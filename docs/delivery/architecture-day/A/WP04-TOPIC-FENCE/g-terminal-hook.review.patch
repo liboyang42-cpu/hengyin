@@ -1,0 +1,68 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICoopSettlementClaimService.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICoopSettlementClaimService.java
+@@ -7,6 +7,10 @@
+ import java.util.Date;
+
+ public interface ICoopSettlementClaimService {
++    /** 同调用方事务：仅原退款已完成(渠道到账/人工双审)时，按原冻结分项幂等冲回。 */
++    void reverseCompletedRegistrationRefund(Long refundId);
++
++
+     CoopSettlementPlan prepare(CoopOrder order, Date settlementSnapshotAt);
+     void persist(CoopSettlementPlan plan, CoopSettlement head);
+     void appendExecutedAdjustment(Long claimId, String eventKey, java.math.BigDecimal signedAmount);
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java
+@@ -140,6 +140,9 @@
+     @Autowired
+     private IWxPaymentCallbackInboxService wxPaymentCallbackInboxService;
+
++    @Autowired
++    private com.chengyinhub.business.service.ICoopSettlementClaimService coopSettlementClaimService;
++
+     /**
+      * best-effort 告警,失败不影响主流程 —— 但不能静默:资金类告警(待人工/接管/ABNORMAL/冲销失败)
+      * 投递挂了若无痕迹,线上等于"没人知道有单待处理"。
+@@ -361,12 +364,21 @@
+         if (refund == null) {
+             throw new IllegalArgumentException("退款单不存在");
+         }
++        if ("registration".equals(refund.getSourceType())) {
++            CmsRegistration locked = lockRefundRegistration(refund.getSourceId());
++            RefundApplication original = refund;
++            refund = registrationRefundHistory(locked.getId()).stream()
++                    .filter(row -> original.getId().equals(row.getId())).findFirst()
++                    .orElseThrow(() -> new IllegalStateException("原退款不存在"));
++            requireSameRefundIdentity(original, refund);
++        }
+         // 双人复核:复核人须≠处理人(应用层显式拦,mapper WHERE 再兜一层防绕过)
+         if (reviewer2Id.equals(refund.getPayoutHandlerId())) {
+             throw new IllegalStateException("复核人不能与处理人为同一人(双人复核)");
+         }
+         int rows = refundApplicationMapper.markPayoutVerified(refundId, reviewer2Id, DateUtils.getNowDate());
+         if (rows == 1) {
++            coopSettlementClaimService.reverseCompletedRegistrationRefund(refund.getId());
+             notifyRefundAfterCommit(refund);
+         }
+         return rows;
+@@ -479,12 +491,18 @@
+
+     private boolean updatePayoutTerminal(RefundApplication refund, int expectedStatus, String message) {
+         if (refundApplicationMapper.updatePayoutResult(refund.getId(), expectedStatus, message) == 1) {
+-            if (expectedStatus == RefundApplication.PAYOUT_SUCCESS) notifyRefundAfterCommit(refund);
++            if (expectedStatus == RefundApplication.PAYOUT_SUCCESS) {
++                coopSettlementClaimService.reverseCompletedRegistrationRefund(refund.getId());
++                notifyRefundAfterCommit(refund);
++            }
+             return true;
+         }
+         // The caller holds this current refund-history row through inbox DONE. A plain SELECT here
+         // could replay the older RR snapshot taken before the topic fence instead of the winning terminal.
+-        return Integer.valueOf(expectedStatus).equals(refund.getPayoutStatus());
++        boolean sameTerminal = Integer.valueOf(expectedStatus).equals(refund.getPayoutStatus());
++        if (sameTerminal && expectedStatus == RefundApplication.PAYOUT_SUCCESS)
++            coopSettlementClaimService.reverseCompletedRegistrationRefund(refund.getId());
++        return sameTerminal;
+     }
+
+     /** 仅首次到账终态调用；沿用 best-effort 通道，不把发送失败伪装成送达或回滚资金。 */

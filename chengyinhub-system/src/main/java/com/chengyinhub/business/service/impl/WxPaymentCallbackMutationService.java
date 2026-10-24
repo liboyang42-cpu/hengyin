@@ -6,6 +6,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.chengyinhub.business.domain.WxPaymentCallbackClaim;
 import com.chengyinhub.business.domain.WxPaymentCallbackInbox;
+import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.domain.RefundApplication;
+import com.chengyinhub.business.mapper.CmsActivityMapper;
+import com.chengyinhub.business.mapper.CmsRegistrationMapper;
+import com.chengyinhub.business.mapper.CmsTopicMapper;
+import com.chengyinhub.business.mapper.RefundApplicationMapper;
 import com.chengyinhub.business.mapper.WxPaymentCallbackInboxMapper;
 import com.chengyinhub.business.service.IWxPaymentCallbackInboxService;
 
@@ -18,6 +24,10 @@ public class WxPaymentCallbackMutationService
 
     @Autowired
     private WxPaymentCallbackInboxMapper mapper;
+    @Autowired private CmsRegistrationMapper registrationMapper;
+    @Autowired private CmsActivityMapper activityMapper;
+    @Autowired private CmsTopicMapper topicMapper;
+    @Autowired private RefundApplicationMapper refundMapper;
 
     @Transactional
     public boolean apply(WxPaymentCallbackClaim claim, IWxPaymentCallbackInboxService.Mutation mutation)
@@ -28,6 +38,7 @@ public class WxPaymentCallbackMutationService
         {
             return false;
         }
+        lockOriginalRegistration(row);
         if (row.getBizId() == null || row.getBizType() == null
                 || mapper.lockBusinessTarget(row.getBizType(), row.getBizId()) == null)
         {
@@ -51,6 +62,28 @@ public class WxPaymentCallbackMutationService
             throw new PaymentCallbackTransactionException("callback DONE write lost ownership");
         }
         return true;
+    }
+
+    private void lockOriginalRegistration(WxPaymentCallbackInbox row)
+    {
+        if (Integer.valueOf(WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT).equals(row.getBizType()))
+        {
+            RegistrationTopicFence.lock(registrationMapper.selectCmsRegistrationById(row.getBizId()),
+                    registrationMapper, activityMapper, topicMapper);
+        }
+        else if (Integer.valueOf(WxPaymentCallbackInbox.BIZ_TYPE_REFUND).equals(row.getBizType()))
+        {
+            RefundApplication observed = refundMapper.selectRefundApplicationById(row.getBizId());
+            if (observed == null || !"registration".equals(observed.getSourceType()) || observed.getSourceId() == null)
+                throw new PaymentCallbackTransactionException(ERROR_TARGET_MISSING);
+            CmsRegistration registration = RegistrationTopicFence.lock(
+                    registrationMapper.selectCmsRegistrationById(observed.getSourceId()),
+                    registrationMapper, activityMapper, topicMapper).registration();
+            RefundApplication current = refundMapper.selectRegistrationHistoryForUpdate(registration.getId()).stream()
+                    .filter(candidate -> observed.getId().equals(candidate.getId())).findFirst()
+                    .orElseThrow(() -> new PaymentCallbackTransactionException(ERROR_TARGET_MISSING));
+            RefundServiceImpl.requireSameRefundIdentity(observed, current);
+        }
     }
 
     static final class PaymentCallbackTransactionException extends RuntimeException

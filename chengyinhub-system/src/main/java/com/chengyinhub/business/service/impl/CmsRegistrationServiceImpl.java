@@ -2211,6 +2211,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
     /** 支付回调的业务状态机;只在 inbox fence 的事务或调用方已开启的事务内执行。 */
     private String applyWechatPayCallback(CmsRegistration registration, Map<String, String> resultMap) {
+        RegistrationTopicFence.LockedOrder lockedOrder = RegistrationTopicFence.lock(registration,
+                cmsRegistrationMapper, cmsActivityMapper, cmsTopicMapper);
+        registration = lockedOrder.registration();
         String outTradeNo = resultMap.get("out_trade_no");
         String transactionId = resultMap.get("transaction_id");
         String tradeState = resultMap.get("trade_state");
@@ -2221,7 +2224,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 if (!matchesFrozenWechatAmount(registration, resultMap.get("total"))) {
                     return registrationPaymentCallbackFailure(outTradeNo, "amount_mismatch");
                 }
-                String paymentResult = completePaymentSuccess(registration, transactionId);
+                String paymentResult = completePaymentSuccess(lockedOrder, transactionId);
                 return "SUCCESS".equalsIgnoreCase(paymentResult) ? paymentResult
                         : registrationPaymentCallbackFailure(outTradeNo, "payment_state_conflict");
 
@@ -2315,13 +2318,17 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Transactional(rollbackFor = Exception.class)
     public String completeZeroAmountPayment(String registrationNo) {
         CmsRegistration registration = getByRegistrationNo(registrationNo);
-        if (registration == null || registration.getPayableAmount() == null
+        if (registration == null) return "FAIL";
+        RegistrationTopicFence.LockedOrder lockedOrder = RegistrationTopicFence.lock(registration,
+                cmsRegistrationMapper, cmsActivityMapper, cmsTopicMapper);
+        registration = lockedOrder.registration();
+        if (registration.getPayableAmount() == null
                 || registration.getPayableAmount().compareTo(BigDecimal.ZERO) != 0
                 || (registration.getWechatPaymentAmount() != null
                 && registration.getWechatPaymentAmount().compareTo(BigDecimal.ZERO) != 0)) {
             return "FAIL";
         }
-        return completePaymentSuccess(registration, "");
+        return completePaymentSuccess(lockedOrder, "");
     }
 
     private boolean matchesFrozenWechatAmount(CmsRegistration registration, String totalCents) {
@@ -2340,7 +2347,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     }
 
     /** 新支付和历史半成品重放共用同一依赖项对账；各下游用自己的业务键幂等。 */
-    private String completePaymentSuccess(CmsRegistration registration, String transactionId) {
+    private String completePaymentSuccess(RegistrationTopicFence.LockedOrder locked, String transactionId) {
+        CmsRegistration registration = locked.registration();
         Date paidAt = new Date();
         boolean paymentTransitioned = cmsRegistrationMapper.claimPaymentSuccess(
                 registration.getId(), transactionId, paidAt) == 1;
@@ -2369,8 +2377,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         settlementEntryService.recordOnPayment(registration);
 
         if (StringUtils.isNotEmpty(registration.getParentOrderNo())) {
-            List<CmsRegistration> siblings = cmsRegistrationMapper.selectByParentOrderNo(
-                    registration.getParentOrderNo());
+            List<CmsRegistration> siblings = locked.rows();
             for (CmsRegistration sibling : siblings) {
                 if (sibling.getId().equals(registration.getId())) {
                     continue;

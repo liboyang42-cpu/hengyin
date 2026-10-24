@@ -403,6 +403,32 @@ public class RefundServiceImpl implements IRefundService {
         } catch (IWxPaymentCallbackInboxService.IdentityConflictException conflict) {
             return false;
         }
+        final RefundApplication original = refund;
+        final Map<String, String> originalFacts = new java.util.HashMap<>(facts);
+        return wxPaymentCallbackInboxService.process(
+                "REFUND:" + outRefundNo + ":" + (refundStatus == null ? "" : refundStatus),
+                new IWxPaymentCallbackInboxService.Mutation() {
+                    @Override public boolean isCurrent(WxPaymentCallbackInbox inbox) {
+                        if (!original.getId().equals(inbox.getBizId())
+                                || !Integer.valueOf(WxPaymentCallbackInbox.BIZ_TYPE_REFUND).equals(inbox.getBizType())
+                                || !java.util.Objects.equals(refundStatus, inbox.getEventType()))
+                            throw new IWxPaymentCallbackInboxService.IdentityConflictException("退款回调原事件身份不一致");
+                        return true;
+                    }
+                    @Override public boolean apply(WxPaymentCallbackInbox inbox) {
+                        CmsRegistration locked = lockRefundRegistration(original.getSourceId());
+                        RefundApplication current = registrationRefundHistory(locked.getId()).stream()
+                                .filter(row -> original.getId().equals(row.getId())).findFirst()
+                                .orElseThrow(() -> new IllegalStateException("原退款不存在"));
+                        requireSameRefundIdentity(original, current);
+                        return matchesRefundFacts(current, locked, originalFacts)
+                                && applyRefundPayoutEvent(current, refundStatus);
+                    }
+                });
+    }
+
+    private boolean applyRefundPayoutEvent(RefundApplication refund, String refundStatus) {
+        String outRefundNo = refund.getRefundNo();
         // updatePayoutResult 的 WHERE 只允许从待派发/处理中/待人工(5/0/2)置位,
         // 不会覆盖人工已处理(3/4)的成果
         if ("SUCCESS".equalsIgnoreCase(refundStatus)) {
@@ -430,6 +456,11 @@ public class RefundServiceImpl implements IRefundService {
             return false;
         }
         CmsRegistration registration = cmsRegistrationMapper.selectCmsRegistrationById(refund.getSourceId());
+        return matchesRefundFacts(refund, registration, facts);
+    }
+
+    private boolean matchesRefundFacts(RefundApplication refund, CmsRegistration registration,
+                                       Map<String, String> facts) {
         if (registration == null || StringUtils.isBlank(registration.getRegistrationNo())
                 || !registration.getRegistrationNo().equals(facts.get("outTradeNo"))
                 || !"CNY".equals(facts.get("currency"))) {
@@ -451,8 +482,9 @@ public class RefundServiceImpl implements IRefundService {
             if (expectedStatus == RefundApplication.PAYOUT_SUCCESS) notifyRefundAfterCommit(refund);
             return true;
         }
-        RefundApplication current = refundApplicationMapper.selectByRefundNo(refund.getRefundNo());
-        return current != null && Integer.valueOf(expectedStatus).equals(current.getPayoutStatus());
+        // The caller holds this current refund-history row through inbox DONE. A plain SELECT here
+        // could replay the older RR snapshot taken before the topic fence instead of the winning terminal.
+        return Integer.valueOf(expectedStatus).equals(refund.getPayoutStatus());
     }
 
     /** 仅首次到账终态调用；沿用 best-effort 通道，不把发送失败伪装成送达或回滚资金。 */
@@ -599,16 +631,20 @@ public class RefundServiceImpl implements IRefundService {
         }
         CmsRegistration registration = loadRegistration(refund);
         if (registration != null) {
+            boolean found = false;
             for (RefundApplication persisted : registrationRefundHistory(registration.getId())) {
                 if (refund.getId().equals(persisted.getId())) {
+                    requireSameRefundIdentity(refund, persisted);
                     if (!Integer.valueOf(0).equals(persisted.getStatus())) {
                         if (request.getStatus().equals(persisted.getStatus())) return 0;
                         throw new IllegalStateException("退款申请已处理，不能改变审核结果");
                     }
                     refund = persisted;
+                    found = true;
                     break;
                 }
             }
+            if (!found) throw new IllegalStateException("原退款不在报名退款历史中，请重试");
         } else if (refund.getStatus() != null && !Integer.valueOf(0).equals(refund.getStatus())) {
             if (request.getStatus().equals(refund.getStatus())) return 0;
             throw new IllegalStateException("退款申请已处理，不能改变审核结果");
@@ -684,15 +720,22 @@ public class RefundServiceImpl implements IRefundService {
 
     private CmsRegistration lockRefundRegistration(Long registrationId) {
         CmsRegistration observed = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
-        if (observed != null && StringUtils.isNotEmpty(observed.getParentOrderNo())) {
-            List<CmsRegistration> order = cmsRegistrationMapper.selectByParentOrderNoForUpdate(observed.getParentOrderNo(), Long.valueOf(2L).equals(observed.getOwnerType()) ? observed.getOwnerId() : null);
-            OrderRefundCash.assertOrderScope(order, observed);
-            for (CmsRegistration registration : order) {
-                if (registrationId.equals(registration.getId())) return registration;
-            }
-            throw new IllegalStateException("报名不在原父订单中");
-        }
-        return cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(registrationId);
+        return observed == null ? null : RegistrationTopicFence.lock(observed, cmsRegistrationMapper,
+                cmsActivityMapper, cmsTopicMapper).registration();
+    }
+
+    static void requireSameRefundIdentity(RefundApplication expected, RefundApplication current) {
+        if (!java.util.Objects.equals(expected.getId(), current.getId())
+                || !java.util.Objects.equals(expected.getSourceType(), current.getSourceType())
+                || !java.util.Objects.equals(expected.getSourceId(), current.getSourceId())
+                || !java.util.Objects.equals(expected.getRefundNo(), current.getRefundNo())
+                || !java.util.Objects.equals(expected.getMemberId(), current.getMemberId())
+                || !java.util.Objects.equals(expected.getOwnerType(), current.getOwnerType())
+                || !java.util.Objects.equals(expected.getOwnerId(), current.getOwnerId())
+                || !java.util.Objects.equals(expected.getCreatedByUserId(), current.getCreatedByUserId())
+                || expected.getRefundAmount() == null || current.getRefundAmount() == null
+                || expected.getRefundAmount().compareTo(current.getRefundAmount()) != 0)
+            throw new IllegalStateException("原退款身份已变化，请重试");
     }
 
     private void enrichRegistrationRefund(RefundApplication refund) {
