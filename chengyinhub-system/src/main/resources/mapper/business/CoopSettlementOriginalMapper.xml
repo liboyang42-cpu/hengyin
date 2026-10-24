@@ -80,6 +80,26 @@
             or (r.owner_type=2 and a.topic_id=#{topicId}))
         order by refund.id for update
     </select>
+    <select id="selectOriginalRegistrationsForUpdate" resultType="com.chengyinhub.business.domain.CmsRegistration" useCache="false" flushCache="true">
+        select id,registration_no as registrationNo,parent_order_no as parentOrderNo,owner_type as ownerType,owner_id as ownerId,
+               member_id as memberId,order_num as orderNum,payment_status as paymentStatus,registration_status as registrationStatus,
+               verification_status as verificationStatus,payable_amount as payableAmount,wechat_payment_amount as wechatPaymentAmount,
+               transaction_id as transactionId from cms_registration where owner_type=1 and owner_id=#{topicId} order by id for update
+    </select>
+    <select id="selectPaymentVerifiedReferenceForUpdate" resultMap="VerifiedReference" useCache="false" flushCache="true">
+        select l.fact_id as id,l.fact_hash as hash from cms_registration r
+        join wx_payment_callback_inbox i on i.biz_type=1 and i.biz_id=r.id and i.event_type='SUCCESS' and i.state=2
+          and i.notify_hash=unhex(sha2(concat('PAY:',r.transaction_id,':SUCCESS'),256))
+        join wx_payment_callback_fact_link l on l.inbox_id=i.id and binary l.notify_hash=binary lower(hex(i.notify_hash))
+        join wx_verified_payment_fact pf on pf.id=l.fact_id and pf.fact_hash=l.fact_hash and pf.fact_kind='PAYMENT'
+          and binary pf.business_out_trade_no=binary r.registration_no and binary pf.transaction_id=binary r.transaction_id
+          and pf.amount_fen=r.wechat_payment_amount*100
+        where r.id=#{registrationId} for update
+    </select>
+    <select id="selectOriginalDetailsForHeadForUpdate" resultType="com.chengyinhub.business.domain.CoopSettlementDetail" useCache="false" flushCache="true">
+        select id,settlement_id as settlementId,claim_id as claimId,registration_id as registrationId,origin_amount as originAmount
+        from coop_settlement_detail where settlement_id=#{settlementId} order by id for update
+    </select>
     <update id="bindHeadToClose">
         update coop_settlement head join coop_settlement_cash_close c on c.id=#{cashCloseId} and c.topic_id=head.topic_id
         set head.cash_close_id=#{cashCloseId},head.cash_head_kind=#{receiverKind}
@@ -151,7 +171,8 @@
         select * from coop_settlement_original_component where cash_close_id=#{cashCloseId} order by settlement_id,source_registration_id for update
     </select>
     <select id="selectTopicHeadsForUpdate" resultType="com.chengyinhub.business.domain.CoopSettlement" useCache="false" flushCache="true">
-        select id,topic_id as topicId,merchant_id as merchantId,amount,status,line_type as lineType
+        select id,topic_id as topicId,merchant_id as merchantId,amount,status,line_type as lineType,
+               coop_order_id as coopOrderId,share_mode as shareMode,share_rate as shareRate,fixed_fee as fixedFee
         from coop_settlement where topic_id=#{topicId} order by id for update
     </select>
     <select id="selectHeadCreditAmountsForUpdate" resultType="java.math.BigDecimal" useCache="false" flushCache="true">

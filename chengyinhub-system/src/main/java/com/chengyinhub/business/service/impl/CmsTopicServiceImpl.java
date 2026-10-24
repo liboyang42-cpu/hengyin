@@ -296,6 +296,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
     @Autowired
     private CoopSettlementOriginalMapper coopSettlementOriginalMapper;
+    @Autowired
+    private CoopSettlementOriginalProducer coopSettlementOriginalProducer;
 
     @Autowired(required = false)
     private ITopicSaleCanonicalMutationService canonicalMutationService;
@@ -821,6 +823,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             if ("PLATFORM".equals(ex.getLineType())) return;
         }
         requireClassicTopicCashBasis(topic.getId());
+        coopSettlementOriginalProducer.requireNoManualCase(topic.getId());
         if (coopSettlementClaimService == null) {
             throw new IllegalStateException("MANUAL_REPAIR:COOP_CLAIM_SERVICE_REQUIRED");
         }
@@ -919,6 +922,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         BigDecimal guaranteeAmount = totalSales.multiply(guaranteeRate).setScale(2, java.math.RoundingMode.HALF_UP);
         BigDecimal marginAmount = totalSales.subtract(platformAmount).subtract(guaranteeAmount).subtract(merchantTotal);
 
+        // Retain negative fixed-cost economics only after rollback; never debit/offset or mark paid.
+        if (marginAmount.signum() < 0) coopSettlementOriginalProducer.retainNegativeMargin(
+                topic,totalSales,platformAmount,guaranteeAmount,merchantTotal,marginAmount,List.copyOf(pending));
         // 五分项守恒 + 越界(超拆→毛利为负)断言,先于任何落库/打款。
         assertSettlementConservation(topic, totalSales, platformAmount, guaranteeAmount, merchantTotal, marginAmount);
 
@@ -959,6 +965,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 coopSettlementClaimService.persist(originPlan, s);
             }
         }
+        // Same topic transaction: real heads/claim details, original components and close commit together.
+        coopSettlementOriginalProducer.freezeOriginals(topic,cashBasis,now);
         logger.info("coop分项结算: topicId={} 平台={} 保底={}(率{}) 承接商家={} 毛利={} 核销商家数={}",
                 topic.getId(), platformAmount, guaranteeAmount, guaranteeRate, merchantTotal, marginAmount, verifiedMerchantCount);
 

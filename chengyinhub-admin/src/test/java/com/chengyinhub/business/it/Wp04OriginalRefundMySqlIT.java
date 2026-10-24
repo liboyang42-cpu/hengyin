@@ -28,7 +28,8 @@ import static org.mockito.Mockito.*;
 /** G owner + real MySQL/XML/transactions; topic/member adapters execute real JDBC locks/updates.
  * B's actual producer/reader persists typed fixture facts; no SDK call or provider-verification claim.
  * The terminal CAS and inbox DONE below are explicit G-side SQL fixtures, NOT a test of A's service wiring.
- * No partial-refund, initial allocation, seat counting or negative-margin policy is selected here. */
+ * Partial reversals use the approved cumulative/bounded cent policy; initial allocation, seat counting
+ * and negative-margin policy remain outside this fixture. */
 class Wp04OriginalRefundMySqlIT {
     static final String MIGRATION="migration_20261024_coop_original_refund_components.sql";
     static final String FACT_MIGRATION="migration_20261024_wx_verified_payment_fact.sql";
@@ -93,6 +94,10 @@ class Wp04OriginalRefundMySqlIT {
     }
     void applyNewSchemaAndFreezeOriginalOrder(boolean paid, String refundApp, boolean bindOriginalPaymentReceipt,
             boolean bindConsumedPaymentReceipt) throws Exception {
+        applyNewSchemaAndFreezeOriginalOrder(paid,refundApp,bindOriginalPaymentReceipt,bindConsumedPaymentReceipt,money("10"));
+    }
+    void applyNewSchemaAndFreezeOriginalOrder(boolean paid, String refundApp, boolean bindOriginalPaymentReceipt,
+            boolean bindConsumedPaymentReceipt, BigDecimal initialRefundAmount) throws Exception {
         P0AcceptanceSchema.migrations(source,MIGRATION);
         SqlSessionTemplate sql=P0AcceptanceSchema.sql(source,"CmsRegistrationPaymentFactMapper","CoopSettlementOriginalMapper","CoopSettlementCashEvidenceMapper","CoopSettlementEvidenceMapper",
 
@@ -106,7 +111,7 @@ class Wp04OriginalRefundMySqlIT {
         // The original payable row exists before provider success; only then arrange the original paid fixture.
         originalPayment=facts.recordVerified(payment());
         db.update("UPDATE cms_registration SET payment_status=2,registration_status=2,transaction_id='WXTX1' WHERE id=1");
-        refundFact=facts.recordVerified(refund(refundApp));
+        refundFact=facts.recordVerified(refund(refundApp,"RF901","WXREF1",initialRefundAmount));
         db.update("INSERT INTO coop_settlement(id,topic_id,merchant_id,cash_head_kind,line_type,payee_type,status,amount,del_flag) VALUES(11,11,NULL,'ACCOUNTING','PLATFORM','platform',1,1,0),(12,11,7,'MEMBER','INITIATOR_MARGIN','initiator',?,9,0)",paid?1:0);
         if (paid) {
             db.update("INSERT INTO ums_member_balance_detail(member_id,current_balance,after_balance,change_balance,change_reason,event_type,event_id,change_type,del_flag,create_time) VALUES(7,0,9,9,'Coop结算打款 - 主题11',5,12,1,0,NOW())");
@@ -160,7 +165,7 @@ class Wp04OriginalRefundMySqlIT {
             owner.freezeOriginals(close,List.of(contribution),List.of(component(11L,null,"ACCOUNTING","PLATFORM","1"),component(12L,7L,"MEMBER","INITIATOR_MARGIN","9")));
         });
         assertEquals(2,count("coop_settlement_original_component"));
-        db.update("INSERT INTO refund_application(id,refund_no,source_type,source_id,owner_type,owner_id,status,payout_status,refund_amount,paid_amount,del_flag) VALUES(901,'RF901','registration',1,1,11,1,0,10,10,0)");
+        db.update("INSERT INTO refund_application(id,refund_no,source_type,source_id,owner_type,owner_id,status,payout_status,refund_amount,paid_amount,del_flag) VALUES(901,'RF901','registration',1,1,11,1,0,?,10,0)",initialRefundAmount);
     }
 
     void terminalSuccessAndHook() {
@@ -324,6 +329,99 @@ class Wp04OriginalRefundMySqlIT {
         assertEquals(3,newTableCount(db)); assertEquals(2,count("coop_settlement_original_component"));
     }
 
+    /** Typed persisted B facts and the original inbox binding, never a local success boolean. */
+    WechatVerifiedPaymentFact.Reference prepareSuccessfulRefund(long refundId, BigDecimal amount) {
+        String outRefundNo="RF"+refundId;
+        var reference=facts.recordVerified(refund("wx-original",outRefundNo,"WXREF"+refundId,amount));
+        db.update("INSERT INTO refund_application(id,refund_no,source_type,source_id,owner_type,owner_id,status,payout_status,refund_amount,paid_amount,del_flag) VALUES(?,?,'registration',1,1,11,1,0,?,10,0)",refundId,outRefundNo,amount);
+        String hash=WxPaymentCallbackInboxServiceImpl.sha256Hex("REFUND:"+outRefundNo+":SUCCESS");
+        db.update("INSERT INTO wx_payment_callback_inbox(id,notify_hash,biz_type,biz_id,event_type,state) VALUES(?,UNHEX(?),2,?,'SUCCESS',0)",refundId,hash,refundId);
+        facts.bindNewInbox(refundId,hash,reference,true);
+        return reference;
+    }
+
+    void terminalSuccessAndHook(long refundId) {
+        tx.executeWithoutResult(status -> {
+            db.queryForObject("SELECT id FROM cms_topic WHERE id=11 FOR UPDATE",Long.class);
+            db.update("UPDATE refund_application SET payout_status=1 WHERE id=? AND payout_status=0",refundId);
+            owner.reverseCompletedRegistrationRefund(refundId);
+            db.update("UPDATE wx_payment_callback_inbox SET state=2 WHERE id=?",refundId);
+        });
+    }
+
+    @Test void eachMicroRefundHasExactEffectsAndFullRefundClearsFrozenRemaindersWithoutChangingHeads() throws Exception {
+        applyNewSchemaAndFreezeOriginalOrder(false,"wx-original",true,false,money("0.01"));
+        terminalSuccessAndHook();
+        assertMoney("0.01",db.queryForObject("SELECT reversed_amount FROM coop_settlement_refund_receipt WHERE refund_id=901",BigDecimal.class));
+        assertMoney("-0.01",db.queryForObject("SELECT SUM(amount) FROM coop_settlement_original_adjustment",BigDecimal.class));
+        prepareSuccessfulRefund(902L,money("0.01")); terminalSuccessAndHook(902L);
+        prepareSuccessfulRefund(903L,money("9.98")); terminalSuccessAndHook(903L);
+        assertEquals(3,count("coop_settlement_refund_receipt"));
+        assertEquals(0,db.queryForObject("SELECT COUNT(*) FROM coop_settlement_refund_receipt WHERE reversed_amount<>refund_amount",Integer.class));
+        assertMoney("10",db.queryForObject("SELECT cumulative_after FROM coop_settlement_refund_receipt WHERE refund_id=903",BigDecimal.class));
+        assertMoney("-10",db.queryForObject("SELECT SUM(amount) FROM coop_settlement_original_adjustment",BigDecimal.class));
+        assertEquals(0,db.queryForObject("SELECT COUNT(*) FROM coop_settlement_original_component c LEFT JOIN (SELECT component_id,-SUM(amount) AS reversed FROM coop_settlement_original_adjustment GROUP BY component_id) a ON a.component_id=c.id WHERE c.original_amount<>COALESCE(a.reversed,0)",Integer.class));
+        int effects=count("coop_settlement_original_adjustment");
+        long originalReceipt=db.queryForObject("SELECT id FROM coop_settlement_refund_receipt WHERE refund_id=901",Long.class);
+        terminalSuccessAndHook(901L);
+        assertEquals(originalReceipt,db.queryForObject("SELECT id FROM coop_settlement_refund_receipt WHERE refund_id=901",Long.class));
+        assertEquals(3,count("coop_settlement_refund_receipt")); assertEquals(effects,count("coop_settlement_original_adjustment"));
+        assertMoney("1",db.queryForObject("SELECT amount FROM coop_settlement WHERE id=11",BigDecimal.class));
+        assertMoney("9",db.queryForObject("SELECT amount FROM coop_settlement WHERE id=12",BigDecimal.class));
+        assertMoney("2",balance()); assertEquals(0,count("ums_member_settlement_debt"));
+    }
+
+    @Test void failedPartialWalletWriteCannotAdvanceCumulativeBasisReceiptOrInboxAndExactFactCanRetry() throws Exception {
+        applyNewSchemaAndFreezeOriginalOrder(true,"wx-original",true,false,money("0.01"));
+        terminalSuccessAndHook();
+        assertMoney("1.99",balance());
+        var second=prepareSuccessfulRefund(902L,money("0.02"));
+        int effects=count("coop_settlement_original_adjustment");
+        failAfterWalletReceipt.set(true);
+        assertEquals("INJECTED_AFTER_REAL_WALLET_RECEIPT",assertThrows(IllegalStateException.class,
+                ()->terminalSuccessAndHook(902L)).getMessage());
+        assertMoney("1.99",balance()); assertEquals(1,count("coop_settlement_refund_receipt"));
+        assertEquals(effects,count("coop_settlement_original_adjustment")); assertEquals(0,count("ums_member_settlement_debt"));
+        assertEquals(0,db.queryForObject("SELECT payout_status FROM refund_application WHERE id=902",Integer.class));
+        assertEquals(0,db.queryForObject("SELECT state FROM wx_payment_callback_inbox WHERE id=902",Integer.class));
+        assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM ums_member_balance_detail WHERE event_type=94",Integer.class));
+        assertEquals(second,facts.requireVerified(second).reference());
+        failAfterWalletReceipt.set(false); terminalSuccessAndHook(902L);
+        assertMoney("1.97",balance()); assertEquals(2,count("coop_settlement_refund_receipt"));
+        assertMoney("0.01",db.queryForObject("SELECT cumulative_before FROM coop_settlement_refund_receipt WHERE refund_id=902",BigDecimal.class));
+        assertMoney("0.03",db.queryForObject("SELECT cumulative_after FROM coop_settlement_refund_receipt WHERE refund_id=902",BigDecimal.class));
+        assertMoney("0.02",db.queryForObject("SELECT reversed_amount FROM coop_settlement_refund_receipt WHERE refund_id=902",BigDecimal.class));
+        assertEquals(2,db.queryForObject("SELECT COUNT(*) FROM ums_member_balance_detail WHERE event_type=94",Integer.class));
+    }
+
+    @Test void concurrentDistinctPartialSuccessesSerializeTheirCumulativeReceiptsAndReplayWithoutNewEffects() throws Exception {
+        applyNewSchemaAndFreezeOriginalOrder(false,"wx-original",true,false,money("0.01"));
+        prepareSuccessfulRefund(902L,money("0.02"));
+        ExecutorService workers=Executors.newFixedThreadPool(2); CountDownLatch ready=new CountDownLatch(2),start=new CountDownLatch(1);
+        try {
+            Callable<Void> first=()->{ready.countDown();assertTrue(start.await(5,TimeUnit.SECONDS));terminalSuccessAndHook(901L);return null;};
+            Callable<Void> second=()->{ready.countDown();assertTrue(start.await(5,TimeUnit.SECONDS));terminalSuccessAndHook(902L);return null;};
+            Future<Void> one=workers.submit(first),two=workers.submit(second);
+            assertTrue(ready.await(5,TimeUnit.SECONDS)); start.countDown();
+            one.get(20,TimeUnit.SECONDS); two.get(20,TimeUnit.SECONDS);
+        } finally {workers.shutdownNow();assertTrue(workers.awaitTermination(5,TimeUnit.SECONDS));}
+        assertEquals(2,count("coop_settlement_refund_receipt"));
+        var receipts=tx.execute(status -> originals.selectReceiptsForPayerForUpdate(
+                db.queryForObject("SELECT id FROM coop_settlement_cash_close WHERE topic_id=11",Long.class),1L));
+        BigDecimal cumulative=money("0");
+        for(var receipt:receipts) {
+            assertEquals(cumulative,receipt.getCumulativeBefore());
+            assertEquals(receipt.getRefundAmount(),receipt.getReversedAmount());
+            cumulative=cumulative.add(receipt.getRefundAmount()); assertEquals(cumulative,receipt.getCumulativeAfter());
+        }
+        assertEquals(money("0.03"),cumulative);
+        assertMoney("-0.03",db.queryForObject("SELECT SUM(amount) FROM coop_settlement_original_adjustment",BigDecimal.class));
+        int effects=count("coop_settlement_original_adjustment");
+        terminalSuccessAndHook(902L);terminalSuccessAndHook(901L);
+        assertEquals(2,count("coop_settlement_refund_receipt"));assertEquals(effects,count("coop_settlement_original_adjustment"));
+        assertMoney("2",balance());assertEquals(0,count("ums_member_settlement_debt"));
+    }
+
     private static final String[] NEW={"coop_settlement_original_component","coop_settlement_refund_receipt","coop_settlement_original_adjustment"};
     private static final String NAMES="('coop_settlement_original_component','coop_settlement_refund_receipt','coop_settlement_original_adjustment')";
 
@@ -393,7 +491,12 @@ class Wp04OriginalRefundMySqlIT {
         row.setPaymentFactId(originalPayment.id());row.setPaymentFactHash(originalPayment.hash());return row;
     }
     static WechatVerifiedPaymentFact payment() {return new WechatVerifiedPaymentFact(WechatVerifiedPaymentFact.Kind.PAYMENT,"merchant","wx-original","REG1","WXP1","WXP1","WXTX1","WXTX1","JSAPI","CNY",1000,1000,Instant.ofEpochSecond(1),null,"SUCCESS");}
-    static WechatVerifiedPaymentFact refund(String app) {return new WechatVerifiedPaymentFact(WechatVerifiedPaymentFact.Kind.REFUND,"merchant",app,"REG1","WXP1","RF901","WXREF1","WXTX1","JSAPI","CNY",1000,1000,Instant.ofEpochSecond(2),null,"REFUND");}
+    static WechatVerifiedPaymentFact refund(String app) {return refund(app,"RF901","WXREF1",money("10"));}
+    static WechatVerifiedPaymentFact refund(String app,String outRefundNo,String refundId,BigDecimal amount) {
+        return new WechatVerifiedPaymentFact(WechatVerifiedPaymentFact.Kind.REFUND,"merchant",app,"REG1","WXP1",
+                outRefundNo,refundId,"WXTX1","JSAPI","CNY",1000,amount.movePointRight(2).longValueExact(),
+                Instant.ofEpochSecond(2),null,"REFUND");
+    }
     int count(String table) {return db.queryForObject("SELECT COUNT(*) FROM "+table,Integer.class);}
     BigDecimal balance() {return db.queryForObject("SELECT balance FROM ums_member WHERE id=7",BigDecimal.class);}
     static BigDecimal money(String value) {return new BigDecimal(value).setScale(2);}

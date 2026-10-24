@@ -14,6 +14,8 @@ import java.util.function.Supplier;
 @Service
 public class NpcChatWriteService
 {
+    public record ShopAdmission(NpcChatRequest request,
+            com.chengyinhub.business.service.ai.NpcAsrQuotaHandoff quota) { }
     /** Existing NPC lease duration, shared with the heartbeat; only its admission start moves. */
     static final long LEASE_MILLIS = 20_000L;
     @org.springframework.beans.factory.annotation.Autowired
@@ -47,19 +49,40 @@ public class NpcChatWriteService
 
     public NpcChatRequest admit(NpcChatRequest request, String timeoutText)
     {
-        return locked(request.getUserId(), () -> {
+        return locked(request.getUserId(), () -> admitLocked(request,timeoutText,null,null).request());
+    }
+
+    public ShopAdmission admitShop(NpcChatRequest request,String timeoutText,Long merchantId,String message)
+    {
+        return locked(request.getUserId(), () -> admitLocked(request,timeoutText,merchantId,message));
+    }
+
+    private ShopAdmission admitLocked(NpcChatRequest request,String timeoutText,Long merchantId,String message)
+    {
             NpcChatRequest existing = requests.selectByUserAndRequestId(request.getUserId(), request.getRequestId());
-            if (existing != null) return existing;
-            if (asrIntents.selectForUpdate(request.getUserId(),request.getRequestId())!=null
-                    && asrIntents.claimTextAdmission(request.getUserId(),request.getRequestId(),request.getSessionId())!=1)
-                throw new IllegalStateException("Original ASR text admission is unavailable; read the original receipt");
+            if (existing != null) return new ShopAdmission(existing,null);
+            com.chengyinhub.business.service.ai.NpcAsrQuotaHandoff quota=null;
+            var original=asrIntents.selectForUpdate(request.getUserId(),request.getRequestId());
+            if (original!=null) {
+                if (merchantId==null || !merchantId.equals(original.getMerchantMemberId())
+                        || !request.getUserId().equals(original.getUserId())
+                        || original.getNodeId()==null || original.getNodeId()<=0
+                        || !Long.valueOf(-original.getNodeId()).equals(request.getSessionId())
+                        || original.getQuotaReservation()==null || !"RECEIVED".equals(original.getState())
+                        || !original.isHandoffStarted() || original.isBodyErased()
+                        || original.getTranscript()==null || original.getTranscript().isEmpty()
+                        || !original.getTranscript().equals(message)
+                        || asrIntents.claimTextAdmission(request.getUserId(),request.getRequestId(),request.getSessionId())!=1)
+                    throw new IllegalStateException("Original ASR text admission is unavailable; read the original receipt");
+                quota=new com.chengyinhub.business.service.ai.NpcAsrQuotaHandoff(original.getUserId(),original.getRequestId(),
+                        original.getNodeId(),original.getMerchantMemberId(),original.getQuotaReservation());
+            }
             requests.expireProcessingByUserAndSession(request.getUserId(), request.getSessionId(), timeoutText);
             // Waiting for the per-user lock must not consume a new request's entire initial lease.
             // Existing rows returned above are never renewed here, including expired/deleted tombstones.
             request.setLeaseUntil(new java.util.Date(System.currentTimeMillis() + LEASE_MILLIS));
             if (requests.insertNpcChatRequest(request) != 1) throw new IllegalStateException("NPC request admission failed");
-            return requests.selectByUserAndRequestId(request.getUserId(), request.getRequestId());
-        });
+            return new ShopAdmission(requests.selectByUserAndRequestId(request.getUserId(), request.getRequestId()),quota);
     }
 
     public NpcChatRequest insertTerminal(NpcChatRequest request)

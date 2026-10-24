@@ -27,6 +27,7 @@ class NpcAsrIntentMySqlIT {
     String schema;DriverManagerDataSource source;JdbcTemplate db;
     DataSourceTransactionManager transactions;NpcAsrIntentMapper rows;NpcChatRequestMapper requests;
     NpcChatWriteService writes;SpeechToTextService speech;
+    com.chengyinhub.business.service.ai.AiGatewayService quota;
     @BeforeAll void connect() throws Exception {
         assertEquals("github-hosted",System.getenv("RUNNER_ENVIRONMENT"));
         for(String key:List.of("HOST","PORT","USER","PASSWORD","DB_SUFFIX"))
@@ -39,7 +40,7 @@ class NpcAsrIntentMySqlIT {
         assertTrue(db.queryForObject("SELECT VERSION()",String.class).startsWith("8."));
         P0AcceptanceSchema.baseTables(db,"ums_member","npc_chat_log");
         P0AcceptanceSchema.migrations(source,"migration_npc_chat_request_20260722.sql",
-                "migration_20261012_npc_chat_media_asset.sql","migration_20261024_d_npc_asr_intent.sql");
+                "migration_20261012_npc_chat_media_asset.sql","migration_20261024_d_npc_asr_intent.sql","migration_20261024_d_npc_asr_shared_quota.sql");
         SqlSessionTemplate sql=P0AcceptanceSchema.sql(source,"NpcChatRequestMapper","NpcChatLogMapper","NpcAsrIntentMapper");
         rows=sql.getMapper(NpcAsrIntentMapper.class);requests=sql.getMapper(NpcChatRequestMapper.class);
         transactions=new DataSourceTransactionManager(source);writes=new NpcChatWriteService(requests,sql.getMapper(NpcChatLogMapper.class),transactions);
@@ -49,6 +50,10 @@ class NpcAsrIntentMySqlIT {
     @BeforeEach void clearOnlyThisOwnedScratch() {
         db.update("DELETE FROM npc_chat_log");db.update("DELETE FROM npc_chat_request");db.update("DELETE FROM npc_asr_intent");
         speech=mock(SpeechToTextService.class);when(speech.transcribe(any(),anyString())).thenReturn("原转写");
+        quota=mock(com.chengyinhub.business.service.ai.AiGatewayService.class);
+        when(quota.planQuotaReservation(anyLong(),eq("npc_shop_chat"),anyString())).thenAnswer(c ->
+                "ai:gen:limit:gen:"+c.getArgument(0)+":20261013|"+c.getArgument(2));
+        when(quota.consumePlannedQuota(anyLong(),eq("npc_shop_chat"),anyString())).thenAnswer(c -> c.getArgument(2));
     }
     @AfterAll void cleanOnlyOwnedDatabase() throws Exception {
         if(source==null)return;
@@ -60,7 +65,7 @@ class NpcAsrIntentMySqlIT {
             }
         }
     }
-    NpcAsrIntentService service(){return new NpcAsrIntentService(rows,requests,transactions,speech);}
+    NpcAsrIntentService service(){return new NpcAsrIntentService(rows,requests,transactions,speech,quota);}
     NpcAsrIntent recognize(){return service().recognize(7L,RID,21L,41L,AUDIO,"wav");}
     int count(){return db.queryForObject("SELECT COUNT(*) FROM npc_asr_intent",Integer.class);}
     @Test void committedClaimIsVisibleToAnIndependentConnectionAndOnlyOneConcurrentCallSends() throws Exception {
@@ -94,7 +99,7 @@ class NpcAsrIntentMySqlIT {
         DataSourceTransactionManager uncertain=new DataSourceTransactionManager(source){
             @Override protected void doCommit(DefaultTransactionStatus status){super.doCommit(status);if(lose.getAndSet(false))throw new IllegalStateException("controlled commit ACK loss");}
         };
-        var original=new NpcAsrIntentService(rows,requests,uncertain,speech);
+        var original=new NpcAsrIntentService(rows,requests,uncertain,speech,quota);
         assertThrows(IllegalStateException.class,()->original.recognize(7L,RID,21L,41L,AUDIO,"wav"));
         assertEquals(1,count());assertEquals("IN_FLIGHT",recognize().getState());verifyNoInteractions(speech);
     }
@@ -130,12 +135,12 @@ class NpcAsrIntentMySqlIT {
     @Test void originalTextAdmissionIsAtomicAndCannotRestartAfterOriginalReceiptRetention() {
         recognize();assertTrue(service().beginHandoff(7L,RID,21L,41L));assertFalse(service().beginHandoff(7L,RID,21L,41L));
         db.execute("CREATE TRIGGER d_asr_text_admit_fault BEFORE INSERT ON npc_chat_request FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='controlled original text insert failure'");
-        try{assertThrows(RuntimeException.class,()->writes.admit(textRequest(),"timeout"));}finally{db.execute("DROP TRIGGER d_asr_text_admit_fault");}
+        try{assertThrows(RuntimeException.class,()->writes.admitShop(textRequest(),"timeout",41L,"原转写").request());}finally{db.execute("DROP TRIGGER d_asr_text_admit_fault");}
         assertEquals(0,db.queryForObject("SELECT text_admitted FROM npc_asr_intent WHERE user_id=7",Integer.class));
-        assertNotNull(writes.admit(textRequest(),"timeout"));
+        assertNotNull(writes.admitShop(textRequest(),"timeout",41L,"原转写").request());
         assertEquals(1,db.queryForObject("SELECT text_admitted FROM npc_asr_intent WHERE user_id=7",Integer.class));
         assertEquals(1,requests.deleteNpcChatRequestsBefore(new java.util.Date(System.currentTimeMillis()+86400000),1));
-        assertThrows(IllegalStateException.class,()->writes.admit(textRequest(),"timeout"));
+        assertThrows(IllegalStateException.class,()->writes.admitShop(textRequest(),"timeout",41L,"原转写").request());
         assertEquals(1,count());assertEquals(0,db.queryForObject("SELECT COUNT(*) FROM npc_chat_request",Integer.class));
         assertEquals("ASR_TEXT_HANDOFF_STARTED",service().readOutcome("shop",21L,RID,7L).getAsrReason());
         assertEquals(0,writes.deleteForUser(7L));assertEquals(1,count());verify(speech,times(1)).transcribe(any(),anyString());
@@ -144,4 +149,35 @@ class NpcAsrIntentMySqlIT {
         NpcChatRequest row=new NpcChatRequest();row.setUserId(7L);row.setRequestId(RID);row.setSessionId(-21L);
         row.setStatus("PROCESSING");row.setRetryable(false);row.setAi(true);row.setSafetyDecision("NOT_RUN");row.setLeaseToken(UUID.randomUUID().toString());row.setActiveSlot(1);return row;
     }
+
+    @Test void notSentRefundProofSurvivesItsWakeFailureAndColdReadWithoutAnotherProviderCall() {
+        when(speech.transcribe(any(),anyString())).thenThrow(new com.chengyinhub.business.service.ai.AiServiceException(
+                "controlled not sent",new com.chengyinhub.business.service.ai.AiProviderNotSentException()));
+        doThrow(new IllegalStateException("controlled refund wake failure")).when(quota).refundNpcAsrNotSent(7L,RID);
+        assertEquals("NOT_SENT",recognize().getState());
+        String reservation=db.queryForObject("SELECT quota_reservation FROM npc_asr_intent WHERE user_id=7",String.class);
+        assertNotNull(reservation);assertEquals(1,db.queryForObject("SELECT quota_refund_pending FROM npc_asr_intent WHERE user_id=7",Integer.class));
+        assertEquals("NOT_SENT",service().read(7L,RID,21L).getState());assertEquals("NOT_SENT",recognize().getState());
+        assertEquals(reservation,db.queryForObject("SELECT quota_reservation FROM npc_asr_intent WHERE user_id=7",String.class));
+        verify(speech,times(1)).transcribe(any(),anyString());verify(quota,times(1)).consumePlannedQuota(7L,"npc_shop_chat",reservation);
+    }
+    @Test void originalTextWinnerAndFrozenShopMismatchNeverGetAnotherQuotaOrAdmission() {
+        writes.admit(textRequest(),"timeout");
+        assertThrows(IllegalStateException.class,this::recognize);assertEquals(0,count());verifyNoInteractions(quota,speech);
+        db.update("DELETE FROM npc_chat_request");recognize();assertTrue(service().beginHandoff(7L,RID,21L,41L));
+        assertThrows(IllegalStateException.class,()->writes.admitShop(textRequest(),"timeout",42L,"原转写"));
+        assertThrows(IllegalStateException.class,()->writes.admitShop(textRequest(),"timeout",41L,"替换正文"));
+        assertEquals(0,db.queryForObject("SELECT text_admitted FROM npc_asr_intent WHERE user_id=7",Integer.class));
+        assertEquals(0,db.queryForObject("SELECT COUNT(*) FROM npc_chat_request",Integer.class));
+        assertNotNull(writes.admitShop(textRequest(),"timeout",41L,"原转写").quota());
+        verify(quota,times(1)).consumePlannedQuota(anyLong(),anyString(),anyString());
+    }
+    @Test void unknownNeverCreatesARefundProofAndRemainsQuotaProcessing() {
+        when(speech.transcribe(any(),anyString())).thenThrow(new com.chengyinhub.business.service.ai.AiServiceException("controlled timeout"));
+        assertEquals("UNKNOWN",recognize().getState());assertEquals(0,db.queryForObject("SELECT quota_refund_pending FROM npc_asr_intent WHERE user_id=7",Integer.class));
+        var result=service().readOutcome("shop",21L,RID,7L);assertEquals("PROCESSING",result.getQuotaStatus());
+        assertEquals("REQUEST_OUTCOME_UNKNOWN",result.getErrorCode());assertTrue(result.getSafeText().contains("额度状态处理中"));
+        verify(quota,never()).refundNpcAsrNotSent(anyLong(),anyString());
+    }
+
 }

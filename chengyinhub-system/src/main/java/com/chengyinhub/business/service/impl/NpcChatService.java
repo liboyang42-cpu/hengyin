@@ -162,7 +162,7 @@ public class NpcChatService
         }
 
         return generateAndFinish(processing, findGlobalProfile(),
-                profile -> memoryBuilder.buildRoam(session), "npc_chat", message);
+                profile -> memoryBuilder.buildRoam(session), "npc_chat", message, null);
     }
 
     /**
@@ -259,9 +259,12 @@ public class NpcChatService
         }
 
         NpcChatRequest processing = newProcessing(userId, sessionKey, rid);
+        com.chengyinhub.business.service.ai.NpcAsrQuotaHandoff sharedQuota=null;
         try
         {
-            NpcChatRequest admitted = npcChatWriteService.admit(processing, SAFE_REQUEST_TIMEOUT);
+            NpcChatWriteService.ShopAdmission admission=npcChatWriteService.admitShop(processing,SAFE_REQUEST_TIMEOUT,merchantId,message);
+            NpcChatRequest admitted=admission==null?null:admission.request();
+            if (admission!=null) sharedQuota=admission.quota();
             if (admitted == null) return requestStateUnavailable(processing.getRequestId());
             if (!processing.getSessionId().equals(admitted.getSessionId()))
                 return requestScopeMismatch(processing.getRequestId());
@@ -277,7 +280,7 @@ public class NpcChatService
             return requestStateUnavailable(rid);
         }
 
-        return generateAndFinish(processing, profile, memory, bizType, message);
+        return generateAndFinish(processing, profile, memory, bizType, message, sharedQuota);
     }
 
     /** 门店分身(scope_type=2 挂 merchantId)。取不到只让这条对话降级,不回落到全局 NPC。 */
@@ -303,7 +306,8 @@ public class NpcChatService
      *               在调用点先算好会让那类异常绕过统一的失败收尾。
      */
     private NpcChatResp generateAndFinish(NpcChatRequest processing, NpcProfile profile,
-                                          Function<NpcProfile, String> memory, String bizType, String message)
+                                          Function<NpcProfile, String> memory, String bizType, String message,
+                                          com.chengyinhub.business.service.ai.NpcAsrQuotaHandoff sharedQuota)
     {
         long startMs = System.currentTimeMillis();
         java.util.concurrent.atomic.AtomicBoolean leaseLost = new java.util.concurrent.atomic.AtomicBoolean(false);
@@ -332,8 +336,9 @@ public class NpcChatService
                     processing.getRequestId(),processing.getLeaseToken(),new Date(System.currentTimeMillis()+LEASE_MILLIS))!=1) {
                 return storedOrUnavailable(processing.getUserId(), processing.getRequestId());
             }
-            AiGatewayResult result = aiGatewayService.generate(processing.getUserId(), "player", bizType,
-                    system, message);
+            AiGatewayResult result = sharedQuota==null
+                    ? aiGatewayService.generate(processing.getUserId(), "player", bizType, system, message)
+                    : aiGatewayService.generateNpcAsrHandoff(sharedQuota, system, message);
             providerResultReceived = true;
             terminalize(processing, NpcChatRequest.STATUS_SUCCEEDED, "PASS", null, null, false,
                     truncateCodePoints(result.getText(), SAFE_TEXT_MAX_CODE_POINTS));
@@ -459,7 +464,7 @@ public class NpcChatService
                 || e instanceof com.chengyinhub.business.service.ai.AiProviderResultReceivedException)
         {
             terminalize(processing, NpcChatRequest.STATUS_PROCESSING, "UNKNOWN", "REQUEST_OUTCOME_UNKNOWN",
-                    null, false, "原请求结果待确认，请稍后查看原请求。");
+                    null, false, "原请求结果待确认，额度状态处理中，请稍后查看原请求。");
         }
         else if (reason == AiServiceException.Reason.RATE_LIMITED)
         {
@@ -538,7 +543,7 @@ public class NpcChatService
     {
         if (providerOutcomePossible)
             return response(requestId, NpcChatRequest.STATUS_PROCESSING, "UNKNOWN", "REQUEST_OUTCOME_UNKNOWN",
-                    null, false, true, "原请求结果待确认，请稍后查看原请求。");
+                    null, false, true, "原请求结果待确认，额度状态处理中，请稍后查看原请求。");
         return requestStateUnavailable(requestId);
     }
 
@@ -584,7 +589,7 @@ public class NpcChatService
             if("REQUEST_OUTCOME_UNKNOWN".equals(state.getErrorCode())
                     || (state.getLeaseUntil()!=null && !state.getLeaseUntil().after(new Date()))) {
                 return response(state.getRequestId(),state.getStatus(),"UNKNOWN","REQUEST_OUTCOME_UNKNOWN",null,
-                        false,true,"原请求结果待确认，请稍后查看原请求。");
+                        false,true,"原请求结果待确认，额度状态处理中，请稍后查看原请求。");
             }
             return inProgress(state.getRequestId());
         }
@@ -764,6 +769,7 @@ public class NpcChatService
         resp.setAi(ai);
         resp.setSafeText(safeText);
         resp.setRetryAfterSeconds(retryAfterSeconds);
+        if ("REQUEST_OUTCOME_UNKNOWN".equals(errorCode)) resp.setQuotaStatus("PROCESSING");
         return resp;
     }
 

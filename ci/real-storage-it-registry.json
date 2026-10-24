@@ -31,7 +31,7 @@
     "ai-quota": {
       "lineage": "CORE codex/mini-longrun-core-20261015",
       "registered_source": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
-      "note": "AI quota reservation on real Redis (15) and recovery across real MySQL plus Redis (7).",
+      "note": "AI quota reservation real Redis15 plus recovery real MySQL/Redis9 declared cases; D shared-ASR reservation source, not execution evidence.",
       "classes": [
         "com.chengyinhub.business.service.ai.impl.AiQuotaReservationRedisIT",
         "com.chengyinhub.business.service.ai.AiQuotaRecoveryMySqlRedisIT"
@@ -134,7 +134,7 @@
     "port-ai-quota": {
       "lineage": "PORT port/core-be-20261019: CORE 1e403b13..5752ee6f backend re-applied on master (Java 21 / Boot 4), stacked on port/base-be-20261019",
       "registered_source": "0f65a9184538bd3311b732cedf609403651e9465",
-      "note": "Master-side port of ai-quota (Redis 15 + MySQL/Redis 7). Both classes come from the base port; CORE does not change them.",
+      "note": "AI quota reservation real Redis15 plus recovery real MySQL/Redis9 declared cases; D shared-ASR reservation source, not execution evidence.",
       "classes": [
         "com.chengyinhub.business.service.ai.impl.AiQuotaReservationRedisIT",
         "com.chengyinhub.business.service.ai.AiQuotaRecoveryMySqlRedisIT"
@@ -448,7 +448,7 @@
       "classes": [
         "com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT"
       ],
-      "note": "Twelve fixed source MySQL cases: retained11 plus direct old-DONE SQL path rejection when canonical local consumption exists. Actual A-owned reader and provider facts, original components and refund identity retained. Terminal fixture does not claim provider or full HTTP acceptance."
+      "note": "Fifteen declared original MySQL cases: retained twelve plus bounded cumulative partial-refund conservation, full remainder clearing and replay. Source only; original identity, raw XML, zero skip and CLEAN required."
     },
     "architecture-day-topic-content-budget": {
       "registered_source": "83cb32fd771d4dcba590968f2464a465481c2c57",
@@ -537,7 +537,7 @@
         "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentMySqlIT",
         "com.chengyinhub.business.it.NpcAsrIntentMySqlIT"
       ],
-      "note": "Original E voice3 plus D ASR7 and C f61b8ea8 voice1. Eleven declared cases. Final runner SHA must identify integrated source; no donor green is inherited."
+      "note": "Four voice and ten ASR declared MySQL cases. C f61b8ea8 and D 379d5615 integrated source only; exact final SHA/XML and independent CLEAN required. No provider/device acceptance."
     },
     "architecture-day-clm-commerce-proof": {
       "registered_source": "9f0c44025d42922bdc61f639075c77373792fc31",
@@ -577,7 +577,8 @@
         "com.chengyinhub.business.it.Wp04PaidHalfStateMySqlIT",
         "com.chengyinhub.business.it.Wp04ApprovedRefundFenceMySqlIT",
         "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT",
-        "com.chengyinhub.business.it.WechatVerifiedPaymentFactMySqlIT"
+        "com.chengyinhub.business.it.WechatVerifiedPaymentFactMySqlIT",
+        "com.chengyinhub.business.it.Wp04OriginalProducerMySqlIT"
       ],
       "note": "One source-bound joint A/B/G batch, no duplicate class jobs: original funds, callback/refund, immutable consumption, components, late-success and approved-refund guard. Exact source SHA, declared zero-skip XML and independent CLEAN required. No production/provider/HTTP or unresolved allocation-policy acceptance."
     },
@@ -655,9 +656,11 @@
         "com.chengyinhub.business.it.Wp04ApprovedRefundFenceMySqlIT",
         "com.chengyinhub.business.service.impl.ChapterApplicationOutcomeMySqlIT",
         "com.chengyinhub.business.service.RefundPayoutMybatisIntegrationTest",
-        "com.chengyinhub.business.service.CoopDepositRefundMybatisIntegrationTest"
+        "com.chengyinhub.business.service.CoopDepositRefundMybatisIntegrationTest",
+        "com.chengyinhub.business.it.Wp04OriginalProducerMySqlIT",
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryMySqlRedisIT"
       ],
-      "note": "62 unique registered storage classes, 783 declared cases, whose source changed from reviewed public 2ec68899. One matrix max-parallel20, no duplicate classes. Source SHA, original XML counts, zero skip and independent CLEAN required. Static inventory is not execution, HTTP, provider, restart, load or deployment acceptance."
+      "note": "64 unique registered storage classes, 801 declared cases, including original producer/refund and ASR shared quota. One matrix max-parallel20, no duplicate classes. Source SHA, original XML counts, zero skip and independent CLEAN required. Static inventory is not execution, HTTP, provider, restart, load or deployment acceptance."
     }
   },
   "classes": {
@@ -686,7 +689,7 @@
       "note": "Original three E cases plus C f61b8ea8 confirmed-independent-request real MySQL case. Original identity, same sample distinct attempts, duplicate key and UNKNOWN coexistence; no provider/device proof."
     },
     "com.chengyinhub.business.it.NpcAsrIntentMySqlIT": {
-      "tests": 7,
+      "tests": 10,
       "storage": [
         "mysql"
       ],
@@ -726,7 +729,7 @@
       "gates": {}
     },
     "com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT": {
-      "tests": 12,
+      "tests": 15,
       "storage": [
         "mysql"
       ],
@@ -862,7 +865,7 @@
       }
     },
     "com.chengyinhub.business.service.ai.AiQuotaRecoveryMySqlRedisIT": {
-      "tests": 7,
+      "tests": 9,
       "storage": [
         "mysql",
         "redis"
@@ -1680,6 +1683,14 @@
       },
       "database_base": "cy_deposit_it",
       "note": "9b28: source-owned cy_deposit_it base and class UUID suffix; AfterAll DROP plus schema-absence assertion. Runner independently checks all leftover schemas."
+    },
+    "com.chengyinhub.business.it.Wp04OriginalProducerMySqlIT": {
+      "tests": 3,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "G 54c524ca source: actual producer/ledger/mapper and post-rollback manual evidence, inherited exact original-refund scratch admission plus own producer flag. NOT_RUN; no provider or production DDL."
     }
   }
 }

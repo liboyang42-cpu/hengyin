@@ -449,14 +449,14 @@
     "standard": "DEFERRED_UNTIL_REQUIRED_IMPLEMENTATION_COLLECTED"
   },
   "current_cloud_assignment": {
-    "A": "Environment-offline. Complete TeamGroup/ClubEventOps diff in chat, no unscanned GitHub publishing",
-    "B": "Environment-offline. Complete A4/G2 canonical schemas/seeds/real guard/fact sequencing via chatdiff",
-    "C": "Redemption cleanup and original-template durable before-start reminders; TeamGroup method patch only",
-    "D": "ASR permanent request identity/UNKNOWN/cold recovery; quota policy pending user",
-    "E": "CLM/Commerce exact local original-fact consumption receipts with additive source migration and typed caller patches",
-    "F": "Exact immutable c8bb fixture readback; no duplicate Java/CI",
-    "G": "Typed deposit Router/ApiCoop caller fixture completion",
-    "H": "Enforce existing media review retry budget5 incl expiredlease; preserve latecallback and content HOLD"
+    "A": "Delivered, no new tasks",
+    "B": "Cumulative original refund complete3files applied; frozen",
+    "C": "Voice new-intent complete29files committed4029559; frozen",
+    "D": "Shared ASR quota complete29files applied; precise new voice request-wrapper action-ledger wiring only",
+    "E": "Original work preserved; read failure observed; equivalent ledger delivered separately, not candidate blocker",
+    "F": "Precise G/D new type/SQL ownership and immutable policy/tool/pin caller wiring only",
+    "G": "Original producer20files applied; minimal existing-permission read visibility of durable manual cases only",
+    "H": "Delivered, no new tasks"
   },
   "next_wave_dirty": {
     "D": "fe32 round-outcome production+oldfixtures/newSQL10 applied; existinground10+new10=20; not Java verified",
@@ -470,12 +470,12 @@
   },
   "current_source_head": "8490765f0572dae8ec3468f4e75d0ff6f4760b12",
   "current_source_manifest_counts": {
-    "registered_sql_classes": 110,
-    "funds_declared_tests": 191,
-    "callback_declared_tests": 14,
-    "deposit_declared_tests": 9,
-    "round_declared_tests": 20,
-    "not_execution": "Counters describe dirty source only; latest CI477 used original13/190/8/10."
+    "registered_sql_classes": 119,
+    "combined_unique_classes": 64,
+    "combined_declared_tests": 801,
+    "funds_declared_tests": 197,
+    "voice_asr_declared_tests": 14,
+    "not_execution": "Static declarations only; no current source execution."
   },
   "current_composed_source": {
     "sha": "e4bdaceb8c1eb800b38c93601bbbd82ca15b26e5",
@@ -497,10 +497,8 @@
     "continuation": "Read public code through GitHub; deliver full source diff in chat. Root applies and scans before public writes; no executor rebuild or unscanned publishing."
   },
   "pending_business_questions": [],
-  "current_working_tree": "C f61 full29-file source applied with root migration dependency and declaration-count wiring. B/G/D still implementing; final ledger generation and all verification deferred.",
-  "new_source_blockers_current": [
-    "CI plan negative control fails on precise refund scratch-DDL admission; Java has not started"
-  ],
+  "current_working_tree": "C f61 committed4029559; complete G54c524ca20files, B cumulative refund3files+TimeUnit correction and D379d561529files successfully applied. Root wired migration dependencies, 119 registry classes/64 combined classes/801 declared tests and regenerated5119-control ledger. All new implementation NOT_RUN.",
+  "new_source_blockers_current": [],
   "execution_mode": "IMPLEMENTATION_AND_INTEGRATION_FIRST_FINAL_REVIEW_AND_REGRESSION_ONLY",
   "latest_human_instruction": "不要再审查了 最后一起审查",
   "review_policy": {
@@ -511,7 +509,7 @@
     "preserve_guards_and_test_assertions": true,
     "final_gate": "Collect required code, callers and fixtures; freeze one complete candidate; then conduct consolidated review and regression"
   },
-  "previous_goal_turn_classification": "PROGRESS: collected complete C previous turn, integrated29 source files and migration/real-storage registry callers without audit or regression",
+  "previous_goal_turn_classification": "PROGRESS: complete B/G/D source collected and composed, migration/test-runner declarations wired; no audit, regression, Java, DB or CI executed.",
   "latest_fixture_integration": {
     "base": "8490765f0572dae8ec3468f4e75d0ff6f4760b12",
     "A": "Three cancellation/publish fixtures: current club owner and capture/observe/apply caller wiring",
@@ -530,29 +528,28 @@
       "EXPLICIT_READ_APIS: exact /api/verify/seat/receipt and /api/verify/citynode/receipt",
       "Read classification test source including write and unknown-endpoint negative assertions; NOT_RUN"
     ],
-    "remaining": "Final consolidated review and regression; original E work preserved, not required to block this equivalent completed implementation",
+    "remaining": "D precise new voice _request wrapper/branch contract caller wiring; then regenerate once and final regression",
     "generated_counts": {
-      "controls": 5113,
-      "local_tap": 2180,
+      "controls": 5119,
+      "local_tap": 2186,
       "local_event_contract": 2540,
       "acceptance": false
     }
   },
   "known_remaining_implementation": [
     {
-      "area": "WP04 original settlement producer and verified-seat fee consumer",
-      "state": "APPROVED_IMPLEMENTATION_IN_PROGRESS",
-      "dependency": "User policy confirmed in latest three answers; implement before final review and regression"
+      "area": "F precise new G/D ownership and writer policy plus immutable tool/pin wiring",
+      "state": "DISPATCHED_IMPLEMENTATION_ONLY"
     },
     {
-      "area": "NPC ASR quota reservation and single handoff",
-      "state": "APPROVED_IMPLEMENTATION_IN_PROGRESS",
-      "dependency": "User policy confirmed in latest three answers; implement before final review and regression"
+      "area": "G existing-authorized admin read caller for durable negative-margin manual case",
+      "state": "DISPATCHED_IMPLEMENTATION_ONLY",
+      "restriction": "No arbitrary resolution, automatic debit, liability decision or policy changes"
     },
     {
-      "area": "Voice UNKNOWN independent recreate",
-      "state": "APPROVED_IMPLEMENTATION_IN_PROGRESS",
-      "dependency": "User policy confirmed in latest three answers; implement before final review and regression"
+      "area": "D new C voice _request wrapper reachability and request contracts in generated action ledger",
+      "state": "DISPATCHED_IMPLEMENTATION_ONLY",
+      "restriction": "Do not mark refresh/history as resend; preserve unknown multiwrite assertions"
     }
   ],
   "remaining_acceptance_groups": [
@@ -562,25 +559,22 @@
   ],
   "last_worker_progress_not_acceptance": {
     "G": {
-      "cursor": "d897c36c-6d82-439e-acb9-b400a0c80bd8:4",
-      "turn": "01a16ef9-6234-75c9-9b3b-e4fc8e876ffc",
-      "state": "inProgress",
-      "marker": "exec-77236c3c-7d15-4d56-8215-bdc089624fd4",
-      "reported": "Production verified-seat consumer and original-freeze caller wired; preparing fixtures; no complete delivery yet"
+      "cursor": "d897c36c-6d82-439e-acb9-b400a0c80bd8:5",
+      "state": "complete_original_delivery_applied; precise required caller/policy wiring separately assigned where needed",
+      "source": "54c524ca99204804b6b84af517359eabc8c6ee8d",
+      "validation": "NOT_RUN"
     },
     "B": {
-      "cursor": "2cb81ed8-1eec-4baf-ba82-34145ba14485:4",
-      "turn": "01a16ef9-8b89-73e6-8b3c-abacd5b9a72a",
-      "state": "inProgress",
-      "marker": "exec-11589dbd-5668-4beb-aa3f-f90e2a0475e6",
-      "reported": "Acknowledged exact per-refund conservation and lower/upper bounds; CHECK unchanged, no Mapper/DTO/migration required; still inProgress"
+      "cursor": "2cb81ed8-1eec-4baf-ba82-34145ba14485:5",
+      "state": "complete_original_delivery_applied; precise required caller/policy wiring separately assigned where needed",
+      "source": "chat complete3files plus correction",
+      "validation": "NOT_RUN"
     },
     "D": {
-      "cursor": "1d9ee3e9-b0d3-48c0-8976-625c06845126:2",
-      "turn": "01a16ef9-7787-77d7-bf6b-562691953f94",
-      "state": "inProgress",
-      "marker": "exec-35a351dc-e453-4a70-9769-983066ad055a",
-      "reported": "Reusing reservation ledger/recovery worker; original reservation precedes ASR_STARTED; no delivery yet"
+      "cursor": "1d9ee3e9-b0d3-48c0-8976-625c06845126:4",
+      "state": "complete_original_delivery_applied; precise required caller/policy wiring separately assigned where needed",
+      "source": "379d5615608663c47302598ba238447b264c2bba",
+      "validation": "NOT_RUN"
     },
     "C": {
       "cursor": "44c18d1e-8e5a-4abb-89e4-7e129265b5bd:3",
@@ -601,5 +595,6 @@
     "DDL_executed": false,
     "registry": "Voice MySQL3->4, voice+ASR10->11, combined782->783; declaration metadata only",
     "generated_ledger": "Regenerate once final client source is composed; 5113 belongs to preceding source"
-  }
+  },
+  "updated_at": "2026-10-24T18:21:00Z"
 }

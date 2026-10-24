@@ -33,6 +33,8 @@ class CoopSettlementOriginalLedgerTest {
     final CoopSettlementOriginalLedger owner = new CoopSettlementOriginalLedger(topics,evidence,originals,heads,legacyAdjustments,verified,paymentConsumptions,members,ledger,debts);
     final List<CoopSettlementOriginalAdjustment> applied = new ArrayList<>();
     final CoopSettlementRefundReceipt[] receipt = new CoopSettlementRefundReceipt[1];
+    final List<CoopSettlementRefundReceipt> storedReceipts = new ArrayList<>();
+    BigDecimal frozenCash = money("10");
     CoopSettlementCashClose close;
     CoopSettlementCashContribution source;
     RefundApplication refund;
@@ -73,10 +75,15 @@ class CoopSettlementOriginalLedgerTest {
         when(originals.selectTopicHeadsForUpdate(11L)).thenReturn(List.of(platform,initiator));
         components = new ArrayList<>(List.of(component(101L,platform,"ACCOUNTING"),component(102L,initiator,"MEMBER")));
         when(originals.selectComponentsForPayerForUpdate(1L,1L)).thenReturn(components);
-        when(originals.selectReceiptsForPayerForUpdate(1L,1L)).thenReturn(List.of());
-        when(originals.insertReceipt(any())).thenAnswer(call -> { receipt[0]=call.getArgument(0); receipt[0].setId(1001L); return 1; });
+        when(originals.selectReceiptsForPayerForUpdate(1L,1L)).thenAnswer(call -> new ArrayList<>(storedReceipts));
+        when(originals.selectReceiptForUpdate(anyLong())).thenAnswer(call -> storedReceipts.stream()
+                .filter(row -> row.getRefundId().equals(call.getArgument(0))).findFirst().orElse(null));
+        when(originals.insertReceipt(any())).thenAnswer(call -> { receipt[0]=call.getArgument(0); receipt[0].setId(1001L+storedReceipts.size()); storedReceipts.add(receipt[0]); return 1; });
         when(originals.insertAdjustment(any())).thenAnswer(call -> { CoopSettlementOriginalAdjustment row=call.getArgument(0); row.setId(2001L+applied.size()); applied.add(row); return 1; });
-        when(originals.selectAdjustmentsForReceiptForUpdate(1001L)).thenAnswer(call -> new ArrayList<>(applied));
+        when(originals.selectAdjustmentsForReceiptForUpdate(anyLong())).thenAnswer(call -> applied.stream()
+                .filter(row -> row.getReceiptId().equals(call.getArgument(0))).toList());
+        when(originals.selectAdjustmentsForSettlementForUpdate(anyLong())).thenAnswer(call -> applied.stream()
+                .filter(row -> row.getSettlementId().equals(call.getArgument(0))).toList());
         when(debtRows.insertIgnore(any())).thenReturn(1);
     }
     @AfterEach void clearTransactionFlags() { TransactionSynchronizationManager.clear(); }
@@ -241,6 +248,148 @@ class CoopSettlementOriginalLedgerTest {
                 .getMessage().contains("APPROVED_REFUND_PRECEDES_ORIGINAL_CLOSE"));
         verify(evidence,never()).recordClose(any());verify(originals,never()).insertComponent(any());
         verifyNoInteractions(members,ledger,debtRows,verified);
+    }
+
+    @Test void oneCentSuccessAlwaysReversesOneCentAndFinalRefundClearsEveryFrozenCent() {
+        frozenOrder("0.03","0.01","0.01","0.01");
+        successfulRefund(901L,"0.01"); owner.reverseCompletedRegistrationRefund(901L);
+        assertEquals(1,applied.size()); assertEquals(money("-0.01"),applied.get(0).getAmount());
+        assertEquals(101L,applied.get(0).getComponentId(),"equal remainders use original stable identity");
+        successfulRefund(902L,"0.01"); owner.reverseCompletedRegistrationRefund(902L);
+        successfulRefund(903L,"0.01"); owner.reverseCompletedRegistrationRefund(903L);
+        for (var row : storedReceipts) assertEquals(money("0.01"),row.getReversedAmount());
+        for (var component : components) assertEquals(component.getOriginalAmount(),reversed(component.getId()));
+        int writes=applied.size();
+        assertEquals(1002L,owner.applySucceededRefund(11L,902L).orElseThrow().getId());
+        assertEquals(writes,applied.size()); assertEquals(3,storedReceipts.size());
+        verifyNoInteractions(members,ledger,debtRows);
+    }
+
+    @Test void cumulativeFourThenFiveCentsCannotRevokeTheThirdPartsEarlierRemainder() {
+        frozenOrder("0.09","0.05","0.03","0.01");
+        successfulRefund(901L,"0.04"); owner.reverseCompletedRegistrationRefund(901L);
+        assertEquals(money("0.02"),reversed(101L)); assertEquals(money("0.01"),reversed(102L));
+        assertEquals(money("0.01"),reversed(103L));
+        int start=applied.size();
+        Collections.reverse(components); // Mapper row order is not the economic tie breaker.
+        successfulRefund(902L,"0.01"); owner.reverseCompletedRegistrationRefund(902L);
+        assertEquals(start+1,applied.size()); assertEquals(money("-0.01"),applied.get(start).getAmount());
+        assertEquals(101L,applied.get(start).getComponentId());
+        assertEquals(money("0.03"),reversed(101L)); assertEquals(money("0.01"),reversed(102L));
+        assertEquals(money("0.01"),reversed(103L),"independent 3/2/0 rounding must not withdraw the prior third cent");
+        successfulRefund(903L,"0.04"); owner.reverseCompletedRegistrationRefund(903L);
+        for (var component : components) assertEquals(component.getOriginalAmount(),reversed(component.getId()));
+        assertEquals(money("0.09"),storedReceipts.stream().map(CoopSettlementRefundReceipt::getReversedAmount).reduce(money("0"),BigDecimal::add));
+    }
+
+    @Test void cumulativeTinySplitAndOutOfOrderRefundIdsKeepOriginalBoundsAndReplayReceipts() {
+        frozenOrder("10.00","1.00","9.00");
+        long[] ids={906,901,904,902,905,903};
+        String[] amounts={"0.01","0.01","0.03","0.11","1.84","8.00"};
+        BigDecimal cumulative=money("0");
+        for (int i=0;i<ids.length;i++) {
+            Map<Long,BigDecimal> before=new HashMap<>();
+            for(var component:components) before.put(component.getId(),reversed(component.getId()));
+            successfulRefund(ids[i],amounts[i]); owner.reverseCompletedRegistrationRefund(ids[i]);
+            assertEquals(cumulative,receipt[0].getCumulativeBefore()); cumulative=cumulative.add(money(amounts[i]));
+            assertEquals(cumulative,receipt[0].getCumulativeAfter()); assertEquals(money(amounts[i]),receipt[0].getReversedAmount());
+            for(var component:components) {
+                BigDecimal actual=reversed(component.getId());
+                assertTrue(actual.compareTo(before.get(component.getId()))>=0);
+                assertTrue(actual.compareTo(component.getOriginalAmount())<=0);
+            }
+        }
+        int effects=applied.size();
+        for(long id:new long[]{904,906,901,903}) owner.reverseCompletedRegistrationRefund(id);
+        assertEquals(effects,applied.size()); assertEquals(ids.length,storedReceipts.size());
+        assertEquals(money("1"),platform.getAmount()); assertEquals(money("9"),initiator.getAmount());
+        for(var component:components) assertEquals(component.getOriginalAmount(),reversed(component.getId()));
+    }
+
+    @Test void channelUpperBoundaryAndFinalRemaindersUseExactIntegerMoney() {
+        frozenOrder("21474836.47","10000000.00","11474836.47");
+        successfulRefund(901L,"0.01"); owner.reverseCompletedRegistrationRefund(901L);
+        assertEquals(money("0.01"),receipt[0].getReversedAmount());
+        successfulRefund(902L,"21474836.46"); owner.reverseCompletedRegistrationRefund(902L);
+        for(var component:components) assertEquals(component.getOriginalAmount(),reversed(component.getId()));
+        assertEquals(money("21474836.47"),receipt[0].getCumulativeAfter());
+    }
+
+    @Test void approvedButNotArrivedAndOverRefundCannotConsumeAnyRemainingBudget() {
+        refund.setPayoutStatus(RefundApplication.PAYOUT_PROCESSING);
+        assertEquals("REFUND_SUCCESS_CAS_REQUIRED",assertThrows(IllegalStateException.class,
+                ()->owner.reverseCompletedRegistrationRefund(901L)).getMessage());
+        assertTrue(storedReceipts.isEmpty()); assertTrue(applied.isEmpty());
+        successfulRefund(901L,"10.00"); owner.reverseCompletedRegistrationRefund(901L);
+        int effects=applied.size();
+        successfulRefund(902L,"0.01");
+        assertEquals("ORIGINAL_ORDER_OVER_REFUND",assertThrows(IllegalStateException.class,
+                ()->owner.reverseCompletedRegistrationRefund(902L)).getMessage());
+        assertEquals(effects,applied.size()); assertEquals(1,storedReceipts.size());
+    }
+
+    @Test void missingOriginalValueAndCorruptHistoricalEffectsNeverCreateAFallbackComponent() {
+        components.remove(0);
+        assertEquals("ORIGINAL_ORDER_CONSERVATION",assertThrows(IllegalStateException.class,
+                ()->owner.reverseCompletedRegistrationRefund(901L)).getMessage());
+        assertTrue(applied.isEmpty()); assertTrue(storedReceipts.isEmpty());
+        components.add(component(101L,platform,"ACCOUNTING"));
+        successfulRefund(901L,"0.01"); owner.reverseCompletedRegistrationRefund(901L);
+        CoopSettlementOriginalAdjustment first=applied.get(0); applied.add(first);
+        successfulRefund(902L,"0.01");
+        assertEquals("REFUND_RECEIPT_COMPONENT_CONFLICT",assertThrows(IllegalStateException.class,
+                ()->owner.reverseCompletedRegistrationRefund(902L)).getMessage());
+        assertEquals(1,storedReceipts.size()); assertEquals(2,applied.size(),"corrupt input retained, no new economic effect");
+        verifyNoInteractions(members,ledger,debtRows);
+    }
+
+    @Test void changedSuccessIdentityCannotReuseAnExistingRefundReceiptOrAdjustmentKey() {
+        successfulRefund(901L,"1.00"); owner.reverseCompletedRegistrationRefund(901L);
+        int effects=applied.size();
+        successfulRefund(901L,"2.00");
+        assertThrows(IllegalStateException.class,()->owner.reverseCompletedRegistrationRefund(901L));
+        assertEquals(1,storedReceipts.size()); assertEquals(effects,applied.size());
+    }
+
+    private BigDecimal reversed(Long componentId) {
+        return applied.stream().filter(row -> componentId.equals(row.getComponentId()))
+                .map(row -> row.getAmount().negate()).reduce(money("0"),BigDecimal::add);
+    }
+
+    private void frozenOrder(String total,String... amounts) {
+        frozenCash=money(total); close.setOriginalSalesBasis(frozenCash); source.setSalesBasisAmount(frozenCash);
+        long fen=frozenCash.movePointRight(2).longValueExact();
+        payment=new WechatVerifiedPaymentFact(WechatVerifiedPaymentFact.Kind.PAYMENT,"merchant","wx-original",
+                "REG1","WXP1","WXP1","WXTX1","WXTX1","JSAPI","CNY",fen,fen,Instant.ofEpochSecond(1),null,"SUCCESS");
+        paymentReference=new WechatVerifiedPaymentFact.Reference(31L,payment.factHash());
+        when(verified.requireVerified(paymentReference)).thenReturn(new WechatVerifiedPaymentFactService.Stored(paymentReference,payment));
+        components.clear();
+        for(int i=0;i<amounts.length;i++) {
+            CoopSettlement head=i==0?platform:i==1?initiator:head(11L+i,"INITIATOR_GUARANTEE",7L+i,amounts[i],0);
+            head.setAmount(money(amounts[i]));
+            when(heads.selectByIdForUpdate(head.getId())).thenReturn(head);
+            CoopSettlementOriginalComponent component=component(101L+i,head,i==0?"ACCOUNTING":"MEMBER");
+            component.setOriginalOrderCash(frozenCash);
+            component.setSourceFingerprint(ReflectionTestUtils.invokeMethod(owner,"fingerprint",component));components.add(component);
+        }
+    }
+
+    private void successfulRefund(Long id,String amount) {
+        long fen=money(amount).movePointRight(2).longValueExact();
+        var fact=new WechatVerifiedPaymentFact(WechatVerifiedPaymentFact.Kind.REFUND,"merchant","wx-original",
+                "REG1","WXP1","RF"+id,"WXREF"+id,"WXTX1","JSAPI","CNY",
+                frozenCash.movePointRight(2).longValueExact(),fen,Instant.ofEpochSecond(id),null,"REFUND");
+        var reference=new WechatVerifiedPaymentFact.Reference(90000L+id,fact.factHash());
+        when(verified.requireVerified(reference)).thenReturn(new WechatVerifiedPaymentFactService.Stored(reference,fact));
+        when(originals.selectRefundVerifiedReferenceForUpdate(id)).thenReturn(reference);
+        RefundApplication current=new RefundApplication();current.setId(id);current.setRefundNo("RF"+id);
+        current.setSourceType("registration");current.setSourceId(1L);current.setStatus(1);
+        current.setPayoutStatus(RefundApplication.PAYOUT_SUCCESS);current.setRefundAmount(money(amount));
+        when(originals.selectRefundForUpdate(id)).thenReturn(current);
+        CoopOriginalRefundScope currentScope=new CoopOriginalRefundScope();currentScope.setRefundId(id);
+        currentScope.setSourceType("registration");currentScope.setSourceId(1L);currentScope.setRegistrationId(1L);
+        currentScope.setOwnerType(1L);currentScope.setOwnerId(11L);currentScope.setTopicId(11L);currentScope.setRelationPresent(true);
+        when(originals.selectRefundScope(id)).thenReturn(currentScope);when(originals.selectRefundScopeForUpdate(id)).thenReturn(currentScope);
     }
 
     private CoopSettlementOriginalComponent component(Long id,CoopSettlement head,String kind) {

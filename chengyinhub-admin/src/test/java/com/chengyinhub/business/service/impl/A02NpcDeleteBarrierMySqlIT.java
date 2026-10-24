@@ -108,6 +108,10 @@ class A02NpcDeleteBarrierMySqlIT
         try(java.sql.Connection connection=source.getConnection()) {
             org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(connection,
                     new org.springframework.core.io.FileSystemResource(asrMigration.toFile()));
+            java.nio.file.Path asrQuotaMigration=java.nio.file.Paths.get("chengyinhub-admin/sql/migration_20261024_d_npc_asr_shared_quota.sql");
+            if(!java.nio.file.Files.exists(asrQuotaMigration))asrQuotaMigration=java.nio.file.Paths.get("sql/migration_20261024_d_npc_asr_shared_quota.sql");
+            org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(connection,
+                    new org.springframework.core.io.FileSystemResource(asrQuotaMigration.toFile()));
         }
         Configuration cfg = new Configuration();
         cfg.setEnvironment(new Environment("a02-delete", new SpringManagedTransactionFactory(), source));

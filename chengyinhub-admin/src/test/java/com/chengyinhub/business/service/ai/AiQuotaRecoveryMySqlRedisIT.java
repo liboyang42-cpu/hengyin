@@ -78,7 +78,7 @@ class AiQuotaRecoveryMySqlRedisIT {
         if(redisPassword!=null && !redisPassword.isEmpty()) config.setPassword(redisPassword);
         redisFactory=new LettuceConnectionFactory(config);redisFactory.afterPropertiesSet();
         production=new RedisConfig().redisTemplate(redisFactory);raw=new StringRedisTemplate(redisFactory);
-        service=new AiQuotaRecoveryService(mapper,production,transactions);
+        service=new AiQuotaRecoveryService(mapper,production,transactions,org.mockito.Mockito.mock(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class));
     }
     @BeforeEach void identity() {
         String nonce=UUID.randomUUID().toString().replace("-","");
@@ -116,7 +116,7 @@ class AiQuotaRecoveryMySqlRedisIT {
 
     @Test void restartAfterChargeBeforeReceiptPersistenceCancelsExactNonce() throws Exception {
         charge();forceDue();
-        new AiQuotaRecoveryService(mapper,production,transactions).runDue();
+        new AiQuotaRecoveryService(mapper,production,transactions,org.mockito.Mockito.mock(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class)).runDue();
         assertEquals("0",raw.opsForValue().get(counter));assertEquals("0",raw.opsForValue().get(receipt));
         assertEquals("REFUNDED",state());
     }
@@ -128,10 +128,10 @@ class AiQuotaRecoveryMySqlRedisIT {
                 throw new IllegalStateException("task-injected Redis outage");
             }
         };
-        AiQuotaRecoveryService failed=new AiQuotaRecoveryService(mapper,unavailable,transactions);
+        AiQuotaRecoveryService failed=new AiQuotaRecoveryService(mapper,unavailable,transactions,org.mockito.Mockito.mock(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class));
         assertThrows(IllegalStateException.class,()->failed.requireRefund(receipt,"SERVICE_FAILURE"));
         assertEquals("REFUND_DUE",state());assertEquals("1",raw.opsForValue().get(counter));forceDue();
-        new AiQuotaRecoveryService(mapper,production,transactions).runDue();
+        new AiQuotaRecoveryService(mapper,production,transactions,org.mockito.Mockito.mock(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class)).runDue();
         assertEquals("REFUNDED",state());assertEquals("0",raw.opsForValue().get(counter));
         service.runDue();assertEquals("0",raw.opsForValue().get(counter));
     }
@@ -161,4 +161,31 @@ class AiQuotaRecoveryMySqlRedisIT {
         reserve();service.retain(receipt,"INPUT_BLOCKED");forceDue();service.runDue();
         assertEquals("RETAINED",state());assertEquals("1",raw.opsForValue().get(counter));
     }
+
+    @Test void asrStageIsStickyAndUnknownNeverCompensatesAfterRequestLeaseExpires() throws Exception {
+        reserve();service.stage(receipt,"ASR_STARTED");service.stage(receipt,"INPUT_REVIEW_STARTED");
+        assertThrows(IllegalStateException.class,()->service.requireRefund(receipt,"SERVICE_FAILURE"));
+        assertEquals("RESERVED",state());assertEquals("1",raw.opsForValue().get(counter));
+        forceDue();service.runDue();assertEquals("UNCERTAIN",state());assertEquals("1",raw.opsForValue().get(counter));
+        assertEquals("ASR_STARTED",mapper.selectByReceipt(receipt).getStage());
+    }
+    @Test void coldNotSentProofRefundsTheActualOriginalRedisReceiptOnlyOnce() throws Exception {
+        reserve();service.stage(receipt,"ASR_STARTED");forceDue();
+        sql("update ai_quota_reservation set biz_type='npc_shop_chat' where receipt_key='"+receipt+"'");
+        var original=new com.chengyinhub.business.domain.NpcAsrIntent();original.setId(1L);
+        var bound=mapper.selectByReceipt(receipt);original.setUserId(bound.getMemberId());
+        original.setRequestId("e2596106-82d9-4a4f-9ff2-058414599f90");original.setNodeId(21L);original.setMerchantMemberId(41L);
+        original.setClaimToken(bound.getNonce());original.setState("NOT_SENT");original.setQuotaRefundPending(true);
+        original.setQuotaReservation(counter+"|"+bound.getNonce());
+        var asr=org.mockito.Mockito.mock(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class);
+        org.mockito.Mockito.when(asr.selectQuotaRefundPending(100)).thenAnswer(call->original.isQuotaRefundPending()
+                ?java.util.List.of(original):java.util.List.of());
+        org.mockito.Mockito.when(asr.selectQuotaRefundProof(original.getUserId(),original.getRequestId())).thenReturn(original);
+        org.mockito.Mockito.when(asr.completeQuotaRefund(original.getUserId(),original.getRequestId(),original.getQuotaReservation()))
+                .thenAnswer(call->{original.setQuotaRefundPending(false);return 1;});
+        var restarted=new AiQuotaRecoveryService(mapper,production,transactions,asr);
+        restarted.runDue();assertEquals("REFUNDED",state());assertEquals("0",raw.opsForValue().get(counter));assertFalse(original.isQuotaRefundPending());
+        restarted.runDue();assertEquals("0",raw.opsForValue().get(counter));assertEquals("REFUNDED",state());
+    }
+
 }

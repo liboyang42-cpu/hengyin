@@ -24,6 +24,7 @@ public class NpcAsrTestFixture {
         final NpcAsrIntentMapper rows=mock(NpcAsrIntentMapper.class);
         final NpcChatRequestMapper users=mock(NpcChatRequestMapper.class);
         final SpeechToTextService speech=mock(SpeechToTextService.class);
+        final com.chengyinhub.business.service.ai.AiGatewayService quota=mock(com.chengyinhub.business.service.ai.AiGatewayService.class);
         final Map<String,NpcAsrIntent> stored=new HashMap<>();
         final AtomicBoolean lostCommit=new AtomicBoolean();
         final ReentrantLock lock=new ReentrantLock();
@@ -34,10 +35,21 @@ public class NpcAsrTestFixture {
             protected void doRollback(DefaultTransactionStatus status){}
             protected void doCleanupAfterCompletion(Object tx){lock.unlock();}
         };
-        NpcAsrIntentService service(){return new NpcAsrIntentService(rows,users,manager,speech);}
+        NpcAsrIntentService service(){return new NpcAsrIntentService(rows,users,manager,speech,quota);}
         String key(Long user,String rid){return user+":"+rid.toLowerCase(Locale.ROOT);}
         NpcAsrIntent original(){return stored.get(key(7L,RID));}
         public NpcAsrTestFixture(){
+            when(quota.planQuotaReservation(anyLong(),eq("npc_shop_chat"),anyString())).thenAnswer(c ->
+                    "ai:gen:limit:gen:"+c.getArgument(0)+":20261013|"+c.getArgument(2));
+            when(quota.consumePlannedQuota(anyLong(),eq("npc_shop_chat"),anyString())).thenAnswer(c -> c.getArgument(2));
+            when(rows.finishNotSent(any())).thenAnswer(c -> {
+                NpcAsrIntent value=c.getArgument(0),old=stored.get(key(value.getUserId(),value.getRequestId()));
+                if(old==null || old.isHandoffStarted() || old.isTextAdmitted()
+                        || !java.util.Set.of("IN_FLIGHT","UNKNOWN").contains(old.getState())
+                        || !old.getClaimToken().equals(value.getClaimToken())
+                        || !Objects.equals(old.getQuotaReservation(),value.getQuotaReservation())) return 0;
+                old.setState("NOT_SENT");old.setTranscript(null);old.setBodyExpiresAt(null);old.setQuotaRefundPending(true);return 1;
+            });
             when(users.lockChatUser(anyLong())).thenAnswer(c->c.getArgument(0));
             when(rows.selectForUpdate(anyLong(),anyString())).thenAnswer(c->{
                 NpcAsrIntent old=stored.get(key(c.getArgument(0),c.getArgument(1)));
@@ -71,10 +83,10 @@ public class NpcAsrTestFixture {
         }
         NpcAsrIntent recognize(){return service().recognize(7L,RID,21L,41L,AUDIO,"wav");}
 
-    public NpcAsrIntentService service(SpeechToTextService supplied) { return new NpcAsrIntentService(rows,users,manager,supplied); }
+    public NpcAsrIntentService service(SpeechToTextService supplied) { return new NpcAsrIntentService(rows,users,manager,supplied,quota); }
     public static void wireController(Object controller,SpeechToTextService speech) {
         NpcAsrTestFixture fixture=new NpcAsrTestFixture();
         org.springframework.test.util.ReflectionTestUtils.setField(controller,"npcAsrIntentService",
-                new NpcAsrIntentService(fixture.rows,fixture.users,fixture.manager,speech));
+                new NpcAsrIntentService(fixture.rows,fixture.users,fixture.manager,speech,fixture.quota));
     }
 }

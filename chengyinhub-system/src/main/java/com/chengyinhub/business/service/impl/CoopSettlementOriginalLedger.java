@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.security.MessageDigest;
 import java.util.*;
@@ -236,17 +237,6 @@ public class CoopSettlementOriginalLedger {
         BigDecimal originalCash = cents(components.get(0).getOriginalOrderCash());
         CompletedProof proof = completedProof(refund, source, originalCash, components.get(0));
         Long verifiedFactId = proof.id(); String fingerprint = proof.fingerprint();
-        CoopSettlementRefundReceipt prior = originals.selectReceiptForUpdate(refundId);
-        if (prior != null) {
-            if (!verifiedFactId.equals(prior.getVerifiedFactId()) || !topicId.equals(prior.getTopicId()) || !fingerprint.equals(prior.getSourceFingerprint())
-                    || !proof.kind().equals(prior.getVerifiedFactKind()) || !proof.factHash().equals(prior.getVerifiedFactHash())
-                    || !Objects.equals(close.getId(), prior.getCashCloseId())
-                    || !Objects.equals(refund.getSourceId(), prior.getSourceRegistrationId())
-                    || !Objects.equals(source.getPayerRegistrationId(), prior.getPayerRegistrationId())) throw conflict("REFUND_RECEIPT_PAYLOAD_CONFLICT");
-            equal(prior.getRefundAmount(), proof.refundAmount(), "REFUND_RECEIPT_AMOUNT_CONFLICT");
-            verifyReplay(prior, components);
-            return Optional.of(prior);
-        }
         equal(originalCash, proof.totalAmount(), "ORIGINAL_PAYMENT_TOTAL_CONFLICT");
         BigDecimal originalSum = ZERO;
         for (var row : components) {
@@ -259,11 +249,28 @@ public class CoopSettlementOriginalLedger {
         equal(originalSum, originalCash, "ORIGINAL_ORDER_CONSERVATION");
         List<CoopSettlementRefundReceipt> previous = originals.selectReceiptsForPayerForUpdate(close.getId(), source.getPayerRegistrationId());
         if (previous == null) throw conflict("REFUND_RECEIPT_SET_REQUIRED");
-        BigDecimal before = previous.stream().map(CoopSettlementRefundReceipt::getRefundAmount).map(CoopSettlementOriginalLedger::cents).reduce(ZERO, BigDecimal::add);
-        BigDecimal after = before.add(proof.refundAmount());
-        if (after.compareTo(originalCash) > 0) throw conflict("ORIGINAL_ORDER_OVER_REFUND");
-        // 部分退款/分币新决策尚未答复；只执行不依赖该选择的首次精确全额原件冲回。
-        if (before.signum() != 0 || proof.refundAmount().compareTo(originalCash) != 0) throw conflict("PARTIAL_REFUND_ROUNDING_DECISION_PENDING");
+        RefundHistory history = refundHistory(previous, close, source, components, originalCash);
+        CoopSettlementRefundReceipt prior = originals.selectReceiptForUpdate(refundId);
+        CoopSettlementRefundReceipt retained = history.receipts().get(refundId);
+        if (prior != null || retained != null) {
+            if (prior == null || retained == null || !Objects.equals(prior.getId(),retained.getId()))
+                throw conflict("REFUND_RECEIPT_HISTORY_CONFLICT");
+            requireSame(retained, prior);
+            if (!verifiedFactId.equals(prior.getVerifiedFactId()) || !topicId.equals(prior.getTopicId()) || !fingerprint.equals(prior.getSourceFingerprint())
+                    || !proof.kind().equals(prior.getVerifiedFactKind()) || !proof.factHash().equals(prior.getVerifiedFactHash())
+                    || !Objects.equals(close.getId(), prior.getCashCloseId())
+                    || !Objects.equals(refund.getSourceId(), prior.getSourceRegistrationId())
+                    || !Objects.equals(source.getPayerRegistrationId(), prior.getPayerRegistrationId())) throw conflict("REFUND_RECEIPT_PAYLOAD_CONFLICT");
+            equal(prior.getRefundAmount(), proof.refundAmount(), "REFUND_RECEIPT_AMOUNT_CONFLICT");
+            return Optional.of(prior);
+        }
+        BigDecimal before = history.refunded();
+        BigDecimal after = before.add(cents(proof.refundAmount()));
+        if (proof.refundAmount().signum() <= 0 || after.compareTo(originalCash) > 0)
+            throw conflict("ORIGINAL_ORDER_OVER_REFUND");
+        Map<Long, BigDecimal> reversals = cumulativeReversals(components, originalCash, before, after, history.reversed());
+        BigDecimal reversing = reversals.values().stream().reduce(ZERO, BigDecimal::add);
+        equal(reversing, proof.refundAmount(), "REFUND_COMPONENT_PLAN_CONFLICT");
         Map<Long, CoopSettlement> lockedHeads = new TreeMap<>();
         for (var row : components) lockedHeads.put(row.getSettlementId(), null);
         for (Long id : new ArrayList<>(lockedHeads.keySet())) {
@@ -275,7 +282,7 @@ public class CoopSettlementOriginalLedger {
             List<CoopSettlementAdjustment> priorAdjustments = legacyAdjustments.selectExecutedBySettlementForUpdate(head.getId());
             if (priorAdjustments == null) throw conflict("CURRENT_LEGACY_ADJUSTMENTS_REQUIRED");
             BigDecimal delta = components.stream().filter(row -> head.getId().equals(row.getSettlementId()))
-                    .map(CoopSettlementOriginalComponent::getOriginalAmount).reduce(ZERO,BigDecimal::add).negate();
+                    .map(row -> reversals.get(row.getId())).reduce(ZERO,BigDecimal::add).negate();
             BigDecimal net = cents(head.getAmount()).add(delta).add(sum(originals.selectAdjustmentsForSettlementForUpdate(head.getId())));
             for (var adjustment : priorAdjustments) {
                 if (adjustment == null || !head.getId().equals(adjustment.getSettlementId()) || !"EXECUTED".equals(adjustment.getStatus())) throw conflict("LEGACY_ADJUSTMENT_SCOPE_CONFLICT");
@@ -289,12 +296,12 @@ public class CoopSettlementOriginalLedger {
         receipt.setVerifiedFactHash(proof.factHash());
         receipt.setSourceRegistrationId(refund.getSourceId()); receipt.setPayerRegistrationId(source.getPayerRegistrationId()); receipt.setCurrency("CNY");
         receipt.setRefundAmount(cents(proof.refundAmount())); receipt.setTotalAmount(originalCash); receipt.setCumulativeBefore(before); receipt.setCumulativeAfter(after);
-        receipt.setReversedAmount(proof.refundAmount()); receipt.setCalculationVersion(close.getOriginCalculationVersion()); receipt.setSourceFingerprint(fingerprint);
+        receipt.setReversedAmount(reversing); receipt.setCalculationVersion(close.getOriginCalculationVersion()); receipt.setSourceFingerprint(fingerprint);
         if (originals.insertReceipt(receipt) != 1 || receipt.getId() == null) throw conflict("REFUND_RECEIPT_WRITE_CONFLICT");
         components.sort(Comparator.comparing((CoopSettlementOriginalComponent row) -> row.getReceiverMemberId() == null ? 0L : row.getReceiverMemberId())
                 .thenComparing(CoopSettlementOriginalComponent::getSettlementId).thenComparing(CoopSettlementOriginalComponent::getId));
         for (var row : components) {
-            BigDecimal amount = cents(row.getOriginalAmount()); if (amount.signum() == 0) continue;
+            BigDecimal amount = reversals.get(row.getId()); if (amount.signum() == 0) continue;
             CoopSettlement head = lockedHeads.get(row.getSettlementId());
             if (!Objects.equals(head.getMerchantId(), row.getReceiverMemberId()) || !Objects.equals(head.getLineType(), row.getLineType())) throw conflict("ORIGINAL_RECEIVER_CHANGED");
             boolean paid = "MEMBER".equals(row.getReceiverKind()) && Integer.valueOf(1).equals(head.getStatus());
@@ -330,7 +337,7 @@ public class CoopSettlementOriginalLedger {
             }
             if (debt.signum() > 0) debts.recordOriginalRefund(row.getReceiverMemberId(), adjustment.getId(), debt);
         }
-        equal(sum(originals.selectAdjustmentsForReceiptForUpdate(receipt.getId())).negate(), receipt.getReversedAmount(), "REFUND_COMPONENT_CONSERVATION");
+        verifyReplay(receipt, components, reversals);
         return Optional.of(receipt);
     }
 
@@ -413,21 +420,164 @@ public class CoopSettlementOriginalLedger {
         if (stored instanceof CoopSettlementOriginalComponent row && requested instanceof CoopSettlementOriginalComponent expected
                 && !Objects.equals(row.getSourceFingerprint(), expected.getSourceFingerprint())) throw conflict("ORIGINAL_COMPONENT_FINGERPRINT_CONFLICT");
     }
-    private void verifyReplay(CoopSettlementRefundReceipt receipt, List<CoopSettlementOriginalComponent> components) {
+    private record RefundHistory(BigDecimal refunded, Map<Long, BigDecimal> reversed,
+            Map<Long, CoopSettlementRefundReceipt> receipts) { }
+
+    /** Only committed success receipts/effects form the cumulative basis; topic locking serializes arrival order. */
+    private RefundHistory refundHistory(List<CoopSettlementRefundReceipt> receipts, CoopSettlementCashClose close,
+            CoopSettlementCashContribution payer, List<CoopSettlementOriginalComponent> components, BigDecimal originalCash) {
+        List<CoopSettlementRefundReceipt> ordered = new ArrayList<>(receipts);
+        for (var receipt : ordered) if (receipt == null || receipt.getId() == null || receipt.getId() <= 0)
+            throw conflict("REFUND_HISTORY_IDENTITY_REQUIRED");
+        ordered.sort(Comparator.comparing(CoopSettlementRefundReceipt::getId));
+        Set<Long> receiptIds = new HashSet<>();
+        Set<String> factIds = new HashSet<>();
+        Map<Long, CoopSettlementRefundReceipt> byRefund = new HashMap<>();
+        Map<Long, BigDecimal> reversed = new HashMap<>();
+        BigDecimal refunded = ZERO;
+        for (var receipt : ordered) {
+            String kind = receipt.getVerifiedFactKind();
+            if (!receiptIds.add(receipt.getId()) || receipt.getRefundId() == null || receipt.getRefundId() <= 0
+                    || byRefund.put(receipt.getRefundId(),receipt) != null || receipt.getVerifiedFactId() == null
+                    || receipt.getVerifiedFactId() <= 0 || !("WX".equals(kind) || "MANUAL".equals(kind))
+                    || ("MANUAL".equals(kind) && !receipt.getRefundId().equals(receipt.getVerifiedFactId()))
+                    || receipt.getSourceRegistrationId() == null || receipt.getSourceRegistrationId() <= 0
+                    || receipt.getSourceFingerprint() == null || !receipt.getSourceFingerprint().matches("[0-9a-f]{64}")
+                    || !factIds.add(kind+":"+receipt.getVerifiedFactId())
+                    || receipt.getVerifiedFactHash() == null || !receipt.getVerifiedFactHash().matches("[0-9a-f]{64}")
+                    || !close.getId().equals(receipt.getCashCloseId()) || !close.getTopicId().equals(receipt.getTopicId())
+                    || !payer.getPayerRegistrationId().equals(receipt.getPayerRegistrationId())
+                    || !"CNY".equals(receipt.getCurrency())
+                    || !close.getOriginCalculationVersion().equals(receipt.getCalculationVersion()))
+                throw conflict("REFUND_HISTORY_IDENTITY_CONFLICT");
+            equal(receipt.getTotalAmount(), originalCash, "REFUND_HISTORY_TOTAL_CONFLICT");
+            equal(receipt.getCumulativeBefore(), refunded, "REFUND_HISTORY_CUMULATIVE_CONFLICT");
+            BigDecimal amount = cents(receipt.getRefundAmount());
+            BigDecimal after = refunded.add(amount);
+            if (amount.signum() <= 0 || after.compareTo(originalCash) > 0) throw conflict("ORIGINAL_ORDER_OVER_REFUND");
+            equal(receipt.getCumulativeAfter(), after, "REFUND_HISTORY_CUMULATIVE_CONFLICT");
+            equal(receipt.getReversedAmount(), amount, "REFUND_RECEIPT_EFFECT_CONFLICT");
+            Map<Long, BigDecimal> plan = cumulativeReversals(components, originalCash, refunded, after, reversed);
+            for (var entry : verifyReplay(receipt, components, plan).entrySet())
+                reversed.merge(entry.getKey(), entry.getValue(), BigDecimal::add);
+            refunded = after;
+        }
+        return new RefundHistory(refunded, Map.copyOf(reversed), Map.copyOf(byRefund));
+    }
+
+    /** Project cumulative proportions onto prior reversals, then distribute only this order's remaining cents. */
+    private Map<Long, BigDecimal> cumulativeReversals(List<CoopSettlementOriginalComponent> components,
+            BigDecimal originalCash, BigDecimal before, BigDecimal after, Map<Long, BigDecimal> reversed) {
+        record Share(CoopSettlementOriginalComponent component, long capacity, BigInteger gap) { }
+        record Tail(Share share, BigInteger remainder) { }
+        long denominator = cents(originalCash).movePointRight(2).longValueExact();
+        long beforeFen = cents(before).movePointRight(2).longValueExact();
+        long afterFen = cents(after).movePointRight(2).longValueExact();
+        if (denominator <= 0 || beforeFen < 0 || afterFen <= beforeFen || afterFen > denominator)
+            throw conflict("ORIGINAL_ORDER_OVER_REFUND");
+        long required = afterFen-beforeFen;
+        BigInteger base = BigInteger.valueOf(denominator);
+        Set<Long> ids = new HashSet<>();
+        Map<Long, Long> allocated = new HashMap<>();
+        List<Share> active = new ArrayList<>();
+        long originalSum = 0, alreadySum = 0;
+        for (var component : components) {
+            if (component.getId() == null || component.getId() <= 0 || !ids.add(component.getId())
+                    || component.getSourceRegistrationId() == null || component.getSettlementId() == null)
+                throw conflict("ORIGINAL_COMPONENT_IDENTITY_CONFLICT");
+            long original = cents(component.getOriginalAmount()).movePointRight(2).longValueExact();
+            long already = cents(reversed.getOrDefault(component.getId(),ZERO)).movePointRight(2).longValueExact();
+            if (original < 0 || already < 0 || already > original) throw conflict("ORIGINAL_COMPONENT_OVER_REVERSED");
+            originalSum = Math.addExact(originalSum,original); alreadySum = Math.addExact(alreadySum,already);
+            allocated.put(component.getId(),afterFen == denominator ? original-already : 0L);
+            BigInteger gap = BigInteger.valueOf(original).multiply(BigInteger.valueOf(afterFen))
+                    .subtract(BigInteger.valueOf(already).multiply(base));
+            if (gap.signum() > 0) active.add(new Share(component,original-already,gap));
+        }
+        if (originalSum != denominator || alreadySum != beforeFen || !ids.containsAll(reversed.keySet()))
+            throw conflict("ORIGINAL_COMPONENT_BASIS_CONFLICT");
+        if (afterFen != denominator) {
+            // Earlier tail cents are lower bounds. Never take them back when cumulative remainder ranks change.
+            active.sort(Comparator.comparing(Share::gap));
+            BigInteger sum = active.stream().map(Share::gap).reduce(BigInteger.ZERO,BigInteger::add);
+            BigInteger needed = base.multiply(BigInteger.valueOf(required));
+            int first = 0;
+            while (first < active.size()) {
+                int count = active.size()-first;
+                BigInteger excess = sum.subtract(needed);
+                if (excess.signum() < 0) throw conflict("ORIGINAL_COMPONENT_CAPACITY_CONFLICT");
+                if (active.get(first).gap().multiply(BigInteger.valueOf(count)).compareTo(excess) > 0) break;
+                sum = sum.subtract(active.get(first++).gap());
+            }
+            int count = active.size()-first;
+            if (count == 0) throw conflict("ORIGINAL_COMPONENT_CAPACITY_CONFLICT");
+            BigInteger excess = sum.subtract(needed);
+            BigInteger divisor = base.multiply(BigInteger.valueOf(count));
+            List<Tail> tails = new ArrayList<>();
+            long assigned = 0;
+            for (int i=first; i<active.size(); i++) {
+                Share share = active.get(i);
+                BigInteger numerator = share.gap().multiply(BigInteger.valueOf(count)).subtract(excess);
+                BigInteger[] division = numerator.divideAndRemainder(divisor);
+                long amount = division[0].longValueExact();
+                if (amount < 0 || amount > share.capacity()) throw conflict("ORIGINAL_COMPONENT_CAPACITY_CONFLICT");
+                allocated.put(share.component().getId(),amount); assigned = Math.addExact(assigned,amount);
+                tails.add(new Tail(share,division[1]));
+            }
+            tails.sort((left,right) -> {
+                int rank = right.remainder().compareTo(left.remainder());
+                return rank != 0 ? rank : compareOriginalIdentity(left.share().component(),right.share().component());
+            });
+            int remaining = Math.toIntExact(required-assigned);
+            if (remaining < 0 || remaining > tails.size()) throw conflict("REFUND_COMPONENT_PLAN_CONFLICT");
+            for (int i=0; i<remaining; i++) {
+                Tail tail = tails.get(i); Long id = tail.share().component().getId();
+                long amount = allocated.get(id)+1;
+                if (tail.remainder().signum() <= 0 || amount > tail.share().capacity())
+                    throw conflict("ORIGINAL_COMPONENT_CAPACITY_CONFLICT");
+                allocated.put(id,amount);
+            }
+        }
+        Map<Long, BigDecimal> result = new HashMap<>();
+        allocated.forEach((id,amount) -> result.put(id,BigDecimal.valueOf(amount,2)));
+        equal(result.values().stream().reduce(ZERO,BigDecimal::add),after.subtract(before),"REFUND_COMPONENT_PLAN_CONFLICT");
+        return result;
+    }
+
+    private static int compareOriginalIdentity(CoopSettlementOriginalComponent left, CoopSettlementOriginalComponent right) {
+        int order = left.getSourceRegistrationId().compareTo(right.getSourceRegistrationId());
+        if (order == 0) order = left.getSettlementId().compareTo(right.getSettlementId());
+        return order != 0 ? order : left.getId().compareTo(right.getId());
+    }
+
+    private Map<Long, BigDecimal> verifyReplay(CoopSettlementRefundReceipt receipt,
+            List<CoopSettlementOriginalComponent> components, Map<Long, BigDecimal> expected) {
         List<CoopSettlementOriginalAdjustment> rows = originals.selectAdjustmentsForReceiptForUpdate(receipt.getId());
         if (rows == null) throw conflict("REFUND_RECEIPT_EFFECT_REQUIRED");
-        Map<Long, CoopSettlementOriginalComponent> expected = new HashMap<>();
-        for (var component : components) if (cents(component.getOriginalAmount()).signum() != 0) expected.put(component.getId(), component);
+        Map<Long, CoopSettlementOriginalComponent> byId = new HashMap<>();
+        for (var component : components) byId.put(component.getId(),component);
+        Map<Long, BigDecimal> actual = new HashMap<>();
+        BigDecimal total = ZERO;
         for (var row : rows) {
-            var component = expected.remove(row.getComponentId());
-            if (component == null || !Objects.equals(receipt.getId(), row.getReceiptId())
+            var component = row == null ? null : byId.get(row.getComponentId());
+            if (component == null || actual.containsKey(row.getComponentId())
+                    || !Objects.equals(receipt.getId(), row.getReceiptId())
                     || !Objects.equals(component.getSettlementId(), row.getSettlementId())
                     || !Objects.equals(receipt.getCashCloseId(), row.getCashCloseId())
-                    || !Objects.equals(receipt.getPayerRegistrationId(), row.getPayerRegistrationId())) throw conflict("REFUND_RECEIPT_COMPONENT_CONFLICT");
-            equal(row.getAmount(), component.getOriginalAmount().negate(), "REFUND_RECEIPT_COMPONENT_AMOUNT_CONFLICT");
+                    || !Objects.equals(receipt.getPayerRegistrationId(), row.getPayerRegistrationId()))
+                throw conflict("REFUND_RECEIPT_COMPONENT_CONFLICT");
+            BigDecimal amount = cents(row.getAmount()).negate();
+            BigDecimal debit = cents(row.getWalletDebit()), debt = cents(row.getDebtAmount());
+            if (amount.signum() <= 0 || debit.signum() < 0 || debt.signum() < 0 || row.getHeadWasPaid() == null)
+                throw conflict("REFUND_RECEIPT_COMPONENT_AMOUNT_CONFLICT");
+            equal(amount,expected.getOrDefault(row.getComponentId(),ZERO),"REFUND_RECEIPT_COMPONENT_AMOUNT_CONFLICT");
+            equal(debit.add(debt),Boolean.TRUE.equals(row.getHeadWasPaid()) ? amount : ZERO,"REFUND_RECEIPT_MONEY_EFFECT_CONFLICT");
+            actual.put(component.getId(),amount); total=total.add(amount);
         }
-        if (!expected.isEmpty()) throw conflict("REFUND_RECEIPT_COMPONENTS_INCOMPLETE");
-        equal(sum(rows).negate(), receipt.getReversedAmount(), "REFUND_RECEIPT_EFFECT_CONFLICT");
+        for (var component : components)
+            equal(actual.getOrDefault(component.getId(),ZERO),expected.get(component.getId()),"REFUND_RECEIPT_COMPONENTS_INCOMPLETE");
+        equal(total, receipt.getReversedAmount(), "REFUND_RECEIPT_EFFECT_CONFLICT");
+        return actual;
     }
     private static boolean blank(String value) { return value == null || value.isBlank(); }
     private static void requireTransaction() {

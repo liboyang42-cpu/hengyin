@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5113,
+  "controlCount": 5119,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -28624,6 +28624,60 @@
           "segments": [
             {
               "selector": "cy-btn",
+              "index": 24
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 25
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 26
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 27
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 28
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 29
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
               "index": 3
             }
           ]
@@ -52584,6 +52638,71 @@
             },
             {
               "selector": "cy-btn",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "#node-npc-form",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 11
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "#node-npc-form",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 12
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "#node-npc-form",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 13
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "#node-npc-form",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 14
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "#node-npc-form",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
               "index": 2
             }
           ]
@@ -52663,6 +52782,19 @@
             {
               "selector": "cy-btn",
               "index": 8
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "#node-npc-form",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 9
             }
           ]
         },
@@ -881519,7 +881651,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:260"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:265"
       }
     },
     {
@@ -881586,7 +881718,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:256"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:261"
       }
     },
     {
@@ -881653,7 +881785,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:263"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:268"
       }
     },
     {
@@ -881720,7 +881852,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:287"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:292"
       }
     },
     {
@@ -881787,7 +881919,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:284"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:289"
       }
     },
     {
@@ -881854,7 +881986,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:284"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:289"
       }
     },
     {
@@ -881989,7 +882121,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:294"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:299"
       }
     },
     {
@@ -882056,7 +882188,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:354"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:359"
       }
     },
     {
@@ -882127,7 +882259,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:357"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:362"
       }
     },
     {
@@ -882194,7 +882326,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:354"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:359"
       }
     },
     {
@@ -882261,7 +882393,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:645"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:650"
       }
     },
     {
@@ -882328,7 +882460,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:683"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:772"
       }
     },
     {
@@ -882429,7 +882561,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:651"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:673"
       }
     },
     {
@@ -882506,7 +882638,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:902"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1000"
       }
     },
     {
@@ -882573,7 +882705,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:864"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:962"
       }
     },
     {
@@ -882683,7 +882815,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:832"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:926"
       }
     },
     {
@@ -882750,7 +882882,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:810"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:904"
       }
     },
     {
@@ -882817,7 +882949,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:801"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:895"
       }
     },
     {
@@ -882884,7 +883016,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:801"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:895"
       }
     },
     {
@@ -882992,7 +883124,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:757"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:849"
       }
     },
     {
@@ -883069,7 +883201,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:902"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1000"
       }
     },
     {
@@ -883136,7 +883268,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:864"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:962"
       }
     },
     {
@@ -883285,11 +883417,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:914"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1017"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:240:bindtap:refreshVoice:35",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:242:bindtap:refreshVoice:35",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -883312,7 +883444,328 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "refreshVoice",
-        "line": 240,
+        "line": 242,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": "{{voiceBusy}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/npc/voice/status"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/merchant/npc/voice/status"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/npc/voice/status",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:673"
+      }
+    },
+    {
+      "id": "pages/merchant/decor/ai-npc/index.wxml:243:bindtap:confirmNewVoiceRequest:36",
+      "route": "pages/merchant/decor/ai-npc/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/decor/ai-npc/index.wxml",
+        "js": "pages/merchant/decor/ai-npc/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "confirmNewVoiceRequest",
+        "line": 243,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": "{{voiceBusy}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "self",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/compliance/consents",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/npc/voice/enroll",
+          "/api/merchant/npc/voice/status"
+        ],
+        "primaryApis": [
+          "/api/compliance/consents",
+          "/api/config/features",
+          "/api/merchant/npc/voice/enroll",
+          "/api/merchant/npc/voice/status"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/compliance/consents",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/npc/voice/enroll",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/npc/voice/status",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/compliance/consents"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:711"
+      }
+    },
+    {
+      "id": "pages/merchant/decor/ai-npc/index.wxml:247:bindtap:readVoiceHistory:37",
+      "route": "pages/merchant/decor/ai-npc/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/decor/ai-npc/index.wxml",
+        "js": "pages/merchant/decor/ai-npc/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "readVoiceHistory",
+        "line": 247,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/npc/voice/status"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/merchant/npc/voice/status"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/npc/voice/status",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:696"
+      }
+    },
+    {
+      "id": "pages/merchant/decor/ai-npc/index.wxml:251:bindtap:refreshVoice:38",
+      "route": "pages/merchant/decor/ai-npc/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/decor/ai-npc/index.wxml",
+        "js": "pages/merchant/decor/ai-npc/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "refreshVoice",
+        "line": 251,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{voiceUnknown}}",
         "disabledCondition": null,
@@ -883386,11 +883839,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:651"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:673"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:246:bind:settled:onPrivacyGateSettled:36",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:257:bind:settled:onPrivacyGateSettled:39",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -883413,7 +883866,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 246,
+        "line": 257,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -883453,7 +883906,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:101"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:104"
       }
     },
     {
@@ -883535,7 +883988,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:446"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:451"
       }
     },
     {
@@ -883602,7 +884055,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:252"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:257"
       }
     },
     {
@@ -883669,7 +884122,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:239"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:244"
       }
     },
     {
@@ -883770,7 +884223,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:637"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:642"
       }
     },
     {
@@ -883837,7 +884290,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:269"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:274"
       }
     },
     {
@@ -883908,7 +884361,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:329"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:334"
       }
     },
     {
@@ -883975,7 +884428,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:269"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:274"
       }
     },
     {
@@ -884042,7 +884495,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:269"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:274"
       }
     },
     {
@@ -884109,7 +884562,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:269"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:274"
       }
     },
     {
@@ -884233,7 +884686,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:363"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:368"
       }
     },
     {
@@ -884368,7 +884821,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:599"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:604"
       }
     },
     {
@@ -1170743,7 +1171196,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:131"
+        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:137"
       }
     },
     {
@@ -1170822,7 +1171275,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:137"
+        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:143"
       }
     },
     {
@@ -1170902,7 +1171355,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:511"
+        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:587"
       }
     },
     {
@@ -1170996,7 +1171449,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:152"
+        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:158"
       }
     },
     {
@@ -1171075,11 +1171528,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:131"
+        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:137"
       }
     },
     {
-      "id": "pages/topic/components/cy/node-npc-form/index.wxml:46:bindtap:chooseVoice:5",
+      "id": "pages/topic/components/cy/node-npc-form/index.wxml:47:bindtap:chooseVoice:5",
       "route": "component:pages/topic/components/cy/node-npc-form/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1171117,10 +1171570,10 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "chooseVoice",
-        "line": 46,
+        "line": 47,
         "selectorHint": ".nnf-action-button",
         "visibleCondition": null,
-        "disabledCondition": "{{saving || voiceBusy || voiceStatus === 1}}",
+        "disabledCondition": "{{saving || voiceBusy || voiceUnknown || voiceStatus === 1}}",
         "ariaLabel": null,
         "ariaLabelExpression": null,
         "ariaRole": null,
@@ -1171198,11 +1171651,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:335"
+        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:341"
       }
     },
     {
-      "id": "pages/topic/components/cy/node-npc-form/index.wxml:48:bindtap:uploadVoice:6",
+      "id": "pages/topic/components/cy/node-npc-form/index.wxml:49:bindtap:uploadVoice:6",
       "route": "component:pages/topic/components/cy/node-npc-form/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1171237,10 +1171690,10 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "uploadVoice",
-        "line": 48,
+        "line": 49,
         "selectorHint": ".nnf-action-button",
         "visibleCondition": null,
-        "disabledCondition": "{{!voiceFile || saving || voiceBusy || voiceStatus === 1}}",
+        "disabledCondition": "{{!voiceFile || saving || voiceBusy || voiceUnknown || voiceStatus === 1}}",
         "ariaLabel": null,
         "ariaLabelExpression": null,
         "ariaRole": null,
@@ -1171352,11 +1171805,368 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:383"
+        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:509"
       }
     },
     {
-      "id": "pages/topic/components/cy/node-npc-form/index.wxml:51:bindtap:playVoice:7",
+      "id": "pages/topic/components/cy/node-npc-form/index.wxml:54:bindtap:refreshVoice:7",
+      "route": "component:pages/topic/components/cy/node-npc-form/index",
+      "hostRoutes": [
+        "pages/topic/merchantinfo/merchantinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "#node-npc-form",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/topic/components/cy/node-npc-form/index.wxml",
+        "js": "pages/topic/components/cy/node-npc-form/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "refreshVoice",
+        "line": 54,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": "{{voiceBusy}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/chapter-node/npc/voice/status"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/merchant/chapter-node/npc/voice/status"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/chapter-node/npc/voice/status",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:410"
+      }
+    },
+    {
+      "id": "pages/topic/components/cy/node-npc-form/index.wxml:55:bindtap:confirmNewVoiceRequest:8",
+      "route": "component:pages/topic/components/cy/node-npc-form/index",
+      "hostRoutes": [
+        "pages/topic/merchantinfo/merchantinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "#node-npc-form",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/topic/components/cy/node-npc-form/index.wxml",
+        "js": "pages/topic/components/cy/node-npc-form/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "confirmNewVoiceRequest",
+        "line": 55,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": "{{voiceBusy}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "self",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/compliance/consents",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/chapter-node/npc/voice/enroll",
+          "/api/merchant/chapter-node/npc/voice/status"
+        ],
+        "primaryApis": [
+          "/api/compliance/consents",
+          "/api/config/features",
+          "/api/merchant/chapter-node/npc/voice/enroll",
+          "/api/merchant/chapter-node/npc/voice/status"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/compliance/consents",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/chapter-node/npc/voice/enroll",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/chapter-node/npc/voice/status",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/compliance/consents"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:448"
+      }
+    },
+    {
+      "id": "pages/topic/components/cy/node-npc-form/index.wxml:59:bindtap:readVoiceHistory:9",
+      "route": "component:pages/topic/components/cy/node-npc-form/index",
+      "hostRoutes": [
+        "pages/topic/merchantinfo/merchantinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "#node-npc-form",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/topic/components/cy/node-npc-form/index.wxml",
+        "js": "pages/topic/components/cy/node-npc-form/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "readVoiceHistory",
+        "line": 59,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/chapter-node/npc/voice/status"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/merchant/chapter-node/npc/voice/status"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/chapter-node/npc/voice/status",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:433"
+      }
+    },
+    {
+      "id": "pages/topic/components/cy/node-npc-form/index.wxml:63:bindtap:playVoice:10",
       "route": "component:pages/topic/components/cy/node-npc-form/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1171391,7 +1172201,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "playVoice",
-        "line": 51,
+        "line": 63,
         "selectorHint": ".nnf-action-button",
         "visibleCondition": "{{voiceSample}}",
         "disabledCondition": null,
@@ -1171441,11 +1172251,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:496"
+        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:570"
       }
     },
     {
-      "id": "pages/topic/components/cy/node-npc-form/index.wxml:52:bindtap:resetVoice:8",
+      "id": "pages/topic/components/cy/node-npc-form/index.wxml:64:bindtap:resetVoice:11",
       "route": "component:pages/topic/components/cy/node-npc-form/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1171480,7 +1172290,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "resetVoice",
-        "line": 52,
+        "line": 64,
         "selectorHint": ".nnf-action-button",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1171554,11 +1172364,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:463"
+        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:535"
       }
     },
     {
-      "id": "pages/topic/components/cy/node-npc-form/index.wxml:59:bindtap:onSheetClose:9",
+      "id": "pages/topic/components/cy/node-npc-form/index.wxml:71:bindtap:onSheetClose:12",
       "route": "component:pages/topic/components/cy/node-npc-form/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1171593,7 +1172403,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onSheetClose",
-        "line": 59,
+        "line": 71,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{saving}}",
@@ -1171634,11 +1172444,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:511"
+        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:587"
       }
     },
     {
-      "id": "pages/topic/components/cy/node-npc-form/index.wxml:60:bindtap:save:10",
+      "id": "pages/topic/components/cy/node-npc-form/index.wxml:72:bindtap:save:13",
       "route": "component:pages/topic/components/cy/node-npc-form/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1171673,7 +1172483,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "save",
-        "line": 60,
+        "line": 72,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!form.name}}",
@@ -1171773,11 +1172583,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:295"
+        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:301"
       }
     },
     {
-      "id": "pages/topic/components/cy/node-npc-form/index.wxml:69:bind:close:onResultClose:11",
+      "id": "pages/topic/components/cy/node-npc-form/index.wxml:81:bind:close:onResultClose:14",
       "route": "component:pages/topic/components/cy/node-npc-form/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1171812,7 +1172622,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:close",
         "handler": "onResultClose",
-        "line": 69,
+        "line": 81,
         "selectorHint": "cy-result-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1171852,7 +1172662,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:529"
+        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:605"
       }
     },
     {

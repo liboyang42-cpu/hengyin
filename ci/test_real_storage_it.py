@@ -173,15 +173,30 @@ class RegistryContractTest(unittest.TestCase):
         reg = registry()
         fqcn = 'com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT'
         self.assertEqual([fqcn], reg['batches']['architecture-day-original-refund']['classes'])
-        self.assertEqual({'tests': 12, 'storage': ['mysql'], 'gates': {}}, reg['classes'][fqcn])
+        self.assertEqual({'tests': 15, 'storage': ['mysql'], 'gates': {}}, reg['classes'][fqcn])
         flag = 'WP04_ORIGINAL_REFUND_DDL_APPROVED'
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
                     if line.strip().startswith(flag + ':'))
-        self.assertEqual("WP04_ORIGINAL_REFUND_DDL_APPROVED: ${{ matrix.simple == 'Wp04OriginalRefundMySqlIT' && '1' || '' }}", line)
+        self.assertEqual("WP04_ORIGINAL_REFUND_DDL_APPROVED: ${{ (matrix.simple == 'Wp04OriginalRefundMySqlIT' || matrix.simple == 'Wp04OriginalProducerMySqlIT') && '1' || '' }}", line)
         self.assertEqual({flag: '1'}, rs.child_env({flag: '1'}, {}))
         facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
         self.assertEqual([], problems)
-        self.assertEqual(12, facts['declared_tests'])
+        self.assertEqual(15, facts['declared_tests'])
+
+    def test_original_producer_keeps_both_exact_scratch_admissions(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.it.Wp04OriginalProducerMySqlIT'
+        self.assertEqual(3, reg['classes'][fqcn]['tests'])
+        workflow = WORKFLOW.read_text()
+        self.assertIn("WP04_ORIGINAL_PRODUCER_DDL_APPROVED: ${{ matrix.simple == 'Wp04OriginalProducerMySqlIT' && '1' || '' }}", workflow)
+        source = (_HERE.parent / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04OriginalProducerMySqlIT.java').read_text()
+        self.assertIn('System.getenv("WP04_ORIGINAL_PRODUCER_DDL_APPROVED")', source)
+        self.assertIn('db.isolatedOriginalSchema()', source)
+        flags = {'WP04_ORIGINAL_REFUND_DDL_APPROVED': '1', 'WP04_ORIGINAL_PRODUCER_DDL_APPROVED': '1'}
+        self.assertEqual(flags, rs.child_env(flags, {}))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(3, facts['declared_tests'])
 
     def test_batch_totals_match_the_remaining_receipt(self):
         # 23 条真库 + OWN_C01_51 外层 4 条普通；AI 15+7；E04-07 5+5（原回执41/43新增回归）；E02-22 9 + E02-25 2 + 三夹具 3；B05 3；F3 12（含死锁重试负控）。
@@ -190,11 +205,11 @@ class RegistryContractTest(unittest.TestCase):
         # port-prelaunch-69(W8)：退款通知 9 + 退款重试余量 5 + 漫游定位留存 21。
         # p0-acceptance-ac1(AC1)：核销 5 + 跨账号 3 + 城市跑 2 + 自由探索供给闸 2 + 注销 1。
         # port-*：同批 master 侧移植，类与条数同原批；port-core-funds 27；port-ai-quota 22；port-f3-growth 12；port-f3-evidence 4。
-        expected = {"core-funds": 27, "ai-quota": 22, "e04-07-coupon": 10, "community-e02": 14,
+        expected = {"core-funds": 27, "ai-quota": 24, "e04-07-coupon": 10, "community-e02": 14,
                     "b05-visibility": 3, "f3-growth": 12, "extra-storage": 131,
                     "port-e04-07-coupon": 10, "port-community-e02": 14, "port-b05-visibility": 3,
                     "port-extra-storage": 131,
-                    "port-core-funds": 27, "port-ai-quota": 22,
+                    "port-core-funds": 27, "port-ai-quota": 24,
                     "port-f3-growth": 12, "port-f3-evidence": 4,
                     "funnel-max-date": 4, "port-prelaunch-69": 36,
                     "p0-acceptance-ac1": 13, "architecture-day-batch1": 66,
@@ -216,7 +231,7 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-payment-inbox": 14,
                     "architecture-day-verified-payment-facts": 4,
                     "architecture-day-registration-seats": 7,
-                    "architecture-day-original-refund": 12,
+                    "architecture-day-original-refund": 15,
                     "architecture-day-deposit-attempt": 11,
                     "architecture-day-topic-content-budget": 15,
                     "architecture-day-committed-official-notice": 13,
@@ -228,14 +243,14 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-topic-cash-fence": 5,
                     "architecture-day-scheduler-two-process": 3,
                     "architecture-day-cash-recovery": 10,
-                    "architecture-day-funds-closure": 191,
-                    "architecture-day-npc-voice-asr": 11,
+                    "architecture-day-funds-closure": 197,
+                    "architecture-day-npc-voice-asr": 14,
                     "architecture-day-clm-commerce-proof": 8,
                     "architecture-day-media-retry-budget": 8,
                     "architecture-day-before-start-notice": 12,
                     "architecture-day-commerce-generic-guard": 6,
                     "architecture-day-refund-lifecycle": 72,
-                    "architecture-day-integrated-changes": 783}
+                    "architecture-day-integrated-changes": 801}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}

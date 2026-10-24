@@ -598,7 +598,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-24 上线合并(#563 bug 修复 + #508 业主 UI + #554 文案)并 master 后重建实测:2167 → 2173。
   // 2026-10-23 起名页 templateadd 退役删除(业主第四轮去掉起名一步,页面已无入口),按重建实测:tap 2173 → 2172(−1)。
   // 简易起草恢复新增 4 个 tap、2 个组件事件合同；未把新增控件计作动态通过。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2180)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2186)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -1665,8 +1665,8 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 2026-10-23 上线前 bug 修复合并(BUG-ROAM1 P0-50):漫游地点详情答题半屏加 0 尺寸 page-container 返回守卫(bind:afterleave),+1 ⇒ 5070(重建实测)。
   // 2026-10-24 上线合并(#563 bug 修复 + #508 业主 UI + #554 文案)并 master 后重建实测:5070 → 5109。
   // 2026-10-23 起名页 templateadd 退役删除(业主第四轮去掉起名一步,页面已无入口),按重建实测:controlCount 5109 → 5105(−4)。
-  // 同源生成台账已登记5113个控件；本地tap2180、组件事件2540，不代表动态验收通过。
-  assert.equal(ledger.controlCount, 5113)
+  // 同源生成台账已登记5119个控件；声音原请求恢复新增6个本地tap，合计2186，组件事件2540；不代表动态验收通过。
+  assert.equal(ledger.controlCount, 5119)
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。
