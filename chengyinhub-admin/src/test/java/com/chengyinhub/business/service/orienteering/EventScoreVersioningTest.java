@@ -1,9 +1,12 @@
 package com.chengyinhub.business.service.orienteering;
 
 import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.domain.OrientScoreEntry;
+import com.chengyinhub.business.mapper.OrientScoringMapper;
 import com.chengyinhub.business.service.IClubMemberService;
 import com.chengyinhub.business.service.IClubParticipationGuard;
 import com.chengyinhub.business.service.IClubService;
+import com.chengyinhub.business.service.IOrientScoringService;
 import com.chengyinhub.business.service.orienteering.EventScoreVersioning.ResultVersion;
 import com.chengyinhub.business.service.orienteering.OrdinaryCityTimezoneQualifier.SafetyConfirmation;
 import com.chengyinhub.business.service.orienteering.PublishedRuleSelector.FrozenPublishedRule;
@@ -15,9 +18,12 @@ import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -66,7 +72,8 @@ class EventScoreVersioningTest {
         ResultVersion finished = scores.finish(run.id, "fin-sc-01");
         assertEquals(1, finished.version);
         assertEquals(8500, finished.scoreCenti);
-        assertEquals(8500, finished.originalRewardCenti);
+        assertEquals(0, finished.originalRewardCenti);
+        assertNotEquals(finished.scoreCenti, finished.originalRewardCenti);
         assertEquals(EventScoreVersioning.REWARD_KIND, finished.rewardKind);
         assertEquals("fin-sc-01", finished.requestId);
         assertSame(finished, scores.readback("fin-sc-01"));
@@ -207,5 +214,55 @@ class EventScoreVersioningTest {
         assertEquals("c04-evd-gpsx", first.evidence().get(0).requestId);
         assertEquals("SCAN", first.evidence().get(0).kind);
         assertSame(first, scores.recordEvidence(run.id, 31L, "SCAN", "task:31:scan:alpha", "c04-evd-gpsx"));
+    }
+
+    @Test
+    void persistOriginalUsesExistingScoringWriterAndNewInstanceReadsLedger() {
+        EventScoreVersioning.EventRun run = scores.start(registration, frozen, safety, 7L, "start-sc-led");
+        scores.appendScore(run.id, 10000, "TASK", "TASK_DONE", "scr-led-01");
+        scores.appendScore(run.id, -1500, "PENALTY", "HINT_USED", "scr-led-02");
+        ResultVersion finished = scores.finish(run.id, "fin-sc-led1");
+        assertEquals(8500, finished.scoreCenti);
+        assertEquals(0, finished.originalRewardCenti);
+        OrienteeringEventException waiting = assertThrows(OrienteeringEventException.class,
+                () -> scores.persistOriginal("fin-sc-led1"));
+        assertEquals(OrienteeringEventException.WAITING_SOURCE, waiting.getErrorCode());
+        assertEquals(EventScoreVersioning.SCORE_LEDGER_SESSION, waiting.getWaitingCapability());
+        assertNull(scores.recoverFromLedger(null));
+
+        IOrientScoringService writer = mock(IOrientScoringService.class);
+        OrientScoringMapper mapper = mock(OrientScoringMapper.class);
+        OrientScoreEntry taskRow = new OrientScoreEntry();
+        taskRow.setIdempotencyKey("scr-led-01");
+        taskRow.setDeltaCenti(10000);
+        OrientScoreEntry penaltyRow = new OrientScoreEntry();
+        penaltyRow.setIdempotencyKey("scr-led-02");
+        penaltyRow.setDeltaCenti(-1500);
+        when(writer.appendEntry(eq(88L), eq("TASK"), eq(10000), eq("TASK_DONE"), eq("PROGRESS"),
+                eq("event-score:scr-led-01"), isNull(), eq("scr-led-01"))).thenReturn(taskRow);
+        when(writer.appendEntry(eq(88L), eq("PENALTY"), eq(-1500), eq("HINT_USED"), eq("PROGRESS"),
+                eq("event-score:scr-led-02"), isNull(), eq("scr-led-02"))).thenReturn(penaltyRow);
+        when(mapper.selectEntryByIdem(88L, "scr-led-01")).thenReturn(taskRow);
+        when(mapper.selectEntryByIdem(88L, "scr-led-missing")).thenReturn(null);
+
+        EventScoreVersioning wired = new EventScoreVersioning(writer, mapper, 88L);
+        EventScoreVersioning.EventRun wiredRun = wired.start(registration, frozen, safety, 7L, "start-sc-w01");
+        wired.appendScore(wiredRun.id, 10000, "TASK", "TASK_DONE", "scr-led-01");
+        wired.appendScore(wiredRun.id, -1500, "PENALTY", "HINT_USED", "scr-led-02");
+        ResultVersion wiredFinish = wired.finish(wiredRun.id, "fin-sc-w001");
+        assertEquals(0, wiredFinish.originalRewardCenti);
+        List<OrientScoreEntry> persisted = wired.persistOriginal("fin-sc-w001");
+        assertEquals(2, persisted.size());
+        assertEquals("scr-led-01", persisted.get(0).getIdempotencyKey());
+
+        EventScoreVersioning restarted = new EventScoreVersioning(writer, mapper, 88L);
+        OrientScoreEntry recovered = restarted.recoverFromLedger("scr-led-01");
+        assertEquals("scr-led-01", recovered.getIdempotencyKey());
+        assertEquals(10000, recovered.getDeltaCenti());
+        assertEquals(0, wiredFinish.originalRewardCenti);
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class, () -> restarted.recoverFromLedger("scr-led-missing"))
+                        .getErrorCode());
+        assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, restarted.recoverOriginal("fin-sc-w001").outcome);
     }
 }

@@ -1,5 +1,8 @@
 package com.chengyinhub.business.service.orienteering;
 
+import com.chengyinhub.business.domain.OrientScoreEntry;
+import com.chengyinhub.business.mapper.OrientScoringMapper;
+import com.chengyinhub.business.service.IOrientScoringService;
 import com.chengyinhub.business.service.orienteering.OrdinaryCityTimezoneQualifier.SafetyConfirmation;
 import com.chengyinhub.business.service.orienteering.PublishedRuleSelector.FrozenPublishedRule;
 import com.chengyinhub.business.service.orienteering.TeamClubEligibilityAuthority.Registration;
@@ -17,7 +20,8 @@ import java.util.regex.Pattern;
 
 /**
  * 赛事成绩版本真源。有符号计分、并列名次、DNF/DQ/待审、finish 后按原请求回读；
- * 不写入成长个人榜，也不发奖。
+ * 不写入成长个人榜，也不发奖。持久计分走既有 {@link IOrientScoringService} /
+ * {@link OrientScoringMapper}，不另造一套 ledger。
  */
 public final class EventScoreVersioning {
 
@@ -29,6 +33,10 @@ public final class EventScoreVersioning {
     public static final String OUTCOME_FINISHED = "FINISHED";
     public static final String OUTCOME_NOT_FOUND = "NOT_FOUND";
     public static final String OUTCOME_UNKNOWN = "UNKNOWN";
+    /** 原计分写入/回读依赖 TopicRouteSession；缺会话时 WAITING_SOURCE，不占进程账。 */
+    public static final String SCORE_LEDGER_SESSION = "orientScoring.topicRouteSession";
+    /** 原奖励来源不是成绩；finish 不得把 scoreCenti 抄进 originalRewardCenti。 */
+    public static final String ORIGINAL_REWARD_SOURCE = "eventScore.originalRewardSource";
 
     private static final Set<String> EVIDENCE_KINDS = Set.of("SCAN", "PHOTO", "QUIZ", "TASK_RECEIPT");
     private static final Set<String> GPS_KINDS = Set.of("GPS", "LAT", "LNG", "LATLNG", "COORDINATE", "LOCATION");
@@ -39,6 +47,20 @@ public final class EventScoreVersioning {
     private final Map<Long, EventRun> runs = new ConcurrentHashMap<Long, EventRun>();
     private final Map<String, ResultVersion> resultsByRequest = new ConcurrentHashMap<String, ResultVersion>();
     private final Map<Long, ResultVersion> resultsByRun = new ConcurrentHashMap<Long, ResultVersion>();
+    private final IOrientScoringService originalScoring;
+    private final OrientScoringMapper scoringMapper;
+    private final Long topicRouteSessionId;
+
+    public EventScoreVersioning() {
+        this(null, null, null);
+    }
+
+    public EventScoreVersioning(IOrientScoringService originalScoring, OrientScoringMapper scoringMapper,
+                                Long topicRouteSessionId) {
+        this.originalScoring = originalScoring;
+        this.scoringMapper = scoringMapper;
+        this.topicRouteSessionId = topicRouteSessionId;
+    }
 
     public EventRun start(Registration registration, FrozenPublishedRule frozen, SafetyConfirmation safety,
                           Long ackPublishedConfigVersion, String requestId) {
@@ -168,7 +190,7 @@ public final class EventScoreVersioning {
             if (OUTCOME_RUNNING.equals(run.outcome)) run.outcome = OUTCOME_FINISHED;
             ResultVersion written = new ResultVersion(key, run.id, run.registration.topicId,
                     run.frozen.publishedConfigVersion, run.frozen.digest, 1, run.outcome,
-                    run.scoreCenti, run.scoreCenti, REWARD_KIND, snapshotEntries(run), snapshotEvidence(run),
+                    run.scoreCenti, 0, REWARD_KIND, snapshotEntries(run), snapshotEvidence(run),
                     new Date());
             resultsByRequest.put(key, written);
             resultsByRun.put(run.id, written);
@@ -203,6 +225,45 @@ public final class EventScoreVersioning {
             return OriginalReceipt.notFound(id);
         }
         return new OriginalReceipt(found.requestId, found.outcome, false, found);
+    }
+
+    /**
+     * 把完赛局的计分条目交给既有 {@link IOrientScoringService#appendEntry}。
+     * 缺 TopicRouteSession / 原 writer 时 WAITING_SOURCE，不另造 ledger，也不把成绩当奖励。
+     */
+    public List<OrientScoreEntry> persistOriginal(String finishRequestId) {
+        ResultVersion result = readback(finishRequestId);
+        if (originalScoring == null || topicRouteSessionId == null) {
+            throw new OrienteeringEventException(OrienteeringEventException.WAITING_SOURCE,
+                    "原计分写入需要 TopicRouteSession", SCORE_LEDGER_SESSION);
+        }
+        List<OrientScoreEntry> written = new ArrayList<OrientScoreEntry>();
+        for (ScoreEntry entry : result.entries) {
+            written.add(originalScoring.appendEntry(topicRouteSessionId, entry.dimension, entry.signedCenti,
+                    entry.reasonCode, "PROGRESS", "event-score:" + entry.requestId, null, entry.requestId));
+        }
+        return Collections.unmodifiableList(written);
+    }
+
+    /**
+     * 新实例从既有 orient_score_ledger 按幂等键回读。进程 ConcurrentHashMap 不是持久恢复。
+     * 缺 mapper/session 为 WAITING_SOURCE；从未见过的键 NOT_FOUND，不占进程完赛账。
+     * 缺/空 requestId 保持 Java {@code null}。
+     */
+    public OrientScoreEntry recoverFromLedger(String requestId) {
+        String key = parseKey(requestId);
+        if (key == null) {
+            return null;
+        }
+        if (scoringMapper == null || topicRouteSessionId == null) {
+            throw new OrienteeringEventException(OrienteeringEventException.WAITING_SOURCE,
+                    "原计分回读需要 TopicRouteSession", SCORE_LEDGER_SESSION);
+        }
+        OrientScoreEntry found = scoringMapper.selectEntryByIdem(topicRouteSessionId, key);
+        if (found == null) {
+            throw new OrienteeringEventException(OrienteeringEventException.NOT_FOUND, "没有这条成绩流水");
+        }
+        return found;
     }
 
     public ResultVersion rejectGrowthSubstitution() {

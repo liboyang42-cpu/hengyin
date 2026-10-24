@@ -28,15 +28,26 @@ public class OrienteeringEventException extends RuntimeException {
     public static final String ALREADY_TERMINAL = "EVENT_ALREADY_TERMINAL";
     public static final String INVALID_ARGUMENT = "EVENT_INVALID_ARGUMENT";
     public static final String ALREADY_RESOLVED = "EVENT_ALREADY_RESOLVED";
+    public static final String WAITING_SOURCE = "EVENT_WAITING_SOURCE";
 
     private final String errorCode;
+    private final String waitingCapability;
 
     public OrienteeringEventException(String errorCode, String message) {
+        this(errorCode, message, null);
+    }
+
+    public OrienteeringEventException(String errorCode, String message, String waitingCapability) {
         super(message);
         this.errorCode = errorCode;
+        this.waitingCapability = waitingCapability;
     }
 
     public String getErrorCode() {
         return errorCode;
+    }
+
+    public String getWaitingCapability() {
+        return waitingCapability;
     }
 }

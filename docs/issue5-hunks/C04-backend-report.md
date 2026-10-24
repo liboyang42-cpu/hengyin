@@ -39,9 +39,11 @@ Base: `2ec68899099a1e250df0949a8383bf85b5d3ffe0` (`origin/master`)
 → 城市时区 Asia/Shanghai 逐项安全确认  
 → start 冻结规则版本 7  
 → SCAN/PHOTO/QUIZ 证据（拒绝 GPS）+ 有符号计分  
-→ finish 写入 version=1  
+→ finish 写入 version=1；`scoreCenti` 不是 `originalRewardCenti`（缺原奖励来源时奖励为 0）  
 → `readback(fin-journey1)` 返回同一条结果；未知键 `EVENT_NOT_FOUND`，不新造请求  
-→ 争议恢复指向原完赛 requestId 与 `originalRewardCenti`，`rewardKind=EVENT_SCORE`
+→ 争议恢复指向原完赛 requestId 与封存的 `originalRewardCenti`，不把成绩当奖励  
+→ `persistOriginal` 交给既有 `IOrientScoringService.appendEntry`；缺 `TopicRouteSession` 为 `WAITING_SOURCE`  
+→ 新实例 `recoverFromLedger` 走 `OrientScoringMapper.selectEntryByIdem`，进程 Map 不是持久恢复
 
 ## 4. 明确未做
 
@@ -49,7 +51,9 @@ Base: `2ec68899099a1e250df0949a8383bf85b5d3ffe0` (`origin/master`)
 - 未跑生产 DDL、支付、发奖、真实 GPS
 - 未恢复随机匹配
 - 未用成长个人榜充当赛事榜
-- 真实 MySQL / Boot 启动 / HTTP 为 NOT_RUN（本车道只做隔离单测）
+- 原奖励 writer 仍 WAITING_SOURCE（`eventScore.originalRewardSource`）；finish 不再把 scoreCenti 抄进 originalRewardCenti
+- TopicRouteSession 仍由 Runtime/dot 供数；缺会话时 persist/recover 为 WAITING_SOURCE
+- 真实 MySQL / Boot 启动 / HTTP 为 NOT_RUN（本车道只做隔离单测；mapper mock 不是 DB）
 
 ## 5. 验证（已跑）
 

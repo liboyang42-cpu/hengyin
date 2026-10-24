@@ -86,7 +86,7 @@ class OrdinaryCityTeamEventJourneyTest {
         ResultVersion finished = scores.finish(run.id, "fin-journey1");
         assertEquals(1, finished.version);
         assertEquals(15000, finished.scoreCenti);
-        assertEquals(15000, finished.originalRewardCenti);
+        assertEquals(0, finished.originalRewardCenti);
         assertEquals(EventScoreVersioning.REWARD_KIND, finished.rewardKind);
         assertEquals(7L, finished.frozenRuleVersion);
         assertEquals(frozen.digest, finished.frozenRuleDigest);

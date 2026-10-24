@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 /**
  * 成绩争议与原奖励恢复。恢复指向完赛时封存的 originalRewardCenti / 原 requestId，
- * 不新造发奖请求，也不改成长个人榜。
+ * 不新造发奖请求，也不改成长个人榜。originalRewardCenti 不是 scoreCenti。
  */
 public final class EventResultDispute {
 

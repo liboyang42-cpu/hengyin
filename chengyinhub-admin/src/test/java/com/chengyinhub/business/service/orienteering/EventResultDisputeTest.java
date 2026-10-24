@@ -55,7 +55,7 @@ class EventResultDisputeTest {
     void restorePointsAtOriginalFinishRequestAndDoesNotInventANewAward() {
         EventResultDispute.Dispute dispute = disputes.open("fin-disp-01", "计分条目被误记", "dsp-01xxxx");
         assertEquals("fin-disp-01", dispute.originalResultRequestId);
-        assertEquals(7000, dispute.originalRewardCenti);
+        assertEquals(0, dispute.originalRewardCenti);
         assertEquals(EventScoreVersioning.REWARD_KIND, dispute.rewardKind);
         EventResultDispute.RestoreReceipt restore = disputes.restoreOriginalReward("dsp-01xxxx", "rst-01xxxx");
         assertEquals("fin-disp-01", restore.originalResultRequestId);
