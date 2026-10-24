@@ -48,6 +48,9 @@ import com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl;
 import com.chengyinhub.business.service.impl.CoopSettlementOriginalLedger;
 import com.chengyinhub.business.service.impl.TopicSettlementEvidenceService;
 import com.chengyinhub.business.service.support.CommittedBusinessNotice;
+import com.chengyinhub.business.service.support.CommittedOfficialNoticeService;
+import com.chengyinhub.business.mapper.CommittedOfficialNoticeWxMapper;
+import com.chengyinhub.business.task.CommittedOfficialNoticeTask;
 import com.chengyinhub.business.service.support.SettlementDebtLedger;
 import com.chengyinhub.business.service.ISystemNotificationIntentService;
 import com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper;
@@ -255,14 +258,16 @@ class SupportedStackServiceCyclesTest
     {
         List<Method> unexpectedCalls = new ArrayList<>();
         Class<?>[] services = Stream.concat(cycles().flatMap(cycle -> Arrays.stream(cycle.services())),
-                Stream.of(RefundServiceImpl.class, CoopSettlementClaimServiceImpl.class))
+                Stream.of(RefundServiceImpl.class, CoopSettlementClaimServiceImpl.class,
+                        CommittedOfficialNoticeService.class, CommittedOfficialNoticeTask.class))
                 .distinct().toArray(Class<?>[]::new);
         runner(unexpectedCalls, null, services).run(context -> {
             assertThat(context).hasNotFailed();
             for (Class<?> service : List.of(WechatVerifiedPaymentFactService.class,
                     WechatPaymentSdkGateway.class, CoopSettlementClaimServiceImpl.class,
                     CoopSettlementOriginalLedger.class, SettlementDebtLedger.class,
-                    CommittedBusinessNotice.class, ImServiceImpl.class, NotifyServiceImpl.class,
+                    CommittedBusinessNotice.class, CommittedOfficialNoticeService.class,
+                    CommittedOfficialNoticeTask.class, ImServiceImpl.class, NotifyServiceImpl.class,
                     InAppNotifyChannel.class))
             {
                 assertThat(context).hasSingleBean(service);
@@ -304,6 +309,19 @@ class SupportedStackServiceCyclesTest
             assertThat(transaction.getTransactionManager()).isSameAs(context.getBean(PlatformTransactionManager.class));
             Object channel = AopTestUtils.getUltimateTargetObject(context.getBean(InAppNotifyChannel.class));
             assertThat(ReflectionTestUtils.getField(channel, "imService")).isSameAs(context.getBean(ImServiceImpl.class));
+            Object official = AopTestUtils.getUltimateTargetObject(context.getBean(CommittedOfficialNoticeService.class));
+            assertThat(ReflectionTestUtils.getField(official, "mapper"))
+                    .isSameAs(context.getBean(CommittedOfficialNoticeWxMapper.class));
+            assertThat(ReflectionTestUtils.getField(official, "intents")).isSameAs(context.getBean(ImServiceImpl.class));
+            assertThat(ReflectionTestUtils.getField(official, "im")).isSameAs(context.getBean(ImServiceImpl.class));
+            assertThat(ReflectionTestUtils.getField(official, "wx")).isSameAs(context.getBean(WxSubscribeChannel.class));
+            assertThat(ReflectionTestUtils.getField(official, "executor"))
+                    .isSameAs(context.getBean("scheduledExecutorService"));
+            TransactionTemplate officialTransaction = (TransactionTemplate) ReflectionTestUtils.getField(official, "independent");
+            assertThat(officialTransaction).isNotNull();
+            assertThat(officialTransaction.getTransactionManager()).isSameAs(context.getBean(PlatformTransactionManager.class));
+            assertThat(ReflectionTestUtils.getField(context.getBean(CommittedOfficialNoticeTask.class), "notices"))
+                    .isSameAs(context.getBean(CommittedOfficialNoticeService.class));
             assertThat(unexpectedCalls).isEmpty();
         });
     }
@@ -325,6 +343,22 @@ class SupportedStackServiceCyclesTest
                     assertThat(context).hasFailed();
                     assertThat(context.getStartupFailure()).hasRootCauseInstanceOf(NoSuchBeanDefinitionException.class)
                             .hasStackTraceContaining(dependency.getName());
+                    assertThat(unexpectedCalls).isEmpty();
+                });
+    }
+
+    @Test
+    void realOfficialNoticeCannotStartWithoutItsQualifiedExistingScheduler()
+    {
+        List<Method> unexpectedCalls = new ArrayList<>();
+        runner(unexpectedCalls, null, CommittedOfficialNoticeService.class)
+                .withInitializer(context -> ((DefaultListableBeanFactory) context.getBeanFactory())
+                        .destroySingleton("scheduledExecutorService"))
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(context.getStartupFailure()).hasRootCauseInstanceOf(NoSuchBeanDefinitionException.class)
+                            .hasStackTraceContaining(ScheduledExecutorService.class.getName())
+                            .hasStackTraceContaining("scheduledExecutorService");
                     assertThat(unexpectedCalls).isEmpty();
                 });
     }
@@ -380,6 +414,14 @@ class SupportedStackServiceCyclesTest
             assembly.addAll(List.of(CoopSettlementClaimServiceImpl.class, CoopSettlementOriginalLedger.class,
                     TopicSettlementEvidenceService.class, SettlementDebtLedger.class,
                     WechatVerifiedPaymentFactService.class));
+        }
+        if (assembly.contains(CommittedOfficialNoticeTask.class))
+        {
+            assembly.add(CommittedOfficialNoticeService.class);
+        }
+        if (assembly.contains(CommittedOfficialNoticeService.class))
+        {
+            assembly.addAll(List.of(ImServiceImpl.class, WxSubscribeChannel.class));
         }
         if (assembly.contains(CmsRegistrationServiceImpl.class) || assembly.contains(MerchantChapterApplicationServiceImpl.class)
                 || assembly.contains(ChapterMerchantNodeServiceImpl.class) || assembly.contains(CommittedBusinessNotice.class))
