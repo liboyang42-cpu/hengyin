@@ -1,0 +1,30 @@
+D WP10 graph full-fixture candidate — actual checks only
+Public base 91962c94af463cbfe9b4d4406f9d88d269b097e4
+Base tree cba1815abaae3077103b9a9b01d27e0e9e4c81d0
+Original CmsTopic blob e7b9f22805e8d28292b46e36c68c62e5d5a1d41a
+Current ChapterFlowWriteServiceTest blob 1a14092e4aa90fa93addad0b7503fc4484ae4a74
+
+Root supplemented necessary reversible old-unit owner assembly authority; exact per-file chain/hash/reason inventory was recorded before applying 21 extra test/fixture files. User also explicitly confirmed the six private-seam/reader test paths.
+Actual source scope check:
+python3 docs/delivery/architecture-day/D/wp10-graph/verify_scope.py --base-root /tmp/d_graph_base919 --candidate-root /workspace/architecture-day-d-wp10-graph
+{"result": "PASS", "pinned_source_files": 15, "unowned_facade_bodies_exact": 168, "moved_bodies_matched": 25, "facade_orchestrations_restored": 4, "original_nine_class_cases": 141, "supplemental_fixture_files": 21, "supplemental_old_cases": 216, "builder_seam_cases": 9, "all_modified_file_old_cases_preserved": 366, "old_builder_class_removed": true, "java_mysql_executed": false}
+
+Six production files actually SHA256-compared equal to preserved prior c2f2f57 candidate. No seventh production file edited.
+Case names AND entire source recover exactly after removing only approved owner expressions / Builder identity-type substitutions; amounts, exceptions, order assertions and C M1 access assembly preserved.
+Publication-only wiring creates actual moved guard/reader, not an unrelated graph writer. Unused construction-only finance fixture excluded.
+Complete old inventory: 31 test classes / 366 ordinary @Test in modified files plus one shared fixture with no @Test. Unchanged fixture consumers (5 files / 15 declared cases, including an existing MySQL IT and a static resource-only comparator) are listed separately, not claimed executed.
+New unit3 and new MySQL32 / 62 exact scenarios are separate inventories, not execution results.
+
+Previously actually run lightweight command (comparator code unchanged this wave):
+python3 docs/delivery/architecture-day/D/wp10-graph/test_compare_equivalence.py
+Ran 11 tests in 0.027s
+OK
+These use synthetic JSON to check comparator rejection, NOT business/MySQL receipts.
+
+Not run: Java compile, original366/new3 unit, old/new MySQL32, MySQL cleanup, full Spring startup, HTTP, full CI, T14 graph equivalence, T15 rehearsals.
+No production/provider/DDL execution, credentials transfer, dependency changes, CI dispatch, registry/harness edits or baseline expansion.
+Root-reported copy94/25-pair/startup evidence stays scoped to its original source/run.
+
+The c2f2f57 local patch/identity and all earlier workspaces are separately preserved. Its public tree creation was denied twice before this new root supplemental authorization. No old denial is treated as current environment failure or proof of a new export result.
+Local worktree shell HEAD is public 2ec68899099a1e250df0949a8383bf85b5d3ffe0; only explicit exported files form the candidate delta on the complete public 919 tree. Never integrate the shell's whole diff.
+Final remote SHA/tree and local exact-patch preflight are reported in the delivery receipt; no remote success is claimed before tool readback.

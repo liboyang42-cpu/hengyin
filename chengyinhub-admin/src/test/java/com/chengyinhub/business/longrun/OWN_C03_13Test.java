@@ -94,9 +94,9 @@ class OWN_C03_13Test {
                     .when(nodes).insertCmsTopicNode(any(CmsTopicNode.class));
         }
         Object save() {
-            if (compiled) return ReflectionTestUtils.invokeMethod(service, "compileChapterFlow",
+            if (compiled) return ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.graph(service), "compileChapterFlow",
                     Collections.singletonList(chapter), 700L, "creator", 42L, false, false);
-            return ReflectionTestUtils.invokeMethod(service, "saveChaptersAndNodes",
+            return ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.graph(service), "saveChaptersAndNodes",
                     Collections.singletonList(chapter), 700L, "creator", 42L, false);
         }
     }
