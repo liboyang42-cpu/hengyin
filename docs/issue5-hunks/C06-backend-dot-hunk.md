@@ -213,3 +213,22 @@ BUILD SUCCESS
 ```
 
 App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
+
+## 12. Parent addendum 2026-10-23 21:13 America/Los_Angeles
+
+HEAD `d94ff575e`. Did not invent recoverOriginal. Did not publish, price, deduct stock, or issue rewards.
+
+`MerchantNpcDraftApprovalGate.projectFromDraftQuery` 只读既有 `AiThemeDraftRequestService.read`（capability `AiThemeDraftRequestService.read`）。缺端口抛 `WAITING_SOURCE`。未见草稿 id 回读为 Java null，不占 `privateScopes`、不占 publish 账。已读到的草稿同样不占这两处。
+
+父进程独立 surefire（`/tmp/hy-c06`，2026-10-24T04:13:01Z）：
+
+```
+Tests run: 16 -- MerchantNpcDraftApprovalGateTest
+Tests run: 5 -- C06AccountSwitchRestartIsolationTest
+Tests run: 4 -- MerchantNpcQualificationRevokeTest
+Tests run: 1 -- C06FirstJourneyIsolationTest
+Tests run: 26, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
