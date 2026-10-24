@@ -73,6 +73,7 @@ class WechatPayReadinessTest {
         RefundService refundAdapter = mock(RefundService.class);
         when(refundAdapter.create(any())).thenThrow(new RuntimeException("response lost"));
         WechatPayServiceImpl service = new WechatPayServiceImpl();
+        WechatPaymentIntentTestSupport.install(service, java.util.Map.of());
         ReflectionTestUtils.setField(service, "wxPayConfig", config);
         ReflectionTestUtils.setField(service, "refundService", refundAdapter);
 
@@ -144,9 +145,9 @@ class WechatPayReadinessTest {
                 "B2", "D2", new BigDecimal("21474836.48"), "openid", "测试", "wx_test_appid");
 
         org.junit.jupiter.api.Assertions.assertEquals("false", fractional.get("ok"));
-        org.junit.jupiter.api.Assertions.assertFalse(fractional.containsKey("ambiguous"));
+        org.junit.jupiter.api.Assertions.assertEquals("false", fractional.get("ambiguous"));
         org.junit.jupiter.api.Assertions.assertEquals("false", overflow.get("ok"));
-        org.junit.jupiter.api.Assertions.assertFalse(overflow.containsKey("ambiguous"));
+        org.junit.jupiter.api.Assertions.assertEquals("false", overflow.get("ambiguous"));
         verify(transferAdapter, never()).initiateBatchTransfer(any());
     }
 }

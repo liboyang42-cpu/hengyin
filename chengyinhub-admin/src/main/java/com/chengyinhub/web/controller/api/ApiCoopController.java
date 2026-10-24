@@ -134,10 +134,10 @@ public class ApiCoopController extends BaseController {
         Long inviteId = body == null ? null : toLong(body.get("inviteId"));
         if (inviteId == null) return error("缺少邀约");
         try {
-            java.util.Map<String, Object> prep = coopInviteService.prepareDeposit(inviteId, memberId);
             UmsMember payer = umsMemberService.selectUmsMemberById(memberId);
             String openid = payer == null ? null : payer.getWxOpenId();
             if (openid == null || openid.isEmpty()) return error("缺少微信身份,无法支付");
+            java.util.Map<String, Object> prep = coopInviteService.prepareDeposit(inviteId, memberId);
             java.util.Map<String, String> payParams = wechatPayService.createGenericOrder(
                     (String) prep.get("outTradeNo"),
                     (java.math.BigDecimal) prep.get("amount"),
@@ -161,6 +161,24 @@ public class ApiCoopController extends BaseController {
         Long payer = invite == null ? null : coopInviteService.depositOwedParty(invite);
         if (invite == null || !Integer.valueOf(0).equals(invite.getDelFlag()) || !memberId.equals(payer)) {
             return error("无权查看该保证金状态");
+        }
+        if (Integer.valueOf(1).equals(invite.getDepositStatus()) && invite.getDepositOutTradeNo() != null) {
+            try {
+                String originalNo = invite.getDepositOutTradeNo();
+                java.util.Map<String, String> facts = wechatPayService.queryOrderStatus(originalNo);
+                if (facts != null && originalNo.equals(facts.get("out_trade_no"))
+                        && "SUCCESS".equals(facts.get("trade_state")) && "CNY".equals(facts.get("currency"))
+                        && facts.get("total") != null && facts.get("total").matches("[0-9]{1,10}")) {
+                    // Gateway verifies original merchant/app/channel; domain keeps amount, transaction binding and CAS.
+                    if (!coopInviteService.markDepositPaid(originalNo, Long.valueOf(facts.get("total")), facts.get("transaction_id"))) {
+                        return new AjaxResult(409, "支付已成功，本地确认尚未完成，请稍后重试");
+                    }
+                    invite = coopInviteService.selectCoopInviteById(inviteId);
+                    if (invite == null) return new AjaxResult(409, "保证金状态暂不可确认");
+                }
+            } catch (Exception unknown) {
+                return new AjaxResult(409, "支付结果确认中，请稍后重试");
+            }
         }
         Integer status = invite.getDepositStatus();
         String paymentStatus;

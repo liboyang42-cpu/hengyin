@@ -88,6 +88,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Autowired
     private AlarmService alarmService;
 
+    @Autowired
+    private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IWechatPayService> paymentAttemptGateway;
+
     @org.springframework.beans.factory.annotation.Value("${chengyin.platform.member-id:100000}")
     private Long platformMemberId;
     private static final Logger logger = LoggerFactory.getLogger(CmsRegistrationServiceImpl.class);
@@ -2259,6 +2262,14 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             case "CLOSED": // 已关闭
             case "REVOKED": // 已撤销
             case "PAYERROR": // 支付失败
+                // Gateway notifications carry the exact provider attempt. Hold the same business lock
+                // as alias creation until this inbox mutation commits; old CLOSED cannot close a new attempt.
+                if ("CLOSED".equals(tradeState)
+                        && (resultMap.get("wx_out_trade_no") == null || paymentAttemptGateway == null
+                            || !paymentAttemptGateway.getObject()
+                            .lockPaymentAttemptForUpdate(outTradeNo, resultMap.get("wx_out_trade_no")))) {
+                    return registrationPaymentCallbackFailure(outTradeNo, "payment_attempt_conflict");
+                }
                 Date failedAt = new Date();
                 if (cmsRegistrationMapper.claimPaymentFailure(registration.getId(), failedAt) == 0) {
                     CmsRegistration current = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(

@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "root_parent": "cc91b0845e3abd4a2060d54a857c8c179bd22d4f",
+  "candidate": "ae7b93f62bb62385bed8dc4110a85e4c0f315a8b",
+  "candidate_paths": 32,
+  "byte_exact": 29,
+  "explicit_compositions": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/WechatPayCallbackHttpAckTest.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java"
+  ],
+  "http_fixture_only": "Header-name comparison is case-insensitive, matching HTTP and master #586; SUCCESS/204 assertion and production unchanged.",
+  "original_cash_fact_migration_unchanged": true,
+  "java_db_ci": "NOT_RUN for current composition; earlier independent CI does not prove this candidate",
+  "all_complete": false
+}

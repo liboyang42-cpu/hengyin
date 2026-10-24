@@ -1,0 +1,455 @@
+package com.chengyinhub.business.it;
+
+import com.chengyinhub.business.domain.WxPaymentCallbackInbox;
+import com.chengyinhub.business.mapper.CmsPointsSettingMapper;
+import com.chengyinhub.business.mapper.CmsRegistrationMapper;
+import com.chengyinhub.business.mapper.CmsRegistrationScanMapper;
+import com.chengyinhub.business.mapper.UmsMemberMapper;
+import com.chengyinhub.business.mapper.UmsMemberPointsDetailMapper;
+import com.chengyinhub.business.mapper.WxPaymentCallbackInboxMapper;
+import com.chengyinhub.business.service.IMerchantCommerceService;
+import com.chengyinhub.business.service.IWechatPayService;
+import com.chengyinhub.business.service.MysqlIntegrationTestConfig;
+import com.chengyinhub.business.service.impl.AlarmService;
+import com.chengyinhub.business.service.impl.CmsPointsSettingServiceImpl;
+import com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl;
+import com.chengyinhub.business.service.impl.SettlementEntryServiceImpl;
+import com.chengyinhub.business.service.impl.WechatPayServiceImpl;
+import com.chengyinhub.business.service.impl.WxPaymentCallbackClaimService;
+import com.chengyinhub.business.service.impl.WxPaymentCallbackInboxServiceImpl;
+import com.chengyinhub.business.service.impl.WxPaymentCallbackMutationService;
+import com.chengyinhub.business.service.support.CommittedBusinessNotice;
+import com.chengyinhub.common.config.WxPayConfig;
+import com.wechat.pay.java.core.cipher.AeadAesCipher;
+import com.wechat.pay.java.core.exception.ServiceException;
+import com.wechat.pay.java.core.notification.NotificationParser;
+import com.wechat.pay.java.core.notification.RSAPublicKeyNotificationConfig;
+import com.wechat.pay.java.service.payments.jsapi.JsapiService;
+import com.wechat.pay.java.service.payments.model.Transaction;
+import com.wechat.pay.java.service.payments.model.TransactionAmount;
+import org.apache.ibatis.executor.Executor;
+import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.plugin.Interceptor;
+import org.apache.ibatis.plugin.Intercepts;
+import org.apache.ibatis.plugin.Invocation;
+import org.apache.ibatis.plugin.Signature;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.mybatis.spring.SqlSessionFactoryBean;
+import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.beans.factory.support.StaticListableBeanFactory;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
+import org.springframework.transaction.interceptor.TransactionInterceptor;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import tools.jackson.databind.json.JsonMapper;
+
+import java.nio.charset.StandardCharsets;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+/** Original schema/XML + real registration/inbox/claim/mutation/proxies + signed SDK parser. */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class RegistrationCallbackIntentMySqlIT {
+    private static final String BUSINESS_NO = "REG_CALLBACK_INTENT_11";
+    private static final String MERCHANT = "merchant-callback-it";
+    private static final String SERIAL = "TEST-CALLBACK-INTENT-KEY";
+    private static final String[] TABLES = {"cms_registration", "oms_ticket", "ums_member",
+            "ums_member_points_detail", "cms_points_setting", "cms_topic_node", "cms_member_template",
+            "cms_registration_scan", "registration_entitlement", "cms_topic"};
+    private final String suite = "bregcb_" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+    private final JsonMapper json = JsonMapper.builder().build();
+    private final Map<String, Transaction> providerOrders = new HashMap<>();
+    private final AtomicReference<String> activeHash = new AtomicReference<>();
+    private final AtomicInteger scheduledNotices = new AtomicInteger();
+    private DriverManagerDataSource source;
+    private JdbcTemplate db;
+    private DataSourceTransactionManager transactions;
+    private SqlSessionTemplate sql;
+    private final AtomicCommitProbe probe = new AtomicCommitProbe();
+    private WechatPayServiceImpl gateway;
+    private JsapiService sdk;
+    private KeyPair keys;
+    private String apiV3Key;
+
+    @BeforeAll
+    void originalSchemaAndXml() throws Exception {
+        // This suite is an explicit root CI selection, never a default local or production connection.
+        assertEquals("github-hosted", System.getenv("RUNNER_ENVIRONMENT"));
+        assertEquals("1", System.getenv("B_PAYMENT_INTENT_DDL_APPROVED"));
+        assertTrue(List.of("127.0.0.1", "localhost").contains(MybatisItDatabase.host()));
+        source = P0AcceptanceSchema.dataSource(suite);
+        db = new JdbcTemplate(source);
+        assertEquals(MybatisItDatabase.databaseName(suite), db.queryForObject("SELECT DATABASE()", String.class));
+        assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(db.queryForObject("SELECT VERSION()", String.class)));
+        // Original repository DDL verbatim; no hand-created domain tables or missing-column fallback.
+        P0AcceptanceSchema.baseTables(db, TABLES);
+        P0AcceptanceSchema.migrations(source,
+                "migration_app_open_id.sql",
+                "migration_20260930_registration_first_successful_scan.sql",
+                "migration_wx_payment_callback_inbox_outbox_20260725.sql",
+                "migration_20261023_wx_pay_order_intent.sql");
+        SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
+        factory.setDataSource(source);
+        factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
+        factory.setMapperLocations(List.of("CmsRegistrationMapper", "UmsMemberMapper", "UmsMemberPointsDetailMapper",
+                        "CmsPointsSettingMapper", "CmsRegistrationScanMapper", "WxPaymentCallbackInboxMapper").stream()
+                .map(name -> new ClassPathResource("mapper/business/" + name + ".xml"))
+                .toArray(ClassPathResource[]::new));
+        factory.setPlugins(probe);
+        sql = new SqlSessionTemplate(factory.getObject());
+        transactions = new DataSourceTransactionManager(source);
+    }
+
+    @BeforeEach
+    void seedAndWireRealCallbackServices() throws Exception {
+        for (String table : TABLES) db.update("DELETE FROM " + table); // Only this random owned scratch schema.
+        for (String table : List.of("wx_payment_callback_inbox", "wx_payment_callback_outbox", "wx_pay_order_intent"))
+            db.update("DELETE FROM " + table);
+        providerOrders.clear(); activeHash.set(null); scheduledNotices.set(0); probe.reset();
+        db.update("INSERT INTO ums_member(id,point,balance,status,del_flag) VALUES(7,80,12.34,1,0)");
+        db.update("INSERT INTO cms_topic(id,name) VALUES(23,'Callback transaction fixture')");
+        db.update("INSERT INTO oms_ticket(id,remaining_inventory) VALUES(9,5)");
+        db.update("INSERT INTO cms_member_template(id,member_id,title,validation_method,del_flag) VALUES(90,8,'Scan fixture',1,0)");
+        db.update("INSERT INTO cms_topic_node(id,topic_id,template_id,name) VALUES(91,23,90,'Checkpoint')");
+        db.update("INSERT INTO cms_points_setting(id,title,value,type,event_type,status,del_flag) VALUES"
+                + "(2,'First registration',5,1,2,1,0),(3,'Participation',10,1,3,1,0)");
+        db.update("INSERT INTO cms_registration(id,registration_no,owner_type,owner_id,ticket_id,ticket_price,"
+                + "member_id,order_num,original_amount,total_amount,point_used,point_payment_amount,payable_amount,"
+                + "wechat_payment_amount,fee_platform_rate,payment_status,registration_status,pay_expire_time,purchase_kind,points_returned)"
+                + " VALUES(11,?,1,23,9,10.20,7,1,10.20,10.20,20,0.20,10.00,10.00,0.1234,1,1,DATE_ADD(NOW(),INTERVAL 1 HOUR),1,0)", BUSINESS_NO);
+        db.update("INSERT INTO registration_entitlement(registration_id,chapter_id,topic_id,status) VALUES(11,35,23,0)");
+
+        sdk = mock(JsapiService.class);
+        ServiceException missing = mock(ServiceException.class);
+        when(missing.getHttpStatusCode()).thenReturn(404);
+        when(missing.getErrorCode()).thenReturn("ORDER_NOT_EXIST");
+        when(sdk.queryOrderByOutTradeNo(any())).thenAnswer(call -> {
+            assertFalse(TransactionSynchronizationManager.isActualTransactionActive(), "official query must be outside callback mutation");
+            var request = (com.wechat.pay.java.service.payments.jsapi.model.QueryOrderByOutTradeNoRequest)call.getArgument(0);
+            assertEquals(MERCHANT, request.getMchid());
+            Transaction original = providerOrders.get(request.getOutTradeNo());
+            if (original == null) throw missing;
+            return original;
+        });
+        gateway = new WechatPayServiceImpl();
+        WxPayConfig config = mock(WxPayConfig.class);
+        when(config.getMerchantId()).thenReturn(MERCHANT);
+        ReflectionTestUtils.setField(gateway, "wxPayConfig", config);
+        ReflectionTestUtils.setField(gateway, "paymentIntentJdbc", db);
+        ReflectionTestUtils.setField(gateway, "paymentIntentTransactions", transactions);
+        ReflectionTestUtils.setField(gateway, "jsapiService", sdk);
+        ReflectionTestUtils.setField(gateway, "alarmService", mock(AlarmService.class));
+        IMerchantCommerceService commerce = mock(IMerchantCommerceService.class);
+        when(commerce.supportsOutTradeNo(anyString())).thenReturn(false); // This fixture is a registration, not commerce.
+        ReflectionTestUtils.setField(gateway, "merchantCommerceService", commerce);
+        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA"); generator.initialize(2048);
+        keys = generator.generateKeyPair(); apiV3Key = UUID.randomUUID().toString().replace("-", "");
+        ReflectionTestUtils.setField(gateway, "notificationParser", new NotificationParser(
+                new RSAPublicKeyNotificationConfig.Builder().publicKey(keys.getPublic())
+                        .publicKeyId(SERIAL).apiV3Key(apiV3Key).build()));
+
+        WxPaymentCallbackInboxMapper inboxMapper = sql.getMapper(WxPaymentCallbackInboxMapper.class);
+        WxPaymentCallbackClaimService claims = new WxPaymentCallbackClaimService();
+        ReflectionTestUtils.setField(claims, "mapper", inboxMapper);
+        WxPaymentCallbackMutationService mutations = new WxPaymentCallbackMutationService();
+        ReflectionTestUtils.setField(mutations, "mapper", inboxMapper);
+        WxPaymentCallbackInboxServiceImpl inbox = new WxPaymentCallbackInboxServiceImpl();
+        ReflectionTestUtils.setField(inbox, "mapper", inboxMapper);
+        ReflectionTestUtils.setField(inbox, "claimService", transactional(claims));
+        ReflectionTestUtils.setField(inbox, "mutationService", transactional(mutations));
+        ReflectionTestUtils.setField(inbox, "alarmService", mock(AlarmService.class));
+        CmsRegistrationServiceImpl registration = new CmsRegistrationServiceImpl();
+        ReflectionTestUtils.setField(registration, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
+        ReflectionTestUtils.setField(registration, "umsMemberMapper", sql.getMapper(UmsMemberMapper.class));
+        ReflectionTestUtils.setField(registration, "umsMemberPointsDetailMapper", sql.getMapper(UmsMemberPointsDetailMapper.class));
+        ReflectionTestUtils.setField(registration, "cmsRegistrationScanMapper", sql.getMapper(CmsRegistrationScanMapper.class));
+        ReflectionTestUtils.setField(registration, "alarmService", mock(AlarmService.class));
+        ReflectionTestUtils.setField(registration, "wxPaymentCallbackInboxService", transactional(inbox));
+        CmsPointsSettingServiceImpl settings = new CmsPointsSettingServiceImpl();
+        ReflectionTestUtils.setField(settings, "cmsPointsSettingMapper", sql.getMapper(CmsPointsSettingMapper.class));
+        ReflectionTestUtils.setField(registration, "cmsPointsSettingService", transactional(settings));
+        // Original owner_type=1 policy defers merchant accrual until verification; this is the real service, not a success stub.
+        ReflectionTestUtils.setField(registration, "settlementEntryService", transactional(new SettlementEntryServiceImpl()));
+        StaticListableBeanFactory beans = new StaticListableBeanFactory(); beans.addBean("gateway", gateway);
+        ReflectionTestUtils.setField(registration, "paymentAttemptGateway", beans.getBeanProvider(IWechatPayService.class));
+        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
+        when(executor.schedule(any(Runnable.class), eq(10L), eq(TimeUnit.MILLISECONDS))).thenAnswer(call -> {
+            assertVisibleOutside(2, WxPaymentCallbackInbox.STATE_DONE, 95, 2, 1);
+            scheduledNotices.incrementAndGet();
+            return mock(ScheduledFuture.class); // Do not execute QR/HTTP effects; only verify post-commit enqueue.
+        });
+        ReflectionTestUtils.setField(registration, "committedBusinessNotice", new CommittedBusinessNotice(
+                mock(com.chengyinhub.business.service.INotifyService.class), mock(AlarmService.class), transactions, executor));
+        ReflectionTestUtils.setField(gateway, "registrationService", transactional(registration));
+        assertEquals(BUSINESS_NO, freeze("wx-mini", "JSAPI"));
+        clearInvocations(sdk); // First preflight 404 is separate from the callback observations below.
+    }
+
+    @AfterAll
+    void removeOnlyOwnedScratch() {
+        if (db == null) return;
+        assertTrue(MybatisItDatabase.databaseName(suite).matches("chengyin_mybatis_bregcb_[a-z0-9_]+"));
+        P0AcceptanceSchema.drop(db, suite);
+    }
+
+    @Test
+    void signedSuccessCommitsRegistrationLedgerScansAndDoneTogetherAndDuplicateDoesNotRebook() throws Exception {
+        providerOrders.put(BUSINESS_NO, original(BUSINESS_NO, "wx-mini", "JSAPI", "SUCCESS", "WX-SUCCESS"));
+        SignedNotification signed = notification(BUSINESS_NO, "wx-mini", "JSAPI", "SUCCESS", "WX-SUCCESS", 1000);
+        assertEquals("FAIL", deliver(new SignedNotification(signed.body() + " ", signed.headers()), "WX-SUCCESS", "SUCCESS"));
+        verifyNoInteractions(sdk);
+        assertEquals(0, number("SELECT COUNT(*) FROM wx_payment_callback_inbox"));
+        assertPendingResources();
+        SignedNotification wrongAmount = notification(BUSINESS_NO, "wx-mini", "JSAPI", "SUCCESS", "WX-SUCCESS", 999);
+        assertEquals("FAIL", deliver(wrongAmount, "WX-SUCCESS", "SUCCESS"));
+        assertEquals(0, number("SELECT COUNT(*) FROM wx_payment_callback_inbox"));
+        assertPendingResources();
+        SignedNotification success = notification(BUSINESS_NO, "wx-mini", "JSAPI", "SUCCESS", "WX-SUCCESS", 1000);
+        assertEquals("SUCCESS", deliver(success, "WX-SUCCESS", "SUCCESS"));
+        assertEquals(1, probe.doneProbes.get());
+        assertEquals(1, scheduledNotices.get());
+        assertCompleted("WX-SUCCESS", 1);
+        long rowId = inboxNumber("id"), fence = inboxNumber("fence_token");
+        assertEquals("SUCCESS", deliver(success, "WX-SUCCESS", "SUCCESS"));
+        assertCompleted("WX-SUCCESS", 1);
+        assertEquals(rowId, inboxNumber("id")); assertEquals(fence, inboxNumber("fence_token"));
+        assertEquals(1, probe.doneProbes.get()); assertEquals(1, scheduledNotices.get());
+        verify(sdk, never()).closeOrder(any());
+    }
+
+    @Test
+    void exceptionAfterBusinessAndDoneSqlRollsBothBackAndSameInboxIdentityRecovers() throws Exception {
+        providerOrders.put(BUSINESS_NO, original(BUSINESS_NO, "wx-mini", "JSAPI", "SUCCESS", "WX-RETRY"));
+        SignedNotification success = notification(BUSINESS_NO, "wx-mini", "JSAPI", "SUCCESS", "WX-RETRY", 1000);
+        probe.failAfterDone.set(true);
+        assertEquals("FAIL", deliver(success, "WX-RETRY", "SUCCESS"));
+        assertEquals(1, probe.doneProbes.get(), "injected only after actual business and actual DONE UPDATE ran");
+        assertPendingResources();
+        assertEquals(WxPaymentCallbackInbox.STATE_RETRYABLE, inboxNumber("state"));
+        assertEquals(1, inboxNumber("attempt_count")); assertEquals(1, inboxNumber("fence_token"));
+        assertEquals(0, scheduledNotices.get());
+        long originalId = inboxNumber("id");
+        assertEquals("SUCCESS", deliver(success, "WX-RETRY", "SUCCESS"));
+        assertCompleted("WX-RETRY", 1);
+        assertEquals(originalId, inboxNumber("id"));
+        assertEquals(2, inboxNumber("attempt_count")); assertEquals(2, inboxNumber("fence_token"));
+        assertEquals(11, inboxNumber("biz_id")); assertEquals(1, inboxNumber("biz_type"));
+        assertEquals("SUCCESS", db.queryForObject("SELECT event_type FROM wx_payment_callback_inbox WHERE id=?", String.class, originalId));
+        assertEquals(2, probe.doneProbes.get()); assertEquals(1, scheduledNotices.get());
+        assertEquals("SUCCESS", deliver(success, "WX-RETRY", "SUCCESS"));
+        assertCompleted("WX-RETRY", 1);
+        assertEquals(2, inboxNumber("fence_token")); assertEquals(1, scheduledNotices.get());
+    }
+
+    @Test
+    void oldSignedClosedW1CannotCloseOrReleaseNewW2AndLaterW2SuccessStaysPaid() throws Exception {
+        providerOrders.put(BUSINESS_NO, original(BUSINESS_NO, "wx-mini", "JSAPI", "CLOSED", "WX-OLD"));
+        assertEquals("CLOSED", gateway.queryOrderStatus(BUSINESS_NO).get("trade_state"));
+        String originalHash = db.queryForObject("SELECT request_hash FROM wx_pay_order_intent WHERE out_trade_no=?", String.class, BUSINESS_NO);
+        String w2 = freeze("wx-app", "APP");
+        assertNotEquals(BUSINESS_NO, w2); assertTrue(w2.matches("WXP[0-9a-f]{29}"));
+        providerOrders.put(w2, original(w2, "wx-app", "APP", "SUCCESS", "WX-NEW"));
+        SignedNotification old = notification(BUSINESS_NO, "wx-mini", "JSAPI", "CLOSED", "WX-OLD", 1000);
+        assertEquals("FAIL", deliver(old, "WX-OLD", "CLOSED"));
+        assertPendingResources();
+        assertEquals(WxPaymentCallbackInbox.STATE_RETRYABLE, inboxNumber("state"));
+        assertEquals(0, probe.doneProbes.get());
+        assertEquals(0, number("SELECT COUNT(*) FROM wx_pay_order_intent WHERE out_trade_no='" + w2 + "' AND closed_confirmed_at IS NOT NULL"));
+        SignedNotification success = notification(w2, "wx-app", "APP", "SUCCESS", "WX-NEW", 1000);
+        assertEquals("SUCCESS", deliver(success, "WX-NEW", "SUCCESS"));
+        assertCompleted("WX-NEW", 2);
+        assertEquals("FAIL", deliver(old, "WX-OLD", "CLOSED"));
+        assertEquals(WxPaymentCallbackInbox.STATE_RETRYABLE, inboxNumber("state"));
+        assertEquals(2, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals("WX-NEW", db.queryForObject("SELECT transaction_id FROM cms_registration WHERE id=11", String.class));
+        assertPaidResources();
+        assertEquals(originalHash, db.queryForObject("SELECT request_hash FROM wx_pay_order_intent WHERE out_trade_no=?", String.class, BUSINESS_NO));
+        assertEquals("wx-mini", db.queryForObject("SELECT appid FROM wx_pay_order_intent WHERE out_trade_no=?", String.class, BUSINESS_NO));
+        assertEquals("wx-app", db.queryForObject("SELECT appid FROM wx_pay_order_intent WHERE out_trade_no=?", String.class, w2));
+        assertEquals(2, number("SELECT COUNT(*) FROM wx_pay_order_intent"));
+        String newHash = WxPaymentCallbackInboxServiceImpl.sha256Hex("PAY:WX-NEW:SUCCESS");
+        assertEquals(WxPaymentCallbackInbox.STATE_DONE, db.queryForObject(
+                "SELECT state FROM wx_payment_callback_inbox WHERE notify_hash=UNHEX(?)", Integer.class, newHash));
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM wx_pay_order_intent WHERE out_trade_no=? AND closed_confirmed_at IS NOT NULL", Integer.class, w2));
+        assertEquals(1, probe.doneProbes.get()); assertEquals(1, scheduledNotices.get());
+        verify(sdk, never()).closeOrder(any());
+    }
+
+    private String freeze(String appid, String channel) {
+        return ReflectionTestUtils.invokeMethod(gateway, "freezePaymentIntent", BUSINESS_NO, MERCHANT,
+                appid, channel, "CNY", 1000, "JSAPI".equals(channel) ? "openid-original" : "",
+                "registration callback integration", "https://example.test/notify");
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T transactional(T target) {
+        ProxyFactory factory = new ProxyFactory(target); factory.setProxyTargetClass(true);
+        factory.addAdvice(new TransactionInterceptor(transactions, new AnnotationTransactionAttributeSource()));
+        return (T)factory.getProxy();
+    }
+
+    private String deliver(SignedNotification notification, String transactionId, String state) throws Exception {
+        activeHash.set(WxPaymentCallbackInboxServiceImpl.sha256Hex("PAY:" + transactionId + ":" + state));
+        probe.businessConnection.set(null);
+        return json.readTree(gateway.handlePayCallback(notification.body(), notification.headers())).path("code").asText();
+    }
+
+    private long number(String query) { return db.queryForObject(query, Long.class); }
+    private long inboxNumber(String column) {
+        assertTrue(List.of("id", "state", "fence_token", "attempt_count", "biz_type", "biz_id").contains(column));
+        return db.queryForObject("SELECT " + column + " FROM wx_payment_callback_inbox WHERE notify_hash=UNHEX(?)", Long.class, activeHash.get());
+    }
+
+    private void assertPendingResources() {
+        assertEquals(1, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(1, number("SELECT registration_status FROM cms_registration WHERE id=11"));
+        assertNull(db.queryForObject("SELECT transaction_id FROM cms_registration WHERE id=11", String.class));
+        assertEquals(80, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(0, number("SELECT COUNT(*) FROM ums_member_points_detail"));
+        assertEquals(0, number("SELECT COUNT(*) FROM cms_registration_scan"));
+        assertReservedInventoryAndOwner();
+    }
+
+    private void assertPaidResources() {
+        assertEquals(95, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(2, number("SELECT COUNT(*) FROM ums_member_points_detail"));
+        assertEquals(1, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE reward_business_key='registration:2:0' AND change_points=5 AND member_id=7"));
+        assertEquals(1, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE reward_business_key='registration:3:11' AND change_points=10 AND member_id=7"));
+        assertEquals(1, number("SELECT COUNT(*) FROM cms_registration_scan WHERE registration_id=11 AND member_id=8 AND template_id=90 AND status=0"));
+        assertReservedInventoryAndOwner();
+    }
+
+    private void assertReservedInventoryAndOwner() {
+        assertEquals(5, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
+        assertEquals(1, number("SELECT COUNT(*) FROM registration_entitlement WHERE registration_id=11 AND chapter_id=35 AND topic_id=23 AND status=0"));
+        assertEquals(1, number("SELECT COUNT(*) FROM registration_entitlement"));
+        assertEquals(1, number("SELECT COUNT(*) FROM cms_registration WHERE id=11 AND member_id=7 AND owner_type=1 AND owner_id=23"
+                + " AND ticket_id=9 AND wechat_payment_amount=10.00 AND fee_platform_rate=0.1234 AND point_used=20 AND points_returned=0"));
+        assertEquals("12.34", db.queryForObject("SELECT balance FROM ums_member WHERE id=7", java.math.BigDecimal.class).toPlainString());
+    }
+
+    private void assertCompleted(String transactionId, long inboxRows) {
+        assertEquals(2, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(2, number("SELECT registration_status FROM cms_registration WHERE id=11"));
+        assertEquals(transactionId, db.queryForObject("SELECT transaction_id FROM cms_registration WHERE id=11", String.class));
+        assertEquals(WxPaymentCallbackInbox.STATE_DONE, inboxNumber("state"));
+        assertEquals(inboxRows, number("SELECT COUNT(*) FROM wx_payment_callback_inbox"));
+        assertPaidResources();
+    }
+
+    /** A raw new connection (not DataSourceUtils) must see the prior committed snapshot while mutation is open. */
+    private void assertVisibleOutside(int payment, int inboxState, int points, int rewardRows, int scanRows) throws Exception {
+        try (Connection observer = source.getConnection(); PreparedStatement statement = observer.prepareStatement(
+                "SELECT payment_status,(SELECT state FROM wx_payment_callback_inbox WHERE notify_hash=UNHEX(?)),"
+                        + "(SELECT point FROM ums_member WHERE id=7),(SELECT COUNT(*) FROM ums_member_points_detail),"
+                        + "(SELECT COUNT(*) FROM cms_registration_scan),CONNECTION_ID() FROM cms_registration WHERE id=11")) {
+            assertTrue(observer.getAutoCommit());
+            statement.setString(1, activeHash.get());
+            try (ResultSet rows = statement.executeQuery()) {
+                assertTrue(rows.next()); assertEquals(payment, rows.getInt(1)); assertEquals(inboxState, rows.getInt(2));
+                assertEquals(points, rows.getInt(3)); assertEquals(rewardRows, rows.getInt(4)); assertEquals(scanRows, rows.getInt(5));
+                assertNotEquals(probe.businessConnection.get(), Long.valueOf(rows.getLong(6)), "observer must use a different physical connection");
+            }
+        }
+    }
+
+    @Intercepts(@Signature(type=Executor.class, method="update", args={MappedStatement.class, Object.class}))
+    private final class AtomicCommitProbe implements Interceptor {
+        final AtomicBoolean failAfterDone = new AtomicBoolean();
+        final AtomicInteger doneProbes = new AtomicInteger();
+        final AtomicReference<Long> businessConnection = new AtomicReference<>();
+        void reset() { failAfterDone.set(false); doneProbes.set(0); businessConnection.set(null); }
+        @Override public Object intercept(Invocation invocation) throws Throwable {
+            String id = ((MappedStatement)invocation.getArgs()[0]).getId();
+            if (id.equals(CmsRegistrationMapper.class.getName() + ".claimPaymentSuccess")) {
+                assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+                Object result = invocation.proceed();
+                if (Integer.valueOf(1).equals(result)) {
+                    businessConnection.set(mappedConnectionId(invocation));
+                    assertEquals(businessConnection.get(), db.queryForObject("SELECT CONNECTION_ID()", Long.class));
+                }
+                return result;
+            }
+            if (!id.equals(WxPaymentCallbackInboxMapper.class.getName() + ".markDone")) return invocation.proceed();
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+            assertNotNull(businessConnection.get());
+            assertEquals(businessConnection.get(), mappedConnectionId(invocation));
+            assertEquals(businessConnection.get(), db.queryForObject("SELECT CONNECTION_ID()", Long.class));
+            assertEquals(2, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+            assertEquals(WxPaymentCallbackInbox.STATE_PROCESSING, inboxNumber("state"));
+            assertPaidResources();
+            assertVisibleOutside(1, WxPaymentCallbackInbox.STATE_PROCESSING, 80, 0, 0);
+            Object updated = invocation.proceed();
+            assertEquals(1, updated);
+            assertEquals(WxPaymentCallbackInbox.STATE_DONE, inboxNumber("state"));
+            assertVisibleOutside(1, WxPaymentCallbackInbox.STATE_PROCESSING, 80, 0, 0);
+            doneProbes.incrementAndGet();
+            if (failAfterDone.getAndSet(false)) throw new IllegalStateException("test fault after business and DONE SQL, before commit");
+            return updated;
+        }
+        private Long mappedConnectionId(Invocation invocation) throws Exception {
+            Connection mappedConnection = ((Executor)invocation.getTarget()).getTransaction().getConnection();
+            try (var statement = mappedConnection.createStatement(); var rows = statement.executeQuery("SELECT CONNECTION_ID()")) {
+                assertTrue(rows.next());
+                return rows.getLong(1);
+            }
+        }
+    }
+
+    private Transaction original(String no, String appid, String channel, String state, String transactionId) {
+        Transaction tx = new Transaction(); tx.setOutTradeNo(no); tx.setMchid(MERCHANT); tx.setAppid(appid);
+        tx.setTradeType(Transaction.TradeTypeEnum.valueOf(channel)); tx.setTradeState(Transaction.TradeStateEnum.valueOf(state));
+        tx.setTransactionId(transactionId);
+        TransactionAmount amount = new TransactionAmount(); amount.setTotal(1000); amount.setCurrency("CNY"); tx.setAmount(amount);
+        return tx;
+    }
+
+    private SignedNotification notification(String no, String appid, String channel, String state, String transactionId, int fen) throws Exception {
+        String plaintext = json.writeValueAsString(Map.of("out_trade_no", no, "appid", appid, "mchid", MERCHANT,
+                "trade_type", channel, "trade_state", state, "transaction_id", transactionId,
+                "amount", Map.of("total", fen, "currency", "CNY")));
+        String nonce = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        String ciphertext = new AeadAesCipher(apiV3Key.getBytes(StandardCharsets.UTF_8)).encrypt(
+                "transaction".getBytes(StandardCharsets.UTF_8), nonce.getBytes(StandardCharsets.UTF_8), plaintext.getBytes(StandardCharsets.UTF_8));
+        String body = json.writeValueAsString(Map.of("id", "test-event", "event_type", "TRANSACTION." + state,
+                "create_time", "2026-10-23T00:00:00Z", "resource_type", "encrypt-resource",
+                "resource", Map.of("original_type", "transaction", "algorithm", "AEAD_AES_256_GCM",
+                        "ciphertext", ciphertext, "associated_data", "transaction", "nonce", nonce)));
+        String timestamp = Long.toString(System.currentTimeMillis() / 1000);
+        String headerNonce = UUID.randomUUID().toString().replace("-", "");
+        java.security.Signature signer = java.security.Signature.getInstance("SHA256withRSA");
+        signer.initSign(keys.getPrivate());
+        signer.update((timestamp + "\n" + headerNonce + "\n" + body + "\n").getBytes(StandardCharsets.UTF_8));
+        return new SignedNotification(body, Map.of("wechatpay-serial", SERIAL, "wechatpay-timestamp", timestamp,
+                "wechatpay-nonce", headerNonce, "wechatpay-signature", Base64.getEncoder().encodeToString(signer.sign())));
+    }
+
+    private record SignedNotification(String body, Map<String, String> headers) { }
+}

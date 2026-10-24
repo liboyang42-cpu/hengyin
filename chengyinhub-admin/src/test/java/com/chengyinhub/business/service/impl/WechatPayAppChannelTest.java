@@ -81,6 +81,7 @@ class WechatPayAppChannelTest {
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.isWechatPayEnabled()).thenReturn(true);
         when(config.getAppAppid()).thenReturn("wx_native_app");
+        when(config.getMerchantId()).thenReturn("1900000109");
         when(config.getNotifyUrl()).thenReturn("https://example.test/pay/notify");
         WechatPayServiceImpl service = new WechatPayServiceImpl();
         ReflectionTestUtils.setField(service, "wxPayConfig", config);
@@ -169,7 +170,7 @@ class WechatPayAppChannelTest {
         assertFalse(service.isReady());
         PaymentPreorderException ex = assertThrows(PaymentPreorderException.class,
                 () -> service.createAppOrder(registration()));
-        // 必须是明确失败:调用方据此释放支付占用;若误判为「结果未知」会把订单挂在 PAYING。
+        // 本次未发请求可明确拒绝；领域仍须保留原号历史，不能据此释放之前的 UNKNOWN。
         assertFalse(ex.isResultUncertain(),
                 "支付未就绪属于明确失败，不能当作结果未知挂起订单");
     }
@@ -221,8 +222,10 @@ class WechatPayAppChannelTest {
      * 单独判它非空的原因:只看 isReady() 会让 App 通道在未初始化时空指针。
      */
     private void markServiceReady(WechatPayServiceImpl service) {
+        WechatPaymentIntentTestSupport.install(service, java.util.Map.of(
+                "DEP19T1000", new BigDecimal("50.00"), "R-APP-0001", new BigDecimal("69.00")));
         ReflectionTestUtils.setField(service, "jsapiService",
-                mock(com.wechat.pay.java.service.payments.jsapi.JsapiService.class));
+                WechatPaymentIntentTestSupport.absentOrderSdk());
         ReflectionTestUtils.setField(service, "jsapiServiceExtension",
                 mock(com.wechat.pay.java.service.payments.jsapi.JsapiServiceExtension.class));
         ReflectionTestUtils.setField(service, "refundService",

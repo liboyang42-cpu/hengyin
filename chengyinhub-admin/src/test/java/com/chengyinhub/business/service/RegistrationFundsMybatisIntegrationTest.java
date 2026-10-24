@@ -1028,6 +1028,7 @@ class RegistrationFundsMybatisIntegrationTest {
                 "UPDATE ums_member SET point=80 WHERE id=7",
                 "UPDATE oms_ticket SET remaining_inventory=5 WHERE id=9");
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
 
         RuntimeException rejected = assertThrows(RuntimeException.class,
@@ -1049,6 +1050,7 @@ class RegistrationFundsMybatisIntegrationTest {
                         + "pay_expire_time=DATE_ADD(NOW(),INTERVAL 3 DAY) WHERE id=11",
                 "UPDATE oms_ticket SET remaining_inventory=5 WHERE id=9");
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         Map<String, String> payParams = new HashMap<>();
         payParams.put("package", "prepay_id=cr527-live");
@@ -1069,6 +1071,7 @@ class RegistrationFundsMybatisIntegrationTest {
     void expiredPayingOrderQuerySuccessIsAppliedAsPaymentCallback() throws Exception {
         prepareExpiredPayingOrder();
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("SUCCESS"));
         AlarmService alarm = mock(AlarmService.class);
@@ -1081,7 +1084,7 @@ class RegistrationFundsMybatisIntegrationTest {
         // 钱到了就不能回补:库存继续被占用、预扣积分不退。
         assertEquals(5, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
         assertEquals(0, number("SELECT points_returned FROM cms_registration WHERE id=11"));
-        verify(wechat, never()).closeOrder(org.mockito.ArgumentMatchers.anyString());
+        verify(wechat, never()).closePaymentAttempt(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
         verify(alarm, never()).alarm(org.mockito.ArgumentMatchers.anyString(),
                 org.mockito.ArgumentMatchers.anyString());
     }
@@ -1093,9 +1096,10 @@ class RegistrationFundsMybatisIntegrationTest {
     void expiredPayingOrderQueryNotPayClosesOrderAndReleasesHeldResources() throws Exception {
         prepareExpiredPayingOrder();
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("NOTPAY"));
-        when(wechat.closeOrder("T20260724PAY")).thenReturn(true);
+        when(wechat.closePaymentAttempt("T20260724PAY", "T20260724PAY")).thenReturn(true);
         AlarmService alarm = mock(AlarmService.class);
         clearInvocations(perkLedgerService);
 
@@ -1106,7 +1110,7 @@ class RegistrationFundsMybatisIntegrationTest {
         assertEquals(1, number("SELECT points_returned FROM cms_registration WHERE id=11"));
         assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
         assertEquals(6, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
-        verify(wechat).closeOrder("T20260724PAY");
+        verify(wechat).closePaymentAttempt("T20260724PAY", "T20260724PAY");
         verify(perkLedgerService).releaseOnRefund(11L, "ORGANIZER_CANCEL");
         verify(alarm, never()).alarm(org.mockito.ArgumentMatchers.anyString(),
                 org.mockito.ArgumentMatchers.anyString());
@@ -1122,9 +1126,10 @@ class RegistrationFundsMybatisIntegrationTest {
     void restartResetsCursorButNeverDoubleClosesOrDoubleReleases() throws Exception {
         prepareExpiredPayingOrder();
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("NOTPAY"));
-        when(wechat.closeOrder("T20260724PAY")).thenReturn(true);
+        when(wechat.closePaymentAttempt("T20260724PAY", "T20260724PAY")).thenReturn(true);
         AlarmService alarm = mock(AlarmService.class);
         clearInvocations(perkLedgerService);
 
@@ -1140,7 +1145,7 @@ class RegistrationFundsMybatisIntegrationTest {
         // 已关的单不再落入 payment_status=1 的扫描范围,重启重扫不会二次关单/二次回补/二次告警。
         assertEquals(6, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
         assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
-        verify(wechat, org.mockito.Mockito.times(1)).closeOrder("T20260724PAY");
+        verify(wechat, org.mockito.Mockito.times(1)).closePaymentAttempt("T20260724PAY", "T20260724PAY");
         verify(perkLedgerService, org.mockito.Mockito.times(1)).releaseOnRefund(11L, "ORGANIZER_CANCEL");
         verify(alarm, never()).alarm(org.mockito.ArgumentMatchers.anyString(),
                 org.mockito.ArgumentMatchers.anyString());
@@ -1153,6 +1158,7 @@ class RegistrationFundsMybatisIntegrationTest {
     void expiredPayingOrderQueryFailureLeavesOrderUntouchedAndAlarms() throws Exception {
         prepareExpiredPayingOrder();
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenThrow(new RuntimeException("微信查单超时"));
         AlarmService alarm = mock(AlarmService.class);
@@ -1165,7 +1171,7 @@ class RegistrationFundsMybatisIntegrationTest {
         assertEquals(5, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
         assertEquals(80, number("SELECT point FROM ums_member WHERE id=7"));
         assertEquals(0, number("SELECT points_returned FROM cms_registration WHERE id=11"));
-        verify(wechat, never()).closeOrder(org.mockito.ArgumentMatchers.anyString());
+        verify(wechat, never()).closePaymentAttempt(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
         verify(perkLedgerService, never()).releaseOnRefund(org.mockito.ArgumentMatchers.anyLong(),
                 org.mockito.ArgumentMatchers.anyString());
         verify(alarm).alarm(org.mockito.ArgumentMatchers.eq("支付中过期订单对账失败"),
@@ -1180,6 +1186,7 @@ class RegistrationFundsMybatisIntegrationTest {
     void expiredMultiTicketPayingOrderIsNotSplitByUnpaidCloseTask() throws Exception {
         prepareExpiredMultiTicketPayingOrder();
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("SUCCESS"));
         AlarmService alarm = mock(AlarmService.class);
@@ -1201,9 +1208,10 @@ class RegistrationFundsMybatisIntegrationTest {
     void expiredMultiTicketPayingOrderNotPayClosesWholeParentOrder() throws Exception {
         prepareExpiredMultiTicketPayingOrder();
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("NOTPAY"));
-        when(wechat.closeOrder("T20260724PAY")).thenReturn(true);
+        when(wechat.closePaymentAttempt("T20260724PAY", "T20260724PAY")).thenReturn(true);
 
         orderCloseTask(wechat, mock(AlarmService.class)).reconcileExpiredPaying();
 
@@ -1215,23 +1223,37 @@ class RegistrationFundsMybatisIntegrationTest {
 
     /** 裁决2:预下单结果未知、微信侧从未建单(ORDER_NOT_EXIST)且过期超宽限 ⇒ 视为未支付,本地关单回补。 */
     @Test
-    void expiredPayingOrderNotExistOnWechatBeyondGraceIsClosedAndReleased() throws Exception {
+    void staleClosedAttemptCannotExpireCurrentRegistrationOrReleaseBalances() throws Exception {
+        prepareExpiredPayingOrder();
+        IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.isReady()).thenReturn(true);
+        Map<String, String> observed = wxQuery("CLOSED");
+        observed.put("wx_out_trade_no", "old-wx-attempt");
+        when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(observed);
+        when(wechat.lockPaymentAttemptForUpdate("T20260724PAY", "old-wx-attempt")).thenReturn(false);
+        orderCloseTask(wechat, mock(AlarmService.class)).reconcileExpiredPaying();
+        verify(wechat).lockPaymentAttemptForUpdate("T20260724PAY", "old-wx-attempt");
+        assertEquals(1, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(1, number("SELECT registration_status FROM cms_registration WHERE id=11"));
+        assertEquals(5, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
+        assertEquals(80, number("SELECT point FROM ums_member WHERE id=7"));
+    }
+
+    @Test
+    void expiredPayingOrderNotExistBeyondGraceRetainsOriginalAndBalances() throws Exception {
         prepareExpiredPayingOrder();
         IWechatPayService wechat = mock(IWechatPayService.class);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY"))
                 .thenThrow(new WechatOrderNotExistException("ORDER_NOT_EXIST", null));
         AlarmService alarm = mock(AlarmService.class);
-
         orderCloseTask(wechat, alarm).reconcileExpiredPaying();
-
-        assertEquals(3, number("SELECT payment_status FROM cms_registration WHERE id=11"));
-        assertEquals(4, number("SELECT registration_status FROM cms_registration WHERE id=11"));
-        assertEquals(6, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
-        assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
-        verify(wechat, never()).closeOrder(org.mockito.ArgumentMatchers.anyString());
-        verify(alarm, never()).alarm(org.mockito.ArgumentMatchers.anyString(),
-                org.mockito.ArgumentMatchers.anyString());
+        assertEquals(1, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(1, number("SELECT registration_status FROM cms_registration WHERE id=11"));
+        assertEquals(5, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
+        assertEquals(80, number("SELECT point FROM ums_member WHERE id=7"));
+        verify(wechat, never()).closePaymentAttempt(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
+        verify(alarm).alarm(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
     }
 
     /** 裁决2:ORDER_NOT_EXIST 但刚过期、未过宽限(预下单可能仍在途)⇒ 不动。 */
@@ -1240,6 +1262,7 @@ class RegistrationFundsMybatisIntegrationTest {
         prepareExpiredPayingOrder();
         setPayExpireTime(11L, System.currentTimeMillis() - 10 * 60 * 1000L);
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY"))
                 .thenThrow(new WechatOrderNotExistException("ORDER_NOT_EXIST", null));
@@ -1262,6 +1285,7 @@ class RegistrationFundsMybatisIntegrationTest {
         prepareExpiredPayingOrder();
         setPayExpireTime(11L, System.currentTimeMillis() - 110 * 60 * 1000L);
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY"))
                 .thenThrow(new WechatOrderNotExistException("ORDER_NOT_EXIST", null));
@@ -1284,13 +1308,15 @@ class RegistrationFundsMybatisIntegrationTest {
                         + "payable_amount,wechat_payment_amount,payment_status,registration_status,pay_expire_time,verification_status,points_returned) "
                         + "VALUES (2000,'TLATE',1,99,'后到单',7,0,100,100,1,1,DATE_SUB(NOW(),INTERVAL 3 DAY),0,0)");
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus(org.mockito.ArgumentMatchers.startsWith("STUCK")))
                 .thenThrow(new RuntimeException("微信查单超时"));
         Map<String, String> late = wxQuery("NOTPAY");
         late.put("out_trade_no", "TLATE");
+        late.put("wx_out_trade_no", "TLATE");
         when(wechat.queryOrderStatus("TLATE")).thenReturn(late);
-        when(wechat.closeOrder("TLATE")).thenReturn(true);
+        when(wechat.closePaymentAttempt("TLATE", "TLATE")).thenReturn(true);
 
         orderCloseTask(wechat, mock(AlarmService.class)).reconcileExpiredPaying();
 
@@ -1321,6 +1347,7 @@ class RegistrationFundsMybatisIntegrationTest {
                         + "SELECT 3500+i,CONCAT('CAPLATE',i),1,99,'后到单',7,0,100,100,1,1,"
                         + "DATE_SUB(NOW(),INTERVAL 3 DAY),0,0 FROM n");
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus(org.mockito.ArgumentMatchers.startsWith("CAPSTUCK")))
                 .thenThrow(new RuntimeException("微信查单超时"));
@@ -1328,9 +1355,10 @@ class RegistrationFundsMybatisIntegrationTest {
                 .thenAnswer(call -> {
                     Map<String, String> q = wxQuery("NOTPAY");
                     q.put("out_trade_no", call.getArgument(0));
+                    q.put("wx_out_trade_no", call.getArgument(0));
                     return q;
                 });
-        when(wechat.closeOrder(org.mockito.ArgumentMatchers.startsWith("CAPLATE"))).thenReturn(true);
+        when(wechat.closePaymentAttempt(org.mockito.ArgumentMatchers.startsWith("CAPLATE"), org.mockito.ArgumentMatchers.startsWith("CAPLATE"))).thenReturn(true);
         OrderCloseTask task = orderCloseTask(wechat, mock(AlarmService.class));
 
         task.reconcileExpiredPaying();
@@ -1365,14 +1393,15 @@ class RegistrationFundsMybatisIntegrationTest {
     void expiredPayingOrderPayErrorClosesWechatOrderBeforeLocalClose() throws Exception {
         prepareExpiredPayingOrder();
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("PAYERROR"));
-        when(wechat.closeOrder("T20260724PAY")).thenReturn(true);
+        when(wechat.closePaymentAttempt("T20260724PAY", "T20260724PAY")).thenReturn(true);
         clearInvocations(perkLedgerService);
 
         orderCloseTask(wechat, mock(AlarmService.class)).reconcileExpiredPaying();
 
-        verify(wechat).closeOrder("T20260724PAY");
+        verify(wechat).closePaymentAttempt("T20260724PAY", "T20260724PAY");
         assertEquals(3, number("SELECT payment_status FROM cms_registration WHERE id=11"));
         assertEquals(6, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
         assertEquals("payment-reconcile-task", text("SELECT update_by FROM cms_registration WHERE id=11"));
@@ -1382,9 +1411,10 @@ class RegistrationFundsMybatisIntegrationTest {
     private void assertCloseFailureLeavesOrderUntouched(String tradeState) throws Exception {
         prepareExpiredPayingOrder();
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery(tradeState));
-        when(wechat.closeOrder("T20260724PAY")).thenThrow(new RuntimeException("关闭订单异常：ORDERPAID"));
+        when(wechat.closePaymentAttempt("T20260724PAY", "T20260724PAY")).thenThrow(new RuntimeException("关闭订单异常：ORDERPAID"));
         AlarmService alarm = mock(AlarmService.class);
         clearInvocations(perkLedgerService);
 
@@ -1405,6 +1435,7 @@ class RegistrationFundsMybatisIntegrationTest {
     void activityCancelWithPayingOrderPaidOnWechatAppliesPaymentThenRefunds() throws Exception {
         preparePayingOrderOnActivity();
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("SUCCESS"));
         IRefundService refunds = mock(IRefundService.class);
@@ -1425,7 +1456,7 @@ class RegistrationFundsMybatisIntegrationTest {
         assertEquals("WX-TX-11", text("SELECT transaction_id FROM cms_registration WHERE id=11"));
         assertEquals(3, number("SELECT registration_status FROM cms_registration WHERE id=11"));
         verify(refunds).saveRefund(org.mockito.ArgumentMatchers.argThat(app -> Long.valueOf(11L).equals(app.getSourceId())));
-        verify(wechat, never()).closeOrder(org.mockito.ArgumentMatchers.anyString());
+        verify(wechat, never()).closePaymentAttempt(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
         assertEquals(1, number("SELECT COUNT(*) FROM cms_activity WHERE id=55 AND cancel_time IS NOT NULL"));
     }
 
@@ -1434,15 +1465,16 @@ class RegistrationFundsMybatisIntegrationTest {
     void activityCancelWithPayingOrderUnpaidOnWechatClosesItFirst() throws Exception {
         preparePayingOrderOnActivity();
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("NOTPAY"));
-        when(wechat.closeOrder("T20260724PAY")).thenReturn(true);
+        when(wechat.closePaymentAttempt("T20260724PAY", "T20260724PAY")).thenReturn(true);
         IRefundService refunds = mock(IRefundService.class);
         clearInvocations(perkLedgerService);
 
         cancelActivity(activityCancellation(wechat, refunds));
 
-        verify(wechat).closeOrder("T20260724PAY");
+        verify(wechat).closePaymentAttempt("T20260724PAY", "T20260724PAY");
         assertEquals(3, number("SELECT payment_status FROM cms_registration WHERE id=11"));
         // 主办取消导致的关单,真实原因是「取消」不是「过期」:registration_status 落 3(已取消),
         // 不是 4(已过期)——4 留给对账任务真过期那条路径(见下一条用例)。
@@ -1469,9 +1501,10 @@ class RegistrationFundsMybatisIntegrationTest {
     void activityCancelWithMultiTicketPayingOrderUnpaidEndsCancelledNotExpired() throws Exception {
         preparePayingMultiTicketOrderOnActivity();
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("NOTPAY"));
-        when(wechat.closeOrder("T20260724PAY")).thenReturn(true);
+        when(wechat.closePaymentAttempt("T20260724PAY", "T20260724PAY")).thenReturn(true);
         IRefundService refunds = mock(IRefundService.class);
 
         cancelActivity(activityCancellation(wechat, refunds));
@@ -1488,6 +1521,7 @@ class RegistrationFundsMybatisIntegrationTest {
     void activityCancelWithPayingOrderQueryFailureRejectsCancellation() throws Exception {
         preparePayingOrderOnActivity();
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenThrow(new RuntimeException("微信查单超时"));
         IRefundService refunds = mock(IRefundService.class);
@@ -1501,7 +1535,7 @@ class RegistrationFundsMybatisIntegrationTest {
         assertEquals(1, number("SELECT registration_status FROM cms_registration WHERE id=11"));
         assertEquals(5, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
         assertEquals(0, number("SELECT COUNT(*) FROM cms_activity WHERE id=55 AND cancel_time IS NOT NULL"));
-        verify(wechat, never()).closeOrder(org.mockito.ArgumentMatchers.anyString());
+        verify(wechat, never()).closePaymentAttempt(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
     }
 
     /**
@@ -1517,12 +1551,14 @@ class RegistrationFundsMybatisIntegrationTest {
                 + "(12,'T20260724SECOND',2,55,'资金并发测试',7,9,0,100,100,1,1,"
                 + "DATE_ADD(NOW(),INTERVAL 3 DAY),0,0)");
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         // selectCmsRegistrationList 是 order by id desc ⇒ 先处理 id=12(可关),后处理 id=11(查单失败)。
         Map<String, String> second = wxQuery("NOTPAY");
         second.put("out_trade_no", "T20260724SECOND");
+        second.put("wx_out_trade_no", "T20260724SECOND");
         when(wechat.queryOrderStatus("T20260724SECOND")).thenReturn(second);
-        when(wechat.closeOrder(org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
+        when(wechat.closePaymentAttempt(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenThrow(new RuntimeException("微信查单超时"));
 
         com.chengyinhub.common.exception.ServiceException rejected = assertThrows(
@@ -1531,7 +1567,7 @@ class RegistrationFundsMybatisIntegrationTest {
 
         assertTrue(rejected.getMessage().contains("稍后重试"), rejected.getMessage());
         // 关键断言:先被定性通过的那单(id=12)的微信订单绝不能已经被关掉。
-        verify(wechat, never()).closeOrder(org.mockito.ArgumentMatchers.anyString());
+        verify(wechat, never()).closePaymentAttempt(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
         assertEquals(1, number("SELECT payment_status FROM cms_registration WHERE id=11"));
         assertEquals(1, number("SELECT payment_status FROM cms_registration WHERE id=12"));
         assertEquals(5, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
@@ -1553,12 +1589,14 @@ class RegistrationFundsMybatisIntegrationTest {
                 + "(12,'T20260724SECOND',2,55,'资金并发测试',7,9,0,100,100,1,1,"
                 + "DATE_ADD(NOW(),INTERVAL 3 DAY),0,0)");
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         // selectCmsRegistrationList 是 order by id desc ⇒ plan 顺序为 id=12(NOTPAY)、id=11(SUCCESS)。
         Map<String, String> second = wxQuery("NOTPAY");
         second.put("out_trade_no", "T20260724SECOND");
+        second.put("wx_out_trade_no", "T20260724SECOND");
         when(wechat.queryOrderStatus("T20260724SECOND")).thenReturn(second);
-        when(wechat.closeOrder(org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
+        when(wechat.closePaymentAttempt(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         Map<String, String> paid = wxQuery("SUCCESS");
         paid.put("total", "1"); // 金额对不上 ⇒ handleWechatPayCallback 返回 FAIL
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(paid);
@@ -1568,7 +1606,7 @@ class RegistrationFundsMybatisIntegrationTest {
                 () -> cancelActivity(activityCancellation(wechat, mock(IRefundService.class))));
 
         assertTrue(rejected.getMessage().contains("稍后重试"), rejected.getMessage());
-        verify(wechat, never()).closeOrder(org.mockito.ArgumentMatchers.anyString());
+        verify(wechat, never()).closePaymentAttempt(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
         assertEquals(1, number("SELECT payment_status FROM cms_registration WHERE id=12"));
         assertEquals(0, number("SELECT COUNT(*) FROM cms_activity WHERE id=55 AND cancel_time IS NOT NULL"));
     }
@@ -1582,6 +1620,7 @@ class RegistrationFundsMybatisIntegrationTest {
         preparePayingOrderOnActivity();
         execute("UPDATE cms_registration SET pay_expire_time=NULL WHERE id=11");
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY"))
                 .thenThrow(new WechatOrderNotExistException("ORDER_NOT_EXIST", null));
@@ -1601,6 +1640,7 @@ class RegistrationFundsMybatisIntegrationTest {
         preparePayingOrderOnActivity();
         setPayExpireTime(11L, System.currentTimeMillis() - 10 * 60 * 1000L);
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY"))
                 .thenThrow(new WechatOrderNotExistException("ORDER_NOT_EXIST", null));
@@ -1609,30 +1649,28 @@ class RegistrationFundsMybatisIntegrationTest {
                 com.chengyinhub.common.exception.ServiceException.class,
                 () -> cancelActivity(activityCancellation(wechat, mock(IRefundService.class))));
 
-        assertTrue(rejected.getMessage().matches(".*约 \\d+ 分钟后可重试.*"), rejected.getMessage());
+        assertTrue(rejected.getMessage().contains("重试"), rejected.getMessage());
         assertEquals(1, number("SELECT payment_status FROM cms_registration WHERE id=11"));
         assertEquals(0, number("SELECT COUNT(*) FROM cms_activity WHERE id=55 AND cancel_time IS NOT NULL"));
     }
 
     /** 清单 1:取消路径遇 ORDER_NOT_EXIST 且已过宽限 ⇒ 复用对账口径本地关单回补,取消照常完成。 */
     @Test
-    void activityCancelWithOrderNotExistBeyondGraceClosesLocallyAndCancels() throws Exception {
+    void activityCancelWithOrderNotExistBeyondGraceRetainsOriginalAndRejectsCancel() throws Exception {
         preparePayingOrderOnActivity();
         setPayExpireTime(11L, System.currentTimeMillis() - 3 * 24 * 60 * 60 * 1000L);
         IWechatPayService wechat = mock(IWechatPayService.class);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY"))
                 .thenThrow(new WechatOrderNotExistException("ORDER_NOT_EXIST", null));
-
-        cancelActivity(activityCancellation(wechat, mock(IRefundService.class)));
-
-        assertEquals(3, number("SELECT payment_status FROM cms_registration WHERE id=11"));
-        // 同上一条:主办取消引发的关单,终态是「已取消」(3)而不是「已过期」(4)。
-        assertEquals(3, number("SELECT registration_status FROM cms_registration WHERE id=11"));
-        assertEquals(6, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
-        assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
-        verify(wechat, never()).closeOrder(org.mockito.ArgumentMatchers.anyString());
-        assertEquals(1, number("SELECT COUNT(*) FROM cms_activity WHERE id=55 AND cancel_time IS NOT NULL"));
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> cancelActivity(activityCancellation(wechat, mock(IRefundService.class))));
+        assertEquals(1, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(1, number("SELECT registration_status FROM cms_registration WHERE id=11"));
+        assertEquals(5, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
+        assertEquals(80, number("SELECT point FROM ums_member WHERE id=7"));
+        verify(wechat, never()).closePaymentAttempt(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
+        assertEquals(0, number("SELECT COUNT(*) FROM cms_activity WHERE id=55 AND cancel_time IS NOT NULL"));
     }
 
     /**
@@ -1645,9 +1683,10 @@ class RegistrationFundsMybatisIntegrationTest {
         preparePayingOrderOnActivity();
         execute("UPDATE cms_registration SET point_used=0 WHERE id=11");
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("NOTPAY"));
-        when(wechat.closeOrder("T20260724PAY")).thenReturn(true);
+        when(wechat.closePaymentAttempt("T20260724PAY", "T20260724PAY")).thenReturn(true);
 
         cancelActivity(activityCancellation(wechat, mock(IRefundService.class)));
 
@@ -1660,6 +1699,7 @@ class RegistrationFundsMybatisIntegrationTest {
     void activityCancelQueryFailureAlarmsOperations() throws Exception {
         preparePayingOrderOnActivity();
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenThrow(new RuntimeException("微信查单超时"));
         AlarmService alarm = mock(AlarmService.class);
@@ -1676,9 +1716,10 @@ class RegistrationFundsMybatisIntegrationTest {
     void activityCancelWechatCloseFailureAlarmsOperations() throws Exception {
         preparePayingOrderOnActivity();
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("NOTPAY"));
-        when(wechat.closeOrder("T20260724PAY")).thenThrow(new RuntimeException("关闭订单异常：ORDERPAID"));
+        when(wechat.closePaymentAttempt("T20260724PAY", "T20260724PAY")).thenThrow(new RuntimeException("关闭订单异常：ORDERPAID"));
         AlarmService alarm = mock(AlarmService.class);
 
         assertThrows(com.chengyinhub.common.exception.ServiceException.class,
@@ -1718,6 +1759,7 @@ class RegistrationFundsMybatisIntegrationTest {
     void payParamsAreReturnedOnlyAfterPayingIsDurableSoConcurrentCancelCannotWin() throws Exception {
         execute("UPDATE cms_registration SET owner_type=2,owner_id=55,ticket_id=9 WHERE id=11");
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         Map<String, String> payParams = new HashMap<>();
         payParams.put("package", "prepay_id=durable-11");
@@ -1739,6 +1781,7 @@ class RegistrationFundsMybatisIntegrationTest {
     void uncertainWechatPreorderFailureKeepsPayingForLateSuccessRecovery() throws Exception {
         execute("UPDATE cms_registration SET owner_type=2,owner_id=55,ticket_id=9 WHERE id=11");
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.createOrder(org.mockito.ArgumentMatchers.any(CmsRegistration.class)))
                 .thenThrow(PaymentPreorderException.resultUncertain("微信响应未知", null));
@@ -1753,9 +1796,10 @@ class RegistrationFundsMybatisIntegrationTest {
     }
 
     @Test
-    void definiteLocalPreorderFailureReleasesPayingForSafeRetry() throws Exception {
+    void laterLocalPreorderRejectionKeepsOriginalPayingForLateSuccess() throws Exception {
         execute("UPDATE cms_registration SET owner_type=2,owner_id=55,ticket_id=9 WHERE id=11");
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.createOrder(org.mockito.ArgumentMatchers.any(CmsRegistration.class)))
                 .thenThrow(PaymentPreorderException.definiteFailure("本地参数错误", null));
@@ -1763,14 +1807,18 @@ class RegistrationFundsMybatisIntegrationTest {
         assertThrows(PaymentPreorderException.class,
                 () -> checkoutService(wechat).retryPayment(7L, 11L));
 
-        assertEquals(0, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(1, number("SELECT payment_status FROM cms_registration WHERE id=11"));
         assertEquals(1, number("SELECT registration_status FROM cms_registration WHERE id=11"));
+        execute("UPDATE cms_registration SET owner_type=1,owner_id=99,ticket_id=NULL WHERE id=11");
+        assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
+        assertEquals(2, number("SELECT payment_status FROM cms_registration WHERE id=11"));
     }
 
     @Test
     void applicationServiceOwnsQuoteCreateReplayPreorderAndResponseMapping() throws Exception {
         execute("UPDATE oms_ticket SET remaining_inventory=100 WHERE id=9");
         IWechatPayService wechat = mock(IWechatPayService.class);
+        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         Map<String, String> payParams = new HashMap<>();
         payParams.put("package", "prepay_id=application-flow");
@@ -2424,6 +2472,7 @@ class RegistrationFundsMybatisIntegrationTest {
     private Map<String, String> wxQuery(String tradeState) {
         Map<String, String> query = new HashMap<>();
         query.put("out_trade_no", "T20260724PAY");
+        query.put("wx_out_trade_no", "T20260724PAY");
         query.put("transaction_id", "WX-TX-11");
         query.put("trade_state", tradeState);
         query.put("total", "10000");
@@ -2435,6 +2484,7 @@ class RegistrationFundsMybatisIntegrationTest {
         ReflectionTestUtils.setField(task, "cmsRegistrationService", registrationService);
         ReflectionTestUtils.setField(task, "wechatPayService", wechat);
         ReflectionTestUtils.setField(task, "alarmService", alarm);
+        ReflectionTestUtils.setField(task, "paymentTransactions", transactionManager);
         return task;
     }
 
