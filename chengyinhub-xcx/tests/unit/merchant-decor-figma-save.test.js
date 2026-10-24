@@ -43,6 +43,7 @@ function loadPage(relativePath, options = {}) {
     setNavigationBarColor() {},
     setBackgroundColor() {},
   }
+  require('../helpers/voice-enrollment-environment.cjs').install(app, wx)
   const localRequire = createRequire(absolutePath)
   const sandbox = {
     Array, Date, JSON, Math, Number, Object, RegExp, String,
@@ -68,7 +69,7 @@ function loadPage(relativePath, options = {}) {
     applyPatch(this.data, patch)
     if (typeof callback === 'function') callback.call(this)
   }
-  return { page, requests, navigations, toasts }
+  return { page, requests, navigations, toasts, app, wx }
 }
 
 test('字段保存失败保留草稿，成功前公开预览保持原值', () => {
@@ -147,8 +148,12 @@ test('角色保存使用现有请求通道，失败保留草稿，成功才更�
 });
 test('语音超时后查回同一样本已就绪，清除待提交文件，不能再次生成',async()=>{
   const h=loadPage('pages/merchant/decor/ai-npc/index.js');
-  h.page.data.voiceFile={url:'https://files.example.com/voice.wav'};h.page.data.voiceUnknown=true;
-  const promise=h.page.refreshVoice();h.requests[0].success({code:200,voiceStatus:2,voiceSample:'https://files.example.com/voice.wav'});await promise;
+  const sample='media-asset:73';
+  const original=require('../helpers/voice-enrollment-environment.cjs').seedUnknown(h.app,h.wx,'merchant',sample);
+  h.page.data.voiceFile={url:sample};h.page.data.voiceSample=sample;h.page.data.voiceUnknown=true;
+  const promise=h.page.refreshVoice();
+  assert.equal(JSON.parse(h.requests[0].data).voiceRequestId,original.requestId);
+  h.requests[0].success({code:200,voiceStatus:2,voiceSample:sample});await promise;
   assert.equal(h.page.data.voiceFile,null);assert.equal(h.page.data.voiceUnknown,false);
   h.page.uploadVoice();assert.equal(h.requests.length,1);
 });

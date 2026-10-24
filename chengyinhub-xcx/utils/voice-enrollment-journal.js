@@ -60,20 +60,20 @@ function dispatched(storage, member, scope, row) {
 }
 function observe(storage, member, scope, expectedRequest, result) {
   if (!result || !request(result.voiceRequestId) || (expectedRequest && result.voiceRequestId !== expectedRequest)
-      || !id(result.voiceIntentId) || !states.includes(result.voiceIntentState)) throw Error('原声音回执身份无法确认');
+      || !id(result.voiceIntentId) || !states.includes(result.voiceIntentState)) throw Error('无法确认这次声音请求的返回结果');
   if (result.voiceSelected !== false && (typeof result.voiceStatus !== 'number'
       || ![0, 1, 2, 3].includes(result.voiceStatus))) throw Error('声音状态无法确认');
   const prior = load(storage, member, scope), next = JSON.parse(JSON.stringify(prior));
   let row = next.records.find(item => item.requestId === result.voiceRequestId);
   if (!row) {
-    if (next.active !== null || next.records.length >= LIMIT) throw Error('回执不属于当前声音待办');
+    if (next.active !== null || next.records.length >= LIMIT) throw Error('返回结果不属于当前声音请求');
     row = { requestId: result.voiceRequestId, intentId: null, previousIntentId: result.voicePreviousIntentId || null,
       state: result.voiceIntentState, createdAt: Date.now() };
     next.records.push(row); next.active = row.requestId;
   }
-  if (row.intentId !== null && String(row.intentId) !== String(result.voiceIntentId)) throw Error('原声音回执身份冲突');
+  if (row.intentId !== null && String(row.intentId) !== String(result.voiceIntentId)) throw Error('这次声音请求的返回结果身份不一致');
   if (['READY', 'NOT_SENT'].includes(row.state) && row.state !== result.voiceIntentState)
-    throw Error('迟到回执不能覆盖原声音终态');
+    throw Error('较早返回的结果不能覆盖已确认的声音状态');
   row.intentId = result.voiceIntentId; row.state = result.voiceIntentState;
   write(storage, member, scope, prior, next);
   return { selected: next.active === row.requestId && result.voiceSelected !== false, row, records: next.records };

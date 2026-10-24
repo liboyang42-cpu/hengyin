@@ -397,7 +397,7 @@ Component({
     _voiceObserve(context, requestId, value) {
       if (!context.current()) return false;
       if (value.voiceSelected !== false && /^media-asset:[1-9][0-9]*$/.test(this.data.voiceSample)
-          && value.voiceSample !== this.data.voiceSample) throw Error('回执不是原录音，请查询原请求');
+          && value.voiceSample !== this.data.voiceSample) throw Error('返回结果与这段录音不一致，请查询原请求');
       const observed = voiceJournal.observe(wx, context.member, 'node:' + this.data.nodeId, requestId, value);
       this.setData({ voiceHistory: voiceJournal.recover(wx, context.member, 'node:' + this.data.nodeId, value.voiceHistory).records });
       if (!observed.selected) return false;
@@ -428,7 +428,12 @@ Component({
           }
           if (this._voiceObserve(context, pending.active, value) && value.voiceIntentState === 'PENDING')
             this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(); }, 5000);
-        }).catch((e) => { if (current()) this.setData({ voiceError: e.message }); });
+        }).catch(() => {
+          if (!current()) return;
+          // Query failure does not decide the original command; only this still-current pending view polls again.
+          if (this.data.voiceStatus === 1)
+            this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(); }, 5000);
+        });
     },
     readVoiceHistory(e) {
       let context;

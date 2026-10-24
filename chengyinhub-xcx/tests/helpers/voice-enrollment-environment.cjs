@@ -19,8 +19,10 @@ module.exports = { install, journal };
 // These existing page tests mock HTTP. Echo the immutable request identity their real page now sends;
 // preserve each fixture's original code, status, sample, error and callback scheduling.
 const basicInstall = module.exports.install;
+const submittedByApp = new WeakMap();
 module.exports.install = function (app, storage) {
   const result = basicInstall(app, storage), original = app.sendRequest, submitted = new Map();
+  submittedByApp.set(app, submitted);
   if (original) app.sendRequest = function (options) {
     const data = typeof options.data === 'string' ? JSON.parse(options.data || '{}') : options.data || {};
     if (/\/voice\/enroll$/.test(options.url) && data.voiceRequestId) submitted.set(data.voiceRequestId, data);
@@ -40,4 +42,18 @@ module.exports.install = function (app, storage) {
     return original.call(this, options);
   };
   return result;
+};
+
+// Seed an actual prior UNKNOWN journal through its production transitions, not by assigning page flags/storage shapes.
+// This is a controlled old HTTP fixture, not evidence of provider execution.
+module.exports.seedUnknown = function (app, storage, scope, sample) {
+  const member = String(app.getUserID());
+  const row = journal.begin(storage, member, scope, null, false);
+  journal.dispatched(storage, member, scope, row);
+  journal.observe(storage, member, scope, row.requestId, { voiceRequestId: row.requestId,
+    voiceIntentId: 17, voiceIntentState: 'UNKNOWN', voiceStatus: 1, voiceSample: sample, voiceSelected: true });
+  const submitted = submittedByApp.get(app);
+  if (!submitted) throw Error('Install the real voice environment before seeding an original request');
+  submitted.set(row.requestId, { voiceSample: sample });
+  return row;
 };
