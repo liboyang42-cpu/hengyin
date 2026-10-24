@@ -99,42 +99,42 @@ class ShopDayExperienceLayerContractTest
         doReturn(PLAYER).when(controller).getAppUserId();
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
         CmsRegistrationMapper registrationMapper = mock(CmsRegistrationMapper.class);
         when(registrationMapper.markFirstSuccessfulScan(eq(REGISTRATION), eq(PLAYER),
                 eq(2L), eq(ACTIVITY), any(Date.class))).thenReturn(1);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationMapper", registrationMapper);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
-        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templateService);
-        ReflectionTestUtils.setField(controller, "shopDayProofService", proofService);
-        ReflectionTestUtils.setField(controller, "playerTopicTagService", tagService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService", templateService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "shopDayProofService", proofService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerTopicTagService", tagService);
         PreferencePlayService preferencePlayService = new PreferencePlayService();
         ReflectionTestUtils.setField(preferencePlayService, "tagService", tagService);
-        ReflectionTestUtils.setField(controller, "preferencePlayService", preferencePlayService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "preferencePlayService", preferencePlayService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper",
                 mock(com.chengyinhub.business.mapper.ClubLeadMapper.class));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "perkLedgerService", mock(IPerkLedgerService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "perkLedgerService", mock(IPerkLedgerService.class));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
         var fixtureHintSettings = mock(ICmsPointsSettingService.class);
-        ReflectionTestUtils.setField(controller, "umsMemberPointsDetailService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "umsMemberPointsDetailService",
                 mock(IUmsMemberPointsDetailService.class));
-        ReflectionTestUtils.setField(controller, "topicOnsiteMetricsMapper", mock(TopicOnsiteMetricsMapper.class));
-        ReflectionTestUtils.setField(controller, "topicTemplateMetaMapper", mock(CmsTopicTemplateMetaMapper.class));
-        ReflectionTestUtils.setField(controller, "playAttemptLogMapper", mock(PlayAttemptLogMapper.class));
-        ReflectionTestUtils.setField(controller, "puzzlePlayService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicOnsiteMetricsMapper", mock(TopicOnsiteMetricsMapper.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicTemplateMetaMapper", mock(CmsTopicTemplateMetaMapper.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playAttemptLogMapper", mock(PlayAttemptLogMapper.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "puzzlePlayService",
                 mock(com.chengyinhub.business.service.IPuzzlePlayService.class));
-        ReflectionTestUtils.setField(controller, "memberCollectibleMapper", mock(MemberCollectibleMapper.class));
-        ReflectionTestUtils.setField(controller, "nodeMerchantOverrideService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "memberCollectibleMapper", mock(MemberCollectibleMapper.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "nodeMerchantOverrideService",
                 new NodeMerchantOverrideServiceImpl(mock(ICmsRegistrationMerchantService.class)));
         // 2026-09-08 自由探索卡片详情:节点上新挂了「本店权益」与「门店分身摘要」两段。
         // 本用例关心的是探店日节点**不泄题**,权益/分身取空即可 —— 但依赖必须装上,
         // 否则 FREE_COLLECT 分支一进来就 NPE,七条断言全变成「因为没接线而红」,
         // 看着像泄题门禁挂了,其实是装配漏了。
-        ReflectionTestUtils.setField(controller, "merchantChapterOfferMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "merchantChapterOfferMapper",
                 mock(MerchantChapterOfferMapper.class));
-        ReflectionTestUtils.setField(controller, "coopPerkMapper", mock(CoopPerkMapper.class));
-        ReflectionTestUtils.setField(controller, "npcProfileService", mock(NpcProfileService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "coopPerkMapper", mock(CoopPerkMapper.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "npcProfileService", mock(NpcProfileService.class));
 
         node = new CmsTopicNode();
         node.setId(NODE);

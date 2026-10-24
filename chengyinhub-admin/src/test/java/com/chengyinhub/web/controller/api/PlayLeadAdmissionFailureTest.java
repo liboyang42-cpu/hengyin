@@ -70,13 +70,13 @@ class PlayLeadAdmissionFailureTest {
         registration.setOwnerType(2L); registration.setOwnerId(500L); registration.setRegistrationStatus(2); registration.setPaymentStatus(2);
         registration.setPurchaseKind(1); registration.setExpiresAt(new Date(System.currentTimeMillis() + 86_400_000L));
         when(registrations.selectCmsRegistrationList(any())).thenReturn(List.of(registration));
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrations);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrations);
         ICmsTopicService topics = mock(ICmsTopicService.class); topic = new CmsTopic(); topic.setId(300L); topic.setProductType(1);
         when(topics.selectCmsTopicById(300L)).thenReturn(topic); com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topics);
         templates = mock(ICmsMemberTemplateService.class); template = new CmsMemberTemplate(); template.setId(39L); template.setValidationMethod(1);
         template.setHint1("private hint"); template.setQuestionAnswer("answer");
         when(templates.selectCmsMemberTemplateById(39L)).thenReturn(template);
-        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templates);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService", templates);
         routes = mock(ITopicRouteRuntimeService.class); when(routes.canPlay(eq(7L), eq(300L), eq(500L), eq(401L), nullable(String.class))).thenReturn(true);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", routes);
         progress = mock(IPlayerNodeProgressService.class); points = mock(IPointsAwardService.class);
@@ -84,26 +84,26 @@ class PlayLeadAdmissionFailureTest {
         puzzles = mock(IPuzzlePlayService.class); preferences = mock(PreferencePlayService.class); settings = mock(ICmsPointsSettingService.class);
         sensors = mock(ISensorChallengeService.class); proof = mock(IShopDayProofService.class);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progress);
-        ReflectionTestUtils.setField(controller, "pointsAwardService", points);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "pointsAwardService", points);
 
-        ReflectionTestUtils.setField(controller, "umsMemberPointsDetailService", ledger);
-        ReflectionTestUtils.setField(controller, "puzzlePlayService", puzzles);
-        ReflectionTestUtils.setField(controller, "preferencePlayService", preferences);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "umsMemberPointsDetailService", ledger);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "puzzlePlayService", puzzles);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "preferencePlayService", preferences);
 
-        ReflectionTestUtils.setField(controller, "sensorChallengeService", sensors);
-        ReflectionTestUtils.setField(controller, "shopDayProofService", proof);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "sensorChallengeService", sensors);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "shopDayProofService", proof);
         growth = mock(IGrowthService.class); drops = mock(IRewardDropService.class);
         progression = mock(IPlayerProgressionService.class); coupons = mock(ISmsCouponHistoryService.class);
         completionAwards = mock(ITopicCompletionAwardService.class); attempts = mock(PlayAttemptLogMapper.class);
-        ReflectionTestUtils.setField(controller, "growthService", growth);
-        ReflectionTestUtils.setField(controller, "rewardDropService", drops);
-        ReflectionTestUtils.setField(controller, "playerProgressionService", progression);
-        ReflectionTestUtils.setField(controller, "smsCouponHistoryService", coupons);
-        ReflectionTestUtils.setField(controller, "topicCompletionAwardService", completionAwards);
-        ReflectionTestUtils.setField(controller, "playAttemptLogMapper", attempts);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "growthService", growth);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "rewardDropService", drops);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerProgressionService", progression);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "smsCouponHistoryService", coupons);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicCompletionAwardService", completionAwards);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playAttemptLogMapper", attempts);
         CurrentPlayControllerFixtures.install(controller);
         puzzles=spy(NodeHintUnlockTestFixtures.application(controller,settings,members,ledger,null));
-        ReflectionTestUtils.setField(controller,"puzzlePlayService",puzzles);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"puzzlePlayService",puzzles);
     }
 
     @Test void hintUnlockFaultReturnsNoHintAndNeverReachesPricingOrDebit() {
@@ -216,7 +216,7 @@ class PlayLeadAdmissionFailureTest {
         assertEquals(Map.of("outcome", "NOT_RUN"), response.get("data")); assertFalse(response.containsKey("intentTerminal"));
         verify(leads).selectByActivity(500L); // Proves this was the lead failure, never an early missing-identity rejection.
         verifyNoInteractions(progress, points, members, ledger, preferences, settings, sensors, proof, growth, drops, progression, coupons, completionAwards, attempts);
-        GameSessionRuntimeMapper receipts = (GameSessionRuntimeMapper) ReflectionTestUtils.getField(controller, "playCommandReceiptMapper");
+        GameSessionRuntimeMapper receipts = (GameSessionRuntimeMapper) com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "playCommandReceiptMapper");
         verify(receipts, never()).completeReceipt(any());
         verify(puzzles, never()).hintUnlockCost();
         verify(puzzles, never()).requestHint(any(),any(),any(),any(),anyInt());

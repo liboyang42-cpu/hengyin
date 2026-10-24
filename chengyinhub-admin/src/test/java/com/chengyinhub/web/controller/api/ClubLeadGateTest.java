@@ -38,7 +38,7 @@ class ClubLeadGateTest {
     }
 
     private String gate(Long actId, CmsTopicNode node) {
-        return ReflectionTestUtils.invokeMethod(controller, "leadGateError", actId, node);
+        return com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "leadGateError", actId, node);
     }
 
     private ClubLeadState state(int status, Long currentChapterId) {

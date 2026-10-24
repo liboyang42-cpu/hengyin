@@ -50,7 +50,7 @@ class ApiPlayCheckinLiveCodeTest {
         activityService = mock(ICmsActivityService.class);
         controller = spy(new ApiPlayProgressController());
         doReturn(PLAYER).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "playCheckinCodeService", liveCodes);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playCheckinCodeService", liveCodes);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
         CmsTopicNode target = new CmsTopicNode(); target.setId(NODE); target.setTopicId(44L);
@@ -59,7 +59,7 @@ class ApiPlayCheckinLiveCodeTest {
         when(activityService.selectCmsActivityById(43L)).thenReturn(activity);
         ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
         when(registrations.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(ticket()));
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrations);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrations);
         CurrentPlayControllerFixtures.install(controller);
         BasicPlayCommandFixtures.scope(controller, 44L);
     }
@@ -76,7 +76,7 @@ class ApiPlayCheckinLiveCodeTest {
         com.chengyinhub.business.service.ICmsTopicService topics=mock(com.chengyinhub.business.service.ICmsTopicService.class);
         com.chengyinhub.business.service.ITopicRouteRuntimeService routes=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
         ICmsRegistrationService registrations=mock(ICmsRegistrationService.class);IPlayerNodeProgressService progress=mock(IPlayerNodeProgressService.class);ISmsCouponHistoryService coupons=mock(ISmsCouponHistoryService.class);
-        for(Object[] binding:new Object[][]{{"gameSessionRuntimeService",runtime},{"shopDayProofService",proofs},{"cmsTopicService",topics},{"topicRouteRuntimeService",routes},{"cmsRegistrationService",registrations},{"playerNodeProgressService",progress},{"smsCouponHistoryService",coupons}})ReflectionTestUtils.setField(controller,(String)binding[0],binding[1]);
+        for(Object[] binding:new Object[][]{{"gameSessionRuntimeService",runtime},{"shopDayProofService",proofs},{"cmsTopicService",topics},{"topicRouteRuntimeService",routes},{"cmsRegistrationService",registrations},{"playerNodeProgressService",progress},{"smsCouponHistoryService",coupons}})com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,(String)binding[0],binding[1]);
         CmsTopicNode node=new CmsTopicNode();node.setId(NODE);node.setTopicId(44L);node.setStatus(1L);node.setMerchantMemberId(310L);node.setNodeAuditStatus(1);when(nodeService.selectCmsTopicNodeById(NODE)).thenReturn(node);
         CmsActivity activity=new CmsActivity();activity.setId(43L);activity.setTopicId(44L);activity.setStartDate(new Date(System.currentTimeMillis()-60000));activity.setEndDate(new Date(System.currentTimeMillis()+60000));when(activityService.selectCmsActivityById(43L)).thenReturn(activity);
         CmsRegistration registration=ticket();when(registrations.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(registration));
@@ -87,7 +87,7 @@ class ApiPlayCheckinLiveCodeTest {
         when(runtime.routeSessionStatus(43L)).thenReturn("RUNNING");when(routes.canPlay(any(),any(),any(),any(),any())).thenReturn(true);
         when(runtime.sharedRouteSnapshot(PLAYER,44L,43L,NODE)).thenReturn(new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode().put("teamId",88).put("runtimeInstance","shared-fixture").put("authorityEpoch",4));
         com.chengyinhub.business.domain.GameSession original = new com.chengyinhub.business.domain.GameSession(); original.setId(70L); original.setRevision(2);
-        when(((com.chengyinhub.business.mapper.GameSessionRuntimeMapper)ReflectionTestUtils.getField(controller,"playCommandReceiptMapper")).selectSessionByActivity(43L)).thenReturn(original);
+        when(((com.chengyinhub.business.mapper.GameSessionRuntimeMapper)com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller,"playCommandReceiptMapper")).selectSessionByActivity(43L)).thenReturn(original);
         when(liveCodes.inspect(LIVE)).thenReturn(ConsumeResult.ok(NODE));when(liveCodes.consume(LIVE)).thenReturn(ConsumeResult.ok(NODE));
         com.chengyinhub.business.domain.PlayerNodeProgress proof=new com.chengyinhub.business.domain.PlayerNodeProgress();proof.setStatus(0);proof.setCheckinTime(new Date());when(proofs.markArrived(PLAYER,43L,node)).thenReturn(proof);
         AjaxResult response=BasicPlayCommandFixtures.checkin(controller,"43",LIVE,null,null,null,91L,String.valueOf(NODE));assertEquals(200,response.get(AjaxResult.CODE_TAG));assertEquals(Boolean.TRUE,((java.util.Map<?,?>)response.get("data")).get("arrived"));assertEquals(Boolean.FALSE,((java.util.Map<?,?>)response.get("data")).get("done"));
@@ -151,9 +151,9 @@ class ApiPlayCheckinLiveCodeTest {
         ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
         IPlayerNodeProgressService progress = mock(IPlayerNodeProgressService.class);
         ISmsCouponHistoryService coupons = mock(ISmsCouponHistoryService.class);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrations);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrations);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progress);
-        ReflectionTestUtils.setField(controller, "smsCouponHistoryService", coupons);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "smsCouponHistoryService", coupons);
         CmsTopicNode node = new CmsTopicNode();
         node.setId(NODE);
         node.setTopicId(44L);
@@ -167,9 +167,9 @@ class ApiPlayCheckinLiveCodeTest {
         long now = System.currentTimeMillis();
         activity.setStartDate(new Date(now - 3600000L));
         activity.setEndDate(new Date(now + 60000L));
-        assertNull(ReflectionTestUtils.invokeMethod(controller, "activityTimeError", activity));
+        assertNull(com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "activityTimeError", activity));
         activity.setEndDate(new Date(now - 1000L));
-        assertEquals("活动已结束", ReflectionTestUtils.invokeMethod(controller, "activityTimeError", activity));
+        assertEquals("活动已结束", com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "activityTimeError", activity));
         when(activityService.selectCmsActivityById(43L)).thenReturn(activity);
 
         AjaxResult r = BasicPlayCommandFixtures.checkin(controller,"43",LIVE,null,null,null,91L,String.valueOf(NODE));
@@ -192,8 +192,8 @@ class ApiPlayCheckinLiveCodeTest {
                 mock(com.chengyinhub.business.service.ICmsRegistrationService.class);
         com.chengyinhub.business.service.ISmsCouponHistoryService coupons =
                 mock(com.chengyinhub.business.service.ISmsCouponHistoryService.class);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrations);
-        ReflectionTestUtils.setField(controller, "smsCouponHistoryService", coupons);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrations);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "smsCouponHistoryService", coupons);
         when(liveCodes.inspect(LIVE)).thenReturn(ConsumeResult.ok(NODE));
         CmsTopicNode node = new CmsTopicNode();
         node.setId(NODE);

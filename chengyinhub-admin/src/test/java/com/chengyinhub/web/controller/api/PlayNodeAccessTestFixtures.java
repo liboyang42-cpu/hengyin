@@ -3,61 +3,124 @@ package com.chengyinhub.web.controller.api;
 import com.chengyinhub.business.mapper.*;
 import com.chengyinhub.business.service.*;
 import com.chengyinhub.business.service.support.PlayNodeAccessService;
+import com.chengyinhub.web.service.play.*;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.util.ReflectionUtils;
+import java.lang.reflect.Field;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.WeakHashMap;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.anyLong;
 
-/** Test setup adapter: each explicit owner replacement reconstructs the real shared service.
- * No production callback reads Controller fields during a command. */
+/** Test-only assembly of the actual application owners. Explicit dependency replacements rebuild
+ * the complete graph before invocation; production never reads a Controller field via callback. */
 public final class PlayNodeAccessTestFixtures {
     private PlayNodeAccessTestFixtures() {}
-    public static void setField(Object target, String field, Object value) {
+    private static final Map<ApiPlayProgressController, Map<String,Object>> INPUTS = new WeakHashMap<>();
+    private static final Map<ApiPlayProgressController, Map<Class<?>,Object>> GRAPHS = new WeakHashMap<>();
+    private static final Class<?>[] OWNERS = {
+        PlayNodeContext.class,
+        PlayCompletionFacts.class,
+        PlayNodeQueryApplication.class,
+        PlayHistoryQueryApplication.class,
+        PlayPlayerQueryApplication.class,
+        PlayBasicIntentApplication.class,
+        PlayBasicCommandApplication.class,
+        PlayPhotoCommandApplication.class,
+        PlayPuzzleCommandApplication.class,
+        PlayPreferenceApplication.class,
+        PlayNodeCompletionApplication.class,
+        PlayTaskPresentation.class
+    };
+    public static synchronized void setField(Object target, String field, Object value) {
         if (!(target instanceof ApiPlayProgressController controller)) {
-            ReflectionTestUtils.setField(target, field, value); return;
+            ReflectionTestUtils.setField(target,field,value); return;
         }
-        PlayNodeAccessService previous = (PlayNodeAccessService) ReflectionTestUtils.getField(controller,"playNodeAccessService");
-        if (!field.equals("clubLeadMapper") && !field.equals("omsTicketService"))
-            ReflectionTestUtils.setField(target,field,value);
-        install(controller, previous, field, value);
+        Map<String,Object> input=INPUTS.computeIfAbsent(controller,key -> new LinkedHashMap<>());
+        input.put(field,value);
+        install(controller);
     }
-    public static Object getField(Object target, String field) {
-        if (target instanceof ApiPlayProgressController controller
-                && (field.equals("clubLeadMapper") || field.equals("omsTicketService"))) {
-            PlayNodeAccessService service=(PlayNodeAccessService)ReflectionTestUtils.getField(controller,"playNodeAccessService");
-            return service==null?null:ReflectionTestUtils.getField(service,field);
+    public static synchronized Object getField(Object target, String field) {
+        if (!(target instanceof ApiPlayProgressController controller)) return ReflectionTestUtils.getField(target,field);
+        installIfAbsent(controller);
+        Map<String,Object> input=INPUTS.get(controller);
+        if(input.containsKey(field)) return input.get(field);
+        for(Object application:GRAPHS.get(controller).values()) {
+            if(ReflectionUtils.findField(application.getClass(),field)!=null)
+                return ReflectionTestUtils.getField(application,field);
         }
-        return ReflectionTestUtils.getField(target,field);
+        return ReflectionTestUtils.getField(controller,field);
     }
-    public static void install(ApiPlayProgressController controller) {
-        install(controller,(PlayNodeAccessService)ReflectionTestUtils.getField(controller,"playNodeAccessService"),null,null);
+    public static synchronized Object owner(ApiPlayProgressController controller,Class<?> type) {
+        installIfAbsent(controller);return GRAPHS.get(controller).get(type);
     }
-    private static void install(ApiPlayProgressController controller,PlayNodeAccessService previous,String field,Object value) {
-        // These defaults explicitly describe an ordinary no-lead/unused-ticket fixture, never production fallback.
-        ClubLeadMapper leads;
-        if(previous==null) {
-            leads=mock(ClubLeadMapper.class); when(leads.selectByActivity(anyLong())).thenReturn(null);
-        } else leads=(ClubLeadMapper)ReflectionTestUtils.getField(previous,"clubLeadMapper");
-        IOmsTicketService tickets=previous==null?mock(IOmsTicketService.class):(IOmsTicketService)ReflectionTestUtils.getField(previous,"omsTicketService");
-        if("clubLeadMapper".equals(field))leads=(ClubLeadMapper)value;
-        if("omsTicketService".equals(field))tickets=(IOmsTicketService)value;
-        PlayNodeAccessService service=new PlayNodeAccessService(
-                (ICmsActivityService)ReflectionTestUtils.getField(controller,"cmsActivityService"),
-                (CmsActivityMapper)ReflectionTestUtils.getField(controller,"currentPlayActivityMapper"),
-                (CmsRegistrationMapper)ReflectionTestUtils.getField(controller,"cmsRegistrationMapper"),
-                (ICmsTopicNodeService)ReflectionTestUtils.getField(controller,"cmsTopicNodeService"),
-                (IPlayerNodeProgressService)ReflectionTestUtils.getField(controller,"playerNodeProgressService"),
-                (ICmsTopicService)ReflectionTestUtils.getField(controller,"cmsTopicService"),tickets,leads,
-                (IGameSessionRuntimeService)ReflectionTestUtils.getField(controller,"gameSessionRuntimeService"),
-                (ICmsTopicChapterService)ReflectionTestUtils.getField(controller,"cmsTopicChapterService"),
-                (ITopicRouteRuntimeService)ReflectionTestUtils.getField(controller,"topicRouteRuntimeService"));
-        ReflectionTestUtils.setField(controller,"playNodeAccessService",service);
-        Object puzzle=ReflectionTestUtils.getField(controller,"puzzlePlayService");
+    public static <T> T invokeMethod(Object target,String name,Object... arguments) {
+        if(!(target instanceof ApiPlayProgressController controller)) return ReflectionTestUtils.invokeMethod(target,name,arguments);
+        Class<?> type=switch(name) {
+            case "nodeScope", "playContext", "isDelistedNode", "hasCompletedNodeFact", "findNodeProgressRow", "isPureOnlineNode", "isAppSensorNode", "isPhotoFilterNode", "isPrevDone", "routeAccessError", "unlockGateError", "parseGeoCoordinate", "activityTimeError", "resolveMode", "resolveCtx", "leadGateError", "normalizeAnswer", "frozenAnswer", "frozenTemplateView", "effectiveTemplate" -> PlayNodeContext.class;
+            case "isTopicCompleted", "isTopicCompletedFor", "isCompletedCompletionFact", "completedExplorePassOwnedBy", "exploreRegistration", "isRegistered", "activityRegistration", "validSelfPlayPass", "topicHistoryBlocked", "historyReadableNode", "hasSelfPlayRegistration", "isExploreChapterRedeemed" -> PlayCompletionFacts.class;
+            case "nodes", "resolveCoupon", "visibleBranchNodes", "shopDayCrowdedThreshold", "shopDayServiceCapacityPerHour", "shopDayExpectedWaitMinutes", "vitalsOn", "routeState" -> PlayNodeQueryApplication.class;
+            case "ending", "myCompleted" -> PlayHistoryQueryApplication.class;
+            case "companionLine", "defaultCompanionLine", "leaderboard", "growth", "achievements" -> PlayPlayerQueryApplication.class;
+            case "basicIntentScope", "basicActionContext", "basicActionReceipt", "executeBasicIntent", "basicReplay", "basicJson", "basicHash", "basicRequestId" -> PlayBasicIntentApplication.class;
+            case "checkin", "checkinOnce", "recordFirstSuccessfulScan", "scanEntry", "answer", "answerOnce", "arrive", "arriveOnce", "sensorResult" -> PlayBasicCommandApplication.class;
+            case "photo", "verifyPhotoUploadFactOrError" -> PlayPhotoCommandApplication.class;
+            case "revealPuzzle", "puzzleHint", "unlockHint", "hintUnlockCost" -> PlayPuzzleCommandApplication.class;
+            case "preference", "submitPreference", "confirmPreferenceTag", "revokePreferenceTag", "correctPreferenceTag", "newLifeOperatingSystem", "resolvePreferencePlayCtx" -> PlayPreferenceApplication.class;
+            case "advanceProgress", "collect", "logAttempt", "claimNodeMedal", "refreshBingo", "grantConditionalReward", "grantTemplateCoupon", "grantCouponById" -> PlayNodeCompletionApplication.class;
+            case "shopDayProofData" -> PlayTaskPresentation.class;
+            default -> ApiPlayProgressController.class;
+        };
+        return ReflectionTestUtils.invokeMethod(type==ApiPlayProgressController.class?controller:owner(controller,type),name,arguments);
+    }
+    private static void installIfAbsent(ApiPlayProgressController controller) {
+        if(!GRAPHS.containsKey(controller)) install(controller);
+    }
+    public static synchronized void install(ApiPlayProgressController controller) {
+        Map<String,Object> input=INPUTS.computeIfAbsent(controller,key -> new LinkedHashMap<>());
+        // Explicit ordinary no-lead/unused-ticket fixtures, never production nullable fallbacks.
+        if(!input.containsKey("clubLeadMapper")) {
+            ClubLeadMapper leads=mock(ClubLeadMapper.class); when(leads.selectByActivity(anyLong())).thenReturn(null);
+            input.put("clubLeadMapper",leads);
+        }
+        input.computeIfAbsent("omsTicketService",key -> mock(IOmsTicketService.class));
+        PlayNodeAccessService access=input.containsKey("playNodeAccessService")
+                ? (PlayNodeAccessService)input.get("playNodeAccessService") : new PlayNodeAccessService(
+                (ICmsActivityService)input.get("cmsActivityService"),
+                (CmsActivityMapper)input.get("currentPlayActivityMapper"),
+                (CmsRegistrationMapper)input.get("cmsRegistrationMapper"),
+                (ICmsTopicNodeService)input.get("cmsTopicNodeService"),
+                (IPlayerNodeProgressService)input.get("playerNodeProgressService"),
+                (ICmsTopicService)input.get("cmsTopicService"),(IOmsTicketService)input.get("omsTicketService"),
+                (ClubLeadMapper)input.get("clubLeadMapper"),(IGameSessionRuntimeService)input.get("gameSessionRuntimeService"),
+                (ICmsTopicChapterService)input.get("cmsTopicChapterService"),(ITopicRouteRuntimeService)input.get("topicRouteRuntimeService"));
+        Map<Class<?>,Object> graph=new LinkedHashMap<>();
+        try {
+            for(Class<?> type:OWNERS) graph.put(type,type.getDeclaredConstructor().newInstance());
+        } catch(ReflectiveOperationException failed) { throw new IllegalStateException("Cannot assemble play applications",failed); }
+        for(Object application:graph.values()) {
+            for(Map.Entry<String,Object> dependency:input.entrySet()) {
+                if(ReflectionUtils.findField(application.getClass(),dependency.getKey())!=null)
+                    ReflectionTestUtils.setField(application,dependency.getKey(),dependency.getValue());
+            }
+            for(Field field:application.getClass().getDeclaredFields()) {
+                if(graph.containsKey(field.getType())) ReflectionTestUtils.setField(application,field.getName(),graph.get(field.getType()));
+            }
+            if(ReflectionUtils.findField(application.getClass(),"playNodeAccessService")!=null)
+                ReflectionTestUtils.setField(application,"playNodeAccessService",access);
+        }
+        for(Field field:ApiPlayProgressController.class.getDeclaredFields()) {
+            if(graph.containsKey(field.getType())) ReflectionTestUtils.setField(controller,field.getName(),graph.get(field.getType()));
+        }
+        Object puzzle=input.get("puzzlePlayService");
         if(puzzle instanceof org.springframework.aop.framework.Advised advised) {
             try { puzzle=advised.getTargetSource().getTarget(); }
             catch(Exception failed) { throw new IllegalStateException("Cannot rewire hint application fixture",failed); }
         }
         if(puzzle instanceof com.chengyinhub.business.service.impl.PuzzlePlayServiceImpl)
-            ReflectionTestUtils.setField(puzzle,"accessService",service);
+            ReflectionTestUtils.setField(puzzle,"accessService",access);
+        GRAPHS.put(controller,graph);
     }
 }

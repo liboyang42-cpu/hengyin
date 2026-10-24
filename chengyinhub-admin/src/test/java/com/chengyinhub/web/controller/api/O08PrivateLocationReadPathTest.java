@@ -297,8 +297,8 @@ class O08PrivateLocationReadPathTest {
     private static ApiCreativeSquareController squareController(Long viewer, IViewCreativeSquareService views) {
         ApiCreativeSquareController controller = spy(new ApiCreativeSquareController());
         doReturn(viewer).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "viewCreativeSquareService", views);
-        ReflectionTestUtils.setField(controller, "creativeSquareCommunityPolicyService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "viewCreativeSquareService", views);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "creativeSquareCommunityPolicyService",
                 new CreativeSquareCommunityPolicyServiceImpl(mock(IImService.class)));
         return controller;
     }
@@ -314,19 +314,19 @@ class O08PrivateLocationReadPathTest {
             ICmsRegistrationService registrationService = mock(ICmsRegistrationService.class);
             doReturn(VIEWER).when(controller).getAppUserId();
             com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
-            ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
             com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
             com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
             com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", mock(ITopicRouteRuntimeService.class));
             com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService",
                     mock(com.chengyinhub.business.service.IPlayerNodeProgressService.class));
             var fixtureHintSettings = mock(com.chengyinhub.business.service.ICmsPointsSettingService.class);
-            ReflectionTestUtils.setField(controller, "cmsMemberTemplateService",
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService",
                     mock(com.chengyinhub.business.service.ICmsMemberTemplateService.class));
             com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService",
                     mock(com.chengyinhub.business.service.IOmsTicketService.class));
             com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
-            ReflectionTestUtils.setField(controller, "puzzlePlayService", mock(IPuzzlePlayService.class));
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "puzzlePlayService", mock(IPuzzlePlayService.class));
 
             CmsActivity activity = new CmsActivity();
             activity.setId(72L);
@@ -382,13 +382,13 @@ class O08PrivateLocationReadPathTest {
             ICapabilityService capabilityService = mock(ICapabilityService.class);
             when(capabilityService.hasCapability(anyLong(), anyString())).thenReturn(false);
             doReturn(VIEWER).when(controller).getAppUserId();
-            ReflectionTestUtils.setField(controller, "clubService", clubService);
-            ReflectionTestUtils.setField(controller, "clubMemberService", memberService);
-            ReflectionTestUtils.setField(controller, "capabilityService", capabilityService);
-            ReflectionTestUtils.setField(controller, "clubLeaderService",
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubService", clubService);
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubMemberService", memberService);
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "capabilityService", capabilityService);
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeaderService",
                     mock(com.chengyinhub.business.service.IClubLeaderService.class));
-            ReflectionTestUtils.setField(controller, "cmsTopicService", mock(ICmsTopicService.class));
-            ReflectionTestUtils.setField(controller, "umsMemberService",
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", mock(ICmsTopicService.class));
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "umsMemberService",
                     mock(com.chengyinhub.business.service.IUmsMemberService.class));
             when(clubService.selectClubsByMemberId(VIEWER)).thenReturn(Collections.emptyList());
             when(memberService.selectClubIdsByMember(VIEWER)).thenReturn(Collections.emptyList());

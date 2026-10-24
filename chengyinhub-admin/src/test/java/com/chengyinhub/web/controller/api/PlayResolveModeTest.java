@@ -51,7 +51,7 @@ class PlayResolveModeTest {
     }
 
     private int resolveMode(Long activityId, Long topicId) {
-        Integer r = ReflectionTestUtils.invokeMethod(controller, "resolveMode", activityId, topicId);
+        Integer r = com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "resolveMode", activityId, topicId);
         return r == null ? -1 : r;
     }
 

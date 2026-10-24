@@ -89,15 +89,22 @@ class DeadlockRetryEntryPointContractTest {
         TreeSet<String> callers = new TreeSet<>();
         List<String> violations = new ArrayList<>();
         Map<String, String[]> playMethods = methods(source(PLAY));
+        Map<String, String[]> graph = new LinkedHashMap<>(playMethods);
+        for (String owner : List.of("PlayBasicCommandApplication", "PlayPhotoCommandApplication",
+                "PlayPuzzleCommandApplication", "PlayPreferenceApplication", "PlayNodeCompletionApplication")) {
+            String bean = Character.toLowerCase(owner.charAt(0)) + owner.substring(1);
+            methods(source("src/main/java/com/chengyinhub/web/service/play/" + owner + ".java"))
+                    .forEach((key, value) -> graph.put(bean + "." + key, value));
+        }
         for (Map.Entry<String, String[]> method : playMethods.entrySet()) {
             String name = method.getKey();
             String annotations = method.getValue()[0];
             String body = method.getValue()[1];
-            if (!annotations.contains("Mapping(") || !reachesAdvanceProgress(playMethods, name, new java.util.HashSet<>())) {
+            if (!annotations.contains("Mapping(") || !reachesCall(graph, name, "advanceProgress(", new java.util.HashSet<>())) {
                 continue;
             }
             callers.add(name);
-            if (body.contains("preferencePlayService.submit(")) {
+            if (reachesCall(graph, name, "preferencePlayService.submit(", new java.util.HashSet<>())) {
                 // 偏好题组的事务与重试在 PreferencePlayService.submit 上；controller 再开事务会把它降成内层
                 if (annotated(annotations, "Transactional")) violations.add(name + " 不应自带事务");
             } else if (!annotated(annotations, "DeadlockRetry") || !annotated(annotations, "Transactional")) {
@@ -109,16 +116,18 @@ class DeadlockRetryEntryPointContractTest {
                 "sensorResult", "submitPreference")), "advanceProgress 调用方识别失败: " + callers);
     }
 
-    /** 命令入口仍拥有最外层事务；沿真实私有 helper 调用查找推进，不能把未映射 helper 当入口。 */
-    private static boolean reachesAdvanceProgress(Map<String, String[]> methods, String name, java.util.Set<String> seen) {
+    /** Follow the actual application owner and same-owner helpers; HTTP retains the outer retry. */
+    private static boolean reachesCall(Map<String, String[]> methods, String name, String call, java.util.Set<String> seen) {
         if (!seen.add(name)) return false;
         String body = methods.get(name)[1];
-        if (body.contains("advanceProgress(")) return true;
+        if (body.contains(call)) return true;
+        String owner = name.contains(".") ? name.substring(0, name.lastIndexOf('.') + 1) : "";
         for (Map.Entry<String, String[]> helper : methods.entrySet()) {
-            if (!helper.getValue()[1].stripLeading().startsWith("private ")) continue;
-            String helperName = helper.getKey().replaceFirst("#\\d+$", "");
-            if (Pattern.compile("\\b" + Pattern.quote(helperName) + "\\s*\\(").matcher(body).find()
-                    && reachesAdvanceProgress(methods, helper.getKey(), seen)) return true;
+            String key = helper.getKey().replaceFirst("#\\d+$", "");
+            String targetOwner = key.contains(".") ? key.substring(0, key.lastIndexOf('.') + 1) : "";
+            String target = targetOwner.equals(owner) ? key.substring(targetOwner.length()) : key;
+            if (Pattern.compile("(?<![\\w.])" + Pattern.quote(target) + "\\s*\\(").matcher(body).find()
+                    && reachesCall(methods, helper.getKey(), call, seen)) return true;
         }
         return false;
     }
@@ -158,7 +167,7 @@ class DeadlockRetryEntryPointContractTest {
                 }
             }
         }
-        assertEquals(new TreeSet<>(List.of("ApiPlayProgressController.java", "CmsRegistrationServiceImpl.java",
+        assertEquals(new TreeSet<>(List.of("PlayNodeCompletionApplication.java", "CmsRegistrationServiceImpl.java",
                 "TopicRouteRuntimeServiceImpl.java")), callers);
     }
 

@@ -54,11 +54,11 @@ class FreeOrderCancelEntryGateAcceptanceTest {
         ICmsActivityService activitySvc = mock(ICmsActivityService.class);
         ApiVerifyController controller = spy(new ApiVerifyController());
         doReturn(MEMBER).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "registrationService", regSvc);
-        ReflectionTestUtils.setField(controller, "perkLedgerService", perkSvc);
-        ReflectionTestUtils.setField(controller, "activityService", activitySvc);
-        ReflectionTestUtils.setField(controller, "dynSecret", "test-secret");
-        ReflectionTestUtils.setField(controller, "qrcodeService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "registrationService", regSvc);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "perkLedgerService", perkSvc);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "activityService", activitySvc);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "dynSecret", "test-secret");
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "qrcodeService",
                 mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class));
         when(regSvc.selectCmsRegistrationById(REG)).thenReturn(cancelledFreeOrder());
 
@@ -80,10 +80,10 @@ class FreeOrderCancelEntryGateAcceptanceTest {
         ICmsRegistrationService regSvc = mock(ICmsRegistrationService.class);
         when(regSvc.selectCmsRegistrationList(any())).thenReturn(Collections.emptyList());
         ApiPlayProgressController controller = new ApiPlayProgressController();
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", regSvc);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", regSvc);
 
-        Boolean registered = ReflectionTestUtils.invokeMethod(controller, "isRegistered", MEMBER, ACTIVITY);
-        CmsRegistration entry = ReflectionTestUtils.invokeMethod(controller, "activityRegistration",
+        Boolean registered = com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "isRegistered", MEMBER, ACTIVITY);
+        CmsRegistration entry = com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "activityRegistration",
                 MEMBER, ACTIVITY, REG);
 
         assertFalse(registered);

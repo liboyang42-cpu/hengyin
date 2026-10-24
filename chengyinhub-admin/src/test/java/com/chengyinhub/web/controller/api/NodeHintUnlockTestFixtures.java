@@ -18,10 +18,10 @@ public final class NodeHintUnlockTestFixtures {
             IUmsMemberService members, IUmsMemberPointsDetailService details, PlatformTransactionManager transactions) {
         PlayNodeAccessTestFixtures.install(controller);
         PuzzlePlayServiceImpl target=new PuzzlePlayServiceImpl(
-                (ICmsMemberTemplateService)ReflectionTestUtils.getField(controller,"cmsMemberTemplateService"),
+                (ICmsMemberTemplateService)com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller,"cmsMemberTemplateService"),
                 mock(PlayAttemptLogMapper.class),mock(PlayerNodeProgressMapper.class),mock(UmsMemberMapper.class),
-                (ICmsTopicNodeService)ReflectionTestUtils.getField(controller,"cmsTopicNodeService"),
-                (PlayNodeAccessService)ReflectionTestUtils.getField(controller,"playNodeAccessService"),settings,members,details);
+                (ICmsTopicNodeService)com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller,"cmsTopicNodeService"),
+                (PlayNodeAccessService)com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller,"playNodeAccessService"),settings,members,details);
         if(transactions==null)return target; // Plain unit fixture, never claimed as transaction evidence.
         ProxyFactory proxy=new ProxyFactory(target);proxy.setInterfaces(IPuzzlePlayService.class);
         proxy.addAdvice(new TransactionInterceptor(transactions,new AnnotationTransactionAttributeSource()));
@@ -29,14 +29,14 @@ public final class NodeHintUnlockTestFixtures {
     }
     public static void wire(ApiPlayProgressController controller, ICmsPointsSettingService settings,
             IUmsMemberService members, IUmsMemberPointsDetailService details, PlatformTransactionManager transactions) {
-        ReflectionTestUtils.setField(controller,"puzzlePlayService",application(controller,settings,members,details,transactions));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"puzzlePlayService",application(controller,settings,members,details,transactions));
     }
     public static void pricing(ApiPlayProgressController controller,ICmsPointsSettingService settings) {
         IPuzzlePlayService price=application(controller,settings,mock(IUmsMemberService.class),mock(IUmsMemberPointsDetailService.class),null);
-        IPuzzlePlayService existing=(IPuzzlePlayService)ReflectionTestUtils.getField(controller,"puzzlePlayService");
+        IPuzzlePlayService existing=(IPuzzlePlayService)com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller,"puzzlePlayService");
         if(existing==null)throw new IllegalStateException("Pricing fixture must retain its explicit puzzle caller");
         IPuzzlePlayService observed=mockingDetails(existing).isMock()?existing:spy(existing);
         doAnswer(call -> price.hintUnlockCost()).when(observed).hintUnlockCost();
-        ReflectionTestUtils.setField(controller,"puzzlePlayService",observed);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"puzzlePlayService",observed);
     }
 }

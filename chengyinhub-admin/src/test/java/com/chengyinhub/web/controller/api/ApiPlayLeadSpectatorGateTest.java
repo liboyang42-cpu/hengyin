@@ -58,20 +58,20 @@ class ApiPlayLeadSpectatorGateTest {
         controller = spy(new ApiPlayProgressController());
         doReturn(LEADER).when(controller).getAppUserId();
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "clubEventLeadResolver", leadResolver);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubEventLeadResolver", leadResolver);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService",
                 mock(com.chengyinhub.business.service.IPlayerNodeProgressService.class));
         var fixtureHintSettings = mock(com.chengyinhub.business.service.ICmsPointsSettingService.class);
-        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService",
                 mock(com.chengyinhub.business.service.ICmsMemberTemplateService.class));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService",
                 mock(com.chengyinhub.business.service.IOmsTicketService.class));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
-        ReflectionTestUtils.setField(controller, "puzzlePlayService", mock(IPuzzlePlayService.class));
-        ReflectionTestUtils.setField(controller, "npcProfileService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "puzzlePlayService", mock(IPuzzlePlayService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "npcProfileService",
                 mock(com.chengyinhub.business.service.impl.NpcProfileService.class));
 
         CmsActivity activity = new CmsActivity();

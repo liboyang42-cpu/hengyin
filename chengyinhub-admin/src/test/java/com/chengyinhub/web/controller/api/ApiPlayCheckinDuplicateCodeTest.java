@@ -39,7 +39,7 @@ class ApiPlayCheckinDuplicateCodeTest {
         activityService = mock(ICmsActivityService.class);
         controller = spy(new ApiPlayProgressController());
         doReturn(41L).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "playCheckinCodeService", liveCodes);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playCheckinCodeService", liveCodes);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
         when(nodeService.selectCmsTopicNodeById(77L)).thenReturn(node(77L,44L));
@@ -49,7 +49,7 @@ class ApiPlayCheckinDuplicateCodeTest {
         ticket.setOwnerType(2L); ticket.setOwnerId(43L); ticket.setRegistrationStatus(2);
         ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
         when(registrations.selectCmsRegistrationList(any())).thenReturn(java.util.Collections.singletonList(ticket));
-        ReflectionTestUtils.setField(controller,"cmsRegistrationService",registrations);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"cmsRegistrationService",registrations);
         CurrentPlayControllerFixtures.install(controller);
         BasicPlayCommandFixtures.scope(controller,44L);
         when(liveCodes.inspect(STATIC)).thenReturn(ConsumeResult.invalid());

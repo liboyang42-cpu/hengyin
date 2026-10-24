@@ -47,20 +47,20 @@ class ArchitectureDayGCompletionFallbackTest {
         com.chengyinhub.business.service.support.CompletedRouteFactReader completed =
                 mock(com.chengyinhub.business.service.support.CompletedRouteFactReader.class);
         when(completed.findCurrentCompletedRoutes(7L)).thenReturn(List.of());
-        ReflectionTestUtils.setField(controller, "completedRouteFactReader", completed);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "completedRouteFactReader", completed);
         progress = mock(IPlayerNodeProgressService.class);
         topics = mock(ICmsTopicService.class);
         nodes = mock(ICmsTopicNodeService.class);
         perks = mock(IPerkLedgerService.class);
         ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
         ITopicRouteRuntimeService routes = mock(ITopicRouteRuntimeService.class);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progress);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrations);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", mock(ICmsActivityService.class));
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topics);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodes);
-        ReflectionTestUtils.setField(controller, "perkLedgerService", perks);
-        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", routes);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progress);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrations);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", mock(ICmsActivityService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topics);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodes);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "perkLedgerService", perks);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", routes);
         when(registrations.selectCmsRegistrationList(any(com.chengyinhub.business.domain.CmsRegistration.class))).thenReturn(List.of());
         when(routes.sessionStatuses(any())).thenReturn(Map.of());
         CmsTopic topic = new CmsTopic();

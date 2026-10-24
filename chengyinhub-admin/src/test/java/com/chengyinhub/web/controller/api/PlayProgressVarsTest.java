@@ -67,13 +67,13 @@ class PlayProgressVarsTest {
 
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
         var fixtureHintSettings = pointsSettingService;
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", chapterService);
-        ReflectionTestUtils.setField(controller, "puzzlePlayService", puzzlePlayService);
-        ReflectionTestUtils.setField(controller, "gameRuntimeSessionMapper", sessionMapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "puzzlePlayService", puzzlePlayService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "gameRuntimeSessionMapper", sessionMapper);
 
         CmsTopicNode node = new CmsTopicNode();
         node.setId(NODE);
