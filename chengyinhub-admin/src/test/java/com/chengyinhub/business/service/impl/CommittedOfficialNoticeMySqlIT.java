@@ -212,4 +212,90 @@ class CommittedOfficialNoticeMySqlIT {
             assertEquals("0", f.db.queryForObject("select status from sys_job where invoke_target=?", String.class, target));
         }
     }
+
+    @Test void forwardMetadataMigrationPreservesUnknownOriginalRowAndCreatesTypedShape() throws Exception {
+        var original = new java.util.concurrent.atomic.AtomicReference<java.util.Map<String, Object>>();
+        try (var f = new CommittedOfficialNoticeMySqlFixture()) {
+            f.openWithOriginalNoticeShape(db -> {
+                db.update("INSERT INTO committed_official_notice_wx(id,event_key,recipient,title,body,im_intent_id,"
+                        + "request_hash,wx_state,owner_token,created_at,attempted_at) "
+                        + "VALUES(41,'original-notice:41',100,'frozen title','frozen body',411,?,'UNKNOWN',"
+                        + "'11111111-1111-1111-1111-111111111111',NOW(3),NOW(3))", "a".repeat(64));
+                original.set(db.queryForMap("SELECT * FROM committed_official_notice_wx WHERE id=41"));
+            });
+            var after = new java.util.LinkedHashMap<>(f.db.queryForMap(
+                    "SELECT * FROM committed_official_notice_wx WHERE id=41"));
+            assertEquals("OFFICIAL_BROADCAST", after.remove("notice_type"));
+            assertNull(after.remove("wx_payload_json"));
+            assertEquals(original.get(), after, "all original fields/hash/UNKNOWN owner and times survive unchanged");
+            assertEquals(14, f.db.queryForObject("SELECT COUNT(*) FROM information_schema.columns "
+                    + "WHERE table_schema=DATABASE() AND table_name='committed_official_notice_wx'", Integer.class));
+            assertEquals(3, f.db.queryForObject("SELECT COUNT(*) FROM information_schema.table_constraints "
+                    + "WHERE constraint_schema=DATABASE() AND table_name='committed_official_notice_wx' "
+                    + "AND constraint_type='CHECK' AND enforced='YES'", Integer.class));
+            assertEquals(0, f.count("im_notification_intent")); assertEquals(0, f.count("im_message"));
+            assertTrue(f.wakes.isEmpty()); verifyNoInteractions(f.wx, f.beforeStartWx);
+        }
+    }
+
+    @Test void forwardMetadataMigrationRejectsChangedStateSetBeforeDdl() throws Exception {
+        assertOriginalNoticeShapeRejected(db -> db.execute("ALTER TABLE committed_official_notice_wx "
+                + "DROP CHECK ck_committed_official_notice_state, "
+                + "ADD CONSTRAINT ck_committed_official_notice_state CHECK "
+                + "(wx_state IN ('PENDING','UNKNOWN','ACCEPTED','OTHER'))"));
+    }
+
+    @Test void forwardMetadataMigrationRejectsChangedOwnerCheckBeforeDdl() throws Exception {
+        assertOriginalNoticeShapeRejected(db -> db.execute("ALTER TABLE committed_official_notice_wx "
+                + "DROP CHECK ck_committed_official_notice_owner, "
+                + "ADD CONSTRAINT ck_committed_official_notice_owner CHECK "
+                + "(wx_state IN ('PENDING','UNKNOWN','ACCEPTED'))"));
+    }
+
+    @Test void forwardMetadataMigrationRejectsUnsignedOriginalIdBeforeDdl() throws Exception {
+        assertOriginalNoticeShapeRejected(db -> db.execute("ALTER TABLE committed_official_notice_wx "
+                + "MODIFY COLUMN id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT"));
+    }
+
+    @Test void forwardMetadataMigrationRejectsUnenforcedOriginalCheckBeforeDdl() throws Exception {
+        assertOriginalNoticeShapeRejected(db -> db.execute("ALTER TABLE committed_official_notice_wx "
+                + "ALTER CHECK ck_committed_official_notice_owner NOT ENFORCED"));
+    }
+
+    private void assertOriginalNoticeShapeRejected(java.util.function.Consumer<JdbcTemplate> drift) throws Exception {
+        try (var f = new CommittedOfficialNoticeMySqlFixture()) {
+            var rejected = assertThrows(org.springframework.jdbc.datasource.init.ScriptStatementFailedException.class,
+                    () -> f.openWithOriginalNoticeShape(drift));
+            assertTrue(rejected.getMessage().contains(CommittedOfficialNoticeMySqlFixture.TYPED_NOTICE_MIGRATION));
+            assertTrue(rejected.getMessage().contains("ASSERT_FAILED_before_start_schema_preflight"),
+                    "must reject at the strict preflight, not at a drift-fixture or ALTER error");
+            assertEquals(12, f.db.queryForObject("SELECT COUNT(*) FROM information_schema.columns "
+                    + "WHERE table_schema=DATABASE() AND table_name='committed_official_notice_wx'", Integer.class));
+            assertEquals(0, f.db.queryForObject("SELECT COUNT(*) FROM information_schema.columns "
+                    + "WHERE table_schema=DATABASE() AND table_name='committed_official_notice_wx' "
+                    + "AND column_name IN ('notice_type','wx_payload_json')", Integer.class));
+            assertEquals(0, f.count("committed_official_notice_wx"));
+            assertEquals(0, f.count("im_notification_intent")); assertEquals(0, f.count("im_message"));
+            assertEquals("1", f.db.queryForObject("SELECT status FROM sys_job WHERE invoke_target="
+                    + "'committedOfficialNoticeTask.deliverPending()'", String.class));
+            assertTrue(f.wakes.isEmpty()); verifyNoInteractions(f.wx, f.beforeStartWx);
+        }
+    }
+
+    @Test void forwardMetadataMigrationRejectsAlreadyTypedSchemaWithoutSecondAlter() throws Exception {
+        try (var f = new CommittedOfficialNoticeMySqlFixture()) {
+            f.open();
+            var before = f.db.queryForMap("SHOW CREATE TABLE committed_official_notice_wx");
+            var rejected = assertThrows(org.springframework.jdbc.datasource.init.ScriptStatementFailedException.class,
+                    () -> new org.springframework.jdbc.datasource.init.ResourceDatabasePopulator(
+                            new org.springframework.core.io.FileSystemResource(f.sqlRoot.resolve(
+                                    CommittedOfficialNoticeMySqlFixture.TYPED_NOTICE_MIGRATION)))
+                            .execute(f.manager.getDataSource()));
+            assertTrue(rejected.getMessage().contains("ASSERT_FAILED_before_start_schema_preflight"));
+            assertEquals(before, f.db.queryForMap("SHOW CREATE TABLE committed_official_notice_wx"));
+            assertEquals(0, f.count("committed_official_notice_wx"));
+            assertEquals(1, f.count("complaint_notice_fact"));
+            assertTrue(f.wakes.isEmpty()); verifyNoInteractions(f.wx, f.beforeStartWx);
+        }
+    }
 }
