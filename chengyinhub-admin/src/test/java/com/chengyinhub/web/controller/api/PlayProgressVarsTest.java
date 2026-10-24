@@ -65,13 +65,13 @@ class PlayProgressVarsTest {
         IPuzzlePlayService puzzlePlayService = mock(IPuzzlePlayService.class);
         sessionMapper = mock(GameRuntimeSessionMapper.class);
 
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
         ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
         ReflectionTestUtils.setField(controller, "cmsPointsSettingService", pointsSettingService);
-        ReflectionTestUtils.setField(controller, "cmsTopicChapterService", chapterService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", chapterService);
         ReflectionTestUtils.setField(controller, "puzzlePlayService", puzzlePlayService);
         ReflectionTestUtils.setField(controller, "gameRuntimeSessionMapper", sessionMapper);
 

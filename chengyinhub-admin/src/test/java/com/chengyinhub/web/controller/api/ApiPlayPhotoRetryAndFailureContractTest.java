@@ -84,12 +84,12 @@ class ApiPlayPhotoRetryAndFailureContractTest
         proofService = mock(IShopDayProofService.class);
         IPlayerProgressionService progressionService = mock(IPlayerProgressionService.class);
 
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
         ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
         ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templateService);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
         ReflectionTestUtils.setField(controller, "pointsAwardService", pointsAwardService);
         ReflectionTestUtils.setField(controller, "rewardDropService", mock(IRewardDropService.class));
         ReflectionTestUtils.setField(controller, "smsCouponHistoryService", mock(ISmsCouponHistoryService.class));
@@ -98,7 +98,7 @@ class ApiPlayPhotoRetryAndFailureContractTest
         ReflectionTestUtils.setField(controller, "topicCompletionAwardService", completionAwardService);
         ReflectionTestUtils.setField(controller, "shopDayProofService", proofService);
         ReflectionTestUtils.setField(controller, "xpBudgetService", mock(IXpBudgetService.class));
-        ReflectionTestUtils.setField(controller, "clubLeadMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper",
                 mock(com.chengyinhub.business.mapper.ClubLeadMapper.class));
         ReflectionTestUtils.setField(controller, "playAttemptLogMapper",
                 mock(com.chengyinhub.business.mapper.PlayAttemptLogMapper.class));
@@ -108,7 +108,7 @@ class ApiPlayPhotoRetryAndFailureContractTest
                 new NodeMerchantOverrideServiceImpl(
                         mock(com.chengyinhub.business.service.ICmsRegistrationMerchantService.class)));
         SensorChallengeServiceImpl sensorChallenges = new SensorChallengeServiceImpl();
-        ReflectionTestUtils.setField(sensorChallenges, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(sensorChallenges, "playerNodeProgressService", progressService);
         ReflectionTestUtils.setField(controller, "sensorChallengeService", sensorChallenges);
 
         node = new CmsTopicNode();
@@ -240,7 +240,7 @@ class ApiPlayPhotoRetryAndFailureContractTest
         CmsTopic voucherTopic = new CmsTopic();
         voucherTopic.setId(TOPIC);
         voucherTopic.setProductType(PlayMode.FREE_COLLECT);
-        ReflectionTestUtils.setField(controller, "cmsTopicService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService",
                 (ICmsTopicService) mockTopicReturning(voucherTopic));
         PlayerNodeProgress recorded = new PlayerNodeProgress();
         recorded.setId(7001L);

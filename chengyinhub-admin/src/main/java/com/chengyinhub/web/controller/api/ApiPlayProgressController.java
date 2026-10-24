@@ -117,6 +117,24 @@ public class ApiPlayProgressController extends BaseController
 {
     private final TopicCompletionRulePolicy topicCompletionRulePolicy = new TopicCompletionRulePolicy();
 
+    @Autowired
+    private com.chengyinhub.business.service.support.PlayNodeAccessService playNodeAccessService;
+
+    private static com.chengyinhub.business.service.support.PlayNodeAccessService.NodeScope nodeScope(CmsTopicNode node) {
+        return node == null ? null : new com.chengyinhub.business.service.support.PlayNodeAccessService.NodeScope(
+                node.getId(), node.getTopicId(), node.getChapterId(), node.getSortId(), node.getStatus(), node.getUnlockAfterNodeId());
+    }
+    private static PlayCtx playContext(com.chengyinhub.business.service.support.PlayNodeAccessService.Context view) {
+        PlayCtx ctx=new PlayCtx(); ctx.actId=view.activityId(); ctx.topicId=view.topicId();
+        ctx.selfPlay=view.selfPlay(); ctx.nightWarning=view.nightWarning(); ctx.continuing=view.continuing();
+        if(view.registrationId()!=null) {
+            ctx.registration=new CmsRegistration(); ctx.registration.setId(view.registrationId());
+            ctx.registration.setPurchaseKind(view.purchaseKind());
+        }
+        if(view.failure()!=null) ctx.error=new AjaxResult(view.failure().originalAjaxCode(),view.failure().message());
+        return ctx;
+    }
+
     /**
      * 拍照上传事实证明缝:生产校验 picUrl 来自现行上传链、对象真实存在,且上传归属==当前登录身份;
      * 单测可注入替身,但任何注入都不得降级为“跳过校验”。
@@ -171,8 +189,6 @@ public class ApiPlayProgressController extends BaseController
 
     // P1 俱乐部带领:章节放行强校验
     @Autowired
-    private com.chengyinhub.business.mapper.ClubLeadMapper clubLeadMapper;
-    @Autowired
     private com.chengyinhub.business.service.IGameSessionRuntimeService gameSessionRuntimeService;
     @Autowired
     private com.chengyinhub.business.mapper.GameSessionRuntimeMapper playCommandReceiptMapper;
@@ -222,8 +238,6 @@ public class ApiPlayProgressController extends BaseController
     @Autowired
     private ICmsTopicChapterService cmsTopicChapterService;
 
-    @Autowired
-    private IOmsTicketService omsTicketService;
 
     @Autowired
     private ICmsMemberTemplateService cmsMemberTemplateService;
@@ -1204,7 +1218,7 @@ public class ApiPlayProgressController extends BaseController
     /** 规则16:普通下架/停用(status 显式非 1)节点不得再产生新完成;无 status 的存量行不在此列。 */
     private boolean isDelistedNode(CmsTopicNode node)
     {
-        return node != null && node.getStatus() != null && !Long.valueOf(1L).equals(node.getStatus());
+        return playNodeAccessService.isDelistedNode(nodeScope(node));
     }
 
     /**
@@ -1214,21 +1228,13 @@ public class ApiPlayProgressController extends BaseController
      */
     private boolean hasCompletedNodeFact(Long memberId, String activityId, CmsTopicNode node)
     {
-        Long actId = 0L;
-        if (StringUtils.isNotBlank(activityId) && !"0".equals(activityId.trim())) {
-            try { actId = Long.valueOf(activityId.trim()); }
-            catch (NumberFormatException invalid) { return false; }
-        }
-        return hasCompletedNodeFact(memberId, actId, node);
+        return playNodeAccessService.hasCompletedNodeFact(memberId, activityId, nodeScope(node));
     }
 
     /** 已完成事实(Long 版):路线 seam 豁免与入口下架闸必须同源,见 {@link #routeAccessError}。 */
     private boolean hasCompletedNodeFact(Long memberId, Long actId, CmsTopicNode node)
     {
-        if (memberId == null || node == null || node.getId() == null) return false;
-        PlayerNodeProgress row = findNodeProgressRow(memberId, actId == null ? 0L : actId,
-                node.getTopicId(), node.getId());
-        return row != null && Integer.valueOf(1).equals(row.getStatus());
+        return playNodeAccessService.hasCompletedNodeFact(memberId, actId, nodeScope(node));
     }
 
     /**
@@ -2365,15 +2371,10 @@ public class ApiPlayProgressController extends BaseController
      */
     private PlayerNodeProgress findNodeProgressRow(Long memberId, Long actId, Long topicId, Long nodeId)
     {
-        PlayerNodeProgress probe = new PlayerNodeProgress();
-        probe.setMemberId(memberId);
-        probe.setActivityId(actId == null ? 0L : actId);
-        probe.setNodeId(nodeId);
-        if (actId == null || actId == 0L) {
-            probe.setTopicId(topicId);
-        }
-        List<PlayerNodeProgress> rows = playerNodeProgressService.selectPlayerNodeProgressList(probe);
-        return rows == null || rows.isEmpty() ? null : rows.get(0);
+        var fact = playNodeAccessService.findNodeProgressRow(memberId, actId, topicId, nodeId);
+        if (fact == null) return null;
+        PlayerNodeProgress row = new PlayerNodeProgress(); row.setId(fact.id());
+        row.setStatus(fact.status()); row.setPicUrl(fact.picUrl()); return row;
     }
 
     /**
@@ -2621,46 +2622,14 @@ public class ApiPlayProgressController extends BaseController
     /** mode=1 线性：该节点之前(sortId 更小)的同主题节点是否都已完成（防扫后面的码跳关） */
     private boolean isPrevDone(Long memberId, Long actId, CmsTopicNode node)
     {
-        long mySort = node.getSortId() == null ? 0L : node.getSortId();
-        CmsTopicNode allProbe = new CmsTopicNode();
-        allProbe.setTopicId(node.getTopicId());
-        allProbe.setStatus(1L);
-        List<CmsTopicNode> all = cmsTopicNodeService.selectCmsTopicNodeList(allProbe);
-
-        PlayerNodeProgress doneProbe = new PlayerNodeProgress();
-        doneProbe.setMemberId(memberId);
-        doneProbe.setActivityId(actId);
-        List<PlayerNodeProgress> done = playerNodeProgressService.selectPlayerNodeProgressList(doneProbe);
-        java.util.Set<Long> doneIds = new java.util.HashSet<>();
-        // 完成事实只认 status==1:拍照待审(photo_review=1 的 status=0 行)不得据此放行下一站。
-        for (PlayerNodeProgress p : done) {
-            if (p.getStatus() != null && p.getStatus() == 1) doneIds.add(p.getNodeId());
-        }
-
-        for (CmsTopicNode n : all) {
-            long s = n.getSortId() == null ? 0L : n.getSortId();
-            if (s < mySort && !doneIds.contains(n.getId())) return false;
-        }
-        return true;
+        return playNodeAccessService.isPrevDone(memberId, actId, nodeScope(node));
     }
 
     /** mode=1 的统一准入 seam：LINEAR 适配旧 sortId，BRANCH_GRAPH 只认服务端 routeState。 */
     private String routeAccessError(Long memberId, Long actId, Long topicId, CmsTopicNode node,
                                     String routeActionId)
     {
-        // §7-2 幂等豁免必须先于路线 seam:canPlay 的活节点集只取 status=1(TopicRouteRuntimeServiceImpl.nodes),
-        // 已被本人正式完成的下架节点会被判「不属于当前主题」⇒ 幂等回执被路线闸吃掉。已完成事实判定放在
-        // canPlay 之前;未完成的首次提交在更早的下架闸已被拒,不会借这条路放行新完成。
-        if (isDelistedNode(node) && hasCompletedNodeFact(memberId, actId, node)) return null;
-        if (resolveMode(actId, topicId) == PlayMode.LINEAR_ORIENTEERING) {
-            if (topicRouteRuntimeService != null) {
-                // 业务异常交由统一异常处理返回，不能吞掉已将事务标为回滚的异常。
-                return topicRouteRuntimeService.canPlay(memberId, topicId, actId, node.getId(), routeActionId)
-                        ? null : "该地点尚未解锁";
-            }
-            if (!isPrevDone(memberId, actId, node)) return "请先完成上一站";
-        }
-        return unlockGateError(memberId, actId, node);
+        return playNodeAccessService.routeAccessError(memberId, actId, topicId, nodeScope(node), routeActionId);
     }
 
     /**
@@ -2670,19 +2639,7 @@ public class ApiPlayProgressController extends BaseController
      */
     private String unlockGateError(Long memberId, Long actId, CmsTopicNode node)
     {
-        if (node.getUnlockAfterNodeId() == null || node.getUnlockAfterNodeId() <= 0) return null;
-        PlayerNodeProgress probe = new PlayerNodeProgress();
-        probe.setMemberId(memberId);
-        probe.setActivityId(actId);
-        probe.setNodeId(node.getUnlockAfterNodeId());
-        List<PlayerNodeProgress> rows = playerNodeProgressService.selectPlayerNodeProgressList(probe);
-        for (PlayerNodeProgress p : rows) {
-            if (p.getStatus() != null && p.getStatus() == 1) return null;
-        }
-        CmsTopicNode prev = cmsTopicNodeService.selectCmsTopicNodeById(node.getUnlockAfterNodeId());
-        return prev != null && StringUtils.isNotBlank(prev.getName())
-                ? "先完成「" + prev.getName() + "」才能解锁本关"
-                : "本关尚未解锁,先完成前置关卡";
+        return playNodeAccessService.unlockGateError(memberId, actId, nodeScope(node));
     }
 
     /**
@@ -2704,11 +2661,10 @@ public class ApiPlayProgressController extends BaseController
     /** 活动时间闸：未到开始/已过结束返回提示语，可玩返回 null（C5 有效期 gating） */
     private String activityTimeError(CmsActivity activity)
     {
-        if (activity == null) return null;
-        Date now = new Date();
-        if (activity.getStartDate() != null && now.before(activity.getStartDate())) return "活动未开始";
-        if (activity.getEndDate() != null && !now.before(activity.getEndDate())) return "活动已结束";
-        return null;
+        return playNodeAccessService.activityTimeError(activity == null ? null :
+                new com.chengyinhub.business.service.support.PlayNodeAccessService.ActivityWindow(
+                        activity.getStartDate() == null ? null : activity.getStartDate().getTime(),
+                        activity.getEndDate() == null ? null : activity.getEndDate().getTime()));
     }
 
     /**
@@ -2722,31 +2678,10 @@ public class ApiPlayProgressController extends BaseController
      */
     private int resolveMode(Long activityId, Long topicId)
     {
-        if (topicId != null) {
-            com.chengyinhub.business.domain.CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
-            if (topic != null && topic.getProductType() != null) {
-                return topic.getProductType();
-            }
-        }
-        // fallback:存量未回填 —— 与 P0-02 之前完全一致的行为
-        Integer mode = firstTicketMode(2L, activityId);
-        if (mode == null && topicId != null) mode = firstTicketMode(1L, topicId);
-        return mode == null ? PlayMode.LINEAR_ORIENTEERING : mode;
+        return playNodeAccessService.resolveMode(activityId, topicId);
     }
 
-    private Integer firstTicketMode(Long ownerType, Long ownerId)
-    {
-        if (ownerId == null) return null;
-        OmsTicket probe = new OmsTicket();
-        probe.setOwnerType(ownerType);
-        probe.setOwnerId(ownerId);
-        List<OmsTicket> tickets = omsTicketService.selectOmsTicketList(probe);
-        if (tickets == null) return null;
-        for (OmsTicket t : tickets) {
-            if (t.getMode() != null) return t.getMode();
-        }
-        return null;
-    }
+
 
     /**
      * [P0-17] ★ 通关口径的**单一真源**。五个判定点全部经它,别在任何一处重写 `done >= total`。
@@ -2942,11 +2877,7 @@ public class ApiPlayProgressController extends BaseController
     }
 
     /** M2 夜间(22:00-06:00)提示位:自玩会话返回给前端提示不阻断 */
-    private boolean isNightNow()
-    {
-        int h = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
-        return h >= 22 || h < 6;
-    }
+
 
     /** M2 播放上下文:活动会话(actId>0)或自玩会话(actId=0,校验主题通行证)。error 非空即应直接返回。 */
     private static class PlayCtx {
@@ -2966,60 +2897,13 @@ public class ApiPlayProgressController extends BaseController
      */
     private PlayCtx resolveCtx(Long memberId, String activityId, String topicId, CmsTopicNode node)
     {
-        return resolveCtx(memberId, activityId, topicId, node, null);
+        return playContext(playNodeAccessService.resolveContext(memberId, activityId, topicId, nodeScope(node)));
     }
 
     private PlayCtx resolveCtx(Long memberId, String activityId, String topicId, CmsTopicNode node,
             Long registrationId)
     {
-        PlayCtx c = new PlayCtx();
-        if (StringUtils.isNotBlank(activityId) && !"0".equals(activityId.trim())) {
-            // 活动会话(原逻辑,原样保留)
-            Long actId;
-            try { actId = Long.valueOf(activityId); } catch (Exception e) { c.error = error("参数有误"); return c; }
-            CmsActivity activity = cmsActivityService.selectCmsActivityById(actId);
-            if (activity == null || activity.getTopicId() == null) { c.error = error("活动不存在"); return c; }
-            if (!activity.getTopicId().equals(node.getTopicId())) { c.error = error("该节点不属于本次活动"); return c; }
-            CmsRegistration ticket;
-            try { ticket=com.chengyinhub.business.service.support.CurrentPlayRegistration.require(
-                    currentPlayActivityMapper,cmsRegistrationMapper,memberId,2L,actId,registrationId,new Date()); }
-            catch(IllegalStateException denied) { c.error=error(denied.getMessage());return c; }
-            if (ticket == null) { c.error = error("请先报名并完成支付"); return c; }
-            c.registration = ticket;
-            activity=currentPlayActivityMapper.selectCmsActivityByIdForUpdate(actId);
-            if(activity==null || !node.getTopicId().equals(activity.getTopicId())) {
-                c.error=error("该节点不属于本次活动");return c;
-            }
-            String timeErr = activityTimeError(activity);
-            if (timeErr != null) { c.error = error(timeErr); return c; }
-            c.actId = actId;
-            c.topicId = activity.getTopicId();
-            c.selfPlay = false;
-            return c;
-        }
-        // 自玩会话(activity_id=0 + topic 通行证)
-        if (StringUtils.isBlank(topicId)) { c.error = error("参数有误"); return c; }
-        Long tId;
-        try { tId = Long.valueOf(topicId); } catch (Exception e) { c.error = error("参数有误"); return c; }
-        if (node.getTopicId() == null || !node.getTopicId().equals(tId)) { c.error = error("该节点不属于本主题"); return c; }
-        CmsRegistration pass;
-        // 已开局的自玩路线：通行证开局时有效即可打完本局(中途到期不打断)；未开局仍需有效通行证。
-        // 「已开局」由路线运行时判定：有进行中的路线局，或不建局的普通线性路线已记过节点进度。
-        boolean continuing = topicRouteRuntimeService != null && topicRouteRuntimeService.hasRunningSession(memberId, tId, 0L);
-        try { pass = continuing
-                ? com.chengyinhub.business.service.support.CurrentPlayRegistration.requireToContinue(
-                        currentPlayActivityMapper,cmsRegistrationMapper,memberId,1L,tId,registrationId,new Date())
-                : com.chengyinhub.business.service.support.CurrentPlayRegistration.require(
-                        currentPlayActivityMapper,cmsRegistrationMapper,memberId,1L,tId,registrationId,new Date()); }
-        catch(IllegalStateException denied) { c.error=new AjaxResult(402,denied.getMessage());return c; }
-        if (pass == null) { c.error = new AjaxResult(402, "请先购买自玩通行证"); return c; }
-        c.registration = pass;
-        c.actId = 0L;
-        c.topicId = tId;
-        c.selfPlay = true;
-        c.continuing = continuing;
-        c.nightWarning = isNightNow();
-        return c;
+        return playContext(playNodeAccessService.resolveContext(memberId, activityId, topicId, nodeScope(node), registrationId));
     }
 
     /**
@@ -3032,31 +2916,7 @@ public class ApiPlayProgressController extends BaseController
      * 非带领场(无 state)/已结算(3)/自玩会话(actId=0)不拦。
      */
     private String leadGateError(Long actId, CmsTopicNode node) {
-        if (actId == null || actId <= 0) return null; // 自玩会话无带领
-        try {
-            String routeStatus = gameSessionRuntimeService == null ? null
-                    : gameSessionRuntimeService.routeSessionStatus(actId);
-            if (routeStatus != null) {
-                return "RUNNING".equals(routeStatus) ? null : "本场带队尚未开局或已结束";
-            }
-            com.chengyinhub.business.domain.ClubLeadState st = clubLeadMapper.selectByActivity(actId);
-            if (st == null || st.getStatus() == null || st.getStatus() == 3) return null;
-            if (st.getStatus() == 1) return "队伍集合中,等队长开始行程";
-            if (node == null || node.getChapterId() == null || st.getCurrentChapterId() == null) return null;
-            if (node.getChapterId().equals(st.getCurrentChapterId())) return null;
-            CmsTopicChapter cur = cmsTopicChapterService.selectCmsTopicChapterById(st.getCurrentChapterId());
-            CmsTopicChapter mine = cmsTopicChapterService.selectCmsTopicChapterById(node.getChapterId());
-            if (cur == null || mine == null || cur.getSortId() == null || mine.getSortId() == null) return null;
-            return mine.getSortId() > cur.getSortId() ? "本章还没开启,等队长放行" : null;
-        } catch (ServiceException refusal) {
-            // 已有业务/权限拒绝沿原 code/data 传播，不能改写成依赖故障或非带领场。
-            throw refusal;
-        } catch (RuntimeException unavailable) {
-            // 只有成功查无记录才是非带领场。故障必须越过写入口，使原事务及动作 claim 回滚。
-            logger.warn("带领状态读取失败 activityId={} failureType={}", actId, unavailable.getClass().getSimpleName());
-            throw new ServiceException("带领状态暂时不可用，请稍后重试", 503)
-                    .setData(java.util.Collections.singletonMap("outcome", "NOT_RUN"));
-        }
+        return playNodeAccessService.leadGateError(actId, nodeScope(node));
     }
 
     /** M9 埋点:记录一次节点尝试(best-effort,失败不影响主流程)。attemptType 1答题2扫码3GPS4拍照;result 1过0错2放弃 */

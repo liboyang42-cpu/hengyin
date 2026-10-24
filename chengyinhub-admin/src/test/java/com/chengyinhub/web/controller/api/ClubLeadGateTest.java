@@ -33,8 +33,8 @@ class ClubLeadGateTest {
         controller = new ApiPlayProgressController();
         clubLeadMapper = mock(ClubLeadMapper.class);
         chapterService = mock(ICmsTopicChapterService.class);
-        ReflectionTestUtils.setField(controller, "clubLeadMapper", clubLeadMapper);
-        ReflectionTestUtils.setField(controller, "cmsTopicChapterService", chapterService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper", clubLeadMapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", chapterService);
     }
 
     private String gate(Long actId, CmsTopicNode node) {
@@ -98,7 +98,7 @@ class ClubLeadGateTest {
     void routeRuntimeOverridesStaleLegacyGatheringAndChapterState() {
         com.chengyinhub.business.service.IGameSessionRuntimeService runtime = mock(
                 com.chengyinhub.business.service.IGameSessionRuntimeService.class);
-        ReflectionTestUtils.setField(controller, "gameSessionRuntimeService", runtime);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "gameSessionRuntimeService", runtime);
         when(clubLeadMapper.selectByActivity(100L)).thenReturn(state(1, 20L));
         when(runtime.routeSessionStatus(100L)).thenReturn("RUNNING");
         assertNull(gate(100L, node(30L)), "普通路线开局后不受旧集合和章节状态阻断");
@@ -119,13 +119,13 @@ class ClubLeadGateTest {
     }
 
     @Test void missingMandatoryMapperCannotGrantNonLeadAdmission() {
-        ReflectionTestUtils.setField(controller, "clubLeadMapper", null);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper", null);
         assertUnavailable(() -> gate(100L, node(11L)));
     }
 
     @Test void runtimeLookupFailureDoesNotFallBackToLegacyAdmission() {
         IGameSessionRuntimeService runtime = mock(IGameSessionRuntimeService.class);
-        ReflectionTestUtils.setField(controller, "gameSessionRuntimeService", runtime);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "gameSessionRuntimeService", runtime);
         when(runtime.routeSessionStatus(100L)).thenThrow(new DataAccessResourceFailureException("internal runtime SQL"));
         assertUnavailable(() -> gate(100L, node(11L)));
         verifyNoInteractions(clubLeadMapper, chapterService);
@@ -146,7 +146,7 @@ class ClubLeadGateTest {
 
     @Test void selfPlayStillBypassesAllLeadDependencies() {
         IGameSessionRuntimeService runtime = mock(IGameSessionRuntimeService.class);
-        ReflectionTestUtils.setField(controller, "gameSessionRuntimeService", runtime);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "gameSessionRuntimeService", runtime);
         assertNull(gate(0L, node(11L))); assertNull(gate(null, node(11L)));
         verifyNoInteractions(runtime, clubLeadMapper, chapterService);
     }

@@ -114,12 +114,12 @@ class PhotoReviewRewardContractTest
         progressionService = mock(IPlayerProgressionService.class);
         ITopicCompletionAwardService completionAwardService = mock(ITopicCompletionAwardService.class);
 
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
         ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
         ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templateService);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
         ReflectionTestUtils.setField(controller, "pointsAwardService", pointsAwardService);
         ReflectionTestUtils.setField(controller, "growthService", growthService);
         ReflectionTestUtils.setField(controller, "playerProgressionService", progressionService);
@@ -131,13 +131,13 @@ class PhotoReviewRewardContractTest
                 mock(com.chengyinhub.business.mapper.MemberCollectibleMapper.class));
         ReflectionTestUtils.setField(controller, "playAttemptLogMapper",
                 mock(com.chengyinhub.business.mapper.PlayAttemptLogMapper.class));
-        ReflectionTestUtils.setField(controller, "clubLeadMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper",
                 mock(com.chengyinhub.business.mapper.ClubLeadMapper.class));
         ReflectionTestUtils.setField(controller, "cmsPointsSettingService", mock(ICmsPointsSettingService.class));
         ReflectionTestUtils.setField(controller, "puzzlePlayService",
                 mock(com.chengyinhub.business.service.IPuzzlePlayService.class));
         chapterService = mock(ICmsTopicChapterService.class);
-        ReflectionTestUtils.setField(controller, "cmsTopicChapterService", chapterService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", chapterService);
         when(chapterService.selectCmsTopicChapterList(any())).thenReturn(Collections.emptyList());
         ReflectionTestUtils.setField(controller, "nodeMerchantOverrideService",
                 new NodeMerchantOverrideServiceImpl(

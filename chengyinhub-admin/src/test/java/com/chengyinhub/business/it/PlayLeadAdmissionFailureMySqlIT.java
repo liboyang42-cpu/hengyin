@@ -172,14 +172,14 @@ class PlayLeadAdmissionFailureMySqlIT {
         when(topics.selectCmsTopicById(TOPIC)).thenReturn(topic);
         CmsPointsSettingServiceImpl settings = new CmsPointsSettingServiceImpl(); ReflectionTestUtils.setField(settings, "cmsPointsSettingMapper", sql.getMapper(CmsPointsSettingMapper.class));
         CmsActivityServiceImpl activities = new CmsActivityServiceImpl(); ReflectionTestUtils.setField(activities, "cmsActivityMapper", sql.getMapper(CmsActivityMapper.class));
-        ReflectionTestUtils.setField(target, "cmsTopicNodeService", nodes);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "cmsTopicNodeService", nodes);
         ReflectionTestUtils.setField(target, "cmsMemberTemplateService", templates);
-        ReflectionTestUtils.setField(target, "cmsTopicService", topics);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "cmsTopicService", topics);
         ReflectionTestUtils.setField(target, "cmsPointsSettingService", settings);
-        ReflectionTestUtils.setField(target, "cmsActivityService", activities);
-        ReflectionTestUtils.setField(target, "currentPlayActivityMapper", sql.getMapper(CmsActivityMapper.class));
-        ReflectionTestUtils.setField(target, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
-        ReflectionTestUtils.setField(target, "clubLeadMapper", sql.getMapper(ClubLeadMapper.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "cmsActivityService", activities);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "currentPlayActivityMapper", sql.getMapper(CmsActivityMapper.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "clubLeadMapper", sql.getMapper(ClubLeadMapper.class));
         ReflectionTestUtils.setField(target, "umsMemberService", memberService);
         ReflectionTestUtils.setField(target, "umsMemberPointsDetailService", details);
         ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
@@ -212,10 +212,10 @@ class PlayLeadAdmissionFailureMySqlIT {
         jdbc.update("UPDATE cms_activity SET status=1 WHERE id=500");
         jdbc.update("UPDATE cms_topic SET product_type=1 WHERE id=300");
         ApiPlayProgressController controller = controller(MEMBER, members, ledger, false);
-        ICmsTopicNodeService nodeService = (ICmsTopicNodeService) ReflectionTestUtils.getField(controller, "cmsTopicNodeService");
+        ICmsTopicNodeService nodeService = (ICmsTopicNodeService) com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "cmsTopicNodeService");
         CmsTopicNode first = nodeService.selectCmsTopicNodeById(NODE);
         CmsTopicNode last = new CmsTopicNode(); last.setId(402L); last.setTopicId(TOPIC); last.setSortId(2L); last.setStatus(1L);
-        ICmsTopicService topics = (ICmsTopicService) ReflectionTestUtils.getField(controller, "cmsTopicService");
+        ICmsTopicService topics = (ICmsTopicService) com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "cmsTopicService");
         CmsTopic topic = topics.selectCmsTopicById(TOPIC); topic.setProductType(1); topic.setPublishedConfigVersion(1L);
         if (branch) topic.setPublishedRouteGraphJson("{\"schemaVersion\":1,\"startNodeId\":401,\"terminalNodeIds\":[402],"
                 + "\"edges\":[{\"id\":\"next\",\"fromNodeId\":401,\"toNodeId\":402,"
@@ -244,7 +244,7 @@ class PlayLeadAdmissionFailureMySqlIT {
         }).when(routeTarget).canPlay(anyLong(), anyLong(), anyLong(), anyLong(), nullable(String.class));
         ProxyFactory routeProxy = new ProxyFactory(routeTarget); routeProxy.setInterfaces(ITopicRouteRuntimeService.class);
         routeProxy.addAdvice(new TransactionInterceptor(transactions, new AnnotationTransactionAttributeSource()));
-        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", routeProxy.getProxy());
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", routeProxy.getProxy());
         PreferencePlayService preferences = mock(PreferencePlayService.class);
         when(preferences.load(eq(MEMBER), eq(TOPIC), eq(NODE), any())).thenReturn(Map.of("question", "original-preference"));
         when(preferences.submit(eq(MEMBER), eq(TOPIC), eq(ACTIVITY), eq(NODE), any(), any(), any()))

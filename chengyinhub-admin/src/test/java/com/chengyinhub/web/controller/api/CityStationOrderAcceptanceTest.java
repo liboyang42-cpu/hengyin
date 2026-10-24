@@ -85,8 +85,8 @@ class CityStationOrderAcceptanceTest {
         ICmsTopicNodeService nodes = mock(ICmsTopicNodeService.class);
         IPlayerNodeProgressService progress = mock(IPlayerNodeProgressService.class);
         ApiPlayProgressController controller = new ApiPlayProgressController();
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodes);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progress);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodes);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progress);
         when(nodes.selectCmsTopicNodeList(any())).thenReturn(Arrays.asList(first, second, third));
 
         PlayerNodeProgress pendingPhoto = new PlayerNodeProgress();

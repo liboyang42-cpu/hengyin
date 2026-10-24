@@ -84,18 +84,18 @@ class ApiPlayPuzzleHintTest
         attemptMapper = mock(PlayAttemptLogMapper.class);
         when(attemptMapper.insertPlayAttemptLog(any())).thenReturn(1);
 
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
         ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templateService);
         ReflectionTestUtils.setField(controller, "nodeMerchantOverrideService",
                 new com.chengyinhub.business.service.impl.NodeMerchantOverrideServiceImpl(
                         mock(com.chengyinhub.business.service.ICmsRegistrationMerchantService.class)));
         ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
-        ReflectionTestUtils.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
         progressService = mock(IPlayerNodeProgressService.class);
         when(progressService.selectPlayerNodeProgressList(any())).thenReturn(Collections.emptyList());
         when(progressService.insertPlayerNodeProgress(any())).thenReturn(1);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
         ReflectionTestUtils.setField(controller, "playAttemptLogMapper", attemptMapper);
         com.chengyinhub.business.mapper.PlayerNodeProgressMapper progressMapper =
                 mock(com.chengyinhub.business.mapper.PlayerNodeProgressMapper.class);

@@ -54,12 +54,12 @@ class ApiPlaySensorResultTest {
         doReturn(MEMBER).when(controller).getAppUserId();
         ICmsActivityService activities = mock(ICmsActivityService.class);
         registrations = mock(ICmsRegistrationService.class);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activities);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activities);
         ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrations);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
         ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templateService);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
         ReflectionTestUtils.setField(controller, "pointsAwardService", points);
         ReflectionTestUtils.setField(controller, "rewardDropService", drops);
         ReflectionTestUtils.setField(controller, "smsCouponHistoryService", coupons);
@@ -71,11 +71,11 @@ class ApiPlaySensorResultTest {
                 new com.chengyinhub.business.service.impl.NodeMerchantOverrideServiceImpl(
                         mock(ICmsRegistrationMerchantService.class)));
         SensorChallengeServiceImpl sensorChallenges = new SensorChallengeServiceImpl();
-        ReflectionTestUtils.setField(sensorChallenges, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(sensorChallenges, "playerNodeProgressService", progressService);
         ReflectionTestUtils.setField(controller, "sensorChallengeService", sensorChallenges);
         ReflectionTestUtils.setField(controller, "xpBudgetService", mock(IXpBudgetService.class));
         clubLeadMapper = mock(com.chengyinhub.business.mapper.ClubLeadMapper.class);
-        ReflectionTestUtils.setField(controller, "clubLeadMapper", clubLeadMapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper", clubLeadMapper);
         ReflectionTestUtils.setField(controller, "memberCollectibleMapper", memberCollectibles);
         ReflectionTestUtils.setField(controller, "playAttemptLogMapper",
                 mock(com.chengyinhub.business.mapper.PlayAttemptLogMapper.class));

@@ -224,13 +224,13 @@ class JourneyPublishFreezeTest {
 
     private void wireController() {
         doReturn(MEMBER).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
         ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
         ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templateService);
-        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", runtime);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", runtime);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
         ReflectionTestUtils.setField(controller, "playerProgressionService", progressionService);
         ReflectionTestUtils.setField(controller, "growthService", growthService);
         ReflectionTestUtils.setField(controller, "xpBudgetService", xpBudgetService);
@@ -240,9 +240,9 @@ class JourneyPublishFreezeTest {
         ReflectionTestUtils.setField(controller, "pointsAwardService", pointsAwardService);
         ReflectionTestUtils.setField(controller, "puzzlePlayService", puzzlePlayService);
         ReflectionTestUtils.setField(controller, "preferencePlayService", preferencePlayService);
-        ReflectionTestUtils.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
-        ReflectionTestUtils.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
-        ReflectionTestUtils.setField(controller, "clubLeadMapper", mock(ClubLeadMapper.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper", mock(ClubLeadMapper.class));
         ReflectionTestUtils.setField(controller, "playAttemptLogMapper", mock(PlayAttemptLogMapper.class));
         ReflectionTestUtils.setField(controller, "memberCollectibleMapper", mock(MemberCollectibleMapper.class));
         ReflectionTestUtils.setField(controller, "nodeMerchantOverrideService",

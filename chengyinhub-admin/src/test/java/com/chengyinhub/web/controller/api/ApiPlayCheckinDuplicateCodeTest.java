@@ -40,8 +40,8 @@ class ApiPlayCheckinDuplicateCodeTest {
         controller = spy(new ApiPlayProgressController());
         doReturn(41L).when(controller).getAppUserId();
         ReflectionTestUtils.setField(controller, "playCheckinCodeService", liveCodes);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
         when(nodeService.selectCmsTopicNodeById(77L)).thenReturn(node(77L,44L));
         CmsActivity activity = new CmsActivity(); activity.setId(43L); activity.setTopicId(44L);
         when(activityService.selectCmsActivityById(43L)).thenReturn(activity);
@@ -72,6 +72,6 @@ class ApiPlayCheckinDuplicateCodeTest {
 
         assertEquals(500, r.get(AjaxResult.CODE_TAG));
         assertEquals("该打卡码对应多个站点，请联系商家处理", r.get(AjaxResult.MSG_TAG));
-        org.mockito.Mockito.verify((com.chengyinhub.business.mapper.CmsActivityMapper)ReflectionTestUtils.getField(controller,"currentPlayActivityMapper"),org.mockito.Mockito.never()).selectCmsActivityByIdForUpdate(any());
+        org.mockito.Mockito.verify((com.chengyinhub.business.mapper.CmsActivityMapper)com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller,"currentPlayActivityMapper"),org.mockito.Mockito.never()).selectCmsActivityByIdForUpdate(any());
     }
 }

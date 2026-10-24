@@ -496,8 +496,8 @@ class ChapterFlowWriteServiceTest
         when(nodeRead.selectCmsTopicNodeList(any())).thenReturn(insertedNodes);
         when(progressRead.selectPlayerNodeProgressList(any())).thenReturn(Collections.emptyList());
         ApiPlayProgressController guard = new ApiPlayProgressController();
-        ReflectionTestUtils.setField(guard, "cmsTopicNodeService", nodeRead);
-        ReflectionTestUtils.setField(guard, "playerNodeProgressService", progressRead);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(guard, "cmsTopicNodeService", nodeRead);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(guard, "playerNodeProgressService", progressRead);
         Boolean blocked = ReflectionTestUtils.invokeMethod(guard, "isPrevDone", MEMBER_ID, 501L,
                 insertedNodes.get(0));
         assertEquals(Boolean.FALSE, blocked,

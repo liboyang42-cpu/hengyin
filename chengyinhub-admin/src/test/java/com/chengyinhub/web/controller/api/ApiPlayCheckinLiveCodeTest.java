@@ -51,8 +51,8 @@ class ApiPlayCheckinLiveCodeTest {
         controller = spy(new ApiPlayProgressController());
         doReturn(PLAYER).when(controller).getAppUserId();
         ReflectionTestUtils.setField(controller, "playCheckinCodeService", liveCodes);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
         CmsTopicNode target = new CmsTopicNode(); target.setId(NODE); target.setTopicId(44L);
         when(nodeService.selectCmsTopicNodeById(NODE)).thenReturn(target);
         CmsActivity activity = new CmsActivity(); activity.setId(43L); activity.setTopicId(44L);
@@ -80,7 +80,7 @@ class ApiPlayCheckinLiveCodeTest {
         CmsTopicNode node=new CmsTopicNode();node.setId(NODE);node.setTopicId(44L);node.setStatus(1L);node.setMerchantMemberId(310L);node.setNodeAuditStatus(1);when(nodeService.selectCmsTopicNodeById(NODE)).thenReturn(node);
         CmsActivity activity=new CmsActivity();activity.setId(43L);activity.setTopicId(44L);activity.setStartDate(new Date(System.currentTimeMillis()-60000));activity.setEndDate(new Date(System.currentTimeMillis()+60000));when(activityService.selectCmsActivityById(43L)).thenReturn(activity);
         CmsRegistration registration=ticket();when(registrations.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(registration));
-        com.chengyinhub.business.mapper.CmsRegistrationMapper registrationMapper=mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class);ReflectionTestUtils.setField(controller,"cmsRegistrationMapper",registrationMapper);
+        com.chengyinhub.business.mapper.CmsRegistrationMapper registrationMapper=mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class);com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"cmsRegistrationMapper",registrationMapper);
         CurrentPlayControllerFixtures.delegate(registrationMapper, controller); // C包新使用资格走当前锁读
         when(registrationMapper.markFirstSuccessfulScan(any(),any(),any(),any(),any())).thenReturn(1);
         com.chengyinhub.business.domain.CmsTopic topic=new com.chengyinhub.business.domain.CmsTopic();topic.setId(44L);topic.setProductType(1);when(topics.selectCmsTopicById(44L)).thenReturn(topic);
@@ -152,7 +152,7 @@ class ApiPlayCheckinLiveCodeTest {
         IPlayerNodeProgressService progress = mock(IPlayerNodeProgressService.class);
         ISmsCouponHistoryService coupons = mock(ISmsCouponHistoryService.class);
         ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrations);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progress);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progress);
         ReflectionTestUtils.setField(controller, "smsCouponHistoryService", coupons);
         CmsTopicNode node = new CmsTopicNode();
         node.setId(NODE);

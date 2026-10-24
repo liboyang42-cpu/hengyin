@@ -90,13 +90,13 @@ class ApiPlayGpsGeofenceValidationTest
 
         controller = spy(new ApiPlayProgressController());
         doReturn(PLAYER).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
         ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
         ReflectionTestUtils.setField(controller, "perkLedgerService", perkLedgerService);
         ReflectionTestUtils.setField(controller, "shopDayProofService", mock(IShopDayProofService.class));
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
         ReflectionTestUtils.setField(controller, "topicCompletionAwardService", completionAwardService);
         ReflectionTestUtils.setField(controller, "pointsAwardService", pointsAwardService);
         ReflectionTestUtils.setField(controller, "playerProgressionService", progressionService);
@@ -104,11 +104,11 @@ class ApiPlayGpsGeofenceValidationTest
         ReflectionTestUtils.setField(controller, "xpBudgetService", mock(IXpBudgetService.class));
         ReflectionTestUtils.setField(controller, "rewardDropService", mock(IRewardDropService.class));
         ReflectionTestUtils.setField(controller, "smsCouponHistoryService", mock(ISmsCouponHistoryService.class));
-        ReflectionTestUtils.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
         templateService = mock(ICmsMemberTemplateService.class);
         ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templateService);
-        ReflectionTestUtils.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
-        ReflectionTestUtils.setField(controller, "clubLeadMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper",
                 mock(com.chengyinhub.business.mapper.ClubLeadMapper.class));
         ReflectionTestUtils.setField(controller, "playAttemptLogMapper",
                 mock(com.chengyinhub.business.mapper.PlayAttemptLogMapper.class));

@@ -79,7 +79,7 @@ class ApiPlayHintUnlockTest {
 
         controller = spy(new ApiPlayProgressController());
         doReturn(MEMBER).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeSvc);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeSvc);
         // 承接方现场层:没有中标商家时返回空对象,取值全部回落主办方模板 ——
         // 用真实现而不是 mock,免得「回落」这条路径在测试里被 mock 假装成功。
         ReflectionTestUtils.setField(controller, "nodeMerchantOverrideService",
@@ -90,7 +90,7 @@ class ApiPlayHintUnlockTest {
         ReflectionTestUtils.setField(controller, "umsMemberService", memberSvc);
         ReflectionTestUtils.setField(controller, "umsMemberPointsDetailService", detailSvc);
         // nodes() 出口扣发用:活动会话解析 + 报名探针/进度/章节/模式解析(默认空返回即可)
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activitySvc);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activitySvc);
         registrationSvc = mock(com.chengyinhub.business.service.ICmsRegistrationService.class);
         ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationSvc);
         // C-19 准入闸:自玩通行证探针(ownerType=1)返一份有效通行证,让「只发 nodeId」的存量计费用例
@@ -110,16 +110,16 @@ class ApiPlayHintUnlockTest {
         xpBudgetService = mock(com.chengyinhub.business.service.IXpBudgetService.class);
         when(xpBudgetService.resolveNodeXp(any(CmsTopicNode.class), any())).thenReturn(25);
         ReflectionTestUtils.setField(controller, "xpBudgetService", xpBudgetService);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService",
                 mock(com.chengyinhub.business.service.IPlayerNodeProgressService.class));
         com.chengyinhub.business.service.ICmsTopicService topicSvc =
                 mock(com.chengyinhub.business.service.ICmsTopicService.class);
         // O-08:未报名者看节点要求主题对其公开可见;本夹具的主题是公开在架主题。
         when(topicSvc.selectCmsTopicDetailById(eq(TOPIC), any())).thenReturn(new com.chengyinhub.business.domain.CmsTopic());
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicSvc);
-        ReflectionTestUtils.setField(controller, "omsTicketService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicSvc);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService",
                 mock(com.chengyinhub.business.service.IOmsTicketService.class));
-        ReflectionTestUtils.setField(controller, "cmsTopicChapterService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService",
                 mock(com.chengyinhub.business.service.ICmsTopicChapterService.class));
         ReflectionTestUtils.setField(controller, "puzzlePlayService",
                 mock(com.chengyinhub.business.service.IPuzzlePlayService.class));
