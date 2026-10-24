@@ -38,4 +38,28 @@ class AttachmentReviewProducerTest {
                 producer.recoverUnknown("att-ghost", ImmutableReceiptProducer.PROJECTION_APPLIED).status);
         assertEquals(occupied, store.size());
     }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueSubmitApplies() {
+        InMemoryNotifyFixtures.MemoryReviewStore store = new InMemoryNotifyFixtures.MemoryReviewStore();
+        AttachmentReviewProducer producer = new AttachmentReviewProducer(store);
+        AttachmentReviewProducer.ReviewReceipt blank = producer.recoverOriginal("  ", null);
+        assertNull(blank.requestId);
+        assertEquals(AttachmentReviewProducer.STATUS_UNKNOWN, blank.status);
+        assertEquals(0, store.size());
+        AttachmentReviewProducer.ReviewReceipt recovered = producer.recoverOriginal(
+                "att-recover-never-c09", "VISIBLE");
+        assertEquals("att-recover-never-c09", recovered.requestId);
+        assertEquals(AttachmentReviewProducer.STATUS_UNKNOWN, recovered.status);
+        assertNull(store.find("att-recover-never-c09"));
+        assertEquals(0, store.size());
+        AttachmentReviewProducer.ReviewReceipt first = producer.submit(
+                "att-recover-never-c09", AttachmentReviewProducer.AttachmentType.IMAGE, "digest-IMAGE");
+        assertEquals("att-recover-never-c09", first.requestId);
+        assertEquals(AttachmentReviewProducer.STATUS_PENDING, first.status);
+        assertEquals(1, store.size());
+        assertEquals(AttachmentReviewProducer.STATUS_PENDING,
+                producer.recoverOriginal("att-recover-never-c09", "VISIBLE").status);
+        assertEquals(1, store.size());
+    }
 }

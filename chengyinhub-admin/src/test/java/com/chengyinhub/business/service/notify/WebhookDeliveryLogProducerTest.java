@@ -2,6 +2,7 @@ package com.chengyinhub.business.service.notify;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -59,5 +60,35 @@ class WebhookDeliveryLogProducerTest {
                         "live-secret", true, false), event,
                 Collections.singletonList(InMemoryNotifyFixtures.publicHop())));
         assertTrue(!producer.treatsAppliedProjectionAsOriginalProof(ImmutableReceiptProducer.PROJECTION_APPLIED));
+    }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueDeliverApplies() {
+        InMemoryNotifyFixtures.RecordingTransport transport =
+                new InMemoryNotifyFixtures.RecordingTransport(204, "ok");
+        InMemoryNotifyFixtures.MemoryDeliveryStore store = new InMemoryNotifyFixtures.MemoryDeliveryStore();
+        WebhookDeliveryLogProducer producer = new WebhookDeliveryLogProducer(
+                transport, new WebhookSsrfHopGuard(), store,
+                new InMemoryNotifyFixtures.FixedNonceSource("nonce-never"));
+        WebhookDeliveryLogProducer.DeliveryLog blank = producer.recoverOriginal("  ", null);
+        assertNull(blank.eventId);
+        assertEquals(WebhookDeliveryLogProducer.STATUS_UNKNOWN, blank.status);
+        assertEquals(0, store.size());
+        WebhookDeliveryLogProducer.DeliveryLog recovered = producer.recoverOriginal(
+                "evt-dlv-never-c09", ImmutableReceiptProducer.PROJECTION_APPLIED);
+        assertEquals("evt-dlv-never-c09", recovered.eventId);
+        assertEquals(WebhookDeliveryLogProducer.STATUS_UNKNOWN, recovered.status);
+        assertNull(store.findByEventId("evt-dlv-never-c09"));
+        assertEquals(0, store.size());
+        WebhookDeliveryLogProducer.DeliveryLog first = producer.deliver(
+                InMemoryNotifyFixtures.fixtureConfig(true, false),
+                new WebhookDeliveryLogProducer.OriginalEvent("evt-dlv-never-c09", "PIN", "original-body"),
+                Collections.singletonList(InMemoryNotifyFixtures.publicHop()));
+        assertEquals("evt-dlv-never-c09", first.eventId);
+        assertEquals("dlv-evt-dlv-never-c09", first.deliveryId);
+        assertEquals(WebhookDeliveryLogProducer.STATUS_DELIVERED, first.status);
+        assertEquals(1, store.size());
+        assertEquals(first.deliveryId, producer.recoverOriginal("evt-dlv-never-c09", null).deliveryId);
+        assertEquals(1, store.size());
     }
 }

@@ -46,4 +46,29 @@ class DevicePushRegistrationLifecycleTest {
         assertEquals(occupied, store.size());
         assertFalse(lifecycle.treatsAppliedProjectionAsOriginalProof(ImmutableReceiptProducer.PROJECTION_APPLIED));
     }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueRegisterApplies() {
+        InMemoryNotifyFixtures.MemoryDeviceStore store = new InMemoryNotifyFixtures.MemoryDeviceStore();
+        DevicePushRegistrationLifecycle lifecycle = new DevicePushRegistrationLifecycle(store);
+        DevicePushRegistrationLifecycle.Registration blank = lifecycle.recoverOriginal("  ", null);
+        assertNull(blank.deviceId);
+        assertEquals("UNKNOWN", blank.status);
+        assertEquals(0, store.size());
+        DevicePushRegistrationLifecycle.Registration recovered = lifecycle.recoverOriginal(
+                "dev-recover-never-c09", null);
+        assertEquals("dev-recover-never-c09", recovered.deviceId);
+        assertEquals("UNKNOWN", recovered.status);
+        assertNull(store.find("dev-recover-never-c09"));
+        assertEquals(0, store.size());
+        DevicePushRegistrationLifecycle.Registration first = lifecycle.register(
+                "dev-recover-never-c09", DevicePushRegistrationLifecycle.ENV_SANDBOX, true,
+                "fixture-token-c09");
+        assertEquals("dev-recover-never-c09", first.deviceId);
+        assertEquals(DevicePushRegistrationLifecycle.STATUS_ACTIVE, first.status);
+        assertEquals(1, store.size());
+        assertEquals(DevicePushRegistrationLifecycle.STATUS_ACTIVE,
+                lifecycle.recoverOriginal("dev-recover-never-c09", null).status);
+        assertEquals(1, store.size());
+    }
 }
