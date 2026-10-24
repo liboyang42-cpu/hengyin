@@ -86,7 +86,8 @@ class TopicQueryServiceTest {
         when(nodes.selectCmsTopicNodeList(any())).thenReturn(Collections.singletonList(node));
         CmsMemberTemplate template = new CmsMemberTemplate(); template.setId(201L); template.setTitle("公开玩法");
         template.setQuestionAnswer("private-answer"); template.setHint1("private-hint");
-        when(templates.selectCmsMemberTemplateById(201L)).thenReturn(template);
+        when(templates.selectCmsMemberTemplateByIds(Collections.singletonList(201L)))
+                .thenReturn(Collections.singletonList(template));
         CmsTopicChapterTemplateMeta cm = new CmsTopicChapterTemplateMeta(); cm.setChapterId(101L);
         cm.setExclusivityReason("private-partner-reason"); cm.setEffortMaterials("private-partner-material");
         when(metadata.selectChapterMetaByTopicId(42L)).thenReturn(Collections.singletonList(cm));
