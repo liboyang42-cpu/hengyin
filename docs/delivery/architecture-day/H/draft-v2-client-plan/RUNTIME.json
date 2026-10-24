@@ -1,0 +1,107 @@
+{
+  "source": "864e708e2f38130e21780485e462f8dc147bb76f",
+  "node_version": "v24.19.0",
+  "execution": "direct Node; globals/app.sendRequest/wx storage are local doubles; one negative uses actual injected request-client; no WeChat/UI/backend/provider/network",
+  "results": [
+    {
+      "label": "old_request_state",
+      "command": [
+        "node",
+        "tests/unit/simple-ai-request-state.test.js"
+      ],
+      "exit_code": 0,
+      "counts": {
+        "tests": 6,
+        "pass": 6,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "testcase_summary": [
+        "起草请求带 UUID requestId (3.312141ms)",
+        "网络失败 = 结果未知:锁住重试,再点只回读原 requestId,拿回第一份草稿 (2.32277ms)",
+        "额度变化不是生成证据:未知期间额度变少也不解锁、不当作已生成 (0.812109ms)",
+        "服务端说仍在处理 / 无法确认:保持锁;无法确认且改了灵感才另起新 requestId (0.761074ms)",
+        "明确失败 / 没送达才解锁;关页重开会恢复锁并自动回读 (0.88744ms)",
+        "明确的成功/失败响应直接收尾,不留锁 (0.999976ms)"
+      ],
+      "output_sha256": "9d200cc2a210493e7655c337f74ed1f6c66721508ee7fdcfff389ceda51a899f"
+    },
+    {
+      "label": "old_simple_ai",
+      "command": [
+        "node",
+        "tests/unit/simple-ai.test.js"
+      ],
+      "exit_code": 0,
+      "counts": {
+        "tests": 9,
+        "pass": 9,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "testcase_summary": [
+        "简单 AI 入口加载并展示玩家的剩余额度 (3.184603ms)",
+        "成功生成后用响应中的额度刷新提示 (1.818746ms)",
+        "AI 返回超过三站的草稿时保持 fail-closed，不进入后续编辑 (0.810928ms)",
+        "AI 重试失败时保留已经生成的草稿与节点 (0.810437ms)",
+        "AI 进度与错误使用同一互斥状态链，不得在 complete 前同屏 (0.858508ms)",
+        "页面不再暴露已禁用的模式切换 / 就地建玩法能力 (0.520669ms)",
+        "置灰的主 CTA 必须自己给理由:disabledtap 与 canEnterAiEditor 同判据 (1.49613ms)",
+        "wxml 只保留可达的简单 AI 链路,不含暗色手动编辑子树 (0.526798ms)",
+        "简易版不带发布链路:零绑定的孤儿方法不得复活 (0.514219ms)"
+      ],
+      "output_sha256": "e187674dbc235541e257f03f1156820900d5bfdd23d32523eea7a577395018e3"
+    },
+    {
+      "label": "H_baseline_negative",
+      "command": [
+        "node",
+        "docs/delivery/architecture-day/H/draft-v2-client-plan/baseline-negative.review.test.cjs"
+      ],
+      "exit_code": 1,
+      "counts": {
+        "tests": 12,
+        "pass": 0,
+        "fail": 12,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "testcase_summary": [
+        "storage write failure must stop before any prepare or execute write (3.729778ms)",
+        "silent storage loss must fail read-back verification before write (1.2192ms)",
+        "late A success cannot remove B durable pending (1.581596ms)",
+        "A to B to A must invalidate old Page callback even when final member/token equal (0.851938ms)",
+        "unloaded Page must ignore late successful body (0.533748ms)",
+        "legacy NOT_FOUND must retain unresolved identity (0.614568ms)",
+        "UNKNOWN plus changed idea must not allocate a replacement request (0.500589ms)",
+        "actual request-client must reject an A-B-A stale success (2.933332ms)",
+        "old complete must not clear loading owned by a replacement pending (0.537043ms)",
+        "storage read error cannot mean there is no existing durable request (0.715747ms)",
+        "pending identity journal must not retain plaintext idea indefinitely (0.477165ms)",
+        "SUCCEEDED with unavailable body must not discard original identity (0.448772ms)"
+      ],
+      "output_sha256": "413dfd389aa0f0e33acac84f2f0885811bae9d860e3eaaf20ad32745535309a5"
+    }
+  ],
+  "interpretation": "Old 15 PASS are legacy expectations, not v2 acceptance. H12 expected baseline assertion failures demonstrate exact old-source boundaries, not 12 server incidents.",
+  "not_run": [
+    "Java",
+    "MySQL",
+    "Redis",
+    "CI dispatch",
+    "WeChat UI/account/upload",
+    "actual supplier"
+  ],
+  "negative_review_file_sha256": "f79f92c0ffbd047f035ccea0c51f042bd36ffca7cfaeb7d7cacf85c285c49ef5",
+  "delivery_checks": {
+    "git_diff_cached_check": "PASS",
+    "secret_file_gate": "PASS",
+    "bounded_token_scan": "PASS",
+    "gitleaks": "NOT_RUN; unavailable"
+  }
+}

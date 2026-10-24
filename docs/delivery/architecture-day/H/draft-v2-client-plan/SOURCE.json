@@ -1,0 +1,94 @@
+{
+  "public_base": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "current": "864e708e2f38130e21780485e462f8dc147bb76f",
+  "current_tree": "4f3bfd77f199992c84cdf7d538d4554f5a712e7f",
+  "contract": "ee96ffe45bab6126136e1c5582be53601c4f6fc3",
+  "e683_comparison": "NOT_CLAIMED; short ref not publicly resolvable; current864e is verified",
+  "read_files": [
+    {
+      "path": "chengyinhub-xcx/AGENTS.md",
+      "ref": "864e708e2f38130e21780485e462f8dc147bb76f",
+      "sha": "a86235ecd9ed2af872e5b75df9808550a71ef7fc"
+    },
+    {
+      "path": "chengyinhub-xcx/app.js",
+      "ref": "864e708e2f38130e21780485e462f8dc147bb76f",
+      "sha": "d949c5b5179a26b3bbe09745d55f39a650c8620a"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/simple/index.js",
+      "ref": "864e708e2f38130e21780485e462f8dc147bb76f",
+      "sha": "377072bfc7e1fb1f19d01e95fe5aa5cc24b63b2f"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/simple-ai-request-state.test.js",
+      "ref": "864e708e2f38130e21780485e462f8dc147bb76f",
+      "sha": "4e480a69127bdafbc44d68a844132ef86cedc6e4"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/simple-ai.test.js",
+      "ref": "864e708e2f38130e21780485e462f8dc147bb76f",
+      "sha": "5871b5d1104029e39cd7fada085a51b9d0075234"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/session/session-store.js",
+      "ref": "864e708e2f38130e21780485e462f8dc147bb76f",
+      "sha": "7cd341ed92867a945530a16c7e537b463d687c28"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/transport/request-client.js",
+      "ref": "864e708e2f38130e21780485e462f8dc147bb76f",
+      "sha": "c30a401db5bdfb1e2ed51c1aea9592d98d830cd1"
+    },
+    {
+      "path": "docs/delivery/architecture-day/E/THEME-DURABILITY-02/CONTRACT.md",
+      "ref": "ee96ffe45bab6126136e1c5582be53601c4f6fc3",
+      "sha": "a85511ea3898e4eaa9c1817af185470461f8061f"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/session/session-manager.js",
+      "ref": "864e708e2f38130e21780485e462f8dc147bb76f",
+      "sha": "a694440b375304e89aa7c2dec5b2cddd619674e2"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/session/login-reload.js",
+      "ref": "864e708e2f38130e21780485e462f8dc147bb76f",
+      "sha": "01d0457593e8627a01cb5decc3bd683df2cd9764"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/transport/safe-user-message.js",
+      "ref": "864e708e2f38130e21780485e462f8dc147bb76f",
+      "sha": "58e1acf22ebc1ad7fd9038829fe01f0b9ec40e2b"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/client-version.js",
+      "ref": "864e708e2f38130e21780485e462f8dc147bb76f",
+      "sha": "ffcd2f0bc0f09d913dc8d45c38a2be35193ca7df"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/simple/index.wxml",
+      "ref": "864e708e2f38130e21780485e462f8dc147bb76f",
+      "sha": "af19c9eb11ef6b41879beabecb373279f4638f46"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/motion-preference.js",
+      "ref": "864e708e2f38130e21780485e462f8dc147bb76f",
+      "sha": "369d1aee4834356047c8083cdaae0a5662ab68d5"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/publish/publish-intent.js",
+      "ref": "864e708e2f38130e21780485e462f8dc147bb76f",
+      "sha": "0a298838331adaf950f751936826b75e7c4a7aac"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/utils/advanced-photo-pending.js",
+      "ref": "864e708e2f38130e21780485e462f8dc147bb76f",
+      "sha": "123cba18b4f20730feabc14bda73cc367b77d381"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/form-state.js",
+      "ref": "864e708e2f38130e21780485e462f8dc147bb76f",
+      "sha": "009c55faec3e913b8fce80827beb9ba5c63b0127"
+    }
+  ]
+}
