@@ -115,4 +115,25 @@ class OfflinePackOperationTest {
         assertEquals(OfflinePackOperation.Phase.FULL_DISK, pack.phase());
         assertEquals("op-disk", pack.operationId());
     }
+
+    @Test
+    void unusedApplyUpdateOfIdleDoesNotOccupyThenUniqueStartFinishThenUpdateApplies() {
+        OfflinePackOperation pack = new OfflinePackOperation();
+        assertEquals(OfflinePackOperation.Phase.IDLE, pack.phase());
+        assertNull(pack.operationId());
+        assertEquals(OfflinePackOperation.Failure.NOT_READY,
+                assertThrows(OfflinePackOperation.OfflinePackException.class,
+                        () -> pack.applyUpdate(manifest("op-upd"), true, NOW)).code);
+        assertEquals(OfflinePackOperation.Phase.IDLE, pack.phase(), "未见下载 applyUpdate 观察不得占 UPDATING");
+        assertNull(pack.operationId());
+        pack.startDownload(manifest("op-upd"), NOW);
+        pack.finishDownload();
+        assertEquals("op-upd", pack.operationId());
+        assertEquals(OfflinePackOperation.Phase.READY, pack.phase());
+        pack.applyUpdate(new OfflinePackOperation.Manifest("pack-1", "op-upd", "v2", 1024, CHECKSUM,
+                List.of(11, 12), Instant.parse("2026-12-01T00:00:00Z")), true, NOW);
+        assertEquals(OfflinePackOperation.Phase.UPDATING, pack.phase());
+        assertEquals("op-upd", pack.operationId());
+        assertEquals("v2", pack.manifest().version);
+    }
 }
