@@ -89,12 +89,48 @@ class RegistryContractTest(unittest.TestCase):
         self.assertEqual({}, reg['classes'][fqcn]['gates'])
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
                     if line.strip().startswith('B_PAYMENT_INTENT_DDL_APPROVED:'))
-        self.assertEqual("B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'CoopDepositSettlementAttemptMySqlIT' || matrix.simple == 'CashWithdrawFundEvidenceMySqlIT') && '1' || '' }}", line)
+        self.assertEqual("B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'CoopDepositSettlementAttemptMySqlIT' || matrix.simple == 'CashWithdrawFundEvidenceMySqlIT' || matrix.simple == 'RefundPayoutMybatisIntegrationTest') && '1' || '' }}", line)
         flag = "A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED"
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
                     if line.strip().startswith(flag + ":"))
-        self.assertEqual("A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest') && '1' || '' }}", line)
+        self.assertEqual("A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest' || matrix.simple == 'RefundPayoutMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT') && '1' || '' }}", line)
         self.assertEqual({flag: "1"}, rs.child_env({flag: "1"}, {}))
+
+    def test_refund_lifecycle_batch_has_unique_original_suites_and_exact_gates(self):
+        reg = registry()
+        expected = {
+            'com.chengyinhub.business.service.RefundPayoutMybatisIntegrationTest': 30,
+            'com.chengyinhub.business.service.impl.RefundRetryAndRemainderMySqlIT': 6,
+            'com.chengyinhub.business.service.CoopDepositRefundMybatisIntegrationTest': 36,
+        }
+        self.assertEqual(list(expected), reg['batches']['architecture-day-refund-lifecycle']['classes'])
+        self.assertEqual(72, sum(expected.values()))
+        self.assertEqual([], workflow_problems(WORKFLOW.read_text(), reg))
+        for fqcn, count in expected.items():
+            with self.subTest(fqcn=fqcn):
+                entry = reg['classes'][fqcn]
+                self.assertEqual(count, entry['tests'])
+                self.assertEqual(['mysql'], entry['storage'])
+                self.assertEqual({'CHENGYIN_FUNDS_MYSQL_IT': '1'}, entry['gates'])
+                facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+                self.assertEqual([], problems)
+                self.assertEqual(count, facts['declared_tests'])
+                env = rs.class_env(reg, fqcn, mysql_port=33060, suffix='_unit_a1', timezone='UTC')
+                self.assertEqual('1', env['CHENGYIN_FUNDS_MYSQL_IT'])
+                self.assertEqual('127.0.0.1', env['CHENGYIN_TEST_MYSQL_HOST'])
+                self.assertEqual('_unit_a1', env['CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX'])
+        self.assertIn(next(n for n in expected if n.endswith('.RefundRetryAndRemainderMySqlIT')),
+                      reg['batches']['port-prelaunch-69']['classes'])
+
+    def test_refund_disabled_gate_or_stale_count_fails_existing_precheck(self):
+        for fqcn in registry()['batches']['architecture-day-refund-lifecycle']['classes']:
+            for mutation in ('gate', 'count'):
+                with self.subTest(fqcn=fqcn, mutation=mutation):
+                    reg = registry()
+                    if mutation == 'gate': reg['classes'][fqcn]['gates'] = {}
+                    else: reg['classes'][fqcn]['tests'] -= 1
+                    _, problems = rs.precheck(reg, _HERE.parent, fqcn)
+                    self.assertTrue(problems, 'missing gate or stale count must fail, never silently skip')
 
     def test_registered_literal_scratch_admissions_are_present_in_workflow(self):
         workflow = WORKFLOW.read_text().splitlines()
@@ -127,7 +163,7 @@ class RegistryContractTest(unittest.TestCase):
         flag = 'B_PAYMENT_FACT_DDL_APPROVED'
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
                     if line.strip().startswith(flag + ':'))
-        self.assertEqual("B_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'OmsOrderCommerceGuardMySqlIT' || matrix.simple == 'ClmCommercePaymentProofMySqlIT' || matrix.simple == 'WechatVerifiedPaymentFactMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RefundNotificationMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest') && '1' || '' }}", line)
+        self.assertEqual("B_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'OmsOrderCommerceGuardMySqlIT' || matrix.simple == 'ClmCommercePaymentProofMySqlIT' || matrix.simple == 'WechatVerifiedPaymentFactMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RefundNotificationMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest' || matrix.simple == 'RefundPayoutMybatisIntegrationTest') && '1' || '' }}", line)
         self.assertEqual({flag: '1'}, rs.child_env({flag: '1'}, {}))
         facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
         self.assertEqual([], problems)
@@ -160,7 +196,7 @@ class RegistryContractTest(unittest.TestCase):
                     "port-extra-storage": 131,
                     "port-core-funds": 27, "port-ai-quota": 22,
                     "port-f3-growth": 12, "port-f3-evidence": 4,
-                    "funnel-max-date": 4, "port-prelaunch-69": 35,
+                    "funnel-max-date": 4, "port-prelaunch-69": 36,
                     "p0-acceptance-ac1": 13, "architecture-day-batch1": 66,
                     "architecture-day-wave2": 74, "architecture-day-photo": 15,
                     "architecture-day-broadcast-migration": 10, "architecture-day-settlement": 7,
@@ -197,7 +233,8 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-clm-commerce-proof": 8,
                     "architecture-day-media-retry-budget": 8,
                     "architecture-day-before-start-notice": 12,
-                    "architecture-day-commerce-generic-guard": 6}
+                    "architecture-day-commerce-generic-guard": 6,
+                    "architecture-day-refund-lifecycle": 72}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}
