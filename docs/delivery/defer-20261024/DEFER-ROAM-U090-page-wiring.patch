@@ -1,0 +1,47 @@
+diff --git a/chengyinhub-xcx/pages/roam/index.js b/chengyinhub-xcx/pages/roam/index.js
+index 3951d04c..5f4a6536 100644
+--- a/chengyinhub-xcx/pages/roam/index.js
++++ b/chengyinhub-xcx/pages/roam/index.js
+@@ -38,6 +38,7 @@ const { readNonNegative } = require('../../utils/roam-history-metrics.js');
+ const { createIdleDetector } = require('../../utils/roam-idle.js');
+ const { acceptRoamLocation } = require('../../utils/roam-track-filter.js');
+ const { simplifyTrack, limitTrack } = require('../../utils/roam-track-simplify.js'); const { monthDay } = require('../../utils/month-day.js'); // 同行:本页 ui-integrity 基线按行号键
++const { halfViewM, scaleForHalfViewM } = require('../../utils/map-scale.js');
+ const { isRecordList } = require('../../utils/response-shape.js');
+ const readSession = require('../../utils/session/login-reload.js');
+ const { fromHttpStatusAbnormal } = require('../../utils/transport/failure-envelope.js');
+@@ -2907,31 +2908,13 @@ Page({
+     if (this.data.merchantOffline) this._fetchNearbyMerchants(this._c);
+   },
+ 
+-  /** 视距(中心到边缘 m) → 微信 map scale */
++  /** 视距(中心到边缘 m) ↔ 微信 map scale;阶梯表见 utils/map-scale(C:U-090) */
+   _halfViewM(scale) {
+-    if (scale >= 20) return 35;
+-    if (scale >= 19) return 70;
+-    if (scale >= 18) return 140;
+-    if (scale >= 17) return 280;
+-    if (scale >= 16) return 560;
+-    if (scale >= 15) return 1100;
+-    if (scale >= 14) return 2200;
+-    if (scale >= 13) return 4400;
+-    if (scale >= 12) return 8800;
+-    return 12000;
++    return halfViewM(scale);
+   },
+ 
+   _scaleForHalfViewM(halfM) {
+-    if (halfM <= 35) return 20;
+-    if (halfM <= 70) return 19;
+-    if (halfM <= 140) return 18;
+-    if (halfM <= 280) return 17;
+-    if (halfM <= 560) return 16;
+-    if (halfM <= 1100) return 15;
+-    if (halfM <= 2200) return 14;
+-    if (halfM <= 4400) return 13;
+-    if (halfM <= 8800) return 12;
+-    return SCALE_FAR;
++    return scaleForHalfViewM(halfM, SCALE_FAR);
+   },
+ 
+   _playerCenter() {
