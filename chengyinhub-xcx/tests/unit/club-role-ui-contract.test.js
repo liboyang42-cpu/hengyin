@@ -74,6 +74,7 @@ function createDetailHarness(storage = {}) {
     getApp: () => app,
     Page(page) { definition = page },
     require(request) {
+      if (request === '../../../utils/registration-seat.js') return require('../../utils/registration-seat.js')
       const modules = {
         '../../../utils/motion.js': require('../../utils/motion.js'),
         '../../../utils/motion-preference.js': require('../../utils/motion-preference.js'),
