@@ -47,6 +47,7 @@ class RefundRetryAndRemainderMySqlIT {
     private RefundApplicationMapper refunds;
     private IWechatPayService wechat;
     private SettlementDetailMapper settlements;
+    private WechatVerifiedPaymentFactService factsReader;
 
     @BeforeAll
     void setup() throws Exception {
@@ -58,7 +59,7 @@ class RefundRetryAndRemainderMySqlIT {
         db = new JdbcTemplate(dataSource);
         Path root = Files.exists(Paths.get("sql/base_schema_20260818.sql")) ? Paths.get("") : Paths.get("..");
         String snapshot = new String(Files.readAllBytes(root.resolve("sql/base_schema_20260818.sql")), StandardCharsets.UTF_8);
-        for (String table : new String[] {"cms_registration", "cms_topic", "cms_activity", "refund_application", "wx_payment_callback_inbox"}) {
+        for (String table : new String[] {"cms_registration", "cms_topic", "cms_activity", "refund_application"}) {
             String start = "CREATE TABLE `" + table + "` (";
             int from = snapshot.indexOf(start);
             int closing = snapshot.indexOf("\n) ENGINE", from);
@@ -66,25 +67,36 @@ class RefundRetryAndRemainderMySqlIT {
             assertTrue(from >= 0 && closing > from && to > closing, "missing source DDL: " + table);
             db.execute(snapshot.substring(from, to + 1));
         }
+        assertEquals("1", System.getenv("B_PAYMENT_FACT_DDL_APPROVED"));
         new ResourceDatabasePopulator(
                 new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20260930_registration_first_successful_scan.sql").toFile()),
-                new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_merchant_aftercare_timeout_20260917.sql").toFile())).execute(dataSource);
+                new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_merchant_aftercare_timeout_20260917.sql").toFile()),
+                new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_wx_payment_callback_inbox_outbox_20260725.sql").toFile()),
+                new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20261024_wx_verified_payment_fact.sql").toFile())).execute(dataSource);
 
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(dataSource);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
         factory.setMapperLocations(new ClassPathResource("mapper/business/CmsRegistrationMapper.xml"),
                 new ClassPathResource("mapper/business/RefundApplicationMapper.xml"),
-                new ClassPathResource("mapper/business/WxPaymentCallbackInboxMapper.xml"));
+                new ClassPathResource("mapper/business/WxPaymentCallbackInboxMapper.xml"),
+                new ClassPathResource("mapper/business/CmsActivityMapper.xml"),
+                new ClassPathResource("mapper/business/CmsTopicMapper.xml"));
         SqlSessionTemplate sql = new SqlSessionTemplate(factory.getObject());
         refunds = sql.getMapper(RefundApplicationMapper.class);
+        factsReader = WechatVerifiedFactTestSupport.realFacts(dataSource);
+        DataSourceTransactionManager manager = new DataSourceTransactionManager(dataSource);
         settlements = mock(SettlementDetailMapper.class);
         RefundServiceImpl target = new RefundServiceImpl();
         ReflectionTestUtils.setField(target, "refundApplicationMapper", refunds);
         ReflectionTestUtils.setField(target, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
         ReflectionTestUtils.setField(target, "settlementDetailMapper", settlements);
-        ReflectionTestUtils.setField(target, "cmsActivityMapper", mock(CmsActivityMapper.class));
-        ReflectionTestUtils.setField(target, "cmsTopicMapper", mock(CmsTopicMapper.class));
+        ReflectionTestUtils.setField(target, "cmsActivityMapper", sql.getMapper(CmsActivityMapper.class));
+        ReflectionTestUtils.setField(target, "cmsTopicMapper", sql.getMapper(CmsTopicMapper.class));
+        ReflectionTestUtils.setField(target, "verifiedPaymentFacts", factsReader);
+        var originalOwner = mock(ICoopSettlementClaimService.class);
+        when(originalOwner.hasFrozenOriginalRefundComponents(anyLong())).thenReturn(false);
+        ReflectionTestUtils.setField(target, "coopSettlementClaimService", originalOwner);
         ReflectionTestUtils.setField(target, "perkLedgerService", mock(IPerkLedgerService.class));
         ReflectionTestUtils.setField(target, "firstReviewPointsClawback", mock(FirstReviewPointsClawbackService.class));
         ReflectionTestUtils.setField(target, "merchantReferralBountyService", mock(MerchantReferralBountyService.class));
@@ -92,10 +104,22 @@ class RefundRetryAndRemainderMySqlIT {
         ReflectionTestUtils.setField(target, "alarmService", mock(AlarmService.class));
         WxPaymentCallbackInboxServiceImpl inbox = new WxPaymentCallbackInboxServiceImpl();
         ReflectionTestUtils.setField(inbox, "mapper", sql.getMapper(WxPaymentCallbackInboxMapper.class));
-        ReflectionTestUtils.setField(target, "wxPaymentCallbackInboxService", inbox);
+        ReflectionTestUtils.setField(inbox, "verifiedFacts", factsReader);
+        ReflectionTestUtils.setField(inbox, "alarmService", mock(AlarmService.class));
+        WxPaymentCallbackClaimService claims = new WxPaymentCallbackClaimService();
+        ReflectionTestUtils.setField(claims, "mapper", sql.getMapper(WxPaymentCallbackInboxMapper.class));
+        ReflectionTestUtils.setField(inbox, "claimService", transactional(claims, manager));
+        WxPaymentCallbackMutationService mutations = new WxPaymentCallbackMutationService();
+        ReflectionTestUtils.setField(mutations, "mapper", sql.getMapper(WxPaymentCallbackInboxMapper.class));
+        ReflectionTestUtils.setField(mutations, "registrationMapper", sql.getMapper(CmsRegistrationMapper.class));
+        ReflectionTestUtils.setField(mutations, "activityMapper", sql.getMapper(CmsActivityMapper.class));
+        ReflectionTestUtils.setField(mutations, "topicMapper", sql.getMapper(CmsTopicMapper.class));
+        ReflectionTestUtils.setField(mutations, "refundMapper", refunds);
+        ReflectionTestUtils.setField(inbox, "mutationService", transactional(mutations, manager));
+        ReflectionTestUtils.setField(target, "wxPaymentCallbackInboxService", transactional(inbox, manager));
         ProxyFactory proxy = new ProxyFactory(target);
         proxy.setInterfaces(IRefundService.class);
-        proxy.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(dataSource), new AnnotationTransactionAttributeSource()));
+        proxy.addAdvice(new TransactionInterceptor(manager, new AnnotationTransactionAttributeSource()));
         service = (IRefundService) proxy.getProxy();
         wechat = mock(IWechatPayService.class);
         RefundPayoutServiceImpl payout = new RefundPayoutServiceImpl();
@@ -108,9 +132,12 @@ class RefundRetryAndRemainderMySqlIT {
 
     @BeforeEach
     void clear() {
+        db.update("delete from wx_payment_callback_fact_link");
         db.update("delete from wx_payment_callback_inbox");
+        db.update("delete from wx_verified_payment_fact_rejection"); db.update("delete from wx_verified_payment_fact");
         db.update("delete from refund_application");
-        db.update("delete from cms_registration");
+        db.update("delete from cms_registration"); db.update("delete from cms_activity");
+        db.update("insert into cms_activity(id,member_id,topic_id,is_settlement,del_flag) values(20,3,NULL,0,0)");
         reset(wechat, settlements);
         when(settlements.selectSettledDetails(anyString(), anyLong())).thenReturn(Collections.emptyList());
         when(wechat.submitRefund(anyString(), anyString(), any(), any(), any())).thenReturn(RefundRequestResult.ACCEPTED);
@@ -218,10 +245,11 @@ class RefundRetryAndRemainderMySqlIT {
         assertEquals(2, db.queryForObject("select registration_status from cms_registration where id=99", Integer.class));
     }
 
-    private static Map<String, String> facts(RefundApplication refund) {
-        return Map.of("outRefundNo", refund.getRefundNo(), "outTradeNo", "REG99", "status", "SUCCESS",
-                "refund", Long.toString(refund.getRefundAmount().movePointRight(2).longValueExact()),
-                "total", "6800", "currency", "CNY");
+    private Map<String, String> facts(RefundApplication refund) {
+        return ARefundFactFixture.bindSuccess(factsReader,
+                Map.of("outRefundNo", refund.getRefundNo(), "outTradeNo", "REG99", "status", "SUCCESS",
+                    "refund", Long.toString(refund.getRefundAmount().movePointRight(2).longValueExact()),
+                    "total", "6800", "currency", "CNY"), "TX99");
     }
 
     private boolean approveAfter(CountDownLatch start, Long id, Long operator) throws InterruptedException {
@@ -261,6 +289,13 @@ class RefundRetryAndRemainderMySqlIT {
 
     private void paid(Long id, String parent, String cash) {
         db.update("insert into cms_registration(id,registration_no,parent_order_no,owner_type,owner_id,ticket_id,ticket_price,member_id,original_amount,total_amount,payable_amount,wechat_payment_amount,payment_status,registration_status,verification_status,pay_expire_time) values(?,?,?,2,20,1,?,9,?,?,?, ?,2,2,0,date_add(now(),interval 1 day))", id, "REG" + id, parent, cash, cash, cash, cash, cash);
+        db.update("update cms_registration set transaction_id='TX99' where id=?", id);
+    }
+
+    private <T> T transactional(T target, DataSourceTransactionManager manager) {
+        ProxyFactory proxy = new ProxyFactory(target); proxy.setProxyTargetClass(true);
+        proxy.addAdvice(new TransactionInterceptor(manager, new AnnotationTransactionAttributeSource()));
+        @SuppressWarnings("unchecked") T result = (T) proxy.getProxy(); return result;
     }
 
     private DriverManagerDataSource source(String url) {
