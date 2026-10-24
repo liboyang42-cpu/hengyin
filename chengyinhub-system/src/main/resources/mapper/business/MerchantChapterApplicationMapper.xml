@@ -63,7 +63,7 @@
     </select>
 
     <select id="selectByIdIncludingDeletedForUpdate" parameterType="Long"
-            resultMap="MerchantChapterApplicationResult">
+            resultMap="MerchantChapterApplicationResult" useCache="false" flushCache="true">
         <include refid="selectMerchantChapterApplicationVo" />
         where id = #{id}
         for update
@@ -75,7 +75,7 @@
         limit 1
     </select>
 
-    <select id="selectByChapterAndMerchantForUpdate" resultMap="MerchantChapterApplicationResult">
+    <select id="selectByChapterAndMerchantForUpdate" resultMap="MerchantChapterApplicationResult" useCache="false" flushCache="true">
         <include refid="selectMerchantChapterApplicationVo" />
         where chapter_id = #{chapterId} and merchant_id = #{merchantId} and del_flag = 0
         limit 1 for update

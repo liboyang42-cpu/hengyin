@@ -9,7 +9,7 @@ import com.chengyinhub.business.mapper.MerchantChapterApplicationMapper;
 import com.chengyinhub.business.mapper.MerchantChapterOfferMapper;
 import com.chengyinhub.business.mapper.MmsMerchantMapper;
 import com.chengyinhub.business.service.impl.MerchantChapterApplicationServiceImpl;
-import com.chengyinhub.business.service.support.CommittedBusinessNotice;
+import com.chengyinhub.business.service.support.ChapterApplicationInviteNotice;
 import com.chengyinhub.business.service.support.TopicSupplyReviewService;
 import com.chengyinhub.common.constant.ProductType;
 import com.chengyinhub.system.service.ISysCategoryService;
@@ -42,7 +42,7 @@ class ChapterRejectRevokeNoticeV2Test {
     private static final Long MERCHANT = 2001L;
 
     private MerchantChapterApplicationMapper applicationMapper;
-    private CommittedBusinessNotice committedNotice;
+    private ChapterApplicationInviteNotice committedNotice;
     private MerchantChapterApplicationServiceImpl service;
 
     @BeforeEach
@@ -50,11 +50,12 @@ class ChapterRejectRevokeNoticeV2Test {
         applicationMapper = mock(MerchantChapterApplicationMapper.class);
         CmsTopicChapterMapper chapterMapper = mock(CmsTopicChapterMapper.class);
         CmsTopicMapper topicMapper = mock(CmsTopicMapper.class);
-        committedNotice = mock(CommittedBusinessNotice.class);
+        committedNotice = mock(ChapterApplicationInviteNotice.class);
         service = new MerchantChapterApplicationServiceImpl();
         ReflectionTestUtils.setField(service, "supplyReviewService", mock(TopicSupplyReviewService.class));
         ReflectionTestUtils.setField(service, "applicationMapper", applicationMapper);
-        ReflectionTestUtils.setField(service, "committedNotice", committedNotice);
+        ReflectionTestUtils.setField(service, "inviteNotice", committedNotice);
+        ReflectionTestUtils.setField(service, "auditTaskMapper", mock(com.chengyinhub.business.mapper.AuditTaskMapper.class));
         ReflectionTestUtils.setField(service, "chapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "topicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "merchantMapper", mock(MmsMerchantMapper.class));
@@ -98,58 +99,60 @@ class ChapterRejectRevokeNoticeV2Test {
     void publisherRejectionNotifiesMerchantWithReason() {
         when(applicationMapper.selectMerchantChapterApplicationById(APPLICATION))
                 .thenReturn(pending(MerchantChapterApplication.SOURCE_APPLY));
+        when(applicationMapper.selectByIdIncludingDeletedForUpdate(APPLICATION)).thenReturn(pending(MerchantChapterApplication.SOURCE_APPLY));
 
         assertEquals(Integer.valueOf(MerchantChapterApplication.STATUS_REJECTED),
                 service.audit(APPLICATION, PUBLISHER, false, "  营业时间不符  ").getStatus());
 
-        verify(committedNotice, times(1)).sendAfterCommit(eq(MERCHANT), eq("章节申请审核结果"),
-                eq("章节申请未通过：营业时间不符"), eq("chapter-application-reviewed"), eq(APPLICATION));
+        verify(committedNotice, times(1)).submitOutcome(eq(TOPIC), eq(APPLICATION), any(), eq(com.chengyinhub.business.service.support.ChapterApplicationInviteNotice.Outcome.REVIEW), eq(MERCHANT), eq("章节申请审核结果"), eq("章节申请未通过：营业时间不符"));
     }
 
     @Test
     void merchantDecliningInvitationNotifiesPublisher() {
         when(applicationMapper.selectMerchantChapterApplicationById(APPLICATION))
                 .thenReturn(pending(MerchantChapterApplication.SOURCE_INVITE));
+        when(applicationMapper.selectByIdIncludingDeletedForUpdate(APPLICATION)).thenReturn(pending(MerchantChapterApplication.SOURCE_INVITE));
 
         MerchantChapterApplication declined = service.respondInvite(APPLICATION, MERCHANT, false);
 
         assertEquals(Integer.valueOf(MerchantChapterApplication.STATUS_REJECTED), declined.getStatus());
         verify(applicationMapper).updateAudit(eq(APPLICATION), eq(MerchantChapterApplication.STATUS_REJECTED),
                 eq("商家已拒绝邀请"), eq(MERCHANT), any());
-        verify(committedNotice, times(1)).sendAfterCommit(eq(PUBLISHER), eq("章节邀请处理结果"),
-                eq("商家已拒绝章节邀请"), eq("chapter-invite-decide"), eq(APPLICATION));
-        verify(committedNotice, never()).sendAfterCommit(eq(MERCHANT), any(), any(), any(), any());
+        verify(committedNotice, times(1)).submitOutcome(eq(TOPIC), eq(APPLICATION), any(), eq(com.chengyinhub.business.service.support.ChapterApplicationInviteNotice.Outcome.INVITE_DECISION), eq(PUBLISHER), eq("章节邀请处理结果"), eq("商家已拒绝章节邀请"));
+        verify(committedNotice, never()).submitOutcome(any(), any(), any(), any(), eq(MERCHANT), any(), any());
     }
 
     @Test
     void publisherRevokingPendingInvitationNotifiesMerchantOnce() {
         MerchantChapterApplication invite = pending(MerchantChapterApplication.SOURCE_INVITE);
         when(applicationMapper.selectByIdIncludingDeleted(APPLICATION)).thenReturn(invite);
+        when(applicationMapper.selectByIdIncludingDeletedForUpdate(APPLICATION)).thenReturn(invite);
         when(applicationMapper.withdrawPending(APPLICATION, MERCHANT)).thenReturn(1);
 
         assertEquals(Integer.valueOf(2), service.revokeInvite(APPLICATION, PUBLISHER).getDelFlag());
         // 幂等重放不重复通知
         service.revokeInvite(APPLICATION, PUBLISHER);
 
-        verify(committedNotice, times(1)).sendAfterCommit(eq(MERCHANT), eq("章节邀请已撤回"),
-                eq("主办方已撤回待接受的章节邀请"), eq("chapter-invite-revoke"), eq(APPLICATION));
+        verify(committedNotice, times(1)).submitOutcome(eq(TOPIC), eq(APPLICATION), any(), eq(com.chengyinhub.business.service.support.ChapterApplicationInviteNotice.Outcome.INVITE_REVOKE), eq(MERCHANT), eq("章节邀请已撤回"), eq("主办方已撤回待接受的章节邀请"));
     }
 
     @Test
     void failedRevokeSendsNoNotice() {
         MerchantChapterApplication invite = pending(MerchantChapterApplication.SOURCE_INVITE);
         when(applicationMapper.selectByIdIncludingDeleted(APPLICATION)).thenReturn(invite);
+        when(applicationMapper.selectByIdIncludingDeletedForUpdate(APPLICATION)).thenReturn(invite);
         when(applicationMapper.withdrawPending(APPLICATION, MERCHANT)).thenReturn(0);
 
         assertThrows(IllegalStateException.class, () -> service.revokeInvite(APPLICATION, PUBLISHER));
         assertThrows(IllegalStateException.class, () -> service.revokeInvite(APPLICATION, MERCHANT));
-        verify(committedNotice, never()).sendAfterCommit(any(), any(), any(), any(), any());
+        verify(committedNotice, never()).submitOutcome(any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
     void merchantWithdrawingOwnApplicationNotifiesPublisherOnce() {
         MerchantChapterApplication application = pending(MerchantChapterApplication.SOURCE_APPLY);
         when(applicationMapper.selectByIdIncludingDeletedForUpdate(APPLICATION)).thenReturn(application);
+        when(applicationMapper.selectByIdIncludingDeleted(APPLICATION)).thenReturn(application);
         when(applicationMapper.withdrawPending(APPLICATION, MERCHANT)).thenReturn(1);
 
         assertEquals(Integer.valueOf(2), service.withdraw(APPLICATION, MERCHANT).getDelFlag());
@@ -157,9 +160,8 @@ class ChapterRejectRevokeNoticeV2Test {
         service.withdraw(APPLICATION, MERCHANT);
 
         verify(applicationMapper, times(1)).withdrawPending(APPLICATION, MERCHANT);
-        verify(committedNotice, times(1)).sendAfterCommit(eq(PUBLISHER), eq("章节申请已撤回"),
-                eq("商家已撤回章节承接申请"), eq("chapter-application-withdraw"), eq(APPLICATION));
-        verify(committedNotice, never()).sendAfterCommit(eq(MERCHANT), any(), any(), any(), any());
+        verify(committedNotice, times(1)).submitOutcome(eq(TOPIC), eq(APPLICATION), any(), eq(com.chengyinhub.business.service.support.ChapterApplicationInviteNotice.Outcome.WITHDRAW), eq(PUBLISHER), eq("章节申请已撤回"), eq("商家已撤回章节承接申请"));
+        verify(committedNotice, never()).submitOutcome(any(), any(), any(), any(), eq(MERCHANT), any(), any());
     }
 
     @Test
@@ -172,6 +174,6 @@ class ChapterRejectRevokeNoticeV2Test {
         when(applicationMapper.selectByIdIncludingDeleted(APPLICATION)).thenReturn(alreadyWithdrawn);
 
         assertEquals(Integer.valueOf(2), service.withdraw(APPLICATION, MERCHANT).getDelFlag());
-        verify(committedNotice, never()).sendAfterCommit(any(), any(), any(), any(), any());
+        verify(committedNotice, never()).submitOutcome(any(), any(), any(), any(), any(), any(), any());
     }
 }
