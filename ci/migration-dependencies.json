@@ -839,6 +839,13 @@
     "20261022_theme_state_key_attribute_def": ["theme_state_key_20260916"],
     "20261022_theme_character": ["theme_state_key_20260916", "20261022_theme_state_key_attribute_def"],
     "20261022_f7_user_invoice": [],
-    "20261022_f7_minor_guardian": []
+    "20261022_f7_minor_guardian": [],
+    "20261023_g_cash_evidence_expand": [
+      "coop_settlement",
+      "coop_settlement_line",
+      "settlement_claim_20260811",
+      "fee_snapshot_20260716",
+      "p3_phase_c_web_rules_refund"
+    ]
   }
 }
