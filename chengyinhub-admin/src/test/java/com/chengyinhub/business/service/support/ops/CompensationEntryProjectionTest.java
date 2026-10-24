@@ -17,8 +17,12 @@ import org.junit.jupiter.api.Test;
 import com.chengyinhub.business.domain.BusinessAuditEvent;
 import com.chengyinhub.business.domain.ClubEditionCompensationTerms;
 import com.chengyinhub.business.domain.vo.AuditTrailEntryVO;
+import com.chengyinhub.business.service.IClubEditionCompensationService;
 import com.chengyinhub.business.service.support.ExtraApproverReachability;
 import com.chengyinhub.business.service.support.FinalCompensationFacts;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class CompensationEntryProjectionTest {
 
@@ -164,6 +168,59 @@ class CompensationEntryProjectionTest {
         assertEquals("FROZEN", first.getOriginalAudit().get(0).getAfterJson());
         assertEquals(1, byRequest.get("c11-comp-never").size());
         assertEquals(1, byRequest.size());
+    }
+
+    @Test
+    void projectFromReachabilityConsumesPublicFrozenTermsWithoutOccupyingOnDeny() {
+        IClubEditionCompensationService compensation = mock(IClubEditionCompensationService.class);
+        when(compensation.requireFrozenTerms(10L)).thenReturn(frozenTerms());
+        CompensationEntryProjection missing = new CompensationEntryProjection(
+                CompensationEntryProjection.fromClubCompensation(null),
+                new CompensationAuditSource() {
+                    @Override
+                    public List<BusinessAuditEvent> eventsForRequest(String requestId) {
+                        throw new AssertionError("missing terms port must not read audit");
+                    }
+
+                    @Override
+                    public List<AuditTrailEntryVO> trailForTopic(Long topicId) {
+                        throw new AssertionError("missing terms port must not read trail");
+                    }
+                });
+        CompensationEntryProjection.ViewerGrant viewer = new CompensationEntryProjection.ViewerGrant(
+                88L, Set.of(ExtraApproverReachability.APPROVE_PERMISSION));
+        CompensationEntryProjection.WaitingSourceException termsWaiting = assertThrows(
+                CompensationEntryProjection.WaitingSourceException.class,
+                () -> missing.project("comp-req-1", 10L, viewer, null));
+        assertEquals(CompensationEntryProjection.FROZEN_TERMS, termsWaiting.getWaitingCapability());
+
+        CompensationEntryProjection.WaitingSourceException reachWaiting = assertThrows(
+                CompensationEntryProjection.WaitingSourceException.class,
+                () -> missing.projectFromReachability("comp-req-1", 10L, 88L, null, null));
+        assertEquals(CompensationEntryProjection.EXTRA_APPROVE, reachWaiting.getWaitingCapability());
+
+        CompensationEntryProjection wired = new CompensationEntryProjection(
+                CompensationEntryProjection.fromClubCompensation(compensation),
+                new CompensationAuditSource() {
+                    @Override
+                    public List<BusinessAuditEvent> eventsForRequest(String requestId) {
+                        return List.of();
+                    }
+
+                    @Override
+                    public List<AuditTrailEntryVO> trailForTopic(Long topicId) {
+                        return List.of();
+                    }
+                });
+        SecurityException denied = assertThrows(SecurityException.class,
+                () -> wired.projectFromReachability("comp-req-1", 10L, 88L, userId -> false, null));
+        assertEquals(CompensationEntryProjection.DENIED, denied.getMessage());
+
+        CompensationEntryProjection.View view = wired.projectFromReachability(
+                "comp-req-1", 10L, 88L, userId -> userId != null && userId == 88L, null);
+        assertEquals(new BigDecimal("200.00"), view.getOriginalTerms().getFixedCompensation());
+        assertEquals("hash-v1", view.getOriginalTerms().getConfigHash());
+        assertTrue(view.permissioned());
     }
 
     private static ClubEditionCompensationTerms frozenTerms() {

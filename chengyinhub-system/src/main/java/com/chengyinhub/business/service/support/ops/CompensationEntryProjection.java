@@ -11,6 +11,7 @@ import java.util.Set;
 import com.chengyinhub.business.domain.BusinessAuditEvent;
 import com.chengyinhub.business.domain.ClubEditionCompensationTerms;
 import com.chengyinhub.business.domain.vo.AuditTrailEntryVO;
+import com.chengyinhub.business.service.IClubEditionCompensationService;
 import com.chengyinhub.business.service.support.ExtraApproverReachability;
 import com.chengyinhub.business.service.support.FinalCompensationFacts;
 
@@ -26,6 +27,8 @@ public final class CompensationEntryProjection {
 
     public static final String DENIED = "COMPENSATION_VIEW_DENIED";
     public static final String TERMS_MISSING = "EDITION_TERMS_MISSING";
+    public static final String FROZEN_TERMS = "clubEditionCompensation.requireFrozenTerms";
+    public static final String EXTRA_APPROVE = "extraApprover.canApproveExtraHours";
 
     private final FrozenTermsSource termsSource;
     private final CompensationAuditSource auditSource;
@@ -74,6 +77,42 @@ public final class CompensationEntryProjection {
         return requery(requestId, topicId, viewer, currentFinal);
     }
 
+    /**
+     * 用既有 ExtraApproverReachability.canApproveExtraHours 签发 viewer，再读冻结条款。
+     * 缺端口 WAITING_SOURCE {@link #EXTRA_APPROVE}。不查 JWT，不改共享 Reachability。
+     */
+    public View projectFromReachability(String requestId, Long topicId, Long viewerId,
+                                        ExtraApproverSource reachability, FinalCompensationFacts currentFinal) {
+        if (reachability == null) {
+            throw new WaitingSourceException(EXTRA_APPROVE);
+        }
+        if (viewerId == null || viewerId <= 0L || !reachability.canApproveExtraHours(viewerId)) {
+            throw new SecurityException(DENIED);
+        }
+        return project(requestId, topicId,
+                new ViewerGrant(viewerId, Set.of(ExtraApproverReachability.APPROVE_PERMISSION)),
+                currentFinal);
+    }
+
+    /** 消费公开 {@link IClubEditionCompensationService#requireFrozenTerms}；缺服务 WAITING_SOURCE。 */
+    public static FrozenTermsSource fromClubCompensation(IClubEditionCompensationService compensation) {
+        if (compensation == null) {
+            return topicId -> {
+                throw new WaitingSourceException(FROZEN_TERMS);
+            };
+        }
+        return compensation::requireFrozenTerms;
+    }
+
+    public static ExtraApproverSource fromReachability(ExtraApproverReachability reachability) {
+        if (reachability == null) {
+            return userId -> {
+                throw new WaitingSourceException(EXTRA_APPROVE);
+            };
+        }
+        return reachability::canApproveExtraHours;
+    }
+
     static boolean hasExistingApprovePermission(Set<String> existingPermissionCodes) {
         if (existingPermissionCodes == null || existingPermissionCodes.isEmpty()) {
             return false;
@@ -84,6 +123,25 @@ public final class CompensationEntryProjection {
     /** 开售冻结条款真源，复用 {@code IClubEditionCompensationService#requireFrozenTerms} 合同。 */
     public interface FrozenTermsSource {
         ClubEditionCompensationTerms requireFrozenTerms(Long topicId);
+    }
+
+    /** 只回答权限位可达，不代替冻结审批人。 */
+    public interface ExtraApproverSource {
+        boolean canApproveExtraHours(Long userId);
+    }
+
+    public static final class WaitingSourceException extends IllegalStateException {
+        private static final long serialVersionUID = 1L;
+        private final String waitingCapability;
+
+        public WaitingSourceException(String waitingCapability) {
+            super("WAITING_SOURCE " + waitingCapability);
+            this.waitingCapability = waitingCapability;
+        }
+
+        public String getWaitingCapability() {
+            return waitingCapability;
+        }
     }
 
     /** 既有审计真源；不得新建补偿审计表。 */
