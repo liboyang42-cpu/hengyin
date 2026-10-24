@@ -117,7 +117,7 @@ class CmsTopicRoutePublishPolicyTest {
         // R18-DRAFT:发布时补建自办活动壳 —— 成功路径会走到这两个协作者,不在场就是 NPE 假红。
         ReflectionTestUtils.setField(service, "cmsActivityMapper",
                 mock(com.chengyinhub.business.mapper.CmsActivityMapper.class));
-        ReflectionTestUtils.setField(service, "omsTicketService",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "omsTicketService",
                 mock(com.chengyinhub.business.service.IOmsTicketService.class));
         ReflectionTestUtils.setField(service, "omsTicketMapper", mock(OmsTicketMapper.class));
         // release-0917 同步 master:rule-funds 欠款逾期闸在 publishDraft 提交口与建壳处,手工装配须补上;mock 默认无逾期。
@@ -157,7 +157,7 @@ class CmsTopicRoutePublishPolicyTest {
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service,"cmsTopicNodeMapper",mock(CmsTopicNodeMapper.class));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
-        ReflectionTestUtils.setField(service, "quotaService", mock(IQuotaService.class));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "quotaService", mock(IQuotaService.class));
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", mock(CmsTopicNodeMapper.class));
         IAuditTaskService auditTaskService = mock(IAuditTaskService.class);
         ReflectionTestUtils.setField(service, "auditTaskService", auditTaskService);
@@ -175,7 +175,7 @@ class CmsTopicRoutePublishPolicyTest {
         // R18-DRAFT:发布时补建自办活动壳 —— 成功路径会走到这两个协作者,不在场就是 NPE 假红。
         ReflectionTestUtils.setField(service, "cmsActivityMapper",
                 mock(com.chengyinhub.business.mapper.CmsActivityMapper.class));
-        ReflectionTestUtils.setField(service, "omsTicketService",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "omsTicketService",
                 mock(com.chengyinhub.business.service.IOmsTicketService.class));
         ReflectionTestUtils.setField(service, "omsTicketMapper", mock(OmsTicketMapper.class));
         // release-0917 同步 master:rule-funds 欠款逾期闸在 publishDraft 提交口与建壳处,手工装配须补上;mock 默认无逾期。
@@ -304,8 +304,7 @@ class CmsTopicRoutePublishPolicyTest {
         d20.setAdvancedConfigJson("{\"diceRoll\":{\"enabled\":true,\"mode\":\"d20\"}}");
         when(templateMapper.selectCmsMemberTemplateById(104L)).thenReturn(d20);
 
-        Map<Long, Set<String>> declared = ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service),
-                "declaredRouteOutcomes", 10L);
+        Map<Long, Set<String>> declared = ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicPublicationTestWiring.owner(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service), "declaredRouteOutcomes"), "declaredRouteOutcomes", 10L);
 
         assertEquals(set("PREFERENCE_RESULT:HISTORY", "PREFERENCE_RESULT:ART"), declared.get(1L));
         assertEquals(set("ADVANCED_RESULT:PHOTO_END"), declared.get(2L));

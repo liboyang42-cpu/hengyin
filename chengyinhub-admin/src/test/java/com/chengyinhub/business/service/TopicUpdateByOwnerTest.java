@@ -123,7 +123,7 @@ class TopicUpdateByOwnerTest {
                 invocation -> "lockTopic".equals(invocation.getMethod().getName())
                         ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(svc, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
-        ReflectionTestUtils.setField(svc, "quotaService", mock(IQuotaService.class));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "quotaService", mock(IQuotaService.class));
         when(topicMapper.publishRouteSnapshot(any(), any(), any())).thenReturn(1);
         org.springframework.test.util.ReflectionTestUtils.setField(svc, "settlementDebtLedger", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
         commercialTopicPolicy = new com.chengyinhub.business.service.support.CommercialTopicPolicy(
@@ -140,7 +140,7 @@ class TopicUpdateByOwnerTest {
         ReflectionTestUtils.setField(svc, "clubService", clubService);
         ReflectionTestUtils.setField(svc, "xpBudgetService", xpBudgetService);
         ReflectionTestUtils.setField(svc, "auditTaskService", auditTaskService);
-        ReflectionTestUtils.setField(svc, "omsTicketService", omsTicketService);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "omsTicketService", omsTicketService);
 
         // 没有任何报名(钱不在场),结构重建的钱闸放行
         when(registrationMapper.selectCmsRegistrationList(any())).thenReturn(Collections.<CmsRegistration>emptyList());

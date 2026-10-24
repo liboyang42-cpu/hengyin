@@ -81,10 +81,10 @@ class TopicSizeLimitsTest {
         when(nodeMapper.selectCmsTopicNodeList(any())).thenReturn(Collections.<CmsTopicNode>emptyList());
 
         IllegalStateException e = assertThrows(IllegalStateException.class,
-                () -> ReflectionTestUtils.invokeMethod(service, "assertTopicSizeWithinLimits", 5L));
+                () -> ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicPublicationTestWiring.owner(service, "assertTopicSizeWithinLimits"), "assertTopicSizeWithinLimits", 5L));
         assertEquals("发布前请先调整:主题最多 30 章,当前 31 章,请合并或删减章节", e.getMessage());
 
         when(chapterMapper.selectCmsTopicChapterList(any())).thenReturn(thirtyOne.subList(0, 30));
-        ReflectionTestUtils.invokeMethod(service, "assertTopicSizeWithinLimits", 5L);
+        ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicPublicationTestWiring.owner(service, "assertTopicSizeWithinLimits"), "assertTopicSizeWithinLimits", 5L);
     }
 }

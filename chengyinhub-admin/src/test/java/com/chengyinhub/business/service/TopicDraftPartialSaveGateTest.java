@@ -92,6 +92,7 @@ class TopicDraftPartialSaveGateTest {
             } catch (Exception ignore) {
             }
         }
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wireRelocatedCollaborators(svc, publicationField -> org.mockito.Mockito.mock(publicationField.getType()));
         topicMapper = (CmsTopicMapper) ReflectionTestUtils.getField(svc, "cmsTopicMapper");
         nodeMapper = (CmsTopicNodeMapper) ReflectionTestUtils.getField(svc, "cmsTopicNodeMapper");
         ticketMapper = (OmsTicketMapper) ReflectionTestUtils.getField(svc, "omsTicketMapper");
@@ -99,7 +100,7 @@ class TopicDraftPartialSaveGateTest {
         // 状态键/引用的收集是无状态协作者:用真实现装进去,发布闸才算真跑过(不是被 mock 短路)。
         ReflectionTestUtils.setField(svc, "themeStateKeyService",
                 new ThemeStateKeyService(mock(ThemeStateKeyMapper.class)));
-        ReflectionTestUtils.setField(svc, "topicStateKeyRefService",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "topicStateKeyRefService",
                 new TopicStateKeyRefService(nodeMapper, mock(CmsMemberTemplateMapper.class), chapterMapper));
 
         when(topicMapper.insertCmsTopic(any(CmsTopic.class))).thenAnswer(inv -> {

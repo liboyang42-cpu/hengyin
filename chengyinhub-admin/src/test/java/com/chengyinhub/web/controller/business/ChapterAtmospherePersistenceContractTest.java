@@ -44,11 +44,18 @@ class ChapterAtmospherePersistenceContractTest
     @Test
     void bothWritePathsNormalizeInsteadOfPassingThrough() throws Exception
     {
-        String impl = source("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java");
+        String impl = source("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicContentGraphAuthoringServiceImpl.java");
         int hits = impl.split("setAtmospherePreset\\(ChapterAtmospherePreset\\.requireValid\\(", -1).length - 1;
         assertEquals(2, hits,
                 "两条写路径(v1 saveChapters / v2 flow)都必须显式收敛枚举 —— "
                         + "靠 copyProperties 隐式透传等于让前端任意字符串直接落库,同一个方法里已经栽过两次");
+        assertTrue(impl.contains("chapter.setAtmospherePreset(ChapterAtmospherePreset.requireValid(chapterDTO.getAtmospherePreset()))"),
+                "V1章节写口必须保留显式规范化");
+        assertTrue(impl.contains("chapter.setAtmospherePreset(ChapterAtmospherePreset.requireValid(source.getAtmospherePreset()))"),
+                "V2块编译写口必须保留显式规范化");
+        String facade = source("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java");
+        assertTrue(facade.contains("contentGraphAuthoringService.saveTopicChapters("),
+                "原公共门面必须调用真实内容图写口");
     }
 
     @Test
@@ -77,7 +84,7 @@ class ChapterAtmospherePersistenceContractTest
     @Test
     void negativeControlRemovingNormalizationTurnsRed() throws Exception
     {
-        String impl = source("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java");
+        String impl = source("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicContentGraphAuthoringServiceImpl.java");
         String tampered = impl.replace("setAtmospherePreset(ChapterAtmospherePreset.requireValid(", "setAtmospherePreset((");
         assertNotNull(tampered);
         assertFalse(tampered.contains("setAtmospherePreset(ChapterAtmospherePreset.requireValid("),

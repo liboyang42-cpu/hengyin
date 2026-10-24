@@ -36,6 +36,7 @@ class OWN_C03_10Test {
                 ReflectionTestUtils.setField(service, field.getName(), mock(field.getType()));
             }
         }
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wireRelocatedCollaborators(service, publicationField -> org.mockito.Mockito.mock(publicationField.getType()));
         topics = (CmsTopicMapper) ReflectionTestUtils.getField(service, "cmsTopicMapper");
         nodes = (CmsTopicNodeMapper) ReflectionTestUtils.getField(service, "cmsTopicNodeMapper");
         chapters = (CmsTopicChapterMapper) ReflectionTestUtils.getField(service, "cmsTopicChapterMapper");

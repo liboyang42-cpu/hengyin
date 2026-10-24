@@ -77,7 +77,7 @@ class CmsTopicSysVarPublishGateTest {
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
         ReflectionTestUtils.setField(service, "themeStateKeyService", new ThemeStateKeyService(keyMapper));
-        ReflectionTestUtils.setField(service, "topicStateKeyRefService",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "topicStateKeyRefService",
                 new TopicStateKeyRefService(nodeMapper, templateMapper, chapterMapper));
         // R18-DRAFT 起 publishDraft 会补建自办活动壳:壳已存在 / 票种查询是发布路径的前置协作者。
         CmsActivityMapper cmsActivityMapper = mock(CmsActivityMapper.class);

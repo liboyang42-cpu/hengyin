@@ -66,13 +66,13 @@ class CmsTopicPublishNarrativeNpcGuardTest {
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
-        ReflectionTestUtils.setField(service, "topicStateKeyRefService",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "topicStateKeyRefService",
                 new TopicStateKeyRefService(nodeMapper, templateMapper, mock(com.chengyinhub.business.mapper.CmsTopicChapterMapper.class)));
-        ReflectionTestUtils.setField(service, "npcProfileMapper", npcProfileMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "npcProfileMapper", npcProfileMapper);
         // R18-DRAFT:发布时补建自办活动壳 —— 成功路径会走到这两个协作者,不在场就是 NPE 假红。
         ReflectionTestUtils.setField(service, "cmsActivityMapper",
                 mock(com.chengyinhub.business.mapper.CmsActivityMapper.class));
-        ReflectionTestUtils.setField(service, "omsTicketService",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "omsTicketService",
                 mock(com.chengyinhub.business.service.IOmsTicketService.class));
         // R19-DRAFT2:发布闸读票种(完整度),不在场就是 NPE 假红。
         ReflectionTestUtils.setField(service, "omsTicketMapper",

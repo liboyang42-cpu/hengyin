@@ -10,6 +10,7 @@ import com.chengyinhub.system.domain.SysCategory;
 import com.chengyinhub.system.service.ISysCategoryService;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.plugin.*;
@@ -41,7 +42,8 @@ import static org.mockito.Mockito.*;
 
 /** Same fixture on the original facade and extracted graph. No compile-time new-owner references. */
 final class TopicContentGraphMySqlFixture implements AutoCloseable {
-    static final ObjectMapper JSON = new ObjectMapper();
+    static final ObjectMapper JSON = new ObjectMapper().registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     static final long TOPIC = 100L, OWNER = 42L;
     static final List<String> TABLES = List.of("cms_topic", "cms_topic_chapter", "cms_topic_node",
             "cms_member_template", "npc_profile", "cms_collaborators", "product_role", "merchant_chapter_offer");
@@ -56,6 +58,7 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
     final Capture capture = new Capture(this);
     JdbcTemplate admin, db;
     DataSourceTransactionManager manager;
+    SqlSessionTemplate sql;
     TransactionTemplate tx;
     CmsTopicMapper topics;
     CmsTopicChapterMapper chapters;
@@ -101,7 +104,7 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
                 new ClassPathResource("mapper/business/CmsMemberTemplateMapper.xml"),
                 new ClassPathResource("mapper/business/CmsCollaboratorsMapper.xml"),
                 new ClassPathResource("mapper/business/ProductRoleMapper.xml"));
-        SqlSessionTemplate sql = new SqlSessionTemplate(factory.getObject());
+        sql = new SqlSessionTemplate(factory.getObject());
         topics = sql.getMapper(CmsTopicMapper.class);
         chapters = sql.getMapper(CmsTopicChapterMapper.class);
         nodes = sql.getMapper(CmsTopicNodeMapper.class);
@@ -121,6 +124,9 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
             field.setAccessible(true);
             if (field.get(facade) == null) field.set(facade, boundary(field.getType(), field.getName()));
         }
+        if (!ownerMode.equals("legacy")) publicationFixture("wireRelocatedCollaborators",
+                new Class<?>[]{Object.class, java.util.function.Function.class}, facade,
+                (java.util.function.Function<Field, Object>) publicationField -> boundary(publicationField.getType(), publicationField.getName()));
         set("cmsTopicMapper", topics); set("cmsTopicChapterMapper", chapters); set("cmsTopicNodeMapper", nodes);
         set("cmsMemberTemplateMapper", templateMapper); set("cmsCollaboratorsMapper", collaborators);
         set("productRoleService", roles); set("cmsMemberTemplateService", templateService);
@@ -145,7 +151,10 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
         String name = "com.chengyinhub.business.service.impl.TopicContentGraphAuthoringServiceImpl";
         if (ownerMode.equals("legacy")) {
             for (String cls : List.of(name, "com.chengyinhub.business.service.support.TopicContentWriteGuard",
-                    "com.chengyinhub.business.service.support.TopicRouteOutcomeReader", "com.chengyinhub.business.service.support.TopicAuthoredGraphIds"))
+                    "com.chengyinhub.business.service.support.TopicRouteOutcomeReader", "com.chengyinhub.business.service.support.TopicAuthoredGraphIds",
+                    "com.chengyinhub.business.service.impl.TopicPublicationService",
+                    "com.chengyinhub.business.service.support.TopicPublicationContentGuard",
+                    "com.chengyinhub.business.service.support.TopicSelfHostActivityService"))
                 assertThrows(ClassNotFoundException.class, () -> Class.forName(cls), "legacy must run the original production source");
             graph = facade; guard = facade;
         } else {
@@ -157,13 +166,14 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
                     .getConstructor(CmsTopicNodeMapper.class, CmsMemberTemplateMapper.class).newInstance(nodes, templateMapper);
             for (String field : List.of("cmsTopicMapper", "cmsTopicChapterMapper", "cmsTopicNodeMapper",
                     "cmsMemberTemplateMapper", "cmsMemberTemplateService", "topicRouteRuntimeService"))
-                ReflectionTestUtils.setField(graph, field, ReflectionTestUtils.getField(facade, field));
+                ReflectionTestUtils.setField(graph, field, get(field));
             ReflectionTestUtils.setField(graph, "contentWriteGuard", guard);
             ReflectionTestUtils.setField(graph, "routeOutcomeReader", reader);
             Object graphProxy = proxy(graph, Class.forName("com.chengyinhub.business.service.ITopicContentGraphAuthoringService"));
             assertTrue(AopUtils.isAopProxy(graphProxy));
             set("contentGraphAuthoringService", graphProxy); set("contentWriteGuard", guard); set("routeOutcomeReader", reader);
         }
+        if (!ownerMode.equals("legacy")) publicationFixture("wire", new Class<?>[]{Object.class}, facade);
         service = (ICmsTopicService) proxy(facade, ICmsTopicService.class);
         assertTrue(AopUtils.isAopProxy(service));
         seed(); mark();
@@ -193,7 +203,20 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
         return factory.getProxy();
     }
 
-    void set(String field, Object value) { ReflectionTestUtils.setField(facade, field, value); }
+    void set(String field, Object value) {
+        if (ownerMode.equals("legacy")) ReflectionTestUtils.setField(facade, field, value);
+        else publicationFixture("set", new Class<?>[]{Object.class, String.class, Object.class}, facade, field, value);
+    }
+    Object get(String field) {
+        return ownerMode.equals("legacy") ? ReflectionTestUtils.getField(facade, field)
+                : publicationFixture("get", new Class<?>[]{Object.class, String.class}, facade, field);
+    }
+    Object publicationFixture(String method, Class<?>[] signature, Object... args) {
+        try {
+            return Class.forName("com.chengyinhub.business.service.support.TopicPublicationTestWiring")
+                    .getMethod(method, signature).invoke(null, args);
+        } catch (ReflectiveOperationException failure) { throw new IllegalStateException("publication fixture assembly failed", failure); }
+    }
 
     private void seed() {
         db.update("insert into cms_topic(id,member_id,name,topic_type,product_type,status,user_status,merchant_status,del_flag,is_draft,lifecycle,"
@@ -270,7 +293,13 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
 
     Object graphCall(String name,Object... args) { return tx.execute(status -> ReflectionTestUtils.invokeMethod(graph,name,args)); }
     Object guardCall(String name,Object... args) { return tx.execute(status -> ReflectionTestUtils.invokeMethod(guard,name,args)); }
-    Object outcomes() { return tx.execute(status -> ReflectionTestUtils.invokeMethod(facade,"declaredRouteOutcomes",TOPIC)); }
+    Object outcomes() {
+        return tx.execute(status -> {
+            // Controlled JDBC fixture updates bypass MyBatis write invalidation in the reader scenarios.
+            sql.clearCache();
+            return ReflectionTestUtils.invokeMethod(ownerMode.equals("legacy") ? facade : get("publicationContentGuard"),"declaredRouteOutcomes",TOPIC);
+        });
+    }
 
     Map<String,List<Map<String,Object>>> snapshot() {
         Map<String,List<Map<String,Object>>> rows=new LinkedHashMap<>();
@@ -298,7 +327,12 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
         }
     }
     long number(Object value) { return ((Number)value).longValue(); }
-    List<Map<String,Object>> topicNodes(long topic) { return db.queryForList("select * from cms_topic_node where topic_id=? order by sort_id,id",topic); }
+    List<Map<String,Object>> topicNodes(long topic) {
+        // sort_id is chapter-local in the legacy writer; preserve the submitted chapter/node hierarchy.
+        return db.queryForList("select n.* from cms_topic_node n left join cms_topic_chapter c "
+                + "on c.id=n.chapter_id and c.topic_id=n.topic_id where n.topic_id=? "
+                + "order by c.sort_id,c.id,n.sort_id,n.id",topic);
+    }
     List<Map<String,Object>> topicChapters(long topic) { return db.queryForList("select * from cms_topic_chapter where topic_id=? order by sort_id,id",topic); }
     JsonNode json(String raw) throws Exception { return JSON.readTree(raw); }
     void earlier(String first,String second) {

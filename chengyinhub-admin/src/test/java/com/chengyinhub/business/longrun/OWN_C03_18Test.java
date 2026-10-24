@@ -31,6 +31,7 @@ class OWN_C03_18Test {
                 ReflectionTestUtils.setField(service, field.getName(), mock(field.getType()));
             }
         }
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wireRelocatedCollaborators(service, publicationField -> org.mockito.Mockito.mock(publicationField.getType()));
         topics = (CmsTopicMapper) ReflectionTestUtils.getField(service, "cmsTopicMapper");
         CmsTopic existing = new CmsTopic();
         existing.setId(700L);
