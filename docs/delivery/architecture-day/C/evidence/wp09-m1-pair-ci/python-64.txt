@@ -1,0 +1,114 @@
+test_c01_gate_is_literal_true (ci.test_real_storage_it.EnvProfileTest.test_c01_gate_is_literal_true) ... ok
+test_e04_base_and_only_own_gate (ci.test_real_storage_it.EnvProfileTest.test_e04_base_and_only_own_gate) ... ok
+test_inherited_gates_are_dropped (ci.test_real_storage_it.EnvProfileTest.test_inherited_gates_are_dropped) ... ok
+test_public_env_never_carries_password_values (ci.test_real_storage_it.EnvProfileTest.test_public_env_never_carries_password_values) ... ok
+test_redis_only_and_mixed_storage (ci.test_real_storage_it.EnvProfileTest.test_redis_only_and_mixed_storage) ... ok
+test_counts_only_real_annotations (ci.test_real_storage_it.JavaScanTest.test_counts_only_real_annotations) ... ok
+test_flags_dynamic_and_disabled (ci.test_real_storage_it.JavaScanTest.test_flags_dynamic_and_disabled) ... ok
+test_gate_values_must_satisfy_source (ci.test_real_storage_it.JavaScanTest.test_gate_values_must_satisfy_source) ... ok
+test_hard_coded_database_base_must_match_registry (ci.test_real_storage_it.JavaScanTest.test_hard_coded_database_base_must_match_registry) ... ok
+test_precheck_against_candidate_tree (ci.test_real_storage_it.JavaScanTest.test_precheck_against_candidate_tree) ... ok
+test_failed_source_summary_or_storage_prevents_provenance_pass (ci.test_real_storage_it.M1PairTest.test_failed_source_summary_or_storage_prevents_provenance_pass) ... ok
+test_ordinary_plan_outputs_remain_exact_original_matrix_and_sha12 (ci.test_real_storage_it.M1PairTest.test_ordinary_plan_outputs_remain_exact_original_matrix_and_sha12) ... ok
+test_pair_plan_missing_old_and_real_dynamic_tests_fail_before_matrix (ci.test_real_storage_it.M1PairTest.test_pair_plan_missing_old_and_real_dynamic_tests_fail_before_matrix) ... ❌ m1-pair-plan: 缺环境变量 OLD_SOURCE_SHA
+❌ m1-pair-plan: 静态预检未过（整批不起 runner）:
+  PlayLeadAdmissionFailureMySqlIT: 含 ParameterizedTest：实跑条数不等于声明数，本入口不接
+  PlayHintUnlockMySqlIT: 含 ParameterizedTest：实跑条数不等于声明数，本入口不接
+ok
+test_pair_plan_reuses_real_source_precheck_and_binds_four_jobs (ci.test_real_storage_it.M1PairTest.test_pair_plan_reuses_real_source_precheck_and_binds_four_jobs) ... ok
+test_pair_plan_wrong_head_publishes_no_matrix (ci.test_real_storage_it.M1PairTest.test_pair_plan_wrong_head_publishes_no_matrix) ... ❌ m1-pair-plan: 候选检出 HEAD=5752ee6fd302dab9e610f65cb8f3dc5b2b66201d，不是 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+❌ m1-pair-plan: 候选检出 HEAD=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa，不是 5752ee6fd302dab9e610f65cb8f3dc5b2b66201d
+ok
+test_pair_provenance_success_is_explicitly_not_canonical_verdict (ci.test_real_storage_it.M1PairTest.test_pair_provenance_success_is_explicitly_not_canonical_verdict) ... ok
+test_pair_rejects_any_suffix_override (ci.test_real_storage_it.M1PairTest.test_pair_rejects_any_suffix_override) ... ok
+test_pair_rejects_cross_run_attempt_workflow_or_repository (ci.test_real_storage_it.M1PairTest.test_pair_rejects_cross_run_attempt_workflow_or_repository) ... ok
+test_pair_rejects_cross_source_precheck_batch_or_missing_old (ci.test_real_storage_it.M1PairTest.test_pair_rejects_cross_source_precheck_batch_or_missing_old) ... ok
+test_pair_rejects_missing_duplicate_or_foreign_class_artifact (ci.test_real_storage_it.M1PairTest.test_pair_rejects_missing_duplicate_or_foreign_class_artifact) ... ok
+test_pair_rejects_nonclean_maven_failure_skip_count_or_duplicate_cases (ci.test_real_storage_it.M1PairTest.test_pair_rejects_nonclean_maven_failure_skip_count_or_duplicate_cases) ... ok
+test_pair_rejects_other_batches_subsets_and_timezones (ci.test_real_storage_it.M1PairTest.test_pair_rejects_other_batches_subsets_and_timezones) ... ok
+test_pair_rejects_registry_class_count_storage_or_gate_drift (ci.test_real_storage_it.M1PairTest.test_pair_rejects_registry_class_count_storage_or_gate_drift) ... ok
+test_pair_request_requires_two_distinct_complete_sources (ci.test_real_storage_it.M1PairTest.test_pair_request_requires_two_distinct_complete_sources) ... ok
+test_pair_verify_cli_fails_closed_and_preserves_failure_artifact (ci.test_real_storage_it.M1PairTest.test_pair_verify_cli_fails_closed_and_preserves_failure_artifact) ... ❌ m1-pair-verify: M1 pair missing/duplicate/extra old receipt files
+ok
+test_pair_artifact_source_attempt_freeze_and_mode_negative_controls (ci.test_real_storage_it.M1PairWorkflowTest.test_pair_artifact_source_attempt_freeze_and_mode_negative_controls) ... ok
+test_pair_workflow_and_original_manual_gates (ci.test_real_storage_it.M1PairWorkflowTest.test_pair_workflow_and_original_manual_gates) ... ok
+test_full_batch_and_subset (ci.test_real_storage_it.PlanTest.test_full_batch_and_subset) ... ok
+test_rejects_bad_inputs (ci.test_real_storage_it.PlanTest.test_rejects_bad_inputs) ... ok
+test_batch_totals_match_the_remaining_receipt (ci.test_real_storage_it.RegistryContractTest.test_batch_totals_match_the_remaining_receipt) ... ok
+test_cloudten_routes_keep_their_namespace_and_never_claim_hosted_is_vps (ci.test_real_storage_it.RegistryContractTest.test_cloudten_routes_keep_their_namespace_and_never_claim_hosted_is_vps) ... ok
+test_existing_gated_asset_capacity_and_im_suites_have_matching_extra_routes (ci.test_real_storage_it.RegistryContractTest.test_existing_gated_asset_capacity_and_im_suites_have_matching_extra_routes) ... ok
+test_negative_controls (ci.test_real_storage_it.RegistryContractTest.test_negative_controls) ... ok
+test_play_and_scheduler_batch_preserves_exact_non_dynamic_cases (ci.test_real_storage_it.RegistryContractTest.test_play_and_scheduler_batch_preserves_exact_non_dynamic_cases) ... ok
+test_registration_and_revocation_batches_require_current_counts_and_real_gates (ci.test_real_storage_it.RegistryContractTest.test_registration_and_revocation_batches_require_current_counts_and_real_gates) ... ok
+test_registry_is_valid (ci.test_real_storage_it.RegistryContractTest.test_registry_is_valid) ... ok
+test_reviewed_implicit_it_suites_have_explicit_fresh_storage_routes (ci.test_real_storage_it.RegistryContractTest.test_reviewed_implicit_it_suites_have_explicit_fresh_storage_routes) ... ok
+test_schema_name_budgets (ci.test_real_storage_it.RegistryContractTest.test_schema_name_budgets) ... ok
+test_w19_owner_notification_requires_new_intent_and_original_supply_regression (ci.test_real_storage_it.RegistryContractTest.test_w19_owner_notification_requires_new_intent_and_original_supply_regression) ... ok
+test_green_with_nested (ci.test_real_storage_it.ReportGateTest.test_green_with_nested) ... ok
+test_red_on_duplicate_and_foreign_cases (ci.test_real_storage_it.ReportGateTest.test_red_on_duplicate_and_foreign_cases) ... ok
+test_red_on_failure_or_error (ci.test_real_storage_it.ReportGateTest.test_red_on_failure_or_error) ... ok
+test_red_when_gate_closed_and_class_skipped (ci.test_real_storage_it.ReportGateTest.test_red_when_gate_closed_and_class_skipped) ... ok
+test_red_when_surefire_drops_the_nested_class (ci.test_real_storage_it.ReportGateTest.test_red_when_surefire_drops_the_nested_class) ... ok
+test_red_without_reports (ci.test_real_storage_it.ReportGateTest.test_red_without_reports) ... ok
+test_unreadable_report_is_an_error (ci.test_real_storage_it.ReportGateTest.test_unreadable_report_is_an_error) ... ok
+test_cleanup_query_failure_keeps_results (ci.test_real_storage_it.RunFlowTest.test_cleanup_query_failure_keeps_results) ... ok
+test_fail_when_nested_dropped_and_leftover_recorded (ci.test_real_storage_it.RunFlowTest.test_fail_when_nested_dropped_and_leftover_recorded) ... ok
+test_leftover_fails_even_when_every_case_passes (ci.test_real_storage_it.RunFlowTest.test_leftover_fails_even_when_every_case_passes) ... ok
+test_missing_schema_readback_fails_and_preserves_xml_results (ci.test_real_storage_it.RunFlowTest.test_missing_schema_readback_fails_and_preserves_xml_results) ... ok
+test_pass_with_nested_selected_and_only_own_gate (ci.test_real_storage_it.RunFlowTest.test_pass_with_nested_selected_and_only_own_gate) ... ok
+test_refuses_to_run_after_failed_precheck (ci.test_real_storage_it.RunFlowTest.test_refuses_to_run_after_failed_precheck) ... ❌ run: 前置步骤未完成（预检或起库失败），不执行测试
+ok
+test_surefire_version_reads_maven_39_lines_for_the_target_module (ci.test_real_storage_it.RunFlowTest.test_surefire_version_reads_maven_39_lines_for_the_target_module) ... ok
+test_teardown_is_recorded (ci.test_real_storage_it.RunFlowTest.test_teardown_is_recorded) ... ok
+test_handshake_and_ping_over_loopback (ci.test_real_storage_it.StorageTest.test_handshake_and_ping_over_loopback) ... ok
+test_mysql_identity_and_facts (ci.test_real_storage_it.StorageTest.test_mysql_identity_and_facts) ... ok
+test_mysql_red_paths (ci.test_real_storage_it.StorageTest.test_mysql_red_paths) ... ok
+test_port_must_be_loopback (ci.test_real_storage_it.StorageTest.test_port_must_be_loopback) ... ok
+test_all_pass (ci.test_real_storage_it.SummaryTest.test_all_pass) ... ok
+test_latest_attempt_wins (ci.test_real_storage_it.SummaryTest.test_latest_attempt_wins) ... ok
+test_missing_failed_mismatched_or_unplanned_receipts_fail (ci.test_real_storage_it.SummaryTest.test_missing_failed_mismatched_or_unplanned_receipts_fail) ... ok
+test_nonclean_or_missing_cleanup_cannot_be_hidden_by_pass_receipt (ci.test_real_storage_it.SummaryTest.test_nonclean_or_missing_cleanup_cannot_be_hidden_by_pass_receipt) ... ok
+test_negative_controls (ci.test_real_storage_it.WorkflowContractTest.test_negative_controls) ... ok
+test_workflow_contract (ci.test_real_storage_it.WorkflowContractTest.test_workflow_contract) ... ok
+
+----------------------------------------------------------------------
+Ran 64 tests in 0.437s
+
+OK
+### Real storage plan: `architecture-day-lead-admission` @ `5752ee6fd302`
+
+registered source `f79eac572f7e` (differs), timezone `UTC`
+
+| class | tests | storage |
+|---|---|---|
+| PlayLeadAdmissionFailureMySqlIT | 4 | mysql |
+| PlayHintUnlockMySqlIT | 10 | mysql |
+### Real storage plan: `architecture-day-lead-admission` @ `aaaaaaaaaaaa`
+
+registered source `f79eac572f7e` (differs), timezone `UTC`
+
+| class | tests | storage |
+|---|---|---|
+| PlayLeadAdmissionFailureMySqlIT | 4 | mysql |
+| PlayHintUnlockMySqlIT | 10 | mysql |
+### Real storage plan: `architecture-day-lead-admission` @ `5752ee6fd302`
+
+registered source `f79eac572f7e` (differs), timezone `UTC`
+
+| class | tests | storage |
+|---|---|---|
+| PlayLeadAdmissionFailureMySqlIT | 4 | mysql |
+| PlayHintUnlockMySqlIT | 10 | mysql |
+### Real storage plan: `architecture-day-lead-admission` @ `aaaaaaaaaaaa`
+
+registered source `f79eac572f7e` (differs), timezone `UTC`
+
+| class | tests | storage |
+|---|---|---|
+| PlayLeadAdmissionFailureMySqlIT | 4 | mysql |
+| PlayHintUnlockMySqlIT | 10 | mysql |
+OWN_C01_51Test: FAIL 5/5 (cleanup UNKNOWN: 必须独立回读 CLEAN)
+OWN_C01_51Test: FAIL 4/5 (实跑 4 条，登记 5 条; 嵌套类 RealMysqlRepeatableRead 没有任何用例被执行; cleanup LEFTOVER: 必须独立回读 CLEAN)
+OWN_C01_51Test: FAIL 5/5 (cleanup LEFTOVER: 必须独立回读 CLEAN)
+OWN_C01_51Test: FAIL 5/5 (cleanup UNKNOWN: 必须独立回读 CLEAN)
+OWN_C01_51Test: PASS 5/5 (skipped=0, cleanup CLEAN)

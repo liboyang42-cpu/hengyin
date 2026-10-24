@@ -1,0 +1,58 @@
+test_c01_gate_is_literal_true (ci.test_real_storage_it.EnvProfileTest.test_c01_gate_is_literal_true) ... ok
+test_e04_base_and_only_own_gate (ci.test_real_storage_it.EnvProfileTest.test_e04_base_and_only_own_gate) ... ok
+test_inherited_gates_are_dropped (ci.test_real_storage_it.EnvProfileTest.test_inherited_gates_are_dropped) ... ok
+test_public_env_never_carries_password_values (ci.test_real_storage_it.EnvProfileTest.test_public_env_never_carries_password_values) ... ok
+test_redis_only_and_mixed_storage (ci.test_real_storage_it.EnvProfileTest.test_redis_only_and_mixed_storage) ... ok
+test_counts_only_real_annotations (ci.test_real_storage_it.JavaScanTest.test_counts_only_real_annotations) ... ok
+test_flags_dynamic_and_disabled (ci.test_real_storage_it.JavaScanTest.test_flags_dynamic_and_disabled) ... ok
+test_gate_values_must_satisfy_source (ci.test_real_storage_it.JavaScanTest.test_gate_values_must_satisfy_source) ... ok
+test_hard_coded_database_base_must_match_registry (ci.test_real_storage_it.JavaScanTest.test_hard_coded_database_base_must_match_registry) ... ok
+test_precheck_against_candidate_tree (ci.test_real_storage_it.JavaScanTest.test_precheck_against_candidate_tree) ... ok
+test_full_batch_and_subset (ci.test_real_storage_it.PlanTest.test_full_batch_and_subset) ... ok
+test_rejects_bad_inputs (ci.test_real_storage_it.PlanTest.test_rejects_bad_inputs) ... ok
+test_batch_totals_match_the_remaining_receipt (ci.test_real_storage_it.RegistryContractTest.test_batch_totals_match_the_remaining_receipt) ... ok
+test_cloudten_routes_keep_their_namespace_and_never_claim_hosted_is_vps (ci.test_real_storage_it.RegistryContractTest.test_cloudten_routes_keep_their_namespace_and_never_claim_hosted_is_vps) ... ok
+test_existing_gated_asset_capacity_and_im_suites_have_matching_extra_routes (ci.test_real_storage_it.RegistryContractTest.test_existing_gated_asset_capacity_and_im_suites_have_matching_extra_routes) ... ok
+test_negative_controls (ci.test_real_storage_it.RegistryContractTest.test_negative_controls) ... ok
+test_play_and_scheduler_batch_preserves_exact_non_dynamic_cases (ci.test_real_storage_it.RegistryContractTest.test_play_and_scheduler_batch_preserves_exact_non_dynamic_cases) ... ok
+test_registration_and_revocation_batches_require_current_counts_and_real_gates (ci.test_real_storage_it.RegistryContractTest.test_registration_and_revocation_batches_require_current_counts_and_real_gates) ... ok
+test_registry_is_valid (ci.test_real_storage_it.RegistryContractTest.test_registry_is_valid) ... ok
+test_reviewed_implicit_it_suites_have_explicit_fresh_storage_routes (ci.test_real_storage_it.RegistryContractTest.test_reviewed_implicit_it_suites_have_explicit_fresh_storage_routes) ... ok
+test_schema_name_budgets (ci.test_real_storage_it.RegistryContractTest.test_schema_name_budgets) ... ok
+test_w19_owner_notification_requires_new_intent_and_original_supply_regression (ci.test_real_storage_it.RegistryContractTest.test_w19_owner_notification_requires_new_intent_and_original_supply_regression) ... ok
+test_green_with_nested (ci.test_real_storage_it.ReportGateTest.test_green_with_nested) ... ok
+test_red_on_duplicate_and_foreign_cases (ci.test_real_storage_it.ReportGateTest.test_red_on_duplicate_and_foreign_cases) ... ok
+test_red_on_failure_or_error (ci.test_real_storage_it.ReportGateTest.test_red_on_failure_or_error) ... ok
+test_red_when_gate_closed_and_class_skipped (ci.test_real_storage_it.ReportGateTest.test_red_when_gate_closed_and_class_skipped) ... ok
+test_red_when_surefire_drops_the_nested_class (ci.test_real_storage_it.ReportGateTest.test_red_when_surefire_drops_the_nested_class) ... ok
+test_red_without_reports (ci.test_real_storage_it.ReportGateTest.test_red_without_reports) ... ok
+test_unreadable_report_is_an_error (ci.test_real_storage_it.ReportGateTest.test_unreadable_report_is_an_error) ... ok
+test_cleanup_query_failure_keeps_results (ci.test_real_storage_it.RunFlowTest.test_cleanup_query_failure_keeps_results) ... ok
+test_fail_when_nested_dropped_and_leftover_recorded (ci.test_real_storage_it.RunFlowTest.test_fail_when_nested_dropped_and_leftover_recorded) ... ok
+test_leftover_fails_even_when_every_case_passes (ci.test_real_storage_it.RunFlowTest.test_leftover_fails_even_when_every_case_passes) ... ok
+test_missing_schema_readback_fails_and_preserves_xml_results (ci.test_real_storage_it.RunFlowTest.test_missing_schema_readback_fails_and_preserves_xml_results) ... ok
+test_pass_with_nested_selected_and_only_own_gate (ci.test_real_storage_it.RunFlowTest.test_pass_with_nested_selected_and_only_own_gate) ... ok
+test_refuses_to_run_after_failed_precheck (ci.test_real_storage_it.RunFlowTest.test_refuses_to_run_after_failed_precheck) ... ❌ run: 前置步骤未完成（预检或起库失败），不执行测试
+ok
+test_surefire_version_reads_maven_39_lines_for_the_target_module (ci.test_real_storage_it.RunFlowTest.test_surefire_version_reads_maven_39_lines_for_the_target_module) ... ok
+test_teardown_is_recorded (ci.test_real_storage_it.RunFlowTest.test_teardown_is_recorded) ... ok
+test_handshake_and_ping_over_loopback (ci.test_real_storage_it.StorageTest.test_handshake_and_ping_over_loopback) ... ok
+test_mysql_identity_and_facts (ci.test_real_storage_it.StorageTest.test_mysql_identity_and_facts) ... ok
+test_mysql_red_paths (ci.test_real_storage_it.StorageTest.test_mysql_red_paths) ... ok
+test_port_must_be_loopback (ci.test_real_storage_it.StorageTest.test_port_must_be_loopback) ... ok
+test_all_pass (ci.test_real_storage_it.SummaryTest.test_all_pass) ... ok
+test_latest_attempt_wins (ci.test_real_storage_it.SummaryTest.test_latest_attempt_wins) ... ok
+test_missing_failed_mismatched_or_unplanned_receipts_fail (ci.test_real_storage_it.SummaryTest.test_missing_failed_mismatched_or_unplanned_receipts_fail) ... ok
+test_nonclean_or_missing_cleanup_cannot_be_hidden_by_pass_receipt (ci.test_real_storage_it.SummaryTest.test_nonclean_or_missing_cleanup_cannot_be_hidden_by_pass_receipt) ... ok
+test_negative_controls (ci.test_real_storage_it.WorkflowContractTest.test_negative_controls) ... ok
+test_workflow_contract (ci.test_real_storage_it.WorkflowContractTest.test_workflow_contract) ... ok
+
+----------------------------------------------------------------------
+Ran 47 tests in 0.283s
+
+OK
+OWN_C01_51Test: FAIL 5/5 (cleanup UNKNOWN: 必须独立回读 CLEAN)
+OWN_C01_51Test: FAIL 4/5 (实跑 4 条，登记 5 条; 嵌套类 RealMysqlRepeatableRead 没有任何用例被执行; cleanup LEFTOVER: 必须独立回读 CLEAN)
+OWN_C01_51Test: FAIL 5/5 (cleanup LEFTOVER: 必须独立回读 CLEAN)
+OWN_C01_51Test: FAIL 5/5 (cleanup UNKNOWN: 必须独立回读 CLEAN)
+OWN_C01_51Test: PASS 5/5 (skipped=0, cleanup CLEAN)
