@@ -162,3 +162,20 @@ Class-level `MerchantNpcDraftApprovalGateTest.unpublishedProjectionDoesNotOccupy
 HEAD `ce76c9644`. Parent surefire `com.chengyinhub.business.service.npc.*Test` **22/0** 2026-10-24T01:37:16Z. Isolation 5/0. Gate 12/0. Revoke 4/0.
 
 App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
+
+## 9. Parent addendum 2026-10-23 19:23 America/Los_Angeles
+
+HEAD `e830db56a` tests. Did not invent recoverOriginal.
+
+`MerchantNpcDraftApprovalGateTest.unusedVerifyBeforeIngestDoesNotOccupyThenUniqueIngestThenVerifyApplies`：未见草稿的 `verifyByAuthorizer` 抛 UNPUBLISHED 且 authorizer 仍空、phase 仍 IDLE；后续唯一 `ingestAiDraft` + `verifyByAuthorizer` 才是 AUTHORIZER_VERIFIED。
+
+父进程独立 surefire（`/tmp/hy-c06`，2026-10-24T02:23:27Z）：
+
+```
+Tests run: 13 -- MerchantNpcDraftApprovalGateTest
+Tests run: 5 -- C06AccountSwitchRestartIsolationTest
+Tests run: 23, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
