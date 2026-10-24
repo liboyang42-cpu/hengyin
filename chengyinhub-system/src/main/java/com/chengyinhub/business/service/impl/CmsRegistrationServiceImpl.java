@@ -12,6 +12,7 @@ import java.util.Objects;
 
 import com.chengyinhub.common.annotation.DeadlockRetry;
 import com.chengyinhub.business.domain.*;
+import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;
 import com.chengyinhub.business.domain.enums.TopicLifecycleState;
 import com.chengyinhub.business.mapper.*;
 import com.chengyinhub.business.service.ICmsPointsSettingService;
@@ -87,6 +88,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
     @Autowired
     private AlarmService alarmService;
+    @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;
 
     @Autowired
     private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IWechatPayService> paymentAttemptGateway;
@@ -2135,6 +2137,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             return registrationPaymentCallbackFailure(outTradeNo, "callback_inside_transaction");
         }
 
+        final WechatVerifiedPaymentFact.Reference verifiedReference;
+        try {
+            verifiedReference = "SUCCESS".equals(tradeState) ? checkedVerifiedPayment(resultMap).reference() : null;
+        } catch (RuntimeException unavailableOrConflicting) {
+            return registrationPaymentCallbackFailure(outTradeNo, "verified_fact_missing_or_conflicting");
+        }
         // 查询报名记录
         final CmsRegistration registration = getByRegistrationNo(outTradeNo);
         if (registration == null) {
@@ -2153,14 +2161,18 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         final String notifyId = "PAY:" + (StringUtils.isNotEmpty(transactionId) ? transactionId : outTradeNo)
                 + ":" + tradeState;
         try {
-            wxPaymentCallbackInboxService.register(notifyId,
-                    WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT, registration.getId(), tradeState);
+            if (verifiedReference != null) {
+                wxPaymentCallbackInboxService.registerVerified(notifyId,
+                        WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT, registration.getId(), tradeState, verifiedReference);
+            } else {
+                wxPaymentCallbackInboxService.register(notifyId,
+                        WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT, registration.getId(), tradeState);
+            }
         } catch (IWxPaymentCallbackInboxService.IdentityConflictException conflict) {
             return registrationPaymentCallbackFailure(outTradeNo, "inbox_identity_conflict");
         }
         final String[] outcome = new String[1];
-        boolean completed = wxPaymentCallbackInboxService.process(notifyId,
-                new IWxPaymentCallbackInboxService.Mutation() {
+        IWxPaymentCallbackInboxService.Mutation mutation = new IWxPaymentCallbackInboxService.Mutation() {
                     @Override
                     public boolean isCurrent(WxPaymentCallbackInbox inbox) {
                         if (!registration.getId().equals(inbox.getBizId())
@@ -2178,7 +2190,10 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                         outcome[0] = applyWechatPayCallback(registration, resultMap);
                         return "SUCCESS".equalsIgnoreCase(outcome[0]);
                     }
-                });
+                };
+        boolean completed = verifiedReference != null
+                ? wxPaymentCallbackInboxService.processVerified(notifyId, verifiedReference, mutation)
+                : wxPaymentCallbackInboxService.process(notifyId, mutation);
         if (completed) {
             return "SUCCESS";
         }
@@ -2221,45 +2236,20 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 根据交易状态处理不同的业务逻辑
         switch (tradeState) {
             case "SUCCESS": // 支付成功
+                WechatVerifiedPaymentFact verified = checkedVerifiedPayment(resultMap).facts();
+                if (!verified.businessOutTradeNo().equals(registration.getRegistrationNo())
+                        || !matchesFrozenWechatAmount(registration, Long.toString(verified.totalFen()))) {
+                    return registrationPaymentCallbackFailure(outTradeNo, "verified_original_order_mismatch");
+                }
                 if (!matchesFrozenWechatAmount(registration, resultMap.get("total"))) {
                     return registrationPaymentCallbackFailure(outTradeNo, "amount_mismatch");
                 }
-                String paymentResult = completePaymentSuccess(lockedOrder, transactionId);
+                String paymentResult = completePaymentSuccess(lockedOrder, verified.transactionId());
                 return "SUCCESS".equalsIgnoreCase(paymentResult) ? paymentResult
                         : registrationPaymentCallbackFailure(outTradeNo, "payment_state_conflict");
 
-            case "REFUND": // 转入退款
-                Date refundedAt = new Date();
-                if (cmsRegistrationMapper.claimRegistrationRefundedByGateway(
-                        registration.getId(), "system", refundedAt) == 0) {
-                    CmsRegistration current = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(
-                            registration.getId());
-                    if (current != null && Integer.valueOf(4).equals(current.getPaymentStatus())
-                            && Integer.valueOf(3).equals(current.getRegistrationStatus())) {
-                        returnPointsToUser(current);
-                        return "SUCCESS";
-                    }
-                    return registrationPaymentCallbackFailure(outTradeNo, "refund_state_conflict");
-                }
-                registration = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(registration.getId());
-                if (registration == null) {
-                    throw new IllegalStateException("退款报名在状态迁移后不存在");
-                }
-
-                // [赏金] clawback 必须在 registration_status=3 落库**之后**调:countStillValidAmong 读的就是
-                // 这一列,早调会数到这条还没置 3 的记录 ⇒ stillValid 偏高 ⇒ 该追的追不回。
-                //
-                // ⚠️ 本分支实际很难走到,但**不删**:这里是「查单发现该单已退」的 trade_state=REFUND 分支,
-                //    要有人主动去查那笔老订单才触发。运营在微信商户后台手工退款走的是另一条
-                //    (/refund-callback → handleRefundNotify),那条按 "RF"+regId 查 RefundApplication、
-                //    手工退款没有那行 ⇒ 直接 ACK,且它压根不写 registration_status。
-                //    真正跑得到的 clawback 入口是 RefundServiceImpl.markRegistrationRefunded(后台审核路)。
-                merchantReferralBountyService.onRefund(registration.getVerifierId());
-                firstReviewPointsClawback.onRegistrationRefunded(registration);   // FX-10
-
-                // 退款时返还积分
-                returnPointsToUser(registration);
-                break;
+            case "REFUND": // 转入退款不是某一原退款的已到账终态，不能据此返积分或撤销整单。
+                return registrationPaymentCallbackFailure(outTradeNo, "refund_requires_verified_original_refund");
 
             case "NOTPAY": // 未支付
             case "CLOSED": // 已关闭
@@ -3458,4 +3448,21 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             throw new IllegalStateException("核销审计写入失败");
         }
     }
+    private WechatVerifiedPaymentFactService.Stored checkedVerifiedPayment(Map<String, String> facts) {
+        WechatVerifiedPaymentFact.Reference reference = new WechatVerifiedPaymentFact.Reference(
+                Long.parseLong(facts.get("verified_fact_id")), facts.get("verified_fact_hash"));
+        WechatVerifiedPaymentFactService.Stored stored = verifiedPaymentFacts.requireVerified(reference);
+        WechatVerifiedPaymentFact fact = stored.facts();
+        fact.requireValid();
+        if (fact.kind() != WechatVerifiedPaymentFact.Kind.PAYMENT
+                || !fact.businessOutTradeNo().equals(facts.get("out_trade_no"))
+                || !fact.wxOutTradeNo().equals(facts.get("wx_out_trade_no"))
+                || !fact.transactionId().equals(facts.get("transaction_id"))
+                || !fact.mchid().equals(facts.get("mchid")) || !fact.appid().equals(facts.get("appid"))
+                || !fact.tradeType().equals(facts.get("trade_type")) || !fact.currency().equals(facts.get("currency"))
+                || fact.totalFen() != Long.parseLong(facts.get("total")))
+            throw new IllegalArgumentException("可信支付事实与原事件不一致");
+        return stored;
+    }
+
 }

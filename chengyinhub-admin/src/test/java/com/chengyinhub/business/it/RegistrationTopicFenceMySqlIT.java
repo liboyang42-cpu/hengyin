@@ -2,6 +2,7 @@ package com.chengyinhub.business.it;
 
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.dto.RefundReviewDTO;
+import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;
 import com.chengyinhub.business.mapper.*;
 import com.chengyinhub.business.service.*;
 import com.chengyinhub.business.service.impl.*;
@@ -46,13 +47,16 @@ class RegistrationTopicFenceMySqlIT {
     private WxPaymentCallbackInboxServiceImpl inboxService;
     private RefundServiceImpl refundService;
     private CmsRegistrationServiceImpl payments;
+    private CmsRegistrationServiceImpl paymentTarget;
     private INotifyService notices;
     private ISettlementEntryService entries;
+    private WechatVerifiedPaymentFactService verifiedFacts;
     private CountDownLatch requestedTopic;
     private static final String HASH = "a".repeat(64), OWNER = "b".repeat(32);
 
     @BeforeAll void database() throws Exception {
         assertEquals("github-hosted", System.getenv("RUNNER_ENVIRONMENT"));
+        assertEquals("1", System.getenv("B_PAYMENT_FACT_DDL_APPROVED"));
         for (String key : new String[]{"HOST", "PORT", "DATABASE_BASE", "DATABASE_SUFFIX", "USER", "PASSWORD"})
             assertNotNull(System.getenv("CHENGYIN_TEST_MYSQL_" + key));
         assertTrue(List.of("127.0.0.1", "localhost").contains(System.getenv("CHENGYIN_TEST_MYSQL_HOST")));
@@ -79,12 +83,16 @@ class RegistrationTopicFenceMySqlIT {
                 + " ADD COLUMN club_member_only TINYINT NOT NULL DEFAULT 0");
         db.execute("ALTER TABLE cms_registration ADD COLUMN first_successful_scan_at DATETIME(3)");
         db.execute("ALTER TABLE refund_application ADD COLUMN platform_takeover_at DATETIME");
-        P0AcceptanceSchema.migrations(source, "migration_wx_payment_callback_inbox_outbox_20260725.sql");
+        P0AcceptanceSchema.migrations(source, "migration_wx_payment_callback_inbox_outbox_20260725.sql",
+                "migration_20261024_wx_verified_payment_fact.sql");
         SqlSessionTemplate sql = P0AcceptanceSchema.sql(source, "CmsTopicMapper", "CmsActivityMapper", "CmsRegistrationMapper",
-                "RefundApplicationMapper", "WxPaymentCallbackInboxMapper");
+                "RefundApplicationMapper", "WxPaymentCallbackInboxMapper", "WechatVerifiedPaymentFactMapper");
         registrations = sql.getMapper(CmsRegistrationMapper.class); activities = sql.getMapper(CmsActivityMapper.class);
         realTopics = sql.getMapper(CmsTopicMapper.class); refunds = sql.getMapper(RefundApplicationMapper.class);
         inbox = sql.getMapper(WxPaymentCallbackInboxMapper.class);
+        WechatVerifiedPaymentFactService factTarget = new WechatVerifiedPaymentFactService();
+        ReflectionTestUtils.setField(factTarget, "mapper", sql.getMapper(WechatVerifiedPaymentFactMapper.class));
+        verifiedFacts = transactional(factTarget);
     }
 
     private <T> T transactional(T target) {
@@ -94,7 +102,10 @@ class RegistrationTopicFenceMySqlIT {
     }
 
     @BeforeEach void fixtures() {
-        db.update("DELETE FROM wx_payment_callback_inbox"); db.update("DELETE FROM refund_application");
+        db.update("DELETE FROM wx_payment_callback_fact_link");
+        db.update("DELETE FROM wx_payment_callback_inbox");
+        db.update("DELETE FROM wx_verified_payment_fact_rejection"); db.update("DELETE FROM wx_verified_payment_fact");
+        db.update("DELETE FROM refund_application");
         db.update("DELETE FROM cms_registration"); db.update("DELETE FROM cms_activity"); db.update("DELETE FROM cms_topic");
         db.update("INSERT INTO cms_topic(id,member_id) VALUES(7,70),(8,80)");
         db.update("INSERT INTO cms_activity(id,member_id,topic_id) VALUES(5,70,7)");
@@ -120,6 +131,7 @@ class RegistrationTopicFenceMySqlIT {
         ReflectionTestUtils.setField(inboxTarget, "claimService", transactional(claim));
         ReflectionTestUtils.setField(inboxTarget, "mutationService", mutations);
         ReflectionTestUtils.setField(inboxTarget, "alarmService", mock(AlarmService.class));
+        ReflectionTestUtils.setField(inboxTarget, "verifiedFacts", verifiedFacts);
         inboxService = transactional(inboxTarget);
         RefundServiceImpl refundTarget = new RefundServiceImpl();
         ReflectionTestUtils.setField(refundTarget, "refundApplicationMapper", refunds);
@@ -127,6 +139,7 @@ class RegistrationTopicFenceMySqlIT {
         ReflectionTestUtils.setField(refundTarget, "cmsActivityMapper", activities);
         ReflectionTestUtils.setField(refundTarget, "cmsTopicMapper", topics);
         ReflectionTestUtils.setField(refundTarget, "wxPaymentCallbackInboxService", inboxService);
+        ReflectionTestUtils.setField(refundTarget, "verifiedPaymentFacts", verifiedFacts);
         notices = mock(INotifyService.class); ReflectionTestUtils.setField(refundTarget, "notifyService", notices);
         refundService = transactional(refundTarget);
         payments = paymentService();
@@ -134,9 +147,13 @@ class RegistrationTopicFenceMySqlIT {
 
     private CmsRegistrationServiceImpl paymentService() {
         CmsRegistrationServiceImpl target = new CmsRegistrationServiceImpl();
+        paymentTarget = target;
         ReflectionTestUtils.setField(target, "cmsRegistrationMapper", registrations);
         ReflectionTestUtils.setField(target, "cmsActivityMapper", activities);
         ReflectionTestUtils.setField(target, "cmsTopicMapper", topics);
+        ReflectionTestUtils.setField(target, "verifiedPaymentFacts", verifiedFacts);
+        ReflectionTestUtils.setField(target, "wxPaymentCallbackInboxService", inboxService);
+        ReflectionTestUtils.setField(target, "alarmService", mock(AlarmService.class));
         entries = mock(ISettlementEntryService.class); ReflectionTestUtils.setField(target, "settlementEntryService", entries);
         UmsMemberMapper members = mock(UmsMemberMapper.class); UmsMember member = new UmsMember(); member.setId(11L);
         when(members.selectUmsMemberById(11L)).thenReturn(member);
@@ -174,8 +191,34 @@ class RegistrationTopicFenceMySqlIT {
         };
     }
     private Map<String, String> refundFacts() {
-        return Map.of("outRefundNo", "RF1", "outTradeNo", "REG1", "status", "SUCCESS",
-                "refund", "1000", "total", "3000", "currency", "CNY");
+        return refundFacts("TX1");
+    }
+
+    private Map<String, String> refundFacts(String providerTransaction) {
+        // This refund fixture's original local payment identity is TX1; a candidate provider may disagree.
+        db.update("UPDATE cms_registration SET transaction_id='TX1' WHERE id=1");
+        WechatVerifiedPaymentFact fact = new WechatVerifiedPaymentFact(WechatVerifiedPaymentFact.Kind.REFUND,
+                "mch-origin", "wx-origin", "REG1", "WXREG1", "RF1", "WXREF1", providerTransaction, "JSAPI", "CNY",
+                3000, 1000, java.time.Instant.parse("2026-10-24T00:00:00Z"), null, "SUCCESS");
+        var reference = verifiedFacts.recordVerified(fact);
+        Map<String, String> facts = new java.util.HashMap<>(Map.of("outRefundNo", "RF1", "outTradeNo", "REG1", "status", "SUCCESS",
+                "refund", "1000", "total", "3000", "currency", "CNY"));
+        facts.put("verified_fact_id", Long.toString(reference.id())); facts.put("verified_fact_hash", reference.hash());
+        facts.put("mchid", fact.mchid()); facts.put("appid", fact.appid()); facts.put("tradeType", fact.tradeType());
+        facts.put("transactionId", fact.transactionId()); facts.put("refundId", fact.providerId()); facts.put("wxOutTradeNo", fact.wxOutTradeNo());
+        return facts;
+    }
+
+    private Map<String, String> paymentFacts() {
+        WechatVerifiedPaymentFact fact = new WechatVerifiedPaymentFact(WechatVerifiedPaymentFact.Kind.PAYMENT,
+                "mch-origin", "wx-origin", "REG1", "WXREG1", "WXREG1", "TX1", "TX1", "JSAPI", "CNY",
+                3000, 3000, java.time.Instant.parse("2026-10-24T00:00:00Z"), null, "SUCCESS");
+        var reference = verifiedFacts.recordVerified(fact);
+        Map<String, String> facts = new java.util.HashMap<>(Map.of("out_trade_no", "REG1", "transaction_id", "TX1",
+                "trade_state", "SUCCESS", "total", "3000", "wx_out_trade_no", "WXREG1"));
+        facts.put("verified_fact_id", Long.toString(reference.id())); facts.put("verified_fact_hash", reference.hash());
+        facts.put("mchid", fact.mchid()); facts.put("appid", fact.appid()); facts.put("trade_type", fact.tradeType());
+        facts.put("currency", fact.currency()); return facts;
     }
 
     /** Actual topic lock remains held while a third connection proves registration/refund locks are still free. */
@@ -386,6 +429,94 @@ class RegistrationTopicFenceMySqlIT {
         assertEquals(2, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
         assertEquals(22L, db.queryForObject("SELECT member_id FROM cms_registration WHERE id=1", Long.class));
         assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM refund_application WHERE source_id=1 AND id<>9", Integer.class));
+    }
+
+    @Test void actualPaymentServiceBindsTheDurableFactBeforeAtomicBusinessAndDone() {
+        Map<String, String> facts = paymentFacts();
+        assertEquals("SUCCESS", payments.handleWechatPayCallback(facts));
+        assertEquals("TX1", db.queryForObject("SELECT transaction_id FROM cms_registration WHERE id=1", String.class));
+        assertEquals(2, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals(2, db.queryForObject("SELECT state FROM wx_payment_callback_inbox", Integer.class));
+        assertEquals(Long.valueOf(facts.get("verified_fact_id")), db.queryForObject("SELECT fact_id FROM wx_payment_callback_fact_link", Long.class));
+        assertEquals(facts.get("verified_fact_hash"), db.queryForObject("SELECT fact_hash FROM wx_payment_callback_fact_link", String.class));
+        assertEquals("SUCCESS", payments.handleWechatPayCallback(facts));
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact", Integer.class));
+        verify(entries, times(1)).recordOnPayment(any(CmsRegistration.class));
+    }
+
+    @Test void mapSuccessWithoutDurableReferenceHasNoPaymentOrInboxEffect() {
+        assertEquals("FAIL", payments.handleWechatPayCallback(Map.of("out_trade_no", "REG1", "transaction_id", "TX1",
+                "trade_state", "SUCCESS", "total", "3000")));
+        assertEquals(0, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM wx_payment_callback_inbox", Integer.class));
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact", Integer.class));
+        verifyNoInteractions(entries);
+    }
+
+    @Test void failedPaymentDoneKeepsTheOriginalFactAndRetryCommitsOneOriginalTerminal() {
+        Map<String, String> facts = paymentFacts();
+        doReturn(0).when(mutationInbox).markDone(anyString(), anyString(), anyLong());
+        assertEquals("FAIL", payments.handleWechatPayCallback(facts));
+        assertEquals(0, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals(3, db.queryForObject("SELECT state FROM wx_payment_callback_inbox", Integer.class));
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact", Integer.class));
+        doAnswer(call -> inbox.markDone(call.getArgument(0), call.getArgument(1), call.getArgument(2)))
+                .when(mutationInbox).markDone(anyString(), anyString(), anyLong());
+        assertEquals("SUCCESS", payments.handleWechatPayCallback(facts));
+        assertEquals(2, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals(2, db.queryForObject("SELECT state FROM wx_payment_callback_inbox", Integer.class));
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact", Integer.class));
+        assertEquals(Long.valueOf(facts.get("verified_fact_id")), db.queryForObject("SELECT fact_id FROM wx_payment_callback_fact_link", Long.class));
+    }
+
+    @Test void oldUnboundDoneCannotBeUpgradedIntoANewVerifiedPaymentAck() {
+        inboxService.register("PAY:TX1:SUCCESS", 1, 1L, "SUCCESS");
+        db.update("UPDATE wx_payment_callback_inbox SET state=2");
+        assertEquals("FAIL", payments.handleWechatPayCallback(paymentFacts()));
+        assertEquals(0, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals(2, db.queryForObject("SELECT state FROM wx_payment_callback_inbox", Integer.class));
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM wx_payment_callback_fact_link", Integer.class));
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact_rejection", Integer.class));
+        verifyNoInteractions(entries);
+    }
+
+    @Test void inlineConfirmedPaymentCanReadTheCommittedFactCreatedAfterItsOlderBusinessSnapshot() {
+        var caller = new org.springframework.transaction.support.TransactionTemplate(manager);
+        caller.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_REPEATABLE_READ);
+        caller.executeWithoutResult(tx -> {
+            assertEquals(0, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
+            Map<String, String> facts = paymentFacts(); // real REQUIRES_NEW fact insert, not a Map-only success
+            assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact", Integer.class),
+                    "ordinary RR read must actually demonstrate the older snapshot");
+            assertEquals("SUCCESS", payments.applyConfirmedWechatPaymentWithinTransaction(facts));
+        });
+        assertEquals(2, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals("TX1", db.queryForObject("SELECT transaction_id FROM cms_registration WHERE id=1", String.class));
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact WHERE business_out_trade_no='REG1' AND transaction_id='TX1'", Integer.class));
+    }
+
+    @Test void paymentRefundObservationWithoutOriginalVerifiedRefundCannotReturnPointsOrRevokeWholeOrder() {
+        db.update("UPDATE cms_registration SET payment_status=2,registration_status=2,point_used=100,points_returned=0 WHERE id=1");
+        ReflectionTestUtils.setField(paymentTarget, "merchantReferralBountyService", mock(MerchantReferralBountyService.class));
+        ReflectionTestUtils.setField(paymentTarget, "firstReviewPointsClawback", mock(FirstReviewPointsClawbackService.class));
+        UmsMemberMapper members = (UmsMemberMapper) ReflectionTestUtils.getField(paymentTarget, "umsMemberMapper");
+        when(members.addPoints(anyLong(), anyInt())).thenReturn(1);
+        assertEquals("FAIL", payments.handleWechatPayCallback(Map.of("out_trade_no", "REG1", "transaction_id", "TX1",
+                "trade_state", "REFUND", "total", "3000")));
+        assertEquals(2, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals(2, db.queryForObject("SELECT registration_status FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals(0, db.queryForObject("SELECT points_returned FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals(3, db.queryForObject("SELECT state FROM wx_payment_callback_inbox", Integer.class));
+        verify(members, never()).addPoints(anyLong(), anyInt()); verifyNoInteractions(entries);
+    }
+
+    @Test void internallyConsistentRefundFactForAnotherPaymentTransactionCannotCompleteThisRefund() {
+        assertFalse(refundService.handleRefundNotify(refundFacts("TX2")));
+        assertEquals("TX1", db.queryForObject("SELECT transaction_id FROM cms_registration WHERE id=1", String.class));
+        assertEquals(0, db.queryForObject("SELECT payout_status FROM refund_application WHERE id=9", Integer.class));
+        assertEquals(3, db.queryForObject("SELECT state FROM wx_payment_callback_inbox", Integer.class));
+        assertEquals("TX2", db.queryForObject("SELECT transaction_id FROM wx_verified_payment_fact WHERE fact_kind='REFUND'", String.class));
+        verifyNoInteractions(notices);
     }
 
     @AfterAll void cleanup() {

@@ -11,6 +11,7 @@ import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.UmsMemberBalanceDetail;
 import com.chengyinhub.business.domain.WxPaymentCallbackInbox;
 import com.chengyinhub.business.domain.dto.RefundReviewDTO;
+import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.mapper.CmsRegistrationMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
@@ -135,6 +136,7 @@ public class RefundServiceImpl implements IRefundService {
 
     @Autowired
     private AlarmService alarmService;
+    @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;
 
     /** P1:退款回调先按 notify_hash 落 inbox 去重;状态推进仍由下方既有 CAS 负责。 */
     @Autowired
@@ -379,7 +381,7 @@ public class RefundServiceImpl implements IRefundService {
             return false;
         }
         String outRefundNo = facts.get("outRefundNo");
-        String refundStatus = facts.get("status");
+        String refundStatus = "SUCCESS".equalsIgnoreCase(facts.get("status")) ? "SUCCESS" : facts.get("status");
         // 非本系统退款号/未知号(保证金由验签入口单独路由，不能在这里丢弃):回 true 让微信 ACK,避免重试风暴
         if (outRefundNo == null || outRefundNo.trim().isEmpty()) {
             return true;
@@ -393,21 +395,30 @@ public class RefundServiceImpl implements IRefundService {
         if (!matchesRefundFacts(refund, facts)) {
             return false;
         }
+        final WechatVerifiedPaymentFactService.Stored verified;
+        try {
+            verified = "SUCCESS".equals(refundStatus) ? checkedVerifiedRefund(facts) : null;
+        } catch (RuntimeException unavailableOrConflicting) {
+            return false;
+        }
+        final String notifyId = "REFUND:" + outRefundNo + ":" + (refundStatus == null ? "" : refundStatus);
         // P1:回调先落 inbox 去重(表 wx_payment_callback_inbox,notify_hash 唯一键);
         // 重投只多一次 insert ignore,不影响下方 ACK 与状态推进语义。
         // 同一 notify 已登记为另一笔业务 = 身份冲突(register 内已告警):回 FAIL,不推进状态。
         try {
-            wxPaymentCallbackInboxService.register(
-                    "REFUND:" + outRefundNo + ":" + (refundStatus == null ? "" : refundStatus),
-                    WxPaymentCallbackInbox.BIZ_TYPE_REFUND, refund.getId(), refundStatus);
+            if (verified != null) {
+                wxPaymentCallbackInboxService.registerVerified(notifyId,
+                        WxPaymentCallbackInbox.BIZ_TYPE_REFUND, refund.getId(), refundStatus, verified.reference());
+            } else {
+                wxPaymentCallbackInboxService.register(notifyId,
+                        WxPaymentCallbackInbox.BIZ_TYPE_REFUND, refund.getId(), refundStatus);
+            }
         } catch (IWxPaymentCallbackInboxService.IdentityConflictException conflict) {
             return false;
         }
         final RefundApplication original = refund;
         final Map<String, String> originalFacts = new java.util.HashMap<>(facts);
-        return wxPaymentCallbackInboxService.process(
-                "REFUND:" + outRefundNo + ":" + (refundStatus == null ? "" : refundStatus),
-                new IWxPaymentCallbackInboxService.Mutation() {
+        IWxPaymentCallbackInboxService.Mutation mutation = new IWxPaymentCallbackInboxService.Mutation() {
                     @Override public boolean isCurrent(WxPaymentCallbackInbox inbox) {
                         if (!original.getId().equals(inbox.getBizId())
                                 || !Integer.valueOf(WxPaymentCallbackInbox.BIZ_TYPE_REFUND).equals(inbox.getBizType())
@@ -421,10 +432,15 @@ public class RefundServiceImpl implements IRefundService {
                                 .filter(row -> original.getId().equals(row.getId())).findFirst()
                                 .orElseThrow(() -> new IllegalStateException("原退款不存在"));
                         requireSameRefundIdentity(original, current);
-                        return matchesRefundFacts(current, locked, originalFacts)
+                        boolean sameOriginal = verified == null ? matchesRefundFacts(current, locked, originalFacts)
+                                : matchesVerifiedRefundOriginal(verified.facts(), current, locked);
+                        return sameOriginal
                                 && applyRefundPayoutEvent(current, refundStatus);
                     }
-                });
+                };
+        return verified != null
+                ? wxPaymentCallbackInboxService.processVerified(notifyId, verified.reference(), mutation)
+                : wxPaymentCallbackInboxService.process(notifyId, mutation);
     }
 
     private boolean applyRefundPayoutEvent(RefundApplication refund, String refundStatus) {
@@ -1229,4 +1245,35 @@ public class RefundServiceImpl implements IRefundService {
     private BigDecimal defaultZero(BigDecimal value) {
         return value == null ? BigDecimal.ZERO : value;
     }
+    private WechatVerifiedPaymentFactService.Stored checkedVerifiedRefund(Map<String, String> facts) {
+        WechatVerifiedPaymentFact.Reference reference = new WechatVerifiedPaymentFact.Reference(
+                Long.parseLong(facts.get("verified_fact_id")), facts.get("verified_fact_hash"));
+        WechatVerifiedPaymentFactService.Stored stored = verifiedPaymentFacts.requireVerified(reference);
+        WechatVerifiedPaymentFact fact = stored.facts();
+        fact.requireValid();
+        if (fact.kind() != WechatVerifiedPaymentFact.Kind.REFUND
+                || !fact.merchantEventNo().equals(facts.get("outRefundNo"))
+                || !fact.providerId().equals(facts.get("refundId")) || !fact.transactionId().equals(facts.get("transactionId"))
+                || !fact.businessOutTradeNo().equals(facts.get("outTradeNo")) || !fact.wxOutTradeNo().equals(facts.get("wxOutTradeNo"))
+                || !fact.mchid().equals(facts.get("mchid")) || !fact.appid().equals(facts.get("appid"))
+                || !fact.tradeType().equals(facts.get("tradeType")) || !fact.currency().equals(facts.get("currency"))
+                || fact.amountFen() != Long.parseLong(facts.get("refund")) || fact.totalFen() != Long.parseLong(facts.get("total")))
+            throw new IllegalArgumentException("可信退款事实与原事件不一致");
+        return stored;
+    }
+
+    private boolean matchesVerifiedRefundOriginal(WechatVerifiedPaymentFact fact, RefundApplication refund,
+                                                  CmsRegistration registration) {
+        if (registration == null || !fact.businessOutTradeNo().equals(registration.getRegistrationNo())
+                || !fact.transactionId().equals(registration.getTransactionId())
+                || !fact.merchantEventNo().equals(refund.getRefundNo())
+                || refund.getRefundAmount() == null || registration.getWechatPaymentAmount() == null) return false;
+        try {
+            return refund.getRefundAmount().movePointRight(2).longValueExact() == fact.amountFen()
+                    && registration.getWechatPaymentAmount().movePointRight(2).longValueExact() == fact.totalFen();
+        } catch (ArithmeticException invalidOriginalAmount) {
+            return false;
+        }
+    }
+
 }

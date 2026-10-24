@@ -103,9 +103,11 @@ class RegistrationFundsMybatisIntegrationTest {
     private PlatformTransactionManager transactionManager;
     private SqlSessionTemplate template;
     private CmsRegistrationServiceImpl registrationTarget;
+    private com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService verifiedFacts;
 
     @BeforeAll
     void createDatabaseAndService() throws Exception {
+        assertEquals("1", System.getenv("B_PAYMENT_FACT_DDL_APPROVED"));
         new PiiCryptoService(TEST_PII_KEY, "funds-it-hmac").register();
         DriverManagerDataSource admin = dataSource(MYSQL.adminUrl());
         try (Connection c = admin.getConnection(); Statement s = c.createStatement()) {
@@ -119,6 +121,11 @@ class RegistrationFundsMybatisIntegrationTest {
             s.execute("CREATE DATABASE " + MYSQL.databaseName() + " CHARACTER SET utf8mb4");
         }
         dataSource = dataSource(MYSQL.databaseUrl());
+        try (Connection connection = dataSource.getConnection()) {
+            ScriptUtils.executeSqlScript(connection, new FileSystemResource("sql/migration_wx_payment_callback_inbox_outbox_20260725.sql"));
+            ScriptUtils.executeSqlScript(connection, new FileSystemResource("sql/migration_20261024_wx_verified_payment_fact.sql"));
+        }
+        verifiedFacts = com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.realFacts(dataSource);
         template = new SqlSessionTemplate(buildFactory(dataSource));
         registrationMapper = template.getMapper(CmsRegistrationMapper.class);
 
@@ -128,6 +135,7 @@ class RegistrationFundsMybatisIntegrationTest {
 
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.FirstReviewPointsClawbackService.class));
         registrationTarget = target;
+        ReflectionTestUtils.setField(target, "verifiedPaymentFacts", verifiedFacts);
         ReflectionTestUtils.setField(target, "platformMemberId", 1L);
         org.springframework.test.util.ReflectionTestUtils.setField(target, "growthService",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.IGrowthService.class));
@@ -161,7 +169,7 @@ class RegistrationFundsMybatisIntegrationTest {
         // inbox 自身语义由 WxPaymentCallbackInboxServiceImplTest / WxPaymentCallbackFencingMySqlIT 覆盖,
         // 这里用直通桩:每次都在独立事务里跑业务 mutation,失败整笔回滚。
         ReflectionTestUtils.setField(target, "wxPaymentCallbackInboxService",
-                PaymentCallbackInboxStubs.passThrough(transactionManager));
+                PaymentCallbackInboxStubs.passThrough(transactionManager, verifiedFacts));
         java.util.concurrent.ScheduledExecutorService noticeExecutor =
                 mock(java.util.concurrent.ScheduledExecutorService.class);
         when(noticeExecutor.schedule(org.mockito.ArgumentMatchers.any(Runnable.class),
@@ -236,6 +244,7 @@ class RegistrationFundsMybatisIntegrationTest {
 
     @BeforeEach
     void resetSchema() throws Exception {
+        execute("DELETE FROM wx_verified_payment_fact_rejection", "DELETE FROM wx_verified_payment_fact");
         execute("DROP TABLE IF EXISTS cms_registration_scan", "DROP TABLE IF EXISTS cms_member_template",
                 "DROP TABLE IF EXISTS cms_topic_node",
                 "DROP TABLE IF EXISTS club_edition_compensation_terms",
@@ -984,7 +993,7 @@ class RegistrationFundsMybatisIntegrationTest {
     }
 
     @Test
-    void concurrentRefundCallbacksReturnDeductedPointsExactlyOnce() throws Exception {
+    void concurrentUnverifiedRefundObservationsCannotReturnDeductedPoints() throws Exception {
         execute("UPDATE cms_registration SET payment_status=2,registration_status=2,point_used=20,points_returned=0 WHERE id=11",
                 "UPDATE ums_member SET point=80 WHERE id=7");
         CountDownLatch ready = new CountDownLatch(2);
@@ -995,15 +1004,15 @@ class RegistrationFundsMybatisIntegrationTest {
             Future<String> b = pool.submit(() -> callbackAfter(ready, start, "REFUND"));
             ready.await();
             start.countDown();
-            assertEquals("SUCCESS", a.get());
-            assertEquals("SUCCESS", b.get());
+            assertEquals("FAIL", a.get());
+            assertEquals("FAIL", b.get());
         } finally {
             pool.shutdownNow();
         }
-        assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
-        assertEquals(1, number("SELECT points_returned FROM cms_registration WHERE id=11"));
-        assertEquals(4, number("SELECT payment_status FROM cms_registration WHERE id=11"));
-        assertEquals(3, number("SELECT registration_status FROM cms_registration WHERE id=11"));
+        assertEquals(80, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(0, number("SELECT points_returned FROM cms_registration WHERE id=11"));
+        assertEquals(2, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(2, number("SELECT registration_status FROM cms_registration WHERE id=11"));
     }
 
     @Test
@@ -2418,6 +2427,17 @@ class RegistrationFundsMybatisIntegrationTest {
         callback.put("transaction_id", "WX-TX-11");
         callback.put("trade_state", tradeState);
         callback.put("total", "10000");
+        if ("SUCCESS".equals(tradeState)) {
+            var fact = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
+                    com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,
+                    "mch-funds-it", "wx-funds-it", "T20260724PAY", "WX-T20260724PAY", "WX-T20260724PAY",
+                    "WX-TX-11", "WX-TX-11", "JSAPI", "CNY", 10000, 10000,
+                    java.time.Instant.parse("2026-10-24T00:00:00Z"), null, "SUCCESS");
+            var reference = verifiedFacts.recordVerified(fact);
+            callback.put("verified_fact_id", Long.toString(reference.id())); callback.put("verified_fact_hash", reference.hash());
+            callback.put("wx_out_trade_no", fact.wxOutTradeNo()); callback.put("mchid", fact.mchid());
+            callback.put("appid", fact.appid()); callback.put("trade_type", fact.tradeType()); callback.put("currency", fact.currency());
+        }
         return callback;
     }
 
