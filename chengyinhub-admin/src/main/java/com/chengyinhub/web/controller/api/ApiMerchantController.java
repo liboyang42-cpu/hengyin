@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.business.service.support.MerchantMetricWindow;
+import com.chengyinhub.business.domain.dto.MerchantDashboardIncome;
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -1349,20 +1351,13 @@ public class ApiMerchantController extends BaseController {
                 principalMemberId, MerchantPermission.BASIC_READ);
         Long ownerMemberId = access.getOwnerMemberId();
         Map<String, Object> data = new HashMap<>();
+        // 按实际字段声明窗口：到店统计按报名创建时间取 cohort，在架供给和待处理订单是当前快照。
+        Map<String, Object> windows = new LinkedHashMap<>();
 
         // 品牌收入与趋势属于资金域，非财务角色连查询都不执行。
         if (access.hasPermission(MerchantPermission.FINANCE_READ)) {
-            UmsMemberBalanceDetail balanceQuery = new UmsMemberBalanceDetail();
-            balanceQuery.setMemberId(ownerMemberId);
-            balanceQuery.setChangeType(1L); // 1=收入
-            List<UmsMemberBalanceDetail> balanceList =
-                    umsMemberBalanceDetailService.selectUmsMemberBalanceDetailList(balanceQuery);
-            BigDecimal revenue = balanceList.stream()
-                    .filter(b -> b.getChangeBalance() != null)
-                    .reduce(BigDecimal.ZERO, (sum, b) -> sum.add(b.getChangeBalance()), BigDecimal::add);
-            data.put("revenue", revenue.setScale(2, BigDecimal.ROUND_HALF_UP).toPlainString());
-
-            // 近7日收入趋势(按天):对已取的收入流水(changeType=1)分桶,缺天补0
+            // 累计收入与近7日分桶都在 SQL 聚合(SUM / GROUP BY 日),不再把全量流水拉回内存。
+            // 近7日收入趋势(按天):收入流水(changeType=1)按自然日分桶,缺天补0
             java.text.SimpleDateFormat keyFmt = new java.text.SimpleDateFormat("yyyy-MM-dd");
             java.text.SimpleDateFormat labelFmt = new java.text.SimpleDateFormat("MM-dd");
             java.util.Calendar cal = java.util.Calendar.getInstance();
@@ -1371,6 +1366,10 @@ public class ApiMerchantController extends BaseController {
             cal.set(java.util.Calendar.SECOND, 0);
             cal.set(java.util.Calendar.MILLISECOND, 0);
             cal.add(java.util.Calendar.DATE, -6);
+            MerchantDashboardIncome income =
+                    umsMemberBalanceDetailService.readDashboardIncome(ownerMemberId, cal.getTime());
+            data.put("revenue", income.getTotal().setScale(2, BigDecimal.ROUND_HALF_UP).toPlainString());
+            Map<String, BigDecimal> incomeByDay = income.getByDay();
             String[] dayKeys = new String[7];
             String[] dayLabels = new String[7];
             Map<String, BigDecimal> dayMap = new HashMap<>();
@@ -1378,13 +1377,9 @@ public class ApiMerchantController extends BaseController {
                 String k = keyFmt.format(cal.getTime());
                 dayKeys[i] = k;
                 dayLabels[i] = labelFmt.format(cal.getTime());
-                dayMap.put(k, BigDecimal.ZERO);
+                BigDecimal amount = incomeByDay == null ? null : incomeByDay.get(k);
+                dayMap.put(k, amount == null ? BigDecimal.ZERO : amount);
                 cal.add(java.util.Calendar.DATE, 1);
-            }
-            for (UmsMemberBalanceDetail b : balanceList) {
-                if (b.getCreateTime() == null || b.getChangeBalance() == null) continue;
-                String k = keyFmt.format(b.getCreateTime());
-                if (dayMap.containsKey(k)) dayMap.put(k, dayMap.get(k).add(b.getChangeBalance()));
             }
             java.util.List<Map<String, Object>> revenue7d = new java.util.ArrayList<>();
             for (int i = 0; i < 7; i++) {
@@ -1395,6 +1390,8 @@ public class ApiMerchantController extends BaseController {
                 revenue7d.add(row);
             }
             data.put("revenue7d", revenue7d);
+            windows.put("revenue", MerchantMetricWindow.ALL_TIME.code());
+            windows.put("revenue7d", MerchantMetricWindow.CALENDAR_7D_INCL_TODAY.code());
         }
 
         if (access.hasPermission(MerchantPermission.ORDER_READ)) {
@@ -1406,6 +1403,7 @@ public class ApiMerchantController extends BaseController {
                     .filter(o -> o.getDelFlag() == null || o.getDelFlag() != 2)
                     .collect(java.util.stream.Collectors.toList());
             data.put("pendingOrders", pendingOrders.size());
+            windows.put("pendingOrders", MerchantMetricWindow.CURRENT_SNAPSHOT.code());
         }
 
         // 升级5:曝光/到店/核销率/复购率/在架供给 —— 与店铺参谋同一 facts 口径,数字直出不走 AI。
@@ -1413,10 +1411,14 @@ public class ApiMerchantController extends BaseController {
         if (access.hasPermission(MerchantPermission.MARKETING_READ)) {
             try {
                 data.put("insight", merchantInsightService.dashboard(ownerMemberId));
+                windows.put("insight.exposure", MerchantMetricWindow.ROLLING_30D.code());
+                windows.put("insight.checkin", MerchantMetricWindow.REGISTRATION_COHORT_ROLLING_30D.code());
+                windows.put("insight.supplyCount", MerchantMetricWindow.CURRENT_SNAPSHOT.code());
             } catch (Exception e) {
                 logger.warn("商家看板 insight 块聚合失败 memberId={}", ownerMemberId, e);
             }
         }
+        data.put("windows", windows);
 
         return success(data);
     }
@@ -1454,15 +1456,14 @@ public class ApiMerchantController extends BaseController {
         // 按项目拆的待办:工作台一张卡一个项目,没有这层拆分卡片上只能把全局数字
         // 复制一遍 = 假数据。项目 = (ownerType, ownerId):1 主题 / 2 活动,
         // 两者在工作台平起平坐,所以这里也一视同仁地拆。
+        // 口径同商家主题详情:已支付报名按核销态分(payment=2 / ownerType=1主题);
+        // 全部项目一次分组计数(不再逐项目拉全行 .size()),查询次数与项目数无关。
+        Map<Long, long[]> topicCounts = wonTopicIds.isEmpty() ? Collections.<Long, long[]>emptyMap()
+                : cmsRegistrationService.countPaidVerificationByOwners(1L, wonTopicIds);
         for (Long topicId : wonTopicIds) {
-            // 口径同商家主题详情:已支付报名按核销态分(payment=2 / ownerType=1主题)
-            CmsRegistration q = new CmsRegistration();
-            q.setPaymentStatus(2);
-            q.setOwnerType(1L);
-            q.setOwnerId(topicId);
-            q.setVerificationStatus(1);
+            long[] tc = topicCounts == null ? null : topicCounts.get(topicId);
             // verifiedCount 是累计成绩不是待办 ⇒ 已结束的项目也照算,别让历史核销数凭空消失。
-            verifiedCount += cmsRegistrationService.selectCmsRegistrationList(q).size();
+            verifiedCount += tc == null ? 0 : (int) tc[1];
 
             // 待办类(pendingVerify / 项目卡)才按结束时间过滤:结束满一周的主题不再进待办,
             // 口径同玩家侧 ApiRegistrationController.filterEndedOverWeek。不加这层的后果实测过:
@@ -1470,34 +1471,25 @@ public class ApiMerchantController extends BaseController {
             com.chengyinhub.business.domain.CmsTopic wonTopic = cmsTopicService.selectCmsTopicById(topicId);
             if (wonTopic != null && endedOverWeek(wonTopic.getEndDate(), todoNow)) continue;
 
-            q = new CmsRegistration();
-            q.setPaymentStatus(2);
-            q.setOwnerType(1L);
-            q.setOwnerId(topicId);
-            q.setVerificationStatus(0);
-            int topicPendingVerify = cmsRegistrationService.selectCmsRegistrationList(q).size();
+            int topicPendingVerify = tc == null ? 0 : (int) tc[0];
             pendingVerify += topicPendingVerify;
 
             byProject.put(projectKey(1L, topicId), projectRow(1L, topicId, topicPendingVerify));
         }
 
         // 活动(ownerType=2)同样逐个拆,不再只并进一个总数
-        for (com.chengyinhub.business.domain.CmsActivity a : myActivities(ownerMemberId)) {
-            CmsRegistration q = new CmsRegistration();
-            q.setPaymentStatus(2);
-            q.setOwnerType(2L);
-            q.setOwnerId(a.getId());
-            q.setVerificationStatus(1);
-            verifiedCount += cmsRegistrationService.selectCmsRegistrationList(q).size();  // 同上:累计成绩不过滤
+        List<com.chengyinhub.business.domain.CmsActivity> activities = myActivities(ownerMemberId);
+        LinkedHashSet<Long> activityIds = new LinkedHashSet<>();
+        for (com.chengyinhub.business.domain.CmsActivity a : activities) activityIds.add(a.getId());
+        Map<Long, long[]> activityCounts = activityIds.isEmpty() ? Collections.<Long, long[]>emptyMap()
+                : cmsRegistrationService.countPaidVerificationByOwners(2L, activityIds);
+        for (com.chengyinhub.business.domain.CmsActivity a : activities) {
+            long[] ac = activityCounts == null ? null : activityCounts.get(a.getId());
+            verifiedCount += ac == null ? 0 : (int) ac[1];  // 同上:累计成绩不过滤
 
             if (endedOverWeek(a.getEndDate(), todoNow)) continue;
 
-            q = new CmsRegistration();
-            q.setPaymentStatus(2);
-            q.setOwnerType(2L);
-            q.setOwnerId(a.getId());
-            q.setVerificationStatus(0);
-            int actPendingVerify = cmsRegistrationService.selectCmsRegistrationList(q).size();
+            int actPendingVerify = ac == null ? 0 : (int) ac[0];
             pendingVerify += actPendingVerify;
 
             byProject.put(projectKey(2L, a.getId()), projectRow(2L, a.getId(), actPendingVerify));
