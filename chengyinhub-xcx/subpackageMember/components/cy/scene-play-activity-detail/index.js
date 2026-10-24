@@ -9,6 +9,7 @@ const { isRecordList } = require('../../../../utils/response-shape.js')
 const { ticketWindowPassed, ticketWindowText } = require('../../../../utils/ticket-window.js')
 const { isLoginRequired, retryLogin } = require('../../../../utils/session/login-reload.js')
 const mediaPreview = require('../../../../utils/media-preview.js')
+const { ACTIVITY_STATE } = require('../../../../utils/activity-lifecycle-state.js')
 
 function ok(res) { return res && (res.code === 200 || res.code === '200') }
 
@@ -88,8 +89,8 @@ function actionFor(info) {
    状态文案与分桶口径由后端 ActivityLifecycle 一处算,列表与详情读同一个值;
    这里只剩「语义状态 → 徽章颜色」这一件展示层自己的事。 */
 const STATE_VARIANT = {
-  draft: 'neutral', pending: 'neutral', rejected: 'danger', offline: 'neutral',
-  notStarted: 'neutral', running: 'success', completed: 'neutral',
+  [ACTIVITY_STATE.DRAFT]: 'neutral', [ACTIVITY_STATE.PENDING]: 'neutral', [ACTIVITY_STATE.REJECTED]: 'danger', [ACTIVITY_STATE.OFFLINE]: 'neutral',
+  [ACTIVITY_STATE.NOT_STARTED]: 'neutral', [ACTIVITY_STATE.RUNNING]: 'success', [ACTIVITY_STATE.COMPLETED]: 'neutral',
 }
 
 Component({

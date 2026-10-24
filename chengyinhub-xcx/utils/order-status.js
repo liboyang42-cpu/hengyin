@@ -2,6 +2,14 @@
 const { isFreeOrder } = require('./order-actual-pay');
 const { toTimestamp, chinaParts } = require('./datetime');
 
+// C:U-027:summarizeOrderState 返回的 key 全集(snake_case,订单读模型专用)。
+// 活动档期状态是另一套 camelCase 词表,见 utils/activity-lifecycle-state.js。
+const ORDER_STATE_KEY = Object.freeze({
+  REFUNDED: 'refunded', REFUNDING: 'refunding', MANUAL_REFUND: 'manual_refund', CANCELLED: 'cancelled',
+  PENDING_PAYMENT: 'pending_payment', EXPIRED: 'expired', UNKNOWN: 'unknown', COMPLETED: 'completed',
+  NON_REFUNDABLE: 'non_refundable', NOT_STARTED: 'not_started', IN_PROGRESS: 'in_progress',
+});
+
 function sourceOf(row) {
   return row && (row.cmsActivity || row.cmsTopic) || {};
 }
@@ -113,4 +121,4 @@ function formatRefundDeadline(value) {
     + ' ' + pad(date.hours) + ':' + pad(date.minutes);
 }
 
-module.exports = { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline };
+module.exports = { ORDER_STATE_KEY, summarizeOrderState, canRequestOrderRefund, formatRefundDeadline };
