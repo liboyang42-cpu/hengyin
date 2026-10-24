@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T23:14:57Z",
+  "updated_utc": "2026-10-24T23:25:33Z",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
   "scope": "WP00-WP17/Q1-Q10/A01-A15/T01-T22/G0-G5",
   "all_complete": false,
-  "mode": "OriginalF pool provenance/cleanup patch7898408 applied; only concrete operational harness changes, scan/freeze then one targeted new pool run; accepted coreccd5 remains unchanged",
+  "mode": "Scoped pool runtime identity/cleanup accepted4cda; next first existing authenticated HTTP/Redis refund-lease fault validation40142606869 on accepted coreccd5 with originalB; no new audit or core tests repeated",
   "current_worker_assignments": {
     "A": {
       "state": "DELIVERED_NO_OPEN_IDENTIFIED_FAILURE_CODE_TASK",
@@ -23,8 +23,8 @@
       "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280"
     },
     "B": {
-      "state": "DELIVERED_NO_OPEN_IDENTIFIED_FAILURE_CODE_TASK",
-      "task": "Explain original three exact B payment directions and reverse refs only; F owns policy; no new code audit",
+      "state": "RUNTIME_VALIDATION_IN_PROGRESS_AUTHENTICATED_REDIS",
+      "task": "Only original40142606869 receipt/actual HTTP+independent SQL/lease/cleanup readback; no source edits/new CI, UI/cash/provider acceptance remains unverified",
       "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
       "host_id": "durable",
       "owned_symbols": [
@@ -75,7 +75,7 @@
       "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280"
     },
     "F": {
-      "state": "DELIVERED_POOL_EVIDENCE_PATCH_PENDING_HOSTED_RUNTIME",
+      "state": "DELIVERED_POOL_EVIDENCE_IMPLEMENTATION_TARGETED_ACCEPTED",
       "task": "7898408 applied; no new code assignment unless targeted actual runtime fails",
       "thread_id": "01a16a23-5e0c-736b-9fc1-d4d070393009",
       "host_id": "durable",
@@ -1009,37 +1009,28 @@
     "full_scope_complete": false
   },
   "next_runtime_validation": {
-    "id": "RUNTIME_POOL_CCD5_01",
-    "workflow": "isolated-pool-recovery.yml",
-    "run": 40140513624,
+    "id": "AUTHENTICATED_REDIS_RECOVERY_CCD5_01",
+    "workflow": "isolated-authenticated-redis-recovery.yml",
     "source_sha": "ccd55005c75d105f8245b0591e63adcd0dd15280",
-    "status": "BOUNDED_BEHAVIOR_OBSERVED_EVIDENCE_GAPS",
-    "owner": "F",
-    "thread_id": "01a16a23-5e0c-736b-9fc1-d4d070393009",
+    "branch": "codex/architecture-day-final-ccd5-20261024",
+    "run": 40142606869,
+    "status": "in_progress",
+    "conclusion": "",
+    "owner": "B",
+    "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
     "host_id": "durable",
-    "scope": "Existing bounded real SQL-pool timeout/overflow/release and same-process recovery; no capacity baseline or full business acceptance",
-    "evidence_dir": "docs/delivery/architecture-day/F/ccd5-pool-recovery/",
+    "scope": "Existing isolated fixture-admin HTTP/refund-lease Redis fault/recovery; not userUI/cash/channel/full business walkthrough",
     "java_db_location": "GitHub-hosted ubuntu24.04 only",
-    "not_repeated": [
-      "standard40138581031",
-      "storage40138589827"
-    ],
+    "evidence_dir": "docs/delivery/architecture-day/B/ccd5-authenticated-redis-recovery/",
     "jobs": [
       {
-        "databaseId": 121011084232,
-        "name": "isolated-pool-recovery",
-        "status": "in_progress"
+        "databaseId": 121017302795,
+        "name": "isolated-authenticated-redis-recovery",
+        "status": "in_progress",
+        "conclusion": ""
       }
     ],
-    "readback": "ccd5-pool-recovery-readback.json",
-    "pending_evidence": [
-      "Actual rebuiltJAR identity",
-      "Independent post-outer-cleanup exact resource absence",
-      "Unobserved connectTimeout metadata correction"
-    ],
-    "pending_implementation_owners": [
-      "F"
-    ]
+    "prior_core_ci_repeated": false
   },
   "runtime_evidence_implementation": {
     "owner": "F",
@@ -1050,10 +1041,69 @@
       "ci/test_pool_recovery_probe.py",
       "docs/delivery/architecture-day/F/ccd5-pool-recovery/"
     ],
-    "status": "DELIVERED_APPLIED_PENDING_TARGETED_RUNTIME",
+    "status": "TARGETED_HOSTED_RUNTIME_PASS_WITH_SCOPED_PROOF",
     "core_failure_stage_reopened": false,
     "delivery_sha": "78984087323fe460f543d0f9f496137e7a7f172b",
     "parent_sha": "7d742dc7442ead070cd23fcf9048b054e431a69a",
-    "source_control_evidence": "F12/12 Python protocol controls0skip, bash syntax/diff/secret scans PASS; not real Java/DB/resource evidence"
-  }
+    "source_control_evidence": "F12/12 Python protocol controls0skip, bash syntax/diff/secret scans PASS; not real Java/DB/resource evidence",
+    "integrated_source_sha": "4cda5e4a329c41450bdd2b3cdfc18b28f041b073"
+  },
+  "previous_runtime_validations": [
+    {
+      "id": "RUNTIME_POOL_CCD5_01",
+      "workflow": "isolated-pool-recovery.yml",
+      "run": 40140513624,
+      "source_sha": "ccd55005c75d105f8245b0591e63adcd0dd15280",
+      "status": "BOUNDED_BEHAVIOR_OBSERVED_EVIDENCE_GAPS",
+      "owner": "F",
+      "thread_id": "01a16a23-5e0c-736b-9fc1-d4d070393009",
+      "host_id": "durable",
+      "scope": "Existing bounded real SQL-pool timeout/overflow/release and same-process recovery; no capacity baseline or full business acceptance",
+      "evidence_dir": "docs/delivery/architecture-day/F/ccd5-pool-recovery/",
+      "java_db_location": "GitHub-hosted ubuntu24.04 only",
+      "not_repeated": [
+        "standard40138581031",
+        "storage40138589827"
+      ],
+      "jobs": [
+        {
+          "databaseId": 121011084232,
+          "name": "isolated-pool-recovery",
+          "status": "in_progress"
+        }
+      ],
+      "readback": "ccd5-pool-recovery-readback.json",
+      "pending_evidence": [
+        "Actual rebuiltJAR identity",
+        "Independent post-outer-cleanup exact resource absence",
+        "Unobserved connectTimeout metadata correction"
+      ],
+      "pending_implementation_owners": [
+        "F"
+      ]
+    },
+    {
+      "id": "RUNTIME_POOL_PROVENANCE_4CDA_01",
+      "source_sha": "4cda5e4a329c41450bdd2b3cdfc18b28f041b073",
+      "run": 40142070334,
+      "workflow": "isolated-pool-recovery.yml",
+      "branch": "codex/architecture-day-pool-provenance-4cda-20261024",
+      "status": "PASS_SCOPED_BOUNDED_POOL_RUNTIME_IDENTITY_AND_OWNED_CLEANUP",
+      "conclusion": "success",
+      "owner": "ROOT_RUNTIME_READBACK",
+      "implementation_owner": "F",
+      "delivery_sha": "78984087323fe460f543d0f9f496137e7a7f172b",
+      "scope": "Targeted new execution identity and exact owned cleanup only; business source unchanged fromccd5, old green not inherited",
+      "jobs": [
+        {
+          "databaseId": 121015706846,
+          "name": "isolated-pool-recovery",
+          "status": "in_progress",
+          "conclusion": ""
+        }
+      ],
+      "core_standard_storage_repeated": false,
+      "readback": "4cda-pool-provenance-cleanup-readback.json"
+    }
+  ]
 }
