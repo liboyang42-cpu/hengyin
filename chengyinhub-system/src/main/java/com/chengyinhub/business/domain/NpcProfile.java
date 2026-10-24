@@ -40,6 +40,10 @@ public class NpcProfile
     private String voiceSample;
     /** 本次复刻请求已取得声音权利人明确授权；仅作接口入参，不落库。 */
     private Boolean voiceConsent;
+    /** Enrollment recovery metadata, only populated by the authorized voice management service. */
+    private Long voiceIntentId;
+    private String voiceIntentState;
+    private String voiceReasonCode;
     private Date createTime;
     private Date updateTime;
     /** 后台列表联查 mms_merchant.name 用,不落库(insert/update 均不含该列)。 */
@@ -56,6 +60,13 @@ public class NpcProfile
     public void setVoiceSample(String voiceSample) { this.voiceSample = voiceSample; }
     public Boolean getVoiceConsent() { return voiceConsent; }
     public void setVoiceConsent(Boolean voiceConsent) { this.voiceConsent = voiceConsent; }
+
+    public Long getVoiceIntentId() { return voiceIntentId; }
+    public void setVoiceIntentId(Long value) { voiceIntentId = value; }
+    public String getVoiceIntentState() { return voiceIntentState; }
+    public void setVoiceIntentState(String value) { voiceIntentState = value; }
+    public String getVoiceReasonCode() { return voiceReasonCode; }
+    public void setVoiceReasonCode(String value) { voiceReasonCode = value; }
 
     public Integer getScopeType() { return scopeType; }
     public void setScopeType(Integer scopeType) { this.scopeType = scopeType; }
