@@ -68,6 +68,53 @@ function makePage() {
   return page
 }
 
+test('只改通关、Bingo、同步广场或编辑模式也落本机草稿、排队上云并可恢复', t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  const edits = [
+    ['completionRuleMode', 'AT_LEAST'],
+    ['completionRequiredCount', 0],
+    ['bingoRows', [{ pos: 0, label: '第一格', couponId: 0, feedbackText: '完成' }]],
+    ['publishToCreative', false],
+    ['aiSimple', true],
+  ]
+  for (const [key, value] of edits) {
+    const page = makePage()
+    Object.assign(page.data, { draftUuid: 'settings-' + key, draftMemberId: 42 })
+    page.data.formData.name = '设置草稿'
+    page._draftAutosaveReady = true
+    page._cloudAutosaveEnabled = true
+    const saves = []
+    page.saveServerDraft = options => saves.push(options)
+    page._installDraftAutosave()
+    const revision = page._draftContentRevision()
+
+    page.setData({ [key]: value })
+
+    assert.notEqual(page._draftContentRevision(), revision, key + ' 必须计入发布在途的后续修改')
+    assert.equal(page.data.themeSaveState, 'local')
+    const saved = draftStore.loadDraft(wx, { draftUuid: page.data.draftUuid }, { memberId: 42 })
+    assert.equal(saved.status, 'ready')
+    assert.deepEqual(saved.envelope.editorMeta[key], value)
+    t.mock.timers.tick(1999)
+    assert.equal(saves.length, 0)
+    t.mock.timers.tick(1)
+    assert.deepEqual(saves, [{ automatic: true }], key + ' 必须排队保存云端草稿')
+    const restored = makePage()
+    restored._applyDraftEnvelope(saved.envelope)
+    assert.deepEqual(restored.data[key], value, key + ' 必须从本机恢复，不能退回默认值')
+  }
+})
+
+test('旧草稿没有新增编辑设置时保留当前默认或服务端回填值', () => {
+  const page = makePage()
+  const current = { completionRuleMode: 'AT_LEAST', completionRequiredCount: 3,
+    bingoRows: [{ pos: 0, label: '已回填', couponId: 0, feedbackText: '' }],
+    publishToCreative: false, aiSimple: true }
+  Object.assign(page.data, current)
+  page._applyDraftEnvelope({ formData: page.data.formData, editorMeta: {} })
+  for (const key of Object.keys(current)) assert.deepEqual(page.data[key], current[key])
+})
+
 test('主题日期同步票跟随档期，独立票保留原日期，旧草稿提交也按同步开关处理', () => {
   const page = makePage()
   const start = '2026-09-28 09:00:00'
