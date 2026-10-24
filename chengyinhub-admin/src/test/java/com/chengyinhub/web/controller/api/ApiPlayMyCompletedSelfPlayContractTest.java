@@ -69,17 +69,17 @@ class ApiPlayMyCompletedSelfPlayContractTest
 
         controller = spy(new ApiPlayProgressController());
         doReturn(PLAYER).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "perkLedgerService", perkLedgerService);
-        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", routeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "perkLedgerService", perkLedgerService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", routeService);
         com.chengyinhub.business.service.support.CompletedRouteFactReader completedRoutes =
                 mock(com.chengyinhub.business.service.support.CompletedRouteFactReader.class);
         when(completedRoutes.findCurrentCompletedRoutes(PLAYER)).thenReturn(Collections.emptyList());
-        ReflectionTestUtils.setField(controller, "completedRouteFactReader", completedRoutes);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "completedRouteFactReader", completedRoutes);
 
         when(registrationService.selectCmsRegistrationList(any(CmsRegistration.class))).thenReturn(Collections.emptyList());
         when(routeService.sessionStatuses(any())).thenReturn(Collections.emptyMap());
@@ -379,7 +379,7 @@ class ApiPlayMyCompletedSelfPlayContractTest
     {
         com.chengyinhub.business.service.ICommunityPostService references =
                 mock(com.chengyinhub.business.service.ICommunityPostService.class);
-        ReflectionTestUtils.setField(controller, "communityPostService", references);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "communityPostService", references);
         List<Map<String, Object>> history = new ArrayList<>();
         Map<String, Object> cancelled = new LinkedHashMap<>();
         cancelled.put("dataType", 1); cancelled.put("dataId", 63L); cancelled.put("completed", true);

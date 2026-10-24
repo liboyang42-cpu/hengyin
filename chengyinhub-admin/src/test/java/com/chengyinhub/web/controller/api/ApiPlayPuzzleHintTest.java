@@ -85,25 +85,25 @@ class ApiPlayPuzzleHintTest
         when(attemptMapper.insertPlayAttemptLog(any())).thenReturn(1);
 
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templateService);
-        ReflectionTestUtils.setField(controller, "nodeMerchantOverrideService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService", templateService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "nodeMerchantOverrideService",
                 new com.chengyinhub.business.service.impl.NodeMerchantOverrideServiceImpl(
                         mock(com.chengyinhub.business.service.ICmsRegistrationMerchantService.class)));
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
         progressService = mock(IPlayerNodeProgressService.class);
         when(progressService.selectPlayerNodeProgressList(any())).thenReturn(Collections.emptyList());
         when(progressService.insertPlayerNodeProgress(any())).thenReturn(1);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "playAttemptLogMapper", attemptMapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playAttemptLogMapper", attemptMapper);
         com.chengyinhub.business.mapper.PlayerNodeProgressMapper progressMapper =
                 mock(com.chengyinhub.business.mapper.PlayerNodeProgressMapper.class);
         when(progressMapper.selectPlayerNodeProgressList(any())).thenReturn(Collections.emptyList());
         com.chengyinhub.business.mapper.UmsMemberMapper memberMapper =
                 mock(com.chengyinhub.business.mapper.UmsMemberMapper.class);
         when(memberMapper.lockMemberById(MEMBER)).thenReturn(MEMBER);
-        ReflectionTestUtils.setField(controller, "puzzlePlayService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "puzzlePlayService",
                 new com.chengyinhub.business.service.impl.PuzzlePlayServiceImpl(
                         templateService, attemptMapper, progressMapper, memberMapper,
                 mock(com.chengyinhub.business.service.ICmsTopicNodeService.class),
@@ -111,19 +111,19 @@ class ApiPlayPuzzleHintTest
                 mock(com.chengyinhub.business.service.ICmsPointsSettingService.class),
                 mock(com.chengyinhub.business.service.IUmsMemberService.class),
                 mock(com.chengyinhub.business.service.IUmsMemberPointsDetailService.class)));
-        ReflectionTestUtils.setField(controller, "pointsAwardService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "pointsAwardService",
                 mock(com.chengyinhub.business.service.IPointsAwardService.class));
         com.chengyinhub.business.service.IPlayerProgressionService progression =
                 mock(com.chengyinhub.business.service.IPlayerProgressionService.class);
         when(progression.onNodeDone(MEMBER)).thenReturn(Collections.emptyList());
-        ReflectionTestUtils.setField(controller, "playerProgressionService", progression);
-        ReflectionTestUtils.setField(controller, "xpBudgetService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerProgressionService", progression);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "xpBudgetService",
                 mock(com.chengyinhub.business.service.IXpBudgetService.class));
-        ReflectionTestUtils.setField(controller, "growthService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "growthService",
                 mock(com.chengyinhub.business.service.IGrowthService.class));
-        ReflectionTestUtils.setField(controller, "rewardDropService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "rewardDropService",
                 mock(com.chengyinhub.business.service.IRewardDropService.class));
-        ReflectionTestUtils.setField(controller, "memberCollectibleMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "memberCollectibleMapper",
                 mock(com.chengyinhub.business.mapper.MemberCollectibleMapper.class));
         CurrentPlayControllerFixtures.install(controller);
     }
@@ -171,7 +171,7 @@ class ApiPlayPuzzleHintTest
         template.setQuestionAnswer("1932");
         template.setAnswerReveal("1932，门楣最左边的年份");
         ICmsMemberTemplateService service = (ICmsMemberTemplateService)
-                ReflectionTestUtils.getField(controller, "cmsMemberTemplateService");
+                com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "cmsMemberTemplateService");
         when(service.selectCmsMemberTemplateById(TEMPLATE)).thenReturn(template);
 
         AjaxResult result = controller.revealPuzzle(null, String.valueOf(NODE), String.valueOf(TOPIC));
@@ -203,7 +203,7 @@ class ApiPlayPuzzleHintTest
     void revealCannotBypassScanOrGpsValidation()
     {
         ICmsMemberTemplateService service = (ICmsMemberTemplateService)
-                ReflectionTestUtils.getField(controller, "cmsMemberTemplateService");
+                com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "cmsMemberTemplateService");
         CmsMemberTemplate physicalTask = new CmsMemberTemplate();
         physicalTask.setId(TEMPLATE);
 

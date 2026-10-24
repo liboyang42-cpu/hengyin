@@ -498,7 +498,7 @@ class ChapterFlowWriteServiceTest
         ApiPlayProgressController guard = new ApiPlayProgressController();
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(guard, "cmsTopicNodeService", nodeRead);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(guard, "playerNodeProgressService", progressRead);
-        Boolean blocked = ReflectionTestUtils.invokeMethod(guard, "isPrevDone", MEMBER_ID, 501L,
+        Boolean blocked = com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(guard, "isPrevDone", MEMBER_ID, 501L,
                 insertedNodes.get(0));
         assertEquals(Boolean.FALSE, blocked,
                 "blocks 中排在当前节点之前的节点未完成时，isPrevDone 必须拒绝跳关");
@@ -510,7 +510,7 @@ class ChapterFlowWriteServiceTest
         completed.setStatus(1);
         when(progressRead.selectPlayerNodeProgressList(any()))
                 .thenReturn(Collections.singletonList(completed));
-        Boolean allowed = ReflectionTestUtils.invokeMethod(guard, "isPrevDone", MEMBER_ID, 501L,
+        Boolean allowed = com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(guard, "isPrevDone", MEMBER_ID, 501L,
                 insertedNodes.get(0));
         assertEquals(Boolean.TRUE, allowed,
                 "派生顺序中的真实前置节点完成后，isPrevDone 才能放行当前节点");

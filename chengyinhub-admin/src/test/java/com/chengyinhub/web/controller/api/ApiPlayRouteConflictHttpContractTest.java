@@ -104,33 +104,33 @@ class ApiPlayRouteConflictHttpContractTest {
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", cmsTopicService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "perkLedgerService", mock(IPerkLedgerService.class));
-        ReflectionTestUtils.setField(controller, "shopDayProofService", mock(IShopDayProofService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "perkLedgerService", mock(IPerkLedgerService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "shopDayProofService", mock(IShopDayProofService.class));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
-        ReflectionTestUtils.setField(controller, "pointsAwardService", pointsAwardService);
-        ReflectionTestUtils.setField(controller, "playerProgressionService", playerProgressionService);
-        ReflectionTestUtils.setField(controller, "growthService", growthService);
-        ReflectionTestUtils.setField(controller, "xpBudgetService", xpBudgetService);
-        ReflectionTestUtils.setField(controller, "rewardDropService", rewardDropService);
-        ReflectionTestUtils.setField(controller, "playerBadgeMapper", mock(PlayerBadgeMapper.class));
-        ReflectionTestUtils.setField(controller, "playAttemptLogMapper", mock(PlayAttemptLogMapper.class));
-        ReflectionTestUtils.setField(controller, "memberCollectibleMapper", mock(MemberCollectibleMapper.class));
-        ReflectionTestUtils.setField(controller, "smsCouponHistoryService", smsCouponHistoryService);
-        ReflectionTestUtils.setField(controller, "topicCompletionCouponRewardService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "pointsAwardService", pointsAwardService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerProgressionService", playerProgressionService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "growthService", growthService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "xpBudgetService", xpBudgetService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "rewardDropService", rewardDropService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerBadgeMapper", mock(PlayerBadgeMapper.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playAttemptLogMapper", mock(PlayAttemptLogMapper.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "memberCollectibleMapper", mock(MemberCollectibleMapper.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "smsCouponHistoryService", smsCouponHistoryService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicCompletionCouponRewardService",
                 mock(ITopicCompletionCouponRewardService.class));
-        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", mock(ICmsMemberTemplateService.class));
-        ReflectionTestUtils.setField(controller, "officialEventV2Service", mock(IOfficialEventV2Service.class));
-        ReflectionTestUtils.setField(controller, "topicCompletionAwardService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService", mock(ICmsMemberTemplateService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "officialEventV2Service", mock(IOfficialEventV2Service.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicCompletionAwardService",
                 mock(ITopicCompletionAwardService.class));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper", mock(ClubLeadMapper.class));
         // 承接方现场层:没有中标商家时返回空对象,取值全部回落主办方模板 —— 用真实现而不是 mock。
-        ReflectionTestUtils.setField(controller, "nodeMerchantOverrideService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "nodeMerchantOverrideService",
                 new NodeMerchantOverrideServiceImpl(mock(
                         com.chengyinhub.business.service.ICmsRegistrationMerchantService.class)));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", runtimeService);
         // 真实协调器:验证冲突 code 不被协调器吞掉,而是一路传到全局异常处理器。
-        ReflectionTestUtils.setField(controller, "topicRouteCompletionCoordinator",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteCompletionCoordinator",
                 new TopicRouteCompletionCoordinator(runtimeService));
 
         when(nodeService.selectCmsTopicNodeList(any())).thenReturn(Collections.singletonList(nodeEntity()));

@@ -53,7 +53,7 @@ class ApiPlayCurrentUseBoundaryTest {
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"topicRouteRuntimeService",routes);
         ICmsRegistrationService registrationService=mock(ICmsRegistrationService.class);
         when(registrationService.selectCmsRegistrationList(any())).thenAnswer(call->registrations.selectCmsRegistrationList(call.getArgument(0)));
-        ReflectionTestUtils.setField(controller,"cmsRegistrationService",registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"cmsRegistrationService",registrationService);
         BasicPlayCommandFixtures.scope(controller,29L);
     }
     private AjaxResult answer() { return BasicPlayCommandFixtures.answer(controller, "9", "39", "answer", null, null, null); }

@@ -83,18 +83,18 @@ class ApiPlayHistoryNodesContractTest
         controller = spy(new ApiPlayProgressController());
         doReturn(MEMBER).when(controller).getAppUserId();
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
         var fixtureHintSettings = mock(ICmsPointsSettingService.class);
-        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", mock(ICmsMemberTemplateService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService", mock(ICmsMemberTemplateService.class));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService",
                 mock(com.chengyinhub.business.service.IOmsTicketService.class));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
-        ReflectionTestUtils.setField(controller, "puzzlePlayService", mock(IPuzzlePlayService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "puzzlePlayService", mock(IPuzzlePlayService.class));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", mock(ITopicRouteRuntimeService.class));
-        ReflectionTestUtils.setField(controller, "wxContentCallbackInboxMapper", callbackInboxMapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "wxContentCallbackInboxMapper", callbackInboxMapper);
         when(callbackInboxMapper.countRiskyCallback(anyInt(), anyLong())).thenReturn(0);
 
         CmsActivity activity = new CmsActivity();
@@ -293,7 +293,7 @@ class ApiPlayHistoryNodesContractTest
         // 负控(§7-3):运行态处置事实读取件缺失(未注入/装配失败)属于「读不到处置事实」,
         // 旧行为对 mapper==null 是 fail-open(下架主题的历史照放),现在必须失败关闭。
         topic.setUserStatus(0);
-        ReflectionTestUtils.setField(controller, "wxContentCallbackInboxMapper", null);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "wxContentCallbackInboxMapper", null);
 
         Map<String, Object> data = nodesData();
 

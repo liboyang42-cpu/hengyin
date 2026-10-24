@@ -33,11 +33,11 @@ class PlayCommandIntentTest {
         ICmsTopicNodeService nodes = mock(ICmsTopicNodeService.class);
         ICmsActivityService activities = mock(ICmsActivityService.class);
         registrations = mock(ICmsRegistrationService.class);
-        ReflectionTestUtils.setField(controller, "playCommandReceiptMapper", receipts);
-        ReflectionTestUtils.setField(controller, "playCommandRouteMapper", routes);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodes);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activities);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrations);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playCommandReceiptMapper", receipts);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playCommandRouteMapper", routes);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodes);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activities);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrations);
         CmsTopicNode node = new CmsTopicNode(); node.setId(11L); node.setTopicId(10L);
         when(nodes.selectCmsTopicNodeById(11L)).thenReturn(node);
         CmsActivity activity = new CmsActivity(); activity.setId(20L); activity.setTopicId(10L);
@@ -59,7 +59,7 @@ class PlayCommandIntentTest {
     }
 
     private AjaxResult command(String id, Integer expected, String answer, Supplier<AjaxResult> execute) {
-        return ReflectionTestUtils.invokeMethod(controller, "executeBasicIntent", "ANSWER", "20", null, "11",
+        return com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "executeBasicIntent", "ANSWER", "20", null, "11",
                 id, expected, null, 99L, null, null, Collections.singletonList(answer), execute);
     }
 

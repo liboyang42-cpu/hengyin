@@ -1,0 +1,18 @@
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayHintUnlockMySqlIT.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayHintUnlockMySqlIT.java
+@@ -157,13 +157,13 @@
+         CmsPointsSettingServiceImpl settings = new CmsPointsSettingServiceImpl(); ReflectionTestUtils.setField(settings, "cmsPointsSettingMapper", sql.getMapper(CmsPointsSettingMapper.class));
+         CmsActivityServiceImpl activities = new CmsActivityServiceImpl(); ReflectionTestUtils.setField(activities, "cmsActivityMapper", sql.getMapper(CmsActivityMapper.class));
+         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "cmsTopicNodeService", nodes);
+-        ReflectionTestUtils.setField(target, "cmsMemberTemplateService", templates);
++        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "cmsMemberTemplateService", templates);
+         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "cmsTopicService", topics);
+         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "cmsActivityService", activities);
+         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "currentPlayActivityMapper", sql.getMapper(CmsActivityMapper.class));
+         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
+         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "clubLeadMapper", sql.getMapper(ClubLeadMapper.class));
+-        ReflectionTestUtils.setField(target, "umsMemberPointsDetailService", details);
++        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "umsMemberPointsDetailService", details);
+         com.chengyinhub.web.controller.api.NodeHintUnlockTestFixtures.wire(target, settings, memberService, details, transactions);
+         ProxyFactory proxy = new ProxyFactory(target); proxy.setProxyTargetClass(true);
+         proxy.addAdvice(new TransactionInterceptor(transactions, new AnnotationTransactionAttributeSource()));

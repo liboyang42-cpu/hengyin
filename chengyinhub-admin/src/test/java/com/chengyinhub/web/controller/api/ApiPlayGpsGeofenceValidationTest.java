@@ -92,29 +92,29 @@ class ApiPlayGpsGeofenceValidationTest
         doReturn(PLAYER).when(controller).getAppUserId();
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
-        ReflectionTestUtils.setField(controller, "perkLedgerService", perkLedgerService);
-        ReflectionTestUtils.setField(controller, "shopDayProofService", mock(IShopDayProofService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "perkLedgerService", perkLedgerService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "shopDayProofService", mock(IShopDayProofService.class));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "topicCompletionAwardService", completionAwardService);
-        ReflectionTestUtils.setField(controller, "pointsAwardService", pointsAwardService);
-        ReflectionTestUtils.setField(controller, "playerProgressionService", progressionService);
-        ReflectionTestUtils.setField(controller, "growthService", mock(IGrowthService.class));
-        ReflectionTestUtils.setField(controller, "xpBudgetService", mock(IXpBudgetService.class));
-        ReflectionTestUtils.setField(controller, "rewardDropService", mock(IRewardDropService.class));
-        ReflectionTestUtils.setField(controller, "smsCouponHistoryService", mock(ISmsCouponHistoryService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicCompletionAwardService", completionAwardService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "pointsAwardService", pointsAwardService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerProgressionService", progressionService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "growthService", mock(IGrowthService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "xpBudgetService", mock(IXpBudgetService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "rewardDropService", mock(IRewardDropService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "smsCouponHistoryService", mock(ISmsCouponHistoryService.class));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
         templateService = mock(ICmsMemberTemplateService.class);
-        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templateService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService", templateService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper",
                 mock(com.chengyinhub.business.mapper.ClubLeadMapper.class));
-        ReflectionTestUtils.setField(controller, "playAttemptLogMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playAttemptLogMapper",
                 mock(com.chengyinhub.business.mapper.PlayAttemptLogMapper.class));
-        ReflectionTestUtils.setField(controller, "memberCollectibleMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "memberCollectibleMapper",
                 mock(com.chengyinhub.business.mapper.MemberCollectibleMapper.class));
-        ReflectionTestUtils.setField(controller, "nodeMerchantOverrideService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "nodeMerchantOverrideService",
                 new com.chengyinhub.business.service.impl.NodeMerchantOverrideServiceImpl(
                         mock(com.chengyinhub.business.service.ICmsRegistrationMerchantService.class)));
 
@@ -305,7 +305,7 @@ class ApiPlayGpsGeofenceValidationTest
     {
         com.chengyinhub.business.service.support.ArriveLocationGuard guard =
                 mock(com.chengyinhub.business.service.support.ArriveLocationGuard.class);
-        ReflectionTestUtils.setField(controller, "arriveLocationGuard", guard);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "arriveLocationGuard", guard);
 
         AjaxResult result = arriveWithAccuracy(null);
         assertNotEquals(200, result.get("code"));
@@ -323,7 +323,7 @@ class ApiPlayGpsGeofenceValidationTest
         when(guard.check(any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyDouble(),
                 org.mockito.ArgumentMatchers.anyDouble(), any()))
                 .thenReturn(new com.chengyinhub.business.service.support.ArriveLocationGuard.Result(null, null, null, false));
-        ReflectionTestUtils.setField(controller, "arriveLocationGuard", guard);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "arriveLocationGuard", guard);
 
         assertEquals(200, arriveWithAccuracy("30").get("code"));
         verify(guard).check(PLAYER, ACTIVITY, TOPIC, NODE, Double.parseDouble(NODE_LAT), Double.parseDouble(NODE_LNG), 30d);
@@ -339,7 +339,7 @@ class ApiPlayGpsGeofenceValidationTest
                 org.mockito.ArgumentMatchers.anyDouble(), any()))
                 .thenReturn(new com.chengyinhub.business.service.support.ArriveLocationGuard.Result(
                         "ARRIVE_GUARD_SPEED", "移动速度异常，本次到达未记录；如有误判可申诉", 9001L, true));
-        ReflectionTestUtils.setField(controller, "arriveLocationGuard", guard);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "arriveLocationGuard", guard);
 
         AjaxResult result = arriveWithAccuracy("20");
         assertNotEquals(200, result.get("code"));
@@ -356,7 +356,7 @@ class ApiPlayGpsGeofenceValidationTest
     {
         com.chengyinhub.business.service.support.ArriveLocationGuard guard =
                 mock(com.chengyinhub.business.service.support.ArriveLocationGuard.class);
-        ReflectionTestUtils.setField(controller, "arriveLocationGuard", guard);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "arriveLocationGuard", guard);
 
         assertEquals("还没到这一站附近", arrive("121.6", "31.4").get("msg"));
         assertEquals("请开启定位", arrive(null, null).get("msg"));

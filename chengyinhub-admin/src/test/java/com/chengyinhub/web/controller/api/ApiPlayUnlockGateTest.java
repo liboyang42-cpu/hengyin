@@ -54,7 +54,7 @@ class ApiPlayUnlockGateTest {
         CmsTopicNode node = new CmsTopicNode();
         node.setId(402L);
         node.setUnlockAfterNodeId(unlockAfter);
-        return ReflectionTestUtils.invokeMethod(controller, "unlockGateError", MEMBER, ACT, node);
+        return com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "unlockGateError", MEMBER, ACT, node);
     }
 
     private PlayerNodeProgress progress(int status) {

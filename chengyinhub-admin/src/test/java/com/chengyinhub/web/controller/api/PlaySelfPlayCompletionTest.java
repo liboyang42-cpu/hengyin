@@ -59,26 +59,26 @@ class PlaySelfPlayCompletionTest {
         // ⇒ 走 done>=total 老口径,正是本类要测的路径。
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.ICmsTopicService.class));
-        ReflectionTestUtils.setField(controller, "perkLedgerService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "perkLedgerService",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.IPerkLedgerService.class));
         // resolveMode 的 fallback 链会走到 firstTicketMode(查票 mode);返空 ⇒ 兜底 LINEAR_ORIENTEERING。
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.IOmsTicketService.class));
-        ReflectionTestUtils.setField(controller, "pointsAwardService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "pointsAwardService",
                 mock(com.chengyinhub.business.service.IPointsAwardService.class));
-        ReflectionTestUtils.setField(controller, "playerProgressionService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerProgressionService",
                 mock(com.chengyinhub.business.service.IPlayerProgressionService.class));
-        ReflectionTestUtils.setField(controller, "growthService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "growthService",
                 mock(com.chengyinhub.business.service.IGrowthService.class));
-        ReflectionTestUtils.setField(controller, "xpBudgetService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "xpBudgetService",
                 mock(com.chengyinhub.business.service.IXpBudgetService.class));
-        ReflectionTestUtils.setField(controller, "rewardDropService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "rewardDropService",
                 mock(com.chengyinhub.business.service.IRewardDropService.class));
-        ReflectionTestUtils.setField(controller, "playerBadgeMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerBadgeMapper",
                 mock(com.chengyinhub.business.mapper.PlayerBadgeMapper.class));
-        ReflectionTestUtils.setField(controller, "playAttemptLogMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playAttemptLogMapper",
                 mock(com.chengyinhub.business.mapper.PlayAttemptLogMapper.class));
-        ReflectionTestUtils.setField(controller, "memberCollectibleMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "memberCollectibleMapper",
                 mock(com.chengyinhub.business.mapper.MemberCollectibleMapper.class));
 
         when(nodeService.selectCmsTopicNodeList(any())).thenReturn(new ArrayList<CmsTopicNode>());
@@ -103,7 +103,7 @@ class PlaySelfPlayCompletionTest {
     }
 
     private void advance(Long actId) {
-        ReflectionTestUtils.invokeMethod(controller, "advanceProgress", MEMBER, node(), actId, null);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "advanceProgress", MEMBER, node(), actId, null);
     }
 
     /**

@@ -93,7 +93,7 @@ class CityStationOrderAcceptanceTest {
         pendingPhoto.setNodeId(1L);
         pendingPhoto.setStatus(0);
         when(progress.selectPlayerNodeProgressList(any())).thenReturn(List.of(pendingPhoto));
-        Boolean allowed = ReflectionTestUtils.invokeMethod(controller, "isPrevDone", MEMBER, ACT, second);
+        Boolean allowed = com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "isPrevDone", MEMBER, ACT, second);
         assertFalse(allowed, "拍照待审不算完成,第二站不能提前通过");
 
         PlayerNodeProgress done = new PlayerNodeProgress();

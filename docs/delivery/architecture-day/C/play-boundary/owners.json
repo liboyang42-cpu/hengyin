@@ -1,0 +1,124 @@
+{
+  "base": "d49c12b820419308236010e0710f96d7bf48c4c9",
+  "controller": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+  "owners": {
+    "PlayNodeContext": [
+      "nodeScope",
+      "playContext",
+      "isDelistedNode",
+      "hasCompletedNodeFact",
+      "findNodeProgressRow",
+      "isPureOnlineNode",
+      "isAppSensorNode",
+      "isPhotoFilterNode",
+      "isPrevDone",
+      "routeAccessError",
+      "unlockGateError",
+      "parseGeoCoordinate",
+      "activityTimeError",
+      "resolveMode",
+      "resolveCtx",
+      "leadGateError",
+      "normalizeAnswer",
+      "frozenAnswer",
+      "frozenTemplateView",
+      "effectiveTemplate"
+    ],
+    "PlayCompletionFacts": [
+      "isTopicCompleted",
+      "isTopicCompletedFor",
+      "isCompletedCompletionFact",
+      "completedExplorePassOwnedBy",
+      "exploreRegistration",
+      "isRegistered",
+      "activityRegistration",
+      "validSelfPlayPass",
+      "topicHistoryBlocked",
+      "historyReadableNode",
+      "hasSelfPlayRegistration",
+      "isExploreChapterRedeemed"
+    ],
+    "PlayNodeQueryApplication": [
+      "resolveCoupon",
+      "visibleBranchNodes",
+      "shopDayCrowdedThreshold",
+      "shopDayServiceCapacityPerHour",
+      "shopDayExpectedWaitMinutes",
+      "vitalsOn",
+      "prepareNodes",
+      "projectNodeBeforeRuntime",
+      "projectFrozenTemplate",
+      "finishNode",
+      "finishNodes",
+      "appendAssignedRole"
+    ],
+    "PlayHistoryQueryApplication": [
+      "ending",
+      "myCompleted"
+    ],
+    "PlayPlayerQueryApplication": [
+      "companionLine",
+      "defaultCompanionLine",
+      "leaderboard",
+      "growth",
+      "achievements"
+    ],
+    "PlayBasicIntentApplication": [
+      "basicIntentScope",
+      "basicActionContext",
+      "basicActionReceipt",
+      "executeBasicIntent",
+      "basicReplay",
+      "basicJson",
+      "basicHash",
+      "basicRequestId"
+    ],
+    "PlayBasicCommandApplication": [
+      "checkin",
+      "checkinOnce",
+      "recordFirstSuccessfulScan",
+      "scanEntry",
+      "answer",
+      "answerOnce",
+      "arrive",
+      "arriveOnce",
+      "sensorResult"
+    ],
+    "PlayPhotoCommandApplication": [
+      "photo",
+      "verifyPhotoUploadFactOrError"
+    ],
+    "PlayPuzzleCommandApplication": [
+      "revealPuzzle",
+      "puzzleHint",
+      "unlockHint",
+      "hintUnlockCost"
+    ],
+    "PlayPreferenceApplication": [
+      "preference",
+      "submitPreference",
+      "confirmPreferenceTag",
+      "revokePreferenceTag",
+      "correctPreferenceTag",
+      "newLifeOperatingSystem",
+      "resolvePreferencePlayCtx"
+    ],
+    "PlayNodeCompletionApplication": [
+      "advanceProgress",
+      "collect",
+      "logAttempt",
+      "claimNodeMedal",
+      "refreshBingo",
+      "grantConditionalReward",
+      "grantTemplateCoupon",
+      "grantCouponById"
+    ],
+    "PlayTaskPresentation": [
+      "shopDayProofData"
+    ],
+    "PlayEntryApplication": [
+      "nodes",
+      "routeState"
+    ]
+  }
+}

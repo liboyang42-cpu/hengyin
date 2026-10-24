@@ -22,7 +22,7 @@ final class BasicPlayCommandFixtures {
     private BasicPlayCommandFixtures() { }
 
     static void install(ApiPlayProgressController controller) {
-        if (ReflectionTestUtils.getField(controller, "playCommandReceiptMapper") == null) {
+        if (com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "playCommandReceiptMapper") == null) {
             GameSessionRuntimeMapper receipts = mock(GameSessionRuntimeMapper.class);
             Map<String, GameCommandReceipt> saved = new HashMap<>();
             when(receipts.selectReceiptForUpdate(anyLong(), anyLong(), anyString())).thenAnswer(c -> saved.get(receiptKey(c.getArgument(0), c.getArgument(1), c.getArgument(2))));
@@ -34,14 +34,14 @@ final class BasicPlayCommandFixtures {
                 receipt.setId((long) saved.size() + 1); saved.put(key, receipt); return 1;
             });
             when(receipts.completeReceipt(any())).thenReturn(1);
-            ReflectionTestUtils.setField(controller, "playCommandReceiptMapper", receipts);
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playCommandReceiptMapper", receipts);
         }
-        if (ReflectionTestUtils.getField(controller, "playCommandRouteMapper") == null) {
-            Object runtime = ReflectionTestUtils.getField(controller, "topicRouteRuntimeService");
+        if (com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "playCommandRouteMapper") == null) {
+            Object runtime = com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "topicRouteRuntimeService");
             TopicRouteSessionMapper routes = runtime instanceof TopicRouteRuntimeServiceImpl
                     ? (TopicRouteSessionMapper) ReflectionTestUtils.getField(runtime, "routeMapper")
                     : mock(TopicRouteSessionMapper.class);
-            ReflectionTestUtils.setField(controller, "playCommandRouteMapper", routes);
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playCommandRouteMapper", routes);
         }
     }
 
@@ -54,7 +54,7 @@ final class BasicPlayCommandFixtures {
     static void routeVersion(ApiPlayProgressController controller, Long activity, Long topic, int version) {
         install(controller);
         TopicRouteSession session = new TopicRouteSession(); session.setId(99L); session.setVersion(version);
-        TopicRouteSessionMapper routes = (TopicRouteSessionMapper) ReflectionTestUtils.getField(controller, "playCommandRouteMapper");
+        TopicRouteSessionMapper routes = (TopicRouteSessionMapper) com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "playCommandRouteMapper");
         when(routes.selectCurrentByOwner(activity, topic, controller.getAppUserId())).thenReturn(session);
         when(routes.selectAccessibleByIdForUpdate(99L, controller.getAppUserId())).thenReturn(session);
     }
@@ -66,16 +66,16 @@ final class BasicPlayCommandFixtures {
         if (topicId == null) throw new IllegalStateException("测试必须声明原主题 scope");
         Long member = controller.getAppUserId();
         Map<String, Object> fields = new HashMap<>();
-        IGameSessionRuntimeService shared = (IGameSessionRuntimeService) ReflectionTestUtils.getField(controller, "gameSessionRuntimeService");
+        IGameSessionRuntimeService shared = (IGameSessionRuntimeService) com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "gameSessionRuntimeService");
         var snapshot = shared == null ? null : shared.sharedRouteSnapshot(member, topicId, activityId, Long.valueOf(node));
         if (snapshot != null) {
-            GameSessionRuntimeMapper receipts = (GameSessionRuntimeMapper) ReflectionTestUtils.getField(controller, "playCommandReceiptMapper");
+            GameSessionRuntimeMapper receipts = (GameSessionRuntimeMapper) com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "playCommandReceiptMapper");
             GameSession session = receipts.selectSessionByActivity(activityId);
             if (session == null) throw new IllegalStateException("共享局夹具必须声明原 session/revision/runtime/epoch");
             fields.put("routeSessionId", session.getId()); fields.put("expectedRouteVersion", session.getRevision());
             fields.put("runtimeInstance", snapshot.path("runtimeInstance").asText()); fields.put("authorityEpoch", snapshot.path("authorityEpoch").asInt());
         } else {
-            TopicRouteSessionMapper routes = (TopicRouteSessionMapper) ReflectionTestUtils.getField(controller, "playCommandRouteMapper");
+            TopicRouteSessionMapper routes = (TopicRouteSessionMapper) com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "playCommandRouteMapper");
             TopicRouteSession session = routes.selectCurrentByOwner(activityId, topicId, member);
             if (session == null) session = routes.selectByOwner(activityId, topicId, member, "default");
             fields.put("routeSessionId", session == null ? 0L : session.getId());
