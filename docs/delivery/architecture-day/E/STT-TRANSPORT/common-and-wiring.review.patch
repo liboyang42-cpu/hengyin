@@ -1,0 +1,173 @@
+--- a/chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java
++++ b/chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java
+@@ -138,6 +138,12 @@
+     public static String sendJsonPost(String url, String json, String bearer,
+             long deadlineNanos, AttemptLease lease)
+     {
++        return sendJsonPost(url, json, bearer, deadlineNanos, lease, java.util.Map.of());
++    }
++
++    public static String sendJsonPost(String url, String json, String bearer,
++            long deadlineNanos, AttemptLease lease, java.util.Map<String, String> additionalHeaders)
++    {
+         if (lease == null || !lease.transfer())
+         {
+             throw notSent("third-party HTTP lease unavailable");
+@@ -146,6 +152,7 @@
+         try
+         {
+             URL target = jsonTarget(url);
++            java.util.Map<String, String> headers = checkedJsonHeaders(additionalHeaders);
+             if (bearer == null || bearer.isBlank() || bearer.chars().anyMatch(c -> c <= 32 || c >= 127))
+             {
+                 throw notSent("invalid third-party HTTP authorization");
+@@ -168,7 +175,7 @@
+             if (remainingMillis(boundedDeadline) <= 0) throw notSent("third-party HTTP total timeout");
+             handedToAttempt = true;
+             return executeAttempt("POST", target, body, MediaType.APPLICATION_JSON_VALUE,
+-                    Constants.UTF8, false, policy, boundedDeadline, bearer, lease).body;
++                    Constants.UTF8, false, policy, boundedDeadline, bearer, lease, headers).body;
+         }
+         catch (HttpRequestException error)
+         {
+@@ -185,6 +192,17 @@
+             if (!handedToAttempt) lease.complete();
+         }
+     }
++
++    /** Only the existing ASR non-streaming control is accepted; never forward arbitrary auth/host/framing headers. */
++    private static java.util.Map<String, String> checkedJsonHeaders(java.util.Map<String, String> headers)
++    {
++        if (headers == null) throw notSent("invalid third-party HTTP headers");
++        if (headers.isEmpty()) return java.util.Map.of();
++        if (headers.size() != 1 || !"disable".equals(headers.get("X-DashScope-SSE")))
++            throw notSent("invalid third-party HTTP headers");
++        return java.util.Map.of("X-DashScope-SSE", "disable");
++    }
++
+
+     private static URL jsonTarget(String url)
+     {
+@@ -288,6 +306,14 @@
+             String requestContentType, String responseCharset, boolean trustAnyCertificate,
+             RequestPolicy policy, long deadlineNanos, String bearer, AttemptLease lease)
+     {
++        return executeAttempt(method, target, body, requestContentType, responseCharset,
++                trustAnyCertificate, policy, deadlineNanos, bearer, lease, java.util.Map.of());
++    }
++
++    private static AttemptResult executeAttempt(String method, URL target, byte[] body,
++            String requestContentType, String responseCharset, boolean trustAnyCertificate,
++            RequestPolicy policy, long deadlineNanos, String bearer, AttemptLease lease, java.util.Map<String, String> headers)
++    {
+         AtomicReference<HttpRequestBase> activeRequest = new AtomicReference<>();
+         AtomicBoolean cancelled = new AtomicBoolean(false);
+         AttemptState state = lease == null ? null : new AttemptState(lease);
+@@ -296,7 +322,7 @@
+             {
+                 if (state != null && !state.startWorker()) throw notSent("third-party HTTP request cancelled");
+                 return executeBlocking(method, target, body, requestContentType, responseCharset,
+-                        trustAnyCertificate, policy, deadlineNanos, activeRequest, cancelled, bearer, state);
++                        trustAnyCertificate, policy, deadlineNanos, activeRequest, cancelled, bearer, state, headers);
+             }
+             finally
+             {
+@@ -362,6 +388,16 @@
+             AtomicReference<HttpRequestBase> activeRequest, AtomicBoolean cancelled,
+             String bearer, AttemptState state)
+     {
++        return executeBlocking(method, target, body, requestContentType, responseCharset,
++                trustAnyCertificate, policy, deadlineNanos, activeRequest, cancelled, bearer, state, java.util.Map.of());
++    }
++
++    private static AttemptResult executeBlocking(String method, URL target, byte[] body,
++            String requestContentType, String responseCharset, boolean trustAnyCertificate,
++            RequestPolicy policy, long deadlineNanos,
++            AtomicReference<HttpRequestBase> activeRequest, AtomicBoolean cancelled,
++            String bearer, AttemptState state, java.util.Map<String, String> headers)
++    {
+         HttpRequestBase request = null;
+         boolean reusable = false;
+         try
+@@ -378,6 +414,8 @@
+                 // A provider/proxy auth challenge must not automatically replay an authenticated POST.
+                 request.setConfig(RequestConfig.copy(request.getConfig()).setAuthenticationEnabled(false).build());
+             }
++            for (java.util.Map.Entry<String, String> header : headers.entrySet())
++                request.setHeader(header.getKey(), header.getValue());
+             activeRequest.set(request);
+             if (cancelled.get() || Thread.currentThread().isInterrupted())
+             {
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java
+@@ -28,6 +28,7 @@
+         addEndpoint(endpoints, text.getBaseUrl());
+         addEndpoint(endpoints, vision.getBaseUrl());
+         endpoints.add(voice.baseUrl()); // Fixed startup voice origin; the same registry/permits as text and vision.
++        if (voice.isAsrUsable()) endpoints.add(voice.asrUrl()); // Fixed ASR origin; no runtime registry.
+         AiProviderProperties.ProviderConfig minimax = props.getProviders() == null
+                 ? null : props.getProviders().get("minimax");
+         if (minimax != null) addEndpoint(endpoints, minimax.getBaseUrl());
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/DashScopeSpeechToTextServiceTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/DashScopeSpeechToTextServiceTest.java
+@@ -7,6 +7,8 @@
+ import com.alibaba.fastjson2.JSON;
+ import com.alibaba.fastjson2.JSONObject;
+ import com.chengyinhub.business.service.ai.AiServiceException;
++import com.chengyinhub.business.service.ai.AiHttpAdmission;
++import org.springframework.test.util.ReflectionTestUtils;
+ import com.chengyinhub.common.config.AiVoiceConfig;
+ import com.sun.net.httpserver.HttpServer;
+ import cn.hutool.core.io.IoUtil;
+@@ -102,7 +104,7 @@
+         {
+             AiVoiceConfig config = usableConfig();
+             String endpoint = "http://127.0.0.1:" + server.getAddress().getPort() + "/asr";
+-            DashScopeSpeechToTextService service = new DashScopeSpeechToTextService(config, endpoint);
++            DashScopeSpeechToTextService service = admittedService(config, endpoint);
+
+             String text = service.transcribe("ID3-test".getBytes(StandardCharsets.UTF_8), "mp3");
+
+@@ -132,8 +134,7 @@
+         HttpServer server = fixedResponse(200, "{\"code\":\"InvalidParameter\",\"message\":\"bad audio\"}");
+         try
+         {
+-            DashScopeSpeechToTextService service = new DashScopeSpeechToTextService(
+-                    usableConfig(), endpoint(server));
++            DashScopeSpeechToTextService service = admittedService(usableConfig(), endpoint(server));
+
+             assertThrows(AiServiceException.class,
+                     () -> service.transcribe(new byte[]{'x'}, "mp3"));
+@@ -150,8 +151,7 @@
+         HttpServer server = fixedResponse(200, "{\"output\":{\"text\":\"   \"}}");
+         try
+         {
+-            DashScopeSpeechToTextService service = new DashScopeSpeechToTextService(
+-                    usableConfig(), endpoint(server));
++            DashScopeSpeechToTextService service = admittedService(usableConfig(), endpoint(server));
+
+             assertNull(service.transcribe(new byte[]{'x'}, "wav"));
+         }
+@@ -193,7 +193,7 @@
+         try
+         {
+             String endpoint = "http://127.0.0.1:" + server.getAddress().getPort() + "/asr";
+-            DashScopeSpeechToTextService service = new DashScopeSpeechToTextService(usableConfig(), endpoint);
++            DashScopeSpeechToTextService service = admittedService(usableConfig(), endpoint);
+
+             assertEquals("收到", service.transcribe(new byte[]{'x'}, format));
+
+@@ -207,6 +207,13 @@
+         {
+             server.stop(0);
+         }
++    }
++
++    private DashScopeSpeechToTextService admittedService(AiVoiceConfig config, String endpoint)
++    {
++        DashScopeSpeechToTextService service = new DashScopeSpeechToTextService(config, endpoint);
++        ReflectionTestUtils.setField(service, "admission", new AiHttpAdmission(java.util.List.of(endpoint)));
++        return service;
+     }
+
+     private AiVoiceConfig usableConfig()
