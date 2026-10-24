@@ -88,6 +88,29 @@
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/NpcAsrIntentMySqlIT.java"
       ],
       "test_limit": "NOT_RUN；类型及Mapper owner登记不证明方法级经济授权或Redis/MySQL原子性。"
+    },
+    {
+      "id": "coop-original-manual-read",
+      "owner": "chengyinhub-system:CoopSettlementManualCaseReadService",
+      "entry": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementManualCaseReadService.java",
+      "symbol": "detail",
+      "callers": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/SettlementController.java"
+      ],
+      "http_entries": [
+        "GET /business/settlement/manual-case/list",
+        "GET /business/settlement/manual-case/{id}"
+      ],
+      "authorization": "business:settlement:list",
+      "persistent_sources": [
+        "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementManualCaseReadMapper.xml"
+      ],
+      "check": "原list/detail只读投影与脱敏来源；不注册business write command，不授manual-case表写权。VERSION类引用只表示源码常量复用，不能证明方法级只读。",
+      "existing_test_sources": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CoopSettlementManualCaseReadMySqlIT.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/SettlementManualCaseControllerTest.java"
+      ],
+      "test_limit": "NOT_RUN；classgraph/SELECT源码身份不证明权限、脱敏、传递只读或生产链。"
     }
   ],
   "business_commands": [

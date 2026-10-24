@@ -1082,6 +1082,18 @@ class OriginalProducerWiringPolicyTest(unittest.TestCase):
         self.put_write("ai_quota_reservation", "CoopSettlementManualCaseMapper")
         self.assert_rule(self.source_cli(trusted, self.commit()), "NEW_BUSINESS_OWNER_WRITE")
 
+    def test_manual_read_namespace_does_not_gain_original_table_write_permission(self):
+        trusted, _ = self.prepare_policy()
+        path = "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementManualCaseReadMapper.xml"
+        namespace = "com.chengyinhub.business.mapper.CoopSettlementManualCaseReadMapper"
+        self.write(path, mapper('<select id="selectById">select id,state from coop_settlement_manual_case where id=#{id}</select>', namespace))
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(0, status, report)
+        policy = gate.business_policy()
+        self.assertNotIn("chengyinhub-system:" + namespace, policy["writers"])
+        self.put_write("coop_settlement_manual_case", "CoopSettlementManualCaseReadMapper")
+        self.assert_rule(self.source_cli(trusted, self.commit()), "UNDECLARED_WRITE_BINDING")
+
     def test_candidate_cannot_clear_manual_fact_or_add_an_unapproved_consumer(self):
         trusted, _ = self.prepare_policy()
         original = json.loads((trusted / "owners.json").read_text())
