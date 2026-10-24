@@ -1,6 +1,7 @@
 'use strict'
 
 const { limitTrack, normalizeTrack } = require('../../../utils/roam-track-simplify.js')
+const { fitRoute } = require('../../../utils/roam-route-geometry.js')
 
 const WIDTH = 670
 const HEIGHT = 520
@@ -8,56 +9,24 @@ const PADDING = 60
 const REPLAY_FRAME_MS = 120
 const REPLAY_MAX_FRAMES = 24
 
+// 画框与取舍沿用原值(670×520、四周 60、POI 计入包围盒、<2px 线段丢弃);几何本体见 utils/roam-route-geometry(C:U-117)。
 function buildRouteGeometry(session) {
   const track = limitTrack(session && session.track)
   if (track.length < 2) return { segs: [], poiDots: [] }
 
   const kx = Math.cos(track[0].lat * Math.PI / 180)
-  const project = (point) => ({ x: point.lng * kx, y: -point.lat })
-  const trackPoints = track.map(project)
-  const poiPoints = normalizeTrack(session && session.pois).map(project)
-  const all = trackPoints.concat(poiPoints)
-  let minX = Infinity
-  let minY = Infinity
-  let maxX = -Infinity
-  let maxY = -Infinity
-  all.forEach((point) => {
-    minX = Math.min(minX, point.x)
-    minY = Math.min(minY, point.y)
-    maxX = Math.max(maxX, point.x)
-    maxY = Math.max(maxY, point.y)
+  const fit = fitRoute(track, normalizeTrack(session && session.pois), {
+    width: WIDTH, height: HEIGHT, padTop: PADDING, padBottom: PADDING, padX: PADDING,
+    project: (point) => ({ x: point.lng * kx, y: -point.lat }),
+    poisInBounds: true, minSpan: 1e-9, minSegLen: 2,
   })
-  const scale = Math.min(
-    (WIDTH - PADDING * 2) / Math.max(1e-9, maxX - minX),
-    (HEIGHT - PADDING * 2) / Math.max(1e-9, maxY - minY),
-  )
-  const offsetX = (WIDTH - (maxX - minX) * scale) / 2 - minX * scale
-  const offsetY = (HEIGHT - (maxY - minY) * scale) / 2 - minY * scale
-  const x = (point) => point.x * scale + offsetX
-  const y = (point) => point.y * scale + offsetY
-  const segs = []
-  for (let index = 1; index < trackPoints.length; index += 1) {
-    const fromX = x(trackPoints[index - 1])
-    const fromY = y(trackPoints[index - 1])
-    const toX = x(trackPoints[index])
-    const toY = y(trackPoints[index])
-    const length = Math.hypot(toX - fromX, toY - fromY)
-    if (length < 2) continue
-    segs.push({
-      i: index,
-      x: Math.round(fromX),
-      y: Math.round(fromY),
-      len: Math.round(length) + 2,
-      deg: Math.round(Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI),
-    })
-  }
-  const poiDots = poiPoints.map((point, index) => ({
+  const poiDots = fit.poiPoints.map((point, index) => ({
     i: index,
-    x: Math.round(x(point)),
-    y: Math.round(y(point)),
+    x: Math.round(point.x),
+    y: Math.round(point.y),
     tone: index % 4,
   }))
-  return { segs, poiDots }
+  return { segs: fit.segs, poiDots }
 }
 
 function replayFrame(segs, requestedCount) {
