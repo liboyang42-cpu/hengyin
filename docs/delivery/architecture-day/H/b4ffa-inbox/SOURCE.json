@@ -1,0 +1,125 @@
+{
+  "source": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+  "tree": "9201981a6fbff835c0ce30dda1cc5e32521ad50d",
+  "parent": "a3fdd1650f26d88ec8c0cccd30bb37488cda06a9",
+  "public_base": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "review_start_head": "344eefd8641302d4676e288361ef078c1b45d323",
+  "read_files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationCallbackIntentMySqlIT.java",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "7784e545e8664981283c90da918f283a45e98537"
+    },
+    {
+      "path": "docs/delivery/architecture-day/B/registration-callback-intent-delivery.md",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "927b9ba899dc7beeaf705d5801ecc5ca2570076a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "7ea1e5bd03b0f71eddd58ed21789430fda0f32fc"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "e4c5cbc84e76dd25026aa7c4cdf6f161ba6d84a4"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "66b3180ef351fc433ee5a09a712b164b41ee3a67"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackClaimService.java",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "88ce24134ce737cfb67802cd8c98280af87a0c63"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "100f684ba7169d1db0ab056aac2ddcc5ab6d8b2b"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "43228b6a14ecfe7c508364beede6759ff47e1f54"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsPointsSettingServiceImpl.java",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "be5b7d19aa8b1c1cc15e76dd195f9c1b2dfd94bb"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CommittedBusinessNotice.java",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "52420d22efc9798c337e2324d65be2e3b37b0922"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/P0AcceptanceSchema.java",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "352a5c4fbd998ed8543f0520e28295a85e92fb4d"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/MybatisItDatabase.java",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "b70ab6172bc91764ed620e3b46c3604becc42f3a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "294c21f6c141975126d1197bd44f711d7e8e7db1"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackInboxMapper.xml",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "32181a20f33a62391eafaff5d752ab9c5d68dd0b"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberMapper.xml",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "75345e5225a673822ecf6af0a80c91e2d6b1f63c"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberPointsDetailMapper.xml",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "fd40adfa4edb22f37e38537620e986c27da48ad1"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsPointsSettingMapper.xml",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "d077a47c134aca5398ae6349e4b59d280e9fb402"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationScanMapper.xml",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "392881b3ca61b6629cbbf1d2dda999ef46cfbdae"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_app_open_id.sql",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "846cbe7aef91effbde40e7ec07a268095f217d1e"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260930_registration_first_successful_scan.sql",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "4b4f28cc000e439d5b8ad882d4462732f01add50"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_wx_payment_callback_inbox_outbox_20260725.sql",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "bd9053b41216476e557064c9c374baa8f4eeb8ce"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "5ac75efdcb4e5d58efdb262bdfd403fb54e62d9e"
+    },
+    {
+      "path": "sql/base_schema_20260818.sql",
+      "ref": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "sha": "033d8990a75fb99e6b02d05948c03ac58f4d017b"
+    }
+  ],
+  "runtime": "NOT_RUN"
+}
