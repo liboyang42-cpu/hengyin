@@ -42,7 +42,7 @@ class CoopDepositSettlementAttemptMySqlIT {
     private TransactionTemplate tx;
     private CoopInviteMapper mapper;
     private CmsTopicServiceImpl topic;
-    private WechatPayServiceImpl gateway;
+    private WechatPaymentSdkGateway gateway;
     private JsapiService sdk;
     private Transaction provider;
     private boolean closesAsPaid;
@@ -103,14 +103,15 @@ class CoopDepositSettlementAttemptMySqlIT {
         db.update("DELETE FROM coop_invite");
         db.update("INSERT INTO coop_invite(id,invite_type,from_type,from_id,to_type,to_id,status,deposit_status,deposit_amount,deposit_out_trade_no,del_flag) "
                 + "VALUES(89,0,'talent',7,'merchant',8,1,1,50.00,?,0)", BUSINESS);
-        gateway = spy(new WechatPayServiceImpl());
+        WechatPayServiceImpl facade = WechatPayTestWiring.facade();
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.getMerchantId()).thenReturn("merchant");
         sdk = WechatPaymentIntentTestSupport.absentOrderSdk();
-        ReflectionTestUtils.setField(gateway, "wxPayConfig", config);
-        ReflectionTestUtils.setField(gateway, "paymentIntentJdbc", db);
-        ReflectionTestUtils.setField(gateway, "paymentIntentTransactions", transactions);
-        ReflectionTestUtils.setField(gateway, "jsapiService", sdk);
+        WechatPayTestWiring.setField(facade, "wxPayConfig", config);
+        WechatPayTestWiring.setField(facade, "paymentIntentJdbc", db);
+        WechatPayTestWiring.setField(facade, "paymentIntentTransactions", transactions);
+        WechatPayTestWiring.setField(facade, "jsapiService", sdk);
+        gateway = spy((WechatPaymentSdkGateway) WechatPayTestWiring.getField(facade, "gateway"));
         assertEquals(BUSINESS, gateway.freezePaymentIntent(BUSINESS, "merchant", "wx-original", "JSAPI", "CNY", 5000,
                 "payer-original", "deposit", "https://example.test/notify"));
         reset(sdk);

@@ -166,6 +166,31 @@ class TandianriBatch0FundsMybatisIntegrationTest {
         }
     }
 
+    @Test
+    void topicSettlementClaimRejectsEligibilityChangesAfterTheScanAndStillClaimsValidTopicOnce() throws Exception {
+        try (SqlSession session = factory.openSession(true)) {
+            CmsTopicMapper mapper = session.getMapper(CmsTopicMapper.class);
+            assertTrue(mapper.selectTopicsForSettlement().stream().anyMatch(t -> Long.valueOf(7002L).equals(t.getId())));
+            execute("UPDATE cms_topic SET del_flag=2 WHERE id=7002");
+            assertEquals(0, mapper.claimTopicForSettlement(7002L));
+            execute("UPDATE cms_topic SET del_flag=0,status=0 WHERE id=7002");
+            assertEquals(0, mapper.claimTopicForSettlement(7002L));
+            execute("UPDATE cms_topic SET status=1,end_date=NOW() WHERE id=7002");
+            assertEquals(0, mapper.claimTopicForSettlement(7002L));
+            execute("UPDATE cms_topic SET end_date=DATE_SUB(NOW(),INTERVAL 1 DAY),product_type=2 WHERE id=7002");
+            assertEquals(0, mapper.claimTopicForSettlement(7002L));
+            execute("UPDATE cms_topic SET product_type=1 WHERE id=7002",
+                    "INSERT INTO cms_registration(id,owner_type,owner_id,member_id,payable_amount,payment_status,registration_status,verification_status,refund_deadline) "
+                            + "VALUES(7399,1,7002,7499,10.00,2,2,0,DATE_ADD(NOW(),INTERVAL 1 DAY))");
+            assertEquals(0, mapper.claimTopicForSettlement(7002L));
+            assertEquals(0, scalarInt("SELECT is_settlement FROM cms_topic WHERE id=7002"));
+            execute("UPDATE cms_registration SET verification_status=1 WHERE id=7399");
+            assertEquals(1, mapper.claimTopicForSettlement(7002L));
+            assertEquals(0, mapper.claimTopicForSettlement(7002L));
+            assertEquals(1, scalarInt("SELECT is_settlement FROM cms_topic WHERE id=7002"));
+        }
+    }
+
     /**
      * 2026-09-16 用户硬规则:收款方的钱要等所有玩家都退不了才可提现。活动结算即入余额,
      * 所以 end_date 已过、但集合前 24h 退款截止还没到(结束时间填得比集合早)时不许结。

@@ -2,6 +2,7 @@ package com.chengyinhub.business.service.support;
 
 import java.util.*;
 import com.chengyinhub.business.domain.*;
+import com.chengyinhub.business.service.impl.NpcProfileService;
 import com.chengyinhub.business.domain.dto.ChapterDTO;
 import com.chengyinhub.business.domain.dto.NodeDTO;
 import com.chengyinhub.business.mapper.*;

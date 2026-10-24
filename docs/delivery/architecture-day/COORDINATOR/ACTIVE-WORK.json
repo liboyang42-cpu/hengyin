@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T07:24:14.374473+00:00",
+  "updated_utc": "2026-10-24T07:37:51.902816+00:00",
   "source_parent": "678a23367ff4c8abd2806f2b6ccd983aec8342b3",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -182,5 +182,21 @@
     "change": "propagate original TransientDataAccessException through PlayNodeCompletionApplication to existing transaction/retry; keep ordinary best-effort and disabled coupon rules",
     "tests": "4 new ordinary tests, total CouponNotIssuableSkipContractTest=10; Java NOT_RUN",
     "remaining": "preference fixed receipt/fingerprint semantics still open"
+  },
+  "latest_ci": {
+    "run_id": 40074201165,
+    "source": "e4e9f6042ba34fb571c3bcfbfe59e248000ef637",
+    "frozen_branch": "codex/architecture-day-batch-abcf-g-20261024",
+    "conclusion": "FAIL",
+    "backend": "compile failed TopicPublicationContentGuard:375 missing NpcProfileService import; Java tests not reached",
+    "migration": "new master community_open_flags declaration absent in behind candidate; preserve ratchet, inspect actual upstream",
+    "mini": "five unit shard source-contract failures; some still inspect moved controller members; inspect each before classifying",
+    "passed": "secret scan, source architecture gate, admin UI gates, migration layout and mini static gates; not business acceptance"
+  },
+  "followup_repairs": {
+    "topic_atomic_eligibility": "original scan predicate extracted unchanged to one shared SQL fragment, atomic claim rechecks same predicate; deterministic scan-to-mutation MySQL case added",
+    "deposit_fixture": "real extracted SDK gateway spy plus existing intent-store wiring, all8 test bodies retained",
+    "compile_import": "NpcProfileService explicit import restored",
+    "checks": "36 targeted gate tests PASS, secret-file-gate PASS; new Java/MySQL NOT_RUN"
   }
 }

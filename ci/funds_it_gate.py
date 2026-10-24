@@ -141,7 +141,7 @@ EXPECTED = {
     "ExploreScanReplayRealDbIT": 4,
     # 2026-09-16 提现闸(用户硬规则「等所有玩家都退不了才可提现」):14 → 16,+2 = 活动/主题结算选单
     # 在仍有已付未退未核销、退款截止未到的票时不入选(活动结束早于集合 / 自由定向票期长于主题)。
-    "TandianriBatch0FundsMybatisIntegrationTest": 16,
+    "TandianriBatch0FundsMybatisIntegrationTest": 17,
     "ShopDayOneTicketMySqlIT": 5,
     # 2026-08-17 R9:11 → 18,+7 = R6 产品迁移真库重放与两向歧义(此前零执行证据)、
     # R6 资金终结闭环 11 条回读逐条消费、R7 两条写前 guard 的三条错 schema 负控

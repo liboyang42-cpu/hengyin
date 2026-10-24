@@ -41,6 +41,19 @@ class SettlementRefundDeadlineGateSqlTest {
         assertTrue(sql.contains("coalesce(r.refund_deadline, case when t.mode = 2 then t.end_time else t.start_time end) > now()"), sql);
     }
 
+
+    @Test
+    void topicSettlementClaimRechecksAllScanEligibilityAtItsAtomicWrite() throws Exception {
+        String claim = select("mapper/business/CmsTopicMapper.xml", "claimTopicForSettlement");
+        for (String predicate : new String[] {"del_flag = 0", "status = 1", "is_settlement = 0",
+                "end_date <= date_sub(now(), interval 12 hour)",
+                "(product_type is null or product_type <> 2)", "not exists (",
+                "r.payment_status = 2", "r.registration_status = 2",
+                "coalesce(r.refund_deadline, case when t.mode = 2 then t.end_time else t.start_time end) > now()"}) {
+            assertTrue(claim.contains(predicate), claim);
+        }
+    }
+
     private static String select(String resource, String id) throws Exception {
         String xml;
         try (InputStream in = SettlementRefundDeadlineGateSqlTest.class.getClassLoader().getResourceAsStream(resource)) {
@@ -50,8 +63,16 @@ class SettlementRefundDeadlineGateSqlTest {
             for (int n; (n = in.read(buf)) > 0; ) out.write(buf, 0, n);
             xml = new String(out.toByteArray(), StandardCharsets.UTF_8);
         }
-        Matcher m = Pattern.compile("<select id=\"" + id + "\".*?</select>", Pattern.DOTALL).matcher(xml);
+        Matcher m = Pattern.compile("<(?:select|update) id=\"" + id + "\".*?</(?:select|update)>", Pattern.DOTALL).matcher(xml);
         assertTrue(m.find(), "找不到 " + id);
-        return m.group().replaceAll("\\s+", " ").toLowerCase();
+        String statement = m.group();
+        String include = "<include refid=\"topicSettlementEligibility\"/>";
+        if (statement.contains(include)) {
+            Matcher predicate = Pattern.compile("<sql id=\"topicSettlementEligibility\">(.*?)</sql>",
+                    Pattern.DOTALL).matcher(xml);
+            assertTrue(predicate.find(), "找不到共享结算资格");
+            statement = statement.replace(include, predicate.group(1));
+        }
+        return statement.replaceAll("\\s+", " ").toLowerCase();
     }
 }
