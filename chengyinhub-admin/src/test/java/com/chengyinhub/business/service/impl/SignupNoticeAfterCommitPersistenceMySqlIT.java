@@ -448,12 +448,16 @@ public class SignupNoticeAfterCommitPersistenceMySqlIT {
     void concurrentPaymentClaimLoserDoesNotCreateAnotherIntentOrWake() throws Exception {
         CyclicBarrier contenders = new CyclicBarrier(2);
         doAnswer(call -> {
-            contenders.await(10, TimeUnit.SECONDS);
             return db.update("update registration_fact set payment_status=2,registration_status=2,transaction_id=? where id=99 and payment_status=1", (String) call.getArgument(1));
         }).when(registrations).claimPaymentSuccess(eq(99L), anyString(), any());
         ExecutorService workers = Executors.newFixedThreadPool(2);
         try {
-            Callable<String> pay = () -> transaction.execute(status -> registrationService.applyConfirmedWechatPaymentWithinTransaction(callback()));
+            Callable<String> pay = () -> {
+                // Both contenders must be ready before either acquires the original business row lock.
+                // The loser cannot rendezvous inside claimPaymentSuccess while the winner holds that lock.
+                contenders.await(10, TimeUnit.SECONDS);
+                return transaction.execute(status -> registrationService.applyConfirmedWechatPaymentWithinTransaction(callback()));
+            };
             Future<String> first = workers.submit(pay), second = workers.submit(pay);
             assertEquals("SUCCESS", first.get(15, TimeUnit.SECONDS));
             assertEquals("SUCCESS", second.get(15, TimeUnit.SECONDS));

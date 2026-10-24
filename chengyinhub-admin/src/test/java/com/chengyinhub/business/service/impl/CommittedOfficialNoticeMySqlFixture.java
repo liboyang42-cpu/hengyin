@@ -85,8 +85,30 @@ final class CommittedOfficialNoticeMySqlFixture implements AutoCloseable {
                 + "cron_expression varchar(255),misfire_policy varchar(20),concurrent varchar(20),status varchar(20),"
                 + "create_by varchar(64),create_time datetime,remark text) engine=InnoDB");
         new ResourceDatabasePopulator(new FileSystemResource(sqlRoot.resolve("migration_20261013_b_im_notification_intent.sql")),
-                new FileSystemResource(sqlRoot.resolve("migration_20261024_d_committed_official_notice_wx.sql")),
-                new FileSystemResource(sqlRoot.resolve("migration_20261024_c_before_start_notice_typed.sql"))).execute(source);
+                new FileSystemResource(sqlRoot.resolve("migration_20261024_d_committed_official_notice_wx.sql"))).execute(source);
+        try {
+            // Execute the original strict preflight, DDL and readback without rewriting or skipping them.
+            new ResourceDatabasePopulator(new FileSystemResource(sqlRoot.resolve(
+                    "migration_20261024_c_before_start_notice_typed.sql"))).execute(source);
+        } catch (org.springframework.dao.DataAccessException failedMigration) {
+            // The old CAST failure contained no actual metadata. Preserve the failure and attach
+            // only schema diagnostics from this exclusive scratch database, never notification rows.
+            try {
+                failedMigration.addSuppressed(new IllegalStateException("Canonical notice schema at failure: "
+                        + db.queryForMap("SELECT VERSION() AS version, @@SESSION.sql_mode AS sql_mode")
+                        + "; " + db.queryForMap("SHOW CREATE TABLE committed_official_notice_wx")
+                        + "; columns=" + db.queryForList("SELECT column_name,data_type,column_type,is_nullable,"
+                                + "character_maximum_length,collation_name,column_default,extra,datetime_precision "
+                                + "FROM information_schema.columns WHERE table_schema=DATABASE() "
+                                + "AND table_name='committed_official_notice_wx' ORDER BY ordinal_position")
+                        + "; checks=" + db.queryForList("SELECT constraint_name,check_clause "
+                                + "FROM information_schema.check_constraints WHERE constraint_schema=DATABASE() "
+                                + "AND constraint_name LIKE 'ck_committed_official_notice_%' ORDER BY constraint_name")));
+            } catch (RuntimeException diagnosticsFailure) {
+                failedMigration.addSuppressed(diagnosticsFailure);
+            }
+            throw failedMigration;
+        }
         manager = original; tx = new TransactionTemplate(manager);
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean(); factory.setDataSource(source);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
