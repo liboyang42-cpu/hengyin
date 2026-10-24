@@ -301,6 +301,7 @@ public class TopicQueryService {
         java.util.List<CmsTopicChapter> chapters = cmsTopicChapterMapper.selectCmsTopicChapterList(probeC);
         java.util.List<com.chengyinhub.business.domain.vo.TopicTemplateChapterVO> chapterVOs = new java.util.ArrayList<>();
         java.util.Map<Long, com.chengyinhub.business.domain.vo.TopicTemplateGameVO> gameMap = new java.util.LinkedHashMap<>();
+        java.util.List<RecruitmentProjection> recruitment = new java.util.ArrayList<>();
 
         if (chapters != null && !chapters.isEmpty()) {
             for (CmsTopicChapter ch : chapters) {
@@ -398,8 +399,6 @@ public class TopicQueryService {
                     configured = ChapterRecruitmentRules.isMerchantCategory(ch.getCategoryId(), category);
                 }
                 if (configured) {
-                    com.chengyinhub.business.domain.vo.MerchantChapterRecruitmentStats stats =
-                            merchantChapterApplicationService.getRecruitmentStats(ch.getId(), ch.getMaxMerchant());
                     com.chengyinhub.business.domain.vo.TopicTemplateRecruitVO rec =
                             new com.chengyinhub.business.domain.vo.TopicTemplateRecruitVO();
                     rec.setTermsMode(StringUtils.isEmpty(ch.getTermsMode()) ? "PERK" : ch.getTermsMode());
@@ -408,21 +407,13 @@ public class TopicQueryService {
                     rec.setAllowedValidationMethods(ch.getAllowedValidationMethods());
                     rec.setMaxNodeXp(ch.getMaxNodeXp());
                     rec.setMaxMerchant(ch.getMaxMerchant());
-                    rec.setCurrentOfferCount(stats.getReservedMerchantCount());
-                    rec.setPendingApplicationCount(stats.getPendingApplicationCount());
-                    rec.setApprovedApplicationCount(stats.getApprovedApplicationCount());
-                    rec.setActiveOfferCount(stats.getActiveOfferCount());
-                    rec.setRemainingMerchantCount(stats.getRemainingMerchantCount());
-                    boolean locked = TopicLifecycleState.commercialTermsFrozen(topic.getLifecycle());
-                    boolean full = stats.getRemainingMerchantCount() != null
-                            && stats.getRemainingMerchantCount() <= 0;
-                    rec.setState(locked ? "LOCKED" : !recruitmentWindowOpen ? "CLOSED" : full ? "FULL" : "OPEN");
-                    rec.setIsOpen(recruitmentWindowOpen && !locked && !full);
+                    recruitment.add(new RecruitmentProjection(ch.getId(), ch.getMaxMerchant(), rec));
                     chVO.setRecruitStatus(rec);
                 }
                 chapterVOs.add(chVO);
             }
         }
+        applyRecruitmentStats(recruitment, topic.getLifecycle(), recruitmentWindowOpen);
         vo.setChapters(chapterVOs);
         vo.setGames(new java.util.ArrayList<>(gameMap.values()));
 
@@ -433,6 +424,44 @@ public class TopicQueryService {
         applyTemplateMeta(vo, id, viewerCanViewRecruitment);
         return vo;
     }
+
+    /** Only chapters admitted by the existing view/category gates reach this request-local batch. */
+    private void applyRecruitmentStats(java.util.List<RecruitmentProjection> targets, Integer lifecycle,
+            boolean recruitmentWindowOpen) {
+        for (int offset = 0; offset < targets.size();) {
+            int end = offset + Math.min(TopicSizeLimits.MAX_CHAPTERS, targets.size() - offset);
+            java.util.List<RecruitmentProjection> batchTargets = targets.subList(offset, end);
+            java.util.Map<Long, Integer> limits = new java.util.LinkedHashMap<>();
+            for (RecruitmentProjection target : batchTargets) {
+                if (target.chapterId() != null) limits.put(target.chapterId(), target.maxMerchant());
+            }
+            java.util.Map<Long, com.chengyinhub.business.domain.vo.MerchantChapterRecruitmentStats> results =
+                    limits.isEmpty() ? java.util.Collections.emptyMap()
+                            : merchantChapterApplicationService.getRecruitmentStatsByChapters(limits);
+            if (results == null) throw new IllegalStateException("Recruitment statistics unavailable");
+            for (RecruitmentProjection target : batchTargets) {
+                com.chengyinhub.business.domain.vo.MerchantChapterRecruitmentStats stats = target.chapterId() == null
+                        ? merchantChapterApplicationService.getRecruitmentStats(null, target.maxMerchant())
+                        : results.get(target.chapterId());
+                if (stats == null) throw new IllegalStateException("Recruitment statistics unavailable");
+                com.chengyinhub.business.domain.vo.TopicTemplateRecruitVO rec = target.view();
+                rec.setCurrentOfferCount(stats.getReservedMerchantCount());
+                rec.setPendingApplicationCount(stats.getPendingApplicationCount());
+                rec.setApprovedApplicationCount(stats.getApprovedApplicationCount());
+                rec.setActiveOfferCount(stats.getActiveOfferCount());
+                rec.setRemainingMerchantCount(stats.getRemainingMerchantCount());
+                boolean locked = TopicLifecycleState.commercialTermsFrozen(lifecycle);
+                boolean full = stats.getRemainingMerchantCount() != null
+                        && stats.getRemainingMerchantCount() <= 0;
+                rec.setState(locked ? "LOCKED" : !recruitmentWindowOpen ? "CLOSED" : full ? "FULL" : "OPEN");
+                rec.setIsOpen(recruitmentWindowOpen && !locked && !full);
+            }
+            offset = end;
+        }
+    }
+
+    private record RecruitmentProjection(Long chapterId, Integer maxMerchant,
+            com.chengyinhub.business.domain.vo.TopicTemplateRecruitVO view) { }
 
     /** Request-local rows for this admitted chapter only; no cache or SQL for an empty id set. */
     private java.util.Map<Long, CmsMemberTemplate> selectChapterTemplates(java.util.List<CmsTopicNode> nodes) {
