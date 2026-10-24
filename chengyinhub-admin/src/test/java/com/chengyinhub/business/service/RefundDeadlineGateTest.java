@@ -231,6 +231,9 @@ class RefundDeadlineGateTest {
         r.setPurchaseKind(PurchaseKind.EXPLORE_PASS);
         r.setVerificationStatus(1);
         when(regMapper.selectCmsRegistrationById(REG)).thenReturn(r);
+        // The topic-first fence must first see the original row; the later chapter
+        // snapshot read is deliberately missing, as this negative control requires.
+        org.mockito.Mockito.doReturn(r, (CmsRegistration) null).when(regMapper).selectCmsRegistrationByIdForUpdate(REG);
         IActivityCancelManualRefundCaseService cases = mock(IActivityCancelManualRefundCaseService.class);
         IRefundService refunds = mock(IRefundService.class);
         ReflectionTestUtils.setField(service, "manualRefundCaseService", cases);

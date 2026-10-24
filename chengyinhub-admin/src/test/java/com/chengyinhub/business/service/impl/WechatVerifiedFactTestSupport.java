@@ -78,6 +78,18 @@ public final class WechatVerifiedFactTestSupport {
         });
         return facts;
     }
+    /** Business fixture boundary only; distinct from the independently committed fact writer. */
+    public static org.springframework.transaction.PlatformTransactionManager unitBusinessTransactions() {
+        return new org.springframework.transaction.support.AbstractPlatformTransactionManager(){
+            @Override protected Object doGetTransaction(){return new Object();}
+            @Override protected void doBegin(Object tx,org.springframework.transaction.TransactionDefinition definition){
+                org.junit.jupiter.api.Assertions.assertEquals(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRED,definition.getPropagationBehavior());
+                org.junit.jupiter.api.Assertions.assertFalse(definition.isReadOnly());
+            }
+            @Override protected void doCommit(org.springframework.transaction.support.DefaultTransactionStatus status){}
+            @Override protected void doRollback(org.springframework.transaction.support.DefaultTransactionStatus status){}
+        };
+    }
     public static org.springframework.transaction.PlatformTransactionManager unitWriteTransactions() {
         return new org.springframework.transaction.support.AbstractPlatformTransactionManager(){
             @Override protected Object doGetTransaction(){return new Object();}
@@ -147,6 +159,8 @@ public final class WechatVerifiedFactTestSupport {
             Class<?> type=Class.forName(WechatPaymentSdkGateway.class.getName()+"$VerifiedProviderClients");
             Constructor<?> constructor=type.getDeclaredConstructor(JsapiService.class,RefundService.class,String.class);
             constructor.setAccessible(true);
+            ReflectionTestUtils.setField(gateway,"jsapiService",payment);
+            ReflectionTestUtils.setField(gateway,"refundService",refund);
             ReflectionTestUtils.setField(gateway,"verifiedProviderClients",constructor.newInstance(payment,refund,mchid));
         } catch (ReflectiveOperationException failed) { throw new AssertionError(failed); }
     }

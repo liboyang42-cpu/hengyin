@@ -69,6 +69,16 @@ class ExploreReleaseWiringTest {
         ReflectionTestUtils.setField(service, "omsTicketMapper", ticketMapper);
         ReflectionTestUtils.setField(service, "umsMemberMapper", memberMapper);
         ReflectionTestUtils.setField(service, "perkLedgerService", perkLedgerService);
+        var topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        var topic = new com.chengyinhub.business.domain.CmsTopic();
+        topic.setId(6001L);
+        when(topics.selectCmsTopicById(6001L)).thenReturn(topic);
+        com.chengyinhub.business.service.impl.RegistrationScopeFixture
+                .currentReads(registrationMapper, null, topics);
+        ReflectionTestUtils.setField(service, "cmsTopicMapper", topics);
+        // These unpaid/cancelled fixtures have no stored external SUCCESS.
+        ReflectionTestUtils.setField(service, "verifiedPaymentFacts",
+                mock(com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.class));
         when(ticketMapper.restoreInventory(anyLong(), anyLong())).thenReturn(1);
     }
 
@@ -76,6 +86,9 @@ class ExploreReleaseWiringTest {
     private CmsRegistration unpaid() {
         CmsRegistration r = new CmsRegistration();
         r.setId(REG);
+        r.setOwnerType(1L);
+        r.setOwnerId(6001L);
+        r.setRegistrationNo("REG4242");
         r.setMemberId(MEMBER);
         r.setTicketId(TICKET);
         r.setOrderNum(1L);

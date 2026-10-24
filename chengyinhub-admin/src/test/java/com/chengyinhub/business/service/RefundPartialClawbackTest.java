@@ -131,6 +131,9 @@ class RefundPartialClawbackTest {
         reg.setPaymentStatus(2);
         reg.setPayableAmount(new BigDecimal("100"));
         reg.setId(10L);
+        reg.setMemberId(8L);
+        reg.setRegistrationNo("REG10");
+        reg.setRegistrationStatus(2);
         reg.setOwnerType(2L);   // 活动报名
         reg.setOwnerId(77L);
         when(cmsRegistrationMapper.selectCmsRegistrationById(10L)).thenReturn(reg);
@@ -168,8 +171,16 @@ class RefundPartialClawbackTest {
         reg.setPaymentStatus(2);
         reg.setPayableAmount(new BigDecimal("100"));
         reg.setId(10L);
+        reg.setMemberId(8L);
+        reg.setRegistrationNo("REG10");
+        reg.setRegistrationStatus(2);
         reg.setPaymentStatus(2);
         reg.setPayableAmount(new BigDecimal("100"));
+        reg.setOwnerType(2L);
+        reg.setOwnerId(77L);
+        CmsActivity activity = new CmsActivity();
+        activity.setId(77L);
+        when(cmsActivityMapper.selectCmsActivityById(77L)).thenReturn(activity);
         when(cmsRegistrationMapper.selectCmsRegistrationById(10L)).thenReturn(reg);
 
         RefundApplication over = new RefundApplication();

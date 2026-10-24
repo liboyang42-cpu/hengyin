@@ -110,14 +110,14 @@ class WechatVerifiedPaymentFactGatewayTest {
             Map<String,String> map=call.getArgument(0); assertEquals(500,f.store.requireVerified(reference(map)).facts().amountFen()); return false;
         });
         assertTrue(f.gateway.handleRefundCallback("signed-double",Map.of()).contains("FAIL"));
-        when(f.refundOwner.handleRefundNotify(anyMap())).thenReturn(true);
+        doReturn(true).when(f.refundOwner).handleRefundNotify(anyMap());
         assertTrue(f.gateway.handleRefundCallback("signed-double",Map.of()).contains("SUCCESS"));
         assertEquals(1,f.rows.rows.size());
         verify(f.refundOwner,times(2)).handleRefundNotify(anyMap());
     }
     @Test void activeBusinessTransactionCannotReachTheOfficialQueryOrCloseSdk() {
         Fixture fixture=new Fixture();
-        new org.springframework.transaction.support.TransactionTemplate(WechatVerifiedFactTestSupport.unitWriteTransactions()).executeWithoutResult(status->{
+        new org.springframework.transaction.support.TransactionTemplate(WechatVerifiedFactTestSupport.unitBusinessTransactions()).executeWithoutResult(status->{
             assertThrows(RuntimeException.class,()->fixture.gateway.queryOrderStatus("REG1"));
             assertThrows(IllegalStateException.class,()->fixture.gateway.closePaymentAttempt("REG1","REG1"));
         });

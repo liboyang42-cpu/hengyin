@@ -64,6 +64,7 @@ class WholeOrderRefundTest {
         regMapper = mock(CmsRegistrationMapper.class);
         topicMapper = mock(CmsTopicMapper.class);
         ticketMapper = mock(OmsTicketMapper.class);
+        RegistrationScopeFixture.currentReads(regMapper, null, topicMapper);
         refundService = mock(IRefundService.class);
 
         OmsTicket ticket = new OmsTicket();
@@ -118,6 +119,7 @@ class WholeOrderRefundTest {
         r.setOwnerType(1L);
         r.setOwnerId(9L);
         r.setPaymentStatus(2);
+        r.setRegistrationStatus(2);
         r.setVerificationStatus(0);
         r.setPointUsed(0L);
         r.setOrderNum(1L);
@@ -396,8 +398,7 @@ class WholeOrderRefundTest {
         final Set<Long> claimed = java.util.concurrent.ConcurrentHashMap.newKeySet();
         final Set<String> refundNos = java.util.concurrent.ConcurrentHashMap.newKeySet();
         when(regMapper.selectCmsRegistrationById(anyLong())).thenAnswer(inv -> byId.get(inv.getArgument(0, Long.class)));
-        when(regMapper.selectCmsRegistrationByIdForUpdate(anyLong()))
-                .thenAnswer(inv -> byId.get(inv.getArgument(0, Long.class)));
+        org.mockito.Mockito.doAnswer(inv -> byId.get(inv.getArgument(0, Long.class))).when(regMapper).selectCmsRegistrationByIdForUpdate(anyLong());
         when(regMapper.selectByParentOrderNoForUpdate(eq(PARENT), org.mockito.ArgumentMatchers.nullable(Long.class))).thenReturn(order);
         when(regMapper.claimRegistrationRefunded(anyLong(), anyString(), any(Date.class))).thenAnswer(inv -> {
             Long id = inv.getArgument(0, Long.class);
@@ -476,6 +477,7 @@ class WholeOrderRefundTest {
         act.setMemberId(500L);
         act.setStartDate(new Date(System.currentTimeMillis() + 7L * 24 * 3600 * 1000));
         when(activityMapper.selectCmsActivityById(77L)).thenReturn(act);
+        RegistrationScopeFixture.currentReads(null, activityMapper, null);
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activityMapper);
         ReflectionTestUtils.setField(service, "manualRefundCaseService", cases);
         List<CmsRegistration> order = multiTicketOrder();
@@ -574,7 +576,7 @@ class WholeOrderRefundTest {
         when(regMapper.claimRegistrationRefunded(eq(6L), anyString(), any(Date.class))).thenReturn(0);
         CmsRegistration verifiedNow = reg(6L, "R006", "0.00", "0.00");
         verifiedNow.setVerificationStatus(1);
-        when(regMapper.selectCmsRegistrationByIdForUpdate(6L)).thenReturn(verifiedNow);
+        org.mockito.Mockito.doReturn(verifiedNow).when(regMapper).selectCmsRegistrationByIdForUpdate(6L);
 
         RuntimeException e = org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class,
                 () -> service.cancelPaidRegistration(6L, MEMBER_ID));
@@ -600,7 +602,7 @@ class WholeOrderRefundTest {
         CmsRegistration subNow = reg(2L, "R002", "0.00", "100.00");
         subNow.setParentOrderNo(PARENT);
         subNow.setVerificationStatus(1);
-        when(regMapper.selectCmsRegistrationByIdForUpdate(2L)).thenReturn(subNow);
+        org.mockito.Mockito.doReturn(subNow).when(regMapper).selectCmsRegistrationByIdForUpdate(2L);
         when(refundService.saveRefund(any(RefundApplication.class))).thenAnswer(inv -> {
             inv.getArgument(0, RefundApplication.class).setId(996L);
             return 1;
@@ -626,7 +628,7 @@ class WholeOrderRefundTest {
         CmsRegistration subNow = reg(2L, "R002", "0.00", "100.00");
         subNow.setParentOrderNo(PARENT);
         subNow.setPaymentStatus(4);
-        when(regMapper.selectCmsRegistrationByIdForUpdate(2L)).thenReturn(subNow);
+        org.mockito.Mockito.doReturn(subNow).when(regMapper).selectCmsRegistrationByIdForUpdate(2L);
 
         ServiceException e = assertThrows(ServiceException.class,
                 () -> service.cancelPaidRegistration(1L, MEMBER_ID));

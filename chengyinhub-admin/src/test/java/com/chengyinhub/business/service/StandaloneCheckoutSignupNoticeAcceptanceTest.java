@@ -69,6 +69,8 @@ class StandaloneCheckoutSignupNoticeAcceptanceTest {
         ticketMapper = mock(OmsTicketMapper.class);
         memberMapper = mock(UmsMemberMapper.class);
         registrationMapper = mock(CmsRegistrationMapper.class);
+        com.chengyinhub.business.service.impl.RegistrationScopeFixture
+                .currentReads(registrationMapper, activityMapper, null);
         imService = mock(IImService.class);
         intents = mock(ISystemNotificationIntentService.class);
         when(intents.findIntentId(anyString())).thenReturn(null);
@@ -186,6 +188,7 @@ class StandaloneCheckoutSignupNoticeAcceptanceTest {
 
     @Test
     void signupNoticeIsSentOnlyOnceAfterZeroAmountConfirmation() {
+        givenStandaloneActivity(PLATFORM);
         CmsRegistration zero = pendingOrder(BigDecimal.ZERO);
         when(registrationMapper.selectByRegistrationNo("R" + REG)).thenReturn(zero);
         CmsRegistration paid = pendingOrder(BigDecimal.ZERO);
@@ -193,7 +196,7 @@ class StandaloneCheckoutSignupNoticeAcceptanceTest {
         paid.setRegistrationStatus(2);
         paid.setPaymentTime(new Date());
         when(registrationMapper.selectCmsRegistrationById(REG)).thenReturn(paid);
-        when(registrationMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(paid);
+        org.mockito.Mockito.doReturn(paid).when(registrationMapper).selectCmsRegistrationByIdForUpdate(REG);
         when(registrationMapper.claimPaymentSuccess(eq(REG), any(), any())).thenReturn(1, 0);
 
         // Direct-new unit fixture supplies only synchronization; real rollback/persistence is tested in MySQL IT.

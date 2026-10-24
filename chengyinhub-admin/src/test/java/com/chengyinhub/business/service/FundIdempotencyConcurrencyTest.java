@@ -85,6 +85,8 @@ class FundIdempotencyConcurrencyTest {
         topic.setId(6001L);
         CmsTopicMapper topicMapper = mock(CmsTopicMapper.class);
         when(topicMapper.selectCmsTopicById(6001L)).thenReturn(topic);
+        com.chengyinhub.business.service.impl.RegistrationScopeFixture
+                .currentReads(registrationMapper, null, topicMapper);
         OmsTicket ticket = new OmsTicket();
         ticket.setId(ticketId);
         ticket.setName("积分票");

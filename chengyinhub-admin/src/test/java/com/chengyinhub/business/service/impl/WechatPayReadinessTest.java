@@ -87,7 +87,7 @@ class WechatPayReadinessTest {
     void depositRefundQueryDistinguishesConfirmedMissingFromTransportOrOther404() {
         RefundService adapter = mock(RefundService.class);
         WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
-        WechatVerifiedFactTestSupport.setField(service,"refundService",adapter);
+        WechatVerifiedFactTestSupport.bind(service,mock(com.wechat.pay.java.service.payments.jsapi.JsapiService.class),adapter,"merchant");
         com.wechat.pay.java.core.exception.ServiceException missing = mock(com.wechat.pay.java.core.exception.ServiceException.class);
         when(missing.getHttpStatusCode()).thenReturn(404);
         when(missing.getErrorCode()).thenReturn("RESOURCE_NOT_EXISTS");

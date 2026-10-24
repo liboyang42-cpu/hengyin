@@ -133,7 +133,7 @@ class WechatVerifiedPaymentFactServiceTest {
         var first=service.recordVerified(payment("TX1","REG1",1000));
         assertThrows(WechatVerifiedPaymentFactService.ConflictException.class,()->service.recordVerified(payment("TX1","REG1",1001)));
         assertEquals(2,commits.get());assertEquals(1,rows.rejections.size());assertEquals(1000,service.requireVerified(first).facts().totalFen());
-        new org.springframework.transaction.support.TransactionTemplate(WechatVerifiedFactTestSupport.unitWriteTransactions()).executeWithoutResult(status->{
+        new org.springframework.transaction.support.TransactionTemplate(WechatVerifiedFactTestSupport.unitBusinessTransactions()).executeWithoutResult(status->{
             assertThrows(IllegalStateException.class,()->service.recordVerified(payment("TX1","REG1",1000)));
         });
         assertEquals(2,commits.get(),"outer owner rejected before suspending/acquiring another business lock");
@@ -153,7 +153,7 @@ class WechatVerifiedPaymentFactServiceTest {
         assertEquals(candidate,ticket.original().facts());assertEquals("VERIFIED_SUCCESS_AFTER_CLOSED",ticket.reason());
         assertEquals(1,rows.rows.size());assertEquals(1,rows.recoveries.size());assertEquals(1,rows.rejections.size());
         assertThrows(IllegalStateException.class,()->service.completePaymentRecovery(reference,1));
-        new org.springframework.transaction.support.TransactionTemplate(WechatVerifiedFactTestSupport.unitWriteTransactions()).executeWithoutResult(status->{
+        new org.springframework.transaction.support.TransactionTemplate(WechatVerifiedFactTestSupport.unitBusinessTransactions()).executeWithoutResult(status->{
             assertThrows(WechatVerifiedPaymentFactService.ConflictException.class,()->service.completePaymentRecovery(reference,2));
             // This unit models only the owner's boundary. Actual consumption proof remains the A-owned mapper/transaction.
             service.completePaymentRecovery(reference,1);service.completePaymentRecovery(reference,1);

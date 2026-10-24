@@ -562,11 +562,11 @@ class WechatPayCallbackForgedSignatureTest {
     @Test
     void verifiedOldClosedNotificationCannotMutateANewRegistrationAttempt() throws Exception {
         RegistrationFailureFixture fixture = new RegistrationFailureFixture("REG_CLOSED");
-        var registrationService = WechatVerifiedFactTestSupport.getField(fixture.service, "registrationService");
-        var provider = (org.springframework.beans.factory.ObjectProvider<?>)WechatVerifiedFactTestSupport.getField(
-                registrationService, "paymentAttemptGateway");
-        var gateway = (com.chengyinhub.business.service.IWechatPayService)provider.getObject();
-        when(gateway.lockPaymentAttemptForUpdate("REG_CLOSED", "REG_CLOSED")).thenReturn(false);
+        var intents = (WechatPaymentIntentTestSupport)WechatVerifiedFactTestSupport.getField(fixture.service, "paymentIntentJdbc");
+        // Negative storage fixture: the real shared guard must reject an older observed provider number.
+        intents.intents.put("merchant-test:WXP_CURRENT", new java.util.HashMap<>(Map.of(
+                "mchid","merchant-test","business_out_trade_no","REG_CLOSED","out_trade_no","WXP_CURRENT",
+                "biz_type","REGISTRATION","biz_id",17L,"attempt_no",2)));
         assertTrue(fixture.callback("CLOSED", 100).contains("FAIL"));
         fixture.assertAlarm("REG_CLOSED", "payment_attempt_conflict");
         verify(fixture.mapper, org.mockito.Mockito.times(2)).selectByRegistrationNo("REG_CLOSED");
@@ -699,12 +699,9 @@ class WechatPayCallbackForgedSignatureTest {
             when(topics.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
             when(mapper.selectByParentOrderNoForUpdate(PARENT_ORDER, null)).thenReturn(java.util.List.of(registration));
             WechatVerifiedFactTestSupport.setField(registrationService, "alarmService", alarm);
-            var attemptGateway = mock(com.chengyinhub.business.service.IWechatPayService.class);
-            when(attemptGateway.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(),
-                    org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
             org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IWechatPayService> attempts =
                     mock(org.springframework.beans.factory.ObjectProvider.class);
-            when(attempts.getObject()).thenReturn(attemptGateway);
+            when(attempts.getObject()).thenReturn(service);
             WechatVerifiedFactTestSupport.setField(registrationService, "paymentAttemptGateway", attempts);
             when(mapper.selectByRegistrationNo(order)).thenReturn(registration);
             wireParser(service, buildParser(keys.getPublic()), registrationService,
@@ -712,8 +709,21 @@ class WechatPayCallbackForgedSignatureTest {
             // wireParser installs B's final SDK/intent bindings before capturing that same real reader.
             verifiedFacts = (WechatVerifiedPaymentFactService) WechatVerifiedFactTestSupport.getField(service, "verifiedFacts");
             org.junit.jupiter.api.Assertions.assertNotNull(verifiedFacts, "reuse B's actual SDK original-fact reader after its final binding");
+            // Same declared original business row for the writer and the real shared attempt guard.
+            com.chengyinhub.business.service.WechatPaymentOrderOwner originalOwner = businessNo -> {
+                if (!order.equals(businessNo))
+                    throw new com.chengyinhub.business.service.WechatPaymentOrderOwner.MissingOrderException();
+                return new com.chengyinhub.business.service.WechatPaymentOrderOwner.Snapshot(
+                        "REGISTRATION",registration.getId(),registration.getWechatPaymentAmount(),false,
+                        Integer.valueOf(1).equals(registration.getPaymentStatus())
+                                && Integer.valueOf(1).equals(registration.getRegistrationStatus()));
+            };
+            WechatVerifiedFactTestSupport.setField(verifiedFacts, "factBusinessOwner", originalOwner);
+            WechatVerifiedFactTestSupport.setField(WechatVerifiedFactTestSupport.getField(service,"intents"),
+                    "businessOwner", originalOwner);
             WechatVerifiedFactTestSupport.setField(registrationService, "verifiedPaymentFacts", verifiedFacts);
-            inbox = com.chengyinhub.business.service.PaymentCallbackInboxStubs.passThrough(null, verifiedFacts);
+            inbox = com.chengyinhub.business.service.PaymentCallbackInboxStubs.passThrough(
+                    WechatVerifiedFactTestSupport.unitBusinessTransactions(), verifiedFacts);
             WechatVerifiedFactTestSupport.setField(registrationService, "wxPaymentCallbackInboxService", inbox);
             WechatVerifiedFactTestSupport.setField(service, "alarmService", alarm);
         }

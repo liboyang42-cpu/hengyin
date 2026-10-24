@@ -174,7 +174,7 @@ class ClubOccurrenceCancellationServiceTest {
         when(mapper.selectOccurrenceByActivityAndClubForUpdate(ACTIVITY, CLUB)).thenReturn(null);
         when(mapper.selectActivityTopicForUpdate(ACTIVITY, CLUB)).thenReturn(990028L);
         when(mapper.selectOccurrenceCancellationState(ACTIVITY, CLUB))
-                .thenReturn(activeState(), cancelledState());
+                .thenReturn(activeState(), activeState(), cancelledState());
         when(mapper.selectRegisteredRecipients(CLUB, ACTIVITY)).thenReturn(Collections.singletonList(101L));
         when(mapper.selectWaitlistRecipients(CLUB, ACTIVITY)).thenReturn(Collections.<Long>emptyList());
         when(mapper.selectActiveWaitlistsForUpdate(CLUB, ACTIVITY))

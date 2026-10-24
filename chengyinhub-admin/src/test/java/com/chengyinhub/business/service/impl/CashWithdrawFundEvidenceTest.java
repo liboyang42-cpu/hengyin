@@ -2,6 +2,7 @@ package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.CashWithdrawFundFact;
 import com.chengyinhub.business.domain.MemberCashWithdraw;
+import com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent;
 import com.chengyinhub.business.mapper.MemberCashWithdrawMapper;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.service.IWechatPayService;
@@ -43,6 +44,7 @@ class CashWithdrawFundEvidenceTest {
         ReflectionTestUtils.setField(service, "transactionManager", tx);
         original = new MemberCashWithdraw();
         original.setId(81L); original.setMemberId(9L); original.setAmount(new BigDecimal("30.00"));
+        original.setOpenid("unit-openid-9");
         original.setOutBatchNo("CW81"); original.setOutDetailNo("CD81"); original.setDelFlag(0);
         original.setStatus(MemberCashWithdraw.STATUS_FAILED_MANUAL);
         facts = new ArrayList<>();
@@ -71,11 +73,40 @@ class CashWithdrawFundEvidenceTest {
             f.setBalanceBefore(new BigDecimal("100.00")); f.setBalanceAfter(new BigDecimal("70.00"));
             original.setBalanceDeductId(f.getId());
         }
-        if (CashWithdrawFundFact.NOT_ACCEPTED.equals(kind))
-            f.setSubmissionIntentId(facts.stream().filter(v -> "SUBMIT_INTENT".equals(v.getKind()))
-                    .map(CashWithdrawFundFact::getId).findFirst().orElse(null));
-        if (CashWithdrawFundFact.FINAL_FAIL.equals(kind)) f.setChannelDetailStatus("FAIL");
+        if (CashWithdrawFundFact.SUBMIT_INTENT.equals(kind)) {
+            f.bindTransferIntent(request());
+        } else {
+            facts.stream().filter(v -> CashWithdrawFundFact.SUBMIT_INTENT.equals(v.getKind()))
+                    .findFirst().ifPresent(submission -> {
+                        f.setSubmissionIntentId(submission.getId());
+                        f.bindTransferIntent(submission.transferIntent());
+                    });
+        }
+        if (CashWithdrawFundFact.FINAL_FAIL.equals(kind)) {
+            f.setChannelBatchStatus("FINISHED");
+            f.setChannelDetailStatus("FAIL");
+            f.setChannelBatchId("provider-batch-81");
+            f.setChannelDetailId("provider-detail-81");
+        }
         facts.add(f);
+    }
+    private CashWithdrawTransferIntent request() {
+        return CashWithdrawTransferIntent.fromRequest(original.getId(), "unit-merchant", "wx-mp-appid",
+                original.getOutBatchNo(), original.getOutDetailNo(), original.getAmount(),
+                original.getOpenid(), "城瘾分润提现");
+    }
+    private CashWithdrawTransferIntent intent() {
+        return facts.stream().filter(f -> CashWithdrawFundFact.SUBMIT_INTENT.equals(f.getKind()))
+                .findFirst().orElseThrow().transferIntent();
+    }
+    private Map<String, String> completedQuery(String outcome) {
+        CashWithdrawTransferIntent submitted = intent();
+        return Map.ofEntries(Map.entry("result", outcome), Map.entry("detailStatus", outcome),
+                Map.entry("batchStatus", "FINISHED"), Map.entry("batchId", "provider-batch-81"),
+                Map.entry("detailId", "provider-detail-81"), Map.entry("mchid", submitted.mchid()),
+                Map.entry("appid", submitted.appid()), Map.entry("outBatchNo", submitted.outBatchNo()),
+                Map.entry("outDetailNo", submitted.outDetailNo()), Map.entry("openid", submitted.openid()),
+                Map.entry("transferAmount", Long.toString(submitted.amountFen())));
     }
     private void rejected() {
         assertThrows(IllegalStateException.class, () -> service.manualRefund(81L, "maker", "查证", 3));
@@ -114,7 +145,7 @@ class CashWithdrawFundEvidenceTest {
         assertEquals(1, service.syncPendingWithdrawals(10));
         assertEquals(3, original.getStatus()); assertEquals(1, facts.size());
         verifyNoInteractions(channel); verify(members, never()).addBalance(any(), any());
-        assertNull(ReflectionTestUtils.invokeMethod(service, "recordSubmissionIntent", 81L));
+        assertNull(ReflectionTestUtils.invokeMethod(service, "recordSubmissionIntent", 81L, request()));
         assertTrue(service.manualRefund(81L, "maker", "未提交待复核", 3));
         service.requery(81L);
         assertEquals(4, original.getStatus()); assertEquals(1, facts.size());
@@ -128,11 +159,10 @@ class CashWithdrawFundEvidenceTest {
     }
     @Test void oldUnknownWithoutIntentIsNotReclassifiedAsNeverSubmitted() {
         fact("DEBIT"); fact("UNKNOWN");
-        when(channel.queryTransferResult("CW81", "CD81")).thenReturn(Map.of("result", "UNKNOWN"));
         service.requery(81L);
         assertThrows(IllegalStateException.class, () -> service.manualRefund(81L, "maker", "旧未知", 3));
         assertEquals(2, facts.size());
-        verify(channel).queryTransferResult("CW81", "CD81");
+        verifyNoInteractions(channel);
         verify(members, never()).addBalance(any(), any());
     }
     @Test void frozenDebitOnlySnapshotIsNotRecoveredOrQueried() {
@@ -164,7 +194,7 @@ class CashWithdrawFundEvidenceTest {
     }
     @Test void oneNotFoundDuringInvestigationDoesNotCreateRefundPermission() {
         fact("DEBIT"); fact("SUBMIT_INTENT");
-        when(channel.queryTransferResult("CW81", "CD81")).thenReturn(Map.of("result", "UNKNOWN", "error", "NOT_FOUND"));
+        when(channel.queryTransferResult(intent())).thenReturn(Map.of("result", "UNKNOWN", "error", "NOT_FOUND"));
         service.requery(81L);
         assertThrows(IllegalStateException.class, () -> service.manualRefund(81L, "maker", "查证", 3));
         verify(members, never()).addBalance(any(), any());
@@ -172,14 +202,14 @@ class CashWithdrawFundEvidenceTest {
     }
     @Test void bareFailureWithoutFinalChannelStateCreatesNoRefundProof() {
         fact("DEBIT"); fact("SUBMIT_INTENT"); original.setStatus(0);
-        when(channel.queryTransferResult("CW81", "CD81")).thenReturn(Map.of("result", "FAIL"));
+        when(channel.queryTransferResult(intent())).thenReturn(Map.of("result", "FAIL"));
         service.requery(81L);
         assertEquals(3, facts.size()); assertEquals("UNKNOWN", facts.get(2).getKind());
         verify(members, never()).addBalance(any(), any());
     }
     @Test void closedWithoutFinalDetailRemainsUnknown() {
         fact("DEBIT"); fact("SUBMIT_INTENT"); original.setStatus(0);
-        when(channel.queryTransferResult("CW81", "CD81")).thenReturn(Map.of("result", "FAIL", "batchStatus", "CLOSED"));
+        when(channel.queryTransferResult(intent())).thenReturn(Map.of("result", "FAIL", "batchStatus", "CLOSED"));
         service.requery(81L);
         assertFalse(facts.stream().anyMatch(f -> "FINAL_FAIL".equals(f.getKind())));
         assertTrue(facts.stream().anyMatch(f -> "UNKNOWN".equals(f.getKind())));
@@ -197,7 +227,7 @@ class CashWithdrawFundEvidenceTest {
     }
     @Test void existingIntentIsNeverReusedForANewGatewayAttempt() {
         fact("DEBIT"); fact("SUBMIT_INTENT"); original.setStatus(0);
-        assertNull(ReflectionTestUtils.invokeMethod(service, "recordSubmissionIntent", 81L));
+        assertNull(ReflectionTestUtils.invokeMethod(service, "recordSubmissionIntent", 81L, request()));
         assertEquals(2, facts.size()); verifyNoInteractions(channel);
     }
     @Test void firstLocalRejectionBindsTheExactOriginalIntent() {
@@ -211,7 +241,7 @@ class CashWithdrawFundEvidenceTest {
     }
     @Test void lateSuccessDuringReviewResolvesOriginalWithoutCredit() {
         fact("DEBIT"); fact("SUBMIT_INTENT"); original.setStatus(4); original.setManualOperator("maker");
-        when(channel.queryTransferResult("CW81", "CD81")).thenReturn(Map.of("result", "SUCCESS", "detailStatus", "SUCCESS"));
+        when(channel.queryTransferResult(intent())).thenReturn(completedQuery("SUCCESS"));
         service.requery(81L);
         assertEquals(1, original.getStatus());
         assertFalse(service.manualRefund(81L, "checker", "过期页面", 4));

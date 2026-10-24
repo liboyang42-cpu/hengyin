@@ -127,6 +127,7 @@ class TicketSourceAttributionTrustBoundaryTest {
             // 平台建期：活动/主题的 club_id 都为空，执行俱乐部只存在于 club_edition_compensation_terms。
             // 建单路径压根不读它 —— 所以「自报的 id 恰好等于执行俱乐部」在建单这一刻是无法证伪的。
             when(activityMapper.selectCmsActivityById(ACTIVITY_ID)).thenReturn(activity);
+            RegistrationScopeFixture.currentReads(null, activityMapper, null);
 
             CmsTopic topic = new CmsTopic();
             topic.setId(TOPIC_ID);

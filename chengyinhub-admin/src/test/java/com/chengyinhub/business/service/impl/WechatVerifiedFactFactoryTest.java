@@ -47,7 +47,7 @@ class WechatVerifiedFactFactoryTest {
                 "fixture-mch","fixture-app","REG99","REG99","REG99","fixture-tx99","fixture-tx99",
                 "JSAPI","CNY",6800,6800,Instant.parse(WechatVerifiedFactTestSupport.SUCCESS_TIME),null,"SUCCESS");
         var reference=facts.recordVerified(original);
-        new TransactionTemplate(WechatVerifiedFactTestSupport.unitWriteTransactions()).executeWithoutResult(status->{
+        new TransactionTemplate(WechatVerifiedFactTestSupport.unitBusinessTransactions()).executeWithoutResult(status->{
             assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
             assertEquals(original,facts.requireVerified(reference).facts());
             // Real common consumer, explicit historical no-intent SQL port; never a frozen-attempt proof.
@@ -65,7 +65,7 @@ class WechatVerifiedFactFactoryTest {
                 "fixture-mch","fixture-app","REG99","WXP-OLD","WXP-OLD","fixture-tx99","fixture-tx99",
                 "JSAPI","CNY",6800,6800,Instant.parse(WechatVerifiedFactTestSupport.SUCCESS_TIME),null,"SUCCESS");
         var reference=facts.recordVerified(original);
-        new TransactionTemplate(WechatVerifiedFactTestSupport.unitWriteTransactions()).executeWithoutResult(status->{
+        new TransactionTemplate(WechatVerifiedFactTestSupport.unitBusinessTransactions()).executeWithoutResult(status->{
             assertThrows(WechatVerifiedPaymentFactService.ConflictException.class,
                     ()->facts.requireConsumablePayment(reference));
         });

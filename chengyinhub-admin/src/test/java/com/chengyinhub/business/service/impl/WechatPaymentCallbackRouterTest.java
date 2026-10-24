@@ -166,17 +166,10 @@ class WechatPaymentCallbackRouterTest {
     }
 
     @Test
-    void missingDepositReferenceHashIsExplicitlyRejectedByTheStrictTypedOwner() {
-        when(deposit.markDepositPaid(eq("DEP1"),eq(123L),eq("TX-original"),any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class)))
-                .thenAnswer(call -> {
-                    // Boundary double accepts only the exact original proof; it never defaults a missing hash to success.
-                    if (!reference("DEP1").equals(call.getArgument(3))) throw new WechatVerifiedPaymentFactService.ConflictException();
-                    return true;
-                });
+    void missingDepositReferenceHashIsRejectedBeforeTheTypedOwner() {
         Map<String,String> unproven = new HashMap<>(facts("DEP1"));unproven.remove("verified_fact_hash");
-        assertThrows(WechatVerifiedPaymentFactService.ConflictException.class,()->router.payment(unproven));
-        verify(deposit).markDepositPaid(eq("DEP1"),eq(123L),eq("TX-original"),
-                argThat(reference -> reference != null && reference.hash() == null));
+        assertThrows(IllegalArgumentException.class,()->router.payment(unproven));
+        verifyNoInteractions(deposit);
     }
 
     /** Pure router boundary fixture, not a claim that this unit class performs provider verification/storage. */

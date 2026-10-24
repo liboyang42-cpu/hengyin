@@ -318,10 +318,10 @@ class RefundPayoutServiceTest {
 
     @Test void missingOrConflictingConsumptionNeverChoosesAnotherPayment() {
         given(1, "30.00", "100.00");
-        when(consumptionMapper.selectByRegistrationForUpdate(10L)).thenReturn(null);
+        org.mockito.Mockito.doReturn(null).when(consumptionMapper).selectByRegistrationForUpdate(10L);
         svc.payoutAfterReview(7L);
-        when(consumptionMapper.selectByRegistrationForUpdate(10L)).thenReturn(
-                new RegistrationPaymentFactReceipt(10L,"REG-OTHER",41L,originalPayment.hash(),"TX10"));
+        org.mockito.Mockito.doReturn(new RegistrationPaymentFactReceipt(10L,"REG-OTHER",41L,originalPayment.hash(),"TX10"))
+                .when(consumptionMapper).selectByRegistrationForUpdate(10L);
         svc.payoutAfterReview(7L);
         org.mockito.Mockito.verifyNoInteractions(wechatPayService);
         verify(refundService, never()).markPayoutResult(anyLong(), anyString(), org.mockito.ArgumentMatchers.anyBoolean(), any());

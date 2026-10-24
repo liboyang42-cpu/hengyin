@@ -197,7 +197,7 @@ class RegistrationCancellationSdkPhasesTest {
     @Test void newlyAppearedPayingOrderRequiresFreshObservationBeforeAnyClose() {
         RegistrationCancellationPayments captured = capture();
         when(provider.queryOrderStatus(anyString())).thenAnswer(call -> query(call.getArgument(0),"NOTPAY"));
-        when(rows.selectCancellationRowsForUpdate(2L,71L)).thenReturn(List.of(first,second,row(3L)));
+        doReturn(List.of(first,second,row(3L))).when(rows).selectCancellationRowsForUpdate(2L,71L);
 
         assertThrows(ServiceException.class,() -> service.observeCancellationPayments(captured));
 
