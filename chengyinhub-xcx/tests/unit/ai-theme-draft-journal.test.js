@@ -5,7 +5,8 @@ const PREPARE_ID = '7c9e6679-7425-40de-944b-e07fc1f90ae7';
 const RID = 'td2_0123456789abcdef0123456789abcdef';
 function storage() {
   const values = {};
-  return { values, getStorageSync: key => values[key] === undefined ? '' : values[key], setStorageSync: (key, value) => { values[key] = value; } };
+  return { values, getStorageInfoSync: () => ({ keys: Object.keys(values) }),
+    getStorageSync: key => values[key] === undefined ? '' : values[key], setStorageSync: (key, value) => { values[key] = value; } };
 }
 function prepared() {
   return { version: 2, memberId: '7', prepareKey: PREPARE_ID, requestId: null, stage: 'PREPARE_UNCONFIRMED',
@@ -103,4 +104,102 @@ test('known terminal facts may update availability but cannot become unknown or 
   const newAction = { ...prepared(), prepareKey: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' };
   assert.equal(journal.save(wx, '7', newAction, expired).ok, true);
   assert.deepEqual(journal.load(wx, '7').value, newAction);
+});
+
+test('history selection preserves the previous terminal identity and refuses to displace pending work', () => {
+  const selected = { ...prepared(), prepareKey: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+    requestId: 'td2_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', stage: 'KNOWN', state: 'SUCCEEDED', createdAt: 90 };
+  const wx = storage();
+  assert.equal(journal.selectHistory(wx, '7', selected, null).ok, true);
+  const old = { ...prepared(), requestId: RID, stage: 'KNOWN', state: 'FAILED' };
+  wx.values[journal.key('7')] = old;
+  assert.equal(journal.save(wx, '7', selected, old).ok, false);
+  assert.equal(journal.selectHistory(wx, '7', selected, old).ok, true);
+  assert.deepEqual(journal.history(wx, '7'), { kind: 'READY', values: [old] });
+  for (const pending of [prepared(), { ...old, state: 'UNKNOWN' }, { ...old, state: 'PROCESSING' },
+    { ...old, stage: 'PREPARED', state: 'PREPARED' }]) {
+    const other = storage(); other.values[journal.key('7')] = pending;
+    assert.equal(journal.selectHistory(other, '7', selected, pending).ok, false);
+    assert.deepEqual(journal.load(other, '7').value, pending);
+    assert.deepEqual(journal.history(other, '7').values, []);
+  }
+});
+
+test('explicit new action archives the exact unknown identity before CAS and never changes its fields', () => {
+  const unknown = { ...prepared(), requestId: RID, stage: 'KNOWN', state: 'UNKNOWN' };
+  const next = { ...prepared(), prepareKey: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', createdAt: 101 };
+  const wx = storage(); wx.values[journal.key('7')] = unknown;
+  const set = wx.setStorageSync; const writes = [];
+  wx.setStorageSync = (key, value) => { writes.push(key); set(key, value); };
+  assert.equal(journal.save(wx, '7', next, unknown).ok, false);
+  assert.equal(journal.beginConfirmedNewAction(wx, '7', next, unknown).ok, true);
+  assert.deepEqual(writes, ['ai_theme_draft_v2:m7:history:' + PREPARE_ID, journal.key('7')]);
+  assert.deepEqual(journal.history(wx, '7'), { kind: 'READY', values: [unknown] });
+  assert.deepEqual(journal.load(wx, '7').value, next);
+  assert.equal(journal.beginConfirmedNewAction(wx, '8', { ...next, memberId: '8' }, unknown).ok, false);
+});
+
+test('a timed-out prepare without a server id remains discoverable after an explicitly confirmed new action', () => {
+  const wx = storage(); const old = prepared(); wx.values[journal.key('7')] = old;
+  const next = { ...old, prepareKey: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' };
+  assert.equal(journal.beginConfirmedNewAction(wx, '7', next, old).ok, true);
+  assert.deepEqual(journal.history(wx, '7'), { kind: 'READY', values: [old] });
+  assert.equal(journal.selectHistory(wx, '7', old, next).ok, false);
+  for (const state of ['PREPARED', 'PROCESSING', 'SUCCEEDED', 'FAILED']) {
+    const other = storage(); const active = { ...old, requestId: RID, stage: 'KNOWN', state };
+    other.values[journal.key('7')] = active;
+    assert.equal(journal.beginConfirmedNewAction(other, '7', next, active).ok, false);
+  }
+});
+
+test('archive write errors, no-ops, corruption and failed readback prohibit replacing the active identity', () => {
+  const old = prepared(); const next = { ...old, prepareKey: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' };
+  for (const fault of ['throw', 'noop', 'readback', 'corrupt']) {
+    const wx = storage(); wx.values[journal.key('7')] = old;
+    const get = wx.getStorageSync; const set = wx.setStorageSync; let written = false;
+    wx.setStorageSync = (key, value) => {
+      if (key.includes(':history:')) {
+        if (fault === 'throw') throw new Error('disk');
+        if (fault === 'noop') return;
+        written = true;
+      }
+      set(key, value);
+    };
+    wx.getStorageSync = key => {
+      if (key.includes(':history:') && fault === 'readback' && written) throw new Error('read');
+      if (key.includes(':history:') && fault === 'corrupt') return { ...old, idea: 'forbidden' };
+      return get(key);
+    };
+    assert.equal(journal.beginConfirmedNewAction(wx, '7', next, old).ok, false, fault);
+    assert.deepEqual(journal.load(wx, '7').value, old, fault);
+  }
+});
+
+test('a changed active identity cannot be overwritten after archival; a failed active write can be retried safely', () => {
+  const old = prepared(); const next = { ...old, prepareKey: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' };
+  const changed = { ...old, requestId: RID, state: 'UNKNOWN', stage: 'KNOWN' };
+  const wx = storage(); wx.values[journal.key('7')] = old; const set = wx.setStorageSync;
+  wx.setStorageSync = (key, value) => { set(key, value); if (key.includes(':history:')) set(journal.key('7'), changed); };
+  assert.equal(journal.beginConfirmedNewAction(wx, '7', next, old).ok, false);
+  assert.deepEqual(journal.load(wx, '7').value, changed);
+  assert.deepEqual(journal.history(wx, '7').values, [old]);
+  const retry = storage(); retry.values[journal.key('7')] = old; const write = retry.setStorageSync;
+  retry.setStorageSync = (key, value) => { if (key === journal.key('7')) throw new Error('disk'); write(key, value); };
+  assert.equal(journal.beginConfirmedNewAction(retry, '7', next, old).ok, false);
+  assert.deepEqual(journal.load(retry, '7').value, old);
+  retry.setStorageSync = write;
+  assert.equal(journal.beginConfirmedNewAction(retry, '7', next, old).ok, true);
+  assert.deepEqual(journal.history(retry, '7').values, [old]);
+});
+
+test('historical metadata enumeration is owner-scoped and storage failures never appear as empty history', () => {
+  const wx = storage(); const old = prepared();
+  wx.values['ai_theme_draft_v2:m8:history:' + PREPARE_ID] = { ...old, memberId: '8' };
+  assert.deepEqual(journal.history(wx, '7'), { kind: 'READY', values: [] });
+  wx.values['ai_theme_draft_v2:m7:history:wrong'] = old;
+  assert.equal(journal.history(wx, '7').kind, 'CORRUPT');
+  delete wx.values['ai_theme_draft_v2:m7:history:wrong'];
+  wx.getStorageInfoSync = () => { throw new Error('disk'); };
+  assert.equal(journal.history(wx, '7').kind, 'UNAVAILABLE');
+  assert.equal(journal.history(wx, '0').kind, 'CORRUPT');
 });

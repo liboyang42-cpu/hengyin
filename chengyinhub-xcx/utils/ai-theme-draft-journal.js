@@ -58,9 +58,15 @@ function allowsUpdate(previous, next) {
 function save(storage, member, value, expected) {
   if (!valid(value, member) || (expected !== null && !valid(expected, member))) return { ok: false };
   if (expected !== null && !allowsUpdate(expected, value)) return { ok: false };
+  return writeActive(storage, member, value, expected);
+}
+function matchesActive(storage, member, expected) {
   const current = load(storage, member);
-  if (expected === null ? current.kind !== 'ABSENT'
-    : current.kind !== 'READY' || JSON.stringify(current.value) !== JSON.stringify(copy(expected))) return { ok: false };
+  return expected === null ? current.kind === 'ABSENT'
+    : current.kind === 'READY' && JSON.stringify(current.value) === JSON.stringify(copy(expected));
+}
+function writeActive(storage, member, value, expected) {
+  if (!matchesActive(storage, member, expected)) return { ok: false };
   try {
     storage.setStorageSync(key(member), copy(value));
     const readback = load(storage, member);
@@ -69,4 +75,54 @@ function save(storage, member, value, expected) {
   } catch (_) { return { ok: false }; }
 }
 
-module.exports = { key, load, save, sameIdentity, valid, isServerId: value => typeof value === 'string' && SERVER_ID.test(value) };
+function historyPrefix(member) {
+  return key(member).replace(/active$/, 'history:');
+}
+function archive(storage, member, value) {
+  const storageKey = historyPrefix(member) + (value.prepareKey || value.requestId);
+  try {
+    const previous = storage.getStorageSync(storageKey);
+    if (previous !== '' && previous !== null && previous !== undefined)
+      return valid(previous, member) && sameIdentity(previous, value);
+    storage.setStorageSync(storageKey, copy(value));
+    const readback = storage.getStorageSync(storageKey);
+    return valid(readback, member) && JSON.stringify(copy(readback)) === JSON.stringify(copy(value));
+  } catch (_) { return false; }
+}
+function selectHistory(storage, member, value, expected) {
+  if (!valid(value, member) || !value.requestId || value.stage !== 'KNOWN'
+      || (expected !== null && (!valid(expected, member) || ['SUCCEEDED', 'FAILED'].indexOf(expected.state) < 0)))
+    return { ok: false };
+  if (!matchesActive(storage, member, expected) || (expected !== null && !archive(storage, member, expected)))
+    return { ok: false };
+  return writeActive(storage, member, value, expected);
+}
+function beginConfirmedNewAction(storage, member, value, expected) {
+  if (!valid(value, member) || value.requestId !== null || !valid(expected, member)
+      || value.prepareKey === expected.prepareKey
+      || ['SUCCEEDED', 'FAILED'].indexOf(expected.state) >= 0
+      || !(expected.state === 'UNKNOWN' || ['PREPARE_UNCONFIRMED', 'EXECUTE_UNCONFIRMED'].indexOf(expected.stage) >= 0))
+    return { ok: false };
+  // The caller confirms the extra quota risk; retain the old identity before changing the active one.
+  if (!matchesActive(storage, member, expected) || !archive(storage, member, expected)) return { ok: false };
+  return writeActive(storage, member, value, expected);
+}
+function history(storage, member) {
+  if (!key(member)) return { kind: 'CORRUPT' };
+  try {
+    const info = storage.getStorageInfoSync();
+    if (!info || !Array.isArray(info.keys)) return { kind: 'CORRUPT' };
+    const prefix = historyPrefix(member);
+    const values = [];
+    for (const storageKey of info.keys) {
+      if (typeof storageKey !== 'string' || storageKey.indexOf(prefix) !== 0) continue;
+      const value = storage.getStorageSync(storageKey);
+      if (!valid(value, member) || storageKey !== prefix + (value.prepareKey || value.requestId)) return { kind: 'CORRUPT' };
+      values.push(copy(value));
+    }
+    return { kind: 'READY', values };
+  } catch (_) { return { kind: 'UNAVAILABLE' }; }
+}
+
+module.exports = { key, load, save, selectHistory, beginConfirmedNewAction, history, sameIdentity, valid,
+  isServerId: value => typeof value === 'string' && SERVER_ID.test(value) };
