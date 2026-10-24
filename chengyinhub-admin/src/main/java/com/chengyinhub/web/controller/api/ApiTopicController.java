@@ -37,6 +37,7 @@ import com.chengyinhub.business.service.support.TopicTextSafety;
 import com.chengyinhub.business.util.ChapterBlockReadSupport;
 import com.chengyinhub.business.util.JourneyReviewTexts;
 import com.chengyinhub.business.service.support.ClubCoopWindowPolicy;
+import com.chengyinhub.common.annotation.Anonymous;
 import com.chengyinhub.common.constant.ProductType;
 import com.chengyinhub.common.constant.RecruitmentWindowPolicy;
 import com.chengyinhub.common.constant.HttpStatus;
@@ -1661,11 +1662,15 @@ public class ApiTopicController extends BaseController {
     @Parameters({
             @Parameter(name = "id", description = "主题id")
     })
+    // owner 2026-10-24「游客可浏览，写入时弹窗登录」:主题详情/封面对游客开放只读。
+    // 游客 memberId=0:可见性只走公开闸(status/user_status/圈子公开闸),本人态全部为否
+    // (isSignUp/isRegistrationMerchant/isOwner=0、不下发驳回原因、多章剧情只解锁首章、不放行承接站)。
+    @Anonymous
     public AjaxResult topicInfo(String id) {
         CmsTopic cmsTopic = new CmsTopic();
 
 
-        Long memberId = getAppUserId();
+        Long memberId = optionalAppUserId();
 
         Long topicId = Convert.toLong(id, 0L);
 
@@ -1960,6 +1965,16 @@ public class ApiTopicController extends BaseController {
         }
     }
 
+
+    /** 游客(无登录态)= 0L,只用于公开只读投影;写接口一律继续用 getAppUserId() 硬要求登录。 */
+    private Long optionalAppUserId() {
+        try {
+            Long id = getAppUserId();
+            return id == null || id <= 0 ? 0L : id;
+        } catch (Exception notLoggedIn) {
+            return 0L;
+        }
+    }
 
     @Operation(summary = "M7 主题XP预算总览(publishCheck奖励总览/budget-bar)")
     @PostMapping("/xp-budget")
