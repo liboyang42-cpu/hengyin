@@ -152,3 +152,13 @@ App / 真库 / CI = NOT_RUN。
 - 知识草稿 HTTP 路由不存在，保持 WAITING_SOURCE。
 - 真实 App / MySQL / 并发 / CI 属 C12 与 D6，本组未跑。
 - 不是 100%。
+
+## 8. Parent addendum 2026-10-23 18:37 America/Los_Angeles
+
+Timer deliveryCount=36 (01:30Z). WAITING_SOURCE cat-file still ABSENT.
+
+Class-level `MerchantNpcDraftApprovalGateTest.unpublishedProjectionDoesNotOccupyPrivateScopesThenUniqueRetainPrivateApplies`：unpublished `playerProjection` 不得占 `privateScopes`；后续唯一 `retainPrivate` 才是第一次隔离占用，`publish` 清掉后投影恢复。Did not invent recoverOriginal on iOS/Java C06 isolation.
+
+HEAD `ce76c9644`. Parent surefire `com.chengyinhub.business.service.npc.*Test` **22/0** 2026-10-24T01:37:16Z. Isolation 5/0. Gate 12/0. Revoke 4/0.
+
+App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
