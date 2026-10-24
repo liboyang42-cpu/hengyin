@@ -22,6 +22,7 @@ const gameSessionClient = require('../../utils/game-session-client.js');
 const audioSession = require('./utils/audio-session.js');       // 音频打断/恢复 + 长音频不熄屏
 const { createPoller } = require('./utils/poller.js');           // 带领场进度:退避轮询
 const playAccuracy = require('./utils/play-accuracy.js');       // 到达定位精度阈值(80m)与提示
+const { VM } = require('../../utils/validation-method-labels.js'); // 核验方式码值(与后端 ValidationMethod 同值)
 const {
   normalizePlayerProjection,
   buildPlayerChoiceInput,
@@ -4563,7 +4564,7 @@ Page({
             // 仅"到点即完成(vm0)/GPS到达(vm5)"节点自动到达;答题/拍照/选项/扫码(1/2/3/4)须玩家手动完成,
             // 否则后端 arrive 闸会拒绝并在每次定位回调刷 toast。
             // 精度 > 80m 后端必拒(定位精度不足),不发,免得每次定位回调都弹一次拒绝
-            if (d <= 50 && !node.done && (node.vm === 0 || node.vm === 5) && playAccuracy.canAutoArrive(loc.accuracy)) that.arrive(node.nodeId, 'gps');
+            if (d <= 50 && !node.done && (node.vm === VM.NONE || node.vm === VM.GPS) && playAccuracy.canAutoArrive(loc.accuracy)) that.arrive(node.nodeId, 'gps');
           }
         };
         wx.onLocationChange(that._playLocationHandler);
@@ -4922,7 +4923,7 @@ Page({
   // 对不上。前往 / 我到了只留节点半屏这一个入口(9-09 裁决:点不开或点错的功能一律收口)。
   // 入口:节点详情卡「⊡ 我已到达此站」(无模板节点)。仅 mode2 且有坐标才截胡进 nav。
   _isStoryGame(node) {
-    return !!node && !node.lat && !node.lng && node.vm !== 4 && node.vm !== 5
+    return !!node && !node.lat && !node.lng && node.vm !== VM.QR && node.vm !== VM.GPS
       && ((this.data.chapter && this.data.chapter.blocks) || []).some((block) =>
         block.type === 'node' && block.locationRequired === false
         && String(block.nodeId) === String(node.nodeId));
@@ -5153,7 +5154,7 @@ Page({
     if (!node) return;
     if (this._arrivalWriteUnknown) return;
     // 高级玩法已通过且本站没有坐标时直接收尾；真实地点和GPS任务仍要求定位。
-    const needsLocation = node.lat || node.lng || node.vm === 5 || this._advancedReadyNodeId !== node.nodeId;
+    const needsLocation = node.lat || node.lng || node.vm === VM.GPS || this._advancedReadyNodeId !== node.nodeId;
     if (!this.data.gpsOk && !this._isStoryGame(node) && needsLocation) { this.requestPlayLocation(); return; }
     this.arrive(node.nodeId, 'arrive');
   },
@@ -5462,7 +5463,7 @@ Page({
        以前只放 0/5 过,其余全被塞进 startGame:守卫刚被 _advancedReadyNodeId
        放行,于是落到老任务页 —— 那屏只写了 vm 1/2/3/4/6,这三个进来只剩一屏
        标题文字、零按钮的死路。 */
-      if (node.vm === 0 || node.vm === 5 || node.vm === 8 || node.vm === 9 || node.vm === 10) {
+      if (node.vm === VM.NONE || node.vm === VM.GPS || node.vm === VM.ESTIMATE || node.vm === VM.PRICE_PAIR || node.vm === VM.HIDDEN_OBJECT) {
         this.setData({ 'sheet.show': true, sheetOut: false });
         this.onSheetGoTap();
       } else {
