@@ -191,31 +191,9 @@ public class TopicPublicationContentGuard {
         return Collections.singletonList(chapter);
     }
 
-    public void publishApprovedRouteSnapshot(Long topicId) {
-        CmsTopic topic = cmsTopicMapper.selectCmsTopicById(topicId);
-        if (topic == null || !Integer.valueOf(1).equals(topic.getStatus())) {
-            throw new IllegalStateException("主题尚未成功通过审核，拒绝推进路线发布快照");
-        }
-        publishValidatedRouteSnapshot(topic);
-    }
 
-    public void publishValidatedRouteSnapshot(CmsTopic topic) {
-        if (topic == null) throw new IllegalStateException("主题不存在");
-        Long topicId = topic.getId();
-        assertStateKeysRegistered(topic);
-        assertThoughtRefsResolvable(topic);
-        // R8-STORY:剧情配置的章节 / NPC 引用同上
-        assertJourneyStoryReferences(topic);
-        assertThemeRuntimeReferences(topic);
-        // R11-A:节点叙事段(enter / outcome)的 npcId 同一道归属闸
-        assertBlockNarrativeNpcReferences(topic);
-        // R14:块配置条件里 sys.* 引用的 nodeId 同一道归属闸
-        assertBlockSysVarReferences(topic);
-        String snapshot = normalizedBranchRouteForPublish(topic);
-        if (cmsTopicMapper.publishRouteSnapshot(topicId, snapshot, new Date()) != 1) {
-            throw new IllegalStateException("路线发布快照保存失败");
-        }
-    }
+
+
 
     public void assertThoughtRefsResolvable(CmsTopic topic) {
         if (cmsTopicChapterMapper == null) return;

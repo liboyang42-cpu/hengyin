@@ -145,7 +145,7 @@ public class TopicPublicationService {
         TopicBundleSubmitResultVO reviewResult = simple ? null : submitTopicBundle(id, topic.getMemberId());
         // 发布草稿后同步恢复公开帖；专业版审核任务留在后台。留置中不公开。
         if (!contentSafetyHeld) syncCreativeSquarePostVisibility(id, true);
-        if (simple && cmsTopicMapper.publishRouteSnapshot(id, publishedRouteSnapshot, new Date()) != 1) {
+        if (simple && persistRouteSnapshot(id, publishedRouteSnapshot, new Date()) != 1) {
             throw new IllegalStateException("路线发布快照保存失败");
         }
         // R18-DRAFT:草稿期不再预建自办活动壳(草稿不得出现在公开活动列表)⇒ 自办主题在这里补建,
@@ -248,13 +248,13 @@ public class TopicPublicationService {
         CmsTopic current = cmsTopicMapper.selectCmsTopicById(topicId);
         if (com.chengyinhub.business.util.TopicContentSafetyHold.isHeld(current)) {
             // 已发布过的主题照常刷新路线快照,复核通过上架时就是最新内容;未发布的由过审时统一发布。
-            if (Integer.valueOf(1).equals(current.getStatus())) publicationContentGuard.publishValidatedRouteSnapshot(current);
+            if (Integer.valueOf(1).equals(current.getStatus())) publishValidatedRouteSnapshot(current);
             requestContentSafetyRelistReview(topicId, memberId);
             return false;
         }
         String quotaError = quotaService.lockAndCheckThemeOnline(memberId, topicId);
         if (quotaError != null) throw new ServiceException(quotaError);
-        publicationContentGuard.publishValidatedRouteSnapshot(cmsTopicMapper.selectCmsTopicById(topicId));
+        publishValidatedRouteSnapshot(cmsTopicMapper.selectCmsTopicById(topicId));
         CmsTopic published = new CmsTopic();
         published.setId(topicId);
         published.setStatus(1);
@@ -312,5 +312,37 @@ public class TopicPublicationService {
             return;
         }
         umsCreativeSquareService.syncTopicPostVisibility(topicId, visible);
+    }
+
+
+    public void publishApprovedRouteSnapshot(Long topicId) {
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicById(topicId);
+        if (topic == null || !Integer.valueOf(1).equals(topic.getStatus())) {
+            throw new IllegalStateException("主题尚未成功通过审核，拒绝推进路线发布快照");
+        }
+        publishValidatedRouteSnapshot(topic);
+    }
+
+    private void publishValidatedRouteSnapshot(CmsTopic topic) {
+        if (topic == null) throw new IllegalStateException("主题不存在");
+        Long topicId = topic.getId();
+        publicationContentGuard.assertStateKeysRegistered(topic);
+        publicationContentGuard.assertThoughtRefsResolvable(topic);
+        // R8-STORY:剧情配置的章节 / NPC 引用同上
+        publicationContentGuard.assertJourneyStoryReferences(topic);
+        publicationContentGuard.assertThemeRuntimeReferences(topic);
+        // R11-A:节点叙事段(enter / outcome)的 npcId 同一道归属闸
+        publicationContentGuard.assertBlockNarrativeNpcReferences(topic);
+        // R14:块配置条件里 sys.* 引用的 nodeId 同一道归属闸
+        publicationContentGuard.assertBlockSysVarReferences(topic);
+        String snapshot = publicationContentGuard.normalizedBranchRouteForPublish(topic);
+        if (persistRouteSnapshot(topicId, snapshot, new Date()) != 1) {
+            throw new IllegalStateException("路线发布快照保存失败");
+        }
+    }
+
+    /** The publication owner is the single route-publication write port; callers retain original guards and rowcount checks. */
+    public int persistRouteSnapshot(Long topicId, String snapshot, Date publishedAt) {
+        return cmsTopicMapper.publishRouteSnapshot(topicId, snapshot, publishedAt);
     }
 }

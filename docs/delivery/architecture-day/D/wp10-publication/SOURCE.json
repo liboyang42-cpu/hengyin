@@ -15,7 +15,9 @@
       "requestContentSafetyRelistReview",
       "submitDraftSpotCheck",
       "submitPublishedProjectReview",
-      "submitTopicBundle"
+      "submitTopicBundle",
+      "publishApprovedRouteSnapshot",
+      "publishValidatedRouteSnapshot"
     ],
     "activity": [
       "assertSoldActivityTimeLocationUntouched",
@@ -51,14 +53,12 @@
       "journeyStoryStateKeyRefs",
       "normalizedBranchRouteForPublish",
       "ordinarySupplyResumeBlockReason",
-      "publishApprovedRouteSnapshot",
-      "publishValidatedRouteSnapshot",
       "requiresFullRuntimeSnapshot",
       "validateCoordinate"
     ]
   },
   "moved_method_count": 47,
-  "unchanged_method_count": 128,
+  "unchanged_method_count": 127,
   "original_366_names_preserved": true,
   "old_ordinary_cases_in_all_touched_files": 448,
   "graph_mysql_cases": 32,
@@ -76,7 +76,7 @@
     "topicRouteConfigValidator",
     "routeOutcomeReader"
   ],
-  "patch_sha256": "1d068915e5804e9bc2be5cbd1fb7990731272f0f19ab97f271d21384e754b3e3",
+  "patch_sha256": "15b89065d89435376397ce010d5ef1f67a328eaebf77dff54875716c6f42dd98",
   "java_mysql_ci_executed": false,
   "files": [
     {
@@ -375,20 +375,20 @@
     },
     {
       "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
-      "sha256": "61c6bbda355ab2c6195af132a06117e2759cdd51fd16ec002e4c2910202a7aca",
-      "blob": "bfa7214b17adf54ccc1306089750821faa03fb2b",
+      "sha256": "965cbd0a532364e1c034eaf6031fd58c41affe7d11020d42ae7e368372cfa6fb",
+      "blob": "26e5e9e6e68a0c4b5629ea679baa464ed00923cd",
       "preimage_blob": "1506dc5b7a73af5f8abdcc0a172c08279b24ceec"
     },
     {
       "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicPublicationService.java",
-      "sha256": "20c220e3f635e1b391b63deeb792f1f2c1f8c18ce739f42f7d86cb876baa85ed",
-      "blob": "d3c6f6162968b10d91c4171d4f1e7c0ac4b3646c",
+      "sha256": "8fa749053e1058b634d0737ba7777581a8b5b752f1c16546882c214a3aa4f759",
+      "blob": "424b509b9aade7c8fce0ef241eed0d180d65b891",
       "preimage_blob": null
     },
     {
       "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicPublicationContentGuard.java",
-      "sha256": "bf84c4fc046e2ecb06ef0f93c77c906c0f9aca22a68db1df3112d428a344f2a2",
-      "blob": "94afef26e76d8af321ad37030af030f9541b275e",
+      "sha256": "5cb77f7c19e7858f471eb183e2e8bb12605e6d4a6ab41340f338148e65334531",
+      "blob": "7cd83c0d27f6198f33d4dab039d8ec1cc54e7b28",
       "preimage_blob": null
     },
     {
@@ -397,5 +397,8 @@
       "blob": "499a32b09fe21a4f46cc6bbb71518b1fd588cc6d",
       "preimage_blob": null
     }
-  ]
+  ],
+  "creation_method_snapshot_port_requalification_only": true,
+  "snapshot_write_port": "TopicPublicationService.persistRouteSnapshot",
+  "previous_frozen_publication_sha": "20d6df7cc53d00fdabf91918c843b5dec6c18d54"
 }

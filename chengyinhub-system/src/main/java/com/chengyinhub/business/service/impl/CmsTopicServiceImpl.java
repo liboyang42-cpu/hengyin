@@ -2371,7 +2371,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void publishApprovedRouteSnapshot(Long topicId) {
-        publicationContentGuard.publishApprovedRouteSnapshot(topicId);
+        topicPublicationService.publishApprovedRouteSnapshot(topicId);
     }
 
 
@@ -2902,12 +2902,12 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         contentGraphAuthoringService.persistTemplateInteractionRules(topicId);
         if (!saveDraft && simpleMode && !"BRANCH_GRAPH".equalsIgnoreCase(dto.getRouteMode())) {
             CmsTopic ready = cmsTopicMapper.selectCmsTopicById(topicId);
-            if (requiresFullRuntimeSnapshot(ready) && cmsTopicMapper.publishRouteSnapshot(topicId,normalizedBranchRouteForPublish(ready),new Date()) != 1) throw new IllegalStateException("主题模板规则发布失败");
+            if (requiresFullRuntimeSnapshot(ready) && topicPublicationService.persistRouteSnapshot(topicId,normalizedBranchRouteForPublish(ready),new Date()) != 1) throw new IllegalStateException("主题模板规则发布失败");
         }
         if (!saveDraft && simpleMode && "BRANCH_GRAPH".equalsIgnoreCase(dto.getRouteMode())) {
             CmsTopic publishedTopic = cmsTopicMapper.selectCmsTopicById(topicId);
             String snapshot = normalizedBranchRouteForPublish(publishedTopic);
-            if (cmsTopicMapper.publishRouteSnapshot(topicId, snapshot, new Date()) != 1) {
+            if (topicPublicationService.persistRouteSnapshot(topicId, snapshot, new Date()) != 1) {
                 throw new IllegalStateException("路线发布快照保存失败");
             }
         }

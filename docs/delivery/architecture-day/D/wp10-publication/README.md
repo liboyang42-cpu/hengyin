@@ -2,9 +2,9 @@
 
 基线 `6d668e381e8f0b6f33db93470c93056161be4b70` / tree `8f4f3463ac50a06415acc75afbc26e2dfd7d8c3f`。只改D独占主题门面、新发布同域owner及必要测试；没有整旧分支覆盖master。
 
-实际代码：CmsTopicServiceImpl 5238→4129行；47个定义迁入 TopicPublicationService（状态/草稿发布/组合审核）、TopicPublicationContentGuard（内容引用/供给恢复/发布快照）、TopicSelfHostActivityService（壳及既有票务服务协调）。新owner分别14/12/5个注入；没有Context转手、Controller lambda、反调ICmsTopicService或新增调度/外部服务。
+实际代码：CmsTopicServiceImpl 5238→4129行；47个定义迁入 TopicPublicationService（状态/草稿发布/组合审核）、TopicPublicationContentGuard（内容引用/供给恢复/快照校验）、TopicSelfHostActivityService（壳及既有票务服务协调）。新owner分别14/12/5个注入；发布快照SQL统一由TopicPublicationService.persistRouteSnapshot执行；没有Context转手、Controller lambda、反调ICmsTopicService或新增调度/外部服务。
 
-所有旧公共API、外层事务注解、owner/锁/CAS及调用次序保留。创建/编辑的原插入点委托组合送审；草稿发布、留置复核、审核通过快照/活动壳入口均接实际owner。审核/商业资格/额度/欠款/票务仍调用已有服务；未迁移资金算法。47个方法体去掉接收者限定后与6d相同，128个未迁方法体全字节相同；这是静态证据，不是Java等价验收。
+所有旧公共API、外层事务注解、owner/锁/CAS及调用次序保留。创建/编辑的原插入点委托组合送审；草稿发布、留置复核、审核通过快照/活动壳入口均接实际owner。审核/商业资格/额度/欠款/票务仍调用已有服务；未迁移资金算法。47个方法体去掉接收者限定后与6d相同，127个未迁方法体全字节相同，创建原体仅两处发布快照调用改接唯一写端口；这是静态证据，不是Java等价验收。
 
 D8的GraphImpl两处requireWithinLimits和TopicSizeLimits原helper均继承6d原blob；发布按库计数的第三道门禁移入真实发布guard，原调用位置不变。PointsValuePolicy、#585隐私/资质、#586 HTTP ACK及其他主线文件均继承6d，未修改。
 
