@@ -112,3 +112,23 @@ BUILD SUCCESS
 ```
 
 App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
+
+## Addendum 2026-10-23 19:39 America/Los_Angeles
+
+HEAD `046661647` tests. Did not invent recoverOriginal.
+
+`SideQuestAcceptHoldTest.unusedExitBeforeHoldDoesNotOccupyThenUniqueExitApplies`：DISCOVERED `exit` 抛 `HOLD_REQUIRED` 且 original 仍 null；后续唯一 acceptHold+exit 才是 EXITED 原文（无需 proof）。
+
+Parent surefire `com.chengyinhub.business.service.offline.*Test` **14/0** 2026-10-24T02:39:08Z：
+
+```
+Tests run: 1 -- OfflinePackOperationTest
+Tests run: 5 -- SideQuestAcceptHoldTest
+Tests run: 4 -- C05AccountSwitchRestartIsolationTest
+Tests run: 2 -- C05FirstJourneyIsolationTest
+Tests run: 2 -- NavigationDestinationConsentTest
+Tests run: 14, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
