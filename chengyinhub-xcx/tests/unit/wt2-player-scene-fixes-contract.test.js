@@ -31,6 +31,7 @@ function loadActivityComponent() {
       if (request.endsWith('response-shape.js')) return require('../../utils/response-shape.js')
       // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
       if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
+      if (request.endsWith('activity-lifecycle-state.js')) return require('../../utils/activity-lifecycle-state.js') // C:U-027 纯常量模块
       if (request.endsWith('media-preview.js')) return loadMediaPreview({ previewImage() {} })
       throw new Error(`unexpected dependency: ${request}`)
     },
