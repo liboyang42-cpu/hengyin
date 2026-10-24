@@ -34,6 +34,14 @@ class OriginalSendDigestVectorTest {
     }
 
     @Test
+    void scriptTagIsRemovedBeforeHashing() {
+        String raw = "<script>alert(1)</script>";
+        assertEquals("alert(1)", EscapeUtil.clean(raw));
+        assertEquals("7a82356a4861c01d805ff17257fac9a081dafeb20f609d5551606f38fcd705bd",
+                digest(raw, 9L, 0L, java.util.List.of(), java.util.List.of(), false));
+    }
+
+    @Test
     void htmlFilterOutputIsWhatGetsHashed() {
         String raw = "你好\"引号\"\n换行<b>粗</b>";
         assertEquals(raw, EscapeUtil.clean(raw));
