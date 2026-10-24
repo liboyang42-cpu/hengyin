@@ -53,4 +53,30 @@ class H5AnswerProtectionTest {
         assertEquals(H5AnswerProtection.Outcome.UNKNOWN, decision.outcome());
         assertNull(decision.originalRequestId());
     }
+
+    @Test
+    void recoverOfNeverSeenIdDoesNotOccupyThenUniqueMatchApplies() {
+        WorkshopOriginalRequestBinder binder = new WorkshopOriginalRequestBinder();
+        H5AnswerProtection protection = new H5AnswerProtection(binder);
+        H5AnswerProtection.Decision blank = protection.recover("  ");
+        assertNull(blank.originalRequestId());
+        assertEquals(H5AnswerProtection.Outcome.UNKNOWN, blank.outcome());
+        assertNull(binder.existing("  "));
+        H5AnswerProtection.Decision recovered = protection.recover("c10-ans-never-c10");
+        assertEquals("c10-ans-never-c10", recovered.originalRequestId());
+        assertEquals(H5AnswerProtection.Outcome.UNKNOWN, recovered.outcome());
+        assertNull(binder.existing("c10-ans-never-c10"));
+        H5AnswerProtection.Decision first = protection.evaluate(new H5AnswerProtection.Attempt(
+                "c10-ans-never-c10", Map.of("title", "demo"),
+                "north-gate", "north-gate", "v1", "v1", false, false));
+        assertEquals(H5AnswerProtection.Outcome.SERVER_MATCH, first.outcome());
+        assertEquals("c10-ans-never-c10", first.originalRequestId());
+        assertEquals(WorkshopOriginalRequestBinder.APPLIED, binder.existing("c10-ans-never-c10").status());
+        H5AnswerProtection.Decision replay = protection.evaluate(new H5AnswerProtection.Attempt(
+                "c10-ans-never-c10", Map.of("title", "demo"),
+                "north-gate", "north-gate", "v1", "v1", false, false));
+        assertEquals(H5AnswerProtection.Outcome.SERVER_MATCH, replay.outcome());
+        assertEquals("c10-ans-never-c10", replay.originalRequestId());
+        assertEquals(WorkshopOriginalRequestBinder.APPLIED, binder.existing("c10-ans-never-c10").status());
+    }
 }
