@@ -152,3 +152,23 @@ BUILD SUCCESS
 ```
 
 App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
+
+## Addendum 2026-10-23 19:46 America/Los_Angeles
+
+HEAD `1f02763b7` tests. Did not invent recoverOriginal.
+
+`OfflinePackOperationTest.unusedExpireOfIdleDoesNotOccupyThenUniqueStartThenExpireApplies`：IDLE `expire` 抛 `INVALID_MANIFEST` 且 phase 仍 IDLE、operationId 仍空；后续唯一 startDownload+expire 才是 EXPIRED（DOWNLOADING 允许 expire，即使 now 早于 expiresAt）。与 unused delete 的 DELETED 占账不同。
+
+Parent surefire `com.chengyinhub.business.service.offline.*Test` **16/0** 2026-10-24T02:46:17Z：
+
+```
+Tests run: 3 -- OfflinePackOperationTest
+Tests run: 5 -- SideQuestAcceptHoldTest
+Tests run: 4 -- C05AccountSwitchRestartIsolationTest
+Tests run: 2 -- C05FirstJourneyIsolationTest
+Tests run: 2 -- NavigationDestinationConsentTest
+Tests run: 16, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
