@@ -257,6 +257,13 @@ public class CmsRegistration extends BaseEntity
     /** 玩家本人冻结订单的人工售后状态；仅展示，不暴露案件内部材料。 */
     private String manualRefundCaseStatus;
 
+    /** 服务端读时刻(瞬态,epoch ms):玩家订单「未开始/进行中/已完成」标签按它判,不读手机时钟(U-033)。 */
+    private Long serverNow;
+
+    public Long getServerNow() { return serverNow; }
+
+    public void setServerNow(Long serverNow) { this.serverNow = serverNow; }
+
     public String getManualRefundCaseStatus() { return manualRefundCaseStatus; }
 
     public void setManualRefundCaseStatus(String status) { this.manualRefundCaseStatus = status; }

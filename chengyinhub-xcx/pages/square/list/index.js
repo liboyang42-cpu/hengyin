@@ -1126,10 +1126,13 @@ Page({
         bizId: id
       });
       return Object.assign(require('../utils/square-share.js').buildSquareShare(post), {
+        // U-171 分享回执:只有老基础库会回调 success/fail,新基础库不回调 —— 能拿到时如实记一笔。
         success: function (res) {
+          analytics.track('square_share_complete', { bizType: 'square', bizId: id });
           toast.success('分享成功');
         },
         fail: function (res) {
+          analytics.track('square_share_fail', { bizType: 'square', bizId: id, properties: { reason: 'cancelled' } });
           toast('分享取消');
         }
       });

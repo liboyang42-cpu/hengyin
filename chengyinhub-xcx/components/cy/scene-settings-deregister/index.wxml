@@ -1,3 +1,4 @@
+<wxs src="../../../utils/wxs/list-key.wxs" module="lk" />
 <view class="deregister-scene">
   <view class="deregister-card" wx:if="{{status === 'PENDING'}}">
     <text class="deregister-title">注销申请已提交</text>
@@ -23,7 +24,7 @@
   <view class="deregister-card deregister-card--blocked" wx:elif="{{status === 'BLOCKED'}}">
     <text class="deregister-title deregister-title--danger">暂时无法注销</text>
     <text class="deregister-copy">请先处理以下事项：</text>
-    <text class="deregister-blocker" wx:for="{{blockers}}" wx:key="*this">· {{item}}</text>
+    <text class="deregister-blocker" wx:for="{{lk.rows(blockers)}}" wx:key="key">· {{item.text}}</text>
     <cy-btn class="deregister-action" variant="secondary" bindtap="recheck">我已处理，重新检查</cy-btn>
   </view>
 
