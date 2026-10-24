@@ -55,7 +55,7 @@ function mountCityNodePage() {
         if (request.includes('code-text')) return require('../../pages/merchant/utils/code-text.js');
         // 据点核销与 #424 共用核销写闸(PRIVATE-GROUP-nucleation-original-request),给真实现
         if (request.includes('verification-readback')) return require('../../utils/verification-readback.js');
-        if (request.includes('citynode-redeem-outcome')) return require('../../utils/citynode-redeem-outcome.js');
+        if (request.includes('citynode-redeem-outcome')) return require('../../pages/merchant/utils/citynode-redeem-outcome.js');
         throw new Error('unexpected require: ' + request);
       },
       wx,
@@ -115,7 +115,7 @@ function mountCityNodeCreatePage() {
         if (request.includes('code-text')) return require('../../pages/merchant/utils/code-text.js');
         // 据点核销与 #424 共用核销写闸(PRIVATE-GROUP-nucleation-original-request),给真实现
         if (request.includes('verification-readback')) return require('../../utils/verification-readback.js');
-        if (request.includes('citynode-redeem-outcome')) return require('../../utils/citynode-redeem-outcome.js');
+        if (request.includes('citynode-redeem-outcome')) return require('../../pages/merchant/utils/citynode-redeem-outcome.js');
         throw new Error('unexpected require: ' + request);
       },
       wx,

@@ -792,15 +792,19 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
     {
         JSONObject out = new JSONObject();
         out.put("activeOffers", supply.size());
-        Set<String> topics = new HashSet<>();
+        // 按 topicId 去重(同名不同主题各算一个);一个主题多章多行只出一次名字
+        Map<Object, String> topics = new LinkedHashMap<>();
         int quotaTotal = 0, quotaUsed = 0;
         for (MerchantInsightSupplyFact f : supply)
         {
-            if (f.getTopicName() != null) topics.add(f.getTopicName());
+            if (f.getTopicName() != null)
+            {
+                topics.putIfAbsent(f.getTopicId() != null ? f.getTopicId() : "name:" + f.getTopicName(), f.getTopicName());
+            }
             if (f.getQuotaTotal() != null) quotaTotal += f.getQuotaTotal();
             if (f.getQuotaUsed() != null) quotaUsed += f.getQuotaUsed();
         }
-        out.put("topics", new ArrayList<>(topics));
+        out.put("topics", new ArrayList<>(topics.values()));
         out.put("quotaUsedRate", com.chengyinhub.common.utils.SafeRatio.ratio(quotaUsed, quotaTotal, 2));
         return out;
     }

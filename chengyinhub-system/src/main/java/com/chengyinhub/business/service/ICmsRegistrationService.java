@@ -38,6 +38,12 @@ public interface ICmsRegistrationService
      */
     public List<CmsRegistration> selectCmsRegistrationList(CmsRegistration cmsRegistration);
 
+    /**
+     * 已支付报名的待核销/已核销数,按项目一次分组查完。
+     * @return ownerId → {待核销(verification_status=0), 已核销(=1)};没有报名的项目不出现
+     */
+    Map<Long, long[]> countPaidVerificationByOwners(Long ownerType, java.util.Collection<Long> ownerIds);
+
     /** 历史 request_id 的 NULL 指纹只允许 CAS 绑定；并发已绑定相同值也算成功。 */
     public boolean bindLegacyRequestFingerprint(Long registrationId, String requestId, String requestFingerprint);
 
@@ -300,6 +306,9 @@ public interface ICmsRegistrationService
      * 只收口活动单(owner_type=2);主题单(①②③)的结算写入在核销动作里,不允许无台账自动置位。
      */
     public List<Long> listExpiredUnverifiedIds();
+
+    /** 同一到期判据，按 id 升序扫描严格大于 afterId 的下一页，每页最多 200 单。 */
+    public List<Long> listExpiredUnverifiedIdsAfter(long afterId);
 
     /**
      * RUN-01 到期自动核销:把一笔已确认到期的场次票置成已核销并记 {@code update_by}=自动任务来源。

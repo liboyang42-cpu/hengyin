@@ -29,7 +29,7 @@ const { cityOrientationScheduleIssues, freeExplorationSaleScheduleIssues, freeEx
 const { createPublishWorkflow } = require('../utils/publish/publish-workflow.js');
 const { createServerDraftSaver, topicIdOf, confirmedPublication } = require('../utils/publish/server-draft.js');
 const publishIntent = require('../../../utils/publish/publish-intent.js');
-const proEditorPolicy = require('../../../utils/publish/pro-editor-policy.js');
+const proEditorPolicy = require('../utils/publish/pro-editor-policy.js');
 const proEditorDraft = require('../utils/publish/pro-editor-draft.js');
 
 function emptyChapterForm(name = '', opening = false) {
@@ -648,7 +648,8 @@ Page({
   _draftContentRevision() {
     return JSON.stringify([this.data.formData, this.data.pendingMaterials,
       this.data.selectedCategoryIds, this.data.selectedCategoryNames,
-      this.data.startDateTime, this.data.endDateTime]);
+      this.data.startDateTime, this.data.endDateTime, this.data.completionRuleMode,
+      this.data.completionRequiredCount, this.data.bingoRows, this.data.publishToCreative, this.data.aiSimple]);
   },
 
   _showUnstoredPublishedChanges(rejected) {
@@ -788,7 +789,8 @@ Page({
         || key === 'selectedCategoryIds'
         || key === 'selectedCategoryNames'
         || key === 'startDateTime'
-        || key === 'endDateTime';
+        || key === 'endDateTime'
+        || ['completionRuleMode', 'completionRequiredCount', 'bingoRows', 'publishToCreative', 'aiSimple'].includes(key);
     });
   },
 
@@ -812,6 +814,11 @@ Page({
           selectedCategoryNames: this.data.selectedCategoryNames || [],
           startDateTime: this.data.startDateTime,
           endDateTime: this.data.endDateTime,
+          completionRuleMode: this.data.completionRuleMode,
+          completionRequiredCount: this.data.completionRequiredCount,
+          bingoRows: this.data.bingoRows,
+          publishToCreative: this.data.publishToCreative,
+          aiSimple: this.data.aiSimple,
         },
       });
       this._draftSaveWarned = false;
@@ -845,6 +852,11 @@ Page({
     }
     if (meta.startDateTime) patch.startDateTime = meta.startDateTime;
     if (meta.endDateTime) patch.endDateTime = meta.endDateTime;
+    if (['ALL', 'AT_LEAST'].includes(meta.completionRuleMode)) patch.completionRuleMode = meta.completionRuleMode;
+    if (Number.isFinite(meta.completionRequiredCount)) patch.completionRequiredCount = meta.completionRequiredCount;
+    if (Array.isArray(meta.bingoRows)) patch.bingoRows = meta.bingoRows;
+    if (typeof meta.publishToCreative === 'boolean') patch.publishToCreative = meta.publishToCreative;
+    if (typeof meta.aiSimple === 'boolean') patch.aiSimple = meta.aiSimple;
     cyToast(pendingMaterials.length
         ? ('已恢复上次未编排完的 ' + pendingMaterials.length + ' 个素材')
         : '已恢复上次本地草稿');

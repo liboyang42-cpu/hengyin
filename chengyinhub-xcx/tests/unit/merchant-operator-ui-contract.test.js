@@ -772,7 +772,7 @@ test('商家项目招商从项目页到邀约提交全程保留 MERCHANT 主体'
   assert.match(profile, /readPublisherAccess\(app, this\.data, allowed =>/);
   assert.match(profile, /onCoopInvite\(\)\s*\{[\s\S]{0,180}this\._coopPublisherMemberId !== String\(app\.getUserID\(\) \|\| ''\)/);
   assert.match(read('subpackageMember/components/cy/profile/index.wxml'), /<cy-coop-invite-sheet[^>]*topic-id="\{\{topicId\}\}"[^>]*operation-scope="\{\{operationScope \|\| ''\}\}"/);
-  const { readPublisherAccess } = require('../../utils/coop-publisher-access');
+  const { readPublisherAccess } = require('../../subpackageMember/utils/coop-publisher-access');
   const accessRequests = [];
   const accessResults = [];
   const merchantApp = { getUserID: () => 'member-7', getUserRole: () => 'merchant', sendRequest: req => accessRequests.push(req) };

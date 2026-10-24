@@ -1,0 +1,227 @@
+{
+  "schema": 1,
+  "scope": "merge anchor identity only; no rule/count/limit relaxation",
+  "parents": {
+    "root": "0707d2f625b08eb3af63a98fc018b78eb232342a",
+    "master": "c283adf7f40fa3d6c71e7bd879eab5047cf5ebca"
+  },
+  "anchors": [
+    {
+      "parent": "root",
+      "section": "u4Dynamic",
+      "old": "chengyinhub-xcx/pages/publish/fabu/index.js:851",
+      "current": "chengyinhub-xcx/pages/publish/fabu/index.js:863",
+      "same_three_lines": true,
+      "same_reason": false,
+      "reason_source": "public master fixed-setting validation update"
+    },
+    {
+      "parent": "root",
+      "section": "u4Dynamic",
+      "old": "chengyinhub-xcx/pages/publish/fabu/index.js:1151",
+      "current": "chengyinhub-xcx/pages/publish/fabu/index.js:1163",
+      "same_three_lines": true,
+      "same_reason": true,
+      "reason_source": "original"
+    },
+    {
+      "parent": "root",
+      "section": "u4Dynamic",
+      "old": "chengyinhub-xcx/pages/publish/fabu/index.js:2852",
+      "current": "chengyinhub-xcx/pages/publish/fabu/index.js:2864",
+      "same_three_lines": true,
+      "same_reason": true,
+      "reason_source": "original"
+    },
+    {
+      "parent": "root",
+      "section": "u4Dynamic",
+      "old": "chengyinhub-xcx/pages/publish/fabu/index.js:3918",
+      "current": "chengyinhub-xcx/pages/publish/fabu/index.js:3930",
+      "same_three_lines": true,
+      "same_reason": true,
+      "reason_source": "original"
+    },
+    {
+      "parent": "root",
+      "section": "u4Dynamic",
+      "old": "chengyinhub-xcx/pages/publish/fabu/index.js:4299",
+      "current": "chengyinhub-xcx/pages/publish/fabu/index.js:4311",
+      "same_three_lines": true,
+      "same_reason": true,
+      "reason_source": "original"
+    },
+    {
+      "parent": "root",
+      "section": "u4Dynamic",
+      "old": "chengyinhub-xcx/pages/publish/fabu/index.js:5362",
+      "current": "chengyinhub-xcx/pages/publish/fabu/index.js:5374",
+      "same_three_lines": true,
+      "same_reason": true,
+      "reason_source": "original"
+    },
+    {
+      "parent": "root",
+      "section": "u4Dynamic",
+      "old": "chengyinhub-xcx/pages/publish/fabu/index.js:5621",
+      "current": "chengyinhub-xcx/pages/publish/fabu/index.js:5633",
+      "same_three_lines": true,
+      "same_reason": true,
+      "reason_source": "original"
+    },
+    {
+      "parent": "root",
+      "section": "u4Dynamic",
+      "old": "chengyinhub-xcx/pages/publish/fabu/index.js:6277",
+      "current": "chengyinhub-xcx/pages/publish/fabu/index.js:6289",
+      "same_three_lines": true,
+      "same_reason": true,
+      "reason_source": "original"
+    },
+    {
+      "parent": "root",
+      "section": "u4Dynamic",
+      "old": "chengyinhub-xcx/pages/publish/fabu/index.js:6287",
+      "current": "chengyinhub-xcx/pages/publish/fabu/index.js:6299",
+      "same_three_lines": true,
+      "same_reason": true,
+      "reason_source": "original"
+    },
+    {
+      "parent": "root",
+      "section": "u4Dynamic",
+      "old": "chengyinhub-xcx/pages/publish/fabu/index.js:6340",
+      "current": "chengyinhub-xcx/pages/publish/fabu/index.js:6352",
+      "same_three_lines": true,
+      "same_reason": true,
+      "reason_source": "original"
+    },
+    {
+      "parent": "root",
+      "section": "u4Dynamic",
+      "old": "chengyinhub-xcx/pages/publish/fabu/index.js:8652",
+      "current": "chengyinhub-xcx/pages/publish/fabu/index.js:8664",
+      "same_three_lines": true,
+      "same_reason": true,
+      "reason_source": "original"
+    },
+    {
+      "parent": "root",
+      "section": "u4Dynamic",
+      "old": "chengyinhub-xcx/pages/publish/temp/index.js:1451",
+      "current": "chengyinhub-xcx/pages/publish/temp/index.js:1458",
+      "same_three_lines": true,
+      "same_reason": true,
+      "reason_source": "original"
+    },
+    {
+      "parent": "root",
+      "section": "u4Dynamic",
+      "old": "chengyinhub-xcx/pages/publish/temp/index.js:1452",
+      "current": "chengyinhub-xcx/pages/publish/temp/index.js:1459",
+      "same_three_lines": true,
+      "same_reason": true,
+      "reason_source": "original"
+    },
+    {
+      "parent": "root",
+      "section": "u4Dynamic",
+      "old": "chengyinhub-xcx/pages/publish/temp/index.js:1495",
+      "current": "chengyinhub-xcx/pages/publish/temp/index.js:1502",
+      "same_three_lines": true,
+      "same_reason": true,
+      "reason_source": "original"
+    },
+    {
+      "parent": "root",
+      "section": "u4Dynamic",
+      "old": "chengyinhub-xcx/pages/publish/temp/index.js:2930",
+      "current": "chengyinhub-xcx/pages/publish/temp/index.js:2942",
+      "same_three_lines": true,
+      "same_reason": true,
+      "reason_source": "original"
+    },
+    {
+      "parent": "root",
+      "section": "u4Dynamic",
+      "old": "chengyinhub-xcx/pages/publish/temp/index.js:3726",
+      "current": "chengyinhub-xcx/pages/publish/temp/index.js:3738",
+      "same_three_lines": true,
+      "same_reason": true,
+      "reason_source": "original"
+    },
+    {
+      "parent": "root",
+      "section": "u4Dynamic",
+      "old": "chengyinhub-xcx/pages/publish/temp/index.js:3853",
+      "current": "chengyinhub-xcx/pages/publish/temp/index.js:3865",
+      "same_three_lines": true,
+      "same_reason": true,
+      "reason_source": "original"
+    },
+    {
+      "parent": "root",
+      "section": "u4Dynamic",
+      "old": "chengyinhub-xcx/pages/publish/fabu/index.js:6686",
+      "current": "chengyinhub-xcx/pages/publish/fabu/index.js:6698",
+      "same_three_lines": true,
+      "same_reason": true,
+      "reason_source": "original"
+    },
+    {
+      "parent": "master",
+      "section": "u4Dynamic",
+      "old": "chengyinhub-xcx/pages/play/index.js:1620",
+      "current": "chengyinhub-xcx/pages/play/index.js:1708",
+      "same_three_lines": true,
+      "same_reason": true,
+      "reason_source": "original"
+    },
+    {
+      "parent": "master",
+      "section": "u5Silent",
+      "old": "chengyinhub-xcx/pages/play/index.js:7688",
+      "current": "chengyinhub-xcx/pages/play/index.js:7778",
+      "same_three_lines": true,
+      "same_reason": true,
+      "reason_source": "original"
+    }
+  ],
+  "production_or_private_history_touched": false,
+  "java_db_ci": "NOT_RUN",
+  "minimal_merge_checks": {
+    "play_syntax": "PASS",
+    "get_auth_matrix_and_mainpkg_leaves": {
+      "executed": 32,
+      "pass": 30,
+      "fail": 2,
+      "skip": 0,
+      "failure_reason": "Existing source-location assertions expect inline controller authentication; real delegation and application guards need assertion migration; not accepted as passing."
+    },
+    "action_ledger_controls": 5109
+  },
+  "automatic_compositions": {
+    "CmsRegistrationServiceImpl": "Preserved root write/points guards and main paid-verification aggregation/cursor methods; root-to-merge diff only adds 24 lines.",
+    "RegistrationFundsMybatisIntegrationTest": "Preserved root funds assertions; main adds nine cursor checks.",
+    "pages/play/index.js": "Preserved root account/intent/Photo changes; root-to-merge only story-audio relocated import.",
+    "get-auth-matrix-contract.test.js": "Preserved root authenticated endpoint entries/counts and main two relocated feature paths."
+  },
+  "immutable_tool_pins": {
+    "architecture": "7b3cb04791c4b31b42592ffc82de83e0c34339c4",
+    "m1_comparator": "f671227c0bd483b290a72c04ca2ed60bb5f7748e"
+  },
+  "m1_workflow_controls": {
+    "pass": 3,
+    "fail": 0,
+    "skip": 0
+  },
+  "all_complete": false,
+  "staged_whitespace_check": {
+    "exit": 2,
+    "inherited_public_master_only": [
+      "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiMerchantLedgerControllerTest.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiMerchantOperatorReadScopeTest.java"
+    ],
+    "both_files_byte_identical_to_public_master": true
+  }
+}

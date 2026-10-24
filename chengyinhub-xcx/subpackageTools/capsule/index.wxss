@@ -1,4 +1,4 @@
-@import '../../style/tool-ui.wxss';
+@import '../style/tool-ui.wxss';
 .rd-label--row { display: flex; justify-content: space-between; }
 .rd-label__v { color: var(--cy-comp-sheet-player-text); }
 .rd-label { padding: 31rpx 31rpx 15rpx; font-size: var(--cy-type-label); color: var(--cy-comp-sheet-player-text-secondary); }

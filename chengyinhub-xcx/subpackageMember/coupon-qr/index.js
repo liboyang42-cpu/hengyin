@@ -2,7 +2,7 @@
 // 动态二维码(couponHistoryId + 60s 签名 token,倒计时自动刷新) + 每 5s 轮询核销状态
 const cyToast = require('../../utils/toast.js');
 const app = getApp();
-const credential = require('../../utils/coupon-credential.js');
+const credential = require('../utils/coupon-credential.js');
 const { readReducedMotion } = require('../../utils/motion-preference.js');
 const datetime = require('../../utils/datetime.js');
 

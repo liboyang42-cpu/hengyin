@@ -219,8 +219,14 @@ public class TopicRouteEngine {
     private boolean legacyConditionPasses(JsonNode condition, State state) {
         String op = condition.path("op").asText();
         if ("ITEM_HELD".equals(op) || "ITEM_ACQUIRED".equals(op)) {
+            JsonNode quantity = condition.path("quantity");
+            if (!quantity.isIntegralNumber() || !quantity.canConvertToLong()
+                    || quantity.asLong() < 1 || quantity.asLong() > 999) {
+                // 非法配置不能当 false 返回，否则 NOT 会把它反转为通过。
+                throw new IllegalArgumentException("物资条件数量须为 1 至 999 的整数");
+            }
             String field = "ITEM_HELD".equals(op) ? "inventory" : "acquired";
-            return state.themeRuntime.path(field).path(condition.path("itemId").asText()).asInt() >= condition.path("quantity").asInt();
+            return state.themeRuntime.path(field).path(condition.path("itemId").asText()).asInt() >= quantity.asLong();
         }
         if ("NODE_COMPLETED".equals(op)) {
             return state.completedNodeIds.contains(condition.path("nodeId").asLong());

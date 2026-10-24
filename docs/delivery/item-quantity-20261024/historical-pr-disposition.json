@@ -1,0 +1,198 @@
+{
+  "schemaVersion": 1,
+  "auditedMaster": "e2e05b9614a3c5d62b774718797f9a6792a3eeca",
+  "auditDate": "2026-10-24",
+  "method": "完整分页读取历史 8 PR /files（2316 条记录），对照当前源码、调用者、测试及后续提交。短 SHA 表示该 master 的已确认祖先。",
+  "limitations": [
+    "分流不是各旧 head 的完整测试验收",
+    "未运行后端 Maven/Java/数据库或微信 UI；未验不自动记为 BUG",
+    "不关闭、不合并旧 PR，不修改其分支，不导入 carrier 历史"
+  ],
+  "entries": [
+    {
+      "pr": 3,
+      "files": 31,
+      "adopted": [
+        "支付中订单有界游标对账",
+        "IM 列表旧响应与静音/删除竞态、可见已读",
+        "草稿按提交数组重建章/节点顺序",
+        "consent 请求身份一致性",
+        "NPC 通行证/场次时效"
+      ],
+      "confirmedMissing": [],
+      "deferred": [],
+      "closeRecommendation": "可由协调者关闭重复入口；本分支不关闭 PR",
+      "successors": [
+        "f1341d06",
+        "f2b2c7c2",
+        "b44d43df",
+        "e3b302dc"
+      ],
+      "head": "0f0c32f1edc955f6117108daecbb492652212931",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/3"
+    },
+    {
+      "pr": 11,
+      "files": 317,
+      "adopted": [
+        "A/B/C 基础实现与六份迁移",
+        "callback inbox 身份/事务 fence",
+        "提现失败退款恢复的后续替代实现"
+      ],
+      "confirmedMissing": [],
+      "deferred": [
+        "注销时是否清除同账户未同步缓存：待规则决策",
+        "报名通知持久 outbox：现有 after-commit 不能宣称持久可靠"
+      ],
+      "closeRecommendation": "保留两项决策后，可关闭重复 carrier",
+      "successors": [
+        "bc05d9cb",
+        "91f8b440",
+        "90a8c136",
+        "ed682117"
+      ],
+      "head": "0b301c9b8d1853a86ed689c701eaad40cb3b70d7",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/11"
+    },
+    {
+      "pr": 21,
+      "files": 377,
+      "adopted": [
+        "含 367 个小程序文件，并非 docs-only",
+        "BL230–255 UI/导航及后续 L21 发布锁、发布校验、阶段结束",
+        "退款驳回订阅请求、收藏按 ID 取消、治理通知读取"
+      ],
+      "confirmedMissing": [],
+      "deferred": [
+        "CL6 联合主办公开展示未完",
+        "商家认领证明细节与订阅模板实际配置未验/待决，不自动记为 BUG"
+      ],
+      "closeRecommendation": "保留 CL6 与配置/验收记录后，可关闭重复代码入口",
+      "successors": [
+        "1c469f9e",
+        "b268b5cc",
+        "bf72faa2"
+      ],
+      "head": "6bfc9e572d8cfd252a399896b9225b310809149e",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/21"
+    },
+    {
+      "pr": 334,
+      "files": 194,
+      "adopted": [
+        "身份证、产品发布闸、引用隐私、IM 路由",
+        "内容类型/媒体权利、协作者、售出锁、传感器",
+        "共享暂停、线索单调性、审核失败关闭"
+      ],
+      "confirmedMissing": [],
+      "deferred": [
+        "券规则版本/支付事实/身份变更/团接待/核销上传归属等未完或待规则决策",
+        "在线提现 summary 缺失不列现有 BUG：玩家提现已转客服流程"
+      ],
+      "closeRecommendation": "不整合；先拆存未完功能记录",
+      "successors": [
+        "647e7fa2",
+        "1fc7fe7d",
+        "7ce7517b",
+        "9de8fb3f",
+        "6f9ccc53",
+        "3ba609ce",
+        "c7c974f4",
+        "9b7276ef",
+        "ea7c438e",
+        "9921d4ad"
+      ],
+      "head": "81382f28ff8f3f61066e80515b9628e15032c971",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/334"
+    },
+    {
+      "pr": 335,
+      "files": 340,
+      "adopted": [
+        "无障碍/动效、故事媒体、定位撤回、草稿与恢复",
+        "传感器、身份证、最高价边界、同图失败重试"
+      ],
+      "confirmedMissing": [],
+      "deferred": [
+        "身份变更、团接待、提现渠道等新增流程保留待验"
+      ],
+      "closeRecommendation": "功能留档后可关闭重复修复入口",
+      "successors": [
+        "647e7fa2",
+        "9c67529d",
+        "f59c51d5",
+        "ecda12d1"
+      ],
+      "head": "54f9fb2e1dfb344dfefb59555f8a9786957f1c60",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/335"
+    },
+    {
+      "pr": 336,
+      "files": 160,
+      "adopted": [
+        "退款/关单游标、候补、结束边界",
+        "AI 额度退回、IM 可见已读、文本审核降级"
+      ],
+      "confirmedMissing": [
+        {
+          "item": "自动核销固定前 200 条持续失败可阻塞尾部",
+          "owner": "协调者指定 #596 独立处理；本分支不实现、不宣称已通过"
+        }
+      ],
+      "deferred": [
+        "购物车 settlement receipt/请求号回读是新增恢复契约，需要规则与迁移决策",
+        "insert 返回 0 的资金影响缺少真实复现，unknown"
+      ],
+      "closeRecommendation": "先跟踪 #596 和新增契约待办，再收口 carrier",
+      "successors": [
+        "063a6c3c",
+        "bc05d9cb"
+      ],
+      "head": "7d186d55f6b9fc699613b018038d536bb04d55fc",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/336"
+    },
+    {
+      "pr": 338,
+      "files": 143,
+      "adopted": [
+        "现有工厂处理器 AST 扫描和正负测试"
+      ],
+      "confirmedMissing": [],
+      "deferred": [
+        "旧 carrier 的额外 parser 用例未全量证明等价，unknown",
+        "stacked sheet 处理器缺少 guard，但真实 UI 触达/用户影响 unknown；见 sheet 复现文档",
+        "城市板、私人主页、社交、付费工作坊等新增功能待验"
+      ],
+      "closeRecommendation": "保留待验记录，不合入旧平台/CI 改动",
+      "successors": [],
+      "head": "35ce7cc7ad04e9fc17ce6183f188604a675ecf24",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/338"
+    },
+    {
+      "pr": 398,
+      "files": 754,
+      "adopted": [
+        "券有效期、模板重发布、日志脱敏、NPC 目录、规则说明",
+        "空身份归属、跨夜营业、缺模板重开、duration 溢出"
+      ],
+      "confirmedMissing": [
+        {
+          "item": "ITEM_HELD/ITEM_ACQUIRED quantity 整数截断及运行时非整数绕过",
+          "owner": "本分支 / PR #599；测试与实现分开提交"
+        }
+      ],
+      "deferred": [
+        "孤儿模板复制规则待定",
+        "平台/原生证明/商城/工作坊/大量新迁移与新依赖保留待验"
+      ],
+      "closeRecommendation": "单独跟踪数量修复；保留未裁决功能，不能整体合入",
+      "successors": [
+        "6f9ccc53",
+        "647e7fa2",
+        "47c441f2"
+      ],
+      "head": "0127e3dc12509114289ef164536f83a3a9617265",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/398"
+    }
+  ]
+}

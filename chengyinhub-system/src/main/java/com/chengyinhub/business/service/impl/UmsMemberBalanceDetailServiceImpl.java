@@ -1,5 +1,10 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.business.domain.dto.MerchantDashboardIncome;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -187,5 +192,24 @@ public class UmsMemberBalanceDetailServiceImpl implements IUmsMemberBalanceDetai
         if (value == null) return BigDecimal.ZERO;
         if (value instanceof BigDecimal) return (BigDecimal) value;
         return new BigDecimal(value.toString());
+    }
+
+    @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ, propagation = Propagation.REQUIRES_NEW)
+    public MerchantDashboardIncome readDashboardIncome(Long memberId, java.util.Date since)
+    {
+        BigDecimal total = umsMemberBalanceDetailMapper.selectDashboardIncomeTotal(memberId);
+        Map<String, BigDecimal> byDay = new java.util.HashMap<>();
+        List<Map<String, Object>> rows = umsMemberBalanceDetailMapper.selectDashboardIncomeDaily(memberId, since);
+        if (rows != null) {
+            for (Map<String, Object> row : rows)
+            {
+                Object day = row.get("day");
+                Object amount = row.get("amount");
+                if (day == null || amount == null) continue;
+                byDay.put(String.valueOf(day), new BigDecimal(String.valueOf(amount)));
+            }
+        }
+        return new MerchantDashboardIncome(total, byDay);
     }
 }

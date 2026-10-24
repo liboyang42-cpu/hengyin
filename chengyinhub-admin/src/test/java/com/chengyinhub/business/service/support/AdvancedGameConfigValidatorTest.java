@@ -3,6 +3,8 @@ package com.chengyinhub.business.service.support;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -21,6 +23,30 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AdvancedGameConfigValidatorTest {
+    @ParameterizedTest
+    @ValueSource(strings = {"-4294967295", "4294967297", "9223372036854775808", "-9223372036854775809",
+            "18446744073709551617", "-18446744073709551615",
+            "0", "1000", "1.0", "1.5", "999.9", "1e0", "\"1\"", "null"})
+    void itemConditionsRejectOutOfRangeAndNonIntegralQuantities(String quantity) {
+        for (String op : new String[]{"ITEM_HELD", "ITEM_ACQUIRED"}) {
+            String config = "{\"schemaVersion\":1,\"requires\":[{\"op\":\"" + op
+                    + "\",\"itemId\":\"supply\",\"quantity\":" + quantity + "}]}";
+            assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(config), op + ": " + quantity);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 999})
+    void itemConditionsPreserveValidQuantityBoundaries(int quantity) throws Exception {
+        for (String op : new String[]{"ITEM_HELD", "ITEM_ACQUIRED"}) {
+            String config = "{\"schemaVersion\":1,\"requires\":[{\"op\":\"" + op
+                    + "\",\"itemId\":\"supply\",\"quantity\":" + quantity + "}]}";
+            String normalized = validator.validateAndNormalize(config);
+            assertEquals(quantity, objectMapper.readTree(normalized).path("requires").get(0).path("quantity").asInt());
+            assertEquals(normalized, validator.validateAndNormalize(normalized));
+        }
+    }
+
     @org.junit.jupiter.api.Test
     void legacyMissingBranchCodesAreStableAndExplicitDuplicatesStillFail() throws Exception {
         AdvancedGameConfigValidator validator = new AdvancedGameConfigValidator();

@@ -21,7 +21,7 @@ function loadCouponPage() {
     require: (id) => {
       if (/coupon-form\.js$/.test(id)) return require(path.join(ROOT, 'utils/coupon-form.js'))
       if (/datetime\.js$/.test(id)) return require(path.join(ROOT, 'utils/datetime.js'))
-      if (/coupon-credential\.js$/.test(id)) return require(path.join(ROOT, 'utils/coupon-credential.js'))
+      if (/coupon-credential\.js$/.test(id)) return require(path.join(ROOT, 'subpackageMember/utils/coupon-credential.js'))
       if (/coupon-summary\.js$/.test(id)) return require(path.join(ROOT, 'subpackageMember/coupon/coupon-summary.js'))
       if (/\/modal\.js$/.test(id)) return { show: (opts) => modals.push(opts) }
       if (/\/toast\.js$/.test(id)) {

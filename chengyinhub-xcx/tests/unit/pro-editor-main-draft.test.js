@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const drafts = require('../../utils/publish/pro-editor-draft.js');
+const drafts = require('../../pages/square/utils/publish/pro-editor-draft.js');
 
 test('广场主包草稿仍能按原槽位往返，其他账号不能恢复', () => {
   const values = {};

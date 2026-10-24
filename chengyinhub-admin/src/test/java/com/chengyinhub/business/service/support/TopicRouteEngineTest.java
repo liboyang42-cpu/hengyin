@@ -2,11 +2,57 @@ package com.chengyinhub.business.service.support;
 
 import com.chengyinhub.business.domain.route.NodeOutcome;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TopicRouteEngineTest {
+    @ParameterizedTest
+    @ValueSource(strings = {"-4294967295", "4294967297", "9223372036854775808", "-9223372036854775809",
+            "18446744073709551617", "-18446744073709551615",
+            "0", "1000", "1.0", "1.5", "999.9", "1e0", "\"1\"", "null"})
+    void itemConditionsRejectInvalidQuantitiesBeforeComparisonOrNegation(String quantity) throws Exception {
+        TopicRouteEngine engine = new TopicRouteEngine();
+        TopicRouteEngine.State state = new TopicRouteEngine.State();
+        state.getThemeRuntime().putObject("inventory").put("supply", 999);
+        state.getThemeRuntime().putObject("acquired").put("supply", 999);
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        for (String op : new String[]{"ITEM_HELD", "ITEM_ACQUIRED"}) {
+            String condition = "{\"op\":\"" + op + "\",\"itemId\":\"supply\",\"quantity\":" + quantity + "}";
+            for (String wrapped : new String[]{"[" + condition + "]",
+                    "[{\"op\":\"NOT\",\"condition\":" + condition + "}]"}) {
+                com.fasterxml.jackson.databind.JsonNode conditions = json.readTree(wrapped);
+                assertThrows(IllegalArgumentException.class, () -> engine.conditionsPass(conditions, state), op + ": " + quantity);
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 999})
+    void itemConditionsKeepHeldAndAcquiredThresholdsWithoutConsuming(int quantity) throws Exception {
+        TopicRouteEngine engine = new TopicRouteEngine();
+        TopicRouteEngine.State state = new TopicRouteEngine.State();
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.JsonNode held = json.readTree("[{\"op\":\"ITEM_HELD\",\"itemId\":\"supply\",\"quantity\":" + quantity + "}]");
+        com.fasterxml.jackson.databind.JsonNode acquired = json.readTree("[{\"op\":\"ITEM_ACQUIRED\",\"itemId\":\"supply\",\"quantity\":" + quantity + "}]");
+        state.getThemeRuntime().putObject("inventory").put("supply", quantity);
+        state.getThemeRuntime().putObject("acquired").put("supply", quantity);
+        assertTrue(engine.conditionsPass(held, state));
+        assertTrue(engine.conditionsPass(held, state), "条件求值不消耗库存");
+        assertTrue(engine.conditionsPass(acquired, state));
+        assertEquals(quantity, state.getThemeRuntime().path("inventory").path("supply").asInt());
+        state.getThemeRuntime().with("inventory").put("supply", quantity - 1);
+        assertFalse(engine.conditionsPass(held, state));
+        assertTrue(engine.conditionsPass(acquired, state), "持有减少不撤销累计获得事实");
+        state.getThemeRuntime().with("acquired").put("supply", quantity - 1);
+        assertFalse(engine.conditionsPass(acquired, state));
+    }
+
 
     private static final String GRAPH = "{" +
             "\"schemaVersion\":1," +

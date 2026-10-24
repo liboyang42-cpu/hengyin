@@ -3,18 +3,21 @@
   "kind": "release-migration-pack",
   "releaseCloseout": "release-closeout-20261022",
   "generatedFor": {
-    "masterCommit": "f099c5be9eb3ef22214ce81e80303eb851f417dc",
+    "masterCommit": "11c8055e179930cd63a1d6e296b8285b0586dd16",
+    "sourceTree": "99042a25713445028217379d87fc8ba83cb14562",
+    "migrationTree": "15977e02aa702b90b34c46d6f13c7b2ee89d51b7",
+    "dependencySha256": "59fa9f5ff6f26511e88a52b517cebf00411466ea834f1918631bad381b5ec9f7",
     "date": "2026-10-23"
   },
   "baseline": {
     "commit": "19408d49172c1d8fd16ec012f4498ff8ea584a37",
     "source": "docs/delivery/release-closeout-20261022/migration-ledger.md §0（生产参考基线 Merge #452）",
-    "productionAppliedState": "UNKNOWN（仓库从未声明任何迁移已在生产执行；以 release-migration-precheck.sql 的结果为准）"
+    "productionAppliedState": "UNKNOWN（仅为仓库参考基线，不代表生产已应用状态；生产仍须由 owner 运行只读预检并留存回执）"
   },
   "ordering": {
     "strategy": "explicit-dependencies-then-path-bytewise",
     "source": "ci/migration-dependencies.json via ci/migration_ledger.py",
-    "orderField": "order = 该迁移在 HEAD 全量 515 个迁移拓扑序中的位置；发布集内按 step 顺序执行"
+    "orderField": "order = 该迁移在源提交全量 520 个迁移拓扑序中的位置；发布集内按 step 顺序执行"
   },
   "phases": {
     "PRE_DEPLOY_REQUIRED": "新 jar 直接读写该表/列，必须先于新 jar 落库",
@@ -154,13 +157,56 @@
       ]
     },
     {
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "ums_creative_square_like 增加唯一键 uk_square_like_member_data(member_id,data_id)，每个会员/帖子只保留一个态度状态；不自动删除历史重复行",
+      "idempotencyGuard": "执行前 runner 断言无重复 member_id/data_id；按索引名判是否建键；末尾断言唯一性及完整列序。预检额外核对同名索引形状；重复行必须由 owner 导出/核对后处置",
+      "lockRisk": "中/高：先全表 GROUP BY 查重复，再在线建唯一索引；耗时与表体量相关，需短暂元数据锁。发现重复或同名异形索引禁止执行",
+      "verifySelectOnly": [
+        "SELECT member_id, data_id, COUNT(*) AS duplicate_rows FROM ums_creative_square_like GROUP BY member_id, data_id HAVING COUNT(*) > 1; -- 期望 0 行",
+        "SELECT index_name, non_unique, seq_in_index, column_name, sub_part, index_type, is_visible FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'ums_creative_square_like' AND index_name = 'uk_square_like_member_data'; -- 两列唯一 BTREE，无前缀"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "sha256": "8fe2deeef171d7c44e09f5dacc661c9c834ff6f2ca436d2f810e87235b212780",
+      "baseSha256": null,
       "step": 7,
+      "migrationId": "20261023_creative_square_like_unique",
+      "path": "chengyinhub-admin/sql/migration_20261023_creative_square_like_unique.sql",
+      "order": 51,
+      "dependsOn": [],
+      "change": "ADDED"
+    },
+    {
+      "migrationId": "20261023_points_value_config_seed",
+      "path": "chengyinhub-admin/sql/migration_20261023_points_value_config_seed.sql",
+      "sha256": "c3b7d857e6c0d72107964eb6d049fe9ebe639410ab2a5abe567b4e4054a54923",
+      "baseSha256": null,
+      "change": "ADDED",
+      "phase": "PRE_DEPLOY",
+      "changes": "sys_config 缺失时落种 points.deduct.rate_yuan_per_point='0.02' 与 points.deduct.max_yuan_per_order='50.00'；PointsValuePolicy 缺失/无效时有同值缺省，不覆盖已配置值",
+      "idempotencyGuard": "INSERT SELECT WHERE NOT EXISTS(config_key)；末尾 runner 断言两个键各恰好一行。只检查行数，不强制覆盖运维配置值；重复自然键预检判 CONFLICT",
+      "lockRisk": "低：sys_config 小表，自然键查询后按需插入；执行窗口仍须避免并发写入相同键。公开回执只包含这两个非敏感积分配置键",
+      "verifySelectOnly": [
+        "SELECT config_key, config_value, COUNT(*) OVER (PARTITION BY config_key) AS rows_for_key FROM sys_config WHERE config_key IN ('points.deduct.rate_yuan_per_point','points.deduct.max_yuan_per_order'); -- 每键恰好 1 行，已有值保持原样"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "step": 8,
+      "order": 52,
+      "dependsOn": []
+    },
+    {
+      "step": 9,
       "migrationId": "audit_problem_20261022",
       "path": "chengyinhub-admin/sql/migration_audit_problem_20261022.sql",
       "sha256": "02353f0296b49751e5a035a129a03fccf9173cddba2194e7489b32449434a080",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 66,
+      "order": 68,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "新表 audit_problem（审核逐项驳回原因）；必须先于打开 chengyin.audit.item-problems.enabled",
@@ -175,13 +221,37 @@
       ]
     },
     {
-      "step": 8,
+      "phase": "PRE_DEPLOY",
+      "changes": "club 增加 welcome_note VARCHAR(600) NULL DEFAULT NULL；代码独立读取，旧行保持默认欢迎文案",
+      "idempotencyGuard": "历史 SQL 是普通 ADD COLUMN，不可直接重跑；开头 SELECT 仅供人工看结果，并不阻止 ALTER。只在预检 NEEDED 时执行一次；APPLIED 必须跳过；其他状态停止",
+      "lockRisk": "低：加可空列需要短暂元数据锁；旧 SQL 未显式指定 ALGORITHM。直接重跑必须报 MySQL 1060，禁止吞错后继续",
+      "verifySelectOnly": [
+        "SELECT column_name, column_type, is_nullable, column_default, extra, generation_expression FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'club' AND column_name = 'welcome_note'; -- varchar(600)、YES、NULL、普通列"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sha256": "668c8955b2c965eeb84436ad70a72e264a9c3aaa7d8d77450a282cc3b680f1ee",
+      "baseSha256": null,
+      "step": 10,
+      "migrationId": "club_welcome_note_20261022",
+      "path": "chengyinhub-admin/sql/migration_club_welcome_note_20261022.sql",
+      "order": 107,
+      "dependsOn": [
+        "club_open_settings_20260909"
+      ],
+      "change": "ADDED"
+    },
+    {
+      "step": 11,
       "migrationId": "doc2_f3_bundle_ledger_20261022",
       "path": "chengyinhub-admin/sql/migration_doc2_f3_bundle_ledger_20261022.sql",
       "sha256": "f94e363d84923f4b6e97bce4ec49382364ec2568e7efe6cdcc83c10ed4b8f419",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 137,
+      "order": 140,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "新表 explore_bundle_order/grant/unit/reservation/waiver/exit_case（F3 套票台账；ledger-enabled 默认关）",
@@ -196,13 +266,13 @@
       ]
     },
     {
-      "step": 9,
+      "step": 12,
       "migrationId": "member_profile_version_20261022",
       "path": "chengyinhub-admin/sql/migration_member_profile_version_20261022.sql",
       "sha256": "8be4a0d82578fe1d74579f5abbf859307f0b827655d670ff0e398cf026d018ba",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 182,
+      "order": 185,
       "dependsOn": [],
       "phase": "PRE_DEPLOY_REQUIRED",
       "changes": "新表 ums_member_profile_version（资料版本回执；新 jar 表缺失只 WARN）",
@@ -217,13 +287,13 @@
       ]
     },
     {
-      "step": 10,
+      "step": 13,
       "migrationId": "member_visited_poi_poi_key_20261022",
       "path": "chengyinhub-admin/sql/migration_member_visited_poi_poi_key_20261022.sql",
       "sha256": "ddb6c4652f8138a42a2ec380af3981f6674e574834ade341736e12eacb31c07a",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 184,
+      "order": 187,
       "dependsOn": [
         "member_visited_poi"
       ],
@@ -241,13 +311,35 @@
       ]
     },
     {
-      "step": 11,
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "mms_merchant 增加 category_ids VARCHAR(255) NULL；将为空且 category_id>0 的行回填为原主行业，保留已有多选值",
+      "idempotencyGuard": "InnoDB 表与同名列形状 guard；按 information_schema 判列后 INSTANT ADD；只回填空值，runner 断言回填无遗漏。主预检只核结构，列存在时标 DATA_PREVIEW，须执行附录 B3 的数据回读",
+      "lockRisk": "中：INSTANT 加列需短暂元数据锁；UPDATE 扫描并锁住待回填商家行，低峰执行，先留只读行数预览",
+      "verifySelectOnly": [
+        "SELECT column_name, column_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'mms_merchant' AND column_name = 'category_ids'; -- varchar(255)、YES、NULL",
+        "SELECT COUNT(*) AS remaining_backfill FROM mms_merchant WHERE category_id > 0 AND (category_ids IS NULL OR category_ids = ''); -- 列存在后执行，期望 0"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "DATA_PREVIEW"
+      ],
+      "sha256": "e26703b2a6cb15eea3996c2d188af546002c88f46135accd5956ce1fdd37cbd1",
+      "baseSha256": null,
+      "step": 14,
+      "migrationId": "merchant_category_ids_20261022",
+      "path": "chengyinhub-admin/sql/migration_merchant_category_ids_20261022.sql",
+      "order": 193,
+      "dependsOn": [],
+      "change": "ADDED"
+    },
+    {
+      "step": 15,
       "migrationId": "merchant_desk_receipt_20261022",
       "path": "chengyinhub-admin/sql/migration_merchant_desk_receipt_20261022.sql",
       "sha256": "83746d2cb7e5de51365f97782d9e8692fb58c6bdf3196e854475d102d2fc2278",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 196,
+      "order": 200,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "新表 merchant_desk_receipt（F4 工作台幂等回执；merchant.desk.f4.enabled 默认关）",
@@ -262,13 +354,13 @@
       ]
     },
     {
-      "step": 12,
+      "step": 16,
       "migrationId": "merchant_redemption_anchor_20261022",
       "path": "chengyinhub-admin/sql/migration_merchant_redemption_anchor_20261022.sql",
       "sha256": "907c01f72fb7f77ceed83a0aa8eb51de4cbd55dc740218a0e1a65ca33c2da6e0",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 207,
+      "order": 211,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "新表 merchant_redemption_anchor（F4 核销锚点配置）",
@@ -283,13 +375,35 @@
       ]
     },
     {
-      "step": 13,
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "mms_merchant 增加 wechat_qrcode VARCHAR(512) NULL；原 wechat 中的 URL 搬入新列并清空 URL 文本，保留已有二维码及文本微信号",
+      "idempotencyGuard": "InnoDB 表与同名列形状 guard；按 information_schema 判列后 INSTANT ADD；复制只命中二维码空值，清理只命中已有二维码的 URL。主预检只核结构，列存在时标 DATA_PREVIEW，须执行附录 B4 的数据回读",
+      "lockRisk": "中：INSTANT 加列需短暂元数据锁；两条 UPDATE 扫描并锁定待搬迁行。超长 URL 或历史异常会让末尾断言失败，必须停下核对，禁止放松断言",
+      "verifySelectOnly": [
+        "SELECT column_name, column_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'mms_merchant' AND column_name = 'wechat_qrcode'; -- varchar(512)、YES、NULL",
+        "SELECT COUNT(*) AS remaining_url FROM mms_merchant WHERE wechat LIKE 'http://%' OR wechat LIKE 'https://%'; -- 期望 0"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "DATA_PREVIEW"
+      ],
+      "sha256": "c5f52a9512e615c08522a8d0fa7b62241863664e3853461aecbd7406d680017e",
+      "baseSha256": null,
+      "step": 17,
+      "migrationId": "merchant_wechat_qrcode_20261022",
+      "path": "chengyinhub-admin/sql/migration_merchant_wechat_qrcode_20261022.sql",
+      "order": 215,
+      "dependsOn": [],
+      "change": "ADDED"
+    },
+    {
+      "step": 18,
       "migrationId": "o14_city_code_backfill_log_20261022",
       "path": "chengyinhub-admin/sql/migration_o14_city_code_backfill_log_20261022.sql",
       "sha256": "cc5f6e4dd6e8880f42012cbb7069a2ffaf79b8ac5ac75565e09b2c159922a1ed",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 232,
+      "order": 237,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "新表 o14_city_code_backfill_log（O-14 回填来源标记）",
@@ -304,13 +418,13 @@
       ]
     },
     {
-      "step": 14,
+      "step": 19,
       "migrationId": "o14_cms_activity_city_code_20261022",
       "path": "chengyinhub-admin/sql/migration_o14_cms_activity_city_code_20261022.sql",
       "sha256": "6f8aa378506994897748617ae9209445cca32c2eefe613549194f6252351ee95",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 233,
+      "order": 238,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "cms_activity 加可空列 city_code VARCHAR(32)（ALGORITHM=INSTANT）+ 索引 idx_cms_activity_city_code（INPLACE, LOCK=NONE）",
@@ -326,13 +440,13 @@
       ]
     },
     {
-      "step": 15,
+      "step": 20,
       "migrationId": "o14_cms_topic_city_code_20261022",
       "path": "chengyinhub-admin/sql/migration_o14_cms_topic_city_code_20261022.sql",
       "sha256": "fcda5dcf5bf4172238564758d008b4b64d6eab6a8861335dbb5d063e2dd93ff1",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 234,
+      "order": 239,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "cms_topic 加可空列 city_code VARCHAR(32)（INSTANT）+ 索引 idx_cms_topic_city_code（INPLACE, LOCK=NONE）",
@@ -348,13 +462,13 @@
       ]
     },
     {
-      "step": 16,
+      "step": 21,
       "migrationId": "o14_content_city_code_backfill_20261022",
       "path": "chengyinhub-admin/sql/migration_o14_content_city_code_backfill_20261022.sql",
       "sha256": "abfb4c27b3219ab3906c29feb9c3a9c920f498913f26f06bb177740a271c085a",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 235,
+      "order": 240,
       "dependsOn": [
         "o14_city_code_backfill_log_20261022",
         "o14_cms_activity_city_code_20261022",
@@ -381,13 +495,13 @@
       }
     },
     {
-      "step": 17,
+      "step": 22,
       "migrationId": "o14_content_search_document_20261022",
       "path": "chengyinhub-admin/sql/migration_o14_content_search_document_20261022.sql",
       "sha256": "1d153c6fbbe8e7595cb169e906c64df975d1f85b88c486d1a0db6e4e8ebe3d5f",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 236,
+      "order": 241,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "新表 content_search_document（O-14 统一搜索投影）",
@@ -402,13 +516,13 @@
       ]
     },
     {
-      "step": 18,
+      "step": 23,
       "migrationId": "orient_geo_ar_team_20261022",
       "path": "chengyinhub-admin/sql/migration_orient_geo_ar_team_20261022.sql",
       "sha256": "d297c399d1c12d568d551ebe6dc17d6cc87bc95a6bae6d5667ef1e991d01f1e3",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 252,
+      "order": 257,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "新表 orient_node_geo / orient_task_alternative / orient_task_attempt / orient_task_completion / orient_safety_rule + sys_config orient.* 5 键（默认关）",
@@ -424,13 +538,13 @@
       ]
     },
     {
-      "step": 19,
+      "step": 24,
       "migrationId": "o14_reco_search_jobs_20261022",
       "path": "chengyinhub-admin/sql/migration_o14_reco_search_jobs_20261022.sql",
       "sha256": "046921a70dbbf4f8ea32aa582d651e0a0d9c798cfd9c79a2df3b027972ccc370",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 283,
+      "order": 288,
       "dependsOn": [
         "o14_content_search_document_20261022",
         "p3_platform_foundation"
@@ -448,13 +562,13 @@
       ]
     },
     {
-      "step": 20,
+      "step": 25,
       "migrationId": "play_arrive_guard_log_20261022",
       "path": "chengyinhub-admin/sql/migration_play_arrive_guard_log_20261022.sql",
       "sha256": "52b937c5468f03006aef2e6b15c1beeb9a625c539558ca805c57fc4ff453b1fb",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 297,
+      "order": 302,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "新表 play_arrive_guard_log（到达守卫留痕；mode=off 时不读写）",
@@ -469,13 +583,13 @@
       ]
     },
     {
-      "step": 21,
+      "step": 26,
       "migrationId": "pms_sku_booking_20261022",
       "path": "chengyinhub-admin/sql/migration_pms_sku_booking_20261022.sql",
       "sha256": "0057c4368f7ade02120c109c791950e75b7f4c5d0dd6b42b8baf1fcb8f1fd8ac",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 306,
+      "order": 311,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "新表 pms_sku_booking_rule / pms_sku_capacity_slot（F4 SKU 预约容量）",
@@ -490,13 +604,13 @@
       ]
     },
     {
-      "step": 22,
+      "step": 27,
       "migrationId": "orient_scoring_20261022",
       "path": "chengyinhub-admin/sql/migration_orient_scoring_20261022.sql",
       "sha256": "17893c96611ad13875178c9b6ebf4fcb332e7a11fad5f6fb8a7d1f25fd9e055a",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 328,
+      "order": 333,
       "dependsOn": [
         "20260823_topic_route_graph"
       ],
@@ -514,13 +628,13 @@
       ]
     },
     {
-      "step": 23,
+      "step": 28,
       "migrationId": "orient_session_lifecycle_20261022",
       "path": "chengyinhub-admin/sql/migration_orient_session_lifecycle_20261022.sql",
       "sha256": "ffc9001685f87179b58fa7bb9c104bc27c608664b3288e79234053699ffd2735",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 329,
+      "order": 334,
       "dependsOn": [
         "20260823_topic_route_graph"
       ],
@@ -538,13 +652,13 @@
       ]
     },
     {
-      "step": 24,
+      "step": 29,
       "migrationId": "member_visited_poi_poi_key_backfill_20261022",
       "path": "chengyinhub-admin/sql/migration_member_visited_poi_poi_key_backfill_20261022.sql",
       "sha256": "2980391167e7bb4113a9523158e7a7fb5577eb8875d534f27db7f612e240af27",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 371,
+      "order": 376,
       "dependsOn": [
         "member_visited_poi_poi_key_20261022",
         "roam"
@@ -563,13 +677,13 @@
       ]
     },
     {
-      "step": 25,
+      "step": 30,
       "migrationId": "roam_share_version_20261022",
       "path": "chengyinhub-admin/sql/migration_roam_share_version_20261022.sql",
       "sha256": "563ddd80ae4e23ce96d02183380d9175209e68702aaf06f1061fd9a6688170b6",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 382,
+      "order": 387,
       "dependsOn": [
         "20260917_roam_share_snapshot"
       ],
@@ -586,13 +700,13 @@
       ]
     },
     {
-      "step": 26,
+      "step": 31,
       "migrationId": "20261022_theme_state_key_attribute_def",
       "path": "chengyinhub-admin/sql/migration_20261022_theme_state_key_attribute_def.sql",
       "sha256": "8b69583c24795742c0244610bb8dab6ef9abec64577a0a13666c5929146e0b25",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 420,
+      "order": 425,
       "dependsOn": [
         "theme_state_key_20260916"
       ],
@@ -609,13 +723,13 @@
       ]
     },
     {
-      "step": 27,
+      "step": 32,
       "migrationId": "20261022_theme_character",
       "path": "chengyinhub-admin/sql/migration_20261022_theme_character.sql",
       "sha256": "a0a8637bdf95674f4c11dabeb3852ab53a923789507a59e0b5cd64587f1adc71",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 421,
+      "order": 426,
       "dependsOn": [
         "20261022_theme_state_key_attribute_def",
         "theme_state_key_20260916"
@@ -633,13 +747,13 @@
       ]
     },
     {
-      "step": 28,
+      "step": 33,
       "migrationId": "verification_review_evidence_20261022",
       "path": "chengyinhub-admin/sql/migration_verification_review_evidence_20261022.sql",
       "sha256": "9b13f58da4455c4af67429bbe604086cf28cd451f19ad71f0bf09b489d42d889",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 474,
+      "order": 479,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "新表 verification_review_evidence（F4 复核补材料）",
@@ -654,13 +768,13 @@
       ]
     },
     {
-      "step": 29,
+      "step": 34,
       "migrationId": "20261013_admin_role_page_grants",
       "path": "chengyinhub-admin/sql/migration_20261013_admin_role_page_grants.sql",
       "sha256": "1f147a2136e999b6fd87a7e0a865d8fde5b0c332170d561b28e415b9fccaf56e",
       "baseSha256": "0834bcafb1c9a2f169377445d463cc34a6dce7fa2e96e6b6f81d09ab65254ead",
       "change": "MODIFIED",
-      "order": 495,
+      "order": 500,
       "dependsOn": [
         "20261012_media_review_menu",
         "20261012_missing_business_menu",
@@ -668,7 +782,7 @@
         "web_admin_roles_20260719"
       ],
       "phase": "PRE_DEPLOY",
-      "changes": "仅对「一个页面授权都没有」的 cy_operator/cy_auditor/cy_support/cy_finance 按 20260719 矩阵补授权并补祖先菜单；已有页面授权的角色不动（生产预期 no-op）",
+      "changes": "仅对「一个页面授权都没有」的 cy_operator/cy_auditor/cy_support/cy_finance 按 20260719 矩阵补授权并补祖先菜单；已有页面授权的角色不动（已有页面时 no-op；生产状态未知）",
       "idempotencyGuard": "全部 INSERT … NOT EXISTS；临时表先 DROP TEMPORARY IF EXISTS；无 information_schema 守卫（纯 DML）；有回读断言",
       "lockRisk": "低：sys_role_menu 小表",
       "verifySelectOnly": [
@@ -680,13 +794,13 @@
       ]
     },
     {
-      "step": 30,
+      "step": 35,
       "migrationId": "20261016_admin_role_payee_separation_forward",
       "path": "chengyinhub-admin/sql/migration_20261016_admin_role_payee_separation_forward.sql",
       "sha256": "4eeef3936f72f05e69b3440aa818c2c39d53e046aaabd82cfdef10c868cca34e",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 496,
+      "order": 501,
       "dependsOn": [
         "20260816_tandianri_batch3_funds_club_compensation",
         "20260816_tandianri_batch3_funds_club_payee",

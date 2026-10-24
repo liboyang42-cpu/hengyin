@@ -1125,7 +1125,7 @@ Page({
         bizType: 'square',
         bizId: id
       });
-      return Object.assign(require('../../../utils/square-share.js').buildSquareShare(post), {
+      return Object.assign(require('../utils/square-share.js').buildSquareShare(post), {
         success: function (res) {
           toast.success('分享成功');
         },

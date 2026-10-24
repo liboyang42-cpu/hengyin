@@ -1,6 +1,6 @@
 'use strict'
 
-const { bizFailureMessage } = require('./response-shape.js')
+const { bizFailureMessage } = require('../../utils/response-shape.js')
 
 function memberOptions(maxMembers) {
   const max = Math.max(2, Math.min(4, Number(maxMembers) || 4))

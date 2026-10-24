@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service;
 
+import com.chengyinhub.business.domain.dto.MerchantDashboardIncome;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -112,4 +114,7 @@ public interface IUmsMemberBalanceDetailService
      * 按事件类型+事件ID获取收益
      */
     BigDecimal selectIncomeByEventTypeAndEventId(Long memberId, Long eventType, Long eventId);
+
+    /** 同一 RR 只读事务读取累计收入与 since 起的每日收入，避免并发入账产生混合快照。 */
+    MerchantDashboardIncome readDashboardIncome(Long memberId, java.util.Date since);
 }

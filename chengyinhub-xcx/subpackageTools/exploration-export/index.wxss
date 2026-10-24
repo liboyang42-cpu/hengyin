@@ -1,4 +1,4 @@
-@import '../../style/tool-ui.wxss';
+@import '../style/tool-ui.wxss';
 .ex-prog { margin-top: 31rpx; }
 .ex-top { display: flex; align-items: baseline; justify-content: space-between; }
 .ex-pct { font-size: 77rpx; font-weight: 900; font-style: italic; letter-spacing: -2rpx; } /* ds-ok 原型 NRC 读数 */

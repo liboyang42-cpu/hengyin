@@ -25,7 +25,9 @@ function isUiModule(request) {
 
 // 在 context 里求值真模块;模块自己的 require(safe-user-message 等纯函数)走 Node 真 require。
 function loadUiModule(request, context) {
-  const file = path.join(ROOT, 'utils', UI_MODULE.exec(String(request))[1] + '.js');
+  const name = UI_MODULE.exec(String(request))[1];
+  const directory = /^(coop-publisher-access|coop-invite-return)$/.test(name) ? 'subpackageMember/utils' : 'utils';
+  const file = path.join(ROOT, directory, name + '.js');
   const source = '(function (module, exports, require) {' + fs.readFileSync(file, 'utf8') + '\n})';
   const wrapper = nodeVm.runInContext(source, context, { filename: file });
   const mod = { exports: {} };
