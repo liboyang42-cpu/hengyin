@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T17:40:50Z",
+  "updated_utc": "2026-10-24T17:50:56Z",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -24,20 +24,32 @@
       "state": "implementation_dispatched_policy_fully_confirmed",
       "task": "Implement cumulative original-component refund with exact per-refund conservation and original-component penny allocation; all questioned rules confirmed",
       "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
-      "host_id": "durable"
+      "host_id": "durable",
+      "owned_symbols": [
+        "CoopSettlementOriginalLedger.applySucceededRefund and refund private helpers",
+        "Direct original-refund test source"
+      ]
     },
     "C": {
       "state": "implementation_dispatched",
       "task": "Implement explicitly confirmed independent voice enrollment request after UNKNOWN; preserve original recovery identity",
       "thread_id": "01a16a22-c697-7637-ae29-cdff6341000b",
-      "host_id": "durable"
+      "host_id": "durable",
+      "owned_symbols": [
+        "Voice enrollment API/service and client voice confirmation/recovery journal",
+        "Direct voice fixtures and additive migration if needed"
+      ]
     },
     "D": {
       "state": "implementation_dispatched",
       "task": "Implement approved ASR existing-quota reservation and exactly-once text handoff; keep shop gen pool",
       "thread_id": "01a16a22-f399-7110-ba27-ef3f7245603b",
       "host_id": "durable",
-      "delivery_sha": "020d21aa0d1d21f326aa51b47cf926c2f205c6eb"
+      "delivery_sha": "020d21aa0d1d21f326aa51b47cf926c2f205c6eb",
+      "owned_symbols": [
+        "NpcAsrIntent reservation and existing NPC quota/text handoff wiring",
+        "Direct ASR/NPC fixtures and additive migration if needed"
+      ]
     },
     "E": {
       "state": "reported_in_progress_delivery_observation_unavailable",
@@ -62,10 +74,14 @@
       "task": "Implement approved original settlement producer, stable largest-remainder allocation, verified-seat fee consumer and negative-margin durable manual path",
       "thread_id": "01a16a23-8904-73e8-a024-378a96f0800c",
       "host_id": "durable",
-      "exclusive_files": [
+      "delivery_sha": "af0ed9086625f87e6ccdc1282d870358dc322ee0",
+      "previous_fixture_files": [
         "MerchantCommerceServiceTest.java"
       ],
-      "delivery_sha": "af0ed9086625f87e6ccdc1282d870358dc322ee0"
+      "owned_symbols": [
+        "Original settlement producer and its source query Mapper methods",
+        "CmsTopic settlement/verified-seat fee consumption and durable manual path"
+      ]
     },
     "H": {
       "state": "delivered_integrated_pending_final_validation",
@@ -480,7 +496,7 @@
     "continuation": "Read public code through GitHub; deliver full source diff in chat. Root applies and scans before public writes; no executor rebuild or unscanned publishing."
   },
   "pending_business_questions": [],
-  "current_working_tree": "5a9cd52ea code/doc composition; final penny rule answered and forwarded to B. B/C/D/G implementation continues, no interim audit/tests/CI.",
+  "current_working_tree": "9e960ac85 committed composition plus current ownership update; B/C/D/G remain in implementation with live original handles; no new source delivery, no interim tests or review",
   "new_source_blockers_current": [
     "CI plan negative control fails on precise refund scratch-DDL admission; Java has not started"
   ],
@@ -494,7 +510,7 @@
     "preserve_guards_and_test_assertions": true,
     "final_gate": "Collect required code, callers and fixtures; freeze one complete candidate; then conduct consolidated review and regression"
   },
-  "previous_goal_turn_classification": "PROGRESS: user confirmed exact partial-refund penny conservation; B unblocked and implementation instruction delivered",
+  "previous_goal_turn_classification": "VERIFIED_WAIT: bounded polls confirmed all four assigned turns inProgress with actual execution markers; new G/D/C implementation commentary collected, no completed patch yet",
   "latest_fixture_integration": {
     "base": "8490765f0572dae8ec3468f4e75d0ff6f4760b12",
     "A": "Three cancellation/publish fixtures: current club owner and capture/observe/apply caller wiring",
@@ -542,5 +558,35 @@
     "Same-candidate standard CI, compiled architecture and real-storage class batch",
     "Real HTTP identities and provider unknown-result scenarios",
     "Process termination/recovery, rollback and resource-capacity evidence"
-  ]
+  ],
+  "last_worker_progress_not_acceptance": {
+    "G": {
+      "cursor": "d897c36c-6d82-439e-acb9-b400a0c80bd8:4",
+      "turn": "01a16ef9-6234-75c9-9b3b-e4fc8e876ffc",
+      "state": "inProgress",
+      "marker": "exec-77236c3c-7d15-4d56-8215-bdc089624fd4",
+      "reported": "Production verified-seat consumer and original-freeze caller wired; preparing fixtures; no complete delivery yet"
+    },
+    "B": {
+      "cursor": "2cb81ed8-1eec-4baf-ba82-34145ba14485:3",
+      "turn": "01a16ef9-8b89-73e6-8b3c-abacd5b9a72a",
+      "state": "inProgress",
+      "marker": "exec-11589dbd-5668-4beb-aa3f-f90e2a0475e6",
+      "reported": "Existing receipt CHECK conserves refunded amount; user exact-conservation answer delivered; do not relax CHECK or mark question unanswered"
+    },
+    "D": {
+      "cursor": "1d9ee3e9-b0d3-48c0-8976-625c06845126:2",
+      "turn": "01a16ef9-7787-77d7-bf6b-562691953f94",
+      "state": "inProgress",
+      "marker": "exec-35a351dc-e453-4a70-9769-983066ad055a",
+      "reported": "Reusing reservation ledger/recovery worker; original reservation precedes ASR_STARTED; no delivery yet"
+    },
+    "C": {
+      "cursor": "44c18d1e-8e5a-4abb-89e4-7e129265b5bd:2",
+      "turn": "01a16ef9-4e08-717f-ad39-fb548e29e55a",
+      "state": "inProgress",
+      "marker": "exec-4b8fbdb6-54dd-4aca-9ff2-6c80756b804e",
+      "reported": "Backend independent requestId and original binding wired; client bounded account/scope journal in progress; no delivery yet"
+    }
+  }
 }
