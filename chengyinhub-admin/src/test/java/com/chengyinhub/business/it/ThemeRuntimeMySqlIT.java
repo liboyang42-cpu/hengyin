@@ -825,6 +825,7 @@ class ThemeRuntimeMySqlIT {
         assertNotEquals("default",expected);
         com.chengyinhub.business.service.impl.ShopDayProofServiceImpl realArrival=new com.chengyinhub.business.service.impl.ShopDayProofServiceImpl();
         ReflectionTestUtils.setField(realArrival,"playerNodeProgressMapper",sql.getMapper(PlayerNodeProgressMapper.class));
+        ReflectionTestUtils.setField(realArrival,"playerNodeProgressService",arrivalProgressOwner());
         com.chengyinhub.business.domain.CmsTopicNode node=sql.getMapper(CmsTopicNodeMapper.class).selectCmsTopicNodeById(11L);
         realArrival.markArrived(7L,0L,node);
         com.chengyinhub.business.domain.PlayerNodeProgress probe=new com.chengyinhub.business.domain.PlayerNodeProgress();
@@ -844,6 +845,7 @@ class ThemeRuntimeMySqlIT {
         Map<String,Object> replay=runtime.replayTheme(7L,oldId);
         com.chengyinhub.business.service.impl.ShopDayProofServiceImpl realArrival=new com.chengyinhub.business.service.impl.ShopDayProofServiceImpl();
         ReflectionTestUtils.setField(realArrival,"playerNodeProgressMapper",sql.getMapper(PlayerNodeProgressMapper.class));
+        ReflectionTestUtils.setField(realArrival,"playerNodeProgressService",arrivalProgressOwner());
         com.chengyinhub.business.domain.CmsTopicNode node=sql.getMapper(CmsTopicNodeMapper.class).selectCmsTopicNodeById(11L);
         assertDoesNotThrow(()->realArrival.markArrived(7L,0L,node),"old-run arrival must not make the replay action fail");
         com.chengyinhub.business.domain.PlayerNodeProgress probe=new com.chengyinhub.business.domain.PlayerNodeProgress();
@@ -854,4 +856,120 @@ class ThemeRuntimeMySqlIT {
         assertEquals(1,old.size());assertEquals(0,old.get(0).getStatus());
     }
 
+
+    @Test void repeatedArrivalPreservesAllStoredColumnsAndPhotoWithinOneReplay() throws Exception {
+        Map<String,Object> replay=arrivalReplay();
+        String instance=(String)replay.get("playInstanceId");
+        com.chengyinhub.business.service.impl.ShopDayProofServiceImpl realArrival=arrivalService();
+        CmsTopicNode node=sql.getMapper(CmsTopicNodeMapper.class).selectCmsTopicNodeById(11L);
+        PlayerNodeProgress first=realArrival.markArrived(7L,0L,node);
+        realArrival.submitPhoto(7L,0L,11L,"https://img/same-run-proof.jpg");
+        List<List<String>> before=arrivalStoredRows(instance,null);
+
+        PlayerNodeProgress again=realArrival.markArrived(7L,0L,node);
+
+        assertEquals(first.getId(),again.getId());
+        assertEquals(instance,again.getPlayInstanceId());
+        assertEquals(Integer.valueOf(0),again.getStatus());
+        assertEquals("https://img/same-run-proof.jpg",again.getPicUrl());
+        assertEquals(1,before.size());
+        assertEquals(before,arrivalStoredRows(instance,null),"repeat arrival must not change any stored column");
+        assertTrue(arrivalStoredRows("default",null).isEmpty());
+    }
+
+    @Test void replaySiblingArrivalSharesOneInstanceWithoutMovingOldPhotosOrStatuses() throws Exception {
+        configureArrivalSiblings();
+        try(Connection c=ds.getConnection()) {
+            exec(c,"INSERT INTO player_node_progress(member_id,activity_id,topic_id,node_id,play_instance_id,status,checkin_time,pic_url,review_status,puzzle_score,completion_mode,del_flag,create_time) VALUES(7,0,10,11,'default',1,'2026-01-01 12:00:00','https://img/old-main.jpg',1,80,'SOLVED',0,'2026-01-01 12:00:00'),(7,0,10,12,'default',0,'2026-01-01 12:00:00','https://img/old-sibling.jpg',0,NULL,NULL,0,'2026-01-01 12:00:00')");
+        }
+        List<List<String>> old=arrivalStoredRows("default",null);
+        Map<String,Object> replay=arrivalReplay();String instance=(String)replay.get("playInstanceId");
+        com.chengyinhub.business.service.impl.ShopDayProofServiceImpl realArrival=arrivalService();
+        CmsTopicNode node=sql.getMapper(CmsTopicNodeMapper.class).selectCmsTopicNodeById(11L);
+
+        realArrival.markArrived(7L,0L,node);
+
+        PlayerNodeProgress probe=new PlayerNodeProgress();probe.setMemberId(7L);probe.setActivityId(0L);
+        probe.setTopicId(10L);probe.setPlayInstanceId(instance);
+        List<PlayerNodeProgress> current=sql.getMapper(PlayerNodeProgressMapper.class).selectPlayerNodeProgressList(probe);
+        assertEquals(2,current.size());
+        Set<Long> nodes=new HashSet<>();
+        for(PlayerNodeProgress row:current) {
+            nodes.add(row.getNodeId());assertEquals(instance,row.getPlayInstanceId());
+            assertEquals(Integer.valueOf(0),row.getStatus());assertNull(row.getPicUrl());
+            assertNotNull(row.getCheckinTime());assertEquals(current.get(0).getCheckinTime(),row.getCheckinTime());
+        }
+        assertEquals(new HashSet<>(Arrays.asList(11L,12L)),nodes);
+        assertEquals(old,arrivalStoredRows("default",null),"every old column, completion and photo must remain unchanged");
+        List<List<String>> once=arrivalStoredRows(instance,null);
+        realArrival.markArrived(7L,0L,node);
+        assertEquals(once,arrivalStoredRows(instance,null));
+        assertEquals(old,arrivalStoredRows("default",null));
+    }
+
+    @Test void anExistingSameRunSiblingKeepsItsCompletionAndPhoto() throws Exception {
+        configureArrivalSiblings();
+        Map<String,Object> replay=arrivalReplay();String instance=(String)replay.get("playInstanceId");
+        try(Connection c=ds.getConnection();PreparedStatement st=c.prepareStatement("INSERT INTO player_node_progress(member_id,activity_id,topic_id,node_id,play_instance_id,status,checkin_time,pic_url,review_status,del_flag,create_time) VALUES(7,0,10,12,?,1,'2026-01-01 12:00:00','https://img/current-sibling.jpg',1,0,'2026-01-01 12:00:00')")) {
+            st.setString(1,instance);assertEquals(1,st.executeUpdate());
+        }
+        List<List<String>> sibling=arrivalStoredRows(instance,12L);
+        com.chengyinhub.business.service.impl.ShopDayProofServiceImpl realArrival=arrivalService();
+
+        PlayerNodeProgress main=realArrival.markArrived(7L,0L,sql.getMapper(CmsTopicNodeMapper.class).selectCmsTopicNodeById(11L));
+
+        assertEquals(instance,main.getPlayInstanceId());assertEquals(Integer.valueOf(0),main.getStatus());assertNull(main.getPicUrl());
+        assertEquals(1,sibling.size());assertEquals(sibling,arrivalStoredRows(instance,12L));
+        assertEquals(2,arrivalStoredRows(instance,null).size());
+        assertTrue(arrivalStoredRows("default",null).isEmpty());
+    }
+
+    private com.chengyinhub.business.service.impl.PlayerNodeProgressServiceImpl arrivalProgressOwner() {
+        com.chengyinhub.business.service.impl.PlayerNodeProgressServiceImpl owner=new com.chengyinhub.business.service.impl.PlayerNodeProgressServiceImpl();
+        ReflectionTestUtils.setField(owner,"playerNodeProgressMapper",sql.getMapper(PlayerNodeProgressMapper.class));
+        ReflectionTestUtils.setField(owner,"routeSessions",sql.getMapper(TopicRouteSessionMapper.class));
+        return owner;
+    }
+
+    private com.chengyinhub.business.service.impl.ShopDayProofServiceImpl arrivalService() {
+        com.chengyinhub.business.service.impl.ShopDayProofServiceImpl service=new com.chengyinhub.business.service.impl.ShopDayProofServiceImpl();
+        ReflectionTestUtils.setField(service,"playerNodeProgressMapper",sql.getMapper(PlayerNodeProgressMapper.class));
+        ReflectionTestUtils.setField(service,"playerNodeProgressService",arrivalProgressOwner());
+        ReflectionTestUtils.setField(service,"cmsTopicNodeMapper",sql.getMapper(CmsTopicNodeMapper.class));
+        return service;
+    }
+
+    private Map<String,Object> arrivalReplay() throws Exception {
+        Map<String,Object> first=runtime.themeView(7L,10L,0L,null);
+        long oldId=((Number)first.get("sessionId")).longValue();
+        runtime.themeAction(7L,oldId,((Number)first.get("version")).intValue(),"arrival-test-end","END",null);
+        Map<String,Object> replay=runtime.replayTheme(7L,oldId);
+        assertNotNull(replay.get("playInstanceId"));assertNotEquals("default",replay.get("playInstanceId"));
+        return replay;
+    }
+
+    private void configureArrivalSiblings() throws Exception {
+        // Existing host-node tables: one real chapter, same address/coordinates; no merchant evidence fabricated.
+        try(Connection c=ds.getConnection()) {
+            exec(c,"INSERT INTO cms_topic_chapter(id,topic_id,name,sort_id) VALUES(100,10,'arrival-chapter',1)");
+            exec(c,"UPDATE cms_topic_node SET chapter_id=100,address='same-place',latitude='31.200000',longitude='121.400000' WHERE topic_id=10 AND id IN (11,12)");
+        }
+    }
+
+    private List<List<String>> arrivalStoredRows(String instance,Long nodeId) throws Exception {
+        List<List<String>> rows=new ArrayList<>();
+        String query="SELECT * FROM player_node_progress WHERE member_id=7 AND activity_id=0 AND topic_id=10 AND play_instance_id=?"+(nodeId==null?"":" AND node_id=?")+" ORDER BY id";
+        try(Connection c=ds.getConnection();PreparedStatement st=c.prepareStatement(query)) {
+            st.setString(1,instance);if(nodeId!=null)st.setLong(2,nodeId);
+            try(ResultSet rs=st.executeQuery()) {
+                int columns=rs.getMetaData().getColumnCount();
+                while(rs.next()) {
+                    List<String> row=new ArrayList<>();
+                    for(int column=1;column<=columns;column++)row.add(rs.getString(column));
+                    rows.add(row);
+                }
+            }
+        }
+        return rows;
+    }
 }

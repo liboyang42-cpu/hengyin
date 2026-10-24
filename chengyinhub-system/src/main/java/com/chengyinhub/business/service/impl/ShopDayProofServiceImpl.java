@@ -5,6 +5,7 @@ import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.domain.PlayerNodeProgress;
 import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
 import com.chengyinhub.business.mapper.PlayerNodeProgressMapper;
+import com.chengyinhub.business.service.IPlayerNodeProgressService;
 import com.chengyinhub.business.service.IShopDayProofService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,9 @@ public class ShopDayProofServiceImpl implements IShopDayProofService {
     private PlayerNodeProgressMapper playerNodeProgressMapper;
 
     @Autowired
+    private IPlayerNodeProgressService playerNodeProgressService;
+
+    @Autowired
     private CmsTopicNodeMapper cmsTopicNodeMapper;
 
     /**
@@ -40,18 +44,28 @@ public class ShopDayProofServiceImpl implements IShopDayProofService {
      */
     @Override
     public PlayerNodeProgress markArrived(Long memberId, Long activityId, CmsTopicNode node) {
+        if (memberId == null || activityId == null || node == null
+                || node.getId() == null || node.getTopicId() == null) {
+            throw new IllegalArgumentException("到店记录缺少归属");
+        }
         PlayerNodeProgress probe = probe(memberId, activityId, node.getId());
-        List<PlayerNodeProgress> existing = playerNodeProgressMapper.selectPlayerNodeProgressList(probe);
+        probe.setTopicId(node.getTopicId());
+        // 复用进度服务的原实例解析，入口只解析一次；后续读写显式使用同一实例，
+        // 即使过程中开了重玩局，也不能把本次到达或兄弟节点迁到新局。
+        List<PlayerNodeProgress> existing = playerNodeProgressService.selectPlayerNodeProgressList(probe);
+        final String playInstanceId = probe.getPlayInstanceId();
+        if (StringUtils.isBlank(playInstanceId)) {
+            throw new IllegalStateException("到店记录缺少游玩实例");
+        }
         if (existing != null && !existing.isEmpty()) {
             PlayerNodeProgress row = existing.get(0);
             if (row.getCheckinTime() != null) {
-                shareArrivalWithSiblings(memberId, activityId, node, row.getCheckinTime());
+                shareArrivalWithSiblings(memberId, activityId, node, row.getCheckinTime(), playInstanceId);
             }
             return row;
         }
 
-        PlayerNodeProgress progress = probe(memberId, activityId, node.getId());
-        progress.setTopicId(node.getTopicId());
+        PlayerNodeProgress progress = arrivalProbe(memberId, activityId, node.getTopicId(), node.getId(), playInstanceId);
         progress.setStatus(0);
         progress.setCheckinTime(new Date());
         progress.setDelFlag(0);
@@ -60,7 +74,7 @@ public class ShopDayProofServiceImpl implements IShopDayProofService {
             if (playerNodeProgressMapper.insertPlayerNodeProgress(progress) != 1) {
                 throw new IllegalStateException("到店记录写入失败");
             }
-            shareArrivalWithSiblings(memberId, activityId, node, progress.getCheckinTime());
+            shareArrivalWithSiblings(memberId, activityId, node, progress.getCheckinTime(), playInstanceId);
             return progress;
         } catch (DuplicateKeyException duplicate) {
             List<PlayerNodeProgress> raced = playerNodeProgressMapper.selectPlayerNodeProgressList(probe);
@@ -70,7 +84,8 @@ public class ShopDayProofServiceImpl implements IShopDayProofService {
     }
 
     /** 为同章节同地点的兄弟节点补写到店行;已存在(含并发写入)一律跳过,不覆盖任何既有事实。 */
-    private void shareArrivalWithSiblings(Long memberId, Long activityId, CmsTopicNode node, Date checkinTime) {
+    private void shareArrivalWithSiblings(Long memberId, Long activityId, CmsTopicNode node, Date checkinTime,
+                                         String playInstanceId) {
         if (cmsTopicNodeMapper == null || node == null
                 || node.getTopicId() == null || node.getChapterId() == null) {
             return;
@@ -83,10 +98,9 @@ public class ShopDayProofServiceImpl implements IShopDayProofService {
         for (CmsTopicNode sibling : siblings) {
             if (sibling == null || sibling.getId() == null || sibling.getId().equals(node.getId())) continue;
             if (!samePlace(node, sibling)) continue;
-            if (hasProgressRow(memberId, activityId, sibling.getId())) continue;
+            if (hasProgressRow(memberId, activityId, node.getTopicId(), sibling.getId(), playInstanceId)) continue;
 
-            PlayerNodeProgress row = probe(memberId, activityId, sibling.getId());
-            row.setTopicId(node.getTopicId());
+            PlayerNodeProgress row = arrivalProbe(memberId, activityId, node.getTopicId(), sibling.getId(), playInstanceId);
             row.setStatus(0);
             row.setCheckinTime(checkinTime);
             row.setDelFlag(0);
@@ -99,10 +113,18 @@ public class ShopDayProofServiceImpl implements IShopDayProofService {
         }
     }
 
-    private boolean hasProgressRow(Long memberId, Long activityId, Long nodeId) {
+    private boolean hasProgressRow(Long memberId, Long activityId, Long topicId, Long nodeId, String playInstanceId) {
         List<PlayerNodeProgress> rows = playerNodeProgressMapper.selectPlayerNodeProgressList(
-                probe(memberId, activityId, nodeId));
+                arrivalProbe(memberId, activityId, topicId, nodeId, playInstanceId));
         return rows != null && !rows.isEmpty();
+    }
+
+    private PlayerNodeProgress arrivalProbe(Long memberId, Long activityId, Long topicId, Long nodeId,
+                                            String playInstanceId) {
+        PlayerNodeProgress p = probe(memberId, activityId, nodeId);
+        p.setTopicId(topicId);
+        p.setPlayInstanceId(playInstanceId);
+        return p;
     }
 
     /**
