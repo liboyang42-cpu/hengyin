@@ -47,7 +47,7 @@ class RefundSnapshotWiringTest {
 
     private static final String[] PRODUCTION_CALLERS = {
             "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java",
-            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/registration/RegistrationQueryApplication.java",
     };
 
     private static final String REG_SERVICE =
@@ -105,7 +105,7 @@ class RefundSnapshotWiringTest {
         String team = sourceOf(
                 "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java");
         String api = sourceOf(
-                "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java");
+                "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/registration/RegistrationQueryApplication.java");
 
         assertEquals(1, countOccurrences(team, "r.getRefundDeadline()"),
                 "活动仍读取快照；主题退款改由 FulfillmentWindowResolver 统一履约窗");

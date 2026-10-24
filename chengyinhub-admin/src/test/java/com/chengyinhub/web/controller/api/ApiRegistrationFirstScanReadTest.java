@@ -41,10 +41,10 @@ class ApiRegistrationFirstScanReadTest {
         registrations = mock(ICmsRegistrationService.class);
         ICmsActivityService activities = mock(ICmsActivityService.class);
         IRefundService refunds = mock(IRefundService.class);
-        ReflectionTestUtils.setField(controller, "registrationService", registrations);
-        ReflectionTestUtils.setField(controller, "activityService", activities);
-        ReflectionTestUtils.setField(controller, "topicService", mock(ICmsTopicService.class));
-        ReflectionTestUtils.setField(controller, "refundService", refunds);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "registrationService", registrations);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "activityService", activities);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "topicService", mock(ICmsTopicService.class));
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "refundService", refunds);
         when(refunds.selectRefundList(any())).thenReturn(Collections.emptyList());
         CmsActivity activity = new CmsActivity();
         activity.setId(100L);
@@ -62,9 +62,9 @@ class ApiRegistrationFirstScanReadTest {
         CmsRegistration verified = row(3L);
         verified.setVerificationStatus(1);
         when(registrations.selectCmsRegistrationList(any())).thenReturn(Arrays.asList(scanned, unused, verified));
-        TableDataInfo complete = (TableDataInfo) controller.myRegistrationList("3", "3", null).get("data");
+        TableDataInfo complete = (TableDataInfo) RegistrationQueryTestFixtures.wire(controller).myRegistrationList("3", "3", null).get("data");
         assertEquals(Arrays.asList(scanned, verified), complete.getRows());
-        TableDataInfo pending = (TableDataInfo) controller.myRegistrationList("3", "2", null).get("data");
+        TableDataInfo pending = (TableDataInfo) RegistrationQueryTestFixtures.wire(controller).myRegistrationList("3", "2", null).get("data");
         assertEquals(Collections.singletonList(unused), pending.getRows());
         ArgumentCaptor<CmsRegistration> query = ArgumentCaptor.forClass(CmsRegistration.class);
         verify(registrations, times(2)).selectCmsRegistrationList(query.capture());
@@ -79,7 +79,7 @@ class ApiRegistrationFirstScanReadTest {
     @Test
     void orderDetailReturnsFirstScanAndZeroUnredeemedExitVerdict() {
         when(registrations.selectCmsRegistrationById(1L)).thenReturn(scanned);
-        AjaxResult result = controller.getRegistrationDetail("1");
+        AjaxResult result = RegistrationQueryTestFixtures.wire(controller).getRegistrationDetail("1");
         assertEquals(200, result.get("code"));
         CmsRegistration read = (CmsRegistration) result.get("data");
         assertEquals(scanned.getFirstSuccessfulScanAt(), read.getFirstSuccessfulScanAt());
@@ -95,7 +95,7 @@ class ApiRegistrationFirstScanReadTest {
             CmsRegistration probe = call.getArgument(0);
             return Long.valueOf(2L).equals(probe.getOwnerType()) ? Collections.singletonList(scanned) : Collections.emptyList();
         });
-        AjaxResult result = controller.myJoined();
+        AjaxResult result = RegistrationQueryTestFixtures.wire(controller).myJoined();
         assertEquals(200, result.get("code"));
         List<?> rows = (List<?>) result.get("data");
         assertEquals(1, rows.size());
@@ -110,9 +110,9 @@ class ApiRegistrationFirstScanReadTest {
         ICmsTopicService topics = mock(ICmsTopicService.class);
         ICmsRegistrationScanService scans = mock(ICmsRegistrationScanService.class);
         ICmsMemberTemplateService templates = mock(ICmsMemberTemplateService.class);
-        ReflectionTestUtils.setField(controller, "topicService", topics);
-        ReflectionTestUtils.setField(controller, "registrationScanService", scans);
-        ReflectionTestUtils.setField(controller, "memberTemplateService", templates);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "topicService", topics);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "registrationScanService", scans);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "memberTemplateService", templates);
         CmsTopic topic = new CmsTopic();
         topic.setId(100L);
         when(topics.selectCmsTopicById(100L)).thenReturn(topic);
@@ -132,7 +132,7 @@ class ApiRegistrationFirstScanReadTest {
             template.setHint1("private-hint-" + templateId);
             when(templates.selectCmsMemberTemplateById(templateId)).thenReturn(template);
         }
-        AjaxResult result = controller.getRegistrationDetail("1");
+        AjaxResult result = RegistrationQueryTestFixtures.wire(controller).getRegistrationDetail("1");
         assertEquals(200, result.get("code"));
         List<CmsRegistrationScan> rows = ((CmsRegistration) result.get("data")).getRegistrationScanList();
         assertEquals(Arrays.asList(first, second), rows);

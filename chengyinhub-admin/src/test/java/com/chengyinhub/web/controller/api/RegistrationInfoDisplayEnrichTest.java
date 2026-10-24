@@ -59,11 +59,11 @@ class RegistrationInfoDisplayEnrichTest {
 
         controller = spy(new ApiRegistrationController());
         doReturn(MEMBER).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "registrationService", regSvc);
-        ReflectionTestUtils.setField(controller, "activityService", activitySvc);
-        ReflectionTestUtils.setField(controller, "perkLedgerService", perkSvc);
-        ReflectionTestUtils.setField(controller, "refundService", refundSvc);
-        ReflectionTestUtils.setField(controller, "topicChapterService", chapterSvc);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "registrationService", regSvc);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "activityService", activitySvc);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "perkLedgerService", perkSvc);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "refundService", refundSvc);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "topicChapterService", chapterSvc);
         when(refundSvc.selectRefundList(any(RefundApplication.class))).thenReturn(Collections.emptyList());
 
         CmsActivity act = new CmsActivity();
@@ -89,7 +89,7 @@ class RegistrationInfoDisplayEnrichTest {
         when(regSvc.selectCmsRegistrationById(REG)).thenReturn(baseReg());
         when(perkSvc.listEntitlements(REG)).thenReturn(Collections.emptyList());
 
-        AjaxResult result = controller.getRegistrationDetail(String.valueOf(REG));
+        AjaxResult result = RegistrationQueryTestFixtures.wire(controller).getRegistrationDetail(String.valueOf(REG));
         CmsRegistration data = (CmsRegistration) result.get("data");
 
         assertEquals("138****8000", data.getPhone());
@@ -108,7 +108,7 @@ class RegistrationInfoDisplayEnrichTest {
         r.setPaymentType(paymentType);
         when(regSvc.selectCmsRegistrationById(REG)).thenReturn(r);
         when(perkSvc.listEntitlements(REG)).thenReturn(Collections.emptyList());
-        CmsRegistration data = (CmsRegistration) controller.getRegistrationDetail(String.valueOf(REG)).get("data");
+        CmsRegistration data = (CmsRegistration) RegistrationQueryTestFixtures.wire(controller).getRegistrationDetail(String.valueOf(REG)).get("data");
         return data.getPaymentTypeLabel();
     }
 
@@ -133,7 +133,7 @@ class RegistrationInfoDisplayEnrichTest {
         when(regSvc.selectCmsRegistrationById(REG)).thenReturn(r);
         when(perkSvc.listEntitlements(REG)).thenReturn(Collections.emptyList());
 
-        CmsRegistration data = (CmsRegistration) controller.getRegistrationDetail(String.valueOf(REG)).get("data");
+        CmsRegistration data = (CmsRegistration) RegistrationQueryTestFixtures.wire(controller).getRegistrationDetail(String.valueOf(REG)).get("data");
         assertNotNull(data.getRefundDeadlineDisplay());
         assertTrue(data.getRefundDeadlineDisplay().contains("可免费取消至"),
                 "应展示可免费取消至: " + data.getRefundDeadlineDisplay());
@@ -163,7 +163,7 @@ class RegistrationInfoDisplayEnrichTest {
         when(chapterSvc.selectCmsTopicChapterById(101L)).thenReturn(c101);
         when(chapterSvc.selectCmsTopicChapterById(102L)).thenReturn(c102);
 
-        CmsRegistration data = (CmsRegistration) controller.getRegistrationDetail(String.valueOf(REG)).get("data");
+        CmsRegistration data = (CmsRegistration) RegistrationQueryTestFixtures.wire(controller).getRegistrationDetail(String.valueOf(REG)).get("data");
         List<RegistrationEntitlement> ents = data.getEntitlements();
         assertNotNull(ents);
         assertEquals("第一章·街巷", ents.get(0).getChapterName());

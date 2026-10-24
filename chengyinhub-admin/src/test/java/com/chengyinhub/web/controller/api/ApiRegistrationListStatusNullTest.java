@@ -30,14 +30,14 @@ class ApiRegistrationListStatusNullTest {
 
     private ApiRegistrationController wiredController(ICmsRegistrationService registrationService) {
         ApiRegistrationController controller = spy(new ApiRegistrationController());
-        ReflectionTestUtils.setField(controller, "registrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "topicService", mock(ICmsTopicService.class));
-        ReflectionTestUtils.setField(controller, "activityService", mock(ICmsActivityService.class));
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "registrationService", registrationService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "topicService", mock(ICmsTopicService.class));
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "activityService", mock(ICmsActivityService.class));
         // #164 给 myRegistrationList 接入退款状态:latestRegistrationRefunds() 会调 refundService,
         // 未 mock 则空指针(生产由 Spring 注入,此处补 mock 返空即可)。
         IRefundService refundService = mock(IRefundService.class);
         when(refundService.selectRefundList(any())).thenReturn(new ArrayList<>());
-        ReflectionTestUtils.setField(controller, "refundService", refundService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "refundService", refundService);
         doReturn(100L).when(controller).getAppUserId();
         return controller;
     }
@@ -50,7 +50,7 @@ class ApiRegistrationListStatusNullTest {
         ApiRegistrationController controller = wiredController(registrationService);
 
         AjaxResult res = assertDoesNotThrow(
-                () -> controller.myRegistrationList("3", null, null),
+                () -> RegistrationQueryTestFixtures.wire(controller).myRegistrationList("3", null, null),
                 "status=null 时不得 NPE(投诉页复现)");
         assertEquals(200, res.get(AjaxResult.CODE_TAG), "应正常返回 200");
         TableDataInfo data = (TableDataInfo) res.get(AjaxResult.DATA_TAG);
@@ -64,7 +64,7 @@ class ApiRegistrationListStatusNullTest {
                 .thenReturn(new ArrayList<>(Collections.emptyList()));
         ApiRegistrationController controller = wiredController(registrationService);
 
-        AjaxResult res = controller.myRegistrationList("3", "", null);
+        AjaxResult res = RegistrationQueryTestFixtures.wire(controller).myRegistrationList("3", "", null);
         assertEquals(200, res.get(AjaxResult.CODE_TAG), "空串等同未传/全部");
     }
 }
