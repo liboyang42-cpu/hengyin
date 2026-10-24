@@ -1,0 +1,16 @@
+{
+  "base": "4cf548c3e8b05c6d23f3252c7e5d063691ef0eaa",
+  "test_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ThemeRuntimeMySqlIT.java",
+  "base_test_sha256": "6c9d3536cd4c23a7ff85fefa0fad9639d8ae6cfeeacb048ef22452c3ddd900e0",
+  "candidate_test_sha256": "d319446a05e2f6af25c0af8311e14f5d861cc9b9cd7cc9464d312084b010df30",
+  "original_test_count": 34,
+  "negative_total_test_count": 36,
+  "added_cases": [
+    "replayArrivalMustBeReadableFromTheCurrentPlayInstance",
+    "replayArrivalMustNotCollideWithTheOldDefaultArrival"
+  ],
+  "original_class_except_final_closing_brace_byte_unchanged": true,
+  "production_changes": 0,
+  "java_compile_run": 0,
+  "mysql_run": 0
+}

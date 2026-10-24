@@ -1,0 +1,118 @@
+{
+  "scope": "Replay arrival fixed to one resolved play instance; same-place siblings and duplicate readback use that exact instance.",
+  "proof": {
+    "negative": {
+      "source": "dc2491f9b67e30075cf871ea8aeb64f938920b3a",
+      "run": "40059112582",
+      "all_xml_hashes_verified": 1842,
+      "suites": {
+        "ThemeRuntimeMySqlIT": {
+          "tests": 60,
+          "failures": 2,
+          "errors": 0,
+          "skipped": 0
+        },
+        "PlayerNodeArrivalSharingH2Test": {
+          "tests": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "ShopDayGameThenPhotoH2Test": {
+          "tests": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "ShopDayProofServiceTest": {
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      }
+    },
+    "positive": {
+      "source": "1aaf49e393ca8a424d3552b4e456be7e0331793c",
+      "run": "40060721807",
+      "all_xml_hashes_verified": 1842,
+      "suites": {
+        "ThemeRuntimeMySqlIT": {
+          "tests": 63,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "PlayerNodeArrivalSharingH2Test": {
+          "tests": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "ShopDayGameThenPhotoH2Test": {
+          "tests": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "ShopDayProofServiceTest": {
+          "tests": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      }
+    },
+    "prior": {
+      "source": "4cf548c3e8b05c6d23f3252c7e5d063691ef0eaa",
+      "run": "40054552123",
+      "all_xml_hashes_verified": 1842,
+      "suites": {
+        "ThemeRuntimeMySqlIT": {
+          "tests": 58,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "PlayerNodeArrivalSharingH2Test": {
+          "tests": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "ShopDayGameThenPhotoH2Test": {
+          "tests": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "ShopDayProofServiceTest": {
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      }
+    }
+  },
+  "original58_actual_names_preserved": true,
+  "new5_names": [
+    "anExistingSameRunSiblingKeepsItsCompletionAndPhoto",
+    "repeatedArrivalPreservesAllStoredColumnsAndPhotoWithinOneReplay",
+    "replayArrivalMustBeReadableFromTheCurrentPlayInstance",
+    "replayArrivalMustNotCollideWithTheOldDefaultArrival",
+    "replaySiblingArrivalSharesOneInstanceWithoutMovingOldPhotosOrStatuses"
+  ],
+  "negative_two_failures": [
+    "replayArrivalMustBeReadableFromTheCurrentPlayInstance",
+    "replayArrivalMustNotCollideWithTheOldDefaultArrival"
+  ],
+  "author_source": "29c9fc90233c01fe6ba4efc93d008e33727bd44c",
+  "root_source_files_exact_author": true,
+  "known_gap": "Caller cannot supply an already-frozen old page instance under current interface; no claim of old-page cross-instance race closure.",
+  "not_proven": [
+    "Root d49-plus-G integrated CI",
+    "real clients/providers",
+    "full completion-fact ownership or awards"
+  ]
+}
