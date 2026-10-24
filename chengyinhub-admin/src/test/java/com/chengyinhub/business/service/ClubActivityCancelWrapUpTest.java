@@ -73,6 +73,16 @@ class ClubActivityCancelWrapUpTest {
         service = new ClubEventOpsServiceImpl(accessService, new ClubEventScheduleMaterializer(),
                 mock(IClubSessionService.class), mapper, mock(ClubMemberMapper.class),
                 mock(ClubLeadMapper.class), roleService, teamGroupService);
+        com.chengyinhub.business.mapper.CmsActivityMapper activities = mock(com.chengyinhub.business.mapper.CmsActivityMapper.class);
+        com.chengyinhub.business.mapper.CmsTopicMapper topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        com.chengyinhub.business.domain.CmsActivity activity = new com.chengyinhub.business.domain.CmsActivity();
+        activity.setId(ACTIVITY); activity.setClubId(CLUB); activity.setTopicId(TOPIC); activity.setMemberId(OWNER);
+        com.chengyinhub.business.domain.CmsTopic topic = new com.chengyinhub.business.domain.CmsTopic(); topic.setId(TOPIC);
+        when(activities.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
+        when(activities.selectCmsActivityByIdForUpdate(ACTIVITY)).thenReturn(activity);
+        when(topics.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "cancellationActivityMapper", activities);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "cancellationTopicMapper", topics);
     }
 
     private void stubSeries(ClubEventOccurrence occurrence) {

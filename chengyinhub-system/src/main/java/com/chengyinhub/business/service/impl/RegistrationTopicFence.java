@@ -16,7 +16,8 @@ import java.util.Objects;
 final class RegistrationTopicFence {
     private RegistrationTopicFence() { }
 
-    record LockedOrder(CmsRegistration registration, List<CmsRegistration> rows) { }
+    record LockedOrder(CmsRegistration registration, List<CmsRegistration> rows,
+                       CmsTopic topic, CmsActivity activity) { }
 
     static LockedOrder lock(CmsRegistration observed, CmsRegistrationMapper registrations,
                             CmsActivityMapper activities, CmsTopicMapper topics) {
@@ -34,13 +35,15 @@ final class RegistrationTopicFence {
                 throw new ServiceException("原报名活动不存在，请人工核对");
             topicId = locatedActivity.getTopicId();
         } else throw new ServiceException("原报名归属类型不明确，请人工核对");
+        CmsTopic lockedTopic = null;
         if (topicId != null) {
-            CmsTopic topic = topics.selectCmsTopicByIdForUpdate(topicId);
-            if (topic == null || !topicId.equals(topic.getId()))
+            lockedTopic = topics.selectCmsTopicByIdForUpdate(topicId);
+            if (lockedTopic == null || !topicId.equals(lockedTopic.getId()))
                 throw new ServiceException("原报名主题不存在，请人工核对");
         }
+        CmsActivity lockedActivity = null;
         if (locatedActivity != null) {
-            requireCurrentActivity(locatedActivity, activities);
+            lockedActivity = requireCurrentActivity(locatedActivity, activities);
         }
         List<CmsRegistration> order;
         if (StringUtils.isNotEmpty(observed.getParentOrderNo())) {
@@ -61,24 +64,33 @@ final class RegistrationTopicFence {
         }
         CmsRegistration current = order.stream().filter(row -> observed.getId().equals(row.getId()))
                 .findFirst().orElseThrow(() -> new ServiceException("报名不在原父订单中"));
-        return new LockedOrder(current, List.copyOf(order));
+        return new LockedOrder(current, List.copyOf(order), lockedTopic, lockedActivity);
     }
 
     /** For the outer activity-cancellation owner: call before its first activity/order write lock. */
     static CmsActivity lockActivity(CmsActivity observed, CmsActivityMapper activities, CmsTopicMapper topics) {
+        lockActivityTopic(observed, topics);
+        return requireCurrentActivity(observed, activities);
+    }
+
+    /** Series wrappers retain their existing series/activity order after taking this parent fence. */
+    static CmsTopic lockActivityTopic(CmsActivity observed, CmsTopicMapper topics) {
         if (observed == null || observed.getId() == null) throw new ServiceException("原活动不存在，请重试");
         if (observed.getTopicId() != null) {
             CmsTopic topic = topics.selectCmsTopicByIdForUpdate(observed.getTopicId());
             if (topic == null || !observed.getTopicId().equals(topic.getId()))
                 throw new ServiceException("原活动主题不存在，请人工核对");
+            return topic;
         }
-        return requireCurrentActivity(observed, activities);
+        return null;
     }
 
-    private static CmsActivity requireCurrentActivity(CmsActivity expected, CmsActivityMapper activities) {
+    static CmsActivity requireCurrentActivity(CmsActivity expected, CmsActivityMapper activities) {
         CmsActivity current = activities.selectCmsActivityByIdForUpdate(expected.getId());
         if (current == null || !expected.getId().equals(current.getId())
-                || !Objects.equals(expected.getTopicId(), current.getTopicId()))
+                || !Objects.equals(expected.getTopicId(), current.getTopicId())
+                || !Objects.equals(expected.getClubId(), current.getClubId())
+                || !Objects.equals(expected.getMemberId(), current.getMemberId()))
             throw new ServiceException("原活动主题归属已变化，请重试");
         return current;
     }

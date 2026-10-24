@@ -138,6 +138,9 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         if (operatorMemberId == null || !operatorMemberId.equals(r.getMemberId())) {
             throw new RuntimeException("无权取消他人报名");
         }
+        RegistrationTopicFence.LockedOrder lockedOrder = RegistrationTopicFence.lock(
+                r, cmsRegistrationMapper, cmsActivityMapper, cmsTopicMapper);
+        r = lockedOrder.registration();
         if (r.getPaymentStatus() == null || r.getPaymentStatus() != 2) {
             throw new RuntimeException("仅已支付报名可取消退款");
         }
@@ -153,7 +156,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         }
         String ticketName = null;
         if (r.getOwnerType() != null && r.getOwnerType() == 1L) {
-            CmsTopic topic = cmsTopicMapper.selectCmsTopicById(r.getOwnerId());
+            CmsTopic topic = lockedOrder.topic();
             OmsTicket ticket = r.getTicketId() == null ? null : omsTicketMapper.selectOmsTicketById(r.getTicketId());
             if (ticket != null) ticketName = ticket.getName();
             RefundPolicy.Verdict v = RefundPolicy.evaluateTopicFulfillmentWindow(
@@ -165,7 +168,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         // 活动/场次(ownerType=2):**集合时间前 24 小时可全额退,之后不退**(产品拍板 2026-09-15,5.9)。
         // 集合时间真源 = cms_activity.start_date;窗口由 RefundPolicy 一个判定出,别在这里再减 24h。
         if (r.getOwnerType() != null && r.getOwnerType() == 2L) {
-            com.chengyinhub.business.domain.CmsActivity act = cmsActivityMapper.selectCmsActivityById(r.getOwnerId());
+            com.chengyinhub.business.domain.CmsActivity act = lockedOrder.activity();
             if (act != null) {
                 // [P0-05] 同上:活动侧同样去掉 deadline != null 的放行条件。
                 RefundPolicy.Verdict av = evaluateActivityRefund(r, act);
@@ -305,6 +308,9 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         CmsRegistration r = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
         if (r == null) throw new RuntimeException("报名不存在");
         if (r.getOwnerType() == null) throw new RuntimeException("报名归属不明,不能清退");
+        RegistrationTopicFence.LockedOrder lockedOrder = RegistrationTopicFence.lock(
+                r, cmsRegistrationMapper, cmsActivityMapper, cmsTopicMapper);
+        r = lockedOrder.registration();
 
         // ★ 2026-09-11:原来这里一句 `ownerType != 1 → 抛`,而俱乐部办团卖的恒是**场次票**
         //   (主理人开一场 → cms_activity → 复制票 → 报名落 owner_type=2),
@@ -314,12 +320,12 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         CmsTopic topic;
         com.chengyinhub.business.domain.CmsActivity activity = null;
         if (r.getOwnerType() == 1L) {
-            topic = cmsTopicMapper.selectCmsTopicById(r.getOwnerId());
+            topic = lockedOrder.topic();
             if (topic == null) throw new RuntimeException("主题不存在");
         } else if (r.getOwnerType() == 2L) {
-            activity = cmsActivityMapper.selectCmsActivityById(r.getOwnerId());
+            activity = lockedOrder.activity();
             if (activity == null) throw new RuntimeException("场次不存在");
-            topic = activity.getTopicId() == null ? null : cmsTopicMapper.selectCmsTopicById(activity.getTopicId());
+            topic = lockedOrder.topic();
         } else {
             throw new RuntimeException("这种报名不支持主理人清退");
         }
@@ -331,7 +337,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
                 && topic.getMemberId().equals(ownerMemberId);
         boolean clubOwner = false;
         if (!topicOwner && activity != null && activity.getClubId() != null && activity.getClubId() > 0) {
-            com.chengyinhub.business.domain.Club club = clubMapper.selectClubById(activity.getClubId());
+            com.chengyinhub.business.domain.Club club = clubMapper.selectClubByIdForUpdate(activity.getClubId());
             clubOwner = club != null && club.getMemberId() != null
                     && club.getMemberId().equals(ownerMemberId)
                     && (club.getDelFlag() == null || club.getDelFlag() == 0);
@@ -550,8 +556,8 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     /** @param refuseSettled 主题取消传 true:有订单的钱已结算出去就整次 409,不经退款核心冲回(RV-p6line F1) */
     private com.chengyinhub.business.domain.dto.ActivityCancelResult cancelActivity(
             Long activityId, Long ownerMemberId, Long actorMemberId, String reason, boolean refuseSettled) {
-        com.chengyinhub.business.domain.CmsActivity act = cmsActivityMapper
-                .selectCmsActivityByIdForUpdate(activityId);
+        com.chengyinhub.business.domain.CmsActivity act = RegistrationTopicFence.lockActivity(
+                cmsActivityMapper.selectCmsActivityById(activityId), cmsActivityMapper, cmsTopicMapper);
         // 这三条抛 ServiceException 而非裸 RuntimeException:文案是写给主办方看的,入口据此原样回显;
         // 非预期异常(NPE/SQL)则走 Exception 分支给中性文案 —— 类型就是「该不该给用户看」的判据。
         if (act == null || (act.getDelFlag() != null && act.getDelFlag() == 2)) {
@@ -562,7 +568,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         // event-ops 取消传下来的是**当前**主理人(ClubEventOpsServiceImpl 的 lockedOwner),
         // 只认创建人 ⇒ 新主理人永远取消不了旧场次。判据与 cancelPaidRegistrationByOwner
         // 的俱乐部主理人档同口径(活动创建者的既有行为不变)。
-        if (!isActivityOwnerOrClubOwner(act, ownerMemberId)) {
+        if (!isActivityOwnerOrClubOwner(act, ownerMemberId, true)) {
             throw new ServiceException("无权操作该活动");
         }
         // 幂等闸:已取消不得重复取消,否则会对已退款的报名再走一遍退款链路
@@ -781,12 +787,18 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
      */
     private boolean isActivityOwnerOrClubOwner(com.chengyinhub.business.domain.CmsActivity activity,
                                                Long ownerMemberId) {
+        return isActivityOwnerOrClubOwner(activity, ownerMemberId, false);
+    }
+
+    private boolean isActivityOwnerOrClubOwner(com.chengyinhub.business.domain.CmsActivity activity,
+                                               Long ownerMemberId, boolean lock) {
         if (activity == null || ownerMemberId == null) return false;
         Long clubId = activity.getClubId();
         if (clubId == null || clubId <= 0) {
             return activity.getMemberId() != null && activity.getMemberId().equals(ownerMemberId);
         }
-        com.chengyinhub.business.domain.Club club = clubMapper.selectClubById(clubId);
+        com.chengyinhub.business.domain.Club club = lock ? clubMapper.selectClubByIdForUpdate(clubId)
+                : clubMapper.selectClubById(clubId);
         return club != null && club.getMemberId() != null && club.getMemberId().equals(ownerMemberId)
                 && (club.getDelFlag() == null || club.getDelFlag() == 0);
     }

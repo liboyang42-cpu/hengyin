@@ -58,6 +58,9 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     private static final DateTimeFormatter ASSEMBLY_TIME_FORMAT =
             DateTimeFormatter.ofPattern("HH:mm").withResolverStyle(ResolverStyle.STRICT);
 
+    @Autowired private com.chengyinhub.business.mapper.CmsActivityMapper cancellationActivityMapper;
+    @Autowired private com.chengyinhub.business.mapper.CmsTopicMapper cancellationTopicMapper;
+
     private final IClubAccessService clubAccessService;
     private final ClubEventScheduleMaterializer scheduleMaterializer;
     private final IClubSessionService clubSessionService;
@@ -438,12 +441,17 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         String requestId = cancellationRequestId(request.getRequestId());
         ClubAccessContext access = requireCancellationAccess(
                 actorMemberId, request.getClubId(), request.getActivityId());
+        com.chengyinhub.business.domain.CmsActivity observedActivity = lockCancellationTopic(
+                request.getActivityId(), null, request.getClubId());
 
         // [F-36] open-session 开出来的独立场次没有 series/occurrence。此前这里一律 409,
         // 主理人永远取消不了。归属改按「有系列就用系列、没有就问 cms_activity」判 ——
         // 与 F-34 状态查询同一口径,都不把系列当作活动存在的前提。
         ClubEventSeries series = clubEventOpsMapper
                 .selectSeriesByActivityAnyStatusForUpdate(request.getActivityId());
+        com.chengyinhub.business.domain.CmsActivity currentActivity = RegistrationTopicFence.requireCurrentActivity(
+                observedActivity, cancellationActivityMapper);
+        requireCancellationActivityScope(currentActivity, request.getClubId(), series);
         boolean standalone = series == null;
         if (standalone) {
             // selectActivityTopicForUpdate 只在「活动属于本俱乐部且未删」时返回,顺带上行锁。
@@ -577,7 +585,14 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         String normalizedReason = reason == null ? "" : reason.trim();
         if (normalizedReason.isEmpty()) throw badRequest("请填写取消原因");
 
+        com.chengyinhub.business.domain.CmsActivity observedActivity = lockCancellationTopic(activityId,
+                authorizedTopicCancellation ? authorizedTopicId : null,
+                authorizedTopicCancellation ? authorizedClubId : null);
+
         ClubEventSeries series = clubEventOpsMapper.selectSeriesByActivityAnyStatusForUpdate(activityId);
+        com.chengyinhub.business.domain.CmsActivity currentActivity = RegistrationTopicFence.requireCurrentActivity(
+                observedActivity, cancellationActivityMapper);
+        requireCancellationActivityScope(currentActivity, authorizedTopicCancellation ? authorizedClubId : null, series);
         ClubEventOccurrence occurrence = null;
         Long clubId = null;
         Long ownerMemberId = actorMemberId;
@@ -641,6 +656,25 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
                     occurrence, registeredRecipients, waitlistRecipients, "api-activity-cancel", null);
         }
         return refund;
+    }
+
+    private com.chengyinhub.business.domain.CmsActivity lockCancellationTopic(
+            Long activityId, Long expectedTopicId, Long expectedClubId) {
+        com.chengyinhub.business.domain.CmsActivity observed = cancellationActivityMapper.selectCmsActivityById(activityId);
+        if (observed == null || !activityId.equals(observed.getId())
+                || (expectedTopicId != null && !expectedTopicId.equals(observed.getTopicId()))
+                || (expectedClubId != null && !expectedClubId.equals(observed.getClubId())))
+            throw conflict("场次不属于原主题或俱乐部");
+        RegistrationTopicFence.lockActivityTopic(observed, cancellationTopicMapper);
+        return observed;
+    }
+
+    private void requireCancellationActivityScope(com.chengyinhub.business.domain.CmsActivity current,
+                                                   Long expectedClubId, ClubEventSeries series) {
+        if ((expectedClubId != null && !expectedClubId.equals(current.getClubId()))
+                || (series != null && (!java.util.Objects.equals(series.getClubId(), current.getClubId())
+                    || !java.util.Objects.equals(series.getTopicId(), current.getTopicId()))))
+            throw conflict("场次当前主题或俱乐部与原系列不一致");
     }
 
     @Override
