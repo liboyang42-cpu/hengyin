@@ -85,3 +85,11 @@ test('U-091 location source: 申请失败不订阅;重复 start 不叠加监听'
   src.start(() => {})
   assert.equal(f.listeners.size, 1)
 })
+
+test('U-091 trackPolyline 样式与页面原 _flushTrackLine 逐值一致(颜色取自 play 路线 token)', () => {
+  const [line] = trackPolyline(TRACK)
+  assert.equal(line.color.toUpperCase(), '#FFFFFF')
+  assert.equal(line.borderColor.toUpperCase(), '#FFFFFF66')
+  assert.equal(line.width, 3)
+  assert.equal(line.borderWidth, 1)
+})

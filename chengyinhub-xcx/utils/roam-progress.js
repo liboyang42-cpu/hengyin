@@ -7,7 +7,11 @@ const LINE_MS = 1500
 const MARKER_MS = 600
 const HOLD_MS = 3000
 
-const TRACK_LINE_STYLE = Object.freeze({ color: '#FFFFFF', width: 3, borderColor: '#FFFFFF66', borderWidth: 1 })
+const { ROUTE_COLORS } = require('./play-visual-tokens.js')
+
+// 漫游实时轨迹线:主色取 play 路线 token 首色(白),描边为同色 40% 透明(alpha 66)。原生 map polyline 读不到 CSS 变量。
+const TRACK_LINE_COLOR = ROUTE_COLORS[0]
+const TRACK_LINE_STYLE = Object.freeze({ color: TRACK_LINE_COLOR, width: 3, borderColor: TRACK_LINE_COLOR + '66', borderWidth: 1 })
 
 function trackPolyline(track) {
   return [Object.assign({
