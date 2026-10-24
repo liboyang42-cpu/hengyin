@@ -53,3 +53,11 @@ SELECT
 ```
 
 本查询源码未执行；旧 run 分项值保持 UNKNOWN。补片只在 root 同源 schema 重放原门禁通过后才能认为该前置失败闭合。
+
+## 获准后的唯一必要定点复验
+
+root 明确允许修后直接负控复验。本次在未改 cfda5cde 的代码/配置前提下，只执行 `test_wp08_missing_guard_prerequisite_is_rejected_by_manifest_gate`，真实输出为 `Ran 1 test in 4.822s; OK`，完整命令/输出见 DIRECT_RECHECK.txt。一个方法包含删经验边、删 visibility 边、两边都删三个 subtest；全过，且旧三依赖项在完整 canonical manifest 中的先后次序负控成立。没有为这次复验改变任何断言或门槛，没有重跑完整已有套件。
+
+这取代此前“修后负控 NOT_RUN”的最新状态；首次 2-method 批次中新假设失败的记录原样保留，不追改为成功。原排序正控此前 PASS，本次没有重复跑。Java/DB/CI/完整 schema/鉴权恢复验证仍未执行。
+
+`wp08-manifest-and-tests.review.patch` 提供相对 CCD5 的完整唯一 DAG 项和两个直接测试方法补丁；新交付提交只补证据/文档，资金/迁移 SQL、其他 DAG 项与 B 的 probe/cleanup 均不动。
