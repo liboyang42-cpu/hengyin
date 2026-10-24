@@ -46,3 +46,21 @@ HEAD `7e77514e9`。cataloged / consent / invite / member-role 观察不得占用
 命令：`mvn -pl chengyinhub-admin -am test -Dtest=com.chengyinhub.business.service.channel.*Test -Dsurefire.failIfNoSpecifiedTests=false`
 
 结果：`BUILD SUCCESS` **14/0** 2026-10-23T23:48:32Z。`C08AccountSwitchRestartIsolationTest` 4/0。IM send/receipt still not owned. App / XCTest / MySQL / HTTP / CI = NOT_RUN。不声称 100%。
+
+## Addendum 2026-10-23 18:02 America/Los_Angeles
+
+HEAD `828057afe` tests. Class-level occupancy on `ChannelGovernanceProjectionTest`: cataloged / consent / invite / member-role observation does not occupy `grant()`; later unique `authorizeReadWrite` is the first write. Did not invent `recoverOriginal`. Isolation occupancy remains.
+
+Parent surefire `com.chengyinhub.business.service.channel.*Test` **15/0** 2026-10-24T01:02:41Z：
+
+```
+Tests run: 3 -- ChannelGovernanceProjectionTest
+Tests run: 4 -- C08AccountSwitchRestartIsolationTest
+Tests run: 2 -- ChannelRevokeIsolationTest
+Tests run: 4 -- C08FirstJourneyIsolationTest
+Tests run: 2 -- FriendPermissionDistinctFromChannelTest
+Tests run: 15, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+IM send/receipt still not owned. App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
