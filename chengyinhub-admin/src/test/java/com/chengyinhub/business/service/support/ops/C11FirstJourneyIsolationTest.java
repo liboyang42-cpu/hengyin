@@ -114,7 +114,8 @@ class C11FirstJourneyIsolationTest {
         assertTrue(ReviewResultVisibilityAdapter.visibility(review.get(3),
                 ReviewResultVisibilityAdapter.Audience.PUBLIC).approvedResultVisible());
         assertEquals("2026-10-23 20:00:00",
-                VersionedLocaleDisplay.format(VersionedLocaleDisplay.Market.CN, Instant.parse("2026-10-23T12:00:00Z")));
+                VersionedLocaleDisplay.format(VersionedLocaleDisplay.Market.CN,
+                        Instant.parse("2026-10-23T12:00:00Z"), java.time.ZoneId.of("Asia/Shanghai")));
         assertEquals(VersionedLocaleDisplay.NOT_RUN,
                 VersionedLocaleDisplay.legalGateStatus(VersionedLocaleDisplay.LegalGate.APP_STORE_REVIEW));
         assertEquals(VersionedLocaleDisplay.NOT_RUN,

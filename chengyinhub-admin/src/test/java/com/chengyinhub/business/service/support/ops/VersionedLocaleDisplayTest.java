@@ -2,8 +2,10 @@ package com.chengyinhub.business.service.support.ops;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
@@ -17,15 +19,29 @@ class VersionedLocaleDisplayTest {
         VersionedLocaleDisplay.Profile cn = VersionedLocaleDisplay.profile(VersionedLocaleDisplay.Market.CN);
         VersionedLocaleDisplay.Profile us = VersionedLocaleDisplay.profile(VersionedLocaleDisplay.Market.US);
 
-        assertEquals(1, cn.version);
-        assertEquals(1, us.version);
+        assertEquals(2, cn.version);
+        assertEquals(2, us.version);
         assertEquals("zh-CN", cn.languageTag);
         assertEquals("en-US", us.languageTag);
         assertEquals("Asia/Shanghai", cn.zoneId.getId());
         assertEquals("America/New_York", us.zoneId.getId());
-        assertEquals("2026-10-23 20:00:00", VersionedLocaleDisplay.format(VersionedLocaleDisplay.Market.CN, FIXED));
-        assertEquals("Oct 23, 2026 8:00 AM", asciiSpaces(
-                VersionedLocaleDisplay.format(VersionedLocaleDisplay.Market.US, FIXED)));
+        VersionedLocaleDisplay.WaitingSourceException waiting = assertThrows(
+                VersionedLocaleDisplay.WaitingSourceException.class,
+                () -> VersionedLocaleDisplay.format(VersionedLocaleDisplay.Market.CN, FIXED));
+        assertEquals(VersionedLocaleDisplay.EVENT_TIMEZONE_SOURCE, waiting.getWaitingCapability());
+        assertEquals("2026-10-23 20:00:00", VersionedLocaleDisplay.format(
+                VersionedLocaleDisplay.Market.CN, FIXED, ZoneId.of("Asia/Shanghai")));
+        assertEquals("Oct 23, 2026 8:00 AM", asciiSpaces(VersionedLocaleDisplay.format(
+                VersionedLocaleDisplay.Market.US, FIXED, ZoneId.of("America/New_York"))));
+        assertNotEquals("Oct 23, 2026 8:00 AM", asciiSpaces(VersionedLocaleDisplay.format(
+                VersionedLocaleDisplay.Market.US, FIXED, ZoneId.of("America/Los_Angeles"))));
+        assertEquals("WAITING_SOURCE", cn.asView().get("eventTimezone"));
+        assertEquals("2026-10-23 20:00:00", VersionedLocaleDisplay.format(
+                VersionedLocaleDisplay.Market.CN, FIXED, eventId -> ZoneId.of("Asia/Shanghai"), "evt-1"));
+        VersionedLocaleDisplay.WaitingSourceException missing = assertThrows(
+                VersionedLocaleDisplay.WaitingSourceException.class,
+                () -> VersionedLocaleDisplay.format(VersionedLocaleDisplay.Market.US, FIXED, eventId -> null, "evt-2"));
+        assertEquals(VersionedLocaleDisplay.EVENT_TIMEZONE_SOURCE, missing.getWaitingCapability());
         assertNotEquals(cn.paymentChannel, us.paymentChannel);
         assertTrueContainsWeChat(cn.paymentChannel);
         assertTrueContainsIap(us.paymentChannel);

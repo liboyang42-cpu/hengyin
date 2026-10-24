@@ -10,16 +10,19 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * C11 版本化语言 / 日期 / 时区 / 可读性展示。v1 锁定既定中美差异，后续改展示必须升版本。
+ * C11 版本化语言 / 日期 / 时区 / 可读性展示。v2：市场目录时区不是事件时区。
+ * 后续改展示必须升版本。
  *
- * <p>CN：zh-CN、Asia/Shanghai、24 小时 {@code yyyy-MM-dd HH:mm:ss}、线下消费走微信支付。
- * US：en-US、America/New_York、12 小时 {@code MMM d, yyyy h:mm a}、虚拟道具走 Apple IAP。
+ * <p>CN 目录：zh-CN、Asia/Shanghai、24 小时 {@code yyyy-MM-dd HH:mm:ss}、线下消费走微信支付。
+ * US 目录：en-US、America/New_York、12 小时 {@code MMM d, yyyy h:mm a}、虚拟道具走 Apple IAP。
+ * 事件格式化必须传入真实 {@link ZoneId} / {@link EventTimezoneSource}，不得用市场目录猜时区。
  * 备案 / 协议签署 / 商店审核 / 真实生产容量不由本类判定，固定 {@link #NOT_RUN}。
  */
 public final class VersionedLocaleDisplay {
 
-    public static final int PROFILE_VERSION = 1;
+    public static final int PROFILE_VERSION = 2;
     public static final String NOT_RUN = "NOT_RUN";
+    public static final String EVENT_TIMEZONE_SOURCE = "locale.eventTimezone";
 
     public enum Market {
         CN, US
@@ -67,12 +70,56 @@ public final class VersionedLocaleDisplay {
         throw new IllegalArgumentException("未知市场");
     }
 
+    /**
+     * 无事件时区不得用市场目录猜。null instant 仍为 UNKNOWN；非空 instant 为 WAITING_SOURCE。
+     */
     public static String format(Market market, Instant instant) {
+        profile(market);
+        if (instant == null) {
+            return "UNKNOWN";
+        }
+        throw new WaitingSourceException(EVENT_TIMEZONE_SOURCE);
+    }
+
+    public static String format(Market market, Instant instant, ZoneId zone) {
         Profile profile = profile(market);
         if (instant == null) {
             return "UNKNOWN";
         }
-        return profile.dateTimeFormatter.withZone(profile.zoneId).format(instant);
+        if (zone == null) {
+            throw new WaitingSourceException(EVENT_TIMEZONE_SOURCE);
+        }
+        return profile.dateTimeFormatter.withZone(zone).format(instant);
+    }
+
+    public static String format(Market market, Instant instant, EventTimezoneSource source, String eventId) {
+        if (source == null) {
+            throw new WaitingSourceException(EVENT_TIMEZONE_SOURCE);
+        }
+        ZoneId zone = source.zoneFor(eventId);
+        if (zone == null) {
+            throw new WaitingSourceException(EVENT_TIMEZONE_SOURCE);
+        }
+        return format(market, instant, zone);
+    }
+
+    /** 事件/用户时区真源；缺源不得用 CN=上海 / US=纽约 代替。 */
+    public interface EventTimezoneSource {
+        ZoneId zoneFor(String eventId);
+    }
+
+    public static final class WaitingSourceException extends IllegalStateException {
+        private static final long serialVersionUID = 1L;
+        private final String waitingCapability;
+
+        public WaitingSourceException(String waitingCapability) {
+            super("WAITING_SOURCE " + waitingCapability);
+            this.waitingCapability = waitingCapability;
+        }
+
+        public String getWaitingCapability() {
+            return waitingCapability;
+        }
     }
 
     public static Map<LegalGate, String> legalGateStatuses() {
@@ -115,6 +162,7 @@ public final class VersionedLocaleDisplay {
             view.put("market", market.name());
             view.put("languageTag", languageTag);
             view.put("timezone", zoneId.getId());
+            view.put("eventTimezone", "WAITING_SOURCE");
             view.put("paymentChannel", paymentChannel);
             view.put("readability", readability);
             view.put("legalGates", NOT_RUN);
