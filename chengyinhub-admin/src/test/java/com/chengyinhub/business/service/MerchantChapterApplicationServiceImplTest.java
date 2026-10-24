@@ -77,6 +77,7 @@ class MerchantChapterApplicationServiceImplTest {
     @BeforeEach
     void setUp() {
         applicationMapper = mock(MerchantChapterApplicationMapper.class);
+        when(applicationMapper.selectApplicationRoundForUpdate(anyLong())).thenReturn(1L);
         chapterMapper = mock(CmsTopicChapterMapper.class);
         topicMapper = mock(CmsTopicMapper.class);
         merchantMapper = mock(MmsMerchantMapper.class);
@@ -90,6 +91,7 @@ class MerchantChapterApplicationServiceImplTest {
         ReflectionTestUtils.setField(service, "applicationMapper", applicationMapper);
         committedNotice = mock(com.chengyinhub.business.service.support.CommittedBusinessNotice.class);
         ReflectionTestUtils.setField(service, "committedNotice", committedNotice);
+        ReflectionTestUtils.setField(service, "inviteNotice", mock(com.chengyinhub.business.service.support.ChapterApplicationInviteNotice.class));
         ReflectionTestUtils.setField(service, "chapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "topicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "merchantMapper", merchantMapper);

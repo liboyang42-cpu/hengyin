@@ -68,6 +68,7 @@ class ChapterInviteSlotOnAcceptV2Test {
         ReflectionTestUtils.setField(service, "supplyReviewService", mock(TopicSupplyReviewService.class));
         ReflectionTestUtils.setField(service, "applicationMapper", applicationMapper);
         ReflectionTestUtils.setField(service, "committedNotice", committedNotice);
+        ReflectionTestUtils.setField(service, "inviteNotice", mock(com.chengyinhub.business.service.support.ChapterApplicationInviteNotice.class));
         ReflectionTestUtils.setField(service, "chapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "topicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "merchantMapper", merchantMapper);

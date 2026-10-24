@@ -11,6 +11,9 @@ public interface MerchantChapterApplicationMapper {
 
     MerchantChapterApplication selectMerchantChapterApplicationById(Long id);
 
+    /** Current round after the original begin-attempt CAS; caller already holds that application write lock. */
+    Long selectApplicationRoundForUpdate(@Param("id") Long id);
+
     /** 撤回幂等判定专用：包含 del_flag=2 的历史申请。 */
     MerchantChapterApplication selectByIdIncludingDeleted(Long id);
 
