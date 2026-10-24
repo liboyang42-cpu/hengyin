@@ -1,0 +1,16 @@
+package com.chengyinhub.business.architecture;
+
+import com.chengyinhub.business.mapper.AiThemeDraftIntentMapper;
+
+/** Isolated CI negative control only. No Spring bean, SQL, model or quota effects. */
+public final class ArchitectureThemeDraftIntentForeignReference {
+    private final AiThemeDraftIntentMapper mapper;
+
+    public ArchitectureThemeDraftIntentForeignReference(AiThemeDraftIntentMapper mapper) {
+        this.mapper = mapper;
+    }
+
+    public AiThemeDraftIntentMapper forbiddenReadOnlyReference() {
+        return mapper;
+    }
+}

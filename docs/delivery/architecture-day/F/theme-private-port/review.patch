@@ -1,0 +1,221 @@
+diff --git a/ci/architecture/README.md b/ci/architecture/README.md
+index 8f2ad1e2..e62a67e5 100644
+--- a/ci/architecture/README.md
++++ b/ci/architecture/README.md
+@@ -35 +35 @@
+-## 两项私有 Mapper 的编译引用回读
++## 三项私有 Mapper 的编译引用回读
+@@ -37 +37 @@
+-`owners.business_policy.private_ports` 只声明 AiQuotaReservationMapper→AiQuotaRecoveryService、PhotoCheckIntentMapper→PhotoCheckIntentService 的精确class绑定（均system）；直接只读依赖也受限，`$`内部类不按前缀允许。它与SQL writer身份分开，不自动给其它fact增加私有依赖规则。新增绑定须独立trusted revision。
++`owners.business_policy.private_ports` 仅声明 AiQuotaReservationMapper→AiQuotaRecoveryService、PhotoCheckIntentMapper→PhotoCheckIntentService、AiThemeDraftIntentMapper→service.impl.AiThemeDraftRequestService 三条精确class绑定（均system）；直接只读依赖也受限，`$`内部类不按前缀允许。它与SQL writer身份分开；第三条是独立技术持久端口约束，不新增 whole-table fact / pure writer / business command，也不把技术class owner当作其它表/字段的批准业务owner。新增绑定须独立trusted revision。
+@@ -39 +39 @@
+-`collect_jdeps.parse_output` 可在跨模块过滤前额外收集这两个目标；默认调用和原五项返回值、模块图格式/观察口径不变，不增加System自环或基线。`gate.py compiled-ports` 从实际Boot/original模块Jar/target classes重枚举并核对原11项证据、实际source/tree/run/attempt/JDK工具hash、class-index和invocation，再重读raw；不信候选JSON的references/findings/complete声明，不再运行Java/jdeps。
++`collect_jdeps.parse_output` 可在跨模块过滤前额外收集这三个目标；默认调用和原五项返回值、模块图格式/观察口径不变，不增加System自环或基线。`gate.py compiled-ports` 从实际Boot/original模块Jar/target classes重枚举并核对原11项证据、实际source/tree/run/attempt/JDK工具hash、class-index和invocation，再重读raw；不信候选JSON的references/findings/complete声明，不再运行Java/jdeps。
+@@ -41 +41 @@
+-新CLI退出码为0（仅两个声明目标的静态引用完整通过）、1（确定的其它consumer，PRIVATE_MAPPER_CONSUMER）、2（证据/目标/索引/位置/覆盖UNKNOWN）。已解析确定违规即使同时存在其它UNKNOWN也返回1，缺图/缺边不通过；不证明方法调用、反射/XML、运行授权或完整A01/A02。源级规则继续工作，source的既有退出码不变。CI只能采用同job固定可信producer产生的raw，hash自洽不是任意producer诚实的密码学证明。
++新CLI退出码为0（仅三个声明目标的静态引用完整通过）、1（确定的其它consumer，PRIVATE_MAPPER_CONSUMER）、2（证据/目标/索引/位置/覆盖UNKNOWN）。已解析确定违规即使同时存在其它UNKNOWN也返回1，缺图/缺边不通过；不证明方法调用、反射/XML、运行授权或完整A01/A02。源级规则继续工作，source的既有退出码不变。CI只能采用同job固定可信producer产生的raw，hash自洽不是任意producer诚实的密码学证明。
+@@ -43 +43 @@
+-本候选不修改root工作流；post-build真实接线及同System真实编译负控尚待root完成。参数、忽略target可信checkout、单次采集及失败保留原artifacts的建议见 `docs/delivery/architecture-day/F/private-mapper-compiled/CONTRACT.md`。
++现有root工作流已使用两个固定可信checkout、单次producer及post-build回读；本片不改它，root需独立审阅并同时repin同一新完整verifier SHA。第三目标真实同System编译负控待root在隔离CI执行，Python ZIP/protocol fixtures不是编译证据。参数、忽略target可信checkout、单次采集及失败保留原artifacts的建议见 `docs/delivery/architecture-day/F/private-mapper-compiled/CONTRACT.md`；第三目标最小delta、具体Java负控与未验证项见 `docs/delivery/architecture-day/F/theme-private-port/REPORT.md`。
+diff --git a/ci/architecture/collect_jdeps.py b/ci/architecture/collect_jdeps.py
+index 441e1e25..0c14d950 100644
+--- a/ci/architecture/collect_jdeps.py
++++ b/ci/architecture/collect_jdeps.py
+@@ -248 +248 @@ def check_private_ports(root, artifact, identity_path, observation, env, ports):
+-    """Post-build readback of two private types, not a new graph or JDK run.
++    """Post-build readback of three declared private types, not a new graph or JDK run.
+@@ -255,2 +255,2 @@ def check_private_ports(root, artifact, identity_path, observation, env, ports):
+-    result = {"schema": 1, "kind": "TWO_PRIVATE_MAPPER_COMPILED_REFERENCES",
+-              "verdict": "UNKNOWN", "coverage": "TWO_DECLARED_TARGET_TYPES_ONLY",
++    result = {"schema": 1, "kind": "THREE_PRIVATE_MAPPER_COMPILED_REFERENCES",
++              "verdict": "UNKNOWN", "coverage": "THREE_DECLARED_TARGET_TYPES_ONLY",
+@@ -278 +278 @@ def check_private_ports(root, artifact, identity_path, observation, env, ports):
+-        require(isinstance(ports, dict) and len(ports) == 2, "two declared target bindings required")
++        require(isinstance(ports, dict) and len(ports) == 3, "three declared target bindings required")
+diff --git a/ci/architecture/gate.py b/ci/architecture/gate.py
+index 0f144627..6ae6e7d0 100644
+--- a/ci/architecture/gate.py
++++ b/ci/architecture/gate.py
+@@ -313 +313,3 @@ def business_policy():
+-    """Only reviewed whole-table facts/pure writers. Not an inferred domain map.
++    """Reviewed whole-table facts/pure writers and exact private compiled ports.
++
++    Private ports do not infer new business facts, table/field owners or commands.
+@@ -359 +361 @@ def business_policy():
+-        require(isinstance(policy["private_ports"], list) and len(policy["private_ports"]) == 2)
++        require(isinstance(policy["private_ports"], list) and len(policy["private_ports"]) == 3)
+@@ -362,2 +364,5 @@ def business_policy():
+-            writer = writers[port["owner"] + ":" + port["target"]]
+-            require(port["consumer"] in {m.split("#")[0] for m in entries[writer["command_id"]]["public_methods"]})
++            require(port["owner"] in owners["modules"])
++            require(all(name(port[field], r"(?:" + IDENT + r"\.)+" + IDENT) for field in ("target", "consumer")))
++            writer = writers.get(port["owner"] + ":" + port["target"])
++            if writer is not None:
++                require(port["consumer"] in {m.split("#")[0] for m in entries[writer["command_id"]]["public_methods"]})
+@@ -365,0 +371 @@ def business_policy():
++        require(all(w["namespace"] in ports and ports[w["namespace"]]["owner"] == w["module"] for w in writers.values()))
+diff --git a/ci/architecture/owners.json b/ci/architecture/owners.json
+index 5dd840b1..edda2402 100644
+--- a/ci/architecture/owners.json
++++ b/ci/architecture/owners.json
+@@ -15 +15 @@
+-  "business_domain_assignment": "仅business_policy中两项whole-table事实获root技术写权批准；其它域保持UNKNOWN，不改变产品/授权/金额政策。",
++  "business_domain_assignment": "仅business_policy中两项whole-table事实获root技术写权批准；private_ports另有三项精确编译依赖技术合同，不推定其它表/字段business owner，不改变产品/授权/金额政策。",
+@@ -60,0 +61,5 @@
++      },
++      {
++        "target": "com.chengyinhub.business.mapper.AiThemeDraftIntentMapper",
++        "owner": "chengyinhub-system",
++        "consumer": "com.chengyinhub.business.service.impl.AiThemeDraftRequestService"
+diff --git a/ci/architecture/test_collect_jdeps.py b/ci/architecture/test_collect_jdeps.py
+index f07d4424..2ea4abfe 100644
+--- a/ci/architecture/test_collect_jdeps.py
++++ b/ci/architecture/test_collect_jdeps.py
+@@ -321,0 +322,3 @@ class PrivatePortsReadbackTest(unittest.TestCase):
++        self.theme_target = "com.chengyinhub.business.mapper.AiThemeDraftIntentMapper"
++        self.theme_consumer = "com.chengyinhub.business.service.impl.AiThemeDraftRequestService"
++        self.theme_foreign = "com.chengyinhub.business.architecture.ArchitectureThemeDraftIntentForeignReference"
+@@ -325 +328 @@ class PrivatePortsReadbackTest(unittest.TestCase):
+-        for name in [*self.ports, *(b["consumer"] for b in self.ports.values()), self.foreign, self.nested]:
++        for name in [*self.ports, *(b["consumer"] for b in self.ports.values()), self.foreign, self.nested, self.theme_foreign, self.theme_consumer + "$Nested"]:
+@@ -365,2 +368,2 @@ class PrivatePortsReadbackTest(unittest.TestCase):
+-    def add_reference(self, source):
+-        target = next(iter(self.ports))
++    def add_reference(self, source, target=None):
++        target = target or next(iter(self.ports))
+@@ -387 +390 @@ class PrivatePortsReadbackTest(unittest.TestCase):
+-        self.assertEqual(2, len(report["references"]))
++        self.assertEqual(3, len(report["references"]))
+@@ -389 +392 @@ class PrivatePortsReadbackTest(unittest.TestCase):
+-        self.assertEqual("TWO_DECLARED_TARGET_TYPES_ONLY", report["coverage"])
++        self.assertEqual("THREE_DECLARED_TARGET_TYPES_ONLY", report["coverage"])
+@@ -567,0 +571,75 @@ class PrivatePortsReadbackTest(unittest.TestCase):
++    def test_third_exact_service_is_resolved_inside_system_without_changing_module_edges(self):
++        report = self.check()
++        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
++        refs = report["references"][self.theme_target]
++        self.assertEqual([self.theme_consumer], [ref["source_class"] for ref in refs])
++        self.assertEqual("chengyinhub-system", refs[0]["source_owner"])
++        self.assertEqual("chengyinhub-system", refs[0]["target_owner"])
++        self.assertEqual(3, len(report["references"]))
++        self.assertEqual([["chengyinhub-admin", "chengyinhub-system"]],
++                         json.loads((self.output / "observation.json").read_text())["module_edges"])
++
++    def test_third_foreign_same_system_read_only_reference_is_blocked_without_XML(self):
++        self.add_reference(self.theme_foreign, self.theme_target)
++        report = self.check()
++        self.assertEqual("BLOCKED", report["verdict"], report)
++        finding = report["findings"][0]
++        self.assertEqual("PRIVATE_MAPPER_CONSUMER", finding["rule"])
++        self.assertEqual(self.theme_foreign, finding["source_class"])
++        self.assertEqual(self.theme_target, finding["target_class"])
++        self.assertEqual(self.theme_consumer, finding["allowed_consumer"])
++        self.assertEqual("chengyinhub-system", finding["source_owner"])
++        self.assertEqual("chengyinhub-system", finding["target_owner"])
++
++    def test_third_nested_consumer_is_not_implicitly_allowed(self):
++        self.add_reference(self.theme_consumer + "$Nested", self.theme_target)
++        self.assertEqual("BLOCKED", self.check()["verdict"])
++
++    def test_third_missing_raw_reference_is_unknown_even_when_original_two_are_complete(self):
++        text = (self.output / "jdeps.stdout.txt").read_text()
++        self.replace_evidence("jdeps.stdout.txt", "\n".join(line for line in text.splitlines()
++                              if "-> " + self.theme_target + " " not in line).encode())
++        report = self.check()
++        self.assert_unknown(report)
++        self.assertIn({"reason": "EXPECTED_CONSUMER_REFERENCE_MISSING", "target": self.theme_target}, report["review_items"])
++        self.assertEqual(2, sum(len(v) for t, v in report["references"].items() if t != self.theme_target))
++
++    def test_third_actual_target_missing_is_unknown(self):
++        del self.system_entries[self.theme_target.replace(".", "/") + ".class"]
++        self.write_system()
++        self.output = self.output.with_name("third-target-missing")
++        self.collect()
++        self.assert_unknown(self.check())
++
++    def test_third_index_hash_or_location_forgery_is_unknown(self):
++        index = json.loads((self.output / "class-index.json").read_text())
++        changed = copy.deepcopy(index)
++        changed[self.theme_target]["sha256"] = "f" * 64
++        self.replace_evidence("class-index.json", json.dumps(changed).encode())
++        self.assert_unknown(self.check())
++        self.replace_evidence("class-index.json", json.dumps(index).encode())
++        text = (self.output / "jdeps.stdout.txt").read_text()
++        self.replace_evidence("jdeps.stdout.txt", text.replace("-> " + self.theme_target + " chengyinhub-system.jar",
++                              "-> " + self.theme_target + " unknown.jar").encode())
++        self.assert_unknown(self.check())
++
++    def test_original_two_bindings_cannot_claim_complete_three_target_coverage(self):
++        self.assert_unknown(self.check({t: b for t, b in self.ports.items() if t != self.theme_target}))
++
++    def test_third_cli_pass_blocked_unknown_are_zero_one_two(self):
++        output = self.boot.parent / "third-private-port.json"
++        args = ["gate.py", "compiled-ports", "--source", str(self.root), "--artifact", str(self.boot),
++                "--identity", str(self.identity), "--observation", str(self.output), "--output", str(output)]
++        for expected in (0, 1, 2):
++            if expected == 1: self.add_reference(self.theme_foreign, self.theme_target)
++            if expected == 2:
++                text = self.stdout
++                self.replace_evidence("jdeps.stdout.txt", "\n".join(line for line in text.splitlines()
++                                      if "-> " + self.theme_target + " " not in line).encode())
++            with patch.dict(os.environ, self.env, clear=True), patch.object(sys, "argv", args), redirect_stdout(io.StringIO()):
++                self.assertEqual(expected, producer.shared.main())
++            report = json.loads(output.read_text())
++            self.assertEqual(["PASS_SCOPED_COMPILED_REFERENCES", "BLOCKED", "UNKNOWN"][expected], report["verdict"])
++
++
++
+diff --git a/ci/architecture/test_gate.py b/ci/architecture/test_gate.py
+index 83a40cd3..c84559ab 100644
+--- a/ci/architecture/test_gate.py
++++ b/ci/architecture/test_gate.py
+@@ -858,0 +859,49 @@ class PrivatePortPolicyFreezeTest(unittest.TestCase):
++    def test_three_private_ports_do_not_approve_a_third_whole_table_fact_or_command(self):
++        policy = gate.business_policy()
++        self.assertEqual({"ai_quota_reservation", "photo_check_intent"}, set(policy["facts"]))
++        self.assertEqual(2, len(policy["writers"]))
++        self.assertEqual(2, len(policy["commands"]))
++        self.assertEqual(3, len(policy["private_ports"]))
++        self.assertEqual({"owner": "chengyinhub-system", "consumer":
++                         "com.chengyinhub.business.service.impl.AiThemeDraftRequestService"},
++                         policy["private_ports"]["com.chengyinhub.business.mapper.AiThemeDraftIntentMapper"])
++
++    def test_candidate_third_binding_change_or_removal_requires_independent_trusted_revision(self):
++        trusted, _ = self.prepare_policy()
++        original = json.loads((trusted / "owners.json").read_text())
++        for change in ("consumer", "remove"):
++            with self.subTest(change=change):
++                data = copy.deepcopy(original)
++                if change == "remove": data["business_policy"]["private_ports"].pop()
++                else: data["business_policy"]["private_ports"][2]["consumer"] = "foreign.Consumer"
++                self.write("ci/architecture/owners.json", gate.encode(data))
++                status, report = self.source_cli(trusted, self.commit())
++                self.assertEqual(1, status, report)
++                self.assertIn("POLICY_CHANGE", report["error"])
++
++    def test_invalid_trusted_third_port_is_not_a_disabled_rule(self):
++        trusted, _ = self.prepare_policy()
++        original = json.loads((trusted / "owners.json").read_text())
++        for field, value in (("owner", "unknown-module"), ("consumer", "not a class name")):
++            with self.subTest(field=field):
++                data = copy.deepcopy(original)
++                data["business_policy"]["private_ports"][2][field] = value
++                payload = gate.encode(data)
++                self.write("ci/architecture/owners.json", payload)
++                (trusted / "owners.json").write_bytes(payload)
++                status, report = self.source_cli(trusted, self.commit())
++                self.assertEqual(1, status, report)
++                self.assertIn("BUSINESS_POLICY_INVALID", report["error"])
++
++    def test_adding_third_port_does_not_allow_removing_original_writer_port(self):
++        trusted, _ = self.prepare_policy()
++        data = json.loads((trusted / "owners.json").read_text())
++        data["business_policy"]["private_ports"][0]["target"] = "foreign.OtherMapper"
++        payload = gate.encode(data)
++        self.write("ci/architecture/owners.json", payload)
++        (trusted / "owners.json").write_bytes(payload)
++        status, report = self.source_cli(trusted, self.commit())
++        self.assertEqual(1, status, report)
++        self.assertIn("BUSINESS_POLICY_INVALID", report["error"])
++
++

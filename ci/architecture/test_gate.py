@@ -856,6 +856,55 @@ class PrivatePortPolicyFreezeTest(unittest.TestCase):
         self.assertIn("BUSINESS_POLICY_INVALID", report["error"])
 
 
+    def test_three_private_ports_do_not_approve_a_third_whole_table_fact_or_command(self):
+        policy = gate.business_policy()
+        self.assertEqual({"ai_quota_reservation", "photo_check_intent"}, set(policy["facts"]))
+        self.assertEqual(2, len(policy["writers"]))
+        self.assertEqual(2, len(policy["commands"]))
+        self.assertEqual(3, len(policy["private_ports"]))
+        self.assertEqual({"owner": "chengyinhub-system", "consumer":
+                         "com.chengyinhub.business.service.impl.AiThemeDraftRequestService"},
+                         policy["private_ports"]["com.chengyinhub.business.mapper.AiThemeDraftIntentMapper"])
+
+    def test_candidate_third_binding_change_or_removal_requires_independent_trusted_revision(self):
+        trusted, _ = self.prepare_policy()
+        original = json.loads((trusted / "owners.json").read_text())
+        for change in ("consumer", "remove"):
+            with self.subTest(change=change):
+                data = copy.deepcopy(original)
+                if change == "remove": data["business_policy"]["private_ports"].pop()
+                else: data["business_policy"]["private_ports"][2]["consumer"] = "foreign.Consumer"
+                self.write("ci/architecture/owners.json", gate.encode(data))
+                status, report = self.source_cli(trusted, self.commit())
+                self.assertEqual(1, status, report)
+                self.assertIn("POLICY_CHANGE", report["error"])
+
+    def test_invalid_trusted_third_port_is_not_a_disabled_rule(self):
+        trusted, _ = self.prepare_policy()
+        original = json.loads((trusted / "owners.json").read_text())
+        for field, value in (("owner", "unknown-module"), ("consumer", "not a class name")):
+            with self.subTest(field=field):
+                data = copy.deepcopy(original)
+                data["business_policy"]["private_ports"][2][field] = value
+                payload = gate.encode(data)
+                self.write("ci/architecture/owners.json", payload)
+                (trusted / "owners.json").write_bytes(payload)
+                status, report = self.source_cli(trusted, self.commit())
+                self.assertEqual(1, status, report)
+                self.assertIn("BUSINESS_POLICY_INVALID", report["error"])
+
+    def test_adding_third_port_does_not_allow_removing_original_writer_port(self):
+        trusted, _ = self.prepare_policy()
+        data = json.loads((trusted / "owners.json").read_text())
+        data["business_policy"]["private_ports"][0]["target"] = "foreign.OtherMapper"
+        payload = gate.encode(data)
+        self.write("ci/architecture/owners.json", payload)
+        (trusted / "owners.json").write_bytes(payload)
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(1, status, report)
+        self.assertIn("BUSINESS_POLICY_INVALID", report["error"])
+
+
 class RegisteredReferencesTest(unittest.TestCase):
     def test_command_checklist_references_real_baseline_sources(self):
         registry = json.loads((gate.HERE / "commands.json").read_text())

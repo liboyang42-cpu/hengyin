@@ -12,7 +12,7 @@
   },
   "legacy": "存量仅按 statement 的 path#id、内容哈希及传递 include 哈希精确识别。多 owner 表保持显式多值，不归并为一个万能 owner。没有目录通配豁免或自增 baseline。",
   "unknown": "动态表/字段、foreach/if/choose、include properties、未解析或循环引用及复杂 SQL 均保持 UNKNOWN；table_hints/column_hints 不完整时不猜 owner。DELETE 的字段集合为空不表示无写效果。",
-  "business_domain_assignment": "仅business_policy中两项whole-table事实获root技术写权批准；其它域保持UNKNOWN，不改变产品/授权/金额政策。",
+  "business_domain_assignment": "仅business_policy中两项whole-table事实获root技术写权批准；private_ports另有三项精确编译依赖技术合同，不推定其它表/字段business owner，不改变产品/授权/金额政策。",
   "business_policy": {
     "schema": 1,
     "coverage": "PARTIAL",
@@ -58,6 +58,11 @@
         "target": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
         "owner": "chengyinhub-system",
         "consumer": "com.chengyinhub.business.service.ai.PhotoCheckIntentService"
+      },
+      {
+        "target": "com.chengyinhub.business.mapper.AiThemeDraftIntentMapper",
+        "owner": "chengyinhub-system",
+        "consumer": "com.chengyinhub.business.service.impl.AiThemeDraftRequestService"
       }
     ]
   }

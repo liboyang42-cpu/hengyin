@@ -319,10 +319,13 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.ports = producer.shared.business_policy()["private_ports"]
         self.foreign = "example.system.ForeignConsumer"
         self.nested = next(iter(self.ports.values()))["consumer"] + "$Nested"
+        self.theme_target = "com.chengyinhub.business.mapper.AiThemeDraftIntentMapper"
+        self.theme_consumer = "com.chengyinhub.business.service.impl.AiThemeDraftRequestService"
+        self.theme_foreign = "com.chengyinhub.business.architecture.ArchitectureThemeDraftIntentForeignReference"
         self.system_jar = self.root / "chengyinhub-system/target/chengyinhub-system-1.jar"
         with zipfile.ZipFile(self.system_jar) as z:
             self.system_entries = {name: z.read(name) for name in z.namelist()}
-        for name in [*self.ports, *(b["consumer"] for b in self.ports.values()), self.foreign, self.nested]:
+        for name in [*self.ports, *(b["consumer"] for b in self.ports.values()), self.foreign, self.nested, self.theme_foreign, self.theme_consumer + "$Nested"]:
             self.system_entries[name.replace(".", "/") + ".class"] = ("NOT_COMPILED_FIXTURE_" + name).encode()
         self.write_system()
         for target, binding in self.ports.items():
@@ -362,8 +365,8 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         report[key] = value
         (self.output / "observation.json").write_text(json.dumps(report))
 
-    def add_reference(self, source):
-        target = next(iter(self.ports))
+    def add_reference(self, source, target=None):
+        target = target or next(iter(self.ports))
         text = (self.output / "jdeps.stdout.txt").read_text()
         self.replace_evidence("jdeps.stdout.txt", (text + "   " + source + " -> " + target + " chengyinhub-system.jar\n").encode())
         return target
@@ -384,9 +387,9 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
         self.assertTrue(report["coverage_complete"])
         self.assertTrue(report["evidence_verified"])
-        self.assertEqual(2, len(report["references"]))
+        self.assertEqual(3, len(report["references"]))
         self.assertEqual(2, len(self.calls), "only mocked producer version/analysis calls")
-        self.assertEqual("TWO_DECLARED_TARGET_TYPES_ONLY", report["coverage"])
+        self.assertEqual("THREE_DECLARED_TARGET_TYPES_ONLY", report["coverage"])
         self.assertNotIn("module_edges", report)
         self.assertNotIn("scc", report)
 
@@ -563,6 +566,81 @@ class PrivatePortsReadbackTest(unittest.TestCase):
                 self.assertEqual(expected, producer.shared.main())
             self.assertEqual(json.loads(stream.getvalue()), json.loads(output.read_text()))
             if expected == 2: self.assert_unknown(json.loads(output.read_text()))
+
+
+    def test_third_exact_service_is_resolved_inside_system_without_changing_module_edges(self):
+        report = self.check()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        refs = report["references"][self.theme_target]
+        self.assertEqual([self.theme_consumer], [ref["source_class"] for ref in refs])
+        self.assertEqual("chengyinhub-system", refs[0]["source_owner"])
+        self.assertEqual("chengyinhub-system", refs[0]["target_owner"])
+        self.assertEqual(3, len(report["references"]))
+        self.assertEqual([["chengyinhub-admin", "chengyinhub-system"]],
+                         json.loads((self.output / "observation.json").read_text())["module_edges"])
+
+    def test_third_foreign_same_system_read_only_reference_is_blocked_without_XML(self):
+        self.add_reference(self.theme_foreign, self.theme_target)
+        report = self.check()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        finding = report["findings"][0]
+        self.assertEqual("PRIVATE_MAPPER_CONSUMER", finding["rule"])
+        self.assertEqual(self.theme_foreign, finding["source_class"])
+        self.assertEqual(self.theme_target, finding["target_class"])
+        self.assertEqual(self.theme_consumer, finding["allowed_consumer"])
+        self.assertEqual("chengyinhub-system", finding["source_owner"])
+        self.assertEqual("chengyinhub-system", finding["target_owner"])
+
+    def test_third_nested_consumer_is_not_implicitly_allowed(self):
+        self.add_reference(self.theme_consumer + "$Nested", self.theme_target)
+        self.assertEqual("BLOCKED", self.check()["verdict"])
+
+    def test_third_missing_raw_reference_is_unknown_even_when_original_two_are_complete(self):
+        text = (self.output / "jdeps.stdout.txt").read_text()
+        self.replace_evidence("jdeps.stdout.txt", "\n".join(line for line in text.splitlines()
+                              if "-> " + self.theme_target + " " not in line).encode())
+        report = self.check()
+        self.assert_unknown(report)
+        self.assertIn({"reason": "EXPECTED_CONSUMER_REFERENCE_MISSING", "target": self.theme_target}, report["review_items"])
+        self.assertEqual(2, sum(len(v) for t, v in report["references"].items() if t != self.theme_target))
+
+    def test_third_actual_target_missing_is_unknown(self):
+        del self.system_entries[self.theme_target.replace(".", "/") + ".class"]
+        self.write_system()
+        self.output = self.output.with_name("third-target-missing")
+        self.collect()
+        self.assert_unknown(self.check())
+
+    def test_third_index_hash_or_location_forgery_is_unknown(self):
+        index = json.loads((self.output / "class-index.json").read_text())
+        changed = copy.deepcopy(index)
+        changed[self.theme_target]["sha256"] = "f" * 64
+        self.replace_evidence("class-index.json", json.dumps(changed).encode())
+        self.assert_unknown(self.check())
+        self.replace_evidence("class-index.json", json.dumps(index).encode())
+        text = (self.output / "jdeps.stdout.txt").read_text()
+        self.replace_evidence("jdeps.stdout.txt", text.replace("-> " + self.theme_target + " chengyinhub-system.jar",
+                              "-> " + self.theme_target + " unknown.jar").encode())
+        self.assert_unknown(self.check())
+
+    def test_original_two_bindings_cannot_claim_complete_three_target_coverage(self):
+        self.assert_unknown(self.check({t: b for t, b in self.ports.items() if t != self.theme_target}))
+
+    def test_third_cli_pass_blocked_unknown_are_zero_one_two(self):
+        output = self.boot.parent / "third-private-port.json"
+        args = ["gate.py", "compiled-ports", "--source", str(self.root), "--artifact", str(self.boot),
+                "--identity", str(self.identity), "--observation", str(self.output), "--output", str(output)]
+        for expected in (0, 1, 2):
+            if expected == 1: self.add_reference(self.theme_foreign, self.theme_target)
+            if expected == 2:
+                text = self.stdout
+                self.replace_evidence("jdeps.stdout.txt", "\n".join(line for line in text.splitlines()
+                                      if "-> " + self.theme_target + " " not in line).encode())
+            with patch.dict(os.environ, self.env, clear=True), patch.object(sys, "argv", args), redirect_stdout(io.StringIO()):
+                self.assertEqual(expected, producer.shared.main())
+            report = json.loads(output.read_text())
+            self.assertEqual(["PASS_SCOPED_COMPILED_REFERENCES", "BLOCKED", "UNKNOWN"][expected], report["verdict"])
+
 
 
 class WorkflowWiringTest(unittest.TestCase):

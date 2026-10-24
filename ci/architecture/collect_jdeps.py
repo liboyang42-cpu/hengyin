@@ -245,15 +245,15 @@ def collect(root, artifact, identity_path, output, env, runner=subprocess.run):
 
 
 def check_private_ports(root, artifact, identity_path, observation, env, ports):
-    """Post-build readback of two private types, not a new graph or JDK run.
+    """Post-build readback of three declared private types, not a new graph or JDK run.
 
     Re-enumerate the actual original/Boot/target class bytes using stage_inputs;
     candidate JSON is not the authority for class hashes, owners or policy.
     Raw output must have been collected by the trusted producer in this CI job.
     Hash coherence alone cannot attest an arbitrary producer's honesty.
     """
-    result = {"schema": 1, "kind": "TWO_PRIVATE_MAPPER_COMPILED_REFERENCES",
-              "verdict": "UNKNOWN", "coverage": "TWO_DECLARED_TARGET_TYPES_ONLY",
+    result = {"schema": 1, "kind": "THREE_PRIVATE_MAPPER_COMPILED_REFERENCES",
+              "verdict": "UNKNOWN", "coverage": "THREE_DECLARED_TARGET_TYPES_ONLY",
               "evidence_verified": False, "coverage_complete": False,
               "targets": ports, "references": {}, "findings": [], "review_items": [],
               "not_proven": ["reflection/XML/runtime dependencies", "method calls or mandatory Service path",
@@ -275,7 +275,7 @@ def check_private_ports(root, artifact, identity_path, observation, env, ports):
         identity_bytes = identity_path.read_bytes()
         bound = bind_identity(root, artifact, json.loads(identity_bytes), env)
         result.update(bound)
-        require(isinstance(ports, dict) and len(ports) == 2, "two declared target bindings required")
+        require(isinstance(ports, dict) and len(ports) == 3, "three declared target bindings required")
         require(not (observation / "observation.json").is_symlink(), "symlink observation metadata")
         declared = json.loads((observation / "observation.json").read_text())
         require(all(declared.get(k) == v for k, v in bound.items()), "observation source/tree/Jar/run/attempt mismatch")
