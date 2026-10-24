@@ -9,6 +9,9 @@ import java.math.BigDecimal;
 
 /** 原close内部的逐订单分项与成功冲回；所有写调用必须加入原topic资金事务。 */
 public interface CoopSettlementOriginalMapper {
+    com.chengyinhub.business.domain.dto.CoopPaymentRecoveryTarget selectPaymentRecoveryTarget(@Param("registrationId") Long registrationId);
+    com.chengyinhub.business.domain.dto.CoopPaymentRecoveryTarget selectPaymentRecoveryTargetForUpdate(@Param("registrationId") Long registrationId);
+    WxPaymentCallbackOutbox selectClosedPaymentRecoveryForUpdate(@Param("key") String key);
     int insertComponent(CoopSettlementOriginalComponent component);
     List<CoopSettlementOriginalComponent> selectComponentsForPayerForUpdate(
             @Param("cashCloseId") Long cashCloseId, @Param("payerRegistrationId") Long payerRegistrationId);

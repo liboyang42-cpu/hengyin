@@ -53,6 +53,23 @@
         <result property="debtAmount" column="debt_amount"/>
         <result property="createdAt" column="created_at"/>
     </resultMap>
+    <sql id="paymentRecoveryTarget">
+        select r.id as registrationId,r.registration_no as registrationNo,r.transaction_id as transactionId,
+               r.payment_status as paymentStatus,r.registration_status as registrationStatus,r.wechat_payment_amount as wechatPaymentAmount,
+               case when r.owner_type=1 then r.owner_id when r.owner_type=2 then a.topic_id else null end as topicId,
+               case when r.owner_type=1 and r.owner_id&gt;0 then true when r.owner_type=2 and a.id is not null then true else false end as relationPresent
+        from cms_registration r left join cms_activity a on r.owner_type=2 and a.id=r.owner_id where r.id=#{registrationId}
+    </sql>
+    <select id="selectPaymentRecoveryTarget" resultType="com.chengyinhub.business.domain.dto.CoopPaymentRecoveryTarget" useCache="false" flushCache="true">
+        <include refid="paymentRecoveryTarget"/>
+    </select>
+    <select id="selectPaymentRecoveryTargetForUpdate" resultType="com.chengyinhub.business.domain.dto.CoopPaymentRecoveryTarget" useCache="false" flushCache="true">
+        <include refid="paymentRecoveryTarget"/> for update
+    </select>
+    <select id="selectClosedPaymentRecoveryForUpdate" resultType="com.chengyinhub.business.domain.WxPaymentCallbackOutbox" useCache="false" flushCache="true">
+        select id,biz_type as bizType,biz_id as bizId,idempotency_key as idempotencyKey,money_affecting as moneyAffecting,state
+        from wx_payment_callback_outbox where idempotency_key=#{key} for update
+    </select>
     <update id="bindHeadToClose">
         update coop_settlement head join coop_settlement_cash_close c on c.id=#{cashCloseId} and c.topic_id=head.topic_id
         set head.cash_close_id=#{cashCloseId},head.cash_head_kind=#{receiverKind}

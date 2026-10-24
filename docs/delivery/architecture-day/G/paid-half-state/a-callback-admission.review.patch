@@ -1,0 +1,47 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
+@@ -92,3 +92,6 @@
++    @Autowired
++    private com.chengyinhub.business.service.ICoopSettlementClaimService coopSettlementClaimService;
++
+     @Autowired
+     @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
+     private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.WechatPaymentOperations> paymentAttemptGateway;
+@@ -2176,6 +2179,15 @@
+         } catch (IWxPaymentCallbackInboxService.IdentityConflictException conflict) {
+             return registrationPaymentCallbackFailure(outTradeNo, "inbox_identity_conflict");
+         }
++        final com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference cashRecoveryReference = verifiedReference;
++        try {
++            if (cashRecoveryReference != null && !coopSettlementClaimService.retainClosedPaidHalfStateSuccess(
++                    registration.getId(), cashRecoveryReference)) {
++                return registrationPaymentCallbackFailure(outTradeNo, "topic_closed_paid_half_state_recovery_required");
++            }
++        } catch (RuntimeException unavailableRecovery) {
++            return registrationPaymentCallbackFailure(outTradeNo, "verified_cash_recovery_not_completed");
++        }
+         final String[] outcome = new String[1];
+         IWxPaymentCallbackInboxService.Mutation mutation = new IWxPaymentCallbackInboxService.Mutation() {
+                     @Override
+@@ -2202,6 +2214,12 @@
+         if (completed) {
+             return "SUCCESS";
+         }
++        if (cashRecoveryReference != null) {
++            try { coopSettlementClaimService.retainClosedPaidHalfStateSuccess(registration.getId(), cashRecoveryReference); }
++            catch (RuntimeException unavailableRecovery) {
++                return registrationPaymentCallbackFailure(outTradeNo, "verified_cash_recovery_not_completed");
++            }
++        }
+         // 业务判定失败时 applyWechatPayCallback 已按原因告警,事务回滚、inbox 释放待微信重投。
+         return outcome[0] != null && !"SUCCESS".equalsIgnoreCase(outcome[0]) ? outcome[0]
+                 : registrationPaymentCallbackFailure(outTradeNo, "callback_not_completed");
+@@ -2244,6 +2262,8 @@
+                 if (!matchesFrozenWechatAmount(registration, resultMap.get("total"))) {
+                     return registrationPaymentCallbackFailure(outTradeNo, "amount_mismatch");
+                 }
++                coopSettlementClaimService.requirePaidHalfStateCashAdmission(registration.getId(),
++                        checkedVerifiedPaymentReference(resultMap));
+                 String paymentResult = completePaymentSuccess(lockedOrder, transactionId);
+                 return "SUCCESS".equalsIgnoreCase(paymentResult) ? paymentResult
+                         : registrationPaymentCallbackFailure(outTradeNo, "payment_state_conflict");

@@ -24,6 +24,10 @@ public final class TopicSettlementCashBasis {
             if (Integer.valueOf(1).equals(row.getPaymentStatus())) {
                 throw invalid("PAYMENT_CONFIRMATION_UNRESOLVED");
             }
+            if (Integer.valueOf(2).equals(row.getPaymentStatus()) && Integer.valueOf(1).equals(row.getRegistrationStatus())) {
+                // Inspect the full locked set before cash/verification filters. A later legitimate SUCCESS can repair 2/1 to 2/2.
+                throw invalid("PAID_REGISTRATION_HALF_STATE_UNRESOLVED:registrationId=" + row.getId());
+            }
             if (!Integer.valueOf(2).equals(row.getPaymentStatus())) continue;
             // 已删活动壳的已付资金也不能被经典主题基数吞掉；未核销不会绕过此闸门。
             if (Long.valueOf(2).equals(row.getOwnerType())) throw invalid("ACTIVITY_CASH_BASIS_UNSUPPORTED");

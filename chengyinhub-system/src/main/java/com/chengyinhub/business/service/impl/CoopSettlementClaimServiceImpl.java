@@ -43,6 +43,24 @@ public class CoopSettlementClaimServiceImpl implements ICoopSettlementClaimServi
     @Autowired
     private CoopSettlementOriginalLedger originalLedger;
 
+    @Autowired
+    private CoopClosedPaymentRecovery closedPaymentRecovery;
+
+    @Override
+    @Transactional(propagation = Propagation.NEVER)
+    public boolean retainClosedPaidHalfStateSuccess(Long registrationId, com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference) {
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("CLOSED_PAYMENT_RECOVERY_OUTSIDE_BUSINESS_TRANSACTION_REQUIRED");
+        return closedPaymentRecovery.retainClosedSuccess(registrationId,reference);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
+    public void requirePaidHalfStateCashAdmission(Long registrationId, com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference) {
+        closedPaymentRecovery.requireCashAdmission(registrationId,reference);
+    }
+
+
     @Override
     @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
     public void reverseCompletedRegistrationRefund(Long refundId) {
