@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T07:42:17.326863+00:00",
-  "source_parent": "678a23367ff4c8abd2806f2b6ccd983aec8342b3",
+  "updated_utc": "2026-10-24T07:51:42.565654+00:00",
+  "source_parent": "d586c143eb0a4499aeb15cbb3d173496f18b83e2",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
   "scope": "WP00-WP17/Q1-Q10/A01-A15/T01-T22/G0-G5",
@@ -11,15 +11,15 @@
     "A": {
       "thread_id": "01a16a22-3076-7196-88f5-86d5b2c83036",
       "host_id": "durable",
-      "task": "支付/退款首个业务锁统一topic，锁下归属复核；保留交易、CAS和回放",
-      "ownership": "CmsRegistrationServiceImpl/RefundServiceImpl/WxPaymentCallbackMutationService的栅栏与接线；G账本正文不改",
+      "task": "ae160首锁候选已交；继续TeamGroup/ClubEventOps外层同锁序",
+      "ownership": "CmsRegistrationServiceImpl/RefundServiceImpl/WxPaymentCallbackMutationService的栅栏与接线；G账本正文不改；外层两个服务精确报名/支付/退款包装",
       "dispatch": "accepted; authoritative active readback",
-      "last_cursor": "57d93131-47ef-462a-86af-d1e50fa531e9:8",
+      "last_cursor": "57d93131-47ef-462a-86af-d1e50fa531e9:11",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
-      "last_turn_id": "01a16cbc-cb2e-7083-9828-8936232ca7c3"
+      "last_turn_id": "01a16ce1-6375-7017-a202-ffd128522121"
     },
     "B": {
       "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
@@ -37,15 +37,15 @@
     "C": {
       "thread_id": "01a16a22-c697-7637-ae29-cdff6341000b",
       "host_id": "durable",
-      "task": "复用现有票码建立稳定逐席位身份和实际核销事实",
+      "task": "735b活动席位候选已交，优先修H发现的RR完整当前读P1，再接选席UI/UNKNOWN原身份恢复；skill原文已补发",
       "ownership": "席位/票码/核销事实；共享下单/退款文件只给review.patch",
       "dispatch": "accepted; authoritative active readback",
-      "last_cursor": "04667806-5015-4116-b5cc-5f2df01b0163:4",
+      "last_cursor": "04667806-5015-4116-b5cc-5f2df01b0163:7",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
-      "last_turn_id": "01a16cbc-e80c-7082-9a04-f2dd5521ef56"
+      "last_turn_id": "01a16cce-8bc5-71da-b2e7-beb943297961"
     },
     "D": {
       "thread_id": "01a16a22-f399-7110-ba27-ef3f7245603b",
@@ -53,7 +53,7 @@
       "task": "补齐章节、节点CRUD和审核alreadyPublished写入的topic栅栏",
       "ownership": "三服务上述精确符号已补授；CmsTopic共享只给patch",
       "dispatch": "accepted; authoritative active readback",
-      "last_cursor": "211782f6-46fa-46f2-aefe-b8488d85ece7:4",
+      "last_cursor": "211782f6-46fa-46f2-aefe-b8488d85ece7:5",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
@@ -63,28 +63,28 @@
     "E": {
       "thread_id": "01a16a23-2723-72e4-813f-03d7f1aa6017",
       "host_id": "durable",
-      "task": "地图外呼、缓存及城市地理查询容量和失败语义",
-      "ownership": "TencentMapClient/ApiMapService/MapGeocodeServiceImpl；不改公共传输",
+      "task": "d811/8372地图两片已交；提取CmsTopic成组真实纯读查询职责，保留接口/权限/SQL语义",
+      "ownership": "新TopicQuery owner及测试；CmsTopic只交精确只读delegate patch，root串行合成",
       "dispatch": "accepted; authoritative active readback",
-      "last_cursor": "39e95256-af30-44c8-adcb-3ea2bae46c20:3",
+      "last_cursor": "39e95256-af30-44c8-adcb-3ea2bae46c20:5",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
-      "last_turn_id": "01a16cb3-8388-723a-af9f-128ebbc00e14"
+      "last_turn_id": "01a16ce1-702a-76d8-9ed2-766a14f37d92"
     },
     "F": {
       "thread_id": "01a16a23-5e0c-736b-9fc1-d4d070393009",
       "host_id": "durable",
-      "task": "为新真实类型补既有架构owner/direction约束",
+      "task": "5caf已纳，两CI refs已更新；继续同源真实编译负控后置入口及缺raw行窄缺口",
       "ownership": "既有policy/控制例；不改root CI refs或新造scanner",
       "dispatch": "accepted; authoritative active readback",
-      "last_cursor": "09bef78c-bc99-472f-b3fc-b50c0c7bbbf3:4",
+      "last_cursor": "09bef78c-bc99-472f-b3fc-b50c0c7bbbf3:7",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
-      "last_turn_id": "01a16cbc-f72a-77ca-bdf1-8969cee6b15a"
+      "last_turn_id": "01a16cce-6fa7-777b-90ad-ae59fbb8febf"
     },
     "G": {
       "thread_id": "01a16a23-8904-73e8-a024-378a96f0800c",
@@ -92,7 +92,7 @@
       "task": "原冻结逐订单分项、实际核销席位固定费、成功退款冲回和debt",
       "ownership": "结算/claim/adjustment/debt和additive SQL源码；旧claim约束保留",
       "dispatch": "accepted; authoritative active readback",
-      "last_cursor": "86e604f0-58b4-4db0-ad78-a46ccd5cd127:4",
+      "last_cursor": "86e604f0-58b4-4db0-ad78-a46ccd5cd127:6",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
@@ -102,15 +102,15 @@
     "H": {
       "thread_id": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
       "host_id": "durable",
-      "task": "审查新B路由、A金额边界及root正式下单封口组合",
+      "task": "审A ae160和E d811/8372；复核C当前读P1修复；只读，不把NOT_RUN当BUG",
       "ownership": "只读独立审查，未运行单列",
       "dispatch": "accepted; authoritative active readback",
-      "last_cursor": "4e91c928-6707-49ca-8346-9b8cfe07c243:5",
+      "last_cursor": "4e91c928-6707-49ca-8346-9b8cfe07c243:9",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
-      "last_turn_id": "01a16cbd-2580-7609-b680-7466fc699b8b"
+      "last_turn_id": "01a16ce1-4c74-7319-ae21-b6b60affaba9"
     }
   },
   "root_ownership": [
@@ -129,7 +129,8 @@
   ],
   "pending_business_decisions": [
     "Partial refund rounding: cumulative target minus original reversed amount, full refund clear original allocation remaining; user question pending",
-    "Original head-to-order allocation: preserve original total, largest fractional remainder and stable registration ID versus oldest-order remainder; user question pending"
+    "Original head-to-order allocation: preserve original total, largest fractional remainder and stable registration ID versus oldest-order remainder; user question pending",
+    "Fixed actual fulfillment cost can leave negative original organizer margin after another order refund: liability/deposit/debt owner unspecified; user question pending, no unilateral debit"
   ],
   "actual_minimal_checks": {
     "m1_workflow_controls": "3 PASS",
@@ -168,7 +169,9 @@
     "files": 2,
     "exact_candidate_bytes": true,
     "fixed_test_count": 53,
-    "Java_DB": "NOT_RUN"
+    "Java_DB": "NOT_RUN",
+    "initial_integration_at": "95c5f1c719c75beaaa5c42d2e9285036ee440695",
+    "later_composition": "two A test fixture bindings adapted at678 to actual B SDK gateway; exact-candidate-bytes claim applies only initial integration"
   },
   "new_batch_composition": {
     "receipt": "batch-ABCFG-composition-20261024.json",
@@ -179,7 +182,8 @@
       "F": "1fb99670c066496c3b19da6b3ac4b132e14ab785",
       "G": "2457bf1851c0573df7a69270a4532b00b9e8404c"
     },
-    "status": "reviewed staged source; Java/DB NOT_RUN"
+    "status": "committed/pushed; first joint CI e4 failed compilation; current source repairs require new same-source backend acceptance",
+    "integrated_at": "678a23367ff4c8abd2806f2b6ccd983aec8342b3"
   },
   "bingo_followup": {
     "source": "PlayBingoServiceImpl.topicRule/grantCellRewards",
@@ -210,5 +214,19 @@
     "migration_gate": "PASS: dependencies relative origin/master only added;9 new migration scripts all covered by shared ledger, all edges ordered; no DDL executed",
     "C_delivery": "1fbd8d83340a7b2fab82b6b971f8d0a89ed6dd49 fetched, NOT_INTEGRATED; C continues activity seats/client selection",
     "F_delivery": "de0a3ffe512a1883474a46afa4f0a1b9d04bba9d applied; F continues real compiled negative controls"
+  },
+  "confirmed_unresolved": [
+    {
+      "id": "H-C-SEAT-RR-P1",
+      "source": "1fbd8d83340a7b2fab82b6b971f8d0a89ed6dd49",
+      "mechanism": "ID row lock followed by ordinary full-row SELECT can reuse pre-refund RR snapshot and permit later seat write",
+      "status": "sent C priority full ForUpdate+real Service interleaving; original seat candidate NOT_INTEGRATED"
+    }
+  ],
+  "available_next_candidates": {
+    "A": "ae1606843cca6ed847d84059640b1bab6e1decdc",
+    "E_budget": "d811d86b6f85dcec9ed4c8ab036719d837eefce5",
+    "E_city_quality": "8372a9d0a37f62cd7e7d6375b5a537e4e921590a",
+    "C_activity_unreviewed": "735b9f4c90819ac38ccaa5ac3c6407de28d9e69d"
   }
 }
