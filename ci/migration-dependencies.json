@@ -9,6 +9,7 @@
     "member_visited_poi_poi_key_20261022": ["member_visited_poi"],
     "member_visited_poi_poi_key_backfill_20261022": ["member_visited_poi_poi_key_20261022", "roam"],
     "20261022_location_guard_switch_seed": [],
+    "20261023_points_value_config_seed": [],
     "orient_geo_ar_team_20261022": [],
     "o14_cms_topic_city_code_20261022": [],
     "o14_cms_activity_city_code_20261022": [],

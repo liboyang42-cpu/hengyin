@@ -167,6 +167,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         mt.create_time DESC
     </select>
     
+    <!-- D5(owner 2026-10-23):同作者广场条目同名判重的比对池 —— 未删除、非本模板投影;判等在 Java 侧(trim 后逐字) -->
+    <select id="selectAuthorLiveTitles" resultType="java.lang.String">
+        select title
+        from cms_template_library
+        where member_id = #{memberId}
+          and del_flag = 0
+          and (member_template_id is null or member_template_id != #{excludeMemberTemplateId})
+          and title is not null
+    </select>
+
     <!-- O5b-5:标题相似度提示的比对池 —— 只读在架(未删、已上架、已过审)条目的 id/title,不含本人 -->
     <select id="selectPublicTitlesForSimilarity" resultMap="CmsTemplateLibraryResult">
         select id, member_id, title
