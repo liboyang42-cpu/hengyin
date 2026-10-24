@@ -1,5 +1,6 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.business.service.support.MerchantMetricWindow;
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -1349,6 +1350,8 @@ public class ApiMerchantController extends BaseController {
                 principalMemberId, MerchantPermission.BASIC_READ);
         Long ownerMemberId = access.getOwnerMemberId();
         Map<String, Object> data = new HashMap<>();
+        // 各块时间窗口并存(累计 / 近7自然日 / 近30天滚动),按实际下发的块声明,端上比较前先看窗口。
+        Map<String, Object> windows = new LinkedHashMap<>();
 
         // 品牌收入与趋势属于资金域，非财务角色连查询都不执行。
         if (access.hasPermission(MerchantPermission.FINANCE_READ)) {
@@ -1388,6 +1391,8 @@ public class ApiMerchantController extends BaseController {
                 revenue7d.add(row);
             }
             data.put("revenue7d", revenue7d);
+            windows.put("revenue", MerchantMetricWindow.ALL_TIME.code());
+            windows.put("revenue7d", MerchantMetricWindow.CALENDAR_7D_INCL_TODAY.code());
         }
 
         if (access.hasPermission(MerchantPermission.ORDER_READ)) {
@@ -1406,10 +1411,12 @@ public class ApiMerchantController extends BaseController {
         if (access.hasPermission(MerchantPermission.MARKETING_READ)) {
             try {
                 data.put("insight", merchantInsightService.dashboard(ownerMemberId));
+                windows.put("insight", MerchantMetricWindow.ROLLING_30D.code());
             } catch (Exception e) {
                 logger.warn("商家看板 insight 块聚合失败 memberId={}", ownerMemberId, e);
             }
         }
+        data.put("windows", windows);
 
         return success(data);
     }

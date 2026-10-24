@@ -52,7 +52,8 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
 {
     private static final Logger log = LoggerFactory.getLogger(MerchantInsightServiceImpl.class);
 
-    private static final int WINDOW_DAYS = 30;
+    /** dashboard/参谋的滚动窗口;与看板 windows.insight 声明同源 */
+    private static final int WINDOW_DAYS = com.chengyinhub.business.service.support.MerchantMetricWindow.ROLLING_30D.days();
     /** 店铺参谋主卡可切换的时间窗(自然日,含今天) */
     private static final int[] TREND_WINDOWS = { 7, 30, 90 };
     private static final int LOW_SAMPLE_THRESHOLD = 10;

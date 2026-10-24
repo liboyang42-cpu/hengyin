@@ -340,6 +340,10 @@ class ApiMerchantLedgerControllerTest {
         java.util.List<?> trend = (java.util.List<?>) data.get("revenue7d");
         assertEquals(7, trend.size());
         assertEquals("5.00", ((java.util.Map<?, ?>) trend.get(6)).get("amount"), "今天落在最后一格");
+        java.util.Map<?, ?> windows = (java.util.Map<?, ?>) data.get("windows");
+        assertEquals("ALL_TIME", windows.get("revenue"));
+        assertEquals("CALENDAR_7D_INCL_TODAY", windows.get("revenue7d"));
+        assertEquals("ROLLING_30D", windows.get("insight"), "三种窗口并存时逐块声明");
         for (int i = 0; i < 6; i++) {
             assertEquals("0.00", ((java.util.Map<?, ?>) trend.get(i)).get("amount"), "无流水的天补 0");
         }
@@ -372,6 +376,10 @@ class ApiMerchantLedgerControllerTest {
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         // 店长没有 FINANCE_READ:资金域一块都不查,但订单/参谋两块按岗位权限照常取数。
         verifyNoInteractions(balanceService);
+        java.util.Map<?, ?> windows =
+                (java.util.Map<?, ?>) ((java.util.Map<?, ?>) result.get(AjaxResult.DATA_TAG)).get("windows");
+        assertEquals(java.util.Collections.singletonMap("insight", "ROLLING_30D"), new java.util.HashMap<>(windows),
+                "只声明实际下发的块");
         verify(orderService).selectOmsOrderList(any(OmsOrder.class));
         verify(insightService).dashboard(OWNER_MEMBER_ID);
     }
