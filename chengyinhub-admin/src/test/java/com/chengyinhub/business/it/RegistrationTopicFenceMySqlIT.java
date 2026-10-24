@@ -213,6 +213,31 @@ class RegistrationTopicFenceMySqlIT {
         }
     }
 
+    @Test void creationTakesTopicBeforeTheClaimCanLockItsActivityAndNeverChangesEconomicsOnClaimFailure() throws Exception {
+        IClubWaitlistOrderBridge claim = mock(IClubWaitlistOrderBridge.class);
+        IllegalStateException stopped = new IllegalStateException("fixture stops after real claim activity lock");
+        when(claim.claimForOrder(anyLong(), any(), any())).thenAnswer(call -> {
+            assertNotNull(activities.selectCmsActivityByIdForUpdate(5L));
+            throw stopped;
+        });
+        CmsRegistrationServiceImpl target = new CmsRegistrationServiceImpl();
+        ReflectionTestUtils.setField(target, "cmsActivityMapper", activities);
+        ReflectionTestUtils.setField(target, "cmsTopicMapper", topics);
+        ReflectionTestUtils.setField(target, "clubWaitlistOrderBridge", claim);
+        CmsRegistrationServiceImpl creation = transactional(target);
+        com.chengyinhub.business.domain.dto.RegistrationRequest request = new com.chengyinhub.business.domain.dto.RegistrationRequest();
+        request.setOwnerType(2); request.setOwnerId(5L);
+        assertTrue(afterTopicRelease(() -> {
+            assertSame(stopped, assertThrows(IllegalStateException.class,
+                    () -> creation.create(11L, request, "claim-original", "a".repeat(64))));
+            return true;
+        }, true, () -> verify(claim, never()).claimForOrder(anyLong(), any(), any())));
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM cms_registration", Integer.class));
+        assertEquals(0, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM refund_application", Integer.class));
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM wx_payment_callback_inbox", Integer.class));
+    }
+
     @Test void paymentInboxWaitsForTopicWithoutHoldingRegistration() throws Exception {
         WxPaymentCallbackClaim claim = ownedPayment();
         assertTrue(afterTopicRelease(() -> mutations.apply(claim, paymentMutation(false)), false));

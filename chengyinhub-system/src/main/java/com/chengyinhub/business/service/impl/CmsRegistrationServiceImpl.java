@@ -1531,6 +1531,11 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     public List<CmsRegistration> create(Long memberId, RegistrationRequest request,
                                         String normalizedRequestId, String requestFingerprint) {
         List<CmsRegistration> created = new ArrayList<>();
+        CmsActivity originalActivity = null;
+        if (Integer.valueOf(2).equals(request.getOwnerType())) {
+            originalActivity = cmsActivityMapper.selectCmsActivityById(request.getOwnerId());
+            RegistrationTopicFence.lockActivityTopic(originalActivity, cmsTopicMapper);
+        }
         ClubWaitlistClaim waitlistClaim;
         if (clubWaitlistOrderBridge == null) {
             if (request.getWaitlistOfferId() != null || request.getWaitlistOfferToken() != null) {
@@ -1539,6 +1544,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             waitlistClaim = null;
         } else {
             waitlistClaim = clubWaitlistOrderBridge.claimForOrder(memberId, request, new Date());
+        }
+        if (originalActivity != null) {
+            RegistrationTopicFence.requireCurrentActivity(originalActivity, cmsActivityMapper);
         }
         if (Integer.valueOf(1).equals(request.getOwnerType())) {
             if (waitlistClaim != null) throw new RuntimeException("自玩通行证不支持候补 offer");

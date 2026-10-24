@@ -1,0 +1,30 @@
+{
+  "baseline": "b681cf0604d2e039c59ee1ca5034a71ec4525801",
+  "status": "STATIC_ONLY",
+  "actual_java_mysql_ci_run": 0,
+  "counts": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java": {
+      "declared_tests": 14,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RegistrationCreationTopicFenceTest.java": {
+      "declared_tests": 6,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    }
+  },
+  "old13_full_suffix": "BYTE_IDENTICAL",
+  "production_only": "8 lines before/after existing claim; other source bytes unchanged",
+  "sha256": {
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java": "ccc46afbd1dc44809b76acbf9b9a2fc7b1ff99f880c60c58bed2a01f1bb75773",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java": "170fbb481c7c9f9b912975fc1435445423666bacb33bbde538f1969978d516a4",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RegistrationCreationTopicFenceTest.java": "712aea62e609cfe546e2ab36a35a8ec360ccb6dbe60e6c0a0d9d9be897eaddc3"
+  }
+}
