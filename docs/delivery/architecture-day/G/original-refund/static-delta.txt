@@ -1,0 +1,5 @@
+Parent 1f781f416a0603c9c6ffd0e06c97171c6fff225b
+Source-only checks PASS: Java delimiters, 10 ordinary declarations/no skips, fixture INSERT columns against actual repository DDL, XML binary/hex conversion, migration 4 statements/parenthesis balance.
+B 3893bc66+041534c7 fetched; domain DTO/service/Mapper/schema identical to 6d641fa8.
+C f1cfe74d fetched; actual RegistrationSeatService/Mapper read, no surrogate interface or consumer enabled.
+No Java compilation/SQL execution/runtime count/performance claim. NOT_RUN.

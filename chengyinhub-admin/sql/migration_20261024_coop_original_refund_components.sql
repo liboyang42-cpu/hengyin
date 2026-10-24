@@ -2,10 +2,15 @@
 -- Requires reviewed migration_20261023_g_cash_evidence_expand.sql and B migration_20261024_wx_verified_payment_fact.sql, MySQL8/InnoDB.
 -- Preserve legacy claim_id NOT NULL and all old unique keys. No manufactured claim/member.
 -- Preflight precedes first CREATE. DDL auto-commits: no generic rollback is safe.
--- This candidate is NOT approved for application; exact-prefix empty recovery and real MySQL validation remain NOT_RUN.
+-- This candidate is NOT approved for application. CI-only exact-prefix recovery source is in Wp04OriginalRefundMySqlIT; all MySQL validation remains NOT_RUN.
 -- runner: assert=scalar-true
 SELECT CAST(IF(
- (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE()
+ @@foreign_key_checks=1
+ AND (FIND_IN_SET('STRICT_TRANS_TABLES',@@sql_mode)>0 OR FIND_IN_SET('STRICT_ALL_TABLES',@@sql_mode)>0)
+ AND CAST(SUBSTRING_INDEX(VERSION(),'.',1) AS UNSIGNED)=8
+ AND (CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(VERSION(),'.',2),'.',-1) AS UNSIGNED)>0
+      OR CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(VERSION(),'-',1),'.',-1) AS UNSIGNED)>=16)
+ AND (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE()
    AND table_name IN ('coop_settlement_original_component','coop_settlement_refund_receipt','coop_settlement_original_adjustment'))=0
  AND (SELECT COUNT(*) FROM information_schema.table_constraints WHERE constraint_schema=DATABASE()
    AND constraint_name IN ('fk_goc_close','fk_goc_source','fk_goc_payer','fk_goc_head','fk_goc_member','fk_goc_payment_fact','ck_goc_payload',
@@ -21,7 +26,7 @@ SELECT CAST(IF(
    AND table_name='coop_settlement_cash_contribution' AND index_name='uk_g_cash_contribution_close_registration' AND non_unique=0)='cash_close_id,registration_id'
  AND (SELECT GROUP_CONCAT(column_name ORDER BY seq_in_index SEPARATOR ',') FROM information_schema.statistics WHERE table_schema=DATABASE()
    AND table_name='coop_settlement_cash_close' AND index_name='uk_g_cash_close_id_topic' AND non_unique=0)='id,topic_id',
- 1,JSON_EXTRACT('ASSERT_FAILED__original_refund_preflight','$')) AS assertion_ok;
+ 1,JSON_EXTRACT('ASSERT_FAILED__original_refund_preflight','$')) AS UNSIGNED) AS assertion_ok;
 
 CREATE TABLE coop_settlement_original_component (
  id BIGINT NOT NULL AUTO_INCREMENT,
