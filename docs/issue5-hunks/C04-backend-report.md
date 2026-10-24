@@ -151,3 +151,19 @@ mvn -pl chengyinhub-admin -am -Dtest=com.chengyinhub.business.service.orienteeri
 结果：`BUILD SUCCESS`。chengyinhub-admin 隔离单测 **23 run, 0 fail, 0 error, 0 skip**（2026-10-24T00:51:06Z）。EventScoreVersioningTest 4/0。TeamClubEligibilityAuthorityTest 5/0。EventResultDisputeTest 2/0。Isolation 5/0。
 
 Runtime / TopicRouteSession / 公共 Controller 仍未接线。App / XCTest / MySQL / HTTP / CI = NOT_RUN。不声称 100%。
+
+## 9. Addendum 2026-10-23 18:21 America/Los_Angeles — class-level start occupancy
+
+HEAD `fe1b266fc`（`test(c04): recoverOriginal 未见 start id 不占账再唯一开局 [skip ci]`）。未发明 recoverOriginal。`recoverOriginal` 仍只回读完赛账，开局占用看 `runs.startRequestId`。
+
+- `EventScoreVersioningTest.recoverOriginalOfNeverSeenStartIdDoesNotOccupyThenUniqueStartApplies`：未见 `c04-sta-never` 保持 `NOT_FOUND` 且 `readback` 仍 throw；后续唯一 `start` 才写入该开局键，replay 同 run id。
+
+命令：
+
+```
+mvn -pl chengyinhub-admin -am -Dtest=com.chengyinhub.business.service.orienteering.*Test -Dsurefire.failIfNoSpecifiedTests=false test
+```
+
+结果：`BUILD SUCCESS`。chengyinhub-admin 隔离单测 **24 run, 0 fail, 0 error, 0 skip**（2026-10-24T01:21:14Z）。EventScoreVersioningTest 5/0。Isolation 5/0。
+
+Runtime / TopicRouteSession / 公共 Controller 仍未接线。App / XCTest / MySQL / HTTP / CI = NOT_RUN。不声称 100%。
