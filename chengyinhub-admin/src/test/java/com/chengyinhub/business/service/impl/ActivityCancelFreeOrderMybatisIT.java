@@ -170,7 +170,8 @@ class ActivityCancelFreeOrderMybatisIT {
         });
 
         service = new TeamGroupServiceImpl();
-        ReflectionTestUtils.setField(service, "cancellationTransactions", transactionManager);
+        com.chengyinhub.business.service.CancellationPhaseTestSupport.wireTeamTransactions(
+                service, transactionManager);
 
         org.springframework.test.util.ReflectionTestUtils.setField(service, "firstReviewPointsClawback",
 
