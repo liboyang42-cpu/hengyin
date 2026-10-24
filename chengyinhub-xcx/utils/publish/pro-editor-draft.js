@@ -20,9 +20,23 @@ function createDraftUuid(now, randomValue) {
   return ts + '-' + entropy;
 }
 
+// B:P2-014:借 topicId 槽位的非主题草稿(如广场发帖)在这里登记命名空间,
+// 不再由调用方各自拼前缀。key 仍落在 topic_ 槽位(pro_editor_draft_topic_<scope>_<id>),
+// 与历史 key 逐字节相同,已存草稿照常恢复;主题 topicId 是数字,不会与 <scope>_ 前缀相撞。
+var DRAFT_SCOPES = Object.freeze({ SQUARE_POST: 'square_post' });
+
+function scopedTopicId(scope, scopeId) {
+  var name = value(scope);
+  var id = value(scopeId);
+  var known = Object.keys(DRAFT_SCOPES).some(function (k) { return DRAFT_SCOPES[k] === name; });
+  if (!known) throw new Error('未登记的草稿命名空间: ' + name);
+  if (!id) throw new Error('草稿命名空间缺少 scopeId');
+  return name + '_' + id;
+}
+
 function draftKeyFor(identity) {
   identity = identity || {};
-  var topicId = value(identity.topicId);
+  var topicId = identity.scope ? scopedTopicId(identity.scope, identity.scopeId) : value(identity.topicId);
   if (topicId) return DRAFT_PREFIX + 'topic_' + encodeURIComponent(topicId);
   var draftUuid = value(identity.draftUuid);
   if (draftUuid) return DRAFT_PREFIX + 'new_' + encodeURIComponent(draftUuid);
@@ -110,6 +124,7 @@ function removeDraft(storage, identity, options) {
 }
 
 module.exports = {
+  DRAFT_SCOPES: DRAFT_SCOPES,
   createDraftUuid: createDraftUuid,
   draftKeyFor: draftKeyFor,
   loadDraft: loadDraft,
@@ -117,4 +132,5 @@ module.exports = {
   rememberActiveNewDraft: rememberActiveNewDraft,
   removeDraft: removeDraft,
   saveDraft: saveDraft,
+  scopedTopicId: scopedTopicId,
 };

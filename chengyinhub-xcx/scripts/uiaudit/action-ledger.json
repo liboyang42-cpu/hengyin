@@ -1150873,7 +1150873,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/components/cy/post-compose/index.js:351"
+        "staticSource": "pages/square/components/cy/post-compose/index.js:352"
       }
     },
     {
@@ -1150962,7 +1150962,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/components/cy/post-compose/index.js:374"
+        "staticSource": "pages/square/components/cy/post-compose/index.js:375"
       }
     },
     {
@@ -1151051,7 +1151051,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/components/cy/post-compose/index.js:360"
+        "staticSource": "pages/square/components/cy/post-compose/index.js:361"
       }
     },
     {
@@ -1151140,7 +1151140,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/components/cy/post-compose/index.js:442"
+        "staticSource": "pages/square/components/cy/post-compose/index.js:443"
       }
     },
     {
@@ -1151229,7 +1151229,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/components/cy/post-compose/index.js:496"
+        "staticSource": "pages/square/components/cy/post-compose/index.js:497"
       }
     },
     {
@@ -1151318,7 +1151318,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/components/cy/post-compose/index.js:312"
+        "staticSource": "pages/square/components/cy/post-compose/index.js:313"
       }
     },
     {
@@ -1151407,7 +1151407,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/components/cy/post-compose/index.js:312"
+        "staticSource": "pages/square/components/cy/post-compose/index.js:313"
       }
     },
     {
@@ -1151496,7 +1151496,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/components/cy/post-compose/index.js:347"
+        "staticSource": "pages/square/components/cy/post-compose/index.js:348"
       }
     },
     {
@@ -1151596,7 +1151596,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/components/cy/post-compose/index.js:306"
+        "staticSource": "pages/square/components/cy/post-compose/index.js:307"
       }
     },
     {
@@ -1151685,7 +1151685,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/components/cy/post-compose/index.js:412"
+        "staticSource": "pages/square/components/cy/post-compose/index.js:413"
       }
     },
     {
@@ -1151774,7 +1151774,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/components/cy/post-compose/index.js:431"
+        "staticSource": "pages/square/components/cy/post-compose/index.js:432"
       }
     },
     {
@@ -1151863,7 +1151863,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/components/cy/post-compose/index.js:510"
+        "staticSource": "pages/square/components/cy/post-compose/index.js:511"
       }
     },
     {
@@ -1152006,7 +1152006,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/components/cy/post-compose/index.js:399"
+        "staticSource": "pages/square/components/cy/post-compose/index.js:400"
       }
     },
     {
@@ -1152115,7 +1152115,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/components/cy/post-compose/index.js:420"
+        "staticSource": "pages/square/components/cy/post-compose/index.js:421"
       }
     },
     {
@@ -1152254,7 +1152254,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/components/cy/post-compose/index.js:437"
+        "staticSource": "pages/square/components/cy/post-compose/index.js:438"
       }
     },
     {
@@ -1153721,7 +1153721,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/components/cy/post-compose/index.js:520"
+        "staticSource": "pages/square/components/cy/post-compose/index.js:521"
       }
     },
     {

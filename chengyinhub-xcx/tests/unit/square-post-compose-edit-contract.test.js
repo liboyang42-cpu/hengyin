@@ -9,6 +9,7 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const realDraft = require('../../utils/publish/pro-editor-draft.js');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
@@ -40,6 +41,8 @@ function loadComponent(opts) {
       if (id.includes('community-post-api')) return require('../helpers/community-page-seam');
       if (id.includes('pro-editor-draft')) {
         return {
+          // B:P2-014:命名空间工具是纯函数,用真实现
+          DRAFT_SCOPES: realDraft.DRAFT_SCOPES, scopedTopicId: realDraft.scopedTopicId,
           saveDraft(wx, payload) { draftCalls.push(['save', payload]); return true; },
           loadDraft() { return { status: 'empty' }; },
           removeDraft(wx, identity) { draftCalls.push(['remove', identity]); return true; },

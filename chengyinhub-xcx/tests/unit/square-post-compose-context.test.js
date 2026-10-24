@@ -2,6 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const realDraft = require('../../utils/publish/pro-editor-draft.js');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
@@ -32,6 +33,8 @@ function mount(canonical = false) {
     require(id) {
       if (id.includes('community-post-api')) return canonical ? require('../../utils/community-post-api') : require('../helpers/community-page-seam');
       if (id.includes('pro-editor-draft')) return {
+        // B:P2-014:命名空间工具是纯函数,用真实现
+        DRAFT_SCOPES: realDraft.DRAFT_SCOPES, scopedTopicId: realDraft.scopedTopicId,
         loadDraft(wx, identity, options) {
           drafts.push(['load', options.memberId]);
           return { status: 'ready', envelope: { formData: { contents: 'draft-' + options.memberId } } };
