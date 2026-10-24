@@ -309,7 +309,109 @@ def scope_violation(kind, details):
     return None
 
 
-def static_findings(base, current, changed, sql_details, base_details):
+def business_policy():
+    """Only reviewed whole-table facts/pure writers. Not an inferred domain map.
+
+    Both files come from HERE (the independent trusted verifier), never candidate
+    observations. check_source protects their exact bytes before using them.
+    """
+    def require(condition):
+        if not condition:
+            raise GateError("BUSINESS_POLICY_INVALID: expected explicit whole-table facts/commands/pure writers")
+
+    def name(value, pattern):
+        return isinstance(value, str) and re.fullmatch(pattern, value) is not None
+
+    try:
+        owners = json.loads((HERE / "owners.json").read_text())
+        commands = json.loads((HERE / "commands.json").read_text())["business_commands"]
+        policy = owners["business_policy"]
+        require(set(policy) == {"schema", "coverage", "scope", "facts", "pure_writers"})
+        require(type(policy["schema"]) is int and policy["schema"] == 1 and policy["coverage"] == "PARTIAL")
+        facts, writers, entries = {}, {}, {}
+        require(isinstance(policy["facts"], list) and policy["facts"])
+        for fact in policy["facts"]:
+            require(set(fact) == {"id", "table", "coverage", "business_owner"})
+            require(name(fact["id"], r"[A-Z][A-Z0-9_]*") and name(fact["table"], IDENT))
+            require(name(fact["business_owner"], r"[A-Z][A-Z0-9_]*") and fact["coverage"] == "whole_table")
+            require(fact["table"] not in facts and fact["id"] not in {f["id"] for f in facts.values()})
+            facts[fact["table"]] = fact
+        require(isinstance(policy["scope"], list) and sorted(policy["scope"]) == sorted(f["id"] for f in facts.values()))
+        require(isinstance(commands, list) and commands)
+        for command in commands:
+            require(set(command) == {"id", "business_owner", "writes", "public_methods"})
+            require(name(command["id"], r"[a-z][a-z0-9-]*") and command["id"] not in entries)
+            require(name(command["business_owner"], r"[A-Z][A-Z0-9_]*"))
+            require(isinstance(command["writes"], list) and command["writes"] and len(set(command["writes"])) == len(command["writes"]))
+            require(all(any(f["id"] == id_ and f["business_owner"] == command["business_owner"] for f in facts.values()) for id_ in command["writes"]))
+            require(isinstance(command["public_methods"], list) and command["public_methods"])
+            require(all(name(method, r"(?:" + IDENT + r"\.)+" + IDENT + "#" + IDENT) for method in command["public_methods"]))
+            entries[command["id"]] = command
+        require(isinstance(policy["pure_writers"], list) and policy["pure_writers"])
+        for writer in policy["pure_writers"]:
+            require(set(writer) == {"module", "namespace", "business_owner", "command_id"})
+            require(writer["module"] in owners["modules"] and name(writer["namespace"], r"(?:" + IDENT + r"\.)+" + IDENT))
+            key = writer["module"] + ":" + writer["namespace"]
+            require(key not in writers and writer["command_id"] in entries)
+            require(writer["business_owner"] == entries[writer["command_id"]]["business_owner"])
+            writers[key] = writer
+        require(all(sum(f["id"] in entries[w["command_id"]]["writes"] for w in writers.values()) == 1 for f in facts.values()))
+        return {"facts": facts, "writers": writers, "commands": entries}
+    except GateError:
+        raise
+    except (OSError, ValueError, TypeError, KeyError, AttributeError) as error:
+        raise GateError("BUSINESS_POLICY_INVALID: " + str(error)) from error
+
+
+def business_write_findings(key, statement, kind, details, previous, previous_details, policy):
+    """Reuse literal targets, not column hints; compare only this statement edge.
+
+    A fixed leading table can be certain while dynamic fields/effects remain
+    UNKNOWN. No method call graph, semantic SQL parser, or field policy here.
+    """
+    table = literal_write_target(kind, details)
+    review, blockers = [], []
+    if not table or details["unknown"]:
+        review.append({"key": key, "reason": "UNKNOWN_BUSINESS_WRITE_EFFECT",
+                       "detail": {"literal_target": table, "unknown": details["unknown"],
+                                  "not_proven": "complete targets/fields/branches and service call paths"}})
+    if table not in policy["facts"]:
+        if table:
+            review.append({"key": key, "reason": "BUSINESS_WRITE_OUTSIDE_POLICY", "detail": table})
+        return blockers, review
+
+    def edge(record, info):
+        if not record:
+            return None
+        operation = record["kind"]
+        # Preserve REPLACE vs INSERT as distinct capability, including select
+        # tags with a literal leading DML. Complex/unknown SQL is not proven equal.
+        mutation = re.match(r"\s*(insert|replace|update|delete)\b", info["text"], re.I)
+        operation = mutation.group(1).lower() if mutation else operation
+        target_kind = "insert" if operation == "replace" else operation
+        return record["owner"], operation, literal_write_target(target_kind, info)
+
+    current_edge = edge(statement, details)
+    if current_edge == edge(previous, previous_details):
+        return blockers, review  # Existing debt is not new permission or baseline.
+    fact = policy["facts"][table]
+    writer = policy["writers"].get(statement["owner"])
+    rule = None
+    if writer is None:
+        rule = "UNDECLARED_WRITE_BINDING"
+    elif (writer["business_owner"] != fact["business_owner"]
+          or fact["id"] not in policy["commands"][writer["command_id"]]["writes"]):
+        rule = "NEW_BUSINESS_OWNER_WRITE"
+    if rule:
+        blockers.append({"rule": rule, "key": key,
+                         "detail": {"fact_id": fact["id"], "table": table, "operation": current_edge[1],
+                                    "expected_business_owner": fact["business_owner"],
+                                    "technical_writer": statement["owner"],
+                                    "declared_business_owner": writer["business_owner"] if writer else None}})
+    return blockers, review
+
+
+def static_findings(base, current, changed, sql_details, base_details, policy=None):
     blockers, review = [], []
     known_owners = {}
     for key, statement in base["statements"].items():
@@ -360,6 +462,11 @@ def static_findings(base, current, changed, sql_details, base_details):
         if owners and statement["owner"] not in owners:
             blockers.append({"rule": "NEW_TABLE_WRITER", "key": key,
                              "detail": table + " <- " + statement["owner"]})
+        if policy is not None:
+            new_blockers, new_review = business_write_findings(
+                key, statement, kind, details, base["statements"].get(key), base_details.get(key), policy)
+            blockers.extend(new_blockers)
+            review.extend(new_review)
         violation = scope_violation(kind, details)
         if violation:
             blockers.append({"rule": "UNSCOPED_WRITE", "key": key, "detail": violation})
@@ -479,27 +586,30 @@ def check_source(root, candidate, compare_base, context, baseline_path=HERE / "b
     proposal = HERE / "locking-select-baseline.proposal.json"
     if proposal.read_bytes() != encode_inventory(locking_debt_proposal(frozen, frozen_details)):
         raise GateError("LOCKING_BASELINE_LAUNDERING: proposal must exactly reproduce pinned public git blobs")
-    # Protect only executable verifier and frozen exceptions. A documentation or
-    # test-file edit is not itself an architecture violation. CI executes trusted
+    # Protect executable verifier, exceptions and all active owner/command data.
+    # Documentation/test edits alone are not violations. CI executes trusted
     # selftests, not arbitrary additional files supplied by the candidate.
     names = set(tree(root, candidate))
-    for filename in ("gate.py", "baseline.json", "locking-select-baseline.proposal.json"):
+    for filename in ("gate.py", "baseline.json", "locking-select-baseline.proposal.json", "owners.json", "commands.json"):
         relative = "ci/architecture/" + filename
         if relative not in names or blob(root, candidate, relative) != (HERE / filename).read_bytes():
             raise GateError("POLICY_CHANGE: candidate changed trusted policy: " + relative)
+    policy = business_policy()
     changed = set(git(root, "diff", "--name-only", "--no-renames", compare_base, candidate).decode().splitlines())
     details = {}
     current = inventory(root, candidate, details)
     previous_details = {}
     previous = inventory(root, compare_base, previous_details)
-    blockers, review = static_findings(previous, current, changed, details, previous_details)
+    blockers, review = static_findings(previous, current, changed, details, previous_details, policy)
     return {"schema": 2, "candidate_sha": candidate, "comparison_base_sha": compare_base,
             "legacy_baseline_sha": BASE, "ci_checkout_sha": context["checkout_sha"],
             "verdict": "BLOCKED" if blockers else "PASS_WITH_REVIEW_ITEMS" if review else "PASS",
             "findings": blockers, "review_items": review, "changed_files": sorted(changed),
+            "business_policy": {"coverage": "PARTIAL", "fact_ids": sorted(f["id"] for f in policy["facts"].values())},
             "not_proven": ["Java/SQL authorization semantics", "transaction atomicity",
                            "complete fresh-read semantics (RR current SQL/transactions still require tests)",
-                           "persistent intent/recovery", "Java or real storage test execution"]}
+                           "persistent intent/recovery", "Java or real storage test execution",
+                           "business service call paths and writes outside declared facts"]}
 
 
 def readback(plan, receipt, reports, assert_path=REPO / "ci/assert_it_ran.py"):

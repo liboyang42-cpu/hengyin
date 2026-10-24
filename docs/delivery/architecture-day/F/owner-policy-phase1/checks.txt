@@ -1,0 +1,37 @@
+Python 3.12.14; cloud task VM: Python/Git static controls only.
+
+Failure reproduced before implementation:
+python3 -m unittest discover -s ci/architecture -p test_gate.py -k foreign_namespace -v
+Ran 1 test; FAILED (failures=1).
+Expected source CLI exit1/UNDECLARED_WRITE_BINDING; old checker returned exit0,
+findings=[], PASS_WITH_REVIEW_ITEMS when compare-base had no protected table.
+No production writer/SQL changed to reproduce or fix it.
+
+After implementation:
+python3 -m unittest discover -s ci/architecture -p test_gate.py -k BusinessOwnerPolicyTest -v
+Ran 21 tests in 2.421s; OK.
+
+Final full architecture regression (includes the same 21 controls):
+python3 -m unittest discover -s ci/architecture -p 'test_*.py' -v
+----------------------------------------------------------------------
+Ran 115 tests in 6.017s
+
+OK
+jdeps observation: UNKNOWN; no baseline/SCC acceptance
+The jdeps UNKNOWN line above is from synthetic producer selftests, not a JDK run.
+
+python3 ci/test_ci_cost_contract.py
+CI cost routing contract: PASS
+Initial unsupported invocation via python3 -m unittest ci.test_ci_cost_contract
+failed to import its sibling test_verify_deploy_ci; used the existing script
+entry above without changing project files or suppressing checks.
+
+A748 original evidence reuse:
+mapper-writes.jsonl / source-files.jsonl match original SHA256SUMS.
+13 exact statement fingerprints + 2 complete XML blobs equal 0c/50f/6ec.
+Latest known literal writers: quota7 one approved namespace; Photo6 one approved namespace.
+No full production SQL/Java/call-graph claim.
+
+NOT RUN by F: actual trusted candidate source CI, Java/HTTP fixtures/MySQL/Redis,
+JDK jdeps, models or CI dispatch. Git fixtures use isolated synthetic event/base
+and real source CLI/parser/checker, no mocked findings/verdict.

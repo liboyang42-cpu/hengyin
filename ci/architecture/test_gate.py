@@ -1,5 +1,7 @@
 """Lightweight isolated negative controls. No Java, database, Docker or network."""
 import copy
+from contextlib import redirect_stdout
+import io
 from contextlib import contextmanager
 import importlib.util
 import json
@@ -205,7 +207,9 @@ class InventoryAndDeltaTest(unittest.TestCase):
         gate.inventory(self.root, self.before["base_sha"], details)
         (policy / "locking-select-baseline.proposal.json").write_bytes(
             gate.encode_inventory(gate.locking_debt_proposal(self.before, details)))
-        (policy / "gate.py").write_bytes(b"# trusted fixture")
+        (policy / "gate.py").write_bytes((gate.HERE / "gate.py").read_bytes())
+        for name in ("owners.json", "commands.json"):
+            (policy / name).write_bytes((gate.HERE / name).read_bytes())
         candidate = self.commit()
         # Trusted files are kept outside candidate to exercise PR policy changes.
         trusted = self.root / ".git/trusted/ci/architecture"
@@ -571,6 +575,250 @@ class EvidenceTest(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual("REPORTS_CONSISTENT", json.loads(result.stdout)["verdict"])
 
+
+
+class BusinessOwnerPolicyTest(unittest.TestCase):
+    """Real source CLI on isolated Git/event fixtures, no Java/DB/network."""
+    setUp = InventoryAndDeltaTest.setUp
+    write = InventoryAndDeltaTest.write
+    commit = InventoryAndDeltaTest.commit
+    prepare_policy = InventoryAndDeltaTest.prepare_policy
+    manual_context = InventoryAndDeltaTest.manual_context
+    manual_origin = InventoryAndDeltaTest.manual_origin
+    facts = (("ai_quota_reservation", "AiQuotaReservationMapper"),
+             ("photo_check_intent", "PhotoCheckIntentMapper"))
+
+    def put_write(self, table, writer, sql=None, name="mutate", module="system"):
+        path = "chengyinhub-%s/src/main/resources/mapper/business/%s.xml" % (module, writer)
+        namespace = "com.chengyinhub.business.mapper." + writer
+        sql = sql or "update %s set state=#{state} where id=#{id}" % table
+        self.write(path, mapper('<update id="%s">%s</update>' % (name, sql), namespace))
+        return path
+
+    def source_cli(self, trusted, candidate, compare=None, context=None):
+        compare = compare or self.base
+        context = context or {"event": "push", "checkout_sha": candidate,
+                              "payload": {"repository": {"full_name": "liboyang42-cpu/hengyin"},
+                                          "before": compare, "after": candidate}}
+        argv = ["gate.py", "source", "--source", str(self.root), "--candidate", candidate,
+                "--compare-base", compare]
+        output = io.StringIO()
+        check = gate.check_source
+        # Same production CLI/parser/checker. Only isolated public-base/event and
+        # trusted-checkout location replace real CI context; no mocked verdict.
+        with patch.object(gate, "BASE", self.base), patch.object(gate, "HERE", trusted), \
+             patch.object(gate, "check_source", side_effect=lambda *args: check(*args, baseline_path=trusted / "baseline.json")), \
+             patch.object(gate, "ci_context", return_value=context), \
+             patch.object(sys, "argv", argv), redirect_stdout(output):
+            status = gate.main()
+        return status, json.loads(output.getvalue())
+
+    def assert_rule(self, result, rule):
+        status, report = result
+        self.assertEqual(1, status, report)
+        self.assertIn(rule, [f["rule"] for f in report["findings"]])
+
+    def test_same_owner_both_facts_are_green_and_scope_is_partial(self):
+        trusted, _ = self.prepare_policy()
+        for table, writer in self.facts:
+            self.put_write(table, writer)
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(0, status, report)
+        self.assertEqual("PARTIAL", report["business_policy"]["coverage"])
+        self.assertEqual(["AI_QUOTA_RESERVATION", "PHOTO_CHECK_INTENT"], report["business_policy"]["fact_ids"])
+        self.assertTrue(any("service call paths" in x for x in report["not_proven"]))
+
+    def test_foreign_namespace_is_red_even_if_table_absent_in_compare_base(self):
+        trusted, _ = self.prepare_policy()
+        self.put_write("ai_quota_reservation", "ForeignMapper")
+        self.assert_rule(self.source_cli(trusted, self.commit()), "UNDECLARED_WRITE_BINDING")
+
+    def test_other_approved_business_owner_is_red(self):
+        trusted, _ = self.prepare_policy()
+        self.put_write("photo_check_intent", "AiQuotaReservationMapper")
+        self.assert_rule(self.source_cli(trusted, self.commit()), "NEW_BUSINESS_OWNER_WRITE")
+
+    def test_same_namespace_in_other_module_does_not_inherit_binding(self):
+        trusted, _ = self.prepare_policy()
+        self.put_write("ai_quota_reservation", "AiQuotaReservationMapper", module="quartz")
+        self.assert_rule(self.source_cli(trusted, self.commit()), "UNDECLARED_WRITE_BINDING")
+
+    def test_legacy_foreign_writer_is_not_relitigated_by_docs_or_same_edge_edit(self):
+        self.put_write("ai_quota_reservation", "ForeignMapper")
+        self.base = self.commit()
+        self.before = gate.inventory(self.root, self.base)
+        trusted, accepted = self.prepare_policy()
+        baseline = (trusted / "baseline.json").read_bytes()
+        self.write("docs/normal.md", b"normal already reviewed history")
+        self.assertEqual(0, self.source_cli(trusted, self.commit(), accepted)[0])
+        self.put_write("ai_quota_reservation", "ForeignMapper", "update ai_quota_reservation set state=2 where id=#{id}")
+        self.assertEqual(0, self.source_cli(trusted, self.commit(), accepted)[0])
+        self.assertEqual(baseline, (trusted / "baseline.json").read_bytes())
+
+    def test_removed_foreign_writer_reintroduced_is_new_and_red(self):
+        path = self.put_write("ai_quota_reservation", "ForeignMapper")
+        self.commit()
+        self.write(path, mapper("", "com.chengyinhub.business.mapper.ForeignMapper"))
+        self.base = self.commit()
+        self.before = gate.inventory(self.root, self.base)
+        trusted, _ = self.prepare_policy()
+        self.put_write("ai_quota_reservation", "ForeignMapper")
+        self.assert_rule(self.source_cli(trusted, self.commit()), "UNDECLARED_WRITE_BINDING")
+
+    def test_new_operation_on_legacy_foreign_writer_is_red(self):
+        path = self.put_write("ai_quota_reservation", "ForeignMapper")
+        self.base = self.commit()
+        self.before = gate.inventory(self.root, self.base)
+        trusted, _ = self.prepare_policy()
+        self.write(path, mapper('<delete id="mutate">delete from ai_quota_reservation where id=#{id}</delete>',
+                                "com.chengyinhub.business.mapper.ForeignMapper"))
+        self.assert_rule(self.source_cli(trusted, self.commit()), "UNDECLARED_WRITE_BINDING")
+
+    def test_cross_namespace_include_target_rewrite_is_red(self):
+        self.write(MAPPER, mapper('<update id="finish"><include refid="example.Target.sql"/></update>'))
+        other = MAPPER.replace("OrderMapper", "TargetMapper")
+        self.write(other, mapper('<sql id="sql">update orders set state=1 where id=#{id}</sql>', "example.Target"))
+        self.base = self.commit()
+        self.before = gate.inventory(self.root, self.base)
+        trusted, _ = self.prepare_policy()
+        self.write(other, mapper('<sql id="sql">update photo_check_intent set state=1 where id=#{id}</sql>', "example.Target"))
+        self.assert_rule(self.source_cli(trusted, self.commit()), "UNDECLARED_WRITE_BINDING")
+
+    def test_unknown_dynamic_target_is_review_not_safety(self):
+        trusted, _ = self.prepare_policy()
+        for sql in ('update ${table} set state=1 where id=#{id}', '<include refid="${dynamic}"/>'):
+            with self.subTest(sql=sql):
+                self.put_write("ai_quota_reservation", "ForeignMapper", sql)
+                status, report = self.source_cli(trusted, self.commit())
+                self.assertEqual(0, status, report)
+                self.assertEqual("PASS_WITH_REVIEW_ITEMS", report["verdict"])
+                self.assertTrue(any(r["reason"] == "UNKNOWN_BUSINESS_WRITE_EFFECT" for r in report["review_items"]))
+
+    def test_known_target_with_dynamic_fields_blocks_foreign_and_keeps_unknown(self):
+        trusted, _ = self.prepare_policy()
+        self.put_write("ai_quota_reservation", "ForeignMapper",
+                       'update ai_quota_reservation set <if test="change">state=1</if> where id=#{id}')
+        result = self.source_cli(trusted, self.commit())
+        self.assert_rule(result, "UNDECLARED_WRITE_BINDING")
+        self.assertTrue(any(r["reason"] == "UNKNOWN_BUSINESS_WRITE_EFFECT" for r in result[1]["review_items"]))
+
+    def test_outside_facts_and_java_changes_do_not_become_new_owner_violations(self):
+        trusted, _ = self.prepare_policy()
+        self.put_write("unapproved_table", "ForeignMapper")
+        self.write(JAVA, b"class OrderService { void newCaller() {} }")
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(0, status, report)
+        self.assertTrue(any(r["reason"] == "BUSINESS_WRITE_OUTSIDE_POLICY" for r in report["review_items"]))
+        self.assertEqual("PARTIAL", report["business_policy"]["coverage"])
+
+    def test_approved_insert_ignore_replace_delete_and_select_dml(self):
+        trusted, _ = self.prepare_policy()
+        path = self.put_write("photo_check_intent", "PhotoCheckIntentMapper")
+        namespace = "com.chengyinhub.business.mapper.PhotoCheckIntentMapper"
+        for tag, sql in (("insert", "insert into photo_check_intent (state) values (1)"),
+                         ("insert", "insert ignore into photo_check_intent (state) values (1)"),
+                         ("insert", "replace into photo_check_intent (state) values (1)"),
+                         ("delete", "delete from photo_check_intent where id=#{id}"),
+                         ("select", "update photo_check_intent set state=1 where id=#{id}")):
+            with self.subTest(tag=tag, sql=sql):
+                self.write(path, mapper('<%s id="mutate">%s</%s>' % (tag, sql, tag), namespace))
+                status, report = self.source_cli(trusted, self.commit())
+                self.assertEqual(0, status, report)
+
+    def test_existing_technical_writer_rule_remains_red(self):
+        self.put_write("photo_check_intent", "PhotoCheckIntentMapper")
+        self.base = self.commit()
+        self.before = gate.inventory(self.root, self.base)
+        trusted, _ = self.prepare_policy()
+        self.put_write("photo_check_intent", "ForeignMapper")
+        result = self.source_cli(trusted, self.commit())
+        self.assert_rule(result, "NEW_TABLE_WRITER")
+        self.assert_rule(result, "UNDECLARED_WRITE_BINDING")
+
+    def test_approved_dynamic_effects_stay_unknown(self):
+        trusted, _ = self.prepare_policy()
+        self.put_write("ai_quota_reservation", "AiQuotaReservationMapper",
+                       'update ai_quota_reservation set <if test="change">state=1</if> where id=#{id}')
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(0, status, report)
+        self.assertTrue(any(r["reason"] == "UNKNOWN_BUSINESS_WRITE_EFFECT" for r in report["review_items"]))
+
+    def test_legacy_foreign_new_statement_identity_cannot_inherit_debt(self):
+        self.put_write("ai_quota_reservation", "ForeignMapper")
+        self.base = self.commit()
+        self.before = gate.inventory(self.root, self.base)
+        trusted, _ = self.prepare_policy()
+        self.put_write("ai_quota_reservation", "ForeignMapper", name="newIdentity")
+        self.assert_rule(self.source_cli(trusted, self.commit()), "UNDECLARED_WRITE_BINDING")
+
+    def test_plain_java_and_docs_do_not_require_new_approval(self):
+        trusted, accepted = self.prepare_policy()
+        self.write(JAVA, b"class OrderService { void changed() {} }")
+        self.write("docs/normal.md", b"normal review")
+        status, report = self.source_cli(trusted, self.commit(), accepted)
+        self.assertEqual(0, status, report)
+        self.assertEqual([], report["findings"])
+        self.assertEqual([], report["review_items"])
+        self.assertEqual("PARTIAL", report["business_policy"]["coverage"])
+
+    def test_candidate_owner_fact_scope_or_writer_forgery_is_fail_closed(self):
+        trusted, _ = self.prepare_policy()
+        original = json.loads((trusted / "owners.json").read_text())
+        for alteration in ("owner", "delete_fact", "clear_scope", "writer"):
+            with self.subTest(alteration=alteration):
+                value = copy.deepcopy(original)
+                policy = value["business_policy"]
+                if alteration == "owner": policy["facts"][0]["business_owner"] = "FORGED"
+                elif alteration == "delete_fact": policy["facts"].pop()
+                elif alteration == "clear_scope": policy["scope"].clear()
+                else: policy["pure_writers"][0]["namespace"] = "foreign.Mapper"
+                self.write("ci/architecture/owners.json", gate.encode(value))
+                status, report = self.source_cli(trusted, self.commit())
+                self.assertEqual(1, status)
+                self.assertIn("POLICY_CHANGE", report["error"])
+
+    def test_candidate_command_or_baseline_forgery_is_fail_closed(self):
+        trusted, _ = self.prepare_policy()
+        for file, value in (("commands.json", b'{"approved":true}'), ("baseline.json", b'{}')):
+            with self.subTest(file=file):
+                self.write("ci/architecture/" + file, value)
+                status, report = self.source_cli(trusted, self.commit())
+                self.assertEqual(1, status)
+                self.assertIn("POLICY_CHANGE", report["error"])
+                self.write("ci/architecture/" + file, (trusted / file).read_bytes())
+                self.commit()
+
+    def test_first_commit_owner_violation_second_docs_cannot_use_parent_as_base(self):
+        trusted, trunk = self.prepare_policy()
+        self.put_write("photo_check_intent", "ForeignMapper")
+        first = self.commit()
+        self.write("docs/second.md", b"docs second commit")
+        candidate = self.commit()
+        with self.manual_origin(trunk):
+            context = self.manual_context(candidate)
+            self.assert_rule(self.source_cli(trusted, candidate, trunk, context), "UNDECLARED_WRITE_BINDING")
+            status, report = self.source_cli(trusted, candidate, first, context)
+            self.assertEqual(1, status)
+            self.assertIn("COMPARISON_BASE_MISMATCH", report["error"])
+
+    def test_malformed_trusted_policy_is_not_treated_as_disabled(self):
+        trusted, _ = self.prepare_policy()
+        self.write("ci/architecture/owners.json", b'{}')
+        (trusted / "owners.json").write_bytes(b'{}')
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(1, status)
+        self.assertIn("BUSINESS_POLICY_INVALID", report["error"])
+
+    def test_command_owner_or_fact_mismatch_in_trusted_data_is_red(self):
+        trusted, _ = self.prepare_policy()
+        data = json.loads((trusted / "commands.json").read_text())
+        data["business_commands"][0]["business_owner"] = "FORGED"
+        payload = gate.encode(data)
+        self.write("ci/architecture/commands.json", payload)
+        (trusted / "commands.json").write_bytes(payload)
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(1, status)
+        self.assertIn("BUSINESS_POLICY_INVALID", report["error"])
 
 
 class RegisteredReferencesTest(unittest.TestCase):

@@ -1,0 +1,460 @@
+{
+  "status": "ROOT_APPROVED_TWO_FACT_POLICY_WITH_SEPARATE_A_OBSERVATIONS_NOT_FULL_A02",
+  "branch": "codex/architecture-day-f-owner-policy",
+  "parent_sha": "50f3c4d3c67383b8ea2e3e230d7f16f2e73f3eb6",
+  "A_inventory_commit": "748ad71bd1de141396fd8e2d9685c35706fd5b84",
+  "A_observation_source_sha": "0c0d61266b2ae54d77c5ad9cf8b3c8fdb86d4b16",
+  "latest_read_only_source_sha": "6ecaea01e0e1a3f3182189615bc00cf9f791fd47",
+  "A_artifact_sha256": {
+    "docs/delivery/architecture-day/A-writer-facts/mapper-writes.jsonl": "fe66e4d18c00d451678b2ae7c1192c844994c0a8011e4ec61fb92bb4b4abb16d",
+    "docs/delivery/architecture-day/A-writer-facts/source-files.jsonl": "692d7e4ed817d1a901ae66f35139bfbae1da769ebebf3c0e123867fc0c7b7867"
+  },
+  "selected_A_statements": [
+    {
+      "analysis": "LITERAL_SHAPE_ONLY",
+      "authorization": "NOT_DETERMINED",
+      "baseline_statement": true,
+      "column_hints": [
+        "request_lease_until",
+        "stage",
+        "updated_at"
+      ],
+      "column_status": "HINTS_ONLY_NOT_COMPLETE_COLUMN_PROOF",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml#advanceStage",
+      "kind": "update",
+      "line": 40,
+      "literal_target_status": "KNOWN_LITERAL_TARGET_ONLY",
+      "literal_write_target": "ai_quota_reservation",
+      "namespace": "com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+      "owner": "chengyinhub-system:com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+      "sha256": "c831acc951def3644119ce869dee7910d83deb668ba595de719b432048cf668b",
+      "statement_id": "advanceStage",
+      "table_hints": [
+        "ai_quota_reservation"
+      ],
+      "unknown": [],
+      "xml_file_git_blob": "192fbbc2b4c10fbe7c7bf06a36b17b5075aa7cc9",
+      "xml_file_sha256": "de0be94334ef7fad441aa8a47a9ed21340ccbe61e18850f16f67364145ec1d5d",
+      "xml_node_sha256": "597b610bea171b6450bc229a35c5e9c9c87d66deb48851078ce3d7ba3e3ffed9"
+    },
+    {
+      "analysis": "LITERAL_SHAPE_ONLY",
+      "authorization": "NOT_DETERMINED",
+      "baseline_statement": true,
+      "column_hints": [
+        "attempt_count",
+        "claim_until",
+        "fence_version",
+        "owner_token",
+        "updated_at"
+      ],
+      "column_status": "HINTS_ONLY_NOT_COMPLETE_COLUMN_PROOF",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml#claim",
+      "kind": "update",
+      "line": 57,
+      "literal_target_status": "KNOWN_LITERAL_TARGET_ONLY",
+      "literal_write_target": "ai_quota_reservation",
+      "namespace": "com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+      "owner": "chengyinhub-system:com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+      "sha256": "7c8bb462a13a3d69b3d4e19c9282ae22bb47262903fa013efad548aaa5c3024f",
+      "statement_id": "claim",
+      "table_hints": [
+        "ai_quota_reservation"
+      ],
+      "unknown": [],
+      "xml_file_git_blob": "192fbbc2b4c10fbe7c7bf06a36b17b5075aa7cc9",
+      "xml_file_sha256": "de0be94334ef7fad441aa8a47a9ed21340ccbe61e18850f16f67364145ec1d5d",
+      "xml_node_sha256": "4d519e2e720d30e442ab450464979af5112be7ba6222078a0507ab9fbdb78c9c"
+    },
+    {
+      "analysis": "LITERAL_SHAPE_ONLY",
+      "authorization": "NOT_DETERMINED",
+      "baseline_statement": true,
+      "column_hints": [
+        "claim_until",
+        "completed_at",
+        "last_error_code",
+        "owner_token",
+        "state",
+        "updated_at"
+      ],
+      "column_status": "HINTS_ONLY_NOT_COMPLETE_COLUMN_PROOF",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml#complete",
+      "kind": "update",
+      "line": 65,
+      "literal_target_status": "KNOWN_LITERAL_TARGET_ONLY",
+      "literal_write_target": "ai_quota_reservation",
+      "namespace": "com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+      "owner": "chengyinhub-system:com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+      "sha256": "8393d822fe2eb39cd50f5ce0d38fb5de064df42693d2e8b3bd1e35cfcfa2f0e3",
+      "statement_id": "complete",
+      "table_hints": [
+        "ai_quota_reservation"
+      ],
+      "unknown": [],
+      "xml_file_git_blob": "192fbbc2b4c10fbe7c7bf06a36b17b5075aa7cc9",
+      "xml_file_sha256": "de0be94334ef7fad441aa8a47a9ed21340ccbe61e18850f16f67364145ec1d5d",
+      "xml_node_sha256": "2cdc7f048a465628a7940dc5aec52f9f1730a0a1697eaf78e2deff5fc92df1f6"
+    },
+    {
+      "analysis": "LITERAL_SHAPE_ONLY",
+      "authorization": "NOT_DETERMINED",
+      "baseline_statement": true,
+      "column_hints": [
+        "attempt_count",
+        "biz_type",
+        "counter_key",
+        "created_at",
+        "fence_version",
+        "member_id",
+        "next_attempt_at",
+        "nonce",
+        "original_day",
+        "pool",
+        "receipt_key",
+        "request_lease_token",
+        "request_lease_until",
+        "stage",
+        "state",
+        "updated_at"
+      ],
+      "column_status": "HINTS_ONLY_NOT_COMPLETE_COLUMN_PROOF",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml#insertPrepared",
+      "kind": "insert",
+      "line": 27,
+      "literal_target_status": "KNOWN_LITERAL_TARGET_ONLY",
+      "literal_write_target": "ai_quota_reservation",
+      "namespace": "com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+      "owner": "chengyinhub-system:com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+      "sha256": "f513cec1d257774a3f4d0fea59253e1c66b4962e36c3994c2f8244da7ab70c58",
+      "statement_id": "insertPrepared",
+      "table_hints": [
+        "ai_quota_reservation"
+      ],
+      "unknown": [],
+      "xml_file_git_blob": "192fbbc2b4c10fbe7c7bf06a36b17b5075aa7cc9",
+      "xml_file_sha256": "de0be94334ef7fad441aa8a47a9ed21340ccbe61e18850f16f67364145ec1d5d",
+      "xml_node_sha256": "0a425eb52717fbd6dd80f9e9cedea21614ac328f66b002aae0af3694844a5f2a"
+    },
+    {
+      "analysis": "LITERAL_SHAPE_ONLY",
+      "authorization": "NOT_DETERMINED",
+      "baseline_statement": true,
+      "column_hints": [
+        "completed_at",
+        "decision_reason",
+        "next_attempt_at",
+        "stage",
+        "state",
+        "updated_at"
+      ],
+      "column_status": "HINTS_ONLY_NOT_COMPLETE_COLUMN_PROOF",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml#recordOutcome",
+      "kind": "update",
+      "line": 44,
+      "literal_target_status": "KNOWN_LITERAL_TARGET_ONLY",
+      "literal_write_target": "ai_quota_reservation",
+      "namespace": "com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+      "owner": "chengyinhub-system:com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+      "sha256": "dac92e3d528f285a8a9640930b38892cbf224a7c12807517dc8213531f4c0b26",
+      "statement_id": "recordOutcome",
+      "table_hints": [
+        "ai_quota_reservation"
+      ],
+      "unknown": [],
+      "xml_file_git_blob": "192fbbc2b4c10fbe7c7bf06a36b17b5075aa7cc9",
+      "xml_file_sha256": "de0be94334ef7fad441aa8a47a9ed21340ccbe61e18850f16f67364145ec1d5d",
+      "xml_node_sha256": "f03e1f4e15ad8a69289835f39a81a5500553389ad4a3a3b132373efb0cb4bc72"
+    },
+    {
+      "analysis": "LITERAL_SHAPE_ONLY",
+      "authorization": "NOT_DETERMINED",
+      "baseline_statement": true,
+      "column_hints": [
+        "generation",
+        "request_lease_until",
+        "state",
+        "updated_at",
+        "used_after_reserve"
+      ],
+      "column_status": "HINTS_ONLY_NOT_COMPLETE_COLUMN_PROOF",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml#recordReserved",
+      "kind": "update",
+      "line": 35,
+      "literal_target_status": "KNOWN_LITERAL_TARGET_ONLY",
+      "literal_write_target": "ai_quota_reservation",
+      "namespace": "com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+      "owner": "chengyinhub-system:com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+      "sha256": "41554867d04f28fb73dc72786362ca2550c045c9158388d410f09fe30a91b933",
+      "statement_id": "recordReserved",
+      "table_hints": [
+        "ai_quota_reservation"
+      ],
+      "unknown": [],
+      "xml_file_git_blob": "192fbbc2b4c10fbe7c7bf06a36b17b5075aa7cc9",
+      "xml_file_sha256": "de0be94334ef7fad441aa8a47a9ed21340ccbe61e18850f16f67364145ec1d5d",
+      "xml_node_sha256": "f9711b773a9eeba784c9c8aeaee3fb142813cf28a971804147daa84e7d502c5d"
+    },
+    {
+      "analysis": "LITERAL_SHAPE_ONLY",
+      "authorization": "NOT_DETERMINED",
+      "baseline_statement": true,
+      "column_hints": [
+        "claim_until",
+        "last_error_code",
+        "next_attempt_at",
+        "owner_token",
+        "updated_at"
+      ],
+      "column_status": "HINTS_ONLY_NOT_COMPLETE_COLUMN_PROOF",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml#retry",
+      "kind": "update",
+      "line": 70,
+      "literal_target_status": "KNOWN_LITERAL_TARGET_ONLY",
+      "literal_write_target": "ai_quota_reservation",
+      "namespace": "com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+      "owner": "chengyinhub-system:com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+      "sha256": "bb30a6d49a865c56dd4d07f4633c1f62301fefb7ef9f402323a66a6d490c768b",
+      "statement_id": "retry",
+      "table_hints": [
+        "ai_quota_reservation"
+      ],
+      "unknown": [],
+      "xml_file_git_blob": "192fbbc2b4c10fbe7c7bf06a36b17b5075aa7cc9",
+      "xml_file_sha256": "de0be94334ef7fad441aa8a47a9ed21340ccbe61e18850f16f67364145ec1d5d",
+      "xml_node_sha256": "c36a14731627dda13d36fd999df72e8641ffc13bd3d892319c7e971ce1c3ffe9"
+    },
+    {
+      "analysis": "LITERAL_SHAPE_ONLY",
+      "authorization": "NOT_DETERMINED",
+      "baseline_statement": false,
+      "column_hints": [
+        "state",
+        "updated_at"
+      ],
+      "column_status": "HINTS_ONLY_NOT_COMPLETE_COLUMN_PROOF",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml#claim",
+      "kind": "update",
+      "line": 59,
+      "literal_target_status": "KNOWN_LITERAL_TARGET_ONLY",
+      "literal_write_target": "photo_check_intent",
+      "namespace": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+      "owner": "chengyinhub-system:com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+      "sha256": "f6bddb4cbce11c92343d2b1402d8d8f16730c45412e762dc2f5329d4de7c6f17",
+      "statement_id": "claim",
+      "table_hints": [
+        "photo_check_intent"
+      ],
+      "unknown": [],
+      "xml_file_git_blob": "23318ad1db0b9609f1ee52a4b904ec555daea970",
+      "xml_file_sha256": "6bf251137839bb4f18485cbab1724568f1c019e3b3c05817f63f758bdf769115",
+      "xml_node_sha256": "c8c7e10c24d10953861f589b17cd4d82be44bd5bfdf28a097b2dfd470534fd55"
+    },
+    {
+      "analysis": "UNKNOWN",
+      "authorization": "NOT_DETERMINED",
+      "baseline_statement": false,
+      "column_hints": [
+        "action_key",
+        "context_json",
+        "created_at",
+        "image_reference",
+        "member_id",
+        "nonce",
+        "original_day",
+        "request_fingerprint",
+        "reservation",
+        "session_id",
+        "state",
+        "updated_at"
+      ],
+      "column_status": "HINTS_ONLY_NOT_COMPLETE_COLUMN_PROOF",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml#insertPrepared",
+      "kind": "insert",
+      "line": 28,
+      "literal_target_status": "KNOWN_LITERAL_TARGET_ONLY",
+      "literal_write_target": "photo_check_intent",
+      "namespace": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+      "owner": "chengyinhub-system:com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+      "sha256": "1a066bd0ccc203d00f89803a51966474d8bf66584273538ed64098e8e59eaa58",
+      "statement_id": "insertPrepared",
+      "table_hints": [
+        "id",
+        "photo_check_intent"
+      ],
+      "unknown": [
+        "unsupported_sql_shape"
+      ],
+      "xml_file_git_blob": "23318ad1db0b9609f1ee52a4b904ec555daea970",
+      "xml_file_sha256": "6bf251137839bb4f18485cbab1724568f1c019e3b3c05817f63f758bdf769115",
+      "xml_node_sha256": "b70716e0fc8f75628232fe2ed00da6d88ba988363d327a5d5d7b46048f5c91b2"
+    },
+    {
+      "analysis": "LITERAL_SHAPE_ONLY",
+      "authorization": "NOT_DETERMINED",
+      "baseline_statement": false,
+      "column_hints": [
+        "attempt_log_id",
+        "state",
+        "updated_at"
+      ],
+      "column_status": "HINTS_ONLY_NOT_COMPLETE_COLUMN_PROOF",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml#markApplied",
+      "kind": "update",
+      "line": 89,
+      "literal_target_status": "KNOWN_LITERAL_TARGET_ONLY",
+      "literal_write_target": "photo_check_intent",
+      "namespace": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+      "owner": "chengyinhub-system:com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+      "sha256": "68ee11fe232b7065e57edccc587eccab77a8afac7e1c820251ed1aec84b4cd0d",
+      "statement_id": "markApplied",
+      "table_hints": [
+        "photo_check_intent"
+      ],
+      "unknown": [],
+      "xml_file_git_blob": "23318ad1db0b9609f1ee52a4b904ec555daea970",
+      "xml_file_sha256": "6bf251137839bb4f18485cbab1724568f1c019e3b3c05817f63f758bdf769115",
+      "xml_node_sha256": "51856d73d8a5e042081988b056556938997a73fb6a1a1308ccd3efaa278594c8"
+    },
+    {
+      "analysis": "LITERAL_SHAPE_ONLY",
+      "authorization": "NOT_DETERMINED",
+      "baseline_statement": false,
+      "column_hints": [
+        "provider_state",
+        "reason_code",
+        "state",
+        "updated_at"
+      ],
+      "column_status": "HINTS_ONLY_NOT_COMPLETE_COLUMN_PROOF",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml#markUnknown",
+      "kind": "update",
+      "line": 77,
+      "literal_target_status": "KNOWN_LITERAL_TARGET_ONLY",
+      "literal_write_target": "photo_check_intent",
+      "namespace": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+      "owner": "chengyinhub-system:com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+      "sha256": "455ca58a90cbf713723d028446e6c683de18cd36352893279a8e153b8b6cd256",
+      "statement_id": "markUnknown",
+      "table_hints": [
+        "photo_check_intent"
+      ],
+      "unknown": [],
+      "xml_file_git_blob": "23318ad1db0b9609f1ee52a4b904ec555daea970",
+      "xml_file_sha256": "6bf251137839bb4f18485cbab1724568f1c019e3b3c05817f63f758bdf769115",
+      "xml_node_sha256": "5fabf8df25ed3cac1f05b01b0953f09848c4427e28fd94102d4f9eb42fcdeb50"
+    },
+    {
+      "analysis": "LITERAL_SHAPE_ONLY",
+      "authorization": "NOT_DETERMINED",
+      "baseline_statement": false,
+      "column_hints": [
+        "provider_state",
+        "reason_code",
+        "result_confidence",
+        "result_degraded",
+        "result_pass",
+        "result_reason",
+        "state",
+        "updated_at"
+      ],
+      "column_status": "HINTS_ONLY_NOT_COMPLETE_COLUMN_PROOF",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml#saveResult",
+      "kind": "update",
+      "line": 70,
+      "literal_target_status": "KNOWN_LITERAL_TARGET_ONLY",
+      "literal_write_target": "photo_check_intent",
+      "namespace": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+      "owner": "chengyinhub-system:com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+      "sha256": "168f81f108a9c0ba2492d6ab85e88f14f1f11fbf67acf8dea5e58493b5b93830",
+      "statement_id": "saveResult",
+      "table_hints": [
+        "photo_check_intent"
+      ],
+      "unknown": [],
+      "xml_file_git_blob": "23318ad1db0b9609f1ee52a4b904ec555daea970",
+      "xml_file_sha256": "6bf251137839bb4f18485cbab1724568f1c019e3b3c05817f63f758bdf769115",
+      "xml_node_sha256": "8890349e99098e7138b1154dc3a092e093c0147356b3aa8945c080a33a286913"
+    },
+    {
+      "analysis": "LITERAL_SHAPE_ONLY",
+      "authorization": "NOT_DETERMINED",
+      "baseline_statement": false,
+      "column_hints": [
+        "encoded_input_sha256",
+        "encoder_version",
+        "model_name",
+        "prompt_version",
+        "updated_at"
+      ],
+      "column_status": "HINTS_ONLY_NOT_COMPLETE_COLUMN_PROOF",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml#saveSnapshot",
+      "kind": "update",
+      "line": 63,
+      "literal_target_status": "KNOWN_LITERAL_TARGET_ONLY",
+      "literal_write_target": "photo_check_intent",
+      "namespace": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+      "owner": "chengyinhub-system:com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+      "sha256": "34075b9427b1f5f793a42ff313e63872f986fc14a1cb7178ed0971d158236e35",
+      "statement_id": "saveSnapshot",
+      "table_hints": [
+        "photo_check_intent"
+      ],
+      "unknown": [],
+      "xml_file_git_blob": "23318ad1db0b9609f1ee52a4b904ec555daea970",
+      "xml_file_sha256": "6bf251137839bb4f18485cbab1724568f1c019e3b3c05817f63f758bdf769115",
+      "xml_node_sha256": "ebfcb1486c82901aa10a0334561d5343cfbb8ddb05c3c964fa8df324ee4a233c"
+    }
+  ],
+  "selected_A_source_files": [
+    {
+      "git_blob": "192fbbc2b4c10fbe7c7bf06a36b17b5075aa7cc9",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml",
+      "sha256": "de0be94334ef7fad441aa8a47a9ed21340ccbe61e18850f16f67364145ec1d5d"
+    },
+    {
+      "git_blob": "23318ad1db0b9609f1ee52a4b904ec555daea970",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml",
+      "sha256": "6bf251137839bb4f18485cbab1724568f1c019e3b3c05817f63f758bdf769115"
+    }
+  ],
+  "A_statement_fingerprints_and_two_XML_blobs_unchanged_across": [
+    "0c0d61266b2ae54d77c5ad9cf8b3c8fdb86d4b16",
+    "50f3c4d3c67383b8ea2e3e230d7f16f2e73f3eb6",
+    "6ecaea01e0e1a3f3182189615bc00cf9f791fd47"
+  ],
+  "latest_known_literal_writers": {
+    "ai_quota_reservation": {
+      "statements": 7,
+      "technical_writers": [
+        "chengyinhub-system:com.chengyinhub.business.mapper.AiQuotaReservationMapper"
+      ]
+    },
+    "photo_check_intent": {
+      "statements": 6,
+      "technical_writers": [
+        "chengyinhub-system:com.chengyinhub.business.mapper.PhotoCheckIntentMapper"
+      ]
+    }
+  },
+  "root_technical_decision": "Only AI_QUOTA_RESERVATION whole_table to AI_QUOTA_RECOVERY / AiQuotaReservationMapper, PHOTO_CHECK_INTENT whole_table to AI_PHOTO_INTENT / PhotoCheckIntentMapper; not derived from A authorization=NOT_DETERMINED",
+  "new_business_facts": 2,
+  "new_pure_writers": 2,
+  "new_baseline_or_allowlist_entries": 0,
+  "unknown": [
+    "complete dynamic effects/targets",
+    "annotations/Provider/JDBC and stored procedures",
+    "Java callers actually passing public Service methods",
+    "field-group or other business ownership",
+    "runtime dependency graph"
+  ],
+  "coordinator_reported_not_independently_read_back": {
+    "source_sha": "6ecaea01e0e1a3f3182189615bc00cf9f791fd47",
+    "run": 40044336447,
+    "conclusion": "SUCCESS",
+    "original_XML_hash_verified": 1840,
+    "F49_E11_C32": "same source 0failure/error/skip per root",
+    "new_JAR_jdeps": "root hash readback pending",
+    "E4_a0f": "different source; not combined acceptance"
+  }
+}
