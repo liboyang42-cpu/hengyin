@@ -4,7 +4,7 @@
 const app = getApp()
 // 2026-09-15 起「提现」不再走银行卡表单:平台不打款,一律弹平台客服微信线下处理。
 const withdrawCs = require('../../../utils/withdraw-cs.js')
-const { bizFailureMessage } = require('../../../utils/response-shape.js')
+const { bizFailureMessage, isBizOk } = require('../../../utils/response-shape.js')
 
 function identityKey() {
   const gd = app.globalData || {}
@@ -20,7 +20,7 @@ function positiveId(value) {
 }
 function jsonBody(data) { return JSON.stringify(data || {}) }
 function jsonHeader() { return { 'Content-Type': 'application/json' } }
-function ok(res) { return !!res && (res.code === 200 || res.code === '200') }
+function ok(res) { return isBizOk(res) }
 function requestId(prefix) {
   return prefix + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)
 }

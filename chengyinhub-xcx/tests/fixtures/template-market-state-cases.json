@@ -1,0 +1,932 @@
+{
+ "_comment": "C:U-046 模板个人审核态/广场态推导两端共测用例:Java TemplateMarketState 与小程序 utils/template-market.js 必须对每条给出相同结果。",
+ "cases": [
+  {
+   "input": {},
+   "auditState": "UNKNOWN",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "checkStatus": 0
+   },
+   "auditState": "UNKNOWN",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "checkStatus": 1
+   },
+   "auditState": "UNKNOWN",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "checkStatus": 2
+   },
+   "auditState": "UNKNOWN",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "status": 0
+   },
+   "auditState": "UNKNOWN",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "status": 0,
+    "checkStatus": 0
+   },
+   "auditState": "UNKNOWN",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "status": 0,
+    "checkStatus": 1
+   },
+   "auditState": "UNKNOWN",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "status": 0,
+    "checkStatus": 2
+   },
+   "auditState": "UNKNOWN",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "status": 1
+   },
+   "auditState": "UNKNOWN",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "status": 1,
+    "checkStatus": 0
+   },
+   "auditState": "UNKNOWN",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "status": 1,
+    "checkStatus": 1
+   },
+   "auditState": "UNKNOWN",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "status": 1,
+    "checkStatus": 2
+   },
+   "auditState": "UNKNOWN",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "status": 2
+   },
+   "auditState": "UNKNOWN",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "status": 2,
+    "checkStatus": 0
+   },
+   "auditState": "UNKNOWN",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "status": 2,
+    "checkStatus": 1
+   },
+   "auditState": "UNKNOWN",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "status": 2,
+    "checkStatus": 2
+   },
+   "auditState": "UNKNOWN",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 0
+   },
+   "auditState": "DRAFT",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 0,
+    "checkStatus": 0
+   },
+   "auditState": "DRAFT",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 0,
+    "checkStatus": 1
+   },
+   "auditState": "DRAFT",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 0,
+    "checkStatus": 2
+   },
+   "auditState": "DRAFT",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 0,
+    "status": 0
+   },
+   "auditState": "DRAFT",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 0,
+    "status": 0,
+    "checkStatus": 0
+   },
+   "auditState": "DRAFT",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 0,
+    "status": 0,
+    "checkStatus": 1
+   },
+   "auditState": "DRAFT",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 0,
+    "status": 0,
+    "checkStatus": 2
+   },
+   "auditState": "DRAFT",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 0,
+    "status": 1
+   },
+   "auditState": "DRAFT",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 0,
+    "status": 1,
+    "checkStatus": 0
+   },
+   "auditState": "DRAFT",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 0,
+    "status": 1,
+    "checkStatus": 1
+   },
+   "auditState": "DRAFT",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 0,
+    "status": 1,
+    "checkStatus": 2
+   },
+   "auditState": "DRAFT",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 0,
+    "status": 2
+   },
+   "auditState": "DRAFT",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 0,
+    "status": 2,
+    "checkStatus": 0
+   },
+   "auditState": "DRAFT",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 0,
+    "status": 2,
+    "checkStatus": 1
+   },
+   "auditState": "DRAFT",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 0,
+    "status": 2,
+    "checkStatus": 2
+   },
+   "auditState": "DRAFT",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1
+   },
+   "auditState": "UNKNOWN",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "checkStatus": 0
+   },
+   "auditState": "REVIEWING",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "checkStatus": 1
+   },
+   "auditState": "UNKNOWN",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "checkStatus": 2
+   },
+   "auditState": "REJECTED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 0
+   },
+   "auditState": "REVIEWING",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 0,
+    "checkStatus": 0
+   },
+   "auditState": "REVIEWING",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 0,
+    "checkStatus": 1
+   },
+   "auditState": "REVIEWING",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 0,
+    "checkStatus": 2
+   },
+   "auditState": "REJECTED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1
+   },
+   "auditState": "UNKNOWN",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 0
+   },
+   "auditState": "REVIEWING",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 2
+   },
+   "auditState": "REJECTED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 2
+   },
+   "auditState": "REJECTED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 2,
+    "checkStatus": 0
+   },
+   "auditState": "REJECTED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 2,
+    "checkStatus": 1
+   },
+   "auditState": "REJECTED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 2,
+    "checkStatus": 2
+   },
+   "auditState": "REJECTED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketPublishStatus": 0
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketPublishStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketStatus": 0
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketStatus": 0,
+    "marketPublishStatus": 0
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketStatus": 0,
+    "marketPublishStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketStatus": 1,
+    "marketPublishStatus": 0
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketStatus": 1,
+    "marketPublishStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketStatus": 2
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketStatus": 2,
+    "marketPublishStatus": 0
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketStatus": 2,
+    "marketPublishStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 0
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 0,
+    "marketPublishStatus": 0
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 0,
+    "marketPublishStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 0,
+    "marketStatus": 0
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 0,
+    "marketStatus": 0,
+    "marketPublishStatus": 0
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 0,
+    "marketStatus": 0,
+    "marketPublishStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 0,
+    "marketStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 0,
+    "marketStatus": 1,
+    "marketPublishStatus": 0
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 0,
+    "marketStatus": 1,
+    "marketPublishStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 0,
+    "marketStatus": 2
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 0,
+    "marketStatus": 2,
+    "marketPublishStatus": 0
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 0,
+    "marketStatus": 2,
+    "marketPublishStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "NONE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": -1
+   },
+   "auditState": "APPROVED",
+   "marketState": "UNKNOWN"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": -1,
+    "marketPublishStatus": 0
+   },
+   "auditState": "APPROVED",
+   "marketState": "UNKNOWN"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": -1,
+    "marketPublishStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "UNKNOWN"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": -1,
+    "marketStatus": 0
+   },
+   "auditState": "APPROVED",
+   "marketState": "UNKNOWN"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": -1,
+    "marketStatus": 0,
+    "marketPublishStatus": 0
+   },
+   "auditState": "APPROVED",
+   "marketState": "UNKNOWN"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": -1,
+    "marketStatus": 0,
+    "marketPublishStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "UNKNOWN"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": -1,
+    "marketStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "UNKNOWN"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": -1,
+    "marketStatus": 1,
+    "marketPublishStatus": 0
+   },
+   "auditState": "APPROVED",
+   "marketState": "UNKNOWN"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": -1,
+    "marketStatus": 1,
+    "marketPublishStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "UNKNOWN"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": -1,
+    "marketStatus": 2
+   },
+   "auditState": "APPROVED",
+   "marketState": "UNKNOWN"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": -1,
+    "marketStatus": 2,
+    "marketPublishStatus": 0
+   },
+   "auditState": "APPROVED",
+   "marketState": "UNKNOWN"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": -1,
+    "marketStatus": 2,
+    "marketPublishStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "UNKNOWN"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 7
+   },
+   "auditState": "APPROVED",
+   "marketState": "UNKNOWN"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 7,
+    "marketPublishStatus": 0
+   },
+   "auditState": "APPROVED",
+   "marketState": "UNKNOWN"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 7,
+    "marketPublishStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "UNKNOWN"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 7,
+    "marketStatus": 0
+   },
+   "auditState": "APPROVED",
+   "marketState": "PENDING"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 7,
+    "marketStatus": 0,
+    "marketPublishStatus": 0
+   },
+   "auditState": "APPROVED",
+   "marketState": "PENDING"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 7,
+    "marketStatus": 0,
+    "marketPublishStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "PENDING"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 7,
+    "marketStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "UNKNOWN"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 7,
+    "marketStatus": 1,
+    "marketPublishStatus": 0
+   },
+   "auditState": "APPROVED",
+   "marketState": "DELISTED"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 7,
+    "marketStatus": 1,
+    "marketPublishStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "ONLINE"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 7,
+    "marketStatus": 2
+   },
+   "auditState": "APPROVED",
+   "marketState": "RESUBMIT"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 7,
+    "marketStatus": 2,
+    "marketPublishStatus": 0
+   },
+   "auditState": "APPROVED",
+   "marketState": "RESUBMIT"
+  },
+  {
+   "input": {
+    "draftStatus": 1,
+    "status": 1,
+    "checkStatus": 1,
+    "marketTemplateId": 7,
+    "marketStatus": 2,
+    "marketPublishStatus": 1
+   },
+   "auditState": "APPROVED",
+   "marketState": "RESUBMIT"
+  }
+ ]
+}

@@ -170,6 +170,8 @@ public class ApiClubRoleController extends BaseController {
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("roleId", metadata.getRoleId());
             row.put("roleCode", roleCode);
+            // U-013:目录只含可分配角色;前端按此字段筛选,不再自带角色清单
+            row.put("assignable", ClubRoleCode.isAssignable(roleCode));
             row.put("name", roleName(roleCode));
             row.put("permissionLevel", metadata.getPermissionLevel());
             row.put("levelAuthorizationSource", metadata.isAuthorizationSource());

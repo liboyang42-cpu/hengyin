@@ -77,6 +77,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where owner_type = 2 and owner_id = #{activityId}
           and payment_status in (0, 1, 2)
           and ticket_id is not null
+        order by ticket_id asc
     </select>
 
     <sql id="CmsRegistrationFilter">

@@ -1,7 +1,7 @@
 // 团核销码:主理人/管理员出示给合作商家扫码。码过期后自动换新，权限与团归属只由服务端判定。
 const app = getApp();
 const { buildGroupCodeIssuePayload, listGroupCodeActivities } = require('../../../utils/group-code-session.js');
-const { bizFailureMessage } = require('../../../utils/response-shape.js');
+const { bizFailureMessage, isBizOk } = require('../../../utils/response-shape.js');
 
 // E-12(2026-09-16):无权限是终态。原来 403/「没有权限」落进通用「出码失败」,只有重试,
 // 重试永远失败且没有出路 —— 单列一态,把「进入俱乐部管理」给它。
@@ -104,7 +104,7 @@ Page({
       success(res) {
         if (epoch !== that._requestEpoch) return;
         const data = res && res.data;
-        if (res && (res.code === '200' || res.code === 200) && data && data.code) {
+        if (isBizOk(res) && data && data.code) {
           // CU-C-78:没有码图的团码不能当成功 —— 码是一长串签名令牌,现场只能靠扫图,
           // 原来只看 data.code 就置 ready,码区于是只剩一句「出码失败」,页面却以为已出码。
           if (!data.qrcodeUrl) {
@@ -154,7 +154,7 @@ Page({
       hideLoading: true,
       success(res) {
         if (epoch !== that._requestEpoch) return;
-        const ok = res && (res.code === '200' || res.code === 200);
+        const ok = isBizOk(res);
         const raw = res && res.data && res.data.activityList;
         if (!ok || !Array.isArray(raw)) {
           that.setData({ state: 'error', activityOptions: [], errMsg: bizFailureMessage(res, '场次加载失败') });

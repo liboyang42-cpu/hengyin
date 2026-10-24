@@ -350,5 +350,7 @@ class ActivitySoldTicketEditLockTest {
         assertTrue(sql.contains("payment_status in (0, 1, 2)"),
                 "待支付/支付中/已支付都算有人下单。实际:" + sql);
         assertTrue(sql.contains("ticket_id is not null"), "无票 id 的报名不能归到任何一张票。实际:" + sql);
+        // B:P1-028:结果顺序要确定,避免依赖数据库 distinct 的偶然顺序
+        assertTrue(sql.contains("order by ticket_id asc"), "结果必须按 ticket_id 升序。实际:" + sql);
     }
 }

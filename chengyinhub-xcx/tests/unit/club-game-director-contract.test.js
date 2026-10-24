@@ -97,7 +97,7 @@ function loadClubDetail(activityList) {
         '../../../utils/merchant-home-link.js': require('../../utils/merchant-home-link.js'),
         '../../../utils/ticket-source.js': require('../../utils/ticket-source.js'),
         '../../../utils/topic-share.js': require('../../utils/topic-share.js'),
-        '../../../utils/response-shape.js': { isRecordList: Array.isArray },
+        '../../../utils/response-shape.js': { isRecordList: Array.isArray, isBizOk: require('../../utils/response-shape.js').isBizOk },
         '../utils/club-event-calendar.js': require('../../pages/club/utils/club-event-calendar.js'),
         '../utils/edition-empty-reason.js': require('../../pages/club/utils/edition-empty-reason.js'),
         // 帖文卡的 variant 判定与广场共用一份,俱乐部页 require 的就是它

@@ -7,15 +7,24 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.util.List;
+
 /** 提交和审核共用内容快照；计数、审核状态与更新时间不属于被审内容。 */
 public final class TemplateAuditSnapshot {
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final String[] CONTENT = ("memberId categoryId title description imgUrl players usageLocation "
-            + "requiredMaterials duration difficulty ruleInstructions merchantGuide rewardRulesJson validationMethod "
-            + "sensorType sensorConfig questionName questionAnswer feedbackText couponId medalImg medalName medalStyle "
-            + "questionA questionB questionC questionD correctAnswer questionImg questionAudio questionOptionMediaJson "
-            + "preferenceJson advancedConfigJson activityCategoryids storyText storyImg storyJson hint1 hint2 "
-            + "answerReveal photoRequireDesc photoReview audioUrl audioDuration packType xpValue interactionType originalTemplateId").split(" ");
+    /**
+     * 被审内容字段（JSON 属性名），顺序即快照输出顺序。每个字段至少要在 CmsMemberTemplate 或
+     * CmsTemplateLibrary 其中之一上存在，缺失的一侧写 null；由 TemplateAuditSnapshotFieldsTest 守住。
+     */
+    static final List<String> CONTENT = List.of(
+            "memberId", "categoryId", "title", "description", "imgUrl", "players", "usageLocation",
+            "requiredMaterials", "duration", "difficulty", "ruleInstructions", "merchantGuide", "rewardRulesJson",
+            "validationMethod", "sensorType", "sensorConfig", "questionName", "questionAnswer", "feedbackText",
+            "couponId", "medalImg", "medalName", "medalStyle", "questionA", "questionB", "questionC", "questionD",
+            "correctAnswer", "questionImg", "questionAudio", "questionOptionMediaJson", "preferenceJson",
+            "advancedConfigJson", "activityCategoryids", "storyText", "storyImg", "storyJson", "hint1", "hint2",
+            "answerReveal", "photoRequireDesc", "photoReview", "audioUrl", "audioDuration", "packType", "xpValue",
+            "interactionType", "originalTemplateId");
     private TemplateAuditSnapshot() { }
 
     public static String personal(CmsMemberTemplate template) {

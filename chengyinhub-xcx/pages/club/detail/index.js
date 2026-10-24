@@ -25,7 +25,7 @@ const { merchantHomeUrl } = require('../../../utils/merchant-home-link.js');
 const ticketSource = require('../../../utils/ticket-source.js');
 // CU-C-38:主题分享卡的标题/封面口径与主题详情页共用一份实现
 const { buildTopicShare, resolveTopicCover } = require('../../../utils/topic-share.js');
-const { isRecord, bizFailureMessage } = require('../../../utils/response-shape.js');
+const { isRecord, bizFailureMessage, isBizOk } = require('../../../utils/response-shape.js');
 const { buildMonthCalendar, calendarNotice, shapeCalendarSessions, shiftMonth } = require('../utils/club-event-calendar.js');
 const { editionEmptyCopy, shapeEditionEmptyReason } = require('../utils/edition-empty-reason.js');
 // 帖文卡的 variant 判定与广场共用一份,别在这儿复制
@@ -207,7 +207,7 @@ function localDateText(date) {
   return y + '-' + m + '-' + d;
 }
 
-function isSuccess(res) { return !!res && (res.code === '200' || res.code === 200); }
+function isSuccess(res) { return isBizOk(res); }
 
 
 function metricInteger(value) {
@@ -2942,7 +2942,7 @@ Page({
       silentError: true,
       success(res) {
         const activities = listGroupCodeActivities(res && res.data && res.data.activityList);
-        if (!(res && (res.code === '200' || res.code === 200)) || !activities.length) {
+        if (!isBizOk(res) || !activities.length) {
           cyToast('还没有可管理的活动场次');
           return;
         }
@@ -3054,7 +3054,7 @@ Page({
       silentError: true,
       success(res) {
         const activities = listGroupCodeActivities(res && res.data && res.data.activityList);
-        if (!(res && (res.code === '200' || res.code === 200)) || !activities.length) {
+        if (!isBizOk(res) || !activities.length) {
           that.setData({ groupCodeState: 'error', groupCodeErrMsg: that.friendlyGroupCodeError(res && res.msg, '暂无可出示团码的场次') });
           return;
         }
@@ -3097,7 +3097,7 @@ Page({
       silentError: true,
       success(res) {
         const data = res && res.data;
-        if (res && (res.code === '200' || res.code === 200) && data && data.code) {
+        if (isBizOk(res) && data && data.code) {
           // CU-C-78:与团码页同一契约 —— 没有码图不能当成功。cy-qr-voucher 在
           // 「ready 且无 qr 但有 code」时会把签名令牌当文字铺满码区(对短券码是退路,对团码是乱码)。
           if (!data.qrcodeUrl) {

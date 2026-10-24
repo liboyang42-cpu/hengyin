@@ -1,9 +1,7 @@
 const toast = require('../../../utils/toast.js');
 const app = getApp()
-const { isRecord, isRecordList, bizFailureMessage } = require('../../../utils/response-shape.js')
+const { isRecord, isRecordList, bizFailureMessage, isBizOk } = require('../../../utils/response-shape.js')
 
-const CLUB_ROLE_CODES = ['CLUB_CO_OWNER', 'CLUB_OPERATOR']
-const EVENT_ROLE_CODES = ['EVENT_LEAD', 'EVENT_CHECKIN']
 const ROLE_REQUEST_INTENT_STORAGE_KEY = 'club_role_request_intents_v1'
 const ROLE_REQUEST_INTENT_TTL_MS = 24 * 60 * 60 * 1000
 const ROLE_SUMMARY = {
@@ -15,7 +13,7 @@ const ROLE_SUMMARY = {
 
 function jsonBody(data) { return JSON.stringify(data || {}) }
 function jsonHeader() { return { 'Content-Type': 'application/json' } }
-function isSuccess(res) { return !!res && (res.code === 200 || res.code === '200') }
+function isSuccess(res) { return isBizOk(res) }
 function isClientError(res) {
   const code = Number(res && res.code)
   return code >= 400 && code < 500
@@ -90,8 +88,9 @@ function expiryText(value) {
   return text.length >= 10 ? (' · 至 ' + text.slice(5, 10)) : ''
 }
 
-function roleAllowed(roleCode, activityId) {
-  return activityId ? EVENT_ROLE_CODES.indexOf(roleCode) >= 0 : CLUB_ROLE_CODES.indexOf(roleCode) >= 0
+// U-013:可分配角色以服务端 /roles/list 目录为准(assignable + scopeType),前端不再维护一份角色清单
+function catalogRoleAllowed(row, activityId) {
+  return !!row && row.assignable !== false && row.scopeType === (activityId ? 'EVENT' : 'CLUB')
 }
 
 function shapeRoleData(raw, clubId, activityId) {
@@ -99,9 +98,8 @@ function shapeRoleData(raw, clubId, activityId) {
   const roles = []
   for (let i = 0; i < raw.roles.length; i += 1) {
     const row = raw.roles[i]
-    if (!roleAllowed(row.roleCode, activityId)) continue
-    const expectedScope = activityId ? 'EVENT' : 'CLUB'
-    if (row.scopeType !== expectedScope || typeof row.name !== 'string' || !Array.isArray(row.permissions)) return null
+    if (!catalogRoleAllowed(row, activityId)) continue
+    if (typeof row.roleCode !== 'string' || typeof row.name !== 'string' || !Array.isArray(row.permissions)) return null
     roles.push(Object.assign({}, row, {
       summary: ROLE_SUMMARY[row.roleCode],
       scopeText: activityId ? ('场次 #' + activityId) : '本俱乐部',
@@ -116,7 +114,7 @@ function shapeRoleData(raw, clubId, activityId) {
     const targetMemberId = positiveId(row.targetMemberId)
     const version = Number(row.version)
     if (!id || !targetMemberId || !Number.isInteger(version) || version < 0) return null
-    if (!roleAllowed(row.roleCode, activityId)) continue
+    if (!roles.some(function (role) { return role.roleCode === row.roleCode })) continue
     if (activityId) {
       if (row.scopeType !== 'EVENT' || String(row.scopeId) !== String(activityId)) return null
     } else if (row.scopeType !== 'CLUB' || String(row.scopeId) !== String(clubId)) {
@@ -385,7 +383,7 @@ Page({
     const role = this.data.roles.find(function (item) { return item.roleCode === roleCode })
     if (!memberId) { toast('先选择一位成员'); return }
     if (!roleCode) { toast('先选择一个角色'); return }
-    if (!role || !roleAllowed(roleCode, this.data.activityId)) {
+    if (!catalogRoleAllowed(role, this.data.activityId)) {
       toast('该角色不适用于当前范围')
       return
     }
