@@ -881,6 +881,23 @@
           "com.chengyinhub.business.service.impl.NodeNpcService",
           "com.chengyinhub.business.service.impl.NpcChatService"
         ]
+      },
+      {
+        "id": "C_REGISTRATION_QUERY_APPLICATION",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.registration.RegistrationQueryApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiRegistrationController",
+          "com.chengyinhub.common.core.controller.BaseController",
+          "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl",
+          "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "com.chengyinhub.business.mapper.CmsRegistrationPaymentFactMapper",
+          "com.chengyinhub.business.service.impl.RefundServiceImpl",
+          "com.chengyinhub.business.mapper.RefundApplicationMapper",
+          "com.chengyinhub.business.service.impl.RegistrationCheckoutServiceImpl"
+        ]
       }
     ],
     "allowed_directions": [
