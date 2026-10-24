@@ -88,7 +88,8 @@ const EXPLICIT_WRITE_APIS = new Set([
 const EXPLICIT_READ_APIS = new Set(['/api/publish/home'])
 const isWriteApi = (api) => !EXPLICIT_READ_APIS.has(api) && (API_WRITE_RE.test(api) || EXPLICIT_WRITE_APIS.has(api))
 const TAP_EVENTS = new Set(['bindtap', 'catchtap', 'bind:tap', 'catch:tap'])
-const AUXILIARY_APIS = new Set(['/api/login/code', '/api/role/info', '/api/analytics/events/batch'])
+// App session/feature bootstrap; exact endpoints only, never a prefix exemption for business requests.
+const AUXILIARY_APIS = new Set(['/api/login/code', '/api/config/features', '/api/role/info', '/api/analytics/events/batch'])
 const SELF_ONLY_WRITE_APIS = new Set([
   '/api/compliance/consents', '/api/user/update', '/api/logout', '/api/user/deregister/apply',
   '/api/user/deregister/cancel', '/api/sms/send', '/api/registration/create',

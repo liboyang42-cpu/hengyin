@@ -97,3 +97,23 @@ test('missing proven enrollment binding cannot be papered over with a fixed writ
     { url: '/api/compliance/consents', method: 'POST' },
   ]), /未登记或未证明/)
 })
+
+test('exact App bootstrap reads do not block voice flow or exempt extra business requests', () => {
+  for (const [file, prefix] of PAGES) {
+    const contracts = [
+      { url: prefix + '/status', method: 'POST', source: 'server-controller', wrapper: '_request' },
+      { url: prefix + '/enroll', method: 'POST', source: 'server-controller', wrapper: '_request' },
+      { url: '/api/compliance/consents', method: 'POST', source: 'server-controller' },
+      { url: '/api/config/features', method: 'POST', source: 'server-controller' },
+      { url: '/api/login/code', method: 'POST', source: 'server-controller' },
+    ]
+    const plan = voiceConfirmedRequestPlan(file, 'confirmNewVoiceRequest', contracts)
+    assert.deepEqual(plan.writeApis, ['/api/compliance/consents', prefix + '/enroll'])
+    assert.deepEqual(plan.requiredRequests.map(request => request.urlTemplate),
+      [prefix + '/status', '/api/compliance/consents', prefix + '/enroll', prefix + '/status'])
+    for (const url of ['/api/config/features/save', '/api/login/code/save', prefix + '/save-extra']) {
+      assert.throws(() => voiceConfirmedRequestPlan(file, 'confirmNewVoiceRequest',
+        contracts.concat({ url, method: 'POST', source: 'server-controller' })), /未登记或未证明/, url)
+    }
+  }
+})
