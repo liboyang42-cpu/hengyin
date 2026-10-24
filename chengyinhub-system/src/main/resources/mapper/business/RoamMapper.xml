@@ -401,6 +401,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                 group by f.source_id, f.member_id
             ) v join ums_member m on m.id = v.member_id
             where m.del_flag = 0 and m.avatar is not null and m.avatar &lt;&gt; ''
+              <!-- 与 selectLatestRoamLocation 一致：跨版本按事件 id 取最新态，仅撤回者隐藏。
+                   不按 presence_visible 过滤；无同意记录的历史访客沿用原展示口径。 -->
+              and coalesce((
+                  select c.event_type from consent_record c
+                  where c.member_id = v.member_id and c.doc_type = 'privacy_policy'
+                    and c.scene = 'roam_location' and c.scope_type is null and c.scope_id is null
+                  order by c.id desc limit 1
+              ), 'AGREE') &lt;&gt; 'REVOKE'
         ) t where t.rn &lt;= #{limit}
     </select>
 
