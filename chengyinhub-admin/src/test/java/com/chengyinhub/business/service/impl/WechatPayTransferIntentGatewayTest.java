@@ -19,7 +19,7 @@ import static org.mockito.Mockito.*;
 
 /** Gateway boundaries only. A owns real DTO canonical-hash tests; no DTO implementation or hash clone here. */
 class WechatPayTransferIntentGatewayTest {
-    private final WechatPayServiceImpl gateway = new WechatPayServiceImpl();
+    private final WechatPaymentSdkGateway gateway = new WechatPaymentSdkGateway();
     private final TransferBatchService sdk = mock(TransferBatchService.class);
 
     @Test
@@ -210,7 +210,7 @@ class WechatPayTransferIntentGatewayTest {
     }
 
     private void bind(String merchant) throws Exception {
-        Class<?> binding = Class.forName(WechatPayServiceImpl.class.getName() + "$TransferClientBinding");
+        Class<?> binding = Class.forName(WechatPaymentSdkGateway.class.getName() + "$TransferClientBinding");
         Constructor<?> constructor = binding.getDeclaredConstructor(TransferBatchService.class, String.class);
         constructor.setAccessible(true);
         ReflectionTestUtils.setField(gateway, "transferClientBinding", constructor.newInstance(sdk, merchant));

@@ -10,7 +10,7 @@ import com.wechat.pay.java.service.payments.model.Transaction;
 import com.wechat.pay.java.service.payments.model.TransactionAmount;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.test.util.ReflectionTestUtils;
+import com.chengyinhub.business.service.impl.WechatPayTestWiring;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -68,7 +68,7 @@ class WechatPayCallbackFactsTest {
                 f.verifyNoBusinessCalls();
             }
             Fixture unavailable = new Fixture(order, "JSAPI");
-            ReflectionTestUtils.setField(unavailable.gateway, "jsapiService", null);
+            WechatPayTestWiring.setField(unavailable.gateway, "jsapiService", null);
             assertTrue(unavailable.deliver().contains("FAIL"));
             unavailable.verifyNoBusinessCalls();
             for (String code : new String[]{"ORDER_NOT_EXIST", "SYSTEM_ERROR", "NEW_CODE"}) {
@@ -227,7 +227,7 @@ class WechatPayCallbackFactsTest {
     }
 
     private static class Fixture {
-        final WechatPayServiceImpl gateway = new WechatPayServiceImpl();
+        final WechatPayServiceImpl gateway = WechatPayTestWiring.facade();
         final JsapiService sdk = mock(JsapiService.class);
         final ICmsRegistrationService registration = mock(ICmsRegistrationService.class);
         final IClubMembershipService membership = mock(IClubMembershipService.class);
@@ -247,27 +247,32 @@ class WechatPayCallbackFactsTest {
             createdOrders.put(no, order(no, channel));
             when(sdk.queryOrderByOutTradeNo(any())).thenAnswer(c ->
                     createdOrders.get(((QueryOrderByOutTradeNoRequest) c.getArgument(0)).getOutTradeNo()));
-            ReflectionTestUtils.setField(gateway, "jsapiService", sdk);
+            WechatPayTestWiring.setField(gateway, "jsapiService", sdk);
             NotificationParser parser = mock(NotificationParser.class);
             when(parser.parse(any(), eq(Transaction.class))).thenReturn(transaction);
-            ReflectionTestUtils.setField(gateway, "notificationParser", parser);
-            ReflectionTestUtils.setField(gateway, "alarmService", mock(AlarmService.class));
+            WechatPayTestWiring.setField(gateway, "notificationParser", parser);
+            WechatPayTestWiring.setField(gateway, "alarmService", mock(AlarmService.class));
             WxPayConfig config = mock(WxPayConfig.class);
             when(config.getMerchantId()).thenReturn("merchant");
             lenient().when(config.getAppid()).thenReturn("wx-mini");
             lenient().when(config.getAppAppid()).thenReturn("wx-app");
-            ReflectionTestUtils.setField(gateway, "wxPayConfig", config);
+            WechatPayTestWiring.setField(gateway, "wxPayConfig", config);
             ObjectProvider<IClubMembershipService> clubs = mock(ObjectProvider.class);
             when(clubs.getIfAvailable()).thenReturn(membership);
-            ReflectionTestUtils.setField(gateway, "clubMembershipServiceProvider", clubs);
-            ReflectionTestUtils.setField(gateway, "registrationService", registration);
-            ReflectionTestUtils.setField(gateway, "merchantCommerceService", commerce);
-            ReflectionTestUtils.setField(gateway, "coopInviteService", coop);
+            WechatPayTestWiring.setField(gateway, "clubMembershipServiceProvider", clubs);
+            WechatPayTestWiring.setField(gateway, "registrationService", registration);
+            WechatPayTestWiring.setField(gateway, "merchantCommerceService", commerce);
+            WechatPayTestWiring.setField(gateway, "coopInviteService", coop);
             lenient().when(membership.supportsOutTradeNo(anyString())).thenAnswer(c -> no.equals(c.getArgument(0)));
             lenient().when(commerce.supportsOutTradeNo(anyString())).thenAnswer(c -> ((String) c.getArgument(0)).startsWith("TPLTM_"));
             lenient().when(membership.handlePaidInvoice(eq(no), eq(true), eq(5000), anyString())).thenAnswer(c -> !rejectDomain);
             lenient().when(commerce.handlePaidOrder(eq(no), eq(true), eq(5000), anyString())).thenAnswer(c -> !rejectDomain);
             lenient().when(coop.markDepositPaid(eq(no), eq(5000L), anyString())).thenAnswer(c -> !rejectDomain);
+            // The registration route must positively identify its existing business order.
+            com.chengyinhub.business.domain.CmsRegistration existingRegistration =
+                    new com.chengyinhub.business.domain.CmsRegistration();
+            existingRegistration.setRegistrationNo(no);
+            if ("REG1".equals(no)) lenient().when(registration.getByRegistrationNo(no)).thenReturn(existingRegistration);
             lenient().when(registration.handleWechatPayCallback(anyMap())).thenAnswer(c -> rejectDomain ? "FAIL" : "SUCCESS");
         }
 

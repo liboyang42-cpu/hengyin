@@ -13,7 +13,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.test.util.ReflectionTestUtils;
+import com.chengyinhub.business.service.impl.WechatPayTestWiring;
 import org.springframework.transaction.support.TransactionTemplate;
 import java.io.*;
 import java.math.BigDecimal;
@@ -82,12 +82,12 @@ class CoopDepositRefundMybatisIntegrationTest {
         db.execute("DELETE FROM club");
         db.execute("INSERT INTO coop_invite(id,invite_type,from_type,from_id,to_type,to_id,status,deposit_status,deposit_amount,deposit_out_trade_no,del_flag,create_time) VALUES(1,0,'talent',9,'merchant',10,3,2,50,'DEP1T100',0,NOW())");
         wx=mock(IWechatPayService.class);alarms=mock(AlarmService.class);refunds=new CoopDepositRefundService();
-        ReflectionTestUtils.setField(refunds,"mapper",mapper);ReflectionTestUtils.setField(refunds,"wechatPayService",wx);
-        ReflectionTestUtils.setField(refunds,"transactionManager",manager);ReflectionTestUtils.setField(refunds,"alarmService",alarms);
+        WechatPayTestWiring.setField(refunds,"mapper",mapper);WechatPayTestWiring.setField(refunds,"wechatPayService",wx);
+        WechatPayTestWiring.setField(refunds,"transactionManager",manager);WechatPayTestWiring.setField(refunds,"alarmService",alarms);
         invites=new CoopInviteServiceImpl();
-        org.springframework.test.util.ReflectionTestUtils.setField(invites, "commercialReviewService",
-                org.mockito.Mockito.mock(com.chengyinhub.business.service.ITopicCommercialReviewService.class));ReflectionTestUtils.setField(invites,"coopInviteMapper",mapper);
-        ReflectionTestUtils.setField(invites,"depositRefundService",refunds);ReflectionTestUtils.setField(invites,"wechatPayService",wx);
+        WechatPayTestWiring.setField(invites, "commercialReviewService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.ITopicCommercialReviewService.class));WechatPayTestWiring.setField(invites,"coopInviteMapper",mapper);
+        WechatPayTestWiring.setField(invites,"depositRefundService",refunds);WechatPayTestWiring.setField(invites,"wechatPayService",wx);
         when(wx.queryRefundFacts("RDEP1T100")).thenReturn(Collections.singletonMap("status","NOT_FOUND"));
         when(wx.submitRefund(anyString(),anyString(),any(),any(),anyString())).thenReturn(RefundRequestResult.ACCEPTED);
     }
@@ -105,7 +105,7 @@ class CoopDepositRefundMybatisIntegrationTest {
     @Test void publicRetryApiUsesTransactionalIntentAndRejectsOtherMember() {
         ICoopInviteService service = transactionalInvites();
         com.chengyinhub.web.controller.api.ApiCoopController controller = spy(new com.chengyinhub.web.controller.api.ApiCoopController());
-        ReflectionTestUtils.setField(controller, "coopInviteService", service);
+        WechatPayTestWiring.setField(controller, "coopInviteService", service);
         doReturn(88L).when(controller).getAppUserId();
         java.util.Map<String,Object> body = Collections.<String,Object>singletonMap("inviteId", 1L);
         assertNotEquals(200, controller.retryDepositRefund(body).get("code"));
@@ -124,7 +124,7 @@ class CoopDepositRefundMybatisIntegrationTest {
         com.chengyinhub.business.domain.CmsTopic topic = new com.chengyinhub.business.domain.CmsTopic();
         topic.setId(7L); topic.setIsSettlement(1);
         when(topics.selectCmsTopicByIdForUpdate(7L)).thenReturn(topic);
-        ReflectionTestUtils.setField(invites,"cmsTopicMapper",topics);
+        WechatPayTestWiring.setField(invites,"cmsTopicMapper",topics);
         ICoopInviteService service = transactionalInvites();
         tx.execute(status -> { service.requestTopicDepositRefunds(7L); status.setRollbackOnly(); return null; });
         assertNull(row().getDepositRefundState()); verifyNoInteractions(wx);
@@ -163,12 +163,12 @@ class CoopDepositRefundMybatisIntegrationTest {
         };
         when(topics.selectCmsTopicById(7L)).thenAnswer(call -> read.apply(false));
         when(topics.selectCmsTopicByIdForUpdate(7L)).thenAnswer(call -> read.apply(true));
-        ReflectionTestUtils.setField(invites,"cmsTopicMapper",topics);
+        WechatPayTestWiring.setField(invites,"cmsTopicMapper",topics);
         com.chengyinhub.business.mapper.MmsMerchantMapper merchants = mock(com.chengyinhub.business.mapper.MmsMerchantMapper.class);
         com.chengyinhub.business.domain.MmsMerchant merchant = new com.chengyinhub.business.domain.MmsMerchant();
         merchant.setStatus(1L); merchant.setAccountStatus(1L); merchant.setDelFlag(0);
         when(merchants.selectMmsMerchantByMemberIdForUpdate(10L)).thenReturn(merchant);
-        ReflectionTestUtils.setField(invites,"mmsMerchantMapper",merchants);
+        WechatPayTestWiring.setField(invites,"mmsMerchantMapper",merchants);
         ExecutorService writer=Executors.newSingleThreadExecutor();
         try { tx.execute(status -> {
             assertEquals(0,read.apply(false).getIsSettlement());
@@ -221,8 +221,8 @@ class CoopDepositRefundMybatisIntegrationTest {
         com.chengyinhub.business.domain.CmsTopic topic=new com.chengyinhub.business.domain.CmsTopic(); topic.setId(7L);
         when(topics.selectCmsTopicById(7L)).thenReturn(topic);
         when(topics.selectCmsTopicByIdForUpdate(7L)).thenReturn(topic);
-        ReflectionTestUtils.setField(invites,"cmsTopicMapper",topics);
-        ReflectionTestUtils.setField(invites,"notifyService",mock(INotifyService.class));
+        WechatPayTestWiring.setField(invites,"cmsTopicMapper",topics);
+        WechatPayTestWiring.setField(invites,"notifyService",mock(INotifyService.class));
         ExecutorService writer=Executors.newSingleThreadExecutor();
         try { tx.execute(status -> {
             assertEquals(0,row().getDepositStatus());
@@ -238,8 +238,8 @@ class CoopDepositRefundMybatisIntegrationTest {
         com.chengyinhub.business.mapper.CmsTopicMapper topics=mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
         com.chengyinhub.business.domain.CmsTopic topic=new com.chengyinhub.business.domain.CmsTopic();topic.setId(7L);
         when(topics.selectCmsTopicByIdForUpdate(7L)).thenReturn(topic);
-        ReflectionTestUtils.setField(invites,"cmsTopicMapper",topics);
-        INotifyService notice=mock(INotifyService.class);ReflectionTestUtils.setField(invites,"notifyService",notice);
+        WechatPayTestWiring.setField(invites,"cmsTopicMapper",topics);
+        INotifyService notice=mock(INotifyService.class);WechatPayTestWiring.setField(invites,"notifyService",notice);
         transactionalInvites().markTopicDepositsDue(7L);
         assertEquals(5,row().getDepositStatus());assertEquals(new BigDecimal("50.00"),row().getDepositAmount());
         clearInvocations(notice);
@@ -267,7 +267,7 @@ class CoopDepositRefundMybatisIntegrationTest {
         db.execute("UPDATE coop_invite SET topic_id=7,deposit_status=4,deposit_refund_no='RDEP1T100' WHERE id=1");
         com.chengyinhub.business.mapper.CmsTopicMapper topics=mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
         when(topics.selectCmsTopicByIdForUpdate(7L)).thenAnswer(call -> lockedHistoricalTopic());
-        ReflectionTestUtils.setField(invites,"cmsTopicMapper",topics);return topics;
+        WechatPayTestWiring.setField(invites,"cmsTopicMapper",topics);return topics;
     }
     private com.chengyinhub.business.domain.CmsTopic lockedHistoricalTopic() {
         return db.queryForObject("SELECT id,club_id,is_settlement FROM cms_topic WHERE id=7 FOR UPDATE",(rs,n)->{
@@ -332,8 +332,8 @@ class CoopDepositRefundMybatisIntegrationTest {
         verify(wx,times(1)).submitRefund(anyString(),anyString(),any(),any(),anyString());
         assertEquals(101,clubs.selectPendingDepositsByClub(73L).size(),"软删待核验责任不能消失");
         Map<String,String> resolved=facts("SUCCESS");resolved.put("outRefundNo","RDEP1");resolved.put("outTradeNo","DEP1");
-        WechatPayServiceImpl support=spy(new WechatPayServiceImpl());
-        ReflectionTestUtils.setField(support,"coopInviteService",invites);
+        WechatPayServiceImpl support=spy(WechatPayTestWiring.facade());
+        WechatPayTestWiring.setField(support,"coopInviteService",invites);
         doReturn(resolved).when(support).queryRefundFacts("RDEP1");
         assertEquals("SUCCESS",support.refreshPayoutFromWx("RDEP1"));
         assertEquals(4,db.queryForObject("SELECT deposit_status FROM coop_invite WHERE id=1",Integer.class));

@@ -26,7 +26,7 @@ import com.chengyinhub.business.mapper.ClubMemberMapper;
 import com.chengyinhub.business.mapper.ClubMembershipMapper;
 import com.chengyinhub.business.service.IClubMembershipService;
 import com.chengyinhub.business.service.IUmsMemberService;
-import com.chengyinhub.business.service.IWechatPayService;
+import com.chengyinhub.business.service.WechatPaymentOperations;
 import com.chengyinhub.business.service.support.CanonicalDigest;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.exception.ServiceException;
@@ -69,7 +69,8 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
     @Autowired private ClubMapper clubMapper;
     @Autowired private ClubMemberMapper clubMemberMapper;
     @Autowired private IUmsMemberService memberService;
-    @Autowired private IWechatPayService wechatPayService;
+    @Autowired @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
+    private WechatPaymentOperations wechatPayService;
     @Autowired private BusinessAuditEventMapper businessAuditEventMapper;
     @Autowired private PlatformTransactionManager transactionManager;
     private Clock clock = Clock.system(SHANGHAI);

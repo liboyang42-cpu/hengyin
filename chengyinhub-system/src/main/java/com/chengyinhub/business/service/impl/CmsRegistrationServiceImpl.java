@@ -86,7 +86,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     private AlarmService alarmService;
 
     @Autowired
-    private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IWechatPayService> paymentAttemptGateway;
+    @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
+    private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.WechatPaymentOperations> paymentAttemptGateway;
 
     @org.springframework.beans.factory.annotation.Value("${chengyin.platform.member-id:100000}")
     private Long platformMemberId;
