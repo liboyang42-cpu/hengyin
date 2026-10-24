@@ -74,7 +74,7 @@ def all_required_clean(directory):
         ("FirstReviewPointsClawbackMybatisIntegrationTest", 10),
         ("ClubSettlementSummaryMybatisIntegrationTest", 6),
         ("CoopComplaintCloseMybatisIntegrationTest", 8),
-        ("RegistrationReadContractMybatisIntegrationTest", 5),
+        ("RegistrationReadContractMybatisIntegrationTest", 6),
         ("ClubWaitlistTokenMybatisIntegrationTest", 7),
         ("CmsMemberTemplateAudioPatchMybatisIntegrationTest", 9),
         ("CmsTemplateLibraryAudioPatchMybatisIntegrationTest", 9),

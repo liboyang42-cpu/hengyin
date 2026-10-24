@@ -274,6 +274,12 @@ public interface RoamMapper {
     /** R6 反作弊:该 member 最近一次 POI 发现的时间(foundAt)+ 该 POI 坐标(lat/lng),供瞬移速度校验。 */
     java.util.Map<String, Object> selectLastPoiFoundLoc(@Param("memberId") Long memberId);
 
+    /**
+     * owner 2026-10-23 D7(U-112):该 member 最近一次已入账探店的时间(visitedAt)+ 来源表里的店坐标(lat/lng,字符串;
+     * 报名商家的坐标列是 VARCHAR,由调用方解析校验)。只供瞬移速度留痕,不参与放行判定。
+     */
+    java.util.Map<String, Object> selectLastShopVisitLoc(@Param("memberId") Long memberId);
+
     // --- 商家自助据点(status 只表示可见性；audit_status 独立表示审核态)---
     /** 新建待审商户据点(type=2,status=0,merchant_id=NULL)。 */
     int insertPendingMerchantPoi(RoamPoi poi);

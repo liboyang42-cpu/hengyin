@@ -216,7 +216,8 @@ EXPECTED = {
     "FirstReviewPointsClawbackMybatisIntegrationTest": 10,
     "ClubSettlementSummaryMybatisIntegrationTest": 6,
     "CoopComplaintCloseMybatisIntegrationTest": 8,
-    "RegistrationReadContractMybatisIntegrationTest": 5,
+    # 2026-10-22 店铺参谋改版 +1 条(主卡 7/30/90 天走势、页头店名/头像、v3 缓存走真库真 XML),5 → 6。
+    "RegistrationReadContractMybatisIntegrationTest": 6,
     "ClubWaitlistTokenMybatisIntegrationTest": 7,
     "CmsMemberTemplateAudioPatchMybatisIntegrationTest": 9,
     "CmsTemplateLibraryAudioPatchMybatisIntegrationTest": 9,

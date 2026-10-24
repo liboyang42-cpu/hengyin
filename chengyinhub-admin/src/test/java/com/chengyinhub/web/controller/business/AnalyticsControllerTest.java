@@ -7,6 +7,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,67 +25,87 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class AnalyticsControllerTest {
+    // owner 2026-10-23 D3(P0-48):旧合同「日期可选、不限窗口」作废。新合同:
+    //   都不传 = 最近 30 天(含今天,Asia/Shanghai);只传一端 = 从该端起算 30 天;窗口(含首尾)最多 90 天。
+    private static final Clock TODAY_2026_10_23 = Clock.fixed(
+            Instant.parse("2026-10-23T02:00:00Z"), ZoneId.of("Asia/Shanghai"));
+
     @Test
-    void funnelPreservesInitialNullDatesAndResponse() {
-        assertFunnelQuery(null, null, Collections.emptyMap(), Collections.emptyList());
+    void funnelDefaultsMissingDatesToLast30Days() {
+        assertFunnelQuery(null, null, "2026-09-24", "2026-10-23", Collections.emptyList());
     }
 
     @Test
-    void funnelPreservesClearedAndBlankDates() {
+    void funnelTreatsClearedAndBlankDatesAsMissing() {
         String[][] dates = {{"", ""}, {" ", "\t"}, {null, ""}, {"", null}};
         for (String[] pair : dates) {
-            assertFunnelQuery(pair[0], pair[1], Collections.emptyMap(), Collections.emptyList());
+            assertFunnelQuery(pair[0], pair[1], "2026-09-24", "2026-10-23", Collections.emptyList());
         }
     }
 
     @Test
-    void funnelSupportsStartOnlyDateQueries() {
+    void funnelDefaultTodayFollowsShanghaiCalendarDay() {
+        // 2026-10-23T17:00Z = 上海 10-24 01:00 —— 「今天」按上海算
+        Clock lateUtc = Clock.fixed(Instant.parse("2026-10-23T17:00:00Z"), ZoneId.of("Asia/Shanghai"));
+        assertFunnelQuery(lateUtc, null, null, "2026-09-25", "2026-10-24", Collections.emptyList());
+    }
+
+    @Test
+    void funnelStartOnlyQueriesThirtyDaysFromStart() {
         for (String endDate : new String[] {null, "", " "}) {
-            assertFunnelQuery("2026-10-15", endDate,
-                    Collections.singletonMap("beginStatDate", "2026-10-15"),
-                    Collections.emptyList());
+            assertFunnelQuery("2026-10-15", endDate, "2026-10-15", "2026-11-13", Collections.emptyList());
         }
     }
 
     @Test
-    void funnelSupportsEndOnlyDateQueries() {
+    void funnelEndOnlyQueriesThirtyDaysEndingAtEnd() {
         for (String startDate : new String[] {null, "", " "}) {
-            assertFunnelQuery(startDate, "2026-10-15",
-                    Collections.singletonMap("endStatDate", "2026-10-15"),
-                    Collections.emptyList());
+            assertFunnelQuery(startDate, "2026-10-15", "2026-09-16", "2026-10-15", Collections.emptyList());
         }
     }
 
     @Test
     void funnelAcceptsLeapDayAndEqualBoundaries() {
-        Map<String, Object> params = new HashMap<>();
-        params.put("beginStatDate", "2024-02-29");
-        params.put("endStatDate", "2024-02-29");
-
-        assertFunnelQuery("2024-02-29", "2024-02-29", params,
+        assertFunnelQuery("2024-02-29", "2024-02-29", "2024-02-29", "2024-02-29",
                 Collections.singletonList(new BizFunnelDaily()));
     }
 
     @Test
-    void funnelAcceptsPositiveFourDigitYearBoundaries() {
-        Map<String, Object> params = new HashMap<>();
-        params.put("beginStatDate", "0001-01-01");
-        params.put("endStatDate", "9999-12-31");
-
-        assertFunnelQuery("0001-01-01", "9999-12-31", params, Collections.emptyList());
+    void funnelAcceptsExactly90DaysAtFourDigitYearBoundaries() {
+        assertFunnelQuery("0001-01-01", "0001-03-31", "0001-01-01", "0001-03-31", Collections.emptyList());
+        assertFunnelQuery("9999-10-03", "9999-12-31", "9999-10-03", "9999-12-31", Collections.emptyList());
     }
 
     @Test
-    void funnelPreservesLongWindowsAndAllRows() {
+    void funnelPreservesAllRowsInsideA90DayWindow() {
         List<BizFunnelDaily> rows = new ArrayList<>();
         for (int index = 0; index < 150; index++) {
             rows.add(new BizFunnelDaily());
         }
-        Map<String, Object> params = new HashMap<>();
-        params.put("beginStatDate", "2020-01-01");
-        params.put("endStatDate", "2026-10-15");
+        assertFunnelQuery("2026-07-26", "2026-10-23", "2026-07-26", "2026-10-23", rows);
+    }
 
-        assertFunnelQuery("2020-01-01", "2026-10-15", params, rows);
+    @Test
+    void funnelRejectsWindowsOver90DaysBeforeMapperAccess() {
+        BizFunnelDailyMapper mapper = mock(BizFunnelDailyMapper.class);
+        AnalyticsController controller = controller(mapper, TODAY_2026_10_23);
+        String[][] windows = {{"2026-07-25", "2026-10-23"}, {"2020-01-01", "2026-10-15"},
+                {"0001-01-01", "9999-12-31"}};
+        for (String[] window : windows) {
+            AjaxResult result = controller.funnel(window[0], window[1]);
+            assertEquals(500, result.get(AjaxResult.CODE_TAG));
+            assertEquals("查询窗口不能超过90天", result.get(AjaxResult.MSG_TAG));
+        }
+        verifyNoInteractions(mapper);
+    }
+
+    @Test
+    void funnelRejectsDerivedWindowOutsideFourDigitYearsBeforeMapperAccess() {
+        BizFunnelDailyMapper mapper = mock(BizFunnelDailyMapper.class);
+        AnalyticsController controller = controller(mapper, TODAY_2026_10_23);
+        assertEquals("日期超出可查询范围", controller.funnel(null, "0001-01-01").get(AjaxResult.MSG_TAG));
+        assertEquals("日期超出可查询范围", controller.funnel("9999-12-31", null).get(AjaxResult.MSG_TAG));
+        verifyNoInteractions(mapper);
     }
 
     @Test
@@ -118,12 +141,23 @@ class AnalyticsControllerTest {
         verifyNoInteractions(mapper);
     }
 
-    @SuppressWarnings("unchecked")
-    private void assertFunnelQuery(String startDate, String endDate,
-                                  Map<String, Object> expectedParams, List<BizFunnelDaily> rows) {
-        BizFunnelDailyMapper mapper = mock(BizFunnelDailyMapper.class);
+    private static AnalyticsController controller(BizFunnelDailyMapper mapper, Clock clock) {
         AnalyticsController controller = new AnalyticsController();
         ReflectionTestUtils.setField(controller, "bizFunnelDailyMapper", mapper);
+        ReflectionTestUtils.setField(controller, "clock", clock);
+        return controller;
+    }
+
+    private void assertFunnelQuery(String startDate, String endDate, String expectedStart, String expectedEnd,
+                                   List<BizFunnelDaily> rows) {
+        assertFunnelQuery(TODAY_2026_10_23, startDate, endDate, expectedStart, expectedEnd, rows);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void assertFunnelQuery(Clock clock, String startDate, String endDate, String expectedStart,
+                                   String expectedEnd, List<BizFunnelDaily> rows) {
+        BizFunnelDailyMapper mapper = mock(BizFunnelDailyMapper.class);
+        AnalyticsController controller = controller(mapper, clock);
         when(mapper.selectBizFunnelDailyList(any(BizFunnelDaily.class))).thenReturn(rows);
 
         AjaxResult result = controller.funnel(startDate, endDate);
@@ -131,11 +165,14 @@ class AnalyticsControllerTest {
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         Map<String, Object> data = (Map<String, Object>) result.get(AjaxResult.DATA_TAG);
         assertEquals(3, data.size());
-        assertEquals(startDate, data.get("startDate"));
-        assertEquals(endDate, data.get("endDate"));
+        assertEquals(expectedStart, data.get("startDate"));
+        assertEquals(expectedEnd, data.get("endDate"));
         assertSame(rows, data.get("rows"));
         ArgumentCaptor<BizFunnelDaily> query = ArgumentCaptor.forClass(BizFunnelDaily.class);
         verify(mapper).selectBizFunnelDailyList(query.capture());
+        Map<String, Object> expectedParams = new HashMap<>();
+        expectedParams.put("beginStatDate", expectedStart);
+        expectedParams.put("endStatDate", expectedEnd);
         assertEquals(expectedParams, query.getValue().getParams());
     }
 

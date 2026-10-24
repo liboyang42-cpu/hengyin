@@ -143,6 +143,35 @@ class CartSettlementTransactionalH2Test {
         assertEquals(1L, jdbcTemplate.queryForObject("select count(*) from ums_member_cart where id = ?", Long.class, CART_ID));
     }
 
+    /** D1(owner 10-23):积分商城单笔积分折合金额不得超过统一上限(缺省 ¥50 ÷ 0.02 = 2500 积分),超出先拦、零写入。 */
+    @Test
+    void settlementRejectsOrderAboveUnifiedPointsCapWithoutAnyWrite() {
+        jdbcTemplate.update("update ums_member set point = ? where id = ?", 100_000L, MEMBER_ID);
+        jdbcTemplate.update("update pms_sku set price = ? where id = ?", new BigDecimal("1250.50"), SKU_ID);
+        jdbcTemplate.update("update pms_product set price = ? where id = ?", new BigDecimal("1250.50"), PRODUCT_ID);
+
+        ServiceException exception = assertThrows(ServiceException.class,
+                () -> cartService.settleCart(MEMBER_ID, "tester", String.valueOf(CART_ID), "", "51"));
+
+        assertEquals("单笔订单最多使用 2500 积分(折合 ¥50.00)", exception.getMessage());
+        assertEquals(5L, stock());
+        assertEquals(100_000L, jdbcTemplate.queryForObject("select point from ums_member where id = ?", Long.class, MEMBER_ID));
+        assertEquals(0L, jdbcTemplate.queryForObject("select count(*) from oms_order", Long.class));
+        assertEquals(1L, jdbcTemplate.queryForObject("select count(*) from ums_member_cart where id = ?", Long.class, CART_ID));
+    }
+
+    @Test
+    void settlementAcceptsOrderExactlyAtUnifiedPointsCap() {
+        jdbcTemplate.update("update ums_member set point = ? where id = ?", 2_600L, MEMBER_ID);
+        jdbcTemplate.update("update pms_sku set price = ? where id = ?", new BigDecimal("1250.00"), SKU_ID);
+        jdbcTemplate.update("update pms_product set price = ? where id = ?", new BigDecimal("1250.00"), PRODUCT_ID);
+
+        cartService.settleCart(MEMBER_ID, "tester", String.valueOf(CART_ID), "", "51");
+
+        assertEquals(100L, jdbcTemplate.queryForObject("select point from ums_member where id = ?", Long.class, MEMBER_ID));
+        assertEquals(1L, jdbcTemplate.queryForObject("select count(*) from oms_order", Long.class));
+    }
+
     @Test
     void settlementPersistsCurrentSkuPriceAndOriginalPriceSeparately() {
         cartService.settleCart(MEMBER_ID, "tester", String.valueOf(CART_ID), "", "51");

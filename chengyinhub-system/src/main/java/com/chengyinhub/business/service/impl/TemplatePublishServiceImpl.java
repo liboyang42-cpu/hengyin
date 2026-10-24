@@ -272,6 +272,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             throw new ServiceException("玩法个人审核通过后才能提交模板广场", HttpStatus.BAD_REQUEST);
         }
         validatePreferenceForReview(template);
+        rejectSameTitleByAuthor(template, memberId);
         Date now = new Date();
         CmsTemplateLibrary projection = findLiveProjection(templateId);
         boolean creating = projection == null;
@@ -286,6 +287,17 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         }
         return auditTaskService.submitOrRefreshTemplateLibrary(
                 projection.getId(), memberId, marketAuditSnapshot(lockedProjection(templateId, projection.getId())));
+    }
+
+    /** owner 2026-10-23 D5(U-036):同一作者不许在模板广场放两份标题(trim 后逐字)相同的未删除模板。 */
+    private void rejectSameTitleByAuthor(CmsMemberTemplate template, Long memberId) {
+        String title = template.getTitle() == null ? "" : template.getTitle().trim();
+        if (title.isEmpty()) return;
+        for (String other : libraryMapper.selectAuthorLiveTitles(memberId, template.getId())) {
+            if (other != null && title.equals(other.trim())) {
+                throw new ServiceException("你已经有同名模板了", HttpStatus.BAD_REQUEST);
+            }
+        }
     }
 
     private String marketAuditSnapshot(CmsTemplateLibrary projection) {
