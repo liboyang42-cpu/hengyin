@@ -1,0 +1,69 @@
+{
+  "source_sha": "f79eac572f7e36b1c437ca7994ca0c9c663311e4",
+  "workflow_sha": "53f8cad383325be8902ba77d697bbf04b8bc6afe",
+  "run_id": 40050016787,
+  "conclusion": "SUCCESS",
+  "selected_suites": [
+    {
+      "suite": "com.chengyinhub.business.it.PlayHintUnlockMySqlIT",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cleanup": {
+        "mysql_leftover_schemas": [],
+        "mysql_schemas_after": [
+          "information_schema",
+          "mysql",
+          "performance_schema",
+          "sys"
+        ],
+        "status": "CLEAN"
+      },
+      "case_names": [
+        "balanceLostAfterPrecheckRollsBackHintLedgerButRetainsOtherCommittedSpend",
+        "debitWriteThenThrowRollsBackBothRealBalanceAndLedgerBeforeOriginalRetry",
+        "disabledRuleStillRequiresEntitlementAndWritesNoPoints",
+        "duplicateAfterLostReplyAndReconstructionKeepsOneDebitAcrossAuthorizedScopes",
+        "ledgerWriteThenThrowRollsBackRealRowAndLeavesDebitUntouched",
+        "legalActivityUsesOneRealDebitAndOriginalEventIdentity",
+        "legalSelfPlayUsesOneRealDebitAndOriginalEventIdentity",
+        "revokedRegistrationBlocksPreviouslyPurchasedHintWithoutChangingItsOriginalLedger",
+        "twoConnectionsSerializeOriginalRegistrationAndDebitOnce",
+        "unauthorizedOrWrongScopeNeverReturnsHintsOrChangesEconomicState"
+      ],
+      "raw_xml_sha256": "efc6c41e01a0433953c2ed802b0d172cfb4b4d86228f27d94b80821bc448eb80"
+    },
+    {
+      "suite": "com.chengyinhub.business.it.PlayLeadAdmissionFailureMySqlIT",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cleanup": {
+        "mysql_leftover_schemas": [],
+        "mysql_schemas_after": [
+          "information_schema",
+          "mysql",
+          "performance_schema",
+          "sys"
+        ],
+        "status": "CLEAN"
+      },
+      "case_names": [
+        "preferenceLeadStorageFaultCannotCreateBranchSessionBeforeEitherHttpAdmission",
+        "preferenceLeadStorageFaultCannotCreateJourneySessionBeforeEitherHttpAdmission",
+        "realLeadStorageFaultReturnsNoHintAndHasZeroEconomicOrRegistrationEffect",
+        "realLeadStorageFaultRollsBackTheOriginalBasicActionClaimWithoutTerminalReceipt"
+      ],
+      "raw_xml_sha256": "de723f8509eab845564209f84eae80f860b1ba78abbd2c94339db24e71ca0350"
+    }
+  ],
+  "tests": 14,
+  "hint_factory_boundary": "Actor extraction outside TX; first actual application node read verifies writable TX/connection/latch before qualifier locks; original10 bodies/wrappers/cleanup unchanged",
+  "limits": [
+    "Direct controller/application proxy with real MySQL, no HTTP/JWT/RateLimiter proof",
+    "Not all endpoints/three runtimes or allWP09",
+    "Old/new full T14 canonical output equivalence and new full appstartup/unit55+16 remain pending"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "purpose": "Draft v2 current-page callback identity fence, no authentication/authorization rule change",
+  "implementation": "Existing session-store closure read-only getRevision; increments on identity writes, applySnapshot, restore, clear before partial I/O; avatar/nickname unchanged",
+  "node": {
+    "files": [
+      "session-store.test.js",
+      "session-manager.test.js"
+    ],
+    "tests": 58,
+    "failures": 0,
+    "skipped": 0,
+    "new_cases": 4
+  },
+  "new_cases": [
+    "Same timestamp and same token A→B→A",
+    "Same snapshot refresh/role/userType/OpenID, profile edits do not invalidate",
+    "Partial snapshot and clear I/O failures invalidate old work",
+    "Restore/single-field write failure invalidates old work"
+  ],
+  "limits": [
+    "Counter is process-local; original identity journal remains necessary across restarts",
+    "Page v2 not yet implemented; this getter alone does not fix existing Page callbacks",
+    "No WeChat/device/UI/real login/HTTP verification",
+    "Direct writes outside session-store must be audited by each consumer; not a new authorization proof"
+  ]
+}

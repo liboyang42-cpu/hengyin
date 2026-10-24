@@ -22,6 +22,69 @@ function makeWx(initial) {
   };
 }
 
+test('会话代次识别同毫秒同token的 A→B→A，不增加持久字段', () => {
+  const wx = makeWx({});
+  const store = createSessionStore({ wx, now: () => 1 });
+  store.setUserID('A'); store.setAuthorization('same-token');
+  const revision = store.getRevision();
+  const keys = Object.keys(wx._store).sort();
+  store.setUserID('B'); store.setAuthorization('other-token');
+  store.setUserID('A'); store.setAuthorization('same-token');
+  assert.equal(store.getUserID(), 'A');
+  assert.equal(store.getAuthorization(), 'same-token');
+  assert.ok(store.getRevision() > revision);
+  assert.deepEqual(Object.keys(wx._store).sort(), keys);
+});
+
+test('相同快照的刷新、角色和身份变化会使旧回调代次失效，头像昵称不影响', () => {
+  const store = createSessionStore({ wx: makeWx({}) });
+  const snapshot = { user_id: '7', authorization: 'same-token', role: 'player' };
+  store.applySnapshot(snapshot);
+  let revision = store.getRevision();
+  store.applySnapshot(snapshot);
+  assert.ok(store.getRevision() > revision);
+  for (const mutate of [() => store.setUserRole('club'), () => store.setUserType(2), () => store.setOpenID('oid')]) {
+    revision = store.getRevision(); mutate(); assert.ok(store.getRevision() > revision);
+  }
+  revision = store.getRevision();
+  store.setAvatar('new.png'); store.setNickname('new');
+  assert.equal(store.getRevision(), revision);
+});
+
+test('身份持久化中断和失败的清空也会使旧回调代次失效', () => {
+  const wx = makeWx({ user_id: 'A' });
+  const target = { user_id: 'A' };
+  const store = createSessionStore({ wx, target });
+  const set = wx.setStorageSync;
+  let failed = false;
+  wx.setStorageSync = (key, value) => {
+    if (key === 'authorization' && !failed) { failed = true; throw new Error('disk'); }
+    set(key, value);
+  };
+  let revision = store.getRevision();
+  assert.throws(() => store.applySnapshot({ user_id: 'B', authorization: 'B' }), /disk/);
+  assert.equal(target.user_id, 'A');
+  assert.ok(store.getRevision() > revision);
+  wx.removeStorageSync = () => { throw new Error('disk'); };
+  revision = store.getRevision();
+  assert.throws(() => store.clearSession(), /disk/);
+  assert.ok(store.getRevision() > revision);
+});
+
+test('恢复身份及单字段写入失败不会复用旧代次', () => {
+  const wx = makeWx({ user_id: 'A' });
+  const store = createSessionStore({ wx });
+  store.restore();
+  let revision = store.getRevision();
+  wx._store.user_id = 'B'; store.restore();
+  assert.equal(store.getUserID(), 'B');
+  assert.ok(store.getRevision() > revision);
+  wx.setStorageSync = () => { throw new Error('disk'); };
+  revision = store.getRevision();
+  assert.throws(() => store.setAuthorization('next'), /disk/);
+  assert.ok(store.getRevision() > revision);
+});
+
 test('生产回退:未注入 wx 时使用全局 wx(防自遮蔽 bug 回归)', () => {
   // 复刻真机场景:app.js 调用 createSessionStore({ target }) 不传 wx。
   // 历史 bug:局部 `var wx` 自遮蔽使 `typeof wx` 永为 'undefined',解析为 null 抛错。
