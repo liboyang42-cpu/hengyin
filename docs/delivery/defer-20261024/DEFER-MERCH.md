@@ -41,4 +41,8 @@
 
 - 本地（LANG=C.UTF-8）：`mvn -pl chengyinhub-admin test -Dtest=MerchantInsightMapperSqlTest,MerchantInsightServiceImplTest,MerchantMetricDictionaryTest,UmsMemberBalanceDetailDashboardSqlTest,ApiMerchantLedgerControllerTest,ApiMerchantOperatorReadScopeTest,ApiMerchantAwardedTopicStatsTest,CmsRegistrationVerificationCountTest,ApiClubSettlementControllerTest` 全部通过；合并 master（`3937086e`）后在合并树上重跑 `MerchantInsight*`、`ApiMerchant*`、`NodePublicVisibilityPredicateContractTest` 等 244 例，0 失败。
 - 小程序：`npm run lint` PASS；`node --test` analytics-privacy / analytics / analytics-whitelist-crossstack / club-settlement-page-contract / funds-stages-owner-only-contract 全部通过。
-- CI run ID：见 PR #587（完成后补录）。
+- CI（PR #587，head `b875fa6e`，35 个检查全部 success / 按变更范围 skipped，mergeable=clean）：
+  run 40063635868（主 CI：Backend tests、小程序 20 分片单测与静态门、迁移门、gitleaks）、40063635819（Funds MySQL IT + 自检）、
+  40063635888（Followup 39 backend cases）、40063635829（isolated-authenticated-redis-recovery）。
+- 上一 head `bb1e33f3` 的小程序单测分片 15/20 曾红：`no-sensitive-console` 门禁拦下 U-077 提示里拼接的键名；
+  `b875fa6e` 改为固定标签后转绿（门禁未改）。本地 `npm run test:unit` 13897 例全过。
