@@ -3,16 +3,10 @@ package com.chengyinhub.web.controller.api;
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
-import com.chengyinhub.business.domain.CmsRegistration;
-import com.chengyinhub.business.domain.CmsActivity;
-import com.chengyinhub.business.service.support.ExploreTicketUsePolicy;
-import java.util.Date;
 import com.chengyinhub.business.domain.BusinessAuditEvent;
 import com.chengyinhub.business.domain.vo.CityNodeVO;
 import com.chengyinhub.business.mapper.RoamMapper;
 import com.chengyinhub.business.mapper.BusinessAuditEventMapper;
-import com.chengyinhub.business.service.ICmsRegistrationService;
-import com.chengyinhub.business.service.ICmsActivityService;
 import com.chengyinhub.business.service.IGroupCodeService;
 import com.chengyinhub.business.service.ISmsCouponHistoryService;
 import com.chengyinhub.common.exception.ServiceException;
@@ -32,7 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
-import com.chengyinhub.common.utils.OwnershipUtils;
+import com.chengyinhub.web.service.verify.RegistrationTicketApplication;
 /**
  * 核销动态码(BE-11 · Layer B 游戏外核销)。
  *
@@ -46,20 +40,10 @@ import com.chengyinhub.common.utils.OwnershipUtils;
 public class ApiVerifyController extends BaseController {
 
     /** 动态码有效期(毫秒):入场码需留足出示时间,取 5 分钟;过期由前端重新签发 */
-    private static final long DYN_TTL_MS = 300_000L;
+    private static final long DYN_TTL_MS = RegistrationTicketApplication.DYN_TTL_MS;
 
     @Autowired
-    private ICmsRegistrationService registrationService;
-
-    @Autowired
-    private com.chengyinhub.business.service.RegistrationSeatService registrationSeatService;
-
-    @Autowired
-    private ICmsActivityService activityService;
-
-    /** [P0-14] ③ 出码判据:还有没有欠的章节(verification_status 对 ③ 是「被核销过」不是「核销完」)。 */
-    @Autowired
-    private com.chengyinhub.business.service.IPerkLedgerService perkLedgerService;
+    private RegistrationTicketApplication registrationTicketApplication;
 
     @Autowired
     private com.chengyinhub.business.service.impl.QrcodeServiceImpl qrcodeService;
@@ -86,95 +70,7 @@ public class ApiVerifyController extends BaseController {
     @Operation(summary = "签发我的动态核销码(玩家出码,商家/俱乐部扫)")
     @PostMapping("/dyncode/issue")
     public AjaxResult issueDynCode(Long registrationId, Integer seatNo) {
-        Long memberId;
-        try {
-            memberId = getAppUserId();
-        } catch (Exception e) {
-            memberId = 0L;
-        }
-        if (memberId == null || memberId <= 0) {
-            return error("请先登录");
-        }
-        if (registrationId == null) {
-            return error("参数缺失");
-        }
-        CmsRegistration reg = registrationService.selectCmsRegistrationById(registrationId);
-        if (reg == null) {
-            return error("报名单不存在");
-        }
-        // 归属校验:只能给自己的报名单出码
-        if (OwnershipUtils.notOwner(reg.getMemberId(), memberId)) {
-            return error("无权操作该报名单");
-        }
-        // 只给"已支付/报名成功"(registrationStatus==2)的报名单出核销码;待支付/已取消/已退款一律拒
-        Integer regStatus = reg.getRegistrationStatus();
-        if (regStatus == null || regStatus.intValue() != 2
-                || !Integer.valueOf(2).equals(reg.getPaymentStatus())) {
-            return error("订单未完成支付或已结束,无法生成核销码");
-        }
-        // 消费完了的不再出码。
-        //
-        // ⚠️ [P0-14] **不能裸判 verification_status==1**:③ 首次核销就置位(那是退款闸
-        // RefundPolicy.verifiedVerdict 拦得住「核销一个就不能退」的前提),它对 ③ 只表示
-        // 「被核销过至少一次」。裸判会让玩家核销完第 1 章就**再也拿不到码**去核销第 2~5 章
-        // ⇒ ③ 的多章核销链路当场断掉,且零告警(玩家只看到「该票已核销」,商家只看到没人来)。
-        // ⇒ 判据收进 isTicketFullyConsumed(与 AccountDeregistration 的活跃单判定同一真源)。
-        //    非 ③ 的票没有 entitlement ⇒ 该方法退化成 verification_status==1 ⇒ 逐字走原逻辑,零影响。
-        boolean multiTopicSeat = (Long.valueOf(1L).equals(reg.getOwnerType()) || Long.valueOf(2L).equals(reg.getOwnerType()))
-                && reg.getOrderNum() != null && reg.getOrderNum() > 1;
-        if (multiTopicSeat && seatNo == null) {
-            Map<String, Object> choice = new HashMap<>();
-            choice.put("requiresSeatSelection", true); choice.put("registrationId", registrationId);
-            choice.put("seatCount", reg.getOrderNum());
-            return AjaxResult.success("请选择本次出示的席位，一次仅核销一席", choice);
-        }
-        com.chengyinhub.business.domain.RegistrationSeat selectedSeat = multiTopicSeat
-                ? registrationSeatService.prepareOwnedSeat(registrationId, memberId, seatNo) : null;
-        if (!multiTopicSeat && perkLedgerService.isTicketFullyConsumed(reg.getVerificationStatus(), reg.getId())) {
-            return error("该票已核销");
-        }
-
-        Long ownerType = reg.getOwnerType();
-        if (Long.valueOf(2L).equals(ownerType)) {
-            CmsActivity activity = activityService.selectCmsActivityById(reg.getOwnerId());
-            if (activity == null || Integer.valueOf(2).equals(activity.getDelFlag())) {
-                return error("活动不存在");
-            }
-            if (activity.getCancelTime() != null) {
-                return error("活动已取消，无法生成核销码");
-            }
-            String rejection = ExploreTicketUsePolicy.rejection(reg.getPurchaseKind(), activity.getEndDate(), new Date());
-            if (rejection != null) return error(rejection);
-        } else if (Integer.valueOf(3).equals(reg.getPurchaseKind())) {
-            return error("探索票所属活动不可用");
-        }
-        String type = selectedSeat == null
-                ? ((ownerType != null && ownerType.longValue() == 2L) ? "activity" : "topic")
-                : com.chengyinhub.business.service.RegistrationSeatService.codeType(ownerType, selectedSeat.getSeatNo());
-        long now = System.currentTimeMillis();
-        long nonce = ThreadLocalRandom.current().nextLong();
-        String code = VerifyDynCodeUtil.issue(reg.getId(), type, now, DYN_TTL_MS, nonce, dynSecret);
-
-        // 短期动态码直接渲染PNG，与团码同源，不依赖对象存储上传。
-        String qrcodeUrl = null;
-        try {
-            qrcodeUrl = qrcodeService.generateInlineQrcode(code, 300, 300);
-        } catch (Exception ignore) {
-            logger.error("签发核销码二维码生成失败", ignore);
-        }
-
-        Map<String, Object> data = new HashMap<>();
-        data.put("code", code);
-        data.put("qrcodeUrl", qrcodeUrl);
-        data.put("ttlMs", DYN_TTL_MS);
-        data.put("expiresAt", now + DYN_TTL_MS);
-        data.put("type", type);
-        if (selectedSeat != null) {
-            data.put("registrationId", registrationId); data.put("seatId", selectedSeat.getId());
-            data.put("seatNo", selectedSeat.getSeatNo()); data.put("seatStatus", selectedSeat.getStatus());
-            data.put("verifiedAt", selectedSeat.getVerifiedAt());
-        }
-        return AjaxResult.success(data);
+        return registrationTicketApplication.issueDynCode(appUid(), registrationId, seatNo);
     }
 
     /** Java compatibility only; a multi-seat order still requires an explicit signed seat. */
@@ -183,9 +79,7 @@ public class ApiVerifyController extends BaseController {
     @Operation(summary = "回读原席位核销事实，不再次核销")
     @PostMapping("/seat/receipt")
     public AjaxResult seatReceipt(Long registrationId, Integer seatNo, Long activityId) {
-        var receipt = registrationSeatService.seatReceipt(registrationId, seatNo, activityId, appUid());
-        return receipt == null ? new AjaxResult(520, "原席位核销结果待确认，请勿改选其他席位重发")
-                : AjaxResult.success("该席位已核销，请勿重复提供权益", receipt);
+        return registrationTicketApplication.seatReceipt(appUid(), registrationId, seatNo, activityId);
     }
 
     @Operation(summary = "签发我的据点核销码(玩家出码,商家扫码领券)")

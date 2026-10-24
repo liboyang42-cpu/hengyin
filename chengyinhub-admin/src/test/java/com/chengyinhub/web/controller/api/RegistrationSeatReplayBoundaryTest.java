@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.web.service.verify.RegistrationTicketApplication;
+
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.mapper.*;
 import com.chengyinhub.business.service.*;
@@ -76,7 +78,9 @@ class RegistrationSeatReplayBoundaryTest {
         for (Object[] field : new Object[][]{{"registrationSeatService", service}, {"registrationService", orders}, {"cmsActivityService", activityService},
                 {"activityService", activityService}, {"merchantAccessService", merchants}, {"pointsAwardService", points}, {"growthService", growth}, {"dynSecret", SECRET}})
             ReflectionTestUtils.setField(scanner, (String) field[0], field[1]);
-        ReflectionTestUtils.setField(reader, "registrationSeatService", service);
+        ReflectionTestUtils.setField(reader, "registrationTicketApplication", new RegistrationTicketApplication(
+                orders, service, activityService, mock(IPerkLedgerService.class),
+                mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class), SECRET));
     }
     private String code(boolean expired, int seat) {
         return VerifyDynCodeUtil.issue(31L, "activity_seat_" + seat,

@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.web.service.verify.RegistrationTicketApplication;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -68,8 +70,6 @@ class ApiVerifyControllerTest {
                 org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt()))
                 .thenReturn("https://oss/qr.png");
         controller = new TestableApiVerifyController(ME);
-        ReflectionTestUtils.setField(controller, "registrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "activityService", activityService);
         ReflectionTestUtils.setField(controller, "roamMapper", roamMapper);
         ReflectionTestUtils.setField(controller, "merchantAccessService", merchantAccessService);
         ReflectionTestUtils.setField(controller, "couponHistoryService", couponHistoryService);
@@ -86,7 +86,9 @@ class ApiVerifyControllerTest {
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.IPerkLedgerService.class);
         org.mockito.Mockito.when(perkSvc.isTicketFullyConsumed(org.mockito.ArgumentMatchers.eq(1), org.mockito.ArgumentMatchers.anyLong()))
                 .thenReturn(true);
-        ReflectionTestUtils.setField(controller, "perkLedgerService", perkSvc);
+        ReflectionTestUtils.setField(controller, "registrationTicketApplication", new RegistrationTicketApplication(
+                registrationService, mock(com.chengyinhub.business.service.RegistrationSeatService.class),
+                activityService, perkSvc, qrcodeService, SECRET));
         ReflectionTestUtils.setField(controller, "qrcodeService", qrcodeService);
         ReflectionTestUtils.setField(controller, "dynSecret", SECRET);
     }
@@ -128,7 +130,9 @@ class ApiVerifyControllerTest {
     @Test
     void rejects_not_logged_in() {
         TestableApiVerifyController anon = new TestableApiVerifyController(0L);
-        ReflectionTestUtils.setField(anon, "registrationService", registrationService);
+        ReflectionTestUtils.setField(anon, "registrationTicketApplication", new RegistrationTicketApplication(
+                registrationService, mock(com.chengyinhub.business.service.RegistrationSeatService.class), activityService,
+                mock(com.chengyinhub.business.service.IPerkLedgerService.class), qrcodeService, SECRET));
         ReflectionTestUtils.setField(anon, "dynSecret", SECRET);
         AjaxResult r = anon.issueDynCode(1L);
         assertEquals(500, r.get(AjaxResult.CODE_TAG));

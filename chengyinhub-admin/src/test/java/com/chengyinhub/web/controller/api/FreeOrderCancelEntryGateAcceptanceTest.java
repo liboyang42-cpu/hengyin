@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.web.service.verify.RegistrationTicketApplication;
+
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.service.ICmsActivityService;
 import com.chengyinhub.business.service.ICmsRegistrationService;
@@ -54,12 +56,9 @@ class FreeOrderCancelEntryGateAcceptanceTest {
         ICmsActivityService activitySvc = mock(ICmsActivityService.class);
         ApiVerifyController controller = spy(new ApiVerifyController());
         doReturn(MEMBER).when(controller).getAppUserId();
-        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "registrationService", regSvc);
-        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "perkLedgerService", perkSvc);
-        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "activityService", activitySvc);
-        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "dynSecret", "test-secret");
-        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "qrcodeService",
-                mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "registrationTicketApplication",
+                new RegistrationTicketApplication(regSvc, mock(com.chengyinhub.business.service.RegistrationSeatService.class),
+                        activitySvc, perkSvc, mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class), "test-secret"));
         when(regSvc.selectCmsRegistrationById(REG)).thenReturn(cancelledFreeOrder());
 
         AjaxResult res = controller.issueDynCode(REG);
