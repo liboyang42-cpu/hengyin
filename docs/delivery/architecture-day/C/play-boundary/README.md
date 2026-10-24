@@ -33,3 +33,9 @@ Controller 9→0个@Transactional，六个DeadlockRetry保持原HTTP位置。Rat
 实际仅执行Python源码静态核对：HTTP事务移除/六重试、命令body和原事务参数无改、两兼容owner、B1四正文、旧合同case保留+2、词法/独占范围，及diff检查。Java/DB/CI均未运行；本批无新增CI/回归批次，由root同源联合执行既有suite和启动验证。
 
 第17节采用记录：本唯一应用事务owner片对应IR01/IR06/IR-T07；代理测试另捕获每次应用入参，逐次断言原actor/activity/node/media/actionId/expected不漂移，短兼容入口亦按原参数断言。该增量仅增强既有2测试，不新增suite/CI；尚未运行Java。IR-T01/05旧代次小程序cleanup不在本事务增量改动范围，不以本片源码/测试冒充其验收；后端原回执先于新版本检查的正文未动。
+
+## action-context 可写入场事务（5fa8 后独立修复）
+
+已沿本工作树和root986的实际A源码确认：sharedRouteSnapshot 的 REQUIRED/DEFAULT/rollbackFor=Exception 参与调用方事务；refreshZeroHpRead在RUNNING且零HP规则适用时锁session，syncChallenge改变状态后saveRouteOwner→updateStoryStateCas、bumpSession→updateSessionCas实际UPDATE。旧外层readOnly=true不会被内层可写声明覆盖，是存量入场错误。本修复仅把basicActionContext声明改为@Transactional(rollbackFor=Exception.class)，沿A默认隔离与REQUIRED，不新增重试/REQUIRES_NEW、不移除refresh、不动scope/读取先后/回执规则。basicActionReceipt原readOnly=true逐字保留，A/E和root IT未改。
+
+既有PlayCommandIntentTest加1场景：真实Controller→应用Spring事务代理→共享边界替身（使用实际A方法的事务属性），断言共享刷新边界可写且加入原事务、原actor/scope投影、无个人局fallback/claim；随后原receipt入口仍readOnly并保持UNKNOWN。mock JDBC仅作为事务属性单测，不冒充零HP/MySQL CAS验证；Java未运行。该类旧private-helper夹具同步补显式actor（迁移后应用参数），原6case/业务断言未删改。实际执行仅源码检查及diff检查，待root同批统一编译/单元/真库。

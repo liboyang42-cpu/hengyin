@@ -80,9 +80,9 @@ public class PlayBasicIntentApplication {
         return scope;
     }
 
-    /** Compatibility GET entry, not a pure query: sharedRouteSnapshot may refresh zero-HP state.
-     * Keep its original authorization, application read-only annotation and call position in this command owner. */
-    @Transactional(readOnly = true)
+    /** Compatibility GET entry, not a pure query: sharedRouteSnapshot can persist zero-HP transitions.
+     * Its REQUIRED refresh participates here; match its writable/default-isolation rollback contract. */
+    @Transactional(rollbackFor = Exception.class)
     public AjaxResult basicActionContext(Long actorMemberId, String activityId, String topicId, String nodeId) {
         Long memberId = actorMemberId;
         BasicIntentScope scope = basicIntentScope(memberId, activityId, topicId, nodeId);

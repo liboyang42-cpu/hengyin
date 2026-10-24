@@ -6,7 +6,13 @@ import com.chengyinhub.business.service.*;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionInterceptor;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import com.chengyinhub.web.service.play.PlayBasicIntentApplication;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -59,8 +65,72 @@ class PlayCommandIntentTest {
     }
 
     private AjaxResult command(String id, Integer expected, String answer, Supplier<AjaxResult> execute) {
-        return com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "executeBasicIntent", "ANSWER", "20", null, "11",
+        return com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "executeBasicIntent", controller.getAppUserId(), "ANSWER", "20", null, "11",
                 id, expected, null, 99L, null, null, Collections.singletonList(answer), execute);
+    }
+
+    /** Real HTTP-method/application proxies with mocked JDBC/shared logic only, not a MySQL refresh proof. */
+    @Test void actionContextAllowsSharedRefreshButActionReceiptKeepsItsReadOnlyTransaction() throws Exception {
+        var sharedMethod = com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl.class
+                .getMethod("sharedRouteSnapshot", Long.class, Long.class, Long.class, Long.class);
+        var applicationMethod = PlayBasicIntentApplication.class
+                .getMethod("basicActionContext", Long.class, String.class, String.class, String.class);
+        Transactional sharedTx = sharedMethod.getAnnotation(Transactional.class);
+        Transactional applicationTx = applicationMethod.getAnnotation(Transactional.class);
+        assertNotNull(sharedTx); assertNotNull(applicationTx);
+        assertFalse(applicationTx.readOnly());
+        assertEquals(sharedTx.propagation(), applicationTx.propagation());
+        assertEquals(sharedTx.isolation(), applicationTx.isolation());
+        assertArrayEquals(sharedTx.rollbackFor(), applicationTx.rollbackFor());
+        assertTrue(PlayBasicIntentApplication.class.getMethod("basicActionReceipt", Long.class,
+                String.class, String.class, String.class, String.class).getAnnotation(Transactional.class).readOnly());
+
+        java.sql.Connection connection = mock(java.sql.Connection.class);
+        when(connection.getAutoCommit()).thenReturn(true);
+        javax.sql.DataSource dataSource = mock(javax.sql.DataSource.class);
+        when(dataSource.getConnection()).thenReturn(connection);
+        var transactions = new DataSourceTransactionManager(dataSource);
+        IGameSessionRuntimeService shared = mock(IGameSessionRuntimeService.class);
+        when(shared.sharedRouteSnapshot(7L, 10L, 20L, 11L)).thenAnswer(call -> {
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+            assertFalse(TransactionSynchronizationManager.isCurrentTransactionReadOnly(),
+                    "the real shared refresh joins this transaction and may UPDATE/CAS zero-HP state");
+            assertNull(TransactionSynchronizationManager.getCurrentTransactionIsolationLevel(), "retain A's DEFAULT isolation");
+            return com.chengyinhub.common.utils.JsonUtils.getObjectMapper().createObjectNode()
+                    .put("runtimeInstance", "shared:77:4").put("authorityEpoch", 4);
+        });
+        // Boundary double uses the actual A entry's transaction attributes: REQUIRED must join,
+        // rather than opening a replacement transaction to hide the caller's read-only mistake.
+        var sharedAttribute = new AnnotationTransactionAttributeSource().getTransactionAttribute(sharedMethod,
+                com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl.class);
+        assertNotNull(sharedAttribute);
+        ProxyFactory sharedProxy = new ProxyFactory(shared); sharedProxy.setInterfaces(IGameSessionRuntimeService.class);
+        sharedProxy.addAdvice(new TransactionInterceptor(transactions, (method, type) -> sharedAttribute));
+        PlayNodeAccessTestFixtures.setField(controller, "gameSessionRuntimeService", sharedProxy.getProxy());
+        GameSession game = new GameSession(); game.setId(77L); game.setRevision(3);
+        when(receipts.selectSessionByActivity(20L)).thenReturn(game);
+        doAnswer(call -> { assertFalse(TransactionSynchronizationManager.isActualTransactionActive()); return 7L; })
+                .when(controller).getAppUserId();
+        PlayNodeAccessTestFixtures.installTransactions(controller, transactions);
+        AjaxResult context = controller.basicActionContext("20", null, "11");
+        assertEquals(200, context.get("code"));
+        assertEquals(Map.of("routeSessionId", 77L, "expectedRouteVersion", 3,
+                "runtimeInstance", "shared:77:4", "authorityEpoch", 4), context.get("data"));
+        doAnswer(call -> {
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+            assertTrue(TransactionSynchronizationManager.isCurrentTransactionReadOnly());
+            return null;
+        }).when(receipts).selectReceipt(eq(20L), eq(7L), anyString());
+        assertEquals(520, controller.basicActionReceipt("20", null, "11", "original-unknown").get("code"));
+        verify(shared, times(1)).sharedRouteSnapshot(7L, 10L, 20L, 11L);
+        verify(dataSource, times(2)).getConnection(); // one context transaction + one receipt transaction; A joins
+        verify(connection, times(2)).commit();
+        verify(connection, never()).rollback();
+        verifyNoInteractions(routes);
+        verify(receipts, never()).insertReceiptClaim(any());
+        verify(receipts, never()).completeReceipt(any());
+        assertTrue(saved.isEmpty());
+        assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
     }
 
     @Test void replayPrecedesCurrentVersionAndChangedInputOrExpectedConflicts() {
