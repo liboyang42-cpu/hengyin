@@ -41,6 +41,22 @@ function assertGameSheetContract(js, wxml) {
   assert.match(wxml, /bindtap="taskGoPhoto"/)
 }
 
+function backendPlaySource() {
+  const base = '../chengyinhub-admin/src/main/java/com/chengyinhub/web/'
+  const controller = read(base + 'controller/api/ApiPlayProgressController.java')
+  assert.match(controller, /return playEntryApplication\.nodes\(currentMemberId\(\)/)
+  assert.match(controller, /return playBasicCommandApplication\.answer\(currentMemberId\(\)/)
+  const entry = read(base + 'service/play/PlayEntryApplication.java')
+  assert.match(entry, /playNodeQueryApplication\.projectNodeBeforeRuntime\(/)
+  const command = read(base + 'service/play/PlayBasicCommandApplication.java')
+  assert.match(command, /playNodeCompletionApplication\.advanceProgress\(/)
+  return [
+    read(base + 'service/play/PlayNodeQueryApplication.java'),
+    command,
+    read(base + 'service/play/PlayNodeCompletionApplication.java'),
+  ].join('\n')
+}
+
 function backendHasGameExpression(ctrl) {
   const match = ctrl.match(/boolean hasGame = ([\s\S]*?);\n\s*if \(!hasGame\)/)
   assert.ok(match, '找不到后端 hasGame 判定')
@@ -86,7 +102,7 @@ test('没配游戏的店:任务卡必须读归一化后的拍摄要求与规则,
 })
 
 test('后端契约:hasGame 覆盖答题、App 传感器与滤镜拍照,未进店不下发题面;答题带进店硬闸与条件更新首完', () => {
-  const ctrl = read('../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java')
+  const ctrl = backendPlaySource()
   assertBackendHasGameKinds(ctrl)
   // 偏好题组是本分支新增的一类 hasGame，master 的 helper 还没覆盖，单独钉住
   assert.match(backendHasGameExpression(ctrl), /vmVal == ValidationMethod\.PREFERENCE_GROUP/)
@@ -119,7 +135,7 @@ test('后端契约:hasGame 覆盖答题、App 传感器与滤镜拍照,未进店
 })
 
 test('mutation 负控:hasGame 漏掉滤镜拍照时契约确实变红', () => {
-  const ctrl = read('../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java')
+  const ctrl = backendPlaySource()
   const expression = backendHasGameExpression(ctrl)
   const mutatedExpression = expression.replace(PLAYABLE_PHOTO_FILTER_BRANCH, '')
   assert.notEqual(mutatedExpression, expression, '负控必须真实删除滤镜拍照分支')

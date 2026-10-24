@@ -329,57 +329,69 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.admin_original = self.boot.with_name(self.boot.name + ".original")
         with zipfile.ZipFile(self.admin_original) as z:
             self.admin_entries = {name: z.read(name) for name in z.namelist()}
+        self.extra_entries = {}
+        for module in MODULES:
+            if module not in ("chengyinhub-admin", "chengyinhub-system"):
+                with zipfile.ZipFile(self.root / module / "target" / (module + "-1.jar")) as z:
+                    self.extra_entries[module] = {name: z.read(name) for name in z.namelist()}
         dependency_types = {n for o in self.dependencies["owners"].values() for n in o["members"] + o["forbidden_backrefs"]}
-        admin_types = {n for o in self.dependencies["owners"].values() if o["module"] == "chengyinhub-admin" for n in o["members"]}
-        # The former Controller is Admin too. Do not fake same-module ownership
-        # for the new Admin application closure or its forbidden backreference.
-        admin_types.add("com.chengyinhub.web.controller.api.ApiPlayProgressController")
-        for name in [*self.ports, *(b["consumer"] for b in self.ports.values()), self.foreign, self.nested, self.theme_foreign, self.theme_consumer + "$Nested", *sorted(dependency_types - admin_types)]:
+        for name in [*self.ports, *(b["consumer"] for b in self.ports.values()), self.foreign, self.nested, self.theme_foreign, self.theme_consumer + "$Nested"]:
             self.system_entries[name.replace(".", "/") + ".class"] = ("NOT_COMPILED_FIXTURE_" + name).encode()
-        for name in sorted(admin_types):
-            self.admin_entries[name.replace(".", "/") + ".class"] = ("NOT_COMPILED_FIXTURE_" + name).encode()
+        for name in sorted(dependency_types):
+            module = self.fixture_module(name)
+            entries = self.admin_entries if module == "chengyinhub-admin" else (
+                    self.system_entries if module == "chengyinhub-system" else self.extra_entries[module])
+            entries[name.replace(".", "/") + ".class"] = ("NOT_COMPILED_FIXTURE_" + name).encode()
         self.write_admin()
         self.write_system()
+        for module, entries in self.extra_entries.items():
+            self.write_module(module, entries)
         for target, binding in self.ports.items():
             self.stdout += "   " + binding["consumer"] + " -> " + target + " chengyinhub-system.jar\n"
         self.stdout += "".join("   " + n + " -> java.lang.Object java.base\n" for n in sorted(dependency_types))
         report = self.collect()
         self.assertTrue(report["static_graph_complete"], report)
 
-    def write_admin(self):
-        """Keep actual fixture original/Boot/classes and target inventory equal."""
-        classes = self.root / "chengyinhub-admin/target/classes"
+    def fixture_module(self, classname):
+        for owner in self.dependencies["owners"].values():
+            if any(classname == n or classname.startswith(n + "$") for n in owner["members"]):
+                return owner["module"]
+        # Known technical modules of test-only forbidden targets, not business
+        # ownership inference or a production parser.
+        for package, module in (("web", "admin"), ("framework", "framework"),
+                                ("quartz", "quartz"), ("common", "common")):
+            if classname.startswith("com.chengyinhub." + package + "."):
+                return "chengyinhub-" + module
+        return "chengyinhub-system"
+
+    def write_module(self, module, module_entries):
+        """Keep fixture original, exact Boot packaging and target inventory equal."""
+        classes = self.root / module / "target/classes"
         for path in classes.rglob("*.class"):
             path.unlink()  # Only this test's TemporaryDirectory fixtures.
-        for name, value in self.admin_entries.items():
+        for name, value in module_entries.items():
             path = classes / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(value)
-        self.admin_original.write_bytes(jar(self.admin_entries))
+        original = self.admin_original if module == "chengyinhub-admin" else self.root / module / "target" / (module + "-1.jar")
+        original.write_bytes(jar(module_entries))
         with zipfile.ZipFile(self.boot) as z:
-            entries = {name: z.read(name) for name in z.namelist() if not name.startswith("BOOT-INF/classes/")}
-        entries.update({"BOOT-INF/classes/" + name: value for name, value in self.admin_entries.items()})
+            entries = {name: z.read(name) for name in z.namelist()
+                       if module != "chengyinhub-admin" or not name.startswith("BOOT-INF/classes/")}
+        if module == "chengyinhub-admin":
+            entries.update({"BOOT-INF/classes/" + name: value for name, value in module_entries.items()})
+        else:
+            entries["BOOT-INF/lib/" + module + "-1.jar"] = original.read_bytes()
         self.boot.write_bytes(jar(entries))
         value = json.loads(self.identity.read_text())
         value["jarSha256"] = producer.shared.digest(self.boot.read_bytes())
         self.identity.write_text(json.dumps(value))
 
+    def write_admin(self):
+        self.write_module("chengyinhub-admin", self.admin_entries)
+
     def write_system(self):
-        classes = self.root / "chengyinhub-system/target/classes"
-        for path in classes.rglob("*.class"):
-            path.unlink()  # Only this test's TemporaryDirectory fixtures.
-        for name, value in self.system_entries.items():
-            path = classes / name
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(value)
-        self.system_jar.write_bytes(jar(self.system_entries))
-        with zipfile.ZipFile(self.boot) as z:
-            entries = {name: z.read(name) for name in z.namelist()}
-        entries["BOOT-INF/lib/chengyinhub-system-1.jar"] = self.system_jar.read_bytes()
-        self.boot.write_bytes(jar(entries))
-        value = json.loads(self.identity.read_text())
-        value["jarSha256"] = producer.shared.digest(self.boot.read_bytes())
-        self.identity.write_text(json.dumps(value))
+        self.write_module("chengyinhub-system", self.system_entries)
 
     def check(self, ports=None):
         return producer.check_private_ports(self.root, self.boot, self.identity, self.output,
@@ -680,10 +692,7 @@ class PrivatePortsReadbackTest(unittest.TestCase):
 
     def reference(self, source, target):
         text = (self.output / "jdeps.stdout.txt").read_text()
-        module = next((o["module"] for o in self.dependencies["owners"].values()
-                       if any(target == n or target.startswith(n + "$") for n in o["members"])), None)
-        if module is None:
-            module = "chengyinhub-admin" if target.startswith("com.chengyinhub.web.") else "chengyinhub-system"
+        module = self.fixture_module(target)
         self.replace_evidence("jdeps.stdout.txt", (text + "   " + source + " -> " + target + " " + module + ".jar\n").encode())
 
     def owner_member(self, id_):
@@ -916,6 +925,79 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.assertEqual(["D_CONTENT_GRAPH", "D_CONTENT_RULES"], cycle["owners"])
         self.assertEqual(2, len(cycle["witnesses"]))
         self.assertTrue(all(w["source_sha256"] and w["target_sha256"] for w in cycle["witnesses"]))
+
+    def test_followup_payment_dto_fence_evidence_and_mdc_directions_are_scoped(self):
+        for a, b in [("B_PAYMENT_FACADE", "B_PAYMENT_SDK"), ("B_PAYMENT_FACADE", "B_PAYMENT_ROUTER"),
+                     ("B_PAYMENT_SDK", "B_PAYMENT_INTENTS"), ("B_PAYMENT_INTENTS", "B_PAYMENT_ORDER_LOCK"),
+                     ("B_PAYMENT_OUTBOUND_PORT", "A_TRANSFER_INTENT_DTO"),
+                     ("D_CONTENT_RULES", "D_CONTENT_SIZE_POLICY"), ("G_CASH_CLAIM", "G_SETTLEMENT_EVIDENCE"),
+                     ("F_REQUEST_CONTEXT", "F_LOG_CONTEXT"), ("F_ASYNC_CONTEXT", "F_LOG_CONTEXT"),
+                     ("F_QUARTZ_CONTEXT", "F_LOG_CONTEXT")]:
+            self.reference(self.owner_member(a), self.owner_member(b))
+        calls = len(self.calls)
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertEqual(calls, len(self.calls), "no second jdeps invocation")
+        index = json.loads((self.output / "class-index.json").read_text())
+        for id_, module in [("F_REQUEST_CONTEXT", "chengyinhub-framework"),
+                            ("F_LOG_CONTEXT", "chengyinhub-common"), ("F_QUARTZ_CONTEXT", "chengyinhub-quartz")]:
+            name = self.owner_member(id_)
+            self.assertEqual(module, index[name]["owner"])
+            self.assertEqual(producer.shared.digest(self.extra_entries[module][name.replace(".", "/") + ".class"]), index[name]["sha256"])
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+        self.assertEqual(3, len(report["references"]))
+
+    def test_followup_verified_reverse_edges_block_without_approving_json(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for a, target in [("B_PAYMENT_SDK", self.owner_member("B_PAYMENT_ROUTER")),
+                          ("B_PAYMENT_INTENTS", self.owner_member("B_PAYMENT_SDK")),
+                          ("A_TRANSFER_INTENT_DTO", "com.chengyinhub.business.service.impl.CashWithdrawServiceImpl"),
+                          ("D_CONTENT_SIZE_POLICY", "com.chengyinhub.business.service.support.TopicContentWriteGuard"),
+                          ("G_CASH_CLAIM", "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"),
+                          ("G_EDITION_FINALIZATION", "com.chengyinhub.business.service.ICmsTopicService"),
+                          ("F_LOG_CONTEXT", self.owner_member("F_REQUEST_CONTEXT"))]:
+            with self.subTest(owner=a):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(self.owner_member(a), target)
+                self.change_report("technical_dependencies", {"verdict": "PASS", "owner_edges": []})
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                bad = next(f for f in report["findings"] if f["rule"] == "OWNER_GOD_BACKREFERENCE")
+                self.assertEqual((a, target), (bad["source_technical_owner"], bad["target_class"]))
+                self.assertEqual(64, len(bad["source_sha256"]))
+
+    def test_followup_sdk_intent_cycle_has_exact_class_witnesses(self):
+        sdk, intents = self.owner_member("B_PAYMENT_SDK"), self.owner_member("B_PAYMENT_INTENTS")
+        self.reference(sdk, intents)
+        self.reference(intents, sdk)
+        report = self.check_directions()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        cycle = next(f for f in report["findings"] if f["rule"] == "NEW_OWNER_CYCLE")
+        self.assertEqual(["B_PAYMENT_INTENTS", "B_PAYMENT_SDK"], cycle["owners"])
+        self.assertEqual(2, len(cycle["witnesses"]))
+
+    def test_followup_missing_common_input_or_wrong_module_remains_unknown(self):
+        policy = copy.deepcopy(self.dependencies)
+        policy["owners"]["F_REQUEST_CONTEXT"]["module"] = "chengyinhub-system"
+        self.assert_unknown(self.check_directions(policy))
+        name = self.owner_member("F_LOG_CONTEXT")
+        entries = self.extra_entries["chengyinhub-common"].copy()
+        del entries[name.replace(".", "/") + ".class"]
+        self.write_module("chengyinhub-common", entries)
+        self.output = self.output.with_name("followup-missing-common")
+        self.collect()
+        report = self.check_directions()
+        self.assert_unknown(report)
+        self.assertIn({"reason": "OWNER_TYPE_INPUT_UNKNOWN", "owner": "F_LOG_CONTEXT", "type": name},
+                      report["technical_dependencies"]["review_items"])
+
+    def test_followup_router_public_domain_port_is_not_claimed_as_runtime_graph_or_lock_proof(self):
+        self.reference(self.owner_member("B_PAYMENT_ROUTER"), "com.chengyinhub.business.service.IClubMembershipService")
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+        self.assertTrue(report["technical_dependencies"]["unscoped_ownership"].startswith("UNKNOWN"))
+        self.assertIn("method/Spring/reflection/XML dependency graph", report["technical_dependencies"]["not_proven"])
 
     def test_missing_owner_class_or_module_binding_remains_unknown(self):
         policy = copy.deepcopy(self.dependencies)

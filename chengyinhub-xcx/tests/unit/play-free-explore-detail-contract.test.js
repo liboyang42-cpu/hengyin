@@ -50,7 +50,7 @@ test('「小瘾说」钩子取 hookText,后端必须真下发这个字段', () =
   // 之前 hero 写的是 hookText || description,而后端根本没 put 过 hookText ⇒ 恒回落,
   // 章节正文被重复念一遍。这条断言把「后端有 put」钉住。
   const ctrl = fs.readFileSync(
-    path.join(REPO, 'chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java'), 'utf8')
+    path.join(REPO, 'chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayNodeQueryApplication.java'), 'utf8')
   assert.match(ctrl, /m\.put\("hookText", n\.getHookText\(\)\)/)
 })
 

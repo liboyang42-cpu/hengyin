@@ -55,7 +55,19 @@ test('★负控:检查器能判红(不是恒绿),也不会被注释骗到', () =
 
 test('替代物存在且回调形状与 showActionSheet 对齐(index === tapIndex)', () => {
   const js = fs.readFileSync(path.join(ROOT, 'components/cy/option-sheet/index.js'), 'utf8')
-  assert.match(js, /triggerEvent\('select', \{ index/)
+  let definition
+  require('node:vm').runInNewContext(js, { Component(value) { definition = value } })
+  const events = []
+  const component = {
+    data: { rows: [{ label: '查看', disabled: false }], immediate: true },
+    triggerEvent(name, detail) { events.push({ name, detail }) },
+  }
+  Object.assign(component, definition.methods)
+  component.onRow({ currentTarget: { dataset: { index: 0 } } })
+  assert.equal(events.length, 1)
+  assert.equal(events[0].name, 'select')
+  assert.equal(events[0].detail.index, 0)
+  assert.equal(events[0].detail.label, '查看')
   assert.match(js, /triggerEvent\('cancel'\)/, '取消要有独立通道:原 fail 分支有 3 处靠它回收在途状态')
   assert.match(js, /immediate/, '动作菜单(IM 的 +/更多)不该被套上「选中再确认」两步')
 })

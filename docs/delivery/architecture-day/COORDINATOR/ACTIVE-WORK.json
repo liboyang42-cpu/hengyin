@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T07:37:51.902816+00:00",
+  "updated_utc": "2026-10-24T07:42:17.326863+00:00",
   "source_parent": "678a23367ff4c8abd2806f2b6ccd983aec8342b3",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -127,7 +127,10 @@
     "Player draft uses only dedicated draft quota",
     "Fixed fulfillment fee once per actually verified seat; unverified seats do not accrue fees"
   ],
-  "pending_business_decisions": [],
+  "pending_business_decisions": [
+    "Partial refund rounding: cumulative target minus original reversed amount, full refund clear original allocation remaining; user question pending",
+    "Original head-to-order allocation: preserve original total, largest fractional remainder and stable registration ID versus oldest-order remainder; user question pending"
+  ],
   "actual_minimal_checks": {
     "m1_workflow_controls": "3 PASS",
     "merged_ui_static_gate": "PASS; not device or business evidence",
@@ -139,7 +142,8 @@
     "gate_metadata_targeted_after_fix": "21 non-network gate contract/source-count tests PASS; original2 loopback environment errors not rerun locally, final hosted CI still required",
     "A_strict_precheck": "53 declared_tests; dynamic/nested/gates/conditions empty; real precheck errors=[]; Java/DB NOT_RUN",
     "registry_after_A": "2 targeted registry validation/batch totals selftests PASS; secret-file-gate and diff check PASS",
-    "batch_registry": "15 targeted tests PASS; all96 registered source prechecks PASS"
+    "batch_registry": "15 targeted tests PASS; all96 registered source prechecks PASS",
+    "F_full_python_controls": "164 test_collect_jdeps/test_gate tests PASS in39.693s; protocol/synthetic controls, actual Java/jdeps remain UNKNOWN"
   },
   "unified_regression_pending": [
     "A53 boundary and original-fact Java/DB acceptance; strict source parser/registry metadata PASS",
@@ -198,5 +202,13 @@
     "deposit_fixture": "real extracted SDK gateway spy plus existing intent-store wiring, all8 test bodies retained",
     "compile_import": "NpcProfileService explicit import restored",
     "checks": "36 targeted gate tests PASS, secret-file-gate PASS; new Java/MySQL NOT_RUN"
+  },
+  "latest_followup": {
+    "upstream": "e1083c6c5 public master: only community_open_flags migration and1 declaration merged; no DDL executed; strict ratchet preserved",
+    "F_policy": "55 exact types /44 technical owners /51 directions from de0; all6 trusted files exact5caf, both CI refs repinned;9 targeted Python controls PASS; Java/jdeps NOT_RUN",
+    "mini_contracts": "4 actual-owner/component contracts repaired,55 Node PASS0skip; production UI untouched",
+    "migration_gate": "PASS: dependencies relative origin/master only added;9 new migration scripts all covered by shared ledger, all edges ordered; no DDL executed",
+    "C_delivery": "1fbd8d83340a7b2fab82b6b971f8d0a89ed6dd49 fetched, NOT_INTEGRATED; C continues activity seats/client selection",
+    "F_delivery": "de0a3ffe512a1883474a46afa4f0a1b9d04bba9d applied; F continues real compiled negative controls"
   }
 }
