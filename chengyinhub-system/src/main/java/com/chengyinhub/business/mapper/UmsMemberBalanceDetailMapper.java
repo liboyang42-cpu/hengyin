@@ -101,4 +101,11 @@ public interface UmsMemberBalanceDetailMapper
     BigDecimal selectIncomeByEventTypeAndEventId(@Param("memberId") Long memberId,
                                                   @Param("eventType") Long eventType,
                                                   @Param("eventId") Long eventId);
+
+    /** 商家看板累计收入(change_type=1 全量 SUM)。 */
+    BigDecimal selectDashboardIncomeTotal(@Param("memberId") Long memberId);
+
+    /** 商家看板 since 起按自然日分桶的收入:每行 day(yyyy-MM-dd) / amount。 */
+    List<Map<String, Object>> selectDashboardIncomeDaily(@Param("memberId") Long memberId,
+                                                         @Param("since") java.util.Date since);
 }

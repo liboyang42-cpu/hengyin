@@ -19,7 +19,7 @@ import java.util.Map;
 public final class MerchantMetricDictionary {
 
     /** 字典版本:口径变化时 +1,端上据此判断缓存的释义是否过期 */
-    public static final int VERSION = 1;
+    public static final int VERSION = 2;
 
     private static final List<Map<String, Object>> METRICS;
 
@@ -38,19 +38,19 @@ public final class MerchantMetricDictionary {
                 "近 30 天内,含本商家节点的主题被浏览次数。店铺页/分享暂无埋点,不计入。",
                 "主题浏览记录", 30));
         m.add(metric("insight.checkin.total", "到店", "人次", MerchantPermission.MARKETING_READ,
-                "近 30 天本商家权益事实中有到店打卡时间的条数。",
+                "近 30 天内创建的已支付报名对应权益事实中，有到店打卡时间的条数；不是按到店时间截取。",
                 "商家权益到店/核销事实", 30));
         m.add(metric("insight.checkin.redeemRate", "核销率", "比例", MerchantPermission.MARKETING_READ,
-                "近 30 天 已核销条数 ÷ 权益事实总条数;分母为 0 时为 null(不显示 0%)。两位小数。",
+                "近 30 天内创建报名的权益 cohort 中，已核销条数 ÷ 权益事实总条数;分母为 0 时为 null(不显示 0%)。两位小数。",
                 "商家权益到店/核销事实", 30));
         m.add(metric("insight.checkin.slotBuckets", "到店时段分布", "人次", MerchantPermission.MARKETING_READ,
-                "近 30 天到店打卡按小时归入 早/午/晚/夜 四段计数。",
+                "近 30 天内创建报名对应的到店打卡，按到店小时归入 早/午/晚/夜 四段计数。",
                 "商家权益到店/核销事实", 30));
         m.add(metric("insight.checkin.repeatRate", "复购率", "比例", MerchantPermission.MARKETING_READ,
-                "近 30 天核销过 ≥2 次的玩家数 ÷ 核销过的玩家数;无核销时为 null。两位小数。",
+                "近 30 天内创建报名的权益 cohort 中，核销过 ≥2 次的玩家数 ÷ 核销过的玩家数;无核销时为 null。两位小数。",
                 "商家权益到店/核销事实", 30));
         m.add(metric("insight.checkin.avgWaitMinutes", "平均等待", "分钟", MerchantPermission.MARKETING_READ,
-                "近 30 天同一条事实 核销时间 − 到店时间(仅非负差值)的平均,四舍五入到分钟;无样本为 null。",
+                "近 30 天内创建报名的同一条权益事实，核销时间 − 到店时间(仅非负差值)的平均,四舍五入到分钟;无样本为 null。",
                 "商家权益到店/核销事实", 30));
         m.add(metric("insight.supplyCount", "在架供给", "条", MerchantPermission.MARKETING_READ,
                 "本商家当前在架的供给事实条数(不限窗口)。",

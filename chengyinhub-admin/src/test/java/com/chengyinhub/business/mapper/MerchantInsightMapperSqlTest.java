@@ -105,4 +105,21 @@ class MerchantInsightMapperSqlTest {
                 "在架供给必须排除已过期 offer");
         assertTrue(s.contains("t.del_flag = 0"), "主题必须排除软删行");
     }
+
+    @Test
+    void supplyFactsSelectTopicIdAsAggregationKey() throws Exception {
+        assertTrue(sql(parse(), "selectSupplyFacts").contains("o.topic_id"),
+                "供给事实必须带 topic_id,主题去重按 id 不按名字");
+    }
+
+    @Test
+    void dashboardWindowsUseTheActualSqlAnchors() throws Exception {
+        Configuration cfg = parse();
+        assertTrue(sql(cfg, "countTopicExposure").contains("b.browse_time >= ?"));
+        String visits = sql(cfg, "selectVisitFacts");
+        assertTrue(visits.contains("r.create_time >= ?"), "到店统计按报名 cohort 取窗");
+        assertFalse(visits.contains("p.checkin_time >= ?"), "不得把报名 cohort 标成到店事件时间窗");
+        String supply = sql(cfg, "selectSupplyFacts");
+        assertFalse(supply.contains("create_time") || supply.contains(">= ?"), "在架供给是当前快照");
+    }
 }

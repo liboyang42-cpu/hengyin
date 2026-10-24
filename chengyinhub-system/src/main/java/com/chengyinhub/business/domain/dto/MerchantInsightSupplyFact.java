@@ -7,10 +7,13 @@ package com.chengyinhub.business.domain.dto;
  */
 public class MerchantInsightSupplyFact
 {
+    private Long topicId;
     private String topicName;
     private Integer quotaTotal;
     private Integer quotaUsed;
 
+    public Long getTopicId() { return topicId; }
+    public void setTopicId(Long topicId) { this.topicId = topicId; }
     public String getTopicName() { return topicName; }
     public void setTopicName(String topicName) { this.topicName = topicName; }
     public Integer getQuotaTotal() { return quotaTotal; }
