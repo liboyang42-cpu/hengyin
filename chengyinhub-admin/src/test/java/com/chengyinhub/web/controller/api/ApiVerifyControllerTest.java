@@ -73,7 +73,6 @@ class ApiVerifyControllerTest {
                 org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt()))
                 .thenReturn("https://oss/qr.png");
         controller = new TestableApiVerifyController(ME);
-        ReflectionTestUtils.setField(controller, "roamMapper", roamMapper);
         ReflectionTestUtils.setField(controller, "merchantAccessService", merchantAccessService);
         when(auditMapper.insertBusinessAuditEvent(any())).thenReturn(1);
         when(merchantAccessService.require(ME, MerchantPermission.VERIFY))
@@ -90,10 +89,8 @@ class ApiVerifyControllerTest {
         ReflectionTestUtils.setField(controller, "registrationTicketApplication", new RegistrationTicketApplication(
                 registrationService, mock(com.chengyinhub.business.service.RegistrationSeatService.class),
                 activityService, perkSvc, qrcodeService, SECRET));
-        ReflectionTestUtils.setField(controller, "qrcodeService", qrcodeService);
-        ReflectionTestUtils.setField(controller, "dynSecret", SECRET);
         cityNodeRedemptionApplication = new CityNodeRedemptionApplication(
-                merchantAccessService, roamMapper, couponHistoryService, auditMapper, SECRET);
+                merchantAccessService, roamMapper, couponHistoryService, auditMapper, qrcodeService, SECRET);
         ReflectionTestUtils.setField(controller, "cityNodeRedemptionApplication", cityNodeRedemptionApplication);
     }
 
@@ -137,7 +134,6 @@ class ApiVerifyControllerTest {
         ReflectionTestUtils.setField(anon, "registrationTicketApplication", new RegistrationTicketApplication(
                 registrationService, mock(com.chengyinhub.business.service.RegistrationSeatService.class), activityService,
                 mock(com.chengyinhub.business.service.IPerkLedgerService.class), qrcodeService, SECRET));
-        ReflectionTestUtils.setField(anon, "dynSecret", SECRET);
         AjaxResult r = anon.issueDynCode(1L);
         assertEquals(500, r.get(AjaxResult.CODE_TAG));
         assertEquals("请先登录", r.get(AjaxResult.MSG_TAG));

@@ -401,7 +401,9 @@
     "architecture-day-topic-authoring": {
       "registered_source": "dbbb2350abe95f22fcc7b6fb291fcd0f66d7a004",
       "lineage": "D six-production-file content graph extraction rebased onto reviewed4197",
-      "classes": ["com.chengyinhub.business.service.impl.TopicContentGraphMySqlIT"],
+      "classes": [
+        "com.chengyinhub.business.service.impl.TopicContentGraphMySqlIT"
+      ],
       "note": "32 ordinary@Test with62 named scenarios; exact original mapper/transaction fixture, old/new full receipts compared separately. Source-bound zero-skip XML and independent CLEAN required; not full economic or HTTP acceptance."
     },
     "architecture-day-theme-intent": {
@@ -414,7 +416,9 @@
     },
     "architecture-day-deposit-attempt": {
       "registered_source": "09555e150a1f9875b66c6c7af4490bfe944ca301",
-      "classes": ["com.chengyinhub.business.service.impl.CoopDepositSettlementAttemptMySqlIT"],
+      "classes": [
+        "com.chengyinhub.business.service.impl.CoopDepositSettlementAttemptMySqlIT"
+      ],
       "note": "G961 precise original payment-attempt closure and transaction fence; eight ordinary Test cases, exact hosted scratch admission and zero-skip XML/CLEAN required."
     },
     "architecture-day-payment-inbox": {
@@ -427,27 +431,38 @@
     },
     "architecture-day-verified-payment-facts": {
       "registered_source": "041534c7681e480f80eb8afc911f65bf1ed13eda",
-      "classes": ["com.chengyinhub.business.it.WechatVerifiedPaymentFactMySqlIT"],
+      "classes": [
+        "com.chengyinhub.business.it.WechatVerifiedPaymentFactMySqlIT"
+      ],
       "note": "Four fixed real-MySQL tests on original inbox and new fact/rejection/sidecar tables; exact hosted class-only scratch DDL admission, source-bound XML and CLEAN required. Mutation service is mocked here; original domain mutation plus DONE remains separately verified. No production DDL or real provider call."
     },
     "architecture-day-registration-seats": {
       "registered_source": "f1cfe74d58b766e385e639d40385e208790644a8",
-      "classes": ["com.chengyinhub.business.it.RegistrationSeatMySqlIT"],
+      "classes": [
+        "com.chengyinhub.business.it.RegistrationSeatMySqlIT"
+      ],
       "note": "Seven fixed actual Mapper/transaction/seat cases, including the current full-registration read across refund under RR. Real Service interleaving uses controlled topic/activity/club collaborators; not full HTTP authorization or financial settlement acceptance. Source-bound XML, zero skips and independent CLEAN required."
     },
     "architecture-day-original-refund": {
       "registered_source": "8818837b3717e3340384545d04b81abef4697fc7",
-      "classes": ["com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT"],
-      "note": "Ten fixed isolated real-MySQL cases for original components, binary inbox/hex links, conservation, FK identity, rollback and exact empty-prefix recovery. Terminal CAS/DONE are SQL fixtures, not A Service/SDK acceptance. No production allocation producer, partial-rounding or negative-margin policy approval. Exact source XML and independent CLEAN required."
+      "classes": [
+        "com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT"
+      ],
+      "note": "Eleven fixed isolated real-MySQL cases, preserving original ten plus same-transaction canonical A consumption and G component/refund readback without fabricated payment inbox. Provider facts use actual B storage, terminal CAS/DONE are explicit G fixtures. No live provider or production acceptance."
     },
     "architecture-day-topic-content-budget": {
       "registered_source": "83cb32fd771d4dcba590968f2464a465481c2c57",
-      "classes": ["com.chengyinhub.business.service.impl.TopicContentBudgetMySqlIT", "com.chengyinhub.business.service.impl.AuditTopicCurrentPublicationMySqlIT"],
+      "classes": [
+        "com.chengyinhub.business.service.impl.TopicContentBudgetMySqlIT",
+        "com.chengyinhub.business.service.impl.AuditTopicCurrentPublicationMySqlIT"
+      ],
       "note": "Original fourteen physical budget/current-read/CRUD cases plus one real author-offline versus RR audit-current-state scenario. Original topic Mapper/controller/audit transaction, other audit-task facts/permissions/media collaborators controlled. Exact XML and CLEAN required; full HTTP moderation/IM/shell acceptance remains separate."
     },
     "architecture-day-committed-official-notice": {
       "registered_source": "974f6af8a25f76baa31c39f8f4e48ffcf31f7846",
-      "classes": ["com.chengyinhub.business.service.impl.CommittedOfficialNoticeMySqlIT"],
+      "classes": [
+        "com.chengyinhub.business.service.impl.CommittedOfficialNoticeMySqlIT"
+      ],
       "note": "Thirteen fixed MySQL cases using original IM migrations/mappers/consumer and new typed notice; WX controlled, business CAS is JDBC adapter. No actual complaint financial service/process-kill/provider acceptance. New task remains paused; source XML/zero skips and independent CLEAN required."
     },
     "architecture-day-complaint-committed-notice": {
@@ -464,19 +479,39 @@
       ],
       "note": "Six fixed actual complaint close/rejection MySQL cases, original caller/financial/audit Mapper and transactions. Alarm, WX, debt and cooldown controlled. Audit Mapper write/read failure injection not yet covered; full schema/provider/HTTP acceptance separate. Exact source XML zero skips and independent CLEAN required."
     },
+    "architecture-day-chapter-application-round": {
+      "registered_source": "31ec329768ecc2b23e09466bf46754d12fe569d6",
+      "classes": [
+        "com.chengyinhub.business.service.impl.ChapterApplicationRoundMySqlIT"
+      ],
+      "note": "Ten actual application Mapper/CAS/service/IM storage tests. Invite only, old49 cases retained elsewhere. Parent-lock JDBC adapter and qualification/WX/other notice collaborators controlled; full audit-task interleaving and HTTP remain separate. Legacy NULL stays unknown; source-only migration not executed in persistent DB."
+    },
+    "architecture-day-citynode-original-receipt": {
+      "registered_source": "c7e0ff743f834345098651abe90ef4f55c2c8923",
+      "classes": [
+        "com.chengyinhub.business.service.RegistrationEquityMybatisIntegrationTest"
+      ],
+      "note": "Six fixed existing equity real-MyBatis tests including new city-node actual application receipt/rollback/current RR scenarios. Original scratch-only gate retained, class env supplied explicitly; actor/merchant permission controlled, no live HTTP/device acceptance."
+    },
     "architecture-day-registration-topic-fence": {
-      "registered_source": "e6dc689acd16f8354096fa6017cec85b36171c4e",
-      "classes": ["com.chengyinhub.business.it.RegistrationTopicFenceMySqlIT"],
-      "note": "Twenty-six fixed tests in actual root composite: frozen Ae6 twenty-five plus independent fd350 creation-before-claim case. Original verified mutation/DONE, current replay, outer fences, real G original terminal calls with controlled financial collaborators and closed-topic half-state refusal. Requires B fresh reader; actual G producer/recovery, original allocation and provider acceptance remain separate. Exact XML and CLEAN required."
+      "registered_source": "48d24f8e0fb14ab555003f9e035b981a6807f884",
+      "classes": [
+        "com.chengyinhub.business.it.RegistrationTopicFenceMySqlIT"
+      ],
+      "note": "Thirty-five actual composite ordinary tests: frozen A inline-consumption thirty-four plus retained independent fd350 creation-before-claim case. Canonical local receipt, rollback, replay and exact identity, no fabricated inline inbox DONE. Source tests require zero-skip hosted XML and CLEAN; no provider acceptance."
     },
     "architecture-day-topic-cash-fence": {
       "registered_source": "2457bf1851c0573df7a69270a4532b00b9e8404c",
-      "classes": ["com.chengyinhub.business.it.Wp04TopicCashFenceMySqlIT"],
+      "classes": [
+        "com.chengyinhub.business.it.Wp04TopicCashFenceMySqlIT"
+      ],
       "note": "Five fixed tests: shared topic lock ordering and original adjustment/payout atomicity. Coordinator fixture admission replaces inherited stripped funds env with exact class-only WP04_TOPIC_CASH_DDL_APPROVED; actual source_sha and CLEAN must match run. No real provider or original-allocation refund acceptance."
     },
     "architecture-day-scheduler-two-process": {
       "registered_source": "5c269087e611e8d87de7ba3c060074fa3433f409",
-      "classes": ["com.chengyinhub.quartz.util.SchedulerWorkFenceTwoProcessMySqlIT"],
+      "classes": [
+        "com.chengyinhub.quartz.util.SchedulerWorkFenceTwoProcessMySqlIT"
+      ],
       "note": "Three fixed tests with actual child JVMs and owned-session disconnects. Probe receipt is fixture-only, not actual economic-task idempotency. Original XML, same-source class hashes, process exit and CLEAN required."
     },
     "architecture-day-payment-intent": {
@@ -491,47 +526,65 @@
   "classes": {
     "com.chengyinhub.business.service.impl.CommittedOfficialNoticeMySqlIT": {
       "tests": 13,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {}
     },
     "com.chengyinhub.business.service.impl.AuditTopicCurrentPublicationMySqlIT": {
       "tests": 1,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {}
     },
     "com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT": {
-      "tests": 10,
-      "storage": ["mysql"],
+      "tests": 11,
+      "storage": [
+        "mysql"
+      ],
       "gates": {}
     },
     "com.chengyinhub.business.it.RegistrationSeatMySqlIT": {
       "tests": 7,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {}
     },
     "com.chengyinhub.business.it.WechatVerifiedPaymentFactMySqlIT": {
       "tests": 4,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {}
     },
     "com.chengyinhub.business.service.impl.TopicContentBudgetMySqlIT": {
       "tests": 14,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {}
     },
     "com.chengyinhub.business.it.RegistrationTopicFenceMySqlIT": {
-      "tests": 26,
-      "storage": ["mysql"],
+      "tests": 35,
+      "storage": [
+        "mysql"
+      ],
       "gates": {}
     },
     "com.chengyinhub.business.it.Wp04TopicCashFenceMySqlIT": {
       "tests": 5,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {}
     },
     "com.chengyinhub.quartz.util.SchedulerWorkFenceTwoProcessMySqlIT": {
       "tests": 3,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {}
     },
     "com.chengyinhub.business.longrun.E04_13Test": {
@@ -1325,7 +1378,9 @@
     },
     "com.chengyinhub.business.service.impl.TopicContentGraphMySqlIT": {
       "tests": 32,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {},
       "note": "Actual production content mappers and Spring transactions; explicit controlled outer participants; strict owner-mode source assertion. Equivalence receipts are not substitutes for XML and CLEAN."
     },
@@ -1354,9 +1409,29 @@
       "gates": {},
       "note": "Actual close-caller durable invalid-recipient audit, original transaction and frozen immutable submission identity. No new table; external alarms best-effort, not exactly-once. Runtime NOT_RUN."
     },
+    "com.chengyinhub.business.service.impl.ChapterApplicationRoundMySqlIT": {
+      "tests": 10,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Ten actual application Mapper/CAS/service/IM storage tests. Invite only, old49 cases retained elsewhere. Parent-lock JDBC adapter and qualification/WX/other notice collaborators controlled; full audit-task interleaving and HTTP remain separate. Legacy NULL stays unknown; source-only migration not executed in persistent DB."
+    },
+    "com.chengyinhub.business.service.RegistrationEquityMybatisIntegrationTest": {
+      "tests": 6,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
+      "note": "Six fixed existing equity real-MyBatis tests including new city-node actual application receipt/rollback/current RR scenarios. Original scratch-only gate retained, class env supplied explicitly; actor/merchant permission controlled, no live HTTP/device acceptance."
+    },
     "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT": {
       "tests": 8,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {},
       "note": "Eight source cases: original business/DONE atomicity, replay/fence, fresh RR read and outer false/exception/rollback/commit release. New afterCompletion release source repair awaits real MySQL acceptance. Original after-commit notice is an explicit scheduler double."
     },
@@ -1370,7 +1445,9 @@
     },
     "com.chengyinhub.business.service.impl.CoopDepositSettlementAttemptMySqlIT": {
       "tests": 8,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {},
       "note": "G961 exact observed-attempt closure/fence with real gateway, original coop_invite mapper and transaction; SDK doubles. Explicit hosted scratch DDL admission, owned UUID schema and CLEAN required. No real provider or whole financial-domain acceptance."
     }

@@ -779,6 +779,17 @@
           "com.chengyinhub.web.controller.api.ApiVerifyController",
           "com.chengyinhub.common.core.controller.BaseController"
         ]
+      },
+      {
+        "id": "C_CITY_NODE_REDEMPTION_APPLICATION",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.verify.CityNodeRedemptionApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiVerifyController",
+          "com.chengyinhub.common.core.controller.BaseController"
+        ]
       }
     ],
     "allowed_directions": [

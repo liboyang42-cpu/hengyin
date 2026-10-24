@@ -147,7 +147,8 @@ class FreeExploreNodeSupplyMySqlIT {
                 "migration_20261003_merchant_offer_withdrawal_columns.sql",
                 "migration_club_direct_merchant_receivable_20261004.sql"));
         MIGRATIONS.put("merchant_chapter_application", List.of(
-                "migration_20261003_merchant_offer_withdrawal_columns.sql"));
+                "migration_20261003_merchant_offer_withdrawal_columns.sql",
+                "migration_20261024_d_chapter_application_round.sql"));
         MIGRATIONS.put("cms_member_template", List.of(
                 "migration_question_media_20260816.sql",
                 "migration_20260820_new_city_preference_chain.sql",

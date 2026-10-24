@@ -1,0 +1,84 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementOriginalMapper.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementOriginalMapper.java
+@@ -11,4 +11,5 @@
+ public interface CoopSettlementOriginalMapper {
+     int insertComponent(CoopSettlementOriginalComponent component);
++    int insertConsumedPaymentComponent(CoopSettlementOriginalComponent component);
+     List<CoopSettlementOriginalComponent> selectComponentsForPayerForUpdate(
+             @Param("cashCloseId") Long cashCloseId, @Param("payerRegistrationId") Long payerRegistrationId);
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java
+@@ -73,4 +73,5 @@
+         Map<Long, CoopSettlement> lockedHeads = new HashMap<>();
+         Map<Long, WechatVerifiedPaymentFact.Reference> paymentByPayer = new HashMap<>();
++        Set<Long> consumedPaymentPayers = new HashSet<>();
+         Set<String> componentKeys = new HashSet<>();
+         for (CoopSettlementOriginalComponent component : components) {
+@@ -111,4 +112,11 @@
+             WechatVerifiedPaymentFact.Reference previousPayment = paymentByPayer.putIfAbsent(component.getPayerRegistrationId(), paymentReference);
+             if (previousPayment != null && !previousPayment.equals(paymentReference)) throw conflict("ORIGINAL_PAYMENT_IDENTITY_CONFLICT");
++            if (previousPayment == null) {
++                var consumed = verifiedFacts.findConsumedRegistrationPayment(component.getPayerRegistrationId());
++                if (consumed.isPresent()) {
++                    if (!paymentReference.equals(consumed.get().reference())) throw conflict("ORIGINAL_CONSUMED_PAYMENT_REFERENCE_CONFLICT");
++                    consumedPaymentPayers.add(component.getPayerRegistrationId());
++                }
++            }
+             WechatVerifiedPaymentFact payment = verifiedFacts.requireVerified(paymentReference).facts();
+             requirePayment(payment, payer.getRegistrationNo(), component.getOriginalOrderCash());
+@@ -141,5 +149,9 @@
+             if (originals.bindHeadToClose(id, close.getId(), close.getTopicId(), kind) != 1) throw conflict("HEAD_CLOSE_BINDING_CONFLICT");
+         }
+-        for (var row : components) if (originals.insertComponent(row) != 1 || row.getId() == null) throw conflict("ORIGINAL_COMPONENT_WRITE_CONFLICT");
++        for (var row : components) {
++            int inserted = consumedPaymentPayers.contains(row.getPayerRegistrationId())
++                    ? originals.insertConsumedPaymentComponent(row) : originals.insertComponent(row);
++            if (inserted != 1 || row.getId() == null) throw conflict("ORIGINAL_COMPONENT_WRITE_CONFLICT");
++        }
+     }
+
+--- a/chengyinhub-system/src/main/resources/mapper/business/CoopSettlementOriginalMapper.xml
++++ b/chengyinhub-system/src/main/resources/mapper/business/CoopSettlementOriginalMapper.xml
+@@ -63,5 +63,5 @@
+               and head.line_type in ('PLATFORM','DEPOSIT_DEDUCTION')))
+     </update>
+-    <insert id="insertComponent" useGeneratedKeys="true" keyProperty="id">
++    <sql id="originalComponentInsertBase">
+         insert into coop_settlement_original_component
+             (cash_close_id,topic_id,source_registration_id,payer_registration_id,settlement_id,source_claim_id,payment_fact_id,payment_fact_hash,
+@@ -80,9 +80,6 @@
+           and binary paid_reg.registration_no=binary pf.business_out_trade_no
+           and binary paid_reg.transaction_id=binary pf.transaction_id and paid_reg.wechat_payment_amount*100=pf.amount_fen
+-          and exists (select 1 from wx_payment_callback_inbox pi join wx_payment_callback_fact_link pl on pl.inbox_id=pi.id
+-                and binary pl.notify_hash=binary lower(hex(pi.notify_hash))
+-              where pi.biz_type=1 and pi.biz_id=payer.registration_id and pi.event_type='SUCCESS' and pi.state=2
+-                and pi.notify_hash=unhex(sha2(concat('PAY:',pf.transaction_id,':SUCCESS'),256))
+-                and pl.fact_id=pf.id and pl.fact_hash=pf.fact_hash)
++    </sql>
++    <sql id="originalComponentFrozenScope">
+           and #{originalOrderCash}=cast(json_unquote(json_extract(payer.registration_snapshot,'$.wechatPaymentAmount')) as decimal(15,2))
+           and binary h.line_type=binary #{lineType} and binary h.cash_head_kind=binary #{receiverKind}
+@@ -99,4 +96,23 @@
+             or (h.line_type in ('PLATFORM','INITIATOR_GUARANTEE','INITIATOR_MARGIN')
+                 and #{sourceClaimId} is null and r.registration_id=payer.registration_id))
++    </sql>
++    <insert id="insertComponent" useGeneratedKeys="true" keyProperty="id">
++        <include refid="originalComponentInsertBase"/>
++          and exists (select 1 from wx_payment_callback_inbox pi join wx_payment_callback_fact_link pl on pl.inbox_id=pi.id
++                and binary pl.notify_hash=binary lower(hex(pi.notify_hash))
++              where pi.biz_type=1 and pi.biz_id=payer.registration_id and pi.event_type='SUCCESS' and pi.state=2
++                and pi.notify_hash=unhex(sha2(concat('PAY:',pf.transaction_id,':SUCCESS'),256))
++                and pl.fact_id=pf.id and pl.fact_hash=pf.fact_hash)
++        <include refid="originalComponentFrozenScope"/>
++    </insert>
++    <!-- Separate statement: an inline receipt never waits for/claims a mutable inbox under the topic lock. -->
++    <insert id="insertConsumedPaymentComponent" useGeneratedKeys="true" keyProperty="id">
++        <include refid="originalComponentInsertBase"/>
++          and exists (select 1 from cms_registration_payment_fact consumed
++              where consumed.registration_id=payer.registration_id
++                and binary consumed.registration_no=binary pf.business_out_trade_no
++                and consumed.payment_fact_id=pf.id and binary consumed.payment_fact_hash=binary pf.fact_hash
++                and binary consumed.transaction_id=binary pf.transaction_id)
++        <include refid="originalComponentFrozenScope"/>
+     </insert>
+     <select id="selectComponentsForPayerForUpdate" resultMap="Component" useCache="false" flushCache="true">

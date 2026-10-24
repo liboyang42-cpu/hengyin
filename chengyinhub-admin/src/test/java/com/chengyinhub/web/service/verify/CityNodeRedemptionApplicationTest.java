@@ -55,7 +55,7 @@ class CityNodeRedemptionApplicationTest {
         source = mock(DataSource.class); connection = mock(Connection.class);
         when(source.getConnection()).thenReturn(connection); when(connection.getAutoCommit()).thenReturn(true);
         transactions = new DataSourceTransactionManager(source);
-        CityNodeRedemptionApplication target = new CityNodeRedemptionApplication(access, roam, coupons, audit, SECRET);
+        CityNodeRedemptionApplication target = new CityNodeRedemptionApplication(access, roam, coupons, audit, mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class), SECRET);
         ProxyFactory proxy = new ProxyFactory(target); proxy.setProxyTargetClass(true);
         proxy.addAdvice(new TransactionInterceptor(transactions, new AnnotationTransactionAttributeSource()));
         application = (CityNodeRedemptionApplication) proxy.getProxy();
@@ -80,6 +80,28 @@ class CityNodeRedemptionApplicationTest {
         stages.add(name); return result;
     }
     private String code() { return VerifyDynCodeUtil.issue(51L, "citynode_7001", System.currentTimeMillis(), 300000L, 7L, SECRET); }
+    @Test void issuanceUsesTheSameApplicationWithoutOpeningATransaction() throws Exception {
+        assertNull(CityNodeRedemptionApplication.class.getMethod("issueCityNodeCode", long.class, Long.class)
+                .getAnnotation(Transactional.class));
+        CityNodeVO poi = new CityNodeVO(); poi.setPoiId(51L); poi.setMerchantId(11L);
+        doReturn(poi).when(roam).selectMerchantNodeDetail(51L);
+        doReturn(poi).when(roam).selectPlayerMerchantNodeDetail(51L, 0L);
+        com.chengyinhub.business.service.impl.QrcodeServiceImpl qr =
+                (com.chengyinhub.business.service.impl.QrcodeServiceImpl) ReflectionTestUtils.getField(
+                        org.springframework.test.util.AopTestUtils.getTargetObject(application), "qrcodeService");
+        doAnswer(call -> {
+            assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+            assertEquals(300, (int) call.getArgument(1)); assertEquals(300, (int) call.getArgument(2));
+            return "data:image/png;base64,fixture";
+        }).when(qr).generateInlineQrcode(anyString(), anyInt(), anyInt());
+        AjaxResult response = controller.issueCityNodeCode(51L);
+        assertEquals(200, response.get("code")); Map<?, ?> data = (Map<?, ?>) response.get("data");
+        assertEquals(300000L, data.get("ttlMs")); assertEquals(51L, data.get("poiId"));
+        VerifyDynCodeUtil.Result signed = VerifyDynCodeUtil.verify((String) data.get("code"), System.currentTimeMillis(), SECRET);
+        assertTrue(signed.valid); assertEquals(51L, signed.regId); assertEquals("citynode_" + ACTOR, signed.type);
+        verifyNoInteractions(source, connection, access, coupons, audit);
+        verify(roam, never()).lockClaimOwner(anyLong()); verify(roam, never()).redeemCityNodeReward(anyLong(), anyLong());
+    }
     @Test void controllerCallsTheApplicationProxyAndAllStagesShareOneWritableTransaction() throws Exception {
         assertFalse(AopUtils.isAopProxy(controller)); assertTrue(AopUtils.isAopProxy(application));
         assertNull(ApiVerifyController.class.getMethod("redeemCityNodeCode", String.class).getAnnotation(Transactional.class));
@@ -143,4 +165,117 @@ class CityNodeRedemptionApplicationTest {
         assertEquals(500, response.get("code")); assertEquals("请先登录", response.get("msg"));
         verifyNoInteractions(access, roam, coupons, audit); verify(connection).commit(); verify(connection, never()).rollback();
     }
+    private com.chengyinhub.business.domain.BusinessAuditEvent original(String afterJson) {
+        com.chengyinhub.business.domain.BusinessAuditEvent row = new com.chengyinhub.business.domain.BusinessAuditEvent();
+        row.setDomainType("CITY_NODE"); row.setDomainId(51L); row.setOwnerMemberId(9001L);
+        row.setAction("CITY_NODE_REDEEM"); row.setTargetType("ROAM_CHECKIN"); row.setTargetId(51L);
+        row.setRelationId(7001L); row.setRequestId("citynode-redeem-51-7001"); row.setAfterJson(afterJson);
+        return row;
+    }
+    @Test void originalResultCommitsWithAuditAndReadsBackAfterCodeExpiryWithoutCurrentCouponRules() throws Exception {
+        java.util.concurrent.atomic.AtomicReference<com.chengyinhub.business.domain.BusinessAuditEvent> saved = new java.util.concurrent.atomic.AtomicReference<>();
+        doAnswer(call -> { saved.set(call.getArgument(0)); return stage("audit", 1); }).when(audit).insertBusinessAuditEvent(any());
+        doAnswer(call -> stage("receipt", saved.get())).when(audit).selectByDomainActionRequestForUpdate(
+                "CITY_NODE", 51L, "CITY_NODE_REDEEM", "citynode-redeem-51-7001");
+        AjaxResult first = controller.redeemCityNodeCode(code());
+        assertNotNull(saved.get());
+        com.alibaba.fastjson2.JSONObject frozen = com.alibaba.fastjson2.JSON.parseObject(saved.get().getAfterJson());
+        assertEquals(Integer.valueOf(1), frozen.getInteger("status")); assertEquals(Integer.valueOf(1), frozen.getInteger("receiptVersion"));
+        assertEquals(first.get("msg"), frozen.getString("message"));
+        assertEquals(Long.valueOf(88L), frozen.getJSONObject("data").getLong("couponId"));
+        assertTrue(frozen.getJSONObject("data").getBoolean("couponGranted"));
+        doReturn(true).when(coupons).isCouponNotIssuable(88L);
+        String expired = VerifyDynCodeUtil.issue(51L, "citynode_7001", 1L, 1L, 99L, SECRET);
+        assertFalse(VerifyDynCodeUtil.verify(expired, System.currentTimeMillis(), SECRET).valid);
+        stages.clear(); AjaxResult replay = controller.cityNodeReceipt(expired);
+        assertEquals(first, replay); assertEquals(List.of("permission", "claim", "detail", "receipt"), stages);
+        verify(roam, times(1)).redeemCityNodeReward(51L, 7001L); verify(coupons, times(1)).grantCouponById(7001L, 88L);
+        verify(coupons, times(1)).isCouponNotIssuable(88L); verify(audit, times(1)).insertBusinessAuditEvent(any());
+        verify(connection, times(2)).commit(); verify(connection, never()).rollback();
+    }
+    @Test void receiptCannotTurnLegacyOrMissingOrCorruptFactsIntoAnAck() throws Exception {
+        for (String json : new String[] { null, "{\"status\":1}", "not-json", "{\"status\":1,\"receiptVersion\":1,\"data\":[]}" }) {
+            doReturn(original(json)).when(audit).selectByDomainActionRequestForUpdate(
+                    "CITY_NODE", 51L, "CITY_NODE_REDEEM", "citynode-redeem-51-7001");
+            AjaxResult response = controller.cityNodeReceipt(code());
+            assertEquals(520, response.get("code")); assertEquals("原据点核销结果待确认，请勿重复核销", response.get("msg"));
+            assertNull(response.get("data"));
+        }
+        doReturn(null).when(audit).selectByDomainActionRequestForUpdate("CITY_NODE", 51L, "CITY_NODE_REDEEM", "citynode-redeem-51-7001");
+        assertEquals(520, controller.cityNodeReceipt(code()).get("code"));
+        verifyNoInteractions(coupons); verify(audit, never()).insertBusinessAuditEvent(any());
+        verify(roam, never()).selectPendingCityNodeCouponId(anyLong(), anyLong());
+        verify(roam, never()).redeemCityNodeReward(anyLong(), anyLong());
+    }
+    @Test void receiptRechecksCurrentPermissionAndPoiOwnershipBeforeAccessingAnyOriginalFact() throws Exception {
+        CityNodeVO otherShop = new CityNodeVO(); otherShop.setMerchantId(12L);
+        doReturn(otherShop).when(roam).selectMerchantNodeDetail(51L);
+        AjaxResult forbidden = controller.cityNodeReceipt(code());
+        assertEquals(500, forbidden.get("code")); assertEquals("无权核销该据点", forbidden.get("msg"));
+        verifyNoInteractions(audit, coupons);
+        doAnswer(call -> { stage("permission", 0); throw new ServiceException("商家身份无效或权限不足", 403); })
+                .when(access).require(ACTOR, MerchantPermission.VERIFY);
+        ServiceException revoked = assertThrowsExactly(ServiceException.class, () -> controller.cityNodeReceipt(code()));
+        assertEquals(Integer.valueOf(403), revoked.getCode());
+        verify(roam, times(1)).lockClaimOwner(7001L); verifyNoInteractions(audit, coupons);
+    }
+    @Test void receiptSignatureOrOriginalScopeMismatchCannotReadAnotherPlayerOrOwner() throws Exception {
+        assertEquals(500, controller.cityNodeReceipt(code() + "tampered").get("code"));
+        verifyNoInteractions(roam, audit, coupons);
+        com.chengyinhub.business.domain.BusinessAuditEvent wrongPlayer = original("{\"status\":1}");
+        wrongPlayer.setRelationId(7002L);
+        doReturn(wrongPlayer).when(audit).selectByDomainActionRequestForUpdate("CITY_NODE", 51L, "CITY_NODE_REDEEM", "citynode-redeem-51-7001");
+        assertEquals(520, controller.cityNodeReceipt(code()).get("code"));
+        wrongPlayer.setRelationId(7001L); wrongPlayer.setOwnerMemberId(9002L);
+        assertEquals(520, controller.cityNodeReceipt(code()).get("code"));
+        verifyNoInteractions(coupons); verify(roam, never()).redeemCityNodeReward(anyLong(), anyLong());
+    }
+    @Test void receiptDatabaseFailureIsNotConvertedToAbsenceOrPermissionAndRollsBack() throws Exception {
+        doAnswer(call -> { stage("receipt", 0); throw new IllegalStateException("fixture storage failure"); })
+                .when(audit).selectByDomainActionRequestForUpdate("CITY_NODE", 51L, "CITY_NODE_REDEEM", "citynode-redeem-51-7001");
+        IllegalStateException failed = assertThrowsExactly(IllegalStateException.class, () -> controller.cityNodeReceipt(code()));
+        assertEquals("fixture storage failure", failed.getMessage()); verify(connection).rollback(); verify(connection, never()).commit();
+        verifyNoInteractions(coupons); verify(audit, never()).insertBusinessAuditEvent(any());
+    }
+    @Test void terminalReadDoesNotRelaxExpiryForNewUseOrPermitAnyNewMutation() throws Exception {
+        String expired = VerifyDynCodeUtil.issue(51L, "citynode_7001", 1L, 1L, 1L, SECRET);
+        AjaxResult refusal = controller.redeemCityNodeCode(expired);
+        assertEquals(500, refusal.get("code")); assertEquals("已过期", refusal.get("msg"));
+        verifyNoInteractions(roam, coupons, audit);
+        AjaxResult unknown = controller.cityNodeReceipt(expired); assertEquals(520, unknown.get("code"));
+        verifyNoInteractions(coupons); verify(roam, never()).redeemCityNodeReward(anyLong(), anyLong());
+        verify(audit, never()).insertBusinessAuditEvent(any());
+    }
+
+    @Test void storedSkippedDecisionIsAnOriginalResultEvenAfterCouponBecomesIssuableAgain() {
+        doReturn(true).when(coupons).isCouponNotIssuable(88L);
+        org.mockito.ArgumentCaptor<com.chengyinhub.business.domain.BusinessAuditEvent> captured =
+                org.mockito.ArgumentCaptor.forClass(com.chengyinhub.business.domain.BusinessAuditEvent.class);
+        AjaxResult first = controller.redeemCityNodeCode(code());
+        assertEquals(false, ((Map<?, ?>) first.get("data")).get("couponGranted"));
+        verify(audit).insertBusinessAuditEvent(captured.capture());
+        doReturn(captured.getValue()).when(audit).selectByDomainActionRequestForUpdate(
+                "CITY_NODE", 51L, "CITY_NODE_REDEEM", "citynode-redeem-51-7001");
+        doReturn(false).when(coupons).isCouponNotIssuable(88L);
+        assertEquals(first, controller.cityNodeReceipt(code()));
+        verify(coupons, times(1)).isCouponNotIssuable(88L); verify(coupons, never()).grantCouponById(anyLong(), anyLong());
+        verify(audit, times(1)).insertBusinessAuditEvent(any()); verify(roam, times(1)).redeemCityNodeReward(51L, 7001L);
+    }
+    @Test void typedFrozenIdentityDecisionAndMessageMustAllAgreeBeforeAnyAck() {
+        for (Map<String, Object> invalidData : List.of(
+                Map.<String, Object>of("poiId", 52L, "memberId", 7001L, "couponId", 88L, "couponGranted", true),
+                Map.<String, Object>of("poiId", 51L, "memberId", 7002L, "couponId", 88L, "couponGranted", true),
+                Map.<String, Object>of("poiId", 51L, "memberId", 7001L, "couponId", -1L, "couponGranted", true),
+                Map.<String, Object>of("poiId", 51L, "memberId", 7001L, "couponId", 88L, "couponGranted", "true"),
+                Map.<String, Object>of("poiId", 51L, "memberId", 7001L, "couponId", 88L, "couponGranted", false))) {
+            String json = com.alibaba.fastjson2.JSON.toJSONString(Map.of("status", 1, "receiptVersion", 1,
+                    "data", invalidData, "message", "核销成功,券已发放玩家"));
+            doReturn(original(json)).when(audit).selectByDomainActionRequestForUpdate(
+                    "CITY_NODE", 51L, "CITY_NODE_REDEEM", "citynode-redeem-51-7001");
+            assertEquals(520, controller.cityNodeReceipt(code()).get("code"));
+        }
+        verifyNoInteractions(coupons); verify(audit, never()).insertBusinessAuditEvent(any());
+        verify(roam, never()).redeemCityNodeReward(anyLong(), anyLong());
+    }
+
 }

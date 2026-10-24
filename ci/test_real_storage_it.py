@@ -121,7 +121,7 @@ class RegistryContractTest(unittest.TestCase):
         reg = registry()
         fqcn = 'com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT'
         self.assertEqual([fqcn], reg['batches']['architecture-day-original-refund']['classes'])
-        self.assertEqual({'tests': 10, 'storage': ['mysql'], 'gates': {}}, reg['classes'][fqcn])
+        self.assertEqual({'tests': 11, 'storage': ['mysql'], 'gates': {}}, reg['classes'][fqcn])
         flag = 'WP04_ORIGINAL_REFUND_DDL_APPROVED'
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
                     if line.strip().startswith(flag + ':'))
@@ -129,7 +129,7 @@ class RegistryContractTest(unittest.TestCase):
         self.assertEqual({flag: '1'}, rs.child_env({flag: '1'}, {}))
         facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
         self.assertEqual([], problems)
-        self.assertEqual(10, facts['declared_tests'])
+        self.assertEqual(11, facts['declared_tests'])
 
     def test_batch_totals_match_the_remaining_receipt(self):
         # 23 条真库 + OWN_C01_51 外层 4 条普通；AI 15+7；E04-07 5+5（原回执41/43新增回归）；E02-22 9 + E02-25 2 + 三夹具 3；B05 3；F3 12（含死锁重试负控）。
@@ -164,13 +164,15 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-payment-inbox": 8,
                     "architecture-day-verified-payment-facts": 4,
                     "architecture-day-registration-seats": 7,
-                    "architecture-day-original-refund": 10,
+                    "architecture-day-original-refund": 11,
                     "architecture-day-deposit-attempt": 8,
                     "architecture-day-topic-content-budget": 15,
                     "architecture-day-committed-official-notice": 13,
                     "architecture-day-complaint-committed-notice": 11,
                     "architecture-day-complaint-notice-rejection": 6,
-                    "architecture-day-registration-topic-fence": 26,
+                    "architecture-day-chapter-application-round": 10,
+                    "architecture-day-citynode-original-receipt": 6,
+                    "architecture-day-registration-topic-fence": 35,
                     "architecture-day-topic-cash-fence": 5,
                     "architecture-day-scheduler-two-process": 3}
         reg = registry()

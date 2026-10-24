@@ -28,6 +28,7 @@ public class CoopSettlementOriginalLedger {
     private final CoopSettlementMapper heads;
     private final CoopSettlementAdjustmentMapper legacyAdjustments;
     private final WechatVerifiedPaymentFactService verifiedFacts;
+    private final com.chengyinhub.business.service.support.RegistrationPaymentConsumptionReadService paymentConsumptions;
     private final UmsMemberMapper members;
     private final IUmsMemberBalanceDetailService balanceLedger;
     private final SettlementDebtLedger debts;
@@ -35,10 +36,11 @@ public class CoopSettlementOriginalLedger {
 
     public CoopSettlementOriginalLedger(CmsTopicMapper topics, CoopSettlementCashEvidenceMapper evidence,
             CoopSettlementOriginalMapper originals, CoopSettlementMapper heads, CoopSettlementAdjustmentMapper legacyAdjustments, WechatVerifiedPaymentFactService verifiedFacts,
+            com.chengyinhub.business.service.support.RegistrationPaymentConsumptionReadService paymentConsumptions,
             UmsMemberMapper members, IUmsMemberBalanceDetailService balanceLedger, SettlementDebtLedger debts) {
         this.topics = topics; this.evidence = evidence; this.originals = originals; this.heads = heads;
         this.legacyAdjustments = legacyAdjustments;
-        this.verifiedFacts = verifiedFacts; this.members = members; this.balanceLedger = balanceLedger; this.debts = debts;
+        this.verifiedFacts = verifiedFacts; this.paymentConsumptions = paymentConsumptions; this.members = members; this.balanceLedger = balanceLedger; this.debts = debts;
     }
 
     /** 输入为已经按批准分币合同准备的原计划，本方法只校验/冻结，不替调用者选择分币算法。
@@ -72,6 +74,7 @@ public class CoopSettlementOriginalLedger {
         Map<Long, BigDecimal> componentByPayer = new TreeMap<>();
         Map<Long, CoopSettlement> lockedHeads = new HashMap<>();
         Map<Long, WechatVerifiedPaymentFact.Reference> paymentByPayer = new HashMap<>();
+        Set<Long> consumedPaymentPayers = new HashSet<>();
         Set<String> componentKeys = new HashSet<>();
         for (CoopSettlementOriginalComponent component : components) {
             if (component == null || component.getSettlementId() == null || component.getSourceRegistrationId() == null
@@ -112,6 +115,16 @@ public class CoopSettlementOriginalLedger {
             if (previousPayment != null && !previousPayment.equals(paymentReference)) throw conflict("ORIGINAL_PAYMENT_IDENTITY_CONFLICT");
             WechatVerifiedPaymentFact payment = verifiedFacts.requireVerified(paymentReference).facts();
             requirePayment(payment, payer.getRegistrationNo(), component.getOriginalOrderCash());
+            if (previousPayment == null) {
+                var consumed = paymentConsumptions.findConsumedPayment(component.getPayerRegistrationId());
+                if (consumed.isPresent()) {
+                    if (!paymentReference.equals(consumed.get().reference())) throw conflict("ORIGINAL_CONSUMED_PAYMENT_REFERENCE_CONFLICT");
+                    if (!payer.getRegistrationNo().equals(consumed.get().registrationNo())
+                            || !payment.transactionId().equals(consumed.get().transactionId()))
+                        throw conflict("ORIGINAL_CONSUMED_PAYMENT_IDENTITY_CONFLICT");
+                    consumedPaymentPayers.add(component.getPayerRegistrationId());
+                }
+            }
             if (!Objects.equals(head.getLineType(), component.getLineType())
                     || !Objects.equals(head.getMerchantId(), component.getReceiverMemberId())
                     || !("ACCOUNTING".equals(component.getReceiverKind()) && "PLATFORM".equals(head.getLineType()) && head.getMerchantId() == null
@@ -140,7 +153,11 @@ public class CoopSettlementOriginalLedger {
             String kind = head.getMerchantId() == null ? "ACCOUNTING" : "MEMBER";
             if (originals.bindHeadToClose(id, close.getId(), close.getTopicId(), kind) != 1) throw conflict("HEAD_CLOSE_BINDING_CONFLICT");
         }
-        for (var row : components) if (originals.insertComponent(row) != 1 || row.getId() == null) throw conflict("ORIGINAL_COMPONENT_WRITE_CONFLICT");
+        for (var row : components) {
+            int inserted = consumedPaymentPayers.contains(row.getPayerRegistrationId())
+                    ? originals.insertConsumedPaymentComponent(row) : originals.insertComponent(row);
+            if (inserted != 1 || row.getId() == null) throw conflict("ORIGINAL_COMPONENT_WRITE_CONFLICT");
+        }
     }
 
     /** A批准阶段仅选择追收owner：有原close必须由本owner处理，不得并行扣旧settlement_detail。

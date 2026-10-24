@@ -31,7 +31,7 @@ class RegistrationPaymentAtomicityContractTest {
         int method = service.indexOf("String handleWechatPayCallback");
         int register = service.indexOf("wxPaymentCallbackInboxService.register(", method);
         int fence = service.indexOf("wxPaymentCallbackInboxService.process(", method);
-        int apply = service.indexOf("applyWechatPayCallback(registration, resultMap)", method);
+        int apply = service.indexOf("applyWechatPayCallback(registration, originalFacts)", method);
         int mutationDefinition = service.indexOf("IWxPaymentCallbackInboxService.Mutation mutation =", method);
         int verifiedFence = service.indexOf("wxPaymentCallbackInboxService.processVerified(", method);
         int machine = service.indexOf("private String applyWechatPayCallback");

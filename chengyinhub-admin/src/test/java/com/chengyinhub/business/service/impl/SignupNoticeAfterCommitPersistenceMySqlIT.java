@@ -68,6 +68,7 @@ public class SignupNoticeAfterCommitPersistenceMySqlIT {
     private final AtomicBoolean failQr = new AtomicBoolean();
     private final AtomicReference<Throwable> unexpectedImFailure = new AtomicReference<>();
     private Connection unrelatedConnection;
+    private WechatVerifiedPaymentFactService fixturePaymentFacts;
 
     @BeforeEach
     void setup() throws Exception {
@@ -79,6 +80,13 @@ public class SignupNoticeAfterCommitPersistenceMySqlIT {
         db = new JdbcTemplate(source);
         db.execute("create table registration_fact(id bigint primary key, payment_status int, registration_status int, transaction_id varchar(64), qrcode_url varchar(256), verification_code varchar(64), member_id bigint not null, topic_id bigint not null, parent_order_no varchar(64)) engine=InnoDB");
         db.update("insert into registration_fact values(99,1,1,null,null,null,9,88,null)");
+        // Existing JDBC business adapter: local receipt SQL participates in the same IM acceptance transaction.
+        // Canonical provider/receipt FK + append-only DDL is verified by A's dedicated production-XML IT, not here.
+        db.execute("create table fixture_payment_consumption(registration_id bigint primary key,registration_no varchar(64),"
+                + "payment_fact_id bigint unique,payment_fact_hash char(64),transaction_id varchar(64),"
+                + "foreign key(registration_id) references registration_fact(id)) engine=InnoDB");
+        fixturePaymentFacts = new WechatVerifiedPaymentFactService();
+        WechatVerifiedFactTestSupport.setField(fixturePaymentFacts, "mapper", new WechatVerifiedFactTestSupport.MemoryMapper());
         Path sqlRoot = Paths.get("chengyinhub-admin/sql");
         if (!sqlRoot.toFile().isDirectory()) sqlRoot = Paths.get("sql");
         new ResourceDatabasePopulator(new FileSystemResource(sqlRoot.resolve("migration_im.sql").toFile()),
@@ -133,6 +141,9 @@ public class SignupNoticeAfterCommitPersistenceMySqlIT {
         when(registrations.selectByParentOrderNo(anyString())).thenAnswer(call -> db.queryForList(
                 "select id from registration_fact where parent_order_no=? order by id", Long.class, (String) call.getArgument(0))
                 .stream().map(id -> readRegistration(id, false)).toList());
+        when(registrations.selectByParentOrderNoForUpdate(anyString(), org.mockito.ArgumentMatchers.<Long>nullable(Long.class)))
+                .thenAnswer(call -> db.queryForList("select id from registration_fact where parent_order_no=? order by id for update",
+                        Long.class, (String) call.getArgument(0)).stream().map(id -> readRegistration(id, true)).toList());
         when(registrations.claimPaymentSuccess(anyLong(), anyString(), any())).thenAnswer(call -> db.update(
                 "update registration_fact set payment_status=2, registration_status=2, transaction_id=? where id=? and payment_status=1",
                 (String) call.getArgument(1), (Long) call.getArgument(0)));
@@ -149,6 +160,27 @@ public class SignupNoticeAfterCommitPersistenceMySqlIT {
         CmsRegistrationServiceImpl target = new CmsRegistrationServiceImpl();
         registrationTarget = target;
         ReflectionTestUtils.setField(target, "cmsRegistrationMapper", registrations);
+        ReflectionTestUtils.setField(target, "verifiedPaymentFacts", fixturePaymentFacts);
+        var consumed = mock(com.chengyinhub.business.mapper.CmsRegistrationPaymentFactMapper.class);
+        when(consumed.insertConsumed(anyLong(), anyLong(), anyString())).thenAnswer(call -> {
+            Long id = call.getArgument(0); long factId = call.getArgument(1); String hash = call.getArgument(2);
+            var proof = fixturePaymentFacts.requireVerified(new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(factId, hash));
+            CmsRegistration current = readRegistration(id, true);
+            if (proof.facts().kind() != com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT
+                    || !current.getRegistrationNo().equals(proof.facts().businessOutTradeNo())
+                    || !Integer.valueOf(2).equals(current.getPaymentStatus()) || !Integer.valueOf(2).equals(current.getRegistrationStatus())
+                    || !proof.facts().transactionId().equals(current.getTransactionId())) return 0;
+            return db.update("insert ignore into fixture_payment_consumption values(?,?,?,?,?)",
+                    id, current.getRegistrationNo(), factId, hash, current.getTransactionId());
+        });
+        when(consumed.selectByRegistrationForUpdate(anyLong())).thenAnswer(call -> {
+            var rows = db.query("select * from fixture_payment_consumption where registration_id=? for update",
+                    (row, n) -> new com.chengyinhub.business.domain.dto.RegistrationPaymentFactReceipt(row.getLong("registration_id"),
+                            row.getString("registration_no"), row.getLong("payment_fact_id"), row.getString("payment_fact_hash"), row.getString("transaction_id")),
+                    (Long) call.getArgument(0));
+            return rows.isEmpty() ? null : rows.get(0);
+        });
+        ReflectionTestUtils.setField(target, "registrationPaymentFactMapper", consumed);
         ReflectionTestUtils.setField(target, "imService", imService);
         ReflectionTestUtils.setField(target, "systemNotificationIntents", intents);
         ReflectionTestUtils.setField(target, "alarmService", alarm);
@@ -156,7 +188,7 @@ public class SignupNoticeAfterCommitPersistenceMySqlIT {
         // W3:回调入口走 inbox fence(业务在 fence 自己的事务里提交),这里用直通桩;
         // 「支付事务提交后才投递」的边界由下方 payInsideTransaction 经同一状态机在调用方事务内验证。
         ReflectionTestUtils.setField(target, "wxPaymentCallbackInboxService",
-                com.chengyinhub.business.service.PaymentCallbackInboxStubs.passThrough(manager));
+                com.chengyinhub.business.service.PaymentCallbackInboxStubs.passThrough(manager, fixturePaymentFacts));
         ReflectionTestUtils.setField(target, "settlementEntryService", mock(ISettlementEntryService.class));
         ReflectionTestUtils.setField(target, "umsMemberMapper", mock(UmsMemberMapper.class));
         ReflectionTestUtils.setField(target, "cmsPointsSettingService", mock(ICmsPointsSettingService.class));
@@ -164,6 +196,7 @@ public class SignupNoticeAfterCommitPersistenceMySqlIT {
         CmsTopicMapper topics = mock(CmsTopicMapper.class);
         CmsTopic topic = new CmsTopic(); topic.setId(88L);
         when(topics.selectCmsTopicById(88L)).thenReturn(topic);
+        when(topics.selectCmsTopicByIdForUpdate(88L)).thenReturn(topic);
         ReflectionTestUtils.setField(target, "cmsTopicMapper", topics);
         QrcodeServiceImpl qr = mock(QrcodeServiceImpl.class);
         when(qr.generateQrcode(anyString(), eq(300), eq(300))).thenReturn("fixture-qrcode");
@@ -469,6 +502,14 @@ public class SignupNoticeAfterCommitPersistenceMySqlIT {
         Map<String, String> values = new HashMap<>();
         values.put("out_trade_no", "REG99"); values.put("transaction_id", "fixture-tx99");
         values.put("trade_state", "SUCCESS"); values.put("total", "6800");
+        var fact = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
+                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,
+                "fixture-mch", "fixture-app", "REG99", "REG99", "REG99", "fixture-tx99", "fixture-tx99",
+                "JSAPI", "CNY", 6800, 6800, java.time.Instant.parse(WechatVerifiedFactTestSupport.SUCCESS_TIME), null, "SUCCESS");
+        var reference = fixturePaymentFacts.recordVerified(fact);
+        values.put("verified_fact_id", Long.toString(reference.id())); values.put("verified_fact_hash", reference.hash());
+        values.put("wx_out_trade_no", fact.wxOutTradeNo()); values.put("mchid", fact.mchid()); values.put("appid", fact.appid());
+        values.put("trade_type", fact.tradeType()); values.put("currency", fact.currency());
         return values;
     }
 

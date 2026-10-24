@@ -1,0 +1,30 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java
+@@ -18,4 +18,5 @@
+     @Autowired private WechatVerifiedPaymentFactMapper mapper;
+     @Autowired private org.springframework.transaction.PlatformTransactionManager factReadTransactions;
++    @Autowired private com.chengyinhub.business.mapper.CmsRegistrationPaymentFactMapper registrationConsumptions;
+     public record Stored(Reference reference, WechatVerifiedPaymentFact facts) { }
+     public static class ConflictException extends IllegalStateException {
+@@ -47,4 +48,21 @@
+             if (!stored.reference().equals(reference)) throw new ConflictException();
+             return stored;
++        });
++    }
++
++    /** Empty means no committed local-consumption receipt, never external NOT_SENT/NOT_RUN. */
++    public java.util.Optional<Stored> findConsumedRegistrationPayment(Long registrationId) {
++        if (registrationId == null || registrationId <= 0) throw new IllegalArgumentException("Original registration required");
++        return readFresh(() -> {
++            var receipt = registrationConsumptions.selectByRegistration(registrationId);
++            if (receipt == null) return java.util.Optional.empty();
++            Map<String,Object> row = mapper.selectById(receipt.reference().id());
++            if (row == null) throw new IllegalStateException("Consumed original provider fact missing");
++            Stored stored = checked(row);
++            if (!registrationId.equals(receipt.registrationId()) || !receipt.reference().equals(stored.reference())
++                    || stored.facts().kind() != WechatVerifiedPaymentFact.Kind.PAYMENT
++                    || !receipt.registrationNo().equals(stored.facts().businessOutTradeNo())
++                    || !receipt.transactionId().equals(stored.facts().transactionId())) throw new ConflictException();
++            return java.util.Optional.of(stored);
+         });
+     }

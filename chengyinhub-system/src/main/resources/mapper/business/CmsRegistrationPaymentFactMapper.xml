@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CmsRegistrationPaymentFactMapper">
+    <resultMap id="ConsumedFact" type="com.chengyinhub.business.domain.dto.RegistrationPaymentFactReceipt">
+        <constructor>
+            <idArg column="registration_id" javaType="java.lang.Long"/>
+            <arg column="registration_no" javaType="java.lang.String"/>
+            <arg column="payment_fact_id" javaType="java.lang.Long"/>
+            <arg column="payment_fact_hash" javaType="java.lang.String"/>
+            <arg column="transaction_id" javaType="java.lang.String"/>
+        </constructor>
+    </resultMap>
+    <insert id="insertConsumed">
+        insert ignore into cms_registration_payment_fact
+            (registration_id, registration_no, payment_fact_id, payment_fact_hash, transaction_id)
+        select r.id, r.registration_no, f.id, f.fact_hash, f.transaction_id
+        from cms_registration r join wx_verified_payment_fact f on f.id=#{factId}
+        where r.id=#{registrationId} and binary f.fact_hash=binary #{factHash}
+          and r.payment_status=2 and r.registration_status=2
+          and binary r.registration_no=binary f.business_out_trade_no
+          and binary r.transaction_id=binary f.transaction_id
+          and r.wechat_payment_amount*100=f.total_fen and f.amount_fen=f.total_fen
+          and f.fact_kind='PAYMENT' and f.verification_outcome='VERIFIED'
+          and f.verification_version=1 and f.verification_method='SDK_QUERY_ORIGINAL_ORDER'
+    </insert>
+    <select id="selectByRegistration" resultMap="ConsumedFact" useCache="false" flushCache="true">
+        select registration_id, registration_no, payment_fact_id, payment_fact_hash, transaction_id
+        from cms_registration_payment_fact where registration_id=#{registrationId}
+    </select>
+    <select id="selectByRegistrationForUpdate" resultMap="ConsumedFact" useCache="false" flushCache="true">
+        select registration_id, registration_no, payment_fact_id, payment_fact_hash, transaction_id
+        from cms_registration_payment_fact where registration_id=#{registrationId} for update
+    </select>
+</mapper>

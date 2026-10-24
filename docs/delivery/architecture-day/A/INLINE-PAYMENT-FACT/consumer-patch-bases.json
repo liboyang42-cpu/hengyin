@@ -1,0 +1,27 @@
+{
+  "applied": false,
+  "sources": {
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java": {
+      "commit": "f6f382500ff1a1dfd6fad120b3895f70ae563278",
+      "sha256": "d0c8cc20974ff421edb0792a894245090ce42065c0bb5667e189ea894f92912f"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementOriginalMapper.java": {
+      "commit": "8818837b3717e3340384545d04b81abef4697fc7",
+      "sha256": "58c8ab7a7477309c0f958388dd6da9faef22dc32f11c20a148f42ab279e7954e"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java": {
+      "commit": "8818837b3717e3340384545d04b81abef4697fc7",
+      "sha256": "2bb7e297c582347ec6e7bfd880b3ae43d00ed462e69908eed3f6c70e589a64d7"
+    },
+    "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementOriginalMapper.xml": {
+      "commit": "8818837b3717e3340384545d04b81abef4697fc7",
+      "sha256": "9b7a9c0794e047e33c262c4256de159e30d8e14589ce1e4a8eddabfd15efe5f6"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SignupNoticeAfterCommitPersistenceMySqlIT.java": {
+      "commit": "07359d3dac777b67090f7febfbaed68b3ec5d336",
+      "sha256": "7a548d715811a1c2e530adb0b694f8cdff8a5e1782af3c03ef1adceebbe30d06"
+    }
+  },
+  "contract": "B fresh typed optional reader; G chooses separate exact immutable-receipt INSERT, never reverse-claims a mutable inbox; old frozen component base/scope SQL is mechanical unchanged",
+  "D_fixture": "Review only: keeps the existing JDBC registration adapter and all original IM assertions; memory provider facts are explicitly not real MySQL/SDK proof."
+}

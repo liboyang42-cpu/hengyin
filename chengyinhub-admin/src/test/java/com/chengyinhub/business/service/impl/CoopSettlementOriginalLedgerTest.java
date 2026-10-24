@@ -25,11 +25,12 @@ class CoopSettlementOriginalLedgerTest {
     final CoopSettlementMapper heads = mock(CoopSettlementMapper.class);
     final CoopSettlementAdjustmentMapper legacyAdjustments = mock(CoopSettlementAdjustmentMapper.class);
     final WechatVerifiedPaymentFactService verified = mock(WechatVerifiedPaymentFactService.class);
+    final com.chengyinhub.business.service.support.RegistrationPaymentConsumptionReadService paymentConsumptions = mock(com.chengyinhub.business.service.support.RegistrationPaymentConsumptionReadService.class);
     final UmsMemberMapper members = mock(UmsMemberMapper.class);
     final IUmsMemberBalanceDetailService ledger = mock(IUmsMemberBalanceDetailService.class);
     final UmsMemberSettlementDebtMapper debtRows = mock(UmsMemberSettlementDebtMapper.class);
     final SettlementDebtLedger debts = spy(new SettlementDebtLedger(debtRows, members, mock(UmsMemberBalanceDetailMapper.class)));
-    final CoopSettlementOriginalLedger owner = new CoopSettlementOriginalLedger(topics,evidence,originals,heads,legacyAdjustments,verified,members,ledger,debts);
+    final CoopSettlementOriginalLedger owner = new CoopSettlementOriginalLedger(topics,evidence,originals,heads,legacyAdjustments,verified,paymentConsumptions,members,ledger,debts);
     final List<CoopSettlementOriginalAdjustment> applied = new ArrayList<>();
     final CoopSettlementRefundReceipt[] receipt = new CoopSettlementRefundReceipt[1];
     CoopSettlementCashClose close;

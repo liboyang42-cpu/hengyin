@@ -51,6 +51,9 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
     private com.chengyinhub.business.service.support.CommittedBusinessNotice committedNotice;
 
     @Autowired
+    private com.chengyinhub.business.service.support.ChapterApplicationInviteNotice inviteNotice;
+
+    @Autowired
     private CmsTopicChapterMapper chapterMapper;
 
     @Autowired
@@ -104,6 +107,7 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
                                 String.valueOf(merchantId)) != 1) {
                     throw new MerchantChapterApplicationExistsException("历史申请状态刚发生变化，请刷新后重试");
                 }
+                existing.setApplicationRound(requireStartedRound(existing.getId()));
                 existing.setDelFlag(0);
                 existing.setMessage(normalizedMessage);
                 existing.setAuditRemark(null);
@@ -117,7 +121,10 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
             if (Integer.valueOf(MerchantChapterApplication.STATUS_APPROVED).equals(existing.getStatus())) {
                 throw new MerchantChapterApplicationExistsException("该章节申请已通过，请继续填写实际供给");
             }
-            applicationMapper.reapply(existing.getId(), normalizedMessage, String.valueOf(merchantId));
+            if (applicationMapper.reapply(existing.getId(), normalizedMessage, String.valueOf(merchantId)) != 1) {
+                throw new MerchantChapterApplicationExistsException("历史申请状态刚发生变化，请刷新后重试");
+            }
+            existing.setApplicationRound(requireStartedRound(existing.getId()));
             existing.setStatus(MerchantChapterApplication.STATUS_PENDING);
             existing.setMessage(normalizedMessage);
             existing.setAuditRemark(null);
@@ -127,6 +134,7 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
         }
 
         MerchantChapterApplication application = new MerchantChapterApplication();
+        application.setApplicationRound(1L);
         application.setTopicId(topic.getId());
         application.setChapterId(chapterId);
         application.setMerchantId(merchantId);
@@ -470,6 +478,7 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
 
         Date now = DateUtils.getNowDate();
         MerchantChapterApplication invite = new MerchantChapterApplication();
+        invite.setApplicationRound(1L);
         invite.setTopicId(topic.getId());
         invite.setChapterId(chapterId);
         invite.setReplacementOfOfferId(replacementOfOfferId);
@@ -487,8 +496,8 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
             if (applicationMapper.reinviteWithdrawn(invite) != 1) {
                 throw new IllegalStateException("历史申请状态刚发生变化，请刷新后重试");
             }
-            committedNotice.sendAfterCommit(merchantMemberId, "章节承接邀请", "请在主题承接进度中接受或拒绝邀请",
-                    "chapter-invite", invite.getId());
+            invite.setApplicationRound(requireStartedRound(invite.getId()));
+            inviteNotice.submit(topic.getId(), invite.getId(), invite.getApplicationRound(), merchantMemberId);
             return invite;
         }
         try {
@@ -496,8 +505,7 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
         } catch (DuplicateKeyException e) {
             throw new IllegalStateException("该商家已有本章节的申请,请刷新后查看");
         }
-        committedNotice.sendAfterCommit(merchantMemberId, "章节承接邀请", "请在主题承接进度中接受或拒绝邀请",
-                    "chapter-invite", invite.getId());
+        inviteNotice.submit(topic.getId(), invite.getId(), invite.getApplicationRound(), merchantMemberId);
         return invite;
     }
 
@@ -529,6 +537,12 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
         committedNotice.sendAfterCommit(application.getMerchantId(), "章节邀请已撤回", "主办方已撤回待接受的章节邀请",
                 "chapter-invite-revoke", application.getId());
         return application;
+    }
+
+    private Long requireStartedRound(Long applicationId) {
+        Long round = applicationMapper.selectApplicationRoundForUpdate(applicationId);
+        if (round == null || round <= 0) throw new IllegalStateException("新申请轮次未持久保存，请刷新后重试");
+        return round;
     }
 
     /** 本章节是否已有指向同一原供给的补位邀请(待接受或已接受)，可排除当前这一条。 */

@@ -1,7 +1,7 @@
 'use strict';
 
-// 非席位旧入口没有可关联原请求的事实键，只能人工核对，绝不按列表成功释放锁。
-// 席位入口另用持久原 registration/seat/activity 的精确回执恢复。
+// 没有精确原事实入口的旧调用只能人工核对，绝不按列表成功释放锁。
+// 席位按 registration/seat/activity、据点按 poi/player 读回各自原结果。
 function offerVerificationReadback(key, workflow, adapters) {
   key = String(key || '');
   if (!key || !workflow) return false;
@@ -91,6 +91,12 @@ function createVerificationWorkflow(options) {
   const workflow = createWriteActionWorkflow(options);
   let destroyed = false;
   const recovering = new Set();
+  const writing = new Map();
+  // City identity is the existing signed poi+player pair, never QR nonce/TTL.
+  const validCity = target => target && typeof target === 'object' && !Array.isArray(target)
+    && Object.keys(target).length === 2 && ['poiId', 'memberId'].every(field =>
+      /^[1-9]\d*$/.test(String(target[field])) && Number.isSafeInteger(Number(target[field])));
+
   const recoveryStops = new Set();
   function metadata(key) {
     const owner = String(options.getOwner && options.getOwner() || '');
@@ -127,17 +133,21 @@ function createVerificationWorkflow(options) {
     hold: key => workflow.hold(key),
     run(key, start, callback, recovery) {
       if (destroyed) return false;
-      if (recovery && (!validTarget(recovery.target) || !recovery.isCurrent())) return false;
+      const city = recovery && recovery.city;
+      if (recovery && (!(city ? validCity(city) && typeof recovery.isReceipt === 'function' : validTarget(recovery.target)) || !recovery.isCurrent())) return false;
+      const inFlight = writing.get(key);
+      if (inFlight && inFlight.isCurrent()) return false;
       if (recovery) {
         const owner = String(options.getOwner && options.getOwner() || '');
-        if (key !== seatKey(owner, recovery.target)) return blocked(callback, '原席位身份不一致，本次未提交');
+        const originalKey = city ? owner + ':citynode:' + city.poiId + ':' + city.memberId : seatKey(owner, recovery.target);
+        if (key !== originalKey) return blocked(callback, '原核销身份不一致，本次未提交');
       }
       let meta, row;
       try { meta = metadata(key); row = read(meta); }
       catch (error) { return blocked(callback, '无法读取核销待办，本次未提交，请检查本机存储及登录状态'); }
       if (row) {
         workflow.hold(key);
-        if (!recovery || !sameTarget(row.seat, recovery.target)) {
+        if (!recovery || (city ? row.seat !== undefined : !sameTarget(row.seat, recovery.target))) {
           callback(Object.assign(unknownResult(), { recovered: true }));
           return true;
         }
@@ -156,13 +166,14 @@ function createVerificationWorkflow(options) {
           settled = true; recovering.delete(key); recoveryStops.delete(stop); (options.clearTimer || clearTimeout)(timer);
           // 登录代次/页面失效后不清磁盘，也不触碰新页面或新代次的内存锁。
           if (destroyed || !recovery.isCurrent()) return;
-          if (response && String(response.code) === '200' && validSeatReceipt(response.data, row.seat)
-              && response.data.replayed === true && removeOriginal(meta, row)) {
+          const terminal = city ? response && recovery.isReceipt(response)
+            : response && String(response.code) === '200' && validSeatReceipt(response.data, row.seat) && response.data.replayed === true;
+          if (terminal && removeOriginal(meta, row)) {
             workflow.reset(key);
             callback({ status: 'success', response, recovered: true });
           } else callback(Object.assign(unknownResult(), { recovered: true }));
         }
-        try { task = recovery.readReceipt(Object.assign({}, row.seat), finish); } catch (error) { finish(null); }
+        try { task = recovery.readReceipt(Object.assign({}, city || row.seat), finish); } catch (error) { finish(null); }
         return true;
       }
       // POST 前按原账号+入口/原码目标摘要占住待办；即使此刻被系统杀死也不能重放。
@@ -171,7 +182,7 @@ function createVerificationWorkflow(options) {
         attemptId: 'vr_' + Date.now().toString(36) + '_' + verificationSequence.toString(36) + '_' + Math.random().toString(36).slice(2),
         createdAt: Date.now() };
       row.attemptId = row.attemptId.padEnd(32, '0');
-      if (recovery) row.seat = Object.assign({}, recovery.target);
+      if (recovery && !city) row.seat = Object.assign({}, recovery.target);
       try {
         storage.setStorageSync(meta.key, row);
         const stored = read(meta);
@@ -182,6 +193,8 @@ function createVerificationWorkflow(options) {
         return blocked(callback, '核销待办未能保存，本次未提交，请检查本机存储后再试');
       }
       let entered = false, closed = false;
+      const flight = { isCurrent: recovery ? recovery.isCurrent : () => true };
+      writing.set(key, flight);
       const accepted = workflow.run(key, function (done) {
         entered = true;
         function finish(result) {
@@ -196,8 +209,11 @@ function createVerificationWorkflow(options) {
         }
         try { return start(finish); }
         catch (error) { finish(unknownResult()); return null; }
-      }, function (result) { closed = true; if (!recovery || recovery.isCurrent()) callback(result); });
-      if (!accepted && !entered) removeOriginal(meta, row);
+      }, function (result) {
+        closed = true; if (writing.get(key) === flight) writing.delete(key);
+        if (!recovery || recovery.isCurrent()) callback(result);
+      });
+      if (!accepted && !entered) { if (writing.get(key) === flight) writing.delete(key); removeOriginal(meta, row); }
       return accepted;
     },
     // 销毁只销毁内存工作流；磁盘 UNKNOWN 只允许原请求的明确回执结算，不能随离页清除。

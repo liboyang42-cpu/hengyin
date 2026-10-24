@@ -108,6 +108,7 @@ class RegistrationFundsMybatisIntegrationTest {
     @BeforeAll
     void createDatabaseAndService() throws Exception {
         assertEquals("1", System.getenv("B_PAYMENT_FACT_DDL_APPROVED"));
+        assertEquals("1", System.getenv("A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED"));
         new PiiCryptoService(TEST_PII_KEY, "funds-it-hmac").register();
         DriverManagerDataSource admin = dataSource(MYSQL.adminUrl());
         try (Connection c = admin.getConnection(); Statement s = c.createStatement()) {
@@ -136,6 +137,8 @@ class RegistrationFundsMybatisIntegrationTest {
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.FirstReviewPointsClawbackService.class));
         registrationTarget = target;
         ReflectionTestUtils.setField(target, "verifiedPaymentFacts", verifiedFacts);
+        ReflectionTestUtils.setField(target, "registrationPaymentFactMapper",
+                template.getMapper(com.chengyinhub.business.mapper.CmsRegistrationPaymentFactMapper.class));
         ReflectionTestUtils.setField(target, "platformMemberId", 1L);
         org.springframework.test.util.ReflectionTestUtils.setField(target, "growthService",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.IGrowthService.class));
@@ -247,6 +250,8 @@ class RegistrationFundsMybatisIntegrationTest {
 
     @BeforeEach
     void resetSchema() throws Exception {
+        // Existing suite recreates its own scratch schema per case; never disable immutable triggers during execution.
+        execute("DROP TABLE IF EXISTS cms_registration_payment_fact");
         execute("DELETE FROM wx_verified_payment_fact_rejection", "DELETE FROM wx_verified_payment_fact");
         execute("DROP TABLE IF EXISTS cms_registration_scan", "DROP TABLE IF EXISTS cms_member_template",
                 "DROP TABLE IF EXISTS cms_topic_node",
@@ -350,6 +355,9 @@ class RegistrationFundsMybatisIntegrationTest {
                         + " CHECK (JSON_TYPE(verified_registration_ids_json)='ARRAY' AND JSON_LENGTH(verified_registration_ids_json)>0),"
                         + " CHECK (JSON_TYPE(unverified_registration_ids_json)='ARRAY' AND JSON_LENGTH(unverified_registration_ids_json)>0)) ENGINE=InnoDB"
         );
+        try (Connection connection = dataSource.getConnection()) {
+            ScriptUtils.executeSqlScript(connection, new FileSystemResource("sql/migration_20261024_registration_payment_fact.sql"));
+        }
         execute("INSERT INTO ums_member(id,status,point,del_flag) VALUES (7,1,100,0)",
                 "INSERT INTO cms_topic(id,member_id,product_type) VALUES (99,1,1)",
                 "INSERT INTO cms_points_setting(id,value,type,status,del_flag) VALUES (2,10,1,1,0),(3,5,1,1,0)",
@@ -2530,6 +2538,7 @@ class RegistrationFundsMybatisIntegrationTest {
 
     /** §5-3:微信查单返回的原生 map(queryOrderStatus 与回调 resultMap 同键)。 */
     private Map<String, String> wxQuery(String tradeState) {
+        if ("SUCCESS".equals(tradeState)) return callback(tradeState); // Same explicit original provider fact as normal callbacks.
         Map<String, String> query = new HashMap<>();
         query.put("out_trade_no", "T20260724PAY");
         query.put("wx_out_trade_no", "T20260724PAY");
@@ -2663,6 +2672,8 @@ class RegistrationFundsMybatisIntegrationTest {
                 new SpringManagedTransactionFactory(), ds));
         configuration.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
         addMapper(configuration, CmsRegistrationMapper.class, "mapper/business/CmsRegistrationMapper.xml");
+        addMapper(configuration, com.chengyinhub.business.mapper.CmsRegistrationPaymentFactMapper.class,
+                "mapper/business/CmsRegistrationPaymentFactMapper.xml");
         addMapper(configuration, CmsActivityMapper.class, "mapper/business/CmsActivityMapper.xml");
         addMapper(configuration, OmsTicketMapper.class, "mapper/business/OmsTicketMapper.xml");
         addMapper(configuration, UmsMemberMapper.class, "mapper/business/UmsMemberMapper.xml");

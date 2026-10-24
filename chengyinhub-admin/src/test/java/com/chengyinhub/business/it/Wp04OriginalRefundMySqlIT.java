@@ -89,8 +89,12 @@ class Wp04OriginalRefundMySqlIT {
         applyNewSchemaAndFreezeOriginalOrder(paid,refundApp,true);
     }
     void applyNewSchemaAndFreezeOriginalOrder(boolean paid, String refundApp, boolean bindOriginalPaymentReceipt) throws Exception {
-        P0AcceptanceSchema.migrations(source,MIGRATION);
-        SqlSessionTemplate sql=P0AcceptanceSchema.sql(source,"CoopSettlementOriginalMapper","CoopSettlementCashEvidenceMapper",
+        applyNewSchemaAndFreezeOriginalOrder(paid,refundApp,bindOriginalPaymentReceipt,false);
+    }
+    void applyNewSchemaAndFreezeOriginalOrder(boolean paid, String refundApp, boolean bindOriginalPaymentReceipt,
+            boolean bindConsumedPaymentReceipt) throws Exception {
+        P0AcceptanceSchema.migrations(source,MIGRATION,"migration_20261024_registration_payment_fact.sql");
+        SqlSessionTemplate sql=P0AcceptanceSchema.sql(source,"CmsRegistrationPaymentFactMapper","CoopSettlementOriginalMapper","CoopSettlementCashEvidenceMapper",
                 "CoopSettlementMapper","CoopSettlementAdjustmentMapper","WechatVerifiedPaymentFactMapper",
                 "UmsMemberSettlementDebtMapper","UmsMemberBalanceDetailMapper");
         originals=sql.getMapper(CoopSettlementOriginalMapper.class); cash=sql.getMapper(CoopSettlementCashEvidenceMapper.class);
@@ -108,7 +112,8 @@ class Wp04OriginalRefundMySqlIT {
             db.update("INSERT INTO ums_member_balance_detail(member_id,current_balance,after_balance,change_balance,change_reason,event_type,event_id,change_type,del_flag,create_time) VALUES(7,9,2,-7,'IT subsequent balance use',9001,1,2,0,NOW())");
         }
         String paymentHash=WxPaymentCallbackInboxServiceImpl.sha256Hex("PAY:WXTX1:SUCCESS");
-        db.update("INSERT INTO wx_payment_callback_inbox(id,notify_hash,biz_type,biz_id,event_type,state) VALUES(900,UNHEX(?),1,1,'SUCCESS',2)",paymentHash);
+        if (!bindConsumedPaymentReceipt)
+            db.update("INSERT INTO wx_payment_callback_inbox(id,notify_hash,biz_type,biz_id,event_type,state) VALUES(900,UNHEX(?),1,1,'SUCCESS',2)",paymentHash);
         if (bindOriginalPaymentReceipt) facts.bindNewInbox(900,paymentHash,originalPayment,true);
         String notifyHash=WxPaymentCallbackInboxServiceImpl.sha256Hex("REFUND:RF901:SUCCESS");
         db.update("INSERT INTO wx_payment_callback_inbox(id,notify_hash,biz_type,biz_id,event_type,state) VALUES(901,UNHEX(?),2,901,'SUCCESS',0)",notifyHash);
@@ -131,8 +136,10 @@ class Wp04OriginalRefundMySqlIT {
             return count;
         });
         SettlementDebtLedger debts=new SettlementDebtLedger(sql.getMapper(UmsMemberSettlementDebtMapper.class),members,flows);
+        var consumedPayments = sql.getMapper(CmsRegistrationPaymentFactMapper.class);
+        var consumedReader = new com.chengyinhub.business.service.support.RegistrationPaymentConsumptionReadService(consumedPayments);
         owner=new CoopSettlementOriginalLedger(topics,cash,originals,sql.getMapper(CoopSettlementMapper.class),
-                sql.getMapper(CoopSettlementAdjustmentMapper.class),facts,members,ledger,debts);
+                sql.getMapper(CoopSettlementAdjustmentMapper.class),facts,consumedReader,members,ledger,debts);
         CoopSettlementCashClose close=new CoopSettlementCashClose(); close.setTopicId(11L); close.setCommercialContextType("TOPIC_EDITION");
         close.setCommercialContextId(11L); close.setCloseKind("POSITIVE_SALES"); close.setInitiatorMemberId(7L);
         close.setOriginalSalesBasis(money("10")); close.setOriginalContributionCount(1); close.setPlatformRate(new BigDecimal("0.10"));
@@ -144,7 +151,10 @@ class Wp04OriginalRefundMySqlIT {
         contribution.setSnapshotPaymentStatus(2); contribution.setSnapshotRegistrationStatus(2); contribution.setSnapshotVerificationStatus(0);
         contribution.setSnapshotPayableAmount(money("10")); contribution.setSalesBasisAmount(money("10"));
         contribution.setRegistrationSnapshot("{\"wechatPaymentAmount\":10.00}"); contribution.setSourceFingerprint(HASH);
-        tx.executeWithoutResult(status -> owner.freezeOriginals(close,List.of(contribution),List.of(component(11L,null,"ACCOUNTING","PLATFORM","1"),component(12L,7L,"MEMBER","INITIATOR_MARGIN","9"))));
+        tx.executeWithoutResult(status -> {
+            if (bindConsumedPaymentReceipt) assertEquals(1,consumedPayments.insertConsumed(1L,originalPayment.id(),originalPayment.hash()));
+            owner.freezeOriginals(close,List.of(contribution),List.of(component(11L,null,"ACCOUNTING","PLATFORM","1"),component(12L,7L,"MEMBER","INITIATOR_MARGIN","9")));
+        });
         assertEquals(2,count("coop_settlement_original_component"));
     }
 
@@ -169,6 +179,19 @@ class Wp04OriginalRefundMySqlIT {
         assertMoney("10",db.queryForObject("SELECT SUM(amount) FROM coop_settlement",BigDecimal.class));
         assertMoney("2",balance()); assertEquals(0,count("ums_member_settlement_debt"));
         assertEquals(0,db.queryForObject("SELECT status FROM coop_settlement WHERE id=12",Integer.class));
+    }
+
+    @Test void sameTransactionConsumedPaymentFreezesAndRefundsWithoutFabricatedPaymentInbox() throws Exception {
+        applyNewSchemaAndFreezeOriginalOrder(false,"wx-original",false,true);
+        assertEquals(0,db.queryForObject("SELECT COUNT(*) FROM wx_payment_callback_inbox WHERE id=900",Integer.class));
+        assertEquals(originalPayment.id(),db.queryForObject("SELECT payment_fact_id FROM cms_registration_payment_fact WHERE registration_id=1",Long.class));
+        assertEquals(originalPayment.hash(),db.queryForObject("SELECT payment_fact_hash FROM cms_registration_payment_fact WHERE registration_id=1",String.class));
+        assertEquals(1,count("coop_settlement_cash_close"));
+        assertEquals(2,count("coop_settlement_original_component"));
+        terminalSuccessAndHook(); terminalSuccessAndHook();
+        assertEquals(1,count("coop_settlement_refund_receipt"));
+        assertEquals(2,count("coop_settlement_original_adjustment"));
+        assertMoney("-10",db.queryForObject("SELECT SUM(amount) FROM coop_settlement_original_adjustment",BigDecimal.class));
     }
 
     @Test void unboundPaymentFactCannotFreezeOriginalCashAndFailureRollsBackWholePlan() {
