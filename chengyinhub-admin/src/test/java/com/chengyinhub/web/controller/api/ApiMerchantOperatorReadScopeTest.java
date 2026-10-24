@@ -80,8 +80,6 @@ class ApiMerchantOperatorReadScopeTest {
         IUmsMemberBalanceDetailService balance = mock(IUmsMemberBalanceDetailService.class);
         IOmsOrderService orders = mock(IOmsOrderService.class);
         IMerchantInsightService insight = mock(IMerchantInsightService.class);
-        when(balance.selectUmsMemberBalanceDetailList(any(UmsMemberBalanceDetail.class)))
-                .thenReturn(Collections.emptyList());
         when(orders.selectOmsOrderList(any(OmsOrder.class))).thenReturn(Collections.emptyList());
         ReflectionTestUtils.setField(controller, "umsMemberBalanceDetailService", balance);
         ReflectionTestUtils.setField(controller, "omsOrderService", orders);
@@ -93,11 +91,10 @@ class ApiMerchantOperatorReadScopeTest {
         Map<?, ?> data = (Map<?, ?>) result.get(AjaxResult.DATA_TAG);
         assertEquals("0.00", data.get("revenue"));
         assertNotNull(data.get("revenue7d"));
-        org.mockito.ArgumentCaptor<UmsMemberBalanceDetail> balanceQuery =
-                org.mockito.ArgumentCaptor.forClass(UmsMemberBalanceDetail.class);
-        verify(balance).selectUmsMemberBalanceDetailList(balanceQuery.capture());
-        assertEquals(OWNER, balanceQuery.getValue().getMemberId());
+        verify(balance).sumDashboardIncome(OWNER);
+        verify(balance).sumDashboardIncomeByDay(eq(OWNER), any(java.util.Date.class));
         verify(insight, never()).dashboard(any(Long.class));
+        assertEquals("FORBIDDEN", data.get("insightStatus"), "无 MARKETING_READ 要明说无权,不是静默缺键");
     }
 
     @Test

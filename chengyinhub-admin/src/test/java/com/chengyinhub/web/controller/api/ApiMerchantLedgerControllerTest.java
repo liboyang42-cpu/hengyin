@@ -299,23 +299,90 @@ class ApiMerchantLedgerControllerTest {
         ReflectionTestUtils.setField(controller, "umsMemberBalanceDetailService", balanceService);
         ReflectionTestUtils.setField(controller, "omsOrderService", orderService);
         ReflectionTestUtils.setField(controller, "merchantInsightService", insightService);
-        when(balanceService.selectUmsMemberBalanceDetailList(any(UmsMemberBalanceDetail.class)))
-                .thenReturn(Collections.emptyList());
+        when(balanceService.sumDashboardIncome(OWNER_MEMBER_ID)).thenReturn(java.math.BigDecimal.ZERO);
         when(orderService.selectOmsOrderList(any(OmsOrder.class))).thenReturn(Collections.emptyList());
         when(insightService.dashboard(OWNER_MEMBER_ID)).thenReturn(new com.alibaba.fastjson2.JSONObject());
 
         AjaxResult result = controller.getDashboard();
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
-        org.mockito.ArgumentCaptor<UmsMemberBalanceDetail> balanceCaptor =
-                org.mockito.ArgumentCaptor.forClass(UmsMemberBalanceDetail.class);
-        verify(balanceService).selectUmsMemberBalanceDetailList(balanceCaptor.capture());
-        assertEquals(OWNER_MEMBER_ID, balanceCaptor.getValue().getMemberId());
+        // 收入走 SQL 聚合,且按 owner 会员取数;不再拉全量明细
+        verify(balanceService).sumDashboardIncome(OWNER_MEMBER_ID);
+        verify(balanceService).sumDashboardIncomeByDay(eq(OWNER_MEMBER_ID), any(java.util.Date.class));
+        verify(balanceService, never()).selectUmsMemberBalanceDetailList(any(UmsMemberBalanceDetail.class));
         org.mockito.ArgumentCaptor<OmsOrder> orderCaptor = org.mockito.ArgumentCaptor.forClass(OmsOrder.class);
         verify(orderService).selectOmsOrderList(orderCaptor.capture());
         assertEquals(MERCHANT_ROW_ID, orderCaptor.getValue().getMmsMerchantId());
         verify(insightService).dashboard(OWNER_MEMBER_ID);
         verify(accessService).require(OWNER_MEMBER_ID, MerchantPermission.BASIC_READ);
+    }
+
+    @Test
+    void dashboardRevenueAndSevenDayTrendComeFromSqlAggregatesWithMissingDaysZeroFilled() {
+        IUmsMemberBalanceDetailService balanceService = mock(IUmsMemberBalanceDetailService.class);
+        IOmsOrderService orderService = mock(IOmsOrderService.class);
+        IMerchantInsightService insightService = mock(IMerchantInsightService.class);
+        ApiMerchantController controller = new LoggedInOwnerController();
+        attachOwnerAccess(controller);
+        ReflectionTestUtils.setField(controller, "umsMemberBalanceDetailService", balanceService);
+        ReflectionTestUtils.setField(controller, "omsOrderService", orderService);
+        ReflectionTestUtils.setField(controller, "merchantInsightService", insightService);
+        String today = new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date());
+        when(balanceService.sumDashboardIncome(OWNER_MEMBER_ID)).thenReturn(new java.math.BigDecimal("12.345"));
+        when(balanceService.sumDashboardIncomeByDay(eq(OWNER_MEMBER_ID), any(java.util.Date.class)))
+                .thenReturn(Collections.singletonMap(today, new java.math.BigDecimal("5")));
+        when(orderService.selectOmsOrderList(any(OmsOrder.class))).thenReturn(Collections.emptyList());
+
+        AjaxResult result = controller.getDashboard();
+
+        java.util.Map<?, ?> data = (java.util.Map<?, ?>) result.get(AjaxResult.DATA_TAG);
+        assertEquals("12.35", data.get("revenue"), "累计收入保持两位小数 HALF_UP");
+        java.util.List<?> trend = (java.util.List<?>) data.get("revenue7d");
+        assertEquals(7, trend.size());
+        assertEquals("5.00", ((java.util.Map<?, ?>) trend.get(6)).get("amount"), "今天落在最后一格");
+        java.util.Map<?, ?> windows = (java.util.Map<?, ?>) data.get("windows");
+        assertEquals("ALL_TIME", windows.get("revenue"));
+        assertEquals("CALENDAR_7D_INCL_TODAY", windows.get("revenue7d"));
+        assertEquals("ROLLING_30D", windows.get("insight"), "三种窗口并存时逐块声明");
+        assertEquals("OK", data.get("insightStatus"));
+        for (int i = 0; i < 6; i++) {
+            assertEquals("0.00", ((java.util.Map<?, ?>) trend.get(i)).get("amount"), "无流水的天补 0");
+        }
+        // 分桶起点 = 今天往前 6 天的零点(含今天共 7 个自然日)
+        org.mockito.ArgumentCaptor<java.util.Date> since = org.mockito.ArgumentCaptor.forClass(java.util.Date.class);
+        verify(balanceService).sumDashboardIncomeByDay(eq(OWNER_MEMBER_ID), since.capture());
+        java.util.Calendar start = java.util.Calendar.getInstance();
+        start.set(java.util.Calendar.HOUR_OF_DAY, 0);
+        start.set(java.util.Calendar.MINUTE, 0);
+        start.set(java.util.Calendar.SECOND, 0);
+        start.set(java.util.Calendar.MILLISECOND, 0);
+        start.add(java.util.Calendar.DATE, -6);
+        assertEquals(start.getTime(), since.getValue());
+    }
+
+    @Test
+    void dashboardInsightFailureIsReportedAsErrorNotSilentlyMissing() {
+        IUmsMemberBalanceDetailService balanceService = mock(IUmsMemberBalanceDetailService.class);
+        IOmsOrderService orderService = mock(IOmsOrderService.class);
+        IMerchantInsightService insightService = mock(IMerchantInsightService.class);
+        ApiMerchantController controller = new LoggedInOwnerController();
+        attachOwnerAccess(controller);
+        ReflectionTestUtils.setField(controller, "umsMemberBalanceDetailService", balanceService);
+        ReflectionTestUtils.setField(controller, "omsOrderService", orderService);
+        ReflectionTestUtils.setField(controller, "merchantInsightService", insightService);
+        when(orderService.selectOmsOrderList(any(OmsOrder.class))).thenReturn(Collections.emptyList());
+        when(insightService.dashboard(OWNER_MEMBER_ID)).thenThrow(new IllegalStateException("boom"));
+        long before = ApiMerchantController.DASHBOARD_INSIGHT_FAILURES.get();
+
+        AjaxResult result = controller.getDashboard();
+
+        assertEquals(200, result.get(AjaxResult.CODE_TAG), "insight 失败不拖垮收入/订单面板");
+        java.util.Map<?, ?> data = (java.util.Map<?, ?>) result.get(AjaxResult.DATA_TAG);
+        assertEquals("ERROR", data.get("insightStatus"));
+        assertEquals(false, data.containsKey("insight"));
+        assertEquals(null, ((java.util.Map<?, ?>) data.get("windows")).get("insight"), "没下发的块不声明窗口");
+        assertEquals("0.00", data.get("revenue"));
+        assertEquals(before + 1, ApiMerchantController.DASHBOARD_INSIGHT_FAILURES.get());
     }
 
     @Test
@@ -335,6 +402,11 @@ class ApiMerchantLedgerControllerTest {
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         // 店长没有 FINANCE_READ:资金域一块都不查,但订单/参谋两块按岗位权限照常取数。
         verifyNoInteractions(balanceService);
+        java.util.Map<?, ?> windows =
+                (java.util.Map<?, ?>) ((java.util.Map<?, ?>) result.get(AjaxResult.DATA_TAG)).get("windows");
+        assertEquals(java.util.Collections.singletonMap("insight", "ROLLING_30D"), new java.util.HashMap<>(windows),
+                "只声明实际下发的块");
+        assertEquals("OK", ((java.util.Map<?, ?>) result.get(AjaxResult.DATA_TAG)).get("insightStatus"));
         verify(orderService).selectOmsOrderList(any(OmsOrder.class));
         verify(insightService).dashboard(OWNER_MEMBER_ID);
     }

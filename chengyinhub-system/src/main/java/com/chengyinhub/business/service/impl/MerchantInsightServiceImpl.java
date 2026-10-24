@@ -52,7 +52,8 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
 {
     private static final Logger log = LoggerFactory.getLogger(MerchantInsightServiceImpl.class);
 
-    private static final int WINDOW_DAYS = 30;
+    /** dashboard/参谋的滚动窗口;与看板 windows.insight 声明同源 */
+    private static final int WINDOW_DAYS = com.chengyinhub.business.service.support.MerchantMetricWindow.ROLLING_30D.days();
     /** 店铺参谋主卡可切换的时间窗(自然日,含今天) */
     private static final int[] TREND_WINDOWS = { 7, 30, 90 };
     private static final int LOW_SAMPLE_THRESHOLD = 10;
@@ -167,7 +168,10 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
         JSONObject data = new JSONObject();
         data.put("windowDays", WINDOW_DAYS);
         // 曝光 = 我有节点的主题近窗口浏览数(店铺页/分享暂无埋点,不造数 —— 有埋点后再补字段)
+        // exposure 是浏览次数(PV),与到店人次不可直接相除;exposureUv 为去重浏览人数,exposureSemantics 声明口径。
         data.put("exposure", merchantInsightMapper.countTopicExposure(merchantMemberId, since));
+        data.put("exposureUv", merchantInsightMapper.countTopicExposureVisitors(merchantMemberId, since));
+        data.put("exposureSemantics", "PV");
         // 到店/核销率/时段/复购率:与店铺参谋同一 facts 口径,数字直出不走 AI
         data.put("checkin", buildCheckinFacts(visits));
         data.put("supplyCount", supply == null ? 0 : supply.size());
@@ -792,15 +796,19 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
     {
         JSONObject out = new JSONObject();
         out.put("activeOffers", supply.size());
-        Set<String> topics = new HashSet<>();
+        // 按 topicId 去重(同名不同主题各算一个);一个主题多章多行只出一次名字
+        Map<Object, String> topics = new LinkedHashMap<>();
         int quotaTotal = 0, quotaUsed = 0;
         for (MerchantInsightSupplyFact f : supply)
         {
-            if (f.getTopicName() != null) topics.add(f.getTopicName());
+            if (f.getTopicName() != null)
+            {
+                topics.putIfAbsent(f.getTopicId() != null ? f.getTopicId() : "name:" + f.getTopicName(), f.getTopicName());
+            }
             if (f.getQuotaTotal() != null) quotaTotal += f.getQuotaTotal();
             if (f.getQuotaUsed() != null) quotaUsed += f.getQuotaUsed();
         }
-        out.put("topics", new ArrayList<>(topics));
+        out.put("topics", new ArrayList<>(topics.values()));
         out.put("quotaUsedRate", com.chengyinhub.common.utils.SafeRatio.ratio(quotaUsed, quotaTotal, 2));
         return out;
     }

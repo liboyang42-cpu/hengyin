@@ -23,6 +23,7 @@
         <result property="redeemedAt" column="redeemed_at"/>
     </resultMap>
     <resultMap id="supplyFact" type="com.chengyinhub.business.domain.dto.MerchantInsightSupplyFact">
+        <result property="topicId" column="topic_id"/>
         <result property="topicName" column="topic_name"/>
         <result property="quotaTotal" column="quota_total"/>
         <result property="quotaUsed" column="quota_used"/>
@@ -69,7 +70,7 @@
     </select>
 
     <select id="selectSupplyFacts" resultMap="supplyFact">
-        select t.name topic_name, o.quota_total, o.quota_used
+        select o.topic_id, t.name topic_name, o.quota_total, o.quota_used
           from merchant_chapter_offer o
           join cms_topic t on t.id = o.topic_id and t.del_flag = 0
          where o.merchant_id = #{merchantMemberId} and o.status = 1
@@ -78,6 +79,16 @@
     <!-- 曝光(升级5):我有节点的主题,近窗口被浏览了多少次。browse_type=1 主题(活动=2 的约定见 ApiActivityController)。 -->
     <select id="countTopicExposure" resultType="int">
         select count(*)
+          from tms_browse_record b
+         where b.browse_type = 1
+           and b.browse_time &gt;= #{since}
+           and b.target_id in (
+               select distinct n.topic_id from cms_topic_node n
+                where n.merchant_member_id = #{merchantMemberId})
+    </select>
+    <!-- 曝光人数(UV):同 countTopicExposure 口径,按浏览会员去重。PV 与到店不可直接相除,端上要比值用这个。 -->
+    <select id="countTopicExposureVisitors" resultType="int">
+        select count(distinct b.member_id)
           from tms_browse_record b
          where b.browse_type = 1
            and b.browse_time &gt;= #{since}

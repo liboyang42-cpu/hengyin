@@ -147,6 +147,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by id desc
     </select>
     
+    <!-- 商家待办:已支付报名按 (owner_id, verification_status) 分组计数,一次查完全部项目。
+         口径同 selectCmsRegistrationList(paymentStatus=2, ownerType, ownerId, verificationStatus=0|1).size()。 -->
+    <select id="countPaidVerificationByOwners" resultType="java.util.HashMap">
+        select owner_id as owner_id, verification_status as verification_status, count(*) as cnt
+        from cms_registration
+        where payment_status = 2
+          and owner_type = #{ownerType}
+          and owner_id in
+          <foreach collection="ownerIds" item="ownerId" open="(" separator="," close=")">#{ownerId}</foreach>
+          and verification_status in (0, 1)
+        group by owner_id, verification_status
+    </select>
+
     <select id="selectCmsRegistrationById" parameterType="Long" resultMap="CmsRegistrationResult">
         <include refid="selectCmsRegistrationVo"/>
         where id = #{id}

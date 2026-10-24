@@ -18,7 +18,7 @@ public class ImConversation extends BaseEntity
     /** 主键 */
     private Long id;
 
-    /** 类型 1单聊 2系统 3商家 */
+    /** 类型 1单聊 2系统 3商家 4群聊(见 TYPE_* 常量;库表列注释仍缺 4,以此处为准) */
     private Integer type;
 
     /** 业务唯一键 */

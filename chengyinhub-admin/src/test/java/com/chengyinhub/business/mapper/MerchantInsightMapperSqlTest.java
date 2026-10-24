@@ -105,4 +105,21 @@ class MerchantInsightMapperSqlTest {
                 "在架供给必须排除已过期 offer");
         assertTrue(s.contains("t.del_flag = 0"), "主题必须排除软删行");
     }
+
+    @Test
+    void exposureVisitorsIsDistinctMemberCountOverSameScopeAsPv() throws Exception {
+        // UV 版曝光必须按会员去重,且范围与 PV 版一致(只换聚合函数),否则两数不可比
+        Configuration cfg = parse();
+        String pv = sql(cfg, "countTopicExposure");
+        String uv = sql(cfg, "countTopicExposureVisitors");
+        assertTrue(uv.contains("count(distinct b.member_id)"), "UV 必须按 member_id 去重");
+        assertTrue(pv.contains("count(*)"), "PV 仍为浏览次数");
+        assertTrue(uv.replace("count(distinct b.member_id)", "count(*)").equals(pv), "UV 与 PV 只差聚合函数");
+    }
+
+    @Test
+    void supplyFactsSelectTopicIdAsAggregationKey() throws Exception {
+        assertTrue(sql(parse(), "selectSupplyFacts").contains("o.topic_id"),
+                "供给事实必须带 topic_id,主题去重按 id 不按名字");
+    }
 }
