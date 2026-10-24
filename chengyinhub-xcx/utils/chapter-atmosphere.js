@@ -1,4 +1,5 @@
 // 章节配色目录与存量别名。渐变只用于编辑器色卡。
+const { enumCode } = require('./enum-code.js')
 const PRESETS = [
   { value: 'DEFAULT', label: '黑', note: '石墨', className: 'atmosphere-swatch--default' },
   { value: 'BLUE',    label: '蓝', note: '晴空', className: 'atmosphere-swatch--blue' },
@@ -18,7 +19,7 @@ const LEGACY_ALIAS = {
 }
 
 function normalizeAtmosphere(value) {
-  const normalized = String(value || 'DEFAULT').trim().toUpperCase()
+  const normalized = enumCode(value || 'DEFAULT')
   if (VALUE_SET.has(normalized)) return normalized
   return LEGACY_ALIAS[normalized] || 'DEFAULT'
 }
