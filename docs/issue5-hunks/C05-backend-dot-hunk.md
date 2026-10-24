@@ -71,3 +71,24 @@ BUILD SUCCESS
 ```
 
 App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
+
+## Addendum 2026-10-23 19:05 America/Los_Angeles
+
+HEAD `69f6c982b` tests. Did not invent recoverOriginal.
+
+- `SideQuestAcceptHoldTest.unusedAcceptHoldBeforeDiscoverDoesNotOccupyThenUniqueHoldApplies`：IDLE `acceptHold` 抛 `NOT_COMPLIANT`，`hold`/`original` 仍 null；后续唯一 discover+acceptHold 才是 HOLD_ACCEPTED。
+- `SideQuestAcceptHoldTest.unusedCompleteBeforeHoldDoesNotOccupyThenUniqueCompleteApplies`：DISCOVERED `complete` 抛 `HOLD_REQUIRED`，`original` 仍 null；后续唯一 acceptHold+proof+complete 才是 COMPLETED 原文。
+
+Parent surefire `com.chengyinhub.business.service.offline.*Test` **12/0** 2026-10-24T02:05:05Z：
+
+```
+Tests run: 1 -- OfflinePackOperationTest
+Tests run: 3 -- SideQuestAcceptHoldTest
+Tests run: 4 -- C05AccountSwitchRestartIsolationTest
+Tests run: 2 -- C05FirstJourneyIsolationTest
+Tests run: 2 -- NavigationDestinationConsentTest
+Tests run: 12, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
