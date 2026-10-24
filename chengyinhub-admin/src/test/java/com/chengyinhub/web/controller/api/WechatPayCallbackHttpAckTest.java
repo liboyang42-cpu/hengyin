@@ -92,13 +92,15 @@ class WechatPayCallbackHttpAckTest {
                 if (throwsException) throw new IllegalStateException("domain transaction failed");
                 return success;
             };
-            when(club.handlePaidInvoice(anyString(), anyBoolean(), any(), anyString())).thenAnswer(outcome);
+            when(club.handlePaidInvoice(eq(no),eq(true),eq(1000),eq("WX-TX"),
+                    argThat(reference -> reference!=null && originalReference(pay,no).equals(reference)))).thenAnswer(outcome);
             var provider = mock(org.springframework.beans.factory.ObjectProvider.class);
             when(provider.getIfAvailable()).thenReturn(club);
             com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(pay, "clubMembershipServiceProvider", provider);
             var commerce = mock(com.chengyinhub.business.service.IMerchantCommerceService.class);
             when(commerce.supportsOutTradeNo(anyString())).thenAnswer(c -> ((String)c.getArgument(0)).startsWith("TPLTM_"));
-            when(commerce.handlePaidOrder(anyString(), anyBoolean(), any(), anyString())).thenAnswer(outcome);
+            when(commerce.handlePaidOrder(eq(no),eq(true),eq(1000),eq("WX-TX"),
+                    argThat(reference -> reference!=null && originalReference(pay,no).equals(reference)))).thenAnswer(outcome);
             com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(pay, "merchantCommerceService", commerce);
             var coop = mock(com.chengyinhub.business.service.ICoopInviteService.class);
             when(coop.markDepositPaid(anyString(), any(), anyString(), any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class)))
@@ -123,6 +125,26 @@ class WechatPayCallbackHttpAckTest {
             ApiRegistrationController controller = new ApiRegistrationController();
             com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(controller, "wechatPayService", pay);
             mvc = MockMvcBuilders.standaloneSetup(controller).build();
+        }
+        private static com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalReference(
+                com.chengyinhub.business.service.impl.WechatPayServiceImpl gateway,String no) {
+            var reader=(com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService)
+                    WechatVerifiedFactTestSupport.getField(gateway,"verifiedFacts");
+            var original=facts(no);
+            var stored=reader.findPaymentSuccess(original.getMchid(),original.getOutTradeNo(),original.getTransactionId());
+            org.junit.jupiter.api.Assertions.assertNotNull(stored,"HTTP routing must carry an already saved verified reference");
+            var fact=reader.requireVerified(stored.reference()).facts();
+            com.chengyinhub.business.service.impl.DepositVerifiedReferenceTestSupport.assertOriginal(gateway,stored.reference(),no,
+                    original.getAmount().getTotal().longValue(),original.getTransactionId());
+            org.junit.jupiter.api.Assertions.assertEquals(original.getOutTradeNo(),fact.wxOutTradeNo());
+            org.junit.jupiter.api.Assertions.assertEquals(original.getOutTradeNo(),fact.merchantEventNo());
+            org.junit.jupiter.api.Assertions.assertEquals(original.getAppid(),fact.appid());
+            org.junit.jupiter.api.Assertions.assertEquals(original.getMchid(),fact.mchid());
+            org.junit.jupiter.api.Assertions.assertEquals(original.getTradeType().name(),fact.tradeType());
+            org.junit.jupiter.api.Assertions.assertEquals(original.getAmount().getCurrency(),fact.currency());
+            org.junit.jupiter.api.Assertions.assertEquals(java.time.OffsetDateTime.parse(original.getSuccessTime()).toInstant(),fact.successAt());
+            org.junit.jupiter.api.Assertions.assertNull(fact.intentRequestHash(),"this HTTP fixture explicitly uses an unfrozen historical original");
+            return stored.reference();
         }
         private static com.wechat.pay.java.service.payments.model.Transaction facts(String no) {
             var tx = new com.wechat.pay.java.service.payments.model.Transaction();

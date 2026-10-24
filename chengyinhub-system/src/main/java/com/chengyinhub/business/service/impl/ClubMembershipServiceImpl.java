@@ -525,7 +525,7 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
         ClubMembershipInvoice transactionOwner = clubMembershipMapper.selectInvoiceByTransactionId(tx);
         if (transactionOwner != null && !invoice.getId().equals(transactionOwner.getId())) return false;
         if (invoice.getVerifiedPaymentFactId() != null || invoice.getVerifiedPaymentFactHash() != null) return false;
-        if (!wechatPayService.lockPaymentAttemptForUpdate(outTradeNo, verified.facts().wxOutTradeNo())) return false;
+        if (!currentInvoicePayment(verified)) return false;
         Date paidAt = now();
         if (invoice.getVersion() == null || clubMembershipMapper.markInvoicePaidCas(
                 invoice.getId(), invoice.getVersion(), tx, paidAt) != 1) return false;
@@ -1481,6 +1481,17 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
         }
     }
 
+    /** Known current-attempt denial remains false; DB/read failures must propagate. No local intent policy. */
+    private boolean currentInvoicePayment(WechatVerifiedPaymentFactService.Stored verified) {
+        try {
+            var consumable = verifiedPaymentFacts.requireConsumablePayment(verified.reference());
+            if (!verified.equals(consumable)) throw new IllegalStateException("原成功支付事实回读不一致");
+            return true;
+        } catch (WechatVerifiedPaymentFactService.ConflictException rejected) {
+            return false;
+        }
+    }
+
     private boolean completeInvoiceProof(ClubMembershipInvoice invoice, WechatVerifiedPaymentFactService.Stored verified) {
         if (invoice == null || !ClubMembershipInvoice.STATUS_PAID.equals(invoice.getStatus())
                 || !validCallbackSnapshot(invoice, verified.facts().businessOutTradeNo())
@@ -1488,6 +1499,7 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
                 || !Long.valueOf(verified.facts().totalFen()).equals(invoice.getAmountFen())
                 || !Long.valueOf(verified.reference().id()).equals(invoice.getVerifiedPaymentFactId())
                 || !verified.reference().hash().equals(invoice.getVerifiedPaymentFactHash())) return false;
+        if (!currentInvoicePayment(verified)) return false;
         verifiedPaymentFacts.completePaymentRecovery(verified.reference(), invoice.getId());
         return true;
     }

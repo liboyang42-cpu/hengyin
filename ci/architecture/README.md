@@ -90,3 +90,9 @@ D最终7f7752a增量只追加TopicPublicationService、TopicPublicationContentGu
 声明类型覆盖回读：原parse_output增加可选source_rows收集，五返回值及模块图口径不变；compiled-ports要求每个exact member有至少一条原解析器认可的source行。JDK-only依赖（如java.lang.Object）同样计入，不要求业务/项目外向边、不设leaf豁免；仅模块汇总/同模块其它类不足以覆盖该类型。缺行UNKNOWN，原确定违规仍BLOCKED；身份/原JAR/哈希/index/工具校验全部保留。合法空class/interface的OpenJDK21源码核对与协议对照已交F/source-row-verifier；真实JDK leaf形态仍待获准CI，不把协议fixture当实测。
 
 E_TOPIC_QUERY增量（9e14a73e50c9afd5c8f38027c3ecd059967a51d3）只追加精确System TopicQueryService，原55类型/44职责/51方向保留，现56/45/51。保留它的五个Mapper及ISysCategoryService/IMerchantChapterApplicationService七依赖和原门面入向；禁反调ICmsTopicService/CmsTopicServiceImpl及列明publication/claim/finalization/runtime具体写owner，且未批准其它已登记owner出向边。不是整表写权、逐方法权限或传递纯读证明；raw缺行规则同样适用新Query。
+
+新增边界登记棘轮仅覆盖 owners.json 的四个 scope_roots；固定公开 477696c8 为存量身份快照，不能由 candidate 扩大。新增 public Service/ServiceImpl/Controller/Application/Mapper 或确定角色注解的 primary type 须登记；原 DTO/私有 helper 不要求 owner，无法可靠定位角色保持 UNKNOWN。源码登记不替代编译 raw/index 回读或方法级写语义。
+
+RegistrationRedemptionApplication 原端口保留、仅 Redemption→Query 共用谓词单向；其 Mapper 包引用只例外原 CoopOrderMapper 类型，例外不授任何表写权。CI/后置工具必须使用同一独立 reviewed verifier SHA。
+
+该 Redemption owner 的 business.service 与 merchant access 引用同样只保留原精确类型；Seat$Receipt 为独立明确例外，其它 $ 类型不自动放行。方法级授权仍不由 class 图证明。

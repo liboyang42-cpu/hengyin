@@ -155,7 +155,7 @@ public class MerchantCommerceService implements IMerchantCommerceService {
         }
         if (!Long.valueOf(0L).equals(order.getStatus()) || order.getVerifiedPaymentFactId() != null
                 || order.getVerifiedPaymentFactHash() != null) return false;
-        if (!wechatPayService.lockPaymentAttemptForUpdate(outTradeNo, verified.facts().wxOutTradeNo())) return false;
+        if (!currentCommercePayment(verified)) return false;
         if (orderMapper.markCommerceOrderPaid(order.getId(), transactionId) == 0) {
             OmsOrder persisted = orderMapper.selectCommerceOrderForUpdate(outTradeNo);
             return completeCommerceProof(persisted, verified);
@@ -354,6 +354,17 @@ public class MerchantCommerceService implements IMerchantCommerceService {
         }
     }
 
+    /** Known current-attempt denial remains false; DB/read failures must propagate. No local intent policy. */
+    private boolean currentCommercePayment(WechatVerifiedPaymentFactService.Stored verified) {
+        try {
+            var consumable = verifiedPaymentFacts.requireConsumablePayment(verified.reference());
+            if (!verified.equals(consumable)) throw new IllegalStateException("原成功支付事实回读不一致");
+            return true;
+        } catch (WechatVerifiedPaymentFactService.ConflictException rejected) {
+            return false;
+        }
+    }
+
     private boolean completeCommerceProof(OmsOrder order, WechatVerifiedPaymentFactService.Stored verified) {
         if (order == null || !Long.valueOf(1L).equals(order.getStatus())
                 || !verified.facts().businessOutTradeNo().equals(order.getOrderSn())
@@ -362,6 +373,7 @@ public class MerchantCommerceService implements IMerchantCommerceService {
                 || !verified.facts().transactionId().equals(order.getPaymentTransactionId())
                 || !Long.valueOf(verified.reference().id()).equals(order.getVerifiedPaymentFactId())
                 || !verified.reference().hash().equals(order.getVerifiedPaymentFactHash())) return false;
+        if (!currentCommercePayment(verified)) return false;
         verifiedPaymentFacts.completePaymentRecovery(verified.reference(), order.getId());
         return true;
     }

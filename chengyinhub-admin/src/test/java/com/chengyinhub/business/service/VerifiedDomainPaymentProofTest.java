@@ -44,7 +44,7 @@ class VerifiedDomainPaymentProofTest {
     }
     @Test void currentAttemptDenialHasNoPaidGrantOrProofWrite() {
         for(boolean isClub:new boolean[]{true,false}) {
-            var f=new Fixture(isClub);when(f.pay.lockPaymentAttemptForUpdate(f.no,f.no)).thenReturn(false);
+            var f=new Fixture(isClub);doThrow(new WechatVerifiedPaymentFactService.ConflictException()).when(f.proof.reader).requireConsumablePayment(f.ref);
             assertFalse(f.consume(f.ref));f.assertNoGrantOrCompletion();
             verify(f.invoices,never()).markInvoicePaidCas(any(),anyInt(),anyString(),any());
             verify(f.orders,never()).markCommerceOrderPaid(any(),anyString());
@@ -88,6 +88,27 @@ class VerifiedDomainPaymentProofTest {
             var f=new Fixture(isClub);doThrow(new IllegalStateException("controlled original ticket conflict"))
                 .when(f.proof.reader).completePaymentRecovery(f.ref,isClub?100L:8L);
             assertThrows(IllegalStateException.class,()->f.consume(f.ref));assertEquals(1,f.rollbacks.get());assertEquals(0,f.commits.get());
+        }
+    }
+
+    @Test void boundProofCannotCompleteAClosedOrSupersededAttemptTicket() {
+        for(boolean isClub:new boolean[]{true,false}) {
+            var f=new Fixture(isClub);f.invoice.setStatus("PAID");f.invoice.setTransactionId("TX-original");
+            f.invoice.setVerifiedPaymentFactId(f.ref.id());f.invoice.setVerifiedPaymentFactHash(f.ref.hash());
+            f.order.setStatus(1L);f.order.setPaymentTransactionId("TX-original");
+            f.order.setVerifiedPaymentFactId(f.ref.id());f.order.setVerifiedPaymentFactHash(f.ref.hash());
+            doThrow(new WechatVerifiedPaymentFactService.ConflictException()).when(f.proof.reader).requireConsumablePayment(f.ref);
+            assertFalse(f.consume(f.ref));f.assertNoGrantOrCompletion();
+            assertEquals(f.ref.hash(),f.invoice.getVerifiedPaymentFactHash());assertEquals(f.ref.hash(),f.order.getVerifiedPaymentFactHash());
+        }
+    }
+    @Test void sharedCurrentReadFailureIsNeverConvertedToAStaleFalseOrASuccess() {
+        for(boolean isClub:new boolean[]{true,false}) {
+            var f=new Fixture(isClub);var failure=new org.springframework.dao.DataAccessResourceFailureException("controlled current read unavailable");
+            doThrow(failure).when(f.proof.reader).requireConsumablePayment(f.ref);
+            assertSame(failure,assertThrows(org.springframework.dao.DataAccessResourceFailureException.class,()->f.consume(f.ref)));
+            f.assertNoGrantOrCompletion();verify(f.invoices,never()).markInvoicePaidCas(any(),anyInt(),anyString(),any());
+            verify(f.orders,never()).markCommerceOrderPaid(any(),anyString());assertEquals(1,f.rollbacks.get());
         }
     }
 

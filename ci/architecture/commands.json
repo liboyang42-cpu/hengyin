@@ -82,6 +82,33 @@
         "com.chengyinhub.business.service.ai.PhotoCheckIntentService#read",
         "com.chengyinhub.business.service.ai.PhotoCheckIntentService#markApplied"
       ]
+    },
+    {
+      "id": "npc-voice-enrollment-intent",
+      "business_owner": "E_NPC_VOICE_ENROLLMENT",
+      "writes": [
+        "NPC_VOICE_ENROLLMENT_INTENT"
+      ],
+      "public_methods": [
+        "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService#enroll",
+        "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService#status"
+      ]
+    },
+    {
+      "id": "npc-asr-intent",
+      "business_owner": "D_NPC_ASR_INTENT",
+      "writes": [
+        "NPC_ASR_INTENT"
+      ],
+      "public_methods": [
+        "com.chengyinhub.business.service.impl.NpcAsrIntentService#read",
+        "com.chengyinhub.business.service.impl.NpcAsrIntentService#recognize",
+        "com.chengyinhub.business.service.impl.NpcAsrIntentService#beginHandoff",
+        "com.chengyinhub.business.service.impl.NpcAsrIntentService#readOutcome",
+        "com.chengyinhub.business.service.impl.NpcChatWriteService#admit",
+        "com.chengyinhub.business.service.impl.NpcChatWriteService#deleteForUser",
+        "com.chengyinhub.business.service.impl.DataRetentionServiceImpl#cleanNpcChatRequests"
+      ]
     }
   ],
   "business_commands_limit": "root批准的应用合同引用；read两个重载同方法名。登记不证明Java调用必经Service，不授play或其它domain直接Mapper写权；scope/原身份/退款/原子恢复仍由既有业务合同验证。"

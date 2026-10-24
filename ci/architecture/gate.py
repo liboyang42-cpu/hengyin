@@ -20,9 +20,11 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 BASE = "2ec68899099a1e250df0949a8383bf85b5d3ffe0"
+BOUNDARY_BASE = "477696c8eb2fa24bd3d7febc896415bf0d1b67c0"
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent
 SQL_SPLITTER_PATH = REPO / "ci/sql_splitter.py"
+JAVA_MASK_PATH = REPO / "ci/real_storage_it.py"
 SHA = re.compile(r"[0-9a-f]{40}\Z")
 IDENT = r"[A-Za-z_][A-Za-z0-9_]*"
 MAPPER = re.compile(r"chengyinhub-[^/]+/src/main/resources/mapper/.+\.xml\Z")
@@ -392,7 +394,19 @@ def business_policy():
                 require(port["consumer"] in {m.split("#")[0] for m in entries[writer["command_id"]]["public_methods"]})
             require(port["target"] not in ports)
             ports[port["target"]] = {"owner": port["owner"], "consumer": port["consumer"]}
-        require(all(w["namespace"] in ports and ports[w["namespace"]]["owner"] == w["module"] for w in writers.values()))
+        # A namespace writer and a one-consumer private port are distinct contracts.
+        # Keep all three private ports; shared intent storage needs explicit exact consumers instead.
+        for writer in writers.values():
+            if writer["namespace"] in ports:
+                require(ports[writer["namespace"]]["owner"] == writer["module"])
+                continue
+            if "technical_dependency_policy" not in owners:
+                raise GateError("OWNER_DEPENDENCY_POLICY_INVALID: missing shared storage binding")
+            storage = [o for o in owners["technical_dependency_policy"]["owners"]
+                       if o["module"] == writer["module"] and o["members"] == [writer["namespace"]]]
+            require(len(storage) == 1 and bool(storage[0].get("allowed_consumers")))
+            require({m.split("#")[0] for m in entries[writer["command_id"]]["public_methods"]}
+                    <= set(storage[0]["allowed_consumers"]))
         return {"facts": facts, "writers": writers, "commands": entries, "private_ports": ports}
     except GateError:
         raise
@@ -416,7 +430,20 @@ def technical_dependency_policy():
         owners, members = {}, {}
         fqcn = r"(?:" + IDENT + r"\.)+" + IDENT
         for owner in policy["owners"]:
-            require(set(owner) == {"id", "module", "members", "forbidden_backrefs"})
+            fields = {"id", "module", "members", "forbidden_backrefs"}
+            require(fields <= set(owner) and set(owner) <= fields | {"restricted_packages", "allowed_consumers"})
+            if "allowed_consumers" in owner:
+                consumers = owner["allowed_consumers"]
+                require(len(owner["members"]) == 1 and isinstance(consumers, list) and consumers
+                        and len(set(consumers)) == len(consumers))
+                require(all(isinstance(n, str) and re.fullmatch(fqcn, n) for n in consumers))
+            restricted = owner.get("restricted_packages", {})
+            require(isinstance(restricted, dict))
+            for package, exceptions in restricted.items():
+                require(isinstance(package, str) and re.fullmatch(fqcn + r"\.", package))
+                require(isinstance(exceptions, list) and len(exceptions) == len(set(exceptions)))
+                require(all(isinstance(n, str) and re.fullmatch(fqcn + r"(?:\$" + IDENT + r")*", n)
+                            and n.startswith(package) for n in exceptions))
             id_ = owner["id"]
             require(isinstance(id_, str) and re.fullmatch(r"[A-Z][A-Z0-9_]*", id_) and id_ not in owners)
             require(owner["module"] in modules)
@@ -682,16 +709,87 @@ def check_source(root, candidate, compare_base, context, baseline_path=HERE / "b
     previous_details = {}
     previous = inventory(root, compare_base, previous_details)
     blockers, review = static_findings(previous, current, changed, details, previous_details, policy)
+    boundary_blockers, boundary_review, boundary_scope = boundary_findings(root, candidate, changed, names, technical, policy)
+    blockers.extend(boundary_blockers)
+    review.extend(boundary_review)
     return {"schema": 2, "candidate_sha": candidate, "comparison_base_sha": compare_base,
             "legacy_baseline_sha": BASE, "ci_checkout_sha": context["checkout_sha"],
             "verdict": "BLOCKED" if blockers else "PASS_WITH_REVIEW_ITEMS" if review else "PASS",
             "findings": blockers, "review_items": review, "changed_files": sorted(changed),
+            "boundary_registration": boundary_scope,
             "business_policy": {"coverage": "PARTIAL", "fact_ids": sorted(f["id"] for f in policy["facts"].values())},
             "technical_dependencies": {"coverage": "PARTIAL", "owners": sorted(technical["owners"]), "compiled_inputs": "NOT_CHECKED_BY_SOURCE_GATE"},
             "not_proven": ["Java/SQL authorization semantics", "transaction atomicity",
                            "complete fresh-read semantics (RR current SQL/transactions still require tests)",
                            "persistent intent/recovery", "Java or real storage test execution",
                            "business service call paths and writes outside declared facts"]}
+
+
+@functools.lru_cache(maxsize=1)
+def java_mask():
+    # Existing stdlib-only scanner, from the trusted checkout, never candidate code.
+    spec = importlib.util.spec_from_file_location("architecture_java_mask", JAVA_MASK_PATH)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.strip_java_comments
+
+
+def boundary_type(root, ref, path):
+    """Narrow primary-type role detection, not Java/type/annotation semantics."""
+    code = java_mask()(blob(root, ref, path).decode("utf-8"), keep_strings=False)
+    expected = path.split("/src/main/java/", 1)[1][:-5].replace("/", ".")
+    package = re.search(r"\bpackage\s+([A-Za-z_][\w.]*)\s*;", code)
+    primary = re.search(r"\b(?:class|interface|record|enum)\s+(" + IDENT + r")\b", code)
+    if (not package or not primary or expected != package[1] + "." + primary[1]
+            or re.search(r"\\u[0-9a-fA-F]{4}", code)):
+        return {"type": expected, "role": "UNKNOWN"}
+    prefix = code[:primary.start()]
+    role = bool((re.search(r"\bpublic\b", prefix)
+                 and re.search(r"(?:Service(?:Impl)?|Controller|Application|Mapper)$", primary[1]))
+                or re.search(r"@(?:[\w]+\.)*(?:Service|Controller|RestController|Mapper|Repository)\b", prefix))
+    if not role and re.search(r"@(?:[\w]+\.)*(?:Service|Controller|RestController|Mapper|Repository|Component)\b",
+                              code):
+        return {"type": expected, "role": "UNKNOWN"}
+    return {"type": expected, "role": "BOUNDARY" if role else "OTHER"}
+
+
+def boundary_findings(root, candidate, changed, names, technical, business):
+    """New boundary identities only; old unowned code is debt, not new permission."""
+    try:
+        policy = json.loads((HERE / "owners.json").read_text())["boundary_registration"]
+        roots = policy["scope_roots"]
+        if (set(policy) != {"schema", "legacy_source", "scope_roots"} or type(policy["schema"]) is not int or policy["schema"] != 1
+                or policy["legacy_source"] != BOUNDARY_BASE or not isinstance(roots, list) or not roots
+                or len(set(roots)) != len(roots) or any(not re.fullmatch(
+                    r"chengyinhub-(?:admin|system)/src/main/java/com/chengyinhub/(?:business|web)/[a-z/]+/", p) for p in roots)):
+            raise GateError("BOUNDARY_POLICY_INVALID")
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        raise GateError("BOUNDARY_POLICY_INVALID: " + str(error)) from error
+    legacy = set(tree(root, BOUNDARY_BASE))
+    registered = {(o["module"], n) for o in technical["owners"].values() for n in o["members"]}
+    registered.update((b["owner"], n) for target, b in business["private_ports"].items()
+                      for n in (target, b["consumer"]))
+    blockers, review = [], []
+    for path in sorted(names):
+        if not path.endswith(".java") or not any(path.startswith(p) for p in roots):
+            continue
+        # Untouched snapshot identities need no reclassification or mass registration.
+        if path in legacy and path not in changed:
+            continue
+        current = boundary_type(root, candidate, path)
+        if current["role"] == "UNKNOWN":
+            review.append({"key": path, "reason": "BOUNDARY_ROLE_UNKNOWN", "type": current["type"]})
+        if current["role"] != "BOUNDARY" or (path.split("/")[0], current["type"]) in registered:
+            continue
+        previous = boundary_type(root, BOUNDARY_BASE, path) if path in legacy else None
+        if previous == current:
+            review.append({"key": path, "reason": "LEGACY_UNOWNED_BOUNDARY", "type": current["type"],
+                           "legacy_source": BOUNDARY_BASE, "legacy_sha256": digest(blob(root, BOUNDARY_BASE, path))})
+        else:
+            blockers.append({"rule": "NEW_UNOWNED_BOUNDARY", "key": path, "type": current["type"],
+                             "detail": "register exact technical owner in an independently reviewed verifier"})
+    return blockers, review, {"coverage": "SCOPED_PRIMARY_BOUNDARY_ROLES", "legacy_source": BOUNDARY_BASE,
+                             "scope_roots": roots, "semantic_read_only": "UNKNOWN"}
 
 
 def readback(plan, receipt, reports, assert_path=REPO / "ci/assert_it_ran.py"):

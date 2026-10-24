@@ -539,7 +539,7 @@
     "architecture-day-clm-commerce-proof": {
       "registered_source": "9f0c44025d42922bdc61f639075c77373792fc31",
       "classes": ["com.chengyinhub.business.it.ClmCommercePaymentProofMySqlIT"],
-      "note": "Six source cases; final integrated SHA and CLEAN must be verified independently. No production DDL or real provider."
+      "note": "Eight source cases; final integrated SHA and CLEAN must be verified independently. No production DDL or real provider."
     },
     "architecture-day-media-retry-budget": {
       "registered_source": "0465b2910220f23e64c938e89c0a81a29a59301f",
@@ -580,7 +580,7 @@
       "note": "D 6f32127 plus b8b8096 protocol: original request concurrency, durable transcript/handoff and deletion fence. Actual mapper and MySQL; controlled ASR/text ports."
     },
     "com.chengyinhub.business.it.ClmCommercePaymentProofMySqlIT": {
-      "tests": 6, "storage": ["mysql"], "gates": {},
+      "tests": 8, "storage": ["mysql"], "gates": {},
       "note": "E 9f0c440: actual canonical domain/proof/recovery transactions; historical NULL and conflict remain closed. SDK and provider are not called."
     },
     "com.chengyinhub.business.service.impl.ClubPostMediaReviewBudgetMySqlIT": {
