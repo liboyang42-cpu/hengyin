@@ -53,6 +53,17 @@ class OriginalRpgCheckCallerTest {
         assertNull(caller.receipt(7L, 9L, 4L, "spot", "req-1"));
     }
 
+    @Test
+    void frozenSameStageReplayKeepsExpectedVersion() throws Exception {
+        Recording port = new Recording();
+        port.checkBody = JSON.readTree(EXECUTE.replace("\"stateVersion\":3", "\"stateVersion\":2"));
+        OriginalRpgCheckCaller caller = new OriginalRpgCheckCaller(port);
+        JsonNode replay = caller.check(7L, 3L, 1L, 4L, "spot", 9L, "req-1", 2, "ROLL_CHECK", false, "4");
+        assertEquals(2L, replay.path("stateVersion").asLong());
+        port.checkBody = JSON.readTree(EXECUTE.replace("\"stateVersion\":3", "\"stateVersion\":2.5"));
+        assertNull(caller.check(7L, 3L, 1L, 4L, "spot", 9L, "req-1", 2, "ROLL_CHECK", false, "4"));
+    }
+
     private static final class Recording implements OriginalRpgCheckCaller.Port {
         final List<String> checks = new ArrayList<String>();
         final List<String> receipts = new ArrayList<String>();

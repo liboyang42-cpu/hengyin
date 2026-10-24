@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 /**
  * Separates the original POST execute result from the GET receipt shell.
  * A successful execute body has runId, attemptId, checkId and stateVersion.
+ * A new commit is expectedVersion + 1. A same-stage frozen replay stays on expectedVersion.
  * requestId and status belong only to {@code rpgV2CheckReceipt}.
  * This class does not write a resource ledger and does not invent those fields.
  */
@@ -90,11 +91,18 @@ public final class OriginalRpgCheckCaller {
         if (body.has("memberId") && body.path("memberId").asLong() != memberId.longValue()) {
             return false;
         }
+        JsonNode stateVersion = body.path("stateVersion");
+        if (!stateVersion.isIntegralNumber()) {
+            return false;
+        }
+        long state = stateVersion.longValue();
+        long expected = expectedVersion.longValue();
+        boolean committed = state == expected + 1L;
+        boolean frozenReplay = state == expected;
         return body.path("runId").isNumber() && body.path("runId").longValue() == runId.longValue()
                 && checkId.equals(body.path("checkId").asText(""))
                 && body.path("attemptId").isTextual() && !body.path("attemptId").asText().isEmpty()
-                && body.path("stateVersion").isNumber()
-                && body.path("stateVersion").longValue() == expectedVersion.longValue() + 1L;
+                && (committed || frozenReplay);
     }
 
     static boolean receiptShell(JsonNode body, Long runId, String requestId) {
