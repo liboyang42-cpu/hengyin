@@ -58,6 +58,9 @@ public interface WechatPaymentOperations {
     /** 原路退款的渠道归属与金额事实；NOT_FOUND 只用于渠道明确不存在。 */
     java.util.Map<String,String> queryRefundFacts(String outRefundNo);
 
+    /** Query under the original persisted payment success, never another merchant/app/attempt. Null remains UNKNOWN. */
+    java.util.Map<String,String> queryRefundFacts(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalPayment, String outRefundNo);
+
     /** 主动查微信退款态并回写本地 payout(P3 回调的拉取兜底 / admin 刷新)。返回查到的状态。 */
 
     /**

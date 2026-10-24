@@ -70,6 +70,11 @@ public class WechatPayServiceImpl implements IWechatPayService {
     public Map<String,String> queryRefundFacts(String outRefundNo){ return gateway.queryRefundFacts(outRefundNo); }
 
     @Override
+    public Map<String,String> queryRefundFacts(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalPayment, String outRefundNo) {
+        return gateway.queryRefundFacts(originalPayment,outRefundNo);
+    }
+
+    @Override
     public Map<String, String> queryOrderStatus(String outTradeNo){ return gateway.queryOrderStatus(outTradeNo); }
 
     @Override

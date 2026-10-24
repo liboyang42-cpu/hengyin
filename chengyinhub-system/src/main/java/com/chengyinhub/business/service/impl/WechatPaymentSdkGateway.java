@@ -843,7 +843,25 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
 
     @Override
     public Map<String,String> queryRefundFacts(String outRefundNo) {
+        return queryRefundFactsForOriginal(outRefundNo,null);
+    }
+
+    @Override
+    public Map<String,String> queryRefundFacts(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalPayment, String outRefundNo) {
+        try {
+            var expected=verifiedFacts.requireVerified(originalPayment);
+            if (expected.facts().kind()!=com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT
+                    || verifiedProviderClients==null || !expected.facts().mchid().equals(verifiedProviderClients.mchid())) return null;
+            return queryRefundFactsForOriginal(outRefundNo,expected);
+        } catch (RuntimeException unavailable) {
+            logger.warn("原支付事实约束的退款查单未知 type={}",unavailable.getClass().getSimpleName());
+            return null;
+        }
+    }
+
+    private Map<String,String> queryRefundFactsForOriginal(String outRefundNo,WechatVerifiedPaymentFactService.Stored expected) {
         VerifiedProviderClients clients = verifiedProviderClients;
+        if (expected!=null && (clients==null || !expected.facts().mchid().equals(clients.mchid()))) return null;
         if (clients == null || outRefundNo == null || !outRefundNo.matches("[A-Za-z0-9_-]{1,64}")) return null;
         try {
             QueryByOutRefundNoRequest request = new QueryByOutRefundNoRequest(); request.setOutRefundNo(outRefundNo);
@@ -857,6 +875,17 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
                     || !"CNY".equals(refund.getAmount().getCurrency())
                     || refund.getAmount().getTotal().longValue()!=original.getAmount().getTotal().longValue()
                     || refund.getAmount().getRefund()<=0 || refund.getAmount().getRefund()>refund.getAmount().getTotal()) return null;
+            if (expected!=null) {
+                var paid=expected.facts();
+                if (!paid.wxOutTradeNo().equals(refund.getOutTradeNo())
+                        || !paid.businessOutTradeNo().equals(businessPaymentOrderNo(original.getOutTradeNo()))
+                        || !paid.mchid().equals(original.getMchid()) || !paid.appid().equals(original.getAppid())
+                        || !paid.transactionId().equals(original.getTransactionId())
+                        || !paid.tradeType().equals(original.getTradeType().name())
+                        || !paid.currency().equals(original.getAmount().getCurrency())
+                        || paid.totalFen()!=original.getAmount().getTotal().longValue()
+                        || !java.util.Objects.equals(paid.intentRequestHash(),frozenRequestHash(original))) return null;
+            }
             Map<String,String> facts = refundFacts(refund.getOutRefundNo(),refund.getOutTradeNo(),
                     refund.getStatus().name(),refund.getAmount());
             facts.put("mchid",original.getMchid()); facts.put("appid",original.getAppid());

@@ -205,4 +205,10 @@ public class E2eWechatPayStub implements IWechatPayService {
     public Map<String, String> queryTransferResult(com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent intent) {
         return java.util.Map.of("result", "UNKNOWN", "error", "No real transfer detail evidence in E2E fixture");
     }
+    @Override
+    public Map<String,String> queryRefundFacts(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalPayment, String outRefundNo) {
+        // The fixture has no original provider/client proof; it must not authorize a financial query result.
+        return null;
+    }
+
 }
