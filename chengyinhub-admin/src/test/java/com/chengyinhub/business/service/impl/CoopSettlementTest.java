@@ -211,6 +211,7 @@ class CoopSettlementTest {
         topic.setId(700L);
         topic.setMemberId(900001L);
         topic.setProductType(1);
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(topic.getId())).thenReturn(topic);
         when(cmsTopicMapper.claimTopicForSettlement(700L)).thenReturn(1);
         when(cmsRegistrationMapper.selectTotalSalesByTopicId(700L)).thenReturn(new BigDecimal("100"));
         when(cmsRegistrationMapper.selectVerifiedSalesByTopicId(700L)).thenReturn(new BigDecimal("100"));
@@ -234,6 +235,7 @@ class CoopSettlementTest {
         topic.setId(700L);
         topic.setMemberId(900001L);
         topic.setProductType(1);
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(topic.getId())).thenReturn(topic);
         when(cmsTopicMapper.claimTopicForSettlement(700L)).thenReturn(1);
         when(cmsRegistrationMapper.selectTotalSalesByTopicId(700L)).thenReturn(new BigDecimal("100"));
         when(cmsRegistrationMapper.selectVerifiedSalesByTopicId(700L)).thenReturn(new BigDecimal("100"));
@@ -289,6 +291,7 @@ class CoopSettlementTest {
         topic.setId(700L);
         topic.setMemberId(900001L);
         topic.setProductType(1);
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(topic.getId())).thenReturn(topic);
         when(cmsTopicMapper.selectTopicsForSettlement())
                 .thenReturn(Collections.singletonList(topic));
         when(cmsTopicMapper.claimTopicForSettlement(700L)).thenReturn(1);
@@ -527,6 +530,8 @@ class CoopSettlementTest {
     void payoutDue_paysMerchantAndMarksPaid() {
         CoopSettlement s = new CoopSettlement();
         s.setId(5L); s.setMerchantId(900002L); s.setTopicId(700L); s.setAmount(new BigDecimal("30")); s.setStatus(0);
+        CmsTopic payoutTopic = new CmsTopic(); payoutTopic.setId(s.getTopicId());
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(s.getTopicId())).thenReturn(payoutTopic);
         when(coopSettlementMapper.selectDuePayouts(any())).thenReturn(Collections.singletonList(s));
         when(coopSettlementMapper.selectDuePayoutForUpdate(eq(5L), any())).thenReturn(s);
         when(coopSettlementMapper.markPaidIfPending(eq(5L), any())).thenReturn(1);
@@ -550,6 +555,8 @@ class CoopSettlementTest {
     void payoutDue_frozenByOpenComplaint_skips() {
         CoopSettlement s = new CoopSettlement();
         s.setId(9L); s.setMerchantId(900002L); s.setTopicId(800L); s.setAmount(new BigDecimal("30")); s.setStatus(0);
+        CmsTopic payoutTopic = new CmsTopic(); payoutTopic.setId(s.getTopicId());
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(s.getTopicId())).thenReturn(payoutTopic);
         when(coopSettlementMapper.selectDuePayouts(any())).thenReturn(Collections.singletonList(s));
         when(coopSettlementMapper.selectDuePayoutForUpdate(eq(9L), any())).thenReturn(s);
         when(coopComplaintMapper.countOpenByTopicId(800L)).thenReturn(1); // 有未结客诉工单
@@ -564,7 +571,10 @@ class CoopSettlementTest {
     @Test
     void payoutDue_zeroAmount_marksPaidWithoutBalance() {
         CoopSettlement s = new CoopSettlement();
+        s.setTopicId(700L);
         s.setId(6L); s.setMerchantId(900003L); s.setAmount(BigDecimal.ZERO); s.setStatus(0);
+        CmsTopic payoutTopic = new CmsTopic(); payoutTopic.setId(s.getTopicId());
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(s.getTopicId())).thenReturn(payoutTopic);
         when(coopSettlementMapper.selectDuePayouts(any())).thenReturn(Collections.singletonList(s));
         when(coopSettlementMapper.selectDuePayoutForUpdate(eq(6L), any())).thenReturn(s);
         when(coopSettlementMapper.markPaidIfPending(eq(6L), any())).thenReturn(1);
@@ -580,9 +590,13 @@ class CoopSettlementTest {
     @Test
     void payoutDue_missingPayee_continuesOthersThenThrows() {
         CoopSettlement orphan = new CoopSettlement();
+        orphan.setTopicId(700L);
         orphan.setId(11L); orphan.setMerchantId(900404L); orphan.setAmount(new BigDecimal("30")); orphan.setStatus(0);
         CoopSettlement ok = new CoopSettlement();
+        ok.setTopicId(700L);
         ok.setId(12L); ok.setMerchantId(900002L); ok.setAmount(new BigDecimal("30")); ok.setStatus(0);
+        CmsTopic payoutTopic = new CmsTopic(); payoutTopic.setId(700L);
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(700L)).thenReturn(payoutTopic);
         when(coopSettlementMapper.selectDuePayouts(any())).thenReturn(java.util.Arrays.asList(orphan, ok));
         when(coopSettlementMapper.selectDuePayoutForUpdate(eq(11L), any())).thenReturn(orphan);
         when(coopSettlementMapper.selectDuePayoutForUpdate(eq(12L), any())).thenReturn(ok);

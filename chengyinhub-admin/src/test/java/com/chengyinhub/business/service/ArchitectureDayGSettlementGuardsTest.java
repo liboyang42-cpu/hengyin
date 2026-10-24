@@ -64,6 +64,7 @@ class ArchitectureDayGSettlementGuardsTest {
         topic.setId(100L);
         topic.setProductType(ProductType.ORIENTEERING);
         when(topics.selectTopicsForSettlement()).thenReturn(List.of(topic));
+        when(topics.selectCmsTopicByIdForUpdate(topic.getId())).thenReturn(topic);
         when(topics.claimTopicForSettlement(100L)).thenReturn(1);
         when(registrations.selectTotalSalesByTopicId(100L)).thenReturn(new BigDecimal("100.00"));
         when(orders.selectEffectiveOrdersByTopicId(100L)).thenReturn(List.of());

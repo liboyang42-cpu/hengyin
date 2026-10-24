@@ -552,6 +552,7 @@ class SettlementRateConvergenceTest {
         t.setMemberId(publisherMemberId); // 发布者
         t.setProductType(ProductType.ORIENTEERING);
         when(topicMapper.selectTopicsForSettlement()).thenReturn(Collections.singletonList(t));
+        when(topicMapper.selectCmsTopicByIdForUpdate(t.getId())).thenReturn(t);
         when(topicRegMapper.selectTotalSalesByTopicId(200L)).thenReturn(totalSales);
         // 无 coop 单 → 走存量 else 分支
         when(coopOrderMapper.selectEffectiveOrdersByTopicId(200L)).thenReturn(Collections.emptyList());

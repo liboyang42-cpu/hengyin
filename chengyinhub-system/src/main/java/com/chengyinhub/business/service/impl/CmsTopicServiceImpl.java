@@ -573,18 +573,12 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
         // 4. 遍历每个主题进行结算 —— 每主题独立事务:失败仅回滚该主题(含 CAS 领取),可重试。
         TransactionTemplate tx = new TransactionTemplate(transactionManager);
+        tx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         List<String> failures = new ArrayList<>();
         IllegalStateException failure = new IllegalStateException();
         for (CmsTopic topic : topics) {
             try {
-                SettlementRule topicRule = resolveRuleFor(topic, rule);
-                if (topicRule == null) {
-                    // 校验不过的规则宁可不结,也不能悄悄用全局费率把俱乐部的账算成商家的账
-                    logger.error("主题结算跳过:俱乐部费率配置异常, topicId={}, clubId={}", topic.getId(), topic.getClubId());
-                    failures.add("topicId=" + topic.getId() + ": 俱乐部费率配置异常 clubId=" + topic.getClubId());
-                    continue;
-                }
-                Boolean settled = tx.execute(status -> settleTopic(topic, topicRule));
+                Boolean settled = tx.execute(status -> settleTopic(topic, rule));
                 if (Boolean.TRUE.equals(settled)) {
                     settledCount++;
                 }
@@ -685,10 +679,14 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      * 结算单个主题
      */
     private boolean settleTopic(CmsTopic topic, SettlementRule rule) {
+        // 扫描结果只提供定位身份；在任何状态/合同/资金读取前取得共同 topic 锁并使用当前行。
+        topic = lockSettlementTopic(topic == null ? null : topic.getId());
         if (Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) {
             throw new ServiceException("FREE_EXPLORE_LEGACY_SETTLEMENT_FORBIDDEN: topicId="
                     + topic.getId() + ", productType=" + topic.getProductType());
         }
+        rule = resolveRuleFor(topic, rule);
+        if (rule == null) throw new IllegalStateException("主题结算费率无效 topicId=" + topic.getId());
         // A3-7(P0)CAS 原子领取:is_settlement 0→1 抢占,抢不到=已被结算/正在结算 ⇒ 跳过防重复入账。
         // 领取在本主题事务内,失败随事务回滚可重试(照抄活动线 claimActivityForSettlement)。
         if (cmsTopicMapper.claimTopicForSettlement(topic.getId()) == 0) {
@@ -1215,7 +1213,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         IllegalStateException failure = new IllegalStateException("coop 打款失败");
         for (CoopSettlement snapshot : due) {
             try {
-                CoopSettlement paidSettlement = tx.execute(status -> payoutOneDueCoopSettlement(snapshot.getId(), now));
+                CoopSettlement paidSettlement = tx.execute(status -> payoutOneDueCoopSettlement(
+                        snapshot.getId(), snapshot.getTopicId(), now));
                 if (paidSettlement == null) continue;
                 paid++;
                 // 订阅消息:通知商家结算到账(best-effort)
@@ -1245,10 +1244,14 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     }
 
     /** 单张结算独立事务内完成领取、余额、流水和终态；返回 null 表示本轮未发生正额打款。 */
-    private CoopSettlement payoutOneDueCoopSettlement(Long settlementId, Date now) {
+    private CoopSettlement payoutOneDueCoopSettlement(Long settlementId, Long observedTopicId, Date now) {
+        CmsTopic topic = lockSettlementTopic(observedTopicId);
         CoopSettlement s = coopSettlementMapper.selectDuePayoutForUpdate(settlementId, now);
         if (s == null) {
             return null;
+        }
+        if (!topic.getId().equals(s.getTopicId())) {
+            throw new IllegalStateException("coop结算主题归属已变化 settlementId=" + settlementId);
         }
         // 客诉冻结:该主题有未结工单 → 暂缓放款(含 0 元行也不置已打款),工单关闭后下轮再放。
         if (s.getTopicId() != null && coopComplaintMapper.countOpenByTopicId(s.getTopicId()) > 0) {
@@ -1298,6 +1301,15 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // 只改返回对象供通知显示净打款；数据库原始头 amount 永不被调整覆盖。
         s.setAmount(payoutAmount);
         return s;
+    }
+
+    private CmsTopic lockSettlementTopic(Long topicId) {
+        if (topicId == null) throw new IllegalStateException("SETTLEMENT_TOPIC_REQUIRED");
+        CmsTopic locked = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
+        if (locked == null || !topicId.equals(locked.getId())) {
+            throw new IllegalStateException("SETTLEMENT_TOPIC_NOT_FOUND:" + topicId);
+        }
+        return locked;
     }
 
     private void requireExactlyOne(int rows, String operation, Long settlementId) {

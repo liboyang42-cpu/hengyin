@@ -162,6 +162,7 @@ class DoublePaymentReproductionTest {
         when(settlementDetailMapper.insertAdjustment(any(SettlementDetail.class))).thenReturn(1);
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
         when(topicMapper.selectTopicsForSettlement()).thenReturn(Collections.singletonList(topic));
+        when(topicMapper.selectCmsTopicByIdForUpdate(topic.getId())).thenReturn(topic);
         when(topicMapper.claimTopicForSettlement(TOPIC)).thenReturn(1, 0);
         when(registrationMapper.selectTotalSalesByTopicId(TOPIC)).thenReturn(new BigDecimal("100.00"));
         when(registrationMapper.selectVerifiedHeadsByTopicId(TOPIC)).thenReturn(1);
@@ -445,6 +446,7 @@ class DoublePaymentReproductionTest {
         CoopSettlementClaimServiceImpl settlement = new CoopSettlementClaimServiceImpl(reader,
                 new SnapshotFulfillmentWindowResolver(), evidence, new SettlementClaimServiceImpl(claimMapper),
                 coopSettlementMapper, coopDetailMapper, mock(CoopSettlementAdjustmentMapper.class));
+        ReflectionTestUtils.setField(settlement,"topicMapper",topics);
         ReflectionTestUtils.setField(topicService, "coopSettlementEvidenceMapper", evidenceMapper);
         ReflectionTestUtils.setField(topicService, "coopSettlementClaimService", settlement);
     }
