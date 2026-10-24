@@ -61,3 +61,6 @@
 
 | commit | workflow run | 结论 |
 |---|---|---|
+| `74ad356a`（B:P1-059 + C:U-086） | GitHub CI 40061491401 · Funds MySQL IT 40061491249 · Mini followup 40061491317 · Redis recovery 40061491569 | 全部成功 |
+| `138c34fd` / `390458bd` / `0593e1c0` / `2fb0e21d` / `bbebfa4d` | GitHub CI 40062514456 / 40062776433 / 40063406024 / 40063686501 / 40064187953 | 「Mini program static checks」的 DS 硬编码防回潮门报红：`utils/roam-progress.js` 原样搬入了页面的轨迹线色值。已在 `251c9213` 修复，改为取 play 路线 token，取值不变。其余检查均成功；中间几次 run 被后续 push 取消 |
+| `7afc2f08`（修复 + 合入 master） | GitHub CI 40064504422 · Funds MySQL IT 40064504484 · Mini followup 40064504465 · Redis recovery 40064504429 | 全部成功（check-runs：32 success、3 skipped） |
