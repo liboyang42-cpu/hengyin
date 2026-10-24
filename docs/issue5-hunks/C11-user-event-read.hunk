@@ -1,0 +1,69 @@
+# C11 user-event read — DO NOT APPLY
+
+Issue: https://github.com/liboyang42-cpu/chengyin-remote-ops/issues/5
+Repo: github.com/liboyang42-cpu/hengyin
+Base: origin/cursor/c11-ops-support-adapters-d6bd
+Branch: cursor/c11-user-event-read-e504
+
+DO NOT APPLY this hunk. Do not edit ApiRegistrationController.java, BusinessAuditLogController.java, BusinessAuditEventMapper.java, or BusinessAuditEventMapper.xml from this branch.
+
+The method belongs beside POST /api/registration/info on ApiRegistrationController (`@RequestMapping("/api/registration")`). It does not belong on /business/audit-log. `/business/audit-log/list` stays admin-only. This addition does not call that list, does not add an admin role, and does not add a permission string.
+
+The service `MemberOwnedOrderOriginalEventRead.readOwnedOrder` is already real. The controller only forwards the current member from `getAppUserId()` into that service. Mockito in the service test is in-memory. It is not HTTP and it is not MySQL.
+
+```diff
+diff --git a/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java b/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java
+--- a/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java
++++ b/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java
+@@ -5,6 +5,8 @@ import com.chengyinhub.business.access.merchant.IMerchantAccessService;
+ import com.chengyinhub.business.access.merchant.MerchantAccessContext;
+ import com.chengyinhub.business.access.merchant.MerchantPermission;
+ import com.chengyinhub.business.domain.*;
++import com.chengyinhub.business.mapper.BusinessAuditEventMapper;
++import com.chengyinhub.business.service.support.ops.MemberOwnedOrderOriginalEventRead;
+ import com.chengyinhub.business.domain.dto.RegistrationRequest;
+ import com.chengyinhub.business.domain.vo.ExploreChapterRedemptionResult;
+ import com.chengyinhub.business.service.*;
+@@ -58,6 +60,9 @@ public class ApiRegistrationController extends BaseController {
+     @Autowired
+     private ICmsRegistrationService registrationService;
++    @Autowired
++    private BusinessAuditEventMapper businessAuditEventMapper;
+     @Autowired
+     private IMerchantAccessService merchantAccessService;
+     @Autowired
+@@ -546,6 +551,32 @@ public class ApiRegistrationController extends BaseController {
+             return AjaxResult.error(e.getMessage());
+         }
+     }
++
++    /**
++     * 当前会员本人订单的原审计事件。与 POST /api/registration/info 同一控制器、同一登录会员。
++     * 不挂管理端审计列表，不新增权限串。
++     */
++    @Operation(summary = "当前会员本人订单的原审计事件")
++    @PostMapping("/original-event")
++    @Parameters({
++            @Parameter(name = "id", description = "报名id")
++    })
++    public AjaxResult ownedOrderOriginalEvent(String id) {
++        Long memberId = 0L;
++        try {
++            memberId = getAppUserId();
++        } catch (Exception e) {
++        }
++        if (memberId <= 0) {
++            return error("请先登录");
++        }
++        MemberOwnedOrderOriginalEventRead read = new MemberOwnedOrderOriginalEventRead(
++                registrationService, businessAuditEventMapper);
++        BusinessAuditEvent row = read.readOwnedOrder(memberId, id);
++        if (row == null) {
++            return AjaxResult.error("原事件不存在");
++        }
++        return AjaxResult.success(row);
++    }
+ 
+ 
+     /**
+```
