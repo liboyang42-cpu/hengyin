@@ -9,10 +9,11 @@
      与 docs/.../release-migration-pack.json 逐项比对（id / path / sha256 / 执行序 / 依赖）。
   1. 从 sql/base_schema_20260818.sql + base seed 建库，再按台账拓扑序叠加「快照后、且不在本次发布集」的迁移，
      得到模拟生产基线的库；写入少量合成行（只在 scratch 库），让数据类迁移有东西可处理。
-  2. 跑只读预检脚本：每一项都必须等于 pack 的 expectedAtBaseline（除 D-PAYEE 外都是 NEEDED）。
+  2. 跑只读预检脚本：每一项都必须等于 pack 的 expectedAtBaseline（合成状态，不代表生产）。
   3. 第一遍：按执行序逐个执行发布集（严格模式，断言为假即停），记录每个迁移改动了哪些表。
   4. 再跑预检：每一项都必须落在 pack 声明的 expectedAfterApply 状态里。
-  5. 第二遍：原样重跑发布集，每个迁移前后的 schema 指纹 + 全表 CHECKSUM 必须完全一致（零变更）。
+  5. 第二遍：可重入迁移实际重跑；welcome_note 先证明直接重跑必报 1060 且零变更，
+     再仅在只读预检为 APPLIED 时跳过。所有执行/跳过分别记账，仍核对全库指纹。
   6. 负控：人为制造同名异形表 / 列 / 重复配置键 / 重复菜单 / 授权漂移，预检必须判出对应状态。
   7. 风险探针：另建一个「后台角色无页面授权」的库，复现 20261013 在断言处中途停止（见 pack 的 D-PAYEE 节）。
 
@@ -26,6 +27,7 @@ import hashlib
 import json
 import os
 import pathlib
+import re
 import subprocess
 import sys
 import time
@@ -43,9 +45,14 @@ PACK_JSON = PACK_DIR / "release-migration-pack.json"
 PRECHECK_SQL = PACK_DIR / "release-migration-precheck.sql"
 PASSWORD_ENV = "CHENGYIN_REHEARSAL_MYSQL_PASSWORD"
 
-# 只写进 scratch 库的合成行：一个已有后台账号（生产必然有 sys_user，D-PAYEE 不走全新初始化分支）、
+# 只写进 scratch 库的合成行：一个已有后台账号（让 D-PAYEE 不走全新初始化分支）、
 # 俱乐部城市 / 主题 / 活动（O-14 回填）、地标与到访点（poi_key 回填）、分享快照、属性定义、定向会话。
 SYNTHETIC_ROWS = [
+    "INSERT INTO mms_merchant(id, member_id, name, category_id, wechat) VALUES "
+    "(9801, 9801, 'rehearsal-merchant-url', 7, 'https://example.invalid/rehearsal-qr'), "
+    "(9802, 9802, 'rehearsal-merchant-id', 0, 'rehearsal_wechat_id')",
+    "INSERT INTO ums_creative_square_like(id, member_id, data_id, like_type) VALUES "
+    "(9801, 9801, 9801, 1), (9802, 9802, 9801, 2)",
     "INSERT INTO sys_user(user_id, user_name, nick_name) VALUES (9900, 'rehearsal_op', 'rehearsal')",
     "INSERT INTO club(id, member_id, name, city) VALUES (9001, 1, 'rehearsal-club-sh', '上海市'), "
     "(9002, 2, 'rehearsal-club-ambiguous', '南京西路')",
@@ -64,7 +71,7 @@ SYNTHETIC_ROWS = [
     "create_time, update_time) VALUES (9101, 1, 1, '{}', '{}', 1, NOW(3), NOW(3))",
 ]
 
-# 生产形态：四个后台角色都已配置过页面（生产上 20261013 因此是 no-op），且收款审核/打款授权按
+# 合成的已有页面形态（不代表生产状态）：四个后台角色都已配置过页面，且收款审核/打款授权按
 # 20261016 要纠正的方向漂移过（cy_operator 持 verify、cy_finance 持 payout），让 D-PAYEE 的撤销路径真正执行。
 PRODUCTION_LIKE_ROWS = [
     "INSERT INTO sys_role_menu(role_id, menu_id) SELECT r.role_id, (SELECT MIN(menu_id) FROM sys_menu "
@@ -78,6 +85,9 @@ HAZARD_MIGRATION = "20261013_admin_role_page_grants"
 
 # 负控：每条在 scratch 库上制造一个「同名但定义不同 / 前置不唯一」的状态，预检必须判出对应状态。
 NEGATIVE_CONTROLS = [
+    ("20261023_points_value_config_seed",
+     "INSERT INTO sys_config(config_name, config_key, config_value, config_type) "
+     "VALUES ('duplicate-points', 'points.deduct.rate_yuan_per_point', '0.03', 'N')", "CONFLICT"),
     ("audit_problem_20261022", "ALTER TABLE audit_problem ADD COLUMN rehearsal_bogus INT NULL", "CONFLICT"),
     ("member_profile_version_20261022",
      "ALTER TABLE ums_member_profile_version MODIFY changed_fields VARCHAR(64) NOT NULL DEFAULT ''", "CONFLICT"),
@@ -86,6 +96,18 @@ NEGATIVE_CONTROLS = [
      "VALUES ('dup', 'merchant.desk.f4.enabled', 'false', 'N')", "CONFLICT"),
     ("orient_session_lifecycle_20261022",
      "ALTER TABLE topic_route_session MODIFY COLUMN status INT NOT NULL DEFAULT 0", "CONFLICT"),
+    ("club_welcome_note_20261022",
+     "ALTER TABLE club MODIFY welcome_note VARCHAR(64) NULL", "CONFLICT"),
+    ("club_welcome_note_20261022",
+     "ALTER TABLE club DROP COLUMN welcome_note", "NEEDED"),
+    ("merchant_category_ids_20261022",
+     "ALTER TABLE mms_merchant MODIFY category_ids VARCHAR(64) NULL", "CONFLICT"),
+    ("merchant_wechat_qrcode_20261022",
+     "ALTER TABLE mms_merchant MODIFY wechat_qrcode VARCHAR(64) NULL", "CONFLICT"),
+    ("20261023_creative_square_like_unique",
+     "ALTER TABLE ums_creative_square_like DROP INDEX uk_square_like_member_data", "NEEDED"),
+    ("20261023_creative_square_like_unique",
+     "INSERT INTO ums_creative_square_like(member_id,data_id,like_type) VALUES (9801,9801,2)", "CONFLICT"),
     ("20261013_admin_role_page_grants",
      "DELETE rm FROM sys_role_menu rm JOIN sys_role r ON r.role_id = rm.role_id JOIN sys_menu m ON m.menu_id = rm.menu_id "
      "WHERE r.role_key = 'cy_auditor' AND m.menu_type = 'C'", "NEEDED"),
@@ -123,6 +145,149 @@ def compare_pack(pack, computed):
         if len(declared) != len(actual):
             lines.append("pack 有 %d 项，head 算出 %d 项" % (len(declared), len(actual)))
         raise SystemExit("release-migration-pack.json 与 HEAD 不一致（pack 过期）：\n" + "\n".join(lines))
+
+
+
+def rerun_action(item, status):
+    """Only the reviewed single-apply migration may skip, after a fresh APPLIED readback."""
+    policy = item.get("rerunPolicy", "EXECUTE")
+    single_apply = item["migrationId"] == "club_welcome_note_20261022"
+    if single_apply:
+        if policy != "PRECHECK_SKIP_APPLIED" or status != "APPLIED":
+            raise ValueError("welcome_note rerun refused: policy=%s, status=%s" % (policy, status))
+        return "PRECHECK_SKIP_APPLIED"
+    if policy != "EXECUTE":
+        raise ValueError("unreviewed rerun policy: %s" % item["migrationId"])
+    return "EXECUTE"
+
+
+def direct_rerun_rejected_safely(ok, problems, before, after):
+    """Accept precisely the known duplicate-column rejection, with no persistent mutation."""
+    return (not ok and len(problems) == 1 and before == after
+            and "1060" in problems[0][3]
+            and "Duplicate column name 'welcome_note'" in problems[0][3]
+            and problems[0][4].strip().upper() == "ALTER TABLE CLUB")
+
+
+
+GENERATED_BEGIN = "<!-- BEGIN GENERATED RELEASE INVENTORY -->"
+GENERATED_END = "<!-- END GENERATED RELEASE INVENTORY -->"
+
+
+def render_pack_inventory(pack):
+    """Render reviewed metadata; never infer risk, phase or production applied state."""
+    def cell(value):
+        return str(value).replace("|", r"\|").replace("\n", " ")
+
+    source = pack["generatedFor"]
+    items = pack["migrations"]
+    lines = [
+        "## 0 来源与覆盖范围",
+        "",
+        "| 项 | 值 |", "|---|---|",
+        "| 仓库参考基线 | `%s`；不声明生产已执行 |" % pack["baseline"]["commit"],
+        "| 源提交 | `%s` |" % source["masterCommit"],
+        "| 源 tree | `%s` |" % source["sourceTree"],
+        "| SQL 子树 | `%s` |" % source["migrationTree"],
+        "| 依赖台账 SHA-256 | `%s` |" % source["dependencySha256"],
+        "| 发布集 | %d 项；新增 %d、修改 %d、删除 0 |" %
+        (len(items), sum(m["change"] == "ADDED" for m in items), sum(m["change"] == "MODIFIED" for m in items)),
+        "| 生产执行状态 | **UNKNOWN**（每一项均未知） |",
+        "",
+        "## 1 有序迁移清单",
+        "",
+        "order 是源提交全量迁移的拓扑位置；只按 step 从小到大逐项执行。",
+        "",
+        "| step | order | 文件 | 变更 | SHA-256 | dependsOn | phase |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    for m in items:
+        lines.append("| %d | %d | `%s` | %s | `%s` | %s | %s |" %
+                     (m["step"], m["order"], m["path"], m["change"], m["sha256"],
+                      ", ".join(m["dependsOn"]) or "—", m["phase"]))
+    lines += ["", "### 1.1 变更、守卫与风险", "",
+              "| step | migrationId | 变更 | 幂等/拒绝约定 | 锁与体量风险 |",
+              "|---|---|---|---|---|"]
+    for m in items:
+        lines.append("| %d | `%s` | %s | %s | %s |" %
+                     (m["step"], m["migrationId"], cell(m["changes"]),
+                      cell(m["idempotencyGuard"]), cell(m["lockRisk"])))
+    lines += ["", "### 1.2 演练状态契约与执行后只读回读", "",
+              "expectedAtBaseline 只指仓库重建的合成库，不是生产当前状态；DATA_PREVIEW 不证明数据已完成。",
+              "",
+              "| step | migrationId | 合成基线 | 首次执行后 | 重入策略 | SELECT-only 回读 |",
+              "|---|---|---|---|---|---|"]
+    for m in items:
+        lines.append("| %d | `%s` | %s | %s | %s | %s |" %
+                     (m["step"], m["migrationId"], m["expectedAtBaseline"],
+                      ", ".join(m["expectedAfterApply"]), m.get("rerunPolicy", "EXECUTE"),
+                      "<br>".join("`%s`" % cell(q) for q in m["verifySelectOnly"])))
+    return "\n".join(lines) + "\n"
+
+
+def refreshed_items(pack, computed):
+    """Unknown/removed entries need review; regeneration cannot silently invent or erase contracts."""
+    reviewed = {m["migrationId"]: m for m in pack["migrations"]}
+    actual = {m["migrationId"] for m in computed}
+    if len(reviewed) != len(pack["migrations"]) or len(actual) != len(computed):
+        raise ValueError("duplicate migration metadata")
+    if set(reviewed) != actual:
+        raise ValueError("review metadata and precheck before refresh: missing=%s extra=%s" %
+                         (sorted(actual - set(reviewed)), sorted(set(reviewed) - actual)))
+    return [{**reviewed[m["migrationId"]], **m, "step": step}
+            for step, m in enumerate(computed, 1)]
+
+
+def refresh_pack(pack, diff, computed):
+    """Refresh only generated identity/order/hash fields, classifier order, and Markdown tables."""
+    items = refreshed_items(pack, computed)
+    for m in items:
+        if hashlib.sha256((REPO / m["path"]).read_bytes()).hexdigest() != m["sha256"]:
+            raise ValueError("working SQL differs from committed source: %s" % m["path"])
+    precheck = PRECHECK_SQL.read_text(encoding="utf-8")
+    first = re.search(r"(?m)^SELECT \d+ AS exec_order,", precheck)
+    if first is None:
+        raise ValueError("missing main precheck classifier")
+    start = first.start()
+    end = precheck.index("\nORDER BY exec_order;", start)
+    blocks = re.split(r"\nUNION ALL\n(?=SELECT \d+ AS exec_order,)", precheck[start:end])
+    classified = {}
+    for block in blocks:
+        migration_id = re.search(r"'([a-z0-9_]+)' AS migration_id", block).group(1)
+        if migration_id in classified:
+            raise ValueError("duplicate precheck classifier: %s" % migration_id)
+        classified[migration_id] = block
+    if set(classified) != {m["migrationId"] for m in items}:
+        raise ValueError("review precheck coverage before refresh")
+    ordered = [re.sub(r"^SELECT \d+ AS exec_order", "SELECT %d AS exec_order" % m["order"],
+                      classified[m["migrationId"]], count=1) for m in items]
+    precheck = precheck[:start] + "\nUNION ALL\n".join(ordered) + precheck[end:]
+
+    def git_bytes(*args):
+        return subprocess.run(["git", *args], cwd=REPO, capture_output=True, check=True).stdout
+
+    source = diff["head"]
+    pack = {**pack, "migrations": items,
+            "generatedFor": {**pack["generatedFor"], "masterCommit": source,
+                             "sourceTree": git_bytes("rev-parse", source + "^{tree}").decode().strip(),
+                             "migrationTree": git_bytes("rev-parse", source + ":chengyinhub-admin/sql").decode().strip(),
+                             "dependencySha256": hashlib.sha256(git_bytes(
+                                 "show", source + ":ci/migration-dependencies.json")).hexdigest()},
+            "ordering": {**pack["ordering"], "orderField":
+                         "order = 该迁移在源提交全量 %d 个迁移拓扑序中的位置；发布集内按 step 顺序执行" %
+                         diff["headMigrationCount"]}}
+    doc_path = PACK_DIR / "release-migration-pack.md"
+    doc = doc_path.read_text(encoding="utf-8")
+    if doc.count(GENERATED_BEGIN) != 1 or doc.count(GENERATED_END) != 1:
+        raise ValueError("missing/duplicate generated inventory markers")
+    before, rest = doc.split(GENERATED_BEGIN)
+    _, after = rest.split(GENERATED_END)
+    doc = before + GENERATED_BEGIN + "\n" + render_pack_inventory(pack) + GENERATED_END + after
+    # Validate every input before writing any of the three artifacts.
+    PACK_JSON.write_text(json.dumps(pack, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    PRECHECK_SQL.write_text(precheck, encoding="utf-8")
+    doc_path.write_text(doc, encoding="utf-8")
+    print("Refreshed %d reviewed migrations from %s (production UNKNOWN)" % (len(items), source))
 
 
 def schema_fingerprint(cur):
@@ -198,12 +363,17 @@ def main():
     ap.add_argument("--port", type=int, default=3316)
     ap.add_argument("--user", default="root")
     ap.add_argument("--report", type=pathlib.Path)
-    ap.add_argument("--inventory", action="store_true", help="只打印发布集清单（不连库）")
+    inventory = ap.add_mutually_exclusive_group()
+    inventory.add_argument("--inventory", action="store_true", help="只打印发布集清单（不连库）")
+    inventory.add_argument("--refresh-pack", action="store_true", help="从已提交 HEAD 刷新已审元数据/预检顺序/文档；不连库")
     a = ap.parse_args()
 
     pack = json.loads(PACK_JSON.read_text(encoding="utf-8"))
     base = pack["baseline"]["commit"]
     diff, computed = release_set(base)
+    if a.refresh_pack:
+        refresh_pack(pack, diff, computed)
+        return 0
     if a.inventory:
         print(json.dumps({"base": diff["base"], "head": diff["head"], "migrations": computed},
                          ensure_ascii=False, indent=2))
@@ -211,6 +381,7 @@ def main():
     compare_pack(pack, computed)
     expected_before = {m["migrationId"]: m["expectedAtBaseline"] for m in pack["migrations"]}
     expected_after = {m["migrationId"]: set(m["expectedAfterApply"]) for m in pack["migrations"]}
+    pack_by_id = {m["migrationId"]: m for m in pack["migrations"]}
     known_delta = {m["migrationId"]: m["rerunKnownDelta"] for m in pack["migrations"] if m.get("rerunKnownDelta")}
     release_ids = [m["migrationId"] for m in computed]
 
@@ -291,6 +462,20 @@ def main():
             for migration_id in ids:
                 delta = known_delta.get(migration_id) if rerun else None
                 before = schema_fingerprint(cur)
+                if rerun:
+                    status = run_precheck(cur).get(migration_id) if migration_id == "club_welcome_note_20261022" else None
+                    try:
+                        action = rerun_action(pack_by_id[migration_id], status)
+                    except ValueError as error:
+                        return changes, (migration_id, [str(error)])
+                    if action == "PRECHECK_SKIP_APPLIED":
+                        after = schema_fingerprint(cur)
+                        if before != after:
+                            return changes, (migration_id, ["state changed during skip readback"])
+                        report.setdefault("rerunSkippedApplied", []).append(
+                            {"migrationId": migration_id, "status": status, "unchanged": True})
+                        changes[migration_id] = []
+                        continue
                 narrow = table_digest(cur, delta["table"], delta["ignoredColumns"]) if delta else None
                 problems = []
                 ok = bs.run_file(cur, REPO / by_id[migration_id]["path"], migration_id, problems, keep_going=False)
@@ -318,6 +503,37 @@ def main():
         if wrong:
             return fail("第一遍后预检状态不符合 pack 的 expectedAfterApply", unexpected=wrong)
         print("[4] 第一遍后预检：全部符合 expectedAfterApply")
+        cur.execute("SELECT id, category_ids, wechat, wechat_qrcode FROM mms_merchant "
+                    "WHERE id IN (9801,9802) ORDER BY id")
+        merchant_rows = [list(row) for row in cur.fetchall()]
+        expected_merchants = [[9801, "7", "", "https://example.invalid/rehearsal-qr"],
+                              [9802, None, "rehearsal_wechat_id", None]]
+        report["steps"].append({"step": "merchant-backfill-readback", "rows": merchant_rows})
+        if merchant_rows != expected_merchants:
+            return fail("商家真实迁移回填/微信搬迁未保持预期值", observed=merchant_rows)
+
+
+        cur.execute("SELECT config_key, config_value FROM sys_config "
+                    "WHERE config_key IN ('points.deduct.rate_yuan_per_point', "
+                    "'points.deduct.max_yuan_per_order') ORDER BY config_key")
+        points_rows = [list(row) for row in cur.fetchall()]
+        report["steps"].append({"step": "points-config-readback", "rows": points_rows})
+        if points_rows != [["points.deduct.max_yuan_per_order", "50.00"],
+                           ["points.deduct.rate_yuan_per_point", "0.02"]]:
+            return fail("积分配置种子回读不符合原迁移", observed=points_rows)
+
+        # Preserve the raw failure as an explicit negative control; never pretend this SQL is idempotent.
+        before_probe = schema_fingerprint(cur)
+        raw_problems = []
+        raw_ok = bs.run_file(cur, REPO / by_id["club_welcome_note_20261022"]["path"],
+                             "welcome-note-direct-rerun", raw_problems, keep_going=False)
+        after_probe = schema_fingerprint(cur)
+        probe = {"step": "welcome-note-direct-rerun-negative-control",
+                 "problems": [list(p) for p in raw_problems], "unchanged": before_probe == after_probe}
+        report["steps"].append(probe)
+        if not direct_rerun_rejected_safely(raw_ok, raw_problems, before_probe, after_probe):
+            return fail("welcome_note 直接重跑未按预期以 1060 拒绝或发生变更", probe=probe)
+        print("[4a] welcome_note 原 SQL 直接重跑：预期 1060 Duplicate column；全库指纹不变")
 
         second, error = apply_all(release_ids, rerun=True)
         if error:
@@ -326,14 +542,23 @@ def main():
         report["steps"].append({"step": "run-2", "changedTables": second})
         if drift:
             return fail("第二遍不是零变更", drift=drift)
-        print("[5] 第二遍：%d 个迁移重跑，零变更（schema 指纹 + 全表 CHECKSUM 一致；pack 声明的元数据列除外：%s）"
-              % (len(second), report.get("rerunKnownDeltaObserved", "无")))
+        print("[5] 第二遍：实际重跑 %d 个，APPLIED 预检后跳过 %d 个；零变更（已声明的元数据列除外：%s）"
+              % (len(second) - len(report.get("rerunSkippedApplied", [])),
+                 len(report.get("rerunSkippedApplied", [])), report.get("rerunKnownDeltaObserved", "无")))
 
         controls = []
         for migration_id, mutation, expected in NEGATIVE_CONTROLS:
             cur.execute(mutation)
             status = run_precheck(cur).get(migration_id)
-            controls.append({"migrationId": migration_id, "expected": expected, "status": status})
+            control = {"migrationId": migration_id, "expected": expected, "status": status}
+            if migration_id == "club_welcome_note_20261022":
+                try:
+                    rerun_action(pack_by_id[migration_id], status)
+                except ValueError:
+                    control["rerunRefused"] = True
+                else:
+                    return fail("welcome_note 坏状态未拒绝重跑/跳过", negativeControl=control)
+            controls.append(control)
             if status != expected:
                 return fail("负控未转红：%s 判为 %s" % (migration_id, status), negativeControls=controls)
         report["steps"].append({"step": "negative-controls", "controls": controls})
@@ -372,7 +597,7 @@ def main():
 
     report["result"] = "PASS"
     write_report()
-    print("PASS: %d 个发布迁移在 %s 上按序落库、重跑零变更" % (len(release_ids), report["mysql"]))
+    print("PASS: %d 个发布迁移在 %s 上按序落库、按声明策略重入零变更" % (len(release_ids), report["mysql"]))
     return 0
 
 

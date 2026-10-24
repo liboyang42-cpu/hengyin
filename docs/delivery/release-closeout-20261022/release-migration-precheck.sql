@@ -2,24 +2,24 @@
 -- release-migration-precheck.sql —— 发布迁移只读预检（release-closeout-20261022）
 -- =====================================================================================
 -- 用途：在执行任何发布迁移之前，由 owner 对生产库运行一次，把 release-migration-pack.md
---       列出的 30 个迁移逐个判为 APPLIED / NEEDED / PARTIAL / CONFLICT / BLOCKED_PREREQ / DATA_PREVIEW。
+--       列出的全部迁移逐个判为 APPLIED / NEEDED / PARTIAL / CONFLICT / BLOCKED_PREREQ / DATA_PREVIEW。
 -- 只读：本文件每一条语句都是 SELECT（只查 information_schema 与业务表），没有任何写入、DDL、
 --       SET、PREPARE 或事务语句。ci/release_migration_rehearsal.py 在执行前会逐句校验这一点，
 --       出现非 SELECT 语句直接拒绝。
 -- 连接：本文件不含、也不应含任何主机、端口、账号。由 owner 用自己的只读通道执行，
 --       建议使用只读账号，或在会话里先 SET SESSION TRANSACTION READ ONLY（不在本文件里）。
 -- 版本：期望值（列/索引指纹）由 ci/release_migration_rehearsal.py 在 MySQL 8.0 上回读钉住：
---       基线库上必须全部 NEEDED，第一遍执行后必须全部 APPLIED（两个数据回填为 DATA_PREVIEW），
+--       基线状态与执行后状态逐项以 pack 为准；商家两项因含数据搬迁也保留 DATA_PREVIEW，
 --       人为制造同名异形表 / 重复键必须判 CONFLICT / BLOCKED_PREREQ。
 --
 -- 状态含义：
---   APPLIED         对象已存在且形状与迁移完全一致；执行该迁移是 no-op（仍可安全重跑）。
+--   APPLIED         对象已存在且形状与迁移一致；是否允许执行/跳过仍以 pack 的幂等约定为准。
 --   NEEDED          对象都不存在；需要执行。
 --   PARTIAL         部分对象已存在且形状正确、其余缺失；迁移是续跑式幂等的，可执行。
 --   CONFLICT        存在同名但定义不同的表/列/索引，或种子键/任务重复（迁移断言要求恰好 1 行）。
 --                   禁止执行，先由 owner 人工处置。
 --   BLOCKED_PREREQ  依赖的表/角色/菜单不存在或不唯一；先查前置迁移，禁止执行。
---   DATA_PREVIEW    数据回填类迁移：前置列已就位，须先跑配套只读预览（见附录 B）并由 owner 抽检确认。
+--   DATA_PREVIEW    含数据回填的迁移：前置列已就位，仍须跑附录 B 的数据预览/回读；不能据此宣称已完成。
 --
 -- 列/索引指纹算法（与演练脚本一致）：
 --   列  = COUNT(*) + BIT_XOR(前 64 位 SHA2(ordinal_position|column_name|column_type|is_nullable|column_default))
@@ -89,7 +89,36 @@ SELECT 50 AS exec_order, '20261022_merchant_desk_switch_seed' AS migration_id,
 FROM (SELECT
     IFNULL((SELECT CASE COUNT(*) WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END FROM sys_config WHERE config_key = 'merchant.desk.f4.enabled'), 3) AS c0) AS x5
 UNION ALL
-SELECT 66 AS exec_order, 'audit_problem_20261022' AS migration_id,
+SELECT 51 AS exec_order, '20261023_creative_square_like_unique' AS migration_id,
+  CASE WHEN (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()
+                  AND table_name = 'ums_creative_square_like' AND engine = 'InnoDB') <> 1 THEN 'BLOCKED_PREREQ'
+       WHEN (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+                  AND table_name = 'ums_creative_square_like' AND column_name IN ('member_id','data_id')) <> 2 THEN 'BLOCKED_PREREQ'
+       WHEN EXISTS (SELECT 1 FROM ums_creative_square_like GROUP BY member_id, data_id HAVING COUNT(*) > 1) THEN 'CONFLICT'
+       WHEN (SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE()
+                  AND table_name = 'ums_creative_square_like' AND index_name = 'uk_square_like_member_data') = 0 THEN 'NEEDED'
+       WHEN (SELECT COUNT(*) = 2 AND SUM(non_unique = 0 AND sub_part IS NULL
+                  AND index_type = 'BTREE' AND is_visible = 'YES'
+                  AND ((seq_in_index = 1 AND column_name = 'member_id')
+                    OR (seq_in_index = 2 AND column_name = 'data_id'))) = 2
+             FROM information_schema.statistics WHERE table_schema = DATABASE()
+                  AND table_name = 'ums_creative_square_like' AND index_name = 'uk_square_like_member_data') THEN 'APPLIED'
+       ELSE 'CONFLICT' END AS status,
+  '态度唯一键；重复 member_id/data_id 禁止自动删行，先由 owner 对账' AS detail
+UNION ALL
+SELECT 52 AS exec_order, '20261023_points_value_config_seed' AS migration_id,
+  CASE WHEN c0 = 2 OR c1 = 2 THEN 'CONFLICT'
+       WHEN c0 = 1 AND c1 = 1 THEN 'APPLIED'
+       WHEN c0 = 0 AND c1 = 0 THEN 'NEEDED'
+       ELSE 'PARTIAL' END AS status,
+  '积分汇率/单笔上限：每键恰好一行；已有配置值保持原样，不要求等于种子缺省值' AS detail
+FROM (SELECT
+    (SELECT CASE COUNT(*) WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END FROM sys_config
+      WHERE config_key = 'points.deduct.rate_yuan_per_point') AS c0,
+    (SELECT CASE COUNT(*) WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END FROM sys_config
+      WHERE config_key = 'points.deduct.max_yuan_per_order') AS c1) AS points_value_config
+UNION ALL
+SELECT 68 AS exec_order, 'audit_problem_20261022' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 audit_problem' AS detail
@@ -98,7 +127,20 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 4 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 4534874757148141377 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'audit_problem')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'audit_problem'), 3) AS c0) AS x6
 UNION ALL
-SELECT 137 AS exec_order, 'doc2_f3_bundle_ledger_20261022' AS migration_id,
+SELECT 107 AS exec_order, 'club_welcome_note_20261022' AS migration_id,
+  CASE WHEN (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()
+                  AND table_name = 'club' AND engine = 'InnoDB') <> 1 THEN 'BLOCKED_PREREQ'
+       WHEN (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+                  AND table_name = 'club' AND column_name = 'welcome_note') = 0 THEN 'NEEDED'
+       WHEN (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+                  AND table_name = 'club' AND column_name = 'welcome_note'
+                  AND data_type = 'varchar' AND character_maximum_length = 600
+                  AND is_nullable = 'YES' AND column_default IS NULL
+                  AND character_set_name = 'utf8mb4' AND extra = '' AND generation_expression = '') = 1 THEN 'APPLIED'
+       ELSE 'CONFLICT' END AS status,
+  'welcome_note 普通可空列；NEEDED 才执行一次，APPLIED 必须跳过原 SQL' AS detail
+UNION ALL
+SELECT 140 AS exec_order, 'doc2_f3_bundle_ledger_20261022' AS migration_id,
   CASE WHEN GREATEST(c0, c1, c2, c3, c4, c5) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2, c3, c4, c5) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1, c2, c3, c4, c5) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1, c2, c3, c4, c5) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1, c2, c3, c4, c5) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 explore_bundle_* x6' AS detail
@@ -122,7 +164,7 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 5 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 11477923173872796512 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'explore_bundle_exit_case')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'explore_bundle_exit_case'), 3) AS c5) AS x7
 UNION ALL
-SELECT 182 AS exec_order, 'member_profile_version_20261022' AS migration_id,
+SELECT 185 AS exec_order, 'member_profile_version_20261022' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 ums_member_profile_version' AS detail
@@ -131,7 +173,7 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 3 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 16657050347810390992 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'ums_member_profile_version')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ums_member_profile_version'), 3) AS c0) AS x8
 UNION ALL
-SELECT 184 AS exec_order, 'member_visited_poi_poi_key_20261022' AS migration_id,
+SELECT 187 AS exec_order, 'member_visited_poi_poi_key_20261022' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'member_visited_poi.poi_key + uk_member_poi_key' AS detail
@@ -143,7 +185,22 @@ FROM (SELECT
        AND GROUP_CONCAT(column_name ORDER BY seq_in_index) = 'member_id,poi_key' THEN 1 ELSE 2 END
    FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'member_visited_poi' AND index_name = 'uk_member_poi_key'), 3) AS c1) AS x9
 UNION ALL
-SELECT 196 AS exec_order, 'merchant_desk_receipt_20261022' AS migration_id,
+SELECT 193 AS exec_order, 'merchant_category_ids_20261022' AS migration_id,
+  CASE WHEN (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()
+                  AND table_name = 'mms_merchant' AND engine = 'InnoDB') <> 1 THEN 'BLOCKED_PREREQ'
+       WHEN (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+                  AND table_name = 'mms_merchant' AND column_name IN ('category_id')) <> 1 THEN 'BLOCKED_PREREQ'
+       WHEN (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+                  AND table_name = 'mms_merchant' AND column_name = 'category_ids') = 0 THEN 'NEEDED'
+       WHEN (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+                  AND table_name = 'mms_merchant' AND column_name = 'category_ids'
+                  AND data_type = 'varchar' AND character_maximum_length = 255
+                  AND is_nullable = 'YES' AND column_default IS NULL
+                  AND character_set_name = 'utf8mb4' AND extra = '' AND generation_expression = '') = 1 THEN 'DATA_PREVIEW'
+       ELSE 'CONFLICT' END AS status,
+  'category_ids 结构齐全仍须附录 B3 核对数据；DATA_PREVIEW 不是迁移已完成证明' AS detail
+UNION ALL
+SELECT 200 AS exec_order, 'merchant_desk_receipt_20261022' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 merchant_desk_receipt' AS detail
@@ -152,7 +209,7 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 3 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 3217512040811375428 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'merchant_desk_receipt')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'merchant_desk_receipt'), 3) AS c0) AS x10
 UNION ALL
-SELECT 207 AS exec_order, 'merchant_redemption_anchor_20261022' AS migration_id,
+SELECT 211 AS exec_order, 'merchant_redemption_anchor_20261022' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 merchant_redemption_anchor' AS detail
@@ -161,7 +218,22 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 2 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 10133716487572001376 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'merchant_redemption_anchor')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'merchant_redemption_anchor'), 3) AS c0) AS x11
 UNION ALL
-SELECT 232 AS exec_order, 'o14_city_code_backfill_log_20261022' AS migration_id,
+SELECT 215 AS exec_order, 'merchant_wechat_qrcode_20261022' AS migration_id,
+  CASE WHEN (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()
+                  AND table_name = 'mms_merchant' AND engine = 'InnoDB') <> 1 THEN 'BLOCKED_PREREQ'
+       WHEN (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+                  AND table_name = 'mms_merchant' AND column_name IN ('wechat')) <> 1 THEN 'BLOCKED_PREREQ'
+       WHEN (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+                  AND table_name = 'mms_merchant' AND column_name = 'wechat_qrcode') = 0 THEN 'NEEDED'
+       WHEN (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+                  AND table_name = 'mms_merchant' AND column_name = 'wechat_qrcode'
+                  AND data_type = 'varchar' AND character_maximum_length = 512
+                  AND is_nullable = 'YES' AND column_default IS NULL
+                  AND character_set_name = 'utf8mb4' AND extra = '' AND generation_expression = '') = 1 THEN 'DATA_PREVIEW'
+       ELSE 'CONFLICT' END AS status,
+  'wechat_qrcode 结构齐全仍须附录 B4 核对数据；DATA_PREVIEW 不是迁移已完成证明' AS detail
+UNION ALL
+SELECT 237 AS exec_order, 'o14_city_code_backfill_log_20261022' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 o14_city_code_backfill_log' AS detail
@@ -170,7 +242,7 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 2 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 15028227347182792313 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'o14_city_code_backfill_log')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'o14_city_code_backfill_log'), 3) AS c0) AS x12
 UNION ALL
-SELECT 233 AS exec_order, 'o14_cms_activity_city_code_20261022' AS migration_id,
+SELECT 238 AS exec_order, 'o14_cms_activity_city_code_20261022' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'cms_activity.city_code + 索引' AS detail
@@ -182,7 +254,7 @@ FROM (SELECT
        AND GROUP_CONCAT(column_name ORDER BY seq_in_index) = 'city_code' THEN 1 ELSE 2 END
    FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'cms_activity' AND index_name = 'idx_cms_activity_city_code'), 3) AS c1) AS x13
 UNION ALL
-SELECT 234 AS exec_order, 'o14_cms_topic_city_code_20261022' AS migration_id,
+SELECT 239 AS exec_order, 'o14_cms_topic_city_code_20261022' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'cms_topic.city_code + 索引' AS detail
@@ -194,7 +266,7 @@ FROM (SELECT
        AND GROUP_CONCAT(column_name ORDER BY seq_in_index) = 'city_code' THEN 1 ELSE 2 END
    FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'cms_topic' AND index_name = 'idx_cms_topic_city_code'), 3) AS c1) AS x14
 UNION ALL
-SELECT 235 AS exec_order, 'o14_content_city_code_backfill_20261022' AS migration_id,
+SELECT 240 AS exec_order, 'o14_content_city_code_backfill_20261022' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '数据回填:前置列就位后须跑 _precheck_o14_content_city_code_backfill_20261022.sql 预览' AS detail
@@ -202,7 +274,7 @@ FROM (SELECT
     IFNULL((SELECT IF(COUNT(*) = 1, 1, 3) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'club' AND engine = 'InnoDB'), 3) AS p0,
     IFNULL((SELECT IF(EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'cms_topic' AND column_name = 'city_code') AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'cms_activity' AND column_name = 'city_code') AND EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'o14_city_code_backfill_log'), 4, 0)), 3) AS c0) AS x15
 UNION ALL
-SELECT 236 AS exec_order, 'o14_content_search_document_20261022' AS migration_id,
+SELECT 241 AS exec_order, 'o14_content_search_document_20261022' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 content_search_document' AS detail
@@ -211,7 +283,7 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 7 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 3318759553424233406 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'content_search_document')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'content_search_document'), 3) AS c0) AS x16
 UNION ALL
-SELECT 252 AS exec_order, 'orient_geo_ar_team_20261022' AS migration_id,
+SELECT 257 AS exec_order, 'orient_geo_ar_team_20261022' AS migration_id,
   CASE WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 orient_* x5 + sys_config 5 键' AS detail
@@ -237,7 +309,7 @@ FROM (SELECT
     IFNULL((SELECT CASE COUNT(*) WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END FROM sys_config WHERE config_key = 'orient.team.completion_ratio'), 3) AS c8,
     IFNULL((SELECT CASE COUNT(*) WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END FROM sys_config WHERE config_key = 'orient.safety.enabled'), 3) AS c9) AS x17
 UNION ALL
-SELECT 283 AS exec_order, 'o14_reco_search_jobs_20261022' AS migration_id,
+SELECT 288 AS exec_order, 'o14_reco_search_jobs_20261022' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'sys_job 2 行(暂停)' AS detail
@@ -246,7 +318,7 @@ FROM (SELECT
     IFNULL((SELECT CASE COUNT(*) WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END FROM sys_job WHERE invoke_target = 'recommendationScoreDailyTask.run()'), 3) AS c0,
     IFNULL((SELECT CASE COUNT(*) WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END FROM sys_job WHERE invoke_target = 'contentSearchProjectionTask.refresh()'), 3) AS c1) AS x18
 UNION ALL
-SELECT 297 AS exec_order, 'play_arrive_guard_log_20261022' AS migration_id,
+SELECT 302 AS exec_order, 'play_arrive_guard_log_20261022' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 play_arrive_guard_log' AS detail
@@ -255,7 +327,7 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 3 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 15745635712475062580 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'play_arrive_guard_log')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'play_arrive_guard_log'), 3) AS c0) AS x19
 UNION ALL
-SELECT 306 AS exec_order, 'pms_sku_booking_20261022' AS migration_id,
+SELECT 311 AS exec_order, 'pms_sku_booking_20261022' AS migration_id,
   CASE WHEN GREATEST(c0, c1) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 pms_sku_booking_rule / pms_sku_capacity_slot' AS detail
@@ -267,7 +339,7 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 5 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 6569897251089178890 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'pms_sku_capacity_slot')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_sku_capacity_slot'), 3) AS c1) AS x20
 UNION ALL
-SELECT 328 AS exec_order, 'orient_scoring_20261022' AS migration_id,
+SELECT 333 AS exec_order, 'orient_scoring_20261022' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 orient_score_* x4 + sys_config 5 键' AS detail
@@ -291,7 +363,7 @@ FROM (SELECT
     IFNULL((SELECT CASE COUNT(*) WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END FROM sys_config WHERE config_key = 'orient.scoring.xp_rate_pct'), 3) AS c7,
     IFNULL((SELECT CASE COUNT(*) WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END FROM sys_config WHERE config_key = 'orient.scoring.dispute_window_hours'), 3) AS c8) AS x21
 UNION ALL
-SELECT 329 AS exec_order, 'orient_session_lifecycle_20261022' AS migration_id,
+SELECT 334 AS exec_order, 'orient_session_lifecycle_20261022' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1, c2) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1, c2) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1, c2) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'topic_route_session.phase + status 注释 + 新表 orient_session_clock' AS detail
@@ -306,7 +378,7 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 3 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 13932434150092499771 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'orient_session_clock')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'orient_session_clock'), 3) AS c2) AS x22
 UNION ALL
-SELECT 371 AS exec_order, 'member_visited_poi_poi_key_backfill_20261022' AS migration_id,
+SELECT 376 AS exec_order, 'member_visited_poi_poi_key_backfill_20261022' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '数据回填:poi_key 列就位后须跑附录 B 的只读预览' AS detail
@@ -314,7 +386,7 @@ FROM (SELECT
     IFNULL((SELECT IF(COUNT(*) = 1, 1, 3) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'roam_poi' AND engine = 'InnoDB'), 3) AS p0,
     IFNULL((SELECT IF(EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'member_visited_poi' AND column_name = 'poi_key'), 4, 0)), 3) AS c0) AS x23
 UNION ALL
-SELECT 382 AS exec_order, 'roam_share_version_20261022' AS migration_id,
+SELECT 387 AS exec_order, 'roam_share_version_20261022' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'roam_share_snapshot.version' AS detail
@@ -323,7 +395,7 @@ FROM (SELECT
     IFNULL((SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN SUM(column_type = 'int' AND is_nullable = 'NO' AND column_default = '1') = 1 THEN 1 ELSE 2 END
    FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'roam_share_snapshot' AND column_name = 'version'), 3) AS c0) AS x24
 UNION ALL
-SELECT 420 AS exec_order, '20261022_theme_state_key_attribute_def' AS migration_id,
+SELECT 425 AS exec_order, '20261022_theme_state_key_attribute_def' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'theme_state_key 9 列' AS detail
@@ -348,7 +420,7 @@ FROM (SELECT
     IFNULL((SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN SUM(column_type = 'varchar(1024)' AND is_nullable = 'YES' AND column_default IS NULL) = 1 THEN 1 ELSE 2 END
    FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'theme_state_key' AND column_name = 'rules_json'), 3) AS c8) AS x25
 UNION ALL
-SELECT 421 AS exec_order, '20261022_theme_character' AS migration_id,
+SELECT 426 AS exec_order, '20261022_theme_character' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 theme_character' AS detail
@@ -357,7 +429,7 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 3 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 44189788068057420 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'theme_character')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'theme_character'), 3) AS c0) AS x26
 UNION ALL
-SELECT 474 AS exec_order, 'verification_review_evidence_20261022' AS migration_id,
+SELECT 479 AS exec_order, 'verification_review_evidence_20261022' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 verification_review_evidence' AS detail
@@ -366,7 +438,7 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 5 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 17353113222738040501 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'verification_review_evidence')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'verification_review_evidence'), 3) AS c0) AS x27
 UNION ALL
-SELECT 495 AS exec_order, '20261013_admin_role_page_grants' AS migration_id,
+SELECT 500 AS exec_order, '20261013_admin_role_page_grants' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'APPLIED = 4 个后台角色均已有页面授权(本迁移 no-op);NEEDED = 有角色无页面授权,禁止执行,交 owner(见 pack D-PAYEE 节);checksum 对账见附录 A' AS detail
@@ -376,7 +448,7 @@ FROM (SELECT
      WHERE rm.role_id = r.role_id AND m.menu_type = 'C')) = COUNT(*) THEN 1 ELSE 0 END
    FROM sys_role r WHERE r.del_flag = '0' AND r.role_key IN ('cy_operator', 'cy_auditor', 'cy_support', 'cy_finance')), 3) AS c0) AS x28
 UNION ALL
-SELECT 496 AS exec_order, '20261016_admin_role_payee_separation_forward' AS migration_id,
+SELECT 501 AS exec_order, '20261016_admin_role_payee_separation_forward' AS migration_id,
   CASE WHEN GREATEST(p0, p1, p2, p3, p4, p5, p6, p7) = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'D-PAYEE:operator 有 payout 无 verify、finance 有 verify 无 payout' AS detail
@@ -455,7 +527,8 @@ SELECT config_key, config_value, COUNT(*) OVER (PARTITION BY config_key) AS rows
 FROM sys_config
 WHERE config_key IN ('audit.activity.pre_review_all', 'audit.activity.high_risk_categories',
                      'play.arrive.location_guard.mode', 'play.arrive.require_accuracy',
-                     'roam.visited_poi.stable_identity', 'merchant.desk.f4.enabled')
+                     'roam.visited_poi.stable_identity', 'merchant.desk.f4.enabled',
+                     'points.deduct.rate_yuan_per_point', 'points.deduct.max_yuan_per_order')
    OR config_key LIKE 'orient.%'
 ORDER BY config_key;
 
@@ -484,7 +557,8 @@ SELECT table_name, engine, table_rows AS approx_rows,
 FROM information_schema.tables
 WHERE table_schema = DATABASE()
   AND table_name IN ('cms_topic', 'cms_activity', 'member_visited_poi', 'topic_route_session',
-                     'roam_share_snapshot', 'theme_state_key', 'sys_role_menu', 'sys_config', 'sys_job')
+                     'roam_share_snapshot', 'theme_state_key', 'sys_role_menu', 'sys_config', 'sys_job',
+                     'club', 'mms_merchant', 'ums_creative_square_like')
 ORDER BY table_name;
 
 -- [7/7] 执行窗口前：长事务会让 ALTER 卡在元数据锁上（需要 PROCESS 权限；无权限时本句报错，不影响前面结果）
@@ -511,4 +585,17 @@ ORDER BY trx_started;
 --     FROM member_visited_poi WHERE poi_key IS NULL;
 --     SELECT member_id, COUNT(*) AS rows_null_poi_key FROM member_visited_poi
 --     WHERE poi_key IS NULL GROUP BY member_id ORDER BY rows_null_poi_key DESC LIMIT 20;
+
+--   B3 category_ids（列存在后）：
+--     SELECT COUNT(*) AS remaining_backfill FROM mms_merchant
+--     WHERE category_id > 0 AND (category_ids IS NULL OR category_ids = '');
+--     期望 0；非零 = 数据仍待回填，不能当成 APPLIED。
+--   B4 wechat_qrcode（列存在后）：
+--     SELECT COUNT(*) AS remaining_url FROM mms_merchant
+--     WHERE wechat LIKE 'http://%' OR wechat LIKE 'https://%';
+--     期望 0；同时用 owner 自有受控回读核对搬迁前后值，公开回执不要输出二维码 URL。
+--   B5 唯一键重复预览（原表存在后；主分类已执行同样的拒绝检查）：
+--     SELECT member_id, data_id, COUNT(*) AS duplicate_rows FROM ums_creative_square_like
+--     GROUP BY member_id, data_id HAVING COUNT(*) > 1;
+--     任何结果都必须停止；不自动删除、不自动合并历史行。
 -- =====================================================================================

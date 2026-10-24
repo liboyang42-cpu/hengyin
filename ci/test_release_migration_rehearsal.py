@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """发布迁移包的静态契约（不连库）：pack 与 HEAD 一致、预检只读且覆盖全部发布迁移。"""
+import copy
 import hashlib
 import json
 import pathlib
 import re
 import sys
+import subprocess
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -59,6 +61,71 @@ class ReleaseMigrationPackTest(unittest.TestCase):
     def test_precheck_has_no_host_or_credentials(self):
         self.assertNotRegex(PRECHECK, r"\b\d{1,3}(\.\d{1,3}){3}\b")
         self.assertNotRegex(PRECHECK, r"(?i)(password|passwd|mysql\s+-h|jdbc:)")
+
+
+    def test_source_provenance_is_exact_and_public(self):
+        source = PACK["generatedFor"]
+        self.assertRegex(source["masterCommit"], r"^[0-9a-f]{40}$")
+        for field, suffix in (("sourceTree", "^{tree}"), ("migrationTree", ":chengyinhub-admin/sql")):
+            actual = subprocess.run(["git", "rev-parse", source["masterCommit"] + suffix], cwd=ROOT,
+                                    check=True, capture_output=True, text=True).stdout.strip()
+            self.assertEqual(source[field], actual, field)
+        dependency_bytes = subprocess.run(
+            ["git", "show", source["masterCommit"] + ":ci/migration-dependencies.json"],
+            cwd=ROOT, check=True, capture_output=True).stdout
+        self.assertEqual(source["dependencySha256"], hashlib.sha256(dependency_bytes).hexdigest())
+        self.assertTrue(PACK["baseline"]["productionAppliedState"].startswith("UNKNOWN"))
+
+    def test_generated_document_matches_reviewed_pack(self):
+        doc = (rehearsal.PACK_DIR / "release-migration-pack.md").read_text(encoding="utf-8")
+        self.assertEqual(doc.count(rehearsal.GENERATED_BEGIN), 1)
+        self.assertEqual(doc.count(rehearsal.GENERATED_END), 1)
+        generated = doc.split(rehearsal.GENERATED_BEGIN)[1].split(rehearsal.GENERATED_END)[0]
+        self.assertEqual(generated, "\n" + rehearsal.render_pack_inventory(PACK))
+
+    def test_single_apply_policy_refuses_unsafe_skips(self):
+        welcome = next(m for m in PACK["migrations"] if m["migrationId"] == "club_welcome_note_20261022")
+        self.assertEqual("PRECHECK_SKIP_APPLIED", rehearsal.rerun_action(welcome, "APPLIED"))
+        for status in (None, "NEEDED", "PARTIAL", "CONFLICT", "BLOCKED_PREREQ", "DATA_PREVIEW"):
+            with self.subTest(status=status), self.assertRaises(ValueError):
+                rehearsal.rerun_action(welcome, status)
+        with self.assertRaises(ValueError):
+            rehearsal.rerun_action({**welcome, "rerunPolicy": "EXECUTE"}, "APPLIED")
+        for item in PACK["migrations"]:
+            if item["migrationId"] != welcome["migrationId"]:
+                self.assertEqual("EXECUTE", rehearsal.rerun_action(item, None))
+                with self.assertRaises(ValueError):
+                    rehearsal.rerun_action({**item, "rerunPolicy": "PRECHECK_SKIP_APPLIED"}, "APPLIED")
+
+    def test_direct_rerun_negative_control_requires_exact_failure_and_no_mutation(self):
+        duplicate = [("probe", 2, "EXEC",
+                      'OperationalError: (1060, "Duplicate column name \'welcome_note\'")', "ALTER TABLE club")]
+        fingerprint = {"club": "unchanged"}
+        self.assertTrue(rehearsal.direct_rerun_rejected_safely(False, duplicate, fingerprint, fingerprint))
+        wrong_error = [("probe", 2, "EXEC", "OperationalError: (1146, table missing)", "ALTER TABLE club")]
+        wrong_column = [("probe", 2, "EXEC", "1060 Duplicate column name 'other'", "ALTER TABLE club")]
+        wrong_statement = [("probe", 2, "EXEC", duplicate[0][3], "SELECT 1")]
+        for ok, problems, after in (
+                (True, [], fingerprint), (False, [], fingerprint),
+                (False, wrong_error, fingerprint), (False, wrong_column, fingerprint),
+                (False, wrong_statement, fingerprint), (False, duplicate * 2, fingerprint),
+                (False, duplicate, {"club": "changed"})):
+            with self.subTest(ok=ok, problems=problems, after=after):
+                self.assertFalse(rehearsal.direct_rerun_rejected_safely(ok, problems, fingerprint, after))
+
+    def test_refresh_rejects_unreviewed_or_removed_contracts(self):
+        computed = [{k: m[k] for k in ("migrationId", "path", "sha256", "baseSha256", "change", "order", "dependsOn")}
+                    for m in PACK["migrations"]]
+        refreshed = rehearsal.refreshed_items(PACK, computed)
+        self.assertEqual(PACK["migrations"], refreshed)
+        with self.assertRaises(ValueError):
+            rehearsal.refreshed_items(PACK, computed[:-1])
+        with self.assertRaises(ValueError):
+            rehearsal.refreshed_items(PACK, computed + [{**computed[0], "migrationId": "unreviewed"}])
+        duplicate_pack = copy.deepcopy(PACK)
+        duplicate_pack["migrations"].append(duplicate_pack["migrations"][0])
+        with self.assertRaises(ValueError):
+            rehearsal.refreshed_items(duplicate_pack, computed)
 
 
 if __name__ == "__main__":
