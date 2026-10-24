@@ -1,0 +1,34 @@
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/upgrade/SupportedStackServiceCyclesTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/upgrade/SupportedStackServiceCyclesTest.java
+index f8f99259..8fe9761a 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/upgrade/SupportedStackServiceCyclesTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/upgrade/SupportedStackServiceCyclesTest.java
+@@ -49,6 +49,9 @@ import com.chengyinhub.business.service.impl.CoopSettlementOriginalLedger;
+ import com.chengyinhub.business.service.impl.CoopClosedPaymentRecovery;
+ import com.chengyinhub.business.service.impl.WxPaymentCallbackOutboxServiceImpl;
+ import com.chengyinhub.business.mapper.WxPaymentCallbackOutboxMapper;
++import com.chengyinhub.business.mapper.AuditTaskMapper;
++import com.chengyinhub.business.mapper.BusinessAuditEventMapper;
++import com.chengyinhub.business.service.impl.AlarmService;
+ import com.chengyinhub.business.service.impl.TopicSettlementEvidenceService;
+ import com.chengyinhub.business.service.support.CommittedBusinessNotice;
+ import com.chengyinhub.business.service.support.CommittedOfficialNoticeService;
+@@ -351,8 +354,18 @@ class SupportedStackServiceCyclesTest
+             Object chapterApplication = AopTestUtils.getUltimateTargetObject(context.getBean(MerchantChapterApplicationServiceImpl.class));
+             Object invitation = context.getBean(ChapterApplicationInviteNotice.class);
+             assertThat(ReflectionTestUtils.getField(chapterApplication, "inviteNotice")).isSameAs(invitation);
+-            assertThat(ReflectionTestUtils.getField(AopTestUtils.getUltimateTargetObject(invitation), "notices"))
++            Object invitationTarget = AopTestUtils.getUltimateTargetObject(invitation);
++            assertThat(ReflectionTestUtils.getField(invitationTarget, "notices"))
+                     .isSameAs(context.getBean(CommittedOfficialNoticeService.class));
++            // D fe32: these are required Spring collaborators; SQL/diagnostic effects remain explicit inert boundaries.
++            assertThat(ReflectionTestUtils.getField(chapterApplication, "auditTaskMapper"))
++                    .isSameAs(context.getBean(AuditTaskMapper.class));
++            assertThat(ReflectionTestUtils.getField(invitationTarget, "audit"))
++                    .isSameAs(context.getBean(BusinessAuditEventMapper.class));
++            assertThat(ReflectionTestUtils.getField(invitationTarget, "alarm"))
++                    .isSameAs(context.getBean(AlarmService.class));
++            assertThat(ReflectionTestUtils.getField(invitationTarget, "executor"))
++                    .isSameAs(context.getBean("scheduledExecutorService"));
+             assertThat(unexpectedCalls).isEmpty();
+         });
+     }
