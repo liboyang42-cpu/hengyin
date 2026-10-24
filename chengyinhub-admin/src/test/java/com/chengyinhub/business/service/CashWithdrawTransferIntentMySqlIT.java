@@ -222,7 +222,29 @@ class CashWithdrawTransferIntentMySqlIT {
                 assertEquals(0, refunds.get(), field + " drift must not credit the original debit");
             }
         }
-        when(provider.queryTransferResult(any(CashWithdrawTransferIntent.class))).thenReturn(facts(intent, "FAIL"));
+        when(provider.queryTransferResult(any(CashWithdrawTransferIntent.class))).thenAnswer(call -> {
+            // The query read D1, then a separate committed observer records D2 before its response reaches the claim.
+            try (Connection independent = source.getConnection()) {
+                assertTrue(independent.getAutoCommit(), "the competing receipt must commit independently");
+                try (java.sql.PreparedStatement update = independent.prepareStatement(
+                        "UPDATE member_cash_withdraw SET wechat_detail_id=? WHERE id=?")) {
+                    update.setString(1, "concurrent-detail");
+                    update.setLong(2, ID);
+                    assertEquals(1, update.executeUpdate());
+                }
+            }
+            return facts(intent, "FAIL");
+        });
+        service.requery(ID);
+        MemberCashWithdraw concurrent = cash.selectById(ID);
+        assertEquals("concurrent-detail", concurrent.getWechatDetailId(), "the stale failure claim must not replace D2 with D1");
+        assertEquals("original-batch", concurrent.getTransferBatchId());
+        assertEquals(MemberCashWithdraw.STATUS_PROCESSING, concurrent.getStatus());
+        money("70", balance());
+        assertEquals(0, refunds.get());
+
+        db.update("UPDATE member_cash_withdraw SET wechat_detail_id='original-detail' WHERE id=?", ID);
+        doReturn(facts(intent, "FAIL")).when(provider).queryTransferResult(any(CashWithdrawTransferIntent.class));
         service.requery(ID);
         money("100", balance());
         assertEquals(MemberCashWithdraw.STATUS_FAILED_REFUNDED, cash.selectById(ID).getStatus());

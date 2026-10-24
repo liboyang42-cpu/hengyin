@@ -317,7 +317,6 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         if (bs != null && !bs.isEmpty()) {
             upd.setWechatBatchStatus(bs);
         }
-        upd.setWechatDetailId(emptyToNull(q == null ? null : q.get("detailId")));
         if (mapper.updateReceiptIfProcessing(upd) == 0) return;
 
         if (isStuck(w, now)) {
