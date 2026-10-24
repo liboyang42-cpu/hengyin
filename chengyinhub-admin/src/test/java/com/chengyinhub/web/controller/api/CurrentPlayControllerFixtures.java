@@ -27,6 +27,12 @@ final class CurrentPlayControllerFixtures {
 
     static void install(Object controller) {
         if (controller instanceof ApiPlayProgressController) BasicPlayCommandFixtures.install((ApiPlayProgressController) controller);
+        // 旧合法业务夹具显式声明“查询成功且非带领场”；生产入口绝不以缺 mapper 放行。
+        if (ReflectionTestUtils.getField(controller, "clubLeadMapper") == null) {
+            com.chengyinhub.business.mapper.ClubLeadMapper noLead = mock(com.chengyinhub.business.mapper.ClubLeadMapper.class);
+            when(noLead.selectByActivity(anyLong())).thenReturn(null);
+            ReflectionTestUtils.setField(controller, "clubLeadMapper", noLead);
+        }
         if (ReflectionTestUtils.getField(controller, "currentPlayActivityMapper") == null) {
             CmsActivityMapper activityMapper = mock(CmsActivityMapper.class);
             when(activityMapper.selectCmsActivityByIdForUpdate(anyLong())).thenAnswer(call -> {

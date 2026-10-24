@@ -41,6 +41,9 @@ class ApiPlayCurrentUseBoundaryTest {
         original.setRegistrationStatus(2);original.setPaymentStatus(2);original.setPurchaseKind(3);current=original;
         when(registrations.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(original));
         when(registrations.selectCmsRegistrationByIdForUpdate(19L)).thenAnswer(call->current);
+        com.chengyinhub.business.mapper.ClubLeadMapper noLead = mock(com.chengyinhub.business.mapper.ClubLeadMapper.class);
+        when(noLead.selectByActivity(anyLong())).thenReturn(null);
+        ReflectionTestUtils.setField(controller,"clubLeadMapper",noLead);
         ReflectionTestUtils.setField(controller,"currentPlayActivityMapper",activities);
         ReflectionTestUtils.setField(controller,"cmsRegistrationMapper",registrations);
         ReflectionTestUtils.setField(controller,"cmsActivityService",activityService);
