@@ -37,7 +37,7 @@ public class CityNodeRedemptionApplication {
     private final BusinessAuditEventMapper businessAuditEventMapper;
     private final QrcodeServiceImpl qrcodeService;
     private final String dynSecret;
-    private static final long DYN_TTL_MS = RegistrationTicketApplication.DYN_TTL_MS;
+    private static final long DYN_TTL_MS = 300_000L;
 
     public CityNodeRedemptionApplication(IMerchantAccessService merchantAccessService, RoamMapper roamMapper,
             ISmsCouponHistoryService couponHistoryService, BusinessAuditEventMapper businessAuditEventMapper,
