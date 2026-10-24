@@ -3,6 +3,9 @@
 const { distM } = require('./roam-geo.js')
 const DEFAULT_EPSILON_METERS = 8
 const DEFAULT_MAX_POINTS = 180
+// 调用方传入 maxPoints 的硬上限：主循环每保留一个点做一次线性候选扫描（O(maxPoints × 候选数)），
+// 不设上限时一次传大值就会在长轨迹上退化成 O(n²)。
+const MAX_POINTS_LIMIT = 1000
 
 function coordinate(value, limit) {
   if (typeof value !== 'number' && (typeof value !== 'string' || !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(value.trim()))) return null
@@ -37,7 +40,7 @@ function simplifyTrack(points, options) {
   const epsilon = Number(options && options.epsilonMeters)
   const threshold = Number.isFinite(epsilon) && epsilon >= 0 ? epsilon : DEFAULT_EPSILON_METERS
   const requestedMax = Number(options && options.maxPoints)
-  const maxPoints = Number.isFinite(requestedMax) && requestedMax >= 2 ? Math.floor(requestedMax) : DEFAULT_MAX_POINTS
+  const maxPoints = Number.isFinite(requestedMax) && requestedMax >= 2 ? Math.min(Math.floor(requestedMax), MAX_POINTS_LIMIT) : DEFAULT_MAX_POINTS
   const keep = new Set([0, source.length - 1])
   const candidates = []
   function addSegment(start, end) {
@@ -49,7 +52,7 @@ function simplifyTrack(points, options) {
     if (index >= 0) candidates.push({ start, end, index, distance })
   }
   addSegment(0, source.length - 1)
-  // ponytail: 最多180次扫描候选段；更长轨迹有性能证据时再换优先队列。
+  // 最多 maxPoints-2 轮（默认 178，上限 MAX_POINTS_LIMIT）；每轮线性扫一遍候选段。更长轨迹有性能证据时再换优先队列。
   while (candidates.length && keep.size < maxPoints) {
     let best = 0
     for (let i = 1; i < candidates.length; i++) if (candidates[i].distance > candidates[best].distance) best = i
@@ -66,4 +69,4 @@ function limitTrack(points) {
   return track.length > DEFAULT_MAX_POINTS ? simplifyTrack(track) : track
 }
 
-module.exports = { simplifyTrack, limitTrack, normalizeTrack, DEFAULT_EPSILON_METERS, DEFAULT_MAX_POINTS }
+module.exports = { simplifyTrack, limitTrack, normalizeTrack, DEFAULT_EPSILON_METERS, DEFAULT_MAX_POINTS, MAX_POINTS_LIMIT }
