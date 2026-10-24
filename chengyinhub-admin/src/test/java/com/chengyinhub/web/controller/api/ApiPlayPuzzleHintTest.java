@@ -191,8 +191,9 @@ class ApiPlayPuzzleHintTest
     @Test
     void orientingPuzzleSecretsAreNotDownlinkedBeforeServerFactIsRecorded() throws Exception
     {
+        // The production /nodes projection moved out of the HTTP facade; keep the same secret guard.
         String source = new String(Files.readAllBytes(Paths.get("src", "main", "java", "com", "chengyinhub",
-                "web", "controller", "api", "ApiPlayProgressController.java")), StandardCharsets.UTF_8)
+                "web", "service", "play", "PlayNodeQueryApplication.java")), StandardCharsets.UTF_8)
                 .replaceAll("\\s+", " ");
 
         assertEquals(true, source.contains("if (!puzzleScoring) {"),
