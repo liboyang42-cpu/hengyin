@@ -44,6 +44,13 @@ class E2eWechatPayStubContractTest {
     }
 
     @Test
+    void unsupportedAttemptCloseAndLockNeverAuthorizeLocalSettlement() throws Exception {
+        IWechatPayService stub = (IWechatPayService) stubClass.getDeclaredConstructor().newInstance();
+        assertFalse(stub.closePaymentAttempt("REG1", "WXP-original"));
+        assertFalse(stub.lockPaymentAttemptForUpdate("REG1", "WXP-original"));
+    }
+
+    @Test
     void dispatchesEachBusinessToItsRealServiceAndKeepsUnknownMembershipClosed() throws Exception {
         IWechatPayService stub = (IWechatPayService) stubClass.getDeclaredConstructor().newInstance();
         ICmsRegistrationService registration = mock(ICmsRegistrationService.class);
