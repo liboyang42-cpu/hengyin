@@ -51,7 +51,7 @@ test('application owns no HTTP context, callback to controller, optional depende
 test('the original five-minute TTL and signing configuration have one shared value and keep local PNG generation', () => {
   const source = read(applicationPath);
   assert.match(source, /public static final long DYN_TTL_MS = 300_000L/);
-  assert.match(read(controllerPath), /private static final long DYN_TTL_MS = RegistrationTicketApplication.DYN_TTL_MS/);
+  assert.match(read('chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/CityNodeRedemptionApplication.java'), /private static final long DYN_TTL_MS = RegistrationTicketApplication.DYN_TTL_MS/);
   assert.match(source, /@Value\("\$\{verify.dyncode-secret:\$\{token.secret\}\}"\) String dynSecret/);
   assert.match(source, /VerifyDynCodeUtil.issue\(reg.getId\(\), type, now, DYN_TTL_MS, nonce, dynSecret\)/);
   assert.match(source, /qrcodeService.generateInlineQrcode\(code, 300, 300\)/);

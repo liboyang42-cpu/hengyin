@@ -263,10 +263,8 @@ class RegistrationEquityMybatisIntegrationTest {
         when(access.require(99L, MerchantPermission.VERIFY)).thenReturn(
                 new MerchantAccessContext(99L, 77L, 99L, MerchantRoleCode.MERCHANT_OWNER));
         ReflectionTestUtils.setField(target, "merchantAccessService", access);
-        ReflectionTestUtils.setField(target, "roamMapper", mapper);
-        ReflectionTestUtils.setField(target, "dynSecret", "city-node-it-secret");
         CityNodeRedemptionApplication application = new CityNodeRedemptionApplication(
-                access, mapper, couponHistoryService, session.getMapper(BusinessAuditEventMapper.class), "city-node-it-secret");
+                access, mapper, couponHistoryService, session.getMapper(BusinessAuditEventMapper.class), mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class), "city-node-it-secret");
         ProxyFactory factory = new ProxyFactory(application);
         factory.setProxyTargetClass(true);
         factory.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(dataSource),

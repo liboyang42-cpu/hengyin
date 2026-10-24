@@ -55,7 +55,7 @@ class CityNodeRedemptionApplicationTest {
         source = mock(DataSource.class); connection = mock(Connection.class);
         when(source.getConnection()).thenReturn(connection); when(connection.getAutoCommit()).thenReturn(true);
         transactions = new DataSourceTransactionManager(source);
-        CityNodeRedemptionApplication target = new CityNodeRedemptionApplication(access, roam, coupons, audit, SECRET);
+        CityNodeRedemptionApplication target = new CityNodeRedemptionApplication(access, roam, coupons, audit, mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class), SECRET);
         ProxyFactory proxy = new ProxyFactory(target); proxy.setProxyTargetClass(true);
         proxy.addAdvice(new TransactionInterceptor(transactions, new AnnotationTransactionAttributeSource()));
         application = (CityNodeRedemptionApplication) proxy.getProxy();
@@ -80,6 +80,28 @@ class CityNodeRedemptionApplicationTest {
         stages.add(name); return result;
     }
     private String code() { return VerifyDynCodeUtil.issue(51L, "citynode_7001", System.currentTimeMillis(), 300000L, 7L, SECRET); }
+    @Test void issuanceUsesTheSameApplicationWithoutOpeningATransaction() throws Exception {
+        assertNull(CityNodeRedemptionApplication.class.getMethod("issueCityNodeCode", long.class, Long.class)
+                .getAnnotation(Transactional.class));
+        CityNodeVO poi = new CityNodeVO(); poi.setPoiId(51L); poi.setMerchantId(11L);
+        doReturn(poi).when(roam).selectMerchantNodeDetail(51L);
+        doReturn(poi).when(roam).selectPlayerMerchantNodeDetail(51L, 0L);
+        com.chengyinhub.business.service.impl.QrcodeServiceImpl qr =
+                (com.chengyinhub.business.service.impl.QrcodeServiceImpl) ReflectionTestUtils.getField(
+                        org.springframework.test.util.AopTestUtils.getTargetObject(application), "qrcodeService");
+        doAnswer(call -> {
+            assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+            assertEquals(300, (int) call.getArgument(1)); assertEquals(300, (int) call.getArgument(2));
+            return "data:image/png;base64,fixture";
+        }).when(qr).generateInlineQrcode(anyString(), anyInt(), anyInt());
+        AjaxResult response = controller.issueCityNodeCode(51L);
+        assertEquals(200, response.get("code")); Map<?, ?> data = (Map<?, ?>) response.get("data");
+        assertEquals(300000L, data.get("ttlMs")); assertEquals(51L, data.get("poiId"));
+        VerifyDynCodeUtil.Result signed = VerifyDynCodeUtil.verify((String) data.get("code"), System.currentTimeMillis(), SECRET);
+        assertTrue(signed.valid); assertEquals(51L, signed.regId); assertEquals("citynode_" + ACTOR, signed.type);
+        verifyNoInteractions(source, connection, access, coupons, audit);
+        verify(roam, never()).lockClaimOwner(anyLong()); verify(roam, never()).redeemCityNodeReward(anyLong(), anyLong());
+    }
     @Test void controllerCallsTheApplicationProxyAndAllStagesShareOneWritableTransaction() throws Exception {
         assertFalse(AopUtils.isAopProxy(controller)); assertTrue(AopUtils.isAopProxy(application));
         assertNull(ApiVerifyController.class.getMethod("redeemCityNodeCode", String.class).getAnnotation(Transactional.class));

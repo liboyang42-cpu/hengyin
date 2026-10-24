@@ -3,23 +3,16 @@ package com.chengyinhub.web.controller.api;
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
-import com.chengyinhub.business.domain.vo.CityNodeVO;
-import com.chengyinhub.business.mapper.RoamMapper;
 import com.chengyinhub.business.service.IGroupCodeService;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
-import com.chengyinhub.common.utils.VerifyDynCodeUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 
 import com.chengyinhub.web.service.verify.RegistrationTicketApplication;
 import com.chengyinhub.web.service.verify.CityNodeRedemptionApplication;
@@ -35,21 +28,8 @@ import com.chengyinhub.web.service.verify.CityNodeRedemptionApplication;
 @RequestMapping("/api/verify")
 public class ApiVerifyController extends BaseController {
 
-    /** 动态码有效期(毫秒):入场码需留足出示时间,取 5 分钟;过期由前端重新签发 */
-    private static final long DYN_TTL_MS = RegistrationTicketApplication.DYN_TTL_MS;
-
     @Autowired
     private RegistrationTicketApplication registrationTicketApplication;
-
-    @Autowired
-    private com.chengyinhub.business.service.impl.QrcodeServiceImpl qrcodeService;
-
-    /** 核销码密钥:默认复用 JWT secret(已是服务端注入的真密钥),可用 verify.dyncode-secret 单独覆盖 */
-    @Value("${verify.dyncode-secret:${token.secret}}")
-    private String dynSecret;
-
-    @Autowired
-    private RoamMapper roamMapper;
 
     @Autowired
     private IGroupCodeService groupCodeService;
@@ -78,33 +58,7 @@ public class ApiVerifyController extends BaseController {
     @Operation(summary = "签发我的据点核销码(玩家出码,商家扫码领券)")
     @PostMapping("/citynode/issue")
     public AjaxResult issueCityNodeCode(Long poiId) {
-        long memberId = appUid();
-        if (memberId <= 0) return error("请先登录");
-        if (poiId == null || poiId <= 0) return error("参数缺失");
-        CityNodeVO poi = roamMapper.selectMerchantNodeDetail(poiId);
-        if (poi == null) return error("据点不存在");
-        if (roamMapper.selectPlayerMerchantNodeDetail(poiId, 0L) == null
-                && roamMapper.selectPendingCityNodeCouponId(poiId, memberId) == null) {
-            return error("据点未上线，且没有待核销记录");
-        }
-
-        long now = System.currentTimeMillis();
-        long nonce = ThreadLocalRandom.current().nextLong();
-        // regId=poiId,type="citynode_"+玩家memberId(两者均在 HMAC 签名内,商家不可篡改发券对象)
-        String code = VerifyDynCodeUtil.issue(poiId, "citynode_" + memberId, now, DYN_TTL_MS, nonce, dynSecret);
-        String qrcodeUrl = null;
-        try {
-            qrcodeUrl = qrcodeService.generateInlineQrcode(code, 300, 300);
-        } catch (Exception ignore) {
-            logger.error("签发据点核销码二维码生成失败", ignore);
-        }
-        Map<String, Object> data = new HashMap<>();
-        data.put("code", code);
-        data.put("qrcodeUrl", qrcodeUrl);
-        data.put("ttlMs", DYN_TTL_MS);
-        data.put("expiresAt", now + DYN_TTL_MS);
-        data.put("poiId", poiId);
-        return AjaxResult.success(data);
+        return cityNodeRedemptionApplication.issueCityNodeCode(appUid(), poiId);
     }
 
     @Operation(summary = "商家扫玩家据点核销码,校验后发券(C2 防伪造GPS薅券)")

@@ -8,6 +8,7 @@ import com.chengyinhub.business.domain.vo.CityNodeVO;
 import com.chengyinhub.business.mapper.BusinessAuditEventMapper;
 import com.chengyinhub.business.mapper.RoamMapper;
 import com.chengyinhub.business.service.ISmsCouponHistoryService;
+import com.chengyinhub.business.service.impl.QrcodeServiceImpl;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.VerifyDynCodeUtil;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 /** Existing city-node verifier command. Current merchant authorization, claim lock, reward CAS,
  * coupon stock/history and audit stay in the same REQUIRED transaction, without external I/O. */
@@ -29,16 +31,50 @@ public class CityNodeRedemptionApplication {
     private final RoamMapper roamMapper;
     private final ISmsCouponHistoryService couponHistoryService;
     private final BusinessAuditEventMapper businessAuditEventMapper;
+    private final QrcodeServiceImpl qrcodeService;
     private final String dynSecret;
+    private static final long DYN_TTL_MS = RegistrationTicketApplication.DYN_TTL_MS;
 
     public CityNodeRedemptionApplication(IMerchantAccessService merchantAccessService, RoamMapper roamMapper,
             ISmsCouponHistoryService couponHistoryService, BusinessAuditEventMapper businessAuditEventMapper,
+            QrcodeServiceImpl qrcodeService,
             @Value("${verify.dyncode-secret:${token.secret}}") String dynSecret) {
         this.merchantAccessService = merchantAccessService;
         this.roamMapper = roamMapper;
         this.couponHistoryService = couponHistoryService;
         this.businessAuditEventMapper = businessAuditEventMapper;
+        this.qrcodeService = qrcodeService;
         this.dynSecret = dynSecret;
+    }
+
+    /** Issuance keeps its original admission/sign/inline-PNG order without a transaction. */
+    public AjaxResult issueCityNodeCode(long memberId, Long poiId) {
+        if (memberId <= 0) return AjaxResult.error("请先登录");
+        if (poiId == null || poiId <= 0) return AjaxResult.error("参数缺失");
+        CityNodeVO poi = roamMapper.selectMerchantNodeDetail(poiId);
+        if (poi == null) return AjaxResult.error("据点不存在");
+        if (roamMapper.selectPlayerMerchantNodeDetail(poiId, 0L) == null
+                && roamMapper.selectPendingCityNodeCouponId(poiId, memberId) == null) {
+            return AjaxResult.error("据点未上线，且没有待核销记录");
+        }
+
+        long now = System.currentTimeMillis();
+        long nonce = ThreadLocalRandom.current().nextLong();
+        // regId=poiId,type="citynode_"+玩家memberId(两者均在 HMAC 签名内,商家不可篡改发券对象)
+        String code = VerifyDynCodeUtil.issue(poiId, "citynode_" + memberId, now, DYN_TTL_MS, nonce, dynSecret);
+        String qrcodeUrl = null;
+        try {
+            qrcodeUrl = qrcodeService.generateInlineQrcode(code, 300, 300);
+        } catch (Exception ignore) {
+            logger.error("签发据点核销码二维码生成失败", ignore);
+        }
+        Map<String, Object> data = new HashMap<>();
+        data.put("code", code);
+        data.put("qrcodeUrl", qrcodeUrl);
+        data.put("ttlMs", DYN_TTL_MS);
+        data.put("expiresAt", now + DYN_TTL_MS);
+        data.put("poiId", poiId);
+        return AjaxResult.success(data);
     }
 
     @Transactional(rollbackFor = Exception.class)

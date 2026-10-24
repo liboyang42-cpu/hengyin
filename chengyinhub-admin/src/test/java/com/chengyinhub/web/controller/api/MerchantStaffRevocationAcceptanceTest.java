@@ -89,10 +89,8 @@ class MerchantStaffRevocationAcceptanceTest {
         when(auditMapper.insertBusinessAuditEvent(any())).thenReturn(1);
         controller = new StaffController();
         ReflectionTestUtils.setField(controller, "merchantAccessService", access);
-        ReflectionTestUtils.setField(controller, "roamMapper", roamMapper);
         ReflectionTestUtils.setField(controller, "cityNodeRedemptionApplication", new CityNodeRedemptionApplication(
-                access, roamMapper, mock(ISmsCouponHistoryService.class), auditMapper, SECRET));
-        ReflectionTestUtils.setField(controller, "dynSecret", SECRET);
+                access, roamMapper, mock(ISmsCouponHistoryService.class), auditMapper, mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class), SECRET));
     }
 
     private static MerchantOperator activeCheckinStaff() {

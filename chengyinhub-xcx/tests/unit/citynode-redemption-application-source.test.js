@@ -58,3 +58,16 @@ test('negative controls: removing the transactional owner or original permission
   const noPermission = owner.replace('merchantAccessService.require(', 'unapprovedContext(');
   assert.notEqual(noPermission, owner); assert.throws(() => sequence(noPermission), assert.AssertionError);
 });
+
+test('issuance shares CityNode ownership and signing configuration without an issuance transaction', () => {
+  const controller = read(controllerPath), owner = read(ownerPath);
+  assert.match(body(controller, 'public AjaxResult issueCityNodeCode(Long poiId)'), /return cityNodeRedemptionApplication.issueCityNodeCode\(appUid\(\), poiId\);/);
+  assert.doesNotMatch(controller, /private (?:RoamMapper|String dynSecret)|qrcodeService|VerifyDynCodeUtil/);
+  assert.doesNotMatch(owner, /@Transactional[^;{}]*public AjaxResult issueCityNodeCode/);
+  const issuance = body(owner, 'public AjaxResult issueCityNodeCode(long memberId, Long poiId)');
+  let previous = -1;
+  for (const step of ['memberId <= 0', 'poiId == null || poiId <= 0', 'selectMerchantNodeDetail(poiId)', 'selectPlayerMerchantNodeDetail(poiId, 0L)',
+    'selectPendingCityNodeCouponId(poiId, memberId)', 'VerifyDynCodeUtil.issue(poiId, "citynode_" + memberId, now, DYN_TTL_MS, nonce, dynSecret)', 'qrcodeService.generateInlineQrcode(code, 300, 300)', 'AjaxResult.success(data)']) {
+    const next = issuance.indexOf(step); assert.ok(next > previous, step); previous = next;
+  }
+});
