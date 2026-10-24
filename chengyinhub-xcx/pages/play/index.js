@@ -16,6 +16,8 @@ const recommend = require('./utils/play-recommend.js'); // P0 推荐评分(纯�
 const { buildPlayRoute, createSessionClock, formatElapsed } = require('../../utils/play-ui-contract.js');
 const { readPausedRun, writePausedRun, clearRunSession, saveServerPausedRun, clearServerRunSession, readServerPausedRun, newerPausedRun } = require('./utils/play-run-session.js');
 const { resolveLeadMemberTicket } = require('./utils/lead-ticket-scan.js');
+const { seatTarget, seatKey, seatRecovery, seatChoice } = require('../../utils/registration-seat.js');
+const { classifyVerificationOutcome, createVerificationWorkflow } = require('../../utils/merchant-verification.js');
 const { routeColorForKey, ROUTE_BORDER_COLOR } = require('../../utils/play-visual-tokens.js');
 const { getPlayMapState, getPlayRouteNodeState } = require('../../utils/play-state-contract.js');
 const gameSessionClient = require('../../utils/game-session-client.js');
@@ -934,6 +936,7 @@ Page({
 
   onUnload() {
     this._playDisposed = true;
+    if (this._leadVerificationWorkflow) { this._leadVerificationWorkflow.destroy(); this._leadVerificationWorkflow = null; }
     this._leadArrivalEpoch = (this._leadArrivalEpoch || 0) + 1; this._leadArriving = false;
     this._themeRecordsDisposed = true;
     this._themeRecordsEpoch = (this._themeRecordsEpoch || 0) + 1;
@@ -4848,6 +4851,27 @@ Page({
           that.diegetic(ticket.error);
           return;
         }
+        const request = { url: '/api/registration/scan_group_member_ticket', method: 'POST',
+          data: { code: ticket.code, activityId: context.activityId } };
+        const target = seatTarget(request);
+        if (target) {
+          if (!that._leadVerificationWorkflow) that._leadVerificationWorkflow = createVerificationWorkflow({
+            deadlineMs: 15000, storage: wx, getOwner: () => app.getUserID && app.getUserID() });
+          const key = seatKey(context.owner, target);
+          that._leadVerificationWorkflow.run(key, done => app.sendRequest(Object.assign({}, request, {
+            hideLoading: true, silentError: true, autoErrorToast: false,
+            success: r => done(classifyVerificationOutcome(r, 'success', undefined, request)),
+            fail: (r, status) => done(classifyVerificationOutcome(r, 'fail', status, request)),
+            successStatusAbnormal: (r, status) => done(classifyVerificationOutcome(r, 'abnormal', status, request))
+          })), result => {
+            if (!isCurrent()) return;
+            if (result.status === 'success') motion.haptic({ type: 'medium', reducedMotion: that.data.reducedMotion });
+            that.diegetic(result.status === 'unknown'
+              ? '原席位结果待确认；再次扫描同一席位只查询结果，请勿改选席位重发'
+              : result.response && result.response.msg || '核销未提交');
+          }, seatRecovery(app, target, isCurrent));
+          return;
+        }
         loadingShown = true; cyLoading.show('正在核销');
         req('/api/registration/scan_group_member_ticket', 'POST', {
           code: ticket.code, activityId: context.activityId
@@ -6479,6 +6503,12 @@ Page({
     req('/api/verify/dyncode/issue', 'POST', { registrationId: regId }).then((res) => {
       if (!current()) return;
       if (String(res.code) === '200' && res.data) {
+        if (seatChoice(res.data, regId)) {
+          // 旧优惠券出码调用也走同一明确选席组件；不能把整单默认成第一席。
+          that.setData({ 'ticket.loading': false, 'ticket.url': '', 'ticket.code': '' });
+          that.openScene('qr-ticket', { registrationId: regId });
+          return;
+        }
         that.setData({ 'ticket.url': res.data.qrcodeUrl || '', 'ticket.code': res.data.code || '', 'ticket.loading': false, 'ticket.expiresAt': res.data.expiresAt || 0 });
       } else {
         that.setData({ 'ticket.loading': false });

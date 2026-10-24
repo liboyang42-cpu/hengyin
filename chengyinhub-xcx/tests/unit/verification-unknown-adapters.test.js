@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const verification = require('../../utils/merchant-verification.js');
+const seats = require('../../utils/registration-seat.js');
 const entries = [
   ['pages/club/detail/index.js', 'submitClubScan'],
   ['pages/merchant/index/index.js', '_submitVerification'],
@@ -56,9 +57,11 @@ function harness(file, method, transport, request, sharedStorage) {
     setTimer(fn) { deadline = fn; return 1; }, clearTimer() {} });
   const methodObject = new Function('app', 'loading', 'cyLoading', 'cyToast', 'modal',
     'jsonHeader', 'readReducedMotion', 'applyTheme', 'merchantTheme', 'createVerificationWorkflow', 'wx', 'classifyVerificationOutcome', 'offerVerificationReadback',
+    'seatTarget', 'seatKey', 'captureLogin', 'loginCurrent', 'seatRecovery',
     'return ({' + body + '});')(app, loading, loading, m => messages.push(m),
       { show: o => messages.push(o.content) }, () => ({}), () => false, () => {}, { merchantPageRestore() {}, merchantPageShow() {} }, workflow, storage,
-      verification.classifyVerificationOutcome, () => {});
+      verification.classifyVerificationOutcome, () => {},
+      seats.seatTarget, seats.seatKey, seats.captureLogin, seats.loginCurrent, seats.seatRecovery);
   const owner = { ...methodObject, clearGroupCodeTimer() {}, resetGameStationSummaries() {}, _invalidateParticipationCancellation() {},
     data: { reducedMotion: false, myAvatar: '', myNickname: '', pointsSheet: {}, id: '' },
     _profileAttached: true, _syncProfileReadIdentity: () => true, initializeProfile() {}, _syncCommunityProfile() {},
@@ -66,7 +69,7 @@ function harness(file, method, transport, request, sharedStorage) {
   const invoke = () => method === 'submitClubScan'
     ? owner[method](request.url, { code: request.data.code, data: request.data })
     : owner[method](request.url + ':' + (request.data.code || ''), '核销中', request, r => messages.push(r.msg));
-  return { owner, storage, requests, messages, invoke, dispose: () => { if (hook) owner[hook](); else if (owner._verificationWorkflow) { owner._verificationWorkflow.destroy(); owner._verificationWorkflow = null; } }, switchOwner: id => { memberId = id; }, deadline: () => deadline() };
+  return { owner, storage, requests, messages, invoke, dispose: () => { if (hook) owner[hook](); else if (owner._verificationWorkflow) { owner._verificationWorkflow.destroy(); owner._verificationWorkflow = null; } }, switchOwner: id => { memberId = id; }, advanceLogin: () => { app._featureFlagsEpoch = (app._featureFlagsEpoch || 0) + 1; }, deadline: () => deadline() };
 }
 for (const [file, method] of entries) {
   for (const [label, callback, response, status] of [
@@ -365,3 +368,42 @@ test('历史登录拒绝仅接受fail通道的精确status2与code2，其余仍U
     assert.equal(verification.classifyVerificationOutcome({ code }, channel, status).status, 'unknown');
   }
 });
+
+
+const seatEntries = entries.filter(([file]) => !file.includes('/club/'));
+const seatRequest = nonce => ({ url: '/api/registration/scan_dynamic_code', method: 'POST',
+  data: { code: 'v1.71.activity_seat_2.1999999999999.' + nonce + '.signature' } });
+const actualSeat = { code: 200, msg: '该席位已核销，请勿重复提供权益', data: {
+  seatId: 102, registrationId: 71, seatNo: 2, topicId: null, activityId: 9, verifierMemberId: 11,
+  verifiedAt: '2026-10-24T08:00:00.000+08:00', replayed: true, registrationFirstTime: false } };
+for (const [file, method] of seatEntries) {
+  test(file + ' 席位丢包销毁重建/刷新码只读原席位，不重发写', () => {
+    const disk = durableStorage(), a = harness(file, method, false, seatRequest(7), disk);
+    a.invoke(); a.requests[0].fail(); a.dispose();
+    const b = harness(file, method, false, seatRequest(99), disk); b.invoke();
+    assert.equal(b.requests.length, 1); assert.equal(b.requests[0].url, '/api/verify/seat/receipt');
+    assert.deepEqual(b.requests[0].data, { registrationId: '71', seatNo: 2 });
+    b.requests[0].success(actualSeat);
+    assert.match(b.messages.at(-1), /该席位已核销/); assert.equal(Object.keys(disk.values).length, 0);
+    b.dispose();
+  });
+  test(file + ' 席位待确认与畸形200都不释放原UNKNOWN', () => {
+    const h = harness(file, method, false, seatRequest(7)); h.invoke(); h.requests[0].fail(); h.invoke();
+    assert.equal(h.requests[1].url, '/api/verify/seat/receipt'); h.requests[1].success({ code: 520 });
+    h.invoke(); h.requests[2].success({ code: 200, msg: '核销成功' }); h.invoke();
+    assert.equal(h.requests[3].url, '/api/verify/seat/receipt');
+    assert.equal(h.requests.filter(r => r.url === '/api/registration/scan_dynamic_code').length, 1);
+    h.dispose();
+  });
+  test(file + ' 席位A→B→A迟回包不删原pending，不显示新代次UI', () => {
+    const h = harness(file, method, false, seatRequest(7)); h.invoke();
+    h.switchOwner(22); h.advanceLogin(); h.switchOwner(11); h.advanceLogin();
+    h.requests[0].success(actualSeat); assert.deepEqual(h.messages, []);
+    h.invoke(); assert.equal(h.requests[1].url, '/api/verify/seat/receipt'); h.dispose();
+  });
+  test(file + ' 席位存储故障明确未提交且零POST', () => {
+    const disk = durableStorage(); disk.setStorageSync = () => { throw Error('disk unavailable'); };
+    const h = harness(file, method, false, seatRequest(7), disk); h.invoke();
+    assert.equal(h.requests.length, 0); assert.match(h.messages[0], /本次未提交/); h.dispose();
+  });
+}

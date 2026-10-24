@@ -1,7 +1,7 @@
 'use strict';
 
-// unknown 不是失败：写入可能已在服务端提交。当前台账没有能关联“这一次请求”的
-// 服务端事实键，所以只能打开记录供人工核对，绝不能拿任意第一页成功响应释放业务锁。
+// 非席位旧入口没有可关联原请求的事实键，只能人工核对，绝不按列表成功释放锁。
+// 席位入口另用持久原 registration/seat/activity 的精确回执恢复。
 function offerVerificationReadback(key, workflow, adapters) {
   key = String(key || '');
   if (!key || !workflow) return false;
@@ -80,6 +80,7 @@ function sha256(value) {
   return h.map(v => (v >>> 0).toString(16).padStart(8, '0')).join('');
 }
 
+const { validTarget, sameTarget, seatKey, validSeatReceipt } = require('./registration-seat.js');
 const { createWriteActionWorkflow } = require('./write-action-workflow.js');
 let verificationSequence = 0;
 const unknownResult = () => ({ status: 'unknown', errMsg: '核销结果待确认，请勿重复核销', response: { code: 202, msg: '核销结果待确认，请勿重复核销' } });
@@ -89,6 +90,8 @@ function createVerificationWorkflow(options) {
   const storage = options.storage;
   const workflow = createWriteActionWorkflow(options);
   let destroyed = false;
+  const recovering = new Set();
+  const recoveryStops = new Set();
   function metadata(key) {
     const owner = String(options.getOwner && options.getOwner() || '');
     if (!owner || !String(key).startsWith(owner + ':')) throw Error('unbound');
@@ -102,7 +105,8 @@ function createVerificationWorkflow(options) {
     if (!row || typeof row !== 'object' || Array.isArray(row) || row.version !== 1 || row.state !== 'UNKNOWN'
         || row.ownerDigest !== meta.ownerDigest || row.targetDigest !== meta.targetDigest
         || typeof row.attemptId !== 'string' || !/^[a-z0-9_-]{16,96}$/.test(row.attemptId)
-        || !Number.isSafeInteger(row.createdAt) || row.createdAt <= 0) throw Error('unreadable');
+        || !Number.isSafeInteger(row.createdAt) || row.createdAt <= 0
+        || row.seat !== undefined && !validTarget(row.seat)) throw Error('unreadable');
     return row;
   }
   function removeOriginal(meta, row) {
@@ -121,14 +125,44 @@ function createVerificationWorkflow(options) {
   return {
     isBusy: key => workflow.isBusy(key),
     hold: key => workflow.hold(key),
-    run(key, start, callback) {
+    run(key, start, callback, recovery) {
       if (destroyed) return false;
+      if (recovery && (!validTarget(recovery.target) || !recovery.isCurrent())) return false;
+      if (recovery) {
+        const owner = String(options.getOwner && options.getOwner() || '');
+        if (key !== seatKey(owner, recovery.target)) return blocked(callback, '原席位身份不一致，本次未提交');
+      }
       let meta, row;
       try { meta = metadata(key); row = read(meta); }
       catch (error) { return blocked(callback, '无法读取核销待办，本次未提交，请检查本机存储及登录状态'); }
       if (row) {
         workflow.hold(key);
-        callback(Object.assign(unknownResult(), { recovered: true }));
+        if (!recovery || !sameTarget(row.seat, recovery.target)) {
+          callback(Object.assign(unknownResult(), { recovered: true }));
+          return true;
+        }
+        if (recovering.has(key)) return false;
+        recovering.add(key);
+        let settled = false, task;
+        const stop = () => {
+          settled = true; recovering.delete(key); recoveryStops.delete(stop);
+          (options.clearTimer || clearTimeout)(timer);
+          try { if (task && typeof task.abort === 'function') task.abort(); } catch (error) {}
+        };
+        recoveryStops.add(stop);
+        const timer = (options.setTimer || setTimeout)(() => finish(null), Math.max(1000, options.deadlineMs || 15000));
+        function finish(response) {
+          if (settled) return;
+          settled = true; recovering.delete(key); recoveryStops.delete(stop); (options.clearTimer || clearTimeout)(timer);
+          // 登录代次/页面失效后不清磁盘，也不触碰新页面或新代次的内存锁。
+          if (destroyed || !recovery.isCurrent()) return;
+          if (response && String(response.code) === '200' && validSeatReceipt(response.data, row.seat)
+              && response.data.replayed === true && removeOriginal(meta, row)) {
+            workflow.reset(key);
+            callback({ status: 'success', response, recovered: true });
+          } else callback(Object.assign(unknownResult(), { recovered: true }));
+        }
+        try { task = recovery.readReceipt(Object.assign({}, row.seat), finish); } catch (error) { finish(null); }
         return true;
       }
       // POST 前按原账号+入口/原码目标摘要占住待办；即使此刻被系统杀死也不能重放。
@@ -137,10 +171,11 @@ function createVerificationWorkflow(options) {
         attemptId: 'vr_' + Date.now().toString(36) + '_' + verificationSequence.toString(36) + '_' + Math.random().toString(36).slice(2),
         createdAt: Date.now() };
       row.attemptId = row.attemptId.padEnd(32, '0');
+      if (recovery) row.seat = Object.assign({}, recovery.target);
       try {
         storage.setStorageSync(meta.key, row);
         const stored = read(meta);
-        if (!stored || Object.keys(stored).length !== Object.keys(row).length || !Object.keys(row).every(field => stored[field] === row[field])) throw Error('not saved');
+        if (!stored || Object.keys(stored).length !== Object.keys(row).length || !Object.keys(row).every(field => JSON.stringify(stored[field]) === JSON.stringify(row[field]))) throw Error('not saved');
       } catch (error) {
         // start 尚未调用：只能清理仍属于本次、明确未发出的占位；清理失败就继续留存。
         removeOriginal(meta, row);
@@ -150,7 +185,7 @@ function createVerificationWorkflow(options) {
       const accepted = workflow.run(key, function (done) {
         entered = true;
         function finish(result) {
-          if (closed || destroyed) return;
+          if (closed || destroyed || recovery && !recovery.isCurrent()) return;
           closed = true;
           result = result || unknownResult();
           // 迟回包只能结算捕获的原待办，绝不按当前账号或新请求删除。
@@ -161,12 +196,12 @@ function createVerificationWorkflow(options) {
         }
         try { return start(finish); }
         catch (error) { finish(unknownResult()); return null; }
-      }, function (result) { closed = true; callback(result); });
+      }, function (result) { closed = true; if (!recovery || recovery.isCurrent()) callback(result); });
       if (!accepted && !entered) removeOriginal(meta, row);
       return accepted;
     },
     // 销毁只销毁内存工作流；磁盘 UNKNOWN 只允许原请求的明确回执结算，不能随离页清除。
-    destroy() { destroyed = true; workflow.destroy(); },
+    destroy() { destroyed = true; recoveryStops.forEach(stop => stop()); workflow.destroy(); },
   };
 }
 
