@@ -80,4 +80,33 @@ class MerchantNpcQualificationRevokeTest {
         GateException consume = assertThrows(GateException.class, gate::playerConsume);
         assertEquals(Failure.QUALIFICATION_REVOKED, consume.failure());
     }
+
+    @Test
+    void cachedPublicOfNeverSeenScopeDoesNotOccupyThenUniqueRememberPublishedIsFirstWrite() {
+        InMemoryNpcFixtures fx = InMemoryNpcFixtures.synthetic();
+        MerchantNpcQualificationRevoke qualification = new MerchantNpcQualificationRevoke();
+        Scope unseen = fx.scope();
+        assertNull(qualification.cachedPublic(null));
+        assertNull(qualification.cachedPublic(unseen));
+        assertNull(qualification.cachedPrivate(unseen));
+        qualification.rememberPublished(null, unseen);
+        qualification.rememberPublished(null, null);
+        assertNull(qualification.cachedPublic(unseen), "空 revision 不得占 public cache");
+        assertNull(qualification.cachedPrivate(unseen));
+
+        MerchantNpcKnowledgeDraft value = fx.draft();
+        PublishedRevision mismatched = new PublishedRevision("rev-mismatch", fx.requestId(),
+                new Scope(999L, unseen.merchantRowId(), InMemoryNpcFixtures.NAMESPACE),
+                value.validatedPublicFactsJson(), value.factsHash());
+        qualification.rememberPublished(mismatched, unseen);
+        assertNull(qualification.cachedPublic(unseen), "scope 不一致不得占 public cache");
+
+        PublishedRevision first = new PublishedRevision("rev-first", fx.requestId(), unseen,
+                value.validatedPublicFactsJson(), value.factsHash());
+        qualification.rememberPublished(first, unseen);
+        assertEquals(first.revisionId(), qualification.cachedPublic(unseen).revisionId());
+        assertEquals(fx.requestId(), qualification.cachedPublic(unseen).requestId());
+        Scope other = new Scope(999L, unseen.merchantRowId(), InMemoryNpcFixtures.NAMESPACE);
+        assertNull(qualification.cachedPublic(other), "另一未见 scope 仍不得占账");
+    }
 }
