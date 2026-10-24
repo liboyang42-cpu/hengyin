@@ -1023,6 +1023,47 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.assertIn("OWNER_GOD_BACKREFERENCE", {f["rule"] for f in report["findings"]})
         self.assertIn("PRIVATE_MAPPER_CONSUMER", {f["rule"] for f in report["findings"]})
 
+    def test_missing_declared_source_rows_is_unknown_even_with_all_modules_and_class_bytes(self):
+        member = self.owner_member("D_CONTENT_RULES")
+        text = (self.output / "jdeps.stdout.txt").read_text()
+        filtered = "\n".join(line for line in text.splitlines() if not line.strip().startswith(member + " -> "))
+        self.assertNotEqual(text, filtered)
+        self.replace_evidence("jdeps.stdout.txt", filtered.encode())
+        report = self.check_directions()
+        self.assert_unknown(report)
+        self.assertIn({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": "D_CONTENT_RULES", "type": member}, report["review_items"])
+        self.assertEqual("UNKNOWN", report["technical_dependencies"]["verdict"])
+
+    def test_jdk_only_class_and_interface_rows_cover_legal_leaf_without_project_edges(self):
+        # Protocol shapes checked against OpenJDK21 implementation, not claimed
+        # actual JDK output. The real empty-class/interface runner is separate.
+        original = (self.output / "jdeps.stdout.txt").read_text()
+        for owner in ("F_LOG_CONTEXT", "B_PAYMENT_OUTBOUND_PORT"):
+            with self.subTest(kind=owner):
+                member = self.owner_member(owner)
+                rows = [line for line in original.splitlines() if not line.strip().startswith(member + " -> ")]
+                rows.append("   " + member + " -> java.lang.Object java.base")
+                self.replace_evidence("jdeps.stdout.txt", "\n".join(rows).encode())
+                report = self.check_directions()
+                self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+                self.assertEqual([], report["technical_dependencies"]["owner_edges"])
+                index = json.loads((self.output / "class-index.json").read_text())
+                sources = set()
+                parsed = producer.parse_output(rows[-1], index, [Path(o + ".jar") for o in MODULES], source_rows=sources)
+                self.assertEqual({member}, sources)
+                self.assertEqual({}, parsed[0], "a JDK-only leaf has no project dependency edge")
+                self.assertEqual(5, len(parsed), "old parser protocol unchanged")
+
+    def test_module_summary_never_substitutes_for_declared_leaf_source_rows(self):
+        member = self.owner_member("F_LOG_CONTEXT")
+        text = (self.output / "jdeps.stdout.txt").read_text()
+        rows = [line for line in text.splitlines() if not line.strip().startswith(member + " -> ")]
+        rows.append("chengyinhub-common.jar -> java.base")
+        self.replace_evidence("jdeps.stdout.txt", "\n".join(rows).encode())
+        report = self.check_directions()
+        self.assert_unknown(report)
+        self.assertIn({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": "F_LOG_CONTEXT", "type": member}, report["review_items"])
+
     def test_incomplete_raw_is_unknown_even_when_no_forbidden_owner_edge_was_seen(self):
         text = (self.output / "jdeps.stdout.txt").read_text()
         self.replace_evidence("jdeps.stdout.txt", (text + "UNRECOGNIZED FIXTURE ROW\n").encode())
