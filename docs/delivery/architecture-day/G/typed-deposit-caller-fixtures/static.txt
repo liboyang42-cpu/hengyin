@@ -1,0 +1,7 @@
+git diff --check: PASS
+Source scope: seven test/helper files only
+Deleted old assertion lines: 0
+Original parameterized annotations/inputs unchanged
+Java delimiter balance: PASS (not compilation)
+Limited staged-patch secret pattern check: PASS (not gitleaks)
+Java/MySQL/provider/CI: NOT_RUN

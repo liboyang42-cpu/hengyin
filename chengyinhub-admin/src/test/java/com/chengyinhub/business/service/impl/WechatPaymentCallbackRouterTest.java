@@ -26,7 +26,7 @@ class WechatPaymentCallbackRouterTest {
         when(club.handlePaidInvoice("CLM1", true, 123, "TX-original")).thenReturn(true);
         when(commerce.supportsOutTradeNo("TPLTM_1")).thenReturn(true);
         when(commerce.handlePaidOrder("TPLTM_1", true, 123, "TX-original")).thenReturn(true);
-        when(deposit.markDepositPaid("DEP1", 123L, "TX-original")).thenReturn(true);
+        when(deposit.markDepositPaid("DEP1", 123L, "TX-original", reference("DEP1"))).thenReturn(true);
         CmsRegistration order = new CmsRegistration(); order.setRegistrationNo("A20261024ABCDEF01");
         when(registration.getByRegistrationNo(order.getRegistrationNo())).thenReturn(order);
         when(registration.handleWechatPayCallback(anyMap())).thenReturn("SUCCESS");
@@ -40,7 +40,7 @@ class WechatPaymentCallbackRouterTest {
         }
         verify(club).handlePaidInvoice("CLM1", true, 123, "TX-original");
         verify(commerce).handlePaidOrder("TPLTM_1", true, 123, "TX-original");
-        verify(deposit).markDepositPaid("DEP1", 123L, "TX-original");
+        verify(deposit).markDepositPaid("DEP1", 123L, "TX-original", reference("DEP1"));
         verify(registration).handleWechatPayCallback(argThat(f -> f.equals(facts(order.getRegistrationNo()))));
         verifyNoInteractions(refunds);
     }
@@ -158,10 +158,40 @@ class WechatPaymentCallbackRouterTest {
         }
     }
 
+    @Test
+    void missingDepositReferenceIdCannotReachTheTypedOrLegacyOwner() {
+        Map<String,String> unproven = new HashMap<>(facts("DEP1")); unproven.remove("verified_fact_id");
+        assertThrows(IllegalArgumentException.class,()->router.payment(unproven));
+        verifyNoInteractions(deposit);
+    }
+
+    @Test
+    void missingDepositReferenceHashIsExplicitlyRejectedByTheStrictTypedOwner() {
+        when(deposit.markDepositPaid(eq("DEP1"),eq(123L),eq("TX-original"),any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class)))
+                .thenAnswer(call -> {
+                    // Boundary double accepts only the exact original proof; it never defaults a missing hash to success.
+                    if (!reference("DEP1").equals(call.getArgument(3))) throw new WechatVerifiedPaymentFactService.ConflictException();
+                    return true;
+                });
+        Map<String,String> unproven = new HashMap<>(facts("DEP1"));unproven.remove("verified_fact_hash");
+        assertThrows(WechatVerifiedPaymentFactService.ConflictException.class,()->router.payment(unproven));
+        verify(deposit,never()).markDepositPaid(anyString(),any(),anyString());
+    }
+
+    /** Pure router boundary fixture, not a claim that this unit class performs provider verification/storage. */
+    private static com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference(String no) {
+        var original = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
+                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,
+                "merchant-original","wx-original",no,"WX-original","WX-original","TX-original","TX-original",
+                "APP","CNY",123,123,java.time.Instant.ofEpochSecond(1700000000),null,"SUCCESS");
+        return new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(7L,original.factHash());
+    }
+
     private void verifyNoMutations() {
         verify(club, never()).handlePaidInvoice(anyString(), anyBoolean(), any(), anyString());
         verify(commerce, never()).handlePaidOrder(anyString(), anyBoolean(), any(), anyString());
         verify(deposit, never()).markDepositPaid(anyString(), any(), anyString());
+        verify(deposit, never()).markDepositPaid(anyString(), any(), anyString(), any());
         verify(registration, never()).handleWechatPayCallback(anyMap());
         verifyNoInteractions(refunds);
     }
@@ -173,8 +203,12 @@ class WechatPaymentCallbackRouterTest {
         };
     }
     private static Map<String, String> facts(String no) {
-        return Map.of("out_trade_no", no, "wx_out_trade_no", "WX-original", "transaction_id", "TX-original",
+        Map<String,String> facts = new HashMap<>();
+        facts.putAll(Map.of("out_trade_no", no, "wx_out_trade_no", "WX-original", "transaction_id", "TX-original",
                 "trade_state", "SUCCESS", "total", "123", "currency", "CNY", "appid", "wx-original",
-                "mchid", "merchant-original", "trade_type", "APP");
+                "mchid", "merchant-original", "trade_type", "APP"));
+        facts.put("verified_fact_id",Long.toString(reference(no).id()));
+        facts.put("verified_fact_hash",reference(no).hash());
+        return facts;
     }
 }

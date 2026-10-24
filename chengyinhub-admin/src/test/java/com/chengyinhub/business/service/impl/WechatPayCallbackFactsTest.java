@@ -268,7 +268,10 @@ class WechatPayCallbackFactsTest {
             lenient().when(commerce.supportsOutTradeNo(anyString())).thenAnswer(c -> ((String) c.getArgument(0)).startsWith("TPLTM_"));
             lenient().when(membership.handlePaidInvoice(eq(no), eq(true), eq(5000), anyString())).thenAnswer(c -> !rejectDomain);
             lenient().when(commerce.handlePaidOrder(eq(no), eq(true), eq(5000), anyString())).thenAnswer(c -> !rejectDomain);
-            lenient().when(coop.markDepositPaid(eq(no), eq(5000L), anyString())).thenAnswer(c -> !rejectDomain);
+            lenient().when(coop.markDepositPaid(eq(no), eq(5000L), anyString(), any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class))).thenAnswer(c -> {
+                DepositVerifiedReferenceTestSupport.assertOriginal(gateway,c.getArgument(3),no,5000L,c.getArgument(2));
+                return !rejectDomain;
+            });
             // The registration route must positively identify its existing business order.
             com.chengyinhub.business.domain.CmsRegistration existingRegistration =
                     new com.chengyinhub.business.domain.CmsRegistration();
@@ -287,7 +290,9 @@ class WechatPayCallbackFactsTest {
         void verifyRouted() {
             if (order.startsWith("CLM")) verify(membership).handlePaidInvoice(order, true, 5000, "TX1");
             else if (order.startsWith("TPLTM_")) verify(commerce).handlePaidOrder(order, true, 5000, "TX1");
-            else if (order.startsWith("DEP")) verify(coop).markDepositPaid(order, 5000L, "TX1");
+            else if (order.startsWith("DEP")) verify(coop).markDepositPaid(eq(order), eq(5000L), eq("TX1"),
+                    eq(((WechatVerifiedPaymentFactService)WechatVerifiedFactTestSupport.getField(gateway,"verifiedFacts"))
+                            .findPaymentSuccess("merchant",order,"TX1").reference()));
             else verify(registration).handleWechatPayCallback(anyMap());
         }
     }
