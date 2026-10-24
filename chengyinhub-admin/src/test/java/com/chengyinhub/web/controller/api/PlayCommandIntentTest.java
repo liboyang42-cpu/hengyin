@@ -108,7 +108,7 @@ class PlayCommandIntentTest {
         sharedProxy.addAdvice(new TransactionInterceptor(transactions, (method, type) -> sharedAttribute));
         PlayNodeAccessTestFixtures.setField(controller, "gameSessionRuntimeService", sharedProxy.getProxy());
         GameSession game = new GameSession(); game.setId(77L); game.setRevision(3);
-        when(receipts.selectSessionByActivity(20L)).thenReturn(game);
+        when(receipts.selectSessionByActivityForUpdate(20L)).thenReturn(game);
         doAnswer(call -> { assertFalse(TransactionSynchronizationManager.isActualTransactionActive()); return 7L; })
                 .when(controller).getAppUserId();
         PlayNodeAccessTestFixtures.installTransactions(controller, transactions);
@@ -131,6 +131,46 @@ class PlayCommandIntentTest {
         verify(receipts, never()).completeReceipt(any());
         assertTrue(saved.isEmpty());
         assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+    }
+
+    /** Separate plain/locking objects model MyBatis statement-key identity; no MySQL execution claim. */
+    @Test void sharedRefreshUsesPostLockVersionAndRejectsTheOldExpectedBeforeClaiming() {
+        GameSession before = new GameSession(); before.setId(77L); before.setRevision(3);
+        GameSession locked = new GameSession(); locked.setId(77L); locked.setRevision(3);
+        List<String> reads = new ArrayList<>();
+        when(receipts.selectSessionByActivity(20L)).thenAnswer(call -> { reads.add("plain:3"); return before; });
+        when(receipts.selectSessionByActivityForUpdate(20L)).thenAnswer(call -> {
+            reads.add("locked:" + locked.getRevision()); return locked;
+        });
+        IGameSessionRuntimeService shared = mock(IGameSessionRuntimeService.class);
+        when(shared.sharedRouteSnapshot(7L, 10L, 20L, 11L)).thenAnswer(call -> {
+            // A refresh returns its locked object after bump; detached ordinary-read references stay old.
+            locked.setRevision(4);
+            reads.add("refresh:4");
+            return com.chengyinhub.common.utils.JsonUtils.getObjectMapper().createObjectNode()
+                    .put("gameSessionId", 77L).put("runtimeInstance", "game:77").put("authorityEpoch", 2);
+        });
+        PlayNodeAccessTestFixtures.setField(controller, "gameSessionRuntimeService", shared);
+        AjaxResult response = controller.basicActionContext("20", null, "11");
+        assertEquals(200, response.get("code"));
+        assertEquals(Map.of("routeSessionId", 77L, "expectedRouteVersion", 4,
+                "runtimeInstance", "game:77", "authorityEpoch", 2), response.get("data"));
+        assertEquals(List.of("refresh:4", "locked:4"), reads);
+        assertNotSame(before, locked);
+        assertEquals(3, before.getRevision(), "cache invalidation never mutates the held old Java reference");
+        Supplier<AjaxResult> effect = () -> { effects.incrementAndGet(); return AjaxResult.success("done"); };
+        AjaxResult stale = PlayNodeAccessTestFixtures.invokeMethod(controller, "executeBasicIntent", 7L,
+                "ANSWER", "20", null, "11", "old-expected", 3, null, 77L, "game:77", 2,
+                Collections.singletonList("A"), effect);
+        assertEquals(409, stale.get("code"));
+        assertEquals(true, stale.get("intentNotExecuted"));
+        assertEquals(0, effects.get()); assertTrue(saved.isEmpty());
+        verify(receipts, never()).insertReceiptClaim(any());
+        verify(receipts, never()).completeReceipt(any());
+        AjaxResult applied = PlayNodeAccessTestFixtures.invokeMethod(controller, "executeBasicIntent", 7L,
+                "ANSWER", "20", null, "11", "post-refresh-expected", 4, null, 77L, "game:77", 2,
+                Collections.singletonList("A"), effect);
+        assertEquals(200, applied.get("code")); assertEquals(1, effects.get()); assertEquals(1, saved.size());
     }
 
     @Test void replayPrecedesCurrentVersionAndChangedInputOrExpectedConflicts() {

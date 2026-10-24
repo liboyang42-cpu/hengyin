@@ -92,9 +92,13 @@ public class PlayBasicIntentApplication {
 
     public Map<String, Object> basicActionContext(Long memberId, BasicIntentScope scope) {
         Map<String, Object> context = new java.util.LinkedHashMap<>();
-        com.chengyinhub.business.domain.GameSession sharedSession = playCommandReceiptMapper.selectSessionByActivity(scope.activityId);
         com.fasterxml.jackson.databind.JsonNode shared = gameSessionRuntimeService == null ? null
                 : gameSessionRuntimeService.sharedRouteSnapshot(memberId, scope.topicId, scope.activityId, scope.nodeId);
+        // Refresh can bump a different locking-read object. Read its current version afterwards;
+        // a pre-refresh Java reference is not updated when MyBatis flushes its local cache.
+        com.chengyinhub.business.domain.GameSession sharedSession = shared == null
+                ? playCommandReceiptMapper.selectSessionByActivity(scope.activityId)
+                : playCommandReceiptMapper.selectSessionByActivityForUpdate(scope.activityId);
         if (shared != null) {
             if (sharedSession == null || shared.path("runtimeInstance").asText().isEmpty()
                     || !shared.path("authorityEpoch").canConvertToInt()) throw new IllegalStateException("本场缺少动作权威身份");
