@@ -109,10 +109,23 @@ class MerchantCommerceServiceTest {
         pending.setBizType(MerchantCommerceService.BIZ_PREMIUM_TEMPLATE);
         pending.setStatus(0L);
         pending.setPayAmount(new BigDecimal("19.90"));
-        OmsOrder paid = new OmsOrder();
-        paid.setStatus(1L);
-        paid.setPaymentTransactionId("wx-tx-8");
-        when(orderMapper.selectOmsOrderByOrderSn("TPLTM_8")).thenReturn(pending, pending, paid);
+        // One persisted business identity: bindCommercePaymentProof updates this same row before readback.
+        // A sequential "paid" shell loses ID/scope/amount/Reference and cannot prove exact consumption.
+        when(orderMapper.selectOmsOrderByOrderSn("TPLTM_8")).thenReturn(pending);
+        var originalProof = proof.issue("TPLTM_8", 1990, "wx-tx-8");
+        // B's issued/open fixture is the explicit current, not-CLOSED unit port, not a provider/SQL proof.
+        org.mockito.Mockito.doAnswer(call -> {
+            assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+            return proof.reader.requireVerified(originalProof);
+        }).when(proof.reader).requireConsumablePayment(originalProof);
+        org.mockito.Mockito.doAnswer(call -> {
+            assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+            assertEquals(1L, pending.getStatus());
+            assertEquals("wx-tx-8", pending.getPaymentTransactionId());
+            assertEquals(Long.valueOf(originalProof.id()), pending.getVerifiedPaymentFactId());
+            assertEquals(originalProof.hash(), pending.getVerifiedPaymentFactHash());
+            return null;
+        }).when(proof.reader).completePaymentRecovery(originalProof, 8L);
         when(orderMapper.markCommerceOrderPaid(8L, "wx-tx-8")).thenReturn(1);
         when(subscriptionMapper.grantMerchantSubscription(any())).thenReturn(1);
 
@@ -122,6 +135,10 @@ class MerchantCommerceServiceTest {
         when(orderMapper.markCommerceOrderPaid(8L, "wx-tx-8")).thenReturn(0);
         assertTrue(paidOrder("TPLTM_8", true, 1990, "wx-tx-8"));
         verify(subscriptionMapper).grantMerchantSubscription(any());
+        verify(orderMapper).markCommerceOrderPaid(8L, "wx-tx-8");
+        verify(orderMapper).bindCommercePaymentProof(pending, "wx-tx-8", originalProof.id(), originalProof.hash());
+        org.mockito.Mockito.verify(proof.reader, org.mockito.Mockito.times(2)).completePaymentRecovery(originalProof, 8L);
+        org.mockito.Mockito.verifyNoInteractions(wechatPayService);
     }
 
     @Test
