@@ -1,0 +1,8 @@
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -326 +326 @@
+-          ref: 25d91038d40bc45778bc83c304d296eefc4bf4b1
++          ref: 7b3cb04791c4b31b42592ffc82de83e0c34339c4
+@@ -572 +572 @@
+-          ref: 25d91038d40bc45778bc83c304d296eefc4bf4b1
++          ref: 7b3cb04791c4b31b42592ffc82de83e0c34339c4

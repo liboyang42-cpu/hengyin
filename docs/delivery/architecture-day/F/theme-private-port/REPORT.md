@@ -91,3 +91,6 @@ root 新消息提供的旧两目标实际证据：86e/source run40057561361，bu
 - 复用原strip_java_comments，仅作已列35个真实class的只读词法出现核对（原A/G/E三提交+986锚点，D类型取7f）：观察34对已允许的出现，无未允许方向或God引用；这不是JDK编译图，不能将36条允许边都说成实际jdeps边，更不证明方法/纯读/null/事务语义。没有另造scanner或扩大scope。
 - 新增4项编译协议控制+1项source冻结控制，实际连同原4项定点共 **9 tests / 0.714s / OK / 0skip**，日志 [owner-final-d-targeted.txt](evidence/owner-final-d-targeted.txt)。覆盖真实JAR形态字节/模块回读下的3方向正控、旧门面和公开路线/票务端口正控、三owner×原God接口/实现六负控、反向guard→publication及SCC、三个新类逐一缺失UNKNOWN、候选删owner/清God冻结拒绝；原全方向正控/第三Mapper CLI0-1-2/公开runtime接口边界/3ports-2facts控制保留。类字节故意NOT_COMPILED，runner为既有协议double，未运行Java/jdeps。
 - Python3.9语法通过，原65+88个相关test方法正文逐AST相同，本轮只追加5项；未运行完整177项或任何Java/DB/Redis/CI/微信，不派新批次。无新框架、依赖、job、producer或生产修改。原配置秘密扫描与git diff检查提交前完成；root审最终可信SHA后唯一双ref接线、统一真实编译/回归。回退此ref会失去D三owner约束，不能声称仍覆盖；无DDL/业务事实回退动作。
+
+最终执行verifier冻结 `7b3cb04791c4b31b42592ffc82de83e0c34339c4`，parent25d。root仅取 `git diff 25d91038d40bc45778bc83c304d296eefc4bf4b1 7b3cb04791c4b31b42592ffc82de83e0c34339c4 -- ci/architecture docs/delivery/architecture-day/F`；不取本分支旧生产树。
+[双ref review.patch](owner-final-d-ci-review.patch) 仅25d→7b3两行，按root上轮准备的25d最终repin状态构造；`git apply --unidiff-zero --check <patch>` 后由root独占应用，临时Git模拟已逐字核验。若root尚未从355切至25d，请直接独立审定两处实际旧ref→7b3，不能强套上下文/整文件替换，更不能从D局部旧workflow恢复fe95。生产workflow、registry/harness与其它Agent文件均未改。此handoff提交仅新增补丁/说明，不再改冻结源码；真实编译负控及统一回归由root安排，不加新批次。
