@@ -28,6 +28,11 @@ public interface IAiCreatorService
 {
     AiMerchantPlanResp merchantPlan(AiMerchantPlanReq req, Long memberId);
     AiThemeDraftResp themeDraft(AiThemeDraftReq req, Long memberId);
+    /** Pure planning only; durable prepare owns and persists this original identity. */
+    com.chengyinhub.business.service.ai.AiThemeDraftPlan planThemeDraft(Long memberId, String nonce);
+    /** Only the committed durable claim winner may consume the persisted original plan. */
+    AiThemeDraftResp themeDraftPrepared(AiThemeDraftReq req, Long memberId,
+            com.chengyinhub.business.service.ai.AiThemeDraftPlan plan);
     AiThemeDraftQuotaResp themeDraftQuota(Long memberId);
     AiNodeGenResp nodeGenerate(AiNodeGenReq req, Long memberId);
 

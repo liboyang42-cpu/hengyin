@@ -1,0 +1,1247 @@
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayPreparedThemeDraftTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayPreparedThemeDraftTest.java
+new file mode 100644
+index 00000000..c763bdc5
+--- /dev/null
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayPreparedThemeDraftTest.java
+@@ -0,0 +1,265 @@
++package com.chengyinhub.business.service.ai.impl;
++
++import ch.qos.logback.classic.Logger;
++import ch.qos.logback.classic.spi.ILoggingEvent;
++import ch.qos.logback.core.read.ListAppender;
++import com.chengyinhub.business.domain.AiGenerationLog;
++import com.chengyinhub.business.domain.UmsMember;
++import com.chengyinhub.business.mapper.AiGenerationLogMapper;
++import com.chengyinhub.business.service.IUmsMemberService;
++import com.chengyinhub.business.service.IWxContentSecurityService;
++import com.chengyinhub.business.service.ai.*;
++import com.chengyinhub.common.config.AiModelConfig;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.params.ParameterizedTest;
++import org.junit.jupiter.params.provider.ValueSource;
++import org.mockito.ArgumentCaptor;
++import org.slf4j.LoggerFactory;
++import org.springframework.data.redis.core.RedisTemplate;
++import org.springframework.data.redis.core.script.RedisScript;
++import org.springframework.test.util.ReflectionTestUtils;
++
++import java.time.Clock;
++import java.time.Instant;
++import java.time.ZoneId;
++import java.util.ArrayList;
++import java.util.HashMap;
++import java.util.List;
++import java.util.Map;
++
++import static org.junit.jupiter.api.Assertions.*;
++import static org.mockito.ArgumentMatchers.*;
++import static org.mockito.Mockito.*;
++
++/** Prepared orchestration only; provider is an explicit local, network-free test double. */
++class AiGatewayPreparedThemeDraftTest {
++    private static final long MEMBER=7L;
++    private static final String NONCE="0123456789abcdef0123456789abcdef";
++    private static final Instant NOW=Instant.parse("2026-10-23T04:00:00Z");
++    private static final ZoneId BJ=ZoneId.of("Asia/Shanghai");
++    private AiGatewayServiceImpl gateway;
++    private RedisTemplate<Object,Object> redis;
++    private AiQuotaRecoveryService recovery;
++    private IWxContentSecurityService review;
++    private IUmsMemberService members;
++    private AiGenerationLogMapper logs;
++    private AiModelConfig config;
++    private Map<String,LlmClient> clients;
++    private StubClient a,b;
++    private UmsMember member;
++    private final List<List<Object>> reservations=new ArrayList<>();
++
++    /** Final production config/readiness, overridden chat performs no HTTP or model work. */
++    static final class StubClient extends OpenAiCompatibleLlmClient {
++        int calls; RuntimeException failure; String text="OUTPUT_ONLY_SHORT_BODY";
++        StubClient(String model,String credential) {
++            super("deepseek","https://model.invalid",credential,model,true,1000);
++        }
++        @Override public String chat(String system,String user) {
++            calls++; if(failure!=null)throw failure; return text;
++        }
++    }
++
++    @BeforeEach @SuppressWarnings("unchecked")
++    void fixture() {
++        gateway=new AiGatewayServiceImpl(); redis=mock(RedisTemplate.class);
++        recovery=mock(AiQuotaRecoveryService.class); review=mock(IWxContentSecurityService.class);
++        members=mock(IUmsMemberService.class); logs=mock(AiGenerationLogMapper.class);
++        config=new AiModelConfig();
++        ReflectionTestUtils.setField(config,"provider","deepseek");
++        ReflectionTestUtils.setField(config,"baseUrl","https://model.invalid");
++        ReflectionTestUtils.setField(config,"enabled",true);
++        ReflectionTestUtils.setField(config,"timeoutMs",1000);
++        ReflectionTestUtils.setField(config,"dailyLimit",20);
++        a=new StubClient("model-a","unit-credential-one"); b=new StubClient("model-b","unit-credential-two");
++        clients=new HashMap<>(); clients.put("deepseekLlmClient",a);
++        ReflectionTestUtils.setField(gateway,"redisTemplate",redis);
++        ReflectionTestUtils.setField(gateway,"quotaRecovery",recovery);
++        ReflectionTestUtils.setField(gateway,"wxContentSecurityService",review);
++        ReflectionTestUtils.setField(gateway,"umsMemberService",members);
++        ReflectionTestUtils.setField(gateway,"aiGenerationLogMapper",logs);
++        ReflectionTestUtils.setField(gateway,"aiModelConfig",config);
++        ReflectionTestUtils.setField(gateway,"sceneRouter",new AiSceneRouter());
++        ReflectionTestUtils.setField(gateway,"llmClientsByBeanName",clients);
++        ReflectionTestUtils.setField(gateway,"themeDraftClock",Clock.fixed(NOW,BJ));
++        member=new UmsMember(); member.setId(MEMBER); member.setRole("club");
++        member.setStatus(1L); member.setDelFlag(0);
++        when(members.selectUmsMemberById(MEMBER)).thenReturn(member);
++        when(redis.execute(any(RedisScript.class),anyList(),anyInt(),anyInt(),anyInt())).thenAnswer(inv->{
++            reservations.add(new ArrayList<>((List<Object>)inv.getArgument(1)));
++            assertEquals(20,(Integer)inv.getArgument(3),"consumption must use the validated configuration snapshot");
++            return 5L;
++        });
++    }
++
++    private AiThemeDraftPlan plan(String role) {
++        member.setRole(role);
++        boolean player=role.equals("player");
++        String counter=(player?"ai:theme:draft:player:":"ai:gen:limit:gen:")+MEMBER+":20261023";
++        String receipt=(player?"ai:player:theme:draft:reservation:":"ai:gen:reservation:")+counter+":"+NONCE;
++        String hash=gateway.themeDraftConfigurationHash();
++        return new AiThemeDraftPlan(MEMBER,role,player?"player-draft":"gen","20261023",counter,NONCE,
++                receipt,counter+"|"+NONCE,"c".repeat(64),hash,Instant.parse("2026-10-23T16:00:00Z"));
++    }
++    private AiGatewayResult execute(AiThemeDraftPlan p) {
++        return gateway.generateThemeDraftPrepared(MEMBER,p,"SYSTEM_ONLY_SHORT_CONTEXT","IDEA_ONLY_SHORT_CONTEXT");
++    }
++    private void zeroEffects() {
++        verifyNoInteractions(redis,recovery,review,logs); assertEquals(0,a.calls); assertEquals(0,b.calls);
++    }
++
++    @Test void configurationHashIsLocalAndChangesActualModelButNeverCredentials() {
++        String first=gateway.themeDraftConfigurationHash();
++        assertTrue(first.matches("[a-f0-9]{64}"));
++        clients.put("deepseekLlmClient",new StubClient("model-a","rotated-unit-credential"));
++        ReflectionTestUtils.setField(config,"apiKey","different-unit-credential");
++        assertEquals(first,gateway.themeDraftConfigurationHash());
++        clients.put("deepseekLlmClient",b);
++        assertNotEquals(first,gateway.themeDraftConfigurationHash()); zeroEffects();
++    }
++
++    @Test void genConsumesOnlyOriginalPlanAndUsesNonceForTraceAndAudit() {
++        AiThemeDraftPlan p=plan("club"); AiGatewayResult result=execute(p);
++        assertEquals(NONCE,result.getTraceId()); assertEquals(1,a.calls);
++        assertEquals(List.of(p.counterKey(),p.counterKey()+":generation",p.receiptKey()),reservations.get(0));
++        assertEquals(1,reservations.size());
++        verify(recovery).prepare(MEMBER,"theme_draft","gen",p.counterKey(),p.receiptKey());
++        verify(recovery).reserved(p.receiptKey(),5L); verify(recovery).stage(p.receiptKey(),"MODEL_STARTED");
++        verify(recovery).retain(p.receiptKey(),"SUCCESS"); verify(recovery,never()).requireRefund(anyString(),anyString());
++        ArgumentCaptor<AiGenerationLog> audit=ArgumentCaptor.forClass(AiGenerationLog.class);
++        verify(logs).insertAiGenerationLog(audit.capture());
++        assertEquals(NONCE,audit.getValue().getTraceId());
++        assertTrue(audit.getValue().getInputBrief().matches("sha256:[a-f0-9]{64}"));
++        assertTrue(audit.getValue().getOutputBrief().matches("sha256:[a-f0-9]{64}"));
++        assertFalse(audit.getValue().getInputBrief().contains("IDEA_ONLY_SHORT_CONTEXT"));
++    }
++
++    @Test void validatedClientAndLimitAreNotReselectedAfterQuotaOrInputReview() {
++        AiThemeDraftPlan p=plan("club");
++        doAnswer(inv->{ ReflectionTestUtils.setField(config,"dailyLimit",1); return null; })
++                .when(recovery).prepare(MEMBER,"theme_draft","gen",p.counterKey(),p.receiptKey());
++        when(review.checkText(anyString(),anyString())).thenAnswer(inv->{
++            clients.put("deepseekLlmClient",b);
++            ReflectionTestUtils.setField(config,"baseUrl","https://changed.invalid"); return null;
++        });
++        assertEquals(NONCE,execute(p).getTraceId()); assertEquals(1,a.calls); assertEquals(0,b.calls);
++        verify(recovery).reserved(p.receiptKey(),5L);
++    }
++
++    @Test void changedActualModelRejectsGenBeforeAnyQuotaOrReview() {
++        AiThemeDraftPlan p=plan("club"); clients.put("deepseekLlmClient",b);
++        AiThemeDraftPlanRejectedException ex=assertThrows(AiThemeDraftPlanRejectedException.class,()->execute(p));
++        assertEquals(AiThemeDraftPlanRejectedException.Code.CONFIG_CHANGED,ex.getCode()); zeroEffects();
++    }
++
++    @ParameterizedTest @ValueSource(strings={"expired","member","receipt","pool","reservation","configHash"})
++    void originalPlanRejectionIsZeroEffectForGen(String kind) {
++        AiThemeDraftPlan p=plan("club");
++        AiThemeDraftPlan bad=new AiThemeDraftPlan(kind.equals("member")?8L:p.memberId(),p.role(),
++                kind.equals("pool")?"photo":p.pool(),p.originalDay(),p.counterKey(),p.nonce(),
++                kind.equals("receipt")?p.receiptKey()+"bad":p.receiptKey(),
++                kind.equals("reservation")?p.reservation()+"bad":p.reservation(),p.creatorConfigHash(),
++                kind.equals("configHash")?"b".repeat(64):p.gatewayConfigHash(),
++                kind.equals("expired")?NOW:p.executeBefore());
++        AiThemeDraftPlanRejectedException ex=assertThrows(AiThemeDraftPlanRejectedException.class,()->execute(bad));
++        assertEquals(kind.equals("expired")?AiThemeDraftPlanRejectedException.Code.PLAN_EXPIRED:
++                kind.equals("configHash")?AiThemeDraftPlanRejectedException.Code.CONFIG_CHANGED:
++                AiThemeDraftPlanRejectedException.Code.PLAN_INVALID,ex.getCode()); zeroEffects();
++    }
++
++    @Test void failedMemberReadIsCheckUnavailableBeforeGenEffects() {
++        AiThemeDraftPlan p=plan("club"); when(members.selectUmsMemberById(MEMBER)).thenThrow(new IllegalStateException("db unavailable"));
++        AiThemeDraftPlanRejectedException ex=assertThrows(AiThemeDraftPlanRejectedException.class,()->execute(p));
++        assertEquals(AiThemeDraftPlanRejectedException.Code.CHECK_UNAVAILABLE,ex.getCode()); zeroEffects();
++    }
++
++    @Test void changedCanonicalRoleCannotConsumeOriginalGenPlanForAnotherRole() {
++        AiThemeDraftPlan p=plan("club"); member.setRole("merchant");
++        AiThemeDraftPlanRejectedException ex=assertThrows(AiThemeDraftPlanRejectedException.class,()->execute(p));
++        assertEquals(AiThemeDraftPlanRejectedException.Code.AUTHORITY_CHANGED,ex.getCode()); zeroEffects();
++    }
++
++    @Test void ambientTransactionRejectsBeforeGenQuotaAndProvider() {
++        AiThemeDraftPlan p=plan("club");
++        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
++        try {
++            AiThemeDraftPlanRejectedException ex=assertThrows(AiThemeDraftPlanRejectedException.class,()->execute(p));
++            assertEquals(AiThemeDraftPlanRejectedException.Code.CHECK_UNAVAILABLE,ex.getCode()); zeroEffects();
++        } finally { org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(false); }
++    }
++
++    @Test void boundOldSqlSessionWithoutActiveTransactionRejectsBeforeGenEffects() {
++        AiThemeDraftPlan p=plan("club"); Object key=new Object();
++        org.springframework.transaction.support.TransactionSynchronizationManager.bindResource(
++                key,new org.mybatis.spring.SqlSessionHolder(mock(org.apache.ibatis.session.SqlSession.class),
++                        org.apache.ibatis.session.ExecutorType.SIMPLE,null));
++        try {
++            AiThemeDraftPlanRejectedException ex=assertThrows(AiThemeDraftPlanRejectedException.class,()->execute(p));
++            assertEquals(AiThemeDraftPlanRejectedException.Code.CHECK_UNAVAILABLE,ex.getCode()); zeroEffects();
++        } finally { org.springframework.transaction.support.TransactionSynchronizationManager.unbindResourceIfPossible(key); }
++    }
++
++    @ParameterizedTest @ValueSource(strings={"notSent","ordinary","wrappedNotSent","empty"})
++    void modelDispositionPreservesOriginalGenEconomics(String kind) {
++        AiThemeDraftPlan p=plan("club");
++        if(kind.equals("notSent"))a.failure=new AiProviderNotSentException();
++        if(kind.equals("ordinary"))a.failure=new IllegalStateException("IDEA_ONLY_SHORT_CONTEXT");
++        if(kind.equals("wrappedNotSent"))a.failure=new IllegalStateException(new AiProviderNotSentException());
++        if(kind.equals("empty"))a.text="";
++        AiServiceException ex=assertThrows(AiServiceException.class,()->execute(p));
++        assertEquals(!kind.equals("notSent"),ex instanceof AiProviderOutcomeUnknownException);
++        verify(recovery,times(kind.equals("notSent")?1:0)).requireRefund(p.receiptKey(),"SERVICE_FAILURE");
++        assertEquals(1,a.calls); assertEquals(1,reservations.size());
++        assertFalse(ex instanceof AiThemeDraftPlanRejectedException);
++    }
++
++    @Test void receivedOutputReviewFailureCannotBecomeNotSentOrRefund() {
++        AiThemeDraftPlan p=plan("club");
++        when(review.checkText(anyString(),anyString())).thenAnswer(inv->{
++            if("OUTPUT_ONLY_SHORT_BODY".equals(inv.getArgument(0)))throw new IllegalStateException("review down");
++            return null;
++        });
++        assertThrows(AiProviderResultReceivedException.class,()->execute(p));
++        verify(recovery).retain(p.receiptKey(),"OUTPUT_REVIEW_UNKNOWN");
++        verify(recovery,never()).requireRefund(anyString(),anyString()); assertEquals(1,a.calls);
++    }
++
++    @Test void receivedRetentionFailureEvenTypedNotSentKeepsReceivedDisposition() {
++        AiThemeDraftPlan p=plan("club"); doThrow(new AiProviderNotSentException()).when(recovery).retain(p.receiptKey(),"SUCCESS");
++        assertThrows(AiProviderResultReceivedException.class,()->execute(p));
++        verify(recovery,never()).requireRefund(anyString(),anyString()); assertEquals(1,a.calls);
++    }
++
++    @Test void playerStagesOnlyOriginalReceiptAndNeverConsumesOrRefundsGen() {
++        AiThemeDraftPlan p=plan("player"); assertEquals(NONCE,execute(p).getTraceId());
++        verifyNoInteractions(redis); verify(recovery,never()).prepare(anyLong(),anyString(),anyString(),anyString(),anyString());
++        verify(recovery).stage(p.receiptKey(),"INPUT_REVIEW_STARTED"); verify(recovery).stage(p.receiptKey(),"MODEL_STARTED");
++        verify(recovery,never()).retain(anyString(),anyString()); verify(recovery,never()).requireRefund(anyString(),anyString());
++    }
++
++    @Test void latePlayerConfigurationCheckDoesNotClaimZeroEffectsAfterCreatorReservation() {
++        AiThemeDraftPlan p=plan("player"); clients.put("deepseekLlmClient",b);
++        AiServiceException ex=assertThrows(AiServiceException.class,()->execute(p));
++        assertFalse(ex instanceof AiThemeDraftPlanRejectedException); assertNull(ex.getCause()); zeroEffects();
++    }
++
++    @Test void preparedErrorsAndPermanentAuditNeverCopyPromptOutputOrRawThrowable() {
++        AiThemeDraftPlan p=plan("club"); a.failure=new IllegalStateException("IDEA_ONLY_SHORT_CONTEXT OUTPUT_ONLY_SHORT_BODY");
++        Logger logger=(Logger)LoggerFactory.getLogger(AiGatewayServiceImpl.class);
++        ListAppender<ILoggingEvent> appender=new ListAppender<>(); appender.start(); logger.addAppender(appender);
++        try {
++            assertThrows(AiProviderOutcomeUnknownException.class,()->execute(p));
++            assertFalse(appender.list.isEmpty());
++            for(ILoggingEvent event:appender.list) {
++                assertFalse(event.getFormattedMessage().contains("IDEA_ONLY_SHORT_CONTEXT"));
++                assertFalse(event.getFormattedMessage().contains("OUTPUT_ONLY_SHORT_BODY"));
++                assertNull(event.getThrowableProxy());
++            }
++            ArgumentCaptor<AiGenerationLog> audit=ArgumentCaptor.forClass(AiGenerationLog.class);
++            verify(logs).insertAiGenerationLog(audit.capture());
++            assertTrue(audit.getValue().getInputBrief().matches("sha256:[a-f0-9]{64}"));
++            assertTrue(audit.getValue().getOutputBrief().matches("sha256:[a-f0-9]{64}"));
++        } finally { logger.detachAppender(appender); appender.stop(); }
++    }
++}
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorPreparedThemeDraftTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorPreparedThemeDraftTest.java
+new file mode 100644
+index 00000000..9bf9e663
+--- /dev/null
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorPreparedThemeDraftTest.java
+@@ -0,0 +1,291 @@
++package com.chengyinhub.business.service.impl;
++
++import com.chengyinhub.business.domain.UmsMember;
++import com.chengyinhub.business.domain.dto.ai.AiThemeDraftReq;
++import com.chengyinhub.business.domain.vo.ai.AiThemeDraftResp;
++import com.chengyinhub.business.service.IRoleService;
++import com.chengyinhub.business.service.IUmsMemberService;
++import com.chengyinhub.business.service.ai.*;
++import ch.qos.logback.classic.Logger;
++import ch.qos.logback.classic.spi.ILoggingEvent;
++import ch.qos.logback.core.read.ListAppender;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.params.ParameterizedTest;
++import org.junit.jupiter.params.provider.ValueSource;
++import org.slf4j.LoggerFactory;
++import org.springframework.data.redis.core.RedisTemplate;
++import org.springframework.data.redis.core.script.RedisScript;
++import org.springframework.test.util.ReflectionTestUtils;
++
++import java.time.Clock;
++import java.time.Instant;
++import java.time.ZoneId;
++import java.util.ArrayList;
++import java.util.List;
++
++import static org.junit.jupiter.api.Assertions.*;
++import static org.mockito.ArgumentMatchers.*;
++import static org.mockito.Mockito.*;
++
++/** Unit effects/identity tests; E owns the durable claim and real storage verification. */
++class AiCreatorPreparedThemeDraftTest {
++    private static final Long MEMBER = 7L;
++    private static final String NONCE = "0123456789abcdef0123456789abcdef";
++    private static final String HASH = "a".repeat(64);
++    private static final Instant NOW = Instant.parse("2026-10-23T04:00:00Z");
++    private static final ZoneId BJ = ZoneId.of("Asia/Shanghai");
++    private static final String VALID = "{\"plans\":[{\"title\":\"night\",\"storyline\":\"walk\",\"nodes\":[{\"merchantName\":\"place\"}]}]}";
++    private AiCreatorServiceImpl creator;
++    private AiGatewayService gateway;
++    private IUmsMemberService members;
++    private IRoleService roles;
++    private AiQuotaRecoveryService recovery;
++    private RedisTemplate<Object,Object> redis;
++    private UmsMember member;
++    private final List<List<Object>> reservations = new ArrayList<>();
++
++    @BeforeEach @SuppressWarnings("unchecked")
++    void fixture() {
++        creator = new AiCreatorServiceImpl(); gateway = mock(AiGatewayService.class);
++        members = mock(IUmsMemberService.class); roles = mock(IRoleService.class);
++        recovery = mock(AiQuotaRecoveryService.class); redis = mock(RedisTemplate.class);
++        ReflectionTestUtils.setField(creator,"gateway",gateway);
++        ReflectionTestUtils.setField(creator,"umsMemberService",members);
++        ReflectionTestUtils.setField(creator,"roleService",roles);
++        ReflectionTestUtils.setField(creator,"quotaRecovery",recovery);
++        ReflectionTestUtils.setField(creator,"redisTemplate",redis);
++        ReflectionTestUtils.setField(creator,"themeDraftClock",Clock.fixed(NOW,BJ));
++        member = new UmsMember(); member.setId(MEMBER); member.setRole("player");
++        member.setStatus(1L); member.setDelFlag(0);
++        when(members.selectUmsMemberById(MEMBER)).thenReturn(member);
++        when(roles.resolveRole(any(UmsMember.class))).thenAnswer(inv -> ((UmsMember) inv.getArgument(0)).getRole());
++        when(gateway.themeDraftConfigurationHash()).thenReturn(HASH);
++        when(gateway.planQuotaReservation(MEMBER,"theme_draft",NONCE))
++                .thenReturn("ai:gen:limit:gen:7:20261023|"+NONCE);
++        when(redis.execute(any(RedisScript.class),anyList(),anyInt(),anyInt(),anyInt())).thenAnswer(inv -> {
++            reservations.add(new ArrayList<>((List<Object>)inv.getArgument(1)));
++            assertEquals(43_200, (Integer) inv.getArgument(2));
++            assertEquals(3, (Integer) inv.getArgument(3));
++            return 2L;
++        });
++    }
++
++    private AiThemeDraftPlan plan() { return creator.planThemeDraft(MEMBER,NONCE); }
++    private AiThemeDraftReq request() {
++        AiThemeDraftReq req = new AiThemeDraftReq(); req.setIdea("IDEA_ONLY_SHORT_CONTEXT"); return req;
++    }
++    private void zeroEffects() { verifyNoInteractions(redis,recovery); assertTrue(reservations.isEmpty());
++        verify(gateway,never()).generateThemeDraftPrepared(anyLong(),any(),anyString(),anyString()); }
++    private void code(AiThemeDraftPlanRejectedException.Code expected, AiThemeDraftPlan p) {
++        AiThemeDraftPlanRejectedException failure = assertThrows(AiThemeDraftPlanRejectedException.class,
++                () -> creator.themeDraftPrepared(request(),MEMBER,p));
++        assertEquals(expected,failure.getCode()); assertNull(failure.getCause()); zeroEffects();
++    }
++
++    @Test void playerPlanningIsPureAndFreezesSuppliedIdentityAndOriginalBjDay() {
++        AiThemeDraftPlan p=plan();
++        assertEquals("player-draft",p.pool()); assertEquals("20261023",p.originalDay());
++        assertEquals("ai:theme:draft:player:7:20261023",p.counterKey());
++        assertEquals(p.counterKey()+"|"+NONCE,p.reservation());
++        assertEquals("ai:player:theme:draft:reservation:"+p.counterKey()+":"+NONCE,p.receiptKey());
++        assertEquals(Instant.parse("2026-10-23T16:00:00Z"),p.executeBefore());
++        assertTrue(p.creatorConfigHash().matches("[a-f0-9]{64}"));
++        verify(gateway,never()).planQuotaReservation(anyLong(),anyString(),anyString()); zeroEffects();
++    }
++
++    @Test void clubPlanningReusesGatewaysExactOriginalTokenAndDoesNotReserve() {
++        member.setRole("club"); AiThemeDraftPlan p=plan();
++        assertEquals("gen",p.pool()); assertEquals("ai:gen:limit:gen:7:20261023|"+NONCE,p.reservation());
++        verify(gateway).planQuotaReservation(MEMBER,"theme_draft",NONCE); zeroEffects();
++    }
++
++    @ParameterizedTest @ValueSource(strings={"member","role","pool","day","counter","nonce","receipt","reservation","creatorHash","gatewayHash","deadline"})
++    void malformedOriginalPlanRejectsWithoutQuotaReviewOrModel(String field) {
++        AiThemeDraftPlan p=plan();
++        AiThemeDraftPlan bad=new AiThemeDraftPlan(field.equals("member")?8L:p.memberId(),
++                field.equals("role")?"not-a-role":p.role(), field.equals("pool")?"gen":p.pool(),
++                field.equals("day")?"20261399":p.originalDay(),field.equals("counter")?p.counterKey()+"0":p.counterKey(),
++                field.equals("nonce")?"UPPER":p.nonce(),field.equals("receipt")?p.receiptKey()+"0":p.receiptKey(),
++                field.equals("reservation")?p.reservation()+"0":p.reservation(),
++                field.equals("creatorHash")?null:p.creatorConfigHash(),field.equals("gatewayHash")?null:p.gatewayConfigHash(),
++                field.equals("deadline")?p.executeBefore().plusSeconds(1):p.executeBefore());
++        code(AiThemeDraftPlanRejectedException.Code.PLAN_INVALID,bad);
++    }
++
++    @Test void committedRoleChangeRejectsRatherThanReplanningPool() {
++        AiThemeDraftPlan p=plan(); member.setRole("club");
++        code(AiThemeDraftPlanRejectedException.Code.AUTHORITY_CHANGED,p);
++        verify(gateway,never()).planQuotaReservation(anyLong(),anyString(),anyString());
++    }
++
++    @Test void missingMemberCannotFallBackToPlayer() {
++        AiThemeDraftPlan p=plan(); when(members.selectUmsMemberById(MEMBER)).thenReturn(null);
++        code(AiThemeDraftPlanRejectedException.Code.AUTHORITY_CHANGED,p);
++    }
++
++    @ParameterizedTest @ValueSource(strings={"disabled","deleted"})
++    void currentMemberEligibilityUsesExistingRoleServicePolicy(String kind) {
++        AiThemeDraftPlan p=plan();
++        if(kind.equals("disabled"))member.setStatus(0L); else member.setDelFlag(2);
++        code(AiThemeDraftPlanRejectedException.Code.AUTHORITY_CHANGED,p);
++    }
++
++    @Test void memberReadFailureIsCheckUnavailableWithoutUnsentSideEffects() {
++        AiThemeDraftPlan p=plan(); when(members.selectUmsMemberById(MEMBER)).thenThrow(new IllegalStateException("IDEA_ONLY_SHORT_CONTEXT"));
++        code(AiThemeDraftPlanRejectedException.Code.CHECK_UNAVAILABLE,p);
++    }
++
++    @Test void roleResolverFailureIsCheckUnavailableRatherThanAuthorityDecision() {
++        AiThemeDraftPlan p=plan(); when(roles.resolveRole(member)).thenThrow(new IllegalStateException("resolver unavailable"));
++        code(AiThemeDraftPlanRejectedException.Code.CHECK_UNAVAILABLE,p);
++    }
++
++    @Test void changedGatewayConfigurationRejectsBeforeOriginalPlayerReservation() {
++        AiThemeDraftPlan p=plan(); when(gateway.themeDraftConfigurationHash()).thenReturn("b".repeat(64));
++        code(AiThemeDraftPlanRejectedException.Code.CONFIG_CHANGED,p);
++    }
++
++    @ParameterizedTest @ValueSource(longs={43200,86400})
++    void deadlineOrChangedBjDayRejectsWithoutCreatingNewIdentity(long seconds) {
++        AiThemeDraftPlan p=plan(); ReflectionTestUtils.setField(creator,"themeDraftClock",Clock.fixed(NOW.plusSeconds(seconds),BJ));
++        code(AiThemeDraftPlanRejectedException.Code.PLAN_EXPIRED,p);
++    }
++
++    @Test void preparedPlayerConsumesOnlyOriginalReceiptAndKeepsValidDraftPolicy() {
++        AiThemeDraftPlan p=plan();
++        when(gateway.generateThemeDraftPrepared(eq(MEMBER),eq(p),anyString(),anyString()))
++                .thenReturn(new AiGatewayResult(NONCE,VALID,"deepseek",0));
++        AiThemeDraftResp result=creator.themeDraftPrepared(request(),MEMBER,p);
++        assertEquals(NONCE,result.getTraceId()); assertEquals(1,result.getRemainingQuota());
++        assertEquals(List.of(p.counterKey(),p.counterKey()+":generation",p.receiptKey()),reservations.get(0));
++        assertEquals(1,reservations.size());
++        verify(recovery).prepare(MEMBER,"theme_draft","player-draft",p.counterKey(),p.receiptKey());
++        verify(recovery).reserved(p.receiptKey(),2L); verify(recovery).retain(p.receiptKey(),"VALID_PLAYER_DRAFT");
++        verify(recovery,never()).requireRefund(anyString(),anyString());
++        verify(gateway,never()).generate(anyLong(),anyString(),anyString(),anyString(),anyString());
++        verify(gateway,never()).consumePlannedQuota(anyLong(),anyString(),anyString());
++    }
++
++    @ParameterizedTest @ValueSource(strings={"notSent","unknown","received","blocked","parse"})
++    void preparedPlayerKeepsReviewedFailureEconomicsOnItsOriginalReceipt(String kind) {
++        AiThemeDraftPlan p=plan(); RuntimeException failure;
++        switch(kind) {
++            case "unknown": failure=new AiProviderOutcomeUnknownException("unknown",null); break;
++            case "received": failure=new AiProviderResultReceivedException(AiServiceException.Reason.OUTPUT_BLOCKED,"received"); break;
++            case "blocked": failure=new AiServiceException(AiServiceException.Reason.INPUT_BLOCKED,"blocked"); break;
++            default: failure=new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,"unsent",new AiProviderNotSentException());
++        }
++        if(kind.equals("parse")) when(gateway.generateThemeDraftPrepared(eq(MEMBER),eq(p),anyString(),anyString()))
++                .thenReturn(new AiGatewayResult(NONCE,"not-json-OUTPUT_SENTINEL","deepseek",0));
++        else when(gateway.generateThemeDraftPrepared(eq(MEMBER),eq(p),anyString(),anyString())).thenThrow(failure);
++        assertThrows(AiServiceException.class,()->creator.themeDraftPrepared(request(),MEMBER,p));
++        assertEquals(1,reservations.size()); assertEquals(p.receiptKey(),reservations.get(0).get(2));
++        boolean refund=!(kind.equals("unknown")||kind.equals("blocked"));
++        verify(recovery,times(refund?1:0)).requireRefund(p.receiptKey(),"PLAYER_DRAFT_FAILED");
++        verify(recovery,times(kind.equals("blocked")?1:0)).retain(p.receiptKey(),"INPUT_BLOCKED");
++        verify(gateway,times(1)).generateThemeDraftPrepared(eq(MEMBER),eq(p),anyString(),anyString());
++    }
++
++    @Test void latePreflightClassAfterPlayerReservationCannotEscapeAsZeroEffectProof() {
++        AiThemeDraftPlan p=plan();
++        when(gateway.generateThemeDraftPrepared(eq(MEMBER),eq(p),anyString(),anyString()))
++                .thenThrow(new AiThemeDraftPlanRejectedException(AiThemeDraftPlanRejectedException.Code.CONFIG_CHANGED));
++        AiServiceException failure=assertThrows(AiServiceException.class,()->creator.themeDraftPrepared(request(),MEMBER,p));
++        assertFalse(failure instanceof AiThemeDraftPlanRejectedException); assertNull(failure.getCause());
++        verify(recovery).requireRefund(p.receiptKey(),"PLAYER_DRAFT_FAILED");
++    }
++
++    @ParameterizedTest @ValueSource(strings={"notSent","planRejected","ordinary"})
++    void validModelReceiptRetentionFailureCannotTurnReceivedResultIntoUnsent(String kind) {
++        AiThemeDraftPlan p=plan();
++        when(gateway.generateThemeDraftPrepared(eq(MEMBER),eq(p),anyString(),anyString()))
++                .thenReturn(new AiGatewayResult(NONCE,VALID,"deepseek",0));
++        RuntimeException failure=kind.equals("notSent")?new AiProviderNotSentException():kind.equals("planRejected")
++                ?new AiThemeDraftPlanRejectedException(AiThemeDraftPlanRejectedException.Code.CHECK_UNAVAILABLE)
++                :new IllegalStateException("retention unavailable");
++        doThrow(failure).when(recovery).retain(p.receiptKey(),"VALID_PLAYER_DRAFT");
++        assertThrows(AiProviderResultReceivedException.class,()->creator.themeDraftPrepared(request(),MEMBER,p));
++        verify(recovery,never()).requireRefund(anyString(),anyString()); assertEquals(1,reservations.size());
++    }
++
++    @Test void playerMissingRecoveryWiringRejectsBeforeRedisAndRecoveryFallback() {
++        AiThemeDraftPlan p=plan(); ReflectionTestUtils.setField(creator,"quotaRecovery",null);
++        code(AiThemeDraftPlanRejectedException.Code.CHECK_UNAVAILABLE,p);
++    }
++
++    @Test void clubDelegatesOriginalPlanWithoutCreatorPlayerPool() {
++        member.setRole("club"); AiThemeDraftPlan p=plan();
++        when(gateway.generateThemeDraftPrepared(eq(MEMBER),eq(p),anyString(),anyString()))
++                .thenReturn(new AiGatewayResult(NONCE,VALID,"deepseek",0));
++        assertNotNull(creator.themeDraftPrepared(request(),MEMBER,p).getDraft());
++        verifyNoInteractions(redis,recovery);
++    }
++
++    @Test void shorterExecutionDeadlineCannotExpireAndResetOriginalDailyCounterEarly() {
++        AiThemeDraftPlan p=plan();
++        AiThemeDraftPlan shortDeadline=new AiThemeDraftPlan(p.memberId(),p.role(),p.pool(),p.originalDay(),
++                p.counterKey(),p.nonce(),p.receiptKey(),p.reservation(),p.creatorConfigHash(),p.gatewayConfigHash(),NOW.plusSeconds(60));
++        when(gateway.generateThemeDraftPrepared(eq(MEMBER),eq(shortDeadline),anyString(),anyString()))
++                .thenReturn(new AiGatewayResult(NONCE,VALID,"deepseek",0));
++        // The Redis fixture requires the original midnight TTL (43200), not the 60-second execution deadline.
++        assertNotNull(creator.themeDraftPrepared(request(),MEMBER,shortDeadline).getDraft());
++        assertEquals(p.counterKey(),reservations.get(0).get(0));
++    }
++
++    @Test void changedCreatorFingerprintRejectsBeforeQuotaAndGatewayCheck() {
++        AiThemeDraftPlan p=plan(); clearInvocations(gateway);
++        AiThemeDraftPlan changed=new AiThemeDraftPlan(p.memberId(),p.role(),p.pool(),p.originalDay(),
++                p.counterKey(),p.nonce(),p.receiptKey(),p.reservation(),"b".repeat(64),p.gatewayConfigHash(),p.executeBefore());
++        code(AiThemeDraftPlanRejectedException.Code.CONFIG_CHANGED,changed);
++        verify(gateway,never()).themeDraftConfigurationHash();
++    }
++
++    @Test void unavailableOriginalRequestSnapshotIsRejectedBeforeAnyEffect() {
++        AiThemeDraftPlan p=plan();
++        AiThemeDraftPlanRejectedException ex=assertThrows(AiThemeDraftPlanRejectedException.class,
++                ()->creator.themeDraftPrepared(null,MEMBER,p));
++        assertEquals(AiThemeDraftPlanRejectedException.Code.PLAN_INVALID,ex.getCode()); zeroEffects();
++    }
++
++    @Test void preparedExecutionCannotEnterQuotaOrProviderInsideAmbientTransaction() {
++        AiThemeDraftPlan p=plan();
++        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
++        try { code(AiThemeDraftPlanRejectedException.Code.CHECK_UNAVAILABLE,p); }
++        finally { org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(false); }
++    }
++
++    @Test void boundOldSqlSessionWithoutActiveTransactionCannotSupplyAuthoritySnapshot() {
++        AiThemeDraftPlan p=plan(); Object key=new Object();
++        org.springframework.transaction.support.TransactionSynchronizationManager.bindResource(
++                key,new org.mybatis.spring.SqlSessionHolder(mock(org.apache.ibatis.session.SqlSession.class),
++                        org.apache.ibatis.session.ExecutorType.SIMPLE,null));
++        try { code(AiThemeDraftPlanRejectedException.Code.CHECK_UNAVAILABLE,p); }
++        finally { org.springframework.transaction.support.TransactionSynchronizationManager.unbindResourceIfPossible(key); }
++    }
++
++    @ParameterizedTest @ValueSource(strings={"", "UPPER", "012345"})
++    void planningDoesNotRepairOrReplaceInvalidSuppliedNonce(String nonce) {
++        AiThemeDraftPlanRejectedException ex=assertThrows(AiThemeDraftPlanRejectedException.class,
++                ()->creator.planThemeDraft(MEMBER,nonce));
++        assertEquals(AiThemeDraftPlanRejectedException.Code.PLAN_INVALID,ex.getCode());
++        verifyNoInteractions(gateway,members,roles,redis,recovery);
++    }
++
++    @Test void preparedParseLogsNeverRetainOriginalRequestOrModelExceptionText() {
++        AiThemeDraftPlan p=plan();
++        when(gateway.generateThemeDraftPrepared(eq(MEMBER),eq(p),anyString(),anyString()))
++                .thenReturn(new AiGatewayResult(NONCE,"invalid-OUTPUT_SENTINEL","deepseek",0));
++        Logger logger=(Logger) LoggerFactory.getLogger(AiCreatorServiceImpl.class);
++        ListAppender<ILoggingEvent> appender=new ListAppender<>(); appender.start(); logger.addAppender(appender);
++        try {
++            assertThrows(AiServiceException.class,()->creator.themeDraftPrepared(request(),MEMBER,p));
++            assertFalse(appender.list.isEmpty());
++            for(ILoggingEvent event:appender.list) {
++                assertFalse(event.getFormattedMessage().contains("IDEA_ONLY_SHORT_CONTEXT"));
++                assertFalse(event.getFormattedMessage().contains("OUTPUT_SENTINEL"));
++                assertNull(event.getThrowableProxy());
++            }
++        } finally { logger.detachAppender(appender); appender.stop(); }
++    }
++}
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/IAiCreatorService.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/IAiCreatorService.java
+index c9d8afda..dae442a4 100644
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/IAiCreatorService.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/IAiCreatorService.java
+@@ -28,6 +28,11 @@ public interface IAiCreatorService
+ {
+     AiMerchantPlanResp merchantPlan(AiMerchantPlanReq req, Long memberId);
+     AiThemeDraftResp themeDraft(AiThemeDraftReq req, Long memberId);
++    /** Pure planning only; durable prepare owns and persists this original identity. */
++    com.chengyinhub.business.service.ai.AiThemeDraftPlan planThemeDraft(Long memberId, String nonce);
++    /** Only the committed durable claim winner may consume the persisted original plan. */
++    AiThemeDraftResp themeDraftPrepared(AiThemeDraftReq req, Long memberId,
++            com.chengyinhub.business.service.ai.AiThemeDraftPlan plan);
+     AiThemeDraftQuotaResp themeDraftQuota(Long memberId);
+     AiNodeGenResp nodeGenerate(AiNodeGenReq req, Long memberId);
+ 
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiGatewayService.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiGatewayService.java
+index 2ee647ec..7c1db502 100644
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiGatewayService.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiGatewayService.java
+@@ -22,6 +22,13 @@ public interface AiGatewayService
+     AiGatewayResult generate(Long memberId, String role, String bizType,
+                               String systemPrompt, String userPrompt);
+ 
++    /** Local configuration fingerprint only; excludes credentials and credential digests. */
++    String themeDraftConfigurationHash();
++
++    /** Consumes the original plan, never a newly planned quota identity. */
++    AiGatewayResult generateThemeDraftPrepared(Long memberId, AiThemeDraftPlan plan,
++            String systemPrompt, String userPrompt);
++
+     /**
+      * 查询某会员在指定场景所属额度池当日的剩余次数。
+      *
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiThemeDraftPlanRejectedException.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiThemeDraftPlanRejectedException.java
+new file mode 100644
+index 00000000..2a90db54
+--- /dev/null
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiThemeDraftPlanRejectedException.java
+@@ -0,0 +1,17 @@
++package com.chengyinhub.business.service.ai;
++
++/** A zero-effect preflight rejection, not a provider/transport disposition. */
++public final class AiThemeDraftPlanRejectedException extends AiServiceException
++{
++    public enum Code { AUTHORITY_CHANGED, PLAN_EXPIRED, CONFIG_CHANGED, PLAN_INVALID, CHECK_UNAVAILABLE }
++
++    private final Code code;
++
++    public AiThemeDraftPlanRejectedException(Code code)
++    {
++        super(Reason.UPSTREAM_UNAVAILABLE, "AI 草稿原计划不可执行");
++        this.code = java.util.Objects.requireNonNull(code);
++    }
++
++    public Code getCode() { return code; }
++}
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java
+index d733e306..abe7b7fa 100644
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java
+@@ -23,6 +23,10 @@ import com.chengyinhub.business.service.ai.AiGatewayService;
+ import com.chengyinhub.business.service.ai.AiSceneRouter;
+ import com.chengyinhub.business.service.ai.AiServiceException;
+ import com.chengyinhub.business.service.ai.LlmClient;
++import com.chengyinhub.business.service.ai.AiThemeDraftPlan;
++import com.chengyinhub.business.service.ai.AiThemeDraftPlanRejectedException;
++import com.chengyinhub.business.service.ai.AiThemeDraftPlanRejectedException.Code;
++import com.chengyinhub.business.service.support.CanonicalDigest;
+ import com.chengyinhub.common.config.AiModelConfig;
+ import com.chengyinhub.common.config.AiProviderProperties;
+ import com.chengyinhub.common.utils.uuid.IdUtils;
+@@ -122,6 +126,144 @@ public class AiGatewayServiceImpl implements AiGatewayService
+     private int photoDailyLimit;
+ 
+     private volatile Map<String, LlmClient> clientMap;
++    private java.time.Clock themeDraftClock = java.time.Clock.system(QUOTA_ZONE);
++
++    @Override
++    public String themeDraftConfigurationHash()
++    {
++        return themeDraftSnapshot().hash();
++    }
++
++    @Override
++    public AiGatewayResult generateThemeDraftPrepared(Long memberId, AiThemeDraftPlan plan,
++            String systemPrompt, String userPrompt)
++    {
++        Code invalid = themeDraftPlanProblem(memberId, plan);
++        if (invalid != null) throw preparedRejection(plan, invalid);
++        ThemeDraftSnapshot snapshot;
++        String openid;
++        try {
++            if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
++                throw preparedRejection(plan, Code.CHECK_UNAVAILABLE);
++            if (org.springframework.transaction.support.TransactionSynchronizationManager.getResourceMap().values()
++                    .stream().anyMatch(org.mybatis.spring.SqlSessionHolder.class::isInstance))
++                throw preparedRejection(plan, Code.CHECK_UNAVAILABLE);
++            if (quotaRecovery == null || redisTemplate == null)
++                throw preparedRejection(plan, Code.CHECK_UNAVAILABLE);
++            snapshot = themeDraftSnapshot();
++            if (!plan.gatewayConfigHash().equals(snapshot.hash()))
++                throw preparedRejection(plan, Code.CONFIG_CHANGED);
++            UmsMember member = umsMemberService.selectUmsMemberById(memberId);
++            if (member == null || !memberId.equals(member.getId()) || !Long.valueOf(1L).equals(member.getStatus())
++                    || !Integer.valueOf(0).equals(member.getDelFlag()))
++                throw preparedRejection(plan, Code.AUTHORITY_CHANGED);
++            // RoleService's canonical subject is member.role; compare only, never choose another pool.
++            if (!java.util.Arrays.asList("player", "club", "merchant").contains(member.getRole()))
++                throw preparedRejection(plan, Code.CHECK_UNAVAILABLE);
++            if (!plan.role().equals(member.getRole())) throw preparedRejection(plan, Code.AUTHORITY_CHANGED);
++            openid = member.getWxOpenId() == null ? "" : member.getWxOpenId();
++        } catch (AiThemeDraftPlanRejectedException rejected) {
++            throw rejected;
++        } catch (RuntimeException unavailable) {
++            // The player's Creator has already reserved its separate pool. No zero-effect claim here.
++            throw preparedRejection(plan, Code.CHECK_UNAVAILABLE);
++        }
++        String reservation = null;
++        if (!"player".equals(plan.role())) {
++            try {
++                reservation = consumePlannedQuota(memberId, "theme_draft", plan.reservation(), snapshot.dailyLimit());
++            } catch (AiThemeDraftPlanRejectedException lateFailure) {
++                throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
++                        "AI 草稿原计划执行失败");
++            }
++        }
++        return generateReserved(memberId, plan.role(), "theme_draft", systemPrompt, userPrompt,
++                reservation, plan.nonce(), snapshot, plan, openid);
++    }
++
++    private RuntimeException preparedRejection(AiThemeDraftPlan plan, Code code)
++    {
++        if (plan != null && "player".equals(plan.role()))
++            return new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, "AI 草稿原计划不可执行");
++        return new AiThemeDraftPlanRejectedException(code);
++    }
++
++    private Code themeDraftPlanProblem(Long memberId, AiThemeDraftPlan plan)
++    {
++        if (plan == null || memberId == null || memberId <= 0 || !memberId.equals(plan.memberId())
++                || !java.util.Arrays.asList("player", "club", "merchant").contains(plan.role())
++                || plan.nonce() == null || !plan.nonce().matches("[a-f0-9]{32}")
++                || plan.originalDay() == null || !plan.originalDay().matches("[0-9]{8}")
++                || plan.creatorConfigHash() == null || !plan.creatorConfigHash().matches("[a-f0-9]{64}")
++                || plan.gatewayConfigHash() == null || !plan.gatewayConfigHash().matches("[a-f0-9]{64}")
++                || plan.executeBefore() == null) return Code.PLAN_INVALID;
++        java.time.LocalDate day;
++        try { day = java.time.LocalDate.parse(plan.originalDay(), java.time.format.DateTimeFormatter.BASIC_ISO_DATE); }
++        catch (java.time.DateTimeException invalid) { return Code.PLAN_INVALID; }
++        boolean player = "player".equals(plan.role());
++        String counter = (player ? "ai:theme:draft:player:" : "ai:gen:limit:gen:")
++                + memberId + ":" + plan.originalDay();
++        String receipt = (player ? "ai:player:theme:draft:reservation:" : "ai:gen:reservation:")
++                + counter + ":" + plan.nonce();
++        if (!(player ? "player-draft" : "gen").equals(plan.pool()) || !counter.equals(plan.counterKey())
++                || !receipt.equals(plan.receiptKey()) || !(counter + "|" + plan.nonce()).equals(plan.reservation())
++                || !plan.executeBefore().isAfter(day.atStartOfDay(QUOTA_ZONE).toInstant())
++                || plan.executeBefore().isAfter(day.plusDays(1).atStartOfDay(QUOTA_ZONE).toInstant()))
++            return Code.PLAN_INVALID;
++        java.time.Instant now = themeDraftClock.instant();
++        if (day.isAfter(now.atZone(QUOTA_ZONE).toLocalDate())) return Code.PLAN_INVALID;
++        if (!now.isBefore(plan.executeBefore()) || !day.equals(now.atZone(QUOTA_ZONE).toLocalDate()))
++            return Code.PLAN_EXPIRED;
++        return null;
++    }
++
++    /** Capture once; execution never re-resolves the route, client, model or quota limit. */
++    private ThemeDraftSnapshot themeDraftSnapshot()
++    {
++        String route = sceneRouter == null ? aiModelConfig.getProvider() : sceneRouter.resolve("theme_draft");
++        if (route == null || !route.matches("[A-Za-z0-9_-]{1,64}"))
++            throw new IllegalStateException("Invalid local model identity");
++        if (sceneRouter != null && sceneRouter.isCacheOnly("theme_draft"))
++            throw new IllegalStateException("Theme draft needs a model");
++        LlmClient client = sceneRouter == null ? resolveClient(route) : selectRoutedClient(route);
++        String clientName = client.name();
++        if (clientName == null || !clientName.matches("[A-Za-z0-9_-]{1,64}"))
++            throw new IllegalStateException("Invalid local model identity");
++        String model = "client:" + clientName;
++        if (client instanceof com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient) {
++            com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient configured =
++                    (com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient) client;
++            configured.requireReady();
++            model = configured.configuredModel();
++        }
++        int limit = aiModelConfig.getDailyLimit();
++        if (limit < 0 || model == null || model.isBlank()) throw new IllegalStateException("Invalid local model configuration");
++        // Only allowlisted non-secret assembly fields. Never serialize config/props or hash an API key.
++        String base = aiModelConfig.getBaseUrl();
++        if (base != null && !base.isBlank()) {
++            java.net.URI uri = java.net.URI.create(base);
++            if (uri.getUserInfo() != null || uri.getRawQuery() != null || uri.getFragment() != null)
++                throw new IllegalStateException("Invalid local endpoint configuration");
++        }
++        String hash = CanonicalDigest.sha256Hex(com.alibaba.fastjson2.JSON.toJSONString(java.util.Arrays.asList(
++                "theme-draft.gateway.v2", sceneRouter == null ? "single-provider" : "scene-router", route,
++                client.getClass().getName(), clientName, model, base, aiModelConfig.isEnabled(),
++                aiModelConfig.getTimeoutMs(), limit, "gen", "Asia/Shanghai", REVIEW_CHUNK_MAX, REVIEW_OVERLAP,
++                "typed-not-sent-refund;provider-unknown-retain;received-retain.v1",
++                CanonicalDigest.sha256Hex(RESERVE_QUOTA_SCRIPT.getScriptAsString()),
++                CanonicalDigest.sha256Hex(REFUND_QUOTA_SCRIPT.getScriptAsString()))));
++        return new ThemeDraftSnapshot(client, clientName, limit, hash);
++    }
++
++    private record ThemeDraftSnapshot(LlmClient client, String clientName, int dailyLimit, String hash) { }
++
++    private void stageGenerationQuota(Long memberId, String bizType, String reservation, String stage,
++            AiThemeDraftPlan plan)
++    {
++        if (plan != null && "player".equals(plan.role())) {
++            if (quotaRecovery != null) quotaRecovery.stage(plan.receiptKey(), stage);
++        } else stageQuota(memberId, bizType, reservation, stage);
++    }
+ 
+     @Override
+     public AiGatewayResult generate(Long memberId, String role, String bizType,
+@@ -134,11 +276,20 @@ public class AiGatewayServiceImpl implements AiGatewayService
+         //    两条分支落库的 trace_id 与返给前端的对不上(审计无法 join)。
+         //    D-08:traceId 即本次预占 nonce,原日收据/台账 nonce 唯一键保证每个 traceId 至多退一次。
+         String traceId = traceIdOf(reservation);
++        return generateReserved(memberId, role, bizType, systemPrompt, userPrompt, reservation, traceId, null, null, null);
++    }
++
++    private AiGatewayResult generateReserved(Long memberId, String role, String bizType,
++            String systemPrompt, String userPrompt, String reservation, String traceId,
++            ThemeDraftSnapshot snapshot, AiThemeDraftPlan preparedPlan, String preparedOpenid)
++    {
++        boolean playerThemeDraft = "player".equals(role) && "theme_draft".equals(bizType);
++        boolean prepared = snapshot != null;
+         String openid;
+         String secIn;
+         try {
+-            openid = resolveOpenid(memberId);
+-            stageQuota(memberId,bizType,reservation,"INPUT_REVIEW_STARTED");
++            openid = prepared ? preparedOpenid : resolveOpenid(memberId);
++            stageGenerationQuota(memberId,bizType,reservation,"INPUT_REVIEW_STARTED",preparedPlan);
+             // 两段都可能含业务上下文；审核与 provider 收到的文本保持完整，不截掉后缀。
+             String assembledInput = (systemPrompt == null ? "" : systemPrompt) + "\n"
+                     + (userPrompt == null ? "" : userPrompt);
+@@ -151,11 +302,11 @@ public class AiGatewayServiceImpl implements AiGatewayService
+         if (secIn != null) {
+             if (IWxContentSecurityService.isDetectionUnavailable(secIn)) {
+                 if (!playerThemeDraft) refundQuota(memberId, bizType, reservation);
+-                saveLog(traceId, memberId, role, bizType, null, userPrompt, secIn, 0, 0, 0, 0);
++                saveGenerationLog(prepared, traceId, memberId, role, bizType, null, userPrompt, secIn, 0, 0, 0, 0);
+                 throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, secIn);
+             }
+             retainQuota(memberId,bizType,reservation,"INPUT_REJECTED");
+-            saveLog(traceId, memberId, role, bizType, null, userPrompt, secIn,
++            saveGenerationLog(prepared, traceId, memberId, role, bizType, null, userPrompt, secIn,
+                     AiGenerationLog.SAFETY_INPUT_BLOCKED, 0, 0, 0);
+             // 与 master #322 统一：微信审核拒绝（含人工复核/未知拒绝）一律按入参被拦截返回，小程序给出同一条“请修改内容”提示。
+             throw new AiServiceException(AiServiceException.Reason.INPUT_BLOCKED, secIn);
+@@ -166,13 +317,13 @@ public class AiGatewayServiceImpl implements AiGatewayService
+         String modelName;
+         try
+         {
+-            client = selectClient(bizType);
++            client = prepared ? snapshot.client() : selectClient(bizType);
+             // This local check proves no HTTP was sent; provider exceptions cannot prove that.
+             if (client instanceof com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient)
+             {
+                 ((com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient) client).requireReady();
+             }
+-            modelName = client == null ? null : client.name();
++            modelName = prepared ? snapshot.clientName() : client == null ? null : client.name();
+         }
+         catch (RuntimeException e)
+         {
+@@ -186,7 +337,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
+         if (client == null)
+         {
+             // cache-only: npc_event 不调模型,返回空结果
+-            saveLog(traceId, memberId, role, bizType, "cache", userPrompt, "", 0, 0, 0, 0);
++            saveGenerationLog(prepared, traceId, memberId, role, bizType, "cache", userPrompt, "", 0, 0, 0, 0);
+             retainQuota(memberId,bizType,reservation,"CACHE_RESULT");
+             return new AiGatewayResult(traceId, "[]", "cache", 0);
+         }
+@@ -194,7 +345,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
+ 
+         String modelText;
+         try {
+-            stageQuota(memberId,bizType,reservation,"MODEL_STARTED");
++            stageGenerationQuota(memberId,bizType,reservation,"MODEL_STARTED",preparedPlan);
+         } catch (RuntimeException stageUnavailable) {
+             // chat has not been invoked; preserve the original unsent compensation path.
+             if (!playerThemeDraft) refundQuota(memberId, bizType, reservation);
+@@ -219,9 +370,11 @@ public class AiGatewayServiceImpl implements AiGatewayService
+         }
+         catch (RuntimeException e)
+         {
+-            log.error("[AiGateway] model-error memberId={} provider={}", memberId, modelName, e);
++            if (prepared) log.error("[AiGateway] prepared-model-error traceId={} provider={} code=PROVIDER_OUTCOME_UNKNOWN",
++                    traceId, modelName);
++            else log.error("[AiGateway] model-error memberId={} provider={}", memberId, modelName, e);
+             int tokenIn = estimateSingle(systemPrompt) + estimateSingle(userPrompt);
+-            saveLog(traceId, memberId, role, bizType, modelName, userPrompt, "ERROR:" + truncate(e.getMessage(), 100),
++            saveGenerationLog(prepared, traceId, memberId, role, bizType, modelName, userPrompt, prepared ? "PROVIDER_OUTCOME_UNKNOWN" : "ERROR:" + truncate(e.getMessage(), 100),
+                     0, (int) (System.currentTimeMillis() - t0), tokenIn, null);
+             // MODEL_STARTED preserves the original receipt for the existing recovery worker.
+             // A timeout/empty or malformed response may already have incurred provider usage.
+@@ -247,13 +400,13 @@ public class AiGatewayServiceImpl implements AiGatewayService
+             if (IWxContentSecurityService.isDetectionUnavailable(secOut))
+             {
+                 retainQuotaAfterResult(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
+-                saveLog(traceId, memberId, role, bizType, modelName, userPrompt, secOut,
++                saveGenerationLog(prepared, traceId, memberId, role, bizType, modelName, userPrompt, secOut,
+                         0, latencyMs, tokenIn, tokenOut);
+                 throw new com.chengyinhub.business.service.ai.AiProviderResultReceivedException(
+                         AiServiceException.Reason.UPSTREAM_UNAVAILABLE, secOut);
+             }
+             log.info("[AiGateway] output-blocked memberId={} bizType={}", memberId, bizType);
+-            saveLog(traceId, memberId, role, bizType, modelName, userPrompt, modelText,
++            saveGenerationLog(prepared, traceId, memberId, role, bizType, modelName, userPrompt, modelText,
+                     AiGenerationLog.SAFETY_OUTPUT_BLOCKED, latencyMs, tokenIn, tokenOut);
+             retainQuotaAfterResult(memberId,bizType,reservation,"OUTPUT_REJECTED");
+             throw new com.chengyinhub.business.service.ai.AiProviderResultReceivedException(
+@@ -261,7 +414,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
+         }
+ 
+         // 5. 落日志
+-        saveLog(traceId, memberId, role, bizType, modelName, userPrompt, modelText, 0, latencyMs, tokenIn, tokenOut);
++        saveGenerationLog(prepared, traceId, memberId, role, bizType, modelName, userPrompt, modelText, 0, latencyMs, tokenIn, tokenOut);
+ 
+         retainQuotaAfterResult(memberId,bizType,reservation,"SUCCESS");
+         return new AiGatewayResult(traceId, modelText, modelName, 0);
+@@ -345,6 +498,13 @@ public class AiGatewayServiceImpl implements AiGatewayService
+ 
+     @Override
+     public String consumePlannedQuota(Long memberId, String bizType, String reservation)
++    {
++        if (memberId == null || memberId <= 0 || receiptOf(memberId, bizType, reservation) == null)
++            throw new IllegalArgumentException("Invalid original quota reservation");
++        return consumePlannedQuota(memberId, bizType, reservation, dailyLimitOf(rateGroupOf(bizType)));
++    }
++
++    private String consumePlannedQuota(Long memberId, String bizType, String reservation, int limit)
+     {
+         if (memberId == null || memberId <= 0 || receiptOf(memberId, bizType, reservation) == null)
+             throw new IllegalArgumentException("Invalid original quota reservation");
+@@ -360,7 +520,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
+         try {
+             used = redisTemplate.execute(RESERVE_QUOTA_SCRIPT,
+                     java.util.Arrays.<Object>asList(key, key + ":generation", receipt),
+-                    Integer.valueOf(86400), Integer.valueOf(dailyLimitOf(group)), Integer.valueOf(0));
++                    Integer.valueOf(86400), Integer.valueOf(limit), Integer.valueOf(0));
+         } catch (RuntimeException unknown) {
+             cancelQuota(key, receipt);
+             throw unknown;
+@@ -374,10 +534,10 @@ public class AiGatewayServiceImpl implements AiGatewayService
+             try { quotaRecovery.reserved(receipt,used); }
+             catch(RuntimeException persistenceFailure) { cancelQuota(key,receipt); throw persistenceFailure; }
+         }
+-        if (used > dailyLimitOf(group)) {
++        if (used > limit) {
+             if(quotaRecovery!=null) quotaRecovery.retain(receipt,"RATE_LIMITED");
+             throw new AiServiceException(AiServiceException.Reason.RATE_LIMITED,
+-                    "今日AI次数已用完(" + dailyLimitOf(group) + "/天),明天再来吧");
++                    "今日AI次数已用完(" + limit + "/天),明天再来吧");
+         }
+         return reservation;
+     }
+@@ -444,7 +604,8 @@ public class AiGatewayServiceImpl implements AiGatewayService
+                     java.util.Arrays.<Object>asList(key, key + ":generation", receipt));
+         } catch (RuntimeException unavailable) {
+             // 若确定退款意图尚未提交，原结果仍待核；已提交意图由任务按原身份重放。
+-            log.warn("[AiGateway] quota compensation unavailable key={}", key, unavailable);
++            log.warn("[AiGateway] quota compensation unavailable traceId={} code=COMPENSATION_UNAVAILABLE",
++                    receipt.substring(Math.max(0, receipt.length() - 32)));
+         }
+     }
+ 
+@@ -501,6 +662,11 @@ public class AiGatewayServiceImpl implements AiGatewayService
+             return null;
+         }
+ 
++        return selectRoutedClient(providerName);
++    }
++
++    private LlmClient selectRoutedClient(String providerName)
++    {
+         // 按 bean 名查找
+         if (llmClientsByBeanName != null)
+         {
+@@ -600,8 +766,24 @@ public class AiGatewayServiceImpl implements AiGatewayService
+         }
+     }
+ 
++    private void saveGenerationLog(boolean prepared, String traceId, Long memberId, String role,
++            String bizType, String provider, String input, String output, int safetyFlag,
++            int latencyMs, int tokenIn, Integer tokenOut)
++    {
++        saveLog(traceId, memberId, role, bizType, provider,
++                prepared ? "sha256:" + CanonicalDigest.sha256Hex(input == null ? "" : input) : input,
++                prepared ? "sha256:" + CanonicalDigest.sha256Hex(output == null ? "" : output) : output,
++                safetyFlag, latencyMs, tokenIn, tokenOut, prepared);
++    }
++
+     private void saveLog(String traceId, Long memberId, String role, String bizType, String provider,
+                           String input, String output, int safetyFlag, int latencyMs, int tokenIn, Integer tokenOut)
++    {
++        saveLog(traceId, memberId, role, bizType, provider, input, output, safetyFlag, latencyMs, tokenIn, tokenOut, false);
++    }
++
++    private void saveLog(String traceId, Long memberId, String role, String bizType, String provider,
++            String input, String output, int safetyFlag, int latencyMs, int tokenIn, Integer tokenOut, boolean prepared)
+     {
+         try
+         {
+@@ -623,7 +805,8 @@ public class AiGatewayServiceImpl implements AiGatewayService
+         }
+         catch (Exception e)
+         {
+-            log.error("[AiGateway] log-failed", e);
++            if (prepared) log.error("[AiGateway] prepared-log-failed traceId={} code=LOG_UNAVAILABLE", traceId);
++            else log.error("[AiGateway] log-failed", e);
+         }
+     }
+ 
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java
+index 63f2a81e..0588449f 100644
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java
+@@ -49,6 +49,10 @@ import com.chengyinhub.business.service.ai.AiGatewayResult;
+ import com.chengyinhub.business.service.ai.AiGatewayService;
+ import com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException;
+ import com.chengyinhub.business.service.ai.AiServiceException;
++import com.chengyinhub.business.service.ai.AiThemeDraftPlan;
++import com.chengyinhub.business.service.ai.AiThemeDraftPlanRejectedException;
++import com.chengyinhub.business.service.ai.AiThemeDraftPlanRejectedException.Code;
++import com.chengyinhub.business.service.support.CanonicalDigest;
+ 
+ /**
+  * AI 创作服务实现:四大能力编排(候选查询→拼 prompt→调网关→解析 JSON→校验)。
+@@ -70,6 +74,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
+     private static final DateTimeFormatter RATE_DATE_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
+     /** 每日额度按北京时间换日，不随 JVM 默认时区漂移。 */
+     private static final java.time.ZoneId QUOTA_ZONE = java.time.ZoneId.of("Asia/Shanghai");
++    private java.time.Clock themeDraftClock = java.time.Clock.system(QUOTA_ZONE);
+ 
+     @Autowired
+     private IAiTopicPlanService aiTopicPlanService;
+@@ -102,6 +107,62 @@ public class AiCreatorServiceImpl implements IAiCreatorService
+     public AiThemeDraftResp themeDraft(AiThemeDraftReq req, Long memberId)
+     {
+         String role = resolveRole(memberId);
++        return executeThemeDraft(req, memberId, role, null);
++    }
++
++    @Override
++    public AiThemeDraftPlan planThemeDraft(Long memberId, String nonce)
++    {
++        try {
++            if (nonce == null || !nonce.matches("[a-f0-9]{32}")) throw rejected(Code.PLAN_INVALID);
++            String role = resolvePreparedRole(memberId);
++            java.time.LocalDate day = java.time.LocalDate.now(themeDraftClock.withZone(QUOTA_ZONE));
++            String originalDay = day.format(RATE_DATE_FMT);
++            String pool = "player".equals(role) ? "player-draft" : "gen";
++            String reservation = "player".equals(role)
++                    ? PLAYER_THEME_DRAFT_RATE_PREFIX + memberId + ":" + originalDay + "|" + nonce
++                    : gateway.planQuotaReservation(memberId, "theme_draft", nonce);
++            if (reservation == null || !reservation.endsWith("|" + nonce)) throw rejected(Code.PLAN_INVALID);
++            String counter = reservation.substring(0, reservation.length() - 33);
++            String receipt = ("player".equals(role) ? "ai:player:theme:draft:reservation:" : "ai:gen:reservation:")
++                    + counter + ":" + nonce;
++            AiThemeDraftPlan plan = new AiThemeDraftPlan(memberId, role, pool, originalDay, counter, nonce,
++                    receipt, reservation, themeDraftCreatorConfigurationHash(), gateway.themeDraftConfigurationHash(),
++                    day.plusDays(1).atStartOfDay(QUOTA_ZONE).toInstant());
++            validatePreparedIdentity(memberId, plan);
++            return plan;
++        } catch (AiThemeDraftPlanRejectedException rejected) {
++            throw rejected;
++        } catch (RuntimeException unavailable) {
++            throw rejected(Code.CHECK_UNAVAILABLE);
++        }
++    }
++
++    @Override
++    public AiThemeDraftResp themeDraftPrepared(AiThemeDraftReq req, Long memberId, AiThemeDraftPlan plan)
++    {
++        // This is the only boundary that can assert a zero-effect local rejection.
++        try {
++            if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
++                throw rejected(Code.CHECK_UNAVAILABLE);
++            if (req == null) throw rejected(Code.PLAN_INVALID);
++            validatePreparedIdentity(memberId, plan);
++            if (!plan.role().equals(resolvePreparedRole(memberId))) throw rejected(Code.AUTHORITY_CHANGED);
++            if ("player".equals(plan.role()) && (quotaRecovery == null || redisTemplate == null))
++                throw rejected(Code.CHECK_UNAVAILABLE);
++            if (!plan.creatorConfigHash().equals(themeDraftCreatorConfigurationHash())
++                    || !plan.gatewayConfigHash().equals(gateway.themeDraftConfigurationHash()))
++                throw rejected(Code.CONFIG_CHANGED);
++        } catch (AiThemeDraftPlanRejectedException rejected) {
++            throw rejected;
++        } catch (RuntimeException unavailable) {
++            throw rejected(Code.CHECK_UNAVAILABLE);
++        }
++        return executeThemeDraft(req, memberId, plan.role(), plan);
++    }
++
++    private AiThemeDraftResp executeThemeDraft(AiThemeDraftReq req, Long memberId, String role, AiThemeDraftPlan plan)
++    {
+         PlayerThemeDraftQuotaReservation reservation = null;
+         boolean accepted = false;
+         boolean inputBlocked = false;
+@@ -113,15 +174,19 @@ public class AiCreatorServiceImpl implements IAiCreatorService
+         {
+             user.put("existingNodeNames", req.getExistingNodeNames());
+         }
++        String userPrompt = user.toJSONString();
+         try
+         {
+             if ("player".equals(role))
+             {
+                 // 必须在调模型前占位；事后才计数会让第 4 次请求仍消耗一次模型调用。
+-                reservation = reservePlayerThemeDraftQuota(memberId);
++                reservation = plan == null ? reservePlayerThemeDraftQuota(memberId)
++                        : consumePlayerThemeDraftPlan(memberId, plan);
+             }
+-            if(reservation!=null && quotaRecovery!=null) quotaRecovery.stage(reservation.receipt,"INPUT_REVIEW_STARTED");
+-            AiGatewayResult r = gateway.generate(memberId, role, "theme_draft", SYS_THEME_DRAFT, user.toJSONString());
++            if(reservation!=null && quotaRecovery!=null && plan==null) quotaRecovery.stage(reservation.receipt,"INPUT_REVIEW_STARTED");
++            AiGatewayResult r = plan == null
++                    ? gateway.generate(memberId, role, "theme_draft", SYS_THEME_DRAFT, userPrompt)
++                    : gateway.generateThemeDraftPrepared(memberId, plan, SYS_THEME_DRAFT, userPrompt);
+             AiThemeDraftResp resp = new AiThemeDraftResp();
+             resp.setTraceId(r.getTraceId());
+             // 任何角色拿到 mock 模型输出都必须失败关闭：mock 草稿不是真实 AI 结果，
+@@ -143,6 +208,13 @@ public class AiCreatorServiceImpl implements IAiCreatorService
+             accepted = true;
+             return resp;
+         }
++        catch (AiThemeDraftPlanRejectedException failure)
++        {
++            // A later player-side check is after reservation: never export NOT_SENT preflight proof.
++            if (plan != null && reservation == null && !"player".equals(role)) throw failure;
++            throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
++                    "AI 草稿原计划不可执行");
++        }
+         catch (AiServiceException failure)
+         {
+             inputBlocked = failure.getReason() == AiServiceException.Reason.INPUT_BLOCKED;
+@@ -151,7 +223,8 @@ public class AiCreatorServiceImpl implements IAiCreatorService
+         }
+         catch (com.alibaba.fastjson2.JSONException je)
+         {
+-            log.error("[AiCreator] JSON parse failed bizType=theme_draft", je);
++            if (plan == null) log.error("[AiCreator] JSON parse failed bizType=theme_draft", je);
++            else log.warn("[AiCreator] prepared-json-invalid traceId={} code=INVALID_THEME_DRAFT", plan.nonce());
+             throw new AiServiceException(PARSE_ERROR_MSG);
+         }
+         finally
+@@ -159,7 +232,18 @@ public class AiCreatorServiceImpl implements IAiCreatorService
+             // Provider UNKNOWN keeps its original receipt for recovery; input-only failures retain their refund policy.
+             if (reservation != null && !providerOutcomeUnknown) {
+                 if (!accepted && !inputBlocked) releasePlayerThemeDraftQuota(reservation);
+-                else if(quotaRecovery!=null) quotaRecovery.retain(reservation.receipt,inputBlocked ? "INPUT_BLOCKED" : "VALID_PLAYER_DRAFT");
++                else if(quotaRecovery!=null) {
++                    try { quotaRecovery.retain(reservation.receipt,inputBlocked ? "INPUT_BLOCKED" : "VALID_PLAYER_DRAFT"); }
++                    catch (RuntimeException outcomeUnavailable) {
++                        if (plan == null) throw outcomeUnavailable;
++                        if (accepted) throw new com.chengyinhub.business.service.ai.AiProviderResultReceivedException(
++                                AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
++                                "AI 服务暂时不可用，请稍后重试", outcomeUnavailable);
++                        // Input rejection already entered quota/review: no local zero-effect proof.
++                        throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
++                                "AI 服务暂时不可用，请稍后重试");
++                    }
++                }
+             }
+         }
+     }
+@@ -525,6 +609,65 @@ public class AiCreatorServiceImpl implements IAiCreatorService
+         return m == null ? "player" : roleService.resolveRole(m);
+     }
+ 
++    private String resolvePreparedRole(Long memberId)
++    {
++        if (org.springframework.transaction.support.TransactionSynchronizationManager.getResourceMap().values()
++                .stream().anyMatch(org.mybatis.spring.SqlSessionHolder.class::isInstance))
++            throw rejected(Code.CHECK_UNAVAILABLE);
++        if (memberId == null || memberId <= 0) throw rejected(Code.AUTHORITY_CHANGED);
++        UmsMember member = umsMemberService.selectUmsMemberById(memberId);
++        // Same current-member eligibility as RoleService; missing members never become players.
++        if (member == null || !memberId.equals(member.getId()) || !Long.valueOf(1L).equals(member.getStatus())
++                || !Integer.valueOf(0).equals(member.getDelFlag())) throw rejected(Code.AUTHORITY_CHANGED);
++        String role = roleService.resolveRole(member);
++        if (!java.util.Arrays.asList("player", "club", "merchant").contains(role))
++            throw rejected(Code.CHECK_UNAVAILABLE);
++        return role;
++    }
++
++    private void validatePreparedIdentity(Long memberId, AiThemeDraftPlan plan)
++    {
++        if (plan == null || memberId == null || memberId <= 0 || !memberId.equals(plan.memberId())
++                || !java.util.Arrays.asList("player", "club", "merchant").contains(plan.role())
++                || plan.nonce() == null || !plan.nonce().matches("[a-f0-9]{32}")
++                || plan.originalDay() == null || !plan.originalDay().matches("[0-9]{8}")
++                || plan.creatorConfigHash() == null || !plan.creatorConfigHash().matches("[a-f0-9]{64}")
++                || plan.gatewayConfigHash() == null || !plan.gatewayConfigHash().matches("[a-f0-9]{64}")
++                || plan.executeBefore() == null) throw rejected(Code.PLAN_INVALID);
++        java.time.LocalDate day;
++        try { day = java.time.LocalDate.parse(plan.originalDay(), DateTimeFormatter.BASIC_ISO_DATE); }
++        catch (java.time.DateTimeException invalid) { throw rejected(Code.PLAN_INVALID); }
++        boolean player = "player".equals(plan.role());
++        String counter = (player ? PLAYER_THEME_DRAFT_RATE_PREFIX : "ai:gen:limit:gen:")
++                + memberId + ":" + plan.originalDay();
++        String receipt = (player ? "ai:player:theme:draft:reservation:" : "ai:gen:reservation:")
++                + counter + ":" + plan.nonce();
++        if (!(player ? "player-draft" : "gen").equals(plan.pool()) || !counter.equals(plan.counterKey())
++                || !receipt.equals(plan.receiptKey()) || !(counter + "|" + plan.nonce()).equals(plan.reservation())
++                || !plan.executeBefore().isAfter(day.atStartOfDay(QUOTA_ZONE).toInstant())
++                || plan.executeBefore().isAfter(day.plusDays(1).atStartOfDay(QUOTA_ZONE).toInstant()))
++            throw rejected(Code.PLAN_INVALID);
++        java.time.Instant now = themeDraftClock.instant();
++        if (day.isAfter(now.atZone(QUOTA_ZONE).toLocalDate())) throw rejected(Code.PLAN_INVALID);
++        if (!now.isBefore(plan.executeBefore())
++                || !day.equals(now.atZone(QUOTA_ZONE).toLocalDate())) throw rejected(Code.PLAN_EXPIRED);
++    }
++
++    private String themeDraftCreatorConfigurationHash()
++    {
++        return CanonicalDigest.sha256Hex(JSON.toJSONString(java.util.Arrays.asList(
++                "theme-draft.creator.v2", CanonicalDigest.sha256Hex(SYS_THEME_DRAFT), "parse-theme-plan.v1",
++                "player-draft", PLAYER_THEME_DRAFT_DAILY_LIMIT, "Asia/Shanghai",
++                "valid-or-input-blocked-retain;invalid-refund;provider-unknown-retain.v1",
++                CanonicalDigest.sha256Hex(RESERVE_QUOTA_SCRIPT.getScriptAsString()),
++                CanonicalDigest.sha256Hex(REFUND_QUOTA_SCRIPT.getScriptAsString()))));
++    }
++
++    private static AiThemeDraftPlanRejectedException rejected(Code code)
++    {
++        return new AiThemeDraftPlanRejectedException(code);
++    }
++
+     private boolean isMockModel(AiGatewayResult result)
+     {
+         String model = result == null ? null : result.getModel();
+@@ -604,13 +747,28 @@ public class AiCreatorServiceImpl implements IAiCreatorService
+         String key = PLAYER_THEME_DRAFT_RATE_PREFIX + memberId + ":" + now.toLocalDate().format(RATE_DATE_FMT);
+         String receipt = "ai:player:theme:draft:reservation:" + key + ":"
+                 + com.chengyinhub.common.utils.uuid.IdUtils.simpleUUID();
++        return consumePlayerThemeDraftQuota(memberId, key, receipt, secondsUntilNextLocalMidnight(now));
++    }
++
++    private PlayerThemeDraftQuotaReservation consumePlayerThemeDraftPlan(Long memberId, AiThemeDraftPlan plan)
++    {
++        // Already validated; these exact values came from the committed original intent.
++        // Execution authorization may expire earlier; it must never shorten/reset the daily counter.
++        java.time.Instant midnight = java.time.LocalDate.parse(plan.originalDay(), DateTimeFormatter.BASIC_ISO_DATE)
++                .plusDays(1).atStartOfDay(QUOTA_ZONE).toInstant();
++        long ttl = java.time.Duration.between(themeDraftClock.instant(), midnight).getSeconds();
++        return consumePlayerThemeDraftQuota(memberId, plan.counterKey(), plan.receiptKey(), Math.max(1L, ttl));
++    }
++
++    private PlayerThemeDraftQuotaReservation consumePlayerThemeDraftQuota(Long memberId, String key, String receipt, long ttl)
++    {
+         if(quotaRecovery!=null) quotaRecovery.prepare(memberId,"theme_draft","player-draft",key,receipt);
+         PlayerThemeDraftQuotaReservation reservation = new PlayerThemeDraftQuotaReservation(key, receipt, 0);
+         Long used;
+         try {
+             used = redisTemplate.execute(RESERVE_QUOTA_SCRIPT,
+                     java.util.Arrays.<Object>asList(key, key + ":generation", receipt),
+-                    Integer.valueOf((int) secondsUntilNextLocalMidnight(now)),
++                    Integer.valueOf((int) ttl),
+                     Integer.valueOf(PLAYER_THEME_DRAFT_DAILY_LIMIT), Integer.valueOf(1));
+         } catch (RuntimeException unknown) {
+             releasePlayerThemeDraftQuota(reservation);
+@@ -639,7 +797,8 @@ public class AiCreatorServiceImpl implements IAiCreatorService
+             redisTemplate.execute(REFUND_QUOTA_SCRIPT, java.util.Arrays.<Object>asList(
+                     reservation.key, reservation.key + ":generation", reservation.receipt));
+         } catch (RuntimeException unavailable) {
+-            log.warn("[AiCreator] player-theme-draft quota compensation unavailable", unavailable);
++            log.warn("[AiCreator] player-theme-draft quota compensation unavailable traceId={} code=COMPENSATION_UNAVAILABLE",
++                    reservation.receipt.substring(Math.max(0, reservation.receipt.length() - 32)));
+         }
+     }
+ 
