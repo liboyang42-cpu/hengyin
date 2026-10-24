@@ -232,6 +232,16 @@ class ApiMerchantDeskControllerTest {
         verify(mapper, times(1)).updateBookingRule(anyMap());
         assertEquals(3, body.get("ruleVersion"));
 
+        Map<String, Object> listed = new HashMap<>();
+        listed.put("productId", 900L);
+        listed.put("publishStatus", 2);
+        when(mapper.selectProducts(11L)).thenReturn(List.of(listed));
+        List<Map<String, Object>> products = (List<Map<String, Object>>) controller.products().get(AjaxResult.DATA_TAG);
+        assertEquals(1, products.size());
+        assertEquals(900L, products.get(0).get("productId"));
+        verify(mapper).selectProducts(11L);
+        verify(mapper, times(1)).updateSku(anyMap());
+
         when(mapper.selectProduct(11L, 900L)).thenReturn(product);
         Map<String, Object> read = new HashMap<>();
         read.put("skuId", 44L);
@@ -239,11 +249,18 @@ class ApiMerchantDeskControllerTest {
         read.put("ruleVersion", 4);
         when(mapper.selectSkus(11L, 900L)).thenReturn(List.of(read));
         Map<String, Object> detailBody = new HashMap<>();
-        detailBody.put("productId", 900);
+        detailBody.put("productId", products.get(0).get("productId"));
         Map<String, Object> detail = (Map<String, Object>) controller.productDetail(detailBody).get(AjaxResult.DATA_TAG);
         List<Map<String, Object>> skus = (List<Map<String, Object>>) detail.get("skus");
         assertEquals(4, skus.get(0).get("ruleVersion"));
         assertEquals(new BigDecimal("88.00"), skus.get(0).get("price"));
+        assertEquals(true, detail.get("editable"));
+        Map<String, Object> missingBody = new HashMap<>();
+        missingBody.put("productId", 901L);
+        AjaxResult missing = controller.productDetail(missingBody);
+        assertEquals(404, missing.get(AjaxResult.CODE_TAG));
+        assertEquals(MerchantDeskException.NOT_OWNER, missing.get("errorCode"));
+        verify(mapper, never()).selectSkus(11L, 901L);
 
         read.put("ruleVersion", 5);
         Map<String, Object> later = (Map<String, Object>) controller.productDetail(detailBody).get(AjaxResult.DATA_TAG);
