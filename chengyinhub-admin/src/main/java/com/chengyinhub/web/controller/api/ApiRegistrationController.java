@@ -99,15 +99,6 @@ public class ApiRegistrationController extends BaseController {
     private ICmsActivityService activityService;
 
     @Autowired
-    private com.chengyinhub.business.service.IOmsTicketService omsTicketService;
-
-    @Autowired
-    private ICmsRegistrationScanService registrationScanService;
-
-    @Autowired
-    private ICmsMemberTemplateService memberTemplateService;
-
-    @Autowired
     private ICmsRegistrationMerchantService registrationMerchantService;
 
     /** [P0-14] ③ 按章核销 + 扫码反推章节。 */
@@ -123,10 +114,6 @@ public class ApiRegistrationController extends BaseController {
 
     @Autowired
     private IExploreCollectibleService exploreCollectibleService;
-
-    /** 批5 完局面(图鉴 / 通关奖励到账明细 / J·R90 入口)的只读读面。纯读,不发奖不写库。 */
-    @Autowired
-    private com.chengyinhub.business.service.IExploreCompletionReadService exploreCompletionReadService;
 
     /** [P0-2] 选章面板要的章节名(候选 id → name);只在交集 ≥2 时用。 */
     @Autowired
@@ -153,12 +140,6 @@ public class ApiRegistrationController extends BaseController {
     @Autowired
     private IUmsMemberBalanceDetailService umsMemberBalanceDetailService;
 
-
-    @Autowired
-    private IMmsMerchantService mmsMerchantService;
-
-    @Autowired
-    private ISysCategoryService sysCategoryService;
 
     @Operation(summary = "报名报价(M0-1 实扣一致):不落库,返回应付/抵扣明细+quoteSign")
     @PostMapping("/quote")
