@@ -7,7 +7,7 @@ const ISSUE_ERROR_MESSAGE = '暂时无法生成核销码，请稍后重试'
    (与 components/cy/scene-qr-group-code 同一条判据)。 */
 const QR_MISSING_MESSAGE = '核销码二维码没能生成，请重试'
 
-function ok(res) { return res && (res.code === 200 || res.code === '200') }
+const { isBizOk: ok } = require('../../../utils/response-shape.js')
 function ttlSeconds(value) {
   return typeof value === 'number' && Number.isFinite(value) && value >= 1000
     ? Math.floor(value / 1000)

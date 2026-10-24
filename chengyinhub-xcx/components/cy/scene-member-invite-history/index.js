@@ -3,9 +3,9 @@
 const app = getApp()
 const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js')
 const { chinaParts } = require('../../../utils/datetime.js')
-
+const { isBizOk } = require('../../../utils/response-shape.js')
 function success(response) {
-  return response && (response.code === 200 || response.code === '200')
+  return isBizOk(response)
 }
 
 function rowsOf(response) {

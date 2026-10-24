@@ -3,6 +3,7 @@
 // PRIVATE-GROUP-nucleation-original-request:据点核销(/api/verify/citynode/redeem)的回执分类。
 // 与 merchant-verification.js 同一口径——只有能绑定到原请求的明确回执才算 success/failed,其余一律 unknown。
 const UNKNOWN_MESSAGE = '核销结果待确认，请勿重复核销';
+const { isBizOk } = require('./response-shape.js');
 const record = value => value && typeof value === 'object' && !Array.isArray(value);
 const positiveId = value => (typeof value === 'number' || typeof value === 'string')
   && /^[1-9]\d*$/.test(String(value)) && Number.isSafeInteger(Number(value));
@@ -30,7 +31,7 @@ function classifyCityNodeRedeem(response, channel, httpStatus, code) {
   if ([400, 401, 403, 404, 405, 413, 415, 426, 429].includes(status))
     return { status: 'failed', response: { code: status, msg: '请求被拒绝，未执行核销' } };
   if (channel !== 'success' || httpStatus && status !== 200 || !record(response)) return unknown;
-  if (response.code === 200 || response.code === '200') {
+  if (isBizOk(response)) {
     const data = response.data, target = cityNodeTarget(code);
     // 回执须回到码里的同一据点与玩家;couponGranted 严格布尔且与成功文案一致
     const ok = !!target && record(data) && String(data.poiId) === target.poiId && String(data.memberId) === target.memberId

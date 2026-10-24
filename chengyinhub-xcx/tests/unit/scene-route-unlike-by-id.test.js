@@ -22,6 +22,7 @@ function mount(items) {
         if (request.includes('utils/modal.js')) return { show: options => options.success({ confirm: true }) };
         if (request.includes('utils/toast.js')) return toast;
         if (request.includes('merchant-access-policy')) return { inactiveAccess: () => ({ active: false }), normalizeMerchantAccess: raw => raw };
+        if (request.includes('response-shape')) return require('../../utils/response-shape.js');
         return {};
       },
       wx: {},
