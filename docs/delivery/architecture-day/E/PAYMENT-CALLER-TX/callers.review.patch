@@ -1,0 +1,95 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMembershipServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMembershipServiceImpl.java
+@@ -219,8 +219,9 @@
+     }
+
+     @Override
+-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
++    @Transactional(propagation = Propagation.NEVER)
+     public ClubMembershipRenewalVO renew(Long principalMemberId, ClubMembershipRenewRequest request) {
++        requirePaymentOutsideTransaction();
+         requireRequest(request, request == null ? null : request.getClubId());
+         requireMember(principalMemberId, request.getClubId());
+         if (request.getPlanId() == null || request.getPlanId() <= 0
+@@ -264,8 +265,9 @@
+     }
+
+     @Override
+-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
++    @Transactional(propagation = Propagation.NEVER)
+     public ClubMembershipRenewalVO resumeInvoice(Long principalMemberId, ClubMembershipActionRequest request) {
++        requirePaymentOutsideTransaction();
+         requireAction(request);
+         InvoiceActionIntent intent = transaction().execute(status ->
+                 prepareResumeIntent(principalMemberId, request));
+@@ -313,8 +315,9 @@
+     }
+
+     @Override
+-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
++    @Transactional(propagation = Propagation.NEVER)
+     public ClubMembershipRenewalVO closeInvoice(Long principalMemberId, ClubMembershipActionRequest request) {
++        requirePaymentOutsideTransaction();
+         requireAction(request);
+         InvoiceActionIntent intent = transaction().execute(status ->
+                 prepareCloseIntent(principalMemberId, request));
+@@ -962,7 +965,9 @@
+     }
+
+     private TransactionTemplate transaction() {
+-        return new TransactionTemplate(transactionManager);
++        TransactionTemplate transaction = new TransactionTemplate(transactionManager);
++        transaction.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
++        return transaction;
+     }
+
+     private static final class RenewalIntent {
+@@ -1446,4 +1451,11 @@
+     private void bad(String message) { throw new ServiceException(message, HttpStatus.BAD_REQUEST); }
+     private void forbidden() { throw new ServiceException("俱乐部身份无效或权限不足", HttpStatus.FORBIDDEN); }
+     private void conflict() { throw new ServiceException("数据已变化或幂等键冲突", HttpStatus.CONFLICT); }
++    /** NEVER rejects proxied outer transactions; this also protects self/direct invocation before any local intent. */
++    private static void requirePaymentOutsideTransaction() {
++        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
++            throw new IllegalStateException("支付外呼必须在原业务事务外，不能挂起持锁事务继续执行");
++        }
++    }
++
+ }
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java
+@@ -53,9 +53,10 @@
+     }
+
+     @Override
+-    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
++    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
+     public Map<String, String> createOrder(Long memberId, Long merchantId, String openid, String bizType,
+                                            String requestId) {
++        requirePaymentOutsideTransaction();
+         if (!selfCheckoutEnabled) {
+             throw new IllegalStateException("自助开通暂未开放，请联系官方人工开通");
+         }
+@@ -159,8 +160,9 @@
+     }
+
+     @Override
+-    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
++    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
+     public void reconcileOrder(String outTradeNo) {
++        requirePaymentOutsideTransaction();
+         OmsOrder order = orderMapper.selectOmsOrderByOrderSn(outTradeNo);
+         if (order == null || !Long.valueOf(0L).equals(order.getStatus())) return;
+         requireBizType(order.getBizType());
+@@ -316,4 +318,11 @@
+         public int getUsed() { return used; }
+         public int getRemaining() { return remaining; }
+     }
++    /** NEVER rejects proxied outer transactions; this also protects self/direct invocation before any local intent. */
++    private static void requirePaymentOutsideTransaction() {
++        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
++            throw new IllegalStateException("支付外呼必须在原业务事务外，不能挂起持锁事务继续执行");
++        }
++    }
++
+ }
