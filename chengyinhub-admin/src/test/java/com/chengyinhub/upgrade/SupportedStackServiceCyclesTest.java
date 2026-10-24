@@ -209,15 +209,19 @@ class SupportedStackServiceCyclesTest
             Object source = AopTestUtils.getUltimateTargetObject(context.getBean(cycle.source()));
             Object lazyEdge = ReflectionTestUtils.getField(source, cycle.field());
             Object managedTarget = context.getBean(cycle.target());
-            if (cycle.outboundSdkEdge()) {
-                // These former cycles now have an eager outbound SDK edge and no callback dependency.
-                assertThat(lazyEdge).isSameAs(managedTarget);
+            if (cycle.eagerAssemblyStarts()) {
+                // The SDK closure stays real even when this scenario's selected field is a lazy domain edge.
                 assertThat(context).hasSingleBean(WechatPaymentSdkGateway.class);
+                Object sdk = context.getBean(WechatPaymentSdkGateway.class);
                 Object facade = AopTestUtils.getUltimateTargetObject(context.getBean(WechatPayServiceImpl.class));
-                assertThat(ReflectionTestUtils.getField(facade, "gateway")).isSameAs(managedTarget);
+                assertThat(ReflectionTestUtils.getField(facade, "gateway")).isSameAs(sdk);
                 assertThat(Arrays.stream(WechatPaymentSdkGateway.class.getDeclaredFields())
                         .anyMatch(field -> field.getType() == com.chengyinhub.business.service.IWechatPayService.class
                                 || field.getType() == WechatPaymentCallbackRouter.class)).isFalse();
+            }
+            if (cycle.outboundSdkEdge()) {
+                // These selected fields are eager outbound SDK references, not lazy domain references.
+                assertThat(lazyEdge).isSameAs(managedTarget);
                 assertThat(unexpectedCalls).isEmpty();
                 return;
             }
