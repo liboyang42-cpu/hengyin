@@ -1,8 +1,19 @@
 diff --git a/chengyinhub-xcx/pages/roam/index.js b/chengyinhub-xcx/pages/roam/index.js
-index 2965313f..eee127b4 100644
+index cc13fa86..d21728bb 100644
 --- a/chengyinhub-xcx/pages/roam/index.js
 +++ b/chengyinhub-xcx/pages/roam/index.js
-@@ -93,7 +93,6 @@ const TILE_REVEAL_M = 110;
+@@ -38,6 +38,10 @@ const { readNonNegative } = require('../../utils/roam-history-metrics.js');
+ const { createIdleDetector } = require('../../utils/roam-idle.js');
+ const { acceptRoamLocation } = require('../../utils/roam-track-filter.js');
+ const { simplifyTrack, limitTrack } = require('../../utils/roam-track-simplify.js'); const { monthDay } = require('../../utils/month-day.js'); // 同行:本页 ui-integrity 基线按行号键
++const { attachRoamDebugProbes } = require('../../utils/roam-debug-probe.js');
++const { halfViewM, scaleForHalfViewM } = require('../../utils/map-scale.js');
++const { planMovePatch, trackPolyline } = require('../../utils/roam-progress.js');
++const { buildShareArch } = require('../../utils/roam-route-geometry.js');
+ const { isRecordList } = require('../../utils/response-shape.js');
+ const readSession = require('../../utils/session/login-reload.js');
+ const { fromHttpStatusAbnormal } = require('../../utils/transport/failure-envelope.js');
+@@ -93,7 +97,6 @@ const TILE_REVEAL_M = 110;
  // 揭雾边缘羽化倍率:核心全透到 1/FOG_FEATHER,向外渐隐到 FOG_FEATHER×半径。
  // 纯视觉;isPointRevealed / 到店判定仍用 REVEAL_M 硬半径,不受影响。
  const FOG_FEATHER = 1.6;
@@ -10,7 +21,7 @@ index 2965313f..eee127b4 100644
  const PLAYER_MK = 99;
  const STATUS_MARKER_ID = 99997;
  /* 后端真 POI(/api/roam/pois)的 marker id 基数。微信 <map> 的 marker id 契约是数字
-@@ -126,7 +125,7 @@ const BRAND = '#FFFFFF';
+@@ -126,7 +129,7 @@ const BRAND = '#FFFFFF';
  const GAME_STAR = MAP_AVATAR_COLORS.gameStar;
  // 顶部输入地址那一行占掉的高度。提示栈按它整体下让,不写死绝对 top —— 胶囊位置各机型不同。
  const SEARCH_ROW_H = 56;
@@ -19,7 +30,7 @@ index 2965313f..eee127b4 100644
  const SCALE_WALK = 17;       // 步行视角(半视野~280m):能看到街道网+POI 标签,对齐 Fog of World 中景
  const SCALE_PAUSE_MIN = 13;  // 暂停至少缩到此级别
  const OVERVIEW_PAD = 1.55;   // 暂停总览:轨迹半径 × 此系数 + 底栏留白(m)
-@@ -173,40 +172,17 @@ function buildOpeningEmojis(rand) {
+@@ -173,40 +176,17 @@ function buildOpeningEmojis(rand) {
  const ROAM_INTRO_RULE_VERSION = '2026-07-22';
  
  /** 迷雾渲染契约:
@@ -65,7 +76,15 @@ index 2965313f..eee127b4 100644
  // 注:hideLoading 全仓零消费方(死参数);真正抑制自动错误 toast 的开关是 silentError(app.js:343)。
  // 要自定义错误文案的调用方须传 { silentError: true },否则会被自动 toast 一次 + 自己再 toast 一次 = 双弹。
  function req(url, method, data, opts) {
-@@ -1252,19 +1228,7 @@ Page({
+@@ -853,6 +833,7 @@ Page({
+ 
+   onLoad(q) {
+     roamMemory(this); // 固定本页玩家归属；切号后的旧异步回包不得写进新玩家桶
++    attachRoamDebugProbes(this, !!(getApp().isDevEnv && getApp().isDevEnv())); // C:U-126 自动化探针只在开发版挂载
+     this._bindRoamNetwork(); // BL-03 断网提示
+     this._stats = { time: '00:00', shops: 0, explorePct: 0, distance: '0.0' };
+     this._elapsedSeconds = 0;
+@@ -1252,19 +1233,7 @@ Page({
  
    /** 历史 + 本会话轨迹重绘雾层(异步拉回 tiles 后调用) */
    _rebuildFogDisplay() {
@@ -86,7 +105,42 @@ index 2965313f..eee127b4 100644
    },
  
    _fetchRoamTiles() {
-@@ -3016,21 +2980,12 @@ Page({
+@@ -2907,31 +2876,13 @@ Page({
+     if (this.data.merchantOffline) this._fetchNearbyMerchants(this._c);
+   },
+ 
+-  /** 视距(中心到边缘 m) → 微信 map scale */
++  /** 视距(中心到边缘 m) ↔ 微信 map scale;阶梯表见 utils/map-scale(C:U-090) */
+   _halfViewM(scale) {
+-    if (scale >= 20) return 35;
+-    if (scale >= 19) return 70;
+-    if (scale >= 18) return 140;
+-    if (scale >= 17) return 280;
+-    if (scale >= 16) return 560;
+-    if (scale >= 15) return 1100;
+-    if (scale >= 14) return 2200;
+-    if (scale >= 13) return 4400;
+-    if (scale >= 12) return 8800;
+-    return 12000;
++    return halfViewM(scale);
+   },
+ 
+   _scaleForHalfViewM(halfM) {
+-    if (halfM <= 35) return 20;
+-    if (halfM <= 70) return 19;
+-    if (halfM <= 140) return 18;
+-    if (halfM <= 280) return 17;
+-    if (halfM <= 560) return 16;
+-    if (halfM <= 1100) return 15;
+-    if (halfM <= 2200) return 14;
+-    if (halfM <= 4400) return 13;
+-    if (halfM <= 8800) return 12;
+-    return SCALE_FAR;
++    return scaleForHalfViewM(halfM, SCALE_FAR);
+   },
+ 
+   _playerCenter() {
+@@ -3016,21 +2967,12 @@ Page({
        resolve(false);
      }
      (this.data.fogScreenLayers || []).forEach((layer) => this._deleteScreenFogFile(layer.src));
@@ -108,7 +162,7 @@ index 2965313f..eee127b4 100644
      this._fogStartPending = null;
      this._mapCtx = null;
    },
-@@ -3075,13 +3030,6 @@ Page({
+@@ -3075,13 +3017,6 @@ Page({
            this._fogScreenCv = node;
            this._fogScreenG = g;
            this._fogScreenSize = { width, height };
@@ -122,7 +176,7 @@ index 2965313f..eee127b4 100644
            this.setData({ fogPolys: [], fogScreenReady: false, fogScreenLayers: [], fogScreenGuard: true });
            this._finishFogSetup(true, generation);
            return;
-@@ -3280,263 +3228,6 @@ Page({
+@@ -3280,263 +3215,6 @@ Page({
      }, 1500);
    },
  
@@ -386,7 +440,7 @@ index 2965313f..eee127b4 100644
    _syncSparkCircles() {
      const sparks = (this._pois || []).filter((p) => p.state === 'fog' && p.cat === 'merchant').map((p) => ({
        latitude: p.lat, longitude: p.lng, radius: 9,
-@@ -3589,30 +3280,6 @@ Page({
+@@ -3589,41 +3267,9 @@ Page({
      }, 100);
    },
  
@@ -416,8 +470,65 @@ index 2965313f..eee127b4 100644
 -
    _flushTrackLine() {
      if (!this._track || !this._track.length) return;
-     this.setData({
-@@ -3963,16 +3630,10 @@ Page({
+-    this.setData({
+-      polyline: [{
+-        points: this._track.map((q) => ({ latitude: q.lat, longitude: q.lng })),
+-        color: '#FFFFFF',
+-        width: 3,
+-        borderColor: '#FFFFFF66',
+-        borderWidth: 1,
+-      }],
+-    });
++    this.setData({ polyline: trackPolyline(this._track) });
+   },
+ 
+   _enterWalkZoom() {
+@@ -3894,35 +3540,16 @@ Page({
+     this._fetchRunners(p);
+ 
+     const km = ((this._dist || 0) / 1000).toFixed(2);
+-    const patch = {};
+     if (km !== this._stats.distance) { this._stats.distance = km; this._rollStat('distance', km); }
+-
+-    const now = Date.now();
+-    if (!this._zoomLock && (!this._hold || now - this._hold > 3000)) {
+-      if (!this._centerTimer || now - this._centerTimer >= CENTER_MS) {
+-        this._centerTimer = now;
+-        patch.center = { lat: p.lat, lng: p.lng };
+-      }
+-    }
+-    if (!this._lineTimer || now - this._lineTimer >= LINE_MS) {
+-      this._lineTimer = now;
+-      if (this._track.length > 1) {
+-        patch.polyline = [{
+-          points: this._track.map((q) => ({ latitude: q.lat, longitude: q.lng })),
+-          color: '#FFFFFF',
+-          width: 3,
+-          borderColor: '#FFFFFF66',
+-          borderWidth: 1,
+-        }];
+-      }
+-    }
+-
+-    if (Object.keys(patch).length) this.setData(patch);
+-    // markers 全量重发节流(每 tick 重发是图层闪烁源之一);转向时 _updateHeading 清戳 → 本 tick 同步一次
+-    if (!this._mkTimer || now - this._mkTimer >= 600) {
+-      this._mkTimer = now;
+-      this._syncMarkers();
+-    }
++    // 镜头跟随 / 轨迹线 / marker 重发三条节流收口到 utils/roam-progress(C:U-091),纯函数有单测。
++    // 转向时 _updateHeading 清 _mkTimer(C:U-092),本 tick 由这里同步一次 marker。
++    const plan = planMovePatch({
++      now: Date.now(), player: p, track: this._track, zoomLocked: !!this._zoomLock,
++      holdAt: this._hold, centerAt: this._centerTimer, lineAt: this._lineTimer, markerAt: this._mkTimer,
++    }, { centerMs: CENTER_MS, lineMs: LINE_MS });
++    this._centerTimer = plan.centerAt; this._lineTimer = plan.lineAt; this._mkTimer = plan.markerAt;
++    if (Object.keys(plan.patch).length) this.setData(plan.patch);
++    if (plan.syncMarkers) this._syncMarkers();
+   },
+ 
+   _syncStats() {
+@@ -3963,16 +3590,10 @@ Page({
    _addReveal(p) {
      this._reveals.push({ lat: p.lat, lng: p.lng });
      if (this._markSeenNear(p)) { this._syncMarkers(); this._syncSparkCircles(); }
@@ -435,6 +546,97 @@ index 2965313f..eee127b4 100644
      }
      this._accumulateTile(p.lat, p.lng); // P2 接真:格子入上报队列
      const c = this._c; const cell = 60; const half = 600;
+@@ -4761,41 +4382,9 @@ Page({
+ 
+   // 轨迹 + POI 共用的 bbox 归一化:实时结束页(_calcArch)与历史足迹卡(R9-44)同源,
+   // 差别只在传进来的 track/pois/center。不生成轨迹里没有的点,首尾必进(见 _calcArch 的 tail 补点)。
++  // 几何收口到 utils/roam-route-geometry(C:U-117),与会话详情回放共用;画框参数见 buildShareArch。
+   _buildArchFrom(track, pois, center) {
+-    const W = 576; const H = 520; const padT = 100; const padB = 50; const padX = 60;
+-    const points = limitTrack(track);
+-    if (points.length < 2) return { archSegs: [], archPois: [], archEnd: {} };
+-    const c = center || points[0];
+-    const M = (p) => ({ x: (p.lng - c.lng) / m2lng(1, c.lat), y: -(p.lat - c.lat) / m2lat(1) });
+-    const pts = points.map(M);
+-    let x0 = 1e9; let y0 = 1e9; let x1 = -1e9; let y1 = -1e9;
+-    pts.forEach((p) => {
+-      x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y);
+-      x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y);
+-    });
+-    const s = Math.min((W - padX * 2) / Math.max(1, x1 - x0), (H - padT - padB) / Math.max(1, y1 - y0));
+-    const ox = (W - (x1 - x0) * s) / 2 - x0 * s;
+-    const oy = padT + (H - padT - padB - (y1 - y0) * s) / 2 - y0 * s;
+-    const X = (p) => p.x * s + ox; const Y = (p) => p.y * s + oy;
+-    const archSegs = [];
+-    for (let i = 1; i < pts.length; i++) {
+-      const ax = X(pts[i - 1]); const ay = Y(pts[i - 1]);
+-      const bx = X(pts[i]); const by = Y(pts[i]);
+-      const len = Math.hypot(bx - ax, by - ay);
+-      if (len === 0) continue;
+-      archSegs.push({
+-        i, x: Math.round(ax), y: Math.round(ay), len: Math.round(len) + 2,
+-        deg: Math.round(Math.atan2(by - ay, bx - ax) * 180 / Math.PI),
+-      });
+-    }
+-    const archPois = (Array.isArray(pois) ? pois : [])
+-      .filter((p) => p && p.lat != null && p.lng != null)
+-      .map((p, i) => {
+-        const m = M(p);
+-        return { i, x: Math.round(X(m)), y: Math.round(Y(m)), color: p.color };
+-      });
+-    const e = pts[pts.length - 1];
+-    return { archSegs, archPois, archEnd: { x: Math.round(X(e)), y: Math.round(Y(e)) } };
++    return buildShareArch(limitTrack(track), pois, center);
+   },
+ 
+   // share.idx / squarePostUnknown 仍是页面数据;只有「显不显示」交给场景栈(#572 单宿主收口)。
+@@ -5365,46 +4954,6 @@ Page({
+     this.openRoamHistory();
+   },
+ 
+-  // 自动化探针:清掉一切雾层看纯底图(仅验证脚本用)
+-  _probeClearFog() {
+-    if (this._fogFlushTimer) { clearTimeout(this._fogFlushTimer); this._fogFlushTimer = null; }
+-    this.setData({ fogPolys: [] });
+-  },
+-  // 自动化探针:导出雾位图 base64(仅验证脚本用)
+-  _probeFogPng() {
+-    if (!this._fogCv) return null;
+-    const u = this._fogCv.toDataURL('image/png');
+-    return u.slice(u.indexOf(',') + 1);
+-  },
+-
+-  _dbg() {
+-    return {
+-      fogMode: this._fogMode || 'none',
+-      fogFlushes: this._fogFlushCount || 0,
+-      fogCv: !!this._fogCv,
+-      fogErr: this._fogErr || null,
+-      fogPolys: (this.data.fogPolys || []).length,
+-      fogUpdates: this._fogUpdates || 0,
+-      reveals: (this._reveals || []).length,
+-      history: (this._historyReveals || []).length,
+-      pois: (this._pois || []).length,
+-      poisReal: (this._pois || []).filter((p) => p.nodeId).length, // /api/map/nearby 报名商家
+-      poisRoam: (this._pois || []).filter((p) => p._roamId).length, // /api/roam/pois(未部署=0)
+-      poisSeen: (this._pois || []).filter((p) => p.state === 'seen').length, // 雾揭开过的商家
+-      hasPlayer: !!this._player,
+-      // #22 去重自证:卡数 vs 卡上店名去重后的个数,相等即无同名重复
+-      nearbyCards: (this.data.nearbyPois || []).length,
+-      nearbyNames: (this.data.nearbyPois || []).map((m) => m.name).join('|'),
+-      shopsDedup: doneShopCount(this._pois || []),
+-      shopsRaw: (this._pois || []).filter((p) => p.state === 'done' && p.cat === 'merchant').length,
+-      stamp: stampProgress(this._pois || []),
+-      // #23 自证:阈值是否真来自配置 + 结算勋章是否来自后端(而非本地造)
+-      shopBadgeThreshold: this._shopBadgeThreshold(),
+-      shopBadgeCfgLoaded: !!this._shopBadgeCfg,
+-      shopMedalFromServer: !!this._shopMedalFromServer,
+-    };
+-  },
+-
+   _startClock() {
+     this._stopClock();
+     this._sessionClock = createSessionClock();
 diff --git a/chengyinhub-xcx/tests/unit/play-ui-contract.test.js b/chengyinhub-xcx/tests/unit/play-ui-contract.test.js
 index 715c3327..f86d0200 100644
 --- a/chengyinhub-xcx/tests/unit/play-ui-contract.test.js
@@ -695,6 +897,51 @@ index 55cef5dd..d03b27b5 100644
 +    assert.strictEqual(page[name], undefined, name + ' 是已删除的不可达降级路径');
 +  });
  });
+diff --git a/chengyinhub-xcx/tests/unit/roam-fog-legacy-unreachable.test.js b/chengyinhub-xcx/tests/unit/roam-fog-legacy-unreachable.test.js
+deleted file mode 100644
+index 5ec0f953..00000000
+--- a/chengyinhub-xcx/tests/unit/roam-fog-legacy-unreachable.test.js
++++ /dev/null
+@@ -1,39 +0,0 @@
+-'use strict'
+-
+-// C:U-089:旧 overlay/poly 迷雾降级链路生产不可达,待删(删除补丁见
+-// docs/delivery/defer-20261024/DEFER-ROAM-C00-roam-page.patch;落地需 C00 同步重排
+-// tests/lint/ui-integrity-baseline.js 的行号键)。在删除前先把「不可达」锁住:
+-// 一旦有人新增 'overlay' 赋值或从别处调用 poly 入口,这条测试判红,删除补丁就不再安全。
+-const test = require('node:test')
+-const assert = require('node:assert/strict')
+-const fs = require('node:fs')
+-const path = require('node:path')
+-
+-const src = fs.readFileSync(path.join(__dirname, '../../pages/roam/index.js'), 'utf8')
+-
+-function methodBody(name) {
+-  const start = src.indexOf('\n  ' + name + '(')
+-  assert.ok(start >= 0, '找不到方法 ' + name)
+-  const next = src.slice(start + 1).search(/\n  [_a-zA-Z]\w*\([^)]*\) \{/)
+-  return src.slice(start, next < 0 ? undefined : start + 1 + next)
+-}
+-
+-test("U-089: 生产代码没有任何 _fogMode = 'overlay' 赋值", () => {
+-  assert.doesNotMatch(src, /this\._fogMode\s*=\s*'overlay'/)
+-})
+-
+-test('U-089: poly 唯一入口 _fogToPoly 只被 _fogFallbackToPoly 调,后者只在 overlay 守卫下的 _flushFogOverlay 内调', () => {
+-  const toPolyCalls = src.match(/this\._fogToPoly\(\)/g) || []
+-  assert.equal(toPolyCalls.length, 1)
+-  assert.match(methodBody('_fogFallbackToPoly'), /this\._fogToPoly\(\)/)
+-  const fallbackCalls = src.match(/this\._fogFallbackToPoly\(\)/g) || []
+-  const flush = methodBody('_flushFogOverlay')
+-  assert.equal((flush.match(/this\._fogFallbackToPoly\(\)/g) || []).length, fallbackCalls.length,
+-    '_fogFallbackToPoly 只能从 _flushFogOverlay 内调用')
+-  assert.match(flush, /^\s*_flushFogOverlay\(\) \{\s*if \(this\._fogMode !== 'overlay'/m)
+-})
+-
+-test('U-089: _initFogGrid 只从 _fogToPoly 与 _rebuildFogDisplay 的 this._fog 分支进入(_fog 只由它自己赋值)', () => {
+-  assert.equal((src.match(/this\._fog = \{/g) || []).length, 1)
+-  assert.match(methodBody('_initFogGrid'), /this\._fog = \{/)
+-})
 diff --git a/chengyinhub-xcx/tests/unit/roam-fog-persist-feather.test.js b/chengyinhub-xcx/tests/unit/roam-fog-persist-feather.test.js
 index a84891ed..ea167467 100644
 --- a/chengyinhub-xcx/tests/unit/roam-fog-persist-feather.test.js

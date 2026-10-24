@@ -1,7 +1,7 @@
 'use strict'
 
 // C:U-089:旧 overlay/poly 迷雾降级链路生产不可达,待删(删除补丁见
-// docs/delivery/defer-20261024/DEFER-ROAM-U089-fog-dead-code.patch;落地需 C00 同步重排
+// docs/delivery/defer-20261024/DEFER-ROAM-C00-roam-page.patch;落地需 C00 同步重排
 // tests/lint/ui-integrity-baseline.js 的行号键)。在删除前先把「不可达」锁住:
 // 一旦有人新增 'overlay' 赋值或从别处调用 poly 入口,这条测试判红,删除补丁就不再安全。
 const test = require('node:test')
