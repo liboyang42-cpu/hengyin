@@ -1,0 +1,12 @@
+{
+  "status": "STATIC_ONLY",
+  "parent": "f079889b4ba98c83aa754ced8e9540058c100197",
+  "B_required": "9d59271b0d82344b13f7b66ca2e0fb1751d14518",
+  "production_file": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+  "sha256": "186ccf29c077b269691a0b671041f55549d5c338f26db2294942ef165dda5bb5",
+  "source_lines_added": 15,
+  "factories_seeds_tests_CI_schema_G_B_changed": false,
+  "denial_currentclaim_topic_wrapper_notification_methods": "unchanged",
+  "Java_MySQL_CI_DDL_SDK": "NOT_RUN",
+  "root_477_failures": "retained; B owns factory/seed repair; this head does not claim those tests pass"
+}

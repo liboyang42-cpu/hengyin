@@ -2285,6 +2285,19 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 if (!matchesFrozenWechatAmount(registration, resultMap.get("total"))) {
                     return registrationPaymentCallbackFailure(outTradeNo, "amount_mismatch");
                 }
+                if (Integer.valueOf(3).equals(registration.getPaymentStatus())
+                        && (Integer.valueOf(1).equals(registration.getRegistrationStatus())
+                            || Integer.valueOf(3).equals(registration.getRegistrationStatus())
+                            || Integer.valueOf(4).equals(registration.getRegistrationStatus()))) {
+                    var recovery = verifiedPaymentFacts.findPaymentRecovery(consumed.reference())
+                            .orElseThrow(() -> new IllegalStateException("原支付关闭冲突缺少持久恢复任务"));
+                    if (recovery.id() <= 0 || recovery.businessId() != registration.getId()
+                            || !consumed.reference().equals(recovery.original().reference()) || recovery.state() != 4) {
+                        throw new IllegalStateException("原支付关闭恢复身份或状态冲突");
+                    }
+                    return registrationPaymentCallbackFailure(outTradeNo,
+                            "closed_registration_original_payment_recovery_required");
+                }
                 coopSettlementClaimService.requirePaidHalfStateCashAdmission(registration.getId(), consumed.reference());
                 if (lockedOrder.topic() != null && Integer.valueOf(1).equals(lockedOrder.topic().getIsSettlement())
                         && lockedOrder.rows().stream().anyMatch(row -> !isSameCompletedPayment(row, verified.transactionId()))) {
@@ -3547,6 +3560,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 || !fact.transactionId().equals(receipt.transactionId())
                 || !verified.reference().equals(receipt.reference()))
             throw new IllegalStateException("原支付消费事实关联冲突或未持久化");
+        // The exact original receipt above is this owner's proof; complete its ticket in the same Tx.
+        verifiedPaymentFacts.completePaymentRecovery(verified.reference(), registrationId);
     }
 
     private WechatVerifiedPaymentFactService.Stored checkedVerifiedPayment(Map<String, String> facts) {
