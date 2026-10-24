@@ -532,12 +532,12 @@
       "note": "Ten fixed real-MySQL source cases: original paid-half repair boundary, durable late-success identity, current approved-refund fences, RR reads and family rollback. Canonical UUID scratch admission; terminal fixtures do not constitute a full A callback or provider acceptance."
     },
     "architecture-day-npc-voice-asr": {
-      "registered_source": "b8b80968014a03ed4c9510db08b303e6c7e11794",
+      "registered_source": "f61b8ea8c829d0b4e050a8b61ac592ae819a8a09",
       "classes": [
         "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentMySqlIT",
         "com.chengyinhub.business.it.NpcAsrIntentMySqlIT"
       ],
-      "note": "Composed donor sources E c7a60fa + D 6f32127/b8b8096 + E 3856fde. Final runner source SHA must identify the integrated tree; no donor green is inherited. Ten exact cases."
+      "note": "Original E voice3 plus D ASR7 and C f61b8ea8 voice1. Eleven declared cases. Final runner SHA must identify integrated source; no donor green is inherited."
     },
     "architecture-day-clm-commerce-proof": {
       "registered_source": "9f0c44025d42922bdc61f639075c77373792fc31",
@@ -657,7 +657,7 @@
         "com.chengyinhub.business.service.RefundPayoutMybatisIntegrationTest",
         "com.chengyinhub.business.service.CoopDepositRefundMybatisIntegrationTest"
       ],
-      "note": "62 unique registered storage classes, 782 declared cases, whose source changed from reviewed public 2ec68899. One matrix max-parallel20, no duplicate classes. Source SHA, original XML counts, zero skip and independent CLEAN required. Static inventory is not execution, HTTP, provider, restart, load or deployment acceptance."
+      "note": "62 unique registered storage classes, 783 declared cases, whose source changed from reviewed public 2ec68899. One matrix max-parallel20, no duplicate classes. Source SHA, original XML counts, zero skip and independent CLEAN required. Static inventory is not execution, HTTP, provider, restart, load or deployment acceptance."
     }
   },
   "classes": {
@@ -678,12 +678,12 @@
       "note": "C4edd source-only candidate: canonical incremental typed migration and actual Mapper/transaction owner, old broadcast checks retained; NOT_RUN on this integration."
     },
     "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentMySqlIT": {
-      "tests": 3,
+      "tests": 4,
       "storage": [
         "mysql"
       ],
       "gates": {},
-      "note": "E c7a60fa original asset intent, paid create crash/unknown and stale version. Minimal profile schema component scope; no provider/device proof."
+      "note": "Original three E cases plus C f61b8ea8 confirmed-independent-request real MySQL case. Original identity, same sample distinct attempts, duplicate key and UNKNOWN coexistence; no provider/device proof."
     },
     "com.chengyinhub.business.it.NpcAsrIntentMySqlIT": {
       "tests": 7,

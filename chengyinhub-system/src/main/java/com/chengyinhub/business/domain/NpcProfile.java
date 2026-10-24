@@ -41,6 +41,10 @@ public class NpcProfile
     /** 本次复刻请求已取得声音权利人明确授权；仅作接口入参，不落库。 */
     private Boolean voiceConsent;
     /** Enrollment recovery metadata, only populated by the authorized voice management service. */
+    private String voiceRequestId;
+    private Long voicePreviousIntentId;
+    private Boolean voiceDuplicateChargeConsent;
+    private Boolean voiceSelected;
     private Long voiceIntentId;
     private String voiceIntentState;
     private String voiceReasonCode;
@@ -61,6 +65,14 @@ public class NpcProfile
     public Boolean getVoiceConsent() { return voiceConsent; }
     public void setVoiceConsent(Boolean voiceConsent) { this.voiceConsent = voiceConsent; }
 
+    public String getVoiceRequestId() { return voiceRequestId; }
+    public void setVoiceRequestId(String value) { voiceRequestId = value; }
+    public Long getVoicePreviousIntentId() { return voicePreviousIntentId; }
+    public void setVoicePreviousIntentId(Long value) { voicePreviousIntentId = value; }
+    public Boolean getVoiceDuplicateChargeConsent() { return voiceDuplicateChargeConsent; }
+    public void setVoiceDuplicateChargeConsent(Boolean value) { voiceDuplicateChargeConsent = value; }
+    public Boolean getVoiceSelected() { return voiceSelected; }
+    public void setVoiceSelected(Boolean value) { voiceSelected = value; }
     public Long getVoiceIntentId() { return voiceIntentId; }
     public void setVoiceIntentId(Long value) { voiceIntentId = value; }
     public String getVoiceIntentState() { return voiceIntentState; }

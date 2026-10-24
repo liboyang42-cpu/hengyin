@@ -29,31 +29,33 @@ class NpcVoiceNodeStatusProjectionTest
     @Test void unknownOriginalIntentIsNotLostByTheNodeStatusWhitelist() {
         NpcProfile row=new NpcProfile();row.setVoiceStatus(1);row.setVoiceSample("media-asset:73");
         row.setVoiceIntentId(17L);row.setVoiceIntentState("UNKNOWN");row.setVoiceReasonCode("VOICE_PROVIDER_OUTCOME_UNKNOWN");
-        row.setVoiceId("private-known-id");when(npc.voiceStatus(900L,31L)).thenReturn(row);
+        row.setVoiceId("private-known-id");when(npc.voiceStatus(88L,900L,31L,null)).thenReturn(row);
         AjaxResult result=controller().npcVoiceStatus(request());assertEquals(200,result.get(AjaxResult.CODE_TAG));
-        Map<?,?> data=assertInstanceOf(Map.class,result.get(AjaxResult.DATA_TAG));assertEquals(5,data.size());
+        Map<?,?> data=assertInstanceOf(Map.class,result.get(AjaxResult.DATA_TAG));assertEquals(9,data.size());
+        assertNull(data.get("voicePreviousIntentId"));assertNull(data.get("voiceRequestId"));assertNull(data.get("voiceSelected"));
+        assertEquals(java.util.List.of(),data.get("voiceHistory"));
         assertEquals(1,data.get("voiceStatus"));assertEquals("media-asset:73",data.get("voiceSample"));
         assertEquals(17L,data.get("voiceIntentId"));assertEquals("UNKNOWN",data.get("voiceIntentState"));
         assertEquals("VOICE_PROVIDER_OUTCOME_UNKNOWN",data.get("voiceReasonCode"));assertFalse(data.containsKey("voiceId"));
-        verify(npc).voiceStatus(900L,31L);verify(npc,never()).voiceEnroll(any(),any(),any(),any());
+        verify(npc).voiceStatus(88L,900L,31L,null);verify(npc,never()).voiceEnroll(any(),any(),any(),any(),any(),any(),anyBoolean());
     }
     @Test void absentProfileStillReturnsNoneWithoutFabricatingAnIntent() {
         AjaxResult result=controller().npcVoiceStatus(request());Map<?,?> data=assertInstanceOf(Map.class,result.get(AjaxResult.DATA_TAG));
         assertEquals(0,data.get("voiceStatus"));assertNull(data.get("voiceSample"));
         assertNull(data.get("voiceIntentId"));assertNull(data.get("voiceIntentState"));assertNull(data.get("voiceReasonCode"));
-        verify(npc,never()).voiceEnroll(any(),any(),any(),any());
+        verify(npc,never()).voiceEnroll(any(),any(),any(),any(),any(),any(),anyBoolean());
     }
     @Test void stateUnavailableIsAnErrorRatherThanSuccessfulNone() {
-        when(npc.voiceStatus(900L,31L)).thenThrow(new NpcVoiceEnrollmentService.StateUnavailableException());
+        when(npc.voiceStatus(88L,900L,31L,null)).thenThrow(new NpcVoiceEnrollmentService.StateUnavailableException());
         AjaxResult result=controller().npcVoiceStatus(request());assertEquals(500,result.get(AjaxResult.CODE_TAG));
-        assertNull(result.get(AjaxResult.DATA_TAG));verify(npc,never()).voiceEnroll(any(),any(),any(),any());
+        assertNull(result.get(AjaxResult.DATA_TAG));verify(npc,never()).voiceEnroll(any(),any(),any(),any(),any(),any(),anyBoolean());
     }
     @Test void nodeEnrollmentAlreadyReturnsTheOriginalMetadataWithoutASecondProjection() throws Exception {
         NpcProfile row=new NpcProfile();row.setVoiceStatus(1);row.setVoiceIntentId(17L);row.setVoiceIntentState("UNKNOWN");
-        when(npc.voiceEnroll(88L,900L,31L,"media-asset:73")).thenReturn(row);
+        when(npc.voiceEnroll(88L,900L,31L,"media-asset:73",null,null,false)).thenReturn(row);
         AjaxResult result=controller().npcVoiceEnroll(request());assertSame(row,result.get(AjaxResult.DATA_TAG));
         String json=new ObjectMapper().writeValueAsString(result.get(AjaxResult.DATA_TAG));
         assertTrue(json.contains("\"voiceIntentId\":17"));assertTrue(json.contains("\"voiceIntentState\":\"UNKNOWN\""));assertFalse(json.contains("voiceVersion"));
-        verify(npc,times(1)).voiceEnroll(88L,900L,31L,"media-asset:73");
+        verify(npc,times(1)).voiceEnroll(88L,900L,31L,"media-asset:73",null,null,false);
     }
 }

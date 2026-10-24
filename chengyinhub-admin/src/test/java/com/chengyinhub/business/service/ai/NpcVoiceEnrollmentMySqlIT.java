@@ -63,6 +63,8 @@ class NpcVoiceEnrollmentMySqlIT
         try(Connection connection=dataSource.getConnection()) {ScriptUtils.executeSqlScript(connection,new FileSystemResource(migration));}
         assertEquals(4,jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.table_constraints WHERE constraint_schema=? "
                 +"AND table_name='npc_voice_enrollment_intent' AND constraint_type='CHECK' AND enforced='YES'",Integer.class,schema));
+        Path attemptsMigration=migration.resolveSibling("migration_npc_voice_confirmed_attempt_20261024.sql");
+        try(Connection connection=dataSource.getConnection()) {ScriptUtils.executeSqlScript(connection,new FileSystemResource(attemptsMigration));}
         org.apache.ibatis.session.Configuration config=new org.apache.ibatis.session.Configuration();
         config.setLocalCacheScope(LocalCacheScope.SESSION);
         config.setEnvironment(new Environment("voice-intent",new SpringManagedTransactionFactory(),dataSource));
@@ -110,8 +112,8 @@ class NpcVoiceEnrollmentMySqlIT
             assertEquals(id,enroll(second,2).getVoiceIntentId());assertEquals("READY",state(555L));
             assertEquals(1,jdbc.queryForObject("SELECT COUNT(*) FROM npc_voice_enrollment_intent",Integer.class));verify(provider,times(1)).enroll(anyString());
             assertThrows(org.springframework.dao.DataAccessException.class,()->jdbc.update("INSERT INTO npc_voice_enrollment_intent "
-                +"(npc_id,scope_type,scope_id,actor_member_id,sample_sha256,sample_reference,state,profile_version,created_at,updated_at) "
-                +"SELECT npc_id,scope_type,scope_id,actor_member_id,sample_sha256,sample_reference,'PREPARED',profile_version,NOW(),NOW() "
+                +"(request_id,npc_id,scope_type,scope_id,actor_member_id,sample_sha256,sample_reference,state,profile_version,created_at,updated_at) "
+                +"SELECT request_id,npc_id,scope_type,scope_id,actor_member_id,sample_sha256,sample_reference,'PREPARED',profile_version,NOW(),NOW() "
                 +"FROM npc_voice_enrollment_intent WHERE npc_id=555"));
         } finally {release.countDown();executor.shutdownNow();assertTrue(executor.awaitTermination(10,TimeUnit.SECONDS));}
     }
@@ -144,4 +146,23 @@ class NpcVoiceEnrollmentMySqlIT
         assertEquals("voice-original",jdbc.queryForObject("SELECT voice_id FROM npc_voice_enrollment_intent WHERE npc_id=556",String.class));
         assertEquals(0,enroll(first,4).getVoiceStatus());verify(provider,times(1)).enroll(anyString());
     }
+    @Test void confirmedIndependentSameSampleKeepsOriginalAndDatabaseRejectsSameRequestDifferentSample() {
+        doThrow(new AiServiceException("unknown")).when(provider).enroll(anyString());
+        NpcProfile original=enroll(first,2);
+        String request="00000000-0000-4000-8000-000000000001";
+        doReturn("voice-independent").when(provider).enroll(anyString());
+        NpcProfile next=first.enroll(88L,2,31L,555L,"media-asset:73",request,original.getVoiceIntentId(),true,()->"approved");
+        assertEquals("READY",next.getVoiceIntentState()); assertNotEquals(original.getVoiceIntentId(),next.getVoiceIntentId());
+        assertEquals(2,jdbc.queryForObject("SELECT COUNT(*) FROM npc_voice_enrollment_intent",Integer.class));
+        assertEquals("UNKNOWN",jdbc.queryForObject("SELECT state FROM npc_voice_enrollment_intent WHERE id=?",String.class,original.getVoiceIntentId()));
+        assertEquals(next.getVoiceIntentId(),second.enroll(88L,2,31L,555L,"media-asset:73",request,original.getVoiceIntentId(),true,()->"never-sign").getVoiceIntentId());
+        assertThrows(NpcVoiceEnrollmentService.Rejected.class,()->second.enroll(88L,2,31L,555L,"media-asset:74",request,original.getVoiceIntentId(),true,()->"never-sign"));
+        assertThrows(NpcVoiceEnrollmentService.Rejected.class,()->second.enroll(88L,2,31L,555L,"media-asset:73",
+                "00000000-0000-4000-8000-000000000002",original.getVoiceIntentId(),true,()->"never-sign"));
+        assertThrows(org.springframework.dao.DataAccessException.class,()->jdbc.update(
+                "UPDATE npc_voice_enrollment_intent SET request_id=? WHERE id=?",request,original.getVoiceIntentId()));
+        assertEquals("voice-independent",jdbc.queryForObject("SELECT voice_id FROM npc_profile WHERE id=555",String.class));
+        verify(provider,times(2)).enroll(anyString());
+    }
+
 }

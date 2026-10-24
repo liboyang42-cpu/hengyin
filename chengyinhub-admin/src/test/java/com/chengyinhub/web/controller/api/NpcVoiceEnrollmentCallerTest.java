@@ -128,4 +128,32 @@ class NpcVoiceEnrollmentCallerTest
             verifyNoInteractions(held.fixture.intents);verify(held.fixture.provider,never()).enroll(anyString());
         }
     }
+    @Test void explicitIndependentRequestKeepsOriginalThroughActualMediaAndCallerBoundaries() {
+        try(MockedStatic<FileOssUploadUtils> signatures=mockStatic(FileOssUploadUtils.class)) {
+            signatures.when(()->FileOssUploadUtils.generateShortLivedPresignedUrl(OBJECT_PATH,300)).thenReturn(PRIVATE_INPUT);
+            for(boolean merchant:new boolean[]{true,false}) {
+                Caller caller=new Caller(merchant);
+                doThrow(new AiServiceException("unknown")).when(caller.fixture.provider).enroll(PRIVATE_INPUT);
+                assertEquals("UNKNOWN",caller.enroll());Long original=caller.fixture.row().getId();
+                String request="00000000-0000-4000-8000-000000000003";
+                NpcProfile input=new NpcProfile();input.setVoiceSample(SAMPLE);input.setVoiceConsent(true);
+                input.setVoiceRequestId(request);input.setVoicePreviousIntentId(original);input.setVoiceDuplicateChargeConsent(false);
+                if(merchant)assertEquals(500,caller.merchant.npcVoiceEnroll(input).get("code"));
+                else assertThrows(com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService.Rejected.class,
+                        ()->caller.node.voiceEnroll(ACTOR,ACTOR,SCOPE,SAMPLE,request,original,false));
+                verify(caller.fixture.provider,times(1)).enroll(PRIVATE_INPUT);
+                doReturn("voice-confirmed-new").when(caller.fixture.provider).enroll(PRIVATE_INPUT);
+                input.setVoiceDuplicateChargeConsent(true);
+                if(merchant) {
+                    AjaxResult reply=caller.merchant.npcVoiceEnroll(input);
+                    assertEquals(200,reply.get("code"));assertEquals(request,reply.get("voiceRequestId"));
+                } else assertEquals(request,caller.node.voiceEnroll(ACTOR,ACTOR,SCOPE,SAMPLE,request,original,true).getVoiceRequestId());
+                assertEquals("UNKNOWN",caller.fixture.row().getState());assertEquals(original,caller.fixture.row().getId());
+                assertEquals(2,caller.fixture.rows.size());verify(caller.fixture.provider,times(2)).enroll(PRIVATE_INPUT);
+                if(merchant)verify(caller.merchantAccess,atLeastOnce()).require(ACTOR,MerchantPermission.PROFILE_WRITE);
+                else verify(caller.nodeAccess,atLeastOnce()).requireOwnLiveNode(ACTOR,SCOPE);
+            }
+        }
+    }
+
 }

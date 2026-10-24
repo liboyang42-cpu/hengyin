@@ -3,6 +3,8 @@
 <mapper namespace="com.chengyinhub.business.mapper.NpcVoiceEnrollmentMapper">
   <resultMap id="Intent" type="com.chengyinhub.business.domain.NpcVoiceEnrollment">
     <id column="id" property="id"/>
+    <result column="request_id" property="requestId"/>
+    <result column="previous_intent_id" property="previousIntentId"/>
     <result column="npc_id" property="npcId"/>
     <result column="scope_type" property="scopeType"/>
     <result column="scope_id" property="scopeId"/>
@@ -21,16 +23,30 @@
       AND scope_id=#{scopeId} AND del_flag='0' FOR UPDATE
   </select>
   <select id="find" resultMap="Intent" useCache="false" flushCache="true">
-    SELECT * FROM npc_voice_enrollment_intent WHERE npc_id=#{npcId} AND sample_sha256=#{sampleSha256} FOR UPDATE
+    SELECT * FROM npc_voice_enrollment_intent WHERE npc_id=#{npcId} AND sample_sha256=#{sampleSha256}
+      AND request_id=CONCAT('sample:',#{sampleSha256}) FOR UPDATE
   </select>
   <select id="findUnresolved" resultMap="Intent" useCache="false" flushCache="true">
     SELECT * FROM npc_voice_enrollment_intent WHERE npc_id=#{npcId} AND state IN ('IN_FLIGHT','UNKNOWN')
     ORDER BY id LIMIT 1 FOR UPDATE
   </select>
+  <select id="findRequest" resultMap="Intent" useCache="false" flushCache="true">
+    SELECT * FROM npc_voice_enrollment_intent WHERE npc_id=#{npcId} AND request_id=#{requestId} FOR UPDATE
+  </select>
+  <select id="findById" resultMap="Intent" useCache="false" flushCache="true">
+    SELECT * FROM npc_voice_enrollment_intent WHERE npc_id=#{npcId} AND id=#{id} FOR UPDATE
+  </select>
+  <select id="findLatest" resultMap="Intent" useCache="false" flushCache="true">
+    SELECT * FROM npc_voice_enrollment_intent WHERE npc_id=#{npcId} ORDER BY id DESC LIMIT 1 FOR UPDATE
+  </select>
+  <select id="history" resultMap="Intent" useCache="false" flushCache="true">
+    SELECT * FROM npc_voice_enrollment_intent WHERE npc_id=#{npcId} AND actor_member_id=#{actorMemberId}
+    ORDER BY id DESC LIMIT 20 FOR UPDATE
+  </select>
   <insert id="insert" useGeneratedKeys="true" keyProperty="id">
     INSERT INTO npc_voice_enrollment_intent
-    (npc_id,scope_type,scope_id,actor_member_id,sample_sha256,sample_reference,state,profile_version,created_at,updated_at)
-    VALUES (#{npcId},#{scopeType},#{scopeId},#{actorMemberId},#{sampleSha256},#{sampleReference},'PREPARED',#{profileVersion},NOW(6),NOW(6))
+    (request_id,previous_intent_id,npc_id,scope_type,scope_id,actor_member_id,sample_sha256,sample_reference,state,profile_version,created_at,updated_at)
+    VALUES (#{requestId},#{previousIntentId},#{npcId},#{scopeType},#{scopeId},#{actorMemberId},#{sampleSha256},#{sampleReference},'PREPARED',#{profileVersion},NOW(6),NOW(6))
   </insert>
   <update id="claim">
     UPDATE npc_voice_enrollment_intent SET state='IN_FLIGHT',updated_at=NOW(6) WHERE id=#{id} AND state='PREPARED'
@@ -39,6 +55,6 @@
     UPDATE npc_voice_enrollment_intent SET state=#{state},voice_id=#{voiceId},reason_code=#{reasonCode},
       profile_version=#{profileVersion},updated_at=NOW(6)
     WHERE id=#{id} AND npc_id=#{npcId} AND scope_type=#{scopeType} AND scope_id=#{scopeId}
-      AND sample_sha256=#{sampleSha256} AND state IN ('IN_FLIGHT','UNKNOWN','PENDING','READY','NOT_SENT')
+      AND request_id=#{requestId} AND sample_sha256=#{sampleSha256} AND state IN ('IN_FLIGHT','UNKNOWN','PENDING','READY','NOT_SENT')
   </update>
 </mapper>

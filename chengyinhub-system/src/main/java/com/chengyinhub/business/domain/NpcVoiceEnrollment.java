@@ -4,6 +4,8 @@ package com.chengyinhub.business.domain;
 public class NpcVoiceEnrollment
 {
     private Long id;
+    private String requestId;
+    private Long previousIntentId;
     private Long npcId;
     private Integer scopeType;
     private Long scopeId;
@@ -14,6 +16,11 @@ public class NpcVoiceEnrollment
     private String voiceId;
     private String reasonCode;
     private Long profileVersion;
+
+    public String getRequestId() { return requestId; }
+    public void setRequestId(String value) { requestId = value; }
+    public Long getPreviousIntentId() { return previousIntentId; }
+    public void setPreviousIntentId(Long value) { previousIntentId = value; }
 
     public Long getId() { return id; }
     public void setId(Long value) { id = value; }

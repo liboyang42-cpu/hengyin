@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T17:50:56Z",
+  "updated_utc": "2026-10-24T18:02:56Z",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -31,14 +31,15 @@
       ]
     },
     "C": {
-      "state": "implementation_dispatched",
-      "task": "Implement explicitly confirmed independent voice enrollment request after UNKNOWN; preserve original recovery identity",
+      "state": "delivered_integrated_pending_final_validation",
+      "task": "Full voice confirmed-new-request source and both client callers integrated; final generated ledger and unified validation pending",
       "thread_id": "01a16a22-c697-7637-ae29-cdff6341000b",
       "host_id": "durable",
       "owned_symbols": [
         "Voice enrollment API/service and client voice confirmation/recovery journal",
         "Direct voice fixtures and additive migration if needed"
-      ]
+      ],
+      "delivery_sha": "f61b8ea8c829d0b4e050a8b61ac592ae819a8a09"
     },
     "D": {
       "state": "implementation_dispatched",
@@ -496,7 +497,7 @@
     "continuation": "Read public code through GitHub; deliver full source diff in chat. Root applies and scans before public writes; no executor rebuild or unscanned publishing."
   },
   "pending_business_questions": [],
-  "current_working_tree": "9e960ac85 committed composition plus current ownership update; B/C/D/G remain in implementation with live original handles; no new source delivery, no interim tests or review",
+  "current_working_tree": "C f61 full29-file source applied with root migration dependency and declaration-count wiring. B/G/D still implementing; final ledger generation and all verification deferred.",
   "new_source_blockers_current": [
     "CI plan negative control fails on precise refund scratch-DDL admission; Java has not started"
   ],
@@ -510,7 +511,7 @@
     "preserve_guards_and_test_assertions": true,
     "final_gate": "Collect required code, callers and fixtures; freeze one complete candidate; then conduct consolidated review and regression"
   },
-  "previous_goal_turn_classification": "VERIFIED_WAIT: bounded polls confirmed all four assigned turns inProgress with actual execution markers; new G/D/C implementation commentary collected, no completed patch yet",
+  "previous_goal_turn_classification": "PROGRESS: collected complete C previous turn, integrated29 source files and migration/real-storage registry callers without audit or regression",
   "latest_fixture_integration": {
     "base": "8490765f0572dae8ec3468f4e75d0ff6f4760b12",
     "A": "Three cancellation/publish fixtures: current club owner and capture/observe/apply caller wiring",
@@ -568,11 +569,11 @@
       "reported": "Production verified-seat consumer and original-freeze caller wired; preparing fixtures; no complete delivery yet"
     },
     "B": {
-      "cursor": "2cb81ed8-1eec-4baf-ba82-34145ba14485:3",
+      "cursor": "2cb81ed8-1eec-4baf-ba82-34145ba14485:4",
       "turn": "01a16ef9-8b89-73e6-8b3c-abacd5b9a72a",
       "state": "inProgress",
       "marker": "exec-11589dbd-5668-4beb-aa3f-f90e2a0475e6",
-      "reported": "Existing receipt CHECK conserves refunded amount; user exact-conservation answer delivered; do not relax CHECK or mark question unanswered"
+      "reported": "Acknowledged exact per-refund conservation and lower/upper bounds; CHECK unchanged, no Mapper/DTO/migration required; still inProgress"
     },
     "D": {
       "cursor": "1d9ee3e9-b0d3-48c0-8976-625c06845126:2",
@@ -582,11 +583,23 @@
       "reported": "Reusing reservation ledger/recovery worker; original reservation precedes ASR_STARTED; no delivery yet"
     },
     "C": {
-      "cursor": "44c18d1e-8e5a-4abb-89e4-7e129265b5bd:2",
+      "cursor": "44c18d1e-8e5a-4abb-89e4-7e129265b5bd:3",
       "turn": "01a16ef9-4e08-717f-ad39-fb548e29e55a",
-      "state": "inProgress",
-      "marker": "exec-4b8fbdb6-54dd-4aca-9ff2-6c80756b804e",
-      "reported": "Backend independent requestId and original binding wired; client bounded account/scope journal in progress; no delivery yet"
+      "state": "completed_delivered_integrated",
+      "source": "f61b8ea8c829d0b4e050a8b61ac592ae819a8a09",
+      "reported": "Complete source delivered and applied; root migration/count wiring added; not runtime acceptance"
     }
+  },
+  "voice_confirmed_source_integration": {
+    "source": "f61b8ea8c829d0b4e050a8b61ac592ae819a8a09",
+    "parent": "8490765f0572dae8ec3468f4e75d0ff6f4760b12",
+    "files": 29,
+    "Java_new_source_cases": 8,
+    "Node_new_source_cases": 15,
+    "validation": "NOT_RUN",
+    "migration": "npc_voice_confirmed_attempt_20261024",
+    "DDL_executed": false,
+    "registry": "Voice MySQL3->4, voice+ASR10->11, combined782->783; declaration metadata only",
+    "generated_ledger": "Regenerate once final client source is composed; 5113 belongs to preceding source"
   }
 }

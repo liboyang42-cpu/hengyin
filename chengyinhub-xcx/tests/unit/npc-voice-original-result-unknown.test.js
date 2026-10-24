@@ -3,7 +3,7 @@
 // PRIVATE-GROUP-H-voice-original-result:声音 enroll 已发出却没拿到明确回执 = UNKNOWN。
 // UNKNOWN 只能由 voice/status 回读到「服务端样本 = 原录音」才解除;状态有效但样本仍是旧的,继续锁住重录/上传。
 // 明确业务拒绝不是 UNKNOWN;enroll 成功回执里 voiceStatus 必须是 1/2 的数字。
-// 后端依赖(未实现):enroll 不带请求身份,没有按原任务原子恢复/查询的接口——只能靠样本比对回读。
+// 当前调用者携带原 requestId，且正向夹具同时回读原意图元数据与样本；负向样本/状态断言保留。
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -14,7 +14,7 @@ const tick = () => new Promise((resolve) => setImmediate(resolve));
 const settle = async () => { for (let i = 0; i < 6; i++) await tick(); };
 
 const FILE = path.join(__dirname, '../../pages/merchant/decor/ai-npc/index.js');
-const URL = 'https://fixture/media/new.m4a';
+const URL = 'media-asset:73';
 
 function fixture() {
   let definition;
@@ -24,11 +24,14 @@ function fixture() {
     getUploadClient: () => ({ uploadAll() { throw Error('不应重新上传'); } }),
     sendRequest(options) { requests.push(options); },
   };
+  const storage = { createInnerAudioContext: () => ({ stop() {}, play() {}, onEnded() {}, onStop() {}, onError() {} }) };
+  require('../helpers/voice-enrollment-environment.cjs').install(app, storage);
   vm.runInNewContext(fs.readFileSync(FILE, 'utf8'), {
     getApp: () => app, Page: (d) => { definition = d; },
-    wx: { createInnerAudioContext: () => ({ stop() {}, play() {}, onEnded() {}, onStop() {}, onError() {} }) },
+    wx: storage,
     setTimeout: () => 0, clearTimeout() {}, console,
     require(id) {
+      if (id.endsWith('voice-enrollment-journal.js')) return require('../../utils/voice-enrollment-journal.js');
       if (id.endsWith('pixel-avatar.js')) return { AVATAR_IDS: ['one'], stringifyCode: () => 'px1:one', isPixelAvatar: () => false };
       if (id.endsWith('pixel-avatar-data.js')) return { AVATARS: { one: { name: 'fixture' } } };
       if (id.endsWith('toast.js')) return Object.assign(() => {}, { success() {} });

@@ -90,7 +90,7 @@ class ApiChapterMerchantNodeNpcBindingTest {
     @Test
     void voiceStatusBindsJsonBodyAndReturnsZeroWhenAbsent() throws Exception {
         NodeNpcService npc = mock(NodeNpcService.class);
-        when(npc.voiceStatus(OWNER, NODE)).thenReturn(null);
+        when(npc.voiceStatus(PRINCIPAL, OWNER, NODE, null)).thenReturn(null);
         MockMvc mvc = MockMvcBuilders.standaloneSetup(controller(npc, ownerAccess())).build();
 
         mvc.perform(post("/api/merchant/chapter-node/npc/voice/status")
@@ -100,6 +100,6 @@ class ApiChapterMerchantNodeNpcBindingTest {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.voiceStatus").value(0));
 
-        verify(npc).voiceStatus(OWNER, NODE);
+        verify(npc).voiceStatus(PRINCIPAL, OWNER, NODE, null);
     }
 }
