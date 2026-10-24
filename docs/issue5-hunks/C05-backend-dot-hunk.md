@@ -172,3 +172,23 @@ BUILD SUCCESS
 ```
 
 App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
+
+## Addendum 2026-10-23 19:48 America/Los_Angeles
+
+HEAD `23b7215b5` tests. Did not invent recoverOriginal.
+
+`OfflinePackOperationTest.unusedRecordCorruptOfIdleDoesNotOccupyThenUniqueStartThenCorruptApplies`：IDLE `recordCorrupt` 抛 `INVALID_MANIFEST` 且 phase 仍 IDLE、operationId 仍空；后续唯一 startDownload+recordCorrupt 才是 CORRUPT（抛 CORRUPT 发生在占账之后）。与 unused expire 的 EXPIRED、unused delete 的 DELETED 占账不同。
+
+Parent surefire `com.chengyinhub.business.service.offline.*Test` **17/0** 2026-10-24T02:48:50Z：
+
+```
+Tests run: 4 -- OfflinePackOperationTest
+Tests run: 5 -- SideQuestAcceptHoldTest
+Tests run: 4 -- C05AccountSwitchRestartIsolationTest
+Tests run: 2 -- C05FirstJourneyIsolationTest
+Tests run: 2 -- NavigationDestinationConsentTest
+Tests run: 17, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
