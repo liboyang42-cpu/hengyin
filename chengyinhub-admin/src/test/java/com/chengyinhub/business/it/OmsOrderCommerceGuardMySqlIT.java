@@ -204,6 +204,7 @@ class OmsOrderCommerceGuardMySqlIT {
 
     private OmsOrder createCheckout() {
         Map<String,String> response = checkout.createOrder(70L,34L,"original-openid","premium_template",UUID.randomUUID().toString());
+        assertTrue(response.get("orderSn").length() <= 32, "real checkout must fit canonical oms_order.order_sn, not a widened fixture");
         return orders.selectOmsOrderByOrderSn(response.get("orderSn"));
     }
     private OmsOrder createCheckoutOutsideOuterTransaction() {
