@@ -77,6 +77,36 @@ class CompiledControlSourceTest(unittest.TestCase):
             with self.subTest(key=key):
                 with self.assertRaises(ValueError): controls.require_ci({**good, key: value})
 
+    def test_leaf_only_without_ci_cannot_launch_tools_or_claim_an_application_verdict(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary); output = root / "chengyinhub-admin/target/leaf"
+            argv = ["compiled_controls.py", "--leaf-only", "--source", str(root), "--verifier", "missing", "--output", str(output)]
+            with patch.dict(os.environ, {}, clear=True), patch.object(sys, "argv", argv), \
+                    patch.object(controls.subprocess, "run", side_effect=AssertionError("no Java")) as run, \
+                    redirect_stdout(io.StringIO()):
+                self.assertEqual(2, controls.main()); run.assert_not_called()
+            result = json.loads((output / "controls.json").read_text())
+            self.assertEqual("UNKNOWN", result["verdict"])
+            self.assertEqual("REAL_JDK21_LEAF_ONLY_NOT_APPLICATION_ACCEPTANCE", result["kind"])
+            self.assertEqual({}, result["cases"])
+
+    def test_empty_class_and_interface_fixture_sources_have_no_business_calls_or_fabricated_edges(self):
+        self.assertEqual({"architecture.leafcontrol.EmptyClass", "architecture.leafcontrol.EmptyInterface"}, set(controls.LEAF_SOURCES))
+        for name, data in controls.LEAF_SOURCES.items():
+            self.assertIn(name.rsplit(".", 1)[1].encode() + b" {}", data)
+            self.assertNotIn(b"com.chengyinhub", data)
+            self.assertNotIn(b".class", data)
+        self.assertIn(b"public interface", controls.LEAF_SOURCES["architecture.leafcontrol.EmptyInterface"])
+
+    def test_wrong_or_dirty_frozen_verifier_is_refused_before_loading_any_code(self):
+        for wrong in ("refs/heads/master", "5caf6b288c8df612d8420e4007032e4d9568e18e", "0e00ce639dea8e7f266dd326878532f45c59a032", "0" * 40):
+            with self.subTest(wrong=wrong), patch.object(controls, "git", return_value=wrong.encode()), \
+                    patch.object(controls.importlib.util, "spec_from_file_location", side_effect=AssertionError("must not load untrusted code")):
+                with self.assertRaises(ValueError): controls.load_verifier(Path("unused"))
+        with patch.object(controls, "git", side_effect=[controls.VERIFIER.encode(), b" M ci/architecture/owners.json"]), \
+                patch.object(controls.importlib.util, "spec_from_file_location", side_effect=AssertionError("must not load dirty code")):
+            with self.assertRaises(ValueError): controls.load_verifier(Path("unused"))
+
 
 if __name__ == "__main__":
     unittest.main()

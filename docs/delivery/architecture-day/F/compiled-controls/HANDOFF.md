@@ -48,3 +48,8 @@ python3 ci/architecture/compiled_controls.py \
 [source-row-coverage.review.patch](source-row-coverage.review.patch) 基于不可变5caf：仅给现有parse_output增加可选source_rows集合（原五返回值/模块图不变），原compiled回读要求每个声明member至少有一条被原解析器识别的source行；缺失只能UNKNOWN，确定违规仍优先BLOCKED。新增一个原fixture用例。没有新parser/scanner/owner/baseline例外。
 
 在临时5caf CI文件副本 `git apply --unidiff-zero` 后，原9控制+新缺行负控10/10通过。**该review.patch未应用到冻结5caf/本分支生产checker。** root若采纳须独立新verifier SHA/唯一双ref repin；本三项工具仍固定5caf，不偷换信任锚点。空依赖类型缺raw行只能未知，不能因此宣称违规；真实JDK覆盖边界待root统一回读。
+
+## 后续已授权实现（以此为当前合同）
+
+缺行协议已实现并冻结0e00，再追加E_TOPIC_QUERY冻结最终verifier `bd33ed0be7fafaf89daaec2eb772c15b034d3ec0`（56/45/51，原55型/164控制保留）；工具现只加载该完整SHA及干净树，不再接受5caf/0e00或浮动ref。此前source-row-coverage.review.patch仅留历史证据，**不要重新应用旧提案**。新后置full模式也复用同一owner_source_reviews，任意声明类型缺行UNKNOWN。
+新增 `--leaf-only` 独立真实JDK空class/interface对照，不需要主JAR，却仍要求实际CI/clean source/run/attempt/JDK21和固定verifier；其LEAF_SHAPE_CONFIRMED不是应用验收或三项负控通过。当前指令、精确repin补丁和验证见 `F/compiled-controls-pinned/HANDOFF.md`。实际Java仍NOT_RUN，原文0.953s/9+1是旧提案协议实验，不能当最终完整verifier或真实leaf结果。
