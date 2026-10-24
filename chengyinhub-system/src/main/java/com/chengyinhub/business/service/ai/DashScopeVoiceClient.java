@@ -8,9 +8,8 @@ import org.springframework.stereotype.Component;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.chengyinhub.common.config.AiVoiceConfig;
-
-import cn.hutool.http.HttpRequest;
-import cn.hutool.http.HttpResponse;
+import com.chengyinhub.common.utils.http.HttpUtils;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 阿里云百炼(DashScope)的声音复刻与语音合成。
@@ -35,6 +34,9 @@ public class DashScopeVoiceClient implements VoiceCloneClient
 
     @Autowired
     private AiVoiceConfig config;
+
+    @Autowired
+    private AiHttpAdmission admission = AiHttpAdmission.closed();
 
     @Override
     public boolean usable()
@@ -144,19 +146,11 @@ public class DashScopeVoiceClient implements VoiceCloneClient
     private JSONObject post(String url, JSONObject body, String what) throws AiServiceException
     {
         String raw;
-        try (HttpResponse resp = HttpRequest.post(url)
-                .header("Authorization", "Bearer " + config.getApiKey())
-                .header("Content-Type", "application/json")
-                .body(body.toJSONString())
-                .timeout(config.getTimeoutMs())
-                .execute())
+        long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(Math.min(config.getTimeoutMs(), 10_000));
+        // Reuse the existing admitted one-attempt transport; its physical worker owns the transferred lease.
+        try (HttpUtils.AttemptLease lease = admission.acquire(url))
         {
-            raw = resp.body();
-            if (!resp.isOk())
-            {
-                log.error("[VoiceClient] {} HTTP {} resp={}", what, resp.getStatus(), truncate(raw, 500));
-                throw new AiServiceException(what + "失败,请稍后再试");
-            }
+            raw = HttpUtils.sendJsonPost(url, body.toJSONString(), config.getApiKey(), deadline, lease);
         }
         catch (AiServiceException e)
         {
@@ -165,7 +159,8 @@ public class DashScopeVoiceClient implements VoiceCloneClient
         catch (Exception e)
         {
             log.error("[VoiceClient] {} 调用异常", what, e);
-            throw new AiServiceException(what + "失败,请稍后再试");
+            // Keep VoiceCloneClient's existing exception contract. Do not turn a dispatched failure into NOT_SENT.
+            throw new AiServiceException(what + "失败,请稍后再试", e);
         }
 
         JSONObject json;
