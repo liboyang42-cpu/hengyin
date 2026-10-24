@@ -3,6 +3,7 @@ package com.chengyinhub.business.service;
 import com.chengyinhub.business.domain.MemberCashWithdraw;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.dto.WithdrawalDTO;
+import com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent;
 import com.chengyinhub.business.mapper.MemberCashWithdrawMapper;
 import com.chengyinhub.business.mapper.PlayerWithdrawalCooldownMapper;
 import com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper;
@@ -49,6 +50,7 @@ class BothWithdrawalLegsRejectPlayerCooldownTest {
 
     private UmsMemberWithdrawalServiceImpl bankLeg;
     private CashWithdrawServiceImpl wechatLeg;
+    private CashWithdrawIntentTestSupport evidence;
 
     @BeforeEach
     void setUp() {
@@ -80,18 +82,21 @@ class BothWithdrawalLegsRejectPlayerCooldownTest {
                 com.chengyinhub.business.longrun.OWN_C04_21Test.bankFixture(umsMemberMapper, resolver));
 
         wechatLeg = new CashWithdrawServiceImpl();
+        evidence = new CashWithdrawIntentTestSupport();
+        ReflectionTestUtils.setField(wechatLeg, "transferIntents", evidence.mapper);
         ReflectionTestUtils.setField(wechatLeg, "mapper", cashMapper);
         ReflectionTestUtils.setField(wechatLeg, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(wechatLeg, "wechatPayService", wechatPayService);
         ReflectionTestUtils.setField(wechatLeg, "alarmService", mock(AlarmService.class));
         { com.chengyinhub.common.config.WxPayConfig __cfg = org.mockito.Mockito.mock(com.chengyinhub.common.config.WxPayConfig.class);
           org.mockito.Mockito.when(__cfg.getAppid()).thenReturn("wx-mp-appid");
+          org.mockito.Mockito.when(__cfg.getMerchantId()).thenReturn("merchant");
           org.mockito.Mockito.when(__cfg.getAppAppid()).thenReturn("wx-app-appid");
           // R1 起 withdraw 要按来源选同源 appid,不注入这个新依赖就是 NPE
           ReflectionTestUtils.setField(wechatLeg, "wxPayConfig", __cfg); }
         ReflectionTestUtils.setField(wechatLeg, "frozenAmountResolver", resolver);
         ReflectionTestUtils.setField(wechatLeg, "balanceAdmissionService",
-                com.chengyinhub.business.longrun.OWN_C04_21Test.cashFixture(umsMemberService, cashMapper, resolver));
+                com.chengyinhub.business.longrun.OWN_C04_21Test.cashFixture(umsMemberService, cashMapper, resolver, evidence.mapper));
 
         UmsMember member = new UmsMember();
         member.setId(MEMBER);
@@ -173,7 +178,7 @@ class BothWithdrawalLegsRejectPlayerCooldownTest {
         when(cashMapper.selectById(500L)).thenAnswer(invocation -> original.get());
         when(cashMapper.updateMemberCashWithdraw(any())).thenReturn(1); // 原提现单写入 CW/CD 原业务号
 
-        when(wechatPayService.transferToBalance(any(), any(), any(), any(), any(), any()))
+        when(wechatPayService.transferToBalance(any(CashWithdrawTransferIntent.class)))
                 .thenReturn(java.util.Collections.singletonMap("ok", "true"));
         when(cashMapper.updateReceiptIfProcessing(any())).thenReturn(1);
 

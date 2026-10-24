@@ -269,7 +269,7 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         Map<String, String> q;
         try {
             var original = requireTransferIntent(w);
-            q = original.submitted() ? originalTransferFacts(original) : Map.of("result", "UNKNOWN");
+            q = original.submitted() ? originalTransferFacts(w, original) : Map.of("result", "UNKNOWN");
         } catch (RuntimeException missingEvidence) {
             q = Map.of("result", "UNKNOWN");
         }
@@ -280,6 +280,7 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
             upd.setId(id);
             upd.setStatus(MemberCashWithdraw.STATUS_SUCCESS);
             upd.setWechatBatchStatus(q.get("batchStatus"));
+            upd.setTransferBatchId(q.get("batchId"));
             upd.setWechatDetailId(emptyToNull(q.get("detailId")));
             upd.setFinishTime(now);
             upd.setLastQueryTime(now);
@@ -364,7 +365,7 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
                     if (original == null || !Integer.valueOf(MemberCashWithdraw.STATUS_FAILED_MANUAL).equals(original.getStatus())
                             || Integer.valueOf(1).equals(original.getFrozen())) return false;
                     var intent = requireTransferIntent(original);
-                    requireRefundEvidence(intent, facts);
+                    requireRefundEvidence(original, intent, facts);
                     MemberCashWithdraw refunded = new MemberCashWithdraw();
                     refunded.setId(original.getId());
                     refunded.setStatus(MemberCashWithdraw.STATUS_FAILED_REFUNDED);
@@ -382,19 +383,31 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         return intent;
     }
 
-    private Map<String, String> originalTransferFacts(com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent intent) {
+    private Map<String, String> originalTransferFacts(MemberCashWithdraw original,
+            com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent intent) {
         Map<String, String> facts = wechatPayService.queryTransferResult(intent);
         if (facts == null) return Map.of("result", "UNKNOWN");
         if (("SUCCESS".equals(facts.get("result")) || "FAIL".equals(facts.get("result")))
-                && !intent.matchesObservation(facts)) return Map.of("result", "UNKNOWN");
+                && !matchesTransferFacts(original, intent, facts))
+            return Map.of("result", "UNKNOWN");
         return facts;
     }
 
-    private void requireRefundEvidence(com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent intent,
+    private boolean matchesTransferFacts(MemberCashWithdraw original,
+            com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent intent, Map<String, String> facts) {
+        return intent.matchesObservation(facts)
+                && (emptyToNull(original.getTransferBatchId()) == null
+                    || original.getTransferBatchId().equals(facts.get("batchId")))
+                && (emptyToNull(original.getWechatDetailId()) == null
+                    || original.getWechatDetailId().equals(facts.get("detailId")));
+    }
+
+    private void requireRefundEvidence(MemberCashWithdraw original,
+                                       com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent intent,
                                        Map<String, String> facts) {
         intent.requireValid();
         if (!intent.submitted() || intent.locallyRejected()) return;
-        if (facts == null || !"FAIL".equals(facts.get("result")) || !intent.matchesObservation(facts))
+        if (facts == null || !"FAIL".equals(facts.get("result")) || !matchesTransferFacts(original, intent, facts))
             throw new IllegalStateException("渠道尚未确认原提现失败，不能回补；请按原号继续核查");
     }
 
@@ -498,16 +511,17 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         if (!preparing) MakerCheckerGuard.requireDistinct(w.getManualOperator(), operator);
         var intent = requireTransferIntent(w);
         Map<String, String> facts = intent.submitted() && !intent.locallyRejected()
-                ? originalTransferFacts(intent) : null;
+                ? originalTransferFacts(w, intent) : null;
         if (facts != null && "SUCCESS".equals(facts.get("result"))) {
             MemberCashWithdraw paid = new MemberCashWithdraw();
             paid.setId(id); paid.setWechatBatchStatus(facts.get("batchStatus"));
+            paid.setTransferBatchId(facts.get("batchId"));
             paid.setWechatDetailId(facts.get("detailId"));
             paid.setFinishTime(DateUtils.getNowDate()); paid.setLastQueryTime(DateUtils.getNowDate());
             mapper.updateSuccessIfPending(paid);
             return false;
         }
-        requireRefundEvidence(intent, facts);
+        requireRefundEvidence(w, intent, facts);
         if (preparing) {
             MemberCashWithdraw prepare = new MemberCashWithdraw();
             prepare.setId(id); prepare.setStatus(MemberCashWithdraw.STATUS_REFUND_PENDING_REVIEW);

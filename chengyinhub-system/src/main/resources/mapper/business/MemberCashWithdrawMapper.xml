@@ -225,9 +225,12 @@
     </update>
 
     <update id="updateSuccessIfPending" parameterType="MemberCashWithdraw">
-        UPDATE member_cash_withdraw SET status = 1, wechat_batch_status = #{wechatBatchStatus},
-            wechat_detail_id = #{wechatDetailId}, finish_time = #{finishTime}, last_query_time = #{lastQueryTime}
+        UPDATE member_cash_withdraw SET status = 1, transfer_batch_id = #{transferBatchId},
+            wechat_batch_status = #{wechatBatchStatus}, wechat_detail_id = #{wechatDetailId},
+            finish_time = #{finishTime}, last_query_time = #{lastQueryTime}
         WHERE id = #{id} AND status IN (0, 3, 4) AND (frozen IS NULL OR frozen = 0) AND del_flag = 0
+          AND (transfer_batch_id IS NULL OR transfer_batch_id = '' OR transfer_batch_id = #{transferBatchId})
+          AND (wechat_detail_id IS NULL OR wechat_detail_id = '' OR wechat_detail_id = #{wechatDetailId})
     </update>
 
     <!-- 后台列表:按状态/会员过滤 -->

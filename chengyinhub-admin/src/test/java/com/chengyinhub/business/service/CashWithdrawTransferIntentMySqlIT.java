@@ -207,7 +207,21 @@ class CashWithdrawTransferIntentMySqlIT {
         money("70", balance());
         assertNotEquals(MemberCashWithdraw.STATUS_FAILED_REFUNDED, cash.selectById(ID).getStatus());
         assertEquals(0, refunds.get());
-        db.update("UPDATE member_cash_withdraw SET status=0 WHERE id=?", ID);
+        db.update("UPDATE member_cash_withdraw SET status=0, transfer_batch_id='original-batch', wechat_detail_id='original-detail' WHERE id=?", ID);
+        for (String terminal : new String[]{"FAIL", "SUCCESS"}) {
+            for (String field : new String[]{"batchId", "detailId"}) {
+                Map<String, String> drifted = facts(intent, terminal);
+                drifted.put(field, "another-provider-id");
+                when(provider.queryTransferResult(any(CashWithdrawTransferIntent.class))).thenReturn(drifted);
+                service.requery(ID);
+                money("70", balance());
+                MemberCashWithdraw original = cash.selectById(ID);
+                assertEquals(MemberCashWithdraw.STATUS_PROCESSING, original.getStatus(), terminal + " " + field);
+                assertEquals("original-batch", original.getTransferBatchId());
+                assertEquals("original-detail", original.getWechatDetailId());
+                assertEquals(0, refunds.get(), field + " drift must not credit the original debit");
+            }
+        }
         when(provider.queryTransferResult(any(CashWithdrawTransferIntent.class))).thenReturn(facts(intent, "FAIL"));
         service.requery(ID);
         money("100", balance());

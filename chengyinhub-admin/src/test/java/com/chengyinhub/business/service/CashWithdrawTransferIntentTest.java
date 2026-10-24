@@ -59,9 +59,18 @@ class CashWithdrawTransferIntentTest {
                 Map<String, String> missing = new HashMap<>(facts);
                 missing.remove(key);
                 assertFalse(intent.matchesObservation(missing), "missing " + key);
-                Map<String, String> wrong = new HashMap<>(facts);
-                wrong.put(key, "transferAmount".equals(key) ? "3001" : "OTHER");
-                assertFalse(intent.matchesObservation(wrong), "wrong " + key);
+                if (!"batchId".equals(key) && !"detailId".equals(key)) {
+                    Map<String, String> wrong = new HashMap<>(facts);
+                    wrong.put(key, "transferAmount".equals(key) ? "3001" : "OTHER");
+                    assertFalse(intent.matchesObservation(wrong), "wrong " + key);
+                } else {
+                    // Provider-assigned IDs are unknown at DEBIT time; existing receipts bind their identity.
+                    Map<String, String> allocated = new HashMap<>(facts);
+                    allocated.put(key, "another-nonempty-provider-id");
+                    assertTrue(intent.matchesObservation(allocated), "provider assigns " + key);
+                    allocated.put(key, " ");
+                    assertFalse(intent.matchesObservation(allocated), "blank " + key);
+                }
             }
             Map<String, String> inconsistent = new HashMap<>(facts);
             inconsistent.put("detailStatus", "FAIL".equals(state) ? "SUCCESS" : "FAIL");
