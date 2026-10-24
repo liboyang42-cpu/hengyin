@@ -150,3 +150,20 @@ DB / HTTP / App / CI = **NOT_RUN**。Head：`b7dfe4d90`（本文件再提交会�
 - 不要把未启用机制做成「按钮 / port / 默认拒绝冒充完成」；未启用是作者没选，启用后必须真写效果。
 - 不要把 UNKNOWN 投影成 APPLIED，也不要为恢复 mint 新 requestId。
 - 不要对未见过的 requestId 做 `recoverUnknown` / `recoverOriginal` 时 `bind`/`put` 进账本；那会让后续唯一写入变成对 mint 出的 UNKNOWN 的 recover。未见过的 id 只回 UNKNOWN 且 `existing==null`。`recoverOriginal` 对齐 iOS，委托 `recoverUnknown`。缺 requestId 仍抛（与 iOS `requireRequestID` 一致）。
+
+## 7. Parent addendum 2026-10-23 17:45 America/Los_Angeles
+
+Timer deliveryCount=31 (00:40Z). WAITING_SOURCE cat-file still ABSENT.
+
+Class-level `recoverOriginal` of never-seen ids stays UNKNOWN and does not occupy the binder; later unique apply is the first APPLIED write:
+
+- TradeBargain ACCEPT `c03-bargain-never` (`fe8477423`, TradeBargainConsumerTest 5/0)
+- Oath SWEAR `c03-oath-never` (OathFlashbackConsumerTest 4/0)
+- Oracle CONSULT `c03-oracle-never` (OracleBountyConsumerTest 4/0)
+- Route TAKE_SEGMENT `c03-route-never` (RouteCommunityDayConsumerTest 4/0)
+- Clue GAIN_CLUE `c03-clue-never` (ClueSecretGoalConsumerTest 4/0)
+- Clock TICK `c03-clock-never` (ProgressClockConsumerTest 3/0)
+
+HEAD `1a141870b`. Parent surefire `com.chengyinhub.business.service.support.rpg.mechanism.*Test` **34/0** 2026-10-24T00:45:38Z. Isolation 5/0. FirstJourney 2/0. Binder 3/0.
+
+DB / HTTP / App / CI = NOT_RUN. Did not write D1–D6 shared files. Runtime still unwired. Not 100%.
