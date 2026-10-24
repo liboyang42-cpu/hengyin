@@ -790,6 +790,29 @@
           "com.chengyinhub.web.controller.api.ApiVerifyController",
           "com.chengyinhub.common.core.controller.BaseController"
         ]
+      },
+      {
+        "id": "D_COMPLAINT_CLOSE_REPORTER_NOTICE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.ComplaintCloseReporterNotice"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICoopComplaintService",
+          "com.chengyinhub.business.service.impl.CoopComplaintServiceImpl"
+        ]
+      },
+      {
+        "id": "D_COMMITTED_NOTICE_REJECTION_PORT",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.mapper.CommittedNoticeRejectionMapper"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.support.ComplaintCloseReporterNotice",
+          "com.chengyinhub.business.service.ICoopComplaintService",
+          "com.chengyinhub.business.service.impl.CoopComplaintServiceImpl"
+        ]
       }
     ],
     "allowed_directions": [
@@ -1032,6 +1055,10 @@
       [
         "G_CASH_CLAIM",
         "G_ORIGINAL_SETTLEMENT_LEDGER"
+      ],
+      [
+        "D_COMPLAINT_CLOSE_REPORTER_NOTICE",
+        "D_COMMITTED_NOTICE_REJECTION_PORT"
       ]
     ]
   }

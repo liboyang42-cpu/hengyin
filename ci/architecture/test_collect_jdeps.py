@@ -995,6 +995,47 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.assertFalse(report["technical_dependencies"]["graph_complete"])
         self.assertIn("method/Spring/reflection/XML dependency graph", report["technical_dependencies"]["not_proven"])
 
+    def test_complaint_notice_rejection_port_preserves_actual_append_and_lock_read_dependency(self):
+        notice = self.owner_member("D_COMPLAINT_CLOSE_REPORTER_NOTICE")
+        port = self.owner_member("D_COMMITTED_NOTICE_REJECTION_PORT")
+        self.reference(notice, port)
+        self.reference("com.chengyinhub.business.service.impl.CoopComplaintServiceImpl", notice)
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertEqual([["D_COMPLAINT_CLOSE_REPORTER_NOTICE", "D_COMMITTED_NOTICE_REJECTION_PORT"]], report["technical_dependencies"]["owner_edges"])
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+
+    def test_complaint_notice_cannot_callback_its_original_domain_caller(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        owner = "D_COMPLAINT_CLOSE_REPORTER_NOTICE"
+        for target in self.dependencies["owners"][owner]["forbidden_backrefs"]:
+            with self.subTest(target=target):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(self.owner_member(owner), target)
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                self.assertTrue(any(f["rule"] == "OWNER_GOD_BACKREFERENCE" and f["target_class"] == target for f in report["findings"]))
+
+    def test_rejection_mapper_reverse_notice_dependency_is_a_witnessed_cycle(self):
+        self.reference(self.owner_member("D_COMPLAINT_CLOSE_REPORTER_NOTICE"), self.owner_member("D_COMMITTED_NOTICE_REJECTION_PORT"))
+        self.reference(self.owner_member("D_COMMITTED_NOTICE_REJECTION_PORT"), self.owner_member("D_COMPLAINT_CLOSE_REPORTER_NOTICE"))
+        report = self.check_directions()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        cycle = next(f for f in report["findings"] if f["rule"] == "NEW_OWNER_CYCLE")
+        self.assertEqual(["D_COMMITTED_NOTICE_REJECTION_PORT", "D_COMPLAINT_CLOSE_REPORTER_NOTICE"], cycle["owners"])
+        self.assertTrue(all(w["source_sha256"] and w["target_sha256"] for w in cycle["witnesses"]))
+
+    def test_notice_or_rejection_port_missing_raw_rows_remains_unknown(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for owner in ("D_COMPLAINT_CLOSE_REPORTER_NOTICE", "D_COMMITTED_NOTICE_REJECTION_PORT"):
+            member = self.owner_member(owner)
+            with self.subTest(owner=owner):
+                self.replace_evidence("jdeps.stdout.txt", "\n".join(l for l in original.decode().splitlines()
+                                      if not l.strip().startswith(member + " -> ")).encode())
+                report = self.check_directions()
+                self.assert_unknown(report)
+                self.assertIn({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": owner, "type": member}, report["review_items"])
+
     def test_city_node_actual_public_ports_and_http_inbound_remain_scoped(self):
         ports = ["com.chengyinhub.business.access.merchant.IMerchantAccessService",
                  "com.chengyinhub.business.mapper.RoamMapper",
