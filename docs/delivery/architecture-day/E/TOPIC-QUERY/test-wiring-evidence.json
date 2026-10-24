@@ -1,0 +1,58 @@
+[
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PublicTopicStationCountMySqlIT.java",
+    "base_blob": "3a17fdbee5dfbffb61d1bb4fe8d21f6326787928",
+    "unchanged_test_cases": 7,
+    "removed_write_owner_fixture_wirings": 1,
+    "assertion_and_mock_expectation_lines_preserved": true
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PublicTopicStationCountTest.java",
+    "base_blob": "461e1afb9cd2288eddc6ecded4f0ae0232adc40c",
+    "unchanged_test_cases": 1,
+    "removed_write_owner_fixture_wirings": 1,
+    "assertion_and_mock_expectation_lines_preserved": true
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicTemplateMetaBuildTest.java",
+    "base_blob": "e84402cc13ba1ef817725e45da1aa4c748c8a77e",
+    "unchanged_test_cases": 5,
+    "removed_write_owner_fixture_wirings": 1,
+    "assertion_and_mock_expectation_lines_preserved": true
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicTemplateOfficialShelfTest.java",
+    "base_blob": "07fa32a0a74b88d8d9bd26f810c48538a8447615",
+    "unchanged_test_cases": 5,
+    "removed_write_owner_fixture_wirings": 1,
+    "assertion_and_mock_expectation_lines_preserved": true
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicTemplatePublicReadSecurityTest.java",
+    "base_blob": "b4e2b78ba35d7dafcfe3d07504c761fd914931d8",
+    "unchanged_test_cases": 4,
+    "removed_write_owner_fixture_wirings": 1,
+    "assertion_and_mock_expectation_lines_preserved": true
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicTemplateRecruitBuildTest.java",
+    "base_blob": "fd8d8e8df532af1b530a0df58f7a0f84f23fd622",
+    "unchanged_test_cases": 15,
+    "removed_write_owner_fixture_wirings": 1,
+    "assertion_and_mock_expectation_lines_preserved": true
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/UpgradePublicTopicStationCountTest.java",
+    "base_blob": "65be6ac3d7026616c3d2270960535077259dbd42",
+    "unchanged_test_cases": 5,
+    "removed_write_owner_fixture_wirings": 5,
+    "assertion_and_mock_expectation_lines_preserved": true
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CmsTopicUpcomingCountTest.java",
+    "base_blob": "cf35753e4937f6f3a6ec7c79fe8a7fb66b554849",
+    "unchanged_test_cases": 2,
+    "removed_write_owner_fixture_wirings": 2,
+    "assertion_and_mock_expectation_lines_preserved": true
+  }
+]
