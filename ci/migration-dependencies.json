@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "roam_session_status_check_20261024": ["roam"],
     "merchant_wechat_qrcode_20261022": [],
     "merchant_category_ids_20261022": [],
     "orient_session_lifecycle_20261022": ["20260823_topic_route_graph"],
