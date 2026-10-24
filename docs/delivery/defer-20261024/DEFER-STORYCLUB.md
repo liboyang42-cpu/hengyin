@@ -36,10 +36,15 @@
 
 ## 验证
 
-- 后端：每项跑了相关测试类（见上表）。本地全量 `mvn test`（排除需要 MySQL 的 `*IT`）结果见下方。
+- 后端：每项跑了相关测试类（见上表）。本地全量 `mvn -o test`（排除 `*IT`）：13806 个测试，0 失败；29 个错误全部是需要 MySQL 的 `it` 包 / MyBatis 用例（本地没有库，CI 上跑）。
 - 小程序：跑了俱乐部/access-gate/response-shape 相关的 203 个测试文件，只有 `sc-ui-date-count-probe.js` 失败，在 master 上同样失败，不是本 PR 引起的；`lint:scope` PASS；`audit:actions` PASS（5103 controls）。
 - 没有 wxml / wxss 改动；C00 保留文件只按允许的例外重新生成了 `action-ledger.json`（`action-ledger.test.js` 里的冻结计数没变，没改）。
 
 ## CI
 
-- GitHub CI 绿：run 40062698542（b4e72cf7）。最终 head 的 run ID 见 PR #588 的 checks。
+- 957e1852（合入 master 后的 head）全绿，27 个 check run 成功、3 个跳过，mergeable=clean：
+  - GitHub CI 40064935521
+  - Funds MySQL IT 40064935520
+  - Mini followup focused regression 40064935557
+  - Isolated authenticated Redis recovery 40064935535
+- 中间几个 head 上「Mini program static checks」显示失败，原因是被下一次 push 取消的子任务（UNIT/STATIC=cancelled）让汇总门失败，不是用例失败。b4e72cf7 的 GitHub CI 40062698542 跑完是绿的。
