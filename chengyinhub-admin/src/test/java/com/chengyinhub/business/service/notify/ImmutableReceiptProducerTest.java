@@ -204,4 +204,55 @@ class ImmutableReceiptProducerTest {
         assertEquals(ImmutableReceiptProducer.CHANNEL_MESSAGE_SEND, missingWriter.getWaitingCapability());
         assertEquals(0, store.size());
     }
+
+    @Test
+    void projectOriginalSendReadsStoredIdentityAndRejectsRebuiltBody() {
+        String key = "c09-send-key-0001";
+        java.util.Map<String, Object> applied = new java.util.LinkedHashMap<String, Object>();
+        applied.put("actorMemberId", 7L);
+        applied.put("channelId", 12L);
+        applied.put("operation", "SEND");
+        applied.put("digest", "abc123digest");
+        applied.put("state", "APPLIED");
+        applied.put("content", "edited body");
+        applied.put("ignored_mentions", java.util.List.of(9L));
+        applied.put("result", "{\"message_id\":42,\"client_message_id\":\"" + key
+                + "\",\"content\":\"edited body\",\"ignored_mentions\":[9]}");
+        ImmutableReceiptProducer.OriginalSendProof proof = ImmutableReceiptProducer.projectOriginalSend(
+                7L, 12L, key, applied, false);
+        assertEquals("APPLIED", proof.state);
+        assertTrue(proof.outcomeConfirmed);
+        assertEquals("abc123digest", proof.digest);
+        assertEquals(Long.valueOf(42L), proof.messageId);
+        assertEquals("SEND", proof.operation);
+        assertFalse(proof.asView().containsKey("content"));
+        assertFalse(proof.asView().containsKey("ignored_mentions"));
+
+        java.util.Map<String, Object> pending = new java.util.LinkedHashMap<String, Object>(applied);
+        pending.put("state", "PENDING");
+        pending.remove("result");
+        ImmutableReceiptProducer.OriginalSendProof waiting = ImmutableReceiptProducer.projectOriginalSend(
+                7L, 12L, key, pending, false);
+        assertEquals("PENDING", waiting.state);
+        assertFalse(waiting.outcomeConfirmed);
+        assertNull(waiting.messageId);
+
+        assertEquals("NOT_FOUND", ImmutableReceiptProducer.projectOriginalSend(7L, 12L, key, null, false).state);
+        assertEquals("LEGACY", ImmutableReceiptProducer.projectOriginalSend(7L, 12L, key, null, true).state);
+        assertFalse(ImmutableReceiptProducer.projectOriginalSend(7L, 12L, key, null, true).outcomeConfirmed);
+        assertEquals("NOT_FOUND", ImmutableReceiptProducer.projectOriginalSend(7L, 12L, "short", applied, false).state);
+        assertEquals("ACTOR_MISMATCH", ImmutableReceiptProducer.projectOriginalSend(8L, 12L, key, applied, false).state);
+        assertEquals("CHANNEL_MISMATCH", ImmutableReceiptProducer.projectOriginalSend(7L, 13L, key, applied, false).state);
+
+        java.util.Map<String, Object> edited = new java.util.LinkedHashMap<String, Object>(applied);
+        edited.put("operation", "EDIT");
+        assertEquals("WRONG_OPERATION", ImmutableReceiptProducer.projectOriginalSend(7L, 12L, key, edited, false).state);
+        java.util.Map<String, Object> recalled = new java.util.LinkedHashMap<String, Object>(applied);
+        recalled.put("operation", "RECALL");
+        ImmutableReceiptProducer.OriginalSendProof recall = ImmutableReceiptProducer.projectOriginalSend(
+                7L, 12L, key, recalled, false);
+        assertEquals("WRONG_OPERATION", recall.state);
+        assertNull(recall.messageId);
+        assertFalse(recall.outcomeConfirmed);
+    }
 }

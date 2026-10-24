@@ -395,6 +395,159 @@ public final class ImmutableReceiptProducer {
         }
     }
 
+    /**
+     * 原 {@code sendReceipt} 的只读投影。只认 request 行上的 digest、actor、channel、request、
+     * operation，以及 result 里的 message 身份。不重算正文或 mention，不调用 send、claim、complete。
+     * LEGACY、PENDING、NOT_FOUND、错 actor/channel/key/operation 都不是原 SEND 证明。
+     */
+    public static OriginalSendProof projectOriginalSend(Long actor, Long channel, String requestId,
+            Map<String, Object> row, boolean legacyCommitted) {
+        if (actor == null || actor.longValue() <= 0L || channel == null || channel.longValue() <= 0L
+                || !validSendKey(requestId)) {
+            return sendProof(actor, channel, requestId, null, null, null, "NOT_FOUND", false);
+        }
+        if (row == null) {
+            return sendProof(actor, channel, requestId, null, null, null,
+                    legacyCommitted ? "LEGACY" : "NOT_FOUND", false);
+        }
+        Long rowActor = firstLong(row.get("actorMemberId"), row.get("actor"));
+        if (rowActor != null && !actor.equals(rowActor)) {
+            return sendProof(actor, channel, requestId, null, null, null, "ACTOR_MISMATCH", false);
+        }
+        Long rowChannel = longOrNull(row.get("channelId"));
+        if (rowChannel == null || !channel.equals(rowChannel)) {
+            return sendProof(actor, channel, requestId, null, null, null, "CHANNEL_MISMATCH", false);
+        }
+        String operation = row.get("operation") == null ? null : String.valueOf(row.get("operation"));
+        if (!"SEND".equals(operation)) {
+            return sendProof(actor, channel, requestId, operation, null, null, "WRONG_OPERATION", false);
+        }
+        String digest = row.get("digest") == null ? null : String.valueOf(row.get("digest")).trim();
+        if (digest.isEmpty()) {
+            return sendProof(actor, channel, requestId, operation, null, null, "NOT_FOUND", false);
+        }
+        String state = row.get("state") == null ? "" : String.valueOf(row.get("state"));
+        if (!"APPLIED".equals(state)) {
+            return sendProof(actor, channel, requestId, operation, digest, null,
+                    "PENDING".equals(state) ? "PENDING" : "NOT_FOUND", false);
+        }
+        Long messageId = messageIdOf(row.get("result"));
+        String clientId = clientIdOf(row.get("result"));
+        if (messageId == null || messageId.longValue() <= 0L || !requestId.equals(clientId)) {
+            return sendProof(actor, channel, requestId, operation, digest, null, "NOT_FOUND", false);
+        }
+        return sendProof(actor, channel, requestId, operation, digest, messageId, "APPLIED", true);
+    }
+
+    private static boolean validSendKey(String requestId) {
+        return requestId != null && requestId.matches("[A-Za-z0-9_-]{16,64}");
+    }
+
+    private static OriginalSendProof sendProof(Long actor, Long channel, String requestId, String operation,
+            String digest, Long messageId, String state, boolean outcomeConfirmed) {
+        return new OriginalSendProof(actor, channel, requestId, operation, digest, messageId, state, outcomeConfirmed);
+    }
+
+    private static Long firstLong(Object primary, Object fallback) {
+        Long value = longOrNull(primary);
+        return value == null ? longOrNull(fallback) : value;
+    }
+
+    private static Long longOrNull(Object value) {
+        if (value instanceof Number) {
+            return Long.valueOf(((Number) value).longValue());
+        }
+        if (value instanceof String && ((String) value).matches("-?\\d+")) {
+            return Long.valueOf((String) value);
+        }
+        return null;
+    }
+
+    private static Long messageIdOf(Object result) {
+        String raw = fieldOf(result, "message_id");
+        if (raw == null || !raw.matches("\\d+")) {
+            return null;
+        }
+        return Long.valueOf(raw);
+    }
+
+    private static String clientIdOf(Object result) {
+        return fieldOf(result, "client_message_id");
+    }
+
+    private static String fieldOf(Object result, String key) {
+        if (result instanceof Map) {
+            Object value = ((Map<?, ?>) result).get(key);
+            return value == null ? null : String.valueOf(value);
+        }
+        if (!(result instanceof String)) {
+            return null;
+        }
+        String json = (String) result;
+        String needle = "\"" + key + "\"";
+        int at = json.indexOf(needle);
+        if (at < 0) {
+            return null;
+        }
+        int colon = json.indexOf(':', at + needle.length());
+        if (colon < 0) {
+            return null;
+        }
+        int cursor = colon + 1;
+        while (cursor < json.length() && Character.isWhitespace(json.charAt(cursor))) {
+            cursor++;
+        }
+        if (cursor >= json.length()) {
+            return null;
+        }
+        if (json.charAt(cursor) == '"') {
+            int end = json.indexOf('"', cursor + 1);
+            return end < 0 ? null : json.substring(cursor + 1, end);
+        }
+        int end = cursor;
+        while (end < json.length() && Character.isDigit(json.charAt(end))) {
+            end++;
+        }
+        return end == cursor ? null : json.substring(cursor, end);
+    }
+
+    /** 原 SEND request 行的证明。没有正文，也没有 mention。 */
+    public static final class OriginalSendProof {
+        public final Long actor;
+        public final Long channel;
+        public final String requestId;
+        public final String operation;
+        public final String digest;
+        public final Long messageId;
+        public final String state;
+        public final boolean outcomeConfirmed;
+
+        OriginalSendProof(Long actor, Long channel, String requestId, String operation, String digest,
+                Long messageId, String state, boolean outcomeConfirmed) {
+            this.actor = actor;
+            this.channel = channel;
+            this.requestId = requestId;
+            this.operation = operation;
+            this.digest = digest;
+            this.messageId = messageId;
+            this.state = state;
+            this.outcomeConfirmed = outcomeConfirmed;
+        }
+
+        public Map<String, Object> asView() {
+            Map<String, Object> view = new LinkedHashMap<String, Object>();
+            view.put("actor", actor);
+            view.put("channel", channel);
+            view.put("requestId", requestId);
+            view.put("operation", operation);
+            view.put("digest", digest);
+            view.put("messageId", messageId);
+            view.put("state", state);
+            view.put("outcomeConfirmed", Boolean.valueOf(outcomeConfirmed));
+            return Collections.unmodifiableMap(view);
+        }
+    }
+
     /** 只存原回执；实现不得用当前投影表冒充原行。 */
     public interface OriginalReceiptStore {
         OriginalReceipt find(String requestId);
