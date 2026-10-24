@@ -124,7 +124,7 @@ class WechatVerifiedPaymentFactGatewayTest {
         t.setSuccessTime(WechatVerifiedFactTestSupport.SUCCESS_TIME);
         TransactionAmount amount=new TransactionAmount();amount.setTotal(1000);amount.setCurrency("CNY");t.setAmount(amount);return t;
     }
-    private static class Fixture {
+    static class Fixture {
         final WechatPayServiceImpl gateway=WechatVerifiedFactTestSupport.gateway();
         final WechatVerifiedFactTestSupport.MemoryMapper rows=new WechatVerifiedFactTestSupport.MemoryMapper();
         final WechatVerifiedPaymentFactService store=new WechatVerifiedPaymentFactService();

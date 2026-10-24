@@ -746,7 +746,7 @@ class WechatPayCallbackForgedSignatureTest {
     private static Forged buildValidPayNotification(PrivateKey signingKey, String outTradeNo,
                                                       String transactionId, String tradeState, int totalCents) throws Exception {
         String plaintext = String.format(
-                "{\"out_trade_no\":\"%s\",\"transaction_id\":\"%s\",\"trade_state\":\"%s\",\"appid\":\"wx-test-mini\",\"trade_type\":\"JSAPI\",\"mchid\":\"merchant-test\",\"amount\":{\"total\":%d,\"currency\":\"CNY\"}}",
+                "{\"out_trade_no\":\"%s\",\"transaction_id\":\"%s\",\"trade_state\":\"%s\",\"appid\":\"wx-test-mini\",\"trade_type\":\"JSAPI\",\"mchid\":\"merchant-test\",\"success_time\":\"2026-10-24T00:00:00Z\",\"amount\":{\"total\":%d,\"currency\":\"CNY\"}}",
                 outTradeNo, transactionId, tradeState, totalCents);
         return sign(signingKey, "transaction", "TRANSACTION.SUCCESS", plaintext);
     }

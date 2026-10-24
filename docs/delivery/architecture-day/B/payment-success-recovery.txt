@@ -1,0 +1,20 @@
+B 成功通知恢复候选：parent 420df2a7a8b385a308923fe5f332324dd4f5f973（保留f6 reader与独立afterCompletion释放修复）。
+代码边界：现有SDK/fact/intent/facade/原router入口及其测试；A/G/Controller/CI/registry正文不修改。
+失败机制：SDK官方原单已核验并持久化VERIFIED事实；后续原业务+DONE事务回滚；旧通知重试再次依赖实时查询，查询故障导致原业务无法恢复。
+真实caller：ApiRegistrationController支付/退款通知入口→原WechatPayServiceImpl.handlePayCallback/handleRefundCallback→官方NotificationParser验签解密→SDK核对原事实→原唯一router→CLM/商城/DEP/报名原owner。
+支付恢复调用SDK内部replayVerifiedPaymentNotification；退款恢复调用verifiedRefundFacts并继续原完整matchesRefundNotification。没有新增HTTP/裸Map成功入口。
+reader最小合同：findPaymentSuccess(mchid,wxNo,transactionId)、findRefundSuccess(mchid,refundNo,refundId)返回Stored(reference,facts)；以现有两个唯一身份OR检索，必须恰好1行且两身份全匹配，再核验原provenance/version/列hash，使用f6独立新鲜只读事务。
+恢复严格核对：原实际client商户、appid/渠道、CNY/分金额、原微信号/交易号/成功时间、原业务映射及冻结request_hash；支付还须仍是原current attempt。退款原号/refundId/transactionId/total/refund/currency/successTime全部原检查保留。
+输出Map重新从可信行构造，引用原factId/hash；不接受请求提供的事实引用或SUCCESS Map，不重写已有事实，不改变requestId/渠道，不调用prepay/refund/transfer。
+当前通知必须重新通过SDK验签；签名错、未知序列号、过期/不可用证书导致SDK拒绝或证书解析异常时均FAIL/UNKNOWN，绝不借已有事实绕过认证。本片未声称真实过期平台证书已实测。
+同单号但经济/身份payload有变立即拒绝并保留原事实/必要拒绝审计；合法重投的通知envelope/id/nonce/密文可以不同，只在重新验签且完整经济事实相同时恢复。缺失字段/时间/原冻结指纹冲突不猜默认。
+没有完整持久原事实时仍走原官方查单；timeout/5xx/SYSTEM_ERROR/NOT_FOUND/不完整事实不产生SUCCESS引用。主动queryOrderStatus/queryRefundFacts绝不用历史成功冒充当前状态，既有UNKNOWN/NOT_FOUND合同保留。
+防重发：原业务锁内查已持久PAYMENT或REFUND成功证据后，才可变更意图；有证据即拒绝重新预下单/换渠道。按业务查全商户证据，当前商户配置变化也不能隐藏原成功。SDK关单前检查原attempt和成功证据；CLOSED落库时同原业务锁再查，保留原身份。
+新增显式lockClosablePaymentAttemptForUpdate(businessNo,observedWxNo)供领域CLOSED CAS；原lockPaymentAttemptForUpdate仍只校验身份。三个owner精确review.patch按420源码生成，仅在原CLOSED路径换guard，未应用到A/CLM/商城正文。Mockito无需fake；唯一concrete E2E stub显式false。
+测试源码：新增9项unit（含4域真实facade/router+SDK/domain受控double、支付/退款原fact重放、串单金额渠道时间hash拒绝、认证失败、查询UNKNOWN、已知成功禁重发）；不冒充数据库证明。
+另新增1项原真实报名MySQL组合：实际SDK签名解析+原XML/schema/业务服务/事务代理，在真实业务+DONE SQL后注入失败→回滚→停用官方查询→拒绝换渠道/重复预下单、伪签名/未知序列号/同单错误金额渠道交易号→原fact原inbox/fence恢复，只入账一次。
+420的8项真实报名测试全部保留，现9项；原4intent真实SQL/barrier断言及dc87转账段保持不变。所有Java/MySQL/CI/真实微信均NOT_RUN。
+迁移仅新增source-only(business_out_trade_no,mchid)索引提案，复用原事实表，无新经济字段；root负责registry/预检/批准执行，本片未执行DDL，功能不依赖索引存在。
+未闭合项：owner采纳CLOSED guard及相关fixtures；退款owner乱序非SUCCESS与已知成功证据的合并须A/G在原锁和原mutation事务内完成；G若仍在外层事务内关单须先落意图再事务外SDK，本片会拒绝该外呼而非悬挂事务。
+未在途持久化的外部成功仍须原号查证，本片不宣称SDK/数据库分布式原子。业务已合法关闭后迟到真实成功只保留证据，补记/退款由原owner规则决定，不自动重开/发钱。
+实际仅静态diff/XML/范围/秘密标记/保留断言检查；Java编译、MySQL隔离/回滚/并发和CI由root统一同头执行。回退保留原意图/事实/回执/审计/唯一身份，不因TTL/租约删除或重发。

@@ -325,6 +325,51 @@ class RegistrationCallbackIntentMySqlIT {
     }
 
     @Test
+    void durableSuccessRetriesTheRealRegistrationAndInboxWhileProviderQueryIsUnavailable() throws Exception {
+        providerOrders.put(BUSINESS_NO,original(BUSINESS_NO,"wx-mini","JSAPI","SUCCESS","WX-DURABLE"));
+        SignedNotification success=notification(BUSINESS_NO,"wx-mini","JSAPI","SUCCESS","WX-DURABLE",1000);
+        probe.failAfterDone.set(true);
+        assertEquals("FAIL",deliver(success,"WX-DURABLE","SUCCESS"));
+        assertEquals(1,probe.doneProbes.get(),"failure injected after real business SQL and DONE SQL");
+        assertPendingResources();assertEquals(WxPaymentCallbackInbox.STATE_RETRYABLE,inboxNumber("state"));
+        assertEquals(0,scheduledNotices.get());
+        long inboxId=inboxNumber("id");
+        long factId=db.queryForObject("SELECT id FROM wx_verified_payment_fact WHERE provider_id='WX-DURABLE'",Long.class);
+        String factHash=db.queryForObject("SELECT fact_hash FROM wx_verified_payment_fact WHERE id=?",String.class,factId);
+        providerOrders.clear();
+        doThrow(new RuntimeException("controlled provider query outage")).when(sdk).queryOrderByOutTradeNo(any());
+        clearInvocations(sdk);
+        String intentHash=db.queryForObject("SELECT request_hash FROM wx_pay_order_intent WHERE out_trade_no=?",String.class,BUSINESS_NO);
+        var appRejected=assertThrows(com.chengyinhub.business.service.PaymentPreorderException.class,()->freeze("wx-app","APP"));
+        var originalRejected=assertThrows(com.chengyinhub.business.service.PaymentPreorderException.class,()->freeze("wx-mini","JSAPI"));
+        assertTrue(appRejected.isResultUncertain());assertTrue(originalRejected.isResultUncertain());
+        assertEquals(1,number("SELECT COUNT(*) FROM wx_pay_order_intent"));
+        assertEquals(intentHash,db.queryForObject("SELECT request_hash FROM wx_pay_order_intent WHERE out_trade_no=?",String.class,BUSINESS_NO));
+        SignedNotification tampered=new SignedNotification(success.body()+" ",success.headers());
+        var unknownHeaders=new HashMap<>(success.headers());unknownHeaders.put("wechatpay-serial","UNKNOWN-CERTIFICATE");
+        for (SignedNotification rejected:List.of(tampered,new SignedNotification(success.body(),unknownHeaders),
+                notification(BUSINESS_NO,"wx-mini","JSAPI","SUCCESS","WX-DURABLE",999),
+                notification(BUSINESS_NO,"wx-app","APP","SUCCESS","WX-DURABLE",1000),
+                notification(BUSINESS_NO,"wx-mini","JSAPI","SUCCESS","WX-OTHER",1000))) {
+            assertEquals("FAIL",deliver(rejected,"WX-DURABLE","SUCCESS"));
+            assertPendingResources();assertEquals(WxPaymentCallbackInbox.STATE_RETRYABLE,inboxNumber("state"));
+            assertEquals(1,inboxNumber("attempt_count"));assertEquals(inboxId,inboxNumber("id"));
+            assertEquals(factHash,db.queryForObject("SELECT fact_hash FROM wx_verified_payment_fact WHERE id=?",String.class,factId));
+        }
+        // A fresh envelope/signature with identical economic facts is a legitimate provider redelivery.
+        SignedNotification redelivered=notification(BUSINESS_NO,"wx-mini","JSAPI","SUCCESS","WX-DURABLE",1000);
+        assertNotEquals(success.body(),redelivered.body());
+        assertEquals("SUCCESS",deliver(redelivered,"WX-DURABLE","SUCCESS"));
+        assertCompleted("WX-DURABLE",1);assertEquals(inboxId,inboxNumber("id"));
+        assertEquals(2,inboxNumber("attempt_count"));assertEquals(2,inboxNumber("fence_token"));
+        assertEquals(factHash,db.queryForObject("SELECT fact_hash FROM wx_verified_payment_fact WHERE id=?",String.class,factId));
+        assertEquals(1,number("SELECT COUNT(*) FROM wx_verified_payment_fact"));
+        assertEquals("SUCCESS",deliver(success,"WX-DURABLE","SUCCESS"));assertCompleted("WX-DURABLE",1);
+        assertEquals(2,probe.doneProbes.get());
+        assertEquals(1,scheduledNotices.get());verifyNoInteractions(sdk);
+    }
+
+    @Test
     void oldOuterRepeatableReadViewCanVerifyAndApplyANewCommittedFactInItsOriginalDomainTransaction() {
         providerOrders.put(BUSINESS_NO,original(BUSINESS_NO,"wx-mini","JSAPI","SUCCESS","WX-RR"));
         var store=(com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService)
@@ -591,7 +636,7 @@ class RegistrationCallbackIntentMySqlIT {
     private SignedNotification notification(String no, String appid, String channel, String state, String transactionId, int fen) throws Exception {
         String plaintext = json.writeValueAsString(Map.of("out_trade_no", no, "appid", appid, "mchid", MERCHANT,
                 "trade_type", channel, "trade_state", state, "transaction_id", transactionId,
-                "amount", Map.of("total", fen, "currency", "CNY")));
+                "success_time", "2026-10-24T00:00:00Z", "amount", Map.of("total", fen, "currency", "CNY")));
         String nonce = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
         String ciphertext = new AeadAesCipher(apiV3Key.getBytes(StandardCharsets.UTF_8)).encrypt(
                 "transaction".getBytes(StandardCharsets.UTF_8), nonce.getBytes(StandardCharsets.UTF_8), plaintext.getBytes(StandardCharsets.UTF_8));

@@ -49,6 +49,7 @@ class E2eWechatPayStubContractTest {
         assertFalse(stub.closePaymentAttempt("REG1", "WXP-original"));
         assertNull(stub.queryRefundFacts((com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference)null,"RF1"));
         assertFalse(stub.lockPaymentAttemptForUpdate("REG1", "WXP-original"));
+        assertFalse(stub.lockClosablePaymentAttemptForUpdate("REG1", "WXP-original"));
         assertEquals("true", stub.transferToBalance((com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent) null).get("ambiguous"));
         assertEquals("UNKNOWN", stub.queryTransferResult((com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent) null).get("result"));
     }

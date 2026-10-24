@@ -1,0 +1,33 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
+@@ -2279,7 +2279,7 @@
+                 if ("CLOSED".equals(tradeState)
+                         && (resultMap.get("wx_out_trade_no") == null || paymentAttemptGateway == null
+                             || !paymentAttemptGateway.getObject()
+-                            .lockPaymentAttemptForUpdate(outTradeNo, resultMap.get("wx_out_trade_no")))) {
++                            .lockClosablePaymentAttemptForUpdate(outTradeNo, resultMap.get("wx_out_trade_no")))) {
+                     return registrationPaymentCallbackFailure(outTradeNo, "payment_attempt_conflict");
+                 }
+                 Date failedAt = new Date();
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMembershipServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMembershipServiceImpl.java
+@@ -1126,7 +1126,7 @@
+                                                            ClubAccessContext access,
+                                                            String requestId,
+                                                            String wechatState, String observedWxNo) {
+-        if (!wechatPayService.lockPaymentAttemptForUpdate(invoice.getOutTradeNo(), observedWxNo)) {
++        if (!wechatPayService.lockClosablePaymentAttemptForUpdate(invoice.getOutTradeNo(), observedWxNo)) {
+             throw new ServiceException("支付尝试已变化，未关闭当前账单", HttpStatus.CONFLICT);
+         }
+         if (invoice.getVersion() == null || clubMembershipMapper.markInvoiceClosedCas(
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java
+@@ -204,7 +204,7 @@
+ 
+     private boolean closeObservedOrder(OmsOrder order, String observedWxOutTradeNo) {
+         return Boolean.TRUE.equals(paymentTransaction().execute(status -> {
+-            if (!wechatPayService.lockPaymentAttemptForUpdate(order.getOrderSn(), observedWxOutTradeNo)) return false;
++            if (!wechatPayService.lockClosablePaymentAttemptForUpdate(order.getOrderSn(), observedWxOutTradeNo)) return false;
+             return orderMapper.markCommerceOrderClosed(order.getId()) == 1;
+         }));
+     }

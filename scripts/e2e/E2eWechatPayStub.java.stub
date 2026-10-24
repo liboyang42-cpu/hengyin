@@ -211,4 +211,6 @@ public class E2eWechatPayStub implements IWechatPayService {
         return null;
     }
 
+    @Override public boolean lockClosablePaymentAttemptForUpdate(String businessNo,String observedWxNo) { return false; }
+
 }
