@@ -60,6 +60,7 @@ on:
           - architecture-day-topic-copy
           - architecture-day-theme-intent
           - architecture-day-payment-intent
+          - architecture-day-arrival-instance
       classes:
         description: 可选，只跑批次内这些类（逗号分隔的简单类名），用于失败后定点复跑
         required: false
