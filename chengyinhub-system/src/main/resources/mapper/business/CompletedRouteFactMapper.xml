@@ -28,4 +28,76 @@
         where r.member_id = #{memberId} and r.status = 1
         order by r.topic_id, r.activity_id, r.id
     </select>
+
+    <resultMap id="NodeProgressPageRow" type="com.chengyinhub.business.service.support.CompletedRouteFactReader$NodeProgressRow">
+        <id property="inputId" column="input_id"/>
+        <result property="requestedMemberId" column="requested_member_id"/>
+        <result property="requestedActivityId" column="requested_activity_id"/>
+        <result property="requestedTopicId" column="requested_topic_id"/>
+        <result property="requestedNodeId" column="requested_node_id"/>
+        <result property="resolvedPlayInstanceId" column="resolved_play_instance_id"/>
+        <result property="routeSessionId" column="route_session_id"/>
+        <result property="frozenConfigVersion" column="frozen_config_version"/>
+        <result property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="nodeId" column="node_id"/>
+        <result property="playInstanceId" column="play_instance_id"/>
+        <result property="status" column="status"/>
+        <result property="checkinTime" column="checkin_time"/>
+        <result property="picUrl" column="pic_url"/>
+        <result property="reviewStatus" column="review_status"/>
+        <result property="longitude" column="longitude"/>
+        <result property="latitude" column="latitude"/>
+        <result property="puzzleScore" column="puzzle_score"/>
+        <result property="completionMode" column="completion_mode"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <!-- 有界页仅一条SQL；NULL instance按旧owner/PG当前局语义选择最新id，不先筛完成。
+         LEFT JOIN保留每个input id的缺来源结果；无Game/Generic到PG完成的fallback。
+         只返回同member/activity/topic/node/instance且del0的原PG；不读取或写入经济资格。 -->
+    <select id="selectNodeProgressPage" resultMap="NodeProgressPageRow" useCache="false">
+        select q.input_id, q.member_id as requested_member_id,
+               q.activity_id as requested_activity_id, q.topic_id as requested_topic_id,
+               q.node_id as requested_node_id,
+               coalesce(q.requested_instance, r.play_instance_id, 'default') as resolved_play_instance_id,
+               r.id as route_session_id, r.config_version as frozen_config_version,
+               p.id, p.member_id, p.activity_id, p.topic_id, p.node_id, p.play_instance_id,
+               p.status, p.checkin_time, p.pic_url, p.review_status, p.longitude, p.latitude,
+               p.puzzle_score, p.completion_mode, p.del_flag, p.create_time
+        from (
+            <choose>
+                <when test="requests != null and requests.size > 0">
+                    <foreach collection="requests" item="request" separator=" union all ">
+                        select cast(#{request.inputId,jdbcType=VARCHAR} as char(80)) as input_id,
+                               cast(#{request.memberId,jdbcType=BIGINT} as signed) as member_id,
+                               cast(#{request.activityId,jdbcType=BIGINT} as signed) as activity_id,
+                               cast(#{request.topicId,jdbcType=BIGINT} as signed) as topic_id,
+                               cast(#{request.nodeId,jdbcType=BIGINT} as signed) as node_id,
+                               cast(#{request.playInstanceId,jdbcType=VARCHAR} as char(64)) as requested_instance
+                    </foreach>
+                </when>
+                <otherwise>
+                    select null as input_id, null as member_id, null as activity_id,
+                           null as topic_id, null as node_id, null as requested_instance where 1=0
+                </otherwise>
+            </choose>
+        ) q
+        left join topic_route_session r on r.member_id = q.member_id
+          and r.activity_id = q.activity_id and r.topic_id = q.topic_id
+          and ((q.requested_instance is not null and r.play_instance_id = q.requested_instance)
+            or (q.requested_instance is null and r.id = (
+                select max(current_run.id) from topic_route_session current_run
+                where current_run.member_id = q.member_id and current_run.activity_id = q.activity_id
+                  and current_run.topic_id = q.topic_id)))
+        left join player_node_progress p on p.member_id = q.member_id
+          and p.activity_id = q.activity_id and p.topic_id = q.topic_id and p.node_id = q.node_id
+          and p.play_instance_id = coalesce(q.requested_instance, r.play_instance_id, 'default')
+          and p.del_flag = 0
+        where q.member_id = #{memberId} and #{memberId} &gt; 0
+        order by q.input_id, p.id
+    </select>
 </mapper>

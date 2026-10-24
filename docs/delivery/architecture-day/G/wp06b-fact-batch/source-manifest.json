@@ -1,0 +1,164 @@
+{
+  "kind": "STATIC_SOURCE_ONLY_NOT_JAVA_OR_DATABASE_VERIFICATION",
+  "base": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+  "tests": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CompletedRouteProgressPageReaderTest.java",
+      "ordinary_declarations": 9,
+      "parameterized_declarations": 0,
+      "expected_expanded_invocations": 9,
+      "case_names": [
+        "invalidOrForeignScopesAreRejectedBeforeAnyQuery",
+        "emptyPageDoesNotQueryOrFallBackToAllRows",
+        "everyInputIncludingMissingSourceIsReturnedInOriginalOrderInOneCall",
+        "photoPendingSolvedAndRevealedNeverBecomeVerifiedTaskReceipts",
+        "exactDefaultReplayAndCurrentRemainSeparateAndUnknownVersionsStayNull",
+        "omittedDuplicateOrUnrequestedInputCannotBeSilentlyAccepted",
+        "wrongSourceMemberActivityTopicInstanceAndDeletedRowsFailClosed",
+        "originalQueryFailurePropagatesWithoutDefaultOrOlderSourceFallback",
+        "oneHundredInputsStillUseOneMapperCall"
+      ],
+      "execution_status": "NOT_RUN_BY_G"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CompletedRouteProgressPageMySqlIT.java",
+      "ordinary_declarations": 11,
+      "parameterized_declarations": 0,
+      "expected_expanded_invocations": 11,
+      "case_names": [
+        "everyInputHasBidirectionallyEqualLegacyRowsAndCompletionObservation",
+        "currentUsesNewestBeforeStatusWhileExactOldRunStaysReadable",
+        "scopeAndInstanceDifferencesCannotBorrowAnotherSource",
+        "photosSolvedAndRevealedRemainDistinctWithoutInventingTaskVerification",
+        "completedRouteWithoutProgressDoesNotBecomeCompletedNodeFallback",
+        "personalAndSharedBasicArrivalsStayMemberFactsWithNoTeamCompletionClaim",
+        "oneAndHundredInputsEachUseOneActualMyBatisStatement",
+        "invalidScopeEmptyAndOversizedPagesIssueNoSql",
+        "repeatedReadsLeaveAllProgressSessionsAndReceiptsUnchanged",
+        "aPartialInputUniverseMustNotBeAdvertisedAsTheWholeCompanionCount",
+        "directMapperEmptyOrForeignInputsCannotBecomeUnscopedRead"
+      ],
+      "execution_status": "NOT_RUN_BY_G"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CompletedRouteFactReaderTest.java",
+      "ordinary_declarations": 3,
+      "parameterized_declarations": 0,
+      "expected_expanded_invocations": 3,
+      "case_names": [
+        "missingOrAnonymousMemberDoesNotBecomeAnUnscopedQuery",
+        "routeOnlyFactsAreDiscoveredInOneQueryWithFrozenIdentityIntact",
+        "sourceDifferencePreservesActivityAndTopicInsteadOfFlatteningByTopic"
+      ],
+      "execution_status": "NOT_RUN_BY_G"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CompletedRouteFactMapperMySqlIT.java",
+      "ordinary_declarations": 4,
+      "parameterized_declarations": 0,
+      "expected_expanded_invocations": 4,
+      "case_names": [
+        "currentCompletedSetExcludesOldSuccessRunningEndedAndOtherMembers",
+        "zeroNodeRowsStillDiscoverRouteCompletionAndPreserveFrozenVersion",
+        "missingMemberNeverFallsBackToAllOwners",
+        "repeatedReadLeavesSessionsAndSourceReceiptsUnchanged"
+      ],
+      "execution_status": "NOT_RUN_BY_G"
+    }
+  ],
+  "new_expected_invocations": 20,
+  "four_G_classes_expected_invocations": 27,
+  "existing_route_method_and_statements_byte_unchanged": true,
+  "protected_files_byte_unchanged": [
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayProofServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerNodeProgressServiceImpl.java",
+    "chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml",
+    "chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ExploreCompletionReadServiceImpl.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CompletedRouteFactReaderTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CompletedRouteFactMapperMySqlIT.java"
+  ],
+  "files": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CompletedRouteFactReader.java",
+      "candidate_sha256": "67c63ce4058429ca683b91c371583e22cdb653972b0231f08da3c457725006dc",
+      "base_sha256": "a64d94bd1cd258980fdb15eecc048012c9af0cc6fd6625eae057ae9d3c484f08"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CompletedRouteFactMapper.java",
+      "candidate_sha256": "a532119654c7e6981e38f7605682c2e5b00cbfbf25e474ba0ad57c5e9f25950e",
+      "base_sha256": "eb6c8390c6690685d958b19a0550910a9e4ed76911f28129cf53f7848b1ebdda"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CompletedRouteFactMapper.xml",
+      "candidate_sha256": "2367b52c9b5da63c07e261ff389694088a751caefb079e3bd7fba188b17c96eb",
+      "base_sha256": "48cacbc75efd3abc2685e45d909da33a683fd3b678b9111bef19885ddde6bf80"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CompletedRouteProgressPageReaderTest.java",
+      "candidate_sha256": "f77d37df37c3700b7a2ebeca416c0595a2d639d0d720d04f272e5e5bdadc8ca8"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CompletedRouteProgressPageMySqlIT.java",
+      "candidate_sha256": "46ca623cf35cc052142cb893698f5a8735882107d35af84832789b2f49fcd2b1"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+      "candidate_sha256": "7dae1fb4b87a98c3a588180b930ceb6ef36ba38e06add40cfa6936507fbea89a",
+      "base_sha256": "7dae1fb4b87a98c3a588180b930ceb6ef36ba38e06add40cfa6936507fbea89a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayProofServiceImpl.java",
+      "candidate_sha256": "4faca67b9a759a09d583a62f6c148a7d5abdbb30fd6fbf4079fb70ff21dd9272",
+      "base_sha256": "4faca67b9a759a09d583a62f6c148a7d5abdbb30fd6fbf4079fb70ff21dd9272"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerNodeProgressServiceImpl.java",
+      "candidate_sha256": "33029a66e2fbc95471c64bd5e98186b738aef031fc359807c9e8e4006a930011",
+      "base_sha256": "33029a66e2fbc95471c64bd5e98186b738aef031fc359807c9e8e4006a930011"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml",
+      "candidate_sha256": "ca10b337c901c6aecc3aef6f08b7ba10ca0392665f8677b4bf875897a77684fc",
+      "base_sha256": "ca10b337c901c6aecc3aef6f08b7ba10ca0392665f8677b4bf875897a77684fc"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml",
+      "candidate_sha256": "7e05fb1cad8af4507aa6fb44be1d10449b9b4041376b5b91cc37a5789742d5ee",
+      "base_sha256": "7e05fb1cad8af4507aa6fb44be1d10449b9b4041376b5b91cc37a5789742d5ee"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ExploreCompletionReadServiceImpl.java",
+      "candidate_sha256": "faee4b17a7db916bb9746c4aee74d35d36dad107a6cf348421f115108449eea9",
+      "base_sha256": "faee4b17a7db916bb9746c4aee74d35d36dad107a6cf348421f115108449eea9"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CompletedRouteFactReaderTest.java",
+      "candidate_sha256": "a67e4767cb4191c9adb73c77423fe8be937b091d06da78537cedc9709bbd9424",
+      "base_sha256": "a67e4767cb4191c9adb73c77423fe8be937b091d06da78537cedc9709bbd9424"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CompletedRouteFactMapperMySqlIT.java",
+      "candidate_sha256": "c9997c547346a49422b05a775332a37265ec2c88a624930b0725e8a380acfd21",
+      "base_sha256": "c9997c547346a49422b05a775332a37265ec2c88a624930b0725e8a380acfd21"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/resources/it-schema/journey-full-flow-it-schema.sql",
+      "candidate_sha256": "a2a8c66ac0e515dfe1533c6278ecd9004eefb0f673dcb0de6634bd90f4f42204",
+      "base_sha256": "a2a8c66ac0e515dfe1533c6278ecd9004eefb0f673dcb0de6634bd90f4f42204"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260823_topic_route_graph.sql",
+      "candidate_sha256": "a3655b35c4616d60b753c1aa6b78befa964fbc0a6d8b3c0a5d9f88194775e811",
+      "base_sha256": "a3655b35c4616d60b753c1aa6b78befa964fbc0a6d8b3c0a5d9f88194775e811"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_theme_runtime_20261004.sql",
+      "candidate_sha256": "61794ccd8681bfaac0d07208c7d0f3108780f919ee5aeff17951518f999d9007",
+      "base_sha256": "61794ccd8681bfaac0d07208c7d0f3108780f919ee5aeff17951518f999d9007"
+    }
+  ],
+  "consumer_switch": false,
+  "java_or_database_execution_by_G": 0
+}

@@ -1,0 +1,15 @@
+{
+  "algorithm": "SHA-256",
+  "excludes_self": true,
+  "files": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CompletedRouteProgressPageMySqlIT.java": "46ca623cf35cc052142cb893698f5a8735882107d35af84832789b2f49fcd2b1",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CompletedRouteProgressPageReaderTest.java": "f77d37df37c3700b7a2ebeca416c0595a2d639d0d720d04f272e5e5bdadc8ca8",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CompletedRouteFactMapper.java": "a532119654c7e6981e38f7605682c2e5b00cbfbf25e474ba0ad57c5e9f25950e",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CompletedRouteFactReader.java": "67c63ce4058429ca683b91c371583e22cdb653972b0231f08da3c457725006dc",
+    "chengyinhub-system/src/main/resources/mapper/business/CompletedRouteFactMapper.xml": "2367b52c9b5da63c07e261ff389694088a751caefb079e3bd7fba188b17c96eb",
+    "docs/delivery/architecture-day/G/wp06b-fact-batch/CASES.md": "89c159f20febb1735a75645309eff29efe0ad63e5119422d1eb1b383f259d3f9",
+    "docs/delivery/architecture-day/G/wp06b-fact-batch/README.md": "3acfa11ebbcd738282fa6f9889605e8249992268e91562ebe2a7051723faa27e",
+    "docs/delivery/architecture-day/G/wp06b-fact-batch/source-manifest.json": "332dd90e73bef81dcc53be0c7adbff434d952119bb6e94ebbc024f39899b39b9",
+    "docs/delivery/architecture-day/G/wp06b-fact-batch/verify_static.py": "151a0d18d0cd502cbacfbbe9c72f129455a587e8412f702f3b075e7f0fec0bc3"
+  }
+}
