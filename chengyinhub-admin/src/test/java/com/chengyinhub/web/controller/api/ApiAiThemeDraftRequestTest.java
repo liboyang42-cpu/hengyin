@@ -111,4 +111,39 @@ class ApiAiThemeDraftRequestTest {
         verify(requests, never()).read(anyLong(), eq("x"));
         verify(requests, never()).read(eq(MEMBER + 1), anyString());
     }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void actualRequestServiceKeepsUnknownMachineCodeAndOriginalRidAcrossSubmitReplayAndReadback() {
+        java.util.Map<Object, Object> store = new java.util.HashMap<>();
+        org.springframework.data.redis.core.RedisTemplate<Object, Object> redis = mock(org.springframework.data.redis.core.RedisTemplate.class);
+        org.springframework.data.redis.core.ValueOperations<Object, Object> values = mock(org.springframework.data.redis.core.ValueOperations.class);
+        when(redis.opsForValue()).thenReturn(values);
+        when(values.setIfAbsent(any(), any(), anyLong(), eq(java.util.concurrent.TimeUnit.HOURS)))
+                .thenAnswer(call -> store.putIfAbsent(call.getArgument(0), call.getArgument(1)) == null);
+        when(values.get(any())).thenAnswer(call -> store.get(call.getArgument(0)));
+        org.mockito.Mockito.doAnswer(call -> { store.put(call.getArgument(0), call.getArgument(1)); return null; })
+                .when(values).set(any(), any(), anyLong(), eq(java.util.concurrent.TimeUnit.HOURS));
+        AiThemeDraftRequestService actual = new AiThemeDraftRequestService();
+        ReflectionTestUtils.setField(actual, "aiCreatorService", creator);
+        ReflectionTestUtils.setField(actual, "redisTemplate", redis);
+        ReflectionTestUtils.setField(controller, "themeDraftRequests", actual);
+        when(creator.themeDraft(any(), eq(MEMBER))).thenThrow(
+                new com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException("provider outcome unknown", null));
+
+        for (int attempt = 0; attempt < 2; attempt++) {
+            AjaxResult result = controller.themeDraft(req(RID));
+            assertEquals(409, result.get(AjaxResult.CODE_TAG));
+            assertEquals("AI_DRAFT_OUTCOME_UNKNOWN", result.get("errorCode"));
+            assertEquals(RID, result.get("requestId"));
+            assertEquals(AiThemeDraftRequestState.UNKNOWN, result.get("requestState"));
+            org.junit.jupiter.api.Assertions.assertNull(result.get(AjaxResult.DATA_TAG));
+        }
+        AjaxResult read = controller.themeDraftRequest(RID);
+        assertEquals(200, read.get(AjaxResult.CODE_TAG));
+        AiThemeDraftRequestState original = (AiThemeDraftRequestState) read.get(AjaxResult.DATA_TAG);
+        assertEquals(RID, original.getRequestId()); assertEquals(AiThemeDraftRequestState.UNKNOWN, original.getState());
+        verify(creator, org.mockito.Mockito.times(1)).themeDraft(any(), eq(MEMBER));
+        org.mockito.Mockito.verifyNoInteractions(requests);
+    }
 }

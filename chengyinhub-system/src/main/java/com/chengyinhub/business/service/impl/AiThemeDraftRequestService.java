@@ -15,13 +15,14 @@ import com.chengyinhub.business.domain.dto.ai.AiThemeDraftReq;
 import com.chengyinhub.business.domain.vo.ai.AiThemeDraftRequestState;
 import com.chengyinhub.business.domain.vo.ai.AiThemeDraftResp;
 import com.chengyinhub.business.service.IAiCreatorService;
+import com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException;
 import com.chengyinhub.business.service.ai.AiServiceException;
 
 /**
  * AI 主题草稿的 requestId 幂等与回读(#22)。
  *
  * <p>同一会员 + 同一 requestId 只调一次模型:先在 Redis 占位 PROCESSING,再进 {@link IAiCreatorService#themeDraft};
- * 终态(SUCCEEDED 带当时那份草稿 / FAILED 带原因)写回同一键。重复提交与回读都只读这条记录,不再调模型。
+ * 结果(SUCCEEDED 带当时那份草稿 / FAILED 带原因 / UNKNOWN 保留原请求)写回同一键。重复提交与回读都只读这条记录,不再调模型。
  *
  * <p>占位后超过租约仍无终态 = UNKNOWN:进程可能在模型返回后、写终态前退出。此时既不能说「没生成」,
  * 也不能拿额度变化去推断「已生成」—— 额度会因释放、跨日、其它请求而变化,不是这一次生成的证据。
@@ -107,6 +108,11 @@ public class AiThemeDraftRequestService
             writeTerminal(key, done);
             return out;
         }
+        catch (AiProviderOutcomeUnknownException unknown)
+        {
+            // Only the provider subtype proves an uncertain original call; input failures keep their policy.
+            out.setState(AiThemeDraftRequestState.UNKNOWN);
+        }
         catch (AiServiceException e)
         {
             out.setState(AiThemeDraftRequestState.FAILED);
@@ -118,10 +124,10 @@ public class AiThemeDraftRequestService
             out.setState(AiThemeDraftRequestState.FAILED);
             out.setMessage(GENERIC_FAILURE);
         }
-        JSONObject failed = new JSONObject();
-        failed.put("state", AiThemeDraftRequestState.FAILED);
-        failed.put("message", out.getMessage());
-        writeTerminal(key, failed);
+        JSONObject terminal = new JSONObject();
+        terminal.put("state", out.getState());
+        terminal.put("message", out.getMessage());
+        writeTerminal(key, terminal);
         return out;
     }
 
