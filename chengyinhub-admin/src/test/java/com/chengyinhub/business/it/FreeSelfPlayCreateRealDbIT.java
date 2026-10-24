@@ -125,7 +125,10 @@ class FreeSelfPlayCreateRealDbIT {
             // 2026-10-14 集成:快照之后仓库演进到本 IT 用到的列(mapper 已读)一并叠加，否则查询直接 Unknown column。
             for (String name : new String[]{
                     "migration_20260919_cms_registration_selfplay_ticket_columns_nullable.sql",
-                    "migration_20260930_registration_first_successful_scan.sql"}) {
+                    "migration_20260930_registration_first_successful_scan.sql",
+                    // 2026-10-24 验收：MmsMerchantMapper 已读写 wechat_qrcode / category_ids(建单门禁查商家营业状态时触达)
+                    "migration_merchant_wechat_qrcode_20261022.sql",
+                    "migration_merchant_category_ids_20261022.sql"}) {
                 java.io.File migration = new java.io.File("sql/" + name);
                 if (!migration.exists()) {
                     // surefire 工作目录是模块目录时走 ../;两种都认,别再犯 ExploreItDatabase 被 cwd 咬的错。

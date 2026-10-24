@@ -34,6 +34,11 @@ class GameplayReskinMySqlIT {
                     "sql/migration_club_direct_merchant_receivable_20261004.sql",
                     "sql/migration_20261012_app_media_asset.sql",
                     "sql/migration_20261012_app_media_asset_namespaces.sql");
+            // 2026-10-24 验收：草稿发布读 cms_topic.review_flag(#380)。真迁移 migration_audit_level_20261020.sql
+            // 还要求 community_post 存在，本 IT 不建该表，故按同形状(TINYINT NOT NULL DEFAULT 0)单列叠加。
+            try(java.sql.Statement ddl=connection.createStatement()) {
+                ddl.execute("ALTER TABLE cms_topic ADD COLUMN review_flag TINYINT NOT NULL DEFAULT 0");
+            }
         }
         Configuration configuration=new Configuration();configuration.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
         for(String name:Arrays.asList("CmsTopicMapper","CmsTopicChapterMapper","CmsTopicNodeMapper","CmsMemberTemplateMapper","OmsTicketMapper","MerchantChapterOfferMapper","AppMediaAssetMapper","ThemeStateKeyMapper","GameSessionRuntimeMapper","PlayTeamMapper")) {
