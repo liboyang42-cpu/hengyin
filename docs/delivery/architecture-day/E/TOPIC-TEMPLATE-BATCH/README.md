@@ -1,6 +1,6 @@
 # E 模板详情节点模板批读
 
-parent：`9e14a73e50c9afd5c8f38027c3ecd059967a51d3`，独立分支 `codex/architecture-day-e-topic-template-batch`；此前 TopicQuery/地图候选不改。仅 TopicQuery、专属测试及本目录；无需追加 CmsTopic 接线，继续沿用父片两个 review.patch，由 root 串行合成。没有新 namespace/接口/SQL/缓存/依赖：复用现有 `com.chengyinhub.business.mapper.CmsMemberTemplateMapper.selectCmsMemberTemplateByIds`，Mapper.java/XML 均不改，不涉及 D/G 写侧。
+源码基线：`9e14a73e50c9afd5c8f38027c3ecd059967a51d3`，独立分支 `codex/architecture-day-e-topic-template-batch`；此前 TopicQuery/地图候选不改。仅 TopicQuery、专属测试及本目录；无需追加 CmsTopic 接线，继续沿用父片两个 review.patch，由 root 串行合成。没有新 namespace/接口/SQL/缓存/依赖：复用现有 `com.chengyinhub.business.mapper.CmsMemberTemplateMapper.selectCmsMemberTemplateByIds`，Mapper.java/XML 均不改，不涉及 D/G 写侧。
 
 已证实路径与逻辑 SQL 数（不是运行性能）：
 
@@ -16,4 +16,4 @@ parent：`9e14a73e50c9afd5c8f38027c3ecd059967a51d3`，独立分支 `codex/archit
 
 测试源码：原 TopicQueryServiceTest 六例场景/断言不变，仅一个 mapper stub 接到批读；父片 44 旧案例/fixture 不改。新增 TopicQueryTemplateBatchTest 五例覆盖：乱序 SQL 行/重复/缺失模板和完整七字段影子、3章夹具原14→预期10次 mapper调用、300/601节点 IN 分块与无截断、空/null/非正 ID 不查、DB 异常不假空与新请求恢复、真实生产 XML 的 MyBatis BoundSql/同结果映射检查（部分边界同一例）。公开拒绝零下游与敏感字段负控沿原六例。
 
-实际执行：本目录 verify-static.py、git diff/原方法机械对照、精确文件门禁及有限秘密模式扫描 PASS。**Java/JUnit/MySQL/Redis/CI/DevTools/完整 gitleaks 均 NOT_RUN**；五例及上述次数是待 root 同源执行的断言，不是数据库测量。父片逐字迁移校验绑定父片冻结源码，本次有意改变一个方法取行点，使用本目录对照增量，不挪用旧测试回执。
+实际执行：本目录 verify-static.py、git diff/原方法机械对照、精确文件门禁及有限秘密模式扫描 PASS。**Java/JUnit/MySQL/Redis/CI/DevTools/完整 gitleaks 均 NOT_RUN**；五例及上述次数是待 root 同源执行的断言，不是数据库测量。父片逐字迁移校验绑定父片冻结源码，本次有意改变一个方法取行点，使用本目录对照增量，不挪用旧测试回执。首片 `28d179ff` 后追加影子测试表示修正：比较实际序列化 JSON，避免 valueToTree 的 LongNode 与文字 JSON 的 IntNode 差异；不改生产字节、原断言字段或案例数，不改写首片。

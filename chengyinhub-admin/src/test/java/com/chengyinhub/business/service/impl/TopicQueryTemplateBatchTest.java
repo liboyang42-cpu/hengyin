@@ -66,7 +66,8 @@ class TopicQueryTemplateBatchTest {
         String expected = "[{\"id\":201,\"title\":\"game-201\",\"imgUrl\":\"image-201\",\"players\":\"2\",\"duration\":5,\"difficulty\":\"easy\",\"interactionType\":\"type-201\"},"
                 + "{\"id\":202,\"title\":\"game-202\",\"imgUrl\":\"image-202\",\"players\":\"2\",\"duration\":5,\"difficulty\":\"easy\",\"interactionType\":\"type-202\"},"
                 + "{\"id\":204,\"title\":\"game-204\",\"imgUrl\":\"image-204\",\"players\":\"2\",\"duration\":5,\"difficulty\":\"easy\",\"interactionType\":\"type-204\"}]";
-        ObjectMapper json = new ObjectMapper(); assertEquals(json.readTree(expected), json.valueToTree(detail.getGames()));
+        ObjectMapper json = new ObjectMapper();
+        assertEquals(json.readTree(expected), json.readTree(json.writeValueAsString(detail.getGames())));
         assertFalse(json.writeValueAsString(detail).contains("private-answer"));
         assertEquals(6, java.util.stream.Stream.concat(first.stream(), second.stream())
                 .filter(n -> n.getTemplateId() != null && n.getTemplateId() > 0).count(), "former singleton SQL count");
