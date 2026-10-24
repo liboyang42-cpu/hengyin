@@ -1,0 +1,491 @@
+{
+  "reviewer_executed_java_database_or_dispatch": false,
+  "method": "Independent download of original artifacts; parse XML, match testcase names, source/run/attempt, SHA256 identity and cleanup receipts. No supplier calls.",
+  "unit_same_source": {
+    "run": 40044336447,
+    "source": "6ecaea01e0e1a3f3182189615bc00cf9f791fd47",
+    "artifact_id": 12540841721,
+    "zip_sha256": "b0b1a32a49fc02d5049404ea837cee6a0f54759696f4a748f53fa93540802414",
+    "suites": [
+      {
+        "class": "ClubLeadGateTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.ClubLeadGateTest.xml",
+        "sha256": "bc19062116ab6ace7f37b8a4791485575b0e410b3fc99a2b9d2ad5ff526b8dac",
+        "suite": {
+          "name": "com.chengyinhub.web.controller.api.ClubLeadGateTest",
+          "tests": "10",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        "case_count": 10,
+        "nonpasses": [],
+        "testcases": [
+          "chapterDependencyFailureDoesNotGrantAnUnopenedChapter",
+          "noLeadStateOrSettledOrSelfPlayNotBlocked",
+          "routeRuntimeOverridesStaleLegacyGatheringAndChapterState",
+          "selfPlayStillBypassesAllLeadDependencies",
+          "runtimeLookupFailureDoesNotFallBackToLegacyAdmission",
+          "gatheringBlocksAllProgress",
+          "lockedChapterRejected_unlockedAndEarlierAllowed",
+          "existingPermissionRefusalKeepsItsCodeAndIsNeverRelabeledUnknownOrNotRun",
+          "missingMandatoryMapperCannotGrantNonLeadAdmission",
+          "storageFailureIsSafeRetryableNotRunRatherThanNonLead"
+        ]
+      },
+      {
+        "class": "PlayLeadAdmissionFailureTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.PlayLeadAdmissionFailureTest.xml",
+        "sha256": "ce86d34afd9f1af1364815b15768fed447fa02dc9e7b038e42153075dda8b798",
+        "suite": {
+          "name": "com.chengyinhub.web.controller.api.PlayLeadAdmissionFailureTest",
+          "tests": "16",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        "case_count": 16,
+        "nonpasses": [],
+        "testcases": [
+          "scanFaultDoesNotCompleteReceiptOrProgress",
+          "preferenceSubmitRecoveryPassesTheOriginalCommandAfterOriginalRouteAdmission",
+          "preferenceNodeOwnershipRefusalStillPrecedesLeadAndRouteForBothHttpMethods",
+          "preferenceBothHttpMethodsKeepOriginal403WithoutEnteringRouteOrPreference",
+          "answerFaultDoesNotCompleteReceiptOrAward",
+          "preferenceSubmitFaultNeverCallsPreferenceMutation",
+          "freeCollectFilterPhotoFaultEscapesTheInnerIllegalStateCatch",
+          "photoFaultEscapesLocalCatchAndDoesNotSubmitProof",
+          "preferenceLeadRefusalTakesPriorityOverUnlockAndRouteRefusalForBothHttpMethods",
+          "revealFaultReturnsNoAnswerOrCompletion",
+          "preferenceReadFaultReturnsNoPreferencePayload",
+          "hintUnlockFaultReturnsNoHintAndNeverReachesPricingOrDebit",
+          "preferenceReadRecoveryStillCallsOriginalRouteAndLoadsPreference",
+          "gpsFaultDoesNotCompleteReceiptOrProgress",
+          "puzzleHintFaultReturnsNoHintOrAttempt",
+          "sensorFaultNeverAcquiresSensorOrAwards"
+        ]
+      },
+      {
+        "class": "ApiPlayCurrentUseBoundaryTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.ApiPlayCurrentUseBoundaryTest.xml",
+        "sha256": "445ed254ddb054c012fc971388e33cf9b629140a8de39183e33905ae8d2cbdd9",
+        "suite": {
+          "name": "com.chengyinhub.web.controller.api.ApiPlayCurrentUseBoundaryTest",
+          "tests": "6",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        "case_count": 6,
+        "nonpasses": [],
+        "testcases": [
+          "expiredSelfPlayPassStillFinishesARouteAlreadyStarted",
+          "missingEndRejectsAndCorrectionRestoresOriginalEntry",
+          "ordinaryFreeRegistrationReachesSameOriginalAnswerEntry",
+          "refundedCurrentRowDoesNotUseOldPaidSnapshot",
+          "expiredSelfPlayPassCannotStartANewRoute",
+          "expiredExploreOrderCannotReachOriginalAnswerMechanism"
+        ]
+      },
+      {
+        "class": "AiGatewayNotSentQuotaTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.ai.impl.AiGatewayNotSentQuotaTest.xml",
+        "sha256": "7ca46b0cc0d13a79a7fd75f4f77418dc7456a35e3686a147519fe17de11c9c9a",
+        "suite": {
+          "name": "com.chengyinhub.business.service.ai.impl.AiGatewayNotSentQuotaTest",
+          "tests": "4",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        "case_count": 4,
+        "nonpasses": [],
+        "testcases": [
+          "playerDraftNotSentLeavesItsSeparateOriginalPoolToCreator",
+          "exactNotSentCompensatesOnlyOriginalReceiptAfterModelStageAndMapsToUnavailable",
+          "receivedResultRetentionFailureCannotBeTreatedAsUnsentEvenIfItThrowsThatClass",
+          "ordinaryFailuresAndWrappedNotSentNeverAcquireTheTrustedClassification"
+        ]
+      },
+      {
+        "class": "PhotoCheckVisionNotSentQuotaTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.ai.PhotoCheckVisionNotSentQuotaTest.xml",
+        "sha256": "ac6d4820f37584e5fdb0e324348b06495232b92399fd5d1157511effa8793db3",
+        "suite": {
+          "name": "com.chengyinhub.business.service.ai.PhotoCheckVisionNotSentQuotaTest",
+          "tests": "5",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        "case_count": 5,
+        "nonpasses": [],
+        "testcases": [
+          "validReceivedAnswerStillRetainsItsOriginalQuota",
+          "notSentFromRetentionAfterActualAnswerIsNotARefundProof",
+          "ordinaryFailureAndWrappedMarkerStayUnknownWithoutRefundOrRetry",
+          "directReviewUsesTheSameTypedCatchWithoutCreatingAnotherReservation",
+          "typedNotSentAfterSnapshotCompensatesOriginalDayTokenAndKeepsDegradedResult"
+        ]
+      },
+      {
+        "class": "NpcChatGatewayNotSentContractTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.NpcChatGatewayNotSentContractTest.xml",
+        "sha256": "9e7d93627b791f3ff059efc611c4abbc1ec4c461190f1a05295a5e8dab06457c",
+        "suite": {
+          "name": "com.chengyinhub.business.service.impl.NpcChatGatewayNotSentContractTest",
+          "tests": "2",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        "case_count": 2,
+        "nonpasses": [],
+        "testcases": [
+          "typedUnsentMapsToStoredNotRunAndSameNpcRequestDoesNotReserveOrSendAgain",
+          "ordinaryProviderFailureKeepsOriginalUnknownAndNeverCompensates"
+        ]
+      },
+      {
+        "class": "HttpUtilsJsonPostTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.common.utils.http.HttpUtilsJsonPostTest.xml",
+        "sha256": "7b2396afecd73acebf880324bd3e9fb87950edda273f7092ab4107ba884ed32f",
+        "suite": {
+          "name": "com.chengyinhub.common.utils.http.HttpUtilsJsonPostTest",
+          "tests": "15",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        "case_count": 15,
+        "nonpasses": [],
+        "testcases": [
+          "knownOversizedLengthIsRejectedBeforeWaitingForBody",
+          "callerCloseCannotReleaseATransferredRunningAttempt",
+          "slowDripIsBoundedByAbsoluteTotalAndIsNeverUnsent",
+          "lostProviderResponseNeverReplaysThePost",
+          "ownQueuedTimeoutRemovesOnlyThatTaskAndSaturationNeverDispatches",
+          "legacyExceptionNeverInventsNotSentEvidence",
+          "providerErrorsRedirectAndAuthChallengeNeverRetryOrBecomeUnsent",
+          "exactOneMiBResponseIsAccepted",
+          "queuedCancellationWinsCasAndPreventsEveryLaterDispatch",
+          "invalidHeaderUrlAndExpiredDeadlineAreUnsentAndReleaseOnce",
+          "blockedPhysicalPostRetainsLeaseWhenDeadlineAndCleanupRejectionReturnToCaller",
+          "concurrentCancelAndDispatchHaveOneWinnerAndNoPrematureRelease",
+          "cancellationDuringPreparationWaitsForPhysicalWorkerFinally",
+          "authenticatedJsonPostPreservesProtocolAndReleasesItsLease",
+          "decodedGzipAndChunkedBodiesCannotExceedOneMiB"
+        ]
+      },
+      {
+        "class": "AiHttpAdmissionTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.ai.AiHttpAdmissionTest.xml",
+        "sha256": "d22efd2643628637af929e421d7759091b208f1ba48238ca7ede7c13113b14ef",
+        "suite": {
+          "name": "com.chengyinhub.business.service.ai.AiHttpAdmissionTest",
+          "tests": "8",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        "case_count": 8,
+        "nonpasses": [],
+        "testcases": [
+          "processGlobalFourCannotBeBypassedByDifferentAdmissionInstances",
+          "invalidOriginsAndInterruptFailBeforeAdmissionWithoutLosingSlots",
+          "oldConstructorCannotSendWithoutStartupAdmissionButReadinessRemainsLocal",
+          "canonicalOriginsShareTwoSlotsAndDoNotDynamicallyRegister",
+          "realAdmissionStaysHeldAfterCallerTimeoutAndCleanupRejectionUntilWorkersExit",
+          "productionBeansUseOneFixedOriginRegistry",
+          "fourRealAiCallsLeaveOtherCommonHttpUsableAndFifthNeverReachesServer",
+          "configurationAndSerializationFailuresAreTypedUnsentAndReleaseOriginalAdmission"
+        ]
+      },
+      {
+        "class": "OpenAiCompatibleLlmClientVisionTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClientVisionTest.xml",
+        "sha256": "72fbb985b4181b524b23afe9663caf4618197a2625198f7ad4b03d9a51f6c793",
+        "suite": {
+          "name": "com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClientVisionTest",
+          "tests": "2",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        "case_count": 2,
+        "nonpasses": [],
+        "testcases": [
+          "视觉请求体是OpenAI数组格式且鉴权头正确",
+          "负控_未配置key时不发请求直接抛"
+        ]
+      },
+      {
+        "class": "OpenAiCompatibleLlmClientLogRedactionTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClientLogRedactionTest.xml",
+        "sha256": "0e1bb04cec4098715242dec85b24bb31c337840319165935f37db0d912b2ee5a",
+        "suite": {
+          "name": "com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClientLogRedactionTest",
+          "tests": "2",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        "case_count": 2,
+        "nonpasses": [],
+        "testcases": [
+          "解析失败时异常信息不回显响应字节",
+          "非2xx响应体不进日志也不进异常"
+        ]
+      },
+      {
+        "class": "HttpUtilsSecurityTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.common.utils.http.HttpUtilsSecurityTest.xml",
+        "sha256": "e8a6b3a7b8f5674a2ca3723a45040c2a9ae476d260f82de05bb78ae414d1c410",
+        "suite": {
+          "name": "com.chengyinhub.common.utils.http.HttpUtilsSecurityTest",
+          "tests": "19",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        "case_count": 19,
+        "nonpasses": [],
+        "testcases": [
+          "successfulResponsesReturnTheirConnectionToTheJdkKeepAlivePool",
+          "postIsNotAutomaticallyReplayedByTransport",
+          "transportDoesNotFollowRedirectsForAnyEntryPoint",
+          "knownOversizedContentLengthIsRejectedBeforeWaitingForBody",
+          "shorterTotalDeadlineCapsRealBlockedConnectAndWorkerReturns",
+          "realBlockedConnectHonorsConnectTimeoutAndWorkerReturns",
+          "retryBackoffIsInterruptibleAndDoesNotStartAnotherAttempt",
+          "streamedResponseBodyLimitFailsExplicitlyWithoutRetry",
+          "retryPolicyAllowsOnlyKnownTransientNetworkFailures",
+          "defaultGetAndPostNeverRetry",
+          "disconnectQueueSaturationRejectsWithoutRunningInCaller",
+          "readTimeoutAppliesBeforeTheLongerTotalDeadline",
+          "totalTimeoutDisconnectsABlockedPostBody",
+          "totalTimeoutStopsAResponseThatKeepsDrippingBytes",
+          "sslPostEntryPointIsNotAutomaticallyReplayedByTransport",
+          "explicitlyIdempotentGetRetriesOnceWithBoundedBackoff",
+          "infoLogsOnlyMetadataAndNeverQueryCredentialsPhoneOrResponseBody",
+          "noRetryGetIsNotAutomaticallyReplayedByTransport",
+          "idempotentGetRetryComesOnlyFromOurPolicy"
+        ]
+      },
+      {
+        "class": "OWN_C05_15Test",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C05_15Test.xml",
+        "sha256": "9224893f59caa7c705a92dcf142dbab42ca9e73be66916a6d05f287a068e6a5a",
+        "suite": {
+          "name": "com.chengyinhub.business.longrun.OWN_C05_15Test",
+          "tests": "1",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        "case_count": 1,
+        "nonpasses": [],
+        "testcases": [
+          "onlyNonblankStringContentCanBeReturnedAsModelText"
+        ]
+      },
+      {
+        "class": "OWN_C05_16Test",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C05_16Test.xml",
+        "sha256": "3cf900c24910d6758936c3d95c0ebb66810c5a577a338eb08d9773a5deb6ea82",
+        "suite": {
+          "name": "com.chengyinhub.business.longrun.OWN_C05_16Test",
+          "tests": "1",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        "case_count": 1,
+        "nonpasses": [],
+        "testcases": [
+          "missingOrWhitespaceOnlyKeyIsRejectedLocally"
+        ]
+      },
+      {
+        "class": "OWN_C05_20Test",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C05_20Test.xml",
+        "sha256": "fac064044c4f9f276fdf9d7e9413e3a67059c1df72be53659fe95d1bce25db5a",
+        "suite": {
+          "name": "com.chengyinhub.business.longrun.OWN_C05_20Test",
+          "tests": "1",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        "case_count": 1,
+        "nonpasses": [],
+        "testcases": [
+          "auditAndHttpErrorBriefsNeverSplitAnExistingSurrogatePair"
+        ]
+      }
+    ],
+    "identity_reports_sha256_verified": true,
+    "identity_source_run_attempt": {
+      "source_sha": "6ecaea01e0e1a3f3182189615bc00cf9f791fd47",
+      "run_id": "40044336447",
+      "run_attempt": "1"
+    }
+  },
+  "storage_different_sources": [
+    {
+      "artifact_id": 12539963789,
+      "zip_sha256": "bd4628208882b61460af3b3804a76b76ceaa0176c94af607696b7fbfba43a49f",
+      "receipt_sha256": "081352a31e60fb41b634a914ae75f1c111811712373e83598afb1d313377b154",
+      "source": "9a2dcf21aef4d7aec7a14065a2601bd86aaad805",
+      "precheck_source": "9a2dcf21aef4d7aec7a14065a2601bd86aaad805",
+      "workflow_sha": "6ecaea01e0e1a3f3182189615bc00cf9f791fd47",
+      "run": "40044166369",
+      "attempt": "1",
+      "counts": {
+        "tests": 4,
+        "passed": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "cleanup": {
+        "mysql_leftover_schemas": [],
+        "mysql_schemas_after": [
+          "information_schema",
+          "mysql",
+          "performance_schema",
+          "sys"
+        ],
+        "status": "CLEAN"
+      },
+      "maven_exit": 0,
+      "xml": [
+        {
+          "path": "surefire-reports/TEST-com.chengyinhub.business.it.PlayLeadAdmissionFailureMySqlIT.xml",
+          "sha256": "623b66b26368ec7db1c5b8e3af50c6cd6edc0e5f60bf46ced2c897a8e3776bb8",
+          "suite": {
+            "name": "com.chengyinhub.business.it.PlayLeadAdmissionFailureMySqlIT",
+            "tests": "4",
+            "failures": "0",
+            "errors": "0",
+            "skipped": "0"
+          },
+          "testcases": [
+            "realLeadStorageFaultRollsBackTheOriginalBasicActionClaimWithoutTerminalReceipt",
+            "preferenceLeadStorageFaultCannotCreateBranchSessionBeforeEitherHttpAdmission",
+            "preferenceLeadStorageFaultCannotCreateJourneySessionBeforeEitherHttpAdmission",
+            "realLeadStorageFaultReturnsNoHintAndHasZeroEconomicOrRegistrationEffect"
+          ]
+        }
+      ]
+    },
+    {
+      "artifact_id": 12540697469,
+      "zip_sha256": "c86b84459da5bf82ff7fb4abb48b46a876c56f6c635177ed07078b3777ef3bb1",
+      "receipt_sha256": "59b648c318f86fa90d157d6278c22a3ff2e3310338b78dfbe9c7e6c6a71a06ad",
+      "source": "9a2dcf21aef4d7aec7a14065a2601bd86aaad805",
+      "precheck_source": "9a2dcf21aef4d7aec7a14065a2601bd86aaad805",
+      "workflow_sha": "6ecaea01e0e1a3f3182189615bc00cf9f791fd47",
+      "run": "40044166369",
+      "attempt": "1",
+      "counts": {
+        "tests": 10,
+        "passed": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "cleanup": {
+        "mysql_leftover_schemas": [],
+        "mysql_schemas_after": [
+          "information_schema",
+          "mysql",
+          "performance_schema",
+          "sys"
+        ],
+        "status": "CLEAN"
+      },
+      "maven_exit": 0,
+      "xml": [
+        {
+          "path": "surefire-reports/TEST-com.chengyinhub.business.it.PlayHintUnlockMySqlIT.xml",
+          "sha256": "9586eb6fc71be85bca8ef56e4f9cd909896545843adb178adff21a9abdc5921f",
+          "suite": {
+            "name": "com.chengyinhub.business.it.PlayHintUnlockMySqlIT",
+            "tests": "10",
+            "failures": "0",
+            "errors": "0",
+            "skipped": "0"
+          },
+          "testcases": [
+            "balanceLostAfterPrecheckRollsBackHintLedgerButRetainsOtherCommittedSpend",
+            "twoConnectionsSerializeOriginalRegistrationAndDebitOnce",
+            "disabledRuleStillRequiresEntitlementAndWritesNoPoints",
+            "legalActivityUsesOneRealDebitAndOriginalEventIdentity",
+            "unauthorizedOrWrongScopeNeverReturnsHintsOrChangesEconomicState",
+            "ledgerWriteThenThrowRollsBackRealRowAndLeavesDebitUntouched",
+            "duplicateAfterLostReplyAndReconstructionKeepsOneDebitAcrossAuthorizedScopes",
+            "debitWriteThenThrowRollsBackBothRealBalanceAndLedgerBeforeOriginalRetry",
+            "legalSelfPlayUsesOneRealDebitAndOriginalEventIdentity",
+            "revokedRegistrationBlocksPreviouslyPurchasedHintWithoutChangingItsOriginalLedger"
+          ]
+        }
+      ]
+    },
+    {
+      "artifact_id": 12540587445,
+      "zip_sha256": "9bf13b1f74556835cbc27b72932e43264ae1a6f1050fa432a7cccafaf0bbda3f",
+      "receipt_sha256": "ffcd3e3212d75439ec18191ea98e1178bddb355ba96e05af729c3323487f3a50",
+      "source": "a0fbc49b87564e65697bf5be1ce06674e99d9056",
+      "precheck_source": "a0fbc49b87564e65697bf5be1ce06674e99d9056",
+      "workflow_sha": "a716d92abaa97f07c6af84ae6476b7062ddf4ef4",
+      "run": "40043910446",
+      "attempt": "1",
+      "counts": {
+        "tests": 4,
+        "passed": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "cleanup": {
+        "mysql_leftover_schemas": [],
+        "mysql_schemas_after": [
+          "information_schema",
+          "mysql",
+          "performance_schema",
+          "sys"
+        ],
+        "redis_dbsize_after": 0,
+        "status": "CLEAN"
+      },
+      "maven_exit": 0,
+      "xml": [
+        {
+          "path": "surefire-reports/TEST-com.chengyinhub.business.service.ai.AiNotSentQuotaRecoveryMySqlRedisIT.xml",
+          "sha256": "8e7cd8f6af13af9dc426bc34a1ba80d681024b8411e9b0ec98d7d1df8af95d04",
+          "suite": {
+            "name": "com.chengyinhub.business.service.ai.AiNotSentQuotaRecoveryMySqlRedisIT",
+            "tests": "4",
+            "failures": "0",
+            "errors": "0",
+            "skipped": "0"
+          },
+          "testcases": [
+            "genericProviderFailureRetainsOriginalReservationAcrossRecoveryInsteadOfRefunding",
+            "typedNotSentDecisionSurvivesRedisOutageAndRestartRefundsOnlyOriginalReceiptOnce",
+            "expiredCompensationDecisionCasCannotBypassFenceOrDirectlyRefundRedis",
+            "originalPhotoIntentStoresNotSentAndReplaysOldDayNonceWithoutAnotherProviderAttempt"
+          ]
+        }
+      ]
+    }
+  ],
+  "not_claimed": [
+    "full workflow terminal success",
+    "HTTP/JWT/RBAC verification",
+    "real supplier verification",
+    "all results on one candidate",
+    "production configuration acceptance"
+  ]
+}

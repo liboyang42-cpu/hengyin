@@ -1,0 +1,384 @@
+{
+  "public_base": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "joint": "6ecaea01e0e1a3f3182189615bc00cf9f791fd47",
+  "C": "76b107c090134d540ef7fe0efcc8b891e37b0df7",
+  "E": "e359fa5526a32d670012ff1d2c22e8885cdafc84",
+  "candidate_files": {
+    "C": [
+      {
+        "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+        "joint": "d529fcb93849a03783e2e5d979afd188179c7be7",
+        "candidate": "d529fcb93849a03783e2e5d979afd188179c7be7",
+        "match": true
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayLeadAdmissionFailureMySqlIT.java",
+        "joint": "7a90112d12137c3c51700fd19566d893c121c096",
+        "candidate": "7a90112d12137c3c51700fd19566d893c121c096",
+        "match": true
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCurrentUseBoundaryTest.java",
+        "joint": "ca4cf5967dcdb395fb30fc676efbf823edf0ba04",
+        "candidate": "ca4cf5967dcdb395fb30fc676efbf823edf0ba04",
+        "match": true
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ClubLeadGateTest.java",
+        "joint": "d9092525068f3d6f3b2b2e04658aa0c419d28cfd",
+        "candidate": "d9092525068f3d6f3b2b2e04658aa0c419d28cfd",
+        "match": true
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/CurrentPlayControllerFixtures.java",
+        "joint": "9db4713ea8b51d18310b648c554cc51769a76023",
+        "candidate": "9db4713ea8b51d18310b648c554cc51769a76023",
+        "match": true
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayLeadAdmissionFailureTest.java",
+        "joint": "f27e74969bad9ad42e04c3bdb47b837493f51648",
+        "candidate": "f27e74969bad9ad42e04c3bdb47b837493f51648",
+        "match": true
+      },
+      {
+        "path": "docs/delivery/architecture-day/C/wp09-b1-lead-admission.md",
+        "joint": "9d3aee56b222c0f5e9468912dee04cba628724f2",
+        "candidate": "9d3aee56b222c0f5e9468912dee04cba628724f2",
+        "match": true
+      },
+      {
+        "path": "docs/delivery/architecture-day/C/wp09-b1-preference-admission-order.md",
+        "joint": "4fcfa240e9aedcaac9ca4feca0d596f6620aaf6b",
+        "candidate": "4fcfa240e9aedcaac9ca4feca0d596f6620aaf6b",
+        "match": true
+      }
+    ],
+    "E": [
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiNotSentGatewayFixture.java",
+        "joint": "9c24df2a04360f1020530b75b886170a58eda199",
+        "candidate": "9c24df2a04360f1020530b75b886170a58eda199",
+        "mysqlSource": "9c24df2a04360f1020530b75b886170a58eda199",
+        "match": true
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiNotSentQuotaRecoveryMySqlRedisIT.java",
+        "joint": "1a70e1efe370d8d461f707c91795627e7ca2a090",
+        "candidate": "1a70e1efe370d8d461f707c91795627e7ca2a090",
+        "mysqlSource": "1a70e1efe370d8d461f707c91795627e7ca2a090",
+        "match": true
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckVisionNotSentQuotaTest.java",
+        "joint": "9e3d4995af744fe35bbe7479d5f60756947191c3",
+        "candidate": "9e3d4995af744fe35bbe7479d5f60756947191c3",
+        "mysqlSource": "9e3d4995af744fe35bbe7479d5f60756947191c3",
+        "match": true
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayNotSentQuotaTest.java",
+        "joint": "dc9cc6953f55e81e4d3cd40e867d4c8a38e7ed27",
+        "candidate": "dc9cc6953f55e81e4d3cd40e867d4c8a38e7ed27",
+        "mysqlSource": "dc9cc6953f55e81e4d3cd40e867d4c8a38e7ed27",
+        "match": true
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NpcChatGatewayNotSentContractTest.java",
+        "joint": "8967ee1814c9439c7abc48c6e906e43ec059ac74",
+        "candidate": "8967ee1814c9439c7abc48c6e906e43ec059ac74",
+        "mysqlSource": "8967ee1814c9439c7abc48c6e906e43ec059ac74",
+        "match": true
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java",
+        "joint": "9fc48a7387e4383bf0fbcab255fe9ae46c0b741c",
+        "candidate": "9fc48a7387e4383bf0fbcab255fe9ae46c0b741c",
+        "mysqlSource": "9fc48a7387e4383bf0fbcab255fe9ae46c0b741c",
+        "match": true
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+        "joint": "d733e306845898191295827502bc8a7ca8f8a153",
+        "candidate": "d733e306845898191295827502bc8a7ca8f8a153",
+        "mysqlSource": "d733e306845898191295827502bc8a7ca8f8a153",
+        "match": true
+      },
+      {
+        "path": "docs/delivery/architecture-day/E/AI-NOT-SENT/README.md",
+        "joint": "a983ecd1a4c9f1a2f80189c566435c4617f17925",
+        "candidate": "a983ecd1a4c9f1a2f80189c566435c4617f17925",
+        "mysqlSource": "a983ecd1a4c9f1a2f80189c566435c4617f17925",
+        "match": true
+      }
+    ]
+  },
+  "storage_dependency_blob_comparison_only": [
+    {
+      "path": "chengyinhub-admin/sql/migration_ai_quota_reservation_recovery_20261013.sql",
+      "joint": "82b5b37a0fb03be1a596bbad93a5b79ed8f00edf",
+      "storageSource": "82b5b37a0fb03be1a596bbad93a5b79ed8f00edf",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiNotSentGatewayFixture.java",
+      "joint": "9c24df2a04360f1020530b75b886170a58eda199",
+      "storageSource": "9c24df2a04360f1020530b75b886170a58eda199",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiNotSentQuotaRecoveryMySqlRedisIT.java",
+      "joint": "1a70e1efe370d8d461f707c91795627e7ca2a090",
+      "storageSource": "1a70e1efe370d8d461f707c91795627e7ca2a090",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryMySqlRedisIT.java",
+      "joint": "aa8554319faea0f723bc1cd34addcd37d1372685",
+      "storageSource": "aa8554319faea0f723bc1cd34addcd37d1372685",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryServiceTest.java",
+      "joint": "66c826a10157df91414aa70ef0e25f257c6e855f",
+      "storageSource": "66c826a10157df91414aa70ef0e25f257c6e855f",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentFreshReadMySqlIT.java",
+      "joint": "808dfe5deeb9a631cdf5dd1c172918afa063f66e",
+      "storageSource": "808dfe5deeb9a631cdf5dd1c172918afa063f66e",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentLockReadMySqlIT.java",
+      "joint": "38fd09e4bca197f1521fd3a5fd8fdc803e0c5f30",
+      "storageSource": "38fd09e4bca197f1521fd3a5fd8fdc803e0c5f30",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentMySqlIT.java",
+      "joint": "3c0ae949c7f752575b51eeb7bb5d43ce5b9745e3",
+      "storageSource": "3c0ae949c7f752575b51eeb7bb5d43ce5b9745e3",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentRecoveryMySqlIT.java",
+      "joint": "5c13c8de8ae8cd82e0d7003f189f53654a956c87",
+      "storageSource": "5c13c8de8ae8cd82e0d7003f189f53654a956c87",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentRecoveryReadTest.java",
+      "joint": "d5ced5dd4d5db0dd520b5a41b88df138957bc185",
+      "storageSource": "d5ced5dd4d5db0dd520b5a41b88df138957bc185",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentServiceTest.java",
+      "joint": "c4938d3f5c328e8ab60998b73620fff89f6726c5",
+      "storageSource": "c4938d3f5c328e8ab60998b73620fff89f6726c5",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckVisionNotSentQuotaTest.java",
+      "joint": "9e3d4995af744fe35bbe7479d5f60756947191c3",
+      "storageSource": "9e3d4995af744fe35bbe7479d5f60756947191c3",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayNotSentQuotaTest.java",
+      "joint": "dc9cc6953f55e81e4d3cd40e867d4c8a38e7ed27",
+      "storageSource": "dc9cc6953f55e81e4d3cd40e867d4c8a38e7ed27",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiQuotaReservationRedisIT.java",
+      "joint": "d669b1cdb677b6b9cc0f1418fe9258685f9f8773",
+      "storageSource": "d669b1cdb677b6b9cc0f1418fe9258685f9f8773",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NpcChatGatewayNotSentContractTest.java",
+      "joint": "8967ee1814c9439c7abc48c6e906e43ec059ac74",
+      "storageSource": "8967ee1814c9439c7abc48c6e906e43ec059ac74",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpRequestException.java",
+      "joint": "c0bd512ee63994b22f1af36c24882e4144fe8669",
+      "storageSource": "c0bd512ee63994b22f1af36c24882e4144fe8669",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java",
+      "joint": "65776364bfa89dbb27e3567710e06d8214d9ce0a",
+      "storageSource": "65776364bfa89dbb27e3567710e06d8214d9ce0a",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/AiQuotaReservationRecord.java",
+      "joint": "8904dae8336494bc4fd552864f3d6c7f914d15f2",
+      "storageSource": "8904dae8336494bc4fd552864f3d6c7f914d15f2",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/PhotoCheckIntentRow.java",
+      "joint": "e425dfce85a6115cf53d2ce47b58b609c2933bbe",
+      "storageSource": "e425dfce85a6115cf53d2ce47b58b609c2933bbe",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/AiQuotaReservationMapper.java",
+      "joint": "4887fff550faf9c3bd8dc4f7bfb72809a7eda699",
+      "storageSource": "4887fff550faf9c3bd8dc4f7bfb72809a7eda699",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PhotoCheckIntentMapper.java",
+      "joint": "4bba7c453f16fd84fcece793de2a63d184d960fc",
+      "storageSource": "4bba7c453f16fd84fcece793de2a63d184d960fc",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiHttpAdmission.java",
+      "joint": "cd54f35107b0462f11e1a05d2d54df4e16c4fcc4",
+      "storageSource": "cd54f35107b0462f11e1a05d2d54df4e16c4fcc4",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiProviderNotSentException.java",
+      "joint": "9d36567ac74ca13c6f8ed4e733b7b8e0c846ba08",
+      "storageSource": "9d36567ac74ca13c6f8ed4e733b7b8e0c846ba08",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiProviderOutcomeUnknownException.java",
+      "joint": "241b35fcde9443f7d5beb864625703fc5d90f306",
+      "storageSource": "241b35fcde9443f7d5beb864625703fc5d90f306",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiProviderResultReceivedException.java",
+      "joint": "b918af2bda7485e4cfb8ceb008951558df9f5a85",
+      "storageSource": "b918af2bda7485e4cfb8ceb008951558df9f5a85",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryService.java",
+      "joint": "05d6fda769001b49d21d36bd0c3fdcc62f85a10e",
+      "storageSource": "05d6fda769001b49d21d36bd0c3fdcc62f85a10e",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java",
+      "joint": "22436f32cd0da298ce06eb22a67e2eb0b5b4e94f",
+      "storageSource": "22436f32cd0da298ce06eb22a67e2eb0b5b4e94f",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentCommand.java",
+      "joint": "5eb1173c3f7b64abd7afb4693bb56ed04e7f5f56",
+      "storageSource": "5eb1173c3f7b64abd7afb4693bb56ed04e7f5f56",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java",
+      "joint": "a997f4fc3d91c13fd79775a11f281c63d09ab45a",
+      "storageSource": "a997f4fc3d91c13fd79775a11f281c63d09ab45a",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentState.java",
+      "joint": "2846a3d6cf3c3d6dd523da613744ba88f2f43610",
+      "storageSource": "2846a3d6cf3c3d6dd523da613744ba88f2f43610",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentView.java",
+      "joint": "95466d4c4050955cd05143b7d4482497f9dd1633",
+      "storageSource": "95466d4c4050955cd05143b7d4482497f9dd1633",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java",
+      "joint": "c9d88eca1295cd7ec63bf6d1a15a278b585b312c",
+      "storageSource": "c9d88eca1295cd7ec63bf6d1a15a278b585b312c",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/AiQuotaRecoveryTask.java",
+      "joint": "738732dcb5e72777f25cd1d0ea99ea5faf57d9d8",
+      "storageSource": "738732dcb5e72777f25cd1d0ea99ea5faf57d9d8",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml",
+      "joint": "192fbbc2b4c10fbe7c7bf06a36b17b5075aa7cc9",
+      "storageSource": "192fbbc2b4c10fbe7c7bf06a36b17b5075aa7cc9",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml",
+      "joint": "23318ad1db0b9609f1ee52a4b904ec555daea970",
+      "storageSource": "23318ad1db0b9609f1ee52a4b904ec555daea970",
+      "same": true
+    }
+  ],
+  "downloaded_additional_review_files": [
+    {
+      "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/annotation/DeadlockRetry.java",
+      "sha": "f879c18e9ae5d4fe3932f2fa1b4a5069a76f87ec"
+    },
+    {
+      "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/exception/ServiceException.java",
+      "sha": "0ae4c73b180c77124bba22e75c62ccdd9b766871"
+    },
+    {
+      "path": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/aspectj/DeadlockRetryInterceptor.java",
+      "sha": "9e5821a6d8808f7018072ed5a728667222382ea6"
+    },
+    {
+      "path": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/web/exception/GlobalExceptionHandler.java",
+      "sha": "c211054e2f2e8d44ed432bbc0ac98c6912a3903b"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PhotoCheckIntentMapper.java",
+      "sha": "4bba7c453f16fd84fcece793de2a63d184d960fc"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryService.java",
+      "sha": "05d6fda769001b49d21d36bd0c3fdcc62f85a10e"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java",
+      "sha": "a997f4fc3d91c13fd79775a11f281c63d09ab45a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+      "sha": "e53043d60ec2ab3e01d4141eda5b1c146350e22d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java",
+      "sha": "c9d88eca1295cd7ec63bf6d1a15a278b585b312c"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CurrentPlayRegistration.java",
+      "sha": "e55bb8cbe816ef12429d63324bc5e009583a1759"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml",
+      "sha": "23318ad1db0b9609f1ee52a4b904ec555daea970"
+    }
+  ],
+  "additional_marker_and_quota_mapper": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiProviderNotSentException.java",
+      "sha": "9d36567ac74ca13c6f8ed4e733b7b8e0c846ba08"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml",
+      "sha": "192fbbc2b4c10fbe7c7bf06a36b17b5075aa7cc9"
+    }
+  ]
+}
