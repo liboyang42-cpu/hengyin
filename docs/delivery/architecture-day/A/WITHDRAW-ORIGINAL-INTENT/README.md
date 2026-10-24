@@ -19,3 +19,5 @@ A 源码候选完成；Java/JUnit/MySQL/CI 均未执行，整体闭包尚未验�
 实际仅 `git diff --check`、Python 源码/方法保留、XML INSERT 22 列配对、独立 Python hash 参考向量等静态检查；不是编译或业务通过。完整每文件 SHA256 见 static-result.json。
 
 必要余项：B 按批准 record 合同提供两 DTO 重载及 SDK 前实际 merchant-client/hash 校验、查询原 openid 等事实（本候选基线接口尚无重载，未抢改，须组合后才能编译）；root/H 组合审查；root 统一 Java+真实 MySQL 执行/清理回执与迁移登记；生产 schema 预检/授权及供应商链路仍未验证。所有旧绿项不能替代本 head 验收。中间合同 554e 的旧包 class 已由最终 record 替换，集成取 ae7→最终 head 范围或按 A 文件增量，勿只拿中间提交/整树覆盖 root。
+
+test-only 后续增量（parent f676）：已只读核对 B `dc87a41ebc4a18d696d094554e5f91a08f32a03f` 的签名和全部消费字段一致；另补 2 个实际 A caller + 实际 immutable record + 实际 B 网关、SDK stub 的合法成功/失败组合实例，原 49 不删不改，总 51。B client 绑定在测试中复用其反射 fixture，不冒充真实凭据初始化/供应商链路。此分支未应用 B 文件，必须由 root 组合。全部生产源与 f676 相同；51+5 仍仅源码，Java/DB/CI 未执行。

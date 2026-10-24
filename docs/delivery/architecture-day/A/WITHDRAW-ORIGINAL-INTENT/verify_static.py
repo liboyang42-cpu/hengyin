@@ -80,7 +80,7 @@ owned_main = {JAVA + p for p in ("domain/dto/CashWithdrawTransferIntent.java", "
 owned_main.add("chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml")
 assert all(path in owned_main for path in paths if "/src/main/" in path), paths - owned_main
 it = read(TEST + "service/impl/CashWithdrawFundEvidenceMySqlIT.java")
-assert it.count("@Test void") == 29 and it.count("@ParameterizedTest") == 3
+assert it.count("@Test void") == 29 and it.count("@ParameterizedTest") == 4
 # Independent reference calculation, not execution of the Java DTO.
 wire = bytearray(struct.pack(">i", 1))
 def field(value):
@@ -94,7 +94,7 @@ reference_hash = hashlib.sha256(wire).hexdigest()
 assert reference_hash == "3d2a774a7a3aad5a49c9ef9f9cbefe82e53d1ed465af3a752b5d4b96cd26d18a"
 git("diff", "--check")
 print(json.dumps({"baseline": BASE, "prior_withdrawal_source": PRIOR, "status": "STATIC_ONLY_PASS",
-                  "java_junit_mysql_ci": "NOT_RUN", "fund_mysql_cases_authored": 49,
+                  "java_junit_mysql_ci": "NOT_RUN", "fund_mysql_cases_authored": 51,
                   "dto_unit_cases_authored": 5, "gateway_overloads": "B REVIEW PATCH REQUIRED; NOT APPLIED HERE",
                   "python_reference_hash": reference_hash,
                   "files_sha256": {p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest() for p in sorted(paths)

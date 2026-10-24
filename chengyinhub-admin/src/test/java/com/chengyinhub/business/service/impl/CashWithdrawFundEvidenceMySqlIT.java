@@ -684,4 +684,58 @@ class CashWithdrawFundEvidenceMySqlIT {
         assertEquals(0, new BigDecimal("70").compareTo(db.queryForObject("SELECT balance FROM ums_member WHERE id=1", BigDecimal.class)));
         verifyNoInteractions(channel); verify(members, never()).addBalance(anyLong(), any());
     }
+
+    /** Real A caller/record and B gateway; only the SDK/client credential binding is a deterministic fixture. */
+    @ParameterizedTest @ValueSource(strings = {"SUCCESS", "FAIL"})
+    void actualImmutableDtoFlowsThroughActualGatewayAndOriginalFinancialReceipt(String outcome) throws Exception {
+        com.wechat.pay.java.service.transferbatch.TransferBatchService sdk =
+                mock(com.wechat.pay.java.service.transferbatch.TransferBatchService.class);
+        WechatPayServiceImpl gateway = new WechatPayServiceImpl();
+        // Reuse B's exact narrow fixture binding; this does not prove real certificate/client initialization.
+        Class<?> binding = Class.forName(WechatPayServiceImpl.class.getName() + "$TransferClientBinding");
+        java.lang.reflect.Constructor<?> constructor = binding.getDeclaredConstructor(
+                com.wechat.pay.java.service.transferbatch.TransferBatchService.class, String.class);
+        constructor.setAccessible(true);
+        ReflectionTestUtils.setField(gateway, "transferClientBinding", constructor.newInstance(sdk, "unit-merchant"));
+        ReflectionTestUtils.setField(target, "wechatPayService", gateway);
+        when(sdk.initiateBatchTransfer(any())).thenAnswer(i -> {
+            assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+            com.wechat.pay.java.service.transferbatch.model.InitiateBatchTransferRequest sent = i.getArgument(0);
+            Long id = Long.valueOf(sent.getOutBatchNo().substring(2));
+            CashWithdrawTransferIntent stored = cash.selectFundFacts(id).stream()
+                    .filter(f -> "SUBMIT_INTENT".equals(f.getKind())).findFirst().orElseThrow().transferIntent();
+            stored.requireValid();
+            assertEquals(1, count(id, "DEBIT")); assertEquals(1, count(id, "SUBMIT_INTENT"));
+            assertEquals(stored.appid(), sent.getAppid()); assertEquals(stored.outBatchNo(), sent.getOutBatchNo());
+            assertEquals(CashWithdrawTransferIntent.BATCH_NAME, sent.getBatchName()); assertEquals(1, sent.getTotalNum());
+            assertEquals(stored.amountFen(), sent.getTotalAmount()); assertEquals(stored.effectiveRemark(), sent.getBatchRemark());
+            assertEquals(1, sent.getTransferDetailList().size());
+            var detail = sent.getTransferDetailList().get(0);
+            assertEquals(stored.outDetailNo(), detail.getOutDetailNo()); assertEquals(stored.openid(), detail.getOpenid());
+            assertEquals(stored.amountFen(), detail.getTransferAmount()); assertEquals(stored.effectiveRemark(), detail.getTransferRemark());
+            var accepted = new com.wechat.pay.java.service.transferbatch.model.InitiateBatchTransferResponse();
+            accepted.setOutBatchNo(sent.getOutBatchNo()); accepted.setBatchId("provider-batch-" + id);
+            accepted.setBatchStatus("ACCEPTED"); return accepted;
+        });
+        MemberCashWithdraw w = service.withdraw(memberId, new BigDecimal("30.00"));
+        assertEquals(0, w.getStatus()); money("70");
+        var batch = new com.wechat.pay.java.service.transferbatch.model.TransferBatchGet();
+        batch.setMchid("unit-merchant"); batch.setAppid("unit-channel-appid"); batch.setOutBatchNo(w.getOutBatchNo());
+        batch.setBatchId("provider-batch-" + w.getId()); batch.setBatchStatus("FINISHED"); batch.setTotalAmount(3000L); batch.setTotalNum(1);
+        var batchResult = new com.wechat.pay.java.service.transferbatch.model.TransferBatchEntity(); batchResult.setTransferBatch(batch);
+        var detail = new com.wechat.pay.java.service.transferbatch.model.TransferDetailEntity();
+        detail.setMchid("unit-merchant"); detail.setAppid("unit-channel-appid"); detail.setOutBatchNo(w.getOutBatchNo());
+        detail.setOutDetailNo(w.getOutDetailNo()); detail.setOpenid("unit-channel-openid"); detail.setTransferAmount(3000L);
+        detail.setBatchId(batch.getBatchId()); detail.setDetailId("provider-detail"); detail.setDetailStatus(outcome);
+        when(sdk.getTransferBatchByOutNo(any())).thenReturn(batchResult);
+        when(sdk.getTransferDetailByOutNo(any())).thenReturn(detail);
+        service.requery(w.getId()); service.requery(w.getId());
+        assertEquals("SUCCESS".equals(outcome) ? 1 : 2, cash.selectById(w.getId()).getStatus());
+        assertEquals(1, count(w.getId(), "DEBIT")); assertEquals(1, count(w.getId(), "SUBMIT_INTENT"));
+        assertEquals(1, count(w.getId(), "ACCEPTED"));
+        assertEquals("FAIL".equals(outcome) ? 1 : 0, count(w.getId(), "REFUND"));
+        assertEquals(1, count(w.getId(), "FAIL".equals(outcome) ? "FINAL_FAIL" : "SUCCESS"));
+        money("FAIL".equals(outcome) ? "100" : "70");
+        verify(sdk, times(1)).initiateBatchTransfer(any()); verifyNoInteractions(channel);
+    }
 }
