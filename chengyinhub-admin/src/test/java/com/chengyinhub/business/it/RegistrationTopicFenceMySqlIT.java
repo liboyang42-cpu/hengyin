@@ -51,6 +51,7 @@ class RegistrationTopicFenceMySqlIT {
     private INotifyService notices;
     private ISettlementEntryService entries;
     private WechatVerifiedPaymentFactService verifiedFacts;
+    private ICoopSettlementClaimService refundOwner;
     private CountDownLatch requestedTopic;
     private static final String HASH = "a".repeat(64), OWNER = "b".repeat(32);
 
@@ -140,6 +141,10 @@ class RegistrationTopicFenceMySqlIT {
         ReflectionTestUtils.setField(refundTarget, "cmsTopicMapper", topics);
         ReflectionTestUtils.setField(refundTarget, "wxPaymentCallbackInboxService", inboxService);
         ReflectionTestUtils.setField(refundTarget, "verifiedPaymentFacts", verifiedFacts);
+        // This A seam fixture has no G original components. G's real ledger has its own dedicated IT.
+        refundOwner = mock(ICoopSettlementClaimService.class);
+        when(refundOwner.hasFrozenOriginalRefundComponents(anyLong())).thenReturn(false);
+        ReflectionTestUtils.setField(refundTarget, "coopSettlementClaimService", refundOwner);
         notices = mock(INotifyService.class); ReflectionTestUtils.setField(refundTarget, "notifyService", notices);
         refundService = transactional(refundTarget);
         payments = paymentService();
@@ -517,6 +522,97 @@ class RegistrationTopicFenceMySqlIT {
         assertEquals(3, db.queryForObject("SELECT state FROM wx_payment_callback_inbox", Integer.class));
         assertEquals("TX2", db.queryForObject("SELECT transaction_id FROM wx_verified_payment_fact WHERE fact_kind='REFUND'", String.class));
         verifyNoInteractions(notices);
+    }
+
+    @Test void gOwnerFailureRollsBackSuccessAndDoneWhileKeepingTheOriginalProviderFact() {
+        Map<String, String> facts = refundFacts();
+        doAnswer(call -> {
+            assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+            assertEquals(1, db.queryForObject("SELECT payout_status FROM refund_application WHERE id=9", Integer.class));
+            // Controlled participant SQL, not a simulation of G allocation or wallet algorithms.
+            db.update("UPDATE cms_topic SET member_id=71 WHERE id=7");
+            throw new IllegalStateException("fixture owner failed after its joined SQL write");
+        }).when(refundOwner).reverseCompletedRegistrationRefund(9L);
+        assertFalse(refundService.handleRefundNotify(facts));
+        assertEquals(0, db.queryForObject("SELECT payout_status FROM refund_application WHERE id=9", Integer.class));
+        assertEquals(70L, db.queryForObject("SELECT member_id FROM cms_topic WHERE id=7", Long.class));
+        assertEquals(3, db.queryForObject("SELECT state FROM wx_payment_callback_inbox", Integer.class));
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact", Integer.class));
+        verifyNoInteractions(notices);
+        doNothing().when(refundOwner).reverseCompletedRegistrationRefund(9L);
+        assertTrue(refundService.handleRefundNotify(facts));
+        assertEquals(1, db.queryForObject("SELECT payout_status FROM refund_application WHERE id=9", Integer.class));
+        assertEquals(2, db.queryForObject("SELECT state FROM wx_payment_callback_inbox", Integer.class));
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM wx_payment_callback_fact_link", Integer.class));
+    }
+
+    @Test void manualSecondReviewAndOwnerJoinOneTransactionAndExactReplayKeepsTheSameRefund() {
+        db.update("UPDATE refund_application SET payout_status=3,payout_handler_id=41,payout_method='offline_transfer',"
+                + "payout_receipt_url='/profile/refund-origin-receipt.png',payout_handled_at=NOW() WHERE id=9");
+        doThrow(new IllegalStateException("fixture joined owner unavailable"))
+                .when(refundOwner).reverseCompletedRegistrationRefund(9L);
+        assertThrows(RuntimeException.class, () -> refundService.verifyManualPayout(9L, 42L));
+        assertEquals(3, db.queryForObject("SELECT payout_status FROM refund_application WHERE id=9", Integer.class));
+        assertNull(db.queryForObject("SELECT payout_reviewer2_id FROM refund_application WHERE id=9", Long.class));
+        verifyNoInteractions(notices);
+        doNothing().when(refundOwner).reverseCompletedRegistrationRefund(9L);
+        assertEquals(1, refundService.verifyManualPayout(9L, 42L));
+        assertEquals(4, db.queryForObject("SELECT payout_status FROM refund_application WHERE id=9", Integer.class));
+        assertEquals(42L, db.queryForObject("SELECT payout_reviewer2_id FROM refund_application WHERE id=9", Long.class));
+        assertEquals(0, refundService.verifyManualPayout(9L, 42L)); // Existing rows return contract stays unchanged.
+        verify(refundOwner, times(3)).reverseCompletedRegistrationRefund(9L); // failed, first commit, exact replay
+        assertEquals(0, refundService.verifyManualPayout(9L, 43L));
+        verify(refundOwner, times(3)).reverseCompletedRegistrationRefund(9L); // Different reviewer cannot claim the original receipt.
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact", Integer.class));
+    }
+
+    @Test void closedTopicCannotRepairPaidHalfStateAndAckAwayItsOriginalVerifiedRecoveryIdentity() {
+        db.update("UPDATE cms_topic SET is_settlement=1 WHERE id=7");
+        db.update("UPDATE cms_registration SET payment_status=2,registration_status=1,transaction_id='TX1' WHERE id=1");
+        Map<String, String> facts = paymentFacts();
+        assertEquals("FAIL", payments.handleWechatPayCallback(facts));
+        assertEquals(2, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals(1, db.queryForObject("SELECT registration_status FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals("TX1", db.queryForObject("SELECT transaction_id FROM cms_registration WHERE id=1", String.class));
+        assertEquals(3, db.queryForObject("SELECT state FROM wx_payment_callback_inbox", Integer.class));
+        assertEquals(Long.valueOf(facts.get("verified_fact_id")), db.queryForObject("SELECT fact_id FROM wx_payment_callback_fact_link", Long.class));
+        assertEquals(facts.get("verified_fact_hash"), db.queryForObject("SELECT fact_hash FROM wx_payment_callback_fact_link", String.class));
+        assertEquals("FAIL", payments.handleWechatPayCallback(facts));
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact", Integer.class));
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM wx_payment_callback_inbox", Integer.class));
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM wx_payment_callback_fact_link", Integer.class));
+        verifyNoInteractions(entries); // G reconciliation must explicitly own any later contribution or payout.
+    }
+
+    @Test void completedPayerCannotHideItsPaidHalfStateSiblingAfterTopicClose() {
+        db.update("UPDATE cms_topic SET is_settlement=1 WHERE id=7");
+        db.update("UPDATE cms_registration SET parent_order_no='PN1',payment_status=2,registration_status=2,transaction_id='TX1' WHERE id=1");
+        original(2L, 1, 7L, "PN1", "0.00");
+        db.update("UPDATE cms_registration SET payment_status=2,registration_status=1,transaction_id='TX1' WHERE id=2");
+        Map<String, String> facts = paymentFacts();
+        assertEquals("FAIL", payments.handleWechatPayCallback(facts));
+        assertEquals(2, db.queryForObject("SELECT registration_status FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals(1, db.queryForObject("SELECT registration_status FROM cms_registration WHERE id=2", Integer.class));
+        assertEquals(3, db.queryForObject("SELECT state FROM wx_payment_callback_inbox", Integer.class));
+        assertEquals(Long.valueOf(facts.get("verified_fact_id")), db.queryForObject("SELECT fact_id FROM wx_payment_callback_fact_link", Long.class));
+        verifyNoInteractions(entries);
+    }
+
+    @Test void originalSuccessTerminalReplayCallsTheSameOwnerBeforeDoneWithoutRenotifying() {
+        Map<String, String> facts = refundFacts();
+        db.update("UPDATE refund_application SET payout_status=1 WHERE id=9");
+        doAnswer(call -> {
+            assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+            assertEquals(1, db.queryForObject("SELECT state FROM wx_payment_callback_inbox", Integer.class));
+            assertEquals(1, db.queryForObject("SELECT payout_status FROM refund_application WHERE id=9", Integer.class));
+            return null; // Narrow legacy-owner fixture, not a G financial receipt.
+        }).when(refundOwner).reverseCompletedRegistrationRefund(9L);
+        assertTrue(refundService.handleRefundNotify(facts));
+        assertEquals(2, db.queryForObject("SELECT state FROM wx_payment_callback_inbox", Integer.class));
+        verify(refundOwner).reverseCompletedRegistrationRefund(9L);
+        verifyNoInteractions(notices);
+        assertTrue(refundService.handleRefundNotify(facts));
+        verify(refundOwner).reverseCompletedRegistrationRefund(9L); // DONE repeats do not execute a second mutation.
     }
 
     @AfterAll void cleanup() {

@@ -2247,6 +2247,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 if (!matchesFrozenWechatAmount(registration, resultMap.get("total"))) {
                     return registrationPaymentCallbackFailure(outTradeNo, "amount_mismatch");
                 }
+                if (lockedOrder.topic() != null && Integer.valueOf(1).equals(lockedOrder.topic().getIsSettlement())
+                        && lockedOrder.rows().stream().anyMatch(row -> !isSameCompletedPayment(row, verified.transactionId()))) {
+                    // Keep the immutable B fact; standard callbacks also retain their original verified inbox.
+                    // Do not repair a historical half-state outside the already closed cash contribution set.
+                    return registrationPaymentCallbackFailure(outTradeNo, "topic_closed_original_payment_recovery_required");
+                }
                 String paymentResult = completePaymentSuccess(lockedOrder, verified.transactionId());
                 return "SUCCESS".equalsIgnoreCase(paymentResult) ? paymentResult
                         : registrationPaymentCallbackFailure(outTradeNo, "payment_state_conflict");

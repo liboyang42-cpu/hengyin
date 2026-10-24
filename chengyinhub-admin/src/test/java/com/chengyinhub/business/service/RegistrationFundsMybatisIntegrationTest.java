@@ -199,6 +199,9 @@ class RegistrationFundsMybatisIntegrationTest {
         registrationOrderService = orderTarget;
 
         refundService = new RefundServiceImpl();
+        ICoopSettlementClaimService originalRefundOwner = mock(ICoopSettlementClaimService.class);
+        when(originalRefundOwner.hasFrozenOriginalRefundComponents(org.mockito.ArgumentMatchers.anyLong())).thenReturn(false);
+        ReflectionTestUtils.setField(refundService, "coopSettlementClaimService", originalRefundOwner);
 
         org.springframework.test.util.ReflectionTestUtils.setField(refundService, "firstReviewPointsClawback",
 

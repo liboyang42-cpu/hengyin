@@ -142,6 +142,9 @@ public class RefundServiceImpl implements IRefundService {
     @Autowired
     private IWxPaymentCallbackInboxService wxPaymentCallbackInboxService;
 
+    @Autowired
+    private com.chengyinhub.business.service.ICoopSettlementClaimService coopSettlementClaimService;
+
     /**
      * best-effort 告警,失败不影响主流程 —— 但不能静默:资金类告警(待人工/接管/ABNORMAL/冲销失败)
      * 投递挂了若无痕迹,线上等于"没人知道有单待处理"。
@@ -363,13 +366,26 @@ public class RefundServiceImpl implements IRefundService {
         if (refund == null) {
             throw new IllegalArgumentException("退款单不存在");
         }
+        if ("registration".equals(refund.getSourceType())) {
+            CmsRegistration locked = lockRefundRegistration(refund.getSourceId());
+            RefundApplication original = refund;
+            refund = registrationRefundHistory(locked.getId()).stream()
+                    .filter(row -> original.getId().equals(row.getId())).findFirst()
+                    .orElseThrow(() -> new IllegalStateException("原退款不存在"));
+            requireSameRefundIdentity(original, refund);
+        }
         // 双人复核:复核人须≠处理人(应用层显式拦,mapper WHERE 再兜一层防绕过)
         if (reviewer2Id.equals(refund.getPayoutHandlerId())) {
             throw new IllegalStateException("复核人不能与处理人为同一人(双人复核)");
         }
         int rows = refundApplicationMapper.markPayoutVerified(refundId, reviewer2Id, DateUtils.getNowDate());
         if (rows == 1) {
+            coopSettlementClaimService.reverseCompletedRegistrationRefund(refund.getId());
             notifyRefundAfterCommit(refund);
+        } else if (Integer.valueOf(RefundApplication.PAYOUT_MANUAL_VERIFIED).equals(refund.getPayoutStatus())
+                && reviewer2Id.equals(refund.getPayoutReviewer2Id())) {
+            // Exact original second-review replay may repair only its own missing downstream receipt.
+            coopSettlementClaimService.reverseCompletedRegistrationRefund(refund.getId());
         }
         return rows;
     }
@@ -495,12 +511,18 @@ public class RefundServiceImpl implements IRefundService {
 
     private boolean updatePayoutTerminal(RefundApplication refund, int expectedStatus, String message) {
         if (refundApplicationMapper.updatePayoutResult(refund.getId(), expectedStatus, message) == 1) {
-            if (expectedStatus == RefundApplication.PAYOUT_SUCCESS) notifyRefundAfterCommit(refund);
+            if (expectedStatus == RefundApplication.PAYOUT_SUCCESS) {
+                coopSettlementClaimService.reverseCompletedRegistrationRefund(refund.getId());
+                notifyRefundAfterCommit(refund);
+            }
             return true;
         }
         // The caller holds this current refund-history row through inbox DONE. A plain SELECT here
         // could replay the older RR snapshot taken before the topic fence instead of the winning terminal.
-        return Integer.valueOf(expectedStatus).equals(refund.getPayoutStatus());
+        boolean sameTerminal = Integer.valueOf(expectedStatus).equals(refund.getPayoutStatus());
+        if (sameTerminal && expectedStatus == RefundApplication.PAYOUT_SUCCESS)
+            coopSettlementClaimService.reverseCompletedRegistrationRefund(refund.getId());
+        return sameTerminal;
     }
 
     /** 仅首次到账终态调用；沿用 best-effort 通道，不把发送失败伪装成送达或回滚资金。 */
@@ -685,6 +707,9 @@ public class RefundServiceImpl implements IRefundService {
                 ensureWithinOrderCash(refund);
             }
         }
+        // G原分项在真实SUCCESS时冲回；审核阶段不能再从旧明细并行扣同一笔资金。
+        boolean originalComponentOwner = Integer.valueOf(1).equals(request.getStatus())
+                && coopSettlementClaimService.hasFrozenOriginalRefundComponents(refund.getId());
         int rows = refundApplicationMapper.updateRefundStatusIfPending(
                 request.getId(), request.getStatus(), operatorId, DateUtils.getNowDate(), request.getReviewReason());
         if (rows <= 0 || !Integer.valueOf(1).equals(request.getStatus())) {
@@ -695,8 +720,8 @@ public class RefundServiceImpl implements IRefundService {
         // P0-B 多方分账退款漏冲:一笔支付拆 merchant/platform/creator 多条明细,必须逐条负向冲销。
         // 旧 selectSettledDetail 的 `order by id desc limit 1` 只冲最大 id 一条(商家 id 最小 → 永远漏冲),
         // 改用 selectSettledDetails 取全部已结算明细逐条冲销;退款比例按订单口径统一算一次再套到每条。
-        List<SettlementDetail> settledList = settlementDetailMapper.selectSettledDetails(
-                refund.getSourceType(), refund.getSourceId());
+        List<SettlementDetail> settledList = originalComponentOwner ? java.util.Collections.emptyList()
+                : settlementDetailMapper.selectSettledDetails(refund.getSourceType(), refund.getSourceId());
         if (settledList != null && !settledList.isEmpty()) {
             settledList = new ArrayList<>(settledList);
             settledList.sort(Comparator.comparing(SettlementDetail::getReceiverId,
