@@ -9,6 +9,7 @@ import java.util.Map;
 import static com.chengyinhub.business.service.support.rpg.mechanism.MechanismFixtures.choice;
 import static com.chengyinhub.business.service.support.rpg.mechanism.MechanismFixtures.play;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -61,5 +62,34 @@ class RouteCommunityDayConsumerTest {
         session.setPlayerChoice(take);
         session.getState().getEnvironment().put(JourneyRpg.ENV_WEEKPART, JourneyRpg.ENV_UNKNOWN);
         assertThrows(IllegalStateException.class, () -> route.apply(session));
+    }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueTakeSegmentApplies() throws Exception {
+        MechanismRequestIdBinder binder = new MechanismRequestIdBinder();
+        RouteCommunityDayConsumer route = new RouteCommunityDayConsumer(binder);
+        MechanismRequestIdBinder.Play unseen = play(binder);
+        unseen.setOriginalRequestId("c03-route-never");
+        unseen.setOriginalAction(null);
+        Map<String, Object> recovered = route.recoverOriginal(unseen);
+        assertEquals("c03-route-never", recovered.get("requestId"));
+        assertEquals(MechanismRequestIdBinder.UNKNOWN, recovered.get("status"));
+        assertEquals(Boolean.FALSE, recovered.get("mintedNewRequest"));
+        assertEquals(Boolean.FALSE, recovered.get("replay"));
+        assertNull(binder.existing("c03-route-never"));
+        ObjectNode take = choice(MechanismRequestIdBinder.MECH_ROUTE_COMMUNITY_DAY,
+                RouteCommunityDayConsumer.ACTION_TAKE_SEGMENT);
+        take.put("segmentId", "market");
+        unseen.setPlayerChoice(take);
+        Map<String, Object> first = route.apply(unseen);
+        assertEquals("c03-route-never", first.get("requestId"));
+        assertEquals("market", first.get("segmentId"));
+        assertEquals(Boolean.FALSE, first.get("replay"));
+        assertEquals(MechanismRequestIdBinder.APPLIED, binder.existing("c03-route-never").getStatus());
+        Map<String, Object> replay = route.apply(unseen);
+        assertEquals(Boolean.TRUE, replay.get("replay"));
+        assertEquals("c03-route-never", replay.get("requestId"));
+        assertEquals(MechanismRequestIdBinder.APPLIED, binder.existing("c03-route-never").getStatus());
+        assertEquals(1, unseen.getState().getVariables().get("clue.page").intValue());
     }
 }

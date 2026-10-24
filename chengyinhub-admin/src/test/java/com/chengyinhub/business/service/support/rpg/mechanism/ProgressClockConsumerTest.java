@@ -9,6 +9,7 @@ import java.util.Map;
 import static com.chengyinhub.business.service.support.rpg.mechanism.MechanismFixtures.choice;
 import static com.chengyinhub.business.service.support.rpg.mechanism.MechanismFixtures.play;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -54,5 +55,32 @@ class ProgressClockConsumerTest {
         tick.put("var", "counter.missing");
         session.setPlayerChoice(tick);
         assertThrows(IllegalArgumentException.class, () -> clocks.apply(session));
+    }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueTickApplies() throws Exception {
+        MechanismRequestIdBinder binder = new MechanismRequestIdBinder();
+        ProgressClockConsumer clocks = new ProgressClockConsumer(binder);
+        MechanismRequestIdBinder.Play unseen = play(binder);
+        unseen.setOriginalRequestId("c03-clock-never");
+        unseen.setOriginalAction(null);
+        Map<String, Object> recovered = clocks.recoverOriginal(unseen);
+        assertEquals("c03-clock-never", recovered.get("requestId"));
+        assertEquals(MechanismRequestIdBinder.UNKNOWN, recovered.get("status"));
+        assertEquals(Boolean.FALSE, recovered.get("mintedNewRequest"));
+        assertEquals(Boolean.FALSE, recovered.get("replay"));
+        assertNull(binder.existing("c03-clock-never"));
+        ObjectNode tick = choice(MechanismRequestIdBinder.MECH_PROGRESS_CLOCK, ProgressClockConsumer.ACTION_TICK);
+        tick.put("var", "counter.alarm");
+        unseen.setPlayerChoice(tick);
+        Map<String, Object> first = clocks.apply(unseen);
+        assertEquals("c03-clock-never", first.get("requestId"));
+        assertEquals(1, ((Number) first.get("value")).intValue());
+        assertEquals(Boolean.FALSE, first.get("replay"));
+        assertEquals(MechanismRequestIdBinder.APPLIED, binder.existing("c03-clock-never").getStatus());
+        Map<String, Object> replay = clocks.apply(unseen);
+        assertEquals(Boolean.TRUE, replay.get("replay"));
+        assertEquals("c03-clock-never", replay.get("requestId"));
+        assertEquals(MechanismRequestIdBinder.APPLIED, binder.existing("c03-clock-never").getStatus());
     }
 }

@@ -10,6 +10,7 @@ import static com.chengyinhub.business.service.support.rpg.mechanism.MechanismFi
 import static com.chengyinhub.business.service.support.rpg.mechanism.MechanismFixtures.choice;
 import static com.chengyinhub.business.service.support.rpg.mechanism.MechanismFixtures.play;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -50,5 +51,32 @@ class OracleBountyConsumerTest {
         assertThrows(IllegalArgumentException.class, () -> oracle.select(JSON.readTree(
                 "{\"bounties\":[{\"id\":\"x\",\"label\":\"x\",\"var\":\"counter.hunt\",\"ticks\":1,\"segments\":4,\"amount\":50}]}")));
         oracle.select(JSON.readTree(ORACLE));
+    }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueConsultApplies() throws Exception {
+        MechanismRequestIdBinder binder = new MechanismRequestIdBinder();
+        OracleBountyConsumer oracle = new OracleBountyConsumer(binder);
+        MechanismRequestIdBinder.Play unseen = play(binder);
+        unseen.setOriginalRequestId("c03-oracle-never");
+        unseen.setOriginalAction(null);
+        Map<String, Object> recovered = oracle.recoverOriginal(unseen);
+        assertEquals("c03-oracle-never", recovered.get("requestId"));
+        assertEquals(MechanismRequestIdBinder.UNKNOWN, recovered.get("status"));
+        assertEquals(Boolean.FALSE, recovered.get("mintedNewRequest"));
+        assertEquals(Boolean.FALSE, recovered.get("replay"));
+        assertNull(binder.existing("c03-oracle-never"));
+        ObjectNode consult = choice(MechanismRequestIdBinder.MECH_ORACLE_BOUNTY, OracleBountyConsumer.ACTION_CONSULT);
+        consult.put("oracleId", "street_lamp");
+        unseen.setPlayerChoice(consult);
+        Map<String, Object> first = oracle.apply(unseen);
+        assertEquals("c03-oracle-never", first.get("requestId"));
+        assertEquals("巡夜人换班了", first.get("revelation"));
+        assertEquals(Boolean.FALSE, first.get("replay"));
+        assertEquals(MechanismRequestIdBinder.APPLIED, binder.existing("c03-oracle-never").getStatus());
+        Map<String, Object> replay = oracle.apply(unseen);
+        assertEquals(Boolean.TRUE, replay.get("replay"));
+        assertEquals("c03-oracle-never", replay.get("requestId"));
+        assertEquals(MechanismRequestIdBinder.APPLIED, binder.existing("c03-oracle-never").getStatus());
     }
 }

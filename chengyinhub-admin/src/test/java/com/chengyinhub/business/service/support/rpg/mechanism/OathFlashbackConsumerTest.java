@@ -8,6 +8,7 @@ import java.util.Map;
 import static com.chengyinhub.business.service.support.rpg.mechanism.MechanismFixtures.choice;
 import static com.chengyinhub.business.service.support.rpg.mechanism.MechanismFixtures.play;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -60,5 +61,32 @@ class OathFlashbackConsumerTest {
         assertTrue(refused.getMessage().contains("作者配置"));
         session.getState().getVariables().put("clue.page", Integer.valueOf(9));
         assertEquals(9, session.getState().getVariables().get("clue.page").intValue());
+    }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueSwearApplies() throws Exception {
+        MechanismRequestIdBinder binder = new MechanismRequestIdBinder();
+        OathFlashbackConsumer oath = new OathFlashbackConsumer(binder);
+        MechanismRequestIdBinder.Play unseen = play(binder);
+        unseen.setOriginalRequestId("c03-oath-never");
+        unseen.setOriginalAction(null);
+        Map<String, Object> recovered = oath.recoverOriginal(unseen);
+        assertEquals("c03-oath-never", recovered.get("requestId"));
+        assertEquals(MechanismRequestIdBinder.UNKNOWN, recovered.get("status"));
+        assertEquals(Boolean.FALSE, recovered.get("mintedNewRequest"));
+        assertEquals(Boolean.FALSE, recovered.get("replay"));
+        assertNull(binder.existing("c03-oath-never"));
+        ObjectNode swear = choice(MechanismRequestIdBinder.MECH_OATH_FLASHBACK, OathFlashbackConsumer.ACTION_SWEAR);
+        swear.put("oathKey", "keep_silent");
+        unseen.setPlayerChoice(swear);
+        Map<String, Object> first = oath.apply(unseen);
+        assertEquals("c03-oath-never", first.get("requestId"));
+        assertEquals(Boolean.TRUE, first.get("active"));
+        assertEquals(Boolean.FALSE, first.get("replay"));
+        assertEquals(MechanismRequestIdBinder.APPLIED, binder.existing("c03-oath-never").getStatus());
+        Map<String, Object> replay = oath.apply(unseen);
+        assertEquals(Boolean.TRUE, replay.get("replay"));
+        assertEquals("c03-oath-never", replay.get("requestId"));
+        assertEquals(MechanismRequestIdBinder.APPLIED, binder.existing("c03-oath-never").getStatus());
     }
 }
