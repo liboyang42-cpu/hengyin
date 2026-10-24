@@ -1,0 +1,11 @@
+{
+  "author_source": "41c7e1caef9fdd3548585f1646e267565ca252d7",
+  "parent_integrated_public_master": "6d668e381e8f0b6f33db93470c93056161be4b70",
+  "source_files_exact": 9,
+  "independent_source_review": "e1c412e7a9cd0a45ac82cca0d442d4608e604609",
+  "code_change": "One request-local club projection replaces per-conversation club/profile/current-membership repeated reads; write authorization remains original live guard.",
+  "expected_SQL_count": "No club1; club-only2 instead of1+2K/1+3K; actual SQL performance not measured yet",
+  "fixture_classification": "Only exact new fixture SQL path TEST_FIXTURE",
+  "runtime_tests": "Deferred to combined source batch per user priority",
+  "acceptance": false
+}
