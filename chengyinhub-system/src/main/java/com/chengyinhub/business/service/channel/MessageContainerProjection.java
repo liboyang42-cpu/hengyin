@@ -84,9 +84,11 @@ public final class MessageContainerProjection {
         view.put("muted_until", myState.get("muted_until"));
         view.put("effective_level", level);
         boolean category = "NOT_APPLICABLE".equals(myState.get("read_state"));
-        if (!category && integerOne(myState.get("read_state_available"))) {
+        boolean readable = !category && integerOne(myState.get("read_state_available"))
+                && Boolean.TRUE.equals(myState.get("indexed"));
+        if (readable) {
             view.put("read_state_available", Integer.valueOf(1));
-            view.put("indexed", Boolean.TRUE.equals(myState.get("indexed")));
+            view.put("indexed", Boolean.TRUE);
             view.put("last_read_msg_id", nullableLong(myState.get("last_read_msg_id")));
             view.put("last_read_visible_at", myState.get("last_read_visible_at"));
             view.put("unread_count", nullableLong(myState.get("unread_count")));

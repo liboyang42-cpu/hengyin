@@ -85,5 +85,15 @@ class MessageContainerProjectionTest {
         assertNull(category.get("unread_count"));
         assertNull(MessageContainerProjection.readMyState(Map.of("pinned", 1, "hidden", 0, "muted", 0,
                 "permanent_muted", 1, "effective_level", 1)));
+        ready.put("read_state", null);
+        ready.put("read_state_available", 1);
+        ready.put("indexed", Boolean.FALSE);
+        ready.put("unread_count", 7);
+        Map<String, Object> contradiction = MessageContainerProjection.readMyState(ready);
+        assertNull(contradiction.get("unread_count"));
+        assertEquals(Integer.valueOf(0), contradiction.get("read_state_available"));
+        ready.put("indexed", Integer.valueOf(1));
+        Map<String, Object> numericIndex = MessageContainerProjection.readMyState(ready);
+        assertNull(numericIndex.get("unread_count"));
     }
 }
