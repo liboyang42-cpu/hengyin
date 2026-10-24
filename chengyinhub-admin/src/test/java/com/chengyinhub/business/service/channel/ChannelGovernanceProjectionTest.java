@@ -12,6 +12,7 @@ import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelAc
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelAuthorizationGrant;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelCatalogEntry;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelGovernancePhase;
+import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelRevokeReason;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelRole;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelRulesCas;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ConversationKind;
@@ -219,6 +220,43 @@ class ChannelGovernanceProjectionTest {
         assertEquals(1, reads.get());
         assertEquals(ChannelGovernancePhase.CATALOGED, live.phase());
         assertEquals(1L, live.generation());
+    }
+
+    @Test
+    void readMessagesAfterBanOrLeaveDoesNotCallListMessagesWhenMembershipStaysTrue() {
+        ChannelAccount4Identity identity = new ChannelAccount4Identity(7, 1L);
+        ChannelCatalogEntry catalog = new ChannelCatalogEntry(21, 12, ConversationKind.GROUP,
+                new ChannelRulesCas(3, Integer.valueOf(4), 3));
+        java.util.concurrent.atomic.AtomicInteger reads = new java.util.concurrent.atomic.AtomicInteger();
+        ChannelGovernanceProjection.ChannelMessageSource messages = (memberId, conversationId, cursorId, size, afterId) -> {
+            reads.incrementAndGet();
+            return java.util.Collections.<String, Object>emptyMap();
+        };
+        ChannelGovernanceProjection.ChannelMembershipSource stillMember = (memberId, conversationId) -> true;
+
+        ChannelGovernanceProjection banned = new ChannelGovernanceProjection(catalog, identity, stillMember, messages);
+        banned.consentToPublishedRules(new ChannelRulesAdmission(identity, 3));
+        banned.submitInviteOrApply();
+        banned.assignMemberRole(ChannelRole.MEMBER);
+        banned.ban();
+        assertEquals(ChannelAuthorizationException.Code.REVOKED,
+                assertThrows(ChannelAuthorizationException.class, () -> banned.readMessages(70L, null, 20, null)).code);
+        assertEquals(0, reads.get());
+        assertEquals(ChannelGovernancePhase.BANNED, banned.phase());
+        assertEquals(ChannelRole.NONE, banned.role());
+        assertEquals(ChannelRevokeReason.BAN, banned.revokeReason());
+
+        ChannelGovernanceProjection left = new ChannelGovernanceProjection(catalog, identity, stillMember, messages);
+        left.consentToPublishedRules(new ChannelRulesAdmission(identity, 3));
+        left.submitInviteOrApply();
+        left.assignMemberRole(ChannelRole.MEMBER);
+        left.leave();
+        assertEquals(ChannelAuthorizationException.Code.REVOKED,
+                assertThrows(ChannelAuthorizationException.class, () -> left.readMessages(70L, null, 20, null)).code);
+        assertEquals(0, reads.get());
+        assertEquals(ChannelGovernancePhase.LEFT, left.phase());
+        assertEquals(ChannelRole.NONE, left.role());
+        assertEquals(ChannelRevokeReason.LEAVE, left.revokeReason());
     }
 
     private static ChannelGovernanceProjection memberReady(ChannelCatalogEntry catalog,

@@ -162,9 +162,9 @@ public final class ChannelGovernanceProjection {
     }
 
     /**
-     * 用既有 {@link IImService#listMessages} 读会话页。先过群成员闸。
-     * 缺成员口或消息口为 WAITING_SOURCE。非成员不调用 listMessages，也不改 phase。
-     * 不 send、不 markRead。
+     * 用既有 {@link IImService#listMessages} 读会话页。先过既有撤权门，再过群成员闸。
+     * 缺成员口或消息口为 WAITING_SOURCE。撤权或非成员不调用 listMessages，也不改 phase。
+     * 纯读不要求 WRITE。不 send、不 markRead。
      */
     public Map<String, Object> readMessages(long memberId, Long cursorId, int size, Long afterId) {
         if (membership == null) {
@@ -176,6 +176,7 @@ public final class ChannelGovernanceProjection {
         if (size <= 0) {
             throw new IllegalArgumentException("size 不合法");
         }
+        ensureActive();
         if (!membership.isActiveGroupMember(memberId, catalog.conversationId)) {
             throw new ChannelAuthorizationException(ChannelAuthorizationException.Code.NOT_MEMBER);
         }
