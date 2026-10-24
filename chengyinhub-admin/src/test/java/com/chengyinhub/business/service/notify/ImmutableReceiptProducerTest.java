@@ -8,7 +8,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
+import org.springframework.test.util.ReflectionTestUtils;
+
+import com.chengyinhub.business.domain.ImConversation;
+import com.chengyinhub.business.domain.ImConversationMember;
 import com.chengyinhub.business.domain.ImMessage;
+import com.chengyinhub.business.mapper.ImConversationMapper;
+import com.chengyinhub.business.mapper.ImConversationMemberMapper;
+import com.chengyinhub.business.mapper.ImMessageMapper;
+import com.chengyinhub.business.service.impl.ImServiceImpl;
+import com.chengyinhub.common.exception.ServiceException;
+
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class ImmutableReceiptProducerTest {
 
@@ -275,5 +290,56 @@ class ImmutableReceiptProducerTest {
         assertEquals("WRONG_OPERATION", recall.state);
         assertNull(recall.messageId);
         assertFalse(recall.outcomeConfirmed);
+    }
+
+    @Test
+    void recoverFromJournalUsesOriginalReadSentMessageAndDoesNotInsert() {
+        ImConversationMapper conversations = mock(ImConversationMapper.class);
+        ImConversationMemberMapper members = mock(ImConversationMemberMapper.class);
+        ImMessageMapper messages = mock(ImMessageMapper.class);
+        ImServiceImpl im = new ImServiceImpl();
+        ReflectionTestUtils.setField(im, "conversationMapper", conversations);
+        ReflectionTestUtils.setField(im, "memberMapper", members);
+        ReflectionTestUtils.setField(im, "messageMapper", messages);
+        ImConversation conversation = new ImConversation();
+        conversation.setId(100L);
+        conversation.setType(ImConversation.TYPE_SINGLE);
+        conversation.setStatus(0);
+        when(conversations.selectImConversationByIdForUpdate(100L)).thenReturn(conversation);
+        ImConversationMember member = new ImConversationMember();
+        member.setConversationId(100L);
+        member.setMemberId(1L);
+        member.setDeleted(0);
+        when(members.selectByConvAndMemberForUpdate(100L, 1L)).thenReturn(member);
+        ImMessage sent = new ImMessage();
+        sent.setConversationId(100L);
+        sent.setSenderId(1L);
+        sent.setClientMessageId("original-req");
+        sent.setRequestHash("abc123digest");
+        sent.setContent("hello");
+        sent.setMsgType(1);
+        when(messages.selectByClientMessageIdForUpdate(100L, 1L, "original-req")).thenReturn(sent);
+
+        InMemoryNotifyFixtures.MemoryReceiptStore store = new InMemoryNotifyFixtures.MemoryReceiptStore();
+        ImmutableReceiptProducer waiting = new ImmutableReceiptProducer(store,
+                new ImmutableReceiptProducer.ImServiceOriginalReceiptJournal(null), null);
+        IllegalStateException missing = assertThrows(IllegalStateException.class,
+                () -> waiting.recoverFromJournal(1L, 100L, "original-req"));
+        assertTrue(missing.getMessage().contains(ImmutableReceiptProducer.IM_READ_SENT));
+        verify(messages, never()).selectByClientMessageIdForUpdate(eq(100L), eq(1L), eq("original-req"));
+
+        ImmutableReceiptProducer producer = new ImmutableReceiptProducer(store,
+                new ImmutableReceiptProducer.ImServiceOriginalReceiptJournal(im), null);
+        ImmutableReceiptProducer.OriginalReceipt found = producer.recoverFromJournal(1L, 100L, "original-req");
+        assertEquals("original-req", found.requestId);
+        assertEquals("hello", found.originalBody);
+        assertEquals("abc123digest", found.payloadHash);
+        assertEquals(ImmutableReceiptProducer.OUTCOME_UNKNOWN, found.outcome);
+        assertNull(store.find("original-req"));
+        verify(messages).selectByClientMessageIdForUpdate(100L, 1L, "original-req");
+        verify(messages, never()).insertImMessage(org.mockito.ArgumentMatchers.any());
+
+        assertThrows(ServiceException.class, () -> producer.recoverFromJournal(2L, 100L, "original-req"));
+        verify(messages, never()).selectByClientMessageIdForUpdate(eq(100L), eq(2L), eq("original-req"));
     }
 }
