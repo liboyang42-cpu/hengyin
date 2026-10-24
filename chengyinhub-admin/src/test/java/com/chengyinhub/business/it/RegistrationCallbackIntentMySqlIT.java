@@ -6,6 +6,9 @@ import com.chengyinhub.business.mapper.CmsRegistrationMapper;
 import com.chengyinhub.business.mapper.CmsRegistrationPaymentFactMapper;
 import com.chengyinhub.business.mapper.CmsRegistrationScanMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
+import com.chengyinhub.business.mapper.ImNotificationIntentMapper;
+import com.chengyinhub.business.service.ISystemNotificationIntentService;
+import com.chengyinhub.business.service.impl.ImServiceImpl;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.mapper.UmsMemberPointsDetailMapper;
 import com.chengyinhub.business.mapper.WxPaymentCallbackInboxMapper;
@@ -92,6 +95,7 @@ class RegistrationCallbackIntentMySqlIT {
     private DriverManagerDataSource source;
     private JdbcTemplate db;
     private DataSourceTransactionManager transactions;
+    private CommittedBusinessNotice notices;
     private SqlSessionTemplate sql;
     private final AtomicCommitProbe probe = new AtomicCommitProbe();
     private WechatPayServiceImpl gateway;
@@ -118,6 +122,7 @@ class RegistrationCallbackIntentMySqlIT {
                 "migration_20261023_wx_pay_order_intent.sql",
                 "migration_20261024_wx_verified_payment_fact.sql",
                 "migration_20261024_registration_payment_fact.sql");
+        P0AcceptanceSchema.createTableFromMigration(db, "migration_20261013_b_im_notification_intent.sql");
         // Reuse the existing repository helper: exact cms_topic ALTERs from original migrations only.
         // The original topic FOR UPDATE mapper selects these post-snapshot columns; no hand-shaped test table.
         for (String migration : List.of("migration_20260820_new_city_setup_plan.sql",
@@ -135,7 +140,7 @@ class RegistrationCallbackIntentMySqlIT {
         factory.setDataSource(source);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
         factory.setMapperLocations(List.of("CmsRegistrationMapper", "UmsMemberMapper", "UmsMemberPointsDetailMapper",
-                        "CmsPointsSettingMapper", "CmsRegistrationScanMapper", "WxPaymentCallbackInboxMapper", "CmsTopicMapper", "CmsRegistrationPaymentFactMapper").stream()
+                        "CmsPointsSettingMapper", "CmsRegistrationScanMapper", "WxPaymentCallbackInboxMapper", "CmsTopicMapper", "CmsRegistrationPaymentFactMapper", "ImNotificationIntentMapper").stream()
                 .map(name -> new ClassPathResource("mapper/business/" + name + ".xml"))
                 .toArray(ClassPathResource[]::new));
         factory.setPlugins(probe);
@@ -230,14 +235,21 @@ class RegistrationCallbackIntentMySqlIT {
         StaticListableBeanFactory beans = new StaticListableBeanFactory();
         beans.addBean("gateway", WechatVerifiedFactTestSupport.getField(gateway,"gateway"));
         WechatVerifiedFactTestSupport.setField(registration, "paymentAttemptGateway", beans.getBeanProvider(WechatPaymentOperations.class));
+        // Real notification owner joins the payment transaction; delivery remains an unexecuted after-commit effect.
+        ImServiceImpl im = new ImServiceImpl();
+        WechatVerifiedFactTestSupport.setField(im, "notificationIntentMapper", sql.getMapper(ImNotificationIntentMapper.class));
+        ImServiceImpl transactionalIm = transactional(im);
+        WechatVerifiedFactTestSupport.setField(registration, "systemNotificationIntents", (ISystemNotificationIntentService) transactionalIm);
+        WechatVerifiedFactTestSupport.setField(registration, "imService", transactionalIm);
         ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         when(executor.schedule(any(Runnable.class), eq(10L), eq(TimeUnit.MILLISECONDS))).thenAnswer(call -> {
             assertVisibleOutside(2, WxPaymentCallbackInbox.STATE_DONE, 95, 2, 1);
             scheduledNotices.incrementAndGet();
             return mock(ScheduledFuture.class); // Do not execute QR/HTTP effects; only verify post-commit enqueue.
         });
-        WechatVerifiedFactTestSupport.setField(registration, "committedBusinessNotice", new CommittedBusinessNotice(
+        notices = spy(new CommittedBusinessNotice(
                 mock(com.chengyinhub.business.service.INotifyService.class), mock(AlarmService.class), transactions, executor));
+        WechatVerifiedFactTestSupport.setField(registration, "committedBusinessNotice", notices);
         WechatVerifiedFactTestSupport.setField(gateway, "registrationService", transactional(registration));
         assertEquals(BUSINESS_NO, freeze("wx-mini", "JSAPI"));
         clearInvocations(sdk); // First preflight 404 is separate from the callback observations below.
@@ -265,13 +277,13 @@ class RegistrationCallbackIntentMySqlIT {
         SignedNotification success = notification(BUSINESS_NO, "wx-mini", "JSAPI", "SUCCESS", "WX-SUCCESS", 1000);
         assertEquals("SUCCESS", deliver(success, "WX-SUCCESS", "SUCCESS"));
         assertEquals(1, probe.doneProbes.get());
-        assertEquals(1, scheduledNotices.get());
+        assertEquals(2, scheduledNotices.get());
         assertCompleted("WX-SUCCESS", 1);
         long rowId = inboxNumber("id"), fence = inboxNumber("fence_token");
         assertEquals("SUCCESS", deliver(success, "WX-SUCCESS", "SUCCESS"));
         assertCompleted("WX-SUCCESS", 1);
         assertEquals(rowId, inboxNumber("id")); assertEquals(fence, inboxNumber("fence_token"));
-        assertEquals(1, probe.doneProbes.get()); assertEquals(1, scheduledNotices.get());
+        assertEquals(1, probe.doneProbes.get()); assertEquals(2, scheduledNotices.get());
         verify(sdk, never()).closeOrder(any());
     }
 
@@ -293,10 +305,10 @@ class RegistrationCallbackIntentMySqlIT {
         assertEquals(2, inboxNumber("attempt_count")); assertEquals(2, inboxNumber("fence_token"));
         assertEquals(11, inboxNumber("biz_id")); assertEquals(1, inboxNumber("biz_type"));
         assertEquals("SUCCESS", db.queryForObject("SELECT event_type FROM wx_payment_callback_inbox WHERE id=?", String.class, originalId));
-        assertEquals(2, probe.doneProbes.get()); assertEquals(1, scheduledNotices.get());
+        assertEquals(2, probe.doneProbes.get()); assertEquals(2, scheduledNotices.get());
         assertEquals("SUCCESS", deliver(success, "WX-RETRY", "SUCCESS"));
         assertCompleted("WX-RETRY", 1);
-        assertEquals(2, inboxNumber("fence_token")); assertEquals(1, scheduledNotices.get());
+        assertEquals(2, inboxNumber("fence_token")); assertEquals(2, scheduledNotices.get());
     }
 
     @Test
@@ -329,7 +341,7 @@ class RegistrationCallbackIntentMySqlIT {
         assertEquals(WxPaymentCallbackInbox.STATE_DONE, db.queryForObject(
                 "SELECT state FROM wx_payment_callback_inbox WHERE notify_hash=UNHEX(?)", Integer.class, newHash));
         assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM wx_pay_order_intent WHERE out_trade_no=? AND closed_confirmed_at IS NOT NULL", Integer.class, w2));
-        assertEquals(1, probe.doneProbes.get()); assertEquals(1, scheduledNotices.get());
+        assertEquals(1, probe.doneProbes.get()); assertEquals(2, scheduledNotices.get());
         verify(sdk, never()).closeOrder(any());
     }
 
@@ -375,7 +387,7 @@ class RegistrationCallbackIntentMySqlIT {
         assertEquals(1,number("SELECT COUNT(*) FROM wx_verified_payment_fact"));
         assertEquals("SUCCESS",deliver(success,"WX-DURABLE","SUCCESS"));assertCompleted("WX-DURABLE",1);
         assertEquals(2,probe.doneProbes.get());
-        assertEquals(1,scheduledNotices.get());verifyNoInteractions(sdk);
+        assertEquals(2,scheduledNotices.get());verifyNoInteractions(sdk);
     }
 
     @Test
@@ -414,7 +426,7 @@ class RegistrationCallbackIntentMySqlIT {
                 }
             }));
         });
-        assertCompleted("WX-RR",1);assertEquals(1,scheduledNotices.get());
+        assertCompleted("WX-RR",1);assertEquals(2,scheduledNotices.get());
         assertEquals(1,number("SELECT COUNT(*) FROM wx_payment_callback_fact_link l JOIN wx_payment_callback_inbox i ON i.id=l.inbox_id AND i.notify_hash=UNHEX(l.notify_hash)"));
         assertEquals(0,number("SELECT COUNT(*) FROM wx_payment_callback_fact_link l JOIN wx_payment_callback_inbox i ON i.notify_hash=l.notify_hash"));
     }
@@ -491,7 +503,7 @@ class RegistrationCallbackIntentMySqlIT {
         assertEquals(reference.hash(),db.queryForObject("SELECT fact_hash FROM wx_verified_payment_fact WHERE id=?",String.class,reference.id()));
         if ("commit".equals(ending)) {
             assertCompleted(transactionId,1);assertEquals(1,probe.doneProbes.get());
-            assertEquals(0,probe.releaseProbes.get());assertEquals(1,scheduledNotices.get());
+            assertEquals(0,probe.releaseProbes.get());assertEquals(2,scheduledNotices.get());
             assertEquals(originalOwner.get().toUpperCase(java.util.Locale.ROOT),
                     db.queryForObject("SELECT HEX(owner_token) FROM wx_payment_callback_inbox WHERE id=?",String.class,inboxId));
         } else {
@@ -530,7 +542,7 @@ class RegistrationCallbackIntentMySqlIT {
             assertEquals(0,probe.releaseProbes.get());assertVisibleOutside(1,WxPaymentCallbackInbox.STATE_PROCESSING,80,0,0);
         });
         assertFalse(TransactionSynchronizationManager.hasResource(key));
-        assertCompleted("WX-SAME-TX",1);assertEquals(1,scheduledNotices.get());
+        assertCompleted("WX-SAME-TX",1);assertEquals(2,scheduledNotices.get());
         assertTrue(callback.inbox().process(callback.notifyId(),mustNotMutate()),"committed DONE keeps its original legacy duplicate ACK");
         assertEquals(1,probe.claimUpdates.get());
     }
@@ -558,7 +570,7 @@ class RegistrationCallbackIntentMySqlIT {
             assertEquals(1,probe.claimUpdates.get());assertEquals(1,probe.doneProbes.get());assertEquals(0,probe.releaseProbes.get());
         });
         assertFalse(TransactionSynchronizationManager.hasResource(key));
-        assertCompleted("WX-NESTED-TX",1);assertEquals(1,scheduledNotices.get());
+        assertCompleted("WX-NESTED-TX",1);assertEquals(2,scheduledNotices.get());
     }
 
     @Test
@@ -578,7 +590,7 @@ class RegistrationCallbackIntentMySqlIT {
         });
         assertFalse(TransactionSynchronizationManager.hasResource(key));assertCompleted("WX-CLEANUP-TX",1);
         assertEquals(2,inboxNumber("fence_token"));assertEquals(2,inboxNumber("attempt_count"));
-        assertEquals(2,probe.claimUpdates.get());assertEquals(2,probe.doneProbes.get());assertEquals(1,scheduledNotices.get());
+        assertEquals(2,probe.claimUpdates.get());assertEquals(2,probe.doneProbes.get());assertEquals(2,scheduledNotices.get());
     }
 
     @Test
@@ -597,7 +609,7 @@ class RegistrationCallbackIntentMySqlIT {
             assertTrue(callback.inbox().processVerified(callback.notifyId(),callback.reference(),mustNotMutate()));
             assertEquals(2,probe.claimUpdates.get());assertEquals(1,probe.doneProbes.get());assertEquals(0,probe.releaseProbes.get());
         });
-        assertCompleted("WX-INDEPENDENT-TX",2);assertEquals(1,scheduledNotices.get());
+        assertCompleted("WX-INDEPENDENT-TX",2);assertEquals(2,scheduledNotices.get());
         assertEquals(WxPaymentCallbackInbox.STATE_IGNORED_STALE,db.queryForObject(
                 "SELECT state FROM wx_payment_callback_inbox WHERE notify_hash=UNHEX(?)",Integer.class,staleHash));
         assertEquals(1,db.queryForObject("SELECT attempt_count FROM wx_payment_callback_inbox WHERE notify_hash=UNHEX(?)",Integer.class,staleHash));
@@ -669,6 +681,7 @@ class RegistrationCallbackIntentMySqlIT {
 
     private void assertPendingResources() {
         assertEquals(0,number("SELECT COUNT(*) FROM cms_registration_payment_fact WHERE registration_id=11"));
+        assertEquals(0,number("SELECT COUNT(*) FROM im_notification_intent"));
         assertEquals(1, number("SELECT payment_status FROM cms_registration WHERE id=11"));
         assertEquals(1, number("SELECT registration_status FROM cms_registration WHERE id=11"));
         assertNull(db.queryForObject("SELECT transaction_id FROM cms_registration WHERE id=11", String.class));
@@ -704,10 +717,30 @@ class RegistrationCallbackIntentMySqlIT {
         assertEquals(WxPaymentCallbackInbox.STATE_DONE, inboxNumber("state"));
         assertEquals(inboxRows, number("SELECT COUNT(*) FROM wx_payment_callback_inbox"));
         assertPaidResources();
+        assertOriginalSignupIntent();
+        verify(notices, times(1)).dispatchInNewTransaction(eq("registration-qrcode"), eq(11L), any());
+        verify(notices, times(1)).dispatchInNewTransaction(eq("registration-signup"), eq(11L), any());
+    }
+
+    private void assertOriginalSignupIntent() {
+        assertEquals(1, number("SELECT COUNT(*) FROM im_notification_intent"));
+        var intent = db.queryForMap("SELECT id,event_key,recipient,msg_type,content,extra_json,request_hash,status,message_id FROM im_notification_intent");
+        assertTrue(((Number) intent.get("id")).longValue() > 0);
+        assertEquals("registration-signup:11", intent.get("event_key"));
+        assertEquals(7L, ((Number) intent.get("recipient")).longValue());
+        assertEquals(com.chengyinhub.business.domain.ImMessage.MSG_CARD, ((Number) intent.get("msg_type")).intValue());
+        assertEquals("报名成功", intent.get("content"));
+        String expectedExtra = "{\"cardType\":\"signup\",\"topicId\":23}";
+        assertEquals(expectedExtra, intent.get("extra_json"));
+        assertEquals(com.chengyinhub.business.service.support.CanonicalDigest.sha256Hex(com.alibaba.fastjson2.JSON.toJSONString(
+                java.util.Arrays.asList(7L, ((Number) intent.get("msg_type")).intValue(), "报名成功", expectedExtra))), intent.get("request_hash"));
+        assertEquals("PENDING", intent.get("status"));
+        assertNull(intent.get("message_id"), "a wakeup is not delivery");
     }
 
     private void assertConsumptionInOriginalTransaction(String transactionId) {
         assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+        assertOriginalSignupIntent();
         var consumed=sql.getMapper(CmsRegistrationPaymentFactMapper.class).selectByRegistrationForUpdate(11L);
         assertNotNull(consumed);assertEquals(11L,consumed.registrationId().longValue());
         assertEquals(BUSINESS_NO,consumed.registrationNo());assertEquals(transactionId,consumed.transactionId());
@@ -737,7 +770,8 @@ class RegistrationCallbackIntentMySqlIT {
                 "SELECT payment_status,(SELECT state FROM wx_payment_callback_inbox WHERE notify_hash=UNHEX(?)),"
                         + "(SELECT point FROM ums_member WHERE id=7),(SELECT COUNT(*) FROM ums_member_points_detail),"
                         + "(SELECT COUNT(*) FROM cms_registration_scan),CONNECTION_ID(),"
-                        + "(SELECT COUNT(*) FROM cms_registration_payment_fact WHERE registration_id=11) FROM cms_registration WHERE id=11")) {
+                        + "(SELECT COUNT(*) FROM cms_registration_payment_fact WHERE registration_id=11),"
+                        + "(SELECT COUNT(*) FROM im_notification_intent WHERE event_key='registration-signup:11') FROM cms_registration WHERE id=11")) {
             assertTrue(observer.getAutoCommit());
             statement.setString(1, activeHash.get());
             try (ResultSet rows = statement.executeQuery()) {
@@ -745,6 +779,7 @@ class RegistrationCallbackIntentMySqlIT {
                 assertEquals(points, rows.getInt(3)); assertEquals(rewardRows, rows.getInt(4)); assertEquals(scanRows, rows.getInt(5));
                 assertNotEquals(probe.businessConnection.get(), Long.valueOf(rows.getLong(6)), "observer must use a different physical connection");
                 assertEquals(payment==2?1:0,rows.getInt(7),"local consumption becomes visible with the real business and DONE commit only");
+                assertEquals(payment==2?1:0,rows.getInt(8),"original notification intent shares the payment commit/rollback");
             }
         } catch (java.sql.SQLException observerFailure) {
             throw new AssertionError("Independent original transaction readback failed",observerFailure);

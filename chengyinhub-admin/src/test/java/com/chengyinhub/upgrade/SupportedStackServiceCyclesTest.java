@@ -46,12 +46,18 @@ import com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService;
 import com.chengyinhub.business.service.impl.RefundServiceImpl;
 import com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl;
 import com.chengyinhub.business.service.impl.CoopSettlementOriginalLedger;
+import com.chengyinhub.business.service.impl.CoopClosedPaymentRecovery;
+import com.chengyinhub.business.service.impl.WxPaymentCallbackOutboxServiceImpl;
+import com.chengyinhub.business.mapper.WxPaymentCallbackOutboxMapper;
 import com.chengyinhub.business.service.impl.TopicSettlementEvidenceService;
 import com.chengyinhub.business.service.support.CommittedBusinessNotice;
 import com.chengyinhub.business.service.support.CommittedOfficialNoticeService;
+import com.chengyinhub.business.service.support.ChapterApplicationInviteNotice;
 import com.chengyinhub.business.mapper.CommittedOfficialNoticeWxMapper;
 import com.chengyinhub.business.task.CommittedOfficialNoticeTask;
 import com.chengyinhub.business.service.support.SettlementDebtLedger;
+import com.chengyinhub.business.service.support.RegistrationPaymentConsumptionReadService;
+import com.chengyinhub.business.mapper.CmsRegistrationPaymentFactMapper;
 import com.chengyinhub.business.service.ISystemNotificationIntentService;
 import com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper;
 
@@ -265,9 +271,12 @@ class SupportedStackServiceCyclesTest
             assertThat(context).hasNotFailed();
             for (Class<?> service : List.of(WechatVerifiedPaymentFactService.class,
                     WechatPaymentSdkGateway.class, CoopSettlementClaimServiceImpl.class,
-                    CoopSettlementOriginalLedger.class, SettlementDebtLedger.class,
+                    CoopSettlementOriginalLedger.class, CoopClosedPaymentRecovery.class,
+                    WxPaymentCallbackOutboxServiceImpl.class, SettlementDebtLedger.class,
+                    RegistrationPaymentConsumptionReadService.class,
                     CommittedBusinessNotice.class, CommittedOfficialNoticeService.class,
-                    CommittedOfficialNoticeTask.class, ImServiceImpl.class, NotifyServiceImpl.class,
+                    CommittedOfficialNoticeTask.class, ChapterApplicationInviteNotice.class,
+                    ImServiceImpl.class, NotifyServiceImpl.class,
                     InAppNotifyChannel.class))
             {
                 assertThat(context).hasSingleBean(service);
@@ -287,8 +296,25 @@ class SupportedStackServiceCyclesTest
             Object claim = AopTestUtils.getUltimateTargetObject(context.getBean(CoopSettlementClaimServiceImpl.class));
             Object ledger = context.getBean(CoopSettlementOriginalLedger.class);
             assertThat(ReflectionTestUtils.getField(claim, "originalLedger")).isSameAs(ledger);
+            Object recovery = context.getBean(CoopClosedPaymentRecovery.class);
+            Object recoveryTarget = AopTestUtils.getUltimateTargetObject(recovery);
+            assertThat(ReflectionTestUtils.getField(claim, "closedPaymentRecovery")).isSameAs(recovery);
+            assertThat(ReflectionTestUtils.getField(recoveryTarget, "facts")).isSameAs(facts);
+            assertThat(ReflectionTestUtils.getField(recoveryTarget, "outbox"))
+                    .isSameAs(context.getBean(WxPaymentCallbackOutboxServiceImpl.class));
+            ObjectProvider<?> recoverySelf = (ObjectProvider<?>) ReflectionTestUtils.getField(recoveryTarget, "self");
+            assertThat(recoverySelf).isNotNull();
+            assertThat(recoverySelf.getObject()).isSameAs(recovery);
+            Object outbox = AopTestUtils.getUltimateTargetObject(context.getBean(WxPaymentCallbackOutboxServiceImpl.class));
+            assertThat(ReflectionTestUtils.getField(outbox, "mapper"))
+                    .isSameAs(context.getBean(WxPaymentCallbackOutboxMapper.class));
             assertThat(ReflectionTestUtils.getField(AopTestUtils.getUltimateTargetObject(ledger), "verifiedFacts"))
                     .isSameAs(facts);
+            Object consumptions = context.getBean(RegistrationPaymentConsumptionReadService.class);
+            assertThat(ReflectionTestUtils.getField(AopTestUtils.getUltimateTargetObject(ledger), "paymentConsumptions"))
+                    .isSameAs(consumptions);
+            assertThat(ReflectionTestUtils.getField(AopTestUtils.getUltimateTargetObject(consumptions), "mapper"))
+                    .isSameAs(context.getBean(CmsRegistrationPaymentFactMapper.class));
             Object registration = AopTestUtils.getUltimateTargetObject(context.getBean(CmsRegistrationServiceImpl.class));
             Object refund = AopTestUtils.getUltimateTargetObject(context.getBean(RefundServiceImpl.class));
             // Ae6's actual new edges must resolve eagerly to the same managed evidence bean.
@@ -321,6 +347,11 @@ class SupportedStackServiceCyclesTest
             assertThat(officialTransaction).isNotNull();
             assertThat(officialTransaction.getTransactionManager()).isSameAs(context.getBean(PlatformTransactionManager.class));
             assertThat(ReflectionTestUtils.getField(context.getBean(CommittedOfficialNoticeTask.class), "notices"))
+                    .isSameAs(context.getBean(CommittedOfficialNoticeService.class));
+            Object chapterApplication = AopTestUtils.getUltimateTargetObject(context.getBean(MerchantChapterApplicationServiceImpl.class));
+            Object invitation = context.getBean(ChapterApplicationInviteNotice.class);
+            assertThat(ReflectionTestUtils.getField(chapterApplication, "inviteNotice")).isSameAs(invitation);
+            assertThat(ReflectionTestUtils.getField(AopTestUtils.getUltimateTargetObject(invitation), "notices"))
                     .isSameAs(context.getBean(CommittedOfficialNoticeService.class));
             assertThat(unexpectedCalls).isEmpty();
         });
@@ -389,6 +420,38 @@ class SupportedStackServiceCyclesTest
                 });
     }
 
+    @Test
+    void invitationNoticeCallingBackIntoItsRealApplicationFailsAsACycle()
+    {
+        List<Method> unexpectedCalls = new ArrayList<>();
+        boolean[] replaced = { false };
+        runner(unexpectedCalls, null, MerchantChapterApplicationServiceImpl.class)
+                .withInitializer(context -> context.addBeanFactoryPostProcessor(factory -> {
+                    for (String name : factory.getBeanDefinitionNames())
+                    {
+                        var definition = factory.getBeanDefinition(name);
+                        if (ChapterApplicationInviteNotice.class.getName().equals(definition.getBeanClassName()))
+                        {
+                            ((AbstractBeanDefinition) definition).setBeanClass(InviteNoticeCallingApplication.class);
+                            replaced[0] = true;
+                        }
+                    }
+                }))
+                .run(context -> {
+                    assertThat(replaced[0]).isTrue();
+                    assertThat(context).hasFailed();
+                    assertThat(context.getStartupFailure()).hasRootCauseInstanceOf(BeanCurrentlyInCreationException.class);
+                    assertThat(unexpectedCalls).isEmpty();
+                });
+    }
+
+    static class InviteNoticeCallingApplication extends ChapterApplicationInviteNotice
+    {
+        InviteNoticeCallingApplication(CommittedOfficialNoticeService notices) { super(notices); }
+        @Autowired
+        private MerchantChapterApplicationServiceImpl forbiddenApplicationBackReference;
+    }
+
     static class FactReaderCallingSdk extends WechatVerifiedPaymentFactService
     {
         @Autowired
@@ -413,7 +476,12 @@ class SupportedStackServiceCyclesTest
         {
             assembly.addAll(List.of(CoopSettlementClaimServiceImpl.class, CoopSettlementOriginalLedger.class,
                     TopicSettlementEvidenceService.class, SettlementDebtLedger.class,
-                    WechatVerifiedPaymentFactService.class));
+                    WechatVerifiedPaymentFactService.class, RegistrationPaymentConsumptionReadService.class,
+                    CoopClosedPaymentRecovery.class, WxPaymentCallbackOutboxServiceImpl.class));
+        }
+        if (assembly.contains(MerchantChapterApplicationServiceImpl.class) || assembly.contains(ChapterApplicationInviteNotice.class))
+        {
+            assembly.addAll(List.of(ChapterApplicationInviteNotice.class, CommittedOfficialNoticeService.class));
         }
         if (assembly.contains(CommittedOfficialNoticeTask.class))
         {

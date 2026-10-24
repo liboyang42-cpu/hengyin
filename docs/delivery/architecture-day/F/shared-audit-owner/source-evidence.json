@@ -1,0 +1,80 @@
+{
+  "kind": "EXISTING_CALLER_SOURCE_NOT_JAVA",
+  "retired": "com.chengyinhub.business.mapper.CommittedNoticeRejectionMapper",
+  "existing_shared_type": "com.chengyinhub.business.mapper.BusinessAuditEventMapper",
+  "records": [
+    {
+      "source": "80b1126b0c73b5f67e66945e5371cfadb0d2d5ae",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ComplaintCloseReporterNotice.java",
+      "sha256": "90a45b52e97e55e56cb3effda67b726e6b4a6e6ab02ae43d9bff51f39add15ff",
+      "lines": [
+        {
+          "line": 6,
+          "source": "import com.chengyinhub.business.mapper.BusinessAuditEventMapper;"
+        },
+        {
+          "line": 30,
+          "source": "    private final BusinessAuditEventMapper rejections;"
+        },
+        {
+          "line": 34,
+          "source": "    public ComplaintCloseReporterNotice(CommittedOfficialNoticeService notices, BusinessAuditEventMapper rejections,"
+        },
+        {
+          "line": 54,
+          "source": "            if (rejections.selectByDomainActionRequestForUpdate(\"PLATFORM\",complaintId,\"COMPLAINT_CLOSE_NOTICE_REJECTED\",key)!=null)"
+        },
+        {
+          "line": 69,
+          "source": "        rejections.insertComplaintCloseNoticeRejectionIgnore(event);"
+        },
+        {
+          "line": 70,
+          "source": "        BusinessAuditEvent stored=rejections.selectByDomainActionRequestForUpdate(\"PLATFORM\",complaintId,\"COMPLAINT_CLOSE_NOTICE_REJECTED\",key);"
+        }
+      ]
+    },
+    {
+      "source": "99d84ce23afe8852d642ba21d791662ad06a9ebd",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayNodeCompletionApplication.java",
+      "sha256": "2a15570514aa1d65490719389cd0fbde38153d74c87410f048020a7828c875c2",
+      "lines": [
+        {
+          "line": 57,
+          "source": "    private com.chengyinhub.business.mapper.BusinessAuditEventMapper businessAuditEventMapper;"
+        },
+        {
+          "line": 625,
+          "source": "        if (businessAuditEventMapper.insertBusinessAuditEvent(audit) != 1) {"
+        }
+      ]
+    },
+    {
+      "source": "99d84ce23afe8852d642ba21d791662ad06a9ebd",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/CityNodeRedemptionApplication.java",
+      "sha256": "4cae805e6f60ee91ad416666c7c8401d169783656bf0f94d60b4df726c6c12ba",
+      "lines": [
+        {
+          "line": 11,
+          "source": "import com.chengyinhub.business.mapper.BusinessAuditEventMapper;"
+        },
+        {
+          "line": 37,
+          "source": "    private final BusinessAuditEventMapper businessAuditEventMapper;"
+        },
+        {
+          "line": 43,
+          "source": "            ISmsCouponHistoryService couponHistoryService, BusinessAuditEventMapper businessAuditEventMapper,"
+        },
+        {
+          "line": 142,
+          "source": "        if (businessAuditEventMapper.insertBusinessAuditEvent(audit) != 1) {"
+        },
+        {
+          "line": 170,
+          "source": "        BusinessAuditEvent original = businessAuditEventMapper.selectByDomainActionRequestForUpdate("
+        }
+      ]
+    }
+  ]
+}

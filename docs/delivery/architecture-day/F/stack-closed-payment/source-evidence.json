@@ -1,0 +1,43 @@
+{
+  "kind": "SOURCE_ONLY_NOT_JAVA",
+  "source": "8ca8f49180f967ef9cc218026a12e552922df50f",
+  "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopClosedPaymentRecovery.java",
+  "sha256": "1c066f528d39bde0e3c19c6483e3d519be12b5b43de670be90ae2d794dbff9b8",
+  "dependency_lines": [
+    {
+      "line": 19,
+      "source": "    private org.springframework.beans.factory.ObjectProvider<CoopClosedPaymentRecovery> self;"
+    },
+    {
+      "line": 25,
+      "source": "    private final CmsTopicMapper topics;"
+    },
+    {
+      "line": 26,
+      "source": "    private final CoopSettlementOriginalMapper originals;"
+    },
+    {
+      "line": 27,
+      "source": "    private final CoopSettlementCashEvidenceMapper cash;"
+    },
+    {
+      "line": 28,
+      "source": "    private final WechatVerifiedPaymentFactService facts;"
+    },
+    {
+      "line": 29,
+      "source": "    private final IWxPaymentCallbackOutboxService outbox;"
+    },
+    {
+      "line": 30,
+      "source": "    public CoopClosedPaymentRecovery(CmsTopicMapper topics,CoopSettlementOriginalMapper originals,CoopSettlementCashEvidenceMapper cash,"
+    }
+  ],
+  "caller": [
+    "8ca8f49180f967ef9cc218026a12e552922df50f:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:47:    private CoopClosedPaymentRecovery closedPaymentRecovery;",
+    "8ca8f49180f967ef9cc218026a12e552922df50f:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:54:        return closedPaymentRecovery.retainClosedSuccess(registrationId,reference);",
+    "8ca8f49180f967ef9cc218026a12e552922df50f:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:60:        closedPaymentRecovery.requireCashAdmission(registrationId,reference);"
+  ],
+  "java": "NOT_RUN",
+  "expected_invocations": 33
+}

@@ -15,8 +15,8 @@ import com.chengyinhub.common.exception.ServiceException;
  * O-11 关键路径失败事件：每次失败只发一行可 grep 的结构化日志，并累加进程内计数（由 admin 的
  * CriticalPathMetrics 以 Actuator 指标 chengyin.critical.path.failures 暴露）。
  *
- * <p>行格式固定：{@code [CY-CRITICAL] code=<码> kind=<FAULT|REJECTED> op=<子操作> cause=<异常类名> root=<根因类名>}。
- * 只含枚举码、固定字面量与异常类名，<b>不含</b>异常 message、会员/订单 ID、openid、金额等任何业务数据。
+ * <p>行格式固定：{@code [CY-CRITICAL] code=<码> kind=<FAULT|REJECTED> op=<子操作> cause=<异常类名> root=<根因类名> origin=<项目类#方法:行号或unknown>}。
+ * 只含枚举码、固定字面量、异常类名与项目代码位置，<b>不含</b>异常 message、会员/订单 ID、openid、金额等任何业务数据。
  *
  * <p>kind：本仓库业务拒绝习惯抛 IllegalArgumentException / IllegalStateException / ServiceException / 裸
  * RuntimeException，这些记为 REJECTED（INFO）；其余（数据访问、事务、连接池、Redis、NPE 等）记为 FAULT（ERROR），
@@ -32,6 +32,9 @@ public final class CriticalPathEvents
     private static final Logger log = LoggerFactory.getLogger("com.chengyinhub.critical");
 
     private static final Pattern OP = Pattern.compile("[a-z][a-z0-9_]{0,31}");
+
+    private static final Pattern ORIGIN_CLASS = Pattern.compile("com\\.chengyinhub\\.[A-Za-z_$][A-Za-z0-9_$.]{0,191}");
+    private static final Pattern ORIGIN_METHOD = Pattern.compile("[A-Za-z_$][A-Za-z0-9_$]{0,127}|<init>|<clinit>");
 
     public enum Kind
     {
@@ -74,14 +77,16 @@ public final class CriticalPathEvents
             COUNTS.get(code)[kind.ordinal()].increment();
             String safeOp = op != null && OP.matcher(op).matches() ? op : "invalid";
             String cause = failure.getClass().getSimpleName();
-            String root = rootCause(failure).getClass().getSimpleName();
+            Throwable rootFailure = rootCause(failure);
+            String root = rootFailure.getClass().getSimpleName();
+            String origin = safeOrigin(rootFailure);
             if (kind == Kind.FAULT)
             {
-                log.error("{} code={} kind={} op={} cause={} root={}", MARKER, code.name(), kind, safeOp, cause, root);
+                log.error("{} code={} kind={} op={} cause={} root={} origin={}", MARKER, code.name(), kind, safeOp, cause, root, origin);
             }
             else
             {
-                log.info("{} code={} kind={} op={} cause={} root={}", MARKER, code.name(), kind, safeOp, cause, root);
+                log.info("{} code={} kind={} op={} cause={} root={} origin={}", MARKER, code.name(), kind, safeOp, cause, root, origin);
             }
             return true;
         }
@@ -120,6 +125,35 @@ public final class CriticalPathEvents
             current = current.getCause();
         }
         return false;
+    }
+
+    /** 只读根异常前 64 帧；不输出文件名、message 或堆栈对象。 */
+    private static String safeOrigin(Throwable failure)
+    {
+        try
+        {
+            StackTraceElement[] frames = failure.getStackTrace();
+            for (int i = 0; i < Math.min(frames.length, 64); i++)
+            {
+                StackTraceElement frame = frames[i];
+                String type = frame.getClassName();
+                if (type.startsWith("com.chengyinhub."))
+                {
+                    String method = frame.getMethodName();
+                    if (type.length() <= 208 && method.length() <= 128
+                            && ORIGIN_CLASS.matcher(type).matches() && ORIGIN_METHOD.matcher(method).matches())
+                    {
+                        return type + "#" + method + ":" + frame.getLineNumber();
+                    }
+                    return "unknown";
+                }
+            }
+        }
+        catch (RuntimeException | LinkageError ignored)
+        {
+            // 位置提取失败也不能阻止原事件和计数。
+        }
+        return "unknown";
     }
 
     private static Throwable rootCause(Throwable failure)

@@ -457,13 +457,25 @@ class WechatPayCallbackForgedSignatureTest {
     @Test
     void verifiedRegistrationRefundConflictAlertsOnceAndKeepsFail() throws Exception {
         RegistrationFailureFixture fixture = new RegistrationFailureFixture("REG_REFUND");
-        when(fixture.mapper.selectCmsRegistrationByIdForUpdate(17L)).thenReturn(fixture.registration);
+        fixture.registration.setPointUsed(100L);
+        fixture.registration.setPointsReturned(0);
         assertTrue(fixture.callback("REFUND", 100).contains("FAIL"));
-        fixture.assertAlarm("REG_REFUND", "refund_state_conflict");
+        // Old claim/refund_state_conflict expectations predated A's verified-original-refund rule:
+        // a payment REFUND state has no original refundNo/refundId or independent REFUND SUCCESS.
+        fixture.assertAlarm("REG_REFUND", "refund_requires_verified_original_refund");
         verify(fixture.mapper, org.mockito.Mockito.times(2)).selectByRegistrationNo("REG_REFUND");
-        verify(fixture.mapper).claimRegistrationRefundedByGateway(org.mockito.ArgumentMatchers.eq(17L),
-                org.mockito.ArgumentMatchers.eq("system"), org.mockito.ArgumentMatchers.any(java.util.Date.class));
-        verify(fixture.mapper).selectCmsRegistrationByIdForUpdate(17L);
+        fixture.assertOriginalScopeRead();
+        verify(fixture.mapper, org.mockito.Mockito.never()).claimRegistrationRefundedByGateway(
+                org.mockito.ArgumentMatchers.eq(17L), org.mockito.ArgumentMatchers.eq("system"), any());
+        verify(fixture.mapper, org.mockito.Mockito.never()).claimPointsReturn(
+                org.mockito.ArgumentMatchers.eq(17L), org.mockito.ArgumentMatchers.eq("system"), any());
+        verify(fixture.mapper, org.mockito.Mockito.never()).claimPaymentSuccess(
+                org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyString(), any());
+        verify(fixture.mapper, org.mockito.Mockito.never()).selectCmsRegistrationByIdForUpdate(17L);
+        assertEquals(Long.valueOf(100L), fixture.registration.getPointUsed());
+        assertEquals(Integer.valueOf(0), fixture.registration.getPointsReturned());
+        fixture.assertNoLocalPaymentEffects();
+        verifyNoInteractions(fixture.cashAdmission);
         verifyNoMoreInteractions(fixture.mapper);
     }
 
@@ -477,7 +489,30 @@ class WechatPayCallbackForgedSignatureTest {
         verify(fixture.mapper).claimPaymentSuccess(org.mockito.ArgumentMatchers.eq(17L),
                 org.mockito.ArgumentMatchers.eq("WX_PRIVATE_TRANSACTION"), org.mockito.ArgumentMatchers.any(java.util.Date.class));
         verify(fixture.mapper).selectCmsRegistrationByIdForUpdate(17L);
+        fixture.assertOriginalScopeRead();
         verifyNoMoreInteractions(fixture.mapper);
+    }
+
+    @Test
+    void verifiedPaymentConflictReachesOriginalCasAndRetainsItsFactWithoutLocalPaymentEffects() throws Exception {
+        RegistrationFailureFixture fixture = new RegistrationFailureFixture("REG_PAYMENT");
+        when(fixture.mapper.selectCmsRegistrationByIdForUpdate(17L)).thenReturn(fixture.registration);
+        assertTrue(fixture.callback("SUCCESS", 100).contains("FAIL"));
+        var proof = fixture.verifiedPayment();
+        org.junit.jupiter.api.Assertions.assertSame(fixture.verifiedFacts, WechatVerifiedFactTestSupport.getField(fixture.registrationService, "verifiedPaymentFacts"));
+        fixture.assertAlarm("REG_PAYMENT", "payment_state_conflict");
+        org.mockito.InOrder steps = org.mockito.Mockito.inOrder(fixture.inbox, fixture.topics, fixture.mapper, fixture.cashAdmission);
+        steps.verify(fixture.inbox).registerVerified("PAY:WX_PRIVATE_TRANSACTION:SUCCESS", 1, 17L, "SUCCESS", proof.reference());
+        steps.verify(fixture.inbox).processVerified(org.mockito.ArgumentMatchers.eq("PAY:WX_PRIVATE_TRANSACTION:SUCCESS"),
+                org.mockito.ArgumentMatchers.eq(proof.reference()), any());
+        steps.verify(fixture.topics).selectCmsTopicByIdForUpdate(RegistrationFailureFixture.TOPIC_ID);
+        steps.verify(fixture.mapper).selectByParentOrderNoForUpdate(RegistrationFailureFixture.PARENT_ORDER, null);
+        steps.verify(fixture.cashAdmission).requirePaidHalfStateCashAdmission(17L, proof.reference());
+        steps.verify(fixture.mapper).claimPaymentSuccess(org.mockito.ArgumentMatchers.eq(17L),
+                org.mockito.ArgumentMatchers.eq("WX_PRIVATE_TRANSACTION"), org.mockito.ArgumentMatchers.any(java.util.Date.class));
+        steps.verify(fixture.mapper).selectCmsRegistrationByIdForUpdate(17L);
+        steps.verify(fixture.cashAdmission).retainClosedPaidHalfStateSuccess(17L, proof.reference());
+        fixture.assertNoLocalPaymentEffects();
     }
 
     @Test
@@ -493,6 +528,7 @@ class WechatPayCallbackForgedSignatureTest {
             verify(fixture.mapper).claimPaymentFailure(org.mockito.ArgumentMatchers.eq(17L),
                     org.mockito.ArgumentMatchers.any(java.util.Date.class));
             verify(fixture.mapper).selectCmsRegistrationByIdForUpdate(17L);
+            fixture.assertOriginalScopeRead();
             verifyNoMoreInteractions(fixture.mapper);
         }
     }
@@ -516,6 +552,7 @@ class WechatPayCallbackForgedSignatureTest {
         assertTrue(fixture.callback("CLOSED", 100).contains("FAIL"));
         fixture.assertAlarm("REG_CLOSED", "payment_attempt_conflict");
         verify(fixture.mapper, org.mockito.Mockito.times(2)).selectByRegistrationNo("REG_CLOSED");
+        fixture.assertOriginalScopeRead();
         verifyNoMoreInteractions(fixture.mapper);
     }
 
@@ -526,6 +563,7 @@ class WechatPayCallbackForgedSignatureTest {
         fixture.registration.setRegistrationStatus(1);
         when(fixture.mapper.selectCmsRegistrationByIdForUpdate(17L)).thenReturn(fixture.registration);
         assertTrue(fixture.callback("CLOSED", 100).contains("SUCCESS"));
+        fixture.assertOriginalScopeRead();
         verifyNoInteractions(fixture.alarm);
     }
 
@@ -597,22 +635,51 @@ class WechatPayCallbackForgedSignatureTest {
     }
 
     private static class RegistrationFailureFixture {
+        static final long TOPIC_ID = 7001L;
+        static final String PARENT_ORDER = "SIGNATURE_FIXTURE_PARENT";
         final KeyPair keys = generateKeyPair();
         final WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
         final CmsRegistrationMapper mapper = mock(CmsRegistrationMapper.class);
         final AlarmService alarm = mock(AlarmService.class);
         final CmsRegistration registration = new CmsRegistration();
+        final com.chengyinhub.business.mapper.CmsTopicMapper topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        final com.chengyinhub.business.mapper.CmsRegistrationPaymentFactMapper consumed = mock(com.chengyinhub.business.mapper.CmsRegistrationPaymentFactMapper.class);
+        final com.chengyinhub.business.service.ISettlementEntryService settlements = mock(com.chengyinhub.business.service.ISettlementEntryService.class);
+        final com.chengyinhub.business.mapper.UmsMemberMapper members = mock(com.chengyinhub.business.mapper.UmsMemberMapper.class);
+        final com.chengyinhub.business.mapper.UmsMemberPointsDetailMapper pointLedger = mock(com.chengyinhub.business.mapper.UmsMemberPointsDetailMapper.class);
+        final IRefundService refunds = mock(IRefundService.class);
+        // This unit fixture tests A's conflict path, not G's actual cash admission/recovery persistence.
+        final com.chengyinhub.business.service.ICoopSettlementClaimService cashAdmission = mock(com.chengyinhub.business.service.ICoopSettlementClaimService.class);
+        final CmsRegistrationServiceImpl registrationService;
+        final WechatVerifiedPaymentFactService verifiedFacts;
+        final IWxPaymentCallbackInboxService inbox;
         final String order;
 
         RegistrationFailureFixture(String order) throws Exception {
             this.order = order;
             registration.setId(17L);
             registration.setRegistrationNo(order);
+            registration.setMemberId(1L);
+            registration.setOwnerType(1L);
+            registration.setOwnerId(TOPIC_ID);
+            registration.setTopicId(TOPIC_ID);
+            registration.setParentOrderNo(PARENT_ORDER);
             registration.setPaymentStatus(1);
             registration.setRegistrationStatus(1);
             registration.setWechatPaymentAmount(new BigDecimal("1.00"));
-            CmsRegistrationServiceImpl registrationService = new CmsRegistrationServiceImpl();
+            registrationService = new CmsRegistrationServiceImpl();
             WechatVerifiedFactTestSupport.setField(registrationService, "cmsRegistrationMapper", mapper);
+            WechatVerifiedFactTestSupport.setField(registrationService, "cmsTopicMapper", topics);
+            WechatVerifiedFactTestSupport.setField(registrationService, "registrationPaymentFactMapper", consumed);
+            WechatVerifiedFactTestSupport.setField(registrationService, "settlementEntryService", settlements);
+            WechatVerifiedFactTestSupport.setField(registrationService, "umsMemberMapper", members);
+            WechatVerifiedFactTestSupport.setField(registrationService, "umsMemberPointsDetailMapper", pointLedger);
+            WechatVerifiedFactTestSupport.setField(registrationService, "coopSettlementClaimService", cashAdmission);
+            when(cashAdmission.retainClosedPaidHalfStateSuccess(any(), any())).thenReturn(true);
+            var topic = new com.chengyinhub.business.domain.CmsTopic();
+            topic.setId(TOPIC_ID); topic.setIsSettlement(0);
+            when(topics.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
+            when(mapper.selectByParentOrderNoForUpdate(PARENT_ORDER, null)).thenReturn(java.util.List.of(registration));
             WechatVerifiedFactTestSupport.setField(registrationService, "alarmService", alarm);
             var attemptGateway = mock(com.chengyinhub.business.service.IWechatPayService.class);
             when(attemptGateway.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(),
@@ -621,12 +688,39 @@ class WechatPayCallbackForgedSignatureTest {
                     mock(org.springframework.beans.factory.ObjectProvider.class);
             when(attempts.getObject()).thenReturn(attemptGateway);
             WechatVerifiedFactTestSupport.setField(registrationService, "paymentAttemptGateway", attempts);
-            WechatVerifiedFactTestSupport.setField(registrationService, "wxPaymentCallbackInboxService",
-                    com.chengyinhub.business.service.PaymentCallbackInboxStubs.passThrough());
             when(mapper.selectByRegistrationNo(order)).thenReturn(registration);
             wireParser(service, buildParser(keys.getPublic()), registrationService,
-                    mock(ICoopInviteService.class), mock(IRefundService.class));
+                    mock(ICoopInviteService.class), refunds);
+            // wireParser installs B's final SDK/intent bindings before capturing that same real reader.
+            verifiedFacts = (WechatVerifiedPaymentFactService) WechatVerifiedFactTestSupport.getField(service, "verifiedFacts");
+            org.junit.jupiter.api.Assertions.assertNotNull(verifiedFacts, "reuse B's actual SDK original-fact reader after its final binding");
+            WechatVerifiedFactTestSupport.setField(registrationService, "verifiedPaymentFacts", verifiedFacts);
+            inbox = com.chengyinhub.business.service.PaymentCallbackInboxStubs.passThrough(null, verifiedFacts);
+            WechatVerifiedFactTestSupport.setField(registrationService, "wxPaymentCallbackInboxService", inbox);
             WechatVerifiedFactTestSupport.setField(service, "alarmService", alarm);
+        }
+
+        WechatVerifiedPaymentFactService.Stored verifiedPayment() {
+            var stored = verifiedFacts.findPaymentSuccess("merchant-test", order, "WX_PRIVATE_TRANSACTION");
+            org.junit.jupiter.api.Assertions.assertNotNull(stored, "the actual gateway must have persisted the original verified payment fact");
+            assertEquals(order, stored.facts().businessOutTradeNo());
+            assertEquals(100L, stored.facts().totalFen());
+            return stored;
+        }
+
+        void assertOriginalScopeRead() {
+            verify(topics).selectCmsTopicByIdForUpdate(TOPIC_ID);
+            verify(mapper).selectByParentOrderNoForUpdate(PARENT_ORDER, null);
+        }
+
+        void assertNoLocalPaymentEffects() {
+            assertEquals(Integer.valueOf(1), registration.getPaymentStatus());
+            assertEquals(Integer.valueOf(1), registration.getRegistrationStatus());
+            assertEquals(new BigDecimal("1.00"), registration.getWechatPaymentAmount());
+            verifyNoInteractions(consumed, settlements, members, pointLedger, refunds);
+            verify(mapper, org.mockito.Mockito.never()).claimPaymentFailure(org.mockito.ArgumentMatchers.anyLong(), any());
+            verify(mapper, org.mockito.Mockito.never()).claimRegistrationRefundedByGateway(
+                    org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyString(), any());
         }
 
         String callback(String state, int cents) throws Exception {

@@ -1,0 +1,7 @@
+# G8ca真实恢复依赖装配
+
+parentaab24fd3c78ffb4e234e46e700e21e7d44324ddd；只改原SupportedStackServiceCyclesTest与本目录，实际source8ca8f49180f967ef9cc218026a12e552922df50f。类型是service.impl.CoopClosedPaymentRecovery，不猜support包。原fixture已真实覆盖Claim，故需Claim.closedPaymentRecovery→真实Recovery→原事实Service/真实WxPaymentCallbackOutboxServiceImpl；Outbox只有原Mapper外部边界，不mock恢复源服务。self ObjectProvider由容器注入并断言getObject仍同一managed recovery，未调用资金业务方法。
+
+旧33预期场景/旧13 cycle/原3test/inert handler保留，Java/JUnit/Spring实际NOT_RUN；只做源码/差异/秘密扫描。无需新增G policy或A/B表权，A消费leaf仍独立真实，B事实mapper绑定不变。Mapper/PTM/执行器等明确inert，不能由此证明NEVER/MANDATORY/REQUIRES_NEW真实传播或afterCompletion恢复/回执原子。需root99+G8ca同源组合，独立旧父树不含全部类型。
+
+没有生产/CI/registry/schema/owner更改，e9/615/4bb/86/cf/aab冻结保留；原RootMySQL4和33预期都不冒本片执行。实际CI/DB/graph待root统一回读，不以mock签整个装配无环。

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T12:03:50.345020+00:00",
+  "updated_utc": "2026-10-24T12:06:32.005392+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -56,31 +56,29 @@
     "D": {
       "thread_id": "01a16a22-f399-7110-ba27-ef3f7245603b",
       "host_id": "durable",
-      "task": "Consolidate rejection writes into BusinessAuditEventMapper; freeze current application notices",
+      "task": "Current slice complete; queued behind fixed funds batch, do not invent unrelated work",
       "ownership": "三服务上述精确符号已补授；CmsTopic共享只给patch",
       "dispatch": "Probe read back: actual bc5 source delivery, continues application identity task",
       "last_cursor": "211782f6-46fa-46f2-aefe-b8488d85ece7:14",
       "last_observed_status": {
-        "type": "active",
-        "activeFlags": []
+        "type": "idle"
       },
       "last_turn_id": "01a16d52-7f2f-74ad-b0cd-6329728cad00",
-      "last_progress_evidence": "80b frozen delivered; root adopted exact production owner consolidation; current application notices pending",
+      "last_progress_evidence": "Frozen source delivered and fetched, queued for root integration: c643faf54b3cfc65298a099421ced9cc294a73d6",
       "last_tool_status": "completed"
     },
     "E": {
       "thread_id": "01a16a23-2723-72e4-813f-03d7f1aa6017",
       "host_id": "durable",
-      "task": "Freeze original voice intent/UNKNOWN current piece; policy-dependent re-enroll remains closed",
+      "task": "Current slice complete; queued behind fixed funds batch, do not invent unrelated work",
       "ownership": "新TopicQuery owner及测试；CmsTopic只交精确只读delegate patch，root串行合成",
       "dispatch": "Probe read back: github.fetch_blob completed, actual source work resumed",
       "last_cursor": "39e95256-af30-44c8-adcb-3ea2bae46c20:14",
       "last_observed_status": {
-        "type": "active",
-        "activeFlags": []
+        "type": "idle"
       },
       "last_turn_id": "01a16d46-88a2-7403-bf44-90f5c10ace26",
-      "last_progress_evidence": "Actual voice caller source edits reported with completed command marker; Java/provider NOT_RUN",
+      "last_progress_evidence": "Frozen source delivered and fetched, queued for root integration: c7a60fa60d5d4d5db153ddb730aff95cd4d63cb0",
       "last_tool_status": "completed"
     },
     "F": {
@@ -442,7 +440,36 @@
     "CoopInvite reopen existing owner fixtures must match new permanent-businessNo/closed-intent gate (G)"
   ],
   "current_ci_pending": {
-    "status": "NEW_EXACT_RECHECK_DISPATCH_PENDING",
-    "reason": "Only workflow/harness marker mapping changed; no production Java changed"
+    "run_id": 40092412302,
+    "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40092412302",
+    "source_sha": "0cb8115ee34e4647a76c76bda608fae62bbd51e1",
+    "immutable_branch": "codex/architecture-day-funds-0cb-20261024",
+    "scope": "RegistrationCallbackIntentMySqlIT only,13 expected",
+    "last_observed": "terminal FAIL;13 executed/13 failures,0 errors/skips;independent scratch cleanup CLEAN; real notification intent owner omitted in fixture; not 13 independently proven business bugs",
+    "status": "FAIL_SOURCE_FIX_RECHECK_PENDING"
+  },
+  "queued_sources": {
+    "C_query": "30676682dfa161dba593167cb06ffef9ee21a109",
+    "D_round_notices": "c643faf54b3cfc65298a099421ced9cc294a73d6",
+    "E_voice_intent_fixtures": "c7a60fa60d5d4d5db153ddb730aff95cd4d63cb0",
+    "E_STT": "3856fde6adec5534e69516f1170c0d576c92f81e",
+    "F_verifier_before_audit_port_removal": "20f0ed72f4dcdb1db73758095dd896a33f702c72",
+    "F_tool_before_audit_port_removal": "6e50db56ae070b44df47d2f146615a29ad1c6144",
+    "G_producer_pending_policy": "4d6f4a565d8d42c7cca1f960c1000c7fa09205bd"
+  },
+  "current_fixture_repair": {
+    "scope": "Original RegistrationCallbackIntentMySqlIT13 preserved",
+    "changes": [
+      "Canonical notification-intent DDL and real ImServiceImpl/ImNotificationIntentMapper same-source REQUIRED transaction",
+      "Distinct QR/signup wakeups retained once each for seeded fresh single-seat success; zero on rollback",
+      "Original notification key/recipient/hash/PENDING and independent pre/post-commit visibility asserted"
+    ],
+    "validation": "H/F independent original-path review found no other definite blocker; LSP found and root fixed D test SQLException constructor; B13/C fixture LSP no reported errors;109 source classes precheck and14registry contract tests PASS; Java/MySQL pending immutable candidate rerun"
+  },
+  "current_deltas_source_only": {
+    "F": "5c2e2d8c verifier,a03fff54 tool,cd171042 Spring fixture",
+    "G": "a379a994 reopen fixtures,411e3942 consumed fallback denial guard; originalrefund12/funds190",
+    "C": "d89eb3dd verified-reader/scope fixtures; old payment REFUND rejects without original refund proof",
+    "D": "89b05c3d privacy-safe bounded failure origin"
   }
 }

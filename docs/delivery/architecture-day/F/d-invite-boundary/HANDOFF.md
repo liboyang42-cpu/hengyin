@@ -1,0 +1,7 @@
+# D真实章节邀请通知后续类型
+
+parent88c7458a63ec5f9904c094ca3befd1413bca6467，独立追加D_CHAPTER_INVITE_NOTICE → ChapterApplicationInviteNotice精确System类型。来源31ec329768ecc2b23e09466bf46754d12fe569d6，原MerchantChapterApplicationServiceImpl.inviteNotice字段及首邀/重邀submit两处有真实证据；Notice仅持有CommittedOfficialNoticeService，未替此unowned服务编造business owner/表权。
+
+禁止notice反调原IMerchantChapterApplicationService/Impl；原业务→notice合法。零新增allowed_direction，现64类型/53职责/61方向，旧owner/方法/2facts/3Mapper/2ecbaseline不改。新增正常入向、反向红及缺raw UNKNOWN控制，全Python219/219、0skip（21.695s）；它们是NOT_COMPILED协议，不是JDK/实际持久邀请。D共享审计NEW_TABLE_WRITER阻断仍保留，未获豁免。
+
+仅owners/test_collect_jdeps/docs，Bean后续独立cf4c（parent86fb），其原fixture真实覆盖MerchantChapter应用，已补真实InviteNotice→Official闭包和反向环负控；预期33但Java未跑。源/schema/事务/锁/CAS/邀请轮次/到账/通知达成皆未由图证明。无生产/CI改动，Java/jdeps/JAR/DB/CI/Spring均NOT_RUN，工具等最终E小片配套固定。

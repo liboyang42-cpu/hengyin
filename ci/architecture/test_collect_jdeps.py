@@ -995,6 +995,144 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.assertFalse(report["technical_dependencies"]["graph_complete"])
         self.assertIn("method/Spring/reflection/XML dependency graph", report["technical_dependencies"]["not_proven"])
 
+    def test_voice_factory_and_existing_admission_actual_four_directions(self):
+        edges = (("E_VOICE_PROVIDER_CLIENT", "F_AI_HTTP_ADMISSION"),
+                 ("E_VOICE_PROVIDER_CLIENT", "E_VOICE_CONFIGURATION"),
+                 ("E_LLM_CLIENT_FACTORY", "F_AI_HTTP_ADMISSION"),
+                 ("E_LLM_CLIENT_FACTORY", "E_VOICE_CONFIGURATION"))
+        voice = "com.chengyinhub.business.service.ai.DashScopeVoiceClient"
+        self.assertIn(voice, self.dependencies["owners"]["E_VOICE_PROVIDER_CLIENT"]["members"])
+        for source, target in edges:
+            self.reference(voice if source == "E_VOICE_PROVIDER_CLIENT" else self.owner_member(source), self.owner_member(target))
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertEqual(set(edges), set(map(tuple, report["technical_dependencies"]["owner_edges"])))
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+
+    def test_voice_common_config_cannot_depend_on_system_factory_or_provider(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        owner = "E_VOICE_CONFIGURATION"
+        for target in self.dependencies["owners"][owner]["forbidden_backrefs"]:
+            with self.subTest(target=target):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(self.owner_member(owner), target)
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                self.assertTrue(any(f["rule"] == "OWNER_GOD_BACKREFERENCE" and f["target_class"] == target for f in report["findings"]))
+
+    def test_voice_client_factory_and_admission_cannot_callback_domain_consumers(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for owner in ("E_VOICE_PROVIDER_CLIENT", "E_LLM_CLIENT_FACTORY", "F_AI_HTTP_ADMISSION"):
+            source = "com.chengyinhub.business.service.ai.DashScopeVoiceClient" if owner == "E_VOICE_PROVIDER_CLIENT" else self.owner_member(owner)
+            for target in self.dependencies["owners"][owner]["forbidden_backrefs"]:
+                with self.subTest(owner=owner, target=target):
+                    self.replace_evidence("jdeps.stdout.txt", original)
+                    self.reference(source, target)
+                    report = self.check_directions()
+                    self.assertEqual("BLOCKED", report["verdict"], report)
+                    self.assertTrue(any(f["rule"] == "OWNER_GOD_BACKREFERENCE" and f["target_class"] == target for f in report["findings"]))
+
+    def test_admission_callback_factory_is_a_witnessed_new_cycle(self):
+        factory, admission = self.owner_member("E_LLM_CLIENT_FACTORY"), self.owner_member("F_AI_HTTP_ADMISSION")
+        self.reference(factory, admission)
+        self.reference(admission, factory)
+        report = self.check_directions()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        cycle = next(f for f in report["findings"] if f["rule"] == "NEW_OWNER_CYCLE")
+        self.assertEqual(["E_LLM_CLIENT_FACTORY", "F_AI_HTTP_ADMISSION"], cycle["owners"])
+        self.assertTrue(all(w["source_sha256"] and w["target_sha256"] for w in cycle["witnesses"]))
+
+    def test_voice_declared_types_missing_raw_rows_are_unknown(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for owner in ("E_VOICE_PROVIDER_CLIENT", "E_LLM_CLIENT_FACTORY", "F_AI_HTTP_ADMISSION", "E_VOICE_CONFIGURATION"):
+            for member in self.dependencies["owners"][owner]["members"]:
+                with self.subTest(owner=owner, member=member):
+                    self.replace_evidence("jdeps.stdout.txt", "\n".join(l for l in original.decode().splitlines()
+                                          if not l.strip().startswith(member + " -> ")).encode())
+                    self.assert_unknown(self.check_directions())
+
+    def test_chapter_invite_original_application_inbound_is_not_a_business_permission(self):
+        self.reference("com.chengyinhub.business.service.impl.MerchantChapterApplicationServiceImpl",
+                       self.owner_member("D_CHAPTER_INVITE_NOTICE"))
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertGreater(report["technical_dependencies"]["unscoped_reference_count"], 0)
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+
+    def test_chapter_invite_cannot_callback_original_application_and_missing_raw_is_unknown(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        owner = "D_CHAPTER_INVITE_NOTICE"
+        for target in self.dependencies["owners"][owner]["forbidden_backrefs"]:
+            with self.subTest(target=target):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(self.owner_member(owner), target)
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                self.assertTrue(any(f["rule"] == "OWNER_GOD_BACKREFERENCE" and f["target_class"] == target for f in report["findings"]))
+        member = self.owner_member(owner)
+        self.replace_evidence("jdeps.stdout.txt", "\n".join(l for l in original.decode().splitlines()
+                              if not l.strip().startswith(member + " -> ")).encode())
+        self.assert_unknown(self.check_directions())
+
+    def test_retired_rejection_port_is_not_an_active_required_type_or_a_missing_input_exception(self):
+        retired = "com.chengyinhub.business.mapper.CommittedNoticeRejectionMapper"
+        self.assertNotIn("D_COMMITTED_NOTICE_REJECTION_PORT", self.dependencies["owners"])
+        self.assertEqual("com.chengyinhub.business.mapper.BusinessAuditEventMapper", self.owner_member("SHARED_BUSINESS_AUDIT_PORT"))
+        index = json.loads((self.output / "class-index.json").read_text())
+        self.assertNotIn(retired, index)
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+
+    def test_existing_registered_audit_consumers_keep_exact_original_directions(self):
+        audit = self.owner_member("SHARED_BUSINESS_AUDIT_PORT")
+        consumers = ("C_PLAY_NODE_COMPLETION", "C_CITY_NODE_REDEMPTION_APPLICATION", "D_COMPLAINT_CLOSE_REPORTER_NOTICE")
+        for owner in consumers: self.reference(self.owner_member(owner), audit)
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertEqual({(owner, "SHARED_BUSINESS_AUDIT_PORT") for owner in consumers}, set(map(tuple, report["technical_dependencies"]["owner_edges"])))
+
+    def test_complaint_notice_rejection_port_preserves_actual_append_and_lock_read_dependency(self):
+        notice = self.owner_member("D_COMPLAINT_CLOSE_REPORTER_NOTICE")
+        port = self.owner_member("SHARED_BUSINESS_AUDIT_PORT")
+        self.reference(notice, port)
+        self.reference("com.chengyinhub.business.service.impl.CoopComplaintServiceImpl", notice)
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertEqual([["D_COMPLAINT_CLOSE_REPORTER_NOTICE", "SHARED_BUSINESS_AUDIT_PORT"]], report["technical_dependencies"]["owner_edges"])
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+
+    def test_complaint_notice_cannot_callback_its_original_domain_caller(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        owner = "D_COMPLAINT_CLOSE_REPORTER_NOTICE"
+        for target in self.dependencies["owners"][owner]["forbidden_backrefs"]:
+            with self.subTest(target=target):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(self.owner_member(owner), target)
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                self.assertTrue(any(f["rule"] == "OWNER_GOD_BACKREFERENCE" and f["target_class"] == target for f in report["findings"]))
+
+    def test_rejection_mapper_reverse_notice_dependency_is_a_witnessed_cycle(self):
+        self.reference(self.owner_member("D_COMPLAINT_CLOSE_REPORTER_NOTICE"), self.owner_member("SHARED_BUSINESS_AUDIT_PORT"))
+        self.reference(self.owner_member("SHARED_BUSINESS_AUDIT_PORT"), self.owner_member("D_COMPLAINT_CLOSE_REPORTER_NOTICE"))
+        report = self.check_directions()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        cycle = next(f for f in report["findings"] if f["rule"] == "NEW_OWNER_CYCLE")
+        self.assertEqual(["D_COMPLAINT_CLOSE_REPORTER_NOTICE", "SHARED_BUSINESS_AUDIT_PORT"], cycle["owners"])
+        self.assertTrue(all(w["source_sha256"] and w["target_sha256"] for w in cycle["witnesses"]))
+
+    def test_notice_or_rejection_port_missing_raw_rows_remains_unknown(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for owner in ("D_COMPLAINT_CLOSE_REPORTER_NOTICE", "SHARED_BUSINESS_AUDIT_PORT"):
+            member = self.owner_member(owner)
+            with self.subTest(owner=owner):
+                self.replace_evidence("jdeps.stdout.txt", "\n".join(l for l in original.decode().splitlines()
+                                      if not l.strip().startswith(member + " -> ")).encode())
+                report = self.check_directions()
+                self.assert_unknown(report)
+                self.assertIn({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": owner, "type": member}, report["review_items"])
+
     def test_city_node_actual_public_ports_and_http_inbound_remain_scoped(self):
         ports = ["com.chengyinhub.business.access.merchant.IMerchantAccessService",
                  "com.chengyinhub.business.mapper.RoamMapper",
@@ -1010,7 +1148,7 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.reference("com.chengyinhub.web.controller.api.ApiVerifyController", application)
         report = self.check_directions()
         self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
-        self.assertEqual([], report["technical_dependencies"]["owner_edges"])
+        self.assertEqual([["C_CITY_NODE_REDEMPTION_APPLICATION", "SHARED_BUSINESS_AUDIT_PORT"]], report["technical_dependencies"]["owner_edges"])
         self.assertGreater(report["technical_dependencies"]["unscoped_reference_count"], 0)
         self.assertFalse(report["technical_dependencies"]["graph_complete"])
 

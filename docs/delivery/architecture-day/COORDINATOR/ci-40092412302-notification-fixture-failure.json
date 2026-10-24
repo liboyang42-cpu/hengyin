@@ -1,0 +1,18 @@
+{
+  "run_id": 40092412302,
+  "source_sha": "0cb8115ee34e4647a76c76bda608fae62bbd51e1",
+  "verdict": "FAIL",
+  "expected_tests": 13,
+  "executed_tests": 13,
+  "failures": 13,
+  "errors": 0,
+  "skipped": 0,
+  "cleanup": "CLEAN",
+  "diagnosis": "Real notification-intent owner missing from callback fixture; independent source review traced completePaymentSuccess -> registerPaymentAfterCommit. Other assertion-level effects not all attributed to same cause.",
+  "repair_status": "SOURCE_ONLY_RECHECK_PENDING",
+  "not_covered": [
+    "runtime acceptance",
+    "production migration",
+    "merge/deployment"
+  ]
+}

@@ -448,7 +448,7 @@
       "classes": [
         "com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT"
       ],
-      "note": "Eleven fixed isolated real-MySQL cases, preserving original ten plus same-transaction canonical A consumption and G component/refund readback without fabricated payment inbox. Provider facts use actual B storage, terminal CAS/DONE are explicit G fixtures. No live provider or production acceptance."
+      "note": "Twelve fixed source MySQL cases: retained11 plus direct old-DONE SQL path rejection when canonical local consumption exists. Actual A-owned reader and provider facts, original components and refund identity retained. Terminal fixture does not claim provider or full HTTP acceptance."
     },
     "architecture-day-topic-content-budget": {
       "registered_source": "83cb32fd771d4dcba590968f2464a465481c2c57",
@@ -561,7 +561,7 @@
       "gates": {}
     },
     "com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT": {
-      "tests": 11,
+      "tests": 12,
       "storage": [
         "mysql"
       ],

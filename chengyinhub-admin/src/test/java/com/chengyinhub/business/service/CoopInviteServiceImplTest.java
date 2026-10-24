@@ -67,6 +67,9 @@ class CoopInviteServiceImplTest {
     private MmsMerchantMapper mmsMerchantMapper;
     private ICoopClubApplyService coopClubApplyService;
     private INotifyService notifyService;
+    private com.chengyinhub.business.service.impl.WechatPaymentIntentStore paymentIntentStore;
+    private org.springframework.jdbc.core.JdbcTemplate paymentIntentJdbc;
+    private com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService verifiedPaymentFacts;
 
     @BeforeEach
     void setUp() {
@@ -80,6 +83,16 @@ class CoopInviteServiceImplTest {
         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(any())).thenAnswer(call ->
                 cmsTopicMapper.selectCmsTopicById(call.getArgument(0)));
         svc = new CoopInviteServiceImpl();
+        // Real B retry guard/order locator; only JDBC results and provider-proof read are unit doubles.
+        paymentIntentJdbc = mock(org.springframework.jdbc.core.JdbcTemplate.class);
+        verifiedPaymentFacts = mock(com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.class);
+        var paymentOrderOwner = new com.chengyinhub.business.service.impl.JdbcWechatPaymentOrderOwner();
+        ReflectionTestUtils.setField(paymentOrderOwner, "paymentIntentJdbc", paymentIntentJdbc);
+        paymentIntentStore = new com.chengyinhub.business.service.impl.WechatPaymentIntentStore();
+        ReflectionTestUtils.setField(paymentIntentStore, "paymentIntentJdbc", paymentIntentJdbc);
+        ReflectionTestUtils.setField(paymentIntentStore, "businessOwner", paymentOrderOwner);
+        ReflectionTestUtils.setField(paymentIntentStore, "verifiedFacts", verifiedPaymentFacts);
+        ReflectionTestUtils.setField(svc, "paymentIntentStore", paymentIntentStore);
         org.springframework.test.util.ReflectionTestUtils.setField(svc, "commercialReviewService",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.ITopicCommercialReviewService.class));
         ReflectionTestUtils.setField(svc, "depositRefundService", mock(com.chengyinhub.business.service.impl.CoopDepositRefundService.class));
@@ -2048,6 +2061,84 @@ class CoopInviteServiceImplTest {
 
         assertEquals("DEP1T100", r.get("outTradeNo"));
         verify(coopInviteMapper, times(0)).updateDeposit(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void prepareDeposit_retryWithoutConfirmedCloseLeavesOriginalIdentityAndDoesNotCas() {
+        CoopInvite invite = originalDepositRetry(false);
+        IllegalStateException error = assertThrows(IllegalStateException.class, this::prepareOriginalDepositRetry);
+        assertTrue(error.getMessage().contains("原保证金支付身份"));
+        assertOriginalDepositRetryUnchanged(invite);
+        verify(verifiedPaymentFacts).hasConfirmedExternalSuccess("DEP1T100");
+        verify(paymentIntentJdbc).queryForList(
+                org.mockito.ArgumentMatchers.startsWith("SELECT * FROM wx_pay_order_intent"), eq("DEP"), eq(1L));
+        verify(coopInviteMapper, never()).updateDeposit(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void prepareDeposit_confirmedSuccessEvenWithClosedAttemptCannotCreateNewPendingCas() {
+        CoopInvite invite = originalDepositRetry(true);
+        when(verifiedPaymentFacts.hasConfirmedExternalSuccess("DEP1T100")).thenReturn(true);
+        IllegalStateException error = assertThrows(IllegalStateException.class, this::prepareOriginalDepositRetry);
+        assertTrue(error.getMessage().contains("原保证金支付身份"));
+        assertOriginalDepositRetryUnchanged(invite);
+        verify(paymentIntentJdbc, never()).queryForList(
+                org.mockito.ArgumentMatchers.startsWith("SELECT * FROM wx_pay_order_intent"), eq("DEP"), eq(1L));
+        verify(coopInviteMapper, never()).updateDeposit(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void prepareDeposit_confirmedClosedRetryReusesOriginalBusinessNoAfterLockedProof() {
+        originalDepositRetry(true);
+        when(coopInviteMapper.updateDeposit(eq(1L), eq(1), eq("DEP1T100"),
+                org.mockito.ArgumentMatchers.isNull(), eq(new BigDecimal("50.00")))).thenReturn(1);
+        Map<String, Object> prepared = prepareOriginalDepositRetry();
+        assertEquals("DEP1T100", prepared.get("outTradeNo"));
+        assertEquals(new BigDecimal("50.00"), prepared.get("amount"));
+        assertEquals(100L, prepared.get("payerMemberId"));
+        var order = org.mockito.Mockito.inOrder(paymentIntentJdbc, verifiedPaymentFacts, coopInviteMapper);
+        order.verify(paymentIntentJdbc).queryForList(
+                org.mockito.ArgumentMatchers.startsWith("SELECT id,deposit_amount"), eq("DEP1T100"));
+        order.verify(verifiedPaymentFacts).hasConfirmedExternalSuccess("DEP1T100");
+        order.verify(paymentIntentJdbc).queryForList(
+                org.mockito.ArgumentMatchers.startsWith("SELECT * FROM wx_pay_order_intent"), eq("DEP"), eq(1L));
+        order.verify(coopInviteMapper).updateDeposit(1L, 1, "DEP1T100", null, new BigDecimal("50.00"));
+        verify(coopInviteMapper, times(1)).updateDeposit(any(), any(), any(), any(), any());
+    }
+
+    private CoopInvite originalDepositRetry(boolean closed) {
+        CoopInvite invite = clubInvite(1L, 1, 8001L, 100L, 5);
+        invite.setTopicId(7L); invite.setDepositAmount(new BigDecimal("50.00"));
+        invite.setDepositOutTradeNo("DEP1T100");
+        when(coopInviteMapper.selectCoopInviteByIdForUpdate(1L)).thenReturn(invite);
+        CmsTopic topic = new CmsTopic(); topic.setId(7L); topic.setLifecycle(3);
+        when(cmsTopicMapper.selectCmsTopicById(7L)).thenReturn(topic);
+        when(paymentIntentJdbc.queryForList(org.mockito.ArgumentMatchers.startsWith("SELECT id,deposit_amount"), eq("DEP1T100")))
+                .thenReturn(List.of(Map.of("id", 1L, "amount", new BigDecimal("50.00"), "payable", 0)));
+        Map<String, Object> attempt = new java.util.HashMap<>();
+        attempt.put("business_out_trade_no", "DEP1T100"); attempt.put("biz_type", "DEP"); attempt.put("biz_id", 1L);
+        attempt.put("mchid", "merchant"); attempt.put("out_trade_no", "WXP_ORIGINAL_ALIAS");
+        attempt.put("total_fen", 5000L); attempt.put("currency", "CNY"); attempt.put("trade_type", "JSAPI");
+        attempt.put("appid", "wx-original"); attempt.put("request_hash", "a".repeat(64));
+        attempt.put("closed_confirmed_at", closed ? new java.sql.Timestamp(1700000000000L) : null);
+        when(paymentIntentJdbc.queryForList(org.mockito.ArgumentMatchers.startsWith("SELECT * FROM wx_pay_order_intent"), eq("DEP"), eq(1L)))
+                .thenReturn(List.of(attempt));
+        return invite;
+    }
+
+    /** Unit transaction flag only; this does not execute/prove a database transaction or row lock. */
+    private Map<String, Object> prepareOriginalDepositRetry() {
+        boolean originalTransaction = TransactionSynchronizationManager.isActualTransactionActive();
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+        try { return svc.prepareDeposit(1L, 100L); }
+        finally { TransactionSynchronizationManager.setActualTransactionActive(originalTransaction); }
+    }
+
+    private void assertOriginalDepositRetryUnchanged(CoopInvite invite) {
+        assertEquals(5, invite.getDepositStatus());
+        assertEquals("DEP1T100", invite.getDepositOutTradeNo());
+        assertEquals(new BigDecimal("50.00"), invite.getDepositAmount());
+        assertNull(invite.getDepositPaidTransactionId());
     }
 
     @Test

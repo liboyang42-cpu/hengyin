@@ -1,0 +1,5 @@
+# 现有G ledger fixture接真实A消费读leaf
+
+parentcf4cdbbe0078edd7da7fafd824c3b825b8adfb55；只根据root99d84ce23afe8852d642ba21d791662ad06a9ebd，在已有G original ledger真实closure追加RegistrationPaymentConsumptionReadService及原CmsRegistrationPaymentFactMapper外部边界。同一组合正控断言leaf非mock、ledger.paymentConsumptions为同一managed leaf、leaf.mapper为原接口bean；B事实reader仍为原WechatVerifiedPaymentFactMapper，不接A表。
+
+无生产/owner/基线/CI更改，不扩A领域服务或表权。新增9行测试源码，仅随已覆盖G新必需依赖迁移；保留old13cycle/3原测试/inert handler以及33预期场景，Java/Spring/DB/CI均NOT_RUN。Mapper/PTM/执行器仍inert，不能证明真实未提交读/RR/原资金事务语义。需与root99d真实leaf源组合；旧父树没类型不能以mock替代。e9/615/4bb/86/cf及D/E冻结均保留。

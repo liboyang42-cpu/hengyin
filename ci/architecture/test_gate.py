@@ -618,6 +618,33 @@ class BusinessOwnerPolicyTest(unittest.TestCase):
         self.assertEqual(1, status, report)
         self.assertIn(rule, [f["rule"] for f in report["findings"]])
 
+    def test_existing_audit_namespace_can_add_narrow_statement_without_new_writer_permission(self):
+        path = "chengyinhub-system/src/main/resources/mapper/business/BusinessAuditEventMapper.xml"
+        namespace = "com.chengyinhub.business.mapper.BusinessAuditEventMapper"
+        original = '<insert id="append">insert into business_audit_event(action) values(#{action})</insert>'
+        self.write(path, mapper(original, namespace))
+        self.base = self.commit()
+        self.before = gate.inventory(self.root, self.base)
+        trusted, _ = self.prepare_policy()
+        self.write(path, mapper(original + '<insert id="appendRejection">insert ignore into business_audit_event(action) values(#{action})</insert>', namespace))
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(0, status, report)
+        self.assertEqual("PARTIAL", report["business_policy"]["coverage"])
+
+    def test_technical_rejection_mapper_owner_does_not_approve_new_shared_audit_writer(self):
+        self.write("chengyinhub-system/src/main/resources/mapper/business/BusinessAuditEventMapper.xml",
+                   mapper('<insert id="append">insert into business_audit_event(action) values(#{action})</insert>',
+                          "com.chengyinhub.business.mapper.BusinessAuditEventMapper"))
+        self.base = self.commit()
+        self.before = gate.inventory(self.root, self.base)
+        trusted, _ = self.prepare_policy()
+        policy = json.loads((trusted / "owners.json").read_text())
+        self.assertTrue(any(o["id"] == "SHARED_BUSINESS_AUDIT_PORT" for o in policy["technical_dependency_policy"]["owners"]))
+        self.write("chengyinhub-system/src/main/resources/mapper/business/CommittedNoticeRejectionMapper.xml",
+                   mapper('<insert id="insertIgnore">insert ignore into business_audit_event(action) values(#{action})</insert>',
+                          "com.chengyinhub.business.mapper.CommittedNoticeRejectionMapper"))
+        self.assert_rule(self.source_cli(trusted, self.commit()), "NEW_TABLE_WRITER")
+
     def test_same_owner_both_facts_are_green_and_scope_is_partial(self):
         trusted, _ = self.prepare_policy()
         for table, writer in self.facts:
