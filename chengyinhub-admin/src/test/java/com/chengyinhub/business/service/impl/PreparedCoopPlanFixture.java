@@ -24,6 +24,8 @@ final class PreparedCoopPlanFixture {
     private PreparedCoopPlanFixture() {}
     static void install(CmsTopicServiceImpl service, CmsRegistrationMapper registrations,
             CoopOrderMapper orders, CoopGroupVerifyMapper groups, CoopSettlementMapper heads) {
+        // Composition-only fixture: production producer/ledger persistence has its own explicit tests.
+        ReflectionTestUtils.setField(service, "coopSettlementOriginalProducer", mock(CoopSettlementOriginalProducer.class));
         ICoopSettlementClaimService claims = mock(ICoopSettlementClaimService.class);
         when(claims.prepare(any(), any())).thenAnswer(call -> {
             CoopOrder order = call.getArgument(0);

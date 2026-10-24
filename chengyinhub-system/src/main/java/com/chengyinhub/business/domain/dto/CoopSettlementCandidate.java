@@ -5,6 +5,10 @@ import java.util.Date;
 
 /** EligibleRegistrationSet 的单条冻结事实投影。 */
 public class CoopSettlementCandidate {
+    private java.util.List<Long> verifiedSeatIds;
+    /** null means no canonical seat source; an explicit empty list proves zero verified seats. */
+    public java.util.List<Long> getVerifiedSeatIds() { return verifiedSeatIds; }
+    public void setVerifiedSeatIds(java.util.List<Long> ids) { verifiedSeatIds = ids == null ? null : java.util.List.copyOf(ids); }
     private Long registrationId;
     private Long ownerType;
     private Long ownerId;

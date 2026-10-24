@@ -34,7 +34,7 @@ public final class CoopSettlementContract {
                 || !same(s.getTopicId(), s.getCommercialContextId())
                 || !"MERCHANT".equals(s.getBeneficiaryRole()) || s.getBeneficiaryId() == null
                 || s.getBeneficiaryId() <= 0 || !"MERCHANT_PARTICIPATION".equals(s.getServiceUnit())
-                || !"REGISTRATION_SCAN".equals(s.getFulfillmentEvidenceRule())
+                || !("REGISTRATION_SCAN".equals(s.getFulfillmentEvidenceRule()) || "COOP_GROUP_VERIFY".equals(s.getFulfillmentEvidenceRule()))
                 || s.getEligiblePurchaseKinds() == null
                 || !s.getEligiblePurchaseKinds().equals(Collections.singletonList(GUIDED_TICKET))) {
             throw manualRepair("UNSUPPORTED_CASH_PATH:NODE/ACTIVITY/CLUB/非冻结受款或证据路径不得进入经典主题聚合");
@@ -57,7 +57,8 @@ public final class CoopSettlementContract {
         if ("FIXED_PER_FULFILLMENT".equals(snapshot.getCompensationMode())) {
             requirePositiveOrZero(snapshot.getFixedFee(), "fixedFeeSnapshot");
             for (CoopSettlementCandidate candidate : distinct.values()) {
-                lines.add(line(snapshot, candidate.getRegistrationId(), snapshot.getFixedFee().setScale(2),
+                int verifiedSeats = candidate.getVerifiedSeatIds() == null ? 1 : candidate.getVerifiedSeatIds().size();
+                lines.add(line(snapshot, candidate.getRegistrationId(), snapshot.getFixedFee().multiply(BigDecimal.valueOf(verifiedSeats)).setScale(2),
                         candidate.getEligibleSalesSnapshot()));
             }
             return lines;
@@ -152,9 +153,19 @@ public final class CoopSettlementContract {
         if (c.getEligibleSalesSnapshot() == null || c.getEligibleSalesSnapshot().signum() < 0) {
             throw manualRepair("ELIGIBLE_SALES_UNPROVEN:registration=" + c.getRegistrationId());
         }
-        if ("FIXED_PER_FULFILLMENT".equals(snapshot.getCompensationMode())
-                && !Long.valueOf(1L).equals(c.getOrderQuantity())) {
-            throw manualRepair("FIXED_FEE_QUANTITY_UNPROVEN:registration=" + c.getRegistrationId());
+        if ("FIXED_PER_FULFILLMENT".equals(snapshot.getCompensationMode())) {
+            if (c.getVerifiedSeatIds() == null) {
+                // Existing individual scan is exactly one proven seat, never order_num expansion.
+                if (!Long.valueOf(1L).equals(c.getOrderQuantity()))
+                    throw manualRepair("FIXED_FEE_QUANTITY_UNPROVEN:registration=" + c.getRegistrationId());
+            } else {
+                if (c.getOrderQuantity() == null || c.getOrderQuantity() <= 0
+                        || c.getVerifiedSeatIds().stream().anyMatch(id -> id == null || id <= 0)
+                        || new java.util.HashSet<>(c.getVerifiedSeatIds()).size() != c.getVerifiedSeatIds().size()
+                        || c.getVerifiedSeatIds().size() > c.getOrderQuantity())
+                    throw manualRepair("FIXED_FEE_SEAT_IDENTITY_CONFLICT:registration=" + c.getRegistrationId());
+                if (c.getVerifiedSeatIds().isEmpty()) return false;
+            }
         }
         if ("REGISTRATION_SCAN".equals(snapshot.getFulfillmentEvidenceRule())) {
             return "MERCHANT_PARTICIPATION".equals(snapshot.getServiceUnit())

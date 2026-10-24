@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CoopSettlementManualCaseMapper">
+    <insert id="insertIgnore">
+        insert ignore into coop_settlement_manual_case(case_key,topic_id,reason,negative_amount,source_snapshot,state)
+        values(#{caseKey},#{topicId},#{reason},#{negativeAmount},#{sourceSnapshot},'MANUAL_REQUIRED')
+    </insert>
+    <select id="selectByKeyForUpdate" resultType="map" useCache="false" flushCache="true">
+        select case_key,topic_id,reason,negative_amount,source_snapshot,state
+        from coop_settlement_manual_case where case_key=#{key} for update
+    </select>
+    <select id="selectOpenTopicForUpdate" resultType="long" useCache="false" flushCache="true">
+        select topic_id from coop_settlement_manual_case where topic_id=#{topicId} and state='MANUAL_REQUIRED'
+        order by id limit 1 for update
+    </select>
+</mapper>

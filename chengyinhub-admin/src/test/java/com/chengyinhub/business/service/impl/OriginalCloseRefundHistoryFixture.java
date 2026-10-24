@@ -23,6 +23,8 @@ public final class OriginalCloseRefundHistoryFixture {
             return original;
         });
         ReflectionTestUtils.setField(service, "coopSettlementOriginalMapper", rows);
+        // These original composition units do not model provider/close/component persistence.
+        ReflectionTestUtils.setField(service, "coopSettlementOriginalProducer", mock(CoopSettlementOriginalProducer.class));
         return rows;
     }
 }

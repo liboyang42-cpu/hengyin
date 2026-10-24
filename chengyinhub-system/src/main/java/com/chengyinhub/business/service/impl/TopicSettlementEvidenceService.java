@@ -24,6 +24,8 @@ public class TopicSettlementEvidenceService {
     private final CmsRegistrationMapper registrationMapper;
     private final CoopGroupVerifyMapper groupVerifyMapper;
     private final CoopSettlementEvidenceMapper evidenceMapper;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.RegistrationSeatService registrationSeats;
 
     public TopicSettlementEvidenceService(CmsActivityMapper activityMapper,
             CmsRegistrationMapper registrationMapper, CoopGroupVerifyMapper groupVerifyMapper,
@@ -74,8 +76,38 @@ public class TopicSettlementEvidenceService {
         }
         List<Long> activityIds = activityMapper
                 .selectActiveActivityIdsByTopicId(snapshot.getTopicId());
-        return evidenceMapper.selectTopicEvidenceCandidatesForUpdate(snapshot,
+        List<CoopSettlementCandidate> candidates = evidenceMapper.selectTopicEvidenceCandidatesForUpdate(snapshot,
                 activityIds == null ? Collections.<Long>emptyList() : activityIds, settlementCutoff);
+        if ("FIXED_PER_FULFILLMENT".equals(snapshot.getCompensationMode()) && candidates != null
+                && candidates.stream().anyMatch(c -> c != null && c.isOrganizerScopeCovered())) {
+            // All original registrations are already locked. Reuse C's canonical current-read owner.
+            java.util.Map<Long, java.util.Map<Long, com.chengyinhub.business.domain.RegistrationSeat>> byRegistration = new java.util.HashMap<>();
+            if (activityIds != null) for (Long activityId : new java.util.TreeSet<>(activityIds)) {
+                var verified = registrationSeats.verifiedSeatsForGroup(snapshot.getTopicId(), activityId, settlementCutoff);
+                if (verified == null) throw new IllegalStateException("MANUAL_REPAIR:CURRENT_SEAT_FACTS_REQUIRED");
+                for (var seat : verified) {
+                    if (seat == null || seat.getId() == null || seat.getRegistrationId() == null
+                            || !snapshot.getTopicId().equals(seat.getTopicId()) || !activityId.equals(seat.getActivityId())
+                            || !Integer.valueOf(1).equals(seat.getStatus()) || seat.getVerifiedAt() == null)
+                        throw new IllegalStateException("MANUAL_REPAIR:SEAT_SOURCE_IDENTITY_CONFLICT");
+                    byRegistration.computeIfAbsent(seat.getRegistrationId(), ignored -> new java.util.TreeMap<>()).put(seat.getId(), seat);
+                }
+            }
+            for (CoopSettlementCandidate candidate : candidates) {
+                if (candidate == null || !candidate.isOrganizerScopeCovered()) continue;
+                var seats = byRegistration.getOrDefault(candidate.getRegistrationId(), java.util.Map.of());
+                List<Long> ids = new java.util.ArrayList<>();
+                for (var seat : seats.values()) {
+                    if (candidate.getFulfillmentStartInclusive() != null && candidate.getFulfillmentEndExclusive() != null
+                            && !seat.getVerifiedAt().before(candidate.getFulfillmentStartInclusive())
+                            && seat.getVerifiedAt().before(candidate.getFulfillmentEndExclusive())
+                            && seat.getVerifiedAt().before(settlementCutoff)) ids.add(seat.getId());
+                }
+                java.util.Collections.sort(ids);
+                candidate.setVerifiedSeatIds(ids);
+            }
+        }
+        return candidates;
     }
 
     /** 在报名锁之后当前读退款事实；已批准退款的净额/调整链尚未接通，也须拒结。 */
