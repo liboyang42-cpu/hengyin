@@ -7,7 +7,6 @@ import com.chengyinhub.business.service.IPlayerNodeProgressService;
 import com.chengyinhub.business.service.support.NodeAccessPolicy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -100,8 +99,8 @@ class CityStationOrderAcceptanceTest {
         done.setNodeId(1L);
         done.setStatus(1);
         when(progress.selectPlayerNodeProgressList(any())).thenReturn(List.of(done));
-        assertTrue(ReflectionTestUtils.<Boolean>invokeMethod(controller, "isPrevDone", MEMBER, ACT, second));
-        assertFalse(ReflectionTestUtils.<Boolean>invokeMethod(controller, "isPrevDone", MEMBER, ACT, third),
+        assertTrue(PlayNodeAccessTestFixtures.<Boolean>invokeMethod(controller, "isPrevDone", MEMBER, ACT, second));
+        assertFalse(PlayNodeAccessTestFixtures.<Boolean>invokeMethod(controller, "isPrevDone", MEMBER, ACT, third),
                 "第三站还要求第二站完成");
     }
 }

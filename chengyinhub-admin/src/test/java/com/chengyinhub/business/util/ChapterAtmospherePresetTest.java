@@ -54,7 +54,7 @@ class ChapterAtmospherePresetTest
     void playerProjectionHardGatesAtmosphereToLinearOrienting() throws Exception
     {
         String source = new String(Files.readAllBytes(Paths.get("src", "main", "java", "com", "chengyinhub",
-                "web", "controller", "api", "ApiPlayProgressController.java")), StandardCharsets.UTF_8)
+                "web", "service", "play", "PlayNodeQueryApplication.java")), StandardCharsets.UTF_8)
                 .replaceAll("\\s+", " ");
 
         org.junit.jupiter.api.Assertions.assertTrue(source.contains(

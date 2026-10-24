@@ -8,7 +8,6 @@ import com.chengyinhub.business.service.ICmsRegistrationService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.springframework.test.util.ReflectionTestUtils;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
@@ -57,7 +56,7 @@ final class CurrentPlayControllerFixtures {
         when(mapper.selectCmsRegistrationList(any(CmsRegistration.class))).thenAnswer(call -> {
             CmsRegistration probe = call.getArgument(0);
             ICmsRegistrationService registrations =
-                    (ICmsRegistrationService) ReflectionTestUtils.getField(controller, "cmsRegistrationService");
+                    (ICmsRegistrationService) PlayNodeAccessTestFixtures.getField(controller, "cmsRegistrationService");
             List<CmsRegistration> rows = registrations == null ? null : registrations.selectCmsRegistrationList(probe);
             lastRows.clear();
             if (rows != null) for (CmsRegistration row : rows) if (row != null) lastRows.add(asQueried(row, probe));
