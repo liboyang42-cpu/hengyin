@@ -9,9 +9,23 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import com.chengyinhub.business.service.IAiCreatorService;
+import com.chengyinhub.business.service.impl.AiThemeDraftRequestService;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.chengyinhub.business.domain.vo.ai.AiThemeDraftRequestState;
 import com.chengyinhub.business.domain.vo.ai.AiThemeDraftResp;
@@ -407,5 +421,44 @@ class MerchantNpcDraftApprovalGateTest {
         assertEquals(Phase.IDLE, wired.phase());
         assertEquals(0, publisher.publishedCount());
         assertFalse(wired.draft().encodesLiveCommerceMutation());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void projectFromDraftQueryUsesOriginalDraftReadAndDoesNotCallTheModel() {
+        InMemoryNpcFixtures fx = InMemoryNpcFixtures.synthetic();
+        InMemoryNpcFixtures.RecordingPublisher publisher = new InMemoryNpcFixtures.RecordingPublisher();
+        Map<Object, Object> redis = new HashMap<Object, Object>();
+        RedisTemplate<Object, Object> template = mock(RedisTemplate.class);
+        ValueOperations<Object, Object> values = mock(ValueOperations.class);
+        when(template.opsForValue()).thenReturn(values);
+        when(values.get(any())).thenAnswer(inv -> redis.get(inv.getArgument(0)));
+        IAiCreatorService creator = mock(IAiCreatorService.class);
+        AiThemeDraftRequestService drafts = new AiThemeDraftRequestService();
+        ReflectionTestUtils.setField(drafts, "aiCreatorService", creator);
+        ReflectionTestUtils.setField(drafts, "redisTemplate", template);
+        String id = "c06-draft-seen";
+        redis.put("ai:theme:draft:request:" + fx.scope().accountId() + ":" + id,
+                "{\"state\":\"SUCCEEDED\",\"result\":{\"draft\":{\"title\":\"Seen draft\"}}}");
+
+        MerchantNpcDraftApprovalGate closed = new MerchantNpcDraftApprovalGate(
+                fx.scope(), publisher, fx.isolation(), fx.qualification(), fx::scope,
+                new MerchantNpcDraftApprovalGate.AiThemeDraftRequestQuery(null));
+        GateException waiting = assertThrows(GateException.class, () -> closed.projectFromDraftQuery(id));
+        assertEquals(Failure.WAITING_SOURCE, waiting.failure());
+        assertEquals(MerchantNpcDraftApprovalGate.AI_THEME_DRAFT_READ, waiting.capability());
+        verify(creator, never()).themeDraft(any(), any());
+
+        MerchantNpcDraftApprovalGate gate = new MerchantNpcDraftApprovalGate(
+                fx.scope(), publisher, fx.isolation(), fx.qualification(), fx::scope,
+                new MerchantNpcDraftApprovalGate.AiThemeDraftRequestQuery(drafts));
+        AiThemeDraftRequestState seen = gate.projectFromDraftQuery(id);
+        assertEquals(AiThemeDraftRequestState.SUCCEEDED, seen.getState());
+        assertEquals("Seen draft", seen.getResult().getDraft().getTitle());
+        assertEquals(Phase.IDLE, gate.phase());
+        assertNull(gate.published());
+        assertEquals(0, publisher.publishedCount());
+        assertEquals(AiThemeDraftRequestState.NOT_FOUND, drafts.read(902L, id).getState());
+        verify(creator, never()).themeDraft(any(), any());
     }
 }
