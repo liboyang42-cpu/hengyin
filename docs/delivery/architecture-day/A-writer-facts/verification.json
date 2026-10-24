@@ -1,0 +1,17 @@
+{
+  "source_sha": "0c0d61266b2ae54d77c5ad9cf8b3c8fdb86d4b16",
+  "exact_existing_gate_statement_and_observed_writer_match": "PASS",
+  "all_production_java_source_files_manifested": 2442,
+  "xml_write_nodes_independent_count": 1327,
+  "source_file_sha256_and_git_blob_identity": "PASS",
+  "call_offsets_namespace_method_and_entry_annotation_links": "PASS",
+  "policy_candidates_unapproved_not_allowlist": "PASS",
+  "scope_own_docs_only": "PASS",
+  "runtime_authorization_grants_schedule": "UNKNOWN_NOT_READ",
+  "java_mysql_redis_ddl_http_ci_runs": 0,
+  "reproduction": "20 generated artifact hashes byte-identical after collect.py and curate.py replay",
+  "existing_secret_file_gate": "PASS",
+  "new_delivery_secret_markers_including_decompressed_jsonl": "PASS",
+  "limited_credential_patterns": "PASS; not full entropy/history scanning",
+  "diff_check": "PASS"
+}

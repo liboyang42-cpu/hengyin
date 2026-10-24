@@ -1,0 +1,5315 @@
+{
+  "observed_table_field_writers": {
+    "account_deregistration": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.AccountDeregistrationMapper": [
+        "apply_time",
+        "cancel_time",
+        "complete_time",
+        "create_time",
+        "execute_after",
+        "failure_reason",
+        "member_id",
+        "status",
+        "update_time"
+      ]
+    },
+    "activity_cancel_manual_refund_case": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ActivityCancelManualRefundCaseMapper": [
+        "activity_id",
+        "actor_member_id",
+        "actual_refund_amount_fen",
+        "assessed_at",
+        "assessed_by_user_id",
+        "assessed_refund_amount_fen",
+        "assessment_note",
+        "assessment_request_id",
+        "case_type",
+        "chapter_snapshot_json",
+        "club_id",
+        "create_time",
+        "evidence_object_key",
+        "evidence_sha256",
+        "handle_note",
+        "handle_request_id",
+        "handled_at",
+        "handled_by_user_id",
+        "manual_channel",
+        "owner_member_id",
+        "paid_cash_amount_fen",
+        "parent_order_no",
+        "payer_member_id",
+        "payer_registration_id",
+        "status",
+        "topic_id",
+        "unverified_registration_ids_json",
+        "update_time",
+        "verification_note",
+        "verified_at",
+        "verified_by_user_id",
+        "verified_registration_ids_json",
+        "verify_request_id",
+        "version"
+      ]
+    },
+    "ai_generation_log": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.AiGenerationLogMapper": [
+        "biz_type",
+        "create_time",
+        "del_flag",
+        "input_brief",
+        "latency_ms",
+        "member_id",
+        "output_brief",
+        "provider",
+        "role",
+        "safety_flag",
+        "token_est",
+        "token_in",
+        "token_out",
+        "trace_id"
+      ]
+    },
+    "ai_merchant_match_snapshot": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.AiMerchantMatchSnapshotMapper": [
+        "candidates_json",
+        "choice_json",
+        "conditions_json",
+        "create_time",
+        "del_flag",
+        "idea",
+        "member_id",
+        "trace_id"
+      ]
+    },
+    "ai_quota_reservation": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.AiQuotaReservationMapper": [
+        "attempt_count",
+        "biz_type",
+        "claim_until",
+        "completed_at",
+        "counter_key",
+        "created_at",
+        "decision_reason",
+        "fence_version",
+        "generation",
+        "last_error_code",
+        "member_id",
+        "next_attempt_at",
+        "nonce",
+        "original_day",
+        "owner_token",
+        "pool",
+        "receipt_key",
+        "request_lease_token",
+        "request_lease_until",
+        "stage",
+        "state",
+        "updated_at",
+        "used_after_reserve"
+      ]
+    },
+    "app_media_asset": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.AppMediaAssetMapper": [
+        "audit_task_id",
+        "create_time",
+        "media_type",
+        "member_id",
+        "object_key",
+        "owner_type",
+        "public_url",
+        "review_reason",
+        "review_state",
+        "storage_type",
+        "update_time",
+        "version"
+      ]
+    },
+    "audit_appeal": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.AuditAppealMapper": [
+        "biz_id",
+        "biz_type",
+        "created_at",
+        "due_at",
+        "evidence_json",
+        "handled_at",
+        "handled_by",
+        "member_id",
+        "reason",
+        "state",
+        "task_id"
+      ]
+    },
+    "audit_problem": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.AuditProblemMapper": [
+        "biz_id",
+        "biz_type",
+        "create_time",
+        "item_id",
+        "item_type",
+        "owner_member_id",
+        "reason_code",
+        "reason_text",
+        "record_id",
+        "task_id"
+      ]
+    },
+    "audit_record": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.AuditRecordMapper": []
+    },
+    "audit_task": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.AuditTaskMapper": [
+        "current_assignee",
+        "deadline_at",
+        "risk_level",
+        "snapshot_json",
+        "source_type",
+        "status",
+        "submitted_at",
+        "submitter_id",
+        "update_time",
+        "version"
+      ]
+    },
+    "biz_event_log": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.BizEventLogMapper": []
+    },
+    "biz_funnel_daily": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.BizFunnelDailyMapper": [
+        "city_code",
+        "conversion_rate",
+        "create_time",
+        "event_count",
+        "funnel_code",
+        "source",
+        "stat_date",
+        "step_code",
+        "update_time",
+        "user_count"
+      ]
+    },
+    "business_audit_event": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.BusinessAuditEventMapper": [
+        "action",
+        "actor_member_id",
+        "actor_role_code",
+        "actor_type",
+        "after_json",
+        "before_json",
+        "create_time",
+        "domain_id",
+        "domain_type",
+        "owner_member_id",
+        "reason",
+        "relation_id",
+        "request_id",
+        "target_id",
+        "target_type"
+      ]
+    },
+    "circle_explore_answer": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CircleExploreMapper": [
+        "answer_stage",
+        "answer_value",
+        "member_id",
+        "session_id"
+      ]
+    },
+    "circle_explore_record": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CircleExploreMapper": [
+        "member_id",
+        "note",
+        "offer_id",
+        "session_id",
+        "supply_profile_id"
+      ]
+    },
+    "circle_explore_session": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CircleExploreMapper": [
+        "completed_at",
+        "invite_code",
+        "owner_member_id",
+        "status",
+        "topic_id"
+      ]
+    },
+    "city_code": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MemberInterestProfileMapper": [
+        "category_weights_json",
+        "city_code",
+        "create_time",
+        "creator_weights_json",
+        "last_event_at",
+        "member_id",
+        "update_time"
+      ]
+    },
+    "club": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubGovernanceMapper": [
+        "member_id",
+        "update_time"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubMapper": [
+        "case_images",
+        "cover",
+        "del_flag",
+        "join_policy",
+        "logo",
+        "member_count",
+        "member_post_allowed",
+        "merchant_undertake_open",
+        "public_visible",
+        "update_time",
+        "welcome_note"
+      ]
+    },
+    "club_corporate_payee_profile": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubCorporatePayeeProfileMapper": [
+        "bank_account_name",
+        "bank_name",
+        "club_id",
+        "corporate_bank_account_no",
+        "created_by",
+        "credit_code_index",
+        "facts_hash",
+        "finance_contact_name",
+        "finance_contact_phone",
+        "invoice_type",
+        "is_current",
+        "legal_name",
+        "license_hash",
+        "license_object_key",
+        "profile_version",
+        "tax_no",
+        "unified_social_credit_code",
+        "verified_at",
+        "verified_by",
+        "verify_result",
+        "verify_status"
+      ]
+    },
+    "club_customer_profile": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubCrmMapper": [
+        "club_id",
+        "member_id",
+        "remark",
+        "request_id",
+        "tags_json",
+        "updated_by"
+      ]
+    },
+    "club_direct_merchant_receivable": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubDirectMerchantReceivableMapper": [
+        "chapter_id",
+        "claim_id",
+        "merchant_member_id",
+        "offer_id",
+        "pay_voucher_no",
+        "payer_club_id",
+        "per_head_fee_snapshot",
+        "redemption_id",
+        "refund_voucher_no",
+        "refunded_at",
+        "refunded_by",
+        "reversed_at",
+        "settled_at",
+        "settled_by",
+        "status",
+        "topic_id"
+      ]
+    },
+    "club_edition_compensation_terms": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubEditionCompensationMapper": [
+        "config_hash",
+        "evidence_due_at",
+        "executing_club_id",
+        "extra_approver_user_id",
+        "extra_hour_rate",
+        "fixed_compensation",
+        "frozen_at",
+        "fulfillment_end_at",
+        "headcount_cap",
+        "headcount_rate",
+        "quality_dimension_amount",
+        "quality_dimensions",
+        "topic_id"
+      ]
+    },
+    "club_edition_hours": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubEditionCompensationMapper": [
+        "club_id",
+        "confirm_status",
+        "confirmed_actual_hours",
+        "confirmed_at",
+        "confirmed_by",
+        "hour_kind",
+        "planned_hours",
+        "reported_actual_hours",
+        "reported_at",
+        "reported_by",
+        "topic_id",
+        "update_time"
+      ]
+    },
+    "club_edition_hours_correction": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubEditionCompensationMapper": [
+        "club_id",
+        "hour_kind",
+        "previous_confirmed_at",
+        "previous_confirmed_by",
+        "previous_confirmed_hours",
+        "reason",
+        "reopened_at",
+        "reopened_by",
+        "topic_id"
+      ]
+    },
+    "club_event_attendance_correction": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubEventOpsMapper": [
+        "activity_id",
+        "actor_member_id",
+        "club_id",
+        "corrected_at",
+        "member_id",
+        "new_arrived",
+        "new_arrived_at",
+        "original_arrived",
+        "original_arrived_at",
+        "reason",
+        "request_id",
+        "version"
+      ]
+    },
+    "club_event_notification_campaign": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubEventOpsMapper": [
+        "activity_id",
+        "actor_member_id",
+        "audience_type",
+        "channel",
+        "club_id",
+        "content",
+        "create_time",
+        "failed_count",
+        "request_id",
+        "status",
+        "success_count",
+        "title",
+        "total_count",
+        "update_time"
+      ]
+    },
+    "club_event_notification_delivery": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubEventOpsMapper": [
+        "attempt_count",
+        "campaign_id",
+        "channel",
+        "create_time",
+        "last_error",
+        "message_id",
+        "recipient_member_id",
+        "sent_at",
+        "status",
+        "update_time",
+        "version"
+      ]
+    },
+    "club_event_notification_outbox": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubEventOpsMapper": [
+        "create_time",
+        "delivery_id",
+        "next_attempt_at",
+        "status",
+        "update_time"
+      ]
+    },
+    "club_event_occurrence": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubEventOpsMapper": [
+        "activity_id",
+        "create_time",
+        "default_lead_member_id",
+        "occurrence_at",
+        "series_id",
+        "status",
+        "version"
+      ]
+    },
+    "club_event_series": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubEventOpsMapper": [
+        "club_id",
+        "create_by",
+        "create_time",
+        "created_by_member_id",
+        "default_capacity",
+        "default_lead_member_id",
+        "offer_minutes",
+        "recurrence_type",
+        "request_fingerprint",
+        "request_id",
+        "status",
+        "timezone",
+        "topic_id",
+        "update_by",
+        "update_time",
+        "version",
+        "waitlist_enabled"
+      ]
+    },
+    "club_event_waitlist": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubEventOpsMapper": [
+        "activity_id",
+        "club_id",
+        "joined_at",
+        "member_id",
+        "offer_expires_at",
+        "offer_token_hash",
+        "offered_at",
+        "registration_id",
+        "state",
+        "ticket_id",
+        "version"
+      ]
+    },
+    "club_extra_hours_approval": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubEditionCompensationMapper": [
+        "approved_at",
+        "approved_by",
+        "approved_hours",
+        "category",
+        "club_id",
+        "correction_of",
+        "idempotency_key",
+        "note",
+        "topic_id",
+        "work_started_at"
+      ]
+    },
+    "club_governance_ban": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubGovernanceMapper": [
+        "ban_reason",
+        "ban_request_id",
+        "banned_at",
+        "banned_by_member_id",
+        "club_id",
+        "create_by",
+        "create_time",
+        "expires_at",
+        "source_type",
+        "status",
+        "target_member_id",
+        "unban_reason",
+        "unban_request_id",
+        "unbanned_at",
+        "unbanned_by_member_id",
+        "update_by",
+        "update_time",
+        "version"
+      ]
+    },
+    "club_governance_case": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubGovernanceMapper": [
+        "case_type",
+        "club_id",
+        "create_time",
+        "decided_at",
+        "decided_by_user_id",
+        "decision_reason",
+        "decision_request_id",
+        "evidence_json",
+        "filer_member_id",
+        "reason",
+        "related_ban_id",
+        "status",
+        "subject_member_id",
+        "submit_request_id",
+        "target_id",
+        "target_type",
+        "update_time",
+        "version"
+      ]
+    },
+    "club_governance_owner_transfer": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubGovernanceMapper": [
+        "club_id",
+        "create_time",
+        "from_owner_member_id",
+        "reason",
+        "request_id",
+        "to_owner_member_id",
+        "transferred_at"
+      ]
+    },
+    "club_lead_checkin": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubLeadMapper": [
+        "activity_id",
+        "arrived_at",
+        "member_id"
+      ]
+    },
+    "club_lead_state": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubLeadMapper": [
+        "activity_id",
+        "create_time",
+        "current_chapter_id",
+        "leader_member_id",
+        "status"
+      ]
+    },
+    "club_leader": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubLeaderMapper": [
+        "del_flag"
+      ]
+    },
+    "club_member": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubGovernanceMapper": [
+        "club_id",
+        "del_flag",
+        "join_time",
+        "member_id",
+        "role",
+        "status"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubMemberMapper": [
+        "club_id",
+        "del_flag",
+        "join_message",
+        "join_time",
+        "member_id",
+        "review_reason",
+        "reviewed_at",
+        "reviewer_member_id",
+        "role",
+        "status"
+      ]
+    },
+    "club_membership_invoice": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubMembershipMapper": [
+        "amount_fen",
+        "benefits_snapshot",
+        "club_id",
+        "create_by",
+        "create_time",
+        "duration_days_snapshot",
+        "exit_policy_snapshot",
+        "grace_days_snapshot",
+        "idempotency_key",
+        "invoice_no",
+        "member_id",
+        "out_trade_no",
+        "owner_member_id_snapshot",
+        "paid_at",
+        "past_due_days_snapshot",
+        "pay_params_json",
+        "plan_id",
+        "plan_name_snapshot",
+        "plan_version_snapshot",
+        "refund_policy_snapshot",
+        "request_fingerprint",
+        "resume_blocked_at",
+        "snapshot_hash",
+        "status",
+        "transaction_id",
+        "update_by",
+        "update_time",
+        "version"
+      ]
+    },
+    "club_membership_plan": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubMembershipMapper": [
+        "benefits_json",
+        "club_id",
+        "create_by",
+        "create_time",
+        "created_by_member_id",
+        "del_flag",
+        "duration_days",
+        "exit_policy",
+        "grace_days",
+        "name",
+        "past_due_days",
+        "price_fen",
+        "refund_policy",
+        "status",
+        "update_by",
+        "update_time",
+        "version"
+      ]
+    },
+    "club_membership_refund_review": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubMembershipMapper": [
+        "club_id",
+        "create_by",
+        "create_time",
+        "invoice_id",
+        "member_id",
+        "reason",
+        "request_id",
+        "status",
+        "update_by",
+        "update_time",
+        "version"
+      ]
+    },
+    "club_membership_setting": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubMembershipMapper": [
+        "club_id",
+        "create_by",
+        "create_time",
+        "enabled",
+        "update_by",
+        "update_time",
+        "version"
+      ]
+    },
+    "club_membership_term": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubMembershipMapper": [
+        "benefits_snapshot",
+        "club_id",
+        "create_by",
+        "create_time",
+        "ends_at",
+        "exit_policy_snapshot",
+        "expires_at",
+        "grace_ends_at",
+        "member_id",
+        "plan_id",
+        "refund_policy_snapshot",
+        "source_invoice_id",
+        "starts_at",
+        "status",
+        "update_by",
+        "update_time",
+        "version"
+      ]
+    },
+    "club_payable": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubPayableMapper": [
+        "amount",
+        "batch_id",
+        "club_id",
+        "component",
+        "created_by",
+        "entry_type",
+        "idempotency_key",
+        "reason",
+        "reversal_of",
+        "topic_id"
+      ]
+    },
+    "club_payable_batch": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubPayableMapper": [
+        "batch_no",
+        "batch_status",
+        "club_id",
+        "confirmed_at",
+        "confirmed_by",
+        "invoice_no",
+        "invoice_status",
+        "paid_at",
+        "paid_by",
+        "payment_reference",
+        "red_invoice_no",
+        "topic_id",
+        "total_amount"
+      ]
+    },
+    "club_post": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubPostMapper": [
+        "author_member_id",
+        "club_id",
+        "comment_count",
+        "content",
+        "create_time",
+        "del_flag",
+        "images",
+        "is_pinned",
+        "like_count",
+        "pinned_at",
+        "ref_id",
+        "ref_type",
+        "type",
+        "update_time",
+        "version"
+      ]
+    },
+    "club_post_comment": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubPostCommentMapper": [
+        "content",
+        "create_time",
+        "del_flag",
+        "member_id",
+        "post_id"
+      ]
+    },
+    "club_post_like": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubPostLikeMapper": [
+        "create_time",
+        "member_id",
+        "post_id"
+      ]
+    },
+    "club_post_media_review_outbox": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubPostMediaReviewOutboxMapper": [
+        "attempt_count",
+        "fence_token",
+        "last_error_code",
+        "lease_until",
+        "next_attempt_at",
+        "owner_token",
+        "state",
+        "trace_hash",
+        "update_time"
+      ]
+    },
+    "club_post_revision": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubPostRevisionMapper": [
+        "club_id",
+        "content",
+        "create_time",
+        "editor_member_id",
+        "images",
+        "post_id",
+        "snapshot_version",
+        "type"
+      ]
+    },
+    "club_quality_decision": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubEditionCompensationMapper": [
+        "amount",
+        "club_id",
+        "confirmed_at",
+        "confirmed_by",
+        "correction_of",
+        "decision_status",
+        "decision_version",
+        "dimension",
+        "due_at",
+        "evidence_hash",
+        "excluded_by_fault",
+        "fault_party",
+        "is_current",
+        "reason",
+        "topic_id"
+      ]
+    },
+    "club_role_assignment": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubRoleAssignmentMapper": [
+        "assigned_at",
+        "assigned_by_member_id",
+        "club_id",
+        "create_by",
+        "create_time",
+        "expires_at",
+        "revoke_reason",
+        "revoked_at",
+        "revoked_by_member_id",
+        "role_code",
+        "scope_id",
+        "scope_type",
+        "status",
+        "target_member_id",
+        "update_by",
+        "update_time",
+        "version"
+      ]
+    },
+    "cms_activity": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubEventOpsMapper": [
+        "cancel_reason",
+        "cancel_time",
+        "publish_status",
+        "status",
+        "update_by",
+        "update_time"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsActivityMapper": [
+        "check_status",
+        "content_safety_hold",
+        "is_settlement",
+        "publish_status",
+        "status",
+        "update_by",
+        "update_time"
+      ]
+    },
+    "cms_activity_like": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsActivityLikeMapper": []
+    },
+    "cms_activity_settlement_hold": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ActivitySettlementHoldMapper": [
+        "status",
+        "update_time"
+      ]
+    },
+    "cms_beta_game": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsBetaGameMapper": [
+        "del_flag"
+      ]
+    },
+    "cms_beta_game_vote": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsBetaGameVoteMapper": []
+    },
+    "cms_collaborators": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsCollaboratorsMapper": []
+    },
+    "cms_infomation": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsInfomationMapper": []
+    },
+    "cms_infomation_change_audit": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsInfomationMapper": [
+        "action",
+        "create_time",
+        "infomation_id",
+        "operator_user_id",
+        "operator_username",
+        "reason"
+      ]
+    },
+    "cms_member_template": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsMemberTemplateMapper": [
+        "check_status",
+        "draft_status",
+        "publish_status",
+        "reason",
+        "status",
+        "update_time"
+      ]
+    },
+    "cms_points_setting": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsPointsSettingMapper": []
+    },
+    "cms_registration": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.AccountDeregistrationMapper": [
+        "address",
+        "address_id",
+        "email",
+        "phone",
+        "phone_hash",
+        "real_name",
+        "update_time"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsRegistrationMapper": [
+        "address",
+        "club_id",
+        "email",
+        "executing_club_id",
+        "first_successful_scan_at",
+        "payment_status",
+        "payment_time",
+        "phone",
+        "phone_hash",
+        "points_returned",
+        "real_name",
+        "registration_status",
+        "request_fingerprint",
+        "source_club_id",
+        "source_frozen_at",
+        "transaction_id",
+        "typeHandler",
+        "update_by",
+        "update_time",
+        "verification_status",
+        "verification_time",
+        "verifier_id"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.TopicEditionFundsMapper": [
+        "purchase_kind",
+        "update_by",
+        "update_time"
+      ]
+    },
+    "cms_registration_merchant": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsRegistrationMerchantMapper": [
+        "audit_status",
+        "audit_time",
+        "del_flag",
+        "reason",
+        "status",
+        "update_by",
+        "update_time"
+      ]
+    },
+    "cms_registration_scan": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsRegistrationScanMapper": [
+        "address",
+        "create_time",
+        "latitude",
+        "longitude",
+        "member_id",
+        "name",
+        "registration_id",
+        "registration_type",
+        "status",
+        "template_id",
+        "update_time",
+        "validation_method"
+      ]
+    },
+    "cms_setting": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsSettingMapper": []
+    },
+    "cms_template_library": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsTemplateLibraryMapper": [
+        "publish_status",
+        "reason",
+        "status",
+        "update_time",
+        "use_num"
+      ]
+    },
+    "cms_topic": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsTopicMapper": [
+        "beta_flag",
+        "check_status",
+        "circle_reviewed_at",
+        "club_coop_open",
+        "club_member_only",
+        "club_pinned",
+        "config_version",
+        "content_safety_hold",
+        "is_draft",
+        "is_settlement",
+        "is_template",
+        "lifecycle",
+        "published_config_version",
+        "published_route_graph_json",
+        "published_theme_runtime_config_json",
+        "review_flag",
+        "route_graph_json",
+        "route_mode",
+        "selling_started_at",
+        "status",
+        "update_by",
+        "update_time",
+        "user_status"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.TopicEditionReopenMapper": [
+        "address_name",
+        "audio_duration",
+        "audio_url",
+        "category_ids",
+        "check_status",
+        "club_id",
+        "create_by",
+        "create_time",
+        "del_flag",
+        "description",
+        "finish_medal_img",
+        "finish_medal_name",
+        "img_arr",
+        "img_url",
+        "is_recommend",
+        "is_settlement",
+        "is_sync",
+        "journey_rules_json",
+        "journey_story_json",
+        "lifecycle",
+        "location_count",
+        "member_id",
+        "merchant_status",
+        "name",
+        "open_club_pool",
+        "product_type",
+        "publish_mode",
+        "self_play",
+        "source_topic_id",
+        "status",
+        "subtitle",
+        "template_count",
+        "topic_type",
+        "total_mileage",
+        "total_time",
+        "update_by",
+        "update_time",
+        "user_status",
+        "xp_budget"
+      ]
+    },
+    "cms_topic_chapter": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsTopicChapterMapper": [
+        "finish_time",
+        "max_merchant",
+        "max_per_head_fee",
+        "perk_min_value",
+        "recruit_enabled",
+        "terms_mode",
+        "update_time"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.TopicEditionReopenMapper": [
+        "allowed_validation_methods",
+        "atmosphere_preset",
+        "audio_url",
+        "blocks",
+        "category",
+        "category_id",
+        "create_by",
+        "create_time",
+        "description",
+        "img_arr",
+        "location_count",
+        "max_merchant",
+        "max_node_xp",
+        "max_per_head_fee",
+        "name",
+        "perk_min_value",
+        "recruit_enabled",
+        "required",
+        "sort_id",
+        "template_count",
+        "terms_mode",
+        "topic_id",
+        "total_mileage",
+        "total_time"
+      ]
+    },
+    "cms_topic_chapter_template_meta": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsTopicTemplateMetaMapper": [
+        "batch_interval_minutes",
+        "batch_size",
+        "chapter_id",
+        "del_flag",
+        "effort_available_slots",
+        "effort_materials",
+        "effort_max_concurrent",
+        "effort_qualifications",
+        "effort_staff_minutes",
+        "effort_venue",
+        "role_need",
+        "topic_id"
+      ]
+    },
+    "cms_topic_completion_coupon_reward_log": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsTopicCompletionCouponRewardMapper": [
+        "history_id"
+      ]
+    },
+    "cms_topic_like": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsTopicLikeMapper": [
+        "create_time",
+        "data_id",
+        "like_type",
+        "member_id"
+      ]
+    },
+    "cms_topic_node": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsTopicNodeMapper": [],
+      "chengyinhub-system:com.chengyinhub.business.mapper.TopicEditionReopenMapper": [
+        "address",
+        "business_time",
+        "card_hook_long",
+        "chapter_id",
+        "checkin_code",
+        "create_by",
+        "create_time",
+        "description",
+        "fragment_text",
+        "hook_text",
+        "img_url",
+        "latitude",
+        "longitude",
+        "name",
+        "node_time",
+        "sort_id",
+        "status",
+        "template_id",
+        "topic_id",
+        "xp_value"
+      ]
+    },
+    "community_erasure_job": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "attempt_count",
+        "checklist_json",
+        "completed_at",
+        "create_time",
+        "last_error_code",
+        "legal_hold",
+        "next_attempt_at",
+        "post_id",
+        "request_id",
+        "state",
+        "subject_member_id",
+        "trigger_type",
+        "update_time"
+      ]
+    },
+    "community_featured_entry": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "city_code",
+        "collection_code",
+        "create_time",
+        "ends_at",
+        "operator_user_id",
+        "post_id",
+        "reason",
+        "starts_at"
+      ]
+    },
+    "community_guideline_ack": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "acknowledged_at",
+        "guideline_version_id",
+        "member_id",
+        "request_id",
+        "scene"
+      ]
+    },
+    "community_member_governance_state": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "create_time",
+        "last_event_at",
+        "last_event_payload_json",
+        "last_event_type",
+        "member_id",
+        "update_time",
+        "version"
+      ]
+    },
+    "community_member_mute": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "create_time",
+        "member_id",
+        "muted_member_id",
+        "request_id"
+      ]
+    },
+    "community_notification": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "actor_count",
+        "actor_member_id",
+        "aggregate_key",
+        "comment_id",
+        "create_time",
+        "event_id",
+        "notification_type",
+        "payload_json",
+        "post_id",
+        "read_at",
+        "recipient_member_id",
+        "update_time"
+      ]
+    },
+    "community_notification_actor": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "actor_member_id",
+        "aggregate_key",
+        "create_time",
+        "last_event_id",
+        "notification_type",
+        "recipient_member_id",
+        "update_time"
+      ]
+    },
+    "community_notification_preference": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "create_time",
+        "interaction_enabled",
+        "member_id",
+        "mention_enabled",
+        "social_enabled",
+        "update_time"
+      ]
+    },
+    "community_post": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "approximate_geohash",
+        "audience",
+        "audit_before_publish",
+        "audit_level",
+        "author_id",
+        "body",
+        "bookmark_count",
+        "city_code",
+        "client_request_id",
+        "comment_count",
+        "comment_policy",
+        "community_id",
+        "create_time",
+        "deleted_at",
+        "disclosure_type",
+        "edited_at",
+        "guideline_version_id",
+        "interaction_enabled",
+        "lifecycle",
+        "like_count",
+        "location_precision",
+        "poi_name",
+        "post_type",
+        "published_at",
+        "recommendation_eligible",
+        "reply_approval_enabled",
+        "review_flag",
+        "safety_labels_json",
+        "search_eligible",
+        "share_count",
+        "slow_mode_seconds",
+        "title",
+        "update_time",
+        "version"
+      ]
+    },
+    "community_post_appeal": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "appellant_member_id",
+        "create_time",
+        "decision_reason",
+        "due_at",
+        "enforcement_id",
+        "evidence_asset_ids_json",
+        "reason",
+        "request_id",
+        "reviewed_at",
+        "reviewer_user_id",
+        "status",
+        "update_time",
+        "version"
+      ]
+    },
+    "community_post_command_receipt": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": []
+    },
+    "community_post_comment": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "author_approval_state",
+        "author_id",
+        "body",
+        "client_request_id",
+        "create_time",
+        "deleted_at",
+        "lifecycle",
+        "like_count",
+        "parent_id",
+        "post_id",
+        "published_at",
+        "replied_to_member_id",
+        "root_id",
+        "update_time",
+        "version"
+      ]
+    },
+    "community_post_comment_action": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "action_type",
+        "comment_id",
+        "create_time",
+        "member_id",
+        "request_id"
+      ]
+    },
+    "community_post_enforcement": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "comment_id",
+        "create_time",
+        "ends_at",
+        "enforcement_type",
+        "evidence_snapshot_json",
+        "guideline_version_id",
+        "operator_user_id",
+        "post_id",
+        "previous_lifecycle",
+        "reason_code",
+        "report_case_id",
+        "request_id",
+        "rule_code",
+        "starts_at",
+        "status",
+        "target_member_id",
+        "update_time",
+        "version"
+      ]
+    },
+    "community_post_media": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "alt_text",
+        "byte_size",
+        "committed_at",
+        "content_hash",
+        "create_time",
+        "delete_after",
+        "derived_object_key",
+        "duration_ms",
+        "height",
+        "media_type",
+        "mime_type",
+        "object_key",
+        "owner_member_id",
+        "post_id",
+        "retention_state",
+        "review_state",
+        "sort_order",
+        "update_time",
+        "upload_receipt_hash",
+        "upload_request_id",
+        "upload_state",
+        "width"
+      ]
+    },
+    "community_post_member_action": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "action_type",
+        "create_time",
+        "member_id",
+        "post_id",
+        "request_id",
+        "source",
+        "update_time"
+      ]
+    },
+    "community_post_mention": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "create_time",
+        "mentioned_member_id",
+        "post_id"
+      ]
+    },
+    "community_post_outbox": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "aggregate_id",
+        "aggregate_type",
+        "attempt_count",
+        "create_time",
+        "event_id",
+        "event_type",
+        "last_error_code",
+        "next_attempt_at",
+        "payload_json",
+        "processed_at",
+        "state",
+        "update_time"
+      ]
+    },
+    "community_post_reference": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "create_time",
+        "post_id",
+        "privacy_snapshot",
+        "reference_id",
+        "reference_type",
+        "snapshot_json"
+      ]
+    },
+    "community_post_revision": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "create_time",
+        "edit_reason",
+        "editor_member_id",
+        "immutable_snapshot_json",
+        "post_id",
+        "review_state",
+        "snapshot_version"
+      ]
+    },
+    "community_post_topic": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "create_time",
+        "post_id",
+        "topic_code"
+      ]
+    },
+    "community_report_appeal": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityTrustMapper": [
+        "appellant_member_id",
+        "create_time",
+        "payload_hash",
+        "reason",
+        "report_id",
+        "request_id"
+      ]
+    },
+    "community_report_case": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityTrustMapper": [
+        "anonymity_policy",
+        "create_time",
+        "decision_summary",
+        "description",
+        "estimated_resolve_at",
+        "evidence_asset_ids_json",
+        "first_response_minutes_snapshot",
+        "payload_hash",
+        "policy_version",
+        "priority_snapshot",
+        "reason_code",
+        "reason_label_snapshot",
+        "reporter_member_id",
+        "request_id",
+        "stage",
+        "target_id",
+        "target_type",
+        "update_time",
+        "version"
+      ]
+    },
+    "community_report_timeline": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityTrustMapper": [
+        "actor_type",
+        "create_time",
+        "event_key",
+        "event_type",
+        "from_stage",
+        "internal_note",
+        "payload_hash",
+        "public_note",
+        "report_id",
+        "to_stage"
+      ]
+    },
+    "community_search_document": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "city_code",
+        "document_id",
+        "document_type",
+        "indexed_at",
+        "owner_member_id",
+        "search_text",
+        "source_version",
+        "title",
+        "topic_codes_json",
+        "visibility_state"
+      ]
+    },
+    "consent_record": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ConsentRecordMapper": [
+        "create_time",
+        "doc_type",
+        "doc_version",
+        "event_type",
+        "ip_address",
+        "member_id",
+        "occurred_at",
+        "request_id",
+        "scene",
+        "scope_id",
+        "scope_type"
+      ]
+    },
+    "content_draft": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ContentDraftMapper": [
+        "business_type",
+        "client_draft_key",
+        "create_time",
+        "owner_member_id",
+        "payload_hash",
+        "payload_json",
+        "published_resource_id",
+        "status",
+        "subject_id",
+        "update_time",
+        "updated_by_device",
+        "version"
+      ]
+    },
+    "content_search_document": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ContentSearchMapper": [
+        "city_code",
+        "document_id",
+        "document_type",
+        "img_url",
+        "indexed_at",
+        "search_text",
+        "source_time",
+        "title",
+        "visibility_state"
+      ]
+    },
+    "coop_club_apply": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CoopClubApplyMapper": [
+        "handle_time",
+        "message",
+        "status",
+        "update_time"
+      ]
+    },
+    "coop_complaint": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CoopComplaintMapper": [
+        "advance_amount",
+        "create_time",
+        "deduct_amount",
+        "del_flag",
+        "fault_ratio",
+        "handle_note",
+        "handler_id",
+        "reason",
+        "registration_id",
+        "reporter_member_id",
+        "respondent_member_id",
+        "respondent_type",
+        "status",
+        "topic_id",
+        "update_time"
+      ]
+    },
+    "coop_credit_log": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CoopCreditLogMapper": []
+    },
+    "coop_group_member_verify": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CoopGroupMemberVerifyMapper": [
+        "activity_id",
+        "registration_id",
+        "topic_id",
+        "verifier_member_id",
+        "verify_time"
+      ]
+    },
+    "coop_invite": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CoopInviteMapper": [
+        "deposit_amount",
+        "deposit_paid_transaction_id",
+        "deposit_refund_amount",
+        "deposit_refund_confirmed_at",
+        "deposit_refund_lease_at",
+        "deposit_refund_lease_token",
+        "deposit_refund_no",
+        "deposit_refund_requested_at",
+        "deposit_refund_state",
+        "deposit_status",
+        "status",
+        "update_time"
+      ]
+    },
+    "coop_order": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CoopOrderMapper": [
+        "status"
+      ]
+    },
+    "coop_perk": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CoopPerkMapper": [
+        "del_flag"
+      ]
+    },
+    "coop_perk_template": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CoopPerkTemplateMapper": [
+        "del_flag"
+      ]
+    },
+    "coop_review": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CoopReviewMapper": [
+        "comment",
+        "create_time",
+        "del_flag",
+        "from_id",
+        "rating",
+        "to_id",
+        "topic_id"
+      ]
+    },
+    "coop_settlement": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CoopSettlementDetailMapper": [
+        "amount"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.CoopSettlementMapper": [
+        "payout_time",
+        "status"
+      ]
+    },
+    "coop_settlement_cash_close": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CoopSettlementCashEvidenceMapper": [
+        "close_kind",
+        "closed_at",
+        "commercial_context_id",
+        "commercial_context_type",
+        "contract_snapshot",
+        "guarantee_base_rate",
+        "guarantee_max_merchant",
+        "guarantee_step_rate",
+        "initiator_member_id",
+        "origin_calculation_version",
+        "original_contribution_count",
+        "original_sales_basis",
+        "original_verified_merchant_count",
+        "platform_rate",
+        "source_fingerprint",
+        "topic_id"
+      ]
+    },
+    "coop_settlement_cash_contribution": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CoopSettlementCashEvidenceMapper": [
+        "cash_close_id",
+        "owner_id",
+        "owner_type",
+        "parent_order_no",
+        "payer_order_no",
+        "payer_registration_id",
+        "registration_id",
+        "registration_no",
+        "registration_snapshot",
+        "sales_basis_amount",
+        "snapshot_payable_amount",
+        "snapshot_payment_status",
+        "snapshot_registration_status",
+        "snapshot_verification_status",
+        "source_fingerprint",
+        "source_topic_id"
+      ]
+    },
+    "coop_settlement_cash_event": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CoopSettlementCashEvidenceMapper": [
+        "cash_close_id",
+        "event_type",
+        "source_amount",
+        "source_fingerprint",
+        "source_id",
+        "source_registration_id",
+        "source_snapshot"
+      ]
+    },
+    "coupon_source_grant": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CouponSourceGrantMapper": [
+        "coupon_id",
+        "created_at",
+        "delivered_at",
+        "history_id",
+        "member_id",
+        "source_id",
+        "source_type"
+      ]
+    },
+    "create_time": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ImBlockMapper": [
+        "blocked_member_id",
+        "create_time",
+        "member_id"
+      ]
+    },
+    "creator_profile": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CreatorProfileMapper": [
+        "apply_status",
+        "avatar_url",
+        "bio",
+        "create_time",
+        "creator_name",
+        "member_id",
+        "review_reason",
+        "reviewed_at",
+        "reviewer_id",
+        "update_time"
+      ]
+    },
+    "drop_log_id": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamRewardDeliveryMapper": [
+        "coupon_id",
+        "created_at",
+        "drop_log_id",
+        "extra_xp",
+        "member_id",
+        "reward_kind",
+        "state",
+        "updated_at"
+      ]
+    },
+    "event_id": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "actor_count",
+        "actor_member_id",
+        "aggregate_key",
+        "comment_id",
+        "create_time",
+        "event_id",
+        "notification_type",
+        "payload_json",
+        "post_id",
+        "recipient_member_id",
+        "update_time"
+      ]
+    },
+    "event_signup": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.EventSignupMapper": [
+        "reward_claimed",
+        "status",
+        "update_time"
+      ]
+    },
+    "explore_bundle_exit_case": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ExploreBundleMapper": [
+        "create_time",
+        "decision",
+        "exited_offer_id",
+        "holder_member_id",
+        "idempotency_key",
+        "registration_id",
+        "request_fingerprint",
+        "reservation_id",
+        "target_offer_id",
+        "unit_id"
+      ]
+    },
+    "explore_bundle_grant": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ExploreBundleMapper": [
+        "bundle_order_id",
+        "chapter_id",
+        "create_time",
+        "grant_no",
+        "grant_type",
+        "holder_member_id",
+        "registration_id",
+        "source_grant_id",
+        "topic_id",
+        "units_total",
+        "valid_from",
+        "valid_to"
+      ]
+    },
+    "explore_bundle_order": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ExploreBundleMapper": [
+        "activity_id",
+        "contract_version",
+        "create_time",
+        "holder_member_id",
+        "idempotency_key",
+        "paid_amount",
+        "policy_version",
+        "product_version",
+        "quota_version",
+        "registration_id",
+        "request_fingerprint",
+        "settlement_rule_version",
+        "snapshot_json",
+        "topic_id",
+        "valid_from",
+        "valid_to"
+      ]
+    },
+    "explore_bundle_reservation": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ExploreBundleMapper": [
+        "chapter_id",
+        "closed_at",
+        "create_time",
+        "holder_member_id",
+        "idempotency_key",
+        "merchant_id",
+        "offer_id",
+        "registration_id",
+        "request_fingerprint",
+        "start_at",
+        "status",
+        "unit_id",
+        "update_time",
+        "version"
+      ]
+    },
+    "explore_bundle_unit": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ExploreBundleMapper": [
+        "chapter_id",
+        "create_time",
+        "grant_id",
+        "holder_member_id",
+        "redemption_id",
+        "registration_id",
+        "reservation_id",
+        "status",
+        "status_reason",
+        "unit_code",
+        "unit_seq",
+        "unit_value",
+        "update_time",
+        "version"
+      ]
+    },
+    "fund_action_preflight": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.FundActionPreflightMapper": [
+        "action_type",
+        "amount",
+        "challenge_nonce",
+        "challenge_token_hash",
+        "confirmed_at",
+        "consumed_at",
+        "context_device",
+        "context_initiated_at",
+        "context_where",
+        "counterparty_key_hash",
+        "create_time",
+        "currency",
+        "display_account_mask",
+        "display_name",
+        "display_phone_mask",
+        "expires_at",
+        "member_id",
+        "rejected_at",
+        "request_fingerprint",
+        "request_id",
+        "risk_level",
+        "risk_reason_codes",
+        "state",
+        "update_time"
+      ]
+    },
+    "game_broadcast": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.GameSessionRuntimeMapper": [
+        "activity_id",
+        "content",
+        "create_time",
+        "game_session_id",
+        "role_code",
+        "sender_member_id",
+        "status",
+        "target_id",
+        "target_type",
+        "update_time"
+      ]
+    },
+    "game_broadcast_delivery": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.GameSessionRuntimeMapper": [
+        "error_code",
+        "message_id",
+        "status",
+        "update_time"
+      ]
+    },
+    "game_command_receipt": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.GameSessionRuntimeMapper": [
+        "game_session_id",
+        "outcome",
+        "reason_code",
+        "result_json",
+        "revision",
+        "update_time"
+      ]
+    },
+    "game_runtime_session": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.GameRuntimeSessionMapper": [
+        "activity_id",
+        "completed_at",
+        "completed_units",
+        "config_snapshot_json",
+        "create_time",
+        "deadline_at",
+        "node_id",
+        "owner_id",
+        "owner_type",
+        "play_instance_id",
+        "score",
+        "started_at",
+        "state_json",
+        "status",
+        "template_id",
+        "topic_id",
+        "update_time",
+        "version"
+      ]
+    },
+    "game_session": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.GameSessionRuntimeMapper": [
+        "current_chapter_id",
+        "finished_at",
+        "finished_by",
+        "leaderboard_updated_at",
+        "leaderboard_updated_by",
+        "leaderboard_visible",
+        "revision",
+        "started_at",
+        "started_by",
+        "status",
+        "update_time"
+      ]
+    },
+    "game_station_run": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.GameSessionRuntimeMapper": [
+        "capacity",
+        "fallback_node_id",
+        "fallback_plan_code",
+        "fallback_plan_version",
+        "pause_reason",
+        "pause_reason_code",
+        "preparation_snapshot_json",
+        "resume_eta",
+        "revision",
+        "service_end_at",
+        "service_start_at",
+        "station_code",
+        "status",
+        "update_time"
+      ]
+    },
+    "game_story_state": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.GameSessionRuntimeMapper": [
+        "applied_choices_json",
+        "ending_code",
+        "revision",
+        "status",
+        "update_time",
+        "variables_json"
+      ]
+    },
+    "game_task_submission": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.GameSessionRuntimeMapper": [
+        "decided_by",
+        "decision_reason",
+        "decision_reason_code",
+        "revision",
+        "status",
+        "update_time"
+      ]
+    },
+    "game_team_role_assignment": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.GameSessionRuntimeMapper": [
+        "revision",
+        "status",
+        "superseded_at",
+        "superseded_by",
+        "update_time"
+      ]
+    },
+    "gen_table": {
+      "chengyinhub-generator:com.chengyinhub.generator.mapper.GenTableMapper": [
+        "business_name",
+        "class_name",
+        "create_by",
+        "create_time",
+        "function_author",
+        "function_name",
+        "gen_path",
+        "gen_type",
+        "module_name",
+        "package_name",
+        "remark",
+        "table_comment",
+        "table_name",
+        "tpl_category",
+        "tpl_web_type"
+      ]
+    },
+    "gen_table_column": {
+      "chengyinhub-generator:com.chengyinhub.generator.mapper.GenTableColumnMapper": [
+        "column_comment",
+        "column_name",
+        "column_type",
+        "create_by",
+        "create_time",
+        "dict_type",
+        "html_type",
+        "is_edit",
+        "is_increment",
+        "is_insert",
+        "is_list",
+        "is_pk",
+        "is_query",
+        "is_required",
+        "java_field",
+        "java_type",
+        "query_type",
+        "sort",
+        "table_id"
+      ]
+    },
+    "growth_badge": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.GrowthBadgeMapper": [
+        "badge_code",
+        "badge_desc",
+        "badge_name",
+        "club_id",
+        "create_time",
+        "icon_url",
+        "sort_no",
+        "status",
+        "unlock_rule"
+      ]
+    },
+    "growth_mission": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.GrowthMissionMapper": [
+        "create_time",
+        "daily_limit",
+        "exp_reward",
+        "mission_code",
+        "mission_desc",
+        "mission_name",
+        "sort_no",
+        "status",
+        "trigger_event"
+      ]
+    },
+    "growth_mission_progress": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.GrowthMissionProgressMapper": [
+        "biz_id",
+        "biz_type",
+        "update_time"
+      ]
+    },
+    "id": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PhotoCheckIntentMapper": [
+        "action_key",
+        "context_json",
+        "created_at",
+        "image_reference",
+        "member_id",
+        "nonce",
+        "original_day",
+        "request_fingerprint",
+        "reservation",
+        "session_id",
+        "state",
+        "updated_at"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.PlayerTopicTagMapper": [
+        "create_time",
+        "member_id",
+        "source_node_id",
+        "status",
+        "tag_code",
+        "tag_value",
+        "topic_id",
+        "update_time"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamBadgeDeliveryMapper": [
+        "after_id",
+        "badge_code",
+        "badge_name",
+        "icon_url",
+        "id",
+        "member_id",
+        "obtain_time",
+        "session_id",
+        "source_id",
+        "source_type",
+        "state",
+        "through_id"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamMapper": [
+        "client_session_key",
+        "create_time",
+        "member_id",
+        "started_at",
+        "status"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamRewardDeliveryMapper": [
+        "after_id",
+        "id",
+        "through_id"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.ThemeBroadcastMapper": [
+        "attempts",
+        "content",
+        "create_time",
+        "event_id",
+        "member_id",
+        "session_id",
+        "status"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.ThemeCharacterMapper": [
+        "create_time",
+        "member_id",
+        "source_session_id",
+        "source_version",
+        "topic_id",
+        "update_time",
+        "values_json"
+      ]
+    },
+    "im_block": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ImBlockMapper": [
+        "blocked_member_id",
+        "create_time",
+        "member_id"
+      ]
+    },
+    "im_conversation": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ImConversationMapper": [
+        "biz_key",
+        "create_time",
+        "last_msg_at",
+        "last_msg_text",
+        "last_msg_type",
+        "status",
+        "type",
+        "update_time"
+      ]
+    },
+    "im_conversation_member": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ImConversationMemberMapper": [
+        "conversation_id",
+        "create_time",
+        "deleted",
+        "last_read_msg_id",
+        "last_read_visible_at",
+        "member_id",
+        "muted",
+        "role",
+        "unread_count"
+      ]
+    },
+    "im_message": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ImMessageMapper": [
+        "check_status",
+        "client_message_id",
+        "content",
+        "conversation_id",
+        "create_time",
+        "deleted",
+        "extra_json",
+        "msg_type",
+        "receiver_id",
+        "request_hash",
+        "sender_id",
+        "status",
+        "trace_id",
+        "unread_count",
+        "visible_at"
+      ]
+    },
+    "im_notification_intent": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ImNotificationIntentMapper": [
+        "delivered_at",
+        "message_id",
+        "status"
+      ]
+    },
+    "im_poll": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ImPollMapper": [
+        "client_poll_key",
+        "closed_at",
+        "closed_by",
+        "conversation_id",
+        "create_time",
+        "creator_member_id",
+        "deadline_at",
+        "message_id",
+        "question",
+        "request_hash",
+        "selection_mode",
+        "status",
+        "update_time",
+        "version",
+        "visibility"
+      ]
+    },
+    "im_poll_audience": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ImPollMapper": [
+        "create_time",
+        "member_id",
+        "poll_id"
+      ]
+    },
+    "im_poll_option": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ImPollMapper": [
+        "content",
+        "create_time",
+        "poll_id",
+        "position"
+      ]
+    },
+    "im_poll_vote": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ImPollMapper": [
+        "create_time",
+        "member_id",
+        "option_id",
+        "poll_id"
+      ]
+    },
+    "interaction_enabled": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "create_time",
+        "interaction_enabled",
+        "member_id",
+        "mention_enabled",
+        "social_enabled",
+        "update_time"
+      ]
+    },
+    "ip_world": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.IpWorldMapper": [
+        "city_code",
+        "cover_url",
+        "create_time",
+        "deleted",
+        "intro",
+        "sort_no",
+        "status",
+        "subtitle",
+        "world_code",
+        "world_name"
+      ]
+    },
+    "label": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ThemeStateKeyMapper": [
+        "color",
+        "create_time",
+        "display_type",
+        "icon",
+        "initial_value",
+        "key_type",
+        "label",
+        "max_value",
+        "min_value",
+        "persist_scope",
+        "rules_json",
+        "scope",
+        "sort_order",
+        "state_key",
+        "topic_id",
+        "update_time",
+        "visible"
+      ]
+    },
+    "last_event_id": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "actor_member_id",
+        "aggregate_key",
+        "create_time",
+        "last_event_id",
+        "notification_type",
+        "recipient_member_id",
+        "update_time"
+      ]
+    },
+    "last_event_type": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "create_time",
+        "last_event_at",
+        "last_event_payload_json",
+        "last_event_type",
+        "member_id",
+        "update_time",
+        "version"
+      ]
+    },
+    "like_type": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsTopicLikeMapper": [
+        "create_time",
+        "data_id",
+        "like_type",
+        "member_id"
+      ]
+    },
+    "member_capability": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MemberCapabilityMapper": [
+        "capability",
+        "create_time",
+        "granted_at",
+        "granted_by",
+        "member_id",
+        "status",
+        "update_time"
+      ]
+    },
+    "member_cash_withdraw": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.AccountDeregistrationMapper": [
+        "openid"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.MemberCashWithdrawMapper": [
+        "balance_deduct_id",
+        "finish_time",
+        "frozen",
+        "frozen_at",
+        "frozen_by",
+        "frozen_reason",
+        "last_query_time",
+        "status",
+        "wechat_batch_status",
+        "wechat_detail_id"
+      ]
+    },
+    "member_cash_withdraw_fund_fact": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MemberCashWithdrawMapper": [
+        "amount",
+        "balance_after",
+        "balance_before",
+        "channel_batch_status",
+        "channel_detail_id",
+        "channel_detail_status",
+        "channel_error_code",
+        "create_time",
+        "kind",
+        "member_id",
+        "out_batch_no",
+        "out_detail_no",
+        "submission_intent_id",
+        "withdrawal_id"
+      ]
+    },
+    "member_collectible": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MemberCollectibleMapper": []
+    },
+    "member_exp_earned": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MemberGrowthMapper": [
+        "earned_at",
+        "exp_value",
+        "member_id",
+        "mission_progress_id",
+        "reason",
+        "revoked_exp"
+      ]
+    },
+    "member_growth": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MemberGrowthMapper": [
+        "create_time",
+        "exp_value",
+        "last_active_time",
+        "level_no",
+        "member_id",
+        "update_time"
+      ]
+    },
+    "member_id": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CircleExploreMapper": [
+        "answer_stage",
+        "answer_value",
+        "member_id",
+        "session_id"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.PlayerGrowthMapper": [
+        "create_time",
+        "level",
+        "member_id",
+        "streak_days",
+        "total_checkins",
+        "total_mileage",
+        "update_time"
+      ]
+    },
+    "member_interest_profile": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MemberInterestProfileMapper": [
+        "category_weights_json",
+        "city_code",
+        "create_time",
+        "creator_weights_json",
+        "last_event_at",
+        "member_id",
+        "update_time"
+      ]
+    },
+    "member_nickname": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantCrmAppMapper": [
+        "coupon_receive_count",
+        "coupon_verify_count",
+        "create_time",
+        "customer_stage",
+        "del_flag",
+        "last_interaction_time",
+        "member_id",
+        "member_nickname",
+        "member_phone",
+        "merchant_id",
+        "merchant_scope_version",
+        "order_amount",
+        "order_count",
+        "registration_count",
+        "update_time"
+      ]
+    },
+    "member_spoiler_preference": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.SpoilerProtectionMapper": [
+        "member_id",
+        "reveal_all",
+        "update_time"
+      ]
+    },
+    "member_time_capsule": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CapsuleMapper": [
+        "body",
+        "created_at_ms",
+        "deleted",
+        "member_id",
+        "payload_hash",
+        "photo_key",
+        "request_id",
+        "unlock_at_ms"
+      ]
+    },
+    "merchant_aftercare_response": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantAftercareMapper": [
+        "actor_member_id",
+        "actor_role_code",
+        "content",
+        "create_time",
+        "decision",
+        "evidence_url",
+        "merchant_id",
+        "merchant_owner_member_id",
+        "refund_application_id",
+        "request_id"
+      ]
+    },
+    "merchant_chapter_application": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantChapterApplicationMapper": [
+        "audit_member_id",
+        "audit_remark",
+        "create_by",
+        "create_time",
+        "del_flag",
+        "handle_time",
+        "message",
+        "replacement_of_offer_id",
+        "source",
+        "status",
+        "update_by",
+        "update_time"
+      ]
+    },
+    "merchant_chapter_offer": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantChapterOfferMapper": [
+        "payer_club_id",
+        "per_head_fee",
+        "perk_id",
+        "quota_total",
+        "quota_used",
+        "status",
+        "terms_mode",
+        "update_by",
+        "update_time",
+        "valid_end",
+        "withdraw_reason",
+        "withdraw_required"
+      ]
+    },
+    "merchant_circle_supply_profile": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantCircleSupplyProfileMapper": [
+        "action_type",
+        "action_value",
+        "adult_child_capacity",
+        "alcohol_involved",
+        "alcohol_warning",
+        "available_hours",
+        "benefit_rules",
+        "cancellation_rule",
+        "checked_at",
+        "declared_age_range",
+        "duration_minutes",
+        "event_end_at",
+        "guardian_mode",
+        "guardian_present_throughout",
+        "incident_process",
+        "is_current",
+        "last_entry",
+        "legal_drinking_age",
+        "legal_drinking_age_rule",
+        "lighting_policy",
+        "max_people",
+        "merchant_childcare_required",
+        "merchant_rules",
+        "min_people",
+        "night_hours",
+        "offer_id",
+        "optional_benefit",
+        "personal_photo_allowed",
+        "photo_allowed_area",
+        "photo_duration_limit",
+        "price_unit",
+        "regular_price",
+        "restrictions",
+        "single_person_allowed",
+        "split_booking_allowed",
+        "supply_kind",
+        "supply_name",
+        "tools_animals_materials",
+        "tripod_policy",
+        "update_time",
+        "version_no",
+        "workday_evening_covered"
+      ]
+    },
+    "merchant_claim": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantClaimMapper": [
+        "audit_actor_id",
+        "audit_fingerprint",
+        "audit_reason",
+        "audit_request_id",
+        "audited_at",
+        "claim_statement",
+        "claimant_member_id",
+        "contact_name",
+        "contact_phone",
+        "create_time",
+        "merchant_id",
+        "status",
+        "submit_fingerprint",
+        "submit_request_id",
+        "submitted_at",
+        "update_time",
+        "version"
+      ]
+    },
+    "merchant_claim_batch_command": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantClaimMapper": [
+        "action",
+        "actor_id",
+        "create_time",
+        "request_fingerprint",
+        "request_id"
+      ]
+    },
+    "merchant_claim_batch_result": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantClaimMapper": [
+        "batch_command_id",
+        "claim_id",
+        "create_time",
+        "current_status",
+        "result_code",
+        "result_message",
+        "success"
+      ]
+    },
+    "merchant_claim_proof": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantClaimMapper": [
+        "asset_id",
+        "claim_id",
+        "create_time",
+        "proof_type"
+      ]
+    },
+    "merchant_clawback_application": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantClawbackApplicationMapper": [
+        "confirmed_at",
+        "confirmed_by",
+        "executed_at",
+        "reject_reason",
+        "status"
+      ]
+    },
+    "merchant_contribution": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityTrustMapper": [
+        "base_values_json",
+        "can_supplement",
+        "contribution_type",
+        "contributor_member_id",
+        "create_time",
+        "description",
+        "evidence_asset_ids_json",
+        "field_changes_json",
+        "idempotency_key",
+        "issue_type",
+        "merchant_id",
+        "merged_at",
+        "payload_hash",
+        "review_reason",
+        "review_status",
+        "reviewed_at",
+        "reviewed_by_user_id",
+        "scope_key",
+        "update_time",
+        "version"
+      ]
+    },
+    "merchant_contribution_review": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityTrustMapper": [
+        "action",
+        "contribution_id",
+        "create_time",
+        "expected_version",
+        "payload_hash",
+        "reason",
+        "request_id",
+        "reviewer_user_id",
+        "reward_points"
+      ]
+    },
+    "merchant_contribution_reward_ledger": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityTrustMapper": [
+        "business_key",
+        "contribution_id",
+        "contributor_member_id",
+        "create_time",
+        "credited_at",
+        "external_ledger_no",
+        "points",
+        "status",
+        "update_time"
+      ]
+    },
+    "merchant_contribution_supplement": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityTrustMapper": [
+        "contribution_id",
+        "contributor_member_id",
+        "create_time",
+        "description",
+        "evidence_asset_ids_json",
+        "expected_version",
+        "payload_hash",
+        "request_id"
+      ]
+    },
+    "merchant_crm_broadcast": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantCrmBroadcastMapper": [
+        "actor_member_id",
+        "actor_role_code",
+        "audience_count",
+        "broadcast_date",
+        "consented_count",
+        "content",
+        "create_time",
+        "daily_slot",
+        "delivered_count",
+        "failed_count",
+        "filter_json",
+        "frequency_skipped_count",
+        "merchant_id",
+        "merchant_name_snapshot",
+        "merchant_owner_member_id",
+        "no_consent_count",
+        "request_id",
+        "status",
+        "update_time"
+      ]
+    },
+    "merchant_crm_broadcast_recipient": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantCrmBroadcastMapper": [
+        "attempt_count",
+        "broadcast_id",
+        "consent_event_id_snapshot",
+        "create_time",
+        "customer_name_snapshot",
+        "delivered_at",
+        "failure_code",
+        "failure_message",
+        "member_id",
+        "merchant_id",
+        "message_receipt_id",
+        "status",
+        "update_time"
+      ]
+    },
+    "merchant_crm_campaign": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantCrmCampaignMapper": [
+        "actor_member_id",
+        "actor_role_code",
+        "channel",
+        "content",
+        "coupon_id",
+        "create_time",
+        "delivered_count",
+        "failed_count",
+        "finished_at",
+        "frequency_skipped_count",
+        "merchant_id",
+        "merchant_name_snapshot",
+        "merchant_owner_member_id",
+        "no_consent_count",
+        "processing_lease_until",
+        "processing_token",
+        "recipient_count",
+        "request_id",
+        "segment_filter_json",
+        "segment_id",
+        "started_at",
+        "status",
+        "title",
+        "update_time",
+        "version"
+      ]
+    },
+    "merchant_crm_campaign_recipient": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantCrmCampaignMapper": [
+        "attempt_count",
+        "campaign_id",
+        "channel",
+        "consent_event_id_snapshot",
+        "coupon_history_id",
+        "create_time",
+        "customer_name_snapshot",
+        "delivered_at",
+        "failure_code",
+        "failure_message",
+        "last_attempt_at",
+        "member_id",
+        "merchant_id",
+        "message_receipt_id",
+        "status",
+        "update_time"
+      ]
+    },
+    "merchant_crm_delivery_guard": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantCrmCampaignMapper": [
+        "coupon_history_id",
+        "failure_code",
+        "lease_token",
+        "lease_until",
+        "message_receipt_id",
+        "status",
+        "update_time",
+        "version"
+      ]
+    },
+    "merchant_crm_export_task": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantCrmExportTaskMapper": [
+        "create_time",
+        "download_count",
+        "downloaded_at",
+        "error_message",
+        "expires_at",
+        "filter_json",
+        "finished_at",
+        "include_paid_amount",
+        "merchant_id",
+        "merchant_owner_member_id",
+        "request_id",
+        "requester_member_id",
+        "requester_role_code",
+        "row_count",
+        "row_limit",
+        "started_at",
+        "status",
+        "storage_key",
+        "token_hash",
+        "update_time",
+        "version"
+      ]
+    },
+    "merchant_crm_marketing_consent": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantCrmMarketingConsentMapper": [
+        "channel",
+        "create_time",
+        "event_type",
+        "member_id",
+        "merchant_id",
+        "merchant_row_id",
+        "request_id"
+      ]
+    },
+    "merchant_customer_note": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantCrmAppMapper": [
+        "actor_member_id",
+        "content",
+        "corrects_note_id",
+        "create_time",
+        "deleted_at",
+        "deleted_by",
+        "hidden",
+        "hidden_request_id",
+        "member_id",
+        "merchant_id",
+        "merchant_scope_version",
+        "request_id",
+        "version"
+      ]
+    },
+    "merchant_customer_profile": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantCrmAppMapper": [
+        "coupon_receive_count",
+        "coupon_verify_count",
+        "create_time",
+        "customer_stage",
+        "del_flag",
+        "last_interaction_time",
+        "member_id",
+        "member_nickname",
+        "member_phone",
+        "merchant_id",
+        "merchant_scope_version",
+        "order_amount",
+        "order_count",
+        "registration_count",
+        "update_time"
+      ]
+    },
+    "merchant_customer_segment": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantCrmSegmentMapper": [
+        "actor_member_id",
+        "create_time",
+        "del_flag",
+        "filter_json",
+        "merchant_id",
+        "name",
+        "request_id",
+        "update_time",
+        "version"
+      ]
+    },
+    "merchant_customer_tag": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantCustomerTagMapper": [
+        "create_time",
+        "del_flag",
+        "merchant_id",
+        "merchant_scope_version",
+        "sort",
+        "tag_code",
+        "tag_color",
+        "tag_name"
+      ]
+    },
+    "merchant_customer_tag_assignment": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantCrmAppMapper": [
+        "action",
+        "actor_member_id",
+        "create_time",
+        "member_id",
+        "merchant_id",
+        "merchant_scope_version",
+        "request_id",
+        "tag_id"
+      ]
+    },
+    "merchant_desk_receipt": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantDeskMapper": [
+        "action",
+        "actor_member_id",
+        "created_at",
+        "fingerprint",
+        "owner_member_id",
+        "request_id",
+        "target_id",
+        "target_type"
+      ]
+    },
+    "merchant_lead": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.AccountDeregistrationMapper": [
+        "address",
+        "name",
+        "phone"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantLeadMapper": [
+        "address",
+        "category",
+        "contact_open",
+        "coop_open",
+        "create_time",
+        "del_flag",
+        "latitude",
+        "longitude",
+        "member_id",
+        "name",
+        "phone",
+        "source",
+        "status",
+        "tags",
+        "update_time"
+      ]
+    },
+    "merchant_operator": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantOperatorMapper": [
+        "accepted_at",
+        "create_by",
+        "create_time",
+        "merchant_id",
+        "operator_member_id",
+        "revoke_reason",
+        "revoked_at",
+        "revoked_by_member_id",
+        "role_code",
+        "status",
+        "update_by",
+        "update_time",
+        "version"
+      ]
+    },
+    "merchant_operator_invite": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantOperatorInviteMapper": [
+        "accepted_at",
+        "accepted_by_member_id",
+        "create_time",
+        "expires_at",
+        "invited_at",
+        "invited_by_member_id",
+        "merchant_id",
+        "request_id",
+        "revoke_reason",
+        "revoked_at",
+        "revoked_by_member_id",
+        "role_code",
+        "status",
+        "token_hash",
+        "update_time",
+        "version"
+      ]
+    },
+    "merchant_payable": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantPayableMapper": []
+    },
+    "merchant_payable_batch": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantPayableBatchMapper": [
+        "amount_total",
+        "confirmed_at",
+        "confirmed_by",
+        "frozen",
+        "frozen_at",
+        "frozen_by",
+        "frozen_reason",
+        "invoice_no",
+        "invoice_status",
+        "paid_at",
+        "paid_by",
+        "pay_voucher_no",
+        "red_invoice_no",
+        "status"
+      ]
+    },
+    "merchant_redemption_anchor": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantDeskMapper": [
+        "anchor_lat",
+        "anchor_lng",
+        "created_at",
+        "merchant_id",
+        "owner_member_id",
+        "radius_m",
+        "updated_at",
+        "updated_by",
+        "version",
+        "wifi_bssid_hashes"
+      ]
+    },
+    "merchant_referral_bounty": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantReferralBountyMapper": [
+        "activated_at",
+        "bounty_amount",
+        "clawback_reason",
+        "clawed_back_at",
+        "create_time",
+        "del_flag",
+        "frozen_until",
+        "inviter_member_id",
+        "merchant_member_id",
+        "merchant_registered_at",
+        "paid_at",
+        "status",
+        "update_time",
+        "verified_heads_snapshot",
+        "window_expires_at"
+      ]
+    },
+    "merchant_review": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantReviewMapper": [
+        "author_member_id",
+        "content",
+        "create_fingerprint",
+        "create_request_id",
+        "create_time",
+        "images_json",
+        "merchant_owner_member_id",
+        "merchant_row_id",
+        "moderated_at",
+        "moderation_reason",
+        "rating",
+        "redemption_id",
+        "registration_id",
+        "replied_at",
+        "reply_actor_member_id",
+        "reply_actor_role_code",
+        "reply_content",
+        "reply_fingerprint",
+        "reply_request_id",
+        "status",
+        "update_time",
+        "version"
+      ]
+    },
+    "merchant_review_report": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantReviewMapper": [
+        "audit_task_id",
+        "create_time",
+        "merchant_owner_member_id",
+        "merchant_row_id",
+        "reason_text",
+        "reporter_member_id",
+        "reporter_role_code",
+        "request_fingerprint",
+        "request_id",
+        "review_id"
+      ]
+    },
+    "merchant_safety_rating": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityTrustMapper": [
+        "create_time",
+        "eligibility_source_id",
+        "eligibility_type",
+        "idempotency_key",
+        "member_id",
+        "merchant_id",
+        "overall_level",
+        "payload_hash",
+        "rating_period",
+        "reason"
+      ]
+    },
+    "merchant_safety_rating_dimension": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityTrustMapper": [
+        "dimension_code",
+        "level",
+        "rating_id"
+      ]
+    },
+    "merchant_subscription": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantSubscriptionMapper": [
+        "create_time",
+        "end_date",
+        "is_active",
+        "max_usage",
+        "merchant_id",
+        "start_date",
+        "subscription_type",
+        "update_time",
+        "used_count"
+      ]
+    },
+    "metrics_snapshot": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MetricsSnapshotMapper": [
+        "denominator",
+        "metric_key",
+        "numerator",
+        "sampled_at",
+        "source",
+        "status",
+        "threshold_version",
+        "value",
+        "window_end",
+        "window_start"
+      ]
+    },
+    "minor_guardian_authorization": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MinorGuardianAuthorizationMapper": [
+        "create_time",
+        "evidence_method",
+        "guardian_member_id",
+        "invite_expires_at",
+        "invite_token_hash",
+        "policy_version",
+        "purpose",
+        "relation",
+        "request_id",
+        "revoked_at",
+        "revoked_by",
+        "status",
+        "update_time",
+        "valid_days",
+        "valid_from",
+        "valid_until",
+        "ward_confirmed_at",
+        "ward_member_id"
+      ]
+    },
+    "mms_merchant": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MmsMerchantMapper": [
+        "account_status",
+        "capacity",
+        "cover_image",
+        "disable_reason",
+        "featured_id",
+        "featured_type",
+        "gallery",
+        "logo",
+        "member_id",
+        "update_by",
+        "update_time",
+        "wechat_qrcode"
+      ]
+    },
+    "node_medal_claim": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.NodeMedalClaimMapper": [
+        "activity_id",
+        "medal_rank",
+        "member_id",
+        "node_id",
+        "progress_id",
+        "topic_id"
+      ]
+    },
+    "npc_chat_log": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.NpcChatLogMapper": [
+        "activity_id",
+        "create_time",
+        "latency_ms",
+        "model",
+        "npc_reply",
+        "profile_id",
+        "safety_flag",
+        "token_in",
+        "token_out",
+        "user_id",
+        "user_msg"
+      ]
+    },
+    "npc_chat_request": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.NpcChatRequestMapper": [
+        "active_slot",
+        "ai",
+        "audio_asset_id",
+        "completed_at",
+        "create_time",
+        "error_code",
+        "lease_token",
+        "lease_until",
+        "limit_type",
+        "request_id",
+        "retry_after_seconds",
+        "retryable",
+        "safe_text",
+        "safety_decision",
+        "session_id",
+        "status",
+        "update_time",
+        "user_id"
+      ]
+    },
+    "npc_profile": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.NpcProfileMapper": [
+        "active_slot",
+        "audit_reason",
+        "audit_status",
+        "avatar",
+        "create_time",
+        "del_flag",
+        "enabled",
+        "greeting",
+        "knowledge",
+        "name",
+        "persona",
+        "scope_id",
+        "scope_type",
+        "sort",
+        "update_time",
+        "voice_id",
+        "voice_sample",
+        "voice_status"
+      ]
+    },
+    "official_broadcast": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OfficialBroadcastMapper": []
+    },
+    "official_broadcast_log": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OfficialBroadcastLogMapper": [
+        "broadcast_id",
+        "channel",
+        "clicked",
+        "create_time",
+        "delivery_state",
+        "delivery_sub",
+        "delivery_title",
+        "failure_code",
+        "member_id",
+        "message_id",
+        "reached",
+        "reached_time",
+        "role"
+      ]
+    },
+    "official_event": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OfficialEventMapper": [],
+      "chengyinhub-system:com.chengyinhub.business.mapper.OfficialEventV2Mapper": [
+        "control_state",
+        "pause_alternative_plan",
+        "pause_impact_scope",
+        "pause_notification_plan",
+        "pause_notification_status",
+        "paused_at",
+        "paused_by",
+        "paused_from_status",
+        "paused_reason",
+        "resume_note",
+        "update_time"
+      ]
+    },
+    "official_event_audit_log": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OfficialEventV2Mapper": [
+        "action",
+        "after_json",
+        "before_json",
+        "create_time",
+        "event_id",
+        "operator_id",
+        "summary"
+      ]
+    },
+    "official_event_binding": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OfficialEventV2Mapper": [
+        "binding_code",
+        "binding_type",
+        "city",
+        "create_time",
+        "display_json",
+        "event_id",
+        "geometry_json",
+        "latitude",
+        "longitude",
+        "radius_m",
+        "snapshot_json",
+        "sort",
+        "source_mode",
+        "source_ref_id",
+        "status",
+        "update_time"
+      ]
+    },
+    "official_event_fulfillment_requirement": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OfficialEventV2Mapper": [
+        "create_time",
+        "critical",
+        "event_id",
+        "mission_id",
+        "required_capacity",
+        "required_role",
+        "status",
+        "target_id",
+        "target_type",
+        "update_time",
+        "window_end",
+        "window_start"
+      ]
+    },
+    "official_event_mission": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OfficialEventV2Mapper": [
+        "available_end",
+        "available_start",
+        "binding_id",
+        "create_time",
+        "event_id",
+        "mission_code",
+        "mission_type",
+        "prerequisite_json",
+        "required_count",
+        "rule_json",
+        "rule_version",
+        "short_description",
+        "sort",
+        "status",
+        "title",
+        "update_time",
+        "visibility"
+      ]
+    },
+    "official_event_mission_evidence": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OfficialEventV2Mapper": [
+        "operated_by",
+        "reason",
+        "revoked_at",
+        "status",
+        "update_time"
+      ]
+    },
+    "official_event_operator_authorization": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OfficialEventV2Mapper": [
+        "active_sys_user_id",
+        "create_time",
+        "grant_reason",
+        "granted_at",
+        "granted_by",
+        "member_id",
+        "revoke_reason",
+        "revoked_at",
+        "revoked_by",
+        "status",
+        "sys_user_id",
+        "update_time"
+      ]
+    },
+    "official_event_participation": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OfficialEventV2Mapper": [
+        "invalidated_at",
+        "reason",
+        "state",
+        "update_time"
+      ]
+    },
+    "official_event_party": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OfficialEventV2Mapper": [
+        "capacity",
+        "contact_role",
+        "create_time",
+        "event_id",
+        "identity_source",
+        "invited_at",
+        "invited_by",
+        "organizer_authority",
+        "party_id",
+        "party_type",
+        "responsibility_summary",
+        "role",
+        "snapshot_json",
+        "status",
+        "status_at",
+        "status_by",
+        "status_reason",
+        "target_id",
+        "target_type",
+        "update_time",
+        "window_end",
+        "window_start"
+      ]
+    },
+    "official_event_reward_issuance": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OfficialEventV2Mapper": [
+        "failure_reason",
+        "status",
+        "update_time"
+      ]
+    },
+    "oms_order": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.AccountDeregistrationMapper": [
+        "receiver_detail_address",
+        "receiver_name",
+        "receiver_phone",
+        "receiver_phone_code",
+        "receiver_phone_hash",
+        "receiver_province",
+        "update_time"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.OmsOrderMapper": [
+        "pay_type",
+        "payment_time",
+        "payment_transaction_id",
+        "receiver_detail_address",
+        "receiver_name",
+        "receiver_phone",
+        "receiver_phone_hash",
+        "status",
+        "typeHandler",
+        "update_time"
+      ]
+    },
+    "oms_order_item": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OmsOrderItemMapper": []
+    },
+    "oms_ticket": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubEventOpsMapper": [
+        "remaining_inventory",
+        "total_inventory",
+        "update_time"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.OmsTicketMapper": [
+        "end_time",
+        "gather_lat",
+        "gather_lng",
+        "max_people",
+        "meeting_point",
+        "meeting_point_address",
+        "min_people",
+        "mode",
+        "name",
+        "need_audit",
+        "price",
+        "refund_rule",
+        "refund_supported",
+        "remaining_inventory",
+        "sale_end_time",
+        "sale_start_time",
+        "signup_deadline",
+        "start_time",
+        "sync_with_theme",
+        "team_size",
+        "total_inventory",
+        "update_by",
+        "update_time"
+      ]
+    },
+    "orient_node_geo": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OrientMapper": [
+        "create_time",
+        "dirty_reason",
+        "geo_status",
+        "node_id",
+        "source_coord_sys",
+        "source_fingerprint",
+        "source_lat",
+        "source_lng",
+        "topic_id",
+        "update_time",
+        "wgs84_lat",
+        "wgs84_lng"
+      ]
+    },
+    "orient_result_dispute": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OrientScoringMapper": [
+        "create_time",
+        "handled_at",
+        "handled_by",
+        "idempotency_key",
+        "member_id",
+        "reason",
+        "request_fingerprint",
+        "resolution_note",
+        "session_id",
+        "status",
+        "update_time",
+        "window_deadline"
+      ]
+    },
+    "orient_safety_rule": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OrientMapper": [
+        "create_time",
+        "insurance_required",
+        "night_end_minute",
+        "night_start_minute",
+        "topic_id",
+        "update_by",
+        "update_time",
+        "weather_block",
+        "weather_block_until",
+        "weather_reason"
+      ]
+    },
+    "orient_score_appeal": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OrientScoringMapper": [
+        "create_time",
+        "entry_id",
+        "handled_at",
+        "handled_by",
+        "idempotency_key",
+        "member_id",
+        "node_id",
+        "reason",
+        "request_fingerprint",
+        "resolution_entry_id",
+        "resolution_note",
+        "session_id",
+        "status",
+        "update_time"
+      ]
+    },
+    "orient_score_ledger": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OrientScoringMapper": [
+        "activity_id",
+        "create_time",
+        "delta_centi",
+        "dimension",
+        "idempotency_key",
+        "member_id",
+        "node_id",
+        "operator_id",
+        "operator_type",
+        "reason_code",
+        "request_fingerprint",
+        "reverses_entry_id",
+        "session_id",
+        "source_ref",
+        "source_type",
+        "topic_id"
+      ]
+    },
+    "orient_score_settlement": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OrientScoringMapper": [
+        "activity_id",
+        "create_time",
+        "entry_count",
+        "idempotency_key",
+        "ledger_watermark_id",
+        "member_id",
+        "points_awarded",
+        "points_rate_pct",
+        "request_fingerprint",
+        "session_id",
+        "topic_id",
+        "total_centi",
+        "xp_awarded",
+        "xp_rate_pct"
+      ]
+    },
+    "orient_session_clock": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OrientSessionMapper": [
+        "create_time",
+        "elapsed_ms",
+        "ended_at",
+        "member_id",
+        "session_id",
+        "started_at",
+        "update_time"
+      ]
+    },
+    "orient_task_alternative": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OrientMapper": [
+        "alternative_task_type",
+        "answer_hash",
+        "create_by",
+        "create_time",
+        "enabled",
+        "prompt_text",
+        "task_id",
+        "topic_id",
+        "update_time"
+      ]
+    },
+    "orient_task_attempt": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OrientMapper": [
+        "activity_id",
+        "alternative_task_type",
+        "create_time",
+        "distance_m",
+        "idempotency_key",
+        "member_id",
+        "node_geo_dirty",
+        "pic_url",
+        "play_instance_id",
+        "report_coord_sys",
+        "request_fingerprint",
+        "review_by",
+        "review_time",
+        "status",
+        "task_id",
+        "topic_id",
+        "update_time",
+        "wgs84_lat",
+        "wgs84_lng"
+      ]
+    },
+    "orient_task_completion": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OrientMapper": [
+        "activity_id",
+        "completed_time",
+        "completed_via",
+        "member_id",
+        "play_instance_id",
+        "source_attempt_id",
+        "task_id",
+        "topic_id"
+      ]
+    },
+    "owner_member_id": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "city_code",
+        "document_id",
+        "document_type",
+        "indexed_at",
+        "owner_member_id",
+        "search_text",
+        "source_version",
+        "title",
+        "topic_codes_json",
+        "visibility_state"
+      ]
+    },
+    "personal_exploration_goal": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PersonalExplorationGoalMapper": [
+        "cancelled",
+        "created_at_ms",
+        "end_date_exclusive",
+        "member_id",
+        "metric",
+        "request_id",
+        "start_date",
+        "target"
+      ]
+    },
+    "photo_check_intent": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PhotoCheckIntentMapper": [
+        "action_key",
+        "attempt_log_id",
+        "context_json",
+        "created_at",
+        "encoded_input_sha256",
+        "encoder_version",
+        "image_reference",
+        "member_id",
+        "model_name",
+        "nonce",
+        "original_day",
+        "prompt_version",
+        "provider_state",
+        "reason_code",
+        "request_fingerprint",
+        "reservation",
+        "result_confidence",
+        "result_degraded",
+        "result_pass",
+        "result_reason",
+        "session_id",
+        "state",
+        "updated_at"
+      ]
+    },
+    "planned_hours": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubEditionCompensationMapper": [
+        "club_id",
+        "confirm_status",
+        "hour_kind",
+        "planned_hours",
+        "topic_id"
+      ]
+    },
+    "play_arrive_guard_log": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PlayArriveGuardLogMapper": [
+        "accuracy_m",
+        "activity_id",
+        "created_at",
+        "detail",
+        "member_id",
+        "node_id",
+        "node_lat",
+        "node_lng",
+        "reason_code",
+        "topic_id",
+        "verdict"
+      ]
+    },
+    "play_attempt_log": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PlayAttemptLogMapper": [
+        "activity_id",
+        "attempt_type",
+        "created_at",
+        "duration_s",
+        "idempotency_key",
+        "member_id",
+        "node_id",
+        "request_fingerprint",
+        "result",
+        "result_json",
+        "topic_id",
+        "wrong_answer"
+      ]
+    },
+    "play_bingo_card": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PlayBingoCardMapper": [
+        "cells_json",
+        "create_time",
+        "filled_mask",
+        "member_id",
+        "reward_mask",
+        "topic_id",
+        "update_time"
+      ]
+    },
+    "play_note": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PlayNoteMapper": [
+        "content",
+        "create_time",
+        "del_flag",
+        "member_id",
+        "node_id",
+        "topic_id"
+      ]
+    },
+    "play_predict_bet": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PlayPredictMapper": [
+        "activity_id",
+        "create_time",
+        "member_id",
+        "node_id",
+        "option_key",
+        "play_day",
+        "reward_status",
+        "topic_id",
+        "update_time"
+      ]
+    },
+    "play_predict_result": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PlayPredictMapper": [
+        "create_time",
+        "node_id",
+        "play_day",
+        "settle_status",
+        "settled_at",
+        "settled_by",
+        "settled_option"
+      ]
+    },
+    "play_team": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PlayTeamMapper": [
+        "create_time",
+        "expire_time",
+        "invite_code",
+        "join_mode",
+        "joined_count",
+        "leader_member_id",
+        "max_members",
+        "owner_id",
+        "owner_type",
+        "status",
+        "title",
+        "update_time"
+      ]
+    },
+    "play_team_member": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PlayTeamMapper": [
+        "apply_expire_time",
+        "apply_message",
+        "create_time",
+        "member_id",
+        "role",
+        "status",
+        "team_id",
+        "update_time"
+      ]
+    },
+    "player_activity_role": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PlayerActivityRoleMapper": [
+        "activity_id",
+        "create_time",
+        "member_id",
+        "role_code"
+      ]
+    },
+    "player_badge": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PlayerBadgeMapper": []
+    },
+    "player_growth": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PlayerGrowthMapper": [
+        "create_time",
+        "level",
+        "member_id",
+        "streak_days",
+        "total_checkins",
+        "total_mileage",
+        "update_time"
+      ]
+    },
+    "player_node_progress": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PlayerNodeProgressMapper": [
+        "checkin_time",
+        "pic_url",
+        "review_status",
+        "status"
+      ]
+    },
+    "player_object_card": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PlayerObjectCardMapper": [
+        "caption",
+        "card_style",
+        "category",
+        "create_time",
+        "cutout_box",
+        "cutout_url",
+        "frame_count",
+        "frames_prefix",
+        "gen_status",
+        "member_id",
+        "origin_id",
+        "origin_type",
+        "source_url",
+        "title",
+        "update_time"
+      ]
+    },
+    "player_run_session": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PlayerRunSessionMapper": [
+        "activity_id",
+        "create_time",
+        "elapsed_seconds",
+        "member_id",
+        "run_state",
+        "saved_at",
+        "topic_id",
+        "update_time"
+      ]
+    },
+    "player_topic_tag": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PlayerTopicTagMapper": [
+        "create_time",
+        "member_id",
+        "source_node_id",
+        "status",
+        "tag_code",
+        "tag_value",
+        "topic_id",
+        "update_time"
+      ]
+    },
+    "player_withdrawal_cooldown": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PlayerWithdrawalCooldownMapper": [
+        "amount",
+        "balance_detail_id",
+        "complaint_id",
+        "cooldown_hours",
+        "cooldown_until",
+        "created_at",
+        "member_id",
+        "policy_key"
+      ]
+    },
+    "player_withdrawal_cooldown_config_audit": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PlayerWithdrawalCooldownMapper": [
+        "after_hours",
+        "before_hours",
+        "changed_at",
+        "changed_by",
+        "config_key",
+        "reason"
+      ]
+    },
+    "pms_gift": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PmsGiftMapper": []
+    },
+    "pms_gift_change_audit": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PmsGiftChangeAuditMapper": [
+        "action",
+        "create_time",
+        "gift_id",
+        "new_point",
+        "new_status",
+        "old_point",
+        "old_status",
+        "operator_username",
+        "reason"
+      ]
+    },
+    "pms_product": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantDeskMapper": [
+        "album_pics",
+        "create_by",
+        "create_time",
+        "del_flag",
+        "merchant_id",
+        "original_price",
+        "pic",
+        "price",
+        "product_name",
+        "publish_status",
+        "sort_id",
+        "stock",
+        "unit",
+        "update_by",
+        "update_time"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.PmsProductMapper": [
+        "publish_status",
+        "update_by",
+        "update_time"
+      ]
+    },
+    "pms_product_like": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PmsProductLikeMapper": []
+    },
+    "pms_sku": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantDeskMapper": [
+        "create_by",
+        "create_time",
+        "original_price",
+        "pic",
+        "price",
+        "product_id",
+        "sku_name",
+        "stock",
+        "update_by",
+        "update_time"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.PmsSkuMapper": [
+        "stock"
+      ]
+    },
+    "pms_sku_booking_rule": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantDeskMapper": [
+        "bookable",
+        "capacity_per_slot",
+        "created_at",
+        "merchant_id",
+        "product_id",
+        "sku_id",
+        "slot_minutes",
+        "updated_at",
+        "updated_by",
+        "version"
+      ]
+    },
+    "preset_route": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsPresetRouteMapper": [
+        "del_flag"
+      ]
+    },
+    "preset_route_node": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsPresetRouteNodeMapper": [
+        "del_flag"
+      ]
+    },
+    "preset_theme_style": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsPresetThemeStyleMapper": [
+        "del_flag"
+      ]
+    },
+    "product_role": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ProductRoleMapper": [
+        "declared_by",
+        "entity_id",
+        "entity_type",
+        "revenue_share",
+        "slot",
+        "status",
+        "topic_id"
+      ]
+    },
+    "recommendation_score_daily": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RecommendationScoreDailyMapper": [
+        "candidate_id",
+        "candidate_type",
+        "create_time",
+        "member_id",
+        "rank_position",
+        "reason_codes",
+        "score",
+        "stat_date",
+        "update_time"
+      ]
+    },
+    "redemption": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RedemptionMapper": [
+        "reverse_reason",
+        "reversed_at",
+        "status"
+      ]
+    },
+    "refund_application": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantAftercareTimeoutMapper": [
+        "platform_takeover_at",
+        "update_time"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.RefundApplicationMapper": [
+        "adjustment_created",
+        "create_time",
+        "created_by_user_id",
+        "del_flag",
+        "idempotency_key",
+        "member_id",
+        "merchant_id",
+        "owner_id",
+        "owner_type",
+        "paid_amount",
+        "payout_handled_at",
+        "payout_handler_id",
+        "payout_lease_expires_at",
+        "payout_lease_owner",
+        "payout_lease_token",
+        "payout_method",
+        "payout_receipt_url",
+        "payout_remark",
+        "payout_reviewed2_at",
+        "payout_reviewer2_id",
+        "payout_status",
+        "reason",
+        "refund_amount",
+        "refund_no",
+        "reject_reason",
+        "reviewed_at",
+        "reviewer_id",
+        "source_id",
+        "source_type",
+        "status",
+        "update_time"
+      ]
+    },
+    "registration_entitlement": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RegistrationEntitlementMapper": [
+        "invalid_reason",
+        "redeemed_at",
+        "status",
+        "update_time"
+      ]
+    },
+    "registration_id": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.StoreVerifyGrowthDeliveryMapper": [
+        "create_time",
+        "member_id",
+        "missions_json",
+        "next_attempt_at",
+        "registration_id"
+      ]
+    },
+    "request_id": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CommunityPostMapper": [
+        "attempt_count",
+        "checklist_json",
+        "create_time",
+        "legal_hold",
+        "next_attempt_at",
+        "post_id",
+        "request_id",
+        "state",
+        "subject_member_id",
+        "trigger_type",
+        "update_time"
+      ]
+    },
+    "reveal_all": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.SpoilerProtectionMapper": [
+        "member_id",
+        "reveal_all",
+        "update_time"
+      ]
+    },
+    "reward_drop_log": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RewardDropLogMapper": [
+        "activity_id",
+        "created_at",
+        "drop_type",
+        "member_id",
+        "node_id",
+        "param_json",
+        "scene_key",
+        "topic_id"
+      ]
+    },
+    "roam_ai_content": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamAiContentMapper": [
+        "audit_status",
+        "content_key",
+        "content_text",
+        "content_type",
+        "create_time",
+        "enabled",
+        "poi_id",
+        "update_time"
+      ]
+    },
+    "roam_badge_delivery": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamBadgeDeliveryMapper": [
+        "badge_code",
+        "badge_name",
+        "delivered_at",
+        "icon_url",
+        "member_id",
+        "obtain_time",
+        "session_id",
+        "source_id",
+        "source_type",
+        "state"
+      ]
+    },
+    "roam_badge_reconcile_cursor": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamBadgeDeliveryMapper": [
+        "after_id",
+        "id",
+        "through_id"
+      ]
+    },
+    "roam_fog_tile": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamMapper": [
+        "claim_fingerprint",
+        "geohash7"
+      ]
+    },
+    "roam_hangout": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamHangoutMapper": [
+        "address_name",
+        "conversation_id",
+        "cover_url",
+        "create_time",
+        "description",
+        "latitude",
+        "longitude",
+        "member_id",
+        "start_at",
+        "status",
+        "title",
+        "update_time"
+      ]
+    },
+    "roam_poi": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamMapper": [
+        "address",
+        "applicant_merchant_id",
+        "application_type",
+        "audit_reason",
+        "audit_status",
+        "city_code",
+        "coupon_template_id",
+        "cover_img",
+        "create_time",
+        "description",
+        "lat",
+        "lng",
+        "merchant_id",
+        "name",
+        "node_level",
+        "radius_m",
+        "sort",
+        "status",
+        "tags",
+        "template_id",
+        "type"
+      ]
+    },
+    "roam_poi_found": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamMapper": [
+        "claim_fingerprint",
+        "poi_id"
+      ]
+    },
+    "roam_poi_reward_log": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamMapper": [
+        "claim_fingerprint",
+        "poi_id",
+        "status",
+        "trigger_lat",
+        "trigger_lng"
+      ]
+    },
+    "roam_presence_revoke_intent": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamPresenceRevokeIntentMapper": [
+        "attempt_count",
+        "event_type",
+        "lease_until",
+        "member_id",
+        "next_attempt_at",
+        "occurred_at",
+        "owner_token",
+        "previous_consent_id",
+        "request_id",
+        "state"
+      ]
+    },
+    "roam_reward_delivery": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamRewardDeliveryMapper": [
+        "coupon_id",
+        "created_at",
+        "drop_log_id",
+        "extra_xp",
+        "history_id",
+        "member_id",
+        "reward_kind",
+        "state",
+        "updated_at"
+      ]
+    },
+    "roam_reward_reconcile_cursor": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamRewardDeliveryMapper": [
+        "after_id",
+        "id",
+        "through_id"
+      ]
+    },
+    "roam_session": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamMapper": [
+        "client_session_key",
+        "create_time",
+        "distance_m",
+        "explore_pct",
+        "finish_result_json",
+        "finished_at",
+        "last_lat",
+        "last_lng",
+        "last_report_at",
+        "location_cleared_at",
+        "member_id",
+        "pois_found",
+        "presence_visible",
+        "recall_attempts",
+        "recall_last_attempt_at",
+        "recall_sent_at",
+        "started_at",
+        "status",
+        "tiles_revealed",
+        "xp_awarded"
+      ]
+    },
+    "roam_session_record_archive": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamSessionRecordMapper": [
+        "collected_at",
+        "evidence_type",
+        "member_id",
+        "received_at",
+        "session_id",
+        "tile"
+      ]
+    },
+    "roam_share_snapshot": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamShareSnapshotMapper": [
+        "client_ts",
+        "create_time",
+        "member_id",
+        "session_id",
+        "share_token",
+        "snapshot_json",
+        "update_time"
+      ]
+    },
+    "roam_shop_visit": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamMapper": [
+        "claim_fingerprint",
+        "shop_name",
+        "source_id"
+      ]
+    },
+    "roam_shop_visitor_total": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamMapper": [
+        "source_id",
+        "source_type",
+        "total"
+      ]
+    },
+    "roam_stamp": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamStampMapper": [
+        "caption",
+        "check_state",
+        "check_trace",
+        "city_code",
+        "create_time",
+        "del_flag",
+        "geohash7",
+        "idem_key",
+        "kind",
+        "lat",
+        "lng",
+        "member_id",
+        "pic_url"
+      ]
+    },
+    "roam_stamp_exchange": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamStampMapper": [
+        "create_time",
+        "given_stamp_id",
+        "member_id",
+        "received_stamp_id"
+      ]
+    },
+    "role": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubGovernanceMapper": [
+        "club_id",
+        "del_flag",
+        "join_time",
+        "member_id",
+        "role",
+        "status"
+      ]
+    },
+    "run_state": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PlayerRunSessionMapper": [
+        "activity_id",
+        "create_time",
+        "elapsed_seconds",
+        "member_id",
+        "run_state",
+        "saved_at",
+        "topic_id",
+        "update_time"
+      ]
+    },
+    "score": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RecommendationScoreDailyMapper": [
+        "candidate_id",
+        "candidate_type",
+        "create_time",
+        "member_id",
+        "rank_position",
+        "reason_codes",
+        "score",
+        "stat_date",
+        "update_time"
+      ]
+    },
+    "session_id": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamShareSnapshotMapper": [
+        "client_ts",
+        "create_time",
+        "member_id",
+        "session_id",
+        "share_token",
+        "snapshot_json",
+        "update_time"
+      ]
+    },
+    "settlement_batch": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.SettlementBatchMapper": [
+        "batch_no",
+        "create_time",
+        "detail_count",
+        "failed_count",
+        "idempotency_key",
+        "merchant_id",
+        "period_end",
+        "period_start",
+        "reviewed_at",
+        "reviewer_id",
+        "status",
+        "success_count",
+        "total_amount",
+        "update_time"
+      ]
+    },
+    "settlement_claim": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.SettlementClaimMapper": [
+        "beneficiary_id",
+        "beneficiary_role",
+        "commercial_context_id",
+        "commercial_context_type",
+        "create_time",
+        "fulfillment_id",
+        "fulfillment_type",
+        "service_unit",
+        "settlement_route",
+        "source_contract_id",
+        "source_contract_type",
+        "status"
+      ]
+    },
+    "settlement_detail": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.SettlementDetailMapper": [
+        "batch_id",
+        "claim_id",
+        "commission_amount",
+        "create_time",
+        "entry_kind",
+        "event_key",
+        "fail_reason",
+        "gross_amount",
+        "idempotency_key",
+        "merchant_id",
+        "receiver_id",
+        "receiver_type",
+        "settlement_amount",
+        "source_id",
+        "source_type",
+        "status",
+        "update_time"
+      ]
+    },
+    "settlement_rule": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.SettlementRuleMapper": [
+        "allow_refund_after_verified",
+        "auto_approve_refund",
+        "biz_type",
+        "create_time",
+        "creator_rate",
+        "del_flag",
+        "entitlement_days",
+        "entitlement_max_usage",
+        "guarantee_base_rate",
+        "guarantee_max_merchant",
+        "guarantee_step_rate",
+        "inviter_rate",
+        "merchant_id",
+        "merchant_rate",
+        "min_settlement_amount",
+        "platform_commission_rate",
+        "refund_deadline_hours",
+        "rule_name",
+        "settlement_cycle",
+        "status",
+        "unit_price"
+      ]
+    },
+    "sms_coupon": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.SmsCouponMapper": [
+        "receive_count",
+        "status",
+        "update_time",
+        "use_count"
+      ]
+    },
+    "sms_coupon_history": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.SmsCouponHistoryMapper": [
+        "note",
+        "update_time",
+        "use_status",
+        "use_time"
+      ]
+    },
+    "sms_hot_search": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.SmsHotSearchMapper": []
+    },
+    "snapshot_json": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamShareSnapshotMapper": [
+        "client_ts",
+        "create_time",
+        "member_id",
+        "share_token",
+        "snapshot_json",
+        "update_time"
+      ]
+    },
+    "source": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MetricsSnapshotMapper": [
+        "denominator",
+        "metric_key",
+        "numerator",
+        "sampled_at",
+        "source",
+        "status",
+        "threshold_version",
+        "value",
+        "window_end",
+        "window_start"
+      ]
+    },
+    "source_hash": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.WxBillImportMapper": [
+        "balance_status",
+        "bill_date",
+        "bill_type",
+        "expense_amount",
+        "income_amount",
+        "merchant_id",
+        "net_amount",
+        "review_reason",
+        "row_count",
+        "source_hash",
+        "status"
+      ]
+    },
+    "source_url": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.PlayerObjectCardMapper": [
+        "caption",
+        "card_style",
+        "category",
+        "create_time",
+        "cutout_box",
+        "cutout_url",
+        "frame_count",
+        "frames_prefix",
+        "gen_status",
+        "member_id",
+        "origin_id",
+        "origin_type",
+        "source_url",
+        "title",
+        "update_time"
+      ]
+    },
+    "start_date": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantSubscriptionMapper": [
+        "create_time",
+        "end_date",
+        "is_active",
+        "max_usage",
+        "merchant_id",
+        "start_date",
+        "subscription_type",
+        "update_time",
+        "used_count"
+      ]
+    },
+    "store_verify_growth_delivery": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.StoreVerifyGrowthDeliveryMapper": [
+        "attempt_count",
+        "create_time",
+        "last_error",
+        "member_id",
+        "missions_json",
+        "next_attempt_at",
+        "processed_at",
+        "registration_id"
+      ]
+    },
+    "sys_banner": {
+      "chengyinhub-system:com.chengyinhub.system.mapper.SysBannerMapper": []
+    },
+    "sys_category": {
+      "chengyinhub-system:com.chengyinhub.system.mapper.SysCategoryMapper": []
+    },
+    "sys_config": {
+      "chengyinhub-system:com.chengyinhub.system.mapper.SysConfigMapper": [
+        "config_key",
+        "config_name",
+        "config_type",
+        "config_value",
+        "create_by",
+        "create_time",
+        "remark"
+      ]
+    },
+    "sys_dept": {
+      "chengyinhub-system:com.chengyinhub.system.mapper.SysDeptMapper": [
+        "ancestors",
+        "create_by",
+        "create_time",
+        "del_flag",
+        "dept_id",
+        "dept_name",
+        "email",
+        "leader",
+        "order_num",
+        "parent_id",
+        "phone",
+        "status"
+      ]
+    },
+    "sys_dict_data": {
+      "chengyinhub-system:com.chengyinhub.system.mapper.SysDictDataMapper": [
+        "create_by",
+        "create_time",
+        "css_class",
+        "dict_label",
+        "dict_sort",
+        "dict_type",
+        "dict_value",
+        "is_default",
+        "list_class",
+        "remark",
+        "status"
+      ]
+    },
+    "sys_dict_type": {
+      "chengyinhub-system:com.chengyinhub.system.mapper.SysDictTypeMapper": [
+        "create_by",
+        "create_time",
+        "dict_name",
+        "dict_type",
+        "remark",
+        "status"
+      ]
+    },
+    "sys_job": {
+      "chengyinhub-quartz:com.chengyinhub.quartz.mapper.SysJobMapper": [
+        "concurrent",
+        "create_by",
+        "create_time",
+        "cron_expression",
+        "invoke_target",
+        "job_group",
+        "job_id",
+        "job_name",
+        "misfire_policy",
+        "remark",
+        "status"
+      ]
+    },
+    "sys_job_log": {
+      "chengyinhub-quartz:com.chengyinhub.quartz.mapper.SysJobLogMapper": [
+        "create_time",
+        "exception_info",
+        "invoke_target",
+        "job_group",
+        "job_log_id",
+        "job_message",
+        "job_name",
+        "status"
+      ]
+    },
+    "sys_logininfor": {
+      "chengyinhub-system:com.chengyinhub.system.mapper.SysLogininforMapper": [
+        "browser",
+        "ipaddr",
+        "login_location",
+        "login_time",
+        "msg",
+        "os",
+        "status",
+        "user_name"
+      ]
+    },
+    "sys_menu": {
+      "chengyinhub-system:com.chengyinhub.system.mapper.SysMenuMapper": [
+        "component",
+        "create_by",
+        "create_time",
+        "icon",
+        "is_cache",
+        "is_frame",
+        "menu_id",
+        "menu_name",
+        "menu_type",
+        "order_num",
+        "parent_id",
+        "path",
+        "perms",
+        "query",
+        "remark",
+        "route_name",
+        "status",
+        "visible"
+      ]
+    },
+    "sys_notice": {
+      "chengyinhub-system:com.chengyinhub.system.mapper.SysNoticeMapper": [
+        "create_by",
+        "create_time",
+        "notice_content",
+        "notice_title",
+        "notice_type",
+        "remark",
+        "status"
+      ]
+    },
+    "sys_oper_log": {
+      "chengyinhub-system:com.chengyinhub.system.mapper.SysOperLogMapper": [
+        "business_type",
+        "cost_time",
+        "dept_name",
+        "error_msg",
+        "json_result",
+        "method",
+        "oper_ip",
+        "oper_location",
+        "oper_name",
+        "oper_param",
+        "oper_time",
+        "oper_url",
+        "operator_type",
+        "request_method",
+        "status",
+        "title"
+      ]
+    },
+    "sys_post": {
+      "chengyinhub-system:com.chengyinhub.system.mapper.SysPostMapper": [
+        "create_by",
+        "create_time",
+        "post_code",
+        "post_id",
+        "post_name",
+        "post_sort",
+        "remark",
+        "status"
+      ]
+    },
+    "sys_role": {
+      "chengyinhub-system:com.chengyinhub.system.mapper.SysRoleMapper": [
+        "create_by",
+        "create_time",
+        "data_scope",
+        "del_flag",
+        "dept_check_strictly",
+        "menu_check_strictly",
+        "remark",
+        "role_id",
+        "role_key",
+        "role_name",
+        "role_sort",
+        "status"
+      ]
+    },
+    "sys_role_dept": {
+      "chengyinhub-system:com.chengyinhub.system.mapper.SysRoleDeptMapper": [
+        "dept_id",
+        "role_id"
+      ]
+    },
+    "sys_role_menu": {
+      "chengyinhub-system:com.chengyinhub.system.mapper.SysRoleMenuMapper": [
+        "menu_id",
+        "role_id"
+      ]
+    },
+    "sys_user": {
+      "chengyinhub-system:com.chengyinhub.system.mapper.SysUserMapper": [
+        "avatar",
+        "create_by",
+        "create_time",
+        "del_flag",
+        "dept_id",
+        "email",
+        "nick_name",
+        "password",
+        "phonenumber",
+        "pwd_update_date",
+        "remark",
+        "sex",
+        "status",
+        "user_id",
+        "user_name"
+      ]
+    },
+    "sys_user_post": {
+      "chengyinhub-system:com.chengyinhub.system.mapper.SysUserPostMapper": [
+        "post_id",
+        "user_id"
+      ]
+    },
+    "sys_user_role": {
+      "chengyinhub-system:com.chengyinhub.system.mapper.SysUserRoleMapper": [
+        "role_id",
+        "user_id"
+      ]
+    },
+    "tags_json": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubCrmMapper": [
+        "club_id",
+        "member_id",
+        "remark",
+        "request_id",
+        "tags_json",
+        "updated_by"
+      ]
+    },
+    "theme_broadcast_delivery": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ThemeBroadcastMapper": [
+        "attempts",
+        "content",
+        "create_time",
+        "event_id",
+        "member_id",
+        "message_id",
+        "session_id",
+        "status",
+        "update_time"
+      ]
+    },
+    "theme_character": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ThemeCharacterMapper": [
+        "create_time",
+        "member_id",
+        "source_session_id",
+        "source_version",
+        "topic_id",
+        "update_time",
+        "values_json"
+      ]
+    },
+    "theme_state_key": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ThemeStateKeyMapper": [
+        "color",
+        "create_time",
+        "display_type",
+        "icon",
+        "initial_value",
+        "key_type",
+        "label",
+        "max_value",
+        "min_value",
+        "persist_scope",
+        "rules_json",
+        "scope",
+        "sort_order",
+        "state_key",
+        "topic_id",
+        "update_time",
+        "visible"
+      ]
+    },
+    "tile": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamSessionRecordMapper": [
+        "collected_at",
+        "evidence_type",
+        "member_id",
+        "received_at",
+        "session_id",
+        "tile"
+      ]
+    },
+    "title": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ContentSearchMapper": [
+        "city_code",
+        "document_id",
+        "document_type",
+        "img_url",
+        "indexed_at",
+        "search_text",
+        "source_time",
+        "title",
+        "visibility_state"
+      ]
+    },
+    "tms_browse_record": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.TmsBrowseRecordMapper": []
+    },
+    "topic_completion_xp_award": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.TopicCompletionXpAwardMapper": [
+        "create_time",
+        "earned_exp_id",
+        "granted_at",
+        "member_id",
+        "topic_id",
+        "xp_amount"
+      ]
+    },
+    "topic_edition_cost": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.TopicEditionFundsMapper": [
+        "acquisition_cost",
+        "bonuses",
+        "break_even_fixed_cost",
+        "cost_version",
+        "extra_approver_user_id",
+        "fixed_compensation",
+        "headcount_cap",
+        "headcount_rate",
+        "insurance_risk_cost",
+        "is_current",
+        "kit_cost",
+        "material_cost",
+        "note",
+        "other_cost",
+        "payment_cost",
+        "platform_labor_cost",
+        "platform_onsite_hours",
+        "tax_cost",
+        "topic_id",
+        "variable_cost_per_ticket"
+      ]
+    },
+    "topic_edition_finalization": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubPayableMapper": [
+        "club_id",
+        "extra_amount",
+        "final_status",
+        "finalized_by",
+        "fixed_compensation",
+        "headcount_amount",
+        "idempotency_key",
+        "payee_facts_hash",
+        "payee_profile_id",
+        "payee_profile_version",
+        "quality_amount",
+        "topic_id"
+      ]
+    },
+    "topic_edition_funds": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.TopicEditionFundsMapper": [
+        "computed_at",
+        "computed_by",
+        "g_cash",
+        "g_earned",
+        "idempotency_key",
+        "input_hash",
+        "is_current",
+        "n_cash",
+        "r_refund",
+        "snapshot_kind",
+        "snapshot_version",
+        "supersede_reason",
+        "superseded_at",
+        "superseded_by",
+        "topic_id",
+        "u_in",
+        "u_out",
+        "u_pending"
+      ]
+    },
+    "topic_edition_funds_attribution": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.TopicEditionFundsMapper": [
+        "earned_amount",
+        "funds_snapshot_id",
+        "net_ticket_count",
+        "source_club_id",
+        "ticket_count"
+      ]
+    },
+    "topic_edition_reopen_request": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.TopicEditionReopenMapper": [
+        "new_topic_id"
+      ]
+    },
+    "topic_id": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsTopicTemplateMetaMapper": [
+        "batch_interval_minutes",
+        "batch_size",
+        "chapter_id",
+        "del_flag",
+        "effort_available_slots",
+        "effort_materials",
+        "effort_max_concurrent",
+        "effort_qualifications",
+        "effort_staff_minutes",
+        "effort_venue",
+        "role_need",
+        "topic_id"
+      ]
+    },
+    "topic_route_action": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.TopicRouteSessionMapper": [
+        "action_id",
+        "create_time",
+        "member_id",
+        "node_id",
+        "outcome_code",
+        "receipt_id",
+        "response_json",
+        "session_id"
+      ]
+    },
+    "topic_route_session": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.OrientSessionMapper": [
+        "completed_at",
+        "current_node_id",
+        "phase",
+        "recommended_node_id",
+        "status",
+        "update_time",
+        "version"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.TopicRouteSessionMapper": [
+        "activity_id",
+        "completed_at",
+        "config_snapshot_json",
+        "config_version",
+        "create_time",
+        "current_node_id",
+        "member_id",
+        "play_instance_id",
+        "recommended_node_id",
+        "seed",
+        "state_json",
+        "status",
+        "topic_id",
+        "update_time",
+        "version"
+      ]
+    },
+    "topic_sale_canonical_draft": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.TopicSaleSnapshotMapper": [
+        "canonical_json",
+        "parameter_version",
+        "schema_version",
+        "topic_id",
+        "update_time",
+        "updated_by"
+      ]
+    },
+    "topic_sale_payee_snapshot": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubCorporatePayeeProfileMapper": [
+        "club_id",
+        "facts_hash",
+        "frozen_at",
+        "license_hash",
+        "profile_id",
+        "profile_version",
+        "topic_id"
+      ]
+    },
+    "topic_sale_snapshot": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.TopicSaleSnapshotMapper": [
+        "canonical_json",
+        "frozen_at",
+        "parameter_version",
+        "schema_version",
+        "source_review_task_id",
+        "topic_id"
+      ]
+    },
+    "total": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.RoamMapper": [
+        "source_id",
+        "source_type",
+        "total"
+      ]
+    },
+    "track_draft": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.TrackDraftMapper": [
+        "created_at",
+        "distance_m",
+        "duration_s",
+        "lit_blocks",
+        "member_id",
+        "name",
+        "polyline",
+        "raw_oss_url",
+        "status",
+        "updated_at",
+        "waypoint_json"
+      ]
+    },
+    "ums_comment": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.UmsCommentMapper": []
+    },
+    "ums_comment_like": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.UmsCommentLikeMapper": []
+    },
+    "ums_creative_square": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.UmsCreativeSquareMapper": [
+        "status",
+        "update_time"
+      ]
+    },
+    "ums_creative_square_like": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.UmsCreativeSquareLikeMapper": []
+    },
+    "ums_crowdfunding": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.UmsCrowdfundingMapper": []
+    },
+    "ums_member": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.AccountDeregistrationMapper": [
+        "apple_id",
+        "avatar",
+        "case_introducton",
+        "case_pics",
+        "del_flag",
+        "deregister_apply_time",
+        "deregister_execute_after",
+        "deregister_status",
+        "introduction",
+        "mark",
+        "name",
+        "nickname",
+        "password",
+        "phone",
+        "union_id",
+        "update_time",
+        "website",
+        "wechat",
+        "work_address",
+        "wx_open_id"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.MemberInvitationMapper": [
+        "invite_user_id",
+        "update_time"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.UmsMemberMapper": [
+        "avatar",
+        "balance",
+        "case_pics",
+        "password",
+        "point",
+        "role",
+        "update_time",
+        "user_type",
+        "wx_open_id"
+      ]
+    },
+    "ums_member_address": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.AccountDeregistrationMapper": [],
+      "chengyinhub-system:com.chengyinhub.business.mapper.UmsMemberAddressMapper": [
+        "del_flag",
+        "is_default",
+        "update_time"
+      ]
+    },
+    "ums_member_balance_detail": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper": []
+    },
+    "ums_member_cart": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.UmsMemberCartMapper": [
+        "quantity",
+        "sku_id",
+        "update_time"
+      ]
+    },
+    "ums_member_follow": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.UmsMemberFollowMapper": []
+    },
+    "ums_member_identity": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.AccountDeregistrationMapper": [],
+      "chengyinhub-system:com.chengyinhub.business.mapper.UmsMemberIdentityMapper": [
+        "consent_time",
+        "create_time",
+        "id_card",
+        "id_card_hash",
+        "member_id",
+        "real_name",
+        "source"
+      ]
+    },
+    "ums_member_points_detail": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.UmsMemberPointsDetailMapper": [
+        "after_points",
+        "change_points",
+        "change_reason",
+        "change_type",
+        "create_time",
+        "current_points",
+        "del_flag",
+        "event_id",
+        "event_type",
+        "member_id",
+        "points_rule_id",
+        "points_rule_value",
+        "points_rule_version",
+        "publisher_settlement_topic_id",
+        "reward_business_key",
+        "update_time"
+      ]
+    },
+    "ums_member_profile_version": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.UmsMemberProfileVersionMapper": [
+        "avatar_media_hash",
+        "avatar_ref",
+        "changed_fields",
+        "create_time",
+        "member_id",
+        "version_no"
+      ]
+    },
+    "ums_member_settlement_debt": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.UmsMemberSettlementDebtMapper": [
+        "repaid_amount",
+        "status",
+        "update_time"
+      ]
+    },
+    "ums_member_withdrawal": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.AccountDeregistrationMapper": [
+        "bank_account",
+        "bank_account_enc",
+        "bank_account_mask",
+        "bank_name",
+        "bank_name_enc",
+        "bank_name_mask",
+        "mobilephone",
+        "mobilephone_enc",
+        "mobilephone_mask",
+        "realname",
+        "realname_enc",
+        "realname_mask"
+      ],
+      "chengyinhub-system:com.chengyinhub.business.mapper.UmsMemberWithdrawalMapper": [
+        "audit_by",
+        "audit_time",
+        "bank_account",
+        "bank_account_enc",
+        "bank_account_mask",
+        "bank_name",
+        "bank_name_enc",
+        "bank_name_mask",
+        "del_flag",
+        "handle_by",
+        "handle_time",
+        "mobilephone",
+        "mobilephone_enc",
+        "mobilephone_mask",
+        "payout_reference",
+        "pii_cipher_version",
+        "pii_migrated_at",
+        "realname",
+        "realname_enc",
+        "realname_mask",
+        "remark",
+        "status",
+        "update_time"
+      ]
+    },
+    "update_time": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MemberGrowthMapper": [
+        "create_time",
+        "exp_value",
+        "last_active_time",
+        "level_no",
+        "member_id",
+        "update_time"
+      ]
+    },
+    "user_invoice_application": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.UserInvoiceMapper": [
+        "application_no",
+        "create_time",
+        "invoice_no",
+        "issued_at",
+        "member_id",
+        "order_count",
+        "provider",
+        "reject_reason",
+        "request_id",
+        "status",
+        "tax_no",
+        "title_id",
+        "title_name",
+        "title_type",
+        "total_amount",
+        "update_time"
+      ]
+    },
+    "user_invoice_application_order": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.UserInvoiceMapper": [
+        "active_key",
+        "amount",
+        "application_id",
+        "create_time",
+        "member_id",
+        "order_id",
+        "order_source"
+      ]
+    },
+    "user_invoice_title": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.UserInvoiceMapper": [
+        "create_time",
+        "del_flag",
+        "is_default",
+        "member_id",
+        "tax_no",
+        "title_name",
+        "title_type",
+        "typeHandler",
+        "update_time"
+      ]
+    },
+    "user_permission": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.UserPermissionMapper": []
+    },
+    "verification_review": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.VerificationReviewMapper": [
+        "status",
+        "update_time"
+      ]
+    },
+    "verification_review_evidence": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantDeskMapper": [
+        "actor_member_id",
+        "created_at",
+        "media_refs",
+        "note",
+        "owner_member_id",
+        "request_id",
+        "review_id"
+      ]
+    },
+    "view_collaborators": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ViewCollaboratorsMapper": []
+    },
+    "view_comment": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ViewCommentMapper": []
+    },
+    "view_coupon_history": {
+      "chengyinhub-system:com.chengyinhub.system.mapper.ViewCouponHistoryMapper": []
+    },
+    "view_creative_square": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ViewCreativeSquareMapper": []
+    },
+    "view_member_cart": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ViewMemberCartMapper": []
+    },
+    "view_order": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ViewOrderMapper": []
+    },
+    "view_product_like": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ViewProductLikeMapper": []
+    },
+    "view_registration": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.ViewRegistrationMapper": []
+    },
+    "wx_bill_import": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.WxBillImportMapper": [
+        "balance_status",
+        "bill_date",
+        "bill_type",
+        "expense_amount",
+        "income_amount",
+        "merchant_id",
+        "net_amount",
+        "review_reason",
+        "row_count",
+        "source_hash",
+        "status"
+      ]
+    },
+    "wx_content_callback_inbox": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.WxContentCallbackInboxMapper": [
+        "attempt_count",
+        "fence_token",
+        "last_error_code",
+        "lease_until",
+        "owner_token",
+        "state",
+        "update_time",
+        "verdict"
+      ]
+    },
+    "wx_fund_flow_bill_snapshot": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.WxFundFlowBillSnapshotMapper": [
+        "account_type",
+        "accounting_time",
+        "amount",
+        "balance",
+        "bill_date",
+        "business_name",
+        "business_type",
+        "direction",
+        "flow_no",
+        "initiator",
+        "merchant_id",
+        "remark",
+        "voucher_no",
+        "wx_business_no"
+      ]
+    },
+    "wx_payment_callback_inbox": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.WxPaymentCallbackInboxMapper": [
+        "attempt_count",
+        "fence_token",
+        "last_error_code",
+        "lease_until",
+        "owner_token",
+        "state",
+        "update_time"
+      ]
+    },
+    "wx_payment_callback_outbox": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.WxPaymentCallbackOutboxMapper": [
+        "attempt_count",
+        "fence_token",
+        "last_error_code",
+        "lease_until",
+        "next_attempt_at",
+        "owner_token",
+        "state",
+        "update_time"
+      ]
+    },
+    "wx_trade_bill_detail": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.WxTradeBillDetailMapper": [
+        "bill_date",
+        "coupon_amount",
+        "coupon_refund_amount",
+        "fee",
+        "merchant_id",
+        "order_amount",
+        "out_refund_no",
+        "out_trade_no",
+        "record_key",
+        "refund_id",
+        "refund_status",
+        "requested_refund_amount",
+        "settlement_amount",
+        "settlement_refund_amount",
+        "trade_state",
+        "trade_time",
+        "transaction_id"
+      ]
+    },
+    "wx_trade_bill_snapshot": {
+      "chengyinhub-system:com.chengyinhub.business.mapper.WxTradeBillSnapshotMapper": [
+        "amount",
+        "bill_date",
+        "biz_type",
+        "out_refund_no",
+        "out_trade_no",
+        "trade_time",
+        "wx_trade_no"
+      ]
+    }
+  },
+  "source_sha": "0c0d61266b2ae54d77c5ad9cf8b3c8fdb86d4b16",
+  "status": "RAW_EXISTING_GATE_HINTS_NOT_APPROVED_POLICY"
+}

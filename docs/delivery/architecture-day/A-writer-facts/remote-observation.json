@@ -1,0 +1,9 @@
+{
+  "repository": "https://github.com/liboyang42-cpu/hengyin.git",
+  "remote": "origin",
+  "remote_command": "git ls-remote --heads origin refs/heads/codex/*",
+  "ref": "refs/heads/codex/architecture-day-ci-integration2-20261023",
+  "full_sha": "0c0d61266b2ae54d77c5ad9cf8b3c8fdb86d4b16",
+  "explicit_fetch_full_sha": "SUCCESS",
+  "claim": "REMOTE_OBSERVATION_ONLY_NOT_CI_RECEIPT"
+}

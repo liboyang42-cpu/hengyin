@@ -1,0 +1,2012 @@
+{
+  "source_sha": "0c0d61266b2ae54d77c5ad9cf8b3c8fdb86d4b16",
+  "groups": {
+    "withdrawal": {
+      "tables": [
+        "member_cash_withdraw",
+        "member_cash_withdraw_fund_fact",
+        "ums_member_withdrawal",
+        "ums_member_balance_detail"
+      ],
+      "statements": [
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/AccountDeregistrationMapper.xml#anonymizeCashWithdraw",
+          "sha256": "7e4b580a1c5f9c40f84b9d14f2f518dedafad9a4abf2a563992183fc5b65e722",
+          "namespace": "com.chengyinhub.business.mapper.AccountDeregistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AccountDeregistrationServiceImpl.java:326:15277"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/job/AccountDeregistrationJob.java#executeDueDeregistrations@18"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/AccountDeregistrationMapper.xml#anonymizeMemberWithdrawal",
+          "sha256": "2ffb99a9775386e92b38b7f57a5b922f9b0875ea7ca37572e17e8ccb289ff8c3",
+          "namespace": "com.chengyinhub.business.mapper.AccountDeregistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AccountDeregistrationServiceImpl.java:325:15207"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/job/AccountDeregistrationJob.java#executeDueDeregistrations@18"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml#bindDebitEvidence",
+          "sha256": "7ac3528fa06b68f5fd8e12c3d5c50e138345a7d115a690afa6985fbced67f045",
+          "namespace": "com.chengyinhub.business.mapper.MemberCashWithdrawMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java:48:2951"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubSettlementController.java#withdraw@129",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiWalletController.java#withdraw@73"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml#confirmChannelSuccess",
+          "sha256": "66f19d745ab6892dc4843cad0c4f856bd27d42c56777d527a12500b2665edd1d",
+          "namespace": "com.chengyinhub.business.mapper.MemberCashWithdrawMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java:533:28470"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubSettlementController.java#withdraw@129",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiWalletController.java#withdraw@73",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CashWithdrawAdminController.java#requery@51",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/WithdrawTransferQueryTask.java#run@24"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml#freezeWithdraw",
+          "sha256": "cf976b742160c0594e48db4525db0e4981de6bbbfadfc57dfcb18361b58d9b0a",
+          "namespace": "com.chengyinhub.business.mapper.MemberCashWithdrawMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java:724:37233"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CashWithdrawAdminController.java#freeze@92"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml#insertFundFact",
+          "sha256": "97868f48dfe1b90a16dffb83d8e5ab031394f7d4b2cc44060a0740d8e48a0d78",
+          "namespace": "com.chengyinhub.business.mapper.MemberCashWithdrawMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java:434:21534",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java:45:2761"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubSettlementController.java#withdraw@129",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiWalletController.java#withdraw@73",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CashWithdrawAdminController.java#manualRefund@59",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CashWithdrawAdminController.java#requery@51",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/WithdrawTransferQueryTask.java#run@24"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml#insertMemberCashWithdraw",
+          "sha256": "25f521fcc2aa20083e5f38dd777e73c629252f2602e49043f33d501fd862c3cb",
+          "namespace": "com.chengyinhub.business.mapper.MemberCashWithdrawMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java:135:5640"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubSettlementController.java#withdraw@129",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiWalletController.java#withdraw@73"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml#unfreezeWithdraw",
+          "sha256": "36a4550f8f4eb4d53efe487da5b472a1a3a236b1a5803cba4d9c489e2c438023",
+          "namespace": "com.chengyinhub.business.mapper.MemberCashWithdrawMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java:733:37535"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CashWithdrawAdminController.java#unfreeze@112"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml#updateMemberCashWithdraw",
+          "sha256": "d5b02ab8d3705c8e923d2643d11437e1389b473069de657da7541f617d832e00",
+          "namespace": "com.chengyinhub.business.mapper.MemberCashWithdrawMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java:149:6247",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java:556:29411",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java:570:29965",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java:57:3631"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubSettlementController.java#withdraw@129",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiWalletController.java#withdraw@73"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml#updateReceiptIfProcessing",
+          "sha256": "ad51a792e139d699aa1cb8b98a92bc5a1c4990a397f1e8830e5c983fc6c1d717",
+          "namespace": "com.chengyinhub.business.mapper.MemberCashWithdrawMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java:201:9037",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java:219:10125",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java:317:14802"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubSettlementController.java#withdraw@129",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiWalletController.java#withdraw@73",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CashWithdrawAdminController.java#requery@51",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/WithdrawTransferQueryTask.java#run@24"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml#updateStatusIfManual",
+          "sha256": "b30712afc5f09a74f29786f21d205d0f0b1a7f5dce6f0ec77dc1b7aab02bb0ff",
+          "namespace": "com.chengyinhub.business.mapper.MemberCashWithdrawMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java:386:18847",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java:406:20044",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java:652:33528"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubSettlementController.java#withdraw@129",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiWalletController.java#withdraw@73",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CashWithdrawAdminController.java#manualRefund@59",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CashWithdrawAdminController.java#requery@51",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/WithdrawTransferQueryTask.java#run@24"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml#updateStatusIfProcessing",
+          "sha256": "fd47221c4f36919de6e6d10e2225f917bc3ba21ac04e1380401ace3baaf6f04f",
+          "namespace": "com.chengyinhub.business.mapper.MemberCashWithdrawMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java:324:15157",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java:360:17768",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java:377:18539"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubSettlementController.java#withdraw@129",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiWalletController.java#withdraw@73",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CashWithdrawAdminController.java#requery@51",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/WithdrawTransferQueryTask.java#run@24"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml#updateStatusIfRefundReview",
+          "sha256": "0a1c3f6a2870d2315d3ebada431dbc41f57e6d00cd63583b86b198117f8f92eb",
+          "namespace": "com.chengyinhub.business.mapper.MemberCashWithdrawMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java:669:34476"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CashWithdrawAdminController.java#manualRefund@59"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberBalanceDetailMapper.xml#deleteUmsMemberBalanceDetailById",
+          "sha256": "d72da6d1193c24be77cf6ef063dadf6ea1a8e13640ce716a45ccf1d70ad207b5",
+          "namespace": "com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberBalanceDetailServiceImpl.java:128:3493"
+          ],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberBalanceDetailMapper.xml#deleteUmsMemberBalanceDetailByIds",
+          "sha256": "3049518d702c8f4aa5a05a411e08ef2c846422fb77a1f7c4a7fe0d8e8cd6b0db",
+          "namespace": "com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberBalanceDetailServiceImpl.java:116:3239"
+          ],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberBalanceDetailMapper.xml#insertUmsMemberBalanceDetail",
+          "sha256": "854d4936ed91e61e6c190fd28584cd42dc8f82eb645e3222a21c0b3a47d67db1",
+          "namespace": "com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantClawbackServiceImpl.java:182:8102",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantReferralBountyService.java:381:15519",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantReferralBountyService.java:468:18651",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java:1171:57038",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberBalanceDetailServiceImpl.java:91:2573",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java:284:10388",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java:391:15283",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/SettlementDebtLedger.java:115:4850"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java#settle@491",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#cancelByOwner@388",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#cancelRefund@359",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payCallback@1972",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanDynamicCode@1595",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanGroupMemberTicket@1616",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanQrCode@1641",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanQrCodeChapter@1338",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanQrCodeStation@1391",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiWithdrawalController.java#request@78",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiWithdrawalController.java#withdrawalDelete@115",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CoopComplaintController.java#advance@53",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CoopComplaintController.java#close@67",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/MerchantClawbackController.java#confirm@78",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RefundController.java#review@53",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/UmsMemberWithdrawalController.java#review@115",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/CoopSettlementPayoutTask.java#run@27",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/SettlementTask.java#run@33",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberBalanceDetailMapper.xml#updateUmsMemberBalanceDetail",
+          "sha256": "8c04c622318733ed4c4f8c96b11dc33954b4235ae5a400d8c5a42aaa4e7e7410",
+          "namespace": "com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberBalanceDetailServiceImpl.java:104:2961"
+          ],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberMapper.xml#addBalance",
+          "sha256": "9149470081ab6a9d32bc88fd55750cfc121dbdab507a37e6125a9c9f63537fd2",
+          "namespace": "com.chengyinhub.business.mapper.UmsMemberMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1817:89559",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantReferralBountyService.java:365:14895",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberServiceImpl.java:637:21537",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java:377:14667"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java#settle@491",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubSettlementController.java#withdraw@129",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#cancelByOwner@388",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#cancelRefund@359",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payCallback@1972",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanDynamicCode@1595",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanGroupMemberTicket@1616",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanQrCode@1641",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanQrCodeChapter@1338",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanQrCodeStation@1391",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiWalletController.java#withdraw@73",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiWithdrawalController.java#withdrawalDelete@115",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CashWithdrawAdminController.java#manualRefund@59",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CashWithdrawAdminController.java#requery@51",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CoopComplaintController.java#advance@53",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CoopComplaintController.java#close@67",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RefundController.java#review@53",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/UmsMemberWithdrawalController.java#review@115",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/CoopSettlementPayoutTask.java#run@27",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/SettlementTask.java#run@33",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/WithdrawTransferQueryTask.java#run@24"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberMapper.xml#deductBalance",
+          "sha256": "4899b823aa6701ee3733f9d681c6a8535033962d15dfd6f0ced2119248ebdbb4",
+          "namespace": "com.chengyinhub.business.mapper.UmsMemberMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantClawbackServiceImpl.java:168:7451",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java:1156:56417",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberServiceImpl.java:585:19586",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/SettlementDebtLedger.java:101:4199"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#cancelByOwner@388",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#cancelRefund@359",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CoopComplaintController.java#advance@53",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CoopComplaintController.java#close@67",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/MerchantClawbackController.java#confirm@78",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RefundController.java#review@53",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/CoopSettlementPayoutTask.java#run@27",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/SettlementTask.java#run@33"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberMapper.xml#deductWithdrawableBalance",
+          "sha256": "1020a7dc5a92eb668192744d9e184479a18b7cf355a50d9aa488c05079cc734b",
+          "namespace": "com.chengyinhub.business.mapper.UmsMemberMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberServiceImpl.java:615:20898",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java:74:4615"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubSettlementController.java#withdraw@129",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiWalletController.java#withdraw@73",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiWithdrawalController.java#request@78"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberWithdrawalMapper.xml#deleteUmsMemberWithdrawalById",
+          "sha256": "c53b39963e6fe142f1247fc31b40022243a653586f9c6cba612468225e53febd",
+          "namespace": "com.chengyinhub.business.mapper.UmsMemberWithdrawalMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java:149:4526"
+          ],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberWithdrawalMapper.xml#deleteUmsMemberWithdrawalByIds",
+          "sha256": "22f8cc2c0205196d76ccbbae6239a818563c8115fe4b8850faef59939316e8cc",
+          "namespace": "com.chengyinhub.business.mapper.UmsMemberWithdrawalMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java:137:4281"
+          ],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberWithdrawalMapper.xml#insertUmsMemberWithdrawal",
+          "sha256": "94dc58e8f8e1365ef1c1d52e1eba5497ffa3788b9bf4d1aa602720bfc02803ee",
+          "namespace": "com.chengyinhub.business.mapper.UmsMemberWithdrawalMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java:105:3401",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java:246:8657"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiWithdrawalController.java#request@78"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberWithdrawalMapper.xml#migrateSensitiveData",
+          "sha256": "e88dd620da06a36cad87d18e1752f54ca95acca669bec9890906fd62744ea0de",
+          "namespace": "com.chengyinhub.business.mapper.UmsMemberWithdrawalMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java:405:15905"
+          ],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberWithdrawalMapper.xml#softDeletePendingByMember",
+          "sha256": "c1849a763d2e32144c25a31d3c31cb182e4e8470ba334d75f3287cf2d5ec5a6b",
+          "namespace": "com.chengyinhub.business.mapper.UmsMemberWithdrawalMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java:158:4820"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiWithdrawalController.java#withdrawalDelete@115"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberWithdrawalMapper.xml#updateUmsMemberWithdrawal",
+          "sha256": "b0253dcd9623af400cd1736c17ccbbaaf36b77fafb5bdd30da2ad1ff4a14a365",
+          "namespace": "com.chengyinhub.business.mapper.UmsMemberWithdrawalMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java:125:4015"
+          ],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberWithdrawalMapper.xml#updateWithdrawalPaidIfApproved",
+          "sha256": "5dcb71df397715badd49bbd57b662f5b7dc25835dfd3ccfca56bbe74dd3e37bb",
+          "namespace": "com.chengyinhub.business.mapper.UmsMemberWithdrawalMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java:366:13988"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/UmsMemberWithdrawalController.java#confirmPayout@128"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberWithdrawalMapper.xml#updateWithdrawalStatusIfPending",
+          "sha256": "30bbda8531a4f4c5c6714b42061258a35b6f0a8bf38218ba5321666018b8e9fc",
+          "namespace": "com.chengyinhub.business.mapper.UmsMemberWithdrawalMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java:344:13042"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/UmsMemberWithdrawalController.java#review@115"
+          ]
+        }
+      ],
+      "status": "OBSERVED_SOURCE_NOT_AUTHORIZATION; table groups do not assign business ownership"
+    },
+    "registration": {
+      "tables": [
+        "cms_registration",
+        "cms_registration_merchant",
+        "registration_entitlement",
+        "oms_ticket"
+      ],
+      "statements": [
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/AccountDeregistrationMapper.xml#anonymizeRegistrations",
+          "sha256": "35d4fb43c686eb8527c9708f802f7d4a7a6ce4e69e9b9c56762bc8c74c37766d",
+          "namespace": "com.chengyinhub.business.mapper.AccountDeregistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AccountDeregistrationServiceImpl.java:322:15022"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/job/AccountDeregistrationJob.java#executeDueDeregistrations@18"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml#restoreWaitlistHold",
+          "sha256": "ae71664be0bfa06b957c71c1363ac78c8e7f96208d49fdb253eba153696c3056",
+          "namespace": "com.chengyinhub.business.mapper.ClubEventOpsMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java:728:42103"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml#updateUnsoldActivityTicketCapacity",
+          "sha256": "e9abd20274d878927315cf9768e5a7e3f26ae53dbaa5457b225b327823f1491d",
+          "namespace": "com.chengyinhub.business.mapper.ClubEventOpsMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java:928:52706"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#createSeries@55",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#updateFuture@111"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#autoVerifyExpiredSession",
+          "sha256": "e4e3f8a4f380a3f41ec7d6e602e08dd6809ccbe0474b35072cc8ce60d0c46c83",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2769:124545"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RegistrationAutoVerifyTask.java#run@34"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#backfillRegistrationPii",
+          "sha256": "2d17ca2c4bce161af5e4e30e0035f423dd948c3ef049f8afbad0f9a6d020e768",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/PiiBackfillTask.java:76:2627"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/PiiBackfillTask.java#run@47"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#bindRequestFingerprint",
+          "sha256": "3967c92b0cb16ebcc3b83e24cb2ce96c3a41bc887cb46551b6b8be208cc0d20a",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:1542:69443",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:1566:70645"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#cancelUnpaidIfActive",
+          "sha256": "81351641f8daeb449b905072b42143a8bc69fdcfb39aab3574df81e910521ada",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2688:121343",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java:750:38226"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#cancelRegistration@327",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#claimPaymentFailure",
+          "sha256": "c39108b76103b180a4aa49b8f530559fdac7d9a797b4e0b3117d2c43f7a64a4b",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2237:99294"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payCallback@1972",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#claimPaymentProcessing",
+          "sha256": "0f80638ed2301dc316c518f1bd23d62b9b71362c59024c928aeecce7d3dfa5c3",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:1594:71977"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#pay@238",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payApp@273"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#claimPaymentSuccess",
+          "sha256": "6c3d3e4e4e27869adb6e8650d9ce2a057c287c358b9dbd7474bab9d3fb80aabb",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2308:102757",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2341:104527"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payCallback@1972",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#claimPointsReturn",
+          "sha256": "a3069bf538a1cc2e0a74ac3652e9b527f97186a8ce3a4f2bb15b17a2ceef79fa",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2650:119581",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2841:127643",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java:1525:75495"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#cancelByOwner@388",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#cancelRefund@359",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#pay@238",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payApp@273",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payCallback@1972",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#closeExpired@60",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#claimRegistrationRefunded",
+          "sha256": "7a2a65e60c5ba45879ae394f14358baf9dcd30b9ead0e5c99a9c4e86f18c9543",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java:885:41776",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java:1288:64290",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java:1436:71434"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#cancelByOwner@388",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#cancelRefund@359",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RefundController.java#review@53"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#claimRegistrationRefundedByGateway",
+          "sha256": "b4dc4d2483286c47ad2f021a37224642e1004fbfacc7678bb7ea89582d49233c",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2201:97278"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payCallback@1972",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#clearVerification",
+          "sha256": "79346b9b3b56ff13669c3d2a05b825779f8aa2b3b10355bce296fac75c89144f",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:3106:141539",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PerkLedgerServiceImpl.java:622:29026"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java#reverseParentOrderRedemptions@188",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java#reverseRedemption@157",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java#reverseWholeOrderVerification@199"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#closeExpired",
+          "sha256": "b41e8403d2ee34e8495358a7181646a06d93023af580deeb6f19feefae9646d6",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2785:125097",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2818:126627"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#pay@238",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payApp@273",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#closeExpired@60",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#closeExpiredPaying",
+          "sha256": "4e5b8539abb05626949e2fa5540992c9a299719baf27c089d316df03179dba8d",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2805:125923"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#deleteCmsRegistrationById",
+          "sha256": "b7a415336f01dea74c5a63e165ba30e8dad64af90203907f1d2155163333df6c",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:281:9602"
+          ],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#deleteCmsRegistrationByIds",
+          "sha256": "c60d709288f94dc57f8285fa59a8c52720f492e5f8c3dba221d453eab5531e00",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:269:9331"
+          ],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#freezeTicketSourceOnPayment",
+          "sha256": "bf2a583973161968effe0c066fc047f3b34d881431edf5543e9ff098bc8ebb26",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2392:107226"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payCallback@1972",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#insertCmsRegistration",
+          "sha256": "220492ce7e3709d585e8ba22a0a6e39bae7cff2fd0375a11e5afb00e8464275e",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:245:8725",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:574:22525",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:894:38690"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java#add@218"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#markFirstSuccessfulScan",
+          "sha256": "6b2382efcf03eb5f6c9b5102de469e0086085a904a31a5698132977ecbfb6cc4",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java:1634:88928"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#arrive@2170",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#checkin@1505"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#releasePaymentProcessing",
+          "sha256": "f77eaeb8bfc9cd6b19a48edc92e949990ed4d58a276b56f2fc1d67cfaca4b2ac",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:1611:72779"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#pay@238",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payApp@273"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#repairHistoricalPaidHalfState",
+          "sha256": "708db263de5b3d4e57de9300d3bf62dfcc8457f89ecda7054cdcac234b68e0a9",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2465:110973"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payCallback@1972",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#updateCmsRegistration",
+          "sha256": "e00f2ab28bce9454a468f0de0349462d4aa724e13e3dde5769fe65151b531efb",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:1996:88193",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2033:89173",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2078:90911",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:257:9054",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java:1486:74168"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#cancelByOwner@388",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#cancelRefund@359",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payCallback@1972",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java#edit@229",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/VerificationQrcodeRepairTask.java#repairMissing@31"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#verifyIfNotVerified",
+          "sha256": "2ef21fe8d02f43d5531bd1790e28481538345dd194b2d09192bec85b53f5d0d8",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:3002:135783",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:3352:155079"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java#settle@491",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanDynamicCode@1595",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanGroupMemberTicket@1616",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanQrCode@1641",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanQrCodeChapter@1338",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanQrCodeStation@1391"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMerchantMapper.xml#cancelUnwonByMember",
+          "sha256": "f2cbba561c30df8b31d8884fce9812ba7b4834c10d94f361ea9421fb90cca5e1",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMerchantMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationMerchantServiceImpl.java:297:11359"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationMerchantController.java#cancelRegistration@87"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMerchantMapper.xml#confirmWinnerIfPending",
+          "sha256": "7cd7d4a3c395345fae532d99b390568d25b7f4764a974740ac87065d25efb507",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMerchantMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationMerchantServiceImpl.java:98:3206"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopController.java#confirmCandidate@1171",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationMerchantController.java#select@327"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMerchantMapper.xml#deleteCmsRegistrationMerchantById",
+          "sha256": "e7a54fbc93f83c3255a8867c0b9a0dd5593a48006dffbe367bacc172d6513c50",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMerchantMapper",
+          "direct_java_calls": [],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMerchantMapper.xml#deleteCmsRegistrationMerchantByIds",
+          "sha256": "4d857035df9e3c8393be728480d9dab9508e5a1d3e0543deb7a287bd41a1a1b2",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMerchantMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationMerchantServiceImpl.java:219:8418"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationMerchantController.java#remove@231"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMerchantMapper.xml#insertCmsRegistrationMerchant",
+          "sha256": "798e10a9bc031c0e807b0d0f30f556baeaa247474fcae35057ddef1a48b6ac04",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMerchantMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationMerchantServiceImpl.java:70:2185",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java:398:17621"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopController.java#handle@411",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationMerchantController.java#createRegistration@250",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationMerchantController.java#add@178"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMerchantMapper.xml#rejectIfPending",
+          "sha256": "6236a21c84a412288e9c3472d816efac4725fa4af938ffd2e5740f090e8d1414",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMerchantMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationMerchantServiceImpl.java:104:3361"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopController.java#confirmCandidate@1171",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationMerchantController.java#reject@344",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationMerchantController.java#select@327"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMerchantMapper.xml#updateCmsRegistrationMerchant",
+          "sha256": "0c2146084cc6423c0d70b0f84f8dbbfd52b2859cd84af392cd58ec17517d8549",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMerchantMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationMerchantServiceImpl.java:142:4922",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationMerchantServiceImpl.java:162:5967",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationMerchantServiceImpl.java:175:6840",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationMerchantServiceImpl.java:83:2581"
+          ],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMerchantMapper.xml#updateEditableFieldsIfStateMatches",
+          "sha256": "5d797f4e8e18bb92484ef26218f62156431a937b3b2f83e98ffaaf8cd32eb143",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMerchantMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationMerchantServiceImpl.java:91:2970"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationMerchantController.java#updateRegistration@157"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/OmsTicketMapper.xml#deductInventory",
+          "sha256": "ea51e42918dd94ec41c67abb79b49c24272f918eae9d64bf6ed7ba93c2a97d96",
+          "namespace": "com.chengyinhub.business.mapper.OmsTicketMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java:291:15535",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:591:23437"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelWaitlist@188",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#waitlistStatus@176",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/ClubEventOpsTask.java#run@24"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/OmsTicketMapper.xml#deductInventoryKeepingReserved",
+          "sha256": "867b2e18412b73e220005a741de4fdbfbddb5ca8da8e730a5751151a6b88b7c2",
+          "namespace": "com.chengyinhub.business.mapper.OmsTicketMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:589:23279"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/OmsTicketMapper.xml#deleteOmsTicketById",
+          "sha256": "2fe281ced3adac4f270a40bbccba2bff6b1abaa0f47d2920119d6bb993a880e7",
+          "namespace": "com.chengyinhub.business.mapper.OmsTicketMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:6267:310244",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OmsTicketServiceImpl.java:527:21437"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#createTopic@365",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#createTopicV2@372",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#updateTopic@690",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#updateTopicV2@697"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/OmsTicketMapper.xml#deleteOmsTicketByIds",
+          "sha256": "862ebeff7b6c986849b6261d5b5772e2daac62ad1c535c4760c2f11f13cfeebe",
+          "namespace": "com.chengyinhub.business.mapper.OmsTicketMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OmsTicketServiceImpl.java:507:20887"
+          ],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/OmsTicketMapper.xml#deleteUnsoldActivityOrphanTicket",
+          "sha256": "dbb4ffbf2aebda95323b58a749cfdeb67fd3161d92885b910f25222ff1828d67",
+          "namespace": "com.chengyinhub.business.mapper.OmsTicketMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OmsTicketServiceImpl.java:638:26672"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#updateTopic@690",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#updateTopicV2@697"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/OmsTicketMapper.xml#insertOmsTicket",
+          "sha256": "17cb9acd2eca7308e295c3ed1d509da5000466717fe670b89a11496bc5aa4c23",
+          "namespace": "com.chengyinhub.business.mapper.OmsTicketMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsActivityServiceImpl.java:1372:60293",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsActivityServiceImpl.java:947:39690",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:6249:309404",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OmsTicketServiceImpl.java:200:8020",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OmsTicketServiceImpl.java:565:23176",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OmsTicketServiceImpl.java:650:27190",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PricingServiceImpl.java:425:19800"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#publish@777",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#update@871",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubController.java#openSession@1399",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#createSeries@55",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#updateFuture@111",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPricingController.java#confirm@56",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#createTopic@365",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#createTopicV2@372",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#publishDraft@1319",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#updateTopic@690",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#updateTopicV2@697",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/OmsTicketController.java#add@79"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/OmsTicketMapper.xml#restoreInventory",
+          "sha256": "71e1e14b34501a8149b7435b57b0c3caf14c43e056a6884040c22fbc6aa94ccd",
+          "namespace": "com.chengyinhub.business.mapper.OmsTicketMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java:241:12663",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java:359:19311",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2856:128299",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java:1539:76033"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelWaitlist@188",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#waitlistStatus@176",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#cancelByOwner@388",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#cancelRefund@359",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#cancelRegistration@327",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#pay@238",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payApp@273",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/ClubEventOpsTask.java#run@24",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#closeExpired@60",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/OmsTicketMapper.xml#updateOmsTicket",
+          "sha256": "f157594233ffa74ce032139b8b29a8c2a78d3aa56b688998d330081fdb00011f",
+          "namespace": "com.chengyinhub.business.mapper.OmsTicketMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsActivityServiceImpl.java:1233:53839",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsActivityServiceImpl.java:1343:58802",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OmsTicketServiceImpl.java:262:11206",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OmsTicketServiceImpl.java:674:28492",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PricingServiceImpl.java:401:18557"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#update@871",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPricingController.java#confirm@56",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#updateTopic@690",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#updateTopicV2@697",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/OmsTicketController.java#edit@90"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/OmsTicketMapper.xml#updateTopicTicketOnRebuild",
+          "sha256": "c40ed076c4132fe271973fe230facac79b81d296cd477d82cd4a85c1edef28ab",
+          "namespace": "com.chengyinhub.business.mapper.OmsTicketMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:6257:309783"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#createTopic@365",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#createTopicV2@372",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#updateTopic@690",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#updateTopicV2@697"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/RegistrationEntitlementMapper.xml#insertRegistrationEntitlement",
+          "sha256": "7c50d5204406eb5232c6cb815fbc1615c123f1bce33b19a752427aaf699faa6e",
+          "namespace": "com.chengyinhub.business.mapper.RegistrationEntitlementMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PerkLedgerServiceImpl.java:283:11338"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/RegistrationEntitlementMapper.xml#invalidateByRegistration",
+          "sha256": "16db1bb46877df68862130a7469611a62471a7585dddeaa38f9591d5e655e01b",
+          "namespace": "com.chengyinhub.business.mapper.RegistrationEntitlementMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PerkLedgerServiceImpl.java:290:11563"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#cancelByOwner@388",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#cancelRefund@359",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#cancelRegistration@327",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#pay@238",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payApp@273",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RefundController.java#review@53",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#closeExpired@60",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/RegistrationEntitlementMapper.xml#markRedeemed",
+          "sha256": "96e1e2edc41a7762acad279190283cd95f4dd3677af29596fb52a83c9403af07",
+          "namespace": "com.chengyinhub.business.mapper.RegistrationEntitlementMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PerkLedgerServiceImpl.java:439:19387"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanDynamicCode@1595",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanGroupMemberTicket@1616",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanQrCode@1641",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanQrCodeChapter@1338"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/RegistrationEntitlementMapper.xml#restoreToPending",
+          "sha256": "70544e3b7bf12657d83012106b13cd45aab3f3041ec45f3979793be0e71ac95c",
+          "namespace": "com.chengyinhub.business.mapper.RegistrationEntitlementMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PerkLedgerServiceImpl.java:604:28075"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java#reverseParentOrderRedemptions@188",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java#reverseRedemption@157"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/TopicEditionFundsMapper.xml#classifyUnknownExplorePurchases",
+          "sha256": "9846652efc42f6f7cb76ba67679c07bb3c94da45a20be09e0718656e02138601",
+          "namespace": "com.chengyinhub.business.mapper.TopicEditionFundsMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicEditionFundsServiceImpl.java:147:7622"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/TopicEditionFundsController.java#repairPurchaseKind@63"
+          ]
+        }
+      ],
+      "status": "OBSERVED_SOURCE_NOT_AUTHORIZATION; table groups do not assign business ownership"
+    },
+    "payment_intent_callback": {
+      "tables": [
+        "wx_payment_callback_inbox",
+        "wx_payment_callback_outbox"
+      ],
+      "statements": [
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#claimPaymentFailure",
+          "sha256": "c39108b76103b180a4aa49b8f530559fdac7d9a797b4e0b3117d2c43f7a64a4b",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2237:99294"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payCallback@1972",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#claimPaymentProcessing",
+          "sha256": "0f80638ed2301dc316c518f1bd23d62b9b71362c59024c928aeecce7d3dfa5c3",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:1594:71977"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#pay@238",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payApp@273"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#claimPaymentSuccess",
+          "sha256": "6c3d3e4e4e27869adb6e8650d9ce2a057c287c358b9dbd7474bab9d3fb80aabb",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2308:102757",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2341:104527"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payCallback@1972",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#releasePaymentProcessing",
+          "sha256": "f77eaeb8bfc9cd6b19a48edc92e949990ed4d58a276b56f2fc1d67cfaca4b2ac",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:1611:72779"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#pay@238",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payApp@273"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackInboxMapper.xml#claim",
+          "sha256": "463f22199c9ba431eb34af847c5a223cece48c81cb9c48a40a6763a204db3463",
+          "namespace": "com.chengyinhub.business.mapper.WxPaymentCallbackInboxMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackClaimService.java:38:1439"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payCallback@1972",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackInboxMapper.xml#insertIgnore",
+          "sha256": "82f3fdb9fbea449cb6745e34a4f0f592a0e5d0bf21421689112a2767b9fe8444",
+          "namespace": "com.chengyinhub.business.mapper.WxPaymentCallbackInboxMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java:63:2457"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payCallback@1972",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#refundCallback@1984",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RefundController.java#manualClaim@98",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RefundController.java#manualRefresh@198",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RefundController.java#manualTakeover@151",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java#reconcile@52"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackInboxMapper.xml#markDone",
+          "sha256": "a57149f8a293c64b197fc39d1c584cfbfe47cbed6722dde917e38f6209992ad9",
+          "namespace": "com.chengyinhub.business.mapper.WxPaymentCallbackInboxMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java:49:1960"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payCallback@1972",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackInboxMapper.xml#markIgnoredStale",
+          "sha256": "76050d7fc439e15324b0b8219aae8d1ee39f95a8fc98259c7b2ed45d60a4ab07",
+          "namespace": "com.chengyinhub.business.mapper.WxPaymentCallbackInboxMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java:38:1478"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payCallback@1972",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackInboxMapper.xml#release",
+          "sha256": "602725e8738919f8bacbbcc6c41d2940b54f5177a947f472ec2f372afaa50ce6",
+          "namespace": "com.chengyinhub.business.mapper.WxPaymentCallbackInboxMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackClaimService.java:54:2211"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payCallback@1972",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackOutboxMapper.xml#claimById",
+          "sha256": "f854c62e04ffe1c86825dc1b26e9d84731bd95cdabf6e876fd584ab634b82ae2",
+          "namespace": "com.chengyinhub.business.mapper.WxPaymentCallbackOutboxMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackOutboxServiceImpl.java:91:3322"
+          ],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackOutboxMapper.xml#complete",
+          "sha256": "5df207ab988a4e118859e48e7f1609b8022c1ec676f8081a61138bb37e8f4b44",
+          "namespace": "com.chengyinhub.business.mapper.WxPaymentCallbackOutboxMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackOutboxServiceImpl.java:109:3976"
+          ],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackOutboxMapper.xml#escalateToManual",
+          "sha256": "fb24c067f7e822a52cb3ed13178d7193aef4108f21e6895eeb94cf6cfc2ae6ee",
+          "namespace": "com.chengyinhub.business.mapper.WxPaymentCallbackOutboxMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackOutboxServiceImpl.java:125:4559"
+          ],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackOutboxMapper.xml#insertIgnore",
+          "sha256": "e2edf106d859461bac3cc28c44547a468fa4a24d06675d3afad66908593cac98",
+          "namespace": "com.chengyinhub.business.mapper.WxPaymentCallbackOutboxMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackOutboxServiceImpl.java:66:2418"
+          ],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackOutboxMapper.xml#retryOrEscalate",
+          "sha256": "eb2409985cd319ae2a82a576cbca9ee2f0e7c31916e6c5b6bedb8191ae43dc49",
+          "namespace": "com.chengyinhub.business.mapper.WxPaymentCallbackOutboxMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackOutboxServiceImpl.java:117:4250"
+          ],
+          "entry_method_candidates": []
+        }
+      ],
+      "status": "OBSERVED_SOURCE_NOT_AUTHORIZATION; table groups do not assign business ownership"
+    },
+    "topic_cash": {
+      "tables": [
+        "coop_settlement",
+        "coop_settlement_adjustment",
+        "coop_settlement_detail",
+        "settlement_claim",
+        "coop_settlement_cash_close",
+        "coop_settlement_cash_event",
+        "coop_settlement_cash_contribution"
+      ],
+      "statements": [
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementAdjustmentMapper.xml#insertIgnoreAdjustment",
+          "sha256": "cdacf0ed35af521c67ba285cefc3a5d23bdd678a5af3ca96f0d0c1eebe3f0bde",
+          "namespace": "com.chengyinhub.business.mapper.CoopSettlementAdjustmentMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:72:3787"
+          ],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementCashEvidenceMapper.xml#insertClose",
+          "sha256": "83985c92f3b24ae2888c6ff2a1ca95078e226bc0b3ae296af1cc4934259a1206",
+          "namespace": "com.chengyinhub.business.mapper.CoopSettlementCashEvidenceMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementCashEvidenceMapper.java:28:1541"
+          ],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementCashEvidenceMapper.xml#insertContribution",
+          "sha256": "74dbef714fcb7e0b8aa57e23f1da2983dee853d4b56a663842d99a11dc406677",
+          "namespace": "com.chengyinhub.business.mapper.CoopSettlementCashEvidenceMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementCashEvidenceMapper.java:36:2094"
+          ],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementCashEvidenceMapper.xml#insertEvent",
+          "sha256": "9870f58d85f742232876f72d7b2af7094ae9411eef5150c6cbcc81c069eaeb4a",
+          "namespace": "com.chengyinhub.business.mapper.CoopSettlementCashEvidenceMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementCashEvidenceMapper.java:44:2674"
+          ],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementDetailMapper.xml#insertIgnoreDetail",
+          "sha256": "5a37aeb90072efab0e90b1f8ae7725392f7170ef5551f56903bdb39a92061628",
+          "namespace": "com.chengyinhub.business.mapper.CoopSettlementDetailMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:134:7448"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/SettlementTask.java#run@33"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementDetailMapper.xml#refreshOriginAggregate",
+          "sha256": "e507442dc83f6e3f2b371e83d334a19cbde9be738c939cf1fd16829ec0d15c51",
+          "namespace": "com.chengyinhub.business.mapper.CoopSettlementDetailMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:142:7875"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/SettlementTask.java#run@33"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementMapper.xml#insertCoopSettlement",
+          "sha256": "db449b2515cb26dfe52609f05ccc849997d779e5a2c51fa6ab41aa82064ff5c5",
+          "namespace": "com.chengyinhub.business.mapper.CoopSettlementMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1496:71994",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:123:6782"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/SettlementTask.java#run@33"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementMapper.xml#markPaidIfPending",
+          "sha256": "af661d538da71922aaacd697943ad87a4c13302445a5e58df8abf378c474bbc5",
+          "namespace": "com.chengyinhub.business.mapper.CoopSettlementMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1802:88662",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1835:90530"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/CoopSettlementPayoutTask.java#run@27"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementMapper.xml#updateCoopSettlement",
+          "sha256": "b8839488d54f2021f7ff11ef95033a478b90a3f289ca56f18863c694ee350aef",
+          "namespace": "com.chengyinhub.business.mapper.CoopSettlementMapper",
+          "direct_java_calls": [],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementMapper.xml#voidUnpaidByTopic",
+          "sha256": "d9d4894edbb3497d7cd3f48127e9e832b5d45b0aba07e5cd358bc6945664f14c",
+          "namespace": "com.chengyinhub.business.mapper.CoopSettlementMapper",
+          "direct_java_calls": [],
+          "entry_method_candidates": []
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/SettlementClaimMapper.xml#insertClaim",
+          "sha256": "d89d9c3bdcf2488c333ccfb253d1bae96dc4858ac75d4dce68df43f598e0cbf4",
+          "namespace": "com.chengyinhub.business.mapper.SettlementClaimMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementClaimServiceImpl.java:31:1108"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java#settle@491",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCouponController.java#couponVerification@451",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payCallback@1972",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanDynamicCode@1595",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanGroupMemberTicket@1616",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanQrCode@1641",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanQrCodeChapter@1338",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#scanQrCodeStation@1391",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/SettlementTask.java#run@33",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106"
+          ]
+        }
+      ],
+      "status": "OBSERVED_SOURCE_NOT_AUTHORIZATION; table groups do not assign business ownership"
+    },
+    "game_receipt_progress": {
+      "tables": [
+        "game_command_receipt",
+        "game_session",
+        "game_story_state",
+        "player_node_progress",
+        "photo_check_intent",
+        "topic_route_session"
+      ],
+      "statements": [
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml#completeReceipt",
+          "sha256": "0954c12e323bf3614248abf0de298f0e01b998c803da2a080aacabc37af9ff4c",
+          "namespace": "com.chengyinhub.business.mapper.GameSessionRuntimeMapper",
+          "direct_java_calls": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java:256:13082",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java:1471:79357",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:1877:157056",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:2103:180530",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:2138:184088",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:2655:224069",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:932:70402"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#action@50",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#start@36",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#state@72",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java#unlockChapter@204",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiGameSessionController.java#command@92",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#answer@1680",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#arrive@2170",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#checkin@1505",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#photo@2388",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#revealPuzzle@1813",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#sensorResult@2114",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#submitPreference@1929"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml#insertReceiptClaim",
+          "sha256": "1d54c2e0c95a2247c070c35d2392d16f1ead2a1576096c9733920d299c1379ff",
+          "namespace": "com.chengyinhub.business.mapper.GameSessionRuntimeMapper",
+          "direct_java_calls": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java:246:12218",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java:1462:78773",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:1866:155048",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:2020:172005",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:2132:183364",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:2639:222899",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:2704:226598",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:923:69624"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#action@50",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#start@36",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#state@72",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java#unlockChapter@204",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiGameSessionController.java#command@92",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#answer@1680",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#arrive@2170",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#checkin@1505",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#photo@2388",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#revealPuzzle@1813",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#sensorResult@2114",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#submitPreference@1929"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml#insertSession",
+          "sha256": "6b2f2d9f54cf40a7af2d43e002f8d3f0964d72e8870e3496cf17eb303e94bc90",
+          "namespace": "com.chengyinhub.business.mapper.GameSessionRuntimeMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:2778:231378"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiGameSessionController.java#command@92"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml#insertStoryState",
+          "sha256": "027f107a35c6740e5a8d0037a0d39c85324ac3d9ae02764bd365c8059c6dc166",
+          "namespace": "com.chengyinhub.business.mapper.GameSessionRuntimeMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:1716:141276",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:268:13815",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:277:14435",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:5012:360613"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#action@50",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#start@36",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#state@72",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiGameSessionController.java#command@92",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiGameSessionController.java#sharedExportAnchor@172",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#answer@1680",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#arrive@2170",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#checkin@1505",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#photo@2388",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#revealPuzzle@1813",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#sensorResult@2114",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#submitPreference@1929"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml#updateAppliedReceiptResult",
+          "sha256": "2a509115be2f8999897b8c86b78fdb1f9286bc021bc850e8d3da73083a0c39bd",
+          "namespace": "com.chengyinhub.business.mapper.GameSessionRuntimeMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:3544:277151"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiGameSessionController.java#command@92"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml#updateLeaderboardVisibilityCas",
+          "sha256": "2ebf7eb9cdd899cad0d4f7191ea34561bb173f3c418ac032d3c1a0e73d6ed099",
+          "namespace": "com.chengyinhub.business.mapper.GameSessionRuntimeMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:3589:279380"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiGameSessionController.java#command@92"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml#updateSessionCas",
+          "sha256": "8b65b5150d372aa6c7154cb31fdd07fd9cb4cb8a9b668b325888f93be8755af6",
+          "namespace": "com.chengyinhub.business.mapper.GameSessionRuntimeMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:4336:325651"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#action@50",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#leaderboard@82",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#start@36",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#state@72",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiGameSessionController.java#command@92",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiGameSessionController.java#view@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiOrientSessionController.java#prepare@40",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiOrientSessionController.java#start@46",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCheckController.java#bargain@88",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCheckController.java#momentum@106",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCheckController.java#reroll@46",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCheckController.java#rest@74",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCheckController.java#roll@32",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCheckController.java#settle@60",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyActionController.java#ask@40",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyActionController.java#call@55",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyActionController.java#completeOpening@162",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyActionController.java#syncThoughts@95",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyReadController.java#backpack@45",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#answer@1680",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#arrive@2170",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#basicActionContext@1389",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#checkin@1505",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#nodes@356",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#photo@2388",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#preference@1914",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#puzzleHint@1874",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#revealPuzzle@1813",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#routeState@1051",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#sensorResult@2114",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#submitPreference@1929",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#unlockHint@3787",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiThemeRuntimeController.java#action@28",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiThemeRuntimeController.java#gameplayAction@45",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiThemeRuntimeController.java#gameplayPreview@37",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiThemeRuntimeController.java#historyPage@61",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiThemeRuntimeController.java#replay@57",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiThemeRuntimeController.java#state@23"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml#updateStoryStateCas",
+          "sha256": "07be6e6b0716da71fb6c47ea6ae9d13d43935906129cde153fefbacf0047fb5a",
+          "namespace": "com.chengyinhub.business.mapper.GameSessionRuntimeMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:1478:120558",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:293:15192",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:3270:260055",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:530:33426"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#action@50",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#leaderboard@82",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#start@36",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#state@72",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiGameSessionController.java#command@92",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiGameSessionController.java#sharedExportAnchor@172",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiGameSessionController.java#view@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiOrientSessionController.java#prepare@40",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiOrientSessionController.java#start@46",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCheckController.java#bargain@88",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCheckController.java#momentum@106",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCheckController.java#reroll@46",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCheckController.java#rest@74",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCheckController.java#roll@32",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCheckController.java#settle@60",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyActionController.java#ask@40",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyActionController.java#call@55",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyActionController.java#completeOpening@162",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyActionController.java#syncThoughts@95",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyReadController.java#backpack@45",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#answer@1680",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#arrive@2170",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#basicActionContext@1389",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#checkin@1505",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#nodes@356",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#photo@2388",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#preference@1914",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#puzzleHint@1874",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#revealPuzzle@1813",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#routeState@1051",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#sensorResult@2114",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#submitPreference@1929",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#unlockHint@3787",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiThemeRuntimeController.java#action@28",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiThemeRuntimeController.java#gameplayAction@45",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiThemeRuntimeController.java#gameplayPreview@37",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiThemeRuntimeController.java#historyPage@61",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiThemeRuntimeController.java#replay@57",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiThemeRuntimeController.java#state@23"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/OrientSessionMapper.xml#terminate",
+          "sha256": "829e5514b921afd23927dc645fd16a36a87249e566a44b4928a25f34d54801c6",
+          "namespace": "com.chengyinhub.business.mapper.OrientSessionMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientSessionServiceImpl.java:281:15471"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiOrientSessionController.java#abandon@52"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/OrientSessionMapper.xml#updateRunningPhase",
+          "sha256": "c2479c3d253639a3df33df1d0eb6e2a7ba9ecd1680026ab79a5cf5e899c70e86",
+          "namespace": "com.chengyinhub.business.mapper.OrientSessionMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientSessionServiceImpl.java:120:6046",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientSessionServiceImpl.java:168:8645"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiOrientSessionController.java#prepare@40",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiOrientSessionController.java#start@46"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml#claim",
+          "sha256": "f6bddb4cbce11c92343d2b1402d8d8f16730c45412e762dc2f5329d4de7c6f17",
+          "namespace": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java:88:5452"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#action@50"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml#insertPrepared",
+          "sha256": "1a066bd0ccc203d00f89803a51966474d8bf66584273538ed64098e8e59eaa58",
+          "namespace": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java:72:4377"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#action@50"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml#markApplied",
+          "sha256": "68ee11fe232b7065e57edccc587eccab77a8afac7e1c820251ed1aec84b4cd0d",
+          "namespace": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java:147:9379"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#action@50"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml#markUnknown",
+          "sha256": "455ca58a90cbf713723d028446e6c683de18cd36352893279a8e153b8b6cd256",
+          "namespace": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java:98:6146"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#action@50"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml#saveResult",
+          "sha256": "168f81f108a9c0ba2492d6ab85e88f14f1f11fbf67acf8dea5e58493b5b93830",
+          "namespace": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java:113:7173"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#action@50"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml#saveSnapshot",
+          "sha256": "34075b9427b1f5f793a42ff313e63872f986fc14a1cb7178ed0971d158236e35",
+          "namespace": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java:161:10312"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#action@50"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml#insertPlayerNodeProgress",
+          "sha256": "daba0ff70304cd5cccae54c6f1863e1d0b591ecc644fc6508d8630e63a20dfe9",
+          "namespace": "com.chengyinhub.business.mapper.PlayerNodeProgressMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerNodeProgressServiceImpl.java:58:2096",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayProofServiceImpl.java:60:2362",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayProofServiceImpl.java:95:4161"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#answer@1680",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#arrive@2170",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#checkin@1505",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#photo@2388",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#revealPuzzle@1813",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#sensorResult@2114",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#submitPreference@1929"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml#markPhotoMachineApproved",
+          "sha256": "a2dfeee397a972f811b8dc16c48f3e403c48bc6aa4f4feda884cca0ad4cf3811",
+          "namespace": "com.chengyinhub.business.mapper.PlayerNodeProgressMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerNodeProgressServiceImpl.java:64:2258"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#answer@1680",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#arrive@2170",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#checkin@1505",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#photo@2388",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#revealPuzzle@1813",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#sensorResult@2114",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#submitPreference@1929"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml#markShopDayGameDone",
+          "sha256": "ea6ff9c0921db1b899eb88c40f5e18941ed286a8a8a63288b05a8c11eb05af80",
+          "namespace": "com.chengyinhub.business.mapper.PlayerNodeProgressMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayProofServiceImpl.java:152:6761"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#answer@1680",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#arrive@2170",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#checkin@1505",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#photo@2388",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#revealPuzzle@1813",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#sensorResult@2114",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#submitPreference@1929"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml#updateShopDayPhoto",
+          "sha256": "07877e7fedb8dbe6babbe57120b765ef2bea6b5c616508d2fb65efef27fe81d7",
+          "namespace": "com.chengyinhub.business.mapper.PlayerNodeProgressMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayProofServiceImpl.java:179:8130"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#photo@2388"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml#insertSession",
+          "sha256": "827a91768a2827a68f86813e6c8742c98a41ad267ec1f730507d7d2a75adea82",
+          "namespace": "com.chengyinhub.business.mapper.TopicRouteSessionMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:1233:70960",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:2188:138458",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:4659:326142"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#action@50",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#leaderboard@82",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#start@36",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiOrientSessionController.java#prepare@40",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiOrientSessionController.java#start@46",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyReadController.java#backpack@45",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#answer@1680",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#arrive@2170",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#checkin@1505",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#nodes@356",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#photo@2388",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#preference@1914",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#puzzleHint@1874",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#revealPuzzle@1813",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#routeState@1051",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#sensorResult@2114",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#submitPreference@1929",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#unlockHint@3787",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiThemeRuntimeController.java#replay@57",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiThemeRuntimeController.java#state@23"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml#updateStateCas",
+          "sha256": "3141ddb9f780cb3c1c42c4e8e69cb25c5acb4bd9a6bbcd975509cc8e0606ff34",
+          "namespace": "com.chengyinhub.business.mapper.TopicRouteSessionMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:2308:145961",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:2789:173113",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:2890:179482",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:311:17474",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:3187:195365",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:3496:212708",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:4040:256687",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:427:24409",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:4388:294571",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:4539:313587",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:4609:321104",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:755:43612"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#action@50",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#leaderboard@82",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#start@36",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java#state@72",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCheckController.java#bargain@88",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCheckController.java#momentum@106",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCheckController.java#reroll@46",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCheckController.java#rest@74",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCheckController.java#roll@32",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCheckController.java#settle@60",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyActionController.java#ask@40",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyActionController.java#call@55",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyActionController.java#completeOpening@162",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyActionController.java#syncThoughts@95",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyReadController.java#backpack@45",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#answer@1680",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#arrive@2170",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#checkin@1505",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#photo@2388",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#revealPuzzle@1813",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#sensorResult@2114",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java#submitPreference@1929",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiThemeRuntimeController.java#action@28",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiThemeRuntimeController.java#gameplayAction@45",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiThemeRuntimeController.java#state@23"
+          ]
+        }
+      ],
+      "status": "OBSERVED_SOURCE_NOT_AUTHORIZATION; table groups do not assign business ownership"
+    },
+    "notification_intent": {
+      "tables": [
+        "im_notification_intent",
+        "im_message"
+      ],
+      "statements": [
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/ImMessageMapper.xml#applyMediaCheckResult",
+          "sha256": "bb450740c9d38ecc27f58c17ecbe4adb22f8deed70e881848dcbd90402cf15a8",
+          "namespace": "com.chengyinhub.business.mapper.ImMessageMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxContentSecurityServiceImpl.java:1322:55098"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiContentSecurityController.java#onResult@72"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/ImMessageMapper.xml#insertImMessage",
+          "sha256": "d5020cd6fb999449fdeb5f391c3d6c9706083ca2d04b251ea4ea5375d78c022a",
+          "namespace": "com.chengyinhub.business.mapper.ImMessageMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java:1303:52213",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java:1475:59137",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java:968:38762"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventNotificationController.java#preview@24",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventNotificationController.java#retry@65",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventNotificationController.java#send@29",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCommunityPostController.java#appeal@216",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiContentSecurityController.java#onResult@72",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopController.java#offerWithdraw@717",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiGameSessionController.java#command@92",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiImController.java#send@88",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiImPollController.java#create@23",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantCrmController.java#broadcast@147",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantCrmController.java#dispatchCampaign@102",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantCrmController.java#retryCampaign@111",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiOfficialEventController.java#broadcast@343",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyReadController.java#backpack@45",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payCallback@1972",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiThemeRuntimeController.java#state@23",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/BusinessImController.java#send@47",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/BusinessOfficialEventController.java#broadcast@232",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/job/AccountDeregistrationJob.java#executeDueDeregistrations@18",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/OfficialEventTask.java#run@28",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/ClubEventOpsTask.java#run@24",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/ImNotificationDeliveryTask.java#deliverPending@18",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/MerchantCrmDeliveryRecoveryTask.java#run@15",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/ImMessageMapper.xml#transitionStatus",
+          "sha256": "f5cb065db81a53b65a01f56cfffe811424686b91afb333de59ca7199b6e81a8f",
+          "namespace": "com.chengyinhub.business.mapper.ImMessageMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AuditTaskServiceImpl.java:1680:88376"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AuditWorkbenchController.java#review@325",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/MediaReviewController.java#approve@24",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/MediaReviewController.java#reject@27"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/ImMessageMapper.xml#updateStatus",
+          "sha256": "f91d0eebde5a1003d3c9aa9156217f7240cbbf82256df10c059a11aa140e7256",
+          "namespace": "com.chengyinhub.business.mapper.ImMessageMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AuditTaskServiceImpl.java:1684:88574"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AuditWorkbenchController.java#review@325",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/MediaReviewController.java#approve@24",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/MediaReviewController.java#reject@27"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/ImNotificationIntentMapper.xml#delivered",
+          "sha256": "5097f6689dc81be6c1316c00021b15af4c793d2f7544af55fff53bb81321633c",
+          "namespace": "com.chengyinhub.business.mapper.ImNotificationIntentMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java:1363:55341"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopController.java#offerWithdraw@717",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payCallback@1972",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/ImNotificationDeliveryTask.java#deliverPending@18",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106"
+          ]
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/ImNotificationIntentMapper.xml#insert",
+          "sha256": "5abafba732f5aeb01e31ee7cd1092809537725e8429e8bbe6d20ee5cdb8c9231",
+          "namespace": "com.chengyinhub.business.mapper.ImNotificationIntentMapper",
+          "direct_java_calls": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java:1344:54188"
+          ],
+          "entry_method_candidates": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#activityCancel@573",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java#cancelOccurrence@136",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubTopicSettingController.java#end@54",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopController.java#offerWithdraw@717",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#createRegistration@194",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java#payCallback@1972",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#topicCancel@1064",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java#reconcileExpiredPaying@106"
+          ]
+        }
+      ],
+      "status": "OBSERVED_SOURCE_NOT_AUTHORIZATION; table groups do not assign business ownership"
+    }
+  }
+}

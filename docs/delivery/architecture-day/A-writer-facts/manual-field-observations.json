@@ -1,0 +1,230 @@
+{
+  "source_sha": "0c0d61266b2ae54d77c5ad9cf8b3c8fdb86d4b16",
+  "observations": [
+    {
+      "statement_key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberMapper.xml#addBalance",
+      "statement_sha256": "9149470081ab6a9d32bc88fd55750cfc121dbdab507a37e6125a9c9f63537fd2",
+      "table": "ums_member",
+      "selected_written_columns": [
+        "balance"
+      ],
+      "status": "MANUALLY_READ_SELECTED_FIELDS_NOT_COMPLETE_WRITE_SET_OR_APPROVAL",
+      "direct_call_ids": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1817:89559",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantReferralBountyService.java:365:14895",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberServiceImpl.java:637:21537",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java:377:14667"
+      ]
+    },
+    {
+      "statement_key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberMapper.xml#deductBalance",
+      "statement_sha256": "4899b823aa6701ee3733f9d681c6a8535033962d15dfd6f0ced2119248ebdbb4",
+      "table": "ums_member",
+      "selected_written_columns": [
+        "balance"
+      ],
+      "status": "MANUALLY_READ_SELECTED_FIELDS_NOT_COMPLETE_WRITE_SET_OR_APPROVAL",
+      "direct_call_ids": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantClawbackServiceImpl.java:168:7451",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java:1156:56417",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberServiceImpl.java:585:19586",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/SettlementDebtLedger.java:101:4199"
+      ]
+    },
+    {
+      "statement_key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberMapper.xml#deductWithdrawableBalance",
+      "statement_sha256": "1020a7dc5a92eb668192744d9e184479a18b7cf355a50d9aa488c05079cc734b",
+      "table": "ums_member",
+      "selected_written_columns": [
+        "balance"
+      ],
+      "status": "MANUALLY_READ_SELECTED_FIELDS_NOT_COMPLETE_WRITE_SET_OR_APPROVAL",
+      "direct_call_ids": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberServiceImpl.java:615:20898",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java:74:4615"
+      ]
+    },
+    {
+      "statement_key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#insertCmsRegistration",
+      "statement_sha256": "220492ce7e3709d585e8ba22a0a6e39bae7cff2fd0375a11e5afb00e8464275e",
+      "table": "cms_registration",
+      "selected_written_columns": [
+        "member_id",
+        "ticket_id",
+        "order_num",
+        "point_used",
+        "points_returned",
+        "payment_status",
+        "registration_status",
+        "registration_no",
+        "parent_order_no"
+      ],
+      "status": "MANUALLY_READ_SELECTED_FIELDS_NOT_COMPLETE_WRITE_SET_OR_APPROVAL",
+      "direct_call_ids": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:245:8725",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:574:22525",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:894:38690"
+      ]
+    },
+    {
+      "statement_key": "chengyinhub-system/src/main/resources/mapper/business/TopicEditionFundsMapper.xml#classifyUnknownExplorePurchases",
+      "statement_sha256": "9846652efc42f6f7cb76ba67679c07bb3c94da45a20be09e0718656e02138601",
+      "table": "cms_registration",
+      "selected_written_columns": [
+        "purchase_kind",
+        "update_by",
+        "update_time"
+      ],
+      "status": "MANUALLY_READ_SELECTED_FIELDS_NOT_COMPLETE_WRITE_SET_OR_APPROVAL",
+      "direct_call_ids": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicEditionFundsServiceImpl.java:147:7622"
+      ]
+    },
+    {
+      "statement_key": "chengyinhub-system/src/main/resources/mapper/business/AccountDeregistrationMapper.xml#anonymizeRegistrations",
+      "statement_sha256": "35d4fb43c686eb8527c9708f802f7d4a7a6ce4e69e9b9c56762bc8c74c37766d",
+      "table": "cms_registration",
+      "selected_written_columns": [
+        "real_name",
+        "phone",
+        "phone_hash",
+        "email",
+        "address",
+        "address_id",
+        "update_time"
+      ],
+      "status": "MANUALLY_READ_SELECTED_FIELDS_NOT_COMPLETE_WRITE_SET_OR_APPROVAL",
+      "direct_call_ids": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AccountDeregistrationServiceImpl.java:322:15022"
+      ]
+    },
+    {
+      "statement_key": "chengyinhub-system/src/main/resources/mapper/business/AccountDeregistrationMapper.xml#anonymizeCashWithdraw",
+      "statement_sha256": "7e4b580a1c5f9c40f84b9d14f2f518dedafad9a4abf2a563992183fc5b65e722",
+      "table": "member_cash_withdraw",
+      "selected_written_columns": [
+        "openid"
+      ],
+      "status": "MANUALLY_READ_SELECTED_FIELDS_NOT_COMPLETE_WRITE_SET_OR_APPROVAL",
+      "direct_call_ids": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AccountDeregistrationServiceImpl.java:326:15277"
+      ]
+    },
+    {
+      "statement_key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementDetailMapper.xml#refreshOriginAggregate",
+      "statement_sha256": "e507442dc83f6e3f2b371e83d334a19cbde9be738c939cf1fd16829ec0d15c51",
+      "table": "coop_settlement",
+      "selected_written_columns": [
+        "amount",
+        "verified_heads"
+      ],
+      "status": "MANUALLY_READ_SELECTED_FIELDS_NOT_COMPLETE_WRITE_SET_OR_APPROVAL",
+      "direct_call_ids": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:142:7875"
+      ]
+    },
+    {
+      "statement_key": "chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml#completeReceipt",
+      "statement_sha256": "0954c12e323bf3614248abf0de298f0e01b998c803da2a080aacabc37af9ff4c",
+      "table": "game_command_receipt",
+      "selected_written_columns": [
+        "game_session_id",
+        "outcome",
+        "reason_code",
+        "revision",
+        "result_json",
+        "update_time"
+      ],
+      "status": "MANUALLY_READ_SELECTED_FIELDS_NOT_COMPLETE_WRITE_SET_OR_APPROVAL",
+      "direct_call_ids": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java:256:13082",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java:1471:79357",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:1877:157056",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:2103:180530",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:2138:184088",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:2655:224069",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:932:70402"
+      ]
+    },
+    {
+      "statement_key": "chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml#updateAppliedReceiptResult",
+      "statement_sha256": "2a509115be2f8999897b8c86b78fdb1f9286bc021bc850e8d3da73083a0c39bd",
+      "table": "game_command_receipt",
+      "selected_written_columns": [
+        "result_json",
+        "update_time"
+      ],
+      "status": "MANUALLY_READ_SELECTED_FIELDS_NOT_COMPLETE_WRITE_SET_OR_APPROVAL",
+      "direct_call_ids": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:3544:277151"
+      ]
+    },
+    {
+      "statement_key": "chengyinhub-system/src/main/resources/mapper/business/ImNotificationIntentMapper.xml#insert",
+      "statement_sha256": "5abafba732f5aeb01e31ee7cd1092809537725e8429e8bbe6d20ee5cdb8c9231",
+      "table": "im_notification_intent",
+      "selected_written_columns": [
+        "event_key",
+        "recipient",
+        "msg_type",
+        "content",
+        "extra_json",
+        "request_hash",
+        "status",
+        "create_time"
+      ],
+      "status": "MANUALLY_READ_SELECTED_FIELDS_NOT_COMPLETE_WRITE_SET_OR_APPROVAL",
+      "direct_call_ids": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java:1344:54188"
+      ]
+    },
+    {
+      "statement_key": "chengyinhub-system/src/main/resources/mapper/business/ImNotificationIntentMapper.xml#delivered",
+      "statement_sha256": "5097f6689dc81be6c1316c00021b15af4c793d2f7544af55fff53bb81321633c",
+      "table": "im_notification_intent",
+      "selected_written_columns": [
+        "status",
+        "message_id",
+        "delivered_at"
+      ],
+      "status": "MANUALLY_READ_SELECTED_FIELDS_NOT_COMPLETE_WRITE_SET_OR_APPROVAL",
+      "direct_call_ids": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java:1363:55341"
+      ]
+    },
+    {
+      "statement_key": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml#insertFundFact",
+      "statement_sha256": "97868f48dfe1b90a16dffb83d8e5ab031394f7d4b2cc44060a0740d8e48a0d78",
+      "table": "member_cash_withdraw_fund_fact",
+      "selected_written_columns": [
+        "withdrawal_id",
+        "member_id",
+        "amount",
+        "out_batch_no",
+        "out_detail_no",
+        "kind",
+        "submission_intent_id",
+        "balance_before",
+        "balance_after",
+        "create_time"
+      ],
+      "status": "MANUALLY_READ_SELECTED_FIELDS_NOT_COMPLETE_WRITE_SET_OR_APPROVAL",
+      "direct_call_ids": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java:434:21534",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java:45:2761"
+      ]
+    },
+    {
+      "statement_key": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml#bindDebitEvidence",
+      "statement_sha256": "7ac3528fa06b68f5fd8e12c3d5c50e138345a7d115a690afa6985fbced67f045",
+      "table": "member_cash_withdraw",
+      "selected_written_columns": [
+        "balance_deduct_id"
+      ],
+      "status": "MANUALLY_READ_SELECTED_FIELDS_NOT_COMPLETE_WRITE_SET_OR_APPROVAL",
+      "direct_call_ids": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java:48:2951"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,282 @@
+{
+  "source_sha": "0c0d61266b2ae54d77c5ad9cf8b3c8fdb86d4b16",
+  "purpose": "ROOT_DOMAIN_OWNER_REVIEW_BEFORE_F_ENFORCEMENT",
+  "candidates": [
+    {
+      "question_id": "WP01-A1",
+      "status": "PROPOSAL_NOT_APPROVED_NOT_ALLOWLIST",
+      "table": "ums_member",
+      "selected_column_group_not_complete": [
+        "balance"
+      ],
+      "reason": "同一namespace下多Service经济写；需命令/原回执单写责任，而非推断已有writer获准",
+      "decision_required": "root与既有资金合同owner确认；保留提现DEBIT、退款、出款、债务合法边界",
+      "statement_evidence": [
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberMapper.xml#addBalance",
+          "sha256": "9149470081ab6a9d32bc88fd55750cfc121dbdab507a37e6125a9c9f63537fd2",
+          "namespace": "com.chengyinhub.business.mapper.UmsMemberMapper",
+          "literal_target": "ums_member",
+          "shape": "LITERAL_SHAPE_ONLY"
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberMapper.xml#deductBalance",
+          "sha256": "4899b823aa6701ee3733f9d681c6a8535033962d15dfd6f0ced2119248ebdbb4",
+          "namespace": "com.chengyinhub.business.mapper.UmsMemberMapper",
+          "literal_target": "ums_member",
+          "shape": "LITERAL_SHAPE_ONLY"
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberMapper.xml#deductWithdrawableBalance",
+          "sha256": "1020a7dc5a92eb668192744d9e184479a18b7cf355a50d9aa488c05079cc734b",
+          "namespace": "com.chengyinhub.business.mapper.UmsMemberMapper",
+          "literal_target": "ums_member",
+          "shape": "LITERAL_SHAPE_ONLY"
+        }
+      ],
+      "observed_java_call_ids": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1817:89559",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantClawbackServiceImpl.java:168:7451",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantReferralBountyService.java:365:14895",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java:1156:56417",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberServiceImpl.java:585:19586",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberServiceImpl.java:615:20898",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberServiceImpl.java:637:21537",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java:377:14667",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/SettlementDebtLedger.java:101:4199",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java:74:4615"
+      ],
+      "observed_java_classes": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantClawbackServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantReferralBountyService.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/SettlementDebtLedger.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java"
+      ],
+      "approved_owner": null,
+      "approved_writers": null,
+      "observed_does_not_imply_allowed": true
+    },
+    {
+      "question_id": "WP01-A2",
+      "status": "PROPOSAL_NOT_APPROVED_NOT_ALLOWLIST",
+      "table": "cms_registration",
+      "selected_column_group_not_complete": [
+        "member_id",
+        "ticket_id",
+        "order_num",
+        "point_used",
+        "points_returned",
+        "registration_no",
+        "parent_order_no",
+        "request_fingerprint",
+        "purchase_kind",
+        "payment_status",
+        "registration_status"
+      ],
+      "reason": "交易依据、修复与PII写侧分列裁决；裸POST仍已知P1",
+      "decision_required": "产品新增方向待用户；PII/购票类型修复不自动获经济写权；内部合法Mapper保留",
+      "statement_evidence": [
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/AccountDeregistrationMapper.xml#anonymizeRegistrations",
+          "sha256": "35d4fb43c686eb8527c9708f802f7d4a7a6ce4e69e9b9c56762bc8c74c37766d",
+          "namespace": "com.chengyinhub.business.mapper.AccountDeregistrationMapper",
+          "literal_target": "cms_registration",
+          "shape": "LITERAL_SHAPE_ONLY"
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#insertCmsRegistration",
+          "sha256": "220492ce7e3709d585e8ba22a0a6e39bae7cff2fd0375a11e5afb00e8464275e",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "literal_target": "cms_registration",
+          "shape": "UNKNOWN"
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#updateCmsRegistration",
+          "sha256": "e00f2ab28bce9454a468f0de0349462d4aa724e13e3dde5769fe65151b531efb",
+          "namespace": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "literal_target": "cms_registration",
+          "shape": "UNKNOWN"
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/TopicEditionFundsMapper.xml#classifyUnknownExplorePurchases",
+          "sha256": "9846652efc42f6f7cb76ba67679c07bb3c94da45a20be09e0718656e02138601",
+          "namespace": "com.chengyinhub.business.mapper.TopicEditionFundsMapper",
+          "literal_target": null,
+          "shape": "LITERAL_SHAPE_ONLY"
+        }
+      ],
+      "observed_java_call_ids": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AccountDeregistrationServiceImpl.java:322:15022",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:1996:88193",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2033:89173",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2078:90911",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:245:8725",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:257:9054",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:574:22525",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:894:38690",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java:1486:74168",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicEditionFundsServiceImpl.java:147:7622"
+      ],
+      "observed_java_classes": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AccountDeregistrationServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicEditionFundsServiceImpl.java"
+      ],
+      "approved_owner": null,
+      "approved_writers": null,
+      "observed_does_not_imply_allowed": true
+    },
+    {
+      "question_id": "WP01-A3",
+      "status": "PROPOSAL_NOT_APPROVED_NOT_ALLOWLIST",
+      "table": "game_command_receipt",
+      "selected_column_group_not_complete": [
+        "outcome",
+        "result_json",
+        "request_hash",
+        "revision"
+      ],
+      "reason": "Controller与RuntimeService共享回执写；原重发更新也需窄合同",
+      "decision_required": "root/C确认原身份/终态/重发补充结果的现有范围，不新增通用状态机",
+      "statement_evidence": [
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml#completeReceipt",
+          "sha256": "0954c12e323bf3614248abf0de298f0e01b998c803da2a080aacabc37af9ff4c",
+          "namespace": "com.chengyinhub.business.mapper.GameSessionRuntimeMapper",
+          "literal_target": "game_command_receipt",
+          "shape": "LITERAL_SHAPE_ONLY"
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml#insertReceiptClaim",
+          "sha256": "1d54c2e0c95a2247c070c35d2392d16f1ead2a1576096c9733920d299c1379ff",
+          "namespace": "com.chengyinhub.business.mapper.GameSessionRuntimeMapper",
+          "literal_target": "game_command_receipt",
+          "shape": "UNKNOWN"
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml#updateAppliedReceiptResult",
+          "sha256": "2a509115be2f8999897b8c86b78fdb1f9286bc021bc850e8d3da73083a0c39bd",
+          "namespace": "com.chengyinhub.business.mapper.GameSessionRuntimeMapper",
+          "literal_target": "game_command_receipt",
+          "shape": "LITERAL_SHAPE_ONLY"
+        }
+      ],
+      "observed_java_call_ids": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java:246:12218",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java:256:13082",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java:1462:78773",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java:1471:79357",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:1866:155048",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:1877:157056",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:2020:172005",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:2103:180530",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:2132:183364",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:2138:184088",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:2639:222899",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:2655:224069",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:2704:226598",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:3544:277151",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:923:69624",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:932:70402"
+      ],
+      "observed_java_classes": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java"
+      ],
+      "approved_owner": null,
+      "approved_writers": null,
+      "observed_does_not_imply_allowed": true
+    },
+    {
+      "question_id": "WP01-A4",
+      "status": "PROPOSAL_NOT_APPROVED_NOT_ALLOWLIST",
+      "table": "coop_settlement",
+      "selected_column_group_not_complete": [
+        "amount",
+        "verified_heads",
+        "status",
+        "payout_time"
+      ],
+      "reason": "原额、原子明细派生、出款状态分写合同；alias目标UNKNOWN人工确认",
+      "decision_required": "root/G裁决单命令责任；未定退款算法和固定费不编码，无调用语句不自动允许",
+      "statement_evidence": [
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementDetailMapper.xml#refreshOriginAggregate",
+          "sha256": "e507442dc83f6e3f2b371e83d334a19cbde9be738c939cf1fd16829ec0d15c51",
+          "namespace": "com.chengyinhub.business.mapper.CoopSettlementDetailMapper",
+          "literal_target": null,
+          "shape": "LITERAL_SHAPE_ONLY"
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementMapper.xml#insertCoopSettlement",
+          "sha256": "db449b2515cb26dfe52609f05ccc849997d779e5a2c51fa6ab41aa82064ff5c5",
+          "namespace": "com.chengyinhub.business.mapper.CoopSettlementMapper",
+          "literal_target": "coop_settlement",
+          "shape": "UNKNOWN"
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementMapper.xml#markPaidIfPending",
+          "sha256": "af661d538da71922aaacd697943ad87a4c13302445a5e58df8abf378c474bbc5",
+          "namespace": "com.chengyinhub.business.mapper.CoopSettlementMapper",
+          "literal_target": "coop_settlement",
+          "shape": "LITERAL_SHAPE_ONLY"
+        },
+        {
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementMapper.xml#updateCoopSettlement",
+          "sha256": "b8839488d54f2021f7ff11ef95033a478b90a3f289ca56f18863c694ee350aef",
+          "namespace": "com.chengyinhub.business.mapper.CoopSettlementMapper",
+          "literal_target": "coop_settlement",
+          "shape": "UNKNOWN"
+        }
+      ],
+      "observed_java_call_ids": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1496:71994",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1802:88662",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1835:90530",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:123:6782",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:142:7875"
+      ],
+      "observed_java_classes": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java"
+      ],
+      "approved_owner": null,
+      "approved_writers": null,
+      "observed_does_not_imply_allowed": true
+    },
+    {
+      "question_id": "WP01-A5",
+      "status": "PROPOSAL_NOT_APPROVED_NOT_ALLOWLIST",
+      "table": "UNKNOWN_RUNTIME_SCHEMA",
+      "selected_column_group_not_complete": [
+        "UNKNOWN_RUNTIME_COLUMNS"
+      ],
+      "reason": "admin动态DDL能力需与生产迁移授权分开审阅",
+      "decision_required": "root/既有DB治理owner裁决；不修改RBAC或自动允许动态表/模板",
+      "statement_evidence": [
+        {
+          "key": "chengyinhub-generator/src/main/resources/mapper/generator/GenTableMapper.xml#createTable",
+          "sha256": "1d21c96ee362d94158247e9d2c90a15f9176377e86f365361d6fc74373f1026d",
+          "namespace": "com.chengyinhub.generator.mapper.GenTableMapper",
+          "literal_target": null,
+          "shape": "UNKNOWN"
+        }
+      ],
+      "observed_java_call_ids": [
+        "chengyinhub-generator/src/main/java/com/chengyinhub/generator/service/GenTableServiceImpl.java:161:4087"
+      ],
+      "observed_java_classes": [
+        "chengyinhub-generator/src/main/java/com/chengyinhub/generator/service/GenTableServiceImpl.java"
+      ],
+      "approved_owner": null,
+      "approved_writers": null,
+      "observed_does_not_imply_allowed": true
+    }
+  ]
+}

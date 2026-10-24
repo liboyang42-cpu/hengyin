@@ -1,0 +1,430 @@
+{
+  "source_sha": "0c0d61266b2ae54d77c5ad9cf8b3c8fdb86d4b16",
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiWalletController.java",
+      "sha256": "43e5d1efff1f81dd30837bd057f34a5c96df1d094072e8876f943b9401a3bed6",
+      "anchors": {
+        "@RequestMapping": [
+          25
+        ],
+        "cashWithdrawService.withdraw(memberId, amount)": [
+          82
+        ],
+        "if (!fastWithdrawEnabled)": [
+          74
+        ],
+        "getAppUserId()": [
+          49,
+          63,
+          76,
+          92
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubSettlementController.java",
+      "sha256": "e47577288eb585d7388251b3edb73680e63abf2c0654ed85733c39fc49ed230d",
+      "anchors": {
+        "cashWithdrawService.withdraw(memberId, settled)": [
+          153
+        ],
+        "!memberId.equals(club.getMemberId())": [
+          136
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CashWithdrawAdminController.java",
+      "sha256": "3e901e9d8777fbd529101db064cd040e5f81590635243bc239d999fe54c6b7a8",
+      "anchors": {
+        "business:cashwithdraw:manage": [
+          48,
+          56
+        ],
+        "business:cashwithdraw:freeze": [
+          89,
+          109
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java",
+      "sha256": "16767b31b2d6d5ba48e0a6aa2795ab0fa5860f10f88efb4ded20b3d76c18b002",
+      "anchors": {
+        "cmsRegistrationService.insertCmsRegistration(cmsRegistration)": [
+          220
+        ],
+        "business:registration:add": [
+          215
+        ],
+        "editableRegistrationFields": [
+          235,
+          248
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+      "sha256": "1380e374dbec71f28b4dc9fab5cfded3fb3165b966024dc493b1185171b6e5d9",
+      "anchors": {
+        "getAppUserId()": [
+          162,
+          199,
+          243,
+          277,
+          332,
+          361,
+          390,
+          417,
+          567,
+          611,
+          706,
+          766,
+          1056,
+          1205,
+          1340,
+          1393,
+          1646
+        ],
+        "registrationService.cancelRegistration": [
+          344
+        ],
+        "wechatPayService.handlePayCallback": [
+          1974
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/TopicEditionFundsController.java",
+      "sha256": "08556c36e676eb5a94ac5f8ebd494f10082ba496d798117c46186a0b1692d84e",
+      "anchors": {
+        "fundsService.repairUnknownExplorePurchases(topicId)": [
+          65
+        ],
+        "business:topic:edit": [
+          42,
+          50,
+          60
+        ],
+        "scopeAuthorizer.canEditTopic(topicId)": [
+          46,
+          54,
+          64
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "sha256": "4f04c625b48f78bb2fe2af5043c8860a45dc6b618847a994884ed2e6d31119f4",
+      "anchors": {
+        "cmsRegistrationMapper.insertCmsRegistration(registration)": [
+          574
+        ],
+        "cmsRegistrationMapper.insertCmsRegistration(r)": [
+          894
+        ],
+        "systemNotificationIntents.enqueue": [
+          2598
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java",
+      "sha256": "5344bc0204e4dce01a4d1ca6af8b65541d1f271b1a2e2c57de7fd935fda71eb8",
+      "anchors": {
+        "insertFundFact": [
+          45
+        ],
+        "deductWithdrawableBalance": [
+          74
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java",
+      "sha256": "a235e1b3984f4d72998c338af4f4abd2e241bf404bd394f618395d7dc7bf0c32",
+      "anchors": {
+        "mapper.markDone": [
+          49
+        ],
+        "mutation.apply(row)": [
+          45
+        ],
+        "@Transactional": [
+          22
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+      "sha256": "7b679dd00e49742be729d09660084a040ca3b12ab6f41e35349bb00e23865aeb",
+      "anchors": {
+        "coopSettlementMapper.markPaidIfPending": [
+          1802,
+          1835
+        ],
+        "umsMemberMapper.addBalance": [
+          1817
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java",
+      "sha256": "04211a4ed5274c4afb8b17ba310507c9e12f729c05ea5c95598ba984c3690658",
+      "anchors": {
+        "detailMapper.refreshOriginAggregate": [
+          142
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java",
+      "sha256": "36be3f1a0c904506e389b2e10fd19d73b47a89f3e7208f1e1e80873e5eb4bb1a",
+      "anchors": {
+        "mapper.insertPrepared": [
+          72
+        ],
+        "mapper.markApplied": [
+          147
+        ],
+        "Propagation.MANDATORY": [
+          44,
+          140
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+      "sha256": "c42698d6d21525fd17921e5f1beaaa757b92d5f8ace5af8e4a6327693b1d1c4b",
+      "anchors": {
+        "notificationIntentMapper.insert": [
+          1344
+        ],
+        "notificationIntentMapper.delivered": [
+          1363
+        ],
+        "enqueueSystemNotification": [
+          1330,
+          1335
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java",
+      "sha256": "935ce612a8c70ae5f3876c631a8297bc529a29b53e2bf2cbff1fa4e54b9db1b6",
+      "anchors": {
+        "commandReceiptMapper.insertReceiptClaim": [
+          246
+        ],
+        "commandReceiptMapper.completeReceipt": [
+          256
+        ],
+        "memberId.equals(resolveLeaderMemberId(activity))": [
+          219,
+          272
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+      "sha256": "6026eba65b2c117a27cc535cb916031543fdfd194c8dc179d0d5792782cfa125",
+      "anchors": {
+        "playCommandReceiptMapper.insertReceiptClaim": [
+          1462
+        ],
+        "playCommandReceiptMapper.completeReceipt": [
+          1471
+        ],
+        "basicIntentScope(memberId": [
+          1391,
+          1420,
+          1436
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+      "sha256": "e923e5a71d5221040f1d4aa2bda26f230f3471e91d894bcf80367ba2e7301916",
+      "anchors": {
+        "runtimeMapper.insertReceiptClaim": [
+          923,
+          1866,
+          2020,
+          2132,
+          2639,
+          2704
+        ],
+        "runtimeMapper.completeReceipt": [
+          932,
+          1877,
+          2103,
+          2138,
+          2655
+        ],
+        "runtimeMapper.updateAppliedReceiptResult": [
+          3544
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/WithdrawTransferQueryTask.java",
+      "sha256": "d567940247bdefa495679f3b05a1312a391e338e324e59470effa329a66aed6b",
+      "anchors": {
+        "cashWithdrawService.syncPendingWithdrawals": [
+          25
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/ImNotificationDeliveryTask.java",
+      "sha256": "4b7e09df442d7311e24fbc52def8022fb0db22e98e16bbc4563c35e8304bff2d",
+      "anchors": {
+        "imService.deliverSystemNotification": [
+          29
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/CoopSettlementPayoutTask.java",
+      "sha256": "f91b9220438acc82ee3901352390a8432b8e90d980ce9ae79bcd317742933923",
+      "anchors": {
+        "cmsTopicService.payoutDueCoopSettlements": [
+          29
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/config/SecurityConfig.java",
+      "sha256": "a6b9b31ecc5ab6c32e73d6b0f48cb5c6099b61615e5958b72416ecb3d66940f9",
+      "anchors": {
+        ".anyRequest().authenticated()": [
+          166
+        ],
+        "permitAllUrl.getUrls()": [
+          117
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/JobInvokeUtil.java",
+      "sha256": "2b00d179b5aa4c0a45a2d890860416f3756a616fb9484b4a0450dbf4369cc78f",
+      "anchors": {
+        "Class.forName(beanName)": [
+          37
+        ],
+        "method.invoke(bean": [
+          56,
+          61
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/MySqlSessionLock.java",
+      "sha256": "4ed674d724d3ff35491eaba04f736fe52989cc08cf14f1d8b734bbdcdb970085",
+      "anchors": {
+        "SELECT DATABASE()": [
+          37
+        ],
+        "SELECT GET_LOCK(?, ?)": [
+          45
+        ],
+        "SELECT IS_USED_LOCK(?) = CONNECTION_ID()": [
+          91
+        ],
+        "SELECT RELEASE_LOCK(?)": [
+          110
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-generator/src/main/java/com/chengyinhub/generator/controller/GenController.java",
+      "sha256": "47391e2f6937320960c59360486a487efc4dc5c4be4ae023b1c6bba48e498d24",
+      "anchors": {
+        "@ss.hasRole('admin')": [
+          127
+        ],
+        "sqlStatement instanceof MySqlCreateTableStatement": [
+          139
+        ],
+        "genTableService.createTable": [
+          142
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-generator/src/main/resources/mapper/generator/GenTableMapper.xml",
+      "sha256": "2935bcf60a1f6304a3f64b249e5f4b2e141f7d7837ef5fb104685f6762fc5472",
+      "anchors": {
+        "<update id=\"createTable\">": [
+          174
+        ],
+        "${sql}": [
+          175
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_fund_withdraw_query_job.sql",
+      "sha256": "5d9f72231474ad0e05366eeb56db40eab0c11ebcb3a2b721e3acc16be210e35c",
+      "anchors": {
+        "withdrawTransferQueryTask.run()": [
+          5,
+          7
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261023_g_wp08_delivery_jobs_paused.sql",
+      "sha256": "9d5b05113ddbf878735ae391313814540a855bd41f21aeaa61b63578e76ee7ab",
+      "anchors": {
+        "imNotificationDeliveryTask.deliverPending()": [
+          40,
+          50,
+          53,
+          55,
+          64
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261013_monitor_remaining_jobs.sql",
+      "sha256": "f69a6f8f4c14d3d5fa01b83ec6ff81cdb9e51f0e991bd596f54997027e6a6c39",
+      "anchors": {
+        "coopSettlementPayoutTask.run()": [
+          21,
+          37,
+          39,
+          48
+        ]
+      },
+      "status": "SOURCE_EXISTENCE_VERIFIED_NOT_RUNTIME"
+    }
+  ]
+}

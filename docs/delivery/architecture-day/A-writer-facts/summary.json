@@ -1,0 +1,42 @@
+{
+  "baseline_sha256": "1997d73ccf6133b3eb3ceb55eb26357181ec1df02bcd22f519f7cfc30a905bc3",
+  "chained_or_methodref_same_write_name_sites": 6,
+  "direct_sql_api_and_annotation_observations": 2,
+  "entry_candidates": 1651,
+  "entry_kind_counts": {
+    "HTTP_ANNOTATED": 1486,
+    "QUARTZ_BEAN_METHOD_CANDIDATE": 165
+  },
+  "gate_sha256": "4a3831c9040acc03ad5f13ffd8b60a7ec452b5921bae8ecaefae064fd24ac623",
+  "generator_sql_templates": 10,
+  "java_methods_indexed": 34006,
+  "java_mysql_ci_runs": 0,
+  "java_same_write_name_unresolved": 40,
+  "literal_target_counts": {
+    "KNOWN_LITERAL_TARGET_ONLY": 1271,
+    "UNKNOWN_TARGET": 56
+  },
+  "literal_target_tables": 368,
+  "mapper_statements": 2990,
+  "mapper_write_shape_counts": {
+    "LITERAL_SHAPE_ONLY": 930,
+    "UNKNOWN": 397
+  },
+  "production_java_files": 2442,
+  "raw_gate_table_hint_count": 389,
+  "residual_mapper_xml": [],
+  "resource_xml_files": 284,
+  "retained_java_methods": 3562,
+  "runtime_dispatch_observations": 223,
+  "scope": "OBSERVATION_NOT_APPROVED_POLICY_NOT_RUNTIME_PROOF",
+  "select_tag_leading_dml": [],
+  "source_graph_edges_before_pruning": 66075,
+  "source_graph_writer_ancestor_edges": 3625,
+  "source_sha": "0c0d61266b2ae54d77c5ad9cf8b3c8fdb86d4b16",
+  "source_tree": "f944c065f7186d0d6e4eca6129e11dbe6f0c20df",
+  "typed_mapper_write_calls": 1877,
+  "unindexed_mapper_call_observations": 0,
+  "unknown_select_effect_observations": 5,
+  "write_statements": 1327,
+  "write_statements_without_typed_calls": 36
+}
