@@ -68,4 +68,46 @@ class WebhookSameEventRetryTest {
         assertEquals(occupied, store.size());
         assertEquals(2, transport.urls.size());
     }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueDeliverApplies() {
+        InMemoryNotifyFixtures.RecordingTransport transport =
+                new InMemoryNotifyFixtures.RecordingTransport(204, "ok");
+        InMemoryNotifyFixtures.MemoryDeliveryStore store = new InMemoryNotifyFixtures.MemoryDeliveryStore();
+        WebhookDeliveryLogProducer producer = new WebhookDeliveryLogProducer(
+                transport, new WebhookSsrfHopGuard(), store,
+                new InMemoryNotifyFixtures.FixedNonceSource("nonce-retry-never"));
+        WebhookSameEventRetry retry = new WebhookSameEventRetry(producer);
+        WebhookDeliveryLogProducer.WebhookConfig config = InMemoryNotifyFixtures.fixtureConfig(true, false);
+        java.util.List<WebhookSsrfHopGuard.Hop> hops =
+                Collections.singletonList(InMemoryNotifyFixtures.publicHop());
+        WebhookSameEventRetry.RecoveredRetry blank = retry.recoverOriginal("  ", null, config, hops);
+        assertFalse(blank.recovered());
+        assertNull(blank.log);
+        assertEquals(WebhookSameEventRetry.UNKNOWN_NOT_RECOVERED, blank.note);
+        assertEquals(0, store.size());
+        WebhookSameEventRetry.RecoveredRetry recovered = retry.recoverOriginal(
+                "evt-retry-never-c09", ImmutableReceiptProducer.PROJECTION_APPLIED, config, hops);
+        assertFalse(recovered.recovered());
+        assertTrue(recovered.refusedAppliedProjection);
+        assertEquals(WebhookSameEventRetry.UNKNOWN_NOT_RECOVERED, recovered.note);
+        assertNull(recovered.log);
+        assertNull(store.findByEventId("evt-retry-never-c09"));
+        assertEquals(0, store.size());
+        assertEquals(0, transport.urls.size());
+        WebhookDeliveryLogProducer.DeliveryLog first = producer.deliver(
+                config,
+                new WebhookDeliveryLogProducer.OriginalEvent("evt-retry-never-c09", "PIN", "original-body"),
+                hops);
+        assertEquals("evt-retry-never-c09", first.eventId);
+        assertEquals("dlv-evt-retry-never-c09", first.deliveryId);
+        assertEquals(WebhookDeliveryLogProducer.STATUS_DELIVERED, first.status);
+        assertEquals(1, first.attemptCount);
+        assertEquals(1, store.size());
+        WebhookDeliveryLogProducer.DeliveryLog retried = retry.retrySameEvent("evt-retry-never-c09", config, hops);
+        assertTrue(retry.keepsOriginalIds(first, retried));
+        assertEquals(2, retried.attemptCount);
+        assertEquals(1, store.size());
+        assertEquals("evt-retry-never-c09", retried.eventId);
+    }
 }
