@@ -142,7 +142,7 @@ public final class GameplayRuntimeConfig {
             if(ending.has("chapterId"))number(ending,"chapterId",1,Long.MAX_VALUE);
             if(!ending.path("fallback").isBoolean())fail("剧情结局fallback须为开关");if(ending.path("fallback").asBoolean())storyFallbacks++;
         }
-        if(game.has("storyEndings") && storyFallbacks!=1)fail("剧情结局须有唯一默认收尾");
+        if(!EndingFallbackRule.hasSingleFallback(game.has("storyEndings"),storyFallbacks))fail("剧情结局须有唯一默认收尾");
         for(JsonNode quest:game.path("quests"))if(quest.has("facilityKey")) {
             for(JsonNode facility:game.path("facilities"))if(quest.path("facilityKey").asText().equals(facility.path("facilityKey").asText())) {
                 if(quest.has("costOptions") && facility.has("costOptions"))fail("任务与绑定设施不能同时配置任选费用");

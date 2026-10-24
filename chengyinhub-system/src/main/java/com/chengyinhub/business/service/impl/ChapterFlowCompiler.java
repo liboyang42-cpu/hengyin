@@ -5,6 +5,7 @@ import com.chengyinhub.business.domain.dto.ChapterDTO;
 import com.chengyinhub.business.domain.dto.NodeDTO;
 import com.chengyinhub.business.exception.ChapterFlowValidationException;
 import com.chengyinhub.business.service.support.ChapterNarrativeBlocks;
+import com.chengyinhub.business.service.support.EndingFallbackRule;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -426,7 +427,7 @@ final class ChapterFlowCompiler
             }
             compiled.add(new CompiledChapter(chapter, chapterNumber, description.toString(), nodeSortIds));
         }
-        if (endingChapters > 0 && endingFallbacks != 1)
+        if (!EndingFallbackRule.hasSingleFallback(endingChapters > 0, endingFallbacks))
             throw new ChapterFlowValidationException("结局章里必须恰好有一章是兜底(其它结局都不中时走它)");
         return new CompiledFlow(compiled);
     }
