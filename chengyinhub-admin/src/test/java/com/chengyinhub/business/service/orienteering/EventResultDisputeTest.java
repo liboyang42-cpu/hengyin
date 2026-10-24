@@ -9,7 +9,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -108,5 +110,41 @@ class EventResultDisputeTest {
         assertSame(first, disputes.readRestore("c04-rst-never"));
         assertSame(first, disputes.restoreOriginalReward("c04-dsp-rstx", "c04-rst-never"));
         assertEquals(EventResultDispute.STATUS_RESTORED, disputes.readback("c04-dsp-rstx").status());
+    }
+
+    @Test
+    void recoverFromOriginalRewardReadDoesNotOccupyDisputeThenUniqueFactApplies() {
+        EventResultDispute missing = new EventResultDispute(scores);
+        OrienteeringEventException waiting = assertThrows(OrienteeringEventException.class,
+                () -> missing.recoverFromOriginalRewardRead(7L, 30L));
+        assertEquals(OrienteeringEventException.WAITING_SOURCE, waiting.getErrorCode());
+        assertEquals(EventResultDispute.ORIGINAL_REWARD_READ, waiting.getWaitingCapability());
+        assertNull(missing.recoverFromOriginalRewardRead(0L, 30L));
+        assertNull(missing.recoverFromOriginalRewardRead(7L, 0L));
+
+        Map<String, Map<String, Object>> facts = new LinkedHashMap<String, Map<String, Object>>();
+        EventResultDispute.OriginalRewardReadSource source =
+                new EventResultDispute.OriginalRewardReadSource() {
+                    @Override
+                    public Map<String, Object> readPersonalNaturalFinish(long memberId, long sessionId) {
+                        return facts.get(memberId + ":" + sessionId);
+                    }
+                };
+        EventResultDispute wired = new EventResultDispute(scores, source);
+        assertNull(wired.recoverFromOriginalRewardRead(7L, 30L));
+        assertThrows(OrienteeringEventException.class, () -> wired.readback("c04-reward-missing"));
+
+        Map<String, Object> original = new LinkedHashMap<String, Object>();
+        original.put("state", "PARTIAL");
+        original.put("session_id", 30L);
+        original.put("authority", "ORIGINAL_ISSUANCE_FACTS_AND_IMMUTABLE_ACTIONS");
+        facts.put("7:30", original);
+        EventResultDispute restarted = new EventResultDispute(scores, source);
+        Map<String, Object> recovered = restarted.recoverFromOriginalRewardRead(7L, 30L);
+        assertEquals("PARTIAL", recovered.get("state"));
+        assertEquals(30L, recovered.get("session_id"));
+        assertEquals(0, restarted.recoverUnknown("c04-reward-missing").dispute == null ? 0 : 1);
+        assertEquals(EventResultDispute.OUTCOME_NOT_FOUND,
+                restarted.recoverUnknown("c04-reward-missing").outcome);
     }
 }

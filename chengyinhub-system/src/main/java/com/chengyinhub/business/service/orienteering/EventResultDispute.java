@@ -11,6 +11,8 @@ import java.util.regex.Pattern;
 /**
  * 成绩争议与原奖励恢复。恢复指向完赛时封存的 originalRewardCenti / 原 requestId，
  * 不新造发奖请求，也不改成长个人榜。originalRewardCenti 不是 scoreCenti。
+ * 原奖励事实回读走 {@link OriginalRewardReadSource}（orientation.originalRewardRead）；
+ * 不复制私有 OrientationOriginalRewardReadService，不另造发奖账。
  */
 public final class EventResultDispute {
 
@@ -21,18 +23,25 @@ public final class EventResultDispute {
     public static final String OUTCOME_PENDING = "PENDING";
     public static final String OUTCOME_RESTORED = "RESTORED";
     public static final String OUTCOME_REJECTED = "REJECTED";
+    public static final String ORIGINAL_REWARD_READ = "orientation.originalRewardRead";
 
     private static final Pattern REQUEST_ID = Pattern.compile("[A-Za-z0-9_.:-]{8,64}");
 
     private final EventScoreVersioning scores;
+    private final OriginalRewardReadSource rewardRead;
     private final AtomicLong seq = new AtomicLong(1);
     private final Map<String, Dispute> byRequest = new ConcurrentHashMap<String, Dispute>();
     private final Map<Long, Dispute> byId = new ConcurrentHashMap<Long, Dispute>();
     private final Map<String, RestoreReceipt> restores = new ConcurrentHashMap<String, RestoreReceipt>();
 
     public EventResultDispute(EventScoreVersioning scores) {
+        this(scores, null);
+    }
+
+    public EventResultDispute(EventScoreVersioning scores, OriginalRewardReadSource rewardRead) {
         if (scores == null) throw new IllegalArgumentException("成绩版本真源不能为空");
         this.scores = scores;
+        this.rewardRead = rewardRead;
     }
 
     public Dispute open(String resultRequestId, String reason, String requestId) {
@@ -116,6 +125,31 @@ public final class EventResultDispute {
             throw new OrienteeringEventException(OrienteeringEventException.NOT_FOUND, "没有这条原奖励恢复回执");
         }
         return found;
+    }
+
+    /**
+     * 新实例从原奖励只读口回读完赛发放事实。缺端口 WAITING_SOURCE {@link #ORIGINAL_REWARD_READ}；
+     * 非法 member/session 返回 {@code null}；未见过的键返回 {@code null}，不占争议账。
+     * 不复制私有 mapper XML，不把 scoreCenti 当成奖励。
+     */
+    public Map<String, Object> recoverFromOriginalRewardRead(long memberId, long sessionId) {
+        if (memberId <= 0L || sessionId <= 0L) {
+            return null;
+        }
+        if (rewardRead == null) {
+            throw new OrienteeringEventException(OrienteeringEventException.WAITING_SOURCE,
+                    "原奖励回读需要 orientation.originalRewardRead", ORIGINAL_REWARD_READ);
+        }
+        Map<String, Object> fact = rewardRead.readPersonalNaturalFinish(memberId, sessionId);
+        if (fact == null) {
+            return null;
+        }
+        return fact;
+    }
+
+    /** 只读原完赛发放事实；不发奖、不 insert。 */
+    public interface OriginalRewardReadSource {
+        Map<String, Object> readPersonalNaturalFinish(long memberId, long sessionId);
     }
 
     static String parseKey(String requestId) {
