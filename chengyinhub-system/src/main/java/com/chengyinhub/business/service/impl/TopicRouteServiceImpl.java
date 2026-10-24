@@ -3,14 +3,10 @@ package com.chengyinhub.business.service.impl;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.function.LongSupplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,9 +47,9 @@ public class TopicRouteServiceImpl implements ITopicRouteService
     /** 腾讯返回的 polyline 压缩系数 */
     private static final double COMPRESS = 1000000.0D;
 
-    static final long MAX_CACHE_BYTES = 8L * 1024 * 1024;
-    static final long MAX_ENTRY_BYTES = 256L * 1024;
-    static final long MAX_TTL_SECONDS = 300;
+    static final long MAX_CACHE_BYTES = MapResponseCache.MAX_CACHE_BYTES;
+    static final long MAX_ENTRY_BYTES = MapResponseCache.MAX_ENTRY_BYTES;
+    static final long MAX_TTL_SECONDS = MapResponseCache.MAX_TTL_SECONDS;
     static final int MAX_GEOMETRY_POINTS = 4096;
     private static final long BUILD_NANOS = TimeUnit.SECONDS.toNanos(10);
 
@@ -65,7 +61,7 @@ public class TopicRouteServiceImpl implements ITopicRouteService
     private TencentMapClient tencentMapClient;
 
     /** 只保留成功路线；容量、LRU 和 TTL 的元数据操作共用短锁，provider 调用不持锁。 */
-    private final GeometryCache cache;
+    private final MapResponseCache cache;
     /** No waiting callers or unbounded key-lock map. A cold duplicate declines until the winner completes. */
     private final Set<String> inFlight = new HashSet<>();
 
@@ -86,7 +82,7 @@ public class TopicRouteServiceImpl implements ITopicRouteService
         {
             throw new IllegalArgumentException("Invalid route cache budget or TTL");
         }
-        cache = new GeometryCache(cacheEnabled ? maxBytes : 0, maxEntryBytes,
+        cache = new MapResponseCache(cacheEnabled ? maxBytes : 0, maxEntryBytes,
                 TimeUnit.SECONDS.toNanos(ttlSeconds), System::nanoTime);
     }
 
@@ -149,7 +145,6 @@ public class TopicRouteServiceImpl implements ITopicRouteService
         long started = nanoTime();
         // 3) 相邻两点逐段算路并拼接
         List<double[]> line = new ArrayList<>();
-        boolean degraded = false;
         for (int i = 0; i + 1 < pts.size(); i++)
         {
             if (nanoTime() - started >= BUILD_NANOS) return null;
@@ -170,10 +165,8 @@ public class TopicRouteServiceImpl implements ITopicRouteService
             }
             if (seg == null || seg.isEmpty())
             {
-                // 某段算路失败：退化为这两点直连，保证线不断
-                degraded = true;
-                if (!appendDedup(line, pts.get(i)) || !appendDedup(line, pts.get(i + 1))) return null;
-                continue;
+                // A failed/unknown segment is not a provider route. The view may draw labelled local preview lines.
+                return null;
             }
             for (double[] p : seg)
             {
@@ -195,98 +188,8 @@ public class TopicRouteServiceImpl implements ITopicRouteService
             arr.add(o);
         }
         String json = arr.toJSONString();
-        if (!degraded)
-        {
-            cache.put(cacheKey, json);
-        }
+        cache.put(cacheKey, json);
         return json;
-    }
-
-    /**
-     * 路线专用缓存。计费=key/value UTF-16 上界字节+每项256字节元数据预留；
-     * 这不是 JVM heap 实测。项数另外限制为 floor(总预算/256)，避免小 value 无限增项。
-     * TTL 从成功写入起计、命中不续期；过期项按访问惰性删除，闲置时仍受容量上限约束。
-     */
-    static final class GeometryCache
-    {
-        private static final long ENTRY_ALLOWANCE_BYTES = 256;
-
-        private final long maxBytes;
-        private final long maxEntryBytes;
-        private final long maxEntries;
-        private final long ttlNanos;
-        private final LongSupplier ticker;
-        private final LinkedHashMap<String, CacheEntry> entries = new LinkedHashMap<>(16, 0.75f, true);
-        private long retainedBytes;
-
-        GeometryCache(long maxBytes, long maxEntryBytes, long ttlNanos, LongSupplier ticker)
-        {
-            if (maxBytes < 0 || maxBytes > MAX_CACHE_BYTES || maxEntryBytes <= 0 || maxEntryBytes > MAX_ENTRY_BYTES
-                    || ttlNanos <= 0 || ttlNanos > TimeUnit.SECONDS.toNanos(MAX_TTL_SECONDS))
-            {
-                throw new IllegalArgumentException("Invalid route cache limits");
-            }
-            this.maxBytes = maxBytes;
-            this.maxEntryBytes = Math.min(maxEntryBytes, maxBytes);
-            this.maxEntries = Math.min(Integer.MAX_VALUE, maxBytes / ENTRY_ALLOWANCE_BYTES);
-            this.ttlNanos = ttlNanos;
-            this.ticker = ticker;
-        }
-
-        synchronized String get(String key)
-        {
-            CacheEntry entry = entries.get(key);
-            if (entry == null)
-            {
-                return null;
-            }
-            // 单调时钟的差值同时支持 nanoTime 的有符号回绕。
-            if (ticker.getAsLong() - entry.writtenAt >= ttlNanos)
-            {
-                entries.remove(key);
-                retainedBytes -= entry.weight;
-                return null;
-            }
-            return entry.json;
-        }
-
-        synchronized void put(String key, String json)
-        {
-            long weight = ENTRY_ALLOWANCE_BYTES + 2L * ((long) key.length() + json.length());
-            if (weight > maxEntryBytes)
-            {
-                // 超大结果照常返回给当前请求，但不留存，也不淘汰已有正常项。
-                return;
-            }
-            CacheEntry old = entries.remove(key);
-            if (old != null)
-            {
-                retainedBytes -= old.weight;
-            }
-            Iterator<Map.Entry<String, CacheEntry>> oldest = entries.entrySet().iterator();
-            while (entries.size() >= maxEntries || retainedBytes > maxBytes - weight)
-            {
-                CacheEntry evicted = oldest.next().getValue();
-                retainedBytes -= evicted.weight;
-                oldest.remove();
-            }
-            entries.put(key, new CacheEntry(json, weight, ticker.getAsLong()));
-            retainedBytes += weight;
-        }
-
-        private static final class CacheEntry
-        {
-            private final String json;
-            private final long weight;
-            private final long writtenAt;
-
-            private CacheEntry(String json, long weight, long writtenAt)
-            {
-                this.json = json;
-                this.weight = weight;
-                this.writtenAt = writtenAt;
-            }
-        }
     }
 
     /** 调一段腾讯路线规划，返回解压后的坐标 [lat,lng] 列表 */

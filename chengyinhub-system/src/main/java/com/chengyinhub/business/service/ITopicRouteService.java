@@ -16,7 +16,8 @@ public interface ITopicRouteService
      *
      * @param orderedNodes 已按 sort_id 升序排好的节点列表
      * @return JSON 字符串 [{"latitude":..,"longitude":..}, ...]；
-     *         未配置 Key / 已禁用 / 计算失败 时返回 null（前端用节点直连兜底）
+     *         未配置 Key / 已禁用 / 任一段失败或未知 时返回 null，不能返回混有直连的供应商路径。
+     *         界面可另画明确标注的节点直线预览，不能用它作为道路距离、通关或奖励依据。
      */
     String buildGeometryJson(List<? extends CmsTopicNode> orderedNodes);
 }

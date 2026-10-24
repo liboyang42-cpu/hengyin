@@ -93,7 +93,7 @@ class TopicRouteBudgetTest {
             assertThrows(IllegalArgumentException.class, () -> new TopicRouteServiceImpl(enabled, 1024, 1024, 301));
             assertThrows(IllegalArgumentException.class, () -> new TopicRouteServiceImpl(enabled, Long.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE));
         }
-        assertThrows(IllegalArgumentException.class, () -> new TopicRouteServiceImpl.GeometryCache(
+        assertThrows(IllegalArgumentException.class, () -> new MapResponseCache(
                 Long.MAX_VALUE, 1024, 100, () -> 0));
     }
 
@@ -143,7 +143,7 @@ class TopicRouteBudgetTest {
             when(client.get(anyString())).thenReturn("{\"status\":0,\"result\":{\"routes\":[{\"polyline\":" + poly + "}]}}")
                     .thenAnswer(call -> response(call.getArgument(0)));
             TopicRouteServiceImpl service = configure(new TopicRouteServiceImpl(), client);
-            service.buildGeometryJson(nodes(30.1, 30.2));
+            assertNull(service.buildGeometryJson(nodes(30.1, 30.2)));
             assertCacheEmpty(service);
             String recovered = service.buildGeometryJson(nodes(30.1, 30.2));
             assertEquals(2, JSONArray.parseArray(recovered).size());

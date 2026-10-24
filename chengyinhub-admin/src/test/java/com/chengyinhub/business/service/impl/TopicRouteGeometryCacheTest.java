@@ -21,7 +21,7 @@ class TopicRouteGeometryCacheTest
     void byteBudgetEvictsLeastRecentlyUsedAndCountsKeysToo()
     {
         // 每项 256 + 2*(1+1) = 260 bytes；总预算只容两项。
-        TopicRouteServiceImpl.GeometryCache cache = cache(520, 520, new AtomicLong());
+        MapResponseCache cache = cache(520, 520, new AtomicLong());
         cache.put("a", "1");
         cache.put("b", "2");
         assertEquals("1", cache.get("a"));
@@ -37,7 +37,7 @@ class TopicRouteGeometryCacheTest
     void expiryUsesMonotonicWriteTimeAndHitsDoNotExtendTtl()
     {
         AtomicLong now = new AtomicLong(Long.MAX_VALUE - 50);
-        TopicRouteServiceImpl.GeometryCache cache = cache(1024, 1024, now);
+        MapResponseCache cache = cache(1024, 1024, now);
         cache.put("a", "route");
         now.addAndGet(99);
         assertEquals("route", cache.get("a"));
@@ -51,7 +51,7 @@ class TopicRouteGeometryCacheTest
     @Test
     void oversizedKeyOrGeometryDoesNotEvictUsefulEntries()
     {
-        TopicRouteServiceImpl.GeometryCache cache = cache(1024, 300, new AtomicLong());
+        MapResponseCache cache = cache(1024, 300, new AtomicLong());
         cache.put("a", "ok");
         cache.put("b", "x".repeat(23)); // 256+2*(1+23)=304 > 300
         cache.put("k".repeat(23), "x");
@@ -65,7 +65,7 @@ class TopicRouteGeometryCacheTest
     @Test
     void replacementReleasesPreviousWeightAndCanUseExactEntryLimit()
     {
-        TopicRouteServiceImpl.GeometryCache cache = cache(600, 300, new AtomicLong());
+        MapResponseCache cache = cache(600, 300, new AtomicLong());
         cache.put("a", "x".repeat(21)); // exactly 300
         assertEquals("x".repeat(21), cache.get("a"));
         cache.put("a", "1");
@@ -78,7 +78,7 @@ class TopicRouteGeometryCacheTest
     @Test
     void concurrentHitsAndEvictionsNeverExceedBudgetOrMixValues() throws Exception
     {
-        TopicRouteServiceImpl.GeometryCache cache = cache(4096, 1024, new AtomicLong());
+        MapResponseCache cache = cache(4096, 1024, new AtomicLong());
         ExecutorService workers = Executors.newFixedThreadPool(8);
         CountDownLatch start = new CountDownLatch(1);
         try
@@ -114,20 +114,20 @@ class TopicRouteGeometryCacheTest
     @Test
     void invalidLimitsAreRejectedAndZeroBudgetDisablesRetention()
     {
-        TopicRouteServiceImpl.GeometryCache disabled = cache(0, 300, new AtomicLong());
+        MapResponseCache disabled = cache(0, 300, new AtomicLong());
         disabled.put("a", "route");
         assertNull(disabled.get("a"));
         assertBounded(disabled, 0);
         assertThrows(IllegalArgumentException.class, () -> cache(-1, 300, new AtomicLong()));
         assertThrows(IllegalArgumentException.class, () -> cache(1024, 0, new AtomicLong()));
         assertThrows(IllegalArgumentException.class,
-                () -> new TopicRouteServiceImpl.GeometryCache(1024, 300, 0, () -> 0L));
+                () -> new MapResponseCache(1024, 300, 0, () -> 0L));
     }
 
     @Test
     void totalBudgetAlsoLimitsSingleEntryEvenWhenEntrySettingIsLarger()
     {
-        TopicRouteServiceImpl.GeometryCache cache = cache(300, 4096, new AtomicLong());
+        MapResponseCache cache = cache(300, 4096, new AtomicLong());
         cache.put("a", "x".repeat(23));
         assertNull(cache.get("a"));
         cache.put("a", "ok");
@@ -139,12 +139,12 @@ class TopicRouteGeometryCacheTest
                 () -> new TopicRouteServiceImpl(true, -1, 300, 300));
     }
 
-    private TopicRouteServiceImpl.GeometryCache cache(long total, long entry, AtomicLong now)
+    private MapResponseCache cache(long total, long entry, AtomicLong now)
     {
-        return new TopicRouteServiceImpl.GeometryCache(total, entry, 100, now::get);
+        return new MapResponseCache(total, entry, 100, now::get);
     }
 
-    private void assertBounded(TopicRouteServiceImpl.GeometryCache cache, long budget)
+    private void assertBounded(MapResponseCache cache, long budget)
     {
         synchronized (cache)
         {
