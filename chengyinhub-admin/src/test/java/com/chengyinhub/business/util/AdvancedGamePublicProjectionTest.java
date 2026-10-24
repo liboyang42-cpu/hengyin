@@ -87,10 +87,10 @@ class AdvancedGamePublicProjectionTest {
     @Test
     void playerNodesEndpointCannotPutRawAdvancedConfigIntoResponse() throws Exception {
         String source = new String(Files.readAllBytes(Paths.get("src", "main", "java", "com", "chengyinhub",
-                "web", "controller", "api", "ApiPlayProgressController.java")), StandardCharsets.UTF_8)
+                "web", "service", "play", "PlayNodeQueryApplication.java")), StandardCharsets.UTF_8)
                 .replaceAll("\\s+", " ");
 
-        assertTrue(source.contains("AdvancedGamePublicProjection .safeConfigJson(themeNodeConfig==null?tpl.getAdvancedConfigJson():themeNodeConfig.toString(), bargainOffered)"));
+        assertTrue(source.contains("AdvancedGamePublicProjection .safeConfigJson(themeNodeConfig==null?tpl.getAdvancedConfigJson():themeNodeConfig.toString(), read.bargainOffered)"));
         assertFalse(source.contains("m.put(\"advancedConfigJson\", tpl.getAdvancedConfigJson())"));
         assertFalse(source.contains("m.put(\"advancedConfigJson\", themeNodeConfig.toString())"));
     }

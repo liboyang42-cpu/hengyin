@@ -100,6 +100,8 @@ final class PreparedCoopPlanFixture {
         ReflectionTestUtils.setField(service, "coopSettlementEvidenceMapper", evidence);
     }
     static void settle(CmsTopicServiceImpl service, CmsTopic topic, BigDecimal total) {
+        // These old combination scenarios explicitly contain no approved registration refunds.
+        OriginalCloseRefundHistoryFixture.install(service, topic.getId(), List.of());
         currentSales.set(total);
         try { service.settleCoopTopic(topic,total); } finally { currentSales.remove(); }
     }

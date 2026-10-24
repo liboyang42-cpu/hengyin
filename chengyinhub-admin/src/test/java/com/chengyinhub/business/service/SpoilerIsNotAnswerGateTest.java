@@ -30,12 +30,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class SpoilerIsNotAnswerGateTest {
 
-    private static final Path CTRL = Paths.get(
-            "src", "main", "java", "com", "chengyinhub", "web", "controller", "api",
-            "ApiPlayProgressController.java");
+    private static final Path NODE_QUERY = Paths.get(
+            "src", "main", "java", "com", "chengyinhub", "web", "service", "play",
+            "PlayNodeQueryApplication.java");
+    private static final Path PUZZLE_COMMAND = Paths.get(
+            "src", "main", "java", "com", "chengyinhub", "web", "service", "play",
+            "PlayPuzzleCommandApplication.java");
 
     private static String codeWithoutComments() throws Exception {
-        String src = new String(Files.readAllBytes(CTRL), StandardCharsets.UTF_8);
+        return codeWithoutComments(NODE_QUERY);
+    }
+
+    private static String codeWithoutComments(Path owner) throws Exception {
+        String src = new String(Files.readAllBytes(owner), StandardCharsets.UTF_8);
         return src.replaceAll("(?s)/\\*.*?\\*/", "").replaceAll("(?m)^\\s*//.*$", "");
     }
 
@@ -101,7 +108,7 @@ class SpoilerIsNotAnswerGateTest {
     @Test
     @DisplayName("正规出口必须还在:/reveal 记 0 分之后才下发答案")
     void legitimateRevealPathStillExists() throws Exception {
-        String code = codeWithoutComments();
+        String code = codeWithoutComments(PUZZLE_COMMAND);
         assertTrue(code.contains("recordReveal"), "付费闸 recordReveal 不能被一起删掉");
         assertTrue(Pattern.compile("recordReveal[\\s\\S]{0,900}?data\\.put\\(\"answerReveal\"")
                         .matcher(code).find(),
@@ -115,8 +122,8 @@ class SpoilerIsNotAnswerGateTest {
         assertFalse(feedsAnswerIntoProject(clean), "干净输入不该报");
 
         String mutated = clean.replace(
-                "spoilerProtectionService.project(spoilerAccess, n.getId(), null)",
-                "spoilerProtectionService.project(spoilerAccess, n.getId(), tpl.getAnswerReveal())");
+                "spoilerProtectionService.project(read.spoilerAccess, n.getId(), null)",
+                "spoilerProtectionService.project(read.spoilerAccess, n.getId(), tpl.getAnswerReveal())");
         assertFalse(clean.equals(mutated), "负控变异注入失败 —— 锚点没命中,这条负控是假的");
         assertTrue(feedsAnswerIntoProject(mutated), "检查器没抓到被喂回去的答案正文");
     }

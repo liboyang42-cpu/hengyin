@@ -186,7 +186,7 @@ jobs:
       B_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'OmsOrderCommerceGuardMySqlIT' || matrix.simple == 'ClmCommercePaymentProofMySqlIT' || matrix.simple == 'WechatVerifiedPaymentFactMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RefundNotificationMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest') && '1' || '' }}
       WP04_ORIGINAL_REFUND_DDL_APPROVED: ${{ matrix.simple == 'Wp04OriginalRefundMySqlIT' && '1' || '' }}
       WP04_PAID_HALF_STATE_DDL_APPROVED: ${{ (matrix.simple == 'Wp04PaidHalfStateMySqlIT' || matrix.simple == 'Wp04ApprovedRefundFenceMySqlIT') && '1' || '' }}
-      A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest') && '1' || '' }}
+      A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT') && '1' || '' }}
     steps:
       - name: Checkout gate scripts
         uses: actions/checkout@v4

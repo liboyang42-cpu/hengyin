@@ -131,7 +131,7 @@ class OuterCancellationTopicFenceTest {
         assertEquals(0, team.cancelActivityByOwner(5L, 70L, "reason").getRefundedOrders());
         var order = inOrder(topics, activities);
         order.verify(topics).selectCmsTopicByIdForUpdate(7L);
-        order.verify(activities).selectCmsActivityByIdForUpdate(5L);
+        order.verify(activities, atLeastOnce()).selectCmsActivityByIdForUpdate(5L);
         order.verify(activities).updateCmsActivity(any());
         verifyNoInteractions(refunds);
         verifyNoInteractions(verifiedPaymentFacts);

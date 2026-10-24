@@ -93,7 +93,7 @@ class RegistryContractTest(unittest.TestCase):
         flag = "A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED"
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
                     if line.strip().startswith(flag + ":"))
-        self.assertEqual("A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest') && '1' || '' }}", line)
+        self.assertEqual("A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT') && '1' || '' }}", line)
         self.assertEqual({flag: "1"}, rs.child_env({flag: "1"}, {}))
 
     def test_registered_literal_scratch_admissions_are_present_in_workflow(self):

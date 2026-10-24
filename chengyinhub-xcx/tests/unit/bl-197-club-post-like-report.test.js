@@ -30,6 +30,7 @@ function loadPage(relativePath, app, requireMap = {}) {
     getApp: () => app,
     Page(page) { definition = page },
     require(request) {
+      if (request === '../../../utils/registration-seat.js') return require('../../utils/registration-seat.js')
       if (Object.prototype.hasOwnProperty.call(requireMap, request)) return requireMap[request]
       if (request === '../../../utils/response-shape.js') return require(path.join(ROOT, 'utils/response-shape.js'))
       // 邀约/合作池整形与 coop/list 共用一份(2026-09-08 抽出)。给真实现而不是桩:

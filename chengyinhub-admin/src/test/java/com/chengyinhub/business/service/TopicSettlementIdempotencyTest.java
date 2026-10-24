@@ -65,6 +65,7 @@ class TopicSettlementIdempotencyTest {
         ReflectionTestUtils.setField(svc, "cmsRegistrationMapper", cmsRegistrationMapper);
         ReflectionTestUtils.setField(svc, "coopOrderMapper", coopOrderMapper);
         ReflectionTestUtils.setField(svc, "coopSettlementEvidenceMapper", mock(com.chengyinhub.business.mapper.CoopSettlementEvidenceMapper.class));
+        com.chengyinhub.business.service.impl.OriginalCloseRefundHistoryFixture.install(svc, 100L, Collections.emptyList());
         ReflectionTestUtils.setField(svc, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(svc, "settlementRuleService", settlementRuleService);
         ReflectionTestUtils.setField(svc, "transactionManager", transactionManager);

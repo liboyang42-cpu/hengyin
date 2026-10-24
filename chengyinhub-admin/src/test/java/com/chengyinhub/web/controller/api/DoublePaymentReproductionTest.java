@@ -396,6 +396,7 @@ class DoublePaymentReproductionTest {
     private void installOriginalCoopEvidence(CmsRegistration registration,
             CmsTopicMapper topics, CoopOrderMapper orders, CoopInviteMapper invites) {
         evidenceMapper = mock(CoopSettlementEvidenceMapper.class);
+        com.chengyinhub.business.service.impl.OriginalCloseRefundHistoryFixture.install(topicService, TOPIC, Collections.emptyList());
         when(evidenceMapper.countPaidActivityRegistrations(TOPIC)).thenReturn(0);
         when(evidenceMapper.selectTopicCashRowsForUpdate(TOPIC)).thenReturn(List.of(registration));
         when(evidenceMapper.selectCashBasisBlockingRefundIdsForUpdate(TOPIC)).thenReturn(Collections.emptyList());
