@@ -192,3 +192,23 @@ BUILD SUCCESS
 ```
 
 App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
+
+## Addendum 2026-10-23 19:50 America/Los_Angeles
+
+HEAD `8d9aa8a09` tests. Did not invent recoverOriginal.
+
+`OfflinePackOperationTest.unusedRecordFullDiskOfIdleDoesNotOccupyThenUniqueStartThenFullDiskApplies`：IDLE `recordFullDisk` 抛 `NOT_DOWNLOADING` 且 phase 仍 IDLE、operationId 仍空；后续唯一 startDownload+recordFullDisk 才是 FULL_DISK（抛 FULL_DISK 发生在占账之后）。与 unused recordCorrupt 的 CORRUPT 占账不同。
+
+Parent surefire `com.chengyinhub.business.service.offline.*Test` **18/0** 2026-10-24T02:50:37Z：
+
+```
+Tests run: 5 -- OfflinePackOperationTest
+Tests run: 5 -- SideQuestAcceptHoldTest
+Tests run: 4 -- C05AccountSwitchRestartIsolationTest
+Tests run: 2 -- C05FirstJourneyIsolationTest
+Tests run: 2 -- NavigationDestinationConsentTest
+Tests run: 18, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
