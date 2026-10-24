@@ -93,6 +93,19 @@ BUILD SUCCESS
 
 App / 真库 / CI = NOT_RUN。
 
+Class-level occupancy on exclusive class files (did not invent `recoverOriginal`). `MerchantNpcDraftApprovalGateTest`: `visibilityForRequest` of null/blank/never-seen stays null without occupying; later unique `rememberRejectedReview` is the first REJECTED write. Unpublished `requeryPublished` / `cachedPublic` stay null through ingest/verify/submit; unique `publishApproved` is the first write. `MerchantNpcQualificationRevokeTest`: `cachedPublic` of never-seen/mismatched scope stays null; unique `rememberPublished` is the first write. Parent surefire 2026-10-24T01:00:22Z HEAD `db4647446`：
+
+```
+Tests run: 4 -- MerchantNpcQualificationRevokeTest
+Tests run: 5 -- C06AccountSwitchRestartIsolationTest
+Tests run: 11 -- MerchantNpcDraftApprovalGateTest
+Tests run: 1 -- C06FirstJourneyIsolationTest
+Tests run: 21, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / 真库 / CI = NOT_RUN。不是 100%。
+
 SHA256（生产 4 类）：
 
 - `MerchantNpcKnowledgeDraft.java` `24cb23f71488ff7bbdd40c68dfe57e4392e073a2918c30ea3e40e76896cc659a`
