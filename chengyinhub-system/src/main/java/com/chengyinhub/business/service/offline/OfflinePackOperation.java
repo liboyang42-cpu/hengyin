@@ -289,6 +289,10 @@ public final class OfflinePackOperation {
     private void verifyPayload(byte[] payload) {
         if (manifest == null || payload.length != manifest.byteSize
                 || !manifest.checksum.equalsIgnoreCase(sha256Hex(payload))) {
+            if (retainedPrior != null && phase == Phase.UPDATING) {
+                restorePrior(retainedPrior);
+                throw failStatic(Failure.CORRUPT);
+            }
             phase = Phase.CORRUPT;
             failure = Failure.CORRUPT;
             throw failStatic(Failure.CORRUPT);

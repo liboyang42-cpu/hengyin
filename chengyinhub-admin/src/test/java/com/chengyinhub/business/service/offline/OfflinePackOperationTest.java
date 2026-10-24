@@ -155,6 +155,39 @@ class OfflinePackOperationTest {
         assertEquals("op-fin", pack.operationId());
         assertEquals("v2", pack.manifest().version);
     }
+
+    @Test
+    void blankAuthorityIsInvalidAndBadUpdateShaRestoresKeptPrior() {
+        assertEquals(OfflinePackOperation.Failure.INVALID_MANIFEST,
+                assertThrows(OfflinePackOperation.OfflinePackException.class,
+                        () -> new OfflinePackOperation.Manifest("  ", "op-blank", "v1",
+                                OfflinePackFixtures.PAYLOAD.length, OfflinePackFixtures.CHECKSUM,
+                                List.of(11), OfflinePackFixtures.EXPIRES)).code);
+        assertEquals(OfflinePackOperation.Failure.INVALID_MANIFEST,
+                assertThrows(OfflinePackOperation.OfflinePackException.class,
+                        () -> new OfflinePackOperation.Manifest("pack-1", " \t", "v1",
+                                OfflinePackFixtures.PAYLOAD.length, OfflinePackFixtures.CHECKSUM,
+                                List.of(11), OfflinePackFixtures.EXPIRES)).code);
+
+        OfflinePackOperation pack = new OfflinePackOperation();
+        pack.startDownload(manifest("op-bad"), NOW);
+        pack.finishDownload(OfflinePackFixtures.PAYLOAD);
+        pack.applyUpdate(OfflinePackFixtures.manifest("op-bad", "v2"), true, NOW);
+        byte[] wrong = OfflinePackFixtures.PAYLOAD.clone();
+        wrong[0] = (byte) (wrong[0] ^ 0xff);
+        assertEquals(OfflinePackFixtures.PAYLOAD.length, wrong.length);
+        assertEquals(OfflinePackOperation.Failure.CORRUPT,
+                assertThrows(OfflinePackOperation.OfflinePackException.class, () -> pack.finishUpdate(wrong)).code);
+        assertEquals(OfflinePackOperation.Phase.READY, pack.phase());
+        assertEquals("v1", pack.manifest().version);
+        assertEquals("op-bad", pack.operationId());
+
+        pack.applyUpdate(OfflinePackFixtures.manifest("op-bad", "v2"), false, NOW);
+        assertEquals(OfflinePackOperation.Failure.CORRUPT,
+                assertThrows(OfflinePackOperation.OfflinePackException.class, () -> pack.finishUpdate(wrong)).code);
+        assertEquals(OfflinePackOperation.Phase.CORRUPT, pack.phase());
+        assertEquals("v2", pack.manifest().version);
+    }
 }
 
 final class OfflinePackFixtures {
