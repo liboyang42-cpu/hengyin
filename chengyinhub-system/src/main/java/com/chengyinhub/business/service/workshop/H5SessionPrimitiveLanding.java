@@ -21,10 +21,15 @@ import java.lang.reflect.Method;
  * and {@code AppTokenService.verifyToken} are invoked on the instances already passed in.
  * {@code createAppToken} is not called. Buyer-license names {@code licenses}, {@code license},
  * {@code forLicense}, {@code history}, and {@code read} are not on these collaborators, so
- * that check stays closed. No shell host, approval flag, or session TTL is introduced.
- * The main session token is not returned as an H5 ticket, and a ticket is not placed in a URL.
- * Issuance is not executed: {@code setIfAbsent}, {@code compareAndSet}, and
- * {@code compareAndDelete} are not called.
+ * that check stays closed. The frozen release is read with
+ * {@code WorkshopPackageVersionPublish.frozen}, {@code FreezeFact.contentHash}, and
+ * {@code recover}/{@code frozenContentHash}. The original install receipt is read with
+ * {@code WorkshopInstallUpgradeRollback.snapshot}, {@code Snapshot.originalRequestId}, and
+ * {@code recover}. {@code freeze} and {@code install} are not called. A missing frozen
+ * content hash or install request id stays closed. No shell host, approval flag, or
+ * session TTL is introduced. The main session token is not returned as an H5 ticket,
+ * and a ticket is not placed in a URL. Issuance is not executed: {@code setIfAbsent},
+ * {@code compareAndSet}, and {@code compareAndDelete} are not called.
  */
 public final class H5SessionPrimitiveLanding {
 
@@ -41,14 +46,20 @@ public final class H5SessionPrimitiveLanding {
     private final BaseController actors;
     private final IAppSessionRegistryService epochs;
     private final RedisCache redis;
+    private final WorkshopPackageVersionPublish releases;
+    private final WorkshopInstallUpgradeRollback installs;
 
     public H5SessionPrimitiveLanding(Object authFilter, Object appTokenService, BaseController actors,
-                                     IAppSessionRegistryService epochs, RedisCache redis) {
+                                     IAppSessionRegistryService epochs, RedisCache redis,
+                                     WorkshopPackageVersionPublish releases,
+                                     WorkshopInstallUpgradeRollback installs) {
         this.authFilter = authFilter;
         this.appTokenService = appTokenService;
         this.actors = actors;
         this.epochs = epochs;
         this.redis = redis;
+        this.releases = releases;
+        this.installs = installs;
     }
 
     public enum Outcome {
@@ -166,10 +177,58 @@ public final class H5SessionPrimitiveLanding {
         } catch (RuntimeException ex) {
             return closed("redis read missing");
         }
+        String frozenHash = frozenContentHash();
+        String installRequestId = installRequestId();
+        if (carries(frozenHash, mainSessionToken) || carries(installRequestId, mainSessionToken)) {
+            return closed("main jwt is not the h5 ticket");
+        }
+        if (!present(frozenHash)) {
+            return closed("frozen content hash missing");
+        }
+        if (!present(installRequestId)) {
+            return closed("install request id missing");
+        }
         if (!licensePrimitivePresent(authFilter, appTokenService, actors, epochs, redis)) {
             return closed("license missing");
         }
         return closed("issuance not executed");
+    }
+
+    /**
+     * Read the already-frozen release. {@code freeze} is not called. A missing
+     * fact or a receipt without {@code frozenContentHash} is absent.
+     */
+    private String frozenContentHash() {
+        if (releases == null) {
+            return null;
+        }
+        WorkshopPackageVersionPublish.FreezeFact fact = releases.frozen();
+        if (fact == null || !present(fact.contentHash()) || !present(fact.originalRequestId())) {
+            return null;
+        }
+        WorkshopPackageVersionPublish.Decision receipt = releases.recover(fact.originalRequestId());
+        if (receipt == null || !present(receipt.frozenContentHash())) {
+            return null;
+        }
+        return receipt.frozenContentHash();
+    }
+
+    /**
+     * Read the original install receipt. {@code install} is not called. The id
+     * comes from {@code snapshot}; {@code recover} of a blank id does not occupy
+     * the ledger and does not mint a request id.
+     */
+    private String installRequestId() {
+        if (installs == null) {
+            return null;
+        }
+        WorkshopInstallUpgradeRollback.Snapshot current = installs.snapshot();
+        String id = current == null ? null : current.originalRequestId();
+        WorkshopInstallUpgradeRollback.Snapshot receipt = installs.recover(id);
+        if (receipt == null || !present(receipt.originalRequestId())) {
+            return null;
+        }
+        return receipt.originalRequestId();
     }
 
     /**
