@@ -1,0 +1,1212 @@
+{
+  "rootSource": "0d32d888e29c6d5ef51322b10d7aca736be856ff",
+  "aSource": "48d24f8e0fb14ab555003f9e035b981a6807f884",
+  "javaFilesMentioningClass": 66,
+  "concreteConstructionFiles": 52,
+  "concreteNewExpressions": 63,
+  "springReflectionAssemblyFiles": 1,
+  "remainingReferencesWithoutConcreteConstruction": 13,
+  "executedJavaMySqlCI": false,
+  "rows": [
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ClubGatherArrivalMySqlIT.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "registrations"
+      ],
+      "methodMentionsOnInstanceVariables": [],
+      "newInstanceSites": [
+        {
+          "line": 79,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ComplaintPickerOwnerType3RealDbIT.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "impl"
+      ],
+      "methodMentionsOnInstanceVariables": [],
+      "newInstanceSites": [
+        {
+          "line": 173,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ExploreScanReplayRealDbIT.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "registrations"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "redeemExploreChapterAndRecord"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 61,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/FreeSelfPlayCreateRealDbIT.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "target"
+      ],
+      "methodMentionsOnInstanceVariables": [],
+      "newInstanceSites": [
+        {
+          "line": 163,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/MerchantDashboardAggregationMyBatisTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "countPaidVerificationByOwners",
+        "readDashboardIncome"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 149,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedeemExploreReadViewMySqlIT.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "registrations"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "redeemExploreChapterAndRecord"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 111,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationCallbackIntentMySqlIT.java",
+      "instances": 1,
+      "relevant": [
+        [
+          359,
+          "return \"SUCCESS\".equals(registration.applyConfirmedWechatPaymentWithinTransaction(facts));"
+        ],
+        [
+          412,
+          "assertEquals(\"SUCCESS\",registration.applyConfirmedWechatPaymentWithinTransaction(facts));"
+        ]
+      ],
+      "instanceVariables": [
+        "registration"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "applyConfirmedWechatPaymentWithinTransaction"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 209,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "B/D/root owned; latest root confirms G collaborator added; excluded from changes"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationSeatMySqlIT.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "originalOrders"
+      ],
+      "methodMentionsOnInstanceVariables": [],
+      "newInstanceSites": [
+        {
+          "line": 275,
+          "snippet": "new com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java",
+      "instances": 2,
+      "relevant": [
+        [
+          144,
+          "ReflectionTestUtils.setField(refundTarget, \"verifiedPaymentFacts\", verifiedFacts);"
+        ],
+        [
+          160,
+          "ReflectionTestUtils.setField(target, \"verifiedPaymentFacts\", verifiedFacts);"
+        ],
+        [
+          522,
+          "assertEquals(\"SUCCESS\", payments.applyConfirmedWechatPaymentWithinTransaction(facts));"
+        ]
+      ],
+      "instanceVariables": [
+        "creation",
+        "paymentService",
+        "paymentTarget",
+        "payments",
+        "target"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "applyConfirmedWechatPaymentWithinTransaction",
+        "completeZeroAmountPayment",
+        "create",
+        "handleWechatPayCallback"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 155,
+          "snippet": "new CmsRegistrationServiceImpl("
+        },
+        {
+          "line": 272,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "A48 consumed mapper/schema/facts already supplied; latest root message confirms payment-target G collaborator also added; no duplicate proposal"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ClubSessionSettlementBasisMyBatisTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "registrationService"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "verifyAndSettleForGroupActivity"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 86,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/RegistrationTicketSourceMapperSqlTest.java",
+      "instances": 0,
+      "relevant": [],
+      "newInstanceSites": [],
+      "classification": "source/metadata/interface-mock reference; no concrete service construction"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ActivityParentTopicSignupGateTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [],
+      "newInstanceSites": [
+        {
+          "line": 40,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistClaimMembershipRaceTransactionTest.java",
+      "instances": 4,
+      "relevant": [],
+      "instanceVariables": [
+        "target"
+      ],
+      "methodMentionsOnInstanceVariables": [],
+      "newInstanceSites": [
+        {
+          "line": 125,
+          "snippet": "new CmsRegistrationServiceImpl("
+        },
+        {
+          "line": 138,
+          "snippet": "new CmsRegistrationServiceImpl("
+        },
+        {
+          "line": 157,
+          "snippet": "new CmsRegistrationServiceImpl("
+        },
+        {
+          "line": 188,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistQuoteWiringTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "quoteRegistration",
+        "quoteRegistrationForOffer"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 89,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistRegistrationWiringTest.java",
+      "instances": 0,
+      "relevant": [],
+      "newInstanceSites": [],
+      "classification": "source/metadata/interface-mock reference; no concrete service construction"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ComplainableTopicsDerivationTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "selectComplainableTopics"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 56,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ErqingGateTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "assertCollectible",
+        "createMultiTicketRegistrations",
+        "createRegistration",
+        "createSelfPlayPass",
+        "quoteRegistration"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 92,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreNeverWholeOrderSettleTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "verifyAndSettle"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 59,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreQtyGateTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "createMultiTicketRegistrations",
+        "createRegistration"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 97,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemRecordTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "redeemExploreChapterAndRecord"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 103,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreReleaseWiringTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "cancelRegistration",
+        "closeExpiredOne"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 67,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreReserveWiringTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "createMultiTicketRegistrations",
+        "createRegistration"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 97,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreSellGateTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "createRegistration"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 64,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/FreeUgcActivityRegistrationGateTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "createRegistration",
+        "createSelfPlayPass",
+        "quoteRegistration"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 61,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PaymentCallbackFenceEntryTest.java",
+      "instances": 1,
+      "relevant": [
+        [
+          194,
+          "ReflectionTestUtils.setField(service, \"verifiedPaymentFacts\", reader);"
+        ],
+        [
+          227,
+          ".getMethod(\"applyConfirmedWechatPaymentWithinTransaction\", Map.class)"
+        ],
+        [
+          233,
+          "assertEquals(\"FAIL\", service.applyConfirmedWechatPaymentWithinTransaction(payload));"
+        ]
+      ],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "applyConfirmedWechatPaymentWithinTransaction",
+        "handleWechatPayCallback"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 56,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "CLOSED/failure/replay, underpaid SUCCESS, or transaction rejection; no admitted cash SUCCESS"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ProductSourceWiringTest.java",
+      "instances": 0,
+      "relevant": [],
+      "newInstanceSites": [],
+      "classification": "source/metadata/interface-mock reference; no concrete service construction"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ReferralBountyHookWiringTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "redeemExploreChapterAndRecord",
+        "verifyAndSettle"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 70,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundSnapshotWiringTest.java",
+      "instances": 0,
+      "relevant": [],
+      "newInstanceSites": [],
+      "classification": "source/metadata/interface-mock reference; no concrete service construction"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationCancelExactlyOnceContractTest.java",
+      "instances": 0,
+      "relevant": [],
+      "newInstanceSites": [],
+      "classification": "source/metadata/interface-mock reference; no concrete service construction"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationCurrentUseGateTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "generateVerificationQrcode",
+        "redeemExploreChapterAndRecord",
+        "requireCurrentUsableRegistration"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 22,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationDeleteGateTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "deleteCmsRegistrationById",
+        "deleteCmsRegistrationByIds"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 37,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationEquityAtomicityContractTest.java",
+      "instances": 0,
+      "relevant": [],
+      "newInstanceSites": [],
+      "classification": "source/metadata/interface-mock reference; no concrete service construction"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+      "instances": 1,
+      "relevant": [
+        [
+          138,
+          "ReflectionTestUtils.setField(target, \"verifiedPaymentFacts\", verifiedFacts);"
+        ]
+      ],
+      "instanceVariables": [
+        "registrationTarget",
+        "target"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "cancelActivityByOwner"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 132,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "A48 consumed mapper/schema/facts already supplied; latest root message confirms payment-target G collaborator also added; no duplicate proposal"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationPaymentAtomicityContractTest.java",
+      "instances": 0,
+      "relevant": [
+        [
+          34,
+          "int apply = service.indexOf(\"applyWechatPayCallback(registration, resultMap)\", method);"
+        ],
+        [
+          37,
+          "int machine = service.indexOf(\"private String applyWechatPayCallback\");"
+        ]
+      ],
+      "newInstanceSites": [],
+      "classification": "source/metadata/interface-mock reference; no concrete service construction"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationSaleAvailabilityWiringTest.java",
+      "instances": 0,
+      "relevant": [],
+      "newInstanceSites": [],
+      "classification": "source/metadata/interface-mock reference; no concrete service construction"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationTicketWindowGateTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [],
+      "newInstanceSites": [
+        {
+          "line": 50,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerificationAuditTransactionBoundaryTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "target"
+      ],
+      "methodMentionsOnInstanceVariables": [],
+      "newInstanceSites": [
+        {
+          "line": 110,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "verifyAndSettle",
+        "verifyAndSettleForGroupActivity",
+        "verifyAndSettleForStation"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 80,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RevshareGateWiringTest.java",
+      "instances": 0,
+      "relevant": [],
+      "newInstanceSites": [],
+      "classification": "source/metadata/interface-mock reference; no concrete service construction"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayOneTicketGateTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [],
+      "newInstanceSites": [
+        {
+          "line": 43,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/StandaloneCheckoutSignupNoticeAcceptanceTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "completeZeroAmountPayment",
+        "preparePaymentRetry",
+        "quoteRegistration"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 80,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/StoreVerifyGrowthDeliveryTransactionTest.java",
+      "instances": 2,
+      "relevant": [],
+      "instanceVariables": [
+        "registrationTarget",
+        "target"
+      ],
+      "methodMentionsOnInstanceVariables": [],
+      "newInstanceSites": [
+        {
+          "line": 123,
+          "snippet": "new CmsRegistrationServiceImpl("
+        },
+        {
+          "line": 227,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDeletePaidGateTest.java",
+      "instances": 0,
+      "relevant": [],
+      "newInstanceSites": [],
+      "classification": "source/metadata/interface-mock reference; no concrete service construction"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/WholeOrderVerificationReverseTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "reverseWholeOrderVerification",
+        "verifyAndSettle"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 59,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ClubOperationBenefitTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "createRegistration",
+        "createSelfPlayPass",
+        "quoteRegistration"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 264,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CmsRegistrationVerificationCountTest.java",
+      "instances": 2,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "countPaidVerificationByOwners"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 39,
+          "snippet": "new CmsRegistrationServiceImpl("
+        },
+        {
+          "line": 53,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/MoneyPathContractTest.java",
+      "instances": 3,
+      "relevant": [],
+      "instanceVariables": [
+        "quoteService",
+        "s",
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "createSelfPlayPass",
+        "generateCouponQrToken",
+        "quoteRegistration",
+        "verifyCouponQrToken"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 66,
+          "snippet": "new CmsRegistrationServiceImpl("
+        },
+        {
+          "line": 205,
+          "snippet": "new CmsRegistrationServiceImpl("
+        },
+        {
+          "line": 240,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/MultiTicketPointsDeductTest.java",
+      "instances": 2,
+      "relevant": [],
+      "instanceVariables": [
+        "createService",
+        "s",
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "createMultiTicketRegistrations"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 77,
+          "snippet": "new CmsRegistrationServiceImpl("
+        },
+        {
+          "line": 164,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RegistrationCreationTopicFenceTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "create"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 28,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RegistrationSignupIntentTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [],
+      "newInstanceSites": [
+        {
+          "line": 33,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RegistrationTopicFenceTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "payments"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "completeZeroAmountPayment"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 168,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SelfPlayPassIdempotencyTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "create",
+        "createSelfPlayPass"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 202,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SelfPlaySaleGateWordingV2Test.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service",
+        "serviceWithLifecycle"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "quoteRegistration"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 62,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ShopDayPurchaseFundsPolicyTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "createMultiTicketRegistrations",
+        "createRegistration",
+        "quoteRegistration"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 144,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SignupNoticeAfterCommitPersistenceMySqlIT.java",
+      "instances": 1,
+      "relevant": [
+        [
+          272,
+          "transaction.executeWithoutResult(status -> assertEquals(\"SUCCESS\", registrationService.applyConfirmedWechatPaymentWithinTransaction(callback())));"
+        ],
+        [
+          284,
+          "transaction.executeWithoutResult(status -> assertEquals(\"SUCCESS\", registrationService.applyConfirmedWechatPaymentWithinTransaction(callback())));"
+        ],
+        [
+          409,
+          "Callable<String> pay = () -> transaction.execute(status -> registrationService.applyConfirmedWechatPaymentWithinTransaction(callback()));"
+        ],
+        [
+          425,
+          "transaction.executeWithoutResult(status -> assertEquals(\"SUCCESS\", registrationService.applyConfirmedWechatPaymentWithinTransaction(callback())));"
+        ],
+        [
+          437,
+          "transaction.executeWithoutResult(status -> assertEquals(\"FAIL\", registrationService.applyConfirmedWechatPaymentWithinTransaction(rejected)));"
+        ],
+        [
+          448,
+          "transaction.executeWithoutResult(status -> assertEquals(\"FAIL\", registrationService.applyConfirmedWechatPaymentWithinTransaction(callback())));"
+        ],
+        [
+          458,
+          "assertEquals(\"SUCCESS\", registrationService.applyConfirmedWechatPaymentWithinTransaction(callback()));"
+        ]
+      ],
+      "instanceVariables": [
+        "registrationTarget",
+        "target"
+      ],
+      "methodMentionsOnInstanceVariables": [],
+      "newInstanceSites": [
+        {
+          "line": 149,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "B/D/root owned; latest root confirms G collaborator added; excluded from changes"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TicketSourceAttributionTrustBoundaryTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "create"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 110,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicPurchaseGateTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "s",
+        "service",
+        "serviceWithTopicUserStatus"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "quoteRegistration"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 67,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/VerificationRiskQueueFailureNotificationTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [],
+      "newInstanceSites": [
+        {
+          "line": 17,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/VerifiedRegistrationReceiptGuardTest.java",
+      "instances": 1,
+      "relevant": [
+        [
+          43,
+          "ReflectionTestUtils.setField(service, \"verifiedPaymentFacts\", reader);"
+        ],
+        [
+          99,
+          "assertThrows(RuntimeException.class, () -> payments.applyConfirmedWechatPaymentWithinTransaction(map));"
+        ]
+      ],
+      "instanceVariables": [
+        "payments"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "applyConfirmedWechatPaymentWithinTransaction",
+        "handleWechatPayCallback"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 29,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "busy verified processor reaches outer G retain; no successful local mutation / consumed mapper required"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackForgedSignatureTest.java",
+      "instances": 3,
+      "relevant": [],
+      "instanceVariables": [
+        "registration",
+        "registrationService"
+      ],
+      "methodMentionsOnInstanceVariables": [
+        "getByRegistrationNo",
+        "handleWechatPayCallback",
+        "setId",
+        "setPaymentStatus",
+        "setRegistrationNo",
+        "setRegistrationStatus",
+        "setWechatPaymentAmount"
+      ],
+      "newInstanceSites": [
+        {
+          "line": 415,
+          "snippet": "new CmsRegistrationServiceImpl("
+        },
+        {
+          "line": 432,
+          "snippet": "new CmsRegistrationServiceImpl("
+        },
+        {
+          "line": 614,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "real failure factory missing shared verified reader/inbox reader before intended payment conflict; new G collaborator needed once that original path is admitted"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WholeOrderRefundTest.java",
+      "instances": 0,
+      "relevant": [],
+      "newInstanceSites": [],
+      "classification": "source/metadata/interface-mock reference; no concrete service construction"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/PointsValuePolicyTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "service"
+      ],
+      "methodMentionsOnInstanceVariables": [],
+      "newInstanceSites": [
+        {
+          "line": 85,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/framework/aspectj/DeadlockRetryEntryPointContractTest.java",
+      "instances": 0,
+      "relevant": [],
+      "newInstanceSites": [],
+      "classification": "source/metadata/interface-mock reference; no concrete service construction"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/upgrade/SupportedStackServiceCyclesTest.java",
+      "instances": 0,
+      "relevant": [
+        [
+          295,
+          "assertThat(ReflectionTestUtils.getField(registration, \"verifiedPaymentFacts\")).isSameAs(facts);"
+        ],
+        [
+          296,
+          "assertThat(ReflectionTestUtils.getField(refund, \"verifiedPaymentFacts\")).isSameAs(facts);"
+        ]
+      ],
+      "newInstanceSites": [],
+      "classification": "Spring reflective assembly: all @Autowired dependency types automatically receive inert collaborators; no payment execution"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationPayExpiredCodeTest.java",
+      "instances": 0,
+      "relevant": [],
+      "newInstanceSites": [],
+      "classification": "source/metadata/interface-mock reference; no concrete service construction"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/DoublePaymentReproductionTest.java",
+      "instances": 1,
+      "relevant": [],
+      "instanceVariables": [
+        "registrationService"
+      ],
+      "methodMentionsOnInstanceVariables": [],
+      "newInstanceSites": [
+        {
+          "line": 198,
+          "snippet": "new CmsRegistrationServiceImpl("
+        }
+      ],
+      "classification": "creation/quote/zero-amount/verification/read/negative scope; no invocation of the actual admitted Wechat SUCCESS body located"
+    }
+  ],
+  "gSourceCommit": "8ca8f49180f967ef9cc218026a12e552922df50f",
+  "latestCoordinatorUpdate": "Four real payment factories already wired by root; only verified busy-retain unit fixture remains in this proposal."
+}

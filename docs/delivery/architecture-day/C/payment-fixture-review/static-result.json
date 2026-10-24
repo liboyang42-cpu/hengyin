@@ -1,0 +1,19 @@
+{
+  "preimages": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/VerifiedRegistrationReceiptGuardTest.java": {
+      "source": "0d32d888e29c6d5ef51322b10d7aca736be856ff",
+      "sha256": "178616c9fc8da93421d90dea49c453d614d554d877263adb56a3db31c22e7e30",
+      "testDeclarations": 9
+    }
+  },
+  "reviewPatchDeletesLines": false,
+  "reviewPatchAppliedToRealFixture": false,
+  "patchApplicationCheck": "PASS against exact 0d32 Guard preimage; unapplied proposal only",
+  "JavaCompiled": false,
+  "JUnitExecuted": false,
+  "MySQLExecuted": false,
+  "CIStarted": false,
+  "productionOrRootFilesChanged": false,
+  "frozenCSource": "30676682dfa161dba593167cb06ffef9ee21a109",
+  "rootConfirmedFourFactoriesAlreadyWired": true
+}
