@@ -132,3 +132,23 @@ BUILD SUCCESS
 ```
 
 App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
+
+## Addendum 2026-10-23 19:41 America/Los_Angeles
+
+HEAD `e7c48238e` tests. Did not invent recoverOriginal.
+
+`OfflinePackOperationTest.unusedDeleteOfIdleDoesNotOccupyThenUniqueStartThenDeleteApplies`：IDLE `delete` 抛 `INVALID_MANIFEST` 且 phase 仍 IDLE、operationId 仍空；后续唯一 startDownload+delete 才是 DELETED。
+
+Parent surefire `com.chengyinhub.business.service.offline.*Test` **15/0** 2026-10-24T02:41:32Z：
+
+```
+Tests run: 2 -- OfflinePackOperationTest
+Tests run: 5 -- SideQuestAcceptHoldTest
+Tests run: 4 -- C05AccountSwitchRestartIsolationTest
+Tests run: 2 -- C05FirstJourneyIsolationTest
+Tests run: 2 -- NavigationDestinationConsentTest
+Tests run: 15, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
