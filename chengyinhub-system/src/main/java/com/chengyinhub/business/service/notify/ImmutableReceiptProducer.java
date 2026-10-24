@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.chengyinhub.business.domain.ImMessage;
 import com.chengyinhub.business.service.IImService;
@@ -36,8 +35,10 @@ public final class ImmutableReceiptProducer {
     public static final String IM_SEND = "im.send";
     /** 真实发消息命令：content、msgType、extraJson、身份。指纹 body 不是正文。 */
     public static final String IM_SEND_COMMAND = "im.send.originalCommand";
-    /** 原 send 的 extraJson 必须带 reply_to_id 或 mention_* 正式字段。任意 mention 夹具不是合同。 */
+    /** 原 send 的 reply_to_id 或 mention_* 字段。任意 mention 夹具不是合同。 */
     public static final String IM_SEND_WIRE = "im.send.originalWire";
+    /** 频道回复/提及的原 writer 是 ChannelMessageService.send，不是 IImService.send。公开树还没有这个类。 */
+    public static final String CHANNEL_MESSAGE_SEND = "channelMessage.send";
     public static final String NOT_A_SEND = "IM_OPERATION_NOT_SEND";
 
     public enum Kind {
@@ -152,33 +153,58 @@ public final class ImmutableReceiptProducer {
     }
 
     /**
-     * 只有带真实 content、msgType、extraJson 和身份的 REPLY/MENTION 才交给 {@link IImService#send}。
+     * 频道上的 REPLY/MENTION 走原 {@code ChannelMessageService.send} 字段，不调用 {@link IImService#send}。
+     * 原调度对非频道的回复/提及直接拒绝，不会落到普通 send。
      * SEARCH/EDIT/WITHDRAW/PIN 不发送。{@link OriginalRequest#body} 是指纹材料，不能当正文。
-     * 缺真实命令源为 WAITING_SOURCE {@link #IM_SEND_COMMAND}。不写入内存 store。
+     * 缺命令字段为 {@link #IM_SEND_COMMAND}；缺 reply/mention 字段为 {@link #IM_SEND_WIRE}；
+     * 缺频道原 writer 为 {@link #CHANNEL_MESSAGE_SEND}。不写入内存 store，不复制私有类。
      */
-    public OriginalReceipt sendOriginal(OriginalRequest request, Long memberId, Long conversationId,
-            Long targetMemberId, Integer msgType, String content, String extraJson, ImSendSource send) {
+    public OriginalReceipt sendOriginal(OriginalRequest request, Long actorId, Long conversationId,
+            Integer msgType, String content, String extraJson, Long replyToId, List<Long> mentionMemberIds,
+            List<Long> mentionRoleIds, boolean mentionEveryone, ChannelOriginalSend channelSend) {
         OriginalRequest required = requireRequest(request);
         if (required.kind != Kind.REPLY && required.kind != Kind.MENTION) {
             throw new NotASendException(required.kind);
         }
-        if (content == null || content.isBlank() || content.equals(required.body)
-                || extraJson == null || extraJson.isBlank() || msgType == null
-                || memberId == null || memberId.longValue() <= 0L
-                || conversationId == null || conversationId.longValue() <= 0L
-                || targetMemberId == null || targetMemberId.longValue() <= 0L) {
+        if (content == null || content.isBlank() || content.equals(required.body) || msgType == null
+                || actorId == null || actorId.longValue() <= 0L
+                || conversationId == null || conversationId.longValue() <= 0L) {
             throw new WaitingSourceException(IM_SEND_COMMAND);
         }
-        if (send == null) {
-            throw new WaitingSourceException(IM_SEND_COMMAND);
+        if (required.kind == Kind.REPLY && (replyToId == null || replyToId.longValue() <= 0L)) {
+            throw new WaitingSourceException(IM_SEND_WIRE);
         }
-        requireOriginalWire(required.kind, extraJson);
-        ImMessage sent = send.send(memberId, conversationId, targetMemberId, msgType, content, extraJson,
-                required.requestId);
+        if (required.kind == Kind.MENTION && !hasMention(mentionMemberIds, mentionRoleIds, mentionEveryone)) {
+            throw new WaitingSourceException(IM_SEND_WIRE);
+        }
+        if (channelSend == null) {
+            throw new WaitingSourceException(CHANNEL_MESSAGE_SEND);
+        }
+        Map<String, Object> sent = channelSend.send(actorId, conversationId, required.requestId, msgType, content,
+                extraJson, replyToId, mentionMemberIds, mentionRoleIds, mentionEveryone);
         if (sent == null) {
             return unknownReceipt(required.requestId, null);
         }
-        return fromMessage(sent);
+        Object client = sent.get("client_message_id");
+        String id = client instanceof String ? parseRequestId((String) client) : required.requestId;
+        if (id == null) {
+            id = required.requestId;
+        }
+        Object body = sent.get("content");
+        Object hash = sent.get("request_hash");
+        return new OriginalReceipt(id, null, hash instanceof String ? (String) hash : null, OUTCOME_UNKNOWN,
+                body instanceof String ? (String) body : content);
+    }
+
+    /** 与原 ChannelMessageRequests.Send 同一组字段。不复制私有类，也不调用 IImService.send。 */
+    public interface ChannelOriginalSend {
+        Map<String, Object> send(Long actorId, Long conversationId, String clientMessageId, Integer msgType,
+                String content, String extraJson, Long replyToId, List<Long> mentionMemberIds,
+                List<Long> mentionRoleIds, boolean mentionEveryone);
+    }
+
+    private static boolean hasMention(List<Long> members, List<Long> roles, boolean everyone) {
+        return everyone || members != null && !members.isEmpty() || roles != null && !roles.isEmpty();
     }
 
     public static final class NotASendException extends IllegalStateException {
@@ -192,29 +218,6 @@ public final class ImmutableReceiptProducer {
 
         public Kind getKind() {
             return kind;
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private static void requireOriginalWire(Kind kind, String extraJson) {
-        Map<String, Object> wire;
-        try {
-            wire = new ObjectMapper().readValue(extraJson, Map.class);
-        } catch (Exception ex) {
-            throw new WaitingSourceException(IM_SEND_WIRE);
-        }
-        if (kind == Kind.REPLY) {
-            if (!(wire.get("reply_to_id") instanceof Number)) {
-                throw new WaitingSourceException(IM_SEND_WIRE);
-            }
-            return;
-        }
-        Object everyone = wire.get("mention_everyone");
-        boolean mentioned = wire.get("mention_member_ids") instanceof List
-                || wire.get("mention_role_ids") instanceof List
-                || everyone instanceof Boolean || everyone instanceof Number;
-        if (!mentioned) {
-            throw new WaitingSourceException(IM_SEND_WIRE);
         }
     }
 
