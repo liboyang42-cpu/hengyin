@@ -1,0 +1,23 @@
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OuterCancellationTopicFenceTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OuterCancellationTopicFenceTest.java
+index f73f37ee..bd4af232 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OuterCancellationTopicFenceTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OuterCancellationTopicFenceTest.java
+@@ -54,0 +55,2 @@ class OuterCancellationTopicFenceTest {
++        CancellationPhaseTestSupport.wireTeamUnit(team, registrations);
++        when(registrations.selectCmsRegistrationList(any())).thenReturn(Collections.emptyList());
+@@ -62,0 +65 @@ class OuterCancellationTopicFenceTest {
++        CancellationPhaseTestSupport.wireTransactions(events, CancellationPhaseTestSupport.memoryTransactions());
+@@ -111 +114,7 @@ class OuterCancellationTopicFenceTest {
+-        when(delegate.cancelActivityByOwner(5L, 70L, "reason")).thenReturn(new ActivityCancelResult(0, 0, 0));
++        var observed = CancellationPhaseTestSupport.stubEmptyObservation(delegate,
++                new RegistrationCancellationPayments.Scope(2L,5L,7L,70L,null,List.of()));
++        when(delegate.cancelActivityWithObservedPayments(5L, 70L, 70L, "reason", false, observed))
++                .thenAnswer(call -> {
++                    assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
++                    return new ActivityCancelResult(0, 0, 0);
++                });
+@@ -117 +126,3 @@ class OuterCancellationTopicFenceTest {
+-        order.verify(delegate).cancelActivityByOwner(5L, 70L, "reason");
++        order.verify(delegate).captureCancellationPayments(2L, 5L);
++        order.verify(delegate).observeCancellationPayments(observed);
++        order.verify(delegate).cancelActivityWithObservedPayments(5L, 70L, 70L, "reason", false, observed);

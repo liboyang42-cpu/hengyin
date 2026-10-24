@@ -1,0 +1,89 @@
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ActivityCancelTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ActivityCancelTest.java
+index d0e405d6..43df5498 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ActivityCancelTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ActivityCancelTest.java
+@@ -87 +87 @@ class ActivityCancelTest {
+-            return Integer.valueOf(2).equals(query.getPaymentStatus())
++            return query.getPaymentStatus() == null || Integer.valueOf(2).equals(query.getPaymentStatus())
+@@ -130,0 +131 @@ class ActivityCancelTest {
++        com.chengyinhub.business.service.CancellationPhaseTestSupport.wireTeamUnit(s, regMapper);
+@@ -194 +195 @@ class ActivityCancelTest {
+-        when(regMapper.selectCmsRegistrationList(any(CmsRegistration.class))).thenAnswer(inv -> {
++        org.mockito.Mockito.doAnswer(inv -> {
+@@ -200 +201,14 @@ class ActivityCancelTest {
+-        });
++        }).when(regMapper).selectCmsRegistrationList(any(CmsRegistration.class));
++        // The old read-only notification projection is now the actual current-row port used by all phases.
++        org.mockito.Mockito.doAnswer(call -> recipients.stream()
++                .filter(row -> call.getArgument(0).equals(row.getId())).findFirst().orElse(null))
++                .when(regMapper).selectCmsRegistrationByIdForUpdate(anyLong());
++        org.mockito.Mockito.doAnswer(call -> recipients.stream().anyMatch(row ->
++                call.getArgument(0).equals(row.getId()) && Integer.valueOf(2).equals(row.getPaymentStatus())
++                        && Integer.valueOf(0).equals(row.getVerificationStatus())) ? 1 : 0)
++                .when(regMapper).claimRegistrationRefunded(anyLong(), anyString(), any(Date.class));
++        org.mockito.Mockito.doAnswer(call -> recipients.stream().anyMatch(row ->
++                call.getArgument(0).equals(row.getId()) && call.getArgument(1).equals(row.getMemberId())
++                        && Integer.valueOf(0).equals(row.getPaymentStatus())
++                        && Integer.valueOf(1).equals(row.getRegistrationStatus())) ? 1 : 0)
++                .when(regMapper).cancelUnpaidIfActive(anyLong(), anyLong(), anyString());
+@@ -301 +315 @@ class ActivityCancelTest {
+-        assertThrows(ServiceException.class,
++        IllegalStateException refusal = assertThrows(IllegalStateException.class,
+@@ -302,0 +317 @@ class ActivityCancelTest {
++        assertEquals("原取消报名当前范围不一致", refusal.getMessage());
+@@ -333,0 +349,3 @@ class ActivityCancelTest {
++        org.springframework.jdbc.datasource.DataSourceTransactionManager originalManager =
++                new org.springframework.jdbc.datasource.DataSourceTransactionManager(dataSource);
++        com.chengyinhub.business.service.CancellationPhaseTestSupport.wireTeamTransactions(target, originalManager);
+@@ -336 +354 @@ class ActivityCancelTest {
+-                new org.springframework.jdbc.datasource.DataSourceTransactionManager(dataSource),
++                originalManager,
+@@ -395,12 +413,5 @@ class ActivityCancelTest {
+-        TransactionSynchronizationManager.initSynchronization();
+-        try {
+-            s.cancelActivityByOwner(ACTIVITY_ID, OWNER_ID, "场地临时不可用");
+-
+-            verify(refundPayoutService, never()).payoutAfterReview(anyLong());
+-            for (TransactionSynchronization synchronization : TransactionSynchronizationManager.getSynchronizations()) {
+-                synchronization.afterCommit();
+-            }
+-            verify(refundPayoutService).payoutAfterReview(999L);
+-        } finally {
+-            TransactionSynchronizationManager.clearSynchronization();
+-        }
++        com.chengyinhub.business.service.CancellationPhaseTestSupport.wireTeamTransactions(s,
++                com.chengyinhub.business.service.CancellationPhaseTestSupport.memoryTransactions(() ->
++                        verify(refundPayoutService, never()).payoutAfterReview(anyLong())));
++        s.cancelActivityByOwner(ACTIVITY_ID, OWNER_ID, "场地临时不可用");
++        verify(refundPayoutService).payoutAfterReview(999L);
+@@ -421,9 +432,3 @@ class ActivityCancelTest {
+-        TransactionSynchronizationManager.initSynchronization();
+-        try {
+-            assertThrows(ServiceException.class,
+-                    () -> s.cancelActivityByOwner(ACTIVITY_ID, OWNER_ID, "场地临时不可用"));
+-
+-            verify(refundPayoutService, never()).payoutAfterReview(anyLong());
+-        } finally {
+-            TransactionSynchronizationManager.clearSynchronization();
+-        }
++        assertThrows(ServiceException.class,
++                () -> s.cancelActivityByOwner(ACTIVITY_ID, OWNER_ID, "场地临时不可用"));
++        verify(refundPayoutService, never()).payoutAfterReview(anyLong());
+@@ -891 +896 @@ class ActivityCancelTest {
+-        when(regMapper.selectCmsRegistrationList(any(CmsRegistration.class))).thenAnswer(invocation -> {
++        org.mockito.Mockito.doAnswer(invocation -> {
+@@ -893 +898 @@ class ActivityCancelTest {
+-            return Integer.valueOf(0).equals(query.getPaymentStatus())
++            return query.getPaymentStatus() == null || Integer.valueOf(0).equals(query.getPaymentStatus())
+@@ -896 +901 @@ class ActivityCancelTest {
+-        });
++        }).when(regMapper).selectCmsRegistrationList(any(CmsRegistration.class));
+@@ -914 +919 @@ class ActivityCancelTest {
+-        when(regMapper.selectCmsRegistrationList(any(CmsRegistration.class))).thenAnswer(invocation -> {
++        org.mockito.Mockito.doAnswer(invocation -> {
+@@ -916 +921 @@ class ActivityCancelTest {
+-            return Integer.valueOf(0).equals(query.getPaymentStatus())
++            return query.getPaymentStatus() == null || Integer.valueOf(0).equals(query.getPaymentStatus())
+@@ -919 +924 @@ class ActivityCancelTest {
+-        });
++        }).when(regMapper).selectCmsRegistrationList(any(CmsRegistration.class));

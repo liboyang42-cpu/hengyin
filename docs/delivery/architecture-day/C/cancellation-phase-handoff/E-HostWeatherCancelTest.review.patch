@@ -1,0 +1,48 @@
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/HostWeatherCancelTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/HostWeatherCancelTest.java
+index 9588b1cf..695afc89 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/HostWeatherCancelTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/HostWeatherCancelTest.java
+@@ -96 +96 @@ class HostWeatherCancelTest {
+-            if (!Integer.valueOf(2).equals(q.getPaymentStatus())) return Collections.emptyList();
++            if (q.getPaymentStatus() != null && !Integer.valueOf(2).equals(q.getPaymentStatus())) return Collections.emptyList();
+@@ -140,0 +141,3 @@ class HostWeatherCancelTest {
++        var notices = mock(com.chengyinhub.business.service.IImService.class);
++        when(notices.sendSystem(any(), any(), any(), any())).thenReturn(910L);
++        ReflectionTestUtils.setField(service, "imService", notices);
+@@ -144,0 +148 @@ class HostWeatherCancelTest {
++        com.chengyinhub.business.service.CancellationPhaseTestSupport.wireTeamUnit(service, regMapper);
+@@ -380,0 +385,4 @@ class HostWeatherCancelTest {
++        verify(clubOps, never()).captureAuthorizedTopicCancellationPayments(
++                anyLong(), anyLong(), anyLong(), anyLong(), any());
++        verify(clubOps, never()).cancelAuthorizedTopicWithObservedPayments(
++                anyLong(), anyLong(), anyLong(), anyLong(), any(), any());
+@@ -573,2 +581,18 @@ class HostWeatherCancelTest {
+-        when(clubOps.cancelActivityForAuthorizedTopicCancellation(STAFF, TOPIC, 5L, 202L, "台风停运"))
+-                .thenReturn(new ActivityCancelResult(1, 0, 0));
++        var captured = new com.chengyinhub.business.domain.dto.RegistrationCancellationPayments(Collections.singletonList(
++                new com.chengyinhub.business.domain.dto.RegistrationCancellationPayments.Scope(
++                        2L,202L,TOPIC,STRANGER,5L,Collections.emptyList())));
++        when(clubOps.captureAuthorizedTopicCancellationPayments(STAFF, TOPIC, 5L, 202L, "台风停运"))
++                .thenAnswer(call -> {
++                    org.junit.jupiter.api.Assertions.assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
++                    return captured;
++                });
++        when(clubOps.cancelAuthorizedTopicWithObservedPayments(org.mockito.ArgumentMatchers.eq(STAFF),
++                org.mockito.ArgumentMatchers.eq(TOPIC), org.mockito.ArgumentMatchers.eq(5L),
++                org.mockito.ArgumentMatchers.eq(202L), org.mockito.ArgumentMatchers.eq("台风停运"),
++                org.mockito.ArgumentMatchers.any(com.chengyinhub.business.domain.dto.RegistrationCancellationPayments.class)))
++                .thenAnswer(call -> {
++                    org.junit.jupiter.api.Assertions.assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
++                    com.chengyinhub.business.domain.dto.RegistrationCancellationPayments original = call.getArgument(5);
++                    assertEquals(captured.scopes().getFirst(), original.requireScope(2L,202L));
++                    return new ActivityCancelResult(1, 0, 0);
++                });
+@@ -579 +603,7 @@ class HostWeatherCancelTest {
+-        verify(clubOps).cancelActivityForAuthorizedTopicCancellation(STAFF, TOPIC, 5L, 202L, "台风停运");
++        verify(clubOps).captureAuthorizedTopicCancellationPayments(STAFF, TOPIC, 5L, 202L, "台风停运");
++        ArgumentCaptor<com.chengyinhub.business.domain.dto.RegistrationCancellationPayments> observed =
++                ArgumentCaptor.forClass(com.chengyinhub.business.domain.dto.RegistrationCancellationPayments.class);
++        verify(clubOps).cancelAuthorizedTopicWithObservedPayments(org.mockito.ArgumentMatchers.eq(STAFF),
++                org.mockito.ArgumentMatchers.eq(TOPIC), org.mockito.ArgumentMatchers.eq(5L),
++                org.mockito.ArgumentMatchers.eq(202L), org.mockito.ArgumentMatchers.eq("台风停运"), observed.capture());
++        assertEquals(captured.scopes().getFirst(), observed.getValue().requireScope(2L,202L));

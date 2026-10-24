@@ -1,0 +1,11 @@
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ActivityCancelFreeOrderMybatisIT.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ActivityCancelFreeOrderMybatisIT.java
+index cf7839ae..a1e424f7 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ActivityCancelFreeOrderMybatisIT.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ActivityCancelFreeOrderMybatisIT.java
+@@ -192,0 +193,2 @@ class ActivityCancelFreeOrderMybatisIT {
++        com.chengyinhub.business.service.CancellationPhaseTestSupport.wireTeamTransactions(
++                service, transaction.getTransactionManager());
+@@ -368,2 +370 @@ class ActivityCancelFreeOrderMybatisIT {
+-        return transaction.execute(status ->
+-                service.cancelActivityByOwner(activityId, OWNER, "无法履约"));
++        return service.cancelActivityByOwner(activityId, OWNER, "无法履约");
