@@ -117,4 +117,23 @@ class ChannelGovernanceProjectionTest {
         assertEquals(ChannelGovernancePhase.LEFT, journey.phase());
         assertNull(journey.grant());
     }
+
+    @Test
+    void unusedCatalogedInviteDoesNotOccupyApplicantThenUniqueSubmitApplies() {
+        ChannelAccount4Identity identity = new ChannelAccount4Identity(7, 1L);
+        ChannelGovernanceProjection journey = new ChannelGovernanceProjection(
+                new ChannelCatalogEntry(21, 12, ConversationKind.GROUP, new ChannelRulesCas(3, Integer.valueOf(4), 3)),
+                identity);
+        assertEquals(ChannelRole.NONE, journey.role());
+        assertEquals(ChannelAuthorizationException.Code.RULES_CONSENT_REQUIRED,
+                assertThrows(ChannelAuthorizationException.class, journey::submitInviteOrApply).code);
+        assertEquals(ChannelRole.NONE, journey.role(), "cataloged invite 观察不得占 applicant");
+        assertEquals(ChannelGovernancePhase.CATALOGED, journey.phase());
+        journey.consentToPublishedRules(new ChannelRulesAdmission(identity, 3));
+        assertEquals(ChannelRole.NONE, journey.role());
+        journey.submitInviteOrApply();
+        assertEquals(ChannelRole.APPLICANT, journey.role());
+        assertEquals(ChannelGovernancePhase.INVITE_OR_APPLY, journey.phase());
+        assertNull(journey.grant());
+    }
 }
