@@ -2,6 +2,8 @@ package com.chengyinhub.business.service.channel;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -11,12 +13,16 @@ import org.junit.jupiter.api.Test;
 
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelAccount4Identity;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelCapability;
+import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelCatalogEntry;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelGovernancePhase;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelIsolatedAction;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelIsolatedAdmission;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelIsolatedRequest;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelPageLease;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelRevokeReason;
+import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelRole;
+import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelRulesCas;
+import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ConversationKind;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.GroupPollView;
 
 class ChannelRevokeIsolationTest {
@@ -50,5 +56,29 @@ class ChannelRevokeIsolationTest {
                 assertThrows(ChannelAuthorizationException.class,
                         () -> isolation.admit(new ChannelIsolatedRequest(lease, ChannelIsolatedAction.CHANNEL_WRITE)))
                         .code);
+    }
+
+    @Test
+    void unusedHistoricalVoteReadDoesNotOccupyLeaveThenUniqueLeaveApplies() {
+        ChannelAccount4Identity identity = new ChannelAccount4Identity(7, 1L);
+        ChannelCatalogEntry catalog = new ChannelCatalogEntry(21, 12, ConversationKind.GROUP,
+                new ChannelRulesCas(3, Integer.valueOf(4), 3));
+        ChannelGovernanceProjection journey = new ChannelGovernanceProjection(catalog, identity);
+        journey.consentToPublishedRules(new ChannelRulesAdmission(identity, 3));
+        journey.submitInviteOrApply();
+        journey.assignMemberRole(ChannelRole.MEMBER);
+        assertNotNull(journey.authorizeReadWrite());
+        ChannelPageLease lease = journey.pageLease();
+        assertEquals(ChannelIsolatedAdmission.ALLOWED,
+                journey.admit(new ChannelIsolatedRequest(lease, ChannelIsolatedAction.HISTORICAL_VOTE_READ)));
+        assertEquals(ChannelGovernancePhase.AUTHORIZED_READ_WRITE, journey.phase());
+        assertNotNull(journey.grant(), "在籍历史投票只读不得占 leave");
+        journey.leave();
+        assertEquals(ChannelGovernancePhase.LEFT, journey.phase());
+        assertNull(journey.grant());
+        assertEquals(ChannelAuthorizationException.Code.REVOKED,
+                assertThrows(ChannelAuthorizationException.class, journey::authorizeReadWrite).code);
+        assertEquals(ChannelIsolatedAdmission.ALLOWED,
+                journey.admit(new ChannelIsolatedRequest(lease, ChannelIsolatedAction.HISTORICAL_VOTE_READ)));
     }
 }
