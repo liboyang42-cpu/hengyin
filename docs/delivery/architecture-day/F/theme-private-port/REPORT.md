@@ -68,3 +68,12 @@ root 新消息提供的旧两目标实际证据：86e/source run40057561361，bu
 ## 未验证、迁移与回退
 
 本轮没有 Java/DB/Redis/真实 provider/微信操作，没有 CI 派发或新 agent，也没有生产访问。未取得第三目标真实编译证据，不宣称全域 owner、无环或完整 WP01 完成。没有 schema / DDL / 新依赖；回退此守卫仍只能按 root 独立批准的 trusted ref 执行，回退到 fe95 会失去第三目标约束，不能把该盲区说成已覆盖；不改/删除业务事实。
+
+
+## 新职责方向源码补片（从545精确追加）
+
+冻结verifier源码SHA `355fb5a9773fce34db8764649a977ffb93164de2`，parent为原545；仅六份architecture文件及一份定点输出。它登记d49已落地的8个技术职责/13个类型，原三Mapper和两whole-table fact不动，不赋业务写权。生产CLI在原同一次JAR/raw/index回读中强制执行方向、回依赖原God、scoped owner SCC规则；policy自改仍被原六文件冻结挡住。未登记职责/间接调用/同owner内部环保持未证明，不把refresh GET当只读。
+
+按最新批次优先级，仅实际跑12项必要Python协议/CLI负控，0fail/skip；缺类/模块/原始输入继续UNKNOWN，确定违规与UNKNOWN并存仍红。没有重跑完整153、Java/DB/CI。旧2ec baseline/commands/locking proposal、全部生产/主线融合代码和工作流未改；root仅取545→355的精确architecture delta，不用旧整树覆盖540或主线#567/#585/#586。
+
+`owner-directions-ci-repin.patch`只替换两个545 ref→355完整SHA（零上下文，使用`git apply --unidiff-zero --check`后应用）。补丁按root已明确报告的545待提交CI状态构造，并在隔离副本逐字节验证；公开540快照本身仍是fe95，不把它误写为已发布545。root当前旧值不是545时应停止并自行核对，不恢复fe95，不改job/并行/producer次数。真实编译正反控与统一回归仍由root调度。

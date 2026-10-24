@@ -1,0 +1,9 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -326 +326 @@
+-          ref: 5451672c72fa1fe10aef0315ec5b1e81cc8f1866
++          ref: 355fb5a9773fce34db8764649a977ffb93164de2
+@@ -572 +572 @@
+-          ref: 5451672c72fa1fe10aef0315ec5b1e81cc8f1866
++          ref: 355fb5a9773fce34db8764649a977ffb93164de2
