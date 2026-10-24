@@ -85,6 +85,17 @@ class TemplatePackTypeTest {
         }
     }
 
+    /** C:U-039/U-148:认不出的值仍不过滤,但要能被识别出来留告警;不传/空白不算异常。 */
+    @Test
+    void unrecognizedPackTypeIsDetectedForWarningButAbsentIsNot() {
+        for (final String raw : new String[] {"3", "-1", "99", "abc", "1.5", "0x1", "３"}) {
+            assertThat(ApiTemplateController.isUnrecognizedPackType(raw)).as(raw).isTrue();
+        }
+        for (final String raw : new String[] {null, "", "   ", "0", "1", "2", " 2 ", "０"}) {
+            assertThat(ApiTemplateController.isUnrecognizedPackType(raw)).as(String.valueOf(raw)).isFalse();
+        }
+    }
+
     /**
      * 全角数字按半角解析。
      *
