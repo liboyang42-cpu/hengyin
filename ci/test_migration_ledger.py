@@ -844,6 +844,53 @@ class CliSafety(RepoFixture):
 
 
 class HistorySchemaContract(unittest.TestCase):
+    def test_wp08_schema_guard_waits_for_original_effect_tables_and_im_identity(self):
+        root = Path(__file__).resolve().parent.parent
+        dependencies = json.loads(
+            (root / "ci/migration-dependencies.json").read_text(encoding="utf-8")
+        )["dependencies"]
+        consumer = "20261023_g_wp08_delivery_jobs_paused"
+        required = {
+            "20261013_b_im_notification_intent",
+            "20261013_roam_reward_delivery",
+            "20261013_roam_badge_delivery",
+            "member_exp_earned_20261011",
+            "20261012_im_media_visibility",
+        }
+        self.assertTrue(required.issubset(set(dependencies[consumer])))
+        manifest = build_manifest(root, target_commit=TARGET, dependencies=dependencies)
+        positions = {item["migrationId"]: item["order"] for item in manifest["migrations"]}
+        # Visibility already depends on original IM message idempotency. Do not duplicate
+        # or replace that edge: WP08's third assertion needs all three columns + its unique key.
+        for provider in required | {"im_send_idempotency_20260913"}:
+            with self.subTest(provider=provider):
+                self.assertLess(positions[provider], positions[consumer])
+
+    def test_wp08_missing_guard_prerequisite_is_rejected_by_manifest_gate(self):
+        from migration_gates import check_manifest_dependency_order
+
+        root = Path(__file__).resolve().parent.parent
+        dependencies = json.loads(
+            (root / "ci/migration-dependencies.json").read_text(encoding="utf-8")
+        )["dependencies"]
+        consumer = "20261023_g_wp08_delivery_jobs_paused"
+        # Reject either missing edge even if unrelated lexical ordering happens to place its
+        # table first. A valid manifest must carry the required dependency explicitly.
+        required = {"member_exp_earned_20261011", "20261012_im_media_visibility"}
+        for missing in ({"member_exp_earned_20261011"}, {"20261012_im_media_visibility"}, required):
+            with self.subTest(missing=missing):
+                broken = dict(dependencies)
+                broken[consumer] = [dep for dep in dependencies[consumer] if dep not in missing]
+                manifest = build_manifest(root, target_commit=TARGET, dependencies=broken)
+                problems = check_manifest_dependency_order(manifest, [], dependencies)
+                self.assertIn("ledger order/dependency metadata mismatch: " + consumer, problems)
+                if missing == required:
+                    # Restore the exact original three-edge entry: its registration really
+                    # sorts before both omitted providers in the canonical repository graph.
+                    positions = {item["migrationId"]: item["order"] for item in manifest["migrations"]}
+                    for provider in required:
+                        self.assertLess(positions[consumer], positions[provider])
+
     def test_ticket_source_migration_expands_payable_component_check(self):
         root = Path(__file__).resolve().parent.parent
         sql = (
