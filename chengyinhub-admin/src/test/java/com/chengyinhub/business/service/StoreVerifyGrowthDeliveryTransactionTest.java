@@ -227,6 +227,10 @@ class StoreVerifyGrowthDeliveryTransactionTest {
         CmsRegistrationServiceImpl target = new CmsRegistrationServiceImpl();
         ReflectionTestUtils.setField(target, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
         ReflectionTestUtils.setField(target, "cmsActivityMapper", activities);
+        // Original whole-order fixture has no seat fulfillment; inject the required mapper explicitly.
+        var seats = mock(com.chengyinhub.business.mapper.RegistrationSeatMapper.class);
+        when(seats.selectByRegistrationForUpdate(501L)).thenReturn(Collections.emptyList());
+        ReflectionTestUtils.setField(target, "registrationSeatMapper", seats);
         ReflectionTestUtils.setField(target, "cmsRegistrationScanMapper", scans);
         ReflectionTestUtils.setField(target, "storeVerifyGrowthDeliveryMapper", sql.getMapper(StoreVerifyGrowthDeliveryMapper.class));
         ReflectionTestUtils.setField(target, "settlementEntryService", mock(ISettlementEntryService.class));

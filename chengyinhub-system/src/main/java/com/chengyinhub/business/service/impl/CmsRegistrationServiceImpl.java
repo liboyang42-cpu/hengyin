@@ -186,6 +186,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Autowired
     private BusinessAuditEventMapper businessAuditEventMapper;
 
+    @Autowired
+    private com.chengyinhub.business.mapper.RegistrationSeatMapper registrationSeatMapper;
+
     /** 带队场次中的玩家核销事实；与通用 cms_registration_scan 分开，避免混合语义。 */
     @Autowired
     private CoopGroupMemberVerifyMapper coopGroupMemberVerifyMapper;
@@ -3132,6 +3135,11 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         if (current == null || !Long.valueOf(2L).equals(current.getOwnerType())
                 || !located.getOwnerId().equals(current.getOwnerId())) {
             throw new IllegalStateException("订单归属已变化，请刷新后重试");
+        }
+        if (current.getOrderNum() != null && current.getOrderNum() > 1
+                && registrationSeatMapper.selectByRegistrationForUpdate(registrationId).stream()
+                    .anyMatch(seat -> Integer.valueOf(1).equals(seat.getStatus()))) {
+            throw new IllegalStateException("该订单有逐席位核销事实，请走席位售后核验，不能整单清除核销状态");
         }
         if (!Integer.valueOf(1).equals(current.getVerificationStatus())) {
             throw new IllegalStateException("该订单未核销或已撤销，无需重复撤销");

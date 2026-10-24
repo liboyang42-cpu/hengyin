@@ -46,6 +46,7 @@ class WholeOrderVerificationReverseTest {
     private CmsRegistrationServiceImpl service;
     private CmsActivity activity;
     private CmsRegistrationScanMapper scanMapper;
+    private com.chengyinhub.business.mapper.RegistrationSeatMapper seatMapper;
     private com.chengyinhub.business.mapper.StoreVerifyGrowthDeliveryMapper deliveryMapper;
     private com.chengyinhub.business.service.impl.RedemptionRewardClawbackService clawback;
 
@@ -60,6 +61,9 @@ class WholeOrderVerificationReverseTest {
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activityMapper);
         ReflectionTestUtils.setField(service, "businessAuditEventMapper", auditMapper);
         ReflectionTestUtils.setField(service, "perkLedgerService", perkLedger);
+        seatMapper = mock(com.chengyinhub.business.mapper.RegistrationSeatMapper.class);
+        when(seatMapper.selectByRegistrationForUpdate(REG)).thenReturn(Collections.emptyList());
+        ReflectionTestUtils.setField(service, "registrationSeatMapper", seatMapper);
         scanMapper = mock(CmsRegistrationScanMapper.class);
         deliveryMapper = mock(com.chengyinhub.business.mapper.StoreVerifyGrowthDeliveryMapper.class);
         clawback = mock(com.chengyinhub.business.service.impl.RedemptionRewardClawbackService.class);
@@ -89,6 +93,60 @@ class WholeOrderVerificationReverseTest {
         r.setVerificationStatus(1);
         r.setVerifierId(ORGANIZER);
         return r;
+    }
+
+    @Test
+    void verifiedSeatFactsCannotBeClearedByWholeOrderReversalEvenWithRewardClawback() {
+        CmsRegistration current = verified(); current.setOrderNum(2L);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(current);
+        var seat = new com.chengyinhub.business.domain.RegistrationSeat();
+        seat.setId(81L); seat.setRegistrationId(REG); seat.setSeatNo(1); seat.setStatus(1);
+        when(seatMapper.selectByRegistrationForUpdate(REG)).thenReturn(Collections.singletonList(seat));
+
+        assertEquals("该订单有逐席位核销事实，请走席位售后核验，不能整单清除核销状态",
+                message(() -> service.reverseWholeOrderVerification(REG, "核错席位", OPERATOR, true)));
+
+        InOrder locks = inOrder(activityMapper, regMapper, seatMapper);
+        locks.verify(activityMapper).selectCmsActivityByIdForUpdate(ACTIVITY);
+        locks.verify(regMapper).selectCmsRegistrationByIdForUpdate(REG);
+        locks.verify(seatMapper).selectByRegistrationForUpdate(REG);
+        assertEquals(1, seat.getStatus()); assertEquals(1, current.getVerificationStatus());
+        verify(regMapper, never()).clearVerification(anyLong());
+        org.mockito.Mockito.verifyNoInteractions(auditMapper, scanMapper, deliveryMapper, clawback, perkLedger);
+    }
+
+    @Test
+    void currentSeatFactWinsOverAnUnverifiedAggregateSnapshot() {
+        CmsRegistration current = verified(); current.setOrderNum(2L); current.setVerificationStatus(0);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(current);
+        var seat = new com.chengyinhub.business.domain.RegistrationSeat();
+        seat.setId(81L); seat.setRegistrationId(REG); seat.setSeatNo(1); seat.setStatus(1);
+        when(seatMapper.selectByRegistrationForUpdate(REG)).thenReturn(Collections.singletonList(seat));
+
+        assertEquals("该订单有逐席位核销事实，请走席位售后核验，不能整单清除核销状态",
+                message(() -> service.reverseWholeOrderVerification(REG, "核错席位", OPERATOR)));
+        verify(regMapper, never()).clearVerification(anyLong());
+        org.mockito.Mockito.verifyNoInteractions(auditMapper, scanMapper, deliveryMapper, clawback, perkLedger);
+    }
+
+    @Test
+    void preparedUnverifiedSeatsPreserveTheOriginalWholeOrderReversal() {
+        CmsRegistration current = verified(); current.setOrderNum(2L);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(current);
+        var seat = new com.chengyinhub.business.domain.RegistrationSeat();
+        seat.setId(81L); seat.setRegistrationId(REG); seat.setSeatNo(1); seat.setStatus(0);
+        when(seatMapper.selectByRegistrationForUpdate(REG)).thenReturn(Collections.singletonList(seat));
+
+        assertTrue(service.reverseWholeOrderVerification(REG, "原整单核错", OPERATOR));
+        InOrder order = inOrder(regMapper, seatMapper, auditMapper);
+        order.verify(regMapper).selectCmsRegistrationByIdForUpdate(REG);
+        order.verify(seatMapper).selectByRegistrationForUpdate(REG);
+        order.verify(regMapper).clearVerification(REG);
+        order.verify(auditMapper).insertBusinessAuditEvent(any());
+        assertEquals(0, seat.getStatus());
+        verify(scanMapper).markWholeOrderScansReversed(REG);
+        verify(deliveryMapper).deletePendingByRegistration(REG);
+        verify(clawback, never()).clawbackWholeOrderVerification(any(), any(), any(), any(), any());
     }
 
     @Test
