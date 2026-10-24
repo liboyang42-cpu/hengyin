@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.chengyinhub.business.domain.BusinessAuditEvent;
+import com.chengyinhub.business.mapper.BusinessAuditEventMapper;
 
 /**
  * C11 支持台定位器：按 requestId 找回同一 request / run / order 的<strong>原事件</strong>。
@@ -20,6 +21,8 @@ public final class SupportEventLocator {
 
     /** 当前投影把原请求标成已成功时使用的标记；定位器必须忽略它。 */
     public static final String PROJECTION_APPLIED_SUCCESS = "APPLIED+SUCCESS";
+    /** 既有 Mapper 没有按 requestId 单独查询；缺该方法时 WAITING_SOURCE，不另造审计表。 */
+    public static final String REQUEST_ID_QUERY = "businessAuditEvent.selectByRequestId";
 
     private final OriginalEventSource originalEvents;
 
@@ -40,16 +43,7 @@ public final class SupportEventLocator {
             return null;
         }
         List<BusinessAuditEvent> originals = originalEvents.findByRequestId(id);
-        if (originals == null || originals.isEmpty()) {
-            throw new IllegalStateException("原事件不存在 requestId=" + id);
-        }
-        BusinessAuditEvent head = originals.get(0);
-        String originalOutcome = originalOutcome(head);
-        boolean projectionClaimsSuccess = currentProjection != null
-                && id.equals(currentProjection.requestId)
-                && PROJECTION_APPLIED_SUCCESS.equals(currentProjection.appliedState);
-        return new LocatedEvent(id, originals, originalOutcome, projectionClaimsSuccess,
-                correlatedRunId(originals), correlatedOrderId(originals));
+        return locateFromOriginals(id, originals, currentProjection);
     }
 
     /** 同一 requestId 再查必须得到同一原结果，不能变成当前投影。 */
@@ -69,7 +63,7 @@ public final class SupportEventLocator {
         if (found == null || isBlank(found.getRequestId())) {
             throw new IllegalStateException("原事件不存在 runId=" + runId);
         }
-        return locateByRequestId(found.getRequestId(), currentProjection);
+        return locateByRequestIdOrTarget(found.getRequestId(), found, currentProjection);
     }
 
     public LocatedEvent locateByOrderId(Long orderId, CurrentProjection currentProjection) {
@@ -80,7 +74,30 @@ public final class SupportEventLocator {
         if (found == null || isBlank(found.getRequestId())) {
             throw new IllegalStateException("原事件不存在 orderId=" + orderId);
         }
-        return locateByRequestId(found.getRequestId(), currentProjection);
+        return locateByRequestIdOrTarget(found.getRequestId(), found, currentProjection);
+    }
+
+    private LocatedEvent locateByRequestIdOrTarget(String requestId, BusinessAuditEvent targetFallback,
+                                                   CurrentProjection currentProjection) {
+        try {
+            return locateByRequestId(requestId, currentProjection);
+        } catch (WaitingSourceException ignored) {
+            return locateFromOriginals(requestId, List.of(targetFallback), currentProjection);
+        }
+    }
+
+    private LocatedEvent locateFromOriginals(String id, List<BusinessAuditEvent> originals,
+                                             CurrentProjection currentProjection) {
+        if (originals == null || originals.isEmpty()) {
+            throw new IllegalStateException("原事件不存在 requestId=" + id);
+        }
+        BusinessAuditEvent head = originals.get(0);
+        String originalOutcome = originalOutcome(head);
+        boolean projectionClaimsSuccess = currentProjection != null
+                && id.equals(currentProjection.requestId)
+                && PROJECTION_APPLIED_SUCCESS.equals(currentProjection.appliedState);
+        return new LocatedEvent(id, originals, originalOutcome, projectionClaimsSuccess,
+                correlatedRunId(originals), correlatedOrderId(originals));
     }
 
     /** Missing requestId stays Java {@code null}, never {@code ""}. */
@@ -142,6 +159,50 @@ public final class SupportEventLocator {
         List<BusinessAuditEvent> findByRequestId(String requestId);
 
         BusinessAuditEvent findByTarget(String targetType, Long targetId);
+    }
+
+    /**
+     * 生产消费者：走既有 {@link BusinessAuditEventMapper#selectByTarget}。
+     * {@code selectByRequestId} 不在现有 Mapper 上，findByRequestId 保持 WAITING_SOURCE，
+     * 不另造审计表，也不改共享 Mapper XML。
+     */
+    public static final class MapperOriginalEventSource implements OriginalEventSource {
+        private final BusinessAuditEventMapper mapper;
+
+        public MapperOriginalEventSource(BusinessAuditEventMapper mapper) {
+            this.mapper = Objects.requireNonNull(mapper, "businessAuditEventMapper");
+        }
+
+        @Override
+        public List<BusinessAuditEvent> findByRequestId(String requestId) {
+            throw new WaitingSourceException(REQUEST_ID_QUERY);
+        }
+
+        @Override
+        public BusinessAuditEvent findByTarget(String targetType, Long targetId) {
+            if (isBlank(targetType) || targetId == null || targetId <= 0L) {
+                return null;
+            }
+            List<BusinessAuditEvent> rows = mapper.selectByTarget(targetType, targetId);
+            if (rows == null || rows.isEmpty()) {
+                return null;
+            }
+            return rows.get(0);
+        }
+    }
+
+    public static final class WaitingSourceException extends IllegalStateException {
+        private static final long serialVersionUID = 1L;
+        private final String waitingCapability;
+
+        public WaitingSourceException(String waitingCapability) {
+            super("WAITING_SOURCE " + waitingCapability);
+            this.waitingCapability = waitingCapability;
+        }
+
+        public String getWaitingCapability() {
+            return waitingCapability;
+        }
     }
 
     /** 当前读模型，不是原请求证明。 */

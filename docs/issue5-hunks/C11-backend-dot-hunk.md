@@ -108,7 +108,7 @@ SHA256（生产 5 类）：
 
 ## 6. 未解决
 
-- 生产接线：`OriginalEventSource` / `FrozenTermsSource` 尚未挂到 Mapper（禁止本组改 Mapper）。
+- 生产接线：`MapperOriginalEventSource` 已挂 `selectByTarget`（run/order 定位）。`findByRequestId` 仍 WAITING_SOURCE（`businessAuditEvent.selectByRequestId` 不在现有 Mapper，禁止本组改 Mapper XML）。`FrozenTermsSource` 仍未挂。
 - 支持台 UI / Controller 未做（禁止本组加公共 Controller）。
 - 真实 App / 商店 / 备案旅程属 C12 与运营门禁，本组未跑。
 
@@ -153,3 +153,11 @@ BUILD SUCCESS
 ```
 
 App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
+
+## 10. Parent addendum 2026-10-23 20:24 America/Los_Angeles
+
+Dot 20:20 PDT：只并行 READY 组，衡量闭环吞吐，不再刷 unused-action 测试。
+
+`SupportEventLocator.MapperOriginalEventSource` 消费既有 `BusinessAuditEventMapper.selectByTarget`。按 requestId 单独查询仍 WAITING_SOURCE。locateByRunId 在 WAITING_SOURCE 时回退到 target 原行，不另造审计表。
+
+父进程将独立 surefire `support.ops.*Test`。MySQL / HTTP / App / CI = NOT_RUN。不是 100%。

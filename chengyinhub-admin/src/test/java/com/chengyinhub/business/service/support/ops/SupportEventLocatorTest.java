@@ -5,12 +5,16 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Date;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 import com.chengyinhub.business.domain.BusinessAuditEvent;
+import com.chengyinhub.business.mapper.BusinessAuditEventMapper;
 
 class SupportEventLocatorTest {
 
@@ -97,6 +101,27 @@ class SupportEventLocatorTest {
         assertNull(SupportEventLocator.parseRequestId(null));
         assertNull(SupportEventLocator.parseRequestId(""));
         assertNotEquals("", SupportEventLocator.parseRequestId("req-unknown-1"));
+    }
+
+    @Test
+    void mapperSourceLocatesByRunViaSelectByTargetAndRequestIdStaysWaitingSource() {
+        BusinessAuditEvent original = event("req-map-1", "RUN", 42L, "SUBMIT", "UNKNOWN");
+        BusinessAuditEventMapper mapper = mock(BusinessAuditEventMapper.class);
+        when(mapper.selectByTarget("RUN", 42L)).thenReturn(List.of(original));
+        SupportEventLocator locator = new SupportEventLocator(
+                new SupportEventLocator.MapperOriginalEventSource(mapper));
+        SupportEventLocator.WaitingSourceException waiting = assertThrows(
+                SupportEventLocator.WaitingSourceException.class,
+                () -> locator.locateByRequestId("req-map-1", null));
+        assertEquals(SupportEventLocator.REQUEST_ID_QUERY, waiting.getWaitingCapability());
+        SupportEventLocator.LocatedEvent byRun = locator.locateByRunId(42L,
+                new SupportEventLocator.CurrentProjection("req-map-1",
+                        SupportEventLocator.PROJECTION_APPLIED_SUCCESS));
+        assertEquals("req-map-1", byRun.getRequestId());
+        assertEquals("UNKNOWN", byRun.getOriginalOutcome());
+        assertEquals(42L, byRun.getRunId());
+        assertTrue(byRun.originalIsNotProjectionSuccess());
+        assertTrue(byRun.currentProjectionClaimsSuccess());
     }
 
     private static BusinessAuditEvent event(String requestId, String targetType, Long targetId,
