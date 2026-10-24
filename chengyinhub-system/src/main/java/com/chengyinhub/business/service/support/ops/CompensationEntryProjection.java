@@ -107,12 +107,23 @@ public final class CompensationEntryProjection {
     }
 
     /**
-     * 只读既有 {@link AuditTrailProjectionService#trail}。bizType/bizId 由调用方给出，不从 topicId 猜。
+     * 只读既有 {@link AuditTrailProjectionService#trail}。必须消费已经过
+     * {@link #project} 的授权对象，并复核当前 viewer 的既有审批权限。
+     * 无权限、账号切换或资源不属于该授权对象时不进 reader。bizType 仍由调用方给出。
      * 缺端口 WAITING_SOURCE。空列表是真的空留痕，不另写审计表。
      */
-    public List<AuditTrailEntryVO> recoverTrail(String bizType, Long bizId, AuditTrailReader reader) {
+    public List<AuditTrailEntryVO> recoverTrail(View authorized, ViewerGrant viewer, String bizType, Long bizId,
+            AuditTrailReader reader) {
+        if (authorized == null || viewer == null || viewer.viewerId == null || viewer.viewerId.longValue() <= 0L
+                || !viewer.viewerId.equals(authorized.getViewerId())
+                || !hasExistingApprovePermission(viewer.existingPermissionCodes)) {
+            throw new SecurityException(DENIED);
+        }
         if (bizType == null || bizType.isBlank() || bizId == null || bizId.longValue() <= 0L) {
             return null;
+        }
+        if (!bizId.equals(authorized.getTopicId())) {
+            throw new SecurityException(DENIED);
         }
         if (reader == null) {
             throw new WaitingSourceException(AUDIT_TRAIL);

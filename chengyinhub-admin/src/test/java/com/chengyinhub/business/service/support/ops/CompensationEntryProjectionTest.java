@@ -225,29 +225,52 @@ class CompensationEntryProjectionTest {
 
     @Test
     void recoverTrailReadsExistingUnifiedTrailWithoutWritingAudit() {
+        java.util.concurrent.atomic.AtomicInteger trailReads = new java.util.concurrent.atomic.AtomicInteger();
         CompensationEntryProjection projection = new CompensationEntryProjection(
                 topicId -> frozenTerms(),
                 new CompensationAuditSource() {
                     @Override
                     public List<BusinessAuditEvent> eventsForRequest(String requestId) {
-                        throw new AssertionError("trail read must not use request audit");
+                        return List.of();
                     }
 
                     @Override
                     public List<AuditTrailEntryVO> trailForTopic(Long topicId) {
-                        throw new AssertionError("trail read must not guess topic trail");
+                        return List.of();
                     }
                 });
+        CompensationEntryProjection.ViewerGrant grant = new CompensationEntryProjection.ViewerGrant(
+                88L, Set.of(ExtraApproverReachability.APPROVE_PERMISSION));
+        CompensationEntryProjection.View authorized = projection.project("comp-req-1", 10L, grant, null);
+        CompensationEntryProjection.AuditTrailReader counting = (bizType, bizId) -> {
+            trailReads.incrementAndGet();
+            throw new AssertionError("unauthorized trail read");
+        };
+        assertEquals(CompensationEntryProjection.DENIED,
+                assertThrows(SecurityException.class,
+                        () -> projection.recoverTrail(null, grant, "ACTIVITY", 10L, counting)).getMessage());
+        assertEquals(CompensationEntryProjection.DENIED,
+                assertThrows(SecurityException.class,
+                        () -> projection.recoverTrail(authorized,
+                                new CompensationEntryProjection.ViewerGrant(88L, Set.of()),
+                                "ACTIVITY", 10L, counting)).getMessage());
+        assertEquals(CompensationEntryProjection.DENIED,
+                assertThrows(SecurityException.class,
+                        () -> projection.recoverTrail(authorized,
+                                new CompensationEntryProjection.ViewerGrant(3L,
+                                        Set.of(ExtraApproverReachability.APPROVE_PERMISSION)),
+                                "ACTIVITY", 10L, counting)).getMessage());
+        assertEquals(CompensationEntryProjection.DENIED,
+                assertThrows(SecurityException.class,
+                        () -> projection.recoverTrail(authorized, grant, "ACTIVITY", 99L, counting)).getMessage());
+        assertEquals(0, trailReads.get());
+        assertNull(projection.recoverTrail(authorized, grant, "  ", 10L, counting));
+        assertNull(projection.recoverTrail(authorized, grant, "ACTIVITY", 0L, counting));
+        assertEquals(0, trailReads.get());
         CompensationEntryProjection.WaitingSourceException waiting = assertThrows(
                 CompensationEntryProjection.WaitingSourceException.class,
-                () -> projection.recoverTrail("ACTIVITY", 10L, null));
+                () -> projection.recoverTrail(authorized, grant, "ACTIVITY", 10L, null));
         assertEquals(CompensationEntryProjection.AUDIT_TRAIL, waiting.getWaitingCapability());
-        assertNull(projection.recoverTrail("  ", 10L, (bizType, bizId) -> {
-            throw new AssertionError("blank bizType must not read");
-        }));
-        assertNull(projection.recoverTrail("ACTIVITY", 0L, (bizType, bizId) -> {
-            throw new AssertionError("invalid bizId must not read");
-        }));
         CompensationEntryProjection.WaitingSourceException missingService = assertThrows(
                 CompensationEntryProjection.WaitingSourceException.class,
                 () -> CompensationEntryProjection.fromAuditTrail(null).trail("ACTIVITY", 10L));
@@ -256,11 +279,14 @@ class CompensationEntryProjectionTest {
         AuditTrailEntryVO row = new AuditTrailEntryVO();
         row.setSource(AuditTrailEntryVO.SOURCE_BUSINESS_AUDIT_EVENT);
         row.setAction("COMPENSATION_FREEZE");
-        List<AuditTrailEntryVO> recovered = projection.recoverTrail("ACTIVITY", 10L, (bizType, bizId) -> {
-            assertEquals("ACTIVITY", bizType);
-            assertEquals(Long.valueOf(10L), bizId);
-            return List.of(row);
-        });
+        List<AuditTrailEntryVO> recovered = projection.recoverTrail(authorized, grant, " ACTIVITY ", 10L,
+                (bizType, bizId) -> {
+                    trailReads.incrementAndGet();
+                    assertEquals("ACTIVITY", bizType);
+                    assertEquals(Long.valueOf(10L), bizId);
+                    return List.of(row);
+                });
+        assertEquals(1, trailReads.get());
         assertEquals(1, recovered.size());
         assertEquals("COMPENSATION_FREEZE", recovered.get(0).getAction());
     }
