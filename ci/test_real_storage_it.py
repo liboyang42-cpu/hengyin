@@ -90,6 +90,11 @@ class RegistryContractTest(unittest.TestCase):
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
                     if line.strip().startswith('B_PAYMENT_INTENT_DDL_APPROVED:'))
         self.assertEqual("B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'CoopDepositSettlementAttemptMySqlIT') && '1' || '' }}", line)
+        flag = "A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED"
+        line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
+                    if line.strip().startswith(flag + ":"))
+        self.assertEqual("A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest') && '1' || '' }}", line)
+        self.assertEqual({flag: "1"}, rs.child_env({flag: "1"}, {}))
 
     def test_topic_cash_fixture_admission_survives_child_environment_filter(self):
         flag = 'WP04_TOPIC_CASH_DDL_APPROVED'

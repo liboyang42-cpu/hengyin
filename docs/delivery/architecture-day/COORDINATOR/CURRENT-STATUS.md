@@ -13,3 +13,5 @@ Other pending work: C fixture early-exit corrections; F real Spring/raw graph ev
 No production DDL, deployment, live paid provider or WeChat upload.
 
 Latest diagnostic: run40091200759 at54ab failed testCompile in3 fixture files (4 source locations).189 expected,0 executed;8/8 independent scratch receipts CLEAN.Production compilation passed in the observed job.Three fixture corrections are ready; next recheck targets only13 callback cases first.
+
+Second diagnostic40091766066 onfacc: main and test compilation passed.JUnit reports13 failures, all at@BeforeEach line106 because workflow omitted the original A consumption admission marker; no business body reached.Cleanup CLEAN.Marker mapping now names exactly the3 actual consuming classes; original refusal checks remain.

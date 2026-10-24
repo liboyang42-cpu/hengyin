@@ -181,6 +181,7 @@ jobs:
       B_PAYMENT_FACT_DDL_APPROVED: ${{ matrix.simple == 'WechatVerifiedPaymentFactMySqlIT' && '1' || '' }}
       WP04_ORIGINAL_REFUND_DDL_APPROVED: ${{ matrix.simple == 'Wp04OriginalRefundMySqlIT' && '1' || '' }}
       WP04_PAID_HALF_STATE_DDL_APPROVED: ${{ (matrix.simple == 'Wp04PaidHalfStateMySqlIT' || matrix.simple == 'Wp04ApprovedRefundFenceMySqlIT') && '1' || '' }}
+      A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest') && '1' || '' }}
     steps:
       - name: Checkout gate scripts
         uses: actions/checkout@v4

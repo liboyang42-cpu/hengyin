@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T11:54:01.947890+00:00",
+  "updated_utc": "2026-10-24T12:03:50.345020+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -218,14 +218,14 @@
     "remaining": "preference fixed receipt/fingerprint semantics still open"
   },
   "latest_ci": {
-    "run_id": 40091200759,
-    "source": "54ab9282bee31c7b6dd276682f4c86e9903709c9",
+    "run_id": 40091766066,
+    "source": "faccd991c3060d14d0b0e967cce03d32a84ceb8c",
     "conclusion": "FAIL",
-    "stage": "testCompile",
-    "executed_tests": 0,
-    "expected_tests": 189,
-    "cleanup": "8/8 CLEAN from independent downloaded receipts",
-    "repair": "Three fixture files corrected; no production/test assertions removed. New B-only validation pending."
+    "stage": "BeforeEach missing A consumption DDL admission marker",
+    "expected_tests": 13,
+    "junit_reported_tests": 13,
+    "business_test_bodies_reached": false,
+    "cleanup": "CLEAN"
   },
   "followup_repairs": {
     "topic_atomic_eligibility": "original scan predicate extracted unchanged to one shared SQL fragment, atomic claim rechecks same predicate; deterministic scan-to-mutation MySQL case added",
@@ -440,5 +440,9 @@
     "WechatPayCallbackForgedSignatureTest registration conflict fixture may fail before actual business conflict due missing shared reader (C preparing)",
     "Actual Spring/jdeps fixture must include new G recovery dependencies (F)",
     "CoopInvite reopen existing owner fixtures must match new permanent-businessNo/closed-intent gate (G)"
-  ]
+  ],
+  "current_ci_pending": {
+    "status": "NEW_EXACT_RECHECK_DISPATCH_PENDING",
+    "reason": "Only workflow/harness marker mapping changed; no production Java changed"
+  }
 }
