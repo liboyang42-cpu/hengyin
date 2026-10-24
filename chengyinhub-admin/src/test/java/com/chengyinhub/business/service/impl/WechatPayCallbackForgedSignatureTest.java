@@ -501,6 +501,20 @@ class WechatPayCallbackForgedSignatureTest {
     }
 
     @Test
+    void verifiedOldClosedNotificationCannotMutateANewRegistrationAttempt() throws Exception {
+        RegistrationFailureFixture fixture = new RegistrationFailureFixture("REG_CLOSED");
+        var registrationService = ReflectionTestUtils.getField(fixture.service, "registrationService");
+        var provider = (org.springframework.beans.factory.ObjectProvider<?>)ReflectionTestUtils.getField(
+                registrationService, "paymentAttemptGateway");
+        var gateway = (com.chengyinhub.business.service.IWechatPayService)provider.getObject();
+        when(gateway.lockPaymentAttemptForUpdate("REG_CLOSED", "REG_CLOSED")).thenReturn(false);
+        assertTrue(fixture.callback("CLOSED", 100).contains("FAIL"));
+        fixture.assertAlarm("REG_CLOSED", "payment_attempt_conflict");
+        verify(fixture.mapper).selectByRegistrationNo("REG_CLOSED");
+        verifyNoMoreInteractions(fixture.mapper);
+    }
+
+    @Test
     void verifiedRegistrationAlreadyClosedAcknowledgesSuccessWithoutFailureAlarm() throws Exception {
         RegistrationFailureFixture fixture = new RegistrationFailureFixture("REG_CLOSED");
         fixture.registration.setPaymentStatus(3);
@@ -595,6 +609,13 @@ class WechatPayCallbackForgedSignatureTest {
             CmsRegistrationServiceImpl registrationService = new CmsRegistrationServiceImpl();
             ReflectionTestUtils.setField(registrationService, "cmsRegistrationMapper", mapper);
             ReflectionTestUtils.setField(registrationService, "alarmService", alarm);
+            var attemptGateway = mock(com.chengyinhub.business.service.IWechatPayService.class);
+            when(attemptGateway.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(),
+                    org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
+            org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IWechatPayService> attempts =
+                    mock(org.springframework.beans.factory.ObjectProvider.class);
+            when(attempts.getObject()).thenReturn(attemptGateway);
+            ReflectionTestUtils.setField(registrationService, "paymentAttemptGateway", attempts);
             ReflectionTestUtils.setField(registrationService, "wxPaymentCallbackInboxService",
                     com.chengyinhub.business.service.PaymentCallbackInboxStubs.passThrough());
             when(mapper.selectByRegistrationNo(order)).thenReturn(registration);

@@ -104,7 +104,7 @@ class WechatPayCallbackFactsTest {
                     Transaction.TradeStateEnum.CLOSED, Transaction.TradeStateEnum.NOTPAY,
                     Transaction.TradeStateEnum.REFUND, Transaction.TradeStateEnum.PAYERROR}) {
                 f.transaction.setTradeState(late);
-                f.createdOrders.get(order).setTradeState(late);
+                // Original paid order stays SUCCESS: a late conflicting notification cannot rewrite that fact.
                 assertTrue(f.deliver().contains("FAIL"));
             }
             f.verifyNoBusinessCalls();
@@ -241,7 +241,7 @@ class WechatPayCallbackFactsTest {
 
         @SuppressWarnings("unchecked")
         Fixture(String no, String channel) {
-            intentDb = WechatPaymentIntentTestSupport.install(gateway, Map.of());
+            intentDb = WechatPaymentIntentTestSupport.install(gateway, Map.of(no, new java.math.BigDecimal("50.00")));
             order = no;
             transaction = order(no, channel);
             createdOrders.put(no, order(no, channel));

@@ -1,93 +1,100 @@
-# B 支付网关 v4 候选交付
+# B 支付网关 v8 候选交付
 
-结论：已用具体持久实现替换旧 all-reject Source，完成四路统一事实核验、永久支付意图/首次渠道锁定、CLOSED 后新尝试与原号保留，并修复商家建单事务边界及转账 UNKNOWN 分类。静态验证与 efa5c06f 的 Java 21 编译已通过；既有精选39项通过但未覆盖 B 新增支付用例，B 相关测试仍待主 CI 结果，不可集成或发布。新表为提案，未执行 DDL。
+结论：本轮已在源码中修复 H-B01 的旧关闭覆盖新尝试问题，并应用回调 HTTP 204/500 ACK。恢复合法、原单同状态的 CLOSED/REFUND 领域分发，保留终态重复成功 ACK。候选仍须由协调者在同一最终 SHA 上编译和运行相关 Java/MySQL 测试；本报告不宣称验收通过。未合并、未部署、未调用真实微信、未运行生产 DDL。
 
-## 基线、隔离、候选身份
+## 基线、隔离与身份
 
-- 唯一仓库 https://github.com/liboyang42-cpu/hengyin ，公共基线与开工实际 HEAD 都为 `2ec68899099a1e250df0949a8383bf85b5d3ffe0`。
-- 原 `/workspace/hengyin`、分支 `work` 保持原状；B 独立工作树 `/workspace/architecture-day-b`、分支 `codex/architecture-day-b-pay-gateway`，历史 HEAD `3bca5e05328ded4dc47fddd4614f30eff13a28fa`。
-- 历史转账 `090291402461c91377f5a494e92f01cf0887746a`、旧错误 Source 候选 `4f270d0451cc5f13737d0be2b40819fc3629445a` 均保留、不重写。不要直接集成历史 HEAD。
-- 此前未编译测试即提交，是我的执行失误，环境受限不能替代提交门禁。用户后续明确批准“审查/秘密扫描后的独立 codex CI 候选可先 commit/push”例外；本轮仅按该例外发布隔离候选，编译测试通过才可正式集成。不合并、不部署。
-- 最新完整补丁、拆分补丁及 SHA256 见 `artifact-sha256-v7.txt`；旧 v1/v2/v3 工件保留。`files-v4.txt` 列出精确 Java 文件。
+- 唯一公共仓库 https://github.com/liboyang42-cpu/hengyin ，参考基线和开工实际 HEAD 均为 `2ec68899099a1e250df0949a8383bf85b5d3ffe0`。
+- 原工作树 `/workspace/hengyin`、分支 `work` 保持原状。B 独立工作树 `/workspace/architecture-day-b`、本地分支 `codex/architecture-day-b-pay-gateway`；本地历史 HEAD 仍为 `3bca5e05328ded4dc47fddd4614f30eff13a28fa`，当前文件为其后的隔离候选。
+- PR https://github.com/liboyang42-cpu/hengyin/pull/573 ，远程候选分支 `codex/architecture-day-b-pay-gateway-v4-ci`。本轮只追加一个聚合提交，父提交 `218ecae05a78185e689ad3bc115bea2e51aa752c`；最终 SHA 由提交回执和交付消息给出，不重写任何旧候选。
+- 历史 `0902914` 转账、`4f270d0` 错误 Source、`3bca5e0` 报告，以及 `1c7be84/efa5c06/dda99e5/44f8e62/218ecae` 均保留。旧 all-reject Source 已移除，不可集成旧 HEAD。
+- 先前未编译测试即提交是我的执行失误。用户后续明确批准“已审查/秘密扫描的独立 codex CI 候选可先 commit/push”例外，本轮仅使用这一例外，编译测试通过才正式集成。没有自行 dispatch、rerun 或取消 CI；之后由 root 统一执行。
+- `files-v8.txt` 为精确 Java 文件；`artifact-sha256-v8.txt`、`patch-apply-evidence-v8.txt` 为完整公共基线补丁及拆分补丁校验。旧工件不删除。没有引入私有仓库历史、配置、备份或秘密。
 
-## 已授权的精确领域方法与实际修改
+## 失败机制与最小合同
 
-| 文件/方法 | 原失败机制 | 最小修复 |
+| 方法范围 | 失败机制 | 本轮合同 |
 | --- | --- | --- |
-| MerchantCommerceService.createOrder、reconcileOrder；私有 paymentTransaction | 订单外层事务未提交就请求微信；对账自调用付费方法缺少新的原子事务；NOT_FOUND 可本地关闭原单 | 入口 NOT_SUPPORTED，短事务提交订单/幂等重放结果后事务外 SDK；查询网络在事务外，付费 CAS+权益仍同短事务；NOT_FOUND 不关闭，仅原单 CLOSED 可终结 |
-| ClubMembershipServiceImpl.reconcileWechatInvoice | PAYERROR/REVOKED 也能关闭本地 PAYING | 仅 CLOSED 关闭。renew/resumeInvoice/closeInvoice 及 prepare/attach 已有正确短事务，核对后不改 |
-| RegistrationCheckoutServiceImpl.createOrReplay、retryPayment 两重载、createWechatOrder | 外部调用若被上层事务包裹会不耐久；本次参数拒绝不能证明原号之前未执行 | 应用入口 NOT_SUPPORTED，使独立订单/支付状态 service 提交后再 SDK；本次失败不释放原 PAYING |
-| ApiCoopController.depositCreate、depositStatus | 缺 openid 也会先置保证金支付中；状态入口只读本地漏单无法恢复 | 先确认 openid 再 prepareDeposit；事务外统一查单，仅核验 SUCCESS 后调用已有三参数 markDepositPaid，保留领域金额/交易号/CAS |
-| ApiCoopController.depositCreateApp | 已无外层事务、prepareDeposit 返回后才 SDK | 只核对，未改 |
+| WechatPayServiceImpl.freezePaymentIntent / lockPaymentBusiness | 预先准备结果可能在业务已关闭后仍发 SDK；旧 CLOSED 提交后可创建新别名 | 同一业务行 FOR UPDATE 内复核四域 payable、业务金额、原意图/最新尝试，再提交冻结记录；实际外层事务未提交时拒绝 SDK |
+| queryOrderStatus / recordConfirmedClosedAttempt | CLOSED 标记提交和领域关闭有窗口 | 只标记所观察的实际微信号；同一业务行串行；有调用方事务时 REQUIRED 加入，避免挂起持锁调用方造成自锁；无外层时短事务提交 |
+| closePaymentAttempt / lockPaymentAttemptForUpdate | 旧观察关闭时重新解析 current，会误关新号；领域只按 id/status 关闭 | SDK 关闭及回读固定观察号；领域关闭事务必须持有业务行锁并核对最新 attempt/商户/业务号，原观察过期则零关闭 |
+| MerchantCommerceService.createOrder / reconcileOrder / closeObservedOrder | 订单未提交就下单；旧 CLOSED 覆盖新 attempt；自调用权益方法原子边界不足 | NOT_SUPPORTED 应用入口；订单/意图提交后事务外 SDK；已付 CAS+权益同短事务；关闭前同事务 attempt 栅栏；NOT_FOUND 永不凭时间关闭 |
+| ClubMembershipServiceImpl.closeInvoice / reconcileWechatInvoice / applyWechatInvoiceObservation / closeObservedInvoice | 查询后 SDK 关闭丢失原号；旧 CLOSED 释放新尝试账单 | 观察号贯穿关闭；原金额/账单校验保留；关闭 CAS 与当前尝试校验共事务；只接受 CLOSED，不接受 PAYERROR/REVOKED |
+| RegistrationCheckoutServiceImpl.createOrReplay / retryPayment 两重载 / createWechatOrder | 外层事务未提交；本次拒绝被当作原号未执行 | 订单/支付原意图先提交，事务外 SDK；本次本地失败不释放原 PAYING |
+| OrderCloseTask.reconcileExpiredPaying / closeObservedRegistration | 同类旧关闭覆盖；NOT_FOUND 超宽限直接回补 | 保留实际号，原尝试关闭 + 当前尝试栅栏/settlePayingOne 同事务；NOT_FOUND/REVOKED 保持未知，不回补 |
+| TeamGroupServiceImpl.settlePayingRegistrationsBeforeCancel / closeLocally | 活动取消支付收口丢原号；NOT_FOUND 超时回补 | 仅修改 PAYING 支付段，计划携带实际号，关闭在既有业务事务内核对当前尝试；未知拒绝取消，不改变权限、退款金额或 G 结算 |
+| CmsRegistrationServiceImpl.applyWechatPayCallback 的 CLOSED 分支及懒加载网关字段 | 已恢复的旧 CLOSED 通知也可能覆盖新 attempt | 在原 inbox mutation+DONE 事务内强制实际号与当前尝试栅栏；缺实际号拒绝，不保留危险 fallback；原状态机/交易绑定保留 |
+| ApiCoopController.depositCreate / depositStatus | 缺 openid 先改支付中；仅本地状态无法恢复漏单 | 先确认付款人 openid；统一查单事实核验后仅 SUCCESS 调已有三参数 markDepositPaid；APP 入口只盘点 |
+| ApiRegistrationController.payCallback | FAIL JSON 仍 HTTP 200，微信认为已成功接收 | 仅业务 SUCCESS ACK 为 204 空体；FAIL/null/格式错误/分发异常为 HTTP 500 JSON FAIL；HTTP 头按不区分大小写处理；不回显原通知 |
 
-未改非支付业务/权限/G 结算；没有改 mapper、接口签名、根 pom、CI 工作流或软件依赖；新增迁移登记于规范目录，并仅在共享 ci/migration-dependencies.json 增加本表的一条空依赖登记，由协调者统一集成，未运行 DDL。没有新增 Agent、后端实例、数据库或生产操作。
+共享最小接口新增 `IWechatPayService.closePaymentAttempt(businessNo,observedWxNo)` 与 `lockPaymentAttemptForUpdate(businessNo,observedWxNo)`。旧 Map 方法签名不变。唯一生产实现为 WechatPayServiceImpl。协调者须审阅这两个接口与上述报名 mutation 的精确增量；未改 mapper、根 pom、软件依赖或 CI 工作流。只增加本迁移的一条空依赖登记。
 
-## 四域创建、永久事实、确认路径
+## 四域创建与事实来源
 
-| 域 | 创建链及本地金额事实 | 回调/查单后领域处理 |
+| 域 | 创建/提交 | 确认与领域效果 |
 | --- | --- | --- |
-| CLM | renew/resumeInvoice → 已提交 club_membership_invoice(out_trade_no,amount_fen) → createGenericOrder(JSAPI) | handlePaidInvoice 保留归属、snapshot、version/CAS、交易号绑定；恢复/关单复用统一 queryOrderStatus |
-| 商家 | createOrder → 已提交 oms_order(order_sn,pay_amount) → createGenericOrder(JSAPI) | handlePaidOrder 保留类型、金额、交易号/CAS及权益同事务；reconcileOrder 用短事务补记 |
-| DEP | depositCreate/depositCreateApp → prepareDeposit 独立事务提交 coop_invite(deposit_out_trade_no,deposit_amount) → generic JSAPI/APP | markDepositPaid(no,cents,tx) 保留金额和交易号 CAS；depositStatus 新增主动补记；G 既有补记仍用同一网关 |
-| 报名 | createOrReplay/retryPayment → RegistrationOrderService/CmsRegistrationService.beginPaymentAttempt 提交 → createOrder/createAppOrder | handleWechatPayCallback 保留订单归属、混合支付金额、交易号绑定；现有 mutation+DONE 同事务实现不变；OrderCloseTask/TeamGroup 继续用统一查单 |
+| CLM | renew/resumeInvoice 的短事务提交 invoice(out_trade_no,amount_fen)，再 generic JSAPI | handlePaidInvoice 保留归属、冻结快照、金额、交易号、CAS及权益；原短事务 prepare/attach 保留 |
+| 商家 | createOrder 短事务提交 oms_order(order_sn,pay_amount)，再 generic JSAPI | handlePaidOrder 保留业务类型、金额、交易号、CAS及权益原子提交 |
+| DEP | depositCreate/depositCreateApp → prepareDeposit 提交 coop_invite(deposit_out_trade_no,deposit_amount)，再 JSAPI/APP | markDepositPaid(no,cents,tx) 及状态入口主动补记；未修改 CoopInviteServiceImpl/G 文件 |
+| 报名 | checkout → 独立订单创建和 beginPaymentAttempt 提交 → JSAPI/APP | handleWechatPayCallback 的 mutation+DONE 同事务、owner/fence 保留；超时关闭复用 settlePayingOne 的库存/积分/权益处理 |
 
-每次 SDK 下单前，具体 freezePaymentIntent 以真实业务行 FOR UPDATE 校验已提交身份/金额，再独立提交 wx_pay_order_intent。网关发现环境仍有实际外层事务即拒绝，不以内部 NOT_SUPPORTED 假装业务已提交。
+每次 SDK 预下单先永久冻结 merchant、稳定业务号、实际微信号、biz_type/id、attempt_no、appid、APP/JSAPI、CNY、分金额、openid、description、notify_url 和长度编码 SHA256 原参数指纹；无 TTL，不覆盖/释放业务唯一身份。首次提交锁渠道及请求；UNKNOWN/超时/NOT_FOUND 只能保留原意图。仅确认原号 CLOSED 后允许新确定性 WXP 别名，旧号/旧参数永久保留。超过微信32字符的商家业务号也使用确定性别名。
 
-冻结记录包含 merchant、business 原号、实际微信号、biz_type/id、attempt_no、appid、APP/JSAPI、CNY、分金额、openid、description、notify_url 及长度编码 SHA256 原参数指纹；无 TTL、无删除/覆盖。业务唯一 active 约束跨 merchant，防止 UNKNOWN 时换 merchant 绕过；同业务尝试序号永久唯一。
+通知先 SDK 验签，再按原商户+实际号查询微信原单，核对 appid/mchid/trade_type/CNY/total/transactionId/state/单号；有新表冻结记录则同时匹配。不是从任意配置 appid 集合猜订单渠道。合法历史原单是原创建事实，缺表/读取异常不会降级跳过。SUCCESS、CLOSED、REFUND 仅在通知与原单事实同状态匹配后进入原领域；不接受 NOTPAY/PAYERROR/REVOKED 作为通知资金终态。CLOSED 的报名 mutation 再以原尝试栅栏防止旧状态覆盖新尝试；重复终态成功 ACK 保留。
 
-用户决定已落地：首次提交锁定渠道及请求参数；超时/UNKNOWN/NOT_FOUND 不改号、不换渠道。仅统一查询核验原单 CLOSED 后写 closed_confirmed_at；下一次使用同一业务号生成新的确定性 WXP 微信别名，旧号/请求永久保留。首个业务号超过微信 32 字符上限时也使用确定性别名（现有商家 UUID 业务号长度 38/39，原样提交本就不符合协议）。回调、查单、退款运输层映射实际微信号，领域仍绑定稳定原业务号；附加 wx_out_trade_no/wxOutTradeNo 供追踪。领域已终结的订单不会被此网关自动复活。
+主动查单同一事实校验；回调/查单 Map 同时给稳定 `out_trade_no` 与实际 `wx_out_trade_no`，退款保留 `wxOutTradeNo` 映射及原金额规则。
 
-通知先 SDK 验签，之后仅接受 SUCCESS；按实际微信号与原 merchant 用已初始化 JsapiService 官方查询，校验 appid/mchid/trade_type/CNY/total/transactionId/state/单号；有本地冻结记录还须逐项一致，然后才进入四域。不是“任意配置 appid 皆可”。历史既有微信原单本身作为创建时不可变事实，不读取会过期/清空的 payParams。没有 Source 空壳。
+## H-B01 并发验证设计
 
-主动查询使用同样原单/快照校验。错字段或缺必需事实/查询异常不传领域写入；NOTPAY/CLOSED 的可选 transactionId/tradeType 可缺失，但仍要求原应用/商户/金额/币种。迟到非 SUCCESS 通知不调领域、不解渠道锁，重复成功仍由既有领域 CAS 和交易号绑定处理。
+`WechatPaymentIntentMySqlIT.oldClosedObservationCannotCloseNewAttemptAndNewSuccessCreditsExactlyOnce` 使用实际 MySQL、JdbcTemplate、DataSourceTransactionManager、业务代理事务、两个线程和 barrier：旧查单提交 CLOSED → 暂停旧领域关闭 → 同一业务新建 APP 别名 → 恢复旧关闭 → 栅栏拒绝旧关闭 → 新 SUCCESS 两次通知 → 读回业务 paid/新交易号/一次权益记录；旧号/旧应用及 CLOSED 标记不变，再次旧栅栏仍失败。
 
-## 转账独立合同（供 A）
+该测试使用真实网关和 MerchantCommerceService；SDK 为 double，领域 mapper 为 JDBC-backed Mockito adapter、权益落专用 fixture 表。它证明该竞争日程与事务/落库合同，不声称实际 MyBatis XML 或四域完整端到端已验证。会员、报名 task、报名 CLOSED inbox 补对应过期观察负控，四域 freeze 补业务已不可支付时拒绝。
 
-Map 签名保持不变。明确发送前本地拒绝显式 ok=false,ambiguous=false；SDK 调用后全部 ServiceException（包括 SYSTEM_ERROR/5xx/429）、超时、不完整受理响应显式 ambiguous=true，保留原批次/明细和参数。ok=true 仅受理，不能当到账。A 仍须用原 DEBIT/SUBMIT_INTENT 核验，不得用新一次本地拒绝证明原号从未执行。
+## 实际 CI 证据、四项 MySQL 与 HTTP 注册
 
-查询只有 batch FINISHED 才查询明细；批次/明细的 merchant/app/batch/detail 身份、batchId/detailId、单笔数量及金额全部匹配，明细状态 FAIL 才 result=FAIL。批次 CLOSED 没有已证实“所有明细未到账”的保证，返回 UNKNOWN，A 不得按 CLOSED 回补。详见 `A-transfer-contract.md`。
+**已实际执行的旧候选证据**：
 
-官方依据：
-- https://pay.wechatpay.cn/doc/v3/merchant/4012065168 原批次重试/查证、早期 NOT_FOUND。
-- https://pay.wechatpay.cn/doc/v3/merchant/4012458841 发起批量转账、SYSTEM_ERROR 等。
-- https://pay.wechatpay.cn/doc/v3/merchant/4012458877 批次状态 CLOSED/FINISHED 语义。
-- https://pay.wechatpay.cn/doc/v3/merchant/4012458902 明细 FAIL 与字段。
-- https://pay.wechatpay.cn/doc/v3/merchant/4012791859 原单查询，appid/mchid 为创建该原单时值。
+- `efa5c06f` GitHub-hosted Java21 编译了 system1900/admin280 生产源及 admin1892 测试源；精选39项既有测试通过、0失败/错误/跳过，该精选不覆盖 B 支付用例。
+- root 取回 `218ecae` run40019783921 / job120641220198 完整日志：实际13822项，4 failures、0 errors、631 skipped，不能验收。三个 WechatPayCallbackForgedSignatureTest 失败根因为 B 的 SUCCESS-only 闸门错误阻断合法原同状态 CLOSED/REFUND（夹具原单事实本已完整），本轮修根因且保留原冲突/重复断言。另一个 WechatPayReadinessTest 仍期待 ambiguous 缺省，本轮只把断言改为明确 false，保留 fractional-cent/overflow 发送前拒绝和 SDK never 验证。
+- 旧 `218ecae` gitleaks、migration layout、migration safety 通过；不冒充最终新 SHA 的扫描或 Java 结果。
 
-## 调用者与共享边界
+**本轮本地实际执行**：`git diff --check`、Python 范围/缓存微信0.2.15 JAR符号核对、秘密文件及凭据标记扫描、全补丁 apply --check/应用后逐字节比对。详见 v8 证据文件。这些不是 Java/JUnit/MySQL 执行。
 
-已搜索全部 createGenericOrder/createGenericAppOrder/createOrder/createAppOrder、queryOrderStatus/closeOrder/submitRefund 与 transferToBalance/queryTransferResult 调用者。除上述领域外，TeamGroupServiceImpl、OrderCloseTask、CoopInviteServiceImpl.markDepositPaid(String)、CmsTopicServiceImpl.resolvePendingDepositPaymentForSettlement 也读取网关支付事实；唯一实际转账消费方 CashWithdrawServiceImpl。
+**本轮未执行**：新最终 SHA 的 Java 编译、相关 JUnit、四项 MySQL、真实 WeChat、生产链路。没有在云 VM/Mac 起 Java/数据库替代受控环境。root 已获授权可运行 GitHub-hosted 临时 Java/MySQL，无需再次等待执行批准；生产 DDL 仍禁止。
 
-给协调者/G：CoopInviteServiceImpl.markDepositPaid(String) 在其事务中查询，CmsTopicServiceImpl 的保证金补记也可能持有领域锁查询；本轮未修改这两个文件，不碰 G 结算/退款金额规则。queryOrderStatus 的关闭事实提交只写独立意图记录，领域业务修改仍由原调用者负责。
+MySQL 类恰好 **4 个 @Test**，先前统计错误把 @TestInstance 算成第五项，静态计数现已改为正则边界：
 
-## 实际验证和未验证
+1. fourDomainsRetainOriginalParametersAndConflictRollsBackWithoutOverwriting
+2. concurrentChannelChoicesHaveOneCommittedWinner
+3. oldClosedObservationCannotCloseNewAttemptAndNewSuccessCreditsExactlyOnce
+4. sdkObservesCommittedIntentOnIndependentConnectionAndAmbientTransactionCannotSubmit
 
-实际执行：工作树/基线/范围核对；git diff --check；Python 读取已缓存微信 0.2.15 JAR 的方法/类型；完整补丁 apply --check、应用到基线提取副本后逐字节比对；候选密钥文件门禁及 Python 内容规则扫描。证据文件记录命令和输出。这些均不等于 Java 编译/JUnit。
+注册入口为 `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentIntentMySqlIT.java`；显式点名运行，不能以默认 Surefire 不选 `*IT` 算通过。要求 RUNNER_ENVIRONMENT=github-hosted、B_PAYMENT_INTENT_DDL_APPROVED=1、回环临时 MySQL；使用已有 CHENGYIN_MYBATIS_IT_* 受控测试配置，随机专属 schema，缺条件硬失败。四项当前 **实际执行0，待 root 回填同 SHA 证据**。
 
-测试源码：转账8、回调矩阵9（四路正确/错误/缺失 appid/mchid/currency/amount/订单/交易号/渠道、查询错事实、重复乱序、冻结错配、关闭解锁、新别名路由）、签名测试31、主动查询5、意图锁6、真实 MySQL 意图 IT5；另补商家事务提交/NOT_FOUND、会员非CLOSED不释放、DEP主动补记与未知不改、退款别名测试，并更新报名原号晚到成功的真实存储用例。未执行修复前红测，不声称 red/green。
+HTTP 类 `WechatPayCallbackHttpAckTest` 恰好 **5 项**：成功204（含大小写HTTP头）、错误/缺省/坏ACK500、异常500、四路真实网关分发的拒绝及异常500、四路重复成功204。实际路由和 HTTP，SDK/领域 double，不声称数据库或验签真实链路。生产注册入口是原 `POST /api/registration/callback`，没有新建 endpoint。
 
-GitHub-hosted 的精选回归已在 efa5c06f 实际编译后端及全部测试源码，39项执行且无失败/错误/跳过；该套不覆盖 B 新增支付用例。B 相关 JUnit、新意图表 MySQL IT/四域完整链路、查询应答验签负控、真微信及生产仍未通过或未执行。MySQL IT 用真实 JdbcTemplate/DataSourceTransactionManager/两连接观察/并发；其领域表是最小 SQL 夹具，仅证明网关/意图表合同，不冒充四域全链路。
-
-获准 CI 点名测试建议（检查每个 admin 测试实际存在、skip=0）：
+root 可在已批准的 GitHub-hosted 临时 MySQL job 中显式选取（不要在本云 VM 执行）：
 
 ```sh
-mvn -B -pl chengyinhub-admin -am -Dsurefire.failIfNoSpecifiedTests=false -Dtest=WechatPayTransferClassificationTest,WechatPayCallbackFactsTest,WechatPayCallbackForgedSignatureTest,WechatPayOrderQueryTest,WechatPaymentIntentLockTest,WechatPayAppChannelTest,WechatPayNotifyUrlTest,WechatPayRefundNotifyUrlTest,WechatPayReadinessTest,RefundVerifiedFactsTest,WechatPayClubMembershipRouteContractTest,MerchantCommerceServiceTest,ClubMembershipServiceImplTest,ApiCoopDepositStatusTest,ApiCoopDepositAppPaymentTest test
+B_PAYMENT_INTENT_DDL_APPROVED=1 mvn -B -pl chengyinhub-admin -am -Dsurefire.failIfNoSpecifiedTests=false -Dtest=WechatPaymentIntentMySqlIT,WechatPayCallbackHttpAckTest,WechatPayTransferClassificationTest,WechatPayCallbackFactsTest,WechatPayCallbackForgedSignatureTest,WechatPayOrderQueryTest,WechatPaymentIntentLockTest,WechatPayReadinessTest,MerchantCommerceServiceTest,ClubMembershipServiceImplTest,PaymentCallbackFenceEntryTest,OrderClosePayingReconcileTaskContractTest test
 ```
 
-新表 DDL 未获执行批准，WechatPaymentIntentMySqlIT 暂不调用。批准隔离 CI DDL 后，显式设置 B_PAYMENT_INTENT_DDL_APPROVED=1，在 GitHub-hosted 环境点名执行；缺环境硬失败，不以假库或跳过算通过。现有 RegistrationFundsMybatisIntegrationTest 也需获准存储门禁运行。没有改共享 CI 清单，由集成人接入。
+既有真实存储回归还须使用仓库 `ci/funds-mysql-it-gate.sh` 对应环境点名 RegistrationFundsMybatisIntegrationTest（CHENGYIN_FUNDS_MYSQL_IT=1、既有 Oracle MySQL8.0.45 门禁），确认未 skip。无新增依赖或放宽版本/验收门槛。
 
-## 迁移/预检/回退与阻塞
+## 转账独立交付（A）
 
-DDL 仅 `chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql`，从未运行。必须先获批并核对 MySQL 8 实际结构、ascii_bin、generated unique/null、金额分精度、字段长度、业务号唯一性，按四域扫描所有活跃支付；上线前停止旧 writer 并核对未知/历史请求。新代码查表异常不会降级放行，不能在缺表时先上线。
+Map 签名不变。本地确定发送前拒绝显式 `ok=false,ambiguous=false`；调用 SDK 后 SYSTEM_ERROR/5xx/其他 ServiceException、超时、身份不符/不完整响应均 explicit ambiguous=true，原批次/明细/参数继续查证。ok=true 仅受理，不是到账。A 还须核验原 DEBIT/SUBMIT_INTENT，不得用新一次拒绝证明原号未执行。
 
-历史有微信原单但无本地冻结参数时，回调/查单继续按真实原单核验；新预下单会在首次冻结前查证，并拒绝覆盖已存在的原单。不得拿新 appid 猜历史参数或直接补写请求指纹。历史 CLOSED 无快照的同业务再次发起目前保守阻塞，需按官方原单与保留参数逐笔审核后迁移，不能自动伪造 backfill。历史活跃但微信仍 NOT_FOUND 的 UNKNOWN 必须在迁移预检中单独隔离、保留原号，不能作为无历史的新单放行；这仍是迁移验收阻塞，不能靠没有小程序用户跳过资金记录盘点。
+查批次只在 FINISHED 后查明细；merchant/app/batch/detail 身份、ID、单笔数量及金额匹配且 detail FAIL 才 result=FAIL。单纯 batch CLOSED 返回 UNKNOWN，不能证明未到账。官方依据和字段映射见 `A-transfer-contract.md`（4012065168/4012458841/4012458877/4012458902）。
 
-回退先停止新预支付，保留新增表/所有原号/参数/回执/账本/审计，不 DROP/DELETE，不退回会改号/UNKNOWN 回补的旧逻辑；若已使用 WXP 别名，必须保留映射读取能力，否则回调/退款无法正确归属。故不是删表/回滚 jar 即可的可逆上线。
+独立公共基线提交 `1c7be849402d5519035e2c2f11cd6a6a819ce288` 保留。完整 transfer-v2 patch 21910字节，SHA256 `d2bae8b120ce03cb6993373e0cf3b89b1cabc33ca4a20484c3c48029e50ddee4`；`transfer-v2.patch.gz.base64` 为可无损解码的完整工件，不依赖截断 diff。
 
-仍阻塞：受控 Java 编译和相关单测；新表执行审批与真实 MySQL 并发/提交/回滚证据；历史活跃 UNKNOWN 预检/原参数补证；四域真实端到端金额/交易绑定与到账后乱序验收。现有报名 mutation+DONE 原子提交保留，不声称其他三路已迁入 inbox。
+HTTP 协议依据：https://pay.wechatpay.cn/doc/v3/merchant/4012791902 、https://pay.wechatpay.cn/doc/v3/merchant/4013070368 （200/204 成功 ACK，失败应4xx/5xx）。
 
-首次 CI（efa5c06f）完整 gitleaks 通过；迁移布局/清单门禁因 SQL 放在 docs/proposals 失败，已移至规范 chengyinhub-admin/sql 并补 PR 影响分类。保留原候选提交与所有原始证据。后端编译/单测结果另见 CI 回读文件。
+## 迁移、回退限制与剩余事项
 
-追加静态修正：查单异常测试夹具补齐意图数据库，使 SDK 404/5xx 真正被调用；会员非 CLOSED 负控断言实际查单/关单。dda99e55 迁移布局通过，迁移安全门还要求本表显式依赖登记，已追加单条空依赖。主 CI 后端失败摘要的日志连接器返回 Transport closed，已请求协调者提供 Maven 摘要，不能声称 B 支付用例通过。
-
-最终测试修正：旧 MerchantCommerceServiceTest 仍要求 NOT_FOUND 过24小时自动关闭，已按原号 UNKNOWN 合同改为窗口内外均保留；不减弱支付成功后的权益/交易号校验。查单异常测试显式断言原商户/原单号确实送入 SDK，避免空依赖异常误通过。生产 Java 与 efa5c06f 逐字节一致。
+- 新表仅 `chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql`；已写最小 migration/preflight，未运行生产 DDL。生产启用必须先按 `migration-preflight.md` 核对真实列/金额/单号唯一性及历史活跃 UNKNOWN，禁止假 backfill、清空资金/回执/审计。获准临时 CI DDL 与生产授权分开。
+- 历史存在微信原单但缺永久请求快照：回调/查单仍可核验官方原单；预下单拒绝覆盖。历史 CLOSED 无原参数的自动重发仍保守阻塞；历史活跃但 NOT_FOUND 的 UNKNOWN 必须迁移前隔离补证，不能按新单猜渠道。这是上线前迁移阻塞，不是 all-reject 的正常新单实现。
+- 回退先停止新支付提交；保留表、原号、映射、参数、回执、账本与审计，不 DROP/DELETE，不回退到 UNKNOWN 回补逻辑。出现 WXP 别名后必须保留映射读能力，不能直接退回不认识别名的旧 jar。
+- 搜索过所有预支付/查单/关单/退款及转账调用者；其他调用者包括 OrderCloseTask、TeamGroupServiceImpl、CoopInviteServiceImpl.markDepositPaid(String)、CmsTopicServiceImpl.resolvePendingDepositPaymentForSettlement。后两文件未改。G 保证金结算已先持 invite 行锁，与 B freeze 串行；但其现存 REVOKED/PAYERROR 可本地关闭策略交协调者/G 审核，本任务不擅改。
+- 新最终 SHA 的编译/单测/四项 MySQL/barrier/HTTP尚无通过结果；四域完整领域/MyBatis端到端、官方查询验签负控、生产预检仍未验证。现有报名 mutation+DONE 原子合同保留，不声称其余三域已全迁 inbox。

@@ -76,6 +76,13 @@ public interface IWechatPayService {
      */
     boolean closeOrder(String outTradeNo);
 
+    /** Close exactly the observed provider attempt; never resolve a newer alias for an old observation. */
+    boolean closePaymentAttempt(String businessOutTradeNo, String observedWxOutTradeNo);
+
+    /** Must run inside the domain mutation transaction. Locks business then latest attempt; false means stale. */
+    boolean lockPaymentAttemptForUpdate(String businessOutTradeNo, String observedWxOutTradeNo);
+
+
     /**
      * 微信原路退款(退回付款人原支付账户)。
      * @param outTradeNo   原支付商户订单号(= registrationNo)

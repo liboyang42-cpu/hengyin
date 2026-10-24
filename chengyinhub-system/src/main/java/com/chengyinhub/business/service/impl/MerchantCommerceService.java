@@ -188,17 +188,24 @@ public class MerchantCommerceService implements IMerchantCommerceService {
                 throw new IllegalStateException("商业化已支付订单补记失败");
             }
         } else if ("CLOSED".equals(state)) {
-            paymentTransaction().execute(status -> orderMapper.markCommerceOrderClosed(order.getId()));
+            closeObservedOrder(order, observed.get("wx_out_trade_no"));
         } else if (("NOTPAY".equals(state) || "PAYERROR".equals(state)) && abandoned) {
             // 放弃的待支付单不能每 5 分钟查一辈子：先在微信侧关单(已付会被微信拒绝并抛出，
             // 下一轮查到 SUCCESS 照常补记)，关单成功后才本地终结。
-            if (!wechatPayService.closeOrder(outTradeNo)) {
+            if (!wechatPayService.closePaymentAttempt(outTradeNo, observed.get("wx_out_trade_no"))) {
                 throw new IllegalStateException("商业化超时订单关单未确认");
             }
-            paymentTransaction().execute(status -> orderMapper.markCommerceOrderClosed(order.getId()));
+            closeObservedOrder(order, observed.get("wx_out_trade_no"));
         } else if (!"NOTPAY".equals(state) && !"USERPAYING".equals(state) && !"PAYERROR".equals(state)) {
             throw new IllegalStateException("商业化支付状态无法确认");
         }
+    }
+
+    private boolean closeObservedOrder(OmsOrder order, String observedWxOutTradeNo) {
+        return Boolean.TRUE.equals(paymentTransaction().execute(status -> {
+            if (!wechatPayService.lockPaymentAttemptForUpdate(order.getOrderSn(), observedWxOutTradeNo)) return false;
+            return orderMapper.markCommerceOrderClosed(order.getId()) == 1;
+        }));
     }
 
     private org.springframework.transaction.support.TransactionTemplate paymentTransaction() {

@@ -42,6 +42,7 @@ class MerchantCommerceServiceTest {
         orderMapper = mock(OmsOrderMapper.class);
         settlementRuleService = mock(ISettlementRuleService.class);
         wechatPayService = mock(IWechatPayService.class);
+        when(wechatPayService.lockPaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
         permissionService = mock(IUserPermissionService.class);
         service = new MerchantCommerceService(false);
         ReflectionTestUtils.setField(service, "subscriptionMapper", subscriptionMapper);
@@ -259,7 +260,7 @@ class MerchantCommerceServiceTest {
         observed.put("trade_state", "UNKNOWN");
         assertThrows(IllegalStateException.class, () -> service.reconcileOrder("TPLTM_8"));
         verify(orderMapper, never()).markCommerceOrderClosed(any());
-        verify(wechatPayService, never()).closeOrder(any());
+        verify(wechatPayService, never()).closePaymentAttempt(any(), any());
     }
 
     @Test
@@ -279,6 +280,21 @@ class MerchantCommerceServiceTest {
     }
 
     @Test
+    void oldClosedObservationCannotCloseNewCurrentAttempt() {
+        OmsOrder order = new OmsOrder();
+        order.setId(18L); order.setOrderSn("PROMOT_18"); order.setStatus(0L);
+        order.setBizType(MerchantCommerceService.BIZ_PROMOTION_SLOT);
+        when(orderMapper.selectOmsOrderByOrderSn("PROMOT_18")).thenReturn(order);
+        when(wechatPayService.queryOrderStatus("PROMOT_18")).thenReturn(java.util.Map.of(
+                "out_trade_no", "PROMOT_18", "wx_out_trade_no", "old-wx-attempt", "trade_state", "CLOSED"));
+        when(wechatPayService.lockPaymentAttemptForUpdate("PROMOT_18", "old-wx-attempt")).thenReturn(false);
+        service.reconcileOrder("PROMOT_18");
+        verify(wechatPayService).lockPaymentAttemptForUpdate("PROMOT_18", "old-wx-attempt");
+        verify(orderMapper, never()).markCommerceOrderClosed(any());
+        verify(subscriptionMapper, never()).grantMerchantSubscription(any());
+    }
+
+    @Test
     void abandonedUnpaidOrderIsClosedAtWechatBeforeLocalCloseButFreshOneStaysPending() {
         OmsOrder order = new OmsOrder();
         order.setId(18L); order.setOrderSn("PROMOT_18"); order.setStatus(0L);
@@ -287,21 +303,23 @@ class MerchantCommerceServiceTest {
         when(orderMapper.selectOmsOrderByOrderSn("PROMOT_18")).thenReturn(order);
         java.util.Map<String, String> observed = new java.util.HashMap<>();
         observed.put("trade_state", "NOTPAY"); observed.put("out_trade_no", "PROMOT_18");
+        observed.put("wx_out_trade_no", "PROMOT_18");
         when(wechatPayService.queryOrderStatus("PROMOT_18")).thenReturn(observed);
         service.reconcileOrder("PROMOT_18");
-        verify(wechatPayService, never()).closeOrder(any());
+        verify(wechatPayService, never()).closePaymentAttempt(any(), any());
         verify(orderMapper, never()).markCommerceOrderClosed(any());
 
         order.setCreateTime(new java.util.Date(System.currentTimeMillis() - 25 * 60 * 60 * 1000L));
-        org.mockito.Mockito.doThrow(new RuntimeException("ORDERPAID")).when(wechatPayService).closeOrder("PROMOT_18");
+        org.mockito.Mockito.doThrow(new RuntimeException("ORDERPAID")).when(wechatPayService).closePaymentAttempt("PROMOT_18", "PROMOT_18");
         assertThrows(RuntimeException.class, () -> service.reconcileOrder("PROMOT_18"));
         verify(orderMapper, never()).markCommerceOrderClosed(any());
 
         org.mockito.Mockito.reset(wechatPayService);
+        when(wechatPayService.lockPaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
         when(wechatPayService.queryOrderStatus("PROMOT_18")).thenReturn(observed);
-        when(wechatPayService.closeOrder("PROMOT_18")).thenReturn(true);
+        when(wechatPayService.closePaymentAttempt("PROMOT_18", "PROMOT_18")).thenReturn(true);
         service.reconcileOrder("PROMOT_18");
-        verify(wechatPayService).closeOrder("PROMOT_18");
+        verify(wechatPayService).closePaymentAttempt("PROMOT_18", "PROMOT_18");
         verify(orderMapper).markCommerceOrderClosed(18L);
         verify(subscriptionMapper, never()).grantMerchantSubscription(any());
     }

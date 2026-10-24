@@ -860,7 +860,9 @@ public class WechatPayServiceImpl implements IWechatPayService {
     }
 
     private boolean matchesExpectedPayment(Transaction transaction) {
-        if (transaction == null || transaction.getTradeState() != Transaction.TradeStateEnum.SUCCESS
+        if (transaction == null || (transaction.getTradeState() != Transaction.TradeStateEnum.SUCCESS
+                && transaction.getTradeState() != Transaction.TradeStateEnum.CLOSED
+                && transaction.getTradeState() != Transaction.TradeStateEnum.REFUND)
                 || transaction.getOutTradeNo() == null
                 || !transaction.getOutTradeNo().matches("[A-Za-z0-9_-]{1,64}")
                 || transaction.getTransactionId() == null
@@ -1006,11 +1008,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
             String wxOrderNo = currentWechatPaymentNo(outTradeNo);
             Transaction transaction = queryVerifiedOrder(wxOrderNo);
             if (transaction.getTradeState() == Transaction.TradeStateEnum.CLOSED) {
-                var closeFact = new org.springframework.transaction.support.TransactionTemplate(paymentIntentTransactions);
-                closeFact.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-                closeFact.execute(status -> paymentIntentJdbc.update(
-                        "UPDATE wx_pay_order_intent SET closed_confirmed_at=COALESCE(closed_confirmed_at,CURRENT_TIMESTAMP(6)) WHERE mchid=? AND out_trade_no=?",
-                        transaction.getMchid(), wxOrderNo));
+                recordConfirmedClosedAttempt(transaction);
             }
 
             Map<String, String> result = new HashMap<>();
@@ -1123,28 +1121,12 @@ public class WechatPayServiceImpl implements IWechatPayService {
             var transaction = new org.springframework.transaction.support.TransactionTemplate(paymentIntentTransactions);
             transaction.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
             return transaction.execute(status -> {
-                String bizType;
-                String sql;
-                boolean cents = false;
-                if (outTradeNo.startsWith("CLM")) {
-                    bizType = "CLM";
-                    cents = true;
-                    sql = "SELECT id,amount_fen AS amount FROM club_membership_invoice WHERE out_trade_no=? FOR UPDATE";
-                } else if (outTradeNo.startsWith("DEP")) {
-                    bizType = "DEP";
-                    sql = "SELECT id,deposit_amount AS amount FROM coop_invite WHERE deposit_out_trade_no=? FOR UPDATE";
-                } else if (outTradeNo.startsWith("TPLTM_") || outTradeNo.startsWith("PROMOT_") || outTradeNo.startsWith("CUSTOM_")) {
-                    bizType = "COMMERCE";
-                    sql = "SELECT id,pay_amount AS amount FROM oms_order WHERE order_sn=? FOR UPDATE";
-                } else {
-                    bizType = "REGISTRATION";
-                    sql = "SELECT id,wechat_payment_amount AS amount FROM cms_registration WHERE registration_no=? FOR UPDATE";
-                }
-                var business = paymentIntentJdbc.queryForList(sql, outTradeNo);
-                if (business.size() != 1 || !(business.get(0).get("id") instanceof Number bizId)
-                        || business.get(0).get("amount") == null) throw new IllegalStateException("已提交业务支付身份缺失");
-                java.math.BigDecimal amount = new java.math.BigDecimal(business.get(0).get("amount").toString());
-                long expectedFen = cents ? amount.longValueExact() : amount.movePointRight(2).longValueExact();
+                PaymentBusiness business = lockPaymentBusiness(outTradeNo);
+                if (!business.payable()) throw new IllegalStateException("业务订单已不可支付，不能提交旧准备结果");
+                String bizType = business.type();
+                Number bizId = business.id();
+                long expectedFen = business.cents() ? business.amount().longValueExact()
+                        : business.amount().movePointRight(2).longValueExact();
                 if (expectedFen != totalFen.longValue()) throw new IllegalStateException("支付金额与业务冻结金额不符");
                 var active = paymentIntentJdbc.queryForList("SELECT * FROM wx_pay_order_intent WHERE biz_type=? AND biz_id=? AND closed_confirmed_at IS NULL FOR UPDATE", bizType, bizId.longValue());
                 var previous = paymentIntentJdbc.queryForList("SELECT * FROM wx_pay_order_intent WHERE biz_type=? AND biz_id=? ORDER BY attempt_no DESC LIMIT 1 FOR UPDATE", bizType, bizId.longValue());
@@ -1220,16 +1202,85 @@ public class WechatPayServiceImpl implements IWechatPayService {
      */
     @Override
     public boolean closeOrder(String outTradeNo) {
+        return closePaymentAttempt(outTradeNo, currentWechatPaymentNo(outTradeNo));
+    }
+
+    @Override
+    public boolean closePaymentAttempt(String businessOutTradeNo, String observedWxOutTradeNo) {
+        if (businessOutTradeNo == null || observedWxOutTradeNo == null
+                || !businessOutTradeNo.equals(businessPaymentOrderNo(observedWxOutTradeNo))) {
+            throw new IllegalArgumentException("关单必须携带原业务及所观察的微信尝试身份");
+        }
         try {
             CloseOrderRequest request = new CloseOrderRequest();
             request.setMchid(wxPayConfig.getMerchantId());
-            request.setOutTradeNo(currentWechatPaymentNo(outTradeNo));
-
+            request.setOutTradeNo(observedWxOutTradeNo);
             jsapiService.closeOrder(request);
-            return "CLOSED".equals(queryOrderStatus(outTradeNo).get("trade_state"));
+            Transaction observed = queryVerifiedOrder(observedWxOutTradeNo);
+            if (observed.getTradeState() != Transaction.TradeStateEnum.CLOSED) return false;
+            recordConfirmedClosedAttempt(observed);
+            return true;
         } catch (Exception e) {
-            throw new RuntimeException("关闭订单异常：" + e.getMessage(), e);
+            throw new RuntimeException("关闭原支付尝试未确认", e);
         }
+    }
+
+    /** Joining an existing domain transaction avoids suspending a caller that already owns the business row. */
+    private void recordConfirmedClosedAttempt(Transaction observed) {
+        String businessNo = businessPaymentOrderNo(observed.getOutTradeNo());
+        var transaction = new org.springframework.transaction.support.TransactionTemplate(paymentIntentTransactions);
+        transaction.execute(status -> {
+            lockPaymentBusiness(businessNo);
+            paymentIntentJdbc.update(
+                    "UPDATE wx_pay_order_intent SET closed_confirmed_at=COALESCE(closed_confirmed_at,CURRENT_TIMESTAMP(6)) WHERE mchid=? AND out_trade_no=?",
+                    observed.getMchid(), observed.getOutTradeNo());
+            return null;
+        });
+    }
+
+    @Override
+    public boolean lockPaymentAttemptForUpdate(String businessOutTradeNo, String observedWxOutTradeNo) {
+        if (!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
+            throw new IllegalStateException("支付尝试校验必须与领域关闭CAS共用事务");
+        }
+        if (businessOutTradeNo == null || observedWxOutTradeNo == null || observedWxOutTradeNo.isBlank()) return false;
+        PaymentBusiness business = lockPaymentBusiness(businessOutTradeNo);
+        var rows = paymentIntentJdbc.queryForList(
+                "SELECT * FROM wx_pay_order_intent WHERE biz_type=? AND biz_id=? ORDER BY attempt_no DESC LIMIT 1 FOR UPDATE",
+                business.type(), business.id().longValue());
+        if (rows.isEmpty()) return businessOutTradeNo.equals(observedWxOutTradeNo); // Verified historical provider number.
+        var current = rows.get(0);
+        return observedWxOutTradeNo.equals(current.get("out_trade_no"))
+                && businessOutTradeNo.equals(current.get("business_out_trade_no"))
+                && wxPayConfig.getMerchantId().equals(current.get("mchid"));
+    }
+
+    private record PaymentBusiness(String type, Number id, java.math.BigDecimal amount, boolean cents, boolean payable) { }
+
+    /** The same business row is the serialization point for new aliases, CLOSED facts and domain closure. */
+    private PaymentBusiness lockPaymentBusiness(String businessNo) {
+        String type;
+        String sql;
+        boolean cents = false;
+        if (businessNo.startsWith("CLM")) {
+            type = "CLM"; cents = true;
+            sql = "SELECT id,amount_fen AS amount,CASE WHEN status='PAYING' THEN 1 ELSE 0 END AS payable FROM club_membership_invoice WHERE out_trade_no=? FOR UPDATE";
+        } else if (businessNo.startsWith("DEP")) {
+            type = "DEP";
+            sql = "SELECT id,deposit_amount AS amount,CASE WHEN deposit_status=1 AND status=1 AND del_flag=0 THEN 1 ELSE 0 END AS payable FROM coop_invite WHERE deposit_out_trade_no=? FOR UPDATE";
+        } else if (businessNo.startsWith("TPLTM_") || businessNo.startsWith("PROMOT_") || businessNo.startsWith("CUSTOM_")) {
+            type = "COMMERCE";
+            sql = "SELECT id,pay_amount AS amount,CASE WHEN status=0 THEN 1 ELSE 0 END AS payable FROM oms_order WHERE order_sn=? FOR UPDATE";
+        } else {
+            type = "REGISTRATION";
+            sql = "SELECT id,wechat_payment_amount AS amount,CASE WHEN payment_status=1 AND registration_status=1 THEN 1 ELSE 0 END AS payable FROM cms_registration WHERE registration_no=? FOR UPDATE";
+        }
+        var rows = paymentIntentJdbc.queryForList(sql, businessNo);
+        if (rows.size() != 1 || !(rows.get(0).get("id") instanceof Number id)
+                || rows.get(0).get("amount") == null) throw new IllegalStateException("已提交业务支付身份缺失");
+        var row = rows.get(0);
+        boolean payable = row.get("payable") instanceof Number flag && flag.intValue() == 1;
+        return new PaymentBusiness(type, id, new java.math.BigDecimal(row.get("amount").toString()), cents, payable);
     }
 
     /**

@@ -42,6 +42,6 @@ FROM active_business GROUP BY biz_type;
 
 同一业务号重复、同一 biz_type/id 的活跃意图不唯一、业务金额与冻结分不一致必须停止。按上述 active_business CTE 与新表 `(biz_type,biz_id)` 关联，单独统计没有快照的活跃记录；逐笔用原 merchant/原外部号查询官方原单，记录证据来源和状态。已存在原单的通知/查单允许核验真实不可变事实；不允许用当前配置猜原渠道。历史活跃 UNKNOWN 或原微信查询仍 NOT_FOUND 时，不自动预下单、不换号、不释放，须人工补证或等待可靠终态。历史 CLOSED 但无快照的再次发起也先补证，不伪造原请求指纹。
 
-获准执行新表 DDL 后，须在独立 MySQL 8 验证：ascii_bin 单号区分大小写；generated active_biz_id 的 NULL/唯一行为；同业务并发两个渠道仅一个成功；错误金额/参数事务回滚零覆盖；另一连接在 SDK 开始时已看见提交；查证 CLOSED 后旧行/旧请求不变、只新增新别名；UNKNOWN/NOT_FOUND 不释放。对应 `WechatPaymentIntentMySqlIT` 要求 GitHub-hosted 与显式 `B_PAYMENT_INTENT_DDL_APPROVED=1`，缺前提硬失败，不跳过。
+GitHub-hosted 临时 MySQL DDL 已获批准（不授权生产）。须在该独立 MySQL 8 验证：ascii_bin 单号区分大小写；generated active_biz_id 的 NULL/唯一行为；同业务并发两个渠道仅一个成功；错误金额/参数事务回滚零覆盖；另一连接在 SDK 开始时已看见提交；查证 CLOSED 后旧行/旧请求不变、只新增新别名；UNKNOWN/NOT_FOUND 不释放。对应 `WechatPaymentIntentMySqlIT` 要求 GitHub-hosted 与显式 `B_PAYMENT_INTENT_DDL_APPROVED=1`，缺前提硬失败，不跳过。
 
 部署前顺序是预检/补证 → 批准并验证 DDL → 协调者确认实际库表及原活跃记录处理 → 启用新 writer。回退只能先停止新支付提交并保留读取映射能力；不删表、不删行、不复用外部号，不以退款或清空资金数据处理失败。首次产生 WXP 别名后不能直接换回不认识映射的旧网关。

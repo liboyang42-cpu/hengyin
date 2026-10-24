@@ -1969,9 +1969,24 @@ public class ApiRegistrationController extends BaseController {
     @Operation(summary = "微信支付回调")
     @PostMapping("/callback")
     @Anonymous
-    public String payCallback(@RequestBody String requestBody,
+    public org.springframework.http.ResponseEntity<?> payCallback(@RequestBody String requestBody,
                               @RequestHeader Map<String, String> headers) {
-        return wechatPayService.handlePayCallback(requestBody, headers);
+        try {
+            Map<String, String> normalizedHeaders = new java.util.TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            normalizedHeaders.putAll(headers);
+            String ack = wechatPayService.handlePayCallback(requestBody, normalizedHeaders);
+            if (ack != null) {
+                var result = tools.jackson.databind.json.JsonMapper.builder().build().readTree(ack);
+                if (result != null && result.isObject() && "SUCCESS".equals(result.path("code").asText())) {
+                    return org.springframework.http.ResponseEntity.noContent().build();
+                }
+            }
+        } catch (Exception unconfirmed) {
+            // No 2xx ACK until verified business mutation has committed; never echo untrusted callback data.
+        }
+        return org.springframework.http.ResponseEntity.status(500)
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .body(java.util.Map.of("code", "FAIL", "message", "支付结果尚未确认"));
     }
 
     /**

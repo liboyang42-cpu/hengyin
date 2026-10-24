@@ -99,6 +99,7 @@ class ClubMembershipServiceImplTest {
         clubMembers = mock(ClubMemberMapper.class);
         members = mock(IUmsMemberService.class);
         pay = mock(IWechatPayService.class);
+        when(pay.lockPaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
         audits = mock(BusinessAuditEventMapper.class);
         transactions = mock(PlatformTransactionManager.class);
         transactionStatus = mock(TransactionStatus.class);
@@ -181,18 +182,33 @@ class ClubMembershipServiceImplTest {
     }
 
     @Test
+    void oldClosedObservationCannotCloseNewCurrentInvoiceAttempt() {
+        ClubMembershipInvoice invoice = validPayingInvoice();
+        invoice.setVersion(1);
+        when(mapper.selectInvoiceById(invoice.getId())).thenReturn(invoice);
+        Map<String, String> observed = wxOrder(invoice, "CLOSED");
+        observed.put("wx_out_trade_no", "old-wx-attempt");
+        when(pay.queryOrderStatus(invoice.getOutTradeNo())).thenReturn(observed);
+        when(pay.lockPaymentAttemptForUpdate(invoice.getOutTradeNo(), "old-wx-attempt")).thenReturn(false);
+        assertThrows(ServiceException.class, () -> service.resumeInvoice(
+                MEMBER, action(invoice.getId(), "resume-stale-attempt")));
+        verify(mapper, never()).markInvoiceClosedCas(any(), anyInt(), any());
+        verify(pay, never()).createGenericOrder(any(), any(), any(), any());
+    }
+
+    @Test
     void payErrorOrRevokedCannotReleaseOriginalInvoiceWithoutClosedProof() {
         for (String state : new String[]{"PAYERROR", "REVOKED"}) {
             ClubMembershipInvoice invoice = validPayingInvoice();
             invoice.setVersion(1);
             when(mapper.selectInvoiceById(invoice.getId())).thenReturn(invoice);
             when(pay.queryOrderStatus(invoice.getOutTradeNo())).thenReturn(wxOrder(invoice, state));
-            org.mockito.Mockito.doThrow(new RuntimeException("close unknown")).when(pay).closeOrder(invoice.getOutTradeNo());
+            org.mockito.Mockito.doThrow(new RuntimeException("close unknown")).when(pay).closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo());
             assertThrows(ServiceException.class,
                     () -> service.closeInvoice(MEMBER, action(invoice.getId(), "close-" + state)));
             verify(mapper, never()).markInvoiceClosedCas(any(), anyInt(), any());
             verify(pay).queryOrderStatus(invoice.getOutTradeNo());
-            verify(pay).closeOrder(invoice.getOutTradeNo());
+            verify(pay).closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo());
             org.mockito.Mockito.clearInvocations(pay, mapper);
         }
     }
@@ -223,14 +239,14 @@ class ClubMembershipServiceImplTest {
         when(mapper.selectInvoiceById(invoice.getId())).thenReturn(invoice);
         when(pay.queryOrderStatus(invoice.getOutTradeNo()))
                 .thenReturn(wxOrder(invoice, "NOTPAY"), wxOrder(invoice, "CLOSED"));
-        when(pay.closeOrder(invoice.getOutTradeNo())).thenReturn(true);
+        when(pay.closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo())).thenReturn(true);
         when(mapper.markInvoiceClosedCas(eq(invoice.getId()), eq(2), any())).thenReturn(1);
 
         ClubMembershipRenewalVO result = service.closeInvoice(
                 MEMBER, action(invoice.getId(), "close-flag-off"));
 
         assertEquals(ClubMembershipInvoice.STATUS_CLOSED, result.getPaymentState());
-        verify(pay).closeOrder(invoice.getOutTradeNo());
+        verify(pay).closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo());
         verify(pay, never()).createGenericOrder(any(), any(), any(), any());
     }
 
@@ -247,7 +263,7 @@ class ClubMembershipServiceImplTest {
 
         assertEquals(HttpStatus.FORBIDDEN, error.getCode());
         verify(pay, never()).queryOrderStatus(any());
-        verify(pay, never()).closeOrder(any());
+        verify(pay, never()).closePaymentAttempt(any(), any());
     }
 
     @Test
@@ -1430,7 +1446,7 @@ class ClubMembershipServiceImplTest {
         when(mapper.selectInvoiceById(invoice.getId())).thenReturn(invoice);
         when(pay.queryOrderStatus(invoice.getOutTradeNo()))
                 .thenReturn(wxOrder(invoice, "NOTPAY"), wxOrder(invoice, "CLOSED"));
-        when(pay.closeOrder(invoice.getOutTradeNo())).thenReturn(true);
+        when(pay.closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo())).thenReturn(true);
         when(mapper.markInvoiceClosedCas(eq(invoice.getId()), eq(2), any())).thenReturn(1);
 
         ClubMembershipRenewalVO result = service.closeInvoice(
@@ -1440,7 +1456,7 @@ class ClubMembershipServiceImplTest {
         assertFalse(result.isRecoverable());
         InOrder order = inOrder(pay, mapper);
         order.verify(pay).queryOrderStatus(invoice.getOutTradeNo());
-        order.verify(pay).closeOrder(invoice.getOutTradeNo());
+        order.verify(pay).closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo());
         order.verify(pay).queryOrderStatus(invoice.getOutTradeNo());
         order.verify(mapper).markInvoiceClosedCas(eq(invoice.getId()), eq(2), any());
     }
@@ -1455,7 +1471,7 @@ class ClubMembershipServiceImplTest {
         when(mapper.selectInvoiceByIdForUpdate(invoice.getId())).thenReturn(invoice);
         when(pay.queryOrderStatus(invoice.getOutTradeNo()))
                 .thenReturn(wxOrder(invoice, "NOTPAY"), wxOrder(invoice, "CLOSED"));
-        when(pay.closeOrder(invoice.getOutTradeNo())).thenReturn(true);
+        when(pay.closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo())).thenReturn(true);
         when(mapper.markInvoiceClosedCas(eq(invoice.getId()), eq(2), any())).thenReturn(1);
 
         ClubMembershipRenewalVO result = service.closeInvoice(
@@ -1477,7 +1493,7 @@ class ClubMembershipServiceImplTest {
                         localTransactionActive, wxOrder(invoice, "NOTPAY")))
                 .thenAnswer(call -> recordExternalState(externalCallInsideLocalTransaction,
                         localTransactionActive, wxOrder(invoice, "CLOSED")));
-        when(pay.closeOrder(invoice.getOutTradeNo())).thenAnswer(call ->
+        when(pay.closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo())).thenAnswer(call ->
                 recordExternalState(externalCallInsideLocalTransaction, localTransactionActive, true));
         AtomicBoolean closeAppliedInsideLocalTransaction = new AtomicBoolean(false);
         when(mapper.markInvoiceClosedCas(eq(invoice.getId()), eq(2), any())).thenAnswer(call -> {
@@ -1514,7 +1530,7 @@ class ClubMembershipServiceImplTest {
             if (tracker.isTransactionActive()) externalCallInsideLocalTransaction.set(true);
             return wxOrder(invoice, "CLOSED");
         });
-        when(pay.closeOrder(invoice.getOutTradeNo())).thenAnswer(call -> {
+        when(pay.closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo())).thenAnswer(call -> {
             if (tracker.isTransactionActive()) externalCallInsideLocalTransaction.set(true);
             return true;
         });
@@ -1547,7 +1563,7 @@ class ClubMembershipServiceImplTest {
         when(mapper.selectInvoiceById(invoice.getId())).thenReturn(invoice);
         when(pay.queryOrderStatus(invoice.getOutTradeNo()))
                 .thenReturn(wxOrder(invoice, "NOTPAY"), wxOrder(invoice, "USERPAYING"));
-        when(pay.closeOrder(invoice.getOutTradeNo())).thenReturn(true);
+        when(pay.closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo())).thenReturn(true);
 
         ServiceException error = assertThrows(ServiceException.class,
                 () -> service.closeInvoice(MEMBER, action(invoice.getId(), "cancel-unknown-100")));
@@ -1566,7 +1582,7 @@ class ClubMembershipServiceImplTest {
                 () -> service.closeInvoice(MEMBER, action(invoice.getId(), "cancel-refund-100")));
 
         assertEquals(HttpStatus.CONFLICT, error.getCode());
-        verify(pay, never()).closeOrder(any());
+        verify(pay, never()).closePaymentAttempt(any(), any());
         verify(mapper, never()).markInvoiceClosedCas(any(), anyInt(), any());
     }
 
@@ -2001,6 +2017,7 @@ class ClubMembershipServiceImplTest {
         Map<String, String> order = new HashMap<>();
         order.put("trade_state", state);
         order.put("out_trade_no", invoice.getOutTradeNo());
+        order.put("wx_out_trade_no", invoice.getOutTradeNo());
         order.put("total", String.valueOf(invoice.getAmountFen()));
         return order;
     }

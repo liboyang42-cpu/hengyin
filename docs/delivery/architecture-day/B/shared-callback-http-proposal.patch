@@ -1,0 +1,74 @@
+diff --git a/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java b/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java
+--- a/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java
++++ b/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java
+@@ -1969,9 +1969,22 @@
+     @Operation(summary = "微信支付回调")
+     @PostMapping("/callback")
+     @Anonymous
+-    public String payCallback(@RequestBody String requestBody,
++    public org.springframework.http.ResponseEntity<?> payCallback(@RequestBody String requestBody,
+                               @RequestHeader Map<String, String> headers) {
+-        return wechatPayService.handlePayCallback(requestBody, headers);
++        try {
++            String ack = wechatPayService.handlePayCallback(requestBody, headers);
++            if (ack != null) {
++                var result = tools.jackson.databind.json.JsonMapper.builder().build().readTree(ack);
++                if (result != null && result.isObject() && "SUCCESS".equals(result.path("code").asText())) {
++                    return org.springframework.http.ResponseEntity.noContent().build();
++                }
++            }
++        } catch (Exception unconfirmed) {
++            // No 2xx ACK until verified business mutation has committed; never echo untrusted callback data.
++        }
++        return org.springframework.http.ResponseEntity.status(500)
++                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
++                .body(java.util.Map.of("code", "FAIL", "message", "支付结果尚未确认"));
+     }
+ 
+     /**
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/WechatPayCallbackHttpAckTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/WechatPayCallbackHttpAckTest.java
+new file mode 100644
+--- /dev/null
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/WechatPayCallbackHttpAckTest.java
+@@ -0,0 +1,41 @@
++package com.chengyinhub.web.controller.api;
++
++import com.chengyinhub.business.service.IWechatPayService;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.Test;
++import org.springframework.test.util.ReflectionTestUtils;
++import org.springframework.test.web.servlet.MockMvc;
++import org.springframework.test.web.servlet.setup.MockMvcBuilders;
++import static org.mockito.Mockito.*;
++import static org.mockito.ArgumentMatchers.*;
++import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
++import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
++
++/** HTTP ACK contract only; does not claim SDK verification or database integration. */
++class WechatPayCallbackHttpAckTest {
++    private MockMvc mvc;
++    private IWechatPayService gateway;
++    @BeforeEach void setup() {
++        ApiRegistrationController controller = new ApiRegistrationController();
++        gateway = mock(IWechatPayService.class);
++        ReflectionTestUtils.setField(controller, "wechatPayService", gateway);
++        mvc = MockMvcBuilders.standaloneSetup(controller).build();
++    }
++    @Test void committedSuccessReturns204WithoutBody() throws Exception {
++        when(gateway.handlePayCallback(anyString(), anyMap())).thenReturn("{\"code\":\"SUCCESS\"}");
++        mvc.perform(post("/api/registration/callback").contentType("application/json").content("{}"))
++                .andExpect(status().isNoContent()).andExpect(content().string(""));
++    }
++    @Test void failureMissingAndMalformedAckAreNever200() throws Exception {
++        for (String ack : new String[]{"{\"code\":\"FAIL\"}", null, "not-json", "{\"message\":\"SUCCESS\"}"}) {
++            when(gateway.handlePayCallback(anyString(), anyMap())).thenReturn(ack);
++            mvc.perform(post("/api/registration/callback").contentType("application/json").content("{}"))
++                    .andExpect(status().isInternalServerError()).andExpect(jsonPath("$.code").value("FAIL"));
++        }
++    }
++    @Test void unexpectedGatewayExceptionCannotBecomeGlobalHandler200() throws Exception {
++        when(gateway.handlePayCallback(anyString(), anyMap())).thenThrow(new RuntimeException("unknown"));
++        mvc.perform(post("/api/registration/callback").contentType("application/json").content("{}"))
++                .andExpect(status().isInternalServerError()).andExpect(jsonPath("$.code").value("FAIL"));
++    }
++}

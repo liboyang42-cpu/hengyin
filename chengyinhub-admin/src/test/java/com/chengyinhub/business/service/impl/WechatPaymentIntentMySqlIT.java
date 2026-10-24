@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/** Explicit approved CI invocation only. Real MySQL gateway/table contract, not a complete domain flow. */
+/** Explicit approved CI invocation only. Real MySQL gateway/table contract, with SDK doubles and JDBC-backed domain mapper adapters. */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class WechatPaymentIntentMySqlIT {
     private JdbcTemplate jdbc;
@@ -33,7 +33,7 @@ class WechatPaymentIntentMySqlIT {
 
     @BeforeAll
     void schema() throws Exception {
-        // No default local/VPS connection and no silent skips. New DDL requires coordinator approval before invocation.
+        // No default local/VPS connection and no silent skips. GitHub-hosted scratch DDL is explicitly approved; production DDL remains prohibited.
         assertEquals("github-hosted", System.getenv("RUNNER_ENVIRONMENT"));
         assertEquals("1", System.getenv("B_PAYMENT_INTENT_DDL_APPROVED"));
         assertTrue(List.of("127.0.0.1", "localhost").contains(MybatisItDatabase.host()));
@@ -48,20 +48,23 @@ class WechatPaymentIntentMySqlIT {
         int start = ddl.indexOf("CREATE TABLE wx_pay_order_intent");
         jdbc.execute(ddl.substring(start, ddl.indexOf(';', start)));
         // Narrow fixtures exercise gateway SQL. Full domain DDL/CAS/ledger coverage remains in domain IT suites.
-        jdbc.execute("CREATE TABLE club_membership_invoice(id BIGINT PRIMARY KEY,out_trade_no VARCHAR(64),amount_fen BIGINT) ENGINE=InnoDB");
-        jdbc.execute("CREATE TABLE coop_invite(id BIGINT PRIMARY KEY,deposit_out_trade_no VARCHAR(64),deposit_amount DECIMAL(10,2)) ENGINE=InnoDB");
-        jdbc.execute("CREATE TABLE oms_order(id BIGINT PRIMARY KEY,order_sn VARCHAR(64),pay_amount DECIMAL(10,2)) ENGINE=InnoDB");
-        jdbc.execute("CREATE TABLE cms_registration(id BIGINT PRIMARY KEY,registration_no VARCHAR(64),wechat_payment_amount DECIMAL(10,2)) ENGINE=InnoDB");
-        jdbc.update("INSERT INTO club_membership_invoice VALUES(1,'CLM1',1000)");
-        jdbc.update("INSERT INTO coop_invite VALUES(1,'DEP1',10.00)");
-        jdbc.update("INSERT INTO oms_order VALUES(1,'TPLTM_1',10.00)");
-        jdbc.update("INSERT INTO cms_registration VALUES(1,'REG1',10.00)");
+        jdbc.execute("CREATE TABLE club_membership_invoice(id BIGINT PRIMARY KEY,out_trade_no VARCHAR(64),amount_fen BIGINT,status VARCHAR(16) DEFAULT 'PAYING') ENGINE=InnoDB");
+        jdbc.execute("CREATE TABLE coop_invite(id BIGINT PRIMARY KEY,deposit_out_trade_no VARCHAR(64),deposit_amount DECIMAL(10,2),deposit_status INT DEFAULT 1,status INT DEFAULT 1,del_flag INT DEFAULT 0) ENGINE=InnoDB");
+        jdbc.execute("CREATE TABLE oms_order(id BIGINT PRIMARY KEY,order_sn VARCHAR(64),pay_amount DECIMAL(10,2),status BIGINT DEFAULT 0,payment_transaction_id VARCHAR(64)) ENGINE=InnoDB");
+        jdbc.execute("CREATE TABLE cms_registration(id BIGINT PRIMARY KEY,registration_no VARCHAR(64),wechat_payment_amount DECIMAL(10,2),payment_status INT DEFAULT 1,registration_status INT DEFAULT 1) ENGINE=InnoDB");
+        jdbc.update("INSERT INTO club_membership_invoice(id,out_trade_no,amount_fen) VALUES(1,'CLM1',1000)");
+        jdbc.update("INSERT INTO coop_invite(id,deposit_out_trade_no,deposit_amount) VALUES(1,'DEP1',10.00)");
+        jdbc.update("INSERT INTO oms_order(id,order_sn,pay_amount) VALUES(1,'TPLTM_1',10.00)");
+        jdbc.execute("CREATE TABLE b_payment_grant(order_no VARCHAR(64) PRIMARY KEY,transaction_id VARCHAR(64)) ENGINE=InnoDB");
+        jdbc.update("INSERT INTO cms_registration(id,registration_no,wechat_payment_amount) VALUES(1,'REG1',10.00)");
     }
 
     @BeforeEach
     void gateway() {
         jdbc.update("DELETE FROM wx_pay_order_intent"); // This class's unique scratch schema only.
-        service = new WechatPayServiceImpl();
+        jdbc.update("UPDATE oms_order SET status=0,payment_transaction_id=NULL");
+        jdbc.update("DELETE FROM b_payment_grant");
+        service = spy(new WechatPayServiceImpl());
         ReflectionTestUtils.setField(service, "paymentIntentJdbc", jdbc);
         ReflectionTestUtils.setField(service, "paymentIntentTransactions", new DataSourceTransactionManager(source));
         ReflectionTestUtils.setField(service, "jsapiService", WechatPaymentIntentTestSupport.absentOrderSdk());
@@ -88,6 +91,22 @@ class WechatPaymentIntentMySqlIT {
             assertEquals("openid", jdbc.queryForObject("SELECT payer_openid FROM wx_pay_order_intent WHERE out_trade_no=?", String.class, no));
         }
         assertEquals(4, jdbc.queryForObject("SELECT COUNT(*) FROM wx_pay_order_intent", Integer.class));
+        jdbc.update("UPDATE club_membership_invoice SET status='CLOSED'");
+        jdbc.update("UPDATE coop_invite SET deposit_status=2");
+        jdbc.update("UPDATE oms_order SET status=5");
+        jdbc.update("UPDATE cms_registration SET payment_status=3");
+        try {
+            for (String no : new String[]{"CLM1", "DEP1", "TPLTM_1", "REG1"}) {
+                assertThrows(PaymentPreorderException.class, () -> freeze(no, "wx-mini", "JSAPI"));
+            }
+            assertEquals(4, jdbc.queryForObject("SELECT COUNT(*) FROM wx_pay_order_intent", Integer.class));
+        } finally {
+            jdbc.update("UPDATE club_membership_invoice SET status='PAYING'");
+            jdbc.update("UPDATE coop_invite SET deposit_status=1");
+            jdbc.update("UPDATE oms_order SET status=0");
+            jdbc.update("UPDATE cms_registration SET payment_status=1");
+        }
+
     }
 
     @Test
@@ -105,22 +124,91 @@ class WechatPaymentIntentMySqlIT {
     }
 
     @Test
-    void verifiedClosedOriginalAllowsNewAliasAndPreservesOldIdentity() {
-        freeze("REG1", "wx-mini", "JSAPI");
-        Transaction closed = new Transaction();
-        closed.setOutTradeNo("REG1"); closed.setMchid("merchant"); closed.setAppid("wx-mini");
-        closed.setTradeState(Transaction.TradeStateEnum.CLOSED);
-        TransactionAmount amount = new TransactionAmount(); amount.setTotal(1000); amount.setCurrency("CNY"); closed.setAmount(amount);
-        JsapiService sdk = mock(JsapiService.class);
-        when(sdk.queryOrderByOutTradeNo(any())).thenReturn(closed);
+    void oldClosedObservationCannotCloseNewAttemptAndNewSuccessCreditsExactlyOnce() throws Exception {
+        freeze("TPLTM_1", "wx-mini", "JSAPI");
+        var sdk = mock(JsapiService.class);
+        when(sdk.queryOrderByOutTradeNo(any())).thenAnswer(call -> {
+            var request = (com.wechat.pay.java.service.payments.jsapi.model.QueryOrderByOutTradeNoRequest)call.getArgument(0);
+            return providerFacts(request.getOutTradeNo(), "TPLTM_1".equals(request.getOutTradeNo()));
+        });
         ReflectionTestUtils.setField(service, "jsapiService", sdk);
-        assertEquals("CLOSED", service.queryOrderStatus("REG1").get("trade_state"));
-        String alias = freeze("REG1", "wx-app", "APP");
-        assertTrue(alias.matches("WXP[0-9a-f]{29}"));
-        assertEquals(alias, freeze("REG1", "wx-app", "APP"));
+        var orders = mock(com.chengyinhub.business.mapper.OmsOrderMapper.class);
+        when(orders.selectOmsOrderByOrderSn("TPLTM_1")).thenAnswer(call -> {
+            var row = jdbc.queryForMap("SELECT * FROM oms_order WHERE id=1");
+            var order = new com.chengyinhub.business.domain.OmsOrder();
+            order.setId(1L); order.setOrderSn("TPLTM_1"); order.setMemberId(12L);
+            order.setBizType(MerchantCommerceService.BIZ_PREMIUM_TEMPLATE);
+            order.setPayAmount(new java.math.BigDecimal("10.00"));
+            order.setStatus(((Number)row.get("status")).longValue());
+            order.setPaymentTransactionId((String)row.get("payment_transaction_id"));
+            return order;
+        });
+        when(orders.markCommerceOrderClosed(1L)).thenAnswer(call ->
+                jdbc.update("UPDATE oms_order SET status=5 WHERE id=1 AND status=0"));
+        when(orders.markCommerceOrderPaid(eq(1L), anyString())).thenAnswer(call ->
+                jdbc.update("UPDATE oms_order SET status=1,payment_transaction_id=? WHERE id=1 AND status=0", (String)call.getArgument(1)));
+        var grants = mock(com.chengyinhub.business.mapper.MerchantSubscriptionMapper.class);
+        when(grants.grantMerchantSubscription(any())).thenAnswer(call ->
+                jdbc.update("INSERT INTO b_payment_grant VALUES('TPLTM_1','WX-NEW')"));
+        var domain = new MerchantCommerceService(false);
+        var tm = new DataSourceTransactionManager(source);
+        ReflectionTestUtils.setField(domain, "orderMapper", orders);
+        ReflectionTestUtils.setField(domain, "subscriptionMapper", grants);
+        ReflectionTestUtils.setField(domain, "wechatPayService", service);
+        ReflectionTestUtils.setField(domain, "paymentTransactions", tm);
+        var proxy = new org.springframework.aop.framework.ProxyFactory(domain);
+        proxy.addAdvice(new org.springframework.transaction.interceptor.TransactionInterceptor(tm,
+                new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource()));
+        var commerce = (com.chengyinhub.business.service.IMerchantCommerceService)proxy.getProxy();
+        ReflectionTestUtils.setField(service, "merchantCommerceService", commerce);
+        ReflectionTestUtils.setField(service, "alarmService", mock(AlarmService.class));
+        CountDownLatch oldObserved = new CountDownLatch(1);
+        CountDownLatch allowOldClose = new CountDownLatch(1);
+        doAnswer(call -> {
+            Object result = call.callRealMethod(); // commits old CLOSED under business lock
+            oldObserved.countDown();
+            assertTrue(allowOldClose.await(10, TimeUnit.SECONDS)); // before domain close transaction
+            return result;
+        }).when(service).queryOrderStatus("TPLTM_1");
+        String alias;
+        try (ExecutorService threads = Executors.newSingleThreadExecutor()) {
+            Future<?> oldReconcile = threads.submit(() -> commerce.reconcileOrder("TPLTM_1"));
+            assertTrue(oldObserved.await(10, TimeUnit.SECONDS));
+            try {
+                alias = freeze("TPLTM_1", "wx-app", "APP");
+                assertTrue(alias.matches("WXP[0-9a-f]{29}"));
+                assertEquals(0, jdbc.queryForObject("SELECT status FROM oms_order WHERE id=1", Integer.class));
+            } finally { allowOldClose.countDown(); }
+            oldReconcile.get(15, TimeUnit.SECONDS);
+        }
+        assertEquals(0, jdbc.queryForObject("SELECT status FROM oms_order WHERE id=1", Integer.class));
+        verify(orders, never()).markCommerceOrderClosed(anyLong());
+        var parser = mock(com.wechat.pay.java.core.notification.NotificationParser.class);
+        when(parser.parse(any(), eq(Transaction.class))).thenReturn(providerFacts(alias, false));
+        ReflectionTestUtils.setField(service, "notificationParser", parser);
+        var headers = java.util.Map.of("wechatpay-serial", "serial", "wechatpay-nonce", "nonce",
+                "wechatpay-signature", "signature", "wechatpay-timestamp", "1");
+        assertTrue(service.handlePayCallback("{}", headers).contains("SUCCESS"));
+        assertTrue(service.handlePayCallback("{}", headers).contains("SUCCESS"));
+        assertEquals(1, jdbc.queryForObject("SELECT status FROM oms_order WHERE id=1", Integer.class));
+        assertEquals("WX-NEW", jdbc.queryForObject("SELECT payment_transaction_id FROM oms_order WHERE id=1", String.class));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM b_payment_grant", Integer.class));
+        assertFalse(Boolean.TRUE.equals(new TransactionTemplate(tm).execute(status ->
+                service.lockPaymentAttemptForUpdate("TPLTM_1", "TPLTM_1"))));
         assertEquals(2, jdbc.queryForObject("SELECT COUNT(*) FROM wx_pay_order_intent", Integer.class));
-        assertEquals("wx-mini", jdbc.queryForObject("SELECT appid FROM wx_pay_order_intent WHERE out_trade_no='REG1'", String.class));
-        assertNotNull(jdbc.queryForObject("SELECT closed_confirmed_at FROM wx_pay_order_intent WHERE out_trade_no='REG1'", java.sql.Timestamp.class));
+        assertEquals("wx-mini", jdbc.queryForObject("SELECT appid FROM wx_pay_order_intent WHERE out_trade_no='TPLTM_1'", String.class));
+        assertEquals("wx-app", jdbc.queryForObject("SELECT appid FROM wx_pay_order_intent WHERE out_trade_no=?", String.class, alias));
+        assertNotNull(jdbc.queryForObject("SELECT closed_confirmed_at FROM wx_pay_order_intent WHERE out_trade_no='TPLTM_1'", java.sql.Timestamp.class));
+    }
+
+    private static Transaction providerFacts(String no, boolean oldClosed) {
+        Transaction tx = new Transaction();
+        tx.setOutTradeNo(no); tx.setMchid("merchant"); tx.setAppid(oldClosed ? "wx-mini" : "wx-app");
+        tx.setTradeState(oldClosed ? Transaction.TradeStateEnum.CLOSED : Transaction.TradeStateEnum.SUCCESS);
+        tx.setTradeType(oldClosed ? Transaction.TradeTypeEnum.JSAPI : Transaction.TradeTypeEnum.APP);
+        if (!oldClosed) tx.setTransactionId("WX-NEW");
+        TransactionAmount amount = new TransactionAmount(); amount.setTotal(1000); amount.setCurrency("CNY"); tx.setAmount(amount);
+        return tx;
     }
 
     @Test

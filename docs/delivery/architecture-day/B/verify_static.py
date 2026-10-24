@@ -1,6 +1,7 @@
 """Read-only candidate scope / cached SDK symbol checks. Does not run Java or tests."""
 from pathlib import Path
 import struct
+import re
 import subprocess
 import sys
 import hashlib
@@ -9,6 +10,7 @@ from zipfile import ZipFile
 ROOT = Path(__file__).resolve().parents[4]
 BASE = "2ec68899099a1e250df0949a8383bf85b5d3ffe0"
 ALLOWED = {
+    *Path(__file__).with_name("files-v8.txt").read_text().splitlines(),
     "ci/migration-dependencies.json",
     "chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql",
     *[f"chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/{name}.java" for name in (
@@ -90,7 +92,7 @@ for path in sorted(ALLOWED):
     print("Working file SHA256:", hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), path)
 for name in ("WechatPayTransferClassificationTest", "WechatPayCallbackFactsTest", "WechatPayCallbackForgedSignatureTest", "WechatPayOrderQueryTest", "WechatPaymentIntentLockTest", "WechatPaymentIntentMySqlIT"):
     path = ROOT / f"chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/{name}.java"
-    print(name, "source @Test methods:", path.read_text().count("@Test"), "local execution: 0; remote CI results tracked separately")
+    print(name, "source @Test methods:", len(re.findall(r"@Test\b", path.read_text())), "local execution: 0; remote CI results tracked separately")
 
 if len(sys.argv) != 2:
     raise SystemExit("Pass the approved existing wechatpay-java 0.2.15 JAR path; do not download credentials.")

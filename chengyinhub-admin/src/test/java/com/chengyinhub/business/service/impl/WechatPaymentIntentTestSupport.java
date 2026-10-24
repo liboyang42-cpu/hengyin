@@ -25,7 +25,8 @@ final class WechatPaymentIntentTestSupport extends JdbcTemplate {
         ReflectionTestUtils.setField(service, "paymentIntentJdbc", jdbc);
         ReflectionTestUtils.setField(service, "paymentIntentTransactions", new PlatformTransactionManager() {
             public TransactionStatus getTransaction(TransactionDefinition definition) {
-                if (definition.getPropagationBehavior() != TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
+                if (definition.getPropagationBehavior() != TransactionDefinition.PROPAGATION_REQUIRES_NEW
+                        && definition.getPropagationBehavior() != TransactionDefinition.PROPAGATION_REQUIRED) {
                     throw new AssertionError("intent must commit independently before SDK");
                 }
                 return new SimpleTransactionStatus();
@@ -71,7 +72,7 @@ final class WechatPaymentIntentTestSupport extends JdbcTemplate {
         String order = (String) args[0];
         BigDecimal amount = businessAmounts.get(order);
         if (amount == null) return List.of();
-        return List.of(Map.of("id", 1L, "amount", sql.contains("club_membership_invoice")
+        return List.of(Map.of("id", 1L, "payable", 1, "amount", sql.contains("club_membership_invoice")
                 ? amount.movePointRight(2).longValueExact() : amount));
     }
 
