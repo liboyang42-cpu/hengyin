@@ -156,6 +156,14 @@ class CapacityMixedControls(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 probe.run_curve(work, request, concurrency, lambda: None)
 
+    def test_fixed_category_protocol_rejects_gameplay_aliases_and_arbitrary_values(self):
+        self.assertEqual(('SUCCESS', 'LEGAL_AUTH_REJECTION', 'SYSTEM_FAILURE', 'UNKNOWN',
+                          'TRANSPORT_TIMEOUT', 'TRANSPORT_ERROR', 'CONTRACT_MISMATCH', 'NOT_SENT'), probe.CATEGORIES)
+        for category in ('accepted', 'authorized-rejection', 'UNKNOWN_OR_CONTRACT_FAILURE',
+                         'UNREVIEWED_CATEGORY', '', None):
+            with self.subTest(category=category), self.assertRaisesRegex(RuntimeError, 'unknown observation category'):
+                probe.distribution([{'category': category, 'elapsedSeconds': .01}], 1)
+
     def test_final_validation_rejects_partial_foreign_or_missing_evidence(self):
         identity = {"sourceSha": "a" * 40}
         for report in (

@@ -1,0 +1,415 @@
+{
+  "schema": 1,
+  "source": "e82229ef85e58159078a42956560356074192541",
+  "run": 40228802075,
+  "attempt": 1,
+  "summary_artifact": 12611803087,
+  "summary_verdict": "FAIL",
+  "selected_classes": 20,
+  "selected_actual_cases": 284,
+  "accepted_classes": 18,
+  "accepted_cases": 272,
+  "rows": [
+    {
+      "class": "com.chengyinhub.business.service.impl.CashWithdrawFundEvidenceMySqlIT",
+      "artifact": 12612686802,
+      "zip_sha256": "12df614f9d8cc3cd9f35923474e21c761552db7f66ce7534c82b62927cd6edf4",
+      "source_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawFundEvidenceMySqlIT.java",
+      "source_file_sha256": "3b4f7b118e031b163a99961d9d810c1ef6c85bb656d58b96c2a8a7916d86456f",
+      "source_methods": 64,
+      "actual_cases": 64,
+      "failures": [],
+      "xml_sha256": {
+        "TEST-com.chengyinhub.business.service.impl.CashWithdrawFundEvidenceMySqlIT.xml": "ebba6aac8e9927027600ef63e5d379edc49919023de2de31bbab08e5fe7b5c0e"
+      },
+      "checks_problems": [],
+      "cleanup": "CLEAN",
+      "accepted": true,
+      "maven_exit": 0,
+      "verdict": "PASS",
+      "registered_source_match": false
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.TopicContentGraphMySqlIT",
+      "artifact": 12612602145,
+      "zip_sha256": "cedded707090d01d5f42ffd6a945463b3d73376a584355a710591c98be2896fc",
+      "source_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicContentGraphMySqlIT.java",
+      "source_file_sha256": "fec8960024cad7b1d95bd7983a458f35d454fc01dc1802810baca4a84d746c5f",
+      "source_methods": 32,
+      "actual_cases": 32,
+      "failures": [],
+      "xml_sha256": {
+        "TEST-com.chengyinhub.business.service.impl.TopicContentGraphMySqlIT.xml": "fc19fb124c6bc947642756cbc9e4eaf81bd92223160fc4040af302323b119155"
+      },
+      "checks_problems": [],
+      "cleanup": "CLEAN",
+      "accepted": true,
+      "maven_exit": 0,
+      "verdict": "PASS",
+      "registered_source_match": false
+    },
+    {
+      "class": "com.chengyinhub.business.it.CoopOrderStationFulfillmentMySqlIT",
+      "artifact": 12612557405,
+      "zip_sha256": "46eb8da6fdfb5ee258543c61303e6b8dc793593dd121eeb0f7e2420fe4d7338a",
+      "source_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CoopOrderStationFulfillmentMySqlIT.java",
+      "source_file_sha256": "629e557f5ca79955554be32aad9084bd4ca929c6dac8a75b38f590e8523039da",
+      "source_methods": 13,
+      "actual_cases": 13,
+      "failures": [],
+      "xml_sha256": {
+        "TEST-com.chengyinhub.business.it.CoopOrderStationFulfillmentMySqlIT.xml": "2b98dd9438ab0fcc4439bc4f20d31cd4483128d1c5cba892a4699f6fdda516cf"
+      },
+      "checks_problems": [],
+      "cleanup": "CLEAN",
+      "accepted": true,
+      "maven_exit": 0,
+      "verdict": "PASS",
+      "registered_source_match": false
+    },
+    {
+      "class": "com.chengyinhub.business.it.CoopSettlementManualCaseReadMySqlIT",
+      "artifact": 12612552355,
+      "zip_sha256": "383e8cd7748603b670290427f71b67b484a48185293a665678be13d0707a3d83",
+      "source_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CoopSettlementManualCaseReadMySqlIT.java",
+      "source_file_sha256": "3e0267565d0462bb563d8684c09a46c8becb6707f66365b99aac79d5093dc1d8",
+      "source_methods": 3,
+      "actual_cases": 3,
+      "failures": [],
+      "xml_sha256": {
+        "TEST-com.chengyinhub.business.it.CoopSettlementManualCaseReadMySqlIT.xml": "fe9979912470655f606a46ce12c832c7b934b25cd40276eb7f7da587717a8a96"
+      },
+      "checks_problems": [],
+      "cleanup": "CLEAN",
+      "accepted": true,
+      "maven_exit": 0,
+      "verdict": "PASS",
+      "registered_source_match": false
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.CoopSupplyStationMySqlIT",
+      "artifact": 12612367817,
+      "zip_sha256": "f9eaec1a8245175c6ae6743fe3cd846c0c0d064d1c10123a277f018da02ba24a",
+      "source_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSupplyStationMySqlIT.java",
+      "source_file_sha256": "928856705145dbbdd0d1e52ea37cc91c50869eb40bb67c6322beb0387d58dfcf",
+      "source_methods": 7,
+      "actual_cases": 7,
+      "failures": [],
+      "xml_sha256": {
+        "TEST-com.chengyinhub.business.service.impl.CoopSupplyStationMySqlIT.xml": "52e6d012533103b167db62b96fa22b141213f612fec52915ab2c786504e45e73"
+      },
+      "checks_problems": [],
+      "cleanup": "CLEAN",
+      "accepted": true,
+      "maven_exit": 0,
+      "verdict": "PASS",
+      "registered_source_match": false
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.CoopDepositSettlementAttemptMySqlIT",
+      "artifact": 12612352899,
+      "zip_sha256": "afb6d2d4f4195de3c1098b7f66be83d1f189f6f693886486db20e814c317cbab",
+      "source_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptMySqlIT.java",
+      "source_file_sha256": "9583858aca773a1cb8fcad63f1243ef904500fe69d3f9aa6b2e9cfa46984ea8a",
+      "source_methods": 11,
+      "actual_cases": 11,
+      "failures": [
+        {
+          "classname": "com.chengyinhub.business.service.impl.CoopDepositSettlementAttemptMySqlIT",
+          "name": "lateSuccessDuringCloseCannotDeductAndRetryPersistsOriginalPaidFact",
+          "status": "error",
+          "message": "保证金支付原身份缺失"
+        }
+      ],
+      "xml_sha256": {
+        "TEST-com.chengyinhub.business.service.impl.CoopDepositSettlementAttemptMySqlIT.xml": "968d0b3314abde3f9bd4c40023bb005b3db2d7163148f93f9866867da4aa8876"
+      },
+      "checks_problems": [],
+      "cleanup": "CLEAN",
+      "accepted": false,
+      "maven_exit": 1,
+      "verdict": "FAIL",
+      "registered_source_match": false
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp04CoopOrderScopeMySqlIT",
+      "artifact": 12612277927,
+      "zip_sha256": "1de91d6bc5661c0f95c9918e6c8f45d40788fac74856cd5b782a243063fc307c",
+      "source_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CoopOrderScopeMySqlIT.java",
+      "source_file_sha256": "cb188c2b7a72e37ab2c55af059193aed2733ac188246455c531d8be9bd426feb",
+      "source_methods": 11,
+      "actual_cases": 11,
+      "failures": [],
+      "xml_sha256": {
+        "TEST-com.chengyinhub.business.it.Wp04CoopOrderScopeMySqlIT.xml": "036d81033b1d1297daa59baf1e16101d190657a8a62f0011e3398878776e1834"
+      },
+      "checks_problems": [],
+      "cleanup": "CLEAN",
+      "accepted": true,
+      "maven_exit": 0,
+      "verdict": "PASS",
+      "registered_source_match": false
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.TopicContentBudgetMySqlIT",
+      "artifact": 12612188136,
+      "zip_sha256": "fb62e05cd31f7ec102ebadb63facbabb94483270975efaeea5330b1263b16899",
+      "source_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicContentBudgetMySqlIT.java",
+      "source_file_sha256": "fc30c840c7ddd9ecff17046b58cca12b6ab5abddd6aa12b5a1e06d7cf9827d3b",
+      "source_methods": 14,
+      "actual_cases": 14,
+      "failures": [],
+      "xml_sha256": {
+        "TEST-com.chengyinhub.business.service.impl.TopicContentBudgetMySqlIT.xml": "ea23be33bd8c65eccb903f4e84d90d74f634cbfedcc8bfb66cdb4a16f7930858"
+      },
+      "checks_problems": [],
+      "cleanup": "CLEAN",
+      "accepted": true,
+      "maven_exit": 0,
+      "verdict": "PASS",
+      "registered_source_match": false
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp04OriginalProducerMySqlIT",
+      "artifact": 12612177012,
+      "zip_sha256": "60b39f5ba874f8e0f0d3b4d0dcabeedca4ee97750aaf7d6ef727ce10ec81b44f",
+      "source_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04OriginalProducerMySqlIT.java",
+      "source_file_sha256": "5a40a2edb071c344462536705c1b9db6e6db5c867ad706d4724e9950b26bfd34",
+      "source_methods": 3,
+      "actual_cases": 3,
+      "failures": [],
+      "xml_sha256": {
+        "TEST-com.chengyinhub.business.it.Wp04OriginalProducerMySqlIT.xml": "d0464e34bb24561529c710aaf7dad6483909aa07cea50bf9886cfe675098450c"
+      },
+      "checks_problems": [],
+      "cleanup": "CLEAN",
+      "accepted": true,
+      "maven_exit": 0,
+      "verdict": "PASS",
+      "registered_source_match": false
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.TopicContentCopyMySqlIT",
+      "artifact": 12612151976,
+      "zip_sha256": "04b6d413452f120c71dcbef7ab43bc82a8a1c894d3a33c7dd184df2e476e0ae6",
+      "source_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicContentCopyMySqlIT.java",
+      "source_file_sha256": "e80ea101a645340fd891d3be3e9256131bbc61a7ffc29bb40ee58aa024d0f066",
+      "source_methods": 28,
+      "actual_cases": 28,
+      "failures": [],
+      "xml_sha256": {
+        "TEST-com.chengyinhub.business.service.impl.TopicContentCopyMySqlIT.xml": "4d84a8a4c1eb8ec15d9c22e93f146d2bd7282cd9e10edf9367a0f40757198b03"
+      },
+      "checks_problems": [],
+      "cleanup": "CLEAN",
+      "accepted": true,
+      "maven_exit": 0,
+      "verdict": "PASS",
+      "registered_source_match": false
+    },
+    {
+      "class": "com.chengyinhub.business.service.RestoreMoneyDispatchMySqlIT",
+      "artifact": 12612073384,
+      "zip_sha256": "58d58a744f2375a9108482a4851b939789390d936b969155b76d33966335fcb8",
+      "source_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RestoreMoneyDispatchMySqlIT.java",
+      "source_file_sha256": "69f9545fb0b9f4967f17f261f2545a2e072c137441143a8c6b6efba0d01acf6a",
+      "source_methods": 1,
+      "actual_cases": 1,
+      "failures": [],
+      "xml_sha256": {
+        "TEST-com.chengyinhub.business.service.RestoreMoneyDispatchMySqlIT.xml": "8f91e4e09775926fb518aa7114504d65b7c5a43495dfa9d870c34d82bdf67a65"
+      },
+      "checks_problems": [],
+      "cleanup": "CLEAN",
+      "accepted": true,
+      "maven_exit": 0,
+      "verdict": "PASS",
+      "registered_source_match": false
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.FundsProcessRecoveryMySqlIT",
+      "artifact": 12612052388,
+      "zip_sha256": "214b8aafa5d03142a0825355168ef5244b6d4e27b777b66127e4bdeb8f142fe2",
+      "source_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/FundsProcessRecoveryMySqlIT.java",
+      "source_file_sha256": "20fc4cace226ea655221f9ad3080ac50e42fa8d64aaa0fdc2670495ce94a62f7",
+      "source_methods": 14,
+      "actual_cases": 14,
+      "failures": [],
+      "xml_sha256": {
+        "TEST-com.chengyinhub.business.service.impl.FundsProcessRecoveryMySqlIT.xml": "a07d47eba32e8a7c5bc835de5a54cb4fe932731611e9d0987dfe46caef83d590"
+      },
+      "checks_problems": [],
+      "cleanup": "CLEAN",
+      "accepted": true,
+      "maven_exit": 0,
+      "verdict": "PASS",
+      "registered_source_match": false
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp04ApprovedRefundFenceMySqlIT",
+      "artifact": 12612007297,
+      "zip_sha256": "20a6fa474e107e2a02a2a1784e0102fc9931528988aa94381181894fe694fedb",
+      "source_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04ApprovedRefundFenceMySqlIT.java",
+      "source_file_sha256": "74a01d91a81eb8428124fb4c8e853f7cc378ce904d568bb664fc216e568d0f8e",
+      "source_methods": 5,
+      "actual_cases": 5,
+      "failures": [],
+      "xml_sha256": {
+        "TEST-com.chengyinhub.business.it.Wp04ApprovedRefundFenceMySqlIT.xml": "b4c9c75cd0da6744e5681a6947a0925faa85810770622f26fab76da63df23e80"
+      },
+      "checks_problems": [],
+      "cleanup": "CLEAN",
+      "accepted": true,
+      "maven_exit": 0,
+      "verdict": "PASS",
+      "registered_source_match": false
+    },
+    {
+      "class": "com.chengyinhub.business.service.CoopDepositRefundMybatisIntegrationTest",
+      "artifact": 12611807751,
+      "zip_sha256": "5ae9c636a28206d5ce0624845b46a0fa00ba56d0fafaa9c102e8949bad91506a",
+      "source_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopDepositRefundMybatisIntegrationTest.java",
+      "source_file_sha256": "03ed80f36bf71e8812c5c25dee59a3be4111b1c2cab01c954620040fab963bc0",
+      "source_methods": 36,
+      "actual_cases": 36,
+      "failures": [],
+      "xml_sha256": {
+        "TEST-com.chengyinhub.business.service.CoopDepositRefundMybatisIntegrationTest.xml": "3d6bef42b9ece9bf759429749409e1ebebbc4e4098e681230f8ccff405202367"
+      },
+      "checks_problems": [],
+      "cleanup": "CLEAN",
+      "accepted": true,
+      "maven_exit": 0,
+      "verdict": "PASS",
+      "registered_source_match": false
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp04PaidHalfStateMySqlIT",
+      "artifact": 12611747946,
+      "zip_sha256": "6cc2f9a7c1b0eb99f982b13d0bbf82a5dc49771bcc0fa319ca49a43e0a3e9e44",
+      "source_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04PaidHalfStateMySqlIT.java",
+      "source_file_sha256": "2c18c200b2e949f3fe90ebe7af0256b39b93080b8328d3ed46cba0618fcc7867",
+      "source_methods": 5,
+      "actual_cases": 5,
+      "failures": [],
+      "xml_sha256": {
+        "TEST-com.chengyinhub.business.it.Wp04PaidHalfStateMySqlIT.xml": "361864510b7a1d28e2de089a8e877e1ca79642b14df9f291ef5267675696f161"
+      },
+      "checks_problems": [],
+      "cleanup": "CLEAN",
+      "accepted": true,
+      "maven_exit": 0,
+      "verdict": "PASS",
+      "registered_source_match": false
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT",
+      "artifact": 12611718171,
+      "zip_sha256": "c552286f168b43be2b4be89e892ed42dfb9c08c50adb35e25659df83da89eebf",
+      "source_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04OriginalRefundMySqlIT.java",
+      "source_file_sha256": "b26ce091fea49602594cda207a2a2c6bff057170cc7c84278be292f9709c0ce6",
+      "source_methods": 25,
+      "actual_cases": 25,
+      "failures": [],
+      "xml_sha256": {
+        "TEST-com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT.xml": "ac0af7dd93f01575b56dd1c39ff39f1c56aee44b0dc44449f910e26701e5313f"
+      },
+      "checks_problems": [],
+      "cleanup": "CLEAN",
+      "accepted": true,
+      "maven_exit": 0,
+      "verdict": "PASS",
+      "registered_source_match": false
+    },
+    {
+      "class": "com.chengyinhub.business.it.CrossDomainFaultIsolationMySqlIT",
+      "artifact": 12611677959,
+      "zip_sha256": "d4f800ad95b68ddf2dfffa53c1991147b3ca354587326e3ec33c26a5cbc12c41",
+      "source_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainFaultIsolationMySqlIT.java",
+      "source_file_sha256": "dd0454ec0e3d585878233a5c7d73d9db49db650399ee50476641c4289870a94d",
+      "source_methods": 1,
+      "actual_cases": 1,
+      "failures": [
+        {
+          "classname": "com.chengyinhub.business.it.CrossDomainFaultIsolationMySqlIT",
+          "name": "sameWindowRetainsOriginalEconomicIdentitiesAndRequiresUnpoisonedNotificationProgress",
+          "status": "failure",
+          "message": "expected: <true> but was: <false>"
+        }
+      ],
+      "xml_sha256": {
+        "TEST-com.chengyinhub.business.it.CrossDomainFaultIsolationMySqlIT.xml": "a8a594cca142c6a703d7d40d3f5c157c7cf6107f740c03e5bb8f3b6c6f633cc0"
+      },
+      "checks_problems": [],
+      "cleanup": "CLEAN",
+      "accepted": false,
+      "maven_exit": 1,
+      "verdict": "FAIL",
+      "registered_source_match": false
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.AuditTopicCurrentPublicationMySqlIT",
+      "artifact": 12611673213,
+      "zip_sha256": "78dea995c546c3ef7cbd13dca724745379a8c9362e2b61ef876d53154a964e60",
+      "source_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AuditTopicCurrentPublicationMySqlIT.java",
+      "source_file_sha256": "981f8556567a6ec0dbda5ca0e5a4a9cbc227027d3fa2086fc4c10df21aba4fd9",
+      "source_methods": 1,
+      "actual_cases": 1,
+      "failures": [],
+      "xml_sha256": {
+        "TEST-com.chengyinhub.business.service.impl.AuditTopicCurrentPublicationMySqlIT.xml": "77a08042a2c714c67ad7ff8c7286482da4ab645364e2401d78f4c3d59e88d5e0"
+      },
+      "checks_problems": [],
+      "cleanup": "CLEAN",
+      "accepted": true,
+      "maven_exit": 0,
+      "verdict": "PASS",
+      "registered_source_match": false
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplayReskinMySqlIT",
+      "artifact": 12611573538,
+      "zip_sha256": "cc6636bcce82924d5480f1c2f5a7d5dc37764bbde69494df40bf9a8b93e01157",
+      "source_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinMySqlIT.java",
+      "source_file_sha256": "b7b7da1fd537fcad552ef8515949d48054f7430a00e2753db2c902e39ab5647b",
+      "source_methods": 1,
+      "actual_cases": 1,
+      "failures": [],
+      "xml_sha256": {
+        "TEST-com.chengyinhub.business.service.impl.GameplayReskinMySqlIT.xml": "1a2ad91b2ad089e0b71341125967d8edc02658f65ac9cd69086e41f490be3161"
+      },
+      "checks_problems": [],
+      "cleanup": "CLEAN",
+      "accepted": true,
+      "maven_exit": 0,
+      "verdict": "PASS",
+      "registered_source_match": false
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.TopicPublicationBindingMySqlIT",
+      "artifact": 12611548893,
+      "zip_sha256": "a2db7cf3680986c28b2a3103c5d6ed309f6537f1625b78705d8f283817d106f8",
+      "source_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicPublicationBindingMySqlIT.java",
+      "source_file_sha256": "5de58b98151992a40239d089ded5ca985798e716e9e22d37b3d5052e9707f5ac",
+      "source_methods": 9,
+      "actual_cases": 9,
+      "failures": [],
+      "xml_sha256": {
+        "TEST-com.chengyinhub.business.service.impl.TopicPublicationBindingMySqlIT.xml": "3c2df8dafe056b80d45d692fd2e8e072a21b15dff896376e439f73c0a2ce91f5"
+      },
+      "checks_problems": [],
+      "cleanup": "CLEAN",
+      "accepted": true,
+      "maven_exit": 0,
+      "verdict": "PASS",
+      "registered_source_match": false
+    }
+  ],
+  "all_complete": false,
+  "not_covered": [
+    "complete920 sameSHA matrix",
+    "real provider/device/production",
+    "full business acceptance"
+  ],
+  "registered_source_note": "Registry historical registered_source_match false is preserved; execution actual source candidate/workflow/XML/case identity independently bound to e822, no inherited pass."
+}

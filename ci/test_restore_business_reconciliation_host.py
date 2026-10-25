@@ -437,5 +437,121 @@ class RestoreHostControls(unittest.TestCase):
             self.assertNotIn('/private', json.dumps(worker.first_failure))
 
 
+    def test_owned_resource_predicates_have_fixed_codes_and_preserve_value_error_contract(self):
+        name = 'cy-restore-' + SCOPE
+        original = {'Id': 'c' * 64, 'Name': '/' + name + '-source',
+                    'Config': {'Image': host.IMAGE, 'Labels': {'chengyin.restore-business': SCOPE}},
+                    'NetworkSettings': {'Networks': {name: {}}}}
+        mutations = [(['Id'], 'PRIVATE_INVALID_ID', 'OWNER_FULL_ID_INVALID'),
+                     (['Name'], '/PRIVATE_NAME', 'OWNER_CONTAINER_NAME'),
+                     (['Config', 'Labels', 'chengyin.restore-business'], 'PRIVATE_LABEL', 'OWNER_CONTAINER_LABEL'),
+                     (['Config', 'Image'], 'PRIVATE_IMAGE', 'OWNER_CONTAINER_IMAGE'),
+                     (['NetworkSettings', 'Networks'], {'PRIVATE_NETWORK': {}}, 'OWNER_CONTAINER_NETWORK')]
+        host.owned_object('container', original, SCOPE, 'source')
+        for keys, value, code in mutations:
+            row = json.loads(json.dumps(original)); target = row
+            for key in keys[:-1]: target = target[key]
+            target[keys[-1]] = value
+            with self.subTest(code=code), self.assertRaises(ValueError) as caught:
+                host.owned_object('container', row, SCOPE, 'source')
+            self.assertIsInstance(caught.exception, host.OwnerGuardFailure)
+            self.assertEqual(code, caught.exception.guard_code)
+            self.assertNotIn('PRIVATE', str(caught.exception))
+        network = {'Id': 'e' * 64, 'Name': name, 'Internal': True,
+                   'Labels': {'chengyin.restore-business': SCOPE}}
+        for key, value, code in [('Name', 'PRIVATE_NAME', 'OWNER_NETWORK_NAME'),
+                                  ('Internal', False, 'OWNER_NETWORK_NOT_INTERNAL'),
+                                  ('Labels', {'chengyin.restore-business': 'PRIVATE_LABEL'}, 'OWNER_NETWORK_LABEL')]:
+            with self.subTest(code=code), self.assertRaises(ValueError) as caught:
+                host.owned_object('network', dict(network, **{key: value}), SCOPE)
+            self.assertEqual(code, caught.exception.guard_code)
+
+    def test_provision_reports_precise_guard_or_substage_without_reinterpreting_owner_failure_as_docker_exit(self):
+        cases = [('cid', 'container-cid', 'CREATED_CID_INVALID'),
+                 ('label', 'container-ownership', 'OWNER_CONTAINER_LABEL'),
+                 ('image', 'container-ownership', 'OWNER_CONTAINER_IMAGE'),
+                 ('missing', 'loopback-binding', 'BINDING_MISSING'),
+                 ('multiple', 'loopback-binding', 'BINDING_COUNT'),
+                 ('address', 'loopback-binding', 'BINDING_NOT_LOOPBACK'),
+                 ('parse', 'loopback-port-parse', None),
+                 ('range', 'loopback-port-range', 'BINDING_PORT_RANGE'),
+                 ('config', 'client-config-write', None)]
+        for case, substage, code in cases:
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp); worker = host.Host(root, root, root, SCOPE, 'payment-gap')
+                binding = [{'HostIp': '127.0.0.1', 'HostPort': '33080'}]
+                if case == 'missing': binding = None
+                elif case == 'multiple': binding *= 2
+                elif case == 'address': binding[0]['HostIp'] = '0.0.0.0'
+                elif case == 'parse': binding[0]['HostPort'] = 'PRIVATE_PORT'
+                elif case == 'range': binding[0]['HostPort'] = '1024'
+                row = {'Id': 'c' * 64, 'Name': '/' + worker.name + '-source',
+                       'Config': {'Image': 'PRIVATE_IMAGE' if case == 'image' else host.IMAGE,
+                                  'Labels': {'chengyin.restore-business': 'PRIVATE_LABEL' if case == 'label' else SCOPE}},
+                       'NetworkSettings': {'Networks': {worker.name: {}}, 'Ports': {'3306/tcp': binding}}}
+                replies = [subprocess.CompletedProcess([], 0, b'pulled', b''),
+                           subprocess.CompletedProcess([], 0, ('e' * 64).encode(), b''),
+                           subprocess.CompletedProcess([], 0, b'PRIVATE_CID' if case == 'cid' else ('c' * 64).encode(), b''),
+                           subprocess.CompletedProcess([], 0, b'started', b'')]
+                with mock.patch.dict(os.environ, {'GITHUB_SHA': SHA}), \
+                     mock.patch.object(host, 'inspect', side_effect=[None, None, row]), \
+                     mock.patch.object(host.subprocess, 'run', side_effect=replies) as run, \
+                     mock.patch.object(host, 'write_private', side_effect=ValueError('PRIVATE_CONFIG')) as write:
+                    with self.assertRaises(ValueError) as caught:
+                        worker.provision()
+                    worker.remember_failure('HOST_EXCEPTION_UNKNOWN', error=caught.exception)
+                evidence = worker.first_failure
+                self.assertEqual(('source-create', substage, code),
+                                 (evidence['stage'], evidence['substage'], evidence['guardCode']))
+                self.assertEqual('OWNER', evidence['operation'])
+                self.assertEqual('HOST_EXCEPTION_UNKNOWN', evidence['failureType'])
+                self.assertIsNone(evidence['returnCode']); self.assertFalse(evidence['stderrCaptured'])
+                self.assertEqual(3 if case == 'cid' else 4, run.call_count)
+                self.assertEqual(1 if case == 'config' else 0, write.call_count)
+                self.assertNotIn('PRIVATE', json.dumps(evidence))
+                # Cleanup cannot overwrite the first guard, or remove a container failing the same original label guard.
+                if case == 'label':
+                    network = {'Id': 'e' * 64, 'Name': worker.name, 'Internal': True,
+                               'Labels': {'chengyin.restore-business': SCOPE}}
+                    before = dict(evidence)
+                    with mock.patch.object(host, 'inspect', side_effect=[row, network, None]), \
+                         mock.patch.object(worker, 'command') as remove:
+                        self.assertEqual(['source'], worker.cleanup())
+                    self.assertEqual([mock.call(host.DOCKER + ['network', 'rm', 'e' * 64], timeout=30)], remove.call_args_list)
+                    self.assertEqual(before, worker.first_failure)
+
+    def test_inspect_guard_codes_keep_original_absence_proof_and_never_accept_daemon_failure(self):
+        for raw, code in [(b'not json PRIVATE', 'INSPECT_JSON_INVALID'), (b'[]', 'INSPECT_IDENTITY_COUNT'),
+                          (b'[{},{}]', 'INSPECT_IDENTITY_COUNT')]:
+            with self.subTest(code=code), mock.patch.object(host.subprocess, 'run',
+                    return_value=subprocess.CompletedProcess([], 0, raw, b'')), self.assertRaises(ValueError) as caught:
+                host.inspect('container', 'c' * 64)
+            self.assertEqual(code, caught.exception.guard_code)
+            self.assertNotIn('PRIVATE', str(caught.exception))
+        for stderr, absent in [(b'Error: No such container: ' + ('c' * 64).encode(), True),
+                               (b'Cannot connect to the Docker daemon PRIVATE', False)]:
+            with self.subTest(absent=absent), mock.patch.object(host.subprocess, 'run',
+                    return_value=subprocess.CompletedProcess([], 1, b'', stderr)):
+                if absent: self.assertIsNone(host.inspect('container', 'c' * 64))
+                else:
+                    with self.assertRaises(RuntimeError) as caught:
+                        host.inspect('container', 'c' * 64)
+                    self.assertIsInstance(caught.exception, host.InspectAbsenceUnproven)
+                    self.assertEqual('INSPECT_ABSENCE_UNPROVEN', caught.exception.guard_code)
+                    self.assertNotIn('PRIVATE', str(caught.exception))
+
+    def test_untyped_owner_value_error_message_cannot_forge_guard_code_or_replace_first_substage(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); worker = host.Host(root, root, root, SCOPE, 'payment-gap')
+            worker.stage = 'source-create'; worker.substage = 'loopback-port-parse'
+            worker.remember_failure('HOST_EXCEPTION_UNKNOWN', error=ValueError('CREATED_CID_INVALID PRIVATE'))
+            first = dict(worker.first_failure)
+            self.assertIsNone(first['guardCode']); self.assertEqual('ValueError', first['errorType'])
+            self.assertNotIn('PRIVATE', json.dumps(first))
+            worker.substage = 'cleanup'
+            worker.remember_failure('HOST_EXCEPTION_UNKNOWN', error=host.OwnerGuardFailure('OWNER_CONTAINER_LABEL'))
+            self.assertEqual(first, worker.first_failure)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -72,6 +72,7 @@ class TopicSaleReviewDecouplingTest {
     private ITopicCommercialReviewService commercialReviewService;
     private CmsTopicServiceImpl svc;
     private CmsTopic stored;
+    private com.chengyinhub.business.domain.CmsTopicChapter originalChapter;
 
     @BeforeEach
     void setUp() {
@@ -81,6 +82,21 @@ class TopicSaleReviewDecouplingTest {
         CmsTopicNodeMapper nodeMapper = mock(CmsTopicNodeMapper.class);
         java.util.List<com.chengyinhub.business.domain.CmsTopicChapter> writtenChapters = new ArrayList<>();
         java.util.List<com.chengyinhub.business.domain.CmsTopicNode> writtenNodes = new ArrayList<>();
+        // This case edits existing content, not an empty topic into a new commercial chapter.
+        // Freeze all four original sale-term columns explicitly; the DTO copies these exact facts, not database defaults.
+        originalChapter = new com.chengyinhub.business.domain.CmsTopicChapter();
+        originalChapter.setId(11L); originalChapter.setTopicId(TOPIC); originalChapter.setName("第一章");
+        originalChapter.setRecruitEnabled(0); originalChapter.setRequired(1);
+        originalChapter.setTermsMode(com.chengyinhub.common.constant.TermsMode.PERK); originalChapter.setMaxMerchant(1);
+        writtenChapters.add(originalChapter);
+        com.chengyinhub.business.domain.CmsTopicNode originalNode = new com.chengyinhub.business.domain.CmsTopicNode();
+        originalNode.setId(12L); originalNode.setTopicId(TOPIC); originalNode.setChapterId(11L);
+        originalNode.setStatus(1L); originalNode.setName("第一站"); originalNode.setAddress("人民广场"); originalNode.setNodeTime(30);
+        writtenNodes.add(originalNode);
+        when(chapterMapper.deleteCmsTopicChapterById(anyLong())).thenAnswer(call ->
+                writtenChapters.removeIf(row -> call.getArgument(0).equals(row.getId())) ? 1 : 0);
+        when(nodeMapper.deleteCmsTopicNodeById(anyLong())).thenAnswer(call ->
+                writtenNodes.removeIf(row -> call.getArgument(0).equals(row.getId())) ? 1 : 0);
         when(chapterMapper.selectByTopicForUpdate(anyLong())).thenAnswer(call -> writtenChapters.stream()
                 .filter(row -> call.getArgument(0).equals(row.getTopicId())).collect(java.util.stream.Collectors.toCollection(ArrayList::new)));
         when(nodeMapper.selectByTopicForUpdate(anyLong())).thenAnswer(call -> writtenNodes.stream()
@@ -209,6 +225,14 @@ class TopicSaleReviewDecouplingTest {
         publicationDataSource = transactions.getDataSource();
     }
 
+    private java.util.Map<String,Object> frozenSaleTerms() {
+        com.chengyinhub.business.service.support.CommercialTopicPolicy policy =
+                (com.chengyinhub.business.service.support.CommercialTopicPolicy)
+                ReflectionTestUtils.getField(svc, "commercialTopicPolicy");
+        return com.chengyinhub.business.service.support.TopicSaleTerms.of(
+                policy.saleParameters(stored, policy.evaluate(TOPIC)));
+    }
+
     private static Date daysFromNow(int days) {
         return new Date(System.currentTimeMillis() + days * 24L * 3600_000L);
     }
@@ -230,6 +254,10 @@ class TopicSaleReviewDecouplingTest {
         node.setNodeTime(30);
         ChapterDTO chapter = new ChapterDTO();
         chapter.setName("第一章");
+        chapter.setRecruitEnabled(originalChapter.getRecruitEnabled());
+        chapter.setRequired(originalChapter.getRequired());
+        chapter.setTermsMode(originalChapter.getTermsMode());
+        chapter.setMaxMerchant(originalChapter.getMaxMerchant());
         chapter.setNodes(new ArrayList<>(Arrays.asList(node)));
         dto.setChapters(new ArrayList<>(Arrays.asList(chapter)));
         dto.setTickets(new ArrayList<ActivityTicketRequest>());
@@ -238,16 +266,22 @@ class TopicSaleReviewDecouplingTest {
 
     @Test
     void storyAndNameEdit_keepsSaleReview_andRefreshesThePendingTask() {
+        java.util.Map<String,Object> before = frozenSaleTerms();
         com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto("新名字", null, "5"), ME, "me");
 
+        org.junit.jupiter.api.Assertions.assertEquals(before, frozenSaleTerms(), "same-price content edits must preserve the full sale-terms fingerprint");
+        org.junit.jupiter.api.Assertions.assertEquals(new BigDecimal("5"), stored.getSelfPlayPrice());
         verify(canonicalMutationService, never()).invalidateApprovedCanonical(anyLong(), anyString());
         verify(commercialReviewService, times(1)).submitSaleReview(TOPIC, ME);
     }
 
     @Test
     void priceEdit_resetsSaleReview() {
+        java.util.Map<String,Object> before = frozenSaleTerms();
         com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto("旧名字", null, "8"), ME, "me");
 
+        org.junit.jupiter.api.Assertions.assertNotEquals(before, frozenSaleTerms(), "5 to 8 changes the original price fact");
+        org.junit.jupiter.api.Assertions.assertEquals(new BigDecimal("8"), stored.getSelfPlayPrice());
         verify(canonicalMutationService, times(1)).invalidateApprovedCanonical(eq(TOPIC), eq("topic-content-rebuild"));
         verify(commercialReviewService, never()).submitSaleReview(anyLong(), anyLong());
     }

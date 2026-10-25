@@ -250,13 +250,13 @@ class RegistryContractTest(unittest.TestCase):
         reg = registry()
         fqcn = 'com.chengyinhub.business.service.impl.CoopDepositSettlementAttemptMySqlIT'
         flag = 'B_PAYMENT_INTENT_DDL_APPROVED'
-        self.assertEqual({'tests': 11, 'storage': ['mysql'], 'gates': {flag: '1'}},
+        self.assertEqual({'tests': 12, 'storage': ['mysql'], 'gates': {flag: '1'}},
                          {key: reg['classes'][fqcn][key] for key in ('tests', 'storage', 'gates')})
         for batch in ('architecture-day-deposit-attempt', 'architecture-day-integrated-changes'):
             self.assertEqual(1, reg['batches'][batch]['classes'].count(fqcn))
         facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
         self.assertEqual([], problems)
-        self.assertEqual(11, facts['declared_tests'])
+        self.assertEqual(12, facts['declared_tests'])
         self.assertEqual([{'named': flag, 'matches': '1'}], facts['source_gates'])
         for gates in ({}, {flag: '0'}, {flag: 'true'}):
             rejected = copy.deepcopy(reg)
@@ -520,7 +520,7 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-verified-payment-facts": 4,
                     "architecture-day-registration-seats": 7,
                     "architecture-day-original-refund": 25,
-                    "architecture-day-deposit-attempt": 11,
+                    "architecture-day-deposit-attempt": 12,
                     "architecture-day-topic-content-budget": 15,
                     "architecture-day-committed-official-notice": 19,
                     "architecture-day-complaint-committed-notice": 11,
@@ -538,7 +538,7 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-before-start-notice": 12,
                     "architecture-day-commerce-generic-guard": 6,
                     "architecture-day-refund-lifecycle": 72,
-                    "architecture-day-integrated-changes": 920, "payment-intent-correctness": 30}
+                    "architecture-day-integrated-changes": 921, "payment-intent-correctness": 30}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}

@@ -363,4 +363,114 @@ class RestoreHttpFailureLifecycleControls(unittest.TestCase):
                 self.assertIsInstance(failure,ValueError);self.assertEqual(proof['result'],'NOT_ACCEPTED')
 
 
+class RestoreHttpDiagnosticControls(unittest.TestCase):
+    """Pure diagnostic controls; no application or transport acceptance is manufactured."""
+
+    def test_failure_diagnostic_exports_only_fixed_phase_reason_and_type(self):
+        failure=ValueError('password=fixture-secret SQL body token must remain private')
+        failure.restore_reason_code='password=fixture-secret'
+        result=P.failure_diagnostic(failure,'SOURCE_WORKLOAD','ORIGINAL_WITHDRAW_COMMAND')
+        self.assertEqual(result,{'phase':'SOURCE_WORKLOAD','substage':'ORIGINAL_WITHDRAW_COMMAND',
+                                 'type':'ValueError','reasonCode':'UNCLASSIFIED_FAILURE'})
+        self.assertNotIn('fixture-secret',json.dumps(result))
+        with self.assertRaises(ValueError) as rejected:P.good((200,{'code':503,'msg':'private-body'}))
+        self.assertEqual(P.failure_diagnostic(rejected.exception,'SOURCE_WORKLOAD','ADMIN_IDENTITY_READ')['reasonCode'],
+                         'HTTP_OPERATION_REJECTED')
+
+    def test_checkpoint_is_durable_but_never_claims_ready_or_completed(self):
+        snapshots=[];report={'result':'NOT_COMPLETED','applicationStartAttempted':True,'boots':[],'checks':[]}
+        slot=SimpleNamespace(runtime_report_write=lambda path,value:snapshots.append(copy.deepcopy(value)))
+        P.checkpoint(slot,report,Path('unused'),'SOURCE_WORKLOAD','ORIGINAL_CHAPTER_COMMAND')
+        self.assertEqual(snapshots[-1]['substage'],'ORIGINAL_CHAPTER_COMMAND')
+        self.assertEqual(report['boots'],[]);self.assertEqual(report['checks'],[])
+        self.assertEqual(report['result'],'NOT_COMPLETED')
+        with self.assertRaisesRegex(ValueError,'fixed diagnostic checkpoint'):
+            P.checkpoint(slot,report,Path('unused'),'SOURCE_WORKLOAD','arbitrary secret stage')
+        self.assertEqual(len(snapshots),1)
+
+    def test_ready_return_is_separate_from_workload_and_original_boot_acceptance(self):
+        snapshots=[]
+        boot=dict(bootId='actual-ready',side='source',restoreMode='false',guardHeld=False,jarSha256='b'*64,
+                  appCid='4'*64,javaPid=17,sourceSha='a'*40,serverUuid='original-uuid',schema='original-schema',schedulerStarted=True)
+        report={'result':'NOT_COMPLETED','boots':[],'completeBoots':[],'checks':[],'ownedAppCids':['4'*64]}
+        slot=SimpleNamespace(runtime_report_write=lambda path,value:snapshots.append(copy.deepcopy(value)),
+                             start=lambda *args,**kwargs:boot)
+        self.assertIs(P.start_application(slot,report,Path('unused'),'SOURCE_APPLICATION_START','source','false','original-uuid'),boot)
+        self.assertEqual(report['readyBootObservations'],[boot])
+        self.assertEqual(report['result'],'NOT_COMPLETED');self.assertEqual(report['completeBoots'],[])
+        self.assertEqual(report['boots'],[]);self.assertEqual(report['checks'],[])
+        with self.assertRaisesRegex(ValueError,'five independent original app boots'):
+            P.assert_successful_lifecycle(report)
+
+    @staticmethod
+    def http_slot(raw):
+        slot=object.__new__(R.ApplicationSlot)
+        slot.budget=lambda:None;slot.cid='4'*64
+        slot.auth=SimpleNamespace(DOCKER=['docker'],command=lambda *args,**kwargs:raw)
+        return slot
+
+    def test_http_diagnostic_keeps_original_codes_but_not_body_token_or_original_query(self):
+        slot=self.http_slot(b'{"code":409,"msg":"private-token-or-SQL","data":{"secret":"raw"}}\n200')
+        status,value=slot.http('/api/club/lead/unlock-chapter-receipt?activityId=42&commandId=original-private-id','private-token')
+        self.assertEqual((status,value['code']),(200,409))
+        self.assertEqual(slot.last_http,{'route':'/api/club/lead/unlock-chapter-receipt','method':'GET',
+                                       'status':200,'businessCode':409,'result':'JSON_OBJECT_RECEIVED'})
+        self.assertNotIn('private',json.dumps(slot.last_http));self.assertNotIn('42',json.dumps(slot.last_http))
+
+    def test_malformed_http_retains_received_status_and_exact_parse_reason(self):
+        slot=self.http_slot(b'private-not-json\n502')
+        with self.assertRaises(ValueError) as rejected:slot.http('/getInfo','private-token')
+        result=P.failure_diagnostic(rejected.exception,'SOURCE_WORKLOAD','ADMIN_IDENTITY_READ')
+        self.assertEqual(result['reasonCode'],'HTTP_RESPONSE_NOT_JSON')
+        self.assertEqual(slot.last_http['status'],502)
+        self.assertNotIn('private',json.dumps(result)+json.dumps(slot.last_http))
+        slot=self.http_slot(b'[]\n200')
+        with self.assertRaises(ValueError) as rejected:slot.http('/getInfo')
+        self.assertEqual(rejected.exception.restore_reason_code,'HTTP_RESPONSE_NOT_OBJECT')
+
+    def test_safe_log_summary_retains_only_finite_markers_and_types(self):
+        raw=b'password=private-token SQL SELECT body\nApplication run failed\njava.sql.SQLSyntaxErrorException: private-SQL'
+        result=R.summarize_application_log(raw)
+        self.assertTrue(result['markers']['Application run failed'])
+        self.assertEqual(result['exceptionTypes'],['java.sql.SQLSyntaxErrorException'])
+        self.assertNotIn('private',json.dumps(result));self.assertNotIn('SELECT',json.dumps(result))
+        self.assertEqual(result['sampleSha256'],__import__('hashlib').sha256(raw).hexdigest())
+        limited=R.summarize_application_log(b'x'*(1024*1024+1))
+        self.assertEqual(limited['sampleBytes'],1024*1024);self.assertTrue(limited['sampleTruncated'])
+
+    @staticmethod
+    def diagnostic_slot():
+        slot=object.__new__(R.ApplicationSlot);slot.name='cy-auth-'+'a'*32;slot.cid='4'*64
+        slot.source={'networkId':'5'*64};slot.auth=SimpleNamespace(DOCKER=['docker'])
+        obj={'Id':slot.cid,'Name':'/'+slot.name+'-app','Config':{'Labels':{'chengyin.auth-recovery':slot.name}},
+             'NetworkSettings':{'Networks':{slot.name:{'NetworkID':'5'*64}}},
+             'State':{'Running':False,'OOMKilled':False,'Restarting':False,'Pid':0,'ExitCode':137}}
+        slot.inspect=lambda target:obj
+        return slot,obj
+
+    def test_unknown_stop_preserves_actual_exit_and_does_not_remove_or_accept_it(self):
+        slot,_=self.diagnostic_slot();calls=[]
+        slot.auth.command=lambda *args,**kwargs:calls.append(args)
+        with self.assertRaisesRegex(ValueError,'app stop/process exit unknown') as rejected:slot.stop(remove=False)
+        self.assertEqual(rejected.exception.restore_reason_code,'APP_STOP_EXIT_NOT_CONFIRMED')
+        self.assertEqual(slot.stopped['exitCode'],137);self.assertFalse(slot.stopped['running'])
+        self.assertEqual(calls,[])
+
+    def test_safe_log_read_checks_exact_original_owner_before_observing(self):
+        slot,obj=self.diagnostic_slot();obj['NetworkSettings']['Networks'][slot.name]['NetworkID']='6'*64
+        with patch.object(R.subprocess,'run') as command:
+            with self.assertRaisesRegex(ValueError,'exact diagnostic app owner'):slot.diagnostic_summary()
+        command.assert_not_called()
+
+    def test_log_summary_is_inside_original_cid_and_no_cid_is_not_absence_proof(self):
+        slot,_=self.diagnostic_slot()
+        with patch.object(R.subprocess,'run',return_value=SimpleNamespace(returncode=0,stdout=b'Application run failed private-token')) as command:
+            result=slot.diagnostic_summary()
+        self.assertEqual(command.call_args.args[0],['docker','logs','--tail','160','4'*64])
+        self.assertEqual(result['state']['ExitCode'],137);self.assertEqual(result['result'],'EXACT_APP_OBSERVED')
+        self.assertNotIn('private-token',json.dumps(result))
+        slot.cid=None
+        self.assertEqual(slot.diagnostic_summary(),{'result':'NO_CURRENT_CID_OBSERVATION','startAbsenceProven':False})
+
+
 if __name__=='__main__':unittest.main()

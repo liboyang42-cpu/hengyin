@@ -692,7 +692,7 @@
         "com.chengyinhub.business.it.CrossDomainFaultIsolationMySqlIT",
         "com.chengyinhub.business.service.RestoreMoneyDispatchMySqlIT"
       ],
-      "note": "Current composed source inventory:76 unique registered storage classes and920 ordinary@Test declarations, including original producer/refund, manual-case read, ASR shared quota, funds process recovery and copied coupon-owner fences. Original65/810 execution belongs to its historical source only. One matrix max-parallel20, no duplicates. Source SHA, original XML, zero skip and independent CLEAN required; source inventory is not execution/HTTP/provider/restart/load/deployment acceptance."
+      "note": "Current composed source inventory:76 unique registered storage classes and921 ordinary@Test declarations, including original producer/refund, manual-case read, ASR shared quota, funds process recovery and copied coupon-owner fences. Original65/810 execution belongs to its historical source only. One matrix max-parallel20, no duplicates. Source SHA, original XML, zero skip and independent CLEAN required; source inventory is not execution/HTTP/provider/restart/load/deployment acceptance."
     }
   },
   "classes": {
@@ -1681,7 +1681,7 @@
       "database_base": "cyit"
     },
     "com.chengyinhub.business.service.impl.CoopDepositSettlementAttemptMySqlIT": {
-      "tests": 11,
+      "tests": 12,
       "storage": [
         "mysql"
       ],

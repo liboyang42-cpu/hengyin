@@ -1,0 +1,380 @@
+{
+  "source_parent": "e82229ef85e58159078a42956560356074192541",
+  "deliveries": [
+    {
+      "owner": "A",
+      "commit": "cf895bee13d3e2ded7658b4ab7aaefa31cc5e2c8",
+      "parent": "e82229ef85e58159078a42956560356074192541",
+      "patch_bytes": 17992,
+      "patch_sha256": "06501b4e2ec49465c6591aece1619b6e9f0128d31a3a5ae4e9e6e6ea89dd6094",
+      "author_postimages_verified": true,
+      "applied": true,
+      "postimages": [
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCoopControllerInviteAuthzTest.java",
+          "sha256": "a773434dad80f07a319d2481bbb660823ef281709a316996a72f126b6b2b0d79"
+        },
+        {
+          "path": "docs/delivery/architecture-day/A/coop-invite-view-e822/DELIVERY.md",
+          "sha256": "73b401f6c005cb580916b43378141fa336d0f10e1f9ac23fb02ece15dda328ef"
+        },
+        {
+          "path": "docs/delivery/architecture-day/A/coop-invite-view-e822/SOURCE_SHA256SUMS",
+          "sha256": "acaa42026590b8255ed62f180b0b855dd89abdaa8a746f5b39d200959459ae32"
+        }
+      ],
+      "verification": "NOT_RUN"
+    },
+    {
+      "owner": "G",
+      "commit": "d38c3acea21ff76021a4dd60bf8fe260d109d264",
+      "parent": "e82229ef85e58159078a42956560356074192541",
+      "patch_bytes": 21428,
+      "patch_sha256": "36a240053f7b768fc28e81aeae319db3aabbd83a5acfdd8e2c36c022a2018919",
+      "author_postimages_verified": true,
+      "applied": true,
+      "postimages": [
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositPaymentSettlementTest.java",
+          "sha256": "8565fae6be6c0815fabfb37130bff6f9651c411c4e78121a3a44efa74458f2aa"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptMySqlIT.java",
+          "sha256": "0d292144938e141211505fc14c3ed4ab43e7b87952cfd631c66c0ee395b6eb30"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java",
+          "sha256": "4329e953106ace2aea720dd2c4fe52424289eec7cbe8ac94aad6548c87168764"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+          "sha256": "b57745774c66d2d1b0d84e30ea523589e43f9a5eb15a99c8ac29308a8ba18cec"
+        },
+        {
+          "path": "docs/delivery/architecture-day/G/e822-deposit-proof/POSTIMAGE.sha256",
+          "sha256": "39a5d9a10705af035941343d5157a84b41328ab5b060bf8d25cb46988cd21a2c"
+        },
+        {
+          "path": "docs/delivery/architecture-day/G/e822-deposit-proof/README.md",
+          "sha256": "ac32aeedd3e449e60a9ed0f226d0a1a798d54051f9ac2eb9e20cc4c7651810a6"
+        }
+      ],
+      "verification": "NOT_RUN"
+    },
+    {
+      "owner": "D",
+      "commit": "8cce208e609594596245c89ecc3130a8b4c2aa52",
+      "parent": "e82229ef85e58159078a42956560356074192541",
+      "patch_bytes": 31533,
+      "patch_sha256": "142613e536d0472797005a6c7d2548575a75b4490f0a50ff5191b21d0e5d255d",
+      "author_postimages_verified": true,
+      "applied": true,
+      "postimages": [
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishNarrativeNpcGuardTest.java",
+          "sha256": "e0e6acc6219d00f89e832e36a3015f678235cbd969f6361a597884347f080a17"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishStateKeyGuardTest.java",
+          "sha256": "06067145fd4274962a225ce24f95314edbe5e02a6de8a9cf36376e41a631f28f"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicRoutePublishPolicyTest.java",
+          "sha256": "4d2fed845c8e0c29e54662d4adafd755927f5f18791ab2797380d9f7956c457b"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDraftSubmittedOrderTest.java",
+          "sha256": "834fd4de0c76570242a0fa0c11093a043133f45c74a91ddc0331b9a27fe93974"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationTestWiring.java",
+          "sha256": "23a2e2eadce0f7e0eca16a918d5b1bd0fb8405c773f99b64b53c42fd3efb01db"
+        },
+        {
+          "path": "docs/delivery/architecture-day/D/publication-fixtures-e822/CANDIDATE.sha256",
+          "sha256": "6a6cb09e06f52d2d66768dc7bafbbf38181f7d9033932e4abdb89d9be2db35ab"
+        },
+        {
+          "path": "docs/delivery/architecture-day/D/publication-fixtures-e822/ORIGINAL-CASES.json",
+          "sha256": "0148e52ba4d6742f46c5e3e789b87ecfadae6759e628d4268277a034c48c6197"
+        },
+        {
+          "path": "docs/delivery/architecture-day/D/publication-fixtures-e822/README.md",
+          "sha256": "cf9c3e4d0f3912fa070fd0bd6ca0484cdb22bc4e6b80f803d2310b36f9bccb91"
+        }
+      ],
+      "verification": "NOT_RUN"
+    },
+    {
+      "owner": "H",
+      "commit": "bf48f75110ae0b393d482ade65b89a20914aff90",
+      "parent": "e82229ef85e58159078a42956560356074192541",
+      "patch_bytes": 52386,
+      "patch_sha256": "82c81e9aefa23199997aafdd64a7581097d7b65e59bd921edd63aeee96dda10e",
+      "author_postimages_verified": true,
+      "applied": true,
+      "postimages": [
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayDraftCopyTest.java",
+          "sha256": "2b04d396bcb9052c2529342cf1b45378a7bdcc94bd524279a4d63904280885d4"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFixture.java",
+          "sha256": "163c52538722e9508e225e5fa81db8dd4827d7cc477bbc909edd5e07d7fd895f"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinRuntimeServiceTest.java",
+          "sha256": "b2760aff84d805b1c9dc29854cea4cdd258ccb9d074ee087964fff2df2a4d987"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplaySupportMatrixRuntimeTest.java",
+          "sha256": "b98311c94502e74b80861ef8184d9c944a74dbd6349af9f6733411dd71aae975"
+        },
+        {
+          "path": "docs/delivery/architecture-day/H/reskin-keys-e822/CASES.md",
+          "sha256": "24bc703f22691fa2c7da0422b41d2577023f43ba9d271a1b29b3b0259e1cb38e"
+        },
+        {
+          "path": "docs/delivery/architecture-day/H/reskin-keys-e822/POSTIMAGE.sha256",
+          "sha256": "db18a4d521b0650f530eb477906ebace9e08142e4e49ac343c300158862f2102"
+        },
+        {
+          "path": "docs/delivery/architecture-day/H/reskin-keys-e822/PREIMAGE.md",
+          "sha256": "b4657d561da25de959f7f9f4b7021e1626940c6faf10140917ba26ba3a7afb9a"
+        },
+        {
+          "path": "docs/delivery/architecture-day/H/reskin-keys-e822/README.md",
+          "sha256": "e3b9a12ddb9b90989ab4565fc780f5acd8882db4335ed16d2fc5cefcced6bc6b"
+        },
+        {
+          "path": "docs/delivery/architecture-day/H/reskin-keys-e822/owned.review.patch",
+          "sha256": "30b23d452c926c9ae6f0303d792c2d0a07fdebfb544d39f5d94a929e3dc1b96e"
+        }
+      ],
+      "verification": "NOT_RUN"
+    },
+    {
+      "owner": "E",
+      "commit": "978153e6169d454c8cd9cd0d3d5d673529f33d70",
+      "parent": "e82229ef85e58159078a42956560356074192541",
+      "postimages_exact": true,
+      "applied": true,
+      "files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleReviewDecouplingTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationDeclarationsTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationDiagnosticsTest.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/JourneyStoryValidator.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicPublicationContentGuard.java",
+        "docs/delivery/architecture-day/E/e822-publication-repair/README.md",
+        "docs/delivery/architecture-day/E/e822-publication-repair/owned.patch.b64",
+        "docs/delivery/architecture-day/E/e822-publication-repair/source-manifest.json"
+      ],
+      "patch_sha256": "af6325a4e8bd035ebb7964fb70b906832847c68c11d989e808192c72aea01bbc",
+      "code_patch_sha256": "b8c8cd1fc6dea5712e4d45e0df9006f8e9d346f826dabd288e947fdbe21784fc",
+      "verification": "NOT_RUN"
+    },
+    {
+      "owner": "F",
+      "commit": "23d94d1bd43e8a2feeb19a84f167b5bb6f049ab1",
+      "parent": "e82229ef85e58159078a42956560356074192541",
+      "postimages_exact": true,
+      "applied": true,
+      "files": [
+        "ci/gameplay_process_recovery_probe.py",
+        "ci/test_capacity_mixed_probe.py",
+        "ci/test_gameplay_process_recovery_probe.py",
+        "docs/delivery/architecture-day/F/mixed-category-contract-e822/PATCH.sha256",
+        "docs/delivery/architecture-day/F/mixed-category-contract-e822/POSTIMAGES.sha256",
+        "docs/delivery/architecture-day/F/mixed-category-contract-e822/README.md",
+        "docs/delivery/architecture-day/F/mixed-category-contract-e822/review.patch.b64"
+      ],
+      "patch_sha256": "8ced19fabcaf6689f572ed098edfacc18207bbe22335d2ae9a63b64f1b8903d8",
+      "verification": "NOT_RUN"
+    },
+    {
+      "owner": "B",
+      "parent": "e82229ef85e58159078a42956560356074192541",
+      "patch_bytes": 21516,
+      "patch_sha256": "7df7f6c551b9f9c72f94a769e1b7f211fe9fd63702e5740c9262d8b35022639e",
+      "postimages": [
+        {
+          "path": "ci/restore_business_reconciliation_host.py",
+          "sha256": "f839a2b00d980a5d46d9f2394963dd16fc8f5e9e0a8c0ccefca5b13814572d6d"
+        },
+        {
+          "path": "ci/test_restore_business_reconciliation_host.py",
+          "sha256": "f38d78e1be469fb2bc53d8b5a960491dc9dc1cedf878a6a1ef78f267962e2ecc"
+        },
+        {
+          "path": "docs/delivery/architecture-day/B/restore-owner-guard-diagnostics/README.md",
+          "sha256": "b6dff5f45134c2543f1eb490ab88845f5be7901048d514f58b23934e7a74841c"
+        }
+      ],
+      "author_hashes_exact": true,
+      "applied": true,
+      "verification": "NOT_RUN",
+      "actual_original_owner_predicate_still_unknown": true
+    },
+    {
+      "owner": "C",
+      "commit": "0e159c69e942cfb718df14c409509a00b2ac0002",
+      "parent": "e82229ef85e58159078a42956560356074192541",
+      "patch_sha256": "a54632dc8df1bfd35f9b6762aacefad7f95d26d7a33cc957e9e6995efc80163f",
+      "postimages_exact": true,
+      "files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainFaultIsolationMySqlIT.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainStorageFixture.java",
+        "ci/restore_application_http_probe.py",
+        "ci/restore_application_http_runtime.py",
+        "ci/test_restore_application_http_probe.py",
+        "docs/delivery/architecture-day/C/e822-http-notification-source/README.md",
+        "docs/delivery/architecture-day/C/e822-http-notification-source/postimages.sha256"
+      ],
+      "applied": true,
+      "verification": "NOT_RUN"
+    }
+  ],
+  "remaining_SOURCE_owners": [],
+  "source_precheck": {
+    "integrated_classes": 76,
+    "ordinary_source_declarations": 921,
+    "precheck_problems": [],
+    "test_method_inventory": [
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainFaultIsolationMySqlIT.java",
+        "original_test_methods": 1,
+        "current_test_methods": 1,
+        "removed": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainStorageFixture.java",
+        "original_test_methods": 0,
+        "current_test_methods": 0,
+        "removed": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishNarrativeNpcGuardTest.java",
+        "original_test_methods": 5,
+        "current_test_methods": 5,
+        "removed": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishStateKeyGuardTest.java",
+        "original_test_methods": 25,
+        "current_test_methods": 25,
+        "removed": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicRoutePublishPolicyTest.java",
+        "original_test_methods": 8,
+        "current_test_methods": 8,
+        "removed": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDraftSubmittedOrderTest.java",
+        "original_test_methods": 2,
+        "current_test_methods": 2,
+        "removed": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleReviewDecouplingTest.java",
+        "original_test_methods": 2,
+        "current_test_methods": 2,
+        "removed": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositPaymentSettlementTest.java",
+        "original_test_methods": 8,
+        "current_test_methods": 9,
+        "removed": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptMySqlIT.java",
+        "original_test_methods": 11,
+        "current_test_methods": 12,
+        "removed": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java",
+        "original_test_methods": 29,
+        "current_test_methods": 30,
+        "removed": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayDraftCopyTest.java",
+        "original_test_methods": 4,
+        "current_test_methods": 4,
+        "removed": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFixture.java",
+        "original_test_methods": 0,
+        "current_test_methods": 0,
+        "removed": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinRuntimeServiceTest.java",
+        "original_test_methods": 7,
+        "current_test_methods": 7,
+        "removed": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplaySupportMatrixRuntimeTest.java",
+        "original_test_methods": 3,
+        "current_test_methods": 3,
+        "removed": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationDeclarationsTest.java",
+        "original_test_methods": 35,
+        "current_test_methods": 35,
+        "removed": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationDiagnosticsTest.java",
+        "original_test_methods": 10,
+        "current_test_methods": 10,
+        "removed": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationTestWiring.java",
+        "original_test_methods": 0,
+        "current_test_methods": 0,
+        "removed": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCoopControllerInviteAuthzTest.java",
+        "original_test_methods": 24,
+        "current_test_methods": 24,
+        "removed": []
+      }
+    ],
+    "original_method_count": 174,
+    "current_method_count": 177,
+    "removed_test_methods": 0,
+    "verification": "SOURCE_ONLY_NOT_JAVA_DB"
+  },
+  "python_controls": {
+    "first_run": {
+      "tests": 187,
+      "passed": 185,
+      "failures": 1,
+      "errors": 1,
+      "reason": [
+        "root expected funds total guessed275 but actual unchanged274; corrected to original274",
+        "sandbox loopback bind PermissionError, not DB or product failure"
+      ]
+    },
+    "failed_two_only_recheck": {
+      "tests": 2,
+      "passed": 2,
+      "failures": 0,
+      "errors": 0,
+      "permitted_loopback_fixture": true
+    },
+    "not_claimed_single_run187_green": true,
+    "Java_DB_CI_recheck": "NOT_RUN"
+  },
+  "Java_DB_CI": "NOT_RUN",
+  "all_complete": false
+}

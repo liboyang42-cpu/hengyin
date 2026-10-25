@@ -24,11 +24,38 @@ PATHS = {'/captchaImage','/login','/getInfo','/api/wallet/balance','/api/wallet/
          '/api/wallet/withdraws','/business/refund','/monitor/job/run','/api/club/lead/unlock-chapter',
          '/api/club/lead/unlock-chapter-receipt','/__restore_http/evidence','/__restore_http/notice',
          '/__restore_http/verified-callback'}
+LOG_MARKERS = ('Application run failed', 'Started RuoYiApplication', 'RECOVERY_DISPATCH_BLOCKED',
+               'CONTROLLED_PROVIDER_NO_SEND')
+LOG_EXCEPTION_TYPES = ('org.springframework.beans.factory.BeanCreationException',
+        'org.springframework.beans.factory.UnsatisfiedDependencyException',
+        'org.springframework.jdbc.BadSqlGrammarException', 'java.sql.SQLSyntaxErrorException',
+        'com.mysql.cj.jdbc.exceptions.CommunicationsException', 'java.lang.IllegalStateException',
+        'java.lang.IllegalArgumentException', 'java.lang.NoSuchMethodError')
+REASON_CODES = {
+    'real CAPTCHA required': 'CAPTCHA_CONTRACT_REJECTED',
+    'original private CAPTCHA oracle': 'CAPTCHA_ORACLE_REJECTED',
+    'real admin login/filter required': 'ADMIN_LOGIN_REJECTED',
+    'app stop/process exit unknown': 'APP_STOP_EXIT_NOT_CONFIRMED',
+    'complete Spring child exited before readiness': 'APP_EXITED_BEFORE_READY',
+    'bounded complete application startup timeout': 'APP_READINESS_TIMEOUT',
+    'actual child boot identity': 'APP_BOOT_IDENTITY_REJECTED',
+}
 
 
 def require(ok, reason):
     if not ok:
-        raise ValueError(reason)
+        failure=ValueError(reason)
+        failure.restore_reason_code=REASON_CODES.get(reason,'INVARIANT_REJECTED')
+        raise failure
+
+
+def summarize_application_log(raw):
+    """Only fixed markers/types, never lines, exception messages or HTTP/SQL contents."""
+    sample=raw[-1024*1024:];text=sample.decode(errors='replace')
+    return {'sampleBytes':len(sample),'sampleTruncated':len(raw)>len(sample),
+            'sampleSha256':hashlib.sha256(sample).hexdigest(),
+            'markers':{marker:marker in text for marker in LOG_MARKERS},
+            'exceptionTypes':[kind for kind in LOG_EXCEPTION_TYPES if kind in text]}
 
 
 def load(name, relative):
@@ -125,13 +152,36 @@ class ApplicationSlot:
         if obj['State']['Running']:
             self.auth.command(self.auth.DOCKER+['stop','--time','20',self.cid],timeout=30)
         stopped=self.inspect(self.cid)['State']
+        # Preserve the actual exit observation even when the strict success predicate rejects it.
+        self.stopped={'cid':self.cid,'running':stopped['Running'],'hostPid':stopped['Pid'],
+                      'oomKilled':stopped['OOMKilled'],'exitCode':stopped['ExitCode'],
+                      'restarting':stopped['Restarting']}
         require(not stopped['Running'] and not stopped['OOMKilled'] and not stopped['Restarting']
                 and stopped['Pid']==0 and stopped['ExitCode'] in (0,143),'app stop/process exit unknown')
-        self.stopped={'cid':self.cid,'running':stopped['Running'],'hostPid':stopped['Pid'],
-                      'oomKilled':stopped['OOMKilled'],'exitCode':stopped['ExitCode']}
         if not remove:return # Original outer cleanup must still collect this exact container's logs.
         self.auth.command(self.auth.DOCKER+['rm',self.cid],timeout=15)
         self.absence();self.removed.append(self.cid);self.cid=None
+
+    def diagnostic_summary(self):
+        """Observe the exact existing app only; outer owner still preserves/removes its raw log."""
+        if self.cid is None:
+            return {'result':'NO_CURRENT_CID_OBSERVATION','startAbsenceProven':False}
+        obj=self.inspect(self.cid)
+        require(obj['Id']==self.cid and obj['Name']=='/'+self.name+'-app'
+                and obj['Config']['Labels'].get('chengyin.auth-recovery')==self.name
+                and set(obj['NetworkSettings']['Networks'])=={self.name}
+                and obj['NetworkSettings']['Networks'][self.name]['NetworkID']==self.source['networkId'],
+                'exact diagnostic app owner changed')
+        state=obj['State']
+        result={'result':'EXACT_APP_OBSERVED','cid':self.cid,
+                'state':{key:state[key] for key in ('Running','OOMKilled','Restarting','Pid','ExitCode')}}
+        log=subprocess.run(self.auth.DOCKER+['logs','--tail','160',self.cid],
+                           stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=10)
+        if log.returncode:
+            result['logSummary']={'result':'UNAVAILABLE','reasonCode':'APP_LOG_COMMAND_FAILED'}
+        else:
+            result['logSummary']={'result':'FIXED_MARKERS_ONLY',**summarize_application_log(log.stdout)}
+        return result
 
     def start(self,side,mode,uuid,seed=False):
         self.budget();require(side in ('source','target') and mode in ('true','invalid','','false'),'fixed boot matrix')
@@ -201,6 +251,8 @@ class ApplicationSlot:
                 and re.fullmatch(r'activityId=[0-9]+&commandId=[A-Za-z0-9:_-]{1,80}',path.split('?',1)[1]))),'fixed same-app HTTP paths only')
         method=method or ('POST' if payload is not None else 'GET')
         require(method in ('GET','POST','PUT'),'fixed HTTP methods')
+        route=base if base in PATHS else '/business/cashwithdraw/:originalId'
+        self.last_http={'route':route,'method':method,'result':'ATTEMPTED'}
         text='url = "http://127.0.0.1:8080'+path+'"\nrequest = "'+method+'"\n'
         if token:text+='header = "Authorization: Bearer '+token+'"\n'
         if payload is not None:
@@ -209,7 +261,20 @@ class ApplicationSlot:
             text+='data = '+json.dumps(data)+'\n'
         raw=self.auth.command(self.auth.DOCKER+['exec','-i',self.cid,'curl','--noproxy','*','--silent','--show-error',
                 '--max-time','45','--write-out','\n%{http_code}','--config','-'],text.encode(),timeout=50).decode()
-        body,status=raw.rsplit('\n',1);return int(status),json.loads(body)
+        try:
+            body,status=raw.rsplit('\n',1);status=int(status)
+        except ValueError as failure:
+            failure.restore_reason_code='HTTP_STATUS_MALFORMED';raise
+        self.last_http.update(status=status,result='STATUS_RECEIVED')
+        try:value=json.loads(body)
+        except ValueError as failure:
+            failure.restore_reason_code='HTTP_RESPONSE_NOT_JSON';raise
+        if not isinstance(value,dict):
+            failure=ValueError('HTTP response must be an object')
+            failure.restore_reason_code='HTTP_RESPONSE_NOT_OBJECT';raise failure
+        self.last_http['result']='JSON_OBJECT_RECEIVED'
+        if type(value.get('code')) is int:self.last_http['businessCode']=value['code']
+        return status,value
 
     def login_admin(self):
         status,value=self.http('/captchaImage')

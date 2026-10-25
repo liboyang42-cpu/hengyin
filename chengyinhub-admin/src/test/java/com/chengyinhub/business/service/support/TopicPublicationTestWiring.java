@@ -196,8 +196,12 @@ public final class TopicPublicationTestWiring {
             references = new TopicStateKeyRefService(nodes, templates, chapters);
             set(facade, "topicStateKeyRefService", references);
         }
-        if (references instanceof TopicStateKeyRefService && !plainMock(references))
+        if (references instanceof TopicStateKeyRefService && !plainMock(references)) {
             ReflectionTestUtils.setField(references, "cmsTopicMapper", topics);
+            ReflectionTestUtils.setField(references, "cmsTopicChapterMapper", chapters);
+            ReflectionTestUtils.setField(references, "cmsTopicNodeMapper", nodes);
+            ReflectionTestUtils.setField(references, "cmsMemberTemplateMapper", templates);
+        }
         Object runtime = get(facade, "topicRouteRuntimeService");
         if (runtime == null || (plainMock(runtime) && Mockito.mockingDetails(runtime).getStubbings().isEmpty())) {
             TopicRouteRuntimeServiceImpl actual = new TopicRouteRuntimeServiceImpl(null, topics, nodes, null,
@@ -207,6 +211,18 @@ public final class TopicPublicationTestWiring {
             ReflectionTestUtils.setField(actual, "themeStateKeyMapper", keys);
             ReflectionTestUtils.setField(actual, "cmsTopicChapterMapper", chapters);
             set(facade, "topicRouteRuntimeService", actual);
+            runtime = actual;
+        }
+        if (runtime instanceof TopicRouteRuntimeServiceImpl && !plainMock(runtime)) {
+            // Fixtures may replace a real key service or leaf mapper after their first wire.
+            // Keep the existing real runtime (and its other ports), but use one current-content
+            // group for publication, reference collection and compilation at the final wire.
+            Object actual = AopTestUtils.getUltimateTargetObject(runtime);
+            ReflectionTestUtils.setField(actual, "topicMapper", topics);
+            ReflectionTestUtils.setField(actual, "nodeMapper", nodes);
+            ReflectionTestUtils.setField(actual, "templateMapper", templates);
+            ReflectionTestUtils.setField(actual, "themeStateKeyMapper", keys);
+            ReflectionTestUtils.setField(actual, "cmsTopicChapterMapper", chapters);
         }
     }
 

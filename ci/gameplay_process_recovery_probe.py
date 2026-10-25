@@ -253,13 +253,17 @@ def observe_core_workload(identities, http, rows, run_curve, stop, evidence=None
                 else:
                     require(result.get('code') == 200 and result.get('data') == {field: frozen[field]
                             for field in ('commandId', 'expectedChapterId', 'targetChapterId')}, 'workload did not return original business result')
-                observation = {'category': 'accepted' if kind != 'foreign' else 'authorized-rejection',
+                # F's fixed category protocol; success remains provisional until the SQL checks below.
+                observation = {'category': 'SUCCESS' if kind != 'foreign' else 'LEGAL_AUTH_REJECTION',
                                'elapsedSeconds': time.monotonic() - started, 'kind': kind, 'fixtureKey': key}
                 with lock:
                     observations.append(observation)
                 return observation
             except BaseException as failure:
-                observation = {'category': 'UNKNOWN_OR_CONTRACT_FAILURE', 'elapsedSeconds': time.monotonic() - started,
+                observation = {'category': 'UNKNOWN', 'elapsedSeconds': time.monotonic() - started,
+                               'reasonCode': 'GAMEPLAY_OBSERVATION_UNVERIFIED',
+                               'stage': {'command': 'COMMAND', 'replay': 'REPLAY', 'receipt': 'RECEIPT',
+                                         'foreign': 'FOREIGN'}.get(kind, 'UNDECLARED_STAGE'),
                                'kind': kind, 'fixtureKey': key}
                 with lock:
                     failures.append(type(failure).__name__)

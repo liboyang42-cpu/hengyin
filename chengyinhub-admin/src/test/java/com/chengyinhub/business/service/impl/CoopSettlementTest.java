@@ -57,6 +57,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.inOrder;
@@ -849,6 +850,28 @@ class CoopSettlementTest {
         verify(coopInviteService).requestTopicDepositRefunds(717L);
         verify(coopInviteMapper, never()).updateDepositIfCurrent(eq(99L), any(), any(), eq(5), any());
         verify(coopInviteMapper, never()).updateDepositIfCurrent(eq(99L), any(), any(), eq(3), any());
+    }
+
+    @Test
+    void settleCoopTopic_closeReadbackSuccessWithoutReferenceKeepsPendingAndNeverSetsOff() throws Exception {
+        SetoffFixture fixture = new SetoffFixture(717L, order(1L, 900002L, 1, "50", null));
+        CoopInvite paying = unpaidInvite(fixture, 99L, 1, "50.00");
+        closedOriginalAttempt(paying, true, "SUCCESS");
+        Map<String, String> success = depositObservation("DEP99T100", "WXP-deposit-99", "SUCCESS");
+        success.put("currency", "CNY"); success.put("total", "5000"); success.put("transaction_id", "WX-DEPOSIT-99");
+        when(wechatPayService.queryOrderStatus("WXP-deposit-99")).thenAnswer(call -> {
+            assertTrue(!TransactionSynchronizationManager.isActualTransactionActive()); return success;
+        });
+        IllegalStateException rejected = assertThrows(IllegalStateException.class, () -> svc.executeTopicSettlement());
+        assertTrue(rejected.getMessage().contains("保证金原支付事实引用缺失"));
+        assertEquals(Integer.valueOf(1), paying.getDepositStatus());
+        assertEquals(0, new BigDecimal("50.00").compareTo(paying.getDepositAmount()));
+        assertTrue(fixture.heads.isEmpty()); assertTrue(fixture.claimsByKey.isEmpty());
+        assertTrue(fixture.details.isEmpty()); assertTrue(fixture.adjustments.isEmpty());
+        verify(coopInviteService, never()).markDepositPaid(anyString(), any(), any(), any(WechatVerifiedPaymentFact.Reference.class));
+        verify(coopInviteService, never()).requestTopicDepositRefunds(any());
+        verify(coopInviteMapper, never()).updateDepositIfCurrent(eq(99L), any(), any(), any(), any());
+        verify(coopSettlementMapper, never()).insertCoopSettlement(any());
     }
 
     @Test

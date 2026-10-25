@@ -25,8 +25,20 @@ COHORTS = ('payment-gap', 'withdrawal-complete', 'withdrawal-gap', 'refund-compl
            'refund-gap', 'voice-complete', 'voice-gap')
 
 
-def require(value, reason):
+class OwnerGuardFailure(ValueError):
+    def __init__(self, code):
+        self.guard_code = code
+        super().__init__('Owned resource predicate failed')
+
+
+class InspectAbsenceUnproven(RuntimeError):
+    guard_code = 'INSPECT_ABSENCE_UNPROVEN'
+
+
+def require(value, reason, guard_code=None):
     if not value:
+        if guard_code is not None:
+            raise OwnerGuardFailure(guard_code)
         raise ValueError(reason)
 
 
@@ -89,26 +101,35 @@ def classpath(root, dependencies):
 def inspect(kind, identity):
     result = subprocess.run(DOCKER + [kind, 'inspect', identity], capture_output=True, timeout=20)
     if result.returncode:
-        original_helpers().require_absent(kind, identity, result.returncode, result.stderr)
+        try:
+            original_helpers().require_absent(kind, identity, result.returncode, result.stderr)
+        except RuntimeError:
+            raise InspectAbsenceUnproven('Owned resource absence remains unproven') from None
         return None
-    rows = json.loads(result.stdout)
-    require(len(rows) == 1, 'ambiguous resource identity')
+    try:
+        rows = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        raise OwnerGuardFailure('INSPECT_JSON_INVALID') from None
+    require(len(rows) == 1, 'ambiguous resource identity', 'INSPECT_IDENTITY_COUNT')
     return rows[0]
 
 
 def owned_object(kind, row, scope, side=None):
     name = 'cy-restore-' + scope
-    require(re.fullmatch('[a-f0-9]{32}', scope), 'wrong scope')
-    require(re.fullmatch('[a-f0-9]{64}', row['Id']), 'full resource ID required')
+    require(re.fullmatch('[a-f0-9]{32}', scope), 'wrong scope', 'OWNER_SCOPE_INVALID')
+    require(re.fullmatch('[a-f0-9]{64}', row['Id']), 'full resource ID required', 'OWNER_FULL_ID_INVALID')
     if kind == 'container':
         require(side in ('source', 'target') and row['Name'] == '/' + name + '-' + side,
-                'foreign container name')
-        require(row['Config'].get('Labels', {}).get('chengyin.restore-business') == scope
-                and row['Config']['Image'] == IMAGE, 'foreign container provenance')
-        require(set(row['NetworkSettings']['Networks']) <= {name}, 'foreign container network')
+                'foreign container name', 'OWNER_CONTAINER_NAME')
+        require(row['Config'].get('Labels', {}).get('chengyin.restore-business') == scope,
+                'foreign container label', 'OWNER_CONTAINER_LABEL')
+        require(row['Config']['Image'] == IMAGE, 'foreign container image', 'OWNER_CONTAINER_IMAGE')
+        require(set(row['NetworkSettings']['Networks']) <= {name}, 'foreign container network', 'OWNER_CONTAINER_NETWORK')
     else:
-        require(kind == 'network' and row['Name'] == name and row['Internal'] is True
-                and row.get('Labels', {}).get('chengyin.restore-business') == scope, 'foreign network')
+        require(kind == 'network' and row['Name'] == name, 'foreign network name', 'OWNER_NETWORK_NAME')
+        require(row['Internal'] is True, 'foreign network mode', 'OWNER_NETWORK_NOT_INTERNAL')
+        require(row.get('Labels', {}).get('chengyin.restore-business') == scope,
+                'foreign network label', 'OWNER_NETWORK_LABEL')
 
 
 def command_operation(args):
@@ -155,6 +176,7 @@ class Host:
         self.created = {}
         self.resources = private / 'resources.json'
         self.stage = 'preparation'
+        self.substage = None
         self.first_failure = None
 
     def remember_failure(self, failure_type, operation='OWNER', returncode=None, stderr=None, error=None):
@@ -163,7 +185,9 @@ class Host:
         if isinstance(stderr, str):
             stderr = stderr.encode('utf-8')
         reason, excerpt = safe_command_reason(operation, stderr)
-        self.first_failure = {'stage': self.stage, 'failureType': failure_type, 'operation': operation,
+        self.first_failure = {'stage': self.stage, 'substage': self.substage,
+                              'guardCode': error.guard_code if isinstance(error, (OwnerGuardFailure, InspectAbsenceUnproven)) else None,
+                              'failureType': failure_type, 'operation': operation,
                               'returnCode': returncode, 'reasonCode': reason, 'safeReasonExcerpt': excerpt,
                               'stderrCaptured': stderr is not None,
                               'stderrBytes': len(stderr) if stderr is not None else None,
@@ -187,10 +211,13 @@ class Host:
 
     def provision(self):
         self.stage = 'image'
+        self.substage = 'image-pull'
         self.command(DOCKER + ['pull', IMAGE])
         self.stage = 'network'
-        require(inspect('network', self.name) is None, 'network already exists')
+        self.substage = 'network-absence'
+        require(inspect('network', self.name) is None, 'network already exists', 'NETWORK_ALREADY_EXISTS')
         self.created['network'] = None
+        self.substage = 'network-create'
         network_id = self.command(DOCKER + ['network', 'create', '--internal', '--label',
                                               'chengyin.restore-business=' + self.scope, self.name])
         self.created['network'] = network_id
@@ -200,10 +227,13 @@ class Host:
         for side in ('source', 'target'):
             self.stage = side + '-create'
             name = self.name + '-' + side
-            require(inspect('container', name) is None, 'container already exists')
+            self.substage = 'container-absence'
+            require(inspect('container', name) is None, 'container already exists', 'CONTAINER_ALREADY_EXISTS')
+            self.substage = 'container-environment'
             password = secrets.token_urlsafe(24)
             env = dict(os.environ, MYSQL_ROOT_PASSWORD=password)
             self.created[side] = None
+            self.substage = 'container-create'
             cid = self.command(DOCKER + ['create', '--name', name,
                 '--cidfile', str(self.private / (side + '.cid')),
                 '--label', 'chengyin.restore-business=' + self.scope, '--network', self.name,
@@ -211,18 +241,29 @@ class Host:
                 '--tmpfs', '/var/lib/mysql:rw,size=768m', '-p', '127.0.0.1::3306',
                 '-e', 'MYSQL_ROOT_PASSWORD', '-e', 'MYSQL_ROOT_HOST=%', IMAGE,
                 '--skip-log-bin', '--performance-schema=OFF', '--event-scheduler=OFF'], env=env)
-            require(re.fullmatch('[0-9a-f]{64}', cid), 'missing full CID')
+            self.substage = 'container-cid'
+            require(re.fullmatch('[0-9a-f]{64}', cid), 'missing full CID', 'CREATED_CID_INVALID')
             self.created[side] = cid
+            self.substage = 'container-start'
             self.command(DOCKER + ['start', cid])
+            self.substage = 'container-inspect'
             row = inspect('container', cid)
+            self.substage = 'container-ownership'
             owned_object('container', row, self.scope, side)
+            self.substage = 'loopback-binding'
             binding = row['NetworkSettings']['Ports'].get('3306/tcp')
-            require(binding and len(binding) == 1 and binding[0]['HostIp'] == '127.0.0.1', 'loopback port required')
+            require(binding, 'loopback port required', 'BINDING_MISSING')
+            require(len(binding) == 1, 'one loopback binding required', 'BINDING_COUNT')
+            require(binding[0]['HostIp'] == '127.0.0.1', 'loopback port required', 'BINDING_NOT_LOOPBACK')
+            self.substage = 'loopback-port-parse'
             port = int(binding[0]['HostPort'])
-            require(1024 < port < 65536, 'invalid owned port')
+            self.substage = 'loopback-port-range'
+            require(1024 < port < 65536, 'invalid owned port', 'BINDING_PORT_RANGE')
+            self.substage = 'client-config-write'
             defaults = self.private / (side + '.cnf')
             write_private(defaults, '[client]\nhost=127.0.0.1\nport=%d\nuser=root\npassword=%s\nprotocol=tcp\n' % (port, password))
             self.stage = side + '-ready'
+            self.substage = 'mysql-readiness'
             deadline = time.monotonic() + 65
             identity = None
             while time.monotonic() < deadline:
@@ -337,6 +378,7 @@ def main():
         write_private(private / 'test-classpath.txt', classpath(ROOT, dependencies))
         host.provision()
         host.stage = 'probe'
+        host.substage = 'fixed-probe'
         code = host.run_probe()
     except BaseException as failure:
         host.remember_failure('HOST_EXCEPTION_UNKNOWN', error=failure)

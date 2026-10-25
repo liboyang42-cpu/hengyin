@@ -1,4 +1,27 @@
+<!-- e822-complete-source-before-freeze -->
+本轮8个原owner必要源码／调用者／装配／配套控制全部交齐并root精确集成，进入单一新候选冻结。C0e159c69最后补真实member读取所需原app_open_id迁移和安全恢复诊断；原150秒预算／poison／正向通知／真实provider隔离不减。B仅固定OWNER guard/substage诊断，原失败predicate仍UNKNOWN；完整恢复ValueError也仍需真实运行定位，不能把诊断源码当已修通过。
+
+统一源码核对：76类921普通@Test、sourceprecheck0问题；变化18份Java测试174原方法身份全部保留，当前177方法。187纯Python控制首次185PASS／1登记算术FAIL／1沙箱loopback绑定ERROR；root纠正自身误加资金闭环预期275（实际原274未变），只重查这两项2PASS，未重跑185已过控制，不冒称一次187全绿。原G11→12仅deposit-attempt及integrated批次+1。Java／数据库／新CI尚未复验。
+
+最终影响计划仅原backend job、失败DepositAttempt12／CrossDomain1＋真实被共享夹具改变GameplayReskin1共3类14项；mixed／完整restore／固定payment-gap诊断各原入口。其余17真库绿色和小程序／旧HTTP等未受影响项目不重复。先后台共同编译准入，再并行其余实际影响组。全部新证据必须绑定新source，整体all_complete=false。
+
+<!-- e822-source-integration-progress -->
+A、D、G、H四个完整SOURCE包已root按原preimage及作者逐文件SHA精确装配（A cf895bee、D8cce208、Gd38c3ac、Hbf48f751），不是只收到commentary。A修真实可见投影三态fixture；D统一原publication端口/事务/当前主题及章节归属；H沿真实声明writer分主题保存独立ID并修原copy设桩递归；G按原typed持久SUCCESS证明分流，缺proof负控保留，有精确proof即时按原paid路径处理，不新增强制人工retry。原支付重放保存原pending观察，锁内核当前已付终态。G真库11→12、联合76类921仅SOURCE声明，未运行。
+
+当前待B/C/E/F完整包；不因等待开中途CI。H供审patch两行literal空context尾空白仅无损base64包装，原decodedhash30b23d45及四Java后像保留，不改代码。下一影响计划草稿仅后台原job、失败2真库类＋确被H/D共享夹具改变的GameplayReskin1类，以及原mixed/fullrestore/单组诊断；其余17已过真库类不无收益重跑，最终仍按实际新source调用图复核。源码未齐／新候选未冻结／复验NOT_RUN，all_complete=false。
+
+<!-- e822-latest-original-readback -->
+e822五路实际验收已结束，后台已编译执行15,392例：15failure／25error／647skip，40项结果分布13类，不是40个独立BUG。root已核原XML／1894摘要／原case身份；原A/D/E/G/H按明确不重叠owner收完整SOURCE包。A已交cf895bee(parente822)仅正确可见视图三态测试及文档，尚未root装配或执行。
+
+真库40228802075原20类284项已逐原ZIP CRC／XML hash／e822源码方法／workflow／原case／回执／独立精确cleanup核对：18类272项全PASS零failure/error/skip/duplicate；2类失败为DepositAttempt paid replay身份缺失和CrossDomain第57行正向进展，20类均精确CLEAN。18类不因另两类失败重复整批；不能把272与旧708直接相加或宣称920同SHA全部通过。
+
+mixed原首因是capacity distribution拒绝未知observation category，F接实际producer/consumer协议包；fullrestore实际SOURCE_WORKLOAD ValueError，startAttempted但0完整boot，原日志无具体message，C补最小安全定位并修真实原因；固定payment-gap是source-create OWNER ValueError，无subprocess stderr/exit，不再误称Docker已证实拒绝，B补原strictguard定位。三路均失败不验收，已核资源精确移除也不能代替业务通过。
+
+当前8原owner均为已有实际失败目的包，不新agent／新审计；已齐代码、调用者、装配、测试源码再root统一集成扫描冻结并验实际影响范围，不逐补丁回归。完整WP/Q/A/T/G与多身份、全业务终止恢复回退、固定预算混合容量仍未全部验，all_complete=false；UI/设备/真钱provider/生产未验。
+
 <!-- 347b-current-runtime-and-source-status -->
+最新仅后台准入：e82229ef85e58159078a42956560356074192541（parent88c），唯一代码增量为Mockito.verify原静态导入，已扫描推送。后台40228119362仅dispatch1次，APIhead=e822/attempt1，尚无新通过结论；先等实际编译通过，再一次跑完整影响20类及mixed/fullrestore/固定单cohort，避免再次同时复制编译前置。源码／原断言／生产／CI／DDL不再改动，其他项目没有重跑，all_complete=false。
+
 88c两条准入已结束于同一测试编译首因：CoopSettlementPerMerchantTest原负断言还缺Mockito.verify导入。原7条诊断已消失，此为解析never后暴露的外层verify符号；业务admin／Station13仍未执行，非业务失败。root已补该唯一导入并核原4份相关文件编辑器语义错误为0（非编译通过）；不改原case/assert/生产/CI/DDL。原88c Station制品12611671687 CRC／源／0case／独立精确CLEAN已核。下一新候选先只后台编译准入，再并行完整影响20类及原故障恢复入口，避免再复制同一未通过编译。all_complete=false。
 
 最新准入候选为88cbb6cd4230a4834435ffc4075224b21dba3da2，parenta66；仅一次补齐实际7条testCompile诊断的4份测试源码，原case/assert/生产/CI/schema未改，扫描后已push。已各dispatch一次同源复验：backend40227580178、Station13准入40227585631，API source均88c/attempt1，当前inProgress无新XML通过结论。a66两条原失败与清理证据保留，不转签；其余19类/mixed/fullrestore/单cohort尚未派发。整体all_complete=false。

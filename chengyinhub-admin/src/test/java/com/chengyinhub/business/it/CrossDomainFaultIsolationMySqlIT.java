@@ -54,7 +54,9 @@ class CrossDomainFaultIsolationMySqlIT {
                 transport.beginFault();
                 storage.poisonId = storage.broadcast("subscribe"); storage.healthyId = storage.broadcast("inapp");
                 poisonedDispatch = delivery.submit(storage.notifications::runDueScheduled);
-                assertTrue(storage.poisonEntered.await(5, TimeUnit.SECONDS));
+                boolean poisonObserved = storage.poisonEntered.await(5, TimeUnit.SECONDS);
+                assertTrue(poisonObserved, poisonObserved ? "real subscribe poison entered"
+                        : storage.notificationProgressDiagnostic(poisonedDispatch));
                 long poisonReceipt = storage.db.queryForObject("SELECT id FROM official_broadcast_log WHERE broadcast_id=? AND channel='subscribe'", Long.class, storage.poisonId);
                 assertEquals("UNKNOWN", storage.db.queryForObject("SELECT delivery_state FROM official_broadcast_log WHERE id=?", String.class, poisonReceipt));
                 assertEquals(2, storage.db.queryForObject("SELECT COUNT(*) FROM official_broadcast WHERE status=1", Integer.class), "backlog remains visible under original broadcast identities");

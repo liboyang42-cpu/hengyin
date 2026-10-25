@@ -161,20 +161,27 @@ class TopicPublicationDiagnosticsTest {
     @Test void foreignJourneyChapterKeepsServiceExceptionAndExistingReferenceExplanation() {
         topic.setJourneyStoryJson("{\"schemaVersion\":1,\"openingChapterId\":999}");
         ServiceException error = assertThrows(ServiceException.class, () -> facade.publishApprovedRouteSnapshot(TOPIC));
-        assertTrue(error.getMessage().contains("剧情配置引用无效")); assertTrue(error.getMessage().contains("openingChapterId"));
+        assertTrue(error.getMessage().contains("剧情配置引用无效"), error.getMessage());
+        assertTrue(error.getMessage().contains("openingChapterId"), error.getMessage());
+        assertInstanceOf(IllegalArgumentException.class, error.getCause());
+        assertTrue(error.getCause().getMessage().contains("chapterId=999"), error.getMessage());
         location(error, "journeyStoryJson"); noPublicationEffects();
     }
     @Test void nestedSceneReferenceKeepsTheActualSceneIndexInsteadOfPretendingTopLevelStory() {
         topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"currentScene\":\"summer\",\"scenes\":[{\"id\":\"summer\",\"name\":\"夏天\","
                 + "\"journeyStory\":{\"schemaVersion\":1,\"openingChapterId\":999}}]}");
         ServiceException error = assertThrows(ServiceException.class, () -> facade.publishApprovedRouteSnapshot(TOPIC));
-        assertTrue(error.getMessage().contains("openingChapterId"));
+        assertTrue(error.getMessage().contains("openingChapterId"), error.getMessage());
+        assertInstanceOf(IllegalArgumentException.class, error.getCause());
+        assertTrue(error.getCause().getMessage().contains("chapterId=999"), error.getMessage());
         location(error, "themeRuntimeConfigJson.scenes[0].journeyStory"); noPublicationEffects();
     }
     @Test void foreignCompletedNodeReportsTheOriginalTemplateAndRetainsScopeRejection() {
         template(2, 200, "{\"schemaVersion\":1,\"requires\":[{\"op\":\"NODE_COMPLETED\",\"nodeId\":999}]}");
         ServiceException error = assertThrows(ServiceException.class, () -> facade.publishApprovedRouteSnapshot(TOPIC));
-        assertTrue(error.getMessage().contains("NODE_COMPLETED")); assertTrue(error.getMessage().contains("nodeId=999"));
+        assertTrue(error.getMessage().contains("NODE_COMPLETED"), error.getMessage());
+        assertEquals("主题发布失败:块配置的 NODE_COMPLETED 引用无效 → [节点:同名地点 — NODE_COMPLETED 引用的节点不属于本主题:nodeId=[999]"
+                + " [topicId=7, path=nodes[nodeId=2].template[templateId=200].advancedConfigJson]]", error.getMessage());
         location(error, "nodes[nodeId=2].template[templateId=200].advancedConfigJson"); noPublicationEffects();
     }
     @Test void malformedTemplateCaughtByTheEarlierStateKeyCollectorStillHasNodeLocation() {

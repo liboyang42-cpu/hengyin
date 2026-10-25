@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-25T12:46:19.264683+00:00",
+  "updated_utc": "2026-10-25T20:38:46.141811+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -4600,5 +4600,295 @@
     },
     "new_fix": "One missing existing Mockito.verify import in same original negative assertion; no case/assertion/behavior change.",
     "focused_editor_semantics": "Four original compilation-failure files: existing Java LSP error diagnostics empty after source fix; not a Maven compile/test pass."
+  },
+  "final_concentrated_acceptance_e822": {
+    "state": "ALL8_COMPLETE_SOURCE_PACKAGES_ASSEMBLED_UNIFIED_SOURCE_CONTROLS_DONE_PREPARING_ISOLATED_FREEZE",
+    "source": "e82229ef85e58159078a42956560356074192541",
+    "tree": "ed211d0215b206a682697d9470307c0fb0181d53",
+    "parent": "88cbb6cd4230a4834435ffc4075224b21dba3da2",
+    "branch": "codex/architecture-day-runtime-repairs-347b-20261025",
+    "runs": {
+      "standard_backend_selected": 40228119362,
+      "storage_impacted20": 40228802075,
+      "mixed": 40228818909,
+      "restore_http": 40228826843,
+      "cohort_payment_gap_diagnostic": 40228832838
+    },
+    "attempt": 1,
+    "only_code_delta": "Existing Mockito.verify static import; original negative assertion/cases unchanged",
+    "focused_LSP_files": 4,
+    "focused_LSP_errors": 0,
+    "LSP_not_runtime_or_compile_acceptance": true,
+    "other_runtime_modes_dispatched": true,
+    "next": "C full restore precise SOURCE_WORKLOAD diagnostics and CrossDomain actual positive failure complete source first, then single candidate impact checks/scan/freeze; backend common compile first, other actual impacted runtime groups parallel after compile admission. Do not rerun green unaffected.",
+    "all_complete": false,
+    "last_observed_backend_job": {
+      "id": 121273974170,
+      "state": "failure",
+      "actual_admin_tests": 15392,
+      "failures": 15,
+      "errors": 25,
+      "skipped": 647
+    },
+    "last_observed_admission_job": {
+      "id": 121273824960,
+      "state": "success"
+    },
+    "last_observed_secret_job": {
+      "id": 121273825112,
+      "state": "success"
+    },
+    "storage_impact_source_plan": {
+      "classes": 20,
+      "ordinary_source_declarations": 284,
+      "state": "EXECUTED_ORIGINAL_XML_READBACK_COMPLETE",
+      "path": "/private/tmp/hengyin-e822-storage-plan-source.json"
+    },
+    "all_run_head_sha_and_attempt_verified": {
+      "source": "e82229ef85e58159078a42956560356074192541",
+      "attempt": 1,
+      "all": true
+    },
+    "test_compile_proof": {
+      "job": 121273974170,
+      "log_bytes": 26726157,
+      "log_sha256": "b53f0b76f7d8540c66cc77a083c3b30ad6105172414ba690153a9dbf182522b6",
+      "running_JUnit_class_lines": 1903,
+      "compilation_error_present": false,
+      "not_suite_acceptance": true
+    },
+    "backend_log_results": {
+      "admin_tests": 15392,
+      "failures": 15,
+      "errors": 25,
+      "skipped": 647,
+      "original_XML_readback": "VERIFIED_ARTIFACT12612221509",
+      "state": "FAIL_ACTUAL_TESTS_NOT_COMPILE_FAILURE"
+    },
+    "not_dispatched_yet": [
+      "full-seven cohort acceptance after fixed single-cohort diagnostic evidence"
+    ],
+    "backend_original_xml_readback": {
+      "artifact": 12612221509,
+      "zip_sha256": "afa3757b0e93fed2012397c322894d8bce5ad4055903c4c9aefbf81c7b381afc",
+      "identity_hashes": 1894,
+      "totals": {
+        "tests": 15392,
+        "skipped": 647,
+        "failures": 15,
+        "errors": 25
+      },
+      "failed_classes": 13,
+      "duplicate_case_ids": 0,
+      "admin_suite_accepted": false
+    },
+    "runtime_failure_purpose_packages": "docs/delivery/architecture-day/COORDINATOR/e822-runtime-failure-purpose-packages.json",
+    "runtime_source_owners_assigned": {
+      "D": [
+        "CmsTopicPublishNarrativeNpcGuardTest",
+        "CmsTopicPublishStateKeyGuardTest",
+        "CmsTopicRoutePublishPolicyTest",
+        "TopicDraftSubmittedOrderTest"
+      ],
+      "E": [
+        "TopicPublicationDeclarationsTest",
+        "TopicPublicationDiagnosticsTest",
+        "TopicSaleReviewDecouplingTest"
+      ],
+      "H": [
+        "GameplayDraftCopyTest",
+        "GameplayReskinRuntimeServiceTest",
+        "GameplaySupportMatrixRuntimeTest"
+      ],
+      "G": [
+        "CoopDepositPaymentSettlementTest",
+        "CoopSettlementTest"
+      ],
+      "A": [
+        "ApiCoopControllerInviteAuthzTest"
+      ],
+      "B": [
+        "restore_business_reconciliation_host.py OWNER ValueError"
+      ],
+      "C": [
+        "restore HTTP SOURCE_WORKLOAD ValueError",
+        "CrossDomainFaultIsolationMySqlIT actual line57"
+      ],
+      "F": [
+        "gameplay_process_recovery_probe/capacity_mixed_probe category contract"
+      ]
+    },
+    "last_updated_utc": "2026-10-25T20:25:31.934727+00:00",
+    "storage20_original_readback": {
+      "run": 40228802075,
+      "attempt": 1,
+      "selected_classes": 20,
+      "selected_cases": 284,
+      "accepted_classes": 18,
+      "accepted_cases": 272,
+      "original_ZIP_XML_hash_source_case_cleanup_all_verified": true,
+      "failed_classes": [
+        "CoopDepositSettlementAttemptMySqlIT",
+        "CrossDomainFaultIsolationMySqlIT"
+      ],
+      "all_class_cleanup": "CLEAN",
+      "matrix_verdict": "FAIL",
+      "readback": "e822-storage20-readback.json"
+    },
+    "runtime_actual_failures": {
+      "mixed": {
+        "run": 40228818909,
+        "stage": "capacity_mixed_probe.distribution",
+        "type": "RuntimeError",
+        "reason": "unknown observation category",
+        "owner": "F",
+        "resource_cleanup": "CONFIRMED_EXACT_OWNED_REMOVAL"
+      },
+      "restore_http": {
+        "run": 40228826843,
+        "stage": "SOURCE_WORKLOAD",
+        "type": "ValueError",
+        "actual_message_not_exposed": true,
+        "applicationStartAttempted": true,
+        "completeBoots": 0,
+        "owner": "C",
+        "not_accepted": true
+      },
+      "payment_gap_diagnostic": {
+        "run": 40228832838,
+        "stage": "source-create",
+        "operation": "OWNER",
+        "type": "ValueError",
+        "reason": "UNKNOWN",
+        "stderrCaptured": false,
+        "owner": "B",
+        "not_proven_subprocess_or_Docker_rejection": true,
+        "cleanup": "EXACT_ABSENCE"
+      }
+    },
+    "runtime_all_five_ended": true,
+    "first_new_delivery": {
+      "owner": "A",
+      "commit": "cf895bee13d3e2ded7658b4ab7aaefa31cc5e2c8",
+      "parent": "e82229ef85e58159078a42956560356074192541",
+      "state": "PUBLIC_SOURCE_DELIVERED_NOT_YET_ROOT_APPLIED_NOT_RUN"
+    },
+    "new_SOURCE_deliveries_applied": [
+      {
+        "owner": "A",
+        "commit": "cf895bee13d3e2ded7658b4ab7aaefa31cc5e2c8",
+        "parent": "e82229ef85e58159078a42956560356074192541",
+        "patch_bytes": 17992,
+        "patch_sha256": "06501b4e2ec49465c6591aece1619b6e9f0128d31a3a5ae4e9e6e6ea89dd6094",
+        "author_postimages_verified": true,
+        "applied": true,
+        "verification": "NOT_RUN"
+      },
+      {
+        "owner": "G",
+        "commit": "d38c3acea21ff76021a4dd60bf8fe260d109d264",
+        "parent": "e82229ef85e58159078a42956560356074192541",
+        "patch_bytes": 21428,
+        "patch_sha256": "36a240053f7b768fc28e81aeae319db3aabbd83a5acfdd8e2c36c022a2018919",
+        "author_postimages_verified": true,
+        "applied": true,
+        "verification": "NOT_RUN"
+      },
+      {
+        "owner": "D",
+        "commit": "8cce208e609594596245c89ecc3130a8b4c2aa52",
+        "parent": "e82229ef85e58159078a42956560356074192541",
+        "patch_bytes": 31533,
+        "patch_sha256": "142613e536d0472797005a6c7d2548575a75b4490f0a50ff5191b21d0e5d255d",
+        "author_postimages_verified": true,
+        "applied": true,
+        "verification": "NOT_RUN"
+      },
+      {
+        "owner": "H",
+        "commit": "bf48f75110ae0b393d482ade65b89a20914aff90",
+        "parent": "e82229ef85e58159078a42956560356074192541",
+        "patch_bytes": 52386,
+        "patch_sha256": "82c81e9aefa23199997aafdd64a7581097d7b65e59bd921edd63aeee96dda10e",
+        "author_postimages_verified": true,
+        "applied": true,
+        "verification": "NOT_RUN"
+      },
+      {
+        "owner": "E",
+        "commit": "978153e6169d454c8cd9cd0d3d5d673529f33d70",
+        "parent": "e82229ef85e58159078a42956560356074192541",
+        "postimages_exact": true,
+        "applied": true,
+        "patch_sha256": "af6325a4e8bd035ebb7964fb70b906832847c68c11d989e808192c72aea01bbc",
+        "code_patch_sha256": "b8c8cd1fc6dea5712e4d45e0df9006f8e9d346f826dabd288e947fdbe21784fc",
+        "verification": "NOT_RUN"
+      },
+      {
+        "owner": "F",
+        "commit": "23d94d1bd43e8a2feeb19a84f167b5bb6f049ab1",
+        "parent": "e82229ef85e58159078a42956560356074192541",
+        "postimages_exact": true,
+        "applied": true,
+        "patch_sha256": "8ced19fabcaf6689f572ed098edfacc18207bbe22335d2ae9a63b64f1b8903d8",
+        "verification": "NOT_RUN"
+      },
+      {
+        "owner": "B",
+        "parent": "e82229ef85e58159078a42956560356074192541",
+        "patch_bytes": 21516,
+        "patch_sha256": "7df7f6c551b9f9c72f94a769e1b7f211fe9fd63702e5740c9262d8b35022639e",
+        "author_hashes_exact": true,
+        "applied": true,
+        "verification": "NOT_RUN",
+        "actual_original_owner_predicate_still_unknown": true
+      },
+      {
+        "owner": "C",
+        "commit": "0e159c69e942cfb718df14c409509a00b2ac0002",
+        "parent": "e82229ef85e58159078a42956560356074192541",
+        "patch_sha256": "a54632dc8df1bfd35f9b6762aacefad7f95d26d7a33cc957e9e6995efc80163f",
+        "postimages_exact": true,
+        "applied": true,
+        "verification": "NOT_RUN"
+      }
+    ],
+    "remaining_SOURCE_owners": [],
+    "new_SOURCE_inventory_not_execution": {
+      "registered_storage_classes": 76,
+      "ordinary_source_declarations": 921,
+      "deposit_attempt": 12,
+      "funds_closure": 274,
+      "precheck_problems": 0,
+      "original_test_methods_retained": 174,
+      "current_test_methods": 177,
+      "removed_test_methods": 0
+    },
+    "raw_review_patch_transport": {
+      "owner": "H",
+      "decoded_sha256": "30b23d452c926c9ae6f0303d792c2d0a07fdebfb544d39f5d94a929e3dc1b96e",
+      "reason": "Two literal patch blank-context lines have trailing whitespace; lossless base64 transport only. All four Java postimages unchanged."
+    },
+    "composed_python_controls": {
+      "first_run": {
+        "tests": 187,
+        "passed": 185,
+        "failures": 1,
+        "errors": 1,
+        "reason": [
+          "root expected funds total guessed275 but actual unchanged274; corrected to original274",
+          "sandbox loopback bind PermissionError, not DB or product failure"
+        ]
+      },
+      "failed_two_only_recheck": {
+        "tests": 2,
+        "passed": 2,
+        "failures": 0,
+        "errors": 0,
+        "permitted_loopback_fixture": true
+      },
+      "not_claimed_single_run187_green": true,
+      "Java_DB_CI_recheck": "NOT_RUN"
+    }
   }
 }
