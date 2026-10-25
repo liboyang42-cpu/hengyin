@@ -1215,6 +1215,13 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             if (readback == null || !observed.getDepositOutTradeNo().equals(readback.get("out_trade_no"))
                     || !attempt.equals(readback.get("wx_out_trade_no")))
                 throw new IllegalStateException("保证金关单回读归属不匹配 inviteId=" + observed.getId());
+            if ("SUCCESS".equalsIgnoreCase(readback.get("trade_state"))) {
+                // The outside-transaction query has durably recorded the original
+                // SUCCESS fact. Abort this close/unpaid decision without a local CAS;
+                // an explicit retry consumes that same fact through the typed paid
+                // path below. Never turn this changed observation into unpaid/setoff.
+                throw new IllegalStateException("DEPOSIT_PAYMENT_SUCCESS_DURING_CLOSE inviteId=" + observed.getId());
+            }
             payment = new HashMap<>(readback);
         }
         if (!"SUCCESS".equalsIgnoreCase(payment.get("trade_state"))
