@@ -63,6 +63,47 @@ class GenericGameplayHttpE2eIT {
     private final com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
     private final com.fasterxml.jackson.databind.node.ArrayNode transcript = json.createArrayNode();
     private final ReviewedMediaFixture mediaFixture = new ReviewedMediaFixture("generic");
+    private HttpSourceStage httpSourceStage = HttpSourceStage.TEST_BODY;
+    private HttpSourceEndpoint httpSourceEndpoint = HttpSourceEndpoint.OTHER;
+
+    // Only these source-controlled labels may enter the public failure projection.
+    private enum HttpSourceStage {
+        TEST_BODY, PUBLICATION_SETUP, PLAYER_ENTRY_FIXTURE, PLAYER_INITIAL_STATE,
+        PLAYER_ARRIVAL, PLAYER_SCAN_READBACK, PLAYER_QUEST_START, PLAYER_COMPONENT_START
+    }
+    private enum HttpSourceEndpoint {
+        OTHER, TEMPLATE_DRAFT, TEMPLATE_READ, TOPIC_CREATE, TOPIC_UPDATE, STATE_KEYS,
+        TOPIC_DETAIL, TOPIC_PUBLISH, THEME_STATE, CHECKIN, GAMEPLAY_ACTION,
+        ADVANCED_START, ADVANCED_STATE, ADVANCED_ACTION, THEME_ACTION, THEME_CARD
+    }
+
+    @org.junit.jupiter.api.BeforeEach void resetHttpSourceContext() {
+        httpSourceStage = HttpSourceStage.TEST_BODY;
+        httpSourceEndpoint = HttpSourceEndpoint.OTHER;
+    }
+
+    private static HttpSourceEndpoint sourceEndpoint(String method, String path) {
+        int query = path.indexOf('?');
+        String route = query < 0 ? path : path.substring(0, query);
+        return switch (method + " " + route) {
+            case "POST /api/template/draft" -> HttpSourceEndpoint.TEMPLATE_DRAFT;
+            case "POST /api/template/myinfo" -> HttpSourceEndpoint.TEMPLATE_READ;
+            case "POST /api/topic/v2/create" -> HttpSourceEndpoint.TOPIC_CREATE;
+            case "POST /api/topic/v2/update" -> HttpSourceEndpoint.TOPIC_UPDATE;
+            case "POST /api/topic/state-keys" -> HttpSourceEndpoint.STATE_KEYS;
+            case "POST /api/topic/edit-detail" -> HttpSourceEndpoint.TOPIC_DETAIL;
+            case "POST /api/topic/publish-draft" -> HttpSourceEndpoint.TOPIC_PUBLISH;
+            case "GET /api/play/theme/state" -> HttpSourceEndpoint.THEME_STATE;
+            case "POST /api/play/checkin" -> HttpSourceEndpoint.CHECKIN;
+            case "POST /api/play/theme/gameplay-action" -> HttpSourceEndpoint.GAMEPLAY_ACTION;
+            case "POST /api/play/advanced/start" -> HttpSourceEndpoint.ADVANCED_START;
+            case "GET /api/play/advanced/state" -> HttpSourceEndpoint.ADVANCED_STATE;
+            case "POST /api/play/advanced/action" -> HttpSourceEndpoint.ADVANCED_ACTION;
+            case "POST /api/play/theme/action" -> HttpSourceEndpoint.THEME_ACTION;
+            case "GET /api/play/theme/card" -> HttpSourceEndpoint.THEME_CARD;
+            default -> HttpSourceEndpoint.OTHER;
+        };
+    }
 
     // shortcut: local PNG and offline signatures exclude OSS I/O; use dedicated OSS acceptance for upload/download.
     static final class ReviewedMediaFixture implements AutoCloseable {
@@ -731,6 +772,7 @@ class GenericGameplayHttpE2eIT {
         return lifecycle(config,policy,valueKey,scope,publishOnly,4);
     }
     private Lifecycle lifecycle(ObjectNode config,String policy,String valueKey,String scope,boolean publishOnly,int participation) throws Exception {
+        httpSourceStage = HttpSourceStage.PUBLICATION_SETUP;
         Lifecycle s=new Lifecycle();s.valueKey=valueKey;String phone="138"+String.format("%08d",100+transcript.size());
         s.headers=loginHeaders(phone,"生命周期作者");s.memberId=database.queryForObject("SELECT id FROM ums_member WHERE phone=?",Long.class,phone);
         ObjectNode template=json.createObjectNode().put("title","LC "+phone).put("validationMethod",participation).put("isSync",0).put("advancedConfigJson",config.toString());
@@ -756,17 +798,24 @@ class GenericGameplayHttpE2eIT {
         topic.put("themeRuntimeConfig",theme.toString());success(post("/api/topic/v2/update",topic,s.headers));success(form("/api/topic/edit-detail",s.topicId,s.headers));
         s.nodeId=database.queryForObject("SELECT id FROM cms_topic_node WHERE topic_id=? ORDER BY id LIMIT 1",Long.class,s.topicId);
         s.publication=form("/api/topic/publish-draft",s.topicId,s.headers);
-        if(participation==0){rejected(s.publication);return s;}
+        if(participation==0){rejected(s.publication);httpSourceStage=HttpSourceStage.TEST_BODY;return s;}
         success(s.publication);JsonNode frozen=persistedTopic(s.topicId,"r5-frozen");if(config.has("outcomeRules"))assertEquals(valueKey,frozen.path("snapshot").path("nodeConfigs").path(String.valueOf(s.nodeId)).path("outcomeRules").path("pass").path("costs").path(0).path("statKey").asText());
-        if(publishOnly)return s;
+        if(publishOnly){httpSourceStage=HttpSourceStage.TEST_BODY;return s;}
+        httpSourceStage = HttpSourceStage.PLAYER_ENTRY_FIXTURE;
         // Local paid entitlement/static scan fixtures; no payment or remote QR API is exercised.
         database.update("INSERT INTO cms_registration(registration_no,member_id,owner_type,owner_id,topic_id,registration_status,payment_status,purchase_kind,original_amount,total_amount,payable_amount,pay_expire_time,create_time) VALUES(?,?,1,?,?,2,2,2,0,0,0,DATE_ADD(NOW(),INTERVAL 1 DAY),NOW())","lc-"+s.topicId,s.memberId,s.topicId,s.topicId);
         database.update("UPDATE cms_topic_node SET checkin_code=? WHERE id=?","lc-"+s.nodeId,s.nodeId);
+        httpSourceStage = HttpSourceStage.PLAYER_INITIAL_STATE;
         JsonNode view=theme(s);s.routeId=view.path("sessionId").asLong();assertTrue(s.routeId>0,view.toString());
+        httpSourceStage = HttpSourceStage.PLAYER_ARRIVAL;
         success(formFields("/api/play/checkin",json.createObjectNode().put("topicId",s.topicId).put("code","lc-"+s.nodeId).put("routeActionId","arrive"),s.headers));
+        httpSourceStage = HttpSourceStage.PLAYER_SCAN_READBACK;
         if(config.has("outcomeRules"))assertScanHasNotCompleted(s);
+        httpSourceStage = HttpSourceStage.PLAYER_QUEST_START;
         success(route(s,"QUEST_START","start"));
+        httpSourceStage = HttpSourceStage.PLAYER_COMPONENT_START;
         if(config.has("outcomeRules")){JsonNode advanced=success(post("/api/play/advanced/start",json.createObjectNode().put("topicId",s.topicId).put("nodeId",s.nodeId),s.headers));s.advancedId=advanced.path("sessionId").asLong();assertTrue(s.advancedId>0,advanced.toString());}
+        httpSourceStage = HttpSourceStage.TEST_BODY;
         return s;
     }
     private void assertScanHasNotCompleted(Lifecycle s) throws Exception {
@@ -1149,7 +1198,16 @@ class GenericGameplayHttpE2eIT {
         ResponseEntity<JsonNode> response=http.exchange(path,org.springframework.http.HttpMethod.POST,new org.springframework.http.HttpEntity<>(body,headers),JsonNode.class);
         record("POST",path,json.createObjectNode().put("id",id),response);return response.getBody();
     }
-    private JsonNode success(JsonNode response) {return appliedResponseData(response);}
+    private JsonNode success(JsonNode response) {
+        try {
+            return appliedResponseData(response);
+        } catch (AssertionError failure) {
+            // Preserve the original failure/expected/actual; append no response, SQL or request values.
+            failure.addSuppressed(new AssertionError("HTTP_SOURCE_CONTEXT stage=" + httpSourceStage.name()
+                    + " endpoint=" + httpSourceEndpoint.name()));
+            throw failure;
+        }
+    }
     private void rejected(JsonNode response) {assertNotEquals(200,response.path("code").asInt(),response.toString());}
     private JsonNode persistedTopic(long id,String phase) throws Exception {
         java.util.Map<String,Object> row=database.queryForMap("SELECT id,member_id,is_template,journey_rules_json,journey_story_json,theme_runtime_config_json,published_theme_runtime_config_json,published_route_graph_json FROM cms_topic WHERE id=?",id);
@@ -1165,6 +1223,7 @@ class GenericGameplayHttpE2eIT {
         else if(copy.isArray())for(int i=0;i<copy.size();i++)((ArrayNode)copy).set(i,redact(copy.get(i)));return copy;
     }
     private void record(String method,String path,JsonNode request,ResponseEntity<JsonNode> response) {
+        httpSourceEndpoint = sourceEndpoint(method, path);
         com.fasterxml.jackson.databind.node.ObjectNode row = transcript.addObject().put("method",method).put("path",path)
                 .put("authorization","[REDACTED]").put("httpStatus",response.getStatusCode().value());
         if(request!=null){JsonNode safe=request.deepCopy();if(safe.path("weRun").isObject()){ObjectNode weRun=(ObjectNode)safe.path("weRun");weRun.remove(java.util.Arrays.asList("code","encryptedData","iv"));weRun.put("fixture","R5WeRunFixture: local AES and mocked WeChat exchange");}row.set("request",redact(safe));}

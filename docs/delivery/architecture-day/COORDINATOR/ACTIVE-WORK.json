@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-25T01:10:07.437938+00:00",
+  "updated_utc": "2026-10-25T01:40:21.563094+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -9,14 +9,14 @@
   "mode": "Both actual authprepare failure repairs collected: G37 exactWP08 prerequisites and B8f545 full diagnostics guard applied; scan/freeze one operational candidate then targetauth workflow only",
   "current_worker_assignments": {
     "A": {
-      "state": "DELIVERED_NO_OPEN_IDENTIFIED_FAILURE_CODE_TASK",
-      "task": "Original Activity authoritative-topic case canonical parent row, one-line fixture only; original SUCCESS/scans/template assertions preserved",
+      "state": "DELIVERED_SAFE_CONTEXT_ONLY_FROZEN_PENDING_DIAGNOSTIC",
+      "task": "Trace originalGeneric26cases16R5HTTP500failures sharedrealcallchain, preserveallcases/assertions, evidencebeforefix/noinventedUNKNOWNreason",
       "thread_id": "01a16a22-3076-7196-88f5-86d5b2c83036",
       "host_id": "durable",
       "exclusive_files": [
-        "ActivityCancelTest.java",
-        "HostWeatherCancelTest.java",
-        "ActivityPublishRoleGateTest.java"
+        "GenericGameplayHttpE2eIT.java",
+        "Direct necessary gameplay rootcause or fixture only",
+        "docs/delivery/architecture-day/A/f194-generic-http-repair/"
       ],
       "delivery": "Complete three-file diff based on 8490765f, received in cloud turn 01a16ed8-5796-748a-bb71-0c16ebb68105",
       "residual_delivery": "Complete2 chatdiff blocks8files applied,184original methods retained",
@@ -75,15 +75,15 @@
       "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280"
     },
     "F": {
-      "state": "DELIVERED_PREVERIFY_RECEIPT_FROZEN_PENDING_COMBINED_RUNTIME",
-      "task": "Preserve verified input identity/primaryschema failure when finalize happens before verify; retain FAIL/noXML and strict PASS gates",
+      "state": "DELIVERED_CONTEXT_SCOPE_WIRING_FROZEN_PENDING_RUNTIME",
+      "task": "Wire A fixedsuppressedstage/endpoint enums and minimal existingworkflow choice defaultall/singleGeneric; fullPASSgates unchanged, singlepartialscope explicitlyneverall36",
       "thread_id": "01a16a23-5e0c-736b-9fc1-d4d070393009",
       "host_id": "durable",
       "residual_delivery": "verifier d58288edc65e4c57bc98ef61253fb084f38642f1; tool4b3239a559d2a81f057ab7356cb21e58e855b537; exact10 class refs/4 directions, C not granted; root6file+pin hashes exact",
       "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280",
       "exclusive_files": [
         "ci/test_http_e2e_entry.py",
-        "docs/delivery/architecture-day/F/ae0f-http-failure-receipt/"
+        "docs/delivery/architecture-day/F/f194-http-diagnostics-repair/"
       ]
     },
     "G": {
@@ -1018,41 +1018,41 @@
     "full_scope_complete": false
   },
   "next_runtime_validation": {
-    "id": "GAMEPLAY_MULTI_IDENTITY_HTTP_AE0F_02",
+    "id": "GAMEPLAY_MULTI_IDENTITY_HTTP_F194_03",
     "workflow": "gameplay-http-e2e.yml",
-    "source_sha": "ae0f1dbd4df2d65befd9214ffdeb20d7042b9d1e",
-    "tree": "6314555ede621cd77765e035521e9a14df725fe3",
-    "branch": "codex/architecture-day-http-entry-ae0f-20261025",
-    "run": 40147612418,
-    "status": "FAIL_SCHEMA_APPLY_BEFORE_HTTP_WITH_SECONDARY_RECEIPT_IDENTITY_ERROR",
+    "source_sha": "f194799f35811c8153a750dee2958f48ee5b5ab6",
+    "tree": "c7ed0eb5fb462e4b04de70e049302789d1674cc4",
+    "branch": "codex/architecture-day-http-plan-f194-20261025",
+    "run": 40149600486,
+    "status": "PARTIAL_TWO_HTTP_CLASSES_PASS_GENERIC16FAIL",
     "owner": "root",
     "pending_owners": [],
     "prior_core_ci_repeated": false,
     "declared_cases_not_pass_count": 36,
     "jobs": [
       {
-        "databaseId": 121032222026,
+        "databaseId": 121038129084,
         "name": "http (FreezeGameHttpE2eIT)",
         "status": "completed",
-        "conclusion": "failure"
+        "conclusion": "success"
       },
       {
-        "databaseId": 121032222161,
-        "name": "http (FreezeReuseThemeHttpE2eIT)",
-        "status": "completed",
-        "conclusion": "failure"
-      },
-      {
-        "databaseId": 121032222201,
+        "databaseId": 121038129212,
         "name": "http (GenericGameplayHttpE2eIT)",
         "status": "completed",
         "conclusion": "failure"
+      },
+      {
+        "databaseId": 121038129280,
+        "name": "http (FreezeReuseThemeHttpE2eIT)",
+        "status": "completed",
+        "conclusion": "success"
       }
     ],
-    "verification": "API headSha independently verifiedae0f; realXML/source/cleanup receipts pending",
-    "scope": "OriginalthreeisolatedHTTPclasses after exact41diagnosticmaprepair, no realprovider/cash/UI",
+    "verification": "API headSha independently verifiedf194; originalXML/source/cleanup/summary pending",
+    "scope": "OriginalthreeisolatedHTTPclasses after both necessary schema-caller and failure-receipt fixes; no realprovider/cash/UI",
     "conclusion": "failure",
-    "failure_readback": "ae0f-http-schema-and-receipt-failure.json"
+    "readback": "f194-http-partial-and-generic-failure.json"
   },
   "runtime_evidence_implementation": {
     "owner": "F",
@@ -1244,6 +1244,43 @@
       "verification": "APIheadSha4da9 verified; XML and cleanup pending, no PASS inherited",
       "conclusion": "failure",
       "failure_readback": "4da9-gameplay-http-entry-failure.json"
+    },
+    {
+      "id": "GAMEPLAY_MULTI_IDENTITY_HTTP_AE0F_02",
+      "workflow": "gameplay-http-e2e.yml",
+      "source_sha": "ae0f1dbd4df2d65befd9214ffdeb20d7042b9d1e",
+      "tree": "6314555ede621cd77765e035521e9a14df725fe3",
+      "branch": "codex/architecture-day-http-entry-ae0f-20261025",
+      "run": 40147612418,
+      "status": "FAIL_SCHEMA_APPLY_BEFORE_HTTP_WITH_SECONDARY_RECEIPT_IDENTITY_ERROR",
+      "owner": "root",
+      "pending_owners": [],
+      "prior_core_ci_repeated": false,
+      "declared_cases_not_pass_count": 36,
+      "jobs": [
+        {
+          "databaseId": 121032222026,
+          "name": "http (FreezeGameHttpE2eIT)",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "databaseId": 121032222161,
+          "name": "http (FreezeReuseThemeHttpE2eIT)",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "databaseId": 121032222201,
+          "name": "http (GenericGameplayHttpE2eIT)",
+          "status": "completed",
+          "conclusion": "failure"
+        }
+      ],
+      "verification": "API headSha independently verifiedae0f; realXML/source/cleanup receipts pending",
+      "scope": "OriginalthreeisolatedHTTPclasses after exact41diagnosticmaprepair, no realprovider/cash/UI",
+      "conclusion": "failure",
+      "failure_readback": "ae0f-http-schema-and-receipt-failure.json"
     }
   ],
   "worker_progress_cursors": {
@@ -1335,19 +1372,55 @@
     "owner": "F",
     "sha": "e7f17958f17d077d39dc8cc6d12f7216b37cf029",
     "parent": "ae0f1dbd4df2d65befd9214ffdeb20d7042b9d1e",
-    "state": "APPLIED_SOURCE_EXACT_PENDING_G_AND_COMBINED_TARGET",
+    "state": "FROZEN_PUSHED_ONE_COMBINED_HTTP_RUNTIME_IN_PROGRESS",
     "owner_checks": "27/27PASS0skip,21original6new; JavaDBHTTPNOT_RUN",
     "scope": "PreverifyFAIL identity/primarydiagnostic/exit/cleanup, safeFAILsummary; PASSoriginalXML/fixture/source/cleanupgatesretained, old41literalcodeunchanged",
-    "shell_changed": false
+    "shell_changed": false,
+    "integrated_source": "f194799f35811c8153a750dee2958f48ee5b5ab6",
+    "runtime": "PASS_SCOPED_IDENTITY_PRIMARY_FAILURE_PRESERVED; mixedsummaryprojectionnewissueassignedF"
   },
   "http_schema_caller_delivery": {
     "owner": "G",
     "sha": "e4c0efdccdd110e46aafaafd7ab3726494688e8f",
     "parent": "ae0f1dbd4df2d65befd9214ffdeb20d7042b9d1e",
-    "state": "APPLIED_SOURCE_EXACT_ALL_OWNER_HASHES_MATCH_PENDING_COMBINED_TARGET",
+    "state": "FROZEN_PUSHED_ONE_COMBINED_HTTP_RUNTIME_IN_PROGRESS",
     "owner_checks": "New9PASS12.966s+originaldirect12PASS2.993s; original17retained other5notrepeated",
     "scope": "Reuse productionbuild_manifest/custody/notice_forward_plan; exactoldCexcludedfiles/completed, onlyfreshCREATEsuccessREPLACED_UNAPPLIED; preserveDDLonlyassertionskiprecords",
     "old_sql_strict_auth_builder_changed": false,
+    "runtime": "PASS_SCOPED_299FILES_FRESH_SCHEMA_ALL3JOBS_NO_PREVIOUS3821",
+    "integrated_source": "f194799f35811c8153a750dee2958f48ee5b5ab6"
+  },
+  "generic_http_safe_context_delivery": {
+    "owner": "A",
+    "parent": "f194799f35811c8153a750dee2958f48ee5b5ab6",
+    "type": "COMPLETE_CHAT_DIFF_NO_DONOR_COMMIT",
+    "patch_sha256": "32ac756673d5fdfa1ab837d04987d497760f695495cad45c987031433d80f2bb",
+    "apply_check": "PASS_APPLIED",
+    "assertion_calls_retained": 325,
+    "business_fix": false,
+    "cause": "UNKNOWN;16allpersonal_lifecycle,stage_not_yet_observed",
+    "scope": "FixedJavaenumstage/endpoint suppressedassertion on originalfailure; originalfailure/rethrow preserved",
+    "java_db_ci": "NOT_RUN",
+    "remaining": "NONE_SOURCE_COLLECTED; actualdiagnosticpending"
+  },
+  "http_mixed_summary_case_frame_delivery": {
+    "owner": "F",
+    "sha": "d20412c1b223741600ada12435697d9505f6a8ed",
+    "parent": "f194799f35811c8153a750dee2958f48ee5b5ab6",
+    "state": "APPLIED_PENDING_NECESSARY_SOURCE_CONTEXT_WIRING",
+    "checks": "Initial30PASS1testorderFAIL;fixedclasssortedfieldcompare then onlyfailedcase1PASS; notsingle31green",
+    "business_fix": false,
+    "runtime": "NOT_RUN"
+  },
+  "generic_http_context_wiring_delivery": {
+    "owner": "F",
+    "sha": "282528ebfd82c9083f42e12134777d1b439a14c1",
+    "parent": "d20412c1b223741600ada12435697d9505f6a8ed",
+    "state": "APPLIED_ALL_NECESSARY_SOURCE_COLLECTED_PENDING_FREEZE",
+    "owner_controls": "36/36PASS0skip; noJavaDBHTTP",
+    "integration_checks": "Fexecutionfilesbyteexact; AJavaenum8stages16endpoints exactly equalFsafeparseracceptedsets",
+    "workflow": "Originaldefaultall-three; exactgeneric-onlychoice partial diagnostic26 neverfull36/wholebusiness",
+    "business_fix": false,
     "runtime": "NOT_RUN"
   }
 }

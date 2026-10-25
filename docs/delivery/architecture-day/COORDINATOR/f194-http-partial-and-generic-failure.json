@@ -1,0 +1,281 @@
+{
+  "source_sha": "f194799f35811c8153a750dee2958f48ee5b5ab6",
+  "run": 40149600486,
+  "status": "PARTIAL_HTTP_TWO_CLASSES_PASS_GENERIC_FAIL",
+  "artifacts": [
+    {
+      "id": 12582343207,
+      "zip_sha256": "f7536ed40dd04841945d7d464f58fbbbb1381f88a522e51148bf456727cdbeaa",
+      "crc": "PASS",
+      "files": [
+        "TEST-com.chengyinhub.business.it.FreezeGameHttpE2eIT.xml",
+        "receipt.json"
+      ]
+    },
+    {
+      "id": 12582102880,
+      "zip_sha256": "a892775f3a905d54951847741fd505cec9dddbaa67274a1b8c0b19f884988547",
+      "crc": "PASS",
+      "files": [
+        "diagnostic.json",
+        "xml-failure.json",
+        "receipt.json"
+      ]
+    },
+    {
+      "id": 12582048597,
+      "zip_sha256": "4dce1945ef14e61febb27a01ff4d238703b2165898acaf5a9919457d5dc7b3b2",
+      "crc": "PASS",
+      "files": [
+        "summary.json"
+      ]
+    },
+    {
+      "id": 12581941937,
+      "zip_sha256": "5139737b1db0d834f4c321baf69e8dfc1794339981f30f1af508924422151f6e",
+      "crc": "PASS",
+      "files": [
+        "TEST-com.chengyinhub.business.it.FreezeReuseThemeHttpE2eIT.xml",
+        "receipt.json"
+      ]
+    }
+  ],
+  "passed_classes": [
+    {
+      "class": "FreezeGameHttpE2eIT",
+      "tests": 8,
+      "source": "f194799f35811c8153a750dee2958f48ee5b5ab6",
+      "fixture_files": 299,
+      "zero_skip_failure_error": true,
+      "runner_independent_mysql_absent_redis_free": true,
+      "root_sanitized_xml_identity_verification": true,
+      "original_xml_runner_digest": {
+        "bytes": 278365,
+        "sha256": "5b09f51e981d63d4eb8c42864ce94bf6e5218d8d801ce0a4e6f564e0e148bfd8"
+      },
+      "root_original_xml_bytes_downloaded": false
+    },
+    {
+      "class": "FreezeReuseThemeHttpE2eIT",
+      "tests": 2,
+      "source": "f194799f35811c8153a750dee2958f48ee5b5ab6",
+      "fixture_files": 299,
+      "zero_skip_failure_error": true,
+      "runner_independent_mysql_absent_redis_free": true,
+      "root_sanitized_xml_identity_verification": true,
+      "original_xml_runner_digest": {
+        "bytes": 78838,
+        "sha256": "430945e1fbcc5c86aebd23461f58117ead5ab495806da19fa20259038360735f"
+      },
+      "root_original_xml_bytes_downloaded": false
+    }
+  ],
+  "generic": {
+    "job": 121038129212,
+    "diagnostic": {
+      "callerFrame": "GenericGameplayHttpE2eIT.java:1152",
+      "caseMessageCategories": {
+        "legacyHttpFrozenScanSessionIgnoresLaterR5TemplateEdit": [
+          "UNKNOWN"
+        ],
+        "personalR5ScanOnlyDoesNotCompleteTheGameplay": [
+          "UNKNOWN"
+        ],
+        "r5HttpAlbumAcceptsOwnedEvidenceAndRefusesForeignEvidence": [
+          "UNKNOWN"
+        ],
+        "r5HttpCheckRollRerollSubmitHasAuthoritativeActions(String)[1]": [
+          "UNKNOWN"
+        ],
+        "r5HttpCheckRollRerollSubmitHasAuthoritativeActions(String)[2]": [
+          "UNKNOWN"
+        ],
+        "r5HttpCheckRollRerollSubmitHasAuthoritativeActions(String)[3]": [
+          "UNKNOWN"
+        ],
+        "r5HttpFailClampsAndFreezesFailureCard": [
+          "UNKNOWN"
+        ],
+        "r5HttpFeedbackRunsAfterOutcomeOnceAndClosedSessionRefusesChoice": [
+          "UNKNOWN"
+        ],
+        "r5HttpPassInsufficientCostKeepsProofAndDoesNotConsumeSuccessfulUse": [
+          "UNKNOWN"
+        ],
+        "r5HttpSettledFeedbackCanReopenThroughTheComponentStartPath(String)[1]": [
+          "UNKNOWN"
+        ],
+        "r5HttpSettledFeedbackCanReopenThroughTheComponentStartPath(String)[2]": [
+          "UNKNOWN"
+        ],
+        "r5HttpSettledFeedbackCanReopenThroughTheComponentStartPath(String)[3]": [
+          "UNKNOWN"
+        ],
+        "r5HttpStepsRecoveryEpisodeUsesVerifiedFixtureAndRestoresExactlyOnce": [
+          "UNKNOWN"
+        ],
+        "r5HttpTypeInUnlimitedAndTimerDeadlineSurviveReentry(boolean)[1]": [
+          "UNKNOWN"
+        ],
+        "r5HttpTypeInUnlimitedAndTimerDeadlineSurviveReentry(boolean)[2]": [
+          "UNKNOWN"
+        ],
+        "r5HttpWaitReentryKeepsServerDeadlineAndRestoreIsOnce": [
+          "UNKNOWN"
+        ]
+      },
+      "caseSourceFrames": {
+        "legacyHttpFrozenScanSessionIgnoresLaterR5TemplateEdit": [
+          "GenericGameplayHttpE2eIT.java:279",
+          "GenericGameplayHttpE2eIT.java:1152"
+        ],
+        "personalR5ScanOnlyDoesNotCompleteTheGameplay": [
+          "GenericGameplayHttpE2eIT.java:279",
+          "GenericGameplayHttpE2eIT.java:1152"
+        ],
+        "r5HttpAlbumAcceptsOwnedEvidenceAndRefusesForeignEvidence": [
+          "GenericGameplayHttpE2eIT.java:279",
+          "GenericGameplayHttpE2eIT.java:1152"
+        ],
+        "r5HttpCheckRollRerollSubmitHasAuthoritativeActions(String)[1]": [
+          "GenericGameplayHttpE2eIT.java:279",
+          "GenericGameplayHttpE2eIT.java:1152"
+        ],
+        "r5HttpCheckRollRerollSubmitHasAuthoritativeActions(String)[2]": [
+          "GenericGameplayHttpE2eIT.java:279",
+          "GenericGameplayHttpE2eIT.java:1152"
+        ],
+        "r5HttpCheckRollRerollSubmitHasAuthoritativeActions(String)[3]": [
+          "GenericGameplayHttpE2eIT.java:279",
+          "GenericGameplayHttpE2eIT.java:1152"
+        ],
+        "r5HttpFailClampsAndFreezesFailureCard": [
+          "GenericGameplayHttpE2eIT.java:279",
+          "GenericGameplayHttpE2eIT.java:1152"
+        ],
+        "r5HttpFeedbackRunsAfterOutcomeOnceAndClosedSessionRefusesChoice": [
+          "GenericGameplayHttpE2eIT.java:279",
+          "GenericGameplayHttpE2eIT.java:1152"
+        ],
+        "r5HttpPassInsufficientCostKeepsProofAndDoesNotConsumeSuccessfulUse": [
+          "GenericGameplayHttpE2eIT.java:279",
+          "GenericGameplayHttpE2eIT.java:1152"
+        ],
+        "r5HttpSettledFeedbackCanReopenThroughTheComponentStartPath(String)[1]": [
+          "GenericGameplayHttpE2eIT.java:279",
+          "GenericGameplayHttpE2eIT.java:1152"
+        ],
+        "r5HttpSettledFeedbackCanReopenThroughTheComponentStartPath(String)[2]": [
+          "GenericGameplayHttpE2eIT.java:279",
+          "GenericGameplayHttpE2eIT.java:1152"
+        ],
+        "r5HttpSettledFeedbackCanReopenThroughTheComponentStartPath(String)[3]": [
+          "GenericGameplayHttpE2eIT.java:279",
+          "GenericGameplayHttpE2eIT.java:1152"
+        ],
+        "r5HttpStepsRecoveryEpisodeUsesVerifiedFixtureAndRestoresExactlyOnce": [
+          "GenericGameplayHttpE2eIT.java:279",
+          "GenericGameplayHttpE2eIT.java:1152"
+        ],
+        "r5HttpTypeInUnlimitedAndTimerDeadlineSurviveReentry(boolean)[1]": [
+          "GenericGameplayHttpE2eIT.java:279",
+          "GenericGameplayHttpE2eIT.java:1152"
+        ],
+        "r5HttpTypeInUnlimitedAndTimerDeadlineSurviveReentry(boolean)[2]": [
+          "GenericGameplayHttpE2eIT.java:279",
+          "GenericGameplayHttpE2eIT.java:1152"
+        ],
+        "r5HttpWaitReentryKeepsServerDeadlineAndRestoreIsOnce": [
+          "GenericGameplayHttpE2eIT.java:279",
+          "GenericGameplayHttpE2eIT.java:1152"
+        ]
+      },
+      "class": "GenericGameplayHttpE2eIT",
+      "errorNodeCount": 0,
+      "errors": 0,
+      "failedMethods": [
+        "r5HttpAlbumAcceptsOwnedEvidenceAndRefusesForeignEvidence",
+        "r5HttpWaitReentryKeepsServerDeadlineAndRestoreIsOnce",
+        "r5HttpFailClampsAndFreezesFailureCard",
+        "r5HttpFeedbackRunsAfterOutcomeOnceAndClosedSessionRefusesChoice",
+        "r5HttpCheckRollRerollSubmitHasAuthoritativeActions(String)[1]",
+        "r5HttpCheckRollRerollSubmitHasAuthoritativeActions(String)[2]",
+        "r5HttpCheckRollRerollSubmitHasAuthoritativeActions(String)[3]",
+        "r5HttpPassInsufficientCostKeepsProofAndDoesNotConsumeSuccessfulUse",
+        "legacyHttpFrozenScanSessionIgnoresLaterR5TemplateEdit",
+        "personalR5ScanOnlyDoesNotCompleteTheGameplay",
+        "r5HttpSettledFeedbackCanReopenThroughTheComponentStartPath(String)[1]",
+        "r5HttpSettledFeedbackCanReopenThroughTheComponentStartPath(String)[2]",
+        "r5HttpSettledFeedbackCanReopenThroughTheComponentStartPath(String)[3]",
+        "r5HttpStepsRecoveryEpisodeUsesVerifiedFixtureAndRestoresExactlyOnce",
+        "r5HttpTypeInUnlimitedAndTimerDeadlineSurviveReentry(boolean)[1]",
+        "r5HttpTypeInUnlimitedAndTimerDeadlineSurviveReentry(boolean)[2]"
+      ],
+      "failureNodeCount": 16,
+      "failures": 16,
+      "messageCategories": [
+        "UNKNOWN"
+      ],
+      "responseCodes": [
+        500
+      ],
+      "retryNodeCount": 0,
+      "skipped": 0,
+      "sourceFrame": "GenericGameplayHttpE2eIT.java:279",
+      "state": "FAILED_VERIFICATION",
+      "testcaseCount": 26,
+      "tests": 26,
+      "uniqueMethodCount": 26
+    },
+    "receipt": {
+      "classes": [
+        "GenericGameplayHttpE2eIT"
+      ],
+      "sourceSha": "f194799f35811c8153a750dee2958f48ee5b5ab6",
+      "profile": "github-hosted",
+      "database": "cy_e2e_w1_http_20261025091307_3492_28029",
+      "state": "FAIL",
+      "xmlVerified": false,
+      "publicXmlDerivedSanitized": true,
+      "originalXml": {},
+      "migrationAccepted": false,
+      "businessAccepted": false,
+      "fixtureReportVerified": true,
+      "fixtureFiles": 299,
+      "fixtureReportSha256": "582b810f4ef66b10f1b48076fceec44e10fcc6636a252428dd2b981ded119fde",
+      "javaExit": 1,
+      "cleanup": {
+        "mysqlAbsent": true,
+        "redisStoppedAndPortFree": true
+      },
+      "stage": "xml-verify",
+      "originalExit": 1,
+      "diagnostic": {
+        "stage": "xml-verify",
+        "exitCode": 1,
+        "javaExit": 1,
+        "reportState": "SUCCEEDED",
+        "mavenFailure": {
+          "category": "test",
+          "helpException": "MojoFailureException",
+          "plugin": "org.apache.maven.plugins:maven-surefire-plugin",
+          "goal": "test"
+        }
+      }
+    },
+    "pass_count_from_runner_diagnostic": 10,
+    "root_original_failed_xml_not_available": true,
+    "category_unknown": "No actual response reason exposed; do not infer business root cause from code500 alone"
+  },
+  "schema_and_entry": "299filefixtureSUCCEEDED;56PythoncontrolsPASS; oldblockersclosed",
+  "new_confirmed_diagnostic_issues": [
+    "MixedsummaryoverwritesstrictvalidatedPASSclassasFAIL",
+    "Caseframestruncatedto2helpersbeforeactualcasecaller"
+  ],
+  "owners": {
+    "A": "Exact16R5failures sharedrealcallchain/necessaryrootcause or safeevidencegap",
+    "F": "Mixedsummaryperclass truth and precise source-controlled case frame projection"
+  },
+  "no_repeat_passed_suites": true,
+  "full_governance_complete": false
+}
