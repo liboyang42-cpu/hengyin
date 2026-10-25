@@ -666,7 +666,8 @@ Page({
     if (this._submitting) return;
     if (!this._supplyReady()) return;
     if (Number(this.data.activeType) === 0 && this._preparedSupplyScope !== this._submitScope()) {
-      toast('邀约对象或核销据点已变化，请重新确认'); return;
+      this.setData({ sendResult: '邀约对象或核销据点已变化，请重新确认' });
+      toast('对象或据点已变，请重新确认'); return;
     }
     if (Number(this.data.shareMode) === 2
         && !(Number.isFinite(Number(this.data.fixedFee)) && Number(this.data.fixedFee) > 0)) {

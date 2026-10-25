@@ -60,6 +60,8 @@ const MATRIX = [
   ['pages/activity/official-inbox/index.js', "url: '/api/official/v2/party-inbox'", 'required', 'member', 'self-party'],
   ['pages/merchant/coop-center/index.js', "url: '/api/official/events'", 'optional', 'visitor/member', 'public-list+viewer-personalization'],
   ['pages/coop/list/index.js', "url: '/api/official/merchant-invites'", 'required', 'merchant', 'self-merchant'],
+  // 已认证主题 owner / 商家 PROJECT_MANAGE 派生 owner，仅查该主题和指定商家的合法未占用站点。
+  ['pages/coop/invite/index.js', "url: '/api/coop/supply-stations'", 'required', 'topic-owner/merchant-PROJECT_MANAGE', 'owned-topic-target-merchant-stations'],
   ['pages/activity/list/index.js', "url: '/api/official/can-publish'", 'required', 'publisher', 'self-capability'],
   ['pages/activity/list/index.js', "url: '/api/official/events'", 'optional', 'visitor/member', 'public-list+viewer-personalization'],
   ['pages/activity/list/index.js', "url: '/api/official/my-events'", 'required', 'member', 'self-registration'],
@@ -203,7 +205,7 @@ const VALID_SCOPES = new Set([
   'self-merchant-game-entry', 'club-owned-activity',
   'owned-merchant-resource', 'self-marketing-consent',
   'share-token-snapshot', 'owned-merchant-or-club-receivable', 'owned-media-asset',
-  'controlled-event-operator',
+  'controlled-event-operator', 'owned-topic-target-merchant-stations',
 ]);
 
 function productionJsFiles(dir) {
@@ -327,7 +329,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-22 W9 帖子处置(F0521):设置页本人处置列表 GET /api/v1/community/me/enforcements(后端 withAuthenticatedPrincipal,按本人过滤),69 → 70(batch2 集成在 W10b 的 69 上叠加)。
   // 2026-10-22 L21 BL-185:fabu 云端草稿发布前 GET /api/topic/publish-check(本人主题/商家 Owner),70 → 71(batch3 集成在 batch2 的 70 上叠加;L21 原写 65 → 66)。
   // 2026-10-23 v13 动效落地(PR #528):主题页 NPC 资料 / 附近队伍 / 站点 + 地图页据点四处直接 GET,71 → 75(权限档见 MATRIX 同日注释)。
-  assert.equal(directCount, 76, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-10-25 冻结据点选择：新增上述 creator-scoped GET /api/coop/supply-stations，76 → 77。
+  assert.equal(directCount, 77, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。
