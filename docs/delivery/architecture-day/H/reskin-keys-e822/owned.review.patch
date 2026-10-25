@@ -1,0 +1,252 @@
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayDraftCopyTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayDraftCopyTest.java
+index a0cdd47..b95ebc0 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayDraftCopyTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayDraftCopyTest.java
+@@ -101,6 +101,7 @@ class GameplayDraftCopyTest {
+             assertEquals(compiled, json.readTree(service.compileTemplateRules(topic)), "首次保存后再次保存不漂移");
+             String error = assertThrows(IllegalArgumentException.class, () -> freezePublication(service, topic)).getMessage();
+             assertTrue(error.contains("完成证明"), error);
++            assertEquals(json.valueToTree(stateKeys), json.valueToTree(stateMapper.selectByTopicIdForUpdate(77L)));
+             ObjectNode ready = ((ObjectNode)compiled).deepCopy();
+             ObjectNode challenge = (ObjectNode)json.readTree(originalThemes.get(skinIndex++).path("detail").path("themeRuntimeConfig").asText()).path("gameplayRuntime").path("survival").path("zeroChallenge").deepCopy();
+             Set<Long> challengeIds = new HashSet<>(Arrays.asList(clients.get("copy_1"), clients.get("copy_2")));
+@@ -112,6 +113,8 @@ class GameplayDraftCopyTest {
+             for (JsonNode act : game.path("acts")) { Iterator<JsonNode> members = act.path("questKeys").iterator(); while (members.hasNext()) if (challengeKeys.contains(members.next().asText())) members.remove(); }
+             topic.setThemeRuntimeConfigJson(ready.toString());
+             assertNotNull(freezePublication(service, topic), "重选本主题真实挑战及客观题备选后可发布");
++            assertEquals(json.valueToTree(stateKeys), json.valueToTree(stateMapper.selectByTopicId(77L)));
++            assertEquals(json.valueToTree(stateKeys), json.valueToTree(stateMapper.selectByTopicIdForUpdate(77L)));
+         }
+     }
+ 
+@@ -191,8 +194,10 @@ class GameplayDraftCopyTest {
+             ReflectionTestUtils.setField(service,"themeStateKeyMapper",keys);
+         }
+         ThemeStateKeyMapper originalKeys=keys;
+-        when(keys.lockTopicForStateKeyWrite(topic.getId())).thenReturn(topic.getId());
+-        when(keys.selectByTopicIdForUpdate(topic.getId())).thenAnswer(call -> originalKeys.selectByTopicId(call.getArgument(0)));
++        doReturn(topic.getId()).when(keys).lockTopicForStateKeyWrite(topic.getId());
++        // Restubbing must not execute the previous bridge and bind this answer to its nested plain read.
++        doAnswer(call -> originalKeys.selectByTopicId(call.getArgument(0)))
++                .when(keys).selectByTopicIdForUpdate(topic.getId());
+         javax.sql.DataSource data=mock(javax.sql.DataSource.class);
+         java.sql.Connection connection=mock(java.sql.Connection.class);
+         when(data.getConnection()).thenReturn(connection);when(connection.getAutoCommit()).thenReturn(true);
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFixture.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFixture.java
+index 477da6d..c624d63 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFixture.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFixture.java
+@@ -36,10 +36,14 @@ public class GameplayReskinFixture {
+     final CmsMemberTemplateMapper templateMapper = mock(CmsMemberTemplateMapper.class);
+     final GameSessionRuntimeMapper gameMapper = mock(GameSessionRuntimeMapper.class);
+     final PlayTeamMapper teamMapper = mock(PlayTeamMapper.class);
++    final ThemeStateKeyMapper keyMapper = mock(ThemeStateKeyMapper.class);
+     final CmsTopicServiceImpl publisher = new CmsTopicServiceImpl();
+     final TopicRouteRuntimeServiceImpl route;
+     final GameSessionRuntimeServiceImpl runtime = new GameSessionRuntimeServiceImpl();
++    // Author prototypes are not persisted rows and must never acquire another theme's identity.
+     final List<ThemeStateKey> keys = new ArrayList<>();
++    private final Map<Long, Map<String, ThemeStateKey>> declarations = new LinkedHashMap<>();
++    private long declarationSequence = 20000;
+     GameSession session;
+     CmsTopic topic;
+     JsonNode variant, snapshot;
+@@ -83,12 +87,16 @@ public class GameplayReskinFixture {
+         when(freeTickets.selectOmsTicketList(any())).thenReturn(Collections.emptyList());
+         when(noOffers.selectByTopic(anyLong())).thenReturn(Collections.emptyList());
+         wireAuthoringGuards(topicMapper, chapterMapper, nodeMapper, templateMapper, freeTickets, noOffers);
+-        ThemeStateKeyMapper keyMapper=mock(ThemeStateKeyMapper.class);
+         when(keyMapper.lockTopicForStateKeyWrite(anyLong())).thenAnswer(call -> {
+             CmsTopic parent = topics.get(call.getArgument(0)); return parent == null ? null : parent.getId();
+         });
+-        when(keyMapper.selectByTopicId(anyLong())).thenReturn(keys);
+-        when(keyMapper.selectByTopicIdForUpdate(anyLong())).thenReturn(keys);
++        when(keyMapper.upsertThemeStateKey(any())).thenAnswer(call -> persistDeclaration(call.getArgument(0)));
++        when(keyMapper.selectByTopicId(anyLong())).thenAnswer(call -> storedDeclarations(call.getArgument(0)));
++        when(keyMapper.selectByTopicIdForUpdate(anyLong())).thenAnswer(call -> storedDeclarations(call.getArgument(0)));
++        when(keyMapper.selectByTopicIdAndStateKey(anyLong(), anyString()))
++                .thenAnswer(call -> storedDeclaration(call.getArgument(0), call.getArgument(1)));
++        when(keyMapper.selectByTopicIdAndStateKeyForUpdate(anyLong(), anyString()))
++                .thenAnswer(call -> storedDeclaration(call.getArgument(0), call.getArgument(1)));
+         keyService=new ThemeStateKeyService(keyMapper);
+         ReflectionTestUtils.setField(publisher,"themeStateKeyService",keyService);
+         TopicStateKeyRefService currentReferences=new TopicStateKeyRefService(nodeMapper,templateMapper,chapterMapper);
+@@ -144,6 +152,66 @@ public class GameplayReskinFixture {
+         var gameProxy=new org.springframework.aop.framework.ProxyFactory(runtime);gameProxy.setInterfaces(IGameSessionRuntimeService.class);gameProxy.addAdvice(advice);
+         play=(IGameSessionRuntimeService)gameProxy.getProxy();
+     }
++
++    /** Unit model of ThemeStateKeyMapper.xml: unique (topic_id,state_key), generated id, id order. */
++    private int persistDeclaration(ThemeStateKey input) {
++        assertNotNull(input.getTopicId());
++        assertTrue(topics.containsKey(input.getTopicId()), "声明必须属于实际已创建的主题");
++        Map<String, ThemeStateKey> rows = declarations.computeIfAbsent(input.getTopicId(), ignored -> new LinkedHashMap<>());
++        ThemeStateKey previous = rows.get(input.getStateKey());
++        ThemeStateKey next = copyDeclaration(input);
++        if (previous == null) {
++            next.setId(++declarationSequence);
++            input.setId(next.getId()); // Same insert-generated identity consumed by the real writer.
++        } else {
++            // Duplicate registration does not replace identity/type/scope/create_time.
++            next.setId(previous.getId());
++            next.setKeyType(previous.getKeyType());
++            next.setScope(previous.getScope());
++            next.setCreateTime(previous.getCreateTime());
++            if (next.getMinValue() == null) next.setMinValue(previous.getMinValue());
++            if (next.getMaxValue() == null) next.setMaxValue(previous.getMaxValue());
++            if (next.getDisplayType() == null) next.setDisplayType(previous.getDisplayType());
++            if (next.getColor() == null) next.setColor(previous.getColor());
++            if (next.getIcon() == null) next.setIcon(previous.getIcon());
++            if (next.getSortOrder() == null) next.setSortOrder(previous.getSortOrder());
++            if (next.getVisible() == null) next.setVisible(previous.getVisible());
++            if (next.getPersistScope() == null) next.setPersistScope(previous.getPersistScope());
++            if (next.getRulesJson() == null) next.setRulesJson(previous.getRulesJson());
++        }
++        rows.put(next.getStateKey(), copyDeclaration(next));
++        return previous == null ? 1 : 2;
++    }
++
++    private List<ThemeStateKey> storedDeclarations(Long topicId) {
++        Map<String, ThemeStateKey> rows = declarations.get(topicId);
++        if (rows == null) return new ArrayList<>();
++        List<ThemeStateKey> result = new ArrayList<>();
++        for (ThemeStateKey row : rows.values()) result.add(copyDeclaration(row));
++        result.sort(Comparator.comparing(ThemeStateKey::getId));
++        return result;
++    }
++
++    private ThemeStateKey storedDeclaration(Long topicId, String stateKey) {
++        Map<String, ThemeStateKey> rows = declarations.get(topicId);
++        ThemeStateKey row = rows == null ? null : rows.get(stateKey);
++        return row == null ? null : copyDeclaration(row);
++    }
++
++    private static ThemeStateKey copyDeclaration(ThemeStateKey row) {
++        ThemeStateKey copy = new ThemeStateKey();
++        org.springframework.beans.BeanUtils.copyProperties(row, copy);
++        if (row.getCreateTime() != null) copy.setCreateTime(new Date(row.getCreateTime().getTime()));
++        if (row.getUpdateTime() != null) copy.setUpdateTime(new Date(row.getUpdateTime().getTime()));
++        return copy;
++    }
++
++    void registerDeclarations(Long topicId, List<ThemeStateKey> definitions) {
++        List<ThemeStateKey> inputs = new ArrayList<>();
++        for (ThemeStateKey definition : definitions) inputs.add(copyDeclaration(definition));
++        keyService.register(topicId, inputs); // Real validation, parent fence and original Spring transaction.
++    }
++
+     private void wireAuthoringGuards(CmsTopicMapper topics, CmsTopicChapterMapper chapters,
+                                      CmsTopicNodeMapper nodes, CmsMemberTemplateMapper templates,
+                                      OmsTicketMapper tickets, MerchantChapterOfferMapper offers) {
+@@ -203,7 +271,7 @@ public class GameplayReskinFixture {
+         variant=skin;
+         TopicCreateDTO identity=new TopicCreateDTO();identity.setName(skin.path("name").asText());identity.setSaveDraft(1);identity.setPublishMode("simple");identity.setProductType(1);
+         Long id=com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(authoring).createTopic(identity,7L,"配置作者");
+-        keyService.register(id,keys);
++        registerDeclarations(id,keys);
+         TopicUpdateDTO update=JSON.convertValue(definition(skin),TopicUpdateDTO.class);update.setId(id);
+         assertThrows(RuntimeException.class,()->com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(authoring).updateTopicByOwner(update,8L,"外来作者"));
+         assertEquals(id,com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(authoring).updateTopicByOwner(update,7L,"配置作者"));
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinRuntimeServiceTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinRuntimeServiceTest.java
+index 08fbd0a..743e52e 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinRuntimeServiceTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinRuntimeServiceTest.java
+@@ -7,11 +7,33 @@ import static org.junit.jupiter.api.Assertions.*;
+ class GameplayReskinRuntimeServiceTest {
+     @Test void allThreeConfigurationsSavePublishAndFreezeThroughTheSameServices() throws Exception {
+         GameplayReskinFixture fixture=new GameplayReskinFixture();
++        java.util.Set<Long> declarationIds=new java.util.HashSet<>();
++        java.util.Map<Long,JsonNode> registeredByTopic=new java.util.LinkedHashMap<>();
++        java.util.Map<Long,String> publishedByTopic=new java.util.LinkedHashMap<>();
++        java.util.Map<com.chengyinhub.business.domain.GameSession,String> originalRuns=new java.util.LinkedHashMap<>();
+         JsonNode reference=GameplayReskinFixture.resource("reference.json").path("themeRuntimeConfig");
+         assertEquals("mobile",reference.path("chapters").path(2).path("completion").path("overflowSlot").asText());
+         for(JsonNode q:reference.path("gameplayRuntime").path("quests"))if("a3".equals(q.path("actKey").asText()))assertFalse(q.has("extraSlot"));
+         for(JsonNode skin:GameplayReskinFixture.variants()) {
+             fixture.publish(skin);
++            Long topicId=fixture.topic.getId();
++            java.util.List<com.chengyinhub.business.domain.ThemeStateKey> declarations=fixture.keyMapper.selectByTopicId(topicId);
++            assertTrue(declarations.size()>=fixture.keys.size());
++            assertEquals(GameplayReskinFixture.JSON.valueToTree(declarations),
++                    GameplayReskinFixture.JSON.valueToTree(fixture.keyMapper.selectByTopicIdForUpdate(topicId)));
++            long previousId=0;
++            for(com.chengyinhub.business.domain.ThemeStateKey row:declarations) {
++                assertEquals(topicId,row.getTopicId());assertNotNull(row.getId());
++                assertTrue(row.getId()>previousId);previousId=row.getId();
++                assertTrue(declarationIds.add(row.getId()),"不同主题声明不得借用同一行身份");
++                assertNotNull(row.getCreateTime());assertNotNull(row.getUpdateTime());
++                assertEquals(GameplayReskinFixture.JSON.valueToTree(row),GameplayReskinFixture.JSON.valueToTree(
++                        fixture.keyMapper.selectByTopicIdAndStateKey(topicId,row.getStateKey())));
++                assertEquals(GameplayReskinFixture.JSON.valueToTree(row),GameplayReskinFixture.JSON.valueToTree(
++                        fixture.keyMapper.selectByTopicIdAndStateKeyForUpdate(topicId,row.getStateKey())));
++            }
++            registeredByTopic.put(topicId,GameplayReskinFixture.JSON.valueToTree(declarations));
++            publishedByTopic.put(topicId,fixture.topic.getPublishedRouteGraphJson());
+             JsonNode theme=fixture.snapshot.path("themeConfig");
+             assertEquals(skin.path("hpName").asText(),theme.path("hpName").asText());
+             assertEquals(skin.path("actionName").asText(),theme.path("actionName").asText());
+@@ -31,6 +53,47 @@ class GameplayReskinRuntimeServiceTest {
+             java.util.Map<String,Object> player=fixture.play.view(com.chengyinhub.business.domain.dto.GameActorContext.player(7L),70L).getPlayer();
+             assertEquals(skin.path("hpName").asText(),player.get("hpName"));assertEquals(skin.path("actionName").asText(),player.get("actionName"));
+             assertEquals(1,fixture.stock(7,"ration"));assertEquals(1,fixture.stock(7,"fuel"));assertEquals(1,fixture.stock(7,"power"));
++            originalRuns.put(fixture.session,fixture.session.getModuleConfigSnapshotJson());
++            for(java.util.Map.Entry<Long,JsonNode> original:registeredByTopic.entrySet())
++                assertEquals(original.getValue(),GameplayReskinFixture.JSON.valueToTree(fixture.keyMapper.selectByTopicId(original.getKey())),"注册后续主题不得重绑旧声明");
++        }
++        assertEquals(3,registeredByTopic.size());
++        Long firstTopic=registeredByTopic.keySet().iterator().next();
++        java.util.List<com.chengyinhub.business.domain.ThemeStateKey> originalRows=fixture.keyMapper.selectByTopicId(firstTopic);
++        com.chengyinhub.business.domain.ThemeStateKey changed=originalRows.stream()
++                .filter(row->"clue.rescue".equals(row.getStateKey())).findFirst().orElseThrow();
++        Long originalId=changed.getId();java.util.Date created=changed.getCreateTime();
++        changed.setLabel("作者后改声明");changed.setInitialValue(1);changed.setColor("#112233");
++        fixture.registerDeclarations(firstTopic,java.util.Collections.singletonList(changed));
++        com.chengyinhub.business.domain.ThemeStateKey partial=new com.chengyinhub.business.domain.ThemeStateKey();
++        partial.setStateKey(changed.getStateKey());partial.setKeyType(changed.getKeyType());partial.setScope(changed.getScope());
++        partial.setLabel("作者再次修改");partial.setInitialValue(0);
++        fixture.registerDeclarations(firstTopic,java.util.Collections.singletonList(partial));
++        java.util.List<com.chengyinhub.business.domain.ThemeStateKey> updatedRows=fixture.keyMapper.selectByTopicId(firstTopic);
++        assertEquals(originalRows.size(),updatedRows.size(),"同主题同键重放只更新原行");
++        com.chengyinhub.business.domain.ThemeStateKey updated=updatedRows.stream()
++                .filter(row->changed.getStateKey().equals(row.getStateKey())).findFirst().orElseThrow();
++        assertEquals(originalId,updated.getId());assertEquals(created,updated.getCreateTime());
++        assertEquals("作者再次修改",updated.getLabel());assertEquals(Integer.valueOf(0),updated.getInitialValue());
++        assertEquals("#112233",updated.getColor(),"原 upsert 的空扩展字段保留已有定义");
++        assertEquals(changed.getKeyType(),updated.getKeyType());assertEquals(changed.getScope(),updated.getScope());
++        for(java.util.Map.Entry<Long,JsonNode> original:registeredByTopic.entrySet()) {
++            if(!firstTopic.equals(original.getKey()))
++                assertEquals(original.getValue(),GameplayReskinFixture.JSON.valueToTree(fixture.keyMapper.selectByTopicId(original.getKey())));
++            assertEquals(publishedByTopic.get(original.getKey()),fixture.topics.get(original.getKey()).getPublishedRouteGraphJson());
++            assertEquals(GameplayReskinFixture.JSON.readTree(publishedByTopic.get(original.getKey())).path("stateKeys"),
++                    GameplayReskinFixture.JSON.readTree(fixture.route.freezePublishedJourney(fixture.topics.get(original.getKey()))).path("stateKeys"),
++                    "作者后改声明不能修补原发布冻结定义");
++        }
++        for(java.util.Map.Entry<com.chengyinhub.business.domain.GameSession,String> original:originalRuns.entrySet())
++            assertEquals(original.getValue(),original.getKey().getModuleConfigSnapshotJson(),"后续主题和作者修改不得回填原局");
++        Long anotherTopic=registeredByTopic.keySet().stream().filter(id->!firstTopic.equals(id)).findFirst().orElseThrow();
++        assertThrows(IllegalStateException.class,()->com.chengyinhub.business.service.support.ThemeStateKeyDeclarationSnapshot.capture(anotherTopic,updatedRows));
++        updated.setTopicId(anotherTopic);updated.setLabel("修改读取副本");
++        assertEquals(firstTopic,fixture.keyMapper.selectByTopicId(firstTopic).stream()
++                .filter(row->originalId.equals(row.getId())).findFirst().orElseThrow().getTopicId());
++        for(com.chengyinhub.business.domain.ThemeStateKey prototype:fixture.keys) {
++            assertNull(prototype.getId());assertNull(prototype.getTopicId());
+         }
+     }
+ 
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplaySupportMatrixRuntimeTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplaySupportMatrixRuntimeTest.java
+index 6a4c524..eb5a2a9 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplaySupportMatrixRuntimeTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplaySupportMatrixRuntimeTest.java
+@@ -21,6 +21,12 @@ class GameplaySupportMatrixRuntimeTest {
+         template.setValidationMethod("scan".equals(key) ? 4 : key.startsWith("qa") ? "qaText".equals(key) ? 1 : 3 : 0);
+         template.setAdvancedConfigJson(new AdvancedGameConfigValidator().validateAndNormalize(config.toString()));
+         JsonNode skin = GameplayReskinFixture.variants().get(0); f.publish(skin); f.startRun(); f.unlock("a1");
++        java.util.List<com.chengyinhub.business.domain.ThemeStateKey> declarations=f.keyMapper.selectByTopicId(f.topic.getId());
++        assertFalse(declarations.isEmpty());
++        assertEquals(JSON.valueToTree(declarations),JSON.valueToTree(f.keyMapper.selectByTopicIdForUpdate(f.topic.getId())));
++        for(com.chengyinhub.business.domain.ThemeStateKey row:declarations) {
++            assertEquals(f.topic.getId(),row.getTopicId());assertNotNull(row.getId());assertTrue(row.getId()>0);
++        }
+         if (!"scan".equals(key)) assertTrue(f.route.verifyGuidedRouteAnswer(f.snapshot, f.node(1001), GameplaySupportMatrixTest.answers(key)));
+         f.resolve(7, 1001, "food", null);
+         assertEquals(skin.path("initialHp").asInt() - 1, f.hp(7)); assertEquals(3, f.stock(7, "ration"));

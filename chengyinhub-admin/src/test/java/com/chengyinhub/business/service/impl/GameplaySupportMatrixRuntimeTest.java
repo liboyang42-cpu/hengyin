@@ -21,6 +21,12 @@ class GameplaySupportMatrixRuntimeTest {
         template.setValidationMethod("scan".equals(key) ? 4 : key.startsWith("qa") ? "qaText".equals(key) ? 1 : 3 : 0);
         template.setAdvancedConfigJson(new AdvancedGameConfigValidator().validateAndNormalize(config.toString()));
         JsonNode skin = GameplayReskinFixture.variants().get(0); f.publish(skin); f.startRun(); f.unlock("a1");
+        java.util.List<com.chengyinhub.business.domain.ThemeStateKey> declarations=f.keyMapper.selectByTopicId(f.topic.getId());
+        assertFalse(declarations.isEmpty());
+        assertEquals(JSON.valueToTree(declarations),JSON.valueToTree(f.keyMapper.selectByTopicIdForUpdate(f.topic.getId())));
+        for(com.chengyinhub.business.domain.ThemeStateKey row:declarations) {
+            assertEquals(f.topic.getId(),row.getTopicId());assertNotNull(row.getId());assertTrue(row.getId()>0);
+        }
         if (!"scan".equals(key)) assertTrue(f.route.verifyGuidedRouteAnswer(f.snapshot, f.node(1001), GameplaySupportMatrixTest.answers(key)));
         f.resolve(7, 1001, "food", null);
         assertEquals(skin.path("initialHp").asInt() - 1, f.hp(7)); assertEquals(3, f.stock(7, "ration"));

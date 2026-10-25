@@ -1,0 +1,11 @@
+# e822 原文件 Git blob
+
+Parent：e82229ef85e58159078a42956560356074192541
+Tree：ed211d0215b206a682697d9470307c0fb0181d53
+
+- GameplayReskinFixture.java：477da6dc17a5fa787e8fc726aaffc291298b3614
+- GameplayReskinRuntimeServiceTest.java：08fbd0a8e757b68e84fecc8eda80a45ad1a0931f
+- GameplaySupportMatrixRuntimeTest.java：6a4c524ef41aceb8778ba5329a10d058b75a87af
+- GameplayDraftCopyTest.java：a0cdd478340d55db416d3a4c63dbf90a1215526d
+
+后像 SHA256 见 POSTIMAGE.sha256；完整源 delta 见 owned.review.patch。

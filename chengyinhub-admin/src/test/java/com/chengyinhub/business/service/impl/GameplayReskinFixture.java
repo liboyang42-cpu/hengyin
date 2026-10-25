@@ -36,10 +36,14 @@ public class GameplayReskinFixture {
     final CmsMemberTemplateMapper templateMapper = mock(CmsMemberTemplateMapper.class);
     final GameSessionRuntimeMapper gameMapper = mock(GameSessionRuntimeMapper.class);
     final PlayTeamMapper teamMapper = mock(PlayTeamMapper.class);
+    final ThemeStateKeyMapper keyMapper = mock(ThemeStateKeyMapper.class);
     final CmsTopicServiceImpl publisher = new CmsTopicServiceImpl();
     final TopicRouteRuntimeServiceImpl route;
     final GameSessionRuntimeServiceImpl runtime = new GameSessionRuntimeServiceImpl();
+    // Author prototypes are not persisted rows and must never acquire another theme's identity.
     final List<ThemeStateKey> keys = new ArrayList<>();
+    private final Map<Long, Map<String, ThemeStateKey>> declarations = new LinkedHashMap<>();
+    private long declarationSequence = 20000;
     GameSession session;
     CmsTopic topic;
     JsonNode variant, snapshot;
@@ -83,12 +87,16 @@ public class GameplayReskinFixture {
         when(freeTickets.selectOmsTicketList(any())).thenReturn(Collections.emptyList());
         when(noOffers.selectByTopic(anyLong())).thenReturn(Collections.emptyList());
         wireAuthoringGuards(topicMapper, chapterMapper, nodeMapper, templateMapper, freeTickets, noOffers);
-        ThemeStateKeyMapper keyMapper=mock(ThemeStateKeyMapper.class);
         when(keyMapper.lockTopicForStateKeyWrite(anyLong())).thenAnswer(call -> {
             CmsTopic parent = topics.get(call.getArgument(0)); return parent == null ? null : parent.getId();
         });
-        when(keyMapper.selectByTopicId(anyLong())).thenReturn(keys);
-        when(keyMapper.selectByTopicIdForUpdate(anyLong())).thenReturn(keys);
+        when(keyMapper.upsertThemeStateKey(any())).thenAnswer(call -> persistDeclaration(call.getArgument(0)));
+        when(keyMapper.selectByTopicId(anyLong())).thenAnswer(call -> storedDeclarations(call.getArgument(0)));
+        when(keyMapper.selectByTopicIdForUpdate(anyLong())).thenAnswer(call -> storedDeclarations(call.getArgument(0)));
+        when(keyMapper.selectByTopicIdAndStateKey(anyLong(), anyString()))
+                .thenAnswer(call -> storedDeclaration(call.getArgument(0), call.getArgument(1)));
+        when(keyMapper.selectByTopicIdAndStateKeyForUpdate(anyLong(), anyString()))
+                .thenAnswer(call -> storedDeclaration(call.getArgument(0), call.getArgument(1)));
         keyService=new ThemeStateKeyService(keyMapper);
         ReflectionTestUtils.setField(publisher,"themeStateKeyService",keyService);
         TopicStateKeyRefService currentReferences=new TopicStateKeyRefService(nodeMapper,templateMapper,chapterMapper);
@@ -144,6 +152,66 @@ public class GameplayReskinFixture {
         var gameProxy=new org.springframework.aop.framework.ProxyFactory(runtime);gameProxy.setInterfaces(IGameSessionRuntimeService.class);gameProxy.addAdvice(advice);
         play=(IGameSessionRuntimeService)gameProxy.getProxy();
     }
+
+    /** Unit model of ThemeStateKeyMapper.xml: unique (topic_id,state_key), generated id, id order. */
+    private int persistDeclaration(ThemeStateKey input) {
+        assertNotNull(input.getTopicId());
+        assertTrue(topics.containsKey(input.getTopicId()), "声明必须属于实际已创建的主题");
+        Map<String, ThemeStateKey> rows = declarations.computeIfAbsent(input.getTopicId(), ignored -> new LinkedHashMap<>());
+        ThemeStateKey previous = rows.get(input.getStateKey());
+        ThemeStateKey next = copyDeclaration(input);
+        if (previous == null) {
+            next.setId(++declarationSequence);
+            input.setId(next.getId()); // Same insert-generated identity consumed by the real writer.
+        } else {
+            // Duplicate registration does not replace identity/type/scope/create_time.
+            next.setId(previous.getId());
+            next.setKeyType(previous.getKeyType());
+            next.setScope(previous.getScope());
+            next.setCreateTime(previous.getCreateTime());
+            if (next.getMinValue() == null) next.setMinValue(previous.getMinValue());
+            if (next.getMaxValue() == null) next.setMaxValue(previous.getMaxValue());
+            if (next.getDisplayType() == null) next.setDisplayType(previous.getDisplayType());
+            if (next.getColor() == null) next.setColor(previous.getColor());
+            if (next.getIcon() == null) next.setIcon(previous.getIcon());
+            if (next.getSortOrder() == null) next.setSortOrder(previous.getSortOrder());
+            if (next.getVisible() == null) next.setVisible(previous.getVisible());
+            if (next.getPersistScope() == null) next.setPersistScope(previous.getPersistScope());
+            if (next.getRulesJson() == null) next.setRulesJson(previous.getRulesJson());
+        }
+        rows.put(next.getStateKey(), copyDeclaration(next));
+        return previous == null ? 1 : 2;
+    }
+
+    private List<ThemeStateKey> storedDeclarations(Long topicId) {
+        Map<String, ThemeStateKey> rows = declarations.get(topicId);
+        if (rows == null) return new ArrayList<>();
+        List<ThemeStateKey> result = new ArrayList<>();
+        for (ThemeStateKey row : rows.values()) result.add(copyDeclaration(row));
+        result.sort(Comparator.comparing(ThemeStateKey::getId));
+        return result;
+    }
+
+    private ThemeStateKey storedDeclaration(Long topicId, String stateKey) {
+        Map<String, ThemeStateKey> rows = declarations.get(topicId);
+        ThemeStateKey row = rows == null ? null : rows.get(stateKey);
+        return row == null ? null : copyDeclaration(row);
+    }
+
+    private static ThemeStateKey copyDeclaration(ThemeStateKey row) {
+        ThemeStateKey copy = new ThemeStateKey();
+        org.springframework.beans.BeanUtils.copyProperties(row, copy);
+        if (row.getCreateTime() != null) copy.setCreateTime(new Date(row.getCreateTime().getTime()));
+        if (row.getUpdateTime() != null) copy.setUpdateTime(new Date(row.getUpdateTime().getTime()));
+        return copy;
+    }
+
+    void registerDeclarations(Long topicId, List<ThemeStateKey> definitions) {
+        List<ThemeStateKey> inputs = new ArrayList<>();
+        for (ThemeStateKey definition : definitions) inputs.add(copyDeclaration(definition));
+        keyService.register(topicId, inputs); // Real validation, parent fence and original Spring transaction.
+    }
+
     private void wireAuthoringGuards(CmsTopicMapper topics, CmsTopicChapterMapper chapters,
                                      CmsTopicNodeMapper nodes, CmsMemberTemplateMapper templates,
                                      OmsTicketMapper tickets, MerchantChapterOfferMapper offers) {
@@ -203,7 +271,7 @@ public class GameplayReskinFixture {
         variant=skin;
         TopicCreateDTO identity=new TopicCreateDTO();identity.setName(skin.path("name").asText());identity.setSaveDraft(1);identity.setPublishMode("simple");identity.setProductType(1);
         Long id=com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(authoring).createTopic(identity,7L,"配置作者");
-        keyService.register(id,keys);
+        registerDeclarations(id,keys);
         TopicUpdateDTO update=JSON.convertValue(definition(skin),TopicUpdateDTO.class);update.setId(id);
         assertThrows(RuntimeException.class,()->com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(authoring).updateTopicByOwner(update,8L,"外来作者"));
         assertEquals(id,com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(authoring).updateTopicByOwner(update,7L,"配置作者"));

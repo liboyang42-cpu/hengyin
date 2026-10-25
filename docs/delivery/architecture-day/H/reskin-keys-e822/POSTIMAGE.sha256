@@ -1,0 +1,4 @@
+163c52538722e9508e225e5fa81db8dd4827d7cc477bbc909edd5e07d7fd895f  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFixture.java
+b2760aff84d805b1c9dc29854cea4cdd258ccb9d074ee087964fff2df2a4d987  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinRuntimeServiceTest.java
+b98311c94502e74b80861ef8184d9c944a74dbd6349af9f6733411dd71aae975  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplaySupportMatrixRuntimeTest.java
+2b04d396bcb9052c2529342cf1b45378a7bdcc94bd524279a4d63904280885d4  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayDraftCopyTest.java

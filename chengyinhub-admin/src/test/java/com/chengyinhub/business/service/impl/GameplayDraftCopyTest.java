@@ -101,6 +101,7 @@ class GameplayDraftCopyTest {
             assertEquals(compiled, json.readTree(service.compileTemplateRules(topic)), "首次保存后再次保存不漂移");
             String error = assertThrows(IllegalArgumentException.class, () -> freezePublication(service, topic)).getMessage();
             assertTrue(error.contains("完成证明"), error);
+            assertEquals(json.valueToTree(stateKeys), json.valueToTree(stateMapper.selectByTopicIdForUpdate(77L)));
             ObjectNode ready = ((ObjectNode)compiled).deepCopy();
             ObjectNode challenge = (ObjectNode)json.readTree(originalThemes.get(skinIndex++).path("detail").path("themeRuntimeConfig").asText()).path("gameplayRuntime").path("survival").path("zeroChallenge").deepCopy();
             Set<Long> challengeIds = new HashSet<>(Arrays.asList(clients.get("copy_1"), clients.get("copy_2")));
@@ -112,6 +113,8 @@ class GameplayDraftCopyTest {
             for (JsonNode act : game.path("acts")) { Iterator<JsonNode> members = act.path("questKeys").iterator(); while (members.hasNext()) if (challengeKeys.contains(members.next().asText())) members.remove(); }
             topic.setThemeRuntimeConfigJson(ready.toString());
             assertNotNull(freezePublication(service, topic), "重选本主题真实挑战及客观题备选后可发布");
+            assertEquals(json.valueToTree(stateKeys), json.valueToTree(stateMapper.selectByTopicId(77L)));
+            assertEquals(json.valueToTree(stateKeys), json.valueToTree(stateMapper.selectByTopicIdForUpdate(77L)));
         }
     }
 
@@ -191,8 +194,10 @@ class GameplayDraftCopyTest {
             ReflectionTestUtils.setField(service,"themeStateKeyMapper",keys);
         }
         ThemeStateKeyMapper originalKeys=keys;
-        when(keys.lockTopicForStateKeyWrite(topic.getId())).thenReturn(topic.getId());
-        when(keys.selectByTopicIdForUpdate(topic.getId())).thenAnswer(call -> originalKeys.selectByTopicId(call.getArgument(0)));
+        doReturn(topic.getId()).when(keys).lockTopicForStateKeyWrite(topic.getId());
+        // Restubbing must not execute the previous bridge and bind this answer to its nested plain read.
+        doAnswer(call -> originalKeys.selectByTopicId(call.getArgument(0)))
+                .when(keys).selectByTopicIdForUpdate(topic.getId());
         javax.sql.DataSource data=mock(javax.sql.DataSource.class);
         java.sql.Connection connection=mock(java.sql.Connection.class);
         when(data.getConnection()).thenReturn(connection);when(connection.getAutoCommit()).thenReturn(true);
