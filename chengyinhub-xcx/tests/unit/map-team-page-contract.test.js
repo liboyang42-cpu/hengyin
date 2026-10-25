@@ -26,7 +26,7 @@ test('顶部条「附近的队伍 · N 支在招募」+ 底部只剩「范围」
   assert.ok(wrap, '角控件要包在 mt-corners 里')
   assert.match(wrap[0], /wx:if="\{\{!sheet( && viewMode === 'map')?\}\}"/, '开任何半屏时角控件收起(v13:列表模式也收起)')
   assert.match(WXML, /\{\{rangeText\}\}/)
-  assert.match(WXML, /\{\{myTeamsText\}\}/)
+  assert.match(WXML, /aria-label="\{\{myTeamsN \? '我的队伍/)
   assert.doesNotMatch(WXML, /openTools|openStampCamera|pgrabhit/, '旧抽屉/拍照入口不再留在地图上')
 })
 
@@ -269,7 +269,7 @@ test('P6 撤回成功只重拉列表,不重开半屏;角控件计数不算被拒
   requests.filter((r) => r.url === '/api/team/my').pop().success({ code: 200, data: [] })
   requests.filter((r) => r.url === '/api/team/my-applications').pop().success({ code: 200, data: [
     { teamId: 8, title: 'a', applyStatus: 'PENDING' }, { teamId: 10, title: 'b', applyStatus: 'REJECTED' }] })
-  assert.equal(page.data.myTeamsText, '我的队伍 · 1')
+  assert.equal(page.data.myTeamsN, 1)
   let reopened = 0
   page._openSheet = () => { reopened += 1 }
   page.onMyRowAction({ currentTarget: { dataset: { index: 0 } } })

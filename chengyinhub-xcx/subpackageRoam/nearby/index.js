@@ -60,7 +60,7 @@ Page({
     headerText: '附近',
     nearbyReadAccess: '',
     rangeText: kmText(DEFAULT_RADIUS), pcTop: 200, mddLeft: 16,
-    myTeamsText: T.myTeamsText(0), myTeamsN: 0,
+    myTeamsN: 0,
     viewMode: 'map',        // map | list(2026-10-14 地图优化)
     listRows: [], layer: 'all', layerSub: '', layerSheet: '', layerItems: [], poiCard: null, poiCardIn: false, poiFlip: false, poiExpand: false, pcClip: '', poiPhoto: 0, camOpen: false, privacyGateShow: false, // 2026-10-22 筛选行与地标/商家点位卡
     myReadAccess: '', myReadError: false, myLoaded: false,
@@ -702,7 +702,7 @@ Page({
   loadMyTeams(showFail) {
     const owner = this._myIdentity();
     const seq = this._myReadSeq = (this._myReadSeq || 0) + 1;
-    if (this._myReadOwner !== owner) this.setData({ myRows: [], myLoaded: false, myTeamsText: '我的队伍', myTeamsN: 0 });
+    if (this._myReadOwner !== owner) this.setData({ myRows: [], myLoaded: false, myTeamsN: 0 });
     this._myReadOwner = owner;
     if (!session.memberId(app)) {
       this.setData({ myLoading: false, myReadAccess: 'login', myReadError: false }); return;
@@ -715,7 +715,7 @@ Page({
       if (that._unloaded || seq !== that._myReadSeq) return true;
       if (owner !== that._myIdentity() || res && res.reason === 'sessionChanged') {
         that._myReadSeq += 1;
-        that.setData({ myRows: [], myLoaded: false, myTeamsText: '我的队伍', myTeamsN: 0, myLoading: false,
+        that.setData({ myRows: [], myLoaded: false, myTeamsN: 0, myLoading: false,
           myReadAccess: session.memberId(app) ? '' : 'login', myReadError: false });
         if (!that._hidden && session.memberId(app)) that.loadMyTeams(showFail);
         return true;
@@ -723,7 +723,7 @@ Page({
       const code = session.failureStatus(res, status);
       if (code !== 401 && code !== 403) return false;
       that._myReadSeq += 1;
-      that.setData({ myRows: [], myLoaded: false, myTeamsText: '我的队伍', myTeamsN: 0, myLoading: false,
+      that.setData({ myRows: [], myLoaded: false, myTeamsN: 0, myLoading: false,
         myReadAccess: code === 401 ? 'login' : 'denied', myReadError: false });
       return true;
     };
@@ -739,7 +739,7 @@ Page({
       const rows = T.myTeamRows(joined || [], apps || []);
       const complete = joined != null && apps != null;
       that.setData({ myRows: rows, myLoading: false, myLoaded: complete, myReadError: !complete,
-        myTeamsText: complete ? T.myTeamsText(rows.filter((r) => r.tone !== 'bad').length) : '我的队伍', myTeamsN: complete ? rows.filter((r) => r.tone !== 'bad').length : 0 });
+        myTeamsN: complete ? rows.filter((r) => r.tone !== 'bad').length : 0 });
     };
     app.sendRequest({
       url: '/api/team/my', method: 'POST', hideLoading: true, silentError: true, data: JSON.stringify({}), header: JSON_HEADER,

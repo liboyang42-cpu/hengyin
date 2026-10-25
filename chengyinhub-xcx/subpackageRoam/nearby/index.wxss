@@ -207,7 +207,7 @@ page { background: var(--cy-comp-sheet-player-page); }
 .pb__cm-empty { display: block; padding: 23rpx 0; font-size: 25rpx; color: #8E8E93; } /* ds-ok */
 .pb__mine { margin-top: 19rpx; padding: 23rpx; border-radius: 31rpx; background: #2C2C2E; } /* ds-ok */
 .pb__stars { display: flex; gap: 8rpx; }
-.pb__star { width: 64rpx; height: 64rpx; display: flex; align-items: center; justify-content: center; font-size: 40rpx; color: #48484A; } /* ds-ok */
+.pb__star { width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; font-size: 40rpx; color: #48484A; } /* ds-ok */
 .pb__star.on { color: #FF9F0A; } /* ds-ok */
 .pb__ta { width: 100%; min-height: 96rpx; margin-top: 12rpx; font-size: 27rpx; line-height: 1.5; color: #fff; } /* ds-ok */
 .pb__ph { color: #8E8E93; } /* ds-ok */

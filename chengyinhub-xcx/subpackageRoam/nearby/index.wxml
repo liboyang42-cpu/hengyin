@@ -74,7 +74,7 @@
   <!-- 范围保留文字胶囊;我的队伍改图标 + 人数角标。卡片条在时整体抬到卡片条上方 -->
   <view class="mt-corners" wx:if="{{!sheet && viewMode === 'map'}}" style="bottom:{{listRows.length ? 'calc(' + (safeBottom + 16) + 'px + 410rpx)' : (safeBottom + 26) + 'px'}};">
     <view class="mt-corner" bindtap="openRange" aria-role="button" aria-label="{{rangeText}}" hover-class="cy-pressed" hover-stay-time="80">{{rangeText}}</view>
-    <view class="mt-corner mt-corner--icon" bindtap="openMyTeamsPage" aria-role="button" aria-label="{{myTeamsText}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="mtab-customers" size="40" /><text class="mt-corner__n" wx:if="{{myTeamsN}}">{{myTeamsN}}</text></view>
+    <view class="mt-corner mt-corner--icon" bindtap="openMyTeamsPage" aria-role="button" aria-label="{{myTeamsN ? '我的队伍 · ' + myTeamsN : '我的队伍'}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="mtab-customers" size="40" /><text class="mt-corner__n" wx:if="{{myTeamsN}}">{{myTeamsN}}</text></view>
   </view>
 
   <!-- P2 / P3 / P4 / 被拒 / 已加入:队伍卡(稿 593:1017 · 594:1030 · 594:1060) -->

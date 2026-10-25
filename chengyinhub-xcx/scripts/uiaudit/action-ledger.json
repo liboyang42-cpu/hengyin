@@ -1272073,7 +1272073,7 @@
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "{{myTeamsText}}",
+        "ariaLabelExpression": "{{myTeamsN ? '我的队伍 · ' + myTeamsN : '我的队伍'}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
