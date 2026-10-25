@@ -203,6 +203,14 @@ public class PlayNodeQueryApplication {
     }
 
     NodeTask projectNodeBeforeRuntime(NodeProjection read, CmsTopicNode n) {
+        return projectNodeBeforeRuntime(read, n, null);
+    }
+
+    NodeTask projectNodeBeforeRuntime(NodeProjection read, CmsTopicNode source,
+            com.fasterxml.jackson.databind.JsonNode content) {
+        boolean frozenContent = content != null && content.has("contentSnapshotVersion");
+        CmsTopicNode n = frozenContent ? playNodeContext.frozenNodeView(source, content) : source;
+        if (frozenContent) read.presentedContents.put(n.getId(),content.deepCopy());
         read.playableNodeIds.add(n.getId());
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("nodeId", n.getId());
@@ -268,7 +276,8 @@ public class PlayNodeQueryApplication {
         Integer validationMethod = null;
         CmsMemberTemplate tpl = null;
         if (n.getTemplateId() != null) {
-            tpl = cmsMemberTemplateService.selectCmsMemberTemplateById(n.getTemplateId());
+            tpl = frozenContent ? playNodeContext.frozenTemplateView(n, content)
+                    : cmsMemberTemplateService.selectCmsMemberTemplateById(n.getTemplateId());
             if (tpl != null) {
                 validationMethod = tpl.getValidationMethod();
                 // 答题型节点下发题面（不下发答案/正确项，防作弊）
@@ -389,6 +398,10 @@ public class PlayNodeQueryApplication {
     }
 
     void finishNode(NodeProjection read, NodeTask task) {
+        finishNode(read, task, task.node());
+    }
+
+    void finishNode(NodeProjection read, NodeTask task, CmsTopicNode currentNode) {
         CmsTopicNode n = task.node();
         Map<String, Object> m = task.view();
         Integer validationMethod = task.validationMethod();
@@ -400,7 +413,7 @@ public class PlayNodeQueryApplication {
         m.put("doneAt", read.doneAtMap.get(n.getId())); // 完成时间(epoch),手记按完成顺序排列用
         // 节点完成实际入账探索值:与 advanceProgress 用同一个 resolveNodeXp 真源。
         // 前端节点卡「+N 分」原来写死 12,配了更高探索值的节点会被少报成 12。
-        m.put("xp", xpBudgetService == null ? 0 : xpBudgetService.resolveNodeXp(n, read.nodeXpCache));
+        m.put("xp", xpBudgetService == null ? 0 : xpBudgetService.resolveNodeXp(currentNode, read.nodeXpCache));
         PlayerNodeProgress currentProgress = read.progressByNode.get(n.getId());
         m.put("picUrl", currentProgress == null ? null : currentProgress.getPicUrl());
         if (currentProgress != null && currentProgress.getPuzzleScore() != null) {
@@ -502,7 +515,12 @@ public class PlayNodeQueryApplication {
 
         com.chengyinhub.business.domain.CmsTopic topicForFlow = cmsTopicService.selectCmsTopicById(read.tId);
         // 条件正文 / 条件内心声音按本局标签下发(2026-09-24「选择有回响」)
-        java.util.Set<String> storyTags = topicRouteRuntimeService == null ? java.util.Collections.<String>emptySet()
+        java.util.Set<String> storyTags;
+        if (read.contentSnapshot != null) {
+            storyTags = new java.util.LinkedHashSet<>();
+            for (com.fasterxml.jackson.databind.JsonNode tag : read.contentSnapshot.path("contentTags"))
+                if (tag.isTextual()) storyTags.add(tag.asText());
+        } else storyTags = topicRouteRuntimeService == null ? java.util.Collections.<String>emptySet()
                 : topicRouteRuntimeService.tags(read.memberId, read.tId, read.progActId);
         boolean resolveBlocks = ChapterBlockReadSupport.shouldResolveBlocks(
                 topicForFlow == null ? null : topicForFlow.getProductType(), null);
@@ -512,10 +530,21 @@ public class PlayNodeQueryApplication {
         chapterProbe.setTopicId(read.tId);
         List<CmsTopicChapter> chapterList = cmsTopicChapterService.selectCmsTopicChapterList(chapterProbe);
         List<Map<String, Object>> chapters = new ArrayList<>();
+        Map<Long,String> originalChapterAudio = new LinkedHashMap<>();
+        for (com.fasterxml.jackson.databind.JsonNode content : read.presentedContents.values()) {
+            if (!com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContent(content)
+                    || !content.path("nodePresentation").hasNonNull("chapterId")) continue;
+            Long chapterId=content.path("nodePresentation").path("chapterId").asLong();
+            String audio=content.path("chapterAudioUrl").asText(null);
+            if (originalChapterAudio.containsKey(chapterId) && !java.util.Objects.equals(originalChapterAudio.get(chapterId),audio))
+                throw new IllegalStateException("章节音频快照不一致");
+            originalChapterAudio.put(chapterId,audio);
+        }
         Map<String, Object> opening = read.routeState == null ? null : read.routeState.getOpening();
         // 结局章不是路线的一章:不进章节列表(不剧透、不被当成下一章),通关后读 /journey/ending 才播
         java.util.Set<Long> endingChapterIds = com.chengyinhub.business.domain.JourneyStory.endingChapterIds(
-                topicForFlow == null ? null : topicForFlow.getJourneyStoryJson());
+                read.contentSnapshot != null ? com.chengyinhub.business.service.support.NodeJourneySnapshot.journeyStory(read.contentSnapshot.toString())
+                        : topicForFlow == null ? null : topicForFlow.getJourneyStoryJson());
         for (CmsTopicChapter c : chapterList) {
             if (endingChapterIds.contains(c.getId())) continue;
             if (opening != null && String.valueOf(c.getId()).equals(String.valueOf(opening.get("chapterId")))) continue;
@@ -533,10 +562,21 @@ public class PlayNodeQueryApplication {
                     ? ChapterAtmospherePreset.normalizeForRead(c.getAtmospherePreset())
                     : ChapterAtmospherePreset.DEFAULT);
             // 章节背景旁白:玩家端进入本章自动播放(2026-09-04 起音频不再是 blocks 里的块)
-            cm.put("audioUrl", c.getAudioUrl());
+            cm.put("audioUrl", originalChapterAudio.containsKey(c.getId()) ? originalChapterAudio.get(c.getId()) : c.getAudioUrl());
             if (resolveBlocks && ChapterBlockReadSupport.isRequiredChapter(c)) {
+                List<Map<String,Object>> blocks;
+                if (read.contentSnapshot == null) blocks=ChapterBlockReadSupport.resolveFromTopicNodes(c,read.nodeList);
+                else {
+                    blocks=java.util.Collections.emptyList();
+                    for (com.fasterxml.jackson.databind.JsonNode chapter : read.contentSnapshot.path("thoughtChapters"))
+                        if (chapter.path("chapterId").asLong()==c.getId() && chapter.path("blocks").isArray()) {
+                            blocks=new com.fasterxml.jackson.databind.ObjectMapper().convertValue(chapter.path("blocks"),
+                                    new com.fasterxml.jackson.core.type.TypeReference<List<Map<String,Object>>>() {});
+                            break;
+                        }
+                }
                 cm.put("blocks", ChapterBlockReadSupport.projectForPlayer(
-                        ChapterBlockReadSupport.resolveFromTopicNodes(c, read.nodeList), read.completedNodeIds, storyTags));
+                        blocks, read.completedNodeIds, storyTags));
             }
             chapters.add(cm);
         }
@@ -553,7 +593,9 @@ public class PlayNodeQueryApplication {
         // 自由探索卡包首屏的底图:主题长图(列表里的封面也是它),前端虚化铺底,没有就退回章节封面
         if (topicForFlow != null) data.put("topicCover", topicForFlow.getImgUrl());
         // 故事开局的「初始状态」页只列作者真开了的精力 / 幸运:回执里的 hp/luck 没开也有值(取配置初始值),看不出开没开
-        Map<String, Object> vitalsOn = topicForFlow == null ? null : vitalsOn(topicForFlow.getJourneyRulesJson());
+        Map<String, Object> vitalsOn = read.contentSnapshot != null
+                ? vitalsOn(com.chengyinhub.business.service.support.NodeJourneySnapshot.journeyRules(read.contentSnapshot.toString()))
+                : topicForFlow == null ? null : vitalsOn(topicForFlow.getJourneyRulesJson());
         if (vitalsOn != null) data.put("vitalsOn", vitalsOn);
         com.chengyinhub.business.domain.CmsTopic circleTopic = cmsTopicService.selectCmsTopicById(read.tId);
         if (circleTopic != null && StringUtils.isNotEmpty(circleTopic.getCircleThemeCode())) {
@@ -662,6 +704,8 @@ public class PlayNodeQueryApplication {
 
     /** Request-owned projection values only: no service references or executable continuations. */
     static final class NodeProjection {
+        com.fasterxml.jackson.databind.JsonNode contentSnapshot;
+        final Map<Long,com.fasterxml.jackson.databind.JsonNode> presentedContents = new LinkedHashMap<>();
         final Long memberId;
         final boolean selfPlay;
         final Long tId;

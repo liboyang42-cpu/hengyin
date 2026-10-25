@@ -74,11 +74,16 @@ public class ThemeCharacterService {
         if (deleted || (!published && OwnershipUtils.notOwner(topic.getMemberId(), memberId))) {
             throw new ServiceException("主题不存在", HttpStatus.NOT_FOUND).setDetailMessage("CHARACTER_TOPIC_NOT_FOUND");
         }
-        Map<String, JsonNode> attributes = journeyAttributes(topic.getJourneyRulesJson());
-        List<ThemeStateKey> keys = cardKeys(topicId, attributes);
+        TopicRouteSession latest = latestSession(memberId, topicId);
+        String snapshot = latest == null ? topic.getPublishedRouteGraphJson() : latest.getConfigSnapshotJson();
+        List<ThemeStateKey> definitions = JourneyInitialState.frozenDefinitions(snapshot);
+        String frozenRules = NodeJourneySnapshot.journeyRules(snapshot);
+        if (definitions != null) frozenRules = JourneyInitialState.frozenDefinitionRules(snapshot);
+        String rulesJson = frozenRules == null ? topic.getJourneyRulesJson() : frozenRules;
+        Map<String, JsonNode> attributes = journeyAttributes(rulesJson);
+        List<ThemeStateKey> keys = cardKeys(topicId, attributes, definitions);
 
         ThemeCharacter character = themeCharacterMapper.selectByMemberAndTopic(memberId, topicId);
-        TopicRouteSession latest = latestSession(memberId, topicId);
         Map<String, Integer> carried = carriedValues(character, latest, keys);
         boolean running = latest != null && Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(latest.getStatus());
         Map<String, Integer> live = running ? variables(latest.getStateJson()) : new HashMap<String, Integer>();
@@ -107,7 +112,7 @@ public class ThemeCharacterService {
         card.put("running", Boolean.valueOf(running));
         card.put("attributes", rows);
         // F6 T12:主题开了 journeyRules.rpg 才多一个 rpg 块(动量 / 侧面 / 特质 / 进度钟);老主题响应不变。
-        JourneyRules rpgRules = rpgRules(topic.getJourneyRulesJson());
+        JourneyRules rpgRules = rpgRules(rulesJson);
         if (rpgRules != null) card.put("rpg", JourneyRpg.view(rpgRules, running ? engineState(latest.getStateJson()) : null));
         return card;
     }
@@ -139,9 +144,16 @@ public class ThemeCharacterService {
      * (该属性没在 journeyRules.attributes 里启用)不凭空创建 —— 运行期变量表只由规则决定。
      */
     public void seedRun(Long memberId, Long topicId, JourneyRules rules, TopicRouteEngine.State state) {
+        seedRun(memberId, topicId, rules, state, null);
+    }
+
+    /** Original carry ledger/value policy; only author definitions come from this new run's publication. */
+    public void seedRun(Long memberId, Long topicId, JourneyRules rules, TopicRouteEngine.State state, String snapshot) {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L || state == null) return;
         List<ThemeStateKey> persisted = new ArrayList<ThemeStateKey>();
-        List<ThemeStateKey> all = themeStateKeyMapper.selectByTopicId(topicId);
+        List<ThemeStateKey> all = JourneyInitialState.frozenDefinitions(snapshot);
+        if (all == null) all = themeStateKeyMapper.selectByTopicId(topicId);
+        else rules = JourneyRules.parse(JourneyInitialState.frozenDefinitionRules(snapshot));
         if (all != null) {
             for (ThemeStateKey key : all) {
                 if (key != null && ThemeStateKey.TYPE_COUNTER.equals(key.getKeyType()) && key.persistsAcrossRuns()) {
@@ -219,9 +231,9 @@ public class ThemeCharacterService {
     }
 
     /** 角色卡展示的键:counter、可见,且没被 journeyRules 标成隐藏属性;按 sortOrder 升序,null 排最后。 */
-    private List<ThemeStateKey> cardKeys(Long topicId, Map<String, JsonNode> attributes) {
+    private List<ThemeStateKey> cardKeys(Long topicId, Map<String, JsonNode> attributes, List<ThemeStateKey> definitions) {
         List<ThemeStateKey> keys = new ArrayList<ThemeStateKey>();
-        List<ThemeStateKey> all = themeStateKeyMapper.selectByTopicId(topicId);
+        List<ThemeStateKey> all = definitions == null ? themeStateKeyMapper.selectByTopicId(topicId) : definitions;
         if (all == null) return keys;
         for (ThemeStateKey key : all) {
             if (key == null || !ThemeStateKey.TYPE_COUNTER.equals(key.getKeyType()) || !key.shownOnCard()) continue;

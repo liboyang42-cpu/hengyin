@@ -144,6 +144,26 @@ class ApiPlaySensorResultTest {
     }
 
     @Test
+    void originalUnboundSensorStillUsesOriginalConfigAndRefusesUntrustedCompletion() {
+        ITopicRouteRuntimeService route=mock(ITopicRouteRuntimeService.class);
+        PlayNodeAccessTestFixtures.setField(controller,"topicRouteRuntimeService",route);
+        when(route.canPlay(eq(MEMBER),eq(TOPIC),eq(ACTIVITY),eq(NODE),nullable(String.class))).thenReturn(true);
+        var content=new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+        content.put("contentSnapshotVersion",1).put("templateId",85L).put("validationMethod",ValidationMethod.APP_SENSOR)
+                .put("sensorType","still").put("sensorConfig","{\"durationSec\":10}");
+        content.putObject("nodePresentation").put("id",NODE).put("topicId",TOPIC).put("templateId",85L);
+        content.putObject("templatePresentation");
+        when(route.nodeAnswers(MEMBER,TOPIC,ACTIVITY,NODE)).thenReturn(content);
+        node.setTemplateId(null);template.setSensorType("later-author-type");
+        AjaxResult result=controller.sensorResult(request("still",payload("heldSec",12)));
+        assertEquals(500,result.get("code"));assertEquals("传感器可信证明缺失，暂不能完成挑战",result.get("msg"));
+        verify(templateService,never()).selectCmsMemberTemplateById(any());
+        verify(progressService,never()).insertPlayerNodeProgress(any());
+        verify(points,never()).award(anyLong(),anyLong(),anyLong(),anyString());
+        verify(growth,never()).addExp(anyLong(),anyInt(),anyString());
+    }
+
+    @Test
     void filterShotPhotoGrantsXpAndBadgesOnly() {
         template.setValidationMethod(ValidationMethod.PHOTO);
         template.setSensorType("filter_shot");

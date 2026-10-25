@@ -175,8 +175,13 @@ public class PlayEntryApplication {
         int playMode = playNodeContext.resolveMode(progActId, tId); // 复用既有 helper,循环内 + 出参共用
         TopicRouteState routeState = null;
         com.chengyinhub.business.domain.CmsTopic routeTopic = cmsTopicService.selectCmsTopicById(tId);
-        boolean hasJourneyState = routeTopic != null
-                && com.chengyinhub.business.domain.JourneyRules.parse(routeTopic.getJourneyRulesJson()).hasRuntimeState();
+        com.fasterxml.jackson.databind.JsonNode contentSnapshot = contentSnapshotForRead(memberId,tId,progActId,registered,routeTopic);
+        String contentRules = com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContentSnapshots(contentSnapshot)
+                ? com.chengyinhub.business.service.support.NodeJourneySnapshot.journeyRules(contentSnapshot.toString())
+                : routeTopic == null ? null : routeTopic.getJourneyRulesJson();
+        if (com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContentSnapshots(contentSnapshot) && contentRules == null)
+            throw new IllegalStateException("本局数值规则快照不可用");
+        boolean hasJourneyState = com.chengyinhub.business.domain.JourneyRules.parse(contentRules).hasRuntimeState();
         // RV4 S533-3:check.bargain 报价只在本局规则开了魔鬼交易时下发;老主题(无旅程状态)不多查库。
         boolean bargainOffered = hasJourneyState && topicRouteRuntimeService != null
                 && topicRouteRuntimeService.bargainOffered(memberId, tId, progActId);
@@ -184,6 +189,8 @@ public class PlayEntryApplication {
                 && (playMode == PlayMode.LINEAR_ORIENTEERING || hasJourneyState)) {
             try {
                 routeState = topicRouteRuntimeService.state(memberId, tId, progActId);
+                if (routeState != null && routeState.getSessionId() != null)
+                    contentSnapshot = contentSnapshotForRead(memberId,tId,progActId,true,routeTopic);
             } catch (IllegalArgumentException | IllegalStateException e) {
                 return error(e.getMessage());
             }
@@ -192,19 +199,46 @@ public class PlayEntryApplication {
                 memberId, selfPlay, tId, progActId, timeErr, registered, leadSpectator, passExpiresAt,
                 nodeList, doneNodeIds, doneAtMap, progressByNode, completedNodeIds, hintCost,
                 hintUnlockedNodeIds, nodes, spoilerAccess, playMode, routeTopic, bargainOffered, routeState);
+        read.contentSnapshot = com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContentSnapshots(contentSnapshot)
+                ? contentSnapshot : null;
         AjaxResult denied = playNodeQueryApplication.prepareNodes(read);
         if (denied != null) return denied;
+        boolean versionedContent = com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContentSnapshots(contentSnapshot);
+        boolean hasNodeGames = contentSnapshot != null && contentSnapshot.path("originalNodeGames").isObject()
+                && !contentSnapshot.path("originalNodeGames").isEmpty();
+        boolean sharedContent = read.registered && topicRouteRuntimeService != null
+                && contentSnapshot != null && contentSnapshot.hasNonNull("gameSessionId");
+        if (versionedContent && read.routeState != null && read.routeState.getSessionId() != null) {
+            com.fasterxml.jackson.databind.JsonNode originalRun = contentSnapshot.has("gameSessionId")
+                    ? contentSnapshot.get("gameSessionId") : contentSnapshot.get("contentRouteSessionId");
+            if (originalRun != null && originalRun.asLong() != read.routeState.getSessionId())
+                return error("路线状态已更新，请重试");
+        }
+        List<CmsTopicNode> presentedNodes = new ArrayList<>();
         for (CmsTopicNode n : read.nodeList) {
-            PlayNodeQueryApplication.NodeTask task = playNodeQueryApplication.projectNodeBeforeRuntime(read, n);
+            com.fasterxml.jackson.databind.JsonNode nodeSource = com.chengyinhub.business.service.support.NodeJourneySnapshot.nodeContentSource(contentSnapshot,n.getId());
+            boolean legacyNodeGame = nodeSource != null && nodeSource.path("legacyNodeContent").asBoolean();
+            boolean nodeVersioned = com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContentSnapshots(nodeSource);
+            if (nodeVersioned && !nodeSource.path("nodeAnswers").has(String.valueOf(n.getId()))) continue;
+            com.fasterxml.jackson.databind.JsonNode content = nodeVersioned
+                    ? com.chengyinhub.business.service.support.NodeJourneySnapshot.answerFromSnapshot(nodeSource,n.getId()) : null;
+            if (nodeVersioned && !com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContent(content))
+                throw new IllegalStateException("本局内容快照不可用");
+            if (nodeVersioned && !sharedContent && content.path("nodePresentation").path("id").asLong() != n.getId())
+                throw new IllegalStateException("本局内容归属不可用");
+            PlayNodeQueryApplication.NodeTask task = playNodeQueryApplication.projectNodeBeforeRuntime(read, n, content);
+            presentedNodes.add(task.node());
             if (task.template() != null) {
-                // This port can refresh shared zero-HP state. Keep it outside Query, at the
-                // original position between template fields and public frozen config projection.
-                com.fasterxml.jackson.databind.JsonNode themeNodeConfig = topicRouteRuntimeService == null ? null
-                        : topicRouteRuntimeService.nodeRuntimeConfig(memberId, n.getTopicId(), n.getId(), progActId);
+                // New content uses this request's captured config. The old compatibility path
+                // keeps its original Entry-owned shared refresh outside pure Query.
+                com.fasterxml.jackson.databind.JsonNode themeNodeConfig = nodeVersioned || legacyNodeGame
+                        ? nodeSource.path("nodeConfigs").get(String.valueOf(n.getId()))
+                        : topicRouteRuntimeService == null ? null : topicRouteRuntimeService.nodeRuntimeConfig(memberId, n.getTopicId(), n.getId(), progActId);
                 playNodeQueryApplication.projectFrozenTemplate(read, task, themeNodeConfig);
             }
-            playNodeQueryApplication.finishNode(read, task);
+            playNodeQueryApplication.finishNode(read, task, n);
         }
+        if (versionedContent || hasNodeGames) read.nodeList = presentedNodes;
         Map<String, Object> data = playNodeQueryApplication.finishNodes(read);
         // 升级2:俱乐部局自动分配角色(已报名才发;自玩/公域局不发)。best-effort,不拖垮 /nodes
         if (!selfPlay && clubId != null && registered
@@ -222,6 +256,23 @@ public class PlayEntryApplication {
             }
         }
         return AjaxResult.success(data);
+    }
+
+    /** The caller has already performed the original public/spectator/player admission. */
+    private com.fasterxml.jackson.databind.JsonNode contentSnapshotForRead(Long member, Long topicId, Long activity,
+            boolean registered, com.chengyinhub.business.domain.CmsTopic topic) {
+        if (registered && topicRouteRuntimeService != null)
+            return topicRouteRuntimeService.queryNodeContentSnapshot(member,topicId,activity,null);
+        if (topic == null || topic.getPublishedConfigVersion() == null || topic.getPublishedConfigVersion() <= 0
+                || topic.getPublishedRouteGraphJson() == null || topic.getPublishedRouteGraphJson().trim().isEmpty()) return null;
+        com.fasterxml.jackson.databind.JsonNode snapshot = new com.chengyinhub.business.service.support.TopicRouteConfigValidator()
+                .readTree(topic.getPublishedRouteGraphJson());
+        if (registered && com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContentSnapshots(snapshot))
+            throw new IllegalStateException("原局内容读取服务暂时不可用");
+        if (snapshot.isObject()) ((com.fasterxml.jackson.databind.node.ObjectNode)snapshot).remove(java.util.Arrays.asList(
+                "contentRouteSessionId","contentTags","gameSessionId","teamId","authorityEpoch","runtimeInstance"));
+        com.chengyinhub.business.service.support.NodeJourneySnapshot.requireContentSnapshot(snapshot);
+        return snapshot;
     }
 
     /** Compatibility GET entry: preserves state initialization/shared refresh; no target or outcome input. */

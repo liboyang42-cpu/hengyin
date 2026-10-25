@@ -5,6 +5,11 @@ import java.util.List;
 import java.util.Map;
 
 public interface IAdvancedGameRuntimeService {
+    /** Server-only original metadata/config of accessible default node games; pure read, no restart. */
+    default com.fasterxml.jackson.databind.JsonNode queryDefaultNodeContents(Long memberId, Long activityId, Long topicId) {
+        return null;
+    }
+
     Map<String, Object> start(Long memberId, Long activityId, Long topicId, Long nodeId, Long teamId);
 
     Map<String, Object> act(Long memberId, Long sessionId, Integer expectedVersion,

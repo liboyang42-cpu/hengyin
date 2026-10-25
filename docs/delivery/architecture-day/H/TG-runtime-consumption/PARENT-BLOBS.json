@@ -1,0 +1,134 @@
+[
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayBasicCommandApplication.java",
+    "parent_blob": "c628d1e4f523c2840e4121a4bdfd9f09e5299c75"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayEntryApplication.java",
+    "parent_blob": "278b316c2f025c316080e12f01fc6973bfdc495f"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayNodeContext.java",
+    "parent_blob": "09925d61a38ac520ca73df7a4d6743bdd9a33bf1"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayNodeQueryApplication.java",
+    "parent_blob": "e3bec8d113f5f9bdb59d9ecf6dc31b1f081305a1"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayPreferenceApplication.java",
+    "parent_blob": "ea23efaa45579b1227009889c13641daaf441b00"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImplTest.java",
+    "parent_blob": "94f89104e6a196c8873013c447c2043aaf2f9ec6"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSharedRouteQueryTest.java",
+    "parent_blob": "84c1ab49ec55f6343cda1a5f64f6fa5f0242ae5a"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NodeHintUnlockApplicationTest.java",
+    "parent_blob": "5a932300ca90f30fdcc43ca76b190d7768a86fa7"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImplTest.java",
+    "parent_blob": "d8ca7d3ac517713ba0377355b20c923a1d96fbb9"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PublishedNodeContentConsumptionTest.java",
+    "parent_blob": null
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PuzzlePlayServiceImplTest.java",
+    "parent_blob": "7768e72b6ac7fff9541d75e9f43f50a29ea03eb3"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/ThemeCharacterServiceTest.java",
+    "parent_blob": "0733d43d59e92fda4493e1b677532199bc8fff2d"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEncounterControllerTest.java",
+    "parent_blob": "e672c19977a2caa39c427ea5f0e549784ce602a7"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java",
+    "parent_blob": "2957369dfb28fbf29a214269ec3e5538a10dc21d"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPuzzleHintTest.java",
+    "parent_blob": "84f4380c9499d5590863acc455607dfc5541794d"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java",
+    "parent_blob": "3fa07a32098bd8264b3791a98c84a4b0642f8dce"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayFrozenContentProjectionTest.java",
+    "parent_blob": null
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayFrozenPreferenceAdmissionTest.java",
+    "parent_blob": null
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/GameRuntimeSessionMapper.java",
+    "parent_blob": "d449379f2153af6be20093741d4075e7d7fd3614"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IAdvancedGameRuntimeService.java",
+    "parent_blob": "43bc5e1ac54976178962d1a3bf73866fa0004204"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IGameSessionRuntimeService.java",
+    "parent_blob": "fd189e5663e2447902bba6fef1d340e998a0589f"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ITopicRouteRuntimeService.java",
+    "parent_blob": "0dbfff9c075b3f665e615a5555caf47eae420cd5"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java",
+    "parent_blob": "3d182681070436e5fce80fdfe6f54371e16dd793"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+    "parent_blob": "c669a2ea4c7d4ad705976ddcf14a1e70c7ec1830"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayEncounterServiceImpl.java",
+    "parent_blob": "0d1e0f26ec456f5f94ae66fbe0d46f28bc2875b0"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImpl.java",
+    "parent_blob": "0ecf115361893bc1f18fff2a18748a2b6d33b4ba"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PuzzlePlayServiceImpl.java",
+    "parent_blob": "7a66a3c6e2f26124ee808bb26296a7a890e7b18a"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+    "parent_blob": "2e6e460c1ee412cb9e9a856a24c9877d62c19651"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/JourneyInitialState.java",
+    "parent_blob": "3b2d27550feffc228163b98417fa3c9e06e3428f"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/NodeJourneySnapshot.java",
+    "parent_blob": "0c2a8ae89e8f83c3c0b1c56c3ce7b0bd4c194a9e"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeCharacterService.java",
+    "parent_blob": "82569f963294b6ec0b18b137e550810856ce5a52"
+  },
+  {
+    "path": "chengyinhub-system/src/main/resources/mapper/business/GameRuntimeSessionMapper.xml",
+    "parent_blob": "6a1d299960ffac918507bec562035b1f6d9bc795"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayNodeAccessTestFixtures.java",
+    "parent_blob": "ce4f870e6e24a63d3a9b383af7ecf3105eefd125"
+  }
+]

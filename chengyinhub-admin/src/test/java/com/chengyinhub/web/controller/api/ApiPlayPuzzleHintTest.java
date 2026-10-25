@@ -216,4 +216,96 @@ class ApiPlayPuzzleHintTest
         assertEquals(500, controller.revealPuzzle(null, String.valueOf(NODE), String.valueOf(TOPIC)).get("code"));
         verify(progressService, never()).insertPlayerNodeProgress(any());
     }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void admittedUnregisteredBrowseUsesPublishedOrdinaryAndNonTemplateContentWithoutRuntimeEntry() throws Exception
+    {
+        ICmsTopicNodeService nodes=(ICmsTopicNodeService)PlayNodeAccessTestFixtures.getField(controller,"cmsTopicNodeService");
+        ICmsTopicService topics=(ICmsTopicService)PlayNodeAccessTestFixtures.getField(controller,"cmsTopicService");
+        ICmsMemberTemplateService templates=(ICmsMemberTemplateService)PlayNodeAccessTestFixtures.getField(controller,"cmsMemberTemplateService");
+        ICmsRegistrationService registrations=(ICmsRegistrationService)PlayNodeAccessTestFixtures.getField(controller,"cmsRegistrationService");
+        CmsTopic topic=topics.selectCmsTopicById(TOPIC); topic.setPublishedConfigVersion(1L);
+        when(topics.selectCmsTopicDetailById(TOPIC,MEMBER)).thenReturn(topic);
+        when(registrations.selectCmsRegistrationList(any())).thenReturn(Collections.emptyList());
+        CmsTopicNode current=nodes.selectCmsTopicNodeById(NODE);current.setTemplateId(null);current.setName("later author name");
+        CmsTopicNode noTemplate=new CmsTopicNode();noTemplate.setId(402L);noTemplate.setTopicId(TOPIC);noTemplate.setStatus(1L);
+        CmsTopicNode notPublished=new CmsTopicNode();notPublished.setId(403L);notPublished.setTopicId(TOPIC);notPublished.setTemplateId(TEMPLATE);
+        when(nodes.selectCmsTopicNodeList(any())).thenReturn(java.util.List.of(current,noTemplate,notPublished));
+        var json=new com.fasterxml.jackson.databind.ObjectMapper();var publication=json.createObjectNode().put("runtimeSnapshotVersion",1);
+        publication.putObject("journeyRules").put("schemaVersion",1);
+        publication.put("journeyStory","");
+        var frozen=publication.putObject("nodeAnswers").putObject(String.valueOf(NODE));
+        frozen.put("contentSnapshotVersion",1).put("templateId",TEMPLATE).put("validationMethod",1).put("questionAnswer","secret-answer");
+        frozen.putObject("nodePresentation").put("id",NODE).put("topicId",TOPIC).put("templateId",TEMPLATE).put("name","original node");
+        ((com.fasterxml.jackson.databind.node.ObjectNode)frozen.path("nodePresentation")).put("chapterId",201L);
+        frozen.put("chapterAudioUrl","/original/chapter.mp3");
+        frozen.putObject("templatePresentation").put("title","original game").put("questionName","original question");
+        frozen.put("hint1","secret-unused-hint");
+        var plain=publication.with("nodeAnswers").putObject("402").put("contentSnapshotVersion",1);
+        plain.putObject("nodePresentation").put("id",402L).put("topicId",TOPIC).put("name","original non-template node");
+        publication.putObject("nodeConfigs").putObject(String.valueOf(NODE)).put("schemaVersion",1);
+        topic.setPublishedRouteGraphJson(publication.toString());
+        topic.setJourneyRulesJson("{\"schemaVersion\":1,\"stateEnabled\":true,\"attributes\":[{\"key\":\"counter.later\",\"label\":\"later\"}]}");
+        var activity=new com.chengyinhub.business.domain.CmsActivity();activity.setId(700L);activity.setTopicId(TOPIC);
+        var activities=mock(com.chengyinhub.business.service.ICmsActivityService.class);
+        when(activities.selectCmsActivityById(700L)).thenReturn(activity);
+        var runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        var shared=mock(com.chengyinhub.business.service.IGameSessionRuntimeService.class);
+        PlayNodeAccessTestFixtures.setField(controller,"cmsActivityService",activities);
+        PlayNodeAccessTestFixtures.setField(controller,"topicRouteRuntimeService",runtime);
+        PlayNodeAccessTestFixtures.setField(controller,"gameSessionRuntimeService",shared);
+        var chapter=new com.chengyinhub.business.domain.CmsTopicChapter();chapter.setId(201L);chapter.setTopicId(TOPIC);chapter.setAudioUrl("/later/chapter.mp3");
+        var chapters=mock(com.chengyinhub.business.service.ICmsTopicChapterService.class);
+        when(chapters.selectCmsTopicChapterList(any())).thenReturn(java.util.List.of(chapter));
+        PlayNodeAccessTestFixtures.setField(controller,"cmsTopicChapterService",chapters);
+        PlayNodeAccessTestFixtures.setField(controller,"umsMemberPointsDetailService",mock(com.chengyinhub.business.service.IUmsMemberPointsDetailService.class));
+        org.mockito.Mockito.clearInvocations(templates);
+
+        AjaxResult result=controller.nodes(700L,null);
+
+        assertEquals(200,result.get("code"));Map<String,Object> data=(Map<String,Object>)result.get("data");
+        assertEquals(false,data.get("registered"));assertEquals(2,data.get("total"));
+        var projected=(java.util.List<Map<String,Object>>)data.get("nodes");
+        assertEquals("original question",projected.get(0).get("question"));
+        assertEquals("original non-template node",projected.get(1).get("name"));
+        assertEquals(false,projected.get(1).containsKey("gameTitle"));
+        assertEquals(false,json.writeValueAsString(data).contains("secret-"));
+        assertEquals(null,data.get("vitalsOn"));
+        assertEquals("/original/chapter.mp3",((java.util.List<Map<String,Object>>)data.get("chapters")).get(0).get("audioUrl"));
+        verify(templates,never()).selectCmsMemberTemplateById(any());
+        verify(runtime,never()).state(any(),any(),any());
+        verify(runtime,never()).nodeRuntimeConfig(any(),any(),any(),any());
+        verify(runtime,never()).queryNodeContentSnapshot(any(),any(),any(),any());
+        org.mockito.Mockito.verifyNoInteractions(runtime,shared);
+        verify(progressService,never()).insertPlayerNodeProgress(any());
+        verify(attemptMapper,never()).insertPlayAttemptLog(any());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void originalHintCallerUsesFrozenContentAfterTemplateUnbindAndKeepsHintFact() {
+        ICmsTopicNodeService nodes=(ICmsTopicNodeService)PlayNodeAccessTestFixtures.getField(controller,"cmsTopicNodeService");
+        ICmsMemberTemplateService templates=(ICmsMemberTemplateService)PlayNodeAccessTestFixtures.getField(controller,"cmsMemberTemplateService");
+        nodes.selectCmsTopicNodeById(NODE).setTemplateId(null);
+        var runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        when(runtime.canPlay(MEMBER,TOPIC,0L,NODE,null)).thenReturn(true);
+        var frozen=new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+        frozen.put("contentSnapshotVersion",1).put("templateId",TEMPLATE).put("validationMethod",1);
+        frozen.putObject("nodePresentation").put("id",NODE).put("topicId",TOPIC).put("templateId",TEMPLATE);
+        frozen.putObject("templatePresentation");
+        frozen.put("hint1","冻结第一提示").put("hint2","未使用第二提示");
+        when(runtime.nodeAnswers(MEMBER,TOPIC,0L,NODE)).thenReturn(frozen);
+        PlayNodeAccessTestFixtures.setField(controller,"topicRouteRuntimeService",runtime);
+        AjaxResult result=controller.puzzleHint(null,String.valueOf(NODE),String.valueOf(TOPIC),1);
+        assertEquals(200,result.get("code"));Map<String,Object> data=(Map<String,Object>)result.get("data");
+        assertEquals("冻结第一提示",data.get("hint"));assertEquals(70,data.get("scoreCap"));
+        assertEquals(Collections.singletonList("冻结第一提示"),data.get("hints"));
+        ArgumentCaptor<PlayAttemptLog> attempt=ArgumentCaptor.forClass(PlayAttemptLog.class);
+        verify(attemptMapper).insertPlayAttemptLog(attempt.capture());
+        assertEquals(MEMBER,attempt.getValue().getMemberId());assertEquals(TOPIC,attempt.getValue().getTopicId());
+        assertEquals(NODE,attempt.getValue().getNodeId());assertEquals(0L,attempt.getValue().getActivityId());
+        verify(templates,never()).selectCmsMemberTemplateById(any());
+        verify(progressService,never()).insertPlayerNodeProgress(any());
+    }
 }

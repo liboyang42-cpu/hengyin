@@ -36,6 +36,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 
 /**
  * /api/play/encounter 只读合同:状态取自本局 topic_route_session.state_json(线性/分支同一套),
@@ -84,11 +86,12 @@ class ApiPlayEncounterControllerTest {
     private ICmsTopicNodeService nodeService;
     private NpcProfileService npcProfileService;
     private ICmsTopicChapterService chapterService;
+    private ICmsMemberTemplateService templateService;
 
     @BeforeEach
     void setUp() {
         nodeService = mock(ICmsTopicNodeService.class);
-        ICmsMemberTemplateService templateService = mock(ICmsMemberTemplateService.class);
+        templateService = mock(ICmsMemberTemplateService.class);
         routeSessionMapper = mock(TopicRouteSessionMapper.class);
         shopDayProofService = mock(IShopDayProofService.class);
         progressService = mock(IPlayerNodeProgressService.class);
@@ -171,6 +174,78 @@ class ApiPlayEncounterControllerTest {
     private Map<String, Object> data(AjaxResult response) {
         assertEquals(200, response.get("code"));
         return (Map<String, Object>) response.get("data");
+    }
+
+    private com.fasterxml.jackson.databind.node.ObjectNode contentSnapshot(String title) throws Exception {
+        ObjectMapper json = new ObjectMapper();
+        com.fasterxml.jackson.databind.node.ObjectNode snapshot = json.createObjectNode();
+        snapshot.putObject("journeyRules").put("schemaVersion",1); snapshot.put("journeyStory","");
+        snapshot.putObject("nodeConfigs").set(String.valueOf(NODE), json.readTree(CONFIG));
+        snapshot.putObject("nodeJourney").set(String.valueOf(NODE), json.readTree(CONFIG));
+        com.fasterxml.jackson.databind.node.ObjectNode content = snapshot.putObject("nodeAnswers").putObject(String.valueOf(NODE));
+        content.put("contentSnapshotVersion", 1).put("templateId", TEMPLATE);
+        content.put("questionAnswer", "never-public-answer").put("correctAnswer", "never-public-key");
+        content.put("answerReveal", "never-public-reveal");
+        content.putObject("nodePresentation").put("id", NODE).put("topicId", TOPIC)
+                .put("templateId", TEMPLATE).put("chapterId", 81L).put("name", "原节点")
+                .put("hookText", "原钩子").put("imgUrl", "/frozen/node.png");
+        content.putObject("templatePresentation").put("title", title).put("storyText", "原故事")
+                .put("imgUrl", "/frozen/template.png")
+                .put("audioUrl", "/frozen/template.mp3");
+        content.put("hint1", "never-public-unused-hint");
+        content.put("chapterAudioUrl", "/frozen/chapter.mp3");
+        return snapshot;
+    }
+
+    @Test
+    void publishedContentSurvivesAuthorUnbindDeleteAndMediaChangesWithoutReadingDraft() throws Exception {
+        session.setConfigSnapshotJson(contentSnapshot("原游戏").toString());
+        node.setTemplateId(null); node.setHookText("作者的新钩子");
+        template.setTitle("作者的新标题"); template.setStoryText("作者的新故事");
+        when(templateService.selectCmsMemberTemplateById(TEMPLATE)).thenReturn(null);
+
+        Map<String, Object> result = data(controller.encounter(TOPIC, null, NODE));
+        Map<?, ?> presentation = (Map<?, ?>) result.get("presentation");
+        assertEquals("原游戏", presentation.get("title"));
+        assertEquals("原故事", presentation.get("storyText"));
+        assertEquals("原钩子", presentation.get("hook"));
+        assertTrue(((List<?>) result.get("preload")).contains("/frozen/chapter.mp3"));
+        String publicJson = new ObjectMapper().writeValueAsString(result);
+        assertFalse(publicJson.contains("never-public-"));
+        verify(nodeService).selectCmsTopicNodeById(NODE);
+        verify(templateService, never()).selectCmsMemberTemplateById(any());
+        verify(chapterService, never()).selectCmsTopicChapterById(any());
+    }
+
+    @Test
+    void separateOriginalRunContentDoesNotShareMutablePresentation() throws Exception {
+        session.setConfigSnapshotJson(contentSnapshot("原局一").toString());
+        Map<String, Object> first = data(controller.encounter(TOPIC, null, NODE));
+        session.setConfigSnapshotJson(contentSnapshot("原局二").toString());
+        session.setId(RUN + 1L);
+        Map<String, Object> second = data(controller.encounter(TOPIC, null, NODE));
+        assertEquals("原局一", ((Map<?, ?>) first.get("presentation")).get("title"));
+        assertEquals("原局二", ((Map<?, ?>) second.get("presentation")).get("title"));
+        assertEquals(RUN, first.get("runId"));
+        assertEquals(RUN + 1L, second.get("runId"));
+    }
+
+    @Test
+    void brokenNewContentNeverFallsBackToLiveTemplate() throws Exception {
+        com.fasterxml.jackson.databind.node.ObjectNode snapshot = contentSnapshot("原游戏");
+        ((com.fasterxml.jackson.databind.node.ObjectNode) snapshot.path("nodeAnswers").path(String.valueOf(NODE)))
+                .remove("templatePresentation");
+        session.setConfigSnapshotJson(snapshot.toString());
+        assertEquals(500, controller.encounter(TOPIC, null, NODE).get("code"));
+        verify(templateService, never()).selectCmsMemberTemplateById(any());
+    }
+
+    @Test
+    void frozenPresentationDoesNotReconstructACurrentlyRemovedNode() throws Exception {
+        session.setConfigSnapshotJson(contentSnapshot("原游戏").toString());
+        when(nodeService.selectCmsTopicNodeById(NODE)).thenReturn(null);
+        assertEquals(500, controller.encounter(TOPIC, null, NODE).get("code"));
+        verify(templateService, never()).selectCmsMemberTemplateById(any());
     }
 
     @Test

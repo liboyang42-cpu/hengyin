@@ -210,7 +210,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     private Map<String, Object> start(Long memberId, Long activityId, Long topicId, Long nodeId, Long teamId,
             GameRuntimeSession retrySource) {
         GameInput input = requireInput(memberId, activityId, topicId, nodeId);
-        if (retrySource != null) input = new GameInput(input.activityId, retrySource.getTemplateId(), retrySource.getConfigSnapshotJson(), null);
+        if (retrySource != null) input = new GameInput(input.activityId, retrySource.getTemplateId(), retrySource.getConfigSnapshotJson(), null,
+                objectState(retrySource.getStateJson()).get("originalNodeContent"));
         if (settledReadOnly(input.existing)) return state(memberId, input.existing.getId());
         requireRouteNodeAccess(memberId, activityId, topicId, nodeId);
         JsonNode config = readJson(input.configJson, "高级玩法配置不可用");
@@ -283,6 +284,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         requireWithinTimeWindow(config.get("timeWindow"));
         Date now = clock.now();
         ObjectNode state = initialState(config, team, teamMembers);
+        // Server-created state only: author config cannot supply an original content identity.
+        if (input.content != null) state.set("originalNodeContent", input.content.deepCopy());
         if (config.has("outcomeRules")) state.put("attemptOrdinal", 1);
         if (shared != null) {state.put("runtimeAuthorityEpoch", shared.path("authorityEpoch").asInt());state.put("originalGameSessionId",shared.path("gameSessionId").asLong());}
         else if(zeroChallenge != null || config.has("outcomeRules") && (enabled(config.path("branch")) || enabled(config.path("predict"))))state.put("originalRouteSessionId",topicRouteRuntimeService.gameplaySessionId(memberId,topicId,input.activityId));
@@ -334,7 +337,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         }
         ObjectNode restarted = initialState(config, team, teamMembers);
         if (config.has("outcomeRules")) restarted.put("attemptOrdinal", readJson(session.getStateJson(), "Invalid attempt state").path("attemptOrdinal").asLong(1) + 1);
-        for(String origin:Arrays.asList("originalRouteSessionId","originalGameSessionId"))if(objectState(session.getStateJson()).has(origin))restarted.set(origin,objectState(session.getStateJson()).get(origin).deepCopy());
+        for(String origin:Arrays.asList("originalRouteSessionId","originalGameSessionId","originalNodeContent"))if(objectState(session.getStateJson()).has(origin))restarted.set(origin,objectState(session.getStateJson()).get(origin).deepCopy());
         Integer epoch = runtimeEpoch(session);
         if (epoch != null) {
             gameSessionRuntimeService.assertSharedRouteWritable(memberId, session.getTopicId(), session.getActivityId(), session.getNodeId(), epoch);
@@ -1047,8 +1050,10 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         CmsTopicNode node = nodeMapper.selectCmsTopicNodeById(nodeId);
         if (node == null || !topicId.equals(node.getTopicId())) return null;
         long actId = activityId == null ? 0L : activityId;
+        GameRuntimeSession original = existingSession(memberId, actId, topicId, nodeId);
+        JsonNode content = original == null ? frozenContent(memberId, topicId, activityId, nodeId) : null;
         // 已有本局或本路线已开局 = 继续打完(自玩通行证中途到期不打断)；尚未开局按新使用校验。
-        if (existingSession(memberId, actId, topicId, nodeId) != null || routeStarted(memberId, actId, topicId)) {
+        if (original != null || routeStarted(memberId, actId, topicId)) {
             com.chengyinhub.business.service.support.CurrentPlayRegistration.requireToContinue(activityMapper,registrationMapper,
                     memberId,actId>0 ? 2L : 1L,actId>0 ? actId : topicId,null,clock.now());
         } else {
@@ -1065,9 +1070,11 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         GameRuntimeSession session = existingSession(memberId, actId, topicId, nodeId);
         if (session == null) {
             // 尚未开局才读取当前模板。已开局时，移除模板不能绕过本局的完成条件。
-            if (node.getTemplateId() == null) return null;
-            CmsMemberTemplate template = templateMapper.selectCmsMemberTemplateById(node.getTemplateId());
+            if (content != null && !content.hasNonNull("templateId")) return null;
+            if (content == null && node.getTemplateId() == null) return null;
+            CmsMemberTemplate template = content == null ? templateMapper.selectCmsMemberTemplateById(node.getTemplateId()) : null;
             JsonNode frozen=topicRouteRuntimeService==null?null:topicRouteRuntimeService.nodeRuntimeConfig(memberId,topicId,nodeId,activityId);
+            if (content != null && frozen == null) throw new IllegalStateException("本局玩法配置不可用");
             if (frozen==null && (template == null || StringUtils.isBlank(template.getAdvancedConfigJson()))) return null;
             String configJson = configValidator.validateAndNormalize(frozen==null?template.getAdvancedConfigJson():frozen.toString());
             if (!configValidator.hasEnabledMechanic(configJson)) return null;
@@ -1251,18 +1258,86 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (existing != null) {
             return new GameInput(actId, existing.getTemplateId(), existing.getConfigSnapshotJson(), existing);
         }
-        if (node.getTemplateId() == null) throw new IllegalStateException("该节点没有玩法模板");
-        CmsMemberTemplate template = templateMapper.selectCmsMemberTemplateById(node.getTemplateId());
-        if (template == null) throw new IllegalStateException("玩法模板不存在");
+        // 原小游戏局已在上方返回。新局先用原路线内容身份；只有无新标志的旧路线走 live 旧路。
+        JsonNode content = frozenContent(memberId, topicId, activityId, nodeId);
+        Long templateId;
+        CmsMemberTemplate template = null;
+        if (content != null) {
+            JsonNode id = content.get("templateId");
+            if (id == null || !id.isIntegralNumber() || id.asLong() <= 0L) throw new IllegalStateException("该节点没有玩法模板");
+            templateId = id.asLong();
+            if (!content.path("templatePresentation").isObject()) throw new IllegalStateException("本局内容呈现不可用");
+        } else {
+            if (node.getTemplateId() == null) throw new IllegalStateException("该节点没有玩法模板");
+            template = templateMapper.selectCmsMemberTemplateById(node.getTemplateId());
+            if (template == null) throw new IllegalStateException("玩法模板不存在");
+            templateId = template.getId();
+        }
         JsonNode frozenConfig=topicRouteRuntimeService==null?null:topicRouteRuntimeService.nodeRuntimeConfig(memberId,topicId,nodeId,activityId);
         JsonNode publishedR5=topicRouteRuntimeService==null?null:topicRouteRuntimeService.publishedR5NodeConfig(memberId,topicId,nodeId,activityId);
+        if (content != null && frozenConfig == null && publishedR5 == null) throw new IllegalStateException("本局玩法配置不可用");
         String configJson = publishedR5!=null?publishedR5.toString():configValidator.validateAndNormalize(frozenConfig==null?template.getAdvancedConfigJson():frozenConfig.toString());
         if (publishedR5==null ? !configValidator.hasEnabledMechanic(configJson) : !com.chengyinhub.business.service.support.GameplaySupportMatrix.r5CompletionProof(publishedR5)) throw new IllegalStateException("该模板未配置高级玩法");
         // 阶段 4 自适应难度:**开局求值一次**,放宽后的配置写进本局快照。
         // 只在新建局时求值(已有局走上面的快照分支)—— 局内不可变,重放 / CAS / 幂等一行都不用改;
         // 在 AdvancedGamePublicProjection 之前,下发白名单仍是唯一出口,放宽绕不过它。
         configJson = applyRelax(configJson, memberId, topicId, actId);
-        return new GameInput(actId, template.getId(), configJson, null);
+        return new GameInput(actId, templateId, configJson, null, content);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public JsonNode queryDefaultNodeContents(Long memberId, Long activityId, Long topicId) {
+        if (memberId == null || memberId <= 0 || topicId == null || topicId <= 0) return null;
+        long actId = activityId == null ? 0L : activityId;
+        List<GameRuntimeSession> rows = sessionMapper.selectDefaultMemberSessionsByTopic(actId, topicId, memberId);
+        ObjectNode result = objectMapper.createObjectNode();
+        if (rows == null) return result;
+        Map<Long,GameRuntimeSession> selected = new LinkedHashMap<>();
+        for (GameRuntimeSession row : rows) {
+            if (row == null || !Long.valueOf(actId).equals(row.getActivityId()) || !topicId.equals(row.getTopicId())
+                    || !"default".equals(row.getPlayInstanceId()) || row.getNodeId() == null || row.getNodeId() <= 0
+                    || row.getOwnerType() == null
+                    || row.getOwnerType() != GameRuntimeSession.OWNER_PLAYER && row.getOwnerType() != GameRuntimeSession.OWNER_TEAM
+                    || row.getOwnerType() == GameRuntimeSession.OWNER_PLAYER && !memberId.equals(row.getOwnerId()))
+                throw new IllegalStateException("原小游戏内容归属不可用");
+            GameRuntimeSession previous=selected.get(row.getNodeId());
+            // Original selector preference: own player row, otherwise latest accessible team row.
+            if (previous == null || previous.getOwnerType() != GameRuntimeSession.OWNER_PLAYER)
+                selected.put(row.getNodeId(),row);
+        }
+        for (GameRuntimeSession row : selected.values()) {
+            String key=String.valueOf(row.getNodeId());
+            ObjectNode source=objectMapper.createObjectNode();
+            JsonNode answer=objectState(row.getStateJson()).get("originalNodeContent");
+            if (answer != null) {
+                if (!com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContent(answer)
+                        || answer.path("nodePresentation").path("id").asLong() != row.getNodeId()
+                        || answer.path("nodePresentation").path("topicId").asLong() != topicId
+                        || !Objects.equals(longValue(answer.get("templateId")),row.getTemplateId()))
+                    throw new IllegalStateException("原小游戏内容身份不可用");
+                source.putObject("nodeAnswers").set(key,answer.deepCopy());
+            } else {
+                // A legacy game has no historical metadata; never backfill it from a later publication.
+                source.put("legacyNodeContent",true);
+            }
+            source.putObject("nodeConfigs").set(key,readJson(row.getConfigSnapshotJson(),"原小游戏配置不可用").deepCopy());
+            result.set(key,source);
+        }
+        return result;
+    }
+
+    /** 纯读原局内容；新标志损坏不能转去作者 live 行重新解释本次动作。 */
+    private JsonNode frozenContent(Long memberId, Long topicId, Long activityId, Long nodeId) {
+        JsonNode content = topicRouteRuntimeService == null ? null
+                : topicRouteRuntimeService.nodeAnswers(memberId, topicId, activityId, nodeId);
+        if (content == null || !content.has("contentSnapshotVersion")) return null;
+        com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContent(content);
+        if (!content.path("nodePresentation").path("topicId").isIntegralNumber()
+                || content.path("nodePresentation").path("topicId").asLong() != topicId) {
+            throw new IllegalStateException("本局内容快照不可用");
+        }
+        return content;
     }
 
 
@@ -3424,12 +3499,18 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         private final Long templateId;
         private final String configJson;
         private final GameRuntimeSession existing;
+        private final JsonNode content;
 
         private GameInput(long activityId, Long templateId, String configJson, GameRuntimeSession existing) {
+            this(activityId, templateId, configJson, existing, null);
+        }
+
+        private GameInput(long activityId, Long templateId, String configJson, GameRuntimeSession existing, JsonNode content) {
             this.activityId = activityId;
             this.templateId = templateId;
             this.configJson = configJson;
             this.existing = existing;
+            this.content = content;
         }
     }
 }
