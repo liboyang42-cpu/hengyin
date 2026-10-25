@@ -1375,6 +1375,88 @@
             "com.chengyinhub.business.service.RegistrationSeatSettlementReader"
           ]
         }
+      },
+      {
+        "id": "G_STATION_FULFILLMENT_STORAGE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.mapper.CoopOrderStationFulfillmentMapper"
+        ],
+        "allowed_consumers": [
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicSettlementEvidenceService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicSettlementEvidenceService",
+          "com.chengyinhub.business.service.impl.FrozenCoopOrderSettlementSnapshotReader",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl"
+        ],
+        "restricted_packages": {
+          "com.chengyinhub.business.service.": [],
+          "com.chengyinhub.business.mapper.": [
+            "com.chengyinhub.business.mapper.CoopOrderStationFulfillmentMapper"
+          ],
+          "com.chengyinhub.web.": []
+        }
+      },
+      {
+        "id": "G_STATION_SCOPE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.CoopOrderStationScope"
+        ],
+        "allowed_consumers": [
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicSettlementEvidenceService",
+          "com.chengyinhub.business.service.impl.FrozenCoopOrderSettlementSnapshotReader"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicSettlementEvidenceService",
+          "com.chengyinhub.business.service.impl.FrozenCoopOrderSettlementSnapshotReader",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl"
+        ],
+        "restricted_packages": {
+          "com.chengyinhub.business.service.": [
+            "com.chengyinhub.business.service.support.CoopOrderStationScope",
+            "com.chengyinhub.business.service.support.CanonicalDigest"
+          ],
+          "com.chengyinhub.business.mapper.": [],
+          "com.chengyinhub.web.": []
+        }
+      },
+      {
+        "id": "G_STATION_FULFILLMENT_RECORD",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.domain.CoopOrderStationFulfillment"
+        ],
+        "allowed_consumers": [
+          "com.chengyinhub.business.mapper.CoopOrderStationFulfillmentMapper",
+          "com.chengyinhub.business.service.support.CoopOrderStationScope",
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicSettlementEvidenceService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicSettlementEvidenceService",
+          "com.chengyinhub.business.service.impl.FrozenCoopOrderSettlementSnapshotReader",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl",
+          "com.chengyinhub.business.mapper.CoopOrderStationFulfillmentMapper",
+          "com.chengyinhub.business.service.support.CoopOrderStationScope"
+        ],
+        "restricted_packages": {
+          "com.chengyinhub.business.service.": [],
+          "com.chengyinhub.business.mapper.": [],
+          "com.chengyinhub.web.": []
+        }
       }
     ],
     "allowed_directions": [
@@ -1769,6 +1851,38 @@
       [
         "B_PAYMENT_INTENTS",
         "B_VERIFIED_PAYMENT_FACT_STORE"
+      ],
+      [
+        "G_CASH_CLAIM",
+        "G_STATION_FULFILLMENT_STORAGE"
+      ],
+      [
+        "G_SETTLEMENT_EVIDENCE",
+        "G_STATION_FULFILLMENT_STORAGE"
+      ],
+      [
+        "G_CASH_CLAIM",
+        "G_STATION_SCOPE"
+      ],
+      [
+        "G_SETTLEMENT_EVIDENCE",
+        "G_STATION_SCOPE"
+      ],
+      [
+        "G_STATION_FULFILLMENT_STORAGE",
+        "G_STATION_FULFILLMENT_RECORD"
+      ],
+      [
+        "G_STATION_SCOPE",
+        "G_STATION_FULFILLMENT_RECORD"
+      ],
+      [
+        "G_CASH_CLAIM",
+        "G_STATION_FULFILLMENT_RECORD"
+      ],
+      [
+        "G_SETTLEMENT_EVIDENCE",
+        "G_STATION_FULFILLMENT_RECORD"
       ]
     ],
     "exact_directions": [

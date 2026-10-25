@@ -1784,5 +1784,87 @@ class CashTransferIntentTechnicalOwnerTest(unittest.TestCase):
         self.assertTrue(any(r["reason"] == "OWNER_TYPE_INPUT_UNKNOWN" and r["type"] == self.target for r in result["review_items"]))
 
 
+class StationFulfillmentTechnicalOwnerTest(unittest.TestCase):
+    setUp = InventoryAndDeltaTest.setUp
+    write = InventoryAndDeltaTest.write
+    commit = InventoryAndDeltaTest.commit
+    prepare_policy = InventoryAndDeltaTest.prepare_policy
+    source_cli = BusinessOwnerPolicyTest.source_cli
+    assert_rule = BusinessOwnerPolicyTest.assert_rule
+    prefix = "com.chengyinhub.business."
+    mapper = prefix + "mapper.CoopOrderStationFulfillmentMapper"
+    scope = prefix + "service.support.CoopOrderStationScope"
+    record = prefix + "domain.CoopOrderStationFulfillment"
+    claim = prefix + "service.impl.CoopSettlementClaimServiceImpl"
+    evidence = prefix + "service.impl.TopicSettlementEvidenceService"
+    reader = prefix + "service.impl.FrozenCoopOrderSettlementSnapshotReader"
+    sdk = prefix + "service.impl.WechatPaymentSdkGateway"
+
+    def test_exact_source_boundaries_are_registered_without_inventing_managed_services(self):
+        trusted, _ = self.prepare_policy()
+        for name, declaration in ((self.mapper, "public interface CoopOrderStationFulfillmentMapper {}"),
+                                  (self.scope, "public final class CoopOrderStationScope { public static void validate() {} }"),
+                                  (self.record, "public class CoopOrderStationFulfillment {}")):
+            path = "chengyinhub-system/src/main/java/" + name.replace(".", "/") + ".java"
+            self.write(path, ("package " + name.rsplit(".", 1)[0] + "; " + declaration).encode())
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(0, status, report)
+        self.assertEqual("NOT_CHECKED_BY_SOURCE_GATE", report["technical_dependencies"]["compiled_inputs"])
+        path = "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ForeignStationMapper.java"
+        self.write(path, b"package com.chengyinhub.business.mapper; public interface ForeignStationMapper {}")
+        self.assert_rule(self.source_cli(trusted, self.commit()), "NEW_UNOWNED_BOUNDARY")
+
+    def test_exact_two_mapper_three_scope_and_four_record_consumers_do_not_expand_business_permissions(self):
+        owners = gate.technical_dependency_policy()["owners"]
+        self.assertEqual([self.mapper], owners["G_STATION_FULFILLMENT_STORAGE"]["members"])
+        self.assertEqual([self.claim, self.evidence], owners["G_STATION_FULFILLMENT_STORAGE"]["allowed_consumers"])
+        self.assertEqual([self.claim, self.evidence, self.reader], owners["G_STATION_SCOPE"]["allowed_consumers"])
+        self.assertEqual([self.mapper, self.scope, self.claim, self.evidence], owners["G_STATION_FULFILLMENT_RECORD"]["allowed_consumers"])
+        self.assertEqual([self.scope, self.prefix + "service.support.CanonicalDigest"],
+                         owners["G_STATION_SCOPE"]["restricted_packages"][self.prefix + "service."])
+        self.assertEqual(2, len(gate.statement_write_owners()), "B-only exact recovery contracts must not be reused for G")
+        business = gate.business_policy()
+        self.assertEqual(5, len(business["facts"])); self.assertEqual(3, len(business["private_ports"]))
+        self.assertNotIn("coop_order_station_fulfillment", business["facts"])
+
+    def test_candidate_cannot_self_approve_foreign_mapper_or_scope_consumer(self):
+        trusted, _ = self.prepare_policy()
+        original = json.loads((trusted / "owners.json").read_text())
+        for owner in ("G_STATION_FULFILLMENT_STORAGE", "G_STATION_SCOPE"):
+            with self.subTest(owner=owner):
+                data = copy.deepcopy(original)
+                next(o for o in data["technical_dependency_policy"]["owners"] if o["id"] == owner)["allowed_consumers"].append(self.sdk)
+                self.write("ci/architecture/owners.json", gate.encode(data))
+                status, report = self.source_cli(trusted, self.commit())
+                self.assertEqual(1, status, report); self.assertIn("POLICY_CHANGE", report["error"])
+
+    def test_existing_compiled_reference_rules_restrict_leafs_consumers_backrefs_and_keep_missing_graph_unknown(self):
+        spec = importlib.util.spec_from_file_location("station_rule_fixture", gate.HERE / "collect_jdeps.py")
+        collector = importlib.util.module_from_spec(spec); spec.loader.exec_module(collector)
+        policy = gate.technical_dependency_policy()
+        index = {n: {"owner": "chengyinhub-system"} for n in (self.mapper, self.scope, self.record, self.claim,
+                 self.evidence, self.reader, self.sdk, self.claim + "$Late", self.prefix + "service.support.CanonicalDigest")}
+        legitimate = [(c, t) for c in (self.claim, self.evidence) for t in (self.mapper, self.scope, self.record)]
+        legitimate += [(self.reader, self.scope), (self.mapper, self.record), (self.scope, self.record),
+                       (self.scope, self.prefix + "service.support.CanonicalDigest")]
+        def check(edges, current=index):
+            refs = {str(i): {"source_class": a, "target_class": b, "line": "synthetic rule-only witness"}
+                    for i, (a, b) in enumerate(edges)}
+            return collector.technical_dependency_findings(current, {"rule-only": refs}, policy)
+        result = check(legitimate)
+        self.assertEqual([], result["findings"]); self.assertEqual("UNKNOWN", result["verdict"])
+        for source, target in ((self.reader, self.mapper), (self.sdk, self.mapper), (self.sdk, self.scope),
+                               (self.claim + "$Late", self.mapper), (self.mapper, self.scope), (self.reader, self.record)):
+            with self.subTest(source=source, target=target):
+                self.assertIn("EXACT_STORAGE_PORT_CONSUMER", {r["rule"] for r in check(legitimate + [(source, target)])["findings"]})
+        for leaf in (self.mapper, self.scope, self.record):
+            rules = {r["rule"] for r in check(legitimate + [(leaf, self.claim)])["findings"]}
+            self.assertIn("OWNER_GOD_BACKREFERENCE", rules); self.assertIn("RESTRICTED_OWNER_PACKAGE_REFERENCE", rules)
+            self.assertIn("NEW_OWNER_CYCLE", rules)
+        missing = dict(index); missing.pop(self.mapper)
+        self.assertEqual("UNKNOWN", check(legitimate, missing)["verdict"])
+        self.assertIn("business table/field authority", result["not_proven"])
+
+
 if __name__ == "__main__":
     unittest.main()
