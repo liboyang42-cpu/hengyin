@@ -89,6 +89,7 @@ MYBATIS_ITS=(
   # 2026-09-15 R9-41 假绿修复后登记:待审/驳回/下线的 *在线* 投放(status=1)只有
   # RoamMapper.xml 的 cityNodeContentApproved 能挡,删闸即红。不点名 = CI 永远跑不到这条边界。
   CityNodePendingVisibilityMySqlIT
+  CityNodeCompletionIdempotencyMySqlIT
   # MySQL leader session, failover fence, strict Druid wall and transactional duplicate definitions.
   SchedulerSessionLockMySqlIT
   # 2026-10-22 发布验收 P1 俱乐部:入会通过/驳回、封禁/解封、举报工单在真库上的归属与幂等(真服务+真 mapper)。

@@ -1859,6 +1859,16 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     }
 
     @Override
+    public Map<Long, java.util.Date> selectTodoTopicEndDates(java.util.Collection<Long> topicIds) {
+        Map<Long, java.util.Date> dates = new java.util.HashMap<>();
+        if (topicIds == null || topicIds.isEmpty()) return dates;
+        for (CmsTopic topic : cmsTopicMapper.selectTodoTopicEndDates(topicIds)) {
+            dates.put(topic.getId(), topic.getEndDate());
+        }
+        return dates;
+    }
+
+    @Override
     public Integer selectRoamReferralEnabledById(Long id) {
         return cmsTopicMapper.selectRoamReferralEnabledById(id);
     }
