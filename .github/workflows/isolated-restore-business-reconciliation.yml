@@ -10,6 +10,8 @@ jobs:
   restore-source-build:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    outputs:
+      jar_sha256: ${{ steps.build.outputs.jar_sha256 }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -19,12 +21,14 @@ jobs:
           cache: maven
       - name: Check the same source and pure controls once for the matrix
         run: |
+          test "${CHENGYIN_RESTORE_MODE+x}" != x
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           python3 -B ci/test_restore_business_reconciliation_probe.py
           python3 -B ci/test_restore_business_domain_facts.py
           python3 -B ci/test_restore_business_reconciliation_host.py
           python3 -B ci/test_restore_business_reconciliation_build.py
       - name: Compile one exact candidate and copy only its existing test dependencies
+        id: build
         run: |
           mvn -B -pl chengyinhub-admin -am -DskipTests install
           mvn -B -pl chengyinhub-admin dependency:copy-dependencies -DincludeScope=test "-DoutputDirectory=$GITHUB_WORKSPACE/chengyinhub-admin/target/restore-lib" -Dmdep.useRepositoryLayout=true
@@ -96,6 +100,8 @@ jobs:
           path: ${{ runner.temp }}/restore-business-receipts/
       - name: Independently bind all seven receipts and the original complete-cohort verifier
         if: ${{ always() }}
+        env:
+          RESTORE_BUILD_JAR_SHA256: ${{ needs.restore-source-build.outputs.jar_sha256 }}
         run: python3 -I ci/restore_business_reconciliation_host.py --summarize
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}

@@ -115,6 +115,7 @@ def unpack(root, stage, identity):
 
 def main():
     require(sys.argv[1:] in (['pack'], ['unpack']), 'fixed build transfer phase only')
+    require('CHENGYIN_RESTORE_MODE' not in os.environ, 'restore mode must be absent in the build parent')
     for key, value in {'GITHUB_ACTIONS': 'true', 'RUNNER_ENVIRONMENT': 'github-hosted', 'RUNNER_OS': 'Linux',
                        'GITHUB_REPOSITORY': 'liboyang42-cpu/hengyin', 'GITHUB_EVENT_NAME': 'workflow_dispatch'}.items():
         require(os.environ.get(key) == value, 'wrong hosted build transfer scope')
@@ -126,7 +127,10 @@ def main():
     stage = Path(os.environ['RUNNER_TEMP']).resolve() / 'restore-business-build'
     if sys.argv[1] == 'pack':
         require(os.environ.get('GITHUB_JOB') == 'restore-source-build', 'wrong build producer')
-        pack(ROOT, stage, identity)
+        receipt = pack(ROOT, stage, identity)
+        # The summary binds every cohort to this verified once-build digest.
+        with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
+            output.write('jar_sha256=' + receipt['jarSha256'] + '\n')
     else:
         require(os.environ.get('GITHUB_JOB') == 'isolated-restore-business-reconciliation', 'wrong build consumer')
         unpack(ROOT, stage, identity)

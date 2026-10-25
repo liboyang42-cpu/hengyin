@@ -1,0 +1,640 @@
+diff --git a/.github/workflows/isolated-restore-business-reconciliation.yml b/.github/workflows/isolated-restore-business-reconciliation.yml
+index 192416d8..edd8c143 100644
+--- a/.github/workflows/isolated-restore-business-reconciliation.yml
++++ b/.github/workflows/isolated-restore-business-reconciliation.yml
+@@ -10,6 +10,8 @@ jobs:
+   restore-source-build:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 30
++    outputs:
++      jar_sha256: ${{ steps.build.outputs.jar_sha256 }}
+     steps:
+       - uses: actions/checkout@v4
+       - uses: actions/setup-java@v4
+@@ -19,12 +21,14 @@ jobs:
+           cache: maven
+       - name: Check the same source and pure controls once for the matrix
+         run: |
++          test "${CHENGYIN_RESTORE_MODE+x}" != x
+           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+           python3 -B ci/test_restore_business_reconciliation_probe.py
+           python3 -B ci/test_restore_business_domain_facts.py
+           python3 -B ci/test_restore_business_reconciliation_host.py
+           python3 -B ci/test_restore_business_reconciliation_build.py
+       - name: Compile one exact candidate and copy only its existing test dependencies
++        id: build
+         run: |
+           mvn -B -pl chengyinhub-admin -am -DskipTests install
+           mvn -B -pl chengyinhub-admin dependency:copy-dependencies -DincludeScope=test "-DoutputDirectory=$GITHUB_WORKSPACE/chengyinhub-admin/target/restore-lib" -Dmdep.useRepositoryLayout=true
+@@ -96,6 +100,8 @@ jobs:
+           path: ${{ runner.temp }}/restore-business-receipts/
+       - name: Independently bind all seven receipts and the original complete-cohort verifier
+         if: ${{ always() }}
++        env:
++          RESTORE_BUILD_JAR_SHA256: ${{ needs.restore-source-build.outputs.jar_sha256 }}
+         run: python3 -I ci/restore_business_reconciliation_host.py --summarize
+       - uses: actions/upload-artifact@v4
+         if: ${{ always() }}
+diff --git a/.github/workflows/real-storage-it.yml b/.github/workflows/real-storage-it.yml
+index ccbd24ac..28f0d005 100644
+--- a/.github/workflows/real-storage-it.yml
++++ b/.github/workflows/real-storage-it.yml
+@@ -237,21 +237,35 @@ jobs:
+         run: |
+           python3 - <<'PY'
+           from pathlib import Path
+-          import json, os, re, shutil
++          import hashlib, json, os, re
+           source_sha = os.environ['SOURCE_SHA']
+-          if not re.fullmatch(r'[a-f0-9]{40}', source_sha):
++          if not re.fullmatch(r'[a-f0-9]{40}', source_sha) or os.environ.get('GITHUB_SHA') != source_sha:
+               raise ValueError('funds evidence requires the exact source SHA')
++          run_id, attempt = os.environ.get('GITHUB_RUN_ID', ''), os.environ.get('GITHUB_RUN_ATTEMPT', '')
++          if not all(re.fullmatch(r'[1-9][0-9]*', value) for value in (run_id, attempt)):
++              raise ValueError('funds evidence requires the actual workflow run/attempt')
+           source = Path('candidate/chengyinhub-admin/target/funds-process-recovery') / source_sha
+           files = sorted(source.rglob('*.json'))
+-          if source.is_symlink() or not files:
++          if source.is_symlink() or not files or not any(path.name == 'identity.json' for path in files):
+               raise ValueError('funds process JSON receipts are absent or unsafe')
++          hashes = {}
+           for path in files:
+               if path.is_symlink() or source.resolve() not in path.resolve().parents:
+                   raise ValueError('funds evidence cannot leave its source directory')
+-              json.loads(path.read_text(encoding='utf-8'))
++              if not path.is_file() or path.stat().st_size > 8 * 1024 * 1024:
++                  raise ValueError('funds evidence must be bounded regular JSON')
++              data = path.read_bytes()
++              value = json.loads(data)
++              if path.name == 'identity.json' and (not isinstance(value, dict) or value.get('sourceSha') != source_sha):
++                  raise ValueError('funds native identity differs from source SHA')
+               target = Path('out/funds-process-recovery') / source_sha / path.relative_to(source)
+               target.parent.mkdir(parents=True, exist_ok=True)
+-              shutil.copyfile(path, target)
++              target.write_bytes(data)
++              hashes[path.relative_to(source).as_posix()] = hashlib.sha256(target.read_bytes()).hexdigest()
++          Path('out/funds-process-evidence-index.json').write_text(json.dumps({
++              'sourceSha': source_sha, 'runId': run_id, 'runAttempt': attempt,
++              'files': hashes, 'notProven': ['bootJarIdentity', 'productionRecovery']
++          }, sort_keys=True, indent=2) + '\n')
+           PY
+       - name: Upload class receipt
+         if: always()
+@@ -273,10 +287,11 @@ jobs:
+           persist-credentials: false
+       - uses: actions/download-artifact@v4
+         with:
+-          pattern: rs-class-*
++          pattern: rs-class-*-a${{ github.run_attempt }}
+           path: receipts
+       - name: Summarize batch (fail-closed)
+         env:
++          STORAGE_MATRIX_RESULT: ${{ needs.storage_it.result }}
+           PLANNED: ${{ needs.plan.outputs.matrix }}
+           SOURCE_SHA: ${{ inputs.source_sha }}
+           BATCH: ${{ inputs.batch }}
+@@ -312,6 +327,7 @@ jobs:
+       - name: Summarize this source only with the original strict gate
+         if: always()
+         env:
++          STORAGE_MATRIX_RESULT: ${{ needs.storage_it.result }}
+           PLANNED: ${{ needs.plan.outputs.pair_planned }}
+           SOURCE_SHA: ${{ matrix.source_sha }}
+           BATCH: ${{ inputs.batch }}
+diff --git a/ci/real_storage_it.py b/ci/real_storage_it.py
+index 797031a7..eb9b6119 100644
+--- a/ci/real_storage_it.py
++++ b/ci/real_storage_it.py
+@@ -114,6 +114,8 @@ def validate_class_entry(fqcn, entry):
+         problems.append("%s.gates 必须是对象（没有门控写 {}）" % fqcn)
+     else:
+         for name, value in gates.items():
++            if name == "CHENGYIN_RESTORE_MODE":
++                problems.append("%s: CHENGYIN_RESTORE_MODE 不是测试审批门，parent 必须不存在" % fqcn)
+             if not GATE_NAME_RE.match(name) or not isinstance(value, str) or not GATE_VALUE_RE.match(value):
+                 problems.append("%s 的门控 %s=%r 不合规" % (fqcn, name, value))
+     base = entry.get("database_base")
+@@ -246,12 +248,27 @@ def public_env(env):
+ 
+ def child_env(base, extra):
+     """去掉继承来的 CHENGYIN_*，只留本类登记的那组，避免别的门控把其它测试一起打开。"""
++    require_normal_parent(base)
++    require_normal_parent(extra)
+     env = {key: value for key, value in base.items()
+            if not key.startswith("CHENGYIN_") and key not in REVIEWED_APPROVAL_GATES}
+     env.update(extra)
+     return env
+ 
+ 
++def require_normal_parent(environ):
++    if "CHENGYIN_RESTORE_MODE" in environ:
++        raise GateError("CHENGYIN_RESTORE_MODE 必须在验收 parent 环境中不存在，不能设空/false或静默删除")
++
++
++def require_class_source(fqcn, source_sha, environ):
++    # This actual Java owner binds GITHUB_SHA to its loaded class/source receipts.
++    # Do not forge GitHub context for an input SHA; dispatch from the same candidate.
++    if fqcn == "com.chengyinhub.business.service.impl.FundsProcessRecoveryMySqlIT" \
++            and environ.get("GITHUB_SHA") != source_sha:
++        raise GateError("FundsProcessRecoveryMySqlIT 必须从同一候选 workflow SHA 派发；不得覆盖 GITHUB_SHA")
++
++
+ # ---------------------------------------------------------------- 计划
+ 
+ def plan(registry, source_sha, batch, classes_csv, timezone):
+@@ -767,6 +784,7 @@ def cmd_plan(args, environ):
+         raise GateError("候选检出 HEAD=%s，不是 %s" % (head, source_sha))
+     problems = []
+     for item in matrix:
++        require_class_source(item["class"], source_sha, environ)
+         _, found = precheck(registry, args.source, item["class"])
+         problems.extend("%s: %s" % (item["simple"], problem) for problem in found)
+     if problems:
+@@ -815,6 +833,8 @@ def cmd_precheck(args, environ):
+         "verdict": "INCOMPLETE",
+         "problems": [],
+     })
++    require_normal_parent(environ)
++    require_class_source(fqcn, source_sha, environ)
+     head = subprocess.run(["git", "-C", args.source, "log", "-1", "--format=%H%x00%s%x00%cI"],
+                           stdout=subprocess.PIPE, universal_newlines=True).stdout.strip().split("\x00")
+     if head[0] != source_sha:
+@@ -851,6 +871,8 @@ def cmd_storage_start(args, environ):
+ 
+ def cmd_run(args, environ):
+     registry, fqcn = class_context(environ)
++    require_normal_parent(environ)
++    require_class_source(fqcn, required_env(environ, "SOURCE_SHA"), environ)
+     entry = registry["classes"][fqcn]
+     receipt = read_receipt(args.out)
+     storage = receipt.get("storage", {})
+@@ -874,6 +896,8 @@ def cmd_run(args, environ):
+     executed, problems = verify_class_reports(cases, fqcn, entry["tests"], entry.get("nested", []))
+     if reports.is_dir():
+         shutil.copytree(str(reports), str(out / "surefire-reports"), dirs_exist_ok=True)
++    xml_hashes = {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
++                  for path in sorted((out / "surefire-reports").glob("TEST-*.xml"))}
+     if exit_code != 0:
+         problems.append("mvn 退出码 %d" % exit_code)
+     verdict = "FAIL" if problems else "PASS"
+@@ -885,6 +909,7 @@ def cmd_run(args, environ):
+         "maven": {"exit_code": exit_code, "selectors": selectors, "log": "maven.log",
+                   "seconds": round(time.time() - started, 1)},
+         "executed": executed,
++        "surefire_xml_sha256": xml_hashes,
+         "verdict": verdict,
+         "problems": ["run: %s" % problem for problem in problems],
+     })
+@@ -936,18 +961,48 @@ def cmd_storage_stop(args, environ):
+ 
+ # ---------------------------------------------------------------- 汇总
+ 
+-def summarize(registry, receipts_dir, planned, batch, source_sha):
++def summarize(registry, receipts_dir, planned, batch, source_sha, workflow=None):
+     latest = {}
++    problems = []
++    if workflow is not None and (workflow.get('repository') != 'liboyang42-cpu/hengyin'
++            or not SHA_RE.fullmatch(workflow.get('workflow_sha') or '')
++            or any(not re.fullmatch(r'[1-9][0-9]*', workflow.get(key) or '')
++                   for key in ('run_id', 'run_attempt')) or not workflow.get('workflow_ref')):
++        raise GateError('汇总必须绑定真实公共 workflow/source/run/attempt')
+     for path in sorted(Path(receipts_dir).glob("*/receipt.json")):
+-        with open(path, encoding="utf-8") as handle:
+-            receipt = json.load(handle)
++        try:
++            if path.parent.is_symlink() or path.is_symlink() or not path.is_file() or path.stat().st_size > 8 * 1024 * 1024:
++                raise ValueError()
++            with open(path, encoding="utf-8") as handle:
++                receipt = json.load(handle)
++            if not isinstance(receipt, dict):
++                raise ValueError()
++        except (OSError, ValueError):
++            problems.append("receipt: 无法确认有界的原JSON回执")
++            continue
+         fqcn = receipt.get("class")
+-        attempt = int(receipt.get("workflow", {}).get("run_attempt") or 0)
++        if not isinstance(fqcn, str) or not fqcn or not isinstance(receipt.get("workflow", {}), dict):
++            problems.append("receipt: class/workflow 类型无法确认")
++            continue
++        if workflow is not None:
++            observed = receipt.get("workflow", {})
++            if not isinstance(observed, dict) or any(observed.get(key) != workflow.get(key) for key in
++                    ("repository", "run_id", "run_attempt", "workflow_sha", "workflow_ref")) \
++                    or observed.get("job") != "storage_it":
++                problems.append("receipt: 非本次 workflow/run/attempt，不能以最新attempt替代")
++                continue
++            if receipt.get("schema") != RECEIPT_SCHEMA or fqcn in latest:
++                problems.append("receipt: 类型/重复原回执不能确认")
++                continue
++        try:
++            attempt = int(receipt.get("workflow", {}).get("run_attempt") or 0)
++        except (TypeError, ValueError):
++            problems.append("receipt: attempt 无法确认")
++            continue
+         if fqcn and (fqcn not in latest or attempt > latest[fqcn][0]):
+             latest[fqcn] = (attempt, receipt)
+     planned_classes = [item["class"] for item in planned]
+     rows = []
+-    problems = []
+     for fqcn in planned_classes:
+         expected = registry["classes"][fqcn]["tests"]
+         receipt = latest.get(fqcn, (0, None))[1]
+@@ -966,10 +1021,37 @@ def summarize(registry, receipts_dir, planned, batch, source_sha):
+         if cleanup_status != "CLEAN":
+             verdict = "FAIL"
+             problems.append("%s: cleanup %s，必须有 CLEAN 回读" % (simple_name(fqcn), cleanup_status or "MISSING"))
++        if workflow is not None:
++            def object_field(value, key):
++                field = value.get(key) if isinstance(value, dict) else None
++                return field if isinstance(field, dict) else {}
++            executed = object_field(receipt, "executed")
++            maven = object_field(receipt, "maven")
++            candidate = object_field(object_field(receipt, "precheck"), "candidate")
++            teardown = object_field(receipt, "teardown")
++            if (receipt.get("expected_tests") != expected or executed.get("tests") != expected
++                    or type(receipt.get("expected_tests")) is not int
++                    or type(executed.get("tests")) is not int
++                    or any(type(executed.get(key)) is not int or executed.get(key) != 0
++                           for key in ("failures", "errors", "skipped"))
++                    or type(maven.get("exit_code")) is not int or maven.get("exit_code") != 0
++                    or candidate.get("sha") != source_sha):
++                verdict = "FAIL"
++                problems.append("%s: 原JUnit/Maven/候选证据不完整" % simple_name(fqcn))
++            for kind in registry["classes"][fqcn]["storage"]:
++                observed_cleanup = (isinstance(cleanup, dict) and
++                                    (cleanup.get("mysql_leftover_schemas") == [] if kind == "mysql"
++                                     else type(cleanup.get("redis_dbsize_after")) is int
++                                     and cleanup.get("redis_dbsize_after") == 0))
++                if not observed_cleanup or object_field(teardown, kind).get("removed") is not True:
++                    verdict = "FAIL"
++                    problems.append("%s: %s 独立清理/原teardown缺失" % (simple_name(fqcn), kind))
+         rows.append({
+             "class": fqcn,
+             "expected": expected,
+-            "executed": receipt.get("executed", {}).get("tests", 0),
++            "executed": (receipt.get("executed", {}).get("tests", 0)
++                         if isinstance(receipt.get("executed"), dict)
++                         and type(receipt["executed"].get("tests")) is int else 0),
+             "verdict": verdict,
+             "cleanup": cleanup_status,
+             "run_attempt": receipt.get("workflow", {}).get("run_attempt"),
+@@ -1014,7 +1096,12 @@ def cmd_summarize(args, environ):
+     require_valid_registry(registry)
+     planned = json.loads(required_env(environ, "PLANNED"))
+     summary, receipts = summarize(registry, args.receipts, planned, required_env(environ, "BATCH"),
+-                                  required_env(environ, "SOURCE_SHA"))
++                                  required_env(environ, "SOURCE_SHA"), workflow=workflow_facts(environ))
++    # A failing artifact collector/step must not be hidden by an earlier PASS test receipt.
++    summary["storage_matrix_result"] = environ.get("STORAGE_MATRIX_RESULT", "UNKNOWN")
++    if summary["storage_matrix_result"] != "success":
++        summary["verdict"] = "FAIL"
++        summary["problems"].append("storage matrix 未成功，不能把部分原回执提升为整批通过")
+     summary["timezone"] = environ.get("TIMEZONE")
+     summary["workflow"] = workflow_facts(environ)
+     out = Path(args.out)
+@@ -1194,6 +1281,8 @@ def main(argv=None, environ=None):
+                 "storage-stop": cmd_storage_stop, "summarize": cmd_summarize,
+                 "m1-pair-plan": cmd_m1_pair_plan, "m1-pair-verify": cmd_m1_pair_verify}
+     try:
++        if args.command in ("plan", "precheck", "storage-start", "run", "m1-pair-plan"):
++            require_normal_parent(environ)
+         return handlers[args.command](args, environ)
+     except GateError as error:
+         print("❌ %s: %s" % (args.command, error), file=sys.stderr)
+diff --git a/ci/restore_business_reconciliation_build.py b/ci/restore_business_reconciliation_build.py
+index b8846dd4..24e7a8ee 100644
+--- a/ci/restore_business_reconciliation_build.py
++++ b/ci/restore_business_reconciliation_build.py
+@@ -115,6 +115,7 @@ def unpack(root, stage, identity):
+ 
+ def main():
+     require(sys.argv[1:] in (['pack'], ['unpack']), 'fixed build transfer phase only')
++    require('CHENGYIN_RESTORE_MODE' not in os.environ, 'restore mode must be absent in the build parent')
+     for key, value in {'GITHUB_ACTIONS': 'true', 'RUNNER_ENVIRONMENT': 'github-hosted', 'RUNNER_OS': 'Linux',
+                        'GITHUB_REPOSITORY': 'liboyang42-cpu/hengyin', 'GITHUB_EVENT_NAME': 'workflow_dispatch'}.items():
+         require(os.environ.get(key) == value, 'wrong hosted build transfer scope')
+@@ -126,7 +127,10 @@ def main():
+     stage = Path(os.environ['RUNNER_TEMP']).resolve() / 'restore-business-build'
+     if sys.argv[1] == 'pack':
+         require(os.environ.get('GITHUB_JOB') == 'restore-source-build', 'wrong build producer')
+-        pack(ROOT, stage, identity)
++        receipt = pack(ROOT, stage, identity)
++        # The summary binds every cohort to this verified once-build digest.
++        with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
++            output.write('jar_sha256=' + receipt['jarSha256'] + '\n')
+     else:
+         require(os.environ.get('GITHUB_JOB') == 'isolated-restore-business-reconciliation', 'wrong build consumer')
+         unpack(ROOT, stage, identity)
+diff --git a/ci/restore_business_reconciliation_host.py b/ci/restore_business_reconciliation_host.py
+index 31f0e167..1a953bcc 100644
+--- a/ci/restore_business_reconciliation_host.py
++++ b/ci/restore_business_reconciliation_host.py
+@@ -3,6 +3,7 @@
+ from __future__ import annotations
+ 
+ import importlib.util
++import hashlib
+ import json
+ import os
+ from pathlib import Path
+@@ -289,7 +290,7 @@ def main():
+     return code
+ 
+ 
+-def summarize_receipts(root, source_sha, run_id, attempt):
++def summarize_receipts(root, source_sha, run_id, attempt, expected_build=None):
+     expected = {'isolated-restore-business-reconciliation-' + cohort + '-' + attempt for cohort in COHORTS}
+     require(root.is_dir() and not root.is_symlink() and root.resolve() == root.absolute(), 'owned receipt root required')
+     require({path.name for path in root.iterdir()} == expected, 'seven exact cohort artifacts required')
+@@ -342,8 +343,15 @@ def summarize_receipts(root, source_sha, run_id, attempt):
+         rows.append({'cohort': cohort, 'scope': scope, 'businessResult': business['businessResult'],
+                      'finalResult': final['result']})
+     require(len(identities) == 1, 'cohorts must reuse one exact JAR and canonical backup tool')
++    if expected_build is not None:
++        require(isinstance(expected_build, tuple) and len(expected_build) == 2
++                and all(isinstance(value, str) and re.fullmatch('[a-f0-9]{64}', value)
++                        for value in expected_build), 'verified once-build JAR/tool hashes required')
++        require(identities == {expected_build}, 'cohort JAR/tool differs from this workflow build/source')
+     completed = domain_readers().summarize_completed_cohorts(positive)
+     return {'sourceSha': source_sha, 'runId': run_id, 'runAttempt': attempt,
++            'jarSha256': next(iter(identities))[0], 'canonicalToolSha256': next(iter(identities))[1],
++            'onceBuildBound': expected_build is not None,
+             'result': 'SCOPED_SEVEN_RESTORE_COHORTS_COMPLETE_NO_PRODUCTION_RELEASE',
+             'cohorts': rows, 'completeFacts': completed, 'productionDispatchRelease': False,
+             'globalProductionFenceVerified': False}
+@@ -363,10 +371,13 @@ def summary_main():
+     code = 0
+     try:
+         result = summarize_receipts(temporary / 'restore-business-receipts', source,
+-                                    os.environ['GITHUB_RUN_ID'], os.environ['GITHUB_RUN_ATTEMPT'])
++                                    os.environ['GITHUB_RUN_ID'], os.environ['GITHUB_RUN_ATTEMPT'],
++                                    expected_build=(os.environ.get('RESTORE_BUILD_JAR_SHA256', ''),
++                                                    hashlib.sha256((ROOT / 'scripts/db-backup-restore.py').read_bytes()).hexdigest()))
+     except Exception as failure:
+         code = 1
+-        result = {'sourceSha': source, 'result': 'FAIL', 'reason': str(failure)[:400],
++        result = {'sourceSha': source, 'runId': os.environ['GITHUB_RUN_ID'],
++                  'runAttempt': os.environ['GITHUB_RUN_ATTEMPT'], 'result': 'FAIL', 'reason': str(failure)[:400],
+                   'productionDispatchRelease': False, 'globalProductionFenceVerified': False}
+     write_private(output / 'summary.json', json.dumps(result, sort_keys=True, indent=2))
+     return code
+diff --git a/ci/test_real_storage_it.py b/ci/test_real_storage_it.py
+index cc661103..568be2f8 100644
+--- a/ci/test_real_storage_it.py
++++ b/ci/test_real_storage_it.py
+@@ -372,7 +372,7 @@ class RegistryContractTest(unittest.TestCase):
+         self.assertIn("if: always() && matrix.simple == 'FundsProcessRecoveryMySqlIT'", step)
+         script = textwrap.dedent(step.split("          python3 - <<'PY'\n", 1)[1]
+                                  .split('          PY\n', 1)[0])
+-        for case in ('valid', 'missing', 'bad_sha', 'symlink', 'invalid_json'):
++        for case in ('valid', 'missing', 'bad_sha', 'symlink', 'invalid_json', 'foreign_identity', 'foreign_workflow', 'missing_run', 'missing_identity'):
+             with self.subTest(case=case), tempfile.TemporaryDirectory() as temp:
+                 original = pathlib.Path.cwd()
+                 try:
+@@ -381,18 +381,26 @@ class RegistryContractTest(unittest.TestCase):
+                     if case != 'missing':
+                         source.mkdir(parents=True)
+                         (source / 'identity.json').write_text('{bad' if case == 'invalid_json'
+-                                                             else json.dumps({'sourceSha': SHA}))
++                                                             else json.dumps({'sourceSha': '0' * 40 if case == 'foreign_identity' else SHA}))
+                         (source / 'stdout.log').write_text('private diagnostic sentinel')
++                        if case == 'missing_identity':
++                            (source / 'identity.json').rename(source / 'other.json')
+                     if case == 'symlink':
+                         outside = pathlib.Path('outside.json')
+                         outside.write_text('{}')
+                         (source / 'escape.json').symlink_to(outside.resolve())
+-                    with mock.patch.dict(os.environ, {'SOURCE_SHA': 'not-a-sha' if case == 'bad_sha' else SHA}):
++                    with mock.patch.dict(os.environ, {'SOURCE_SHA': 'not-a-sha' if case == 'bad_sha' else SHA,
++                                                     'GITHUB_SHA': '0' * 40 if case == 'foreign_workflow' else SHA,
++                                                     'GITHUB_RUN_ID': '' if case == 'missing_run' else '123',
++                                                     'GITHUB_RUN_ATTEMPT': '2'}):
+                         if case == 'valid':
+                             exec(script, {})
+                             output = pathlib.Path('out/funds-process-recovery') / SHA / 'run'
+                             self.assertEqual({'sourceSha': SHA}, json.loads((output / 'identity.json').read_text()))
+                             self.assertEqual(['identity.json'], sorted(path.name for path in output.iterdir()))
++                            index = json.loads(pathlib.Path('out/funds-process-evidence-index.json').read_text())
++                            self.assertEqual((SHA, '123', '2'), (index['sourceSha'], index['runId'], index['runAttempt']))
++                            self.assertEqual({'run/identity.json': __import__('hashlib').sha256((output / 'identity.json').read_bytes()).hexdigest()}, index['files'])
+                         else:
+                             with self.assertRaises(ValueError):
+                                 exec(script, {})
+@@ -901,6 +909,117 @@ class SummaryTest(unittest.TestCase):
+                 self.assertTrue(any("cleanup" in problem for problem in summary["problems"]))
+ 
+ 
++class FinalEntryBindingTest(unittest.TestCase):
++    WORKFLOW = {'repository': 'liboyang42-cpu/hengyin', 'run_id': '123', 'run_attempt': '2',
++                'workflow_sha': SHA, 'workflow_ref': 'refs/heads/codex/candidate', 'job': 'summary'}
++
++    def test_parent_restore_mode_is_absent_not_an_approval_or_silently_filtered(self):
++        self.assertEqual({'PATH': '/bin'}, rs.child_env({'PATH': '/bin'}, {}))
++        for value in ('', 'false', 'true', 'invalid', None):
++            for base, extra in (({'CHENGYIN_RESTORE_MODE': value}, {}),
++                                ({}, {'CHENGYIN_RESTORE_MODE': value})):
++                with self.subTest(value=value, extra=bool(extra)), self.assertRaises(rs.GateError):
++                    rs.child_env(base, extra)
++        reg = registry()
++        reg['classes'][E04]['gates']['CHENGYIN_RESTORE_MODE'] = 'true'
++        self.assertTrue(rs.validate_class_entry(E04, reg['classes'][E04]))
++        self.assertEqual(('B_PAYMENT_INTENT_DDL_APPROVED', 'B_FUNDS_PROCESS_RECOVERY_APPROVED'),
++                         rs.REVIEWED_APPROVAL_GATES)
++
++    def test_B_native_identity_requires_same_workflow_sha_without_context_replacement(self):
++        fqcn = 'com.chengyinhub.business.service.impl.FundsProcessRecoveryMySqlIT'
++        env = {'GITHUB_SHA': SHA}
++        rs.require_class_source(fqcn, SHA, env)
++        self.assertEqual({'GITHUB_SHA': SHA}, env)
++        for observed in ('', '0' * 40):
++            with self.subTest(observed=observed), self.assertRaises(rs.GateError):
++                rs.require_class_source(fqcn, SHA, {'GITHUB_SHA': observed})
++        # Original two-source M1 remains supported; it does not emit B's GITHUB_SHA directory.
++        rs.require_class_source('com.chengyinhub.business.it.PlayHintUnlockMySqlIT', SHA, {})
++
++    def receipt(self, fqcn):
++        count = registry()['classes'][fqcn]['tests']
++        return dict(SummaryTest.receipt(fqcn), schema=rs.RECEIPT_SCHEMA, expected_tests=count,
++                    workflow=dict(self.WORKFLOW, job='storage_it'),
++                    executed={'tests': count, 'failures': 0, 'errors': 0, 'skipped': 0},
++                    maven={'exit_code': 0}, precheck={'candidate': {'sha': SHA}},
++                    cleanup={'status': 'CLEAN', 'mysql_leftover_schemas': []},
++                    teardown={'mysql': {'removed': True}})
++
++    def summary(self, receipts):
++        reg = registry()
++        planned = [item for item in rs.plan(reg, SHA, 'core-funds', '', 'UTC') if item['class'] in (E04, C01)]
++        with tempfile.TemporaryDirectory() as temp:
++            for index, receipt in enumerate(receipts):
++                path = pathlib.Path(temp, str(index)); path.mkdir()
++                (path / 'receipt.json').write_text(json.dumps(receipt))
++            return rs.summarize(reg, temp, planned, 'core-funds', SHA, workflow=self.WORKFLOW)[0]
++
++    def test_same_run_exact_original_execution_and_cleanup_receipts_pass(self):
++        self.assertEqual('PASS', self.summary([self.receipt(E04), self.receipt(C01)])['verdict'])
++
++    def test_foreign_duplicate_missing_or_incomplete_receipts_cannot_be_promoted(self):
++        cases = ('run_id', 'run_attempt', 'workflow_sha', 'repository', 'workflow_ref', 'job',
++                 'duplicate', 'missing', 'schema', 'count', 'skip', 'maven', 'candidate',
++                 'unknown_cleanup', 'missing_readback', 'missing_teardown', 'malformed', 'boolean_exit', 'unknown_class')
++        for case in cases:
++            receipts = [self.receipt(E04), self.receipt(C01)]
++            receipt = receipts[-1]
++            if case in self.WORKFLOW:
++                receipt['workflow'][case] = 'foreign'
++            elif case == 'duplicate': receipts.append(copy.deepcopy(receipt))
++            elif case == 'missing': receipts.pop()
++            elif case == 'schema': receipt['schema'] = 'foreign'
++            elif case == 'count': receipt['executed']['tests'] -= 1
++            elif case == 'skip': receipt['executed']['skipped'] = 1
++            elif case == 'maven': receipt['maven']['exit_code'] = 98
++            elif case == 'candidate': receipt['precheck']['candidate']['sha'] = '0' * 40
++            elif case == 'unknown_cleanup': receipt['cleanup']['status'] = 'UNKNOWN'
++            elif case == 'missing_readback': receipt['cleanup'].pop('mysql_leftover_schemas')
++            elif case == 'missing_teardown': receipt.pop('teardown')
++            elif case == 'malformed': receipt['executed'] = None
++            elif case == 'boolean_exit': receipt['maven']['exit_code'] = False
++            elif case == 'unknown_class': receipt['class'] = ''
++            with self.subTest(case=case):
++                self.assertEqual('FAIL', self.summary(receipts)['verdict'])
++
++    def test_summary_cli_and_download_bind_the_current_attempt(self):
++        env = dict(GITHUB_REPOSITORY=self.WORKFLOW['repository'], GITHUB_RUN_ID='123',
++                   GITHUB_RUN_ATTEMPT='2', GITHUB_SHA=SHA, GITHUB_REF=self.WORKFLOW['workflow_ref'],
++                   GITHUB_JOB='summary', SOURCE_SHA=SHA, BATCH='core-funds', PLANNED='[]')
++        with mock.patch.object(rs, 'summarize', side_effect=rs.GateError('controlled stop')) as call:
++            with self.assertRaises(rs.GateError):
++                rs.cmd_summarize(mock.Mock(), env)
++        self.assertEqual(self.WORKFLOW, {key: call.call_args.kwargs['workflow'][key] for key in self.WORKFLOW})
++        self.assertIn('pattern: rs-class-*-a${{ github.run_attempt }}', WORKFLOW.read_text())
++
++    def test_theme_runtime_keeps_native_parameterized_backend_entry(self):
++        reg = registry()
++        self.assertFalse(any(rs.simple_name(name) == 'ThemeRuntimeMySqlIT' for name in reg['classes']))
++        source = (_HERE / 'backend-test.sh').read_text()
++        self.assertIn('ThemeRuntimeMySqlIT', source)
++        self.assertIn('MYBATIS_ITS', source)
++        self.assertIn('assert_it_ran.py', source)
++        self.assertIn('-Dtest="$IT_LIST"', source)
++
++    def test_failed_collection_or_matrix_cannot_be_hidden_by_pass_receipts(self):
++        for result in ('success', 'failure', 'cancelled', 'UNKNOWN'):
++            with self.subTest(result=result), tempfile.TemporaryDirectory() as temp:
++                env = dict(GITHUB_REPOSITORY=self.WORKFLOW['repository'], GITHUB_RUN_ID='123',
++                           GITHUB_RUN_ATTEMPT='2', GITHUB_SHA=SHA, GITHUB_REF=self.WORKFLOW['workflow_ref'],
++                           GITHUB_JOB='summary', SOURCE_SHA=SHA, BATCH='core-funds', PLANNED='[]',
++                           STORAGE_MATRIX_RESULT=result)
++                args = __import__('argparse').Namespace(receipts=temp, out=str(pathlib.Path(temp, 'out')))
++                with mock.patch.object(rs, 'summarize', return_value=({'verdict': 'PASS', 'problems': []}, [])), \
++                     mock.patch.object(rs, 'summary_markdown', return_value='controlled summary'):
++                    code = rs.cmd_summarize(args, env)
++                self.assertEqual(0 if result == 'success' else 1, code)
++                written = json.loads(pathlib.Path(args.out, 'summary.json').read_text())
++                self.assertEqual('PASS' if result == 'success' else 'FAIL', written['verdict'])
++                self.assertEqual(result, written['storage_matrix_result'])
++        self.assertEqual(2, WORKFLOW.read_text().count('STORAGE_MATRIX_RESULT: ${{ needs.storage_it.result }}'))
++
++
+ class FakeClock:
+     def __init__(self, step):
+         self.now = 0.0
+@@ -1058,6 +1177,9 @@ class RunFlowTest(unittest.TestCase):
+         self.assertEqual("3.2.5", receipt["toolchain"]["surefire"])
+         self.assertEqual("CLEAN", receipt["cleanup"]["status"])
+         self.assertTrue((self.out / "surefire-reports").is_dir())
++        raw = self.out / "surefire-reports" / ("TEST-%s.xml" % C01)
++        self.assertEqual({raw.name: __import__('hashlib').sha256(raw.read_bytes()).hexdigest()},
++                         receipt['surefire_xml_sha256'])
+ 
+     def test_fail_when_nested_dropped_and_leftover_recorded(self):
+         code, receipt = self.run_class(c01_cases(nested=False), schemas_after=("mysql", "sys", "cyit_leak"))
+@@ -1367,7 +1489,7 @@ def m1_workflow_problems(text):
+                 "format('rs-class-{0}-a{1}', matrix.simple, github.run_attempt)",
+                 "python3 evidence/docs/delivery/architecture-day/C/evidence/wp09-m1-equivalence/test_compare_receipts.py",
+                 "python3 evidence/docs/delivery/architecture-day/C/evidence/wp09-m1-comparator-patches/test_member_fk_review.py",
+-                "pattern: rs-class-*", "PLANNED: ${{ needs.plan.outputs.matrix }}"]
++                "pattern: rs-class-*-a${{ github.run_attempt }}", "PLANNED: ${{ needs.plan.outputs.matrix }}"]
+     problems = ["missing M1 workflow contract: " + item for item in required if item not in text]
+     for job, mode in (("summary", "=="), ("pair_summary", "!="), ("compare", "!=")):
+         block = re.search(r"^  " + job + r":\n([\s\S]*?)(?=^  \w+:|\Z)", text, re.MULTILINE)
+@@ -1402,7 +1524,7 @@ class M1PairWorkflowTest(unittest.TestCase):
+                          ("VALIDATED_SOURCE_SHA: ${{ matrix.source_sha || inputs.source_sha }}", "VALIDATED_SOURCE_SHA: ${{ inputs.source_sha }}"),
+                          ("inputs.old_source_sha == ''", "inputs.old_source_sha != ''"),
+                          ("PAIR_SUMMARY_RESULT: ${{ needs.pair_summary.result }}", "PAIR_SUMMARY_RESULT: success"),
+-                         ("pattern: rs-class-*", "pattern: rs-m1-*")]:
++                         ("pattern: rs-class-*-a${{ github.run_attempt }}", "pattern: rs-m1-*")]:
+             with self.subTest(old=old):
+                 mutated = text.replace(old, new)
+                 self.assertNotEqual(text, mutated); self.assertTrue(m1_workflow_problems(mutated))
+diff --git a/ci/test_restore_business_reconciliation_build.py b/ci/test_restore_business_reconciliation_build.py
+index a6cd0221..04278403 100644
+--- a/ci/test_restore_business_reconciliation_build.py
++++ b/ci/test_restore_business_reconciliation_build.py
+@@ -106,11 +106,37 @@ class RestoreBuildControls(unittest.TestCase):
+         self.assertIn('dependency:copy-dependencies -DincludeScope=test', producer)
+         self.assertIn('-Dmdep.useRepositoryLayout=true', producer)
+         self.assertIn('include-hidden-files: true', producer)
++        self.assertIn('test "${CHENGYIN_RESTORE_MODE+x}" != x', producer)
++        self.assertIn('jar_sha256: ${{ steps.build.outputs.jar_sha256 }}', producer)
++        self.assertIn('id: build', producer)
+         self.assertIn('python3 -I ci/restore_business_reconciliation_build.py pack', producer)
+         self.assertNotIn('mvn ', consumers)
+         self.assertIn('python3 -I ci/restore_business_reconciliation_build.py unpack', consumers)
+         self.assertEqual(2, workflow.count('name: restore-business-build-${{ github.run_attempt }}'))
+ 
++    def test_pack_output_is_the_actual_staged_jar_digest_for_this_run(self):
++        from unittest import mock
++        with tempfile.TemporaryDirectory() as temp:
++            root = Path(temp).resolve(); checkout = root / 'source'; checkout.mkdir(); self.source(checkout)
++            output = root / 'job-output'
++            env = {'GITHUB_ACTIONS': 'true', 'RUNNER_ENVIRONMENT': 'github-hosted', 'RUNNER_OS': 'Linux',
++                   'GITHUB_REPOSITORY': 'liboyang42-cpu/hengyin', 'GITHUB_EVENT_NAME': 'workflow_dispatch',
++                   'GITHUB_JOB': 'restore-source-build', 'GITHUB_SHA': self.identity['sourceSha'],
++                   'GITHUB_RUN_ID': '123', 'GITHUB_RUN_ATTEMPT': '1', 'RUNNER_TEMP': str(root),
++                   'GITHUB_OUTPUT': str(output)}
++            with mock.patch.object(build, 'ROOT', checkout), mock.patch.dict(build.os.environ, env, clear=True), \
++                 mock.patch.object(build.sys, 'argv', ['build', 'pack']), \
++                 mock.patch.object(build.subprocess, 'check_output', return_value=self.identity['sourceSha'] + '\n'):
++                build.main()
++            receipt = json.loads((root / 'restore-business-build' / build.MANIFEST).read_text())
++            self.assertEqual('jar_sha256=' + build.digest(checkout / build.JAR) + '\n', output.read_text())
++            self.assertEqual(self.identity, {key: receipt[key] for key in self.identity})
++            for value in ('', 'false', 'true', 'invalid'):
++                with mock.patch.dict(build.os.environ, {'CHENGYIN_RESTORE_MODE': value}), \
++                     mock.patch.object(build.sys, 'argv', ['build', 'pack']), \
++                     self.subTest(value=value), self.assertRaises(ValueError):
++                    build.main()
++
+ 
+ if __name__ == '__main__':
+     unittest.main()
+diff --git a/ci/test_restore_business_reconciliation_host.py b/ci/test_restore_business_reconciliation_host.py
+index 13a05333..c21e1140 100644
+--- a/ci/test_restore_business_reconciliation_host.py
++++ b/ci/test_restore_business_reconciliation_host.py
+@@ -272,6 +272,25 @@ class RestoreHostControls(unittest.TestCase):
+         self.assertIn('python3 -I ci/restore_business_reconciliation_host.py --summarize', summary)
+         self.assertNotIn('merge-multiple: true', summary)
+         self.assertNotIn('private', summary)
++        self.assertIn('RESTORE_BUILD_JAR_SHA256: ${{ needs.restore-source-build.outputs.jar_sha256 }}', summary)
++
++    def test_all_cohorts_must_match_the_once_build_not_just_one_another(self):
++        for expected in (('c' * 64, 'd' * 64), ('e' * 64, 'd' * 64),
++                         ('c' * 64, 'e' * 64), ('', 'd' * 64)):
++            with self.subTest(expected=expected), tempfile.TemporaryDirectory() as temp:
++                root = Path(temp).resolve(); self.receipts(root)
++                verifier = mock.Mock()
++                verifier.summarize_completed_cohorts.return_value = {'coverageScope': 'C_FIXED_RESTORE_COHORTS_ONLY'}
++                with mock.patch.object(host, 'domain_readers', return_value=verifier):
++                    if expected == ('c' * 64, 'd' * 64):
++                        result = host.summarize_receipts(root, SHA, '123', '1', expected_build=expected)
++                        self.assertTrue(result['onceBuildBound'])
++                        self.assertEqual(expected, (result['jarSha256'], result['canonicalToolSha256']))
++                        verifier.summarize_completed_cohorts.assert_called_once()
++                    else:
++                        with self.assertRaises(ValueError):
++                            host.summarize_receipts(root, SHA, '123', '1', expected_build=expected)
++                        verifier.summarize_completed_cohorts.assert_not_called()
+ 
+ 
+ if __name__ == '__main__':
