@@ -52,6 +52,29 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by id desc
     </select>
     
+    <resultMap id="VisibleReplyCountResult" type="ViewComment">
+        <id property="id" column="parent_id"/>
+        <result property="replyCommentCount" column="reply_count"/>
+    </resultMap>
+
+    <!-- 与 view_comment 的公开可见性一致；reply_id 表示直接父评论，不递归统计线程。 -->
+    <select id="selectVisibleReplyCountsByParents" resultMap="VisibleReplyCountResult">
+        SELECT reply_id AS parent_id, COUNT(*) AS reply_count
+        FROM ums_comment
+        WHERE owner_type = #{ownerType} AND owner_id = #{ownerId}
+          AND status = 1 AND del_flag = 0
+        <choose>
+            <when test="parentIds != null and parentIds.size() > 0">
+                AND reply_id IN
+                <foreach collection="parentIds" item="parentId" open="(" separator="," close=")">
+                    #{parentId}
+                </foreach>
+            </when>
+            <otherwise>AND 1 = 0</otherwise>
+        </choose>
+        GROUP BY reply_id
+    </select>
+
     <select id="selectViewCommentById" parameterType="Long" resultMap="ViewCommentResult">
         <include refid="selectViewCommentVo"/>
         where id = #{id}

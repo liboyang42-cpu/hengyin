@@ -206,9 +206,18 @@ public class ApiCommentController extends BaseController {
         startPage();
         list = viewCommentService.selectViewCommentList(viewComment);
 
+        // 只查当前页，复用旧评论 status/del_flag 可见性；不改变 PageHelper 的 rows/total。
+        Map<Long, Long> replyCounts = new HashMap<>();
+        if (!list.isEmpty()) {
+            List<Long> parentIds = new java.util.ArrayList<>();
+            for (ViewComment comment : list) parentIds.add(comment.getId());
+            for (ViewComment count : viewCommentService.selectVisibleReplyCountsByParents(ownerType, ownerId, parentIds)) {
+                replyCounts.put(count.getId(), count.getReplyCommentCount());
+            }
+        }
         for (ViewComment comment : list) {
             //该评论的回复评论数
-            comment.setReplyCommentCount(0L);
+            comment.setReplyCommentCount(replyCounts.getOrDefault(comment.getId(), 0L));
 
             Long member_id = 0L;
             try {
