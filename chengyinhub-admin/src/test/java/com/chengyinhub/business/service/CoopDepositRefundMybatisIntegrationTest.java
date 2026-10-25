@@ -59,6 +59,7 @@ class CoopDepositRefundMybatisIntegrationTest {
         String ddl=new String(Files.readAllBytes(root.resolve("sql/base_schema_20260818.sql")),"UTF-8");
         Matcher matcher=Pattern.compile("CREATE TABLE `coop_invite` \\(.*?^\\).*?;",Pattern.DOTALL|Pattern.MULTILINE).matcher(ddl);
         assertTrue(matcher.find());db.execute(matcher.group());
+        db.execute("ALTER TABLE coop_invite ADD COLUMN supply_station_id BIGINT NULL"); // New mapper prerequisite, scratch only.
         String migration=new String(Files.readAllBytes(root.resolve("chengyinhub-admin/sql/migration_coop_deposit_refund_state_20260913.sql")),"UTF-8");
         db.execute(migration.substring(migration.indexOf("ALTER TABLE")));
         db.execute("CREATE TABLE deposit_test_topic (id BIGINT PRIMARY KEY, is_settlement INT)");

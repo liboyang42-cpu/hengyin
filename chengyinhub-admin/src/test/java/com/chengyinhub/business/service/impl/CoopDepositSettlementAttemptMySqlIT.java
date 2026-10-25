@@ -77,6 +77,7 @@ class CoopDepositSettlementAttemptMySqlIT {
             assertTrue(start >= 0 && close > start && end > close);
             db.execute(base.substring(start, end + 1));
         }
+        db.execute("ALTER TABLE coop_invite ADD COLUMN supply_station_id BIGINT NULL"); // Mapper prerequisite in this owned scratch schema.
         new ResourceDatabasePopulator(
                 new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_coop_deposit_refund_state_20260913.sql")),
                 new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql")))

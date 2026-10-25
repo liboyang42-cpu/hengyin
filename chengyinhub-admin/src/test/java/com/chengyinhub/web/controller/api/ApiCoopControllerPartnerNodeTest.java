@@ -419,6 +419,7 @@ class ApiCoopControllerPartnerNodeTest {
         assertEquals(500, r.get("code"), "实际:" + msg(r));
         assertTrue(msg(r).contains("仅供查看"), "历史 type2 必须明确只读,实际:" + msg(r));
         verify(coopInviteService, never()).acceptInviteWithLock(any(), any());
+        verify(coopInviteService, never()).acceptInviteWithLock(any(), any(), any());
         verify(coopInviteService, never()).updateCoopInvite(any());
     }
 

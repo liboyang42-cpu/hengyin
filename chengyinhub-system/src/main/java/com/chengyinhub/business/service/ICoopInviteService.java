@@ -47,6 +47,13 @@ public interface ICoopInviteService {
      */
     public CoopInvite acceptInviteWithLock(Long inviteId, Long nodeId);
 
+    /** Explicit confirmation of the original persisted supply station; no replacement on accept. */
+    CoopInvite acceptInviteWithLock(Long inviteId, Long nodeId, Long confirmedSupplyStationId);
+    /** Creator-scoped classic supplier picker; caller passes only its server-resolved contract owner. */
+    List<com.chengyinhub.business.domain.CmsRegistrationMerchant> listSupplyStations(
+            Long topicId, Long merchantMemberId, Long creatorMemberId);
+
+
     /** 官方邀约接受：锁邀约并幂等创建/复用商家承接档案，返回档案 ID。 */
     public Long acceptOfficialInviteWithLock(Long inviteId, Long merchantMemberId);
 

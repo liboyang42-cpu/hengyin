@@ -1,0 +1,76 @@
+{
+  "parent": "6fcd5ac009cec1dd82c438528d24da30c1f302f4",
+  "verification": "Java/JUnit/MySQL/HTTP/DDL/CI NOT_RUN",
+  "patch_sha256": "fc4e597401de3d6b12edc63a4deab95517695cebb5ab843d28b393f0029701d9",
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopController.java",
+      "postimage_sha256": "70071e40768a44e7fa6a1511c524374238569bf91633ef38bac38a2ea4306bf1"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopDepositRefundMybatisIntegrationTest.java",
+      "postimage_sha256": "03ed80f36bf71e8812c5c25dee59a3be4111b1c2cab01c954620040fab963bc0"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopInviteServiceImplTest.java",
+      "postimage_sha256": "18a3493ccfd9909dd3865fad83f5331008a07674c28eacd08b3c086634867a11"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopListReadOnlyMybatisIntegrationTest.java",
+      "postimage_sha256": "9c13f403cf76455d1f58333dff8413aaf982f5f56522ba219a8e984e395143b2"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopPerksSnapshotTest.java",
+      "postimage_sha256": "5ddb21c898ee6787c0ced5d5c3ce4d4d4e074c35e3bde19b04a10ea0d6aba9e5"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptMySqlIT.java",
+      "postimage_sha256": "17045b15dd9d11a772a40ce8e4e72b0d5eeb5bb267a23e9e7be84bd64851f54b"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSupplyStationContractTest.java",
+      "postimage_sha256": "a86cf33586ac39d57d57a0a037aae176333b1dc2411251e81e547e5539f80b7b"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSupplyStationMySqlIT.java",
+      "postimage_sha256": "86ae4fbde974aa60830d03d11d6de1c8b2baffcc0555b1f974fd2e0650b6fdab"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCoopControllerPartnerNodeTest.java",
+      "postimage_sha256": "3de9b363f5713972c14ddb76806a4198fcd335707d966f45016ffc54aa5243ee"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCoopOfferAccessTest.java",
+      "postimage_sha256": "e59db414674e20a94d20236fb084b85bfc0e6d4c72c50e63f935ce8590e326da"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCoopSupplyStationsTest.java",
+      "postimage_sha256": "f25aa879ce914b017584e2f4d66490bc768fabc103df1f544c3f94d4b8d65723"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/resources/it-schema/coop-it-schema.sql",
+      "postimage_sha256": "ec148f259f243010bf79d6574d01b0007fd085fabd53a52eba53bc163905c923"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopInvite.java",
+      "postimage_sha256": "add150addba0963553cbee1d5bdfed1d107c6cf7b5f358ec0e12e924a34110b5"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopInviteMapper.java",
+      "postimage_sha256": "b5d340f89192c6c7fc9d76694d56e3cba3ff1147e84dcef5239072ea460b9007"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICoopInviteService.java",
+      "postimage_sha256": "190eb7c50b4ca26aa64ac11db31fc1c855a247f13fd3190cabc28079793bf5db"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java",
+      "postimage_sha256": "3ba0735f8a10bde27908c48d675225f00867033f663c630c055f2caa3ef48f9a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CoopInviteMapper.xml",
+      "postimage_sha256": "38e937dcdabf2b5cb5d502bdc3a331c451298aafc43c36ef318c4b9da04f8394"
+    }
+  ],
+  "patch_encoding": "owned.patch.b64, standard base64; SHA256 is over decoded full-index patch"
+}

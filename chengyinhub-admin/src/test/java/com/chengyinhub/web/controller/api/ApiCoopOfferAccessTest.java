@@ -93,6 +93,7 @@ class ApiCoopOfferAccessTest {
 
         assertEquals(403, result.get(AjaxResult.CODE_TAG));
         verify(coopService, never()).acceptInviteWithLock(any(), any());
+        verify(coopService, never()).acceptInviteWithLock(any(), any(), any());
     }
 
     @Test
@@ -113,7 +114,7 @@ class ApiCoopOfferAccessTest {
         AjaxResult result = controller.handle(request);
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
-        verify(coopService).acceptInviteWithLock(62L, null);
+        verify(coopService).acceptInviteWithLock(62L, null, null);
     }
 
     @Test
