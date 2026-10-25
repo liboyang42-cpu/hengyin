@@ -459,6 +459,50 @@ def prepare_restore_runtime_user(name, schema, out, private, port):
                  'privileges': privileges, 'result': 'OWNED_RESTORED_RUNTIME_USER_PREPARED'})
 
 
+def restore_http_not_started(name, schema, out, summary):
+    """Only an explicit same-run pre-start C failure can waive an impossible app log.
+
+    Called after exact outer cleanup. This recognizes absence, never business success.
+    Missing/old/corrupt reports retain the existing unavailable-log failure.
+    """
+    env = os.environ
+    if (env.get('CHENGYIN_CI_RESTORE_HTTP_STARTUP') != 'true'
+            or env.get('GITHUB_EVENT_NAME') != 'workflow_dispatch'
+            or env.get('GITHUB_REPOSITORY') != 'liboyang42-cpu/hengyin'
+            or not re.fullmatch('[a-f0-9]{40}', env.get('GITHUB_SHA', ''))
+            or not all(re.fullmatch('[1-9][0-9]*', env.get(key, ''))
+                       for key in ('GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT'))
+            or not re.fullmatch('cy-auth-[a-f0-9]{32}', name)
+            or schema != 'cy_e2e_auth_' + name[8:]):
+        return False
+    path = out / 'restore-http-application.json'
+    try:
+        if path.is_symlink() or not path.is_file() or path.stat().st_size > 8 * 1024 * 1024:
+            return False
+        report = json.loads(path.read_text())
+        if not isinstance(report, dict):
+            return False
+        if (report.get('sourceSha') != env['GITHUB_SHA'] or report.get('schema') != schema
+                or report.get('runId') != env['GITHUB_RUN_ID'] or report.get('runAttempt') != env['GITHUB_RUN_ATTEMPT']
+                or report.get('applicationStartAttempted') is not False or report.get('boots') != []
+                or report.get('ownedAppCids') != [] or report.get('removedAppCids') != []
+                or report.get('applicationStop') != 'NO_ACTIVE_APP_SLOT' or report.get('result') != 'NOT_COMPLETED'
+                or not isinstance(report.get('firstFailureType'), str)
+                or not re.fullmatch('[A-Za-z][A-Za-z0-9_]{0,79}', report['firstFailureType'])
+                or report.get('productionDispatchRelease') is not False):
+            return False
+        expected = {name + '-' + suffix: report.get(key) for suffix, key in
+                    (('mysql', 'sourceMysqlCid'), ('restore-mysql', 'targetMysqlCid'), ('redis', 'redisCid'))}
+        removed = summary.get('ownedRemoved', [])
+        return (summary.get('cleanup') == 'CONFIRMED_EXACT_OWNED_REMOVAL'
+                and all(isinstance(cid, str) and re.fullmatch('[a-f0-9]{64}', cid) for cid in expected.values())
+                and len(set(expected.values())) == 3 and len(removed) == 3
+                and all(isinstance(row, dict) and row.get('independentNoSuch') is True for row in removed)
+                and {row.get('name'): row.get('id') for row in removed} == expected)
+    except (OSError, ValueError, TypeError):
+        return False
+
+
 def cleanup(name, schema, out, private, port):
     """Resolve even a lost docker-run reply by exact name and its original ownership label."""
     if private.exists():
@@ -545,7 +589,10 @@ def cleanup(name, schema, out, private, port):
     path = out / 'authenticated-redis-recovery.json'
     report['resourceCleanup'] = summary
     report['applicationLogPreserved'] = logs_available
-    not_started = pre_app_failure and app_absent
+    restore_pre_start = (report.get('result') == 'FAIL_BEFORE_BUSINESS_PROBE'
+                         and not report.get('reportReadFailure')
+                         and restore_http_not_started(name, schema, out, summary))
+    not_started = app_absent and (pre_app_failure or restore_pre_start)
     report['applicationLogStatus'] = ('PRESERVED' if logs_available else
                                       'NOT_STARTED' if not_started else 'UNAVAILABLE')
     write_report(out, path.name, report)
