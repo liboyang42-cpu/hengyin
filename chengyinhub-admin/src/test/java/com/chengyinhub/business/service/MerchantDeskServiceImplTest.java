@@ -29,6 +29,7 @@ import static org.mockito.Mockito.RETURNS_DEFAULTS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.withSettings;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -167,6 +168,8 @@ class MerchantDeskServiceImplTest {
         MerchantDeskException e = assertThrows(MerchantDeskException.class, () -> service.saveSku(access, body));
         assertEquals(MerchantDeskException.PRODUCT_LIVE_LOCKED, e.getErrorCode());
         verify(mapper, never()).insertSku(anyMap());
+        verify(mapper, never()).updateSku(anyMap());
+        verify(mapper, never()).insertReceipt(anyMap());
     }
 
     @Test
@@ -285,6 +288,18 @@ class MerchantDeskServiceImplTest {
     }
 
     @Test
+    void receiptWithAnotherRequestIdIsNotThisRead() {
+        Map<String, Object> row = new HashMap<>();
+        row.put("requestId", "req-other-0001");
+        row.put("action", "SKU_SAVE");
+        when(mapper.selectReceipt(OWNER, "req-sku-00009")).thenReturn(row);
+        Map<String, Object> view = service.receipt(access, "req-sku-00009");
+        assertEquals("NOT_FOUND", view.get("state"));
+        assertEquals("req-sku-00009", view.get("requestId"));
+        assertEquals(null, view.get("action"));
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     void businessHoursParsedFromExistingFormat() {
         Map<String, Object> all = (Map<String, Object>) ReflectionTestUtils.invokeMethod(
@@ -306,6 +321,208 @@ class MerchantDeskServiceImplTest {
         assertEquals(1, stores.size());
         assertTrue(((Map<?, ?>) stores.get(0).get("editEndpoints")).containsKey("anchor"));
         verify(mapper).selectStore(MERCHANT_ID);
+    }
+
+    @Test
+    void saveSku_recordsSkuSaveOnPmsSkuAndKeepsStaffOffTheOwner() {
+        Map<String, Object> product = new HashMap<>();
+        product.put("publishStatus", 2);
+        when(mapper.selectProductForUpdate(MERCHANT_ID, 900L)).thenReturn(product);
+        when(mapper.insertSku(anyMap())).thenAnswer(i -> {
+            ((Map<String, Object>) i.getArgument(0)).put("id", 44L);
+            return 1;
+        });
+        Map<String, Object> body = new HashMap<>();
+        body.put("requestId", "req-sku-00003");
+        body.put("productId", 900L);
+        body.put("skuName", "周末场");
+        body.put("price", "88.00");
+        body.put("stock", 5);
+        Map<String, Object> result = service.saveSku(access, body);
+        assertEquals("APPLIED", result.get("state"));
+        assertEquals("SKU_SAVE", result.get("action"));
+        assertEquals("pms_sku", result.get("targetType"));
+        assertEquals(44L, result.get("targetId"));
+        assertEquals(false, result.get("replayed"));
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, Object>> receipt = ArgumentCaptor.forClass(Map.class);
+        verify(mapper).insertReceipt(receipt.capture());
+        assertEquals(OWNER, receipt.getValue().get("ownerMemberId"));
+        assertEquals(STAFF, receipt.getValue().get("actorMemberId"));
+        assertEquals("SKU_SAVE", receipt.getValue().get("action"));
+        assertEquals("pms_sku", receipt.getValue().get("targetType"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void saveSku_detailReadbackKeepsFrozenSkuAndRestartDoesNotApplyLaterPrice() {
+        Map<String, Object> product = new HashMap<>();
+        product.put("productId", 900L);
+        product.put("publishStatus", 2);
+        when(mapper.selectProductForUpdate(MERCHANT_ID, 900L)).thenReturn(product);
+        when(mapper.insertSku(anyMap())).thenAnswer(i -> {
+            ((Map<String, Object>) i.getArgument(0)).put("id", 44L);
+            return 1;
+        });
+        Map<String, Object> body = new HashMap<>();
+        body.put("requestId", "req-sku-00004");
+        body.put("productId", 900L);
+        body.put("skuName", "周末场");
+        body.put("price", "88.00");
+        body.put("stock", 5);
+        Map<String, Object> saved = service.saveSku(access, body);
+        assertEquals(44L, saved.get("targetId"));
+        ArgumentCaptor<Map<String, Object>> receipt = ArgumentCaptor.forClass(Map.class);
+        verify(mapper).insertReceipt(receipt.capture());
+        when(mapper.selectReceipt(OWNER, "req-sku-00004")).thenReturn(receipt.getValue());
+
+        Map<String, Object> again = service.saveSku(access, new HashMap<>(body));
+        assertEquals(true, again.get("replayed"));
+        assertEquals("SKU_SAVE", again.get("action"));
+        assertEquals("pms_sku", again.get("targetType"));
+        assertEquals(44L, again.get("targetId"));
+        verify(mapper, times(1)).insertSku(anyMap());
+        verify(mapper, times(1)).insertReceipt(anyMap());
+
+        body.put("price", "99.00");
+        MerchantDeskException conflict = assertThrows(MerchantDeskException.class, () -> service.saveSku(access, body));
+        assertEquals(MerchantDeskException.IDEMPOTENCY_CONFLICT, conflict.getErrorCode());
+        verify(mapper, never()).updateSku(anyMap());
+
+        when(mapper.selectProduct(MERCHANT_ID, 900L)).thenReturn(product);
+        Map<String, Object> sku = new HashMap<>();
+        sku.put("skuId", 44L);
+        sku.put("skuName", "周末场");
+        sku.put("price", new BigDecimal("88.00"));
+        sku.put("stock", 5);
+        when(mapper.selectSkus(MERCHANT_ID, 900L)).thenReturn(Collections.singletonList(sku));
+        Map<String, Object> detail = service.productDetail(access, 900L);
+        List<Map<String, Object>> skus = (List<Map<String, Object>>) detail.get("skus");
+        assertEquals("周末场", skus.get(0).get("skuName"));
+        assertEquals(new BigDecimal("88.00"), skus.get(0).get("price"));
+        assertEquals(5, skus.get(0).get("stock"));
+        assertEquals(Boolean.TRUE, detail.get("editable"));
+        verify(mapper).selectProduct(MERCHANT_ID, 900L);
+        product.put("publishStatus", 1);
+        Map<String, Object> live = service.productDetail(access, 900L);
+        assertEquals(Boolean.FALSE, live.get("editable"));
+        assertEquals("周末场", ((List<Map<String, Object>>) live.get("skus")).get(0).get("skuName"));
+
+        Map<String, Object> found = service.receipt(access, "req-sku-00004");
+        assertEquals("APPLIED", found.get("state"));
+        assertEquals("SKU_SAVE", found.get("action"));
+        assertEquals("pms_sku", found.get("targetType"));
+        assertEquals(44L, found.get("targetId"));
+        Map<String, Object> missing = service.receipt(access, "req-sku-miss");
+        assertEquals("NOT_FOUND", missing.get("state"));
+        assertEquals(null, missing.get("action"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void saveSku_ruleVersionStaysInTheFrozenIntentAndLineSeparatorPriceIsRejected() {
+        Map<String, Object> rejected = new HashMap<>();
+        rejected.put("requestId", "req-sku-00005");
+        rejected.put("productId", 900L);
+        rejected.put("skuName", "周末场");
+        rejected.put("price", "88.00\u2028");
+        rejected.put("stock", 5);
+        MerchantDeskException badPrice = assertThrows(MerchantDeskException.class, () -> service.saveSku(access, rejected));
+        assertEquals(MerchantDeskException.BAD_REQUEST, badPrice.getErrorCode());
+        verify(mapper, never()).insertSku(anyMap());
+
+        Map<String, Object> product = new HashMap<>();
+        product.put("publishStatus", 2);
+        when(mapper.selectProductForUpdate(MERCHANT_ID, 900L)).thenReturn(product);
+        when(mapper.insertSku(anyMap())).thenAnswer(i -> {
+            ((Map<String, Object>) i.getArgument(0)).put("id", 44L);
+            return 1;
+        });
+        Map<String, Object> body = new HashMap<>();
+        body.put("requestId", "req-sku-00005");
+        body.put("productId", 900L);
+        body.put("skuName", "周末场");
+        body.put("price", "88.00\n");
+        body.put("originalPrice", "100.00");
+        body.put("stock", 5);
+        body.put("bookable", true);
+        body.put("slotMinutes", 30);
+        body.put("capacityPerSlot", 2);
+        Map<String, Object> saved = service.saveSku(access, body);
+        assertEquals("SKU_SAVE", saved.get("action"));
+        assertEquals(44L, saved.get("targetId"));
+        ArgumentCaptor<Map<String, Object>> rule = ArgumentCaptor.forClass(Map.class);
+        verify(mapper).insertBookingRule(rule.capture());
+        assertEquals(1, rule.getValue().get("bookable"));
+        assertEquals(30, rule.getValue().get("slotMinutes"));
+        assertEquals(2, rule.getValue().get("capacityPerSlot"));
+        assertEquals(null, rule.getValue().get("expectedVersion"));
+
+        ArgumentCaptor<Map<String, Object>> receipt = ArgumentCaptor.forClass(Map.class);
+        verify(mapper).insertReceipt(receipt.capture());
+        when(mapper.selectReceipt(OWNER, "req-sku-00005")).thenReturn(receipt.getValue());
+        body.put("ruleVersion", 2);
+        MerchantDeskException conflict = assertThrows(MerchantDeskException.class, () -> service.saveSku(access, body));
+        assertEquals(MerchantDeskException.IDEMPOTENCY_CONFLICT, conflict.getErrorCode());
+        verify(mapper, never()).updateBookingRule(anyMap());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void saveSku_sameKeyKeepsFrozenRuleVersionAndDetailReadsTheNextVersion() {
+        Map<String, Object> product = new HashMap<>();
+        product.put("productId", 900L);
+        product.put("publishStatus", 2);
+        when(mapper.selectProductForUpdate(MERCHANT_ID, 900L)).thenReturn(product);
+        Map<String, Object> sku = new HashMap<>();
+        sku.put("productId", 900L);
+        when(mapper.selectSkuForUpdate(MERCHANT_ID, 44L)).thenReturn(sku);
+        when(mapper.updateSku(anyMap())).thenReturn(1);
+        Map<String, Object> currentRule = new HashMap<>();
+        currentRule.put("version", 3);
+        when(mapper.selectBookingRule(MERCHANT_ID, 44L)).thenReturn(currentRule);
+        when(mapper.updateBookingRule(anyMap())).thenReturn(1);
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("requestId", "req-sku-00006");
+        body.put("productId", 900L);
+        body.put("skuId", 44L);
+        body.put("skuName", "周末场");
+        body.put("price", "88.00");
+        body.put("stock", 5);
+        body.put("bookable", true);
+        body.put("slotMinutes", 30);
+        body.put("capacityPerSlot", 2);
+        body.put("ruleVersion", 3);
+        Map<String, Object> saved = service.saveSku(access, body);
+        assertEquals(false, saved.get("replayed"));
+        ArgumentCaptor<Map<String, Object>> rule = ArgumentCaptor.forClass(Map.class);
+        verify(mapper).updateBookingRule(rule.capture());
+        assertEquals(3, rule.getValue().get("expectedVersion"));
+
+        ArgumentCaptor<Map<String, Object>> receipt = ArgumentCaptor.forClass(Map.class);
+        verify(mapper).insertReceipt(receipt.capture());
+        when(mapper.selectReceipt(OWNER, "req-sku-00006")).thenReturn(receipt.getValue());
+        Map<String, Object> replay = service.saveSku(access, new HashMap<>(body));
+        assertEquals(true, replay.get("replayed"));
+        assertEquals("SKU_SAVE", replay.get("action"));
+        verify(mapper, times(1)).updateBookingRule(anyMap());
+
+        when(mapper.selectProduct(MERCHANT_ID, 900L)).thenReturn(product);
+        Map<String, Object> read = new HashMap<>();
+        read.put("skuId", 44L);
+        read.put("skuName", "周末场");
+        read.put("price", new BigDecimal("88.00"));
+        read.put("stock", 5);
+        read.put("bookable", 1);
+        read.put("slotMinutes", 30);
+        read.put("capacityPerSlot", 2);
+        read.put("ruleVersion", 4);
+        when(mapper.selectSkus(MERCHANT_ID, 900L)).thenReturn(Collections.singletonList(read));
+        Map<String, Object> detail = service.productDetail(access, 900L);
+        List<Map<String, Object>> skus = (List<Map<String, Object>>) detail.get("skus");
+        assertEquals(4, skus.get(0).get("ruleVersion"));
+        assertEquals(3, body.get("ruleVersion"));
     }
 
     private static Map<String, Object> canonicalProduct(Map<String, Object> body) {
