@@ -209,7 +209,7 @@ public final class ThemeRuntimeEngine {
             if(ending.path("fallback").asBoolean()) {fallback=ending;continue;}
             if((completed || !ending.path("success").asBoolean()) && (!ending.has("reasons") || contains(ending.path("reasons"),reason)) && conditions(ending.path("when"),state)&&ending.path("priority").asInt()>=priority){chosen=ending;priority=ending.path("priority").asInt();}
         }
-        if(chosen==null)chosen=fallback;
+        chosen=EndingFallbackRule.chosenOrFallback(chosen,fallback);
         boolean success=completed&&(chosen==null||chosen.path("success").asBoolean());
         for(JsonNode g:config.path("grants")) if("ENDING".equals(g.path("source").asText()) && conditions(g.path("when"),state)
                 && (!g.has("reasons")?completed:contains(g.path("reasons"),reason))

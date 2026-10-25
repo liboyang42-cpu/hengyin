@@ -18,6 +18,10 @@ public class MemberTemplateVO extends CmsMemberTemplate {
     private String marketReason;
     public String getMarketReason() { return marketReason; }
     public void setMarketReason(String marketReason) { this.marketReason = marketReason; }
+    /** C:U-046:服务端下发的个人审核态(DRAFT/APPROVED/REJECTED/REVIEWING/UNKNOWN)。 */
+    public String getAuditState() { return TemplateMarketState.audit(getDraftStatus(), getStatus(), getCheckStatus()); }
+    /** C:U-046:服务端下发的广场态(NONE/PENDING/ONLINE/DELISTED/RESUBMIT/UNKNOWN)。 */
+    public String getMarketState() { return TemplateMarketState.market(marketTemplateId, marketStatus, marketPublishStatus); }
 
 
     // Getter和Setter方法

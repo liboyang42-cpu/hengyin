@@ -39,6 +39,8 @@ public class TopicPublishCheckService {
     /** R22-SEC S14:章节故事流 blocks 解析失败(与节点块同样是发布期会拦的错)。 */
     public static final String CODE_CHAPTER_BLOCKS_INVALID = "CHAPTER_BLOCKS_INVALID";
     public static final String CODE_LINEAR_JOURNEY_SESSION = "LINEAR_JOURNEY_SESSION";
+    /** C:U-166:章节正文条件引用了思维阁里没定义的念头(提醒,不拦发布)。 */
+    public static final String CODE_THOUGHT_CONDITION_UNDEFINED = "THOUGHT_CONDITION_UNDEFINED";
 
     private final CmsTopicNodeMapper cmsTopicNodeMapper;
     private final CmsMemberTemplateMapper cmsMemberTemplateMapper;
@@ -109,6 +111,12 @@ public class TopicPublishCheckService {
         if (refs.getParseErrors().stream().noneMatch(error ->
                 TopicStateKeyRefService.KIND_JOURNEY_RULES.equals(error.getKind()))) {
             thoughtDoneTags.addAll(StateKeyRefs.declaredThoughtDoneTags(topic.getJourneyRulesJson()));
+            for (String tag : refs.getChapterThoughtDoneConditions()) {
+                if (!thoughtDoneTags.contains(tag)) {
+                    issues.add(PublishCheckIssue.warn(CODE_THOUGHT_CONDITION_UNDEFINED, null,
+                            "章节正文的条件「" + tag + "」引用的念头还没在思维阁里定义,这段正文玩家永远看不到"));
+                }
+            }
         }
         appendUnregisteredKeyIssues(refs, registered.keySet(), thoughtDoneTags, issues);
         appendRelationKeyTypeIssues(topic, registered, issues);

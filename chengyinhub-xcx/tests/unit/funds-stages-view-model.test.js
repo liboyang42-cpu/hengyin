@@ -190,7 +190,7 @@ test('余额旧组件结果不会把俱乐部新账号的零余额改成可提�
     getUserID() { return this.globalData.user_id }, sendRequest: o => requests.push(o) }
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../../pages/club/settlement/index.js'), 'utf8'), {
     getApp: () => app, Page: d => { definition = d },
-    require: () => ({ bizFailureMessage: (res, fallback) => fallback }),
+    require: () => ({ bizFailureMessage: (res, fallback) => fallback, isBizOk: require('../../utils/response-shape.js').isBizOk }),
     wx: { stopPullDownRefresh() {} },
   })
   const page = { ...definition, data: { ...definition.data }, setData(p) { Object.assign(this.data, p) } }

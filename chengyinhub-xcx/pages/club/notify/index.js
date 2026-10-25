@@ -1,5 +1,5 @@
 const toast = require('../../../utils/toast.js');
-const { bizFailureMessage } = require('../../../utils/response-shape.js');
+const { bizFailureMessage, isBizOk } = require('../../../utils/response-shape.js');
 const app = getApp()
 
 const AUDIENCES = [
@@ -17,7 +17,7 @@ function positiveId(value) {
 }
 function jsonBody(data) { return JSON.stringify(data || {}) }
 function jsonHeader() { return { 'Content-Type': 'application/json' } }
-function ok(res) { return !!res && (res.code === 200 || res.code === '200') }
+function ok(res) { return isBizOk(res) }
 function newRequestId() {
   return 'campaign-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)
 }
@@ -137,7 +137,7 @@ Page({
       data: JSON.stringify({ clubId: this.data.clubId, activityId: this._activityId || null }),
       header: { 'Content-Type': 'application/json' },
       success(res) {
-        const ok = res && (res.code === 200 || res.code === '200')
+        const ok = isBizOk(res)
         const counts = ok && res.data && res.data.counts ? res.data.counts : null
         if (!counts) return
         that.setData({

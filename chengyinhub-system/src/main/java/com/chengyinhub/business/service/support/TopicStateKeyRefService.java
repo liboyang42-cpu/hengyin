@@ -275,6 +275,8 @@ public class TopicStateKeyRefService {
             }
             try {
                 refs.chapterKeys.addAll(StateKeyRefs.collectChapterBlocks(chapter.getBlocksJson()));
+                refs.chapterThoughtDoneConditions.addAll(
+                        StateKeyRefs.collectChapterThoughtDoneConditions(chapter.getBlocksJson()));
             } catch (RuntimeException e) {
                 refs.parseErrors.add(new ParseError(null, null, KIND_CHAPTER_BLOCKS, e.getMessage()));
             }
@@ -312,6 +314,9 @@ public class TopicStateKeyRefService {
         /** 章节故事流 beat 块 when 引用到的键(R19)。 */
         private final Set<String> chapterKeys = new LinkedHashSet<String>();
 
+        /** 章节普通块 when 引用的念头完成标签 thought.&lt;key&gt;.done(C:U-166),不是状态键。 */
+        private final Set<String> chapterThoughtDoneConditions = new LinkedHashSet<String>();
+
         /** 解析失败项,按遇到顺序;空 = 全部可解析。 */
         private final List<ParseError> parseErrors = new ArrayList<ParseError>();
 
@@ -328,6 +333,8 @@ public class TopicStateKeyRefService {
         public Set<String> getStoryKeys() { return storyKeys; }
 
         public Set<String> getChapterKeys() { return chapterKeys; }
+
+        public Set<String> getChapterThoughtDoneConditions() { return chapterThoughtDoneConditions; }
 
         public List<ParseError> getParseErrors() { return parseErrors; }
 

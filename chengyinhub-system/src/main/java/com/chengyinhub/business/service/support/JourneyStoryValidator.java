@@ -30,7 +30,12 @@ public class JourneyStoryValidator {
     public static final int MAX_JSON_BYTES = 32 * 1024;
 
     private static final int MAX_TEXT = 200;
-    private static final int MAX_ITEMS = 16;
+    /**
+     * 旅程故事(journey story)里每个列表(阶段、结局 ending.endings 等)的条数上限。
+     * 与玩法运行时 GameplayRuntimeConfig.MAX_STORY_ENDINGS(100)是两条独立配置链,互不导入,
+     * 各自在保存时校验;两者不同是有意的,改动任一侧前先确认产品口径。
+     */
+    static final int MAX_ITEMS = 16;
     private static final int MIN_OPTIONS = 2;
     private static final int MAX_OPTIONS = 4;
 

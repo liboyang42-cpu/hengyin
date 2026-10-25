@@ -14,7 +14,7 @@ const { toTimestamp, chinaParts } = require('../../../utils/datetime');
 const { DIRECTOR_DATA, DIRECTOR_METHODS } = require('./director.js');
 const planFallback = require('./plan-fallback.js');
 const { listGroupCodeActivities } = require('../../../utils/group-code-session.js');
-const { bizFailureMessage } = require('../../../utils/response-shape.js');
+const { bizFailureMessage, isBizOk } = require('../../../utils/response-shape.js');
 const { safeUserMessage } = require('../../../utils/transport/safe-user-message.js');
 const { resolveTopicCover } = require('../../../utils/topic-share.js');
 const { presentTrendRows } = require('./registration-trend.js');
@@ -67,7 +67,7 @@ function flattenCustomerRows(sessions) {
   return out;
 }
 
-function isSuccess(res) { return !!res && (res.code === '200' || res.code === 200); }
+function isSuccess(res) { return isBizOk(res); }
 function positiveId(v) { const n = Number(v); return Number.isFinite(n) && n > 0 ? n : null; }
 
 // HO-26 集合时间:后端 edit-ops 用 DateUtils.parseDate 收 "yyyy-MM-dd HH:mm:ss"。
