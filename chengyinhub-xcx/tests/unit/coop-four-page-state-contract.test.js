@@ -38,9 +38,10 @@ function loadPage(relativePath, mutate, harnessOptions = {}) {
   const modals = []
   const actionSheets = []
   const timers = []
+  const storage = new Map()
   let definition
   const app = {
-    _userId: 'member-a',
+    _userId: harnessOptions.userId || 'member-a',
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
     getUserID() { return this._userId },
     getUserRole() { return 'merchant' },
@@ -79,8 +80,9 @@ function loadPage(relativePath, mutate, harnessOptions = {}) {
       navigations.push(options.url)
       if (options.complete) options.complete({ errMsg: 'navigateTo:ok' })
     },
-    getStorageSync() { return '' },
-    setStorageSync() {},
+    getStorageSync(key) { return storage.get(key) || '' },
+    setStorageSync(key, value) { storage.set(key, JSON.parse(JSON.stringify(value))) },
+    removeStorageSync(key) { storage.delete(key) },
   }
   const pageFile = path.join(ROOT, relativePath)
   const sandbox = {
@@ -437,7 +439,7 @@ test('收到的带队申请:拒绝同步防重并回读,回邀约带 originApply
 })
 
 test('邀约主题/对象刷新保留草稿与旧列表，提交使用同步锁并留下成功回执', () => {
-  const { page, requests } = loadPage('pages/coop/invite/index.js')
+  const { page, requests } = loadPage('pages/coop/invite/index.js', undefined, { userId: '7' })
   page.onLoad({ type: '1' })
   assert.deepEqual(requests.map((request) => request.url), ['/api/topic/list', '/api/merchant/clubs'])
   page.loadMyTopics()
@@ -470,7 +472,6 @@ test('邀约主题/对象刷新保留草稿与旧列表，提交使用同步锁�
     message: '保留这段邀约语',
   })
   writes[0].success({ code: 200, data: { inviteId: 101 } })
-  writes[0].complete()
   assert.match(page.data.sendReceipt, /已发起 1 条/)
   assert.equal(page.data.submitting, false)
 })

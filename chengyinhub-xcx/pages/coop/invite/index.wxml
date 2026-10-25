@@ -15,7 +15,7 @@
   <view class="send-receipt" wx:if="{{unknownTargets.length}}" aria-role="status" aria-live="polite">
     <text>以下邀请结果待确认，请勿重复发送。记录未出现也不能证明未发送；无法确认时请联系平台处理。</text>
     <view wx:for="{{unknownTargets}}" wx:key="toId"><text>{{item.name}}</text></view>
-    <view class="inline-retry" bindtap="checkUnknownInvites" aria-role="button" aria-label="查看已发出邀请">查看已发出邀请</view>
+    <view class="inline-retry" bindtap="checkUnknownInvites" aria-role="button" aria-label="查看已发出邀请" hover-class="cy-pressed" hover-stay-time="80">查看已发出邀请</view>
   </view>
 
   <view class="card">
