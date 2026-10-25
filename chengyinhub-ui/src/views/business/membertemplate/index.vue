@@ -11,7 +11,7 @@
       <div class="cy-panel__heading">
         <div>
           <h2>模板定位</h2>
-          <p>按标题或发布者定位模板；审核、上架和同步状态均以同一条用户模板记录为准。</p>
+          <p>按标题或发布者定位完整游戏内容；基础验证、高级配置与素材属于同一条用户模板，审核、上架和同步状态也以它为准。</p>
         </div>
       </div>
       <el-form ref="queryForm" :model="queryForm" size="small" :inline="true" label-width="72px">
@@ -114,6 +114,9 @@
       <template #duration="{ row }">
         <span>{{ row.duration == null ? '未记录' : `${row.duration} 分钟` }}</span>
       </template>
+      <template #gameplay="{ row }">
+        <span>{{ contentSummary(row) }}</span>
+      </template>
       <template #updated="{ row }">
         <span>{{ row.updateTime || row.createTime || '未记录' }}</span>
       </template>
@@ -125,14 +128,15 @@
       </template>
     </cy-data-table>
 
-    <el-dialog title="编辑模板" :visible.sync="editOpen" width="680px" append-to-body :close-on-click-modal="false">
+    <el-dialog title="编辑完整游戏模板" :visible.sync="editOpen" width="860px" append-to-body :close-on-click-modal="false" :close-on-press-escape="!editSaving" :show-close="!editSaving" :before-close="closeEditDialog">
       <el-alert
         class="template-center__edit-tip"
         type="info"
         :closable="false"
         title="保存会回到用户模板真源，并将关联的模板库投影与审核任务同步为待处理状态。"
       />
-      <el-form ref="editForm" :model="editForm" :rules="rules" label-width="104px" size="small">
+      <el-alert v-if="editError" type="error" :closable="false" :title="editError" class="template-center__edit-tip" />
+      <el-form ref="editForm" :model="editForm" :rules="rules" :disabled="editSaving" label-width="124px" size="small">
         <el-row :gutter="12">
           <el-col :span="12">
             <el-form-item label="发布用户" prop="memberId"><el-input v-model="editForm.memberId" placeholder="用户 ID" :disabled="Boolean(editForm.id)" /></el-form-item>
@@ -164,18 +168,17 @@
         </el-row>
         <el-row :gutter="12">
           <el-col :span="12">
-            <el-form-item label="验证方式" prop="validationMethod">
+            <el-form-item label="基础完成方式" prop="validationMethod">
               <el-select v-model="editForm.validationMethod" clearable class="template-center__full-width">
-                <el-option :value="1" label="问答验证" />
-                <el-option :value="2" label="图片验证" />
-                <el-option :value="3" label="选项验证" />
+                <el-option v-for="method in validationMethods" :key="method.value" :value="method.value" :label="method.label" />
+                <el-option v-if="hasUnknownValidation" :value="editForm.validationMethod" :label="validationLabel(editForm.validationMethod)" />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="模板标签" prop="activityCategoryids">
               <el-select v-model="editCategoryIds" multiple filterable collapse-tags placeholder="选择玩法标签" class="template-center__full-width">
-                <el-option v-for="category in categoryOptions" :key="category.id" :label="category.categoryName" :value="category.id" />
+                <el-option v-for="category in categoryOptions" :key="category.id" :label="category.categoryName" :value="String(category.id)" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -195,10 +198,11 @@
         <el-form-item label="规则说明" prop="ruleInstructions"><el-input v-model="editForm.ruleInstructions" type="textarea" :rows="3" /></el-form-item>
         <el-form-item label="验证问题" prop="questionName"><el-input v-model="editForm.questionName" /></el-form-item>
         <el-form-item label="验证答案" prop="questionAnswer"><el-input v-model="editForm.questionAnswer" /></el-form-item>
+        <template-content-fields v-model="editForm" :disabled="editSaving" />
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="submitEdit">保 存</el-button>
-        <el-button @click="editOpen = false">取 消</el-button>
+        <el-button type="primary" :loading="editSaving" :disabled="editSaving" @click="submitEdit">保存并重新送审</el-button>
+        <el-button :disabled="editSaving" @click="closeEdit">取 消</el-button>
       </div>
     </el-dialog>
   </div>
@@ -215,6 +219,8 @@ import CyFilterBar from '@/components/CyFilterBar'
 import CyPageHeader from '@/components/CyPageHeader'
 import CyResourceState from '@/components/CyResourceState'
 import CyStatusTag from '@/components/CyStatusTag'
+import TemplateContentFields from './TemplateContentFields.vue'
+import { validationMethods, validationLabel, contentSummary, buildTemplatePayload } from './template-content'
 
 const TEMPLATE_CATEGORY_TYPE = 4
 
@@ -264,7 +270,7 @@ function positiveInteger(value, fallback) {
 
 export default {
   name: 'Membertemplate',
-  components: { CyDataTable, CyEntityLink, CyFilterBar, CyPageHeader, CyResourceState, CyStatusTag },
+  components: { CyDataTable, CyEntityLink, CyFilterBar, CyPageHeader, CyResourceState, CyStatusTag, TemplateContentFields },
   data() {
     return {
       loading: false,
@@ -278,6 +284,10 @@ export default {
       queryForm: createFilters(),
       queryParams: createQueryParams(),
       editOpen: false,
+      editRequestId: 0,
+      editSaving: false,
+      editError: '',
+      validationMethods,
       editForm: createTemplateForm(),
       editCategoryIds: [],
       categoryOptions: [],
@@ -288,6 +298,7 @@ export default {
       tableColumns: [
         { key: 'template', label: '模板', minWidth: 210, locked: true },
         { key: 'publisher', label: '发布者', width: 120 },
+        { key: 'gameplay', label: '玩法与内容', minWidth: 230 },
         { key: 'audit', label: '审核状态', minWidth: 146 },
         { key: 'publish', label: '上架状态', width: 112 },
         { key: 'projection', label: '模板库投影', minWidth: 136 },
@@ -299,6 +310,11 @@ export default {
     }
   },
   computed: {
+    hasUnknownValidation() {
+      const value = this.editForm.validationMethod
+      return value !== null && value !== undefined && value !== ''
+        && !validationMethods.some(method => String(method.value) === String(value))
+    },
     canViewDetail() {
       return checkPermi(['business:membertemplate:query'])
     },
@@ -316,11 +332,29 @@ export default {
     this.getList()
   },
   beforeRouteUpdate(to, from, next) {
+    this.closeEdit()
     this.hydrateFromRoute(to.query)
     this.getList()
     next()
   },
+  beforeDestroy() {
+    this.listRequestId += 1
+    this.closeEdit()
+  },
   methods: {
+    contentSummary,
+    validationLabel,
+    closeEditDialog(done) {
+      if (this.editSaving) return
+      this.closeEdit()
+      done()
+    },
+    closeEdit() {
+      this.editRequestId += 1
+      this.editOpen = false
+      this.editSaving = false
+      this.editError = ''
+    },
     hydrateFromRoute(query = {}) {
       const status = optionalStatus(query.status, [0, 1, 2])
       const isSync = optionalStatus(query.isSync, [0, 1])
@@ -425,31 +459,49 @@ export default {
         })
     },
     handleEdit(row) {
-      return getMembertemplate(row.id)
+      if (this.editSaving) return Promise.resolve()
+      const id = row.id
+      const requestId = ++this.editRequestId
+      this.editError = ''
+      return getMembertemplate(id)
         .then(response => {
-          this.editForm = Object.assign(createTemplateForm(), response.data || {})
+          if (requestId !== this.editRequestId) return
+          if (!response.data || String(response.data.id) !== String(id)) throw new Error('模板身份不匹配')
+          this.editForm = Object.assign(createTemplateForm(), response.data)
           this.editCategoryIds = String(this.editForm.activityCategoryids || '')
             .split(',')
             .filter(id => id.trim())
-            .map(Number)
+            .map(id => id.trim())
+          this.editSaving = false
           this.editOpen = true
           return this.loadCategoryOptions()
         })
         .catch(() => {
+          if (requestId !== this.editRequestId) return
           this.$modal.msgError('模板详情读取失败，请稍后重试。')
         })
     },
     submitEdit() {
-      this.$refs.editForm.validate(valid => {
-        if (!valid) return
-        const payload = Object.assign({}, this.editForm, {
-          activityCategoryids: this.editCategoryIds.join(',')
-        })
-        updateMembertemplate(payload).then(() => {
+      if (this.editSaving || !this.editOpen) return
+      return this.$refs.editForm.validate(valid => {
+        if (!valid || this.editSaving) return
+        let payload
+        try { payload = buildTemplatePayload(this.editForm, this.editCategoryIds) }
+        catch (error) { this.editError = error.message; return }
+        const requestId = this.editRequestId
+        this.editSaving = true
+        this.editError = ''
+        return updateMembertemplate(payload).then(() => {
+          if (requestId !== this.editRequestId) return
           this.$modal.msgSuccess('模板已更新并重新进入审核')
           this.editOpen = false
           this.getList()
-        }).catch(() => {})
+        }).catch(() => {
+          if (requestId !== this.editRequestId) return
+          this.editError = '未取得保存成功结果，输入已保留。请先重新读取模板核对结果，不要连续重复提交。'
+        }).finally(() => {
+          if (requestId === this.editRequestId) this.editSaving = false
+        })
       })
     },
     submitReview(row) {

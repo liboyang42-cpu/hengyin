@@ -10,14 +10,21 @@ const legacyLibrarySource = fs.readFileSync(path.join(uiRoot, 'src/views/busines
 const legacyDetailSource = fs.readFileSync(path.join(uiRoot, 'src/views/business/templatelibrary/detail.vue'), 'utf8')
 const routerSource = fs.readFileSync(path.join(uiRoot, 'src/router/index.js'), 'utf8')
 
+function loadTemplateContentModel() {
+  const source = fs.readFileSync(path.join(uiRoot, 'src/views/business/membertemplate/template-content.js'), 'utf8')
+  return new Function(source.replace(/^export /gm, '') + '\nreturn { validationMethods, validationLabel, contentSummary, buildTemplatePayload }')()
+}
+
 function loadTemplateCenter(dependencies) {
   const script = memberTemplateSource.match(/<script>([\s\S]*?)<\/script>/)[1]
     .replace(/^import \{ delMembertemplate, getMembertemplate, listMembertemplate, submitMembertemplateReview, updateMembertemplate \} from '@\/api\/business\/membertemplate'$/m, 'const { delMembertemplate, getMembertemplate, listMembertemplate, submitMembertemplateReview, updateMembertemplate } = dependencies')
     .replace(/^import \{ listCategory \} from '@\/api\/system\/category'$/m, 'const { listCategory } = dependencies')
     .replace(/^import \{ parseTime \} from '@\/utils\/ruoyi'$/m, 'const { parseTime } = dependencies')
     .replace(/^import \{ checkPermi \} from '@\/utils\/permission'$/m, 'const { checkPermi } = dependencies')
+    .replace(/^import TemplateContentFields from .+$/m, 'const TemplateContentFields = {}')
+    .replace(/^import \{ validationMethods, validationLabel, contentSummary, buildTemplatePayload \} from '\.\/template-content'$/m, 'const { validationMethods, validationLabel, contentSummary, buildTemplatePayload } = contentModel')
     .replace(/^import (Cy\w+) from .+$/gm, 'const $1 = {}')
-  return new Function('dependencies', script.replace(/export\s+default\s*/, 'return '))(dependencies)
+  return new Function('dependencies', 'contentModel', script.replace(/export\s+default\s*/, 'return '))(dependencies, loadTemplateContentModel())
 }
 
 function loadLegacyList() {
@@ -37,8 +44,10 @@ function loadCanonicalDetail(dependencies) {
     .replace(/^import \{ getMembertemplate \} from '@\/api\/business\/membertemplate'$/m, 'const { getMembertemplate } = dependencies')
     .replace(/^import \{ getCouponInfo \} from '@\/api\/business\/coupon'$/m, 'const { getCouponInfo } = dependencies')
     .replace(/^import \{ getCategoryList \} from '@\/api\/system\/category'$/m, 'const { getCategoryList } = dependencies')
+    .replace(/^import TemplateContentFields from .+$/m, 'const TemplateContentFields = {}')
+    .replace(/^import \{ validationLabel \} from '\.\/template-content'$/m, 'const { validationLabel } = contentModel')
     .replace(/^import (Cy\w+) from .+$/gm, 'const $1 = {}')
-  return new Function('dependencies', script.replace(/export\s+default\s*/, 'return '))(dependencies)
+  return new Function('dependencies', 'contentModel', script.replace(/export\s+default\s*/, 'return '))(dependencies, loadTemplateContentModel())
 }
 
 test('模板中心只从 membertemplate 真源读取和发起审核写入', () => {
