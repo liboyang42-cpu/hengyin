@@ -13,6 +13,17 @@
   },
   "default_database_base": "cyit",
   "batches": {
+    "payment-intent-correctness": {
+      "lineage": "Combined public PR598 payment contracts and preserved architecture cases; execution evidence is separate",
+      "registered_source": "ff2b0ea1cf0ca3f097de446b5eda85beb3fad1a0",
+      "note": "Source lineage: ff2b architecture plus public master892efe6f. Final source is dispatched candidate SHA; declarations are not PASS counts.",
+      "classes": [
+        "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT",
+        "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT",
+        "com.chengyinhub.business.service.CashWithdrawTransferIntentMySqlIT",
+        "com.chengyinhub.business.longrun.OWN_C04_21MySqlIT"
+      ]
+    },
     "core-funds": {
       "lineage": "CORE codex/mini-longrun-core-20261015",
       "registered_source": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
@@ -665,17 +676,6 @@
         "com.chengyinhub.business.service.CashWithdrawTransferIntentMySqlIT"
       ],
       "note": "65 unique registered storage classes, 810 declared cases, including original producer/refund, manual-case read projection and ASR shared quota. One matrix max-parallel20, no duplicates. Source SHA, original XML, zero skip and independent CLEAN required. Static inventory is not execution, HTTP/provider/restart/load/deployment acceptance."
-    },
-    "payment-intent-correctness": {
-      "lineage": "Combined public PR598 payment contracts and preserved architecture cases; execution evidence is separate",
-      "registered_source": "ff2b0ea1cf0ca3f097de446b5eda85beb3fad1a0",
-      "note": "Source lineage: ff2b architecture plus public master892efe6f. Final source is dispatched candidate SHA; declarations are not PASS counts.",
-      "classes": [
-        "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT",
-        "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT",
-        "com.chengyinhub.business.service.CashWithdrawTransferIntentMySqlIT",
-        "com.chengyinhub.business.longrun.OWN_C04_21MySqlIT"
-      ]
     }
   },
   "classes": {
@@ -748,8 +748,7 @@
       "storage": [
         "mysql"
       ],
-      "gates": {},
-      "note": " G7e4ce69 approved original-order unpaiddeposit setoff adds10 ordinary methods; originalcaseidentitiesretained, runtimeNOT_RUN pending unifiedcandidate."
+      "gates": {}
     },
     "com.chengyinhub.business.it.RegistrationSeatMySqlIT": {
       "tests": 7,
@@ -1693,7 +1692,8 @@
         "mysql"
       ],
       "gates": {
-        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+        "CHENGYIN_FUNDS_MYSQL_IT": "1",
+        "B_PAYMENT_INTENT_DDL_APPROVED": "1"
       },
       "note": "9b28: task-owned schema create/drop; exact B fact+B intent+A registration DDL admissions. Runner independently requires CLEAN after AfterAll DROP."
     },

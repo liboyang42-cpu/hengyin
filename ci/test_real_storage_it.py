@@ -86,7 +86,7 @@ class RegistryContractTest(unittest.TestCase):
         self.assertEqual([fqcn], reg['batches']['architecture-day-payment-inbox']['classes'])
         self.assertEqual(14, reg['classes'][fqcn]['tests'])
         self.assertEqual(['mysql'], reg['classes'][fqcn]['storage'])
-        self.assertEqual({}, reg['classes'][fqcn]['gates'])
+        self.assertEqual({'B_PAYMENT_INTENT_DDL_APPROVED': '1'}, reg['classes'][fqcn]['gates'])
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
                     if line.strip().startswith('B_PAYMENT_INTENT_DDL_APPROVED:'))
         self.assertEqual("B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'CoopDepositSettlementAttemptMySqlIT' || matrix.simple == 'CashWithdrawFundEvidenceMySqlIT' || matrix.simple == 'RefundPayoutMybatisIntegrationTest') && '1' || '' }}", line)
@@ -111,7 +111,10 @@ class RegistryContractTest(unittest.TestCase):
                 entry = reg['classes'][fqcn]
                 self.assertEqual(count, entry['tests'])
                 self.assertEqual(['mysql'], entry['storage'])
-                self.assertEqual({'CHENGYIN_FUNDS_MYSQL_IT': '1'}, entry['gates'])
+                expected_gates = {'CHENGYIN_FUNDS_MYSQL_IT': '1'}
+                if fqcn == 'com.chengyinhub.business.service.RefundPayoutMybatisIntegrationTest':
+                    expected_gates['B_PAYMENT_INTENT_DDL_APPROVED'] = '1'
+                self.assertEqual(expected_gates, entry['gates'])
                 facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
                 self.assertEqual([], problems)
                 self.assertEqual(count, facts['declared_tests'])
@@ -173,7 +176,7 @@ class RegistryContractTest(unittest.TestCase):
         reg = registry()
         fqcn = 'com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT'
         self.assertEqual([fqcn], reg['batches']['architecture-day-original-refund']['classes'])
-        self.assertEqual({'tests': 15, 'storage': ['mysql'], 'gates': {}}, reg['classes'][fqcn])
+        self.assertEqual({'tests': 25, 'storage': ['mysql'], 'gates': {}}, reg['classes'][fqcn])
         flag = 'WP04_ORIGINAL_REFUND_DDL_APPROVED'
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
                     if line.strip().startswith(flag + ':'))
@@ -181,7 +184,7 @@ class RegistryContractTest(unittest.TestCase):
         self.assertEqual({flag: '1'}, rs.child_env({flag: '1'}, {}))
         facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
         self.assertEqual([], problems)
-        self.assertEqual(15, facts['declared_tests'])
+        self.assertEqual(25, facts['declared_tests'])
 
     def test_original_producer_keeps_both_exact_scratch_admissions(self):
         reg = registry()
@@ -966,6 +969,8 @@ class WorkflowContractTest(unittest.TestCase):
             "self-hosted": self.text.replace("runs-on: ubuntu-latest", "runs-on: [self-hosted, chengyin]", 1),
             "parallel cap": self.text.replace("max-parallel: 20", "max-parallel: 50", 1),
             "batch choice drift": self.text.replace("          - extra-storage\n", "", 1),
+            "batch choice order": self.text.replace("          - payment-intent-correctness\n          - core-funds\n",
+                                                    "          - core-funds\n          - payment-intent-correctness\n", 1),
             "secrets": self.text.replace("TIMEZONE: ${{ inputs.timezone }}",
                                          "TIMEZONE: ${{ secrets.DB_PASSWORD }}", 1),
             "write permission": self.text.replace("  contents: read\n", "  contents: write\n", 1),
