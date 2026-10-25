@@ -944,7 +944,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
         // 保证金抵扣不参与票款五分项守恒:它只是把应缴方已有的应收改记为平台已收保证金。
         // 守恒已在上方按票款口径校验;这里绝不能从非应缴方或平台行扣款。
-        applyUnpaidDepositSetoffs(topic, pending, payable, now, verifiedHeads, verifiedSales, verifiedRegIds);
+        lockedDepositSetoffInvites(topic); // Unknown/in-flight payment refuses before the first economic write.
 
         // 第二遍:守恒通过后落库。
         for (CoopSettlementPlan nonePlan : noneClaimPlans) {
@@ -965,8 +965,20 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 coopSettlementClaimService.persist(originPlan, s);
             }
         }
-        // Same topic transaction: real heads/claim details, original components and close commit together.
+        applyUnpaidDepositSetoffs(topic, pending, payable, now, verifiedHeads, verifiedSales, verifiedRegIds);
+        if (pending.stream().anyMatch(line -> "DEPOSIT_DEDUCTION".equals(line.getLineType()))) {
+            BigDecimal net = BigDecimal.ZERO;
+            for (CoopSettlement line : pending) net = net.add(line.getCoopOrderId() == null ? line.getAmount() : currentCoopHeadNet(line));
+            if (net.compareTo(totalSales) != 0) throw new IllegalStateException("DEPOSIT_SETOFF_CASH_CONSERVATION");
+        }
+        // Freeze original sales components before inserting their separate deposit reclassification receipts.
+        // Every original head, negative adjustment, deposit credit and invite CAS commits in this same transaction.
         coopSettlementOriginalProducer.freezeOriginals(topic,cashBasis,now);
+        for (CoopSettlement line : pending) {
+            if (!"DEPOSIT_DEDUCTION".equals(line.getLineType())) continue;
+            if (coopSettlementMapper.insertCoopSettlement(line) != 1 || line.getId() == null)
+                throw new IllegalStateException("DEPOSIT_SETOFF_PLATFORM_RECEIPT_WRITE_CONFLICT");
+        }
         logger.info("coop分项结算: topicId={} 平台={} 保底={}(率{}) 承接商家={} 毛利={} 核销商家数={}",
                 topic.getId(), platformAmount, guaranteeAmount, guaranteeRate, merchantTotal, marginAmount, verifiedMerchantCount);
 
@@ -1027,69 +1039,129 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      *
      * <p>逐行锁邀约,与微信支付回调的锁顺序一致:支付先成功就转冻结并在结算后退款;
      * 结算先拿到行锁就按当时仍为待缴的余额抵扣。可抵扣金额不足时保留状态5和剩余金额,
-     * 不跨合作方扣款、更不造负数结算行。</p>
+     * 不跨合作方扣款、更不改原头金额；负调整与平台保证金凭证在原主题事务提交。</p>
      */
     private void applyUnpaidDepositSetoffs(CmsTopic topic, List<CoopSettlement> pending,
             Date payable, Date now, int verifiedHeads, BigDecimal verifiedSales, String verifiedRegIds) {
-        CoopInvite query = new CoopInvite();
-        query.setTopicId(topic.getId());
-        query.setStatus(1);
+        List<CoopInvite> due = lockedDepositSetoffInvites(topic);
+        if (due.isEmpty()) return;
+        if (!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("DEPOSIT_SETOFF_REQUIRES_ORIGINAL_TRANSACTION");
+        List<CoopSettlement> sources = pending.stream()
+                .filter(row -> row.getCoopOrderId() != null && Integer.valueOf(0).equals(row.getStatus()))
+                .sorted(Comparator.comparing(CoopSettlement::getCoopOrderId).thenComparing(CoopSettlement::getId))
+                .toList();
+        for (CoopInvite invite : due) {
+            Long payer = coopInviteService.depositOwedParty(invite);
+            if (payer == null || payer <= 0) throw new IllegalStateException("保证金应缴方无法解析 inviteId=" + invite.getId());
+            BigDecimal remaining = depositSetoffMoney(invite.getDepositAmount());
+            if (remaining.signum() < 0) throw new IllegalStateException("保证金欠款金额无效 inviteId=" + invite.getId());
+            BigDecimal collected = BigDecimal.ZERO.setScale(2);
+            for (CoopSettlement source : sources) {
+                if (remaining.signum() == 0) break;
+                if (!payer.equals(source.getMerchantId())) continue;
+                CoopSettlement head = coopSettlementMapper.selectByIdForUpdate(source.getId());
+                if (head == null || !topic.getId().equals(head.getTopicId()) || !payer.equals(head.getMerchantId())
+                        || !source.getCoopOrderId().equals(head.getCoopOrderId()) || !Integer.valueOf(0).equals(head.getStatus())
+                        || !("MERCHANT_VERIFY".equals(head.getLineType()) || "LEAD_FEE".equals(head.getLineType())))
+                    throw new IllegalStateException("DEPOSIT_SETOFF_ORIGINAL_HEAD_CONFLICT");
+                List<CoopSettlementDetail> details = coopSettlementOriginalMapper.selectOriginalDetailsForHeadForUpdate(head.getId());
+                if (details == null || details.isEmpty()) throw new IllegalStateException("DEPOSIT_SETOFF_ORIGINAL_CLAIMS_REQUIRED");
+                List<CoopSettlementDetail> ordered = new ArrayList<>(details);
+                Set<Long> claims = new HashSet<>();
+                BigDecimal original = BigDecimal.ZERO.setScale(2);
+                for (CoopSettlementDetail detail : ordered) {
+                    if (detail == null || detail.getClaimId() == null || detail.getRegistrationId() == null
+                            || !head.getId().equals(detail.getSettlementId()) || !claims.add(detail.getClaimId())
+                            || depositSetoffMoney(detail.getOriginAmount()).signum() < 0)
+                        throw new IllegalStateException("DEPOSIT_SETOFF_ORIGINAL_DETAIL_CONFLICT");
+                    original = original.add(detail.getOriginAmount());
+                }
+                if (original.compareTo(head.getAmount()) != 0) throw new IllegalStateException("DEPOSIT_SETOFF_GROSS_HEAD_CHANGED");
+                ordered.sort(Comparator.comparing(CoopSettlementDetail::getRegistrationId).thenComparing(CoopSettlementDetail::getClaimId));
+                for (CoopSettlementDetail detail : ordered) {
+                    if (remaining.signum() == 0) break;
+                    String event = "UNPAID_DEPOSIT:" + topic.getId() + ":" + invite.getId() + ":" + head.getCoopOrderId() + ":" + head.getId();
+                    CoopSettlementAdjustment prior = coopSettlementAdjustmentMapper.selectByClaimEventForUpdate(detail.getClaimId(), "ADJUSTMENT", event);
+                    if (prior != null) {
+                        requireDepositSetoffReceipt(prior, head, detail, event);
+                        continue; // Same invite/claim event is never collected or credited twice.
+                    }
+                    BigDecimal available = depositSetoffMoney(detail.getOriginAmount());
+                    List<CoopSettlementAdjustment> adjustments = coopSettlementAdjustmentMapper.selectExecutedBySettlementForUpdate(head.getId());
+                    if (adjustments == null) throw new IllegalStateException("DEPOSIT_SETOFF_CURRENT_ADJUSTMENTS_REQUIRED");
+                    for (CoopSettlementAdjustment adjustment : adjustments) {
+                        if (adjustment == null || !head.getId().equals(adjustment.getSettlementId())
+                                || !claims.contains(adjustment.getClaimId()) || !"EXECUTED".equals(adjustment.getStatus()))
+                            throw new IllegalStateException("DEPOSIT_SETOFF_ADJUSTMENT_SOURCE_CONFLICT");
+                        if (detail.getClaimId().equals(adjustment.getClaimId())) available = available.add(depositSetoffMoney(adjustment.getAmount()));
+                    }
+                    available = available.min(detail.getOriginAmount()).min(currentCoopHeadNet(head));
+                    if (available.signum() <= 0) continue;
+                    BigDecimal offset = available.min(remaining);
+                    coopSettlementClaimService.appendExecutedAdjustment(detail.getClaimId(), event, offset.negate());
+                    CoopSettlementAdjustment receipt = coopSettlementAdjustmentMapper.selectByClaimEventForUpdate(detail.getClaimId(), "ADJUSTMENT", event);
+                    requireDepositSetoffReceipt(receipt, head, detail, event);
+                    if (receipt.getAmount().compareTo(offset.negate()) != 0) throw new IllegalStateException("DEPOSIT_SETOFF_RECEIPT_AMOUNT_CONFLICT");
+                    CoopSettlement credit = newSettlementLine(topic, null, offset, "DEPOSIT_DEDUCTION", "platform", 1,
+                            payable, now, verifiedHeads, verifiedSales, verifiedRegIds);
+                    // The original order/head/claim and invite are reached through this immutable adjustment.
+                    credit.setSettlementRoute("DEPOSIT_SETOFF"); credit.setSourceContractType("DEPOSIT_SETOFF");
+                    credit.setSourceContractId(receipt.getId()); credit.setCommercialContextType("TOPIC_EDITION");
+                    credit.setCommercialContextId(topic.getId()); credit.setBeneficiaryRole("PLATFORM");
+                    credit.setServiceUnit("UNPAID_DEPOSIT"); pending.add(credit);
+                    remaining = remaining.subtract(offset); collected = collected.add(offset);
+                }
+            }
+            if (collected.signum() == 0) continue;
+            if (coopInviteMapper.updateDepositIfCurrent(invite.getId(), 5, invite.getDepositAmount(),
+                    remaining.signum() == 0 ? 3 : 5, remaining.signum() == 0 ? invite.getDepositAmount() : remaining) != 1)
+                throw new IllegalStateException("保证金抵扣状态冲突 inviteId=" + invite.getId());
+        }
+    }
+
+    /** Original caller already owns topic; lock invite IDs in one deterministic order, no provider I/O. */
+    private List<CoopInvite> lockedDepositSetoffInvites(CmsTopic topic) {
+        CoopInvite query = new CoopInvite(); query.setTopicId(topic.getId()); query.setStatus(1);
         List<CoopInvite> accepted = coopInviteMapper.selectCoopInviteList(query);
-        if (accepted == null || accepted.isEmpty()) return;
-
-        for (CoopInvite snapshot : accepted) {
+        if (accepted == null) throw new IllegalStateException("DEPOSIT_SETOFF_INVITES_REQUIRED");
+        List<CoopInvite> ordered = new ArrayList<>(accepted);
+        if (ordered.stream().anyMatch(row -> row == null || row.getId() == null || row.getId() <= 0))
+            throw new IllegalStateException("DEPOSIT_SETOFF_INVITE_ID_REQUIRED");
+        ordered.sort(Comparator.comparing(CoopInvite::getId));
+        List<CoopInvite> due = new ArrayList<>();
+        for (CoopInvite snapshot : ordered) {
             if (Integer.valueOf(CoopInvite.TYPE_LEGACY_MERCHANT_NODE).equals(snapshot.getInviteType())) continue;
-            CoopInvite invite = coopInviteMapper.selectCoopInviteByIdForUpdate(snapshot.getId());
-            if (invite == null || invite.getDepositStatus() == null) continue;
-            if (invite.getDepositStatus() == 1) {
-                // B 的查单补记须在事务外完成；租约/本地支付中均不能证明外部未执行。
-                throw new IllegalStateException("MANUAL_REPAIR:DEPOSIT_PAYMENT_RECONCILIATION_REQUIRED inviteId=" + invite.getId());
-            }
-            if (invite.getDepositStatus() != 5) continue;
-
-            Long payerMemberId = coopInviteService.depositOwedParty(invite);
-            if (payerMemberId == null) {
-                throw new IllegalStateException("保证金应缴方无法解析 inviteId=" + invite.getId());
-            }
-            for (CoopSettlement line : pending) {
-                if (line.getCoopOrderId() != null && payerMemberId.equals(line.getMerchantId())
-                        && line.getAmount() != null && line.getAmount().signum() > 0) {
-                    throw new IllegalStateException("MANUAL_REPAIR:CLAIM_DEPOSIT_ADJUSTMENT_REQUIRED inviteId=" + invite.getId());
-                }
-            }
-            BigDecimal remaining = invite.getDepositAmount() == null
-                    ? ICoopInviteService.DEPOSIT_AMOUNT : invite.getDepositAmount();
-            BigDecimal collected = BigDecimal.ZERO;
-            for (CoopSettlement line : pending) {
-                if (line.getStatus() == null || line.getStatus() != 0
-                        || !payerMemberId.equals(line.getMerchantId())
-                        || line.getAmount() == null || line.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-                    continue;
-                }
-                BigDecimal offset = line.getAmount().min(remaining);
-                line.setAmount(line.getAmount().subtract(offset));
-                collected = collected.add(offset);
-                remaining = remaining.subtract(offset);
-                if (remaining.compareTo(BigDecimal.ZERO) == 0) break;
-            }
-            if (collected.compareTo(BigDecimal.ZERO) > 0) {
-                pending.add(newSettlementLine(topic, null, collected, "DEPOSIT_DEDUCTION", "platform", 1,
-                        payable, now, verifiedHeads, verifiedSales, verifiedRegIds));
-            }
-            if (remaining.compareTo(BigDecimal.ZERO) == 0) {
-                if (coopInviteMapper.updateDepositIfCurrent(invite.getId(), 5, invite.getDepositAmount(),
-                        3, invite.getDepositAmount()) != 1) {
-                    throw new IllegalStateException("保证金抵扣状态冲突 inviteId=" + invite.getId());
-                }
-            } else {
-                if (coopInviteMapper.updateDepositIfCurrent(invite.getId(), 5, invite.getDepositAmount(),
-                        5, remaining) != 1) {
-                    throw new IllegalStateException("保证金抵扣状态冲突 inviteId=" + invite.getId());
-                }
-                logger.warn("主题 {} 结算抵扣保证金不足: inviteId={} payer={} 剩余={}",
-                        topic.getId(), invite.getId(), payerMemberId, remaining);
+            CoopInvite current = coopInviteMapper.selectCoopInviteByIdForUpdate(snapshot.getId());
+            if (current == null || !topic.getId().equals(current.getTopicId()) || !Integer.valueOf(1).equals(current.getStatus()) || Integer.valueOf(1).equals(current.getDelFlag()))
+                throw new IllegalStateException("DEPOSIT_SETOFF_INVITE_SCOPE_CONFLICT");
+            if (Integer.valueOf(1).equals(current.getDepositStatus()))
+                throw new IllegalStateException("MANUAL_REPAIR:DEPOSIT_PAYMENT_RECONCILIATION_REQUIRED inviteId=" + current.getId());
+            if (Integer.valueOf(5).equals(current.getDepositStatus())) {
+                if (!(Integer.valueOf(0).equals(current.getInviteType()) || Integer.valueOf(1).equals(current.getInviteType()))
+                        || current.getDepositRefundState() != null || current.getDepositRefundNo() != null
+                        || current.getDepositPaidTransactionId() != null)
+                    throw new IllegalStateException("DEPOSIT_SETOFF_UNPAID_IDENTITY_CONFLICT");
+                depositSetoffMoney(current.getDepositAmount());
+                due.add(current);
             }
         }
+        return due;
+    }
+
+    private static BigDecimal depositSetoffMoney(BigDecimal amount) {
+        if (amount == null) throw new IllegalStateException("DEPOSIT_SETOFF_AMOUNT_REQUIRED");
+        return amount.setScale(2, java.math.RoundingMode.UNNECESSARY);
+    }
+
+    private static void requireDepositSetoffReceipt(CoopSettlementAdjustment receipt, CoopSettlement head,
+            CoopSettlementDetail detail, String event) {
+        if (receipt == null || receipt.getId() == null || !head.getId().equals(receipt.getSettlementId())
+                || !detail.getClaimId().equals(receipt.getClaimId()) || !event.equals(receipt.getEventKey())
+                || !"ADJUSTMENT".equals(receipt.getEntryKind()) || !"EXECUTED".equals(receipt.getStatus())
+                || depositSetoffMoney(receipt.getAmount()).signum() >= 0
+                || receipt.getAmount().negate().compareTo(detail.getOriginAmount()) > 0)
+            throw new IllegalStateException("DEPOSIT_SETOFF_RECEIPT_IDENTITY_CONFLICT");
     }
 
     /**
