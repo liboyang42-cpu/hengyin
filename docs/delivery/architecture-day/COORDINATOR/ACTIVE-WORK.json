@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-25T07:05:39.775167+00:00",
+  "updated_utc": "2026-10-25T07:11:40.851201+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -2441,6 +2441,76 @@
     ],
     "not_authorized_by_this": "Per-theme Maven/service/DB, arbitrary scripts, broad framework/DDL/dependency/permission changes",
     "construction_doc": "主题游戏模块与模板复用施工-20261025.md",
+    "all_complete": false
+  },
+  "theme_game_reuse_implementation": {
+    "state": "FOUR_APPROVED_OUTCOMES_EXACT_SOURCE_WORK_IN_PROGRESS",
+    "source_checkpoint": {
+      "state": "FROZEN_SOURCE_CHECKPOINT_NOT_ACCEPTED",
+      "sha": "fa5c263440573992701263d6bee60830844a49b8",
+      "tree": "1e38f394edd32540bb429e2cbe0a7a42b86dc420",
+      "parent": "6fcd5ac009cec1dd82c438528d24da30c1f302f4",
+      "branch": "codex/architecture-day-station-source-20261025",
+      "public_push": "COMPLETE",
+      "secret_file_gate": "PASS",
+      "diffcheck": "PASS",
+      "gitleaks_staged_bytes": 1097054,
+      "gitleaks": "PASS",
+      "ledger": {
+        "controls": 5125,
+        "sha256": "ca00ec848262bba4f7a0ae12d74bb1360b3924c46fddbec8a1184495623b9291"
+      },
+      "storage_source": {
+        "classes": 70,
+        "declarations": 879
+      },
+      "JavaDBCI": "NOT_RUN",
+      "all_complete": false
+    },
+    "construction_doc": "主题游戏模块与模板复用施工-20261025.md",
+    "owner_tasks": {
+      "A": {
+        "thread": "01a16a22-3076-7196-88f5-86d5b2c83036",
+        "host": "durable",
+        "turn": "01a171e3-a6fe-700e-8c5f-87c632147a78",
+        "cursor": "1e9feea5-2ea9-4d63-a7a0-0e845f8692e0:13",
+        "owned": "Backend qaPick actual reuse/SupportMatrix/TemplateRules/direct tests; no G/E files"
+      },
+      "D": {
+        "thread": "01a16a22-f399-7110-ba27-ef3f7245603b",
+        "host": "durable",
+        "turn": "01a171e3-cdcb-71a7-8d18-55a312f5c6f4",
+        "cursor": "392a0141-0cc8-4147-8a14-b181aa78db38:14",
+        "owned": "Existing client playkit-qa and actual direct same-contract callers/tests; no auth/session/ledger"
+      },
+      "G": {
+        "thread": "01a16a23-8904-73e8-a024-378a96f0800c",
+        "host": "durable",
+        "turn": "01a171e3-c098-70e1-8d14-3d19d206011e",
+        "cursor": "4b361718-0fcf-48df-970f-92288ff9076c:23",
+        "owned": "BundleReview/PublicationService/PublicationCompiler and truly necessary publication SQL/tests; verify full hash/lock transaction before claiming A→A′ gap"
+      },
+      "E": {
+        "thread": "01a16a23-2723-72e4-813f-03d7f1aa6017",
+        "host": "durable",
+        "turn": "01a171e3-b3c0-7376-a09a-26b336389ec6",
+        "cursor": "bf46e2e6-88ca-4fad-a205-efca84d15256:11",
+        "owned": "PublicationContentGuard/RoutePublishGate/actual validators and direct diagnostics/tests; no separate compiler/DBcapability column"
+      }
+    },
+    "root_ownership": "Shared contracts, construction and reuse instructions/catalog, integration, source metadata/ledger, final same-source verification",
+    "other_original_owners": "B/C/F/H closed, no empty standby tasks",
+    "reference_06_sha256": "5d3224e7854f708f32adefd6cdcafd06373e5bd5b993e6c60e840338f3933fc0",
+    "reference_07_sha256": "6d129b6aced3c0b9040b9445b440ffb0db4453e1b1896aff85bdd92a3faf17fa",
+    "reference_not_runtime_proof": true,
+    "review_constraints": [
+      "Use current exact source/tests before external analogy",
+      "Existing applyDecision verifies topic/template hash under ordered locks; isolated publish method does not prove reachable bypass",
+      "Published gate existential fixture is not current runtime reachability",
+      "No new SPI/ServiceLoader/engine/table/dependency merely for task completion",
+      "Actual used capabilities must be covered and supported; do not copy reversed subset expression"
+    ],
+    "acceptance": "Once all necessary implementations/callers/fixtures are complete, root performs concentrated same-candidate review and impacted CI/MySQL/HTTP; no intermediate CI or unimpacted passing reruns",
     "all_complete": false
   }
 }
