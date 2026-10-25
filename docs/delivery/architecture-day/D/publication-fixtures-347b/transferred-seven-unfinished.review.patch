@@ -1,0 +1,206 @@
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishDraftTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishDraftTest.java
+index 6135f23..e1320f6 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishDraftTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishDraftTest.java
+@@ -130,6 +130,7 @@ class CmsTopicPublishDraftTest {
+         when(cmsTopicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
+         when(cmsTopicMapper.publishRouteSnapshot(anyLong(), nullable(String.class), any(java.util.Date.class))).thenReturn(1);
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
++        svc = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(svc);
+     }
+ 
+     @Test
+@@ -353,6 +354,7 @@ class CmsTopicPublishDraftTest {
+         when(cmsTopicNodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
+                 .thenReturn(Collections.singletonList(node));
+         CmsMemberTemplate template = new CmsMemberTemplate();
++        template.setId(101L);
+         template.setAdvancedConfigJson("{\"requires\":[{\"var\":\"clue.ledger_page\",\"op\":\"EQ\",\"value\":1}]}");
+         when(cmsMemberTemplateMapper.selectCmsMemberTemplateById(101L)).thenReturn(template);
+         when(themeStateKeyMapper.selectByTopicId(4L)).thenReturn(Collections.<ThemeStateKey>emptyList());
+
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicEditActivityShellTicketSyncChainTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicEditActivityShellTicketSyncChainTest.java
+index 09efc8b..01d436b 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicEditActivityShellTicketSyncChainTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicEditActivityShellTicketSyncChainTest.java
+@@ -151,6 +151,9 @@ class TopicEditActivityShellTicketSyncChainTest {
+                 .thenReturn(new ArrayList<>(Collections.singletonList(activity)));
+         when(activityMapper.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
++        ReflectionTestUtils.setField(topicService, "themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
++                mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
++        topicService = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(topicService);
+     }
+ 
+     // ---------- P1 ----------
+
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPendingReviewSelfHostShellTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPendingReviewSelfHostShellTest.java
+index 637e290..c6f47ea 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPendingReviewSelfHostShellTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPendingReviewSelfHostShellTest.java
+@@ -99,6 +99,9 @@ class TopicPendingReviewSelfHostShellTest {
+         task.setId(99L);
+         task.setStatus(com.chengyinhub.business.domain.AuditTask.STATUS_PENDING);
+         when(audits.selectAuditTaskById(99L)).thenReturn(task);
++        ReflectionTestUtils.setField(svc, "themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
++                Mockito.mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
++        svc = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(svc);
+     }
+ 
+     private CmsTopic topic(Integer status, String publishMode) {
+@@ -113,12 +116,27 @@ class TopicPendingReviewSelfHostShellTest {
+         return topic;
+     }
+ 
++    /** Current reads see the same row until the original publication update actually writes it. */
++    private void publicationRows(CmsTopic before, CmsTopic after) {
++        java.util.concurrent.atomic.AtomicReference<CmsTopic> current = new java.util.concurrent.atomic.AtomicReference<>(before);
++        org.mockito.Mockito.doAnswer(call -> current.get()).when(topicMapper).selectCmsTopicById(TOPIC);
++        org.mockito.Mockito.doAnswer(call -> {
++            CmsTopic patch = call.getArgument(0);
++            if (patch.getStatus() != null && patch.getUserStatus() != null) {
++                assertEquals(after.getStatus(), patch.getStatus());
++                assertEquals(after.getUserStatus(), patch.getUserStatus());
++                current.set(after);
++            }
++            return 1;
++        }).when(topicMapper).updateCmsTopic(any(CmsTopic.class));
++    }
++
+     /** 专业版上架与后台待审是独立事实。 */
+     @Test
+     void proDraftPublish_whilePendingReview_createsPublicShell() {
+         CmsTopic pending = topic(0, "pro");
+         // 发布前读取草稿，写入后重读已上架状态。
+-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(pending, pending, topic(1, "pro"));
++        publicationRows(pending, topic(1, "pro"));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+         assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(TOPIC));
+@@ -139,7 +157,7 @@ class TopicPendingReviewSelfHostShellTest {
+         CmsTopic draft = topic(0, "simple");
+         CmsTopic published = topic(1, "simple");
+         // 第一次读 = 草稿;第二次读(ensure 重读)= 发布后已上架(status=1)
+-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(draft, published);
++        publicationRows(draft, published);
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+         assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(TOPIC));
+
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleReviewDecouplingTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleReviewDecouplingTest.java
+index 90ba369..702d3f3 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleReviewDecouplingTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleReviewDecouplingTest.java
+@@ -65,16 +65,20 @@ class TopicSaleReviewDecouplingTest {
+         topicMapper = mock(CmsTopicMapper.class);
+         CmsTopicChapterMapper chapterMapper = mock(CmsTopicChapterMapper.class);
+         CmsTopicNodeMapper nodeMapper = mock(CmsTopicNodeMapper.class);
++        java.util.List<com.chengyinhub.business.domain.CmsTopicChapter> writtenChapters = new ArrayList<>();
++        java.util.List<com.chengyinhub.business.domain.CmsTopicNode> writtenNodes = new ArrayList<>();
++        when(chapterMapper.selectByTopicForUpdate(anyLong())).thenAnswer(call -> new ArrayList<>(writtenChapters));
++        when(nodeMapper.selectByTopicForUpdate(anyLong())).thenAnswer(call -> new ArrayList<>(writtenNodes));
+         java.util.concurrent.atomic.AtomicLong chapterIds = new java.util.concurrent.atomic.AtomicLong(100L);
+         java.util.concurrent.atomic.AtomicLong nodeIds = new java.util.concurrent.atomic.AtomicLong(200L);
+         when(chapterMapper.insertCmsTopicChapter(any())).thenAnswer(call -> {
+-            ((com.chengyinhub.business.domain.CmsTopicChapter) call.getArgument(0))
+-                    .setId(chapterIds.incrementAndGet());
++            com.chengyinhub.business.domain.CmsTopicChapter row = call.getArgument(0);
++            row.setId(chapterIds.incrementAndGet()); writtenChapters.add(row);
+             return 1;
+         });
+         when(nodeMapper.insertCmsTopicNode(any())).thenAnswer(call -> {
+-            ((com.chengyinhub.business.domain.CmsTopicNode) call.getArgument(0))
+-                    .setId(nodeIds.incrementAndGet());
++            com.chengyinhub.business.domain.CmsTopicNode row = call.getArgument(0);
++            row.setId(nodeIds.incrementAndGet()); writtenNodes.add(row);
+             return 1;
+         });
+         OmsTicketMapper ticketMapper = mock(OmsTicketMapper.class);
+@@ -153,6 +157,9 @@ class TopicSaleReviewDecouplingTest {
+             return AuditTask.BIZ_TOPIC_SALE_REVIEW.equals(q.getBizType())
+                     ? new ArrayList<>(Collections.singletonList(pendingSale)) : new ArrayList<AuditTask>();
+         });
++        ReflectionTestUtils.setField(svc, "themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
++                mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
++        svc = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(svc);
+     }
+ 
+     private static Date daysFromNow(int days) {
+
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicUpdateByOwnerTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicUpdateByOwnerTest.java
+index d197f0f..6658267 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicUpdateByOwnerTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicUpdateByOwnerTest.java
+@@ -96,18 +96,30 @@ class TopicUpdateByOwnerTest {
+         xpBudgetService = mock(IXpBudgetService.class);
+         auditTaskService = mock(IAuditTaskService.class);
+         omsTicketService = mock(IOmsTicketService.class);
++        java.util.List<CmsTopicChapter> writtenChapters = new ArrayList<>();
++        java.util.List<CmsTopicNode> writtenNodes = new ArrayList<>();
++        org.mockito.Mockito.doAnswer(call -> {
++            if (!writtenChapters.isEmpty()) return new ArrayList<>(writtenChapters);
++            CmsTopicChapter probe = new CmsTopicChapter(); probe.setTopicId(call.getArgument(0));
++            return chapterMapper.selectCmsTopicChapterList(probe);
++        }).when(chapterMapper).selectByTopicForUpdate(anyLong());
++        org.mockito.Mockito.doAnswer(call -> {
++            if (!writtenNodes.isEmpty()) return new ArrayList<>(writtenNodes);
++            CmsTopicNode probe = new CmsTopicNode(); probe.setTopicId(call.getArgument(0));
++            return nodeMapper.selectCmsTopicNodeList(probe);
++        }).when(nodeMapper).selectByTopicForUpdate(anyLong());
+ 
+         // Mapper 成功插入须返回 1 并回填生成 ID；null 是 Mockito 重 stub 的占位调用。
+         AtomicLong chapterIds = new AtomicLong(801L);
+         org.mockito.Mockito.doAnswer(invocation -> {
+             CmsTopicChapter chapter = invocation.getArgument(0);
+-            if (chapter != null) chapter.setId(chapterIds.getAndIncrement());
++            if (chapter != null) { chapter.setId(chapterIds.getAndIncrement()); writtenChapters.add(chapter); }
+             return 1;
+         }).when(chapterMapper).insertCmsTopicChapter(any());
+         AtomicLong nodeIds = new AtomicLong(901L);
+         org.mockito.Mockito.doAnswer(invocation -> {
+             CmsTopicNode node = invocation.getArgument(0);
+-            if (node != null) node.setId(nodeIds.getAndIncrement());
++            if (node != null) { node.setId(nodeIds.getAndIncrement()); writtenNodes.add(node); }
+             return 1;
+         }).when(nodeMapper).insertCmsTopicNode(any());
+         AtomicLong activityIds = new AtomicLong(1001L);
+@@ -147,6 +159,9 @@ class TopicUpdateByOwnerTest {
+         // 自办活动:主题下没有既有活动 → refreshSelfHostActivity 走「按需新建」分支
+         when(activityMapper.selectCmsActivityList(any())).thenReturn(Collections.<CmsActivity>emptyList());
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
++        ReflectionTestUtils.setField(svc, "themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
++                mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
++        svc = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(svc);
+     }
+ 
+     // ---------- 夹具 ----------
+
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateOpenClubPoolTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateOpenClubPoolTest.java
+index 18cf55a..8457204 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateOpenClubPoolTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateOpenClubPoolTest.java
+@@ -74,6 +74,9 @@ class TopicCreateOpenClubPoolTest {
+             when(cmsTopicMapper.selectCmsTopicById(700L)).thenReturn(topic);
+             return 1;
+         });
++        ReflectionTestUtils.setField(svc, "themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
++                Mockito.mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
++        svc = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(svc);
+     }
+ 
+     private TopicCreateDTO freeExploreDto(Integer openClubPool) {
+
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateSaveDraftSideEffectTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateSaveDraftSideEffectTest.java
+index 6fc43cc..eb94cdb 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateSaveDraftSideEffectTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateSaveDraftSideEffectTest.java
+@@ -84,6 +84,9 @@ class TopicCreateSaveDraftSideEffectTest {
+                     Mockito.mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class),
+                     Mockito.mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class),
+                     Mockito.mock(com.chengyinhub.business.mapper.CmsTopicChapterMapper.class)));
++        ReflectionTestUtils.setField(svc, "themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
++                Mockito.mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
++        svc = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(svc);
+     }
+ 
+     private TopicCreateDTO dto(Integer saveDraft) {
