@@ -1,0 +1,5 @@
+99704cc3a6906c8e54f435505ae9964950096ce836a1644c5fab22632ced3e9d  ci/real-storage-it-registry.json
+f3b3dc3db8053aed8f0f85f10a5b3689eaf9df25f4255116b36c416cf8b9a097  ci/test_real_storage_it.py
+f29d13f83527a23ac3313cd4c8ea8dd0f124f86a668f6733652a989a21fc099b  docs/delivery/architecture-day/F/deposit-attempt-admission-119d/README.md
+5e931b00485072157c21418f70d109633ea56613ab3b8ac57e7158b9381d12ca  docs/delivery/architecture-day/F/deposit-attempt-admission-119d/PATCH.sha256
+40c6f06b7ef2e22c899c3a7b2ea9841f9bd3b4fca9819a260ef9fe76beacf3b3  docs/delivery/architecture-day/F/deposit-attempt-admission-119d/review.patch.b64
