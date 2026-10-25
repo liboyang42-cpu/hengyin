@@ -106,8 +106,18 @@ class ReconciliationControls(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'business money'): p.reconcile(*values)
 
     def test_different_original_hash_cannot_be_normalized(self):
-        values = scenario(); values[4]['commands']['lost_success']['fingerprint'] = 'c' * 64
-        with self.assertRaisesRegex(ValueError, 'request/amount'): p.reconcile(*values)
+        with self.subTest(fence='consumed_original_fact_hash'):
+            # Preserve the original negative input: its consumed fact rejects the changed
+            # fingerprint before the later frozen-intent comparison can be reached.
+            values = scenario(); values[4]['commands']['lost_success']['fingerprint'] = 'c' * 64
+            with self.assertRaisesRegex(ValueError, '^provider original money/identity not consumed exactly$'):
+                p.reconcile(*values)
+        with self.subTest(fence='unconsumed_frozen_request_hash'):
+            # No consumption receipt exists here, so the unchanged original frozen hash
+            # must independently reject the same fingerprint-only alteration.
+            values = scenario(); values[4]['commands']['late_success']['fingerprint'] = 'c' * 64
+            with self.assertRaisesRegex(ValueError, '^original frozen request/amount differs$'):
+                p.reconcile(*values)
 
     def test_different_original_business_identity_cannot_be_normalized(self):
         values = scenario(); values[4]['commands']['lost_success']['businessNo'] = 'another-order'
