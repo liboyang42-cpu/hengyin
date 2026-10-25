@@ -96,18 +96,30 @@ class TopicUpdateByOwnerTest {
         xpBudgetService = mock(IXpBudgetService.class);
         auditTaskService = mock(IAuditTaskService.class);
         omsTicketService = mock(IOmsTicketService.class);
+        java.util.List<CmsTopicChapter> writtenChapters = new ArrayList<>();
+        java.util.List<CmsTopicNode> writtenNodes = new ArrayList<>();
+        org.mockito.Mockito.doAnswer(call -> {
+            if (!writtenChapters.isEmpty()) return new ArrayList<>(writtenChapters);
+            CmsTopicChapter probe = new CmsTopicChapter(); probe.setTopicId(call.getArgument(0));
+            return chapterMapper.selectCmsTopicChapterList(probe);
+        }).when(chapterMapper).selectByTopicForUpdate(anyLong());
+        org.mockito.Mockito.doAnswer(call -> {
+            if (!writtenNodes.isEmpty()) return new ArrayList<>(writtenNodes);
+            CmsTopicNode probe = new CmsTopicNode(); probe.setTopicId(call.getArgument(0));
+            return nodeMapper.selectCmsTopicNodeList(probe);
+        }).when(nodeMapper).selectByTopicForUpdate(anyLong());
 
         // Mapper 成功插入须返回 1 并回填生成 ID；null 是 Mockito 重 stub 的占位调用。
         AtomicLong chapterIds = new AtomicLong(801L);
         org.mockito.Mockito.doAnswer(invocation -> {
             CmsTopicChapter chapter = invocation.getArgument(0);
-            if (chapter != null) chapter.setId(chapterIds.getAndIncrement());
+            if (chapter != null) { chapter.setId(chapterIds.getAndIncrement()); writtenChapters.add(chapter); }
             return 1;
         }).when(chapterMapper).insertCmsTopicChapter(any());
         AtomicLong nodeIds = new AtomicLong(901L);
         org.mockito.Mockito.doAnswer(invocation -> {
             CmsTopicNode node = invocation.getArgument(0);
-            if (node != null) node.setId(nodeIds.getAndIncrement());
+            if (node != null) { node.setId(nodeIds.getAndIncrement()); writtenNodes.add(node); }
             return 1;
         }).when(nodeMapper).insertCmsTopicNode(any());
         AtomicLong activityIds = new AtomicLong(1001L);
@@ -147,6 +159,9 @@ class TopicUpdateByOwnerTest {
         // 自办活动:主题下没有既有活动 → refreshSelfHostActivity 走「按需新建」分支
         when(activityMapper.selectCmsActivityList(any())).thenReturn(Collections.<CmsActivity>emptyList());
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+        ReflectionTestUtils.setField(svc, "themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
+                mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
+        svc = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(svc);
     }
 
     // ---------- 夹具 ----------

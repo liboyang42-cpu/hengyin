@@ -151,6 +151,9 @@ class TopicEditActivityShellTicketSyncChainTest {
                 .thenReturn(new ArrayList<>(Collections.singletonList(activity)));
         when(activityMapper.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
+        ReflectionTestUtils.setField(topicService, "themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
+                mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
+        topicService = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(topicService);
     }
 
     // ---------- P1 ----------

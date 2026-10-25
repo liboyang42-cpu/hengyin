@@ -74,6 +74,9 @@ class TopicCreateOpenClubPoolTest {
             when(cmsTopicMapper.selectCmsTopicById(700L)).thenReturn(topic);
             return 1;
         });
+        ReflectionTestUtils.setField(svc, "themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
+                Mockito.mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
+        svc = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(svc);
     }
 
     private TopicCreateDTO freeExploreDto(Integer openClubPool) {

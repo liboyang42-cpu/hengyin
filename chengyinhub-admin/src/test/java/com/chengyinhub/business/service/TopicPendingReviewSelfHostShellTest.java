@@ -99,6 +99,9 @@ class TopicPendingReviewSelfHostShellTest {
         task.setId(99L);
         task.setStatus(com.chengyinhub.business.domain.AuditTask.STATUS_PENDING);
         when(audits.selectAuditTaskById(99L)).thenReturn(task);
+        ReflectionTestUtils.setField(svc, "themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
+                Mockito.mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
+        svc = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(svc);
     }
 
     private CmsTopic topic(Integer status, String publishMode) {
@@ -113,12 +116,27 @@ class TopicPendingReviewSelfHostShellTest {
         return topic;
     }
 
+    /** Current reads see the same row until the original publication update actually writes it. */
+    private void publicationRows(CmsTopic before, CmsTopic after) {
+        java.util.concurrent.atomic.AtomicReference<CmsTopic> current = new java.util.concurrent.atomic.AtomicReference<>(before);
+        org.mockito.Mockito.doAnswer(call -> current.get()).when(topicMapper).selectCmsTopicById(TOPIC);
+        org.mockito.Mockito.doAnswer(call -> {
+            CmsTopic patch = call.getArgument(0);
+            if (patch.getStatus() != null && patch.getUserStatus() != null) {
+                assertEquals(after.getStatus(), patch.getStatus());
+                assertEquals(after.getUserStatus(), patch.getUserStatus());
+                current.set(after);
+            }
+            return 1;
+        }).when(topicMapper).updateCmsTopic(any(CmsTopic.class));
+    }
+
     /** 专业版上架与后台待审是独立事实。 */
     @Test
     void proDraftPublish_whilePendingReview_createsPublicShell() {
         CmsTopic pending = topic(0, "pro");
         // 发布前读取草稿，写入后重读已上架状态。
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(pending, pending, topic(1, "pro"));
+        publicationRows(pending, topic(1, "pro"));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
         assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(TOPIC));
@@ -139,7 +157,7 @@ class TopicPendingReviewSelfHostShellTest {
         CmsTopic draft = topic(0, "simple");
         CmsTopic published = topic(1, "simple");
         // 第一次读 = 草稿;第二次读(ensure 重读)= 发布后已上架(status=1)
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(draft, published);
+        publicationRows(draft, published);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
         assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(TOPIC));

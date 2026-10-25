@@ -130,6 +130,7 @@ class CmsTopicPublishDraftTest {
         when(cmsTopicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
         when(cmsTopicMapper.publishRouteSnapshot(anyLong(), nullable(String.class), any(java.util.Date.class))).thenReturn(1);
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+        svc = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(svc);
     }
 
     @Test
@@ -353,6 +354,7 @@ class CmsTopicPublishDraftTest {
         when(cmsTopicNodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
                 .thenReturn(Collections.singletonList(node));
         CmsMemberTemplate template = new CmsMemberTemplate();
+        template.setId(101L);
         template.setAdvancedConfigJson("{\"requires\":[{\"var\":\"clue.ledger_page\",\"op\":\"EQ\",\"value\":1}]}");
         when(cmsMemberTemplateMapper.selectCmsMemberTemplateById(101L)).thenReturn(template);
         when(themeStateKeyMapper.selectByTopicId(4L)).thenReturn(Collections.<ThemeStateKey>emptyList());

@@ -65,16 +65,20 @@ class TopicSaleReviewDecouplingTest {
         topicMapper = mock(CmsTopicMapper.class);
         CmsTopicChapterMapper chapterMapper = mock(CmsTopicChapterMapper.class);
         CmsTopicNodeMapper nodeMapper = mock(CmsTopicNodeMapper.class);
+        java.util.List<com.chengyinhub.business.domain.CmsTopicChapter> writtenChapters = new ArrayList<>();
+        java.util.List<com.chengyinhub.business.domain.CmsTopicNode> writtenNodes = new ArrayList<>();
+        when(chapterMapper.selectByTopicForUpdate(anyLong())).thenAnswer(call -> new ArrayList<>(writtenChapters));
+        when(nodeMapper.selectByTopicForUpdate(anyLong())).thenAnswer(call -> new ArrayList<>(writtenNodes));
         java.util.concurrent.atomic.AtomicLong chapterIds = new java.util.concurrent.atomic.AtomicLong(100L);
         java.util.concurrent.atomic.AtomicLong nodeIds = new java.util.concurrent.atomic.AtomicLong(200L);
         when(chapterMapper.insertCmsTopicChapter(any())).thenAnswer(call -> {
-            ((com.chengyinhub.business.domain.CmsTopicChapter) call.getArgument(0))
-                    .setId(chapterIds.incrementAndGet());
+            com.chengyinhub.business.domain.CmsTopicChapter row = call.getArgument(0);
+            row.setId(chapterIds.incrementAndGet()); writtenChapters.add(row);
             return 1;
         });
         when(nodeMapper.insertCmsTopicNode(any())).thenAnswer(call -> {
-            ((com.chengyinhub.business.domain.CmsTopicNode) call.getArgument(0))
-                    .setId(nodeIds.incrementAndGet());
+            com.chengyinhub.business.domain.CmsTopicNode row = call.getArgument(0);
+            row.setId(nodeIds.incrementAndGet()); writtenNodes.add(row);
             return 1;
         });
         OmsTicketMapper ticketMapper = mock(OmsTicketMapper.class);
@@ -153,6 +157,9 @@ class TopicSaleReviewDecouplingTest {
             return AuditTask.BIZ_TOPIC_SALE_REVIEW.equals(q.getBizType())
                     ? new ArrayList<>(Collections.singletonList(pendingSale)) : new ArrayList<AuditTask>();
         });
+        ReflectionTestUtils.setField(svc, "themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
+                mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
+        svc = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(svc);
     }
 
     private static Date daysFromNow(int days) {

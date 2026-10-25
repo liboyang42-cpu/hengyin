@@ -84,6 +84,9 @@ class TopicCreateSaveDraftSideEffectTest {
                     Mockito.mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class),
                     Mockito.mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class),
                     Mockito.mock(com.chengyinhub.business.mapper.CmsTopicChapterMapper.class)));
+        ReflectionTestUtils.setField(svc, "themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
+                Mockito.mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
+        svc = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(svc);
     }
 
     private TopicCreateDTO dto(Integer saveDraft) {
