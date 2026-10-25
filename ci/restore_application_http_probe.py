@@ -22,6 +22,10 @@ import zipfile
 
 ROOT=Path(__file__).resolve().parents[1]
 HELD_MODES=('true','invalid','')
+PRE_START_PHASES={'PRE_APPLICATION_PREPARATION','SOURCE_DATABASE_PREPARATION'}
+RUN_PHASES=PRE_START_PHASES|{'SOURCE_APPLICATION_START','SOURCE_WORKLOAD','CANONICAL_BACKUP_RESTORE',
+        'RESTORED_NORMAL_APPLICATION_START','RESTORED_NORMAL_READBACK',
+        'RESTORED_HELD_APPLICATION_START','RESTORED_HELD_WORKLOAD','APPLICATION_STOP','PRIVATE_CLEANUP'}
 ALLOWED_MUTABLE={'sys_oper_log','sys_job_log','sys_logininfor'}
 LATE_TABLES={'wx_verified_payment_fact','wx_payment_callback_inbox','wx_payment_callback_fact_link'}
 REQUIRED_TABLES={'ums_member','member_cash_withdraw','member_cash_withdraw_fund_fact','member_cash_withdraw_transfer_intent',
@@ -189,6 +193,13 @@ def defaults(path,port):
         path.chmod(0o600);stream.write('[client]\nhost=127.0.0.1\nprotocol=TCP\nuser=root\nport='+str(port)+'\npassword='+password+'\n')
 
 
+def start_application(slot,report,path,phase,side,mode,uuid,seed=False):
+    # Persist intent before entering start, including validation/create/lost-reply failures.
+    report['applicationStartAttempted']=True;report['phase']=phase
+    slot.runtime_report_write(path,report)
+    return slot.start(side,mode,uuid,seed=seed)
+
+
 def run(name,schema,out,credentials):
     runtime=load('restore_http_application_slot','ci/restore_application_http_runtime.py');runtime.gate(os.environ)
     out=Path(out).resolve();slot=runtime.ApplicationSlot(name,schema,out,credentials);auth=slot.auth
@@ -196,9 +207,15 @@ def run(name,schema,out,credentials):
     report={'sourceSha':os.environ['GITHUB_SHA'],'runId':os.environ['GITHUB_RUN_ID'],'runAttempt':os.environ['GITHUB_RUN_ATTEMPT'],
             'jarSha256':slot.jar_hash,'schema':schema,'result':'NOT_COMPLETED','productionDispatchRelease':False,
             'scope':'test-owned full Spring HTTP restore startup; controlled original withdrawal-complete and late payment gap only',
-            'sourceOnlyUntilHostedRun':False,'boots':[],'checks':[],'resourceCleanup':'PENDING_OUTER_OWNER'}
+            'sourceOnlyUntilHostedRun':False,'boots':[],'completeBoots':[],'checks':[],
+            'ownedAppCids':[],'removedAppCids':[],'applicationStartAttempted':False,
+            'phase':'PRE_APPLICATION_PREPARATION','resourceCleanup':'PENDING_OUTER_OWNER'}
     failure=None
     report['sourceMysqlCid']=slot.source['id'];report['targetMysqlCid']=slot.target['id'];report['redisCid']=slot.redis['Id']
+    report['networkId']=slot.source['networkId']
+    report_path=out/'restore-http-application.json'
+    require(not report_path.exists() and not report_path.is_symlink(),'never adopt a previous application report')
+    slot.runtime_report_write(report_path,report)
     try:
         require(subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip()==os.environ['GITHUB_SHA'],'exact source checkout')
         with zipfile.ZipFile(slot.jar) as package:
@@ -208,6 +225,7 @@ def run(name,schema,out,credentials):
         source_ready=json.loads((out/'schema-summary.json').read_text())
         target_ready=json.loads((out/'restore-mysql-readiness.json').read_text())['mysqlReadiness']
         require(source_ready['nativeJarSha256']==slot.jar_hash,'original owner JAR changed')
+        report['phase']='SOURCE_DATABASE_PREPARATION'
         with slot.relay('source') as sp,slot.relay('target') as tp:
             identities={}
             for side,port in (('source',sp),('target',tp)):
@@ -219,12 +237,14 @@ def run(name,schema,out,credentials):
                 identities[side]=value
             require(identities['source']['uuid']!=identities['target']['uuid']
                     and identities['source']['version']==identities['target']['version'],'different UUID same MySQL version')
+            report['sourceServerUuid']=identities['source']['uuid'];report['targetServerUuid']=identities['target']['uuid']
             # Only this fresh, test-owned source; preserve all definitions, disable incidental cron scheduling
             # before any app is launched. The existing targets are manually invoked through original HTTP.
             with auth.database(sp,schema) as db,db.cursor() as cur:
                 cur.execute('SELECT COUNT(*) FROM cms_registration');require(cur.fetchone()==(0,),'fresh source business fixture')
                 cur.execute("UPDATE sys_job SET status='1' WHERE status<>'1'")
-            slot.start('source','false',identities['source']['uuid'],seed=True)
+            start_application(slot,report,report_path,'SOURCE_APPLICATION_START','source','false',identities['source']['uuid'],seed=True)
+            report['phase']='SOURCE_WORKLOAD'
             ids=json.loads((slot.root/'identities.json').read_text());actor=ids['a']['memberId'];a=ids['a']['token'];b=ids['b']['token']
             admin=slot.login_admin();slot.redactions(a,b)
             good(slot.http('/getInfo',admin))
@@ -245,6 +265,7 @@ def run(name,schema,out,credentials):
                                      'case':'original_complete_cohort','withdrawalId':wid,'actorId':actor,
                                      'commandIdentityHash':sha(canonical(ids['chapter'])),'providerSubmits':1})
             paths={side:slot.root/(side+'.cnf') for side in ('source','target')}
+            report['phase']='CANONICAL_BACKUP_RESTORE'
             defaults(paths['source'],sp);defaults(paths['target'],tp)
             args={side:argparse.Namespace(defaults_file=paths[side],database=schema,server_uuid=identities[side]['uuid'],confirm_test_target=True)
                   for side in ('source','target')}
@@ -279,7 +300,8 @@ def run(name,schema,out,credentials):
             global_grants=query(auth,tp,None,'SELECT PRIVILEGE_TYPE FROM information_schema.USER_PRIVILEGES WHERE GRANTEE=%s',("'startup_probe'@'%'",))
             require(all(r['PRIVILEGE_TYPE']=='USAGE' for r in global_grants),'no global runtime grant')
             # Explicit separate false boot only for the independently proven complete original cohort.
-            slot.start('target','false',identities['target']['uuid'])
+            start_application(slot,report,report_path,'RESTORED_NORMAL_APPLICATION_START','target','false',identities['target']['uuid'])
+            report['phase']='RESTORED_NORMAL_READBACK'
             require(good(slot.http(receipt_path,a))==original_receipt,'normal test-owned original receipt readback')
             good(slot.http('/api/wallet/withdraws',a,{}));good(slot.http('/business/cashwithdraw/requery/'+str(wid),admin,{}))
             require(snapshot(auth,tp,schema)==before,'normal original-ID readback created an effect/high-water change')
@@ -289,7 +311,8 @@ def run(name,schema,out,credentials):
             # No normal boot occurs below: introducing the independent late SUCCESS intentionally creates
             # a difference that remains held. It is never auto-repaired/reissued or marked READY.
             for mode in HELD_MODES:
-                boot=slot.start('target',mode,identities['target']['uuid'])
+                boot=start_application(slot,report,report_path,'RESTORED_HELD_APPLICATION_START','target',mode,identities['target']['uuid'])
+                report['phase']='RESTORED_HELD_WORKLOAD'
                 mark=snapshot(auth,tp,schema)
                 require(good(slot.http(receipt_path,a))==original_receipt,'held original receipt unreadable')
                 denied=slot.http(receipt_path,b);refused(denied);require(not denied[1].get('data'),'other actor received original receipt')
@@ -335,21 +358,22 @@ def run(name,schema,out,credentials):
                 require((slot.root/'withdrawal-provider.json').read_bytes()==original_provider_bytes,'provider original record changed')
                 require(not (slot.root/'provider-attempts.jsonl').exists(),'controlled transport fence was entered; not a production guard proof')
                 slot.verify_network();slot.stop(remove=False)
-                report['boots'].append({k:boot[k] for k in ('bootId','javaPid','sourceSha','jarSha256','serverUuid','schema','restoreMode','guardHeld','schedulerStarted','appCid')})
+                report['boots'].append({k:boot[k] for k in ('bootId','javaPid','sourceSha','jarSha256','serverUuid','schema','restoreMode','guardHeld','schedulerStarted','appCid','side')})
                 report['checks'].append({'protectedRowsBefore':public_snapshot(mark),'protectedRowsAfter':public_snapshot(snapshot(auth,tp,schema)),
                                          'providerJournalSha256':sha(original_provider_bytes),
                                          'callbackReplayHighWaters':{table:{'before':stable[table]['nextId'],'after':snapshot(auth,tp,schema)[table]['nextId']} for table in LATE_TABLES},
                                          'case':'held-full-http-and-actual-wake','mode':mode,'owners':actual,
                                          'lateCallback':'FACT_AND_WAIT_INBOX_PRESERVED_NO_ECONOMIC_CONSUME','newDispatches':0})
             require(len({b['bootId'] for b in slot.boots})==5,'five distinct real application processes')
-            report['completeBoots']=[{k:b[k] for k in ('bootId','side','restoreMode','guardHeld','jarSha256','appCid')} for b in slot.boots[:2]]
+            report['completeBoots']=[{k:b[k] for k in ('bootId','side','restoreMode','guardHeld','jarSha256','appCid',
+                                    'javaPid','sourceSha','serverUuid','schema','schedulerStarted')} for b in slot.boots[:2]]
             report['result']='SCOPED_RESTORE_HTTP_STARTUP_AND_REAL_OWNER_HOLD_VERIFIED'
             report['candidateState']='TEST_OWNED_LATE_FACT_GAP_BLOCKED'
             report['RPO']='NOT_A_PRODUCTION_RPO_MEASUREMENT'
             report['RTO']='FIXTURE_ONLY_RESTORE_TO_ORIGINAL_READBACK_TIMESTAMPS'
             report['fullHttpApplicationStartup']='ACTUAL_SPRING_SECURITY_MVC_QUARTZ_ON_RESTORED_FULL_SCHEMA'
     except BaseException as exc:
-        failure=exc;report['firstFailureType']=type(exc).__name__
+        failure=exc;report['firstFailureType']=type(exc).__name__;report['firstFailurePhase']=report['phase']
         raise
     finally:
         try:
@@ -358,7 +382,8 @@ def run(name,schema,out,credentials):
             if slot.cid:report['stoppedApp']=slot.stopped
         except BaseException as cleanup:
             report['applicationStop']='UNKNOWN'
-            if failure is None:failure=cleanup
+            if failure is None:
+                failure=cleanup;report['firstFailurePhase']='APPLICATION_STOP'
         report['ownedAppCids']=slot.owned;report['removedAppCids']=slot.removed
         report['productionDispatchRelease']=False
         report['allDispatchDomainsFenced']='NOT_CLAIMED_SPECIFIC_REAL_OWNERS_ONLY'
@@ -374,9 +399,10 @@ def run(name,schema,out,credentials):
                 slot.root.rmdir();report['privateCleanup']='EXACT_OWN_SUBTREE_REMOVED'
             except BaseException as cleanup:
                 report['privateCleanup']='UNKNOWN'
-                if failure is None:failure=cleanup
+                if failure is None:
+                    failure=cleanup;report['firstFailurePhase']='PRIVATE_CLEANUP'
         if failure is not None:report.setdefault('firstFailureType',type(failure).__name__)
-        save(out/'restore-http-application.json',report)
+        slot.runtime_report_write(report_path,report)
         save(out/'restore-http-provenance.json',{'sourceSha':os.environ['GITHUB_SHA'],'jarSha256':slot.jar_hash,
                 'runId':os.environ['GITHUB_RUN_ID'],'runAttempt':os.environ['GITHUB_RUN_ATTEMPT'],
                 'classPostimages':slot.class_hashes,'canonicalToolSha256':sha((ROOT/'scripts/db-backup-restore.py').read_bytes()),
@@ -386,34 +412,154 @@ def run(name,schema,out,credentials):
         if failure is not None:raise failure
 
 
+def read_final_report(path,name,schema):
+    require(path.is_file() and not path.is_symlink() and path.stat().st_size<=8*1024*1024,'bounded regular report required')
+    report=json.loads(path.read_text())
+    require(isinstance(report,dict),'report object required')
+    require(report.get('sourceSha')==os.environ['GITHUB_SHA'] and report.get('schema')==schema
+            and report.get('runId')==os.environ['GITHUB_RUN_ID'] and report.get('runAttempt')==os.environ['GITHUB_RUN_ATTEMPT'],
+            'source/run/attempt-bound result required')
+    require(re.fullmatch('[0-9a-f]{64}',report.get('jarSha256','')),'original JAR hash required')
+    require(type(report.get('applicationStartAttempted')) is bool,'explicit start-attempt evidence required')
+    for key in ('boots','completeBoots','checks','ownedAppCids','removedAppCids'):
+        require(isinstance(report.get(key),list),'explicit lifecycle lists required')
+    for key in ('ownedAppCids','removedAppCids'):
+        require(all(isinstance(cid,str) and re.fullmatch('[0-9a-f]{64}',cid) for cid in report[key]),'exact app CIDs required')
+        require(len(report[key])==len(set(report[key])),'duplicate app CID')
+    resources=[report.get(key) for key in ('sourceMysqlCid','targetMysqlCid','redisCid')]
+    require(all(isinstance(cid,str) and re.fullmatch('[0-9a-f]{64}',cid) for cid in resources)
+            and len(set(resources))==3,'three distinct owned backing resources required')
+    require(report.get('phase') in RUN_PHASES,'fixed run phase required')
+    if 'firstFailureType' in report:
+        require(isinstance(report['firstFailureType'],str) and re.fullmatch('[A-Za-z_][A-Za-z0-9_]{0,95}',report['firstFailureType'])
+                and report.get('firstFailurePhase') in RUN_PHASES,'stable failure phase/type required')
+    return report
+
+
+def confirmed_pre_start_failure(report):
+    # F's original owner must ALSO independently confirm the exact app slot is absent.
+    # Neither exception name nor an empty CID list alone establishes that create was never attempted.
+    return (report.get('applicationStartAttempted') is False and report.get('result')=='NOT_COMPLETED'
+            and report.get('firstFailurePhase') in PRE_START_PHASES
+            and isinstance(report.get('firstFailureType'),str)
+            and re.fullmatch('[A-Za-z_][A-Za-z0-9_]{0,95}',report['firstFailureType']) is not None
+            and report.get('boots')==[] and report.get('completeBoots')==[] and report.get('checks')==[]
+            and report.get('ownedAppCids')==[] and report.get('removedAppCids')==[]
+            and report.get('applicationStop')=='NO_ACTIVE_APP_SLOT'
+            and report.get('privateCleanup')=='EXACT_OWN_SUBTREE_REMOVED'
+            and report.get('productionDispatchRelease') is False)
+
+
+def assert_successful_lifecycle(report):
+    require(report['applicationStartAttempted'] is True and not report.get('firstFailureType'),'successful start evidence required')
+    boots=report['completeBoots']+report['boots'];owned=report['ownedAppCids']
+    require(len(report['completeBoots'])==2 and len(report['boots'])==3 and len(boots)==len(owned)==5
+            and len(set(owned))==5 and len({b['bootId'] for b in boots})==5,'five independent original app boots required')
+    require(report['removedAppCids']==owned[:-1] and report['applicationStop']=='STOPPED_EXACT_APP_CID','original final app retained for owner log cleanup')
+    require(report['sourceServerUuid']!=report['targetServerUuid'] and re.fullmatch('[0-9a-f]{64}',report['networkId']),
+            'distinct original UUIDs and owned network required')
+    for number,(boot,mode) in enumerate(zip(boots,('false','false',*HELD_MODES))):
+        side='source' if number==0 else 'target'
+        uuid=report['sourceServerUuid'] if side=='source' else report['targetServerUuid']
+        require(boot['appCid']==owned[number] and boot['side']==side and boot['restoreMode']==mode
+                and boot['guardHeld'] is (mode!='false') and boot['schedulerStarted'] is True
+                and boot['sourceSha']==report['sourceSha'] and boot['schema']==report['schema']
+                and boot['serverUuid']==uuid and boot['jarSha256']==report['jarSha256']
+                and type(boot['javaPid']) is int and boot['javaPid']>0,'actual original boot identity differs')
+    require(len(report['checks'])==4 and report['checks'][0]['case']=='original_complete_cohort'
+            and report['checks'][0]['providerSubmits']==1
+            and [row['mode'] for row in report['checks'][1:]]==list(HELD_MODES)
+            and all(row['case']=='held-full-http-and-actual-wake' and row['newDispatches']==0 for row in report['checks'][1:]),
+            'original complete facts and three hold workloads required')
+
+
 def finalize(name,schema,out,original_exit):
     runtime=load('restore_http_finalize_slot','ci/restore_application_http_runtime.py');runtime.gate(os.environ)
     require(re.fullmatch('cy-auth-[0-9a-f]{32}',name) and schema=='cy_e2e_auth_'+name[8:],'exact final scope')
+    require(type(original_exit) is int and original_exit>=0,'original exit required')
     auth=load('restore_http_finalize_owner','ci/authenticated_redis_recovery_probe.py')
-    report=json.loads((Path(out)/'restore-http-application.json').read_text())
-    require(report['sourceSha']==os.environ['GITHUB_SHA'] and report['schema']==schema
-            and report['runId']==os.environ['GITHUB_RUN_ID'] and report['runAttempt']==os.environ['GITHUB_RUN_ATTEMPT'],'source/run/attempt-bound result')
-    checks=[]
-    for kind,target in [('container',c) for c in report['ownedAppCids']]+[(kind,target) for kind,target in
-            [('container',name+'-'+suffix) for suffix in ('app','restore-mysql','mysql','redis')]+[('network',name)]]:
+    out=Path(out);report=None;original=None;removed=[];owner_resources_verified=False
+    proof={'sourceSha':os.environ['GITHUB_SHA'],'runId':os.environ['GITHUB_RUN_ID'],'runAttempt':os.environ['GITHUB_RUN_ATTEMPT'],
+           'schema':schema,'originalExit':original_exit,'resourceCleanup':'UNKNOWN','absence':[],
+           'productionDispatchRelease':False,'result':'NOT_ACCEPTED','finalizationFailures':[]}
+    def reject(phase,failure):
+        # Never serialize str(failure), an untrusted report field, SQL or an inner exception.
+        proof['finalizationFailures'].append({'phase':phase,'type':type(failure).__name__})
+    try:
+        report=read_final_report(out/'restore-http-application.json',name,schema)
+        proof['applicationStartAttempted']=report['applicationStartAttempted']
+        proof['confirmedPreStartFailure']=confirmed_pre_start_failure(report)
+        if report.get('firstFailureType'):
+            proof['firstFailurePhase']=report['firstFailurePhase'];proof['firstFailureType']=report['firstFailureType']
+    except (OSError,UnicodeError,ValueError,KeyError,TypeError) as failure:
+        reject('READ_APPLICATION_REPORT',failure)
+    try:
+        path=out/'authenticated-redis-recovery.json'
+        require(path.is_file() and not path.is_symlink() and path.stat().st_size<=8*1024*1024,'bounded owner report required')
+        original=json.loads(path.read_text());require(isinstance(original,dict),'owner report object required')
+        cleanup=original.get('resourceCleanup',{})
+        require(isinstance(cleanup,dict) and cleanup.get('cleanup')=='CONFIRMED_EXACT_OWNED_REMOVAL','original owner cleanup required')
+        removed=cleanup.get('ownedRemoved',[])
+        require(isinstance(removed,list) and len(removed) in (3,4),'original created-resource roster required')
+        names={name+'-'+suffix for suffix in ('app','mysql','restore-mysql','redis')}
+        require(all(isinstance(row,dict) and row.get('name') in names and isinstance(row.get('id'),str)
+                    and re.fullmatch('[0-9a-f]{64}',row['id']) and row.get('independentNoSuch') is True for row in removed),
+                'exact original owner removal rows required')
+        require(len({row['name'] for row in removed})==len(removed) and len({row['id'] for row in removed})==len(removed),
+                'duplicate owner removal identity')
+        actual={row['name']:row['id'] for row in removed}
+        require({name+'-'+suffix for suffix in ('mysql','restore-mysql','redis')}<=set(actual),'three owned backing resources required')
+        if report is not None:
+            expected={name+'-mysql':report['sourceMysqlCid'],name+'-restore-mysql':report['targetMysqlCid'],name+'-redis':report['redisCid']}
+            require(all(actual.get(key)==cid for key,cid in expected.items()),'original backing CIDs differ')
+        removed=[{'name':row['name'],'id':row['id'],'independentNoSuch':True} for row in removed]
+        owner_resources_verified=True
+        proof['originalOwnerCleanup']={'cleanup':cleanup['cleanup'],'ownedRemoved':removed}
+        log_status=original.get('applicationLogStatus')
+        require(log_status in ('PRESERVED','NOT_STARTED','UNAVAILABLE'),'explicit original log status required')
+        proof['applicationLogStatus']=log_status
+        if log_status=='NOT_STARTED':
+            require(report is not None and confirmed_pre_start_failure(report) and name+'-app' not in actual
+                    and original.get('applicationLogPreserved') is False,'strict no-start proof required')
+        elif log_status=='PRESERVED':require(original.get('applicationLogPreserved') is True,'actual app log proof required')
+        else:reject('APPLICATION_LOG_UNAVAILABLE',ValueError())
+    except (OSError,UnicodeError,ValueError,KeyError,TypeError) as failure:
+        original=None;reject('READ_OR_VERIFY_OWNER_CLEANUP',failure)
+    targets=[('container',name+'-'+suffix) for suffix in ('app','restore-mysql','mysql','redis')]+[('network',name)]
+    known=list(report['ownedAppCids']) if report is not None else []
+    # Only validated owner rows may add exact CIDs to the independent absence checks.
+    if owner_resources_verified:known.extend(row['id'] for row in removed)
+    targets.extend(('container',cid) for cid in dict.fromkeys(known))
+    absence_ok=True
+    for kind,target in targets:
         command=auth.DOCKER+(['network','inspect',target] if kind=='network' else ['container','inspect',target])
-        value=subprocess.run(command,capture_output=True,timeout=15)
-        auth.require_absent(kind,target,value.returncode,value.stderr.decode());checks.append({'kind':kind,'id':target,'absent':True})
-    original=json.loads((Path(out)/'authenticated-redis-recovery.json').read_text())
-    cleanup=original.get('resourceCleanup',{})
-    require(cleanup.get('cleanup')=='CONFIRMED_EXACT_OWNED_REMOVAL','original owner cleanup must be confirmed')
-    expected={name+'-app':report['ownedAppCids'][-1],name+'-mysql':report['sourceMysqlCid'],
-              name+'-restore-mysql':report['targetMysqlCid'],name+'-redis':report['redisCid']}
-    removed=cleanup.get('ownedRemoved',[])
-    require(len(removed)==4 and {row['name']:row['id'] for row in removed}==expected
-            and all(row.get('independentNoSuch') is True for row in removed),'original owner exact four known CIDs')
-    proof={'sourceSha':report['sourceSha'],'schema':schema,'originalExit':original_exit,'resourceCleanup':'CLEAN',
-           'absence':checks,'productionDispatchRelease':False,'result':'NOT_ACCEPTED'}
-    if original_exit==0 and report['result']=='SCOPED_RESTORE_HTTP_STARTUP_AND_REAL_OWNER_HOLD_VERIFIED' and report.get('privateCleanup')=='EXACT_OWN_SUBTREE_REMOVED':
+        try:
+            value=subprocess.run(command,capture_output=True,timeout=15)
+            auth.require_absent(kind,target,value.returncode,value.stderr)
+            proof['absence'].append({'kind':kind,'id':target,'absent':True})
+        except (OSError,subprocess.TimeoutExpired,RuntimeError,ValueError) as failure:
+            absence_ok=False;proof['absence'].append({'kind':kind,'id':target,'absent':False})
+            reject('INDEPENDENT_RESOURCE_ABSENCE',failure)
+    if owner_resources_verified and absence_ok:
+        # Resource removal can be proven even when business never started or failed. It is not acceptance.
+        proof['resourceCleanup']='CONFIRMED_EXACT_OWNED_REMOVAL'
+    success=(report is not None and report.get('result')=='SCOPED_RESTORE_HTTP_STARTUP_AND_REAL_OWNER_HOLD_VERIFIED'
+             and not report.get('firstFailureType') and report.get('privateCleanup')=='EXACT_OWN_SUBTREE_REMOVED')
+    if success:
+        try:
+            assert_successful_lifecycle(report)
+            require(original is not None and original.get('applicationLogStatus')=='PRESERVED','success requires original app logs')
+            actual={row['name']:row['id'] for row in removed}
+            expected={name+'-app':report['ownedAppCids'][-1],name+'-mysql':report['sourceMysqlCid'],
+                      name+'-restore-mysql':report['targetMysqlCid'],name+'-redis':report['redisCid']}
+            require(len(removed)==4 and actual==expected,'original owner exact four known CIDs')
+        except (ValueError,KeyError,TypeError) as failure:
+            success=False;reject('VERIFY_SUCCESSFUL_APPLICATION_LIFECYCLE',failure)
+    if original_exit==0 and success and absence_ok and not proof['finalizationFailures']:
+        proof['resourceCleanup']='CLEAN'
         proof['result']='SCOPED_HTTP_RESTORE_EVIDENCE_COMPLETE_NO_PRODUCTION_RELEASE'
-    save(Path(out)/'restore-http-cleanup.json',proof)
+    save(out/'restore-http-cleanup.json',proof)
     require(proof['result']!='NOT_ACCEPTED','original failure cannot become green during finalize')
-
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
