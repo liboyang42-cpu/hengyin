@@ -216,7 +216,7 @@ public class TopicPublicationContentGuard {
     }
 
     @SafeVarargs
-    private final void autoRegisterOptionTags(Long topicId, java.util.Collection<String>... sources) {
+    private final List<ThemeStateKey> optionTagDeclarations(java.util.Collection<String>... sources) {
         List<ThemeStateKey> tags = new ArrayList<ThemeStateKey>();
         Set<String> seen = new LinkedHashSet<String>();
         for (java.util.Collection<String> source : sources) {
@@ -230,21 +230,63 @@ public class TopicPublicationContentGuard {
                 tags.add(row);
             }
         }
+        return tags;
+    }
+
+    private List<ThemeStateKey> optionTagDeclarations(CmsTopic topic) {
+        TopicStateKeyRefService.RefCollection refs = topicStateKeyRefService == null
+                ? new TopicStateKeyRefService.RefCollection() : topicStateKeyRefService.collect(topic);
+        assertStateKeyReferencesParsed(topic, refs);
+        Set<String> nodeKeys = new LinkedHashSet<String>();
+        for (Set<String> keys : refs.getRefsByNode().values()) nodeKeys.addAll(keys);
+        return optionTagDeclarations(nodeKeys, refs.getStoryKeys(), refs.getChapterKeys(), journeyStoryStateKeyRefs(topic).keySet());
+    }
+
+    private void autoRegisterOptionTags(Long topicId, List<ThemeStateKey> declarations, List<ThemeStateKey> tags) {
         if (tags.isEmpty()) return;
         Set<String> existing = new LinkedHashSet<String>();
-        for (ThemeStateKey row : themeStateKeyService.listByTopic(topicId)) {
+        for (ThemeStateKey row : declarations) {
             if (row != null) existing.add(row.getStateKey());
         }
         List<ThemeStateKey> fresh = new ArrayList<ThemeStateKey>();
         for (ThemeStateKey row : tags) if (!existing.contains(row.getStateKey())) fresh.add(row);
-        themeStateKeyService.register(topicId, fresh);
+        if (!fresh.isEmpty()) themeStateKeyService.register(topicId, fresh);
     }
 
+    /** Phase before the caller captures the final declaration projection for hash/validation/freeze.
+     * Never called by preview. The existing key service owns topic -> key locks and registration. */
+    @org.springframework.transaction.annotation.Transactional(
+            propagation = org.springframework.transaction.annotation.Propagation.MANDATORY, rollbackFor = Exception.class)
+    public void deriveOptionTagsForPublication(CmsTopic topic) {
+        requirePublicationWriteTransaction(topic);
+        if (themeStateKeyService == null) throw new IllegalStateException("发布状态键声明服务缺失");
+        if (topicStateKeyRefService == null) throw new IllegalStateException("发布状态键引用服务缺失");
+        List<ThemeStateKey> current = publicationDeclarations(topic,
+                themeStateKeyService.listCurrentDeclarations(topic.getId()));
+        autoRegisterOptionTags(topic.getId(), current, optionTagDeclarations(topic));
+    }
+
+    /** Ordinary read-only check. Formal publication must use the captured-declarations overload. */
     public void assertStateKeysRegistered(CmsTopic topic) {
         if (themeStateKeyService == null) {
             // 手工 new 的旧单测没注入本类依赖(Spring 运行态必注入,缺失会是启动期错误)。
             return;
         }
+        assertStateKeysRegisteredUsing(topic, () -> themeStateKeyService.listByTopic(topic.getId()), true);
+    }
+
+    /** Internal publication port, never a client-provided registry. Caller supplies the same locked,
+     * stable author projection used by the review hash and compiler; this method never re-reads or derives. */
+    @org.springframework.transaction.annotation.Transactional(
+            propagation = org.springframework.transaction.annotation.Propagation.MANDATORY, rollbackFor = Exception.class)
+    public void assertStateKeysRegistered(CmsTopic topic, List<ThemeStateKey> declarations) {
+        requirePublicationWriteTransaction(topic);
+        List<ThemeStateKey> captured = publicationDeclarations(topic, declarations);
+        assertStateKeysRegisteredUsing(topic, () -> captured, false);
+    }
+
+    private void assertStateKeysRegisteredUsing(CmsTopic topic,
+            java.util.function.Supplier<List<ThemeStateKey>> declarations, boolean preview) {
         // 键 → 引用它的节点名,发布失败时一起报出来
         Map<String, Set<String>> refNodeNames = new LinkedHashMap<String, Set<String>>();
         Set<String> storyKeys = new LinkedHashSet<String>();
@@ -256,16 +298,7 @@ public class TopicPublicationContentGuard {
             exhaustTag = journeyRulesExhaustTag(topic);
         } else {
             TopicStateKeyRefService.RefCollection refs = topicStateKeyRefService.collect(topic);
-            if (!refs.getParseErrors().isEmpty()) {
-                TopicStateKeyRefService.ParseError error = refs.getParseErrors().get(0);
-                String path = error.getNodeId() != null
-                        ? "nodes[nodeId=" + error.getNodeId() + "].template.advancedConfigJson"
-                        : TopicStateKeyRefService.KIND_JOURNEY_RULES.equals(error.getKind()) ? "journeyRulesJson"
-                        : TopicStateKeyRefService.KIND_JOURNEY_STORY.equals(error.getKind()) ? "journeyStoryJson"
-                        : "chapters.blocksJson";
-                throw new ServiceException(TopicStateKeyRefService.parseErrorMessage(error)
-                        + publicationLocation(topic, path));
-            }
+            assertStateKeyReferencesParsed(topic, refs);
             for (Map.Entry<Long, Set<String>> entry : refs.getRefsByNode().entrySet()) {
                 String label = refs.getNodeLabels().get(entry.getKey());
                 for (String ref : entry.getValue()) {
@@ -290,13 +323,23 @@ public class TopicPublicationContentGuard {
         }
         Set<String> thoughtDoneTags = com.chengyinhub.business.util.StateKeyRefs
                 .declaredThoughtDoneTags(topic.getJourneyRulesJson());
-        autoRegisterOptionTags(topic.getId(), refNodeNames.keySet(), storyKeys, chapterKeys, storyRefs.keySet());
         Set<String> registered = new LinkedHashSet<String>();
         Map<String, String> registeredTypes = new LinkedHashMap<String, String>();
-        for (ThemeStateKey row : themeStateKeyService.listByTopic(topic.getId())) {
+        for (ThemeStateKey row : declarations.get()) {
             if (row != null && !StringUtils.isEmpty(row.getStateKey())) {
                 registered.add(row.getStateKey());
                 registeredTypes.put(row.getStateKey(), row.getKeyType());
+            }
+        }
+        if (preview) {
+            // The original option-tag mechanism, projected only in memory; no publishing as a preview side effect.
+            for (ThemeStateKey tag : optionTagDeclarations(refNodeNames.keySet(), storyKeys, chapterKeys, storyRefs.keySet())) {
+                registered.add(tag.getStateKey());
+                registeredTypes.putIfAbsent(tag.getStateKey(), tag.getKeyType());
+            }
+            // Pure original compiler projection, never a new declaration or an arbitrary clue exemption.
+            for (String clue : previewTemplateClueKeys(topic)) {
+                registered.add(clue); registeredTypes.putIfAbsent(clue, ThemeStateKey.TYPE_FLAG);
             }
         }
         List<String> missing = new ArrayList<String>();
@@ -342,6 +385,62 @@ public class TopicPublicationContentGuard {
         if (!missing.isEmpty()) {
             throw new ServiceException("主题发布失败:以下状态键未注册 → " + missing);
         }
+    }
+
+    private Set<String> previewTemplateClueKeys(CmsTopic topic) {
+        Set<String> keys = new LinkedHashSet<String>();
+        collectPreviewTemplateClueKeys(topic, topic.getThemeRuntimeConfigJson(), "themeRuntimeConfigJson", keys);
+        if (cmsTopicNodeMapper == null || cmsMemberTemplateMapper == null) return keys;
+        CmsTopicNode probe = new CmsTopicNode(); probe.setTopicId(topic.getId());
+        Set<Long> ids = new LinkedHashSet<Long>();
+        for (CmsTopicNode node : nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(probe)))
+            if (node != null && node.getTemplateId() != null && node.getTemplateId() > 0) ids.add(node.getTemplateId());
+        if (ids.isEmpty()) return keys;
+        for (CmsMemberTemplate template : nullToEmpty(cmsMemberTemplateMapper.selectCmsMemberTemplateByIds(new ArrayList<Long>(ids)))) {
+            if (template != null) collectPreviewTemplateClueKeys(topic, template.getAdvancedConfigJson(),
+                    "templates[templateId=" + template.getId() + "].advancedConfigJson", keys);
+        }
+        return keys;
+    }
+
+    private void collectPreviewTemplateClueKeys(CmsTopic topic, String raw, String path, Set<String> keys) {
+        if (StringUtils.isBlank(raw)) return;
+        try { keys.addAll(com.chengyinhub.business.util.StateKeyRefs.declaredTemplateClues(ROUTE_JSON.readTree(raw)).keySet()); }
+        catch (java.io.IOException invalid) {
+            throw new IllegalArgumentException("主题条件无法读取" + publicationLocation(topic, path), invalid);
+        }
+    }
+
+    private void assertStateKeyReferencesParsed(CmsTopic topic, TopicStateKeyRefService.RefCollection refs) {
+        if (refs == null) throw new IllegalStateException("发布状态键引用读取未知");
+        if (refs.getParseErrors().isEmpty()) return;
+        TopicStateKeyRefService.ParseError error = refs.getParseErrors().get(0);
+        String path = error.getNodeId() != null
+                ? "nodes[nodeId=" + error.getNodeId() + "].template.advancedConfigJson"
+                : TopicStateKeyRefService.KIND_JOURNEY_RULES.equals(error.getKind()) ? "journeyRulesJson"
+                : TopicStateKeyRefService.KIND_JOURNEY_STORY.equals(error.getKind()) ? "journeyStoryJson"
+                : "chapters.blocksJson";
+        throw new ServiceException(TopicStateKeyRefService.parseErrorMessage(error)
+                + publicationLocation(topic, path));
+    }
+
+    private void requirePublicationWriteTransaction(CmsTopic topic) {
+        if (!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()
+                || org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly())
+            throw new IllegalStateException("发布状态键声明需要原发布写事务");
+        if (topic == null || topic.getId() == null || topic.getId() <= 0)
+            throw new IllegalStateException("发布状态键声明主题无效");
+    }
+
+    private List<ThemeStateKey> publicationDeclarations(CmsTopic topic, List<ThemeStateKey> declarations) {
+        if (declarations == null) throw new IllegalStateException("发布状态键声明读取未知");
+        Set<String> names = new LinkedHashSet<String>();
+        for (ThemeStateKey row : declarations) {
+            if (row == null || !topic.getId().equals(row.getTopicId()) || StringUtils.isBlank(row.getStateKey())
+                    || !names.add(row.getStateKey())) throw new IllegalStateException("发布状态键声明归属或身份不一致");
+        }
+        // Do not mutate caller-owned declaration beans or derive runtime values. G owns the stable author copy.
+        return List.copyOf(declarations);
     }
 
     private String journeyRulesExhaustTag(CmsTopic topic) {
@@ -554,6 +653,19 @@ public class TopicPublicationContentGuard {
     }
 
     public void assertThemeRuntimeReferences(CmsTopic topic) {
+        assertThemeRuntimeReferencesUsing(topic, () -> themeStateKeyService.listByTopic(topic.getId()), true);
+    }
+
+    @org.springframework.transaction.annotation.Transactional(
+            propagation = org.springframework.transaction.annotation.Propagation.MANDATORY, rollbackFor = Exception.class)
+    public void assertThemeRuntimeReferences(CmsTopic topic, List<ThemeStateKey> declarations) {
+        requirePublicationWriteTransaction(topic);
+        List<ThemeStateKey> captured = publicationDeclarations(topic, declarations);
+        assertThemeRuntimeReferencesUsing(topic, () -> captured, false);
+    }
+
+    private void assertThemeRuntimeReferencesUsing(CmsTopic topic,
+            java.util.function.Supplier<List<ThemeStateKey>> declarations, boolean preview) {
         com.fasterxml.jackson.databind.node.ObjectNode config;
         try { config = ThemeRuntimeConfig.parse(topic.getThemeRuntimeConfigJson()); }
         catch (IllegalArgumentException invalid) { throw located(topic, "themeRuntimeConfigJson", invalid); }
@@ -561,19 +673,26 @@ public class TopicPublicationContentGuard {
         assertItemReferencesAt(topic, topic.getRouteGraphJson(), config, "routeGraphJson");
         CmsTopicNode probe = new CmsTopicNode(); probe.setTopicId(topic.getId());
         Set<Long> nodeIds = new LinkedHashSet<Long>();
+        Set<String> previewClues = new LinkedHashSet<String>();
+        if (preview) previewClues.addAll(com.chengyinhub.business.util.StateKeyRefs.declaredTemplateClues(config).keySet());
         for (CmsTopicNode node : nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(probe))) {
             nodeIds.add(node.getId());
             if (cmsMemberTemplateMapper != null && node.getTemplateId() != null) {
                 CmsMemberTemplate template = cmsMemberTemplateMapper.selectCmsMemberTemplateById(node.getTemplateId());
                 if (template != null && StringUtils.isNotEmpty(template.getAdvancedConfigJson())) {
-                    assertItemReferencesAt(topic, template.getAdvancedConfigJson(), config,
+                    JsonNode declared = assertItemReferencesAt(topic, template.getAdvancedConfigJson(), config,
                             "nodes[nodeId=" + node.getId() + "].template[templateId=" + template.getId() + "].advancedConfigJson");
+                    if (preview) previewClues.addAll(com.chengyinhub.business.util.StateKeyRefs.declaredTemplateClues(declared).keySet());
                 }
             }
         }
         if (config == null) return;
         Set<String> keys = new LinkedHashSet<String>();
-        for (ThemeStateKey key : nullToEmpty(themeStateKeyService.listByTopic(topic.getId()))) keys.add(key.getStateKey());
+        for (ThemeStateKey key : nullToEmpty(declarations.get())) keys.add(key.getStateKey());
+        if (preview) {
+            for (ThemeStateKey tag : optionTagDeclarations(topic)) keys.add(tag.getStateKey());
+            keys.addAll(previewClues);
+        }
         com.chengyinhub.business.domain.JourneyRules rules;
         try { rules = com.chengyinhub.business.domain.JourneyRules.parse(topic.getJourneyRulesJson()); }
         catch (IllegalArgumentException invalid) { throw located(topic, "journeyRulesJson", invalid); }
@@ -612,9 +731,13 @@ public class TopicPublicationContentGuard {
         }
     }
 
-    private void assertItemReferencesAt(CmsTopic topic, String raw,
+    private JsonNode assertItemReferencesAt(CmsTopic topic, String raw,
             com.fasterxml.jackson.databind.node.ObjectNode config, String path) {
-        try { ThemeRuntimeConfig.assertItemReferences(ROUTE_JSON.readTree(raw == null ? "{}" : raw), config); }
+        try {
+            JsonNode content = ROUTE_JSON.readTree(raw == null ? "{}" : raw);
+            ThemeRuntimeConfig.assertItemReferences(content, config);
+            return content;
+        }
         catch (java.io.IOException invalid) {
             throw new IllegalArgumentException((path.startsWith("nodes[") ? "节点条件无法读取" : "主题条件无法读取")
                     + publicationLocation(topic, path), invalid);
@@ -766,6 +889,25 @@ public class TopicPublicationContentGuard {
         if (!"BRANCH_GRAPH".equalsIgnoreCase(topic.getRouteMode())) {
             return fullSnapshot ? topicRouteRuntimeService.freezePublication(topic, null) : null;
         }
+        String normalized = normalizedBranchGraph(topic);
+        return fullSnapshot ? topicRouteRuntimeService.freezePublication(topic, normalized) : normalized;
+    }
+
+    /** Formal publication freezes complete content even for ordinary linear/no-template nodes.
+     * Preparation/derivation is already finished; never re-enter the legacy compile path after capture. */
+    @org.springframework.transaction.annotation.Transactional(
+            propagation = org.springframework.transaction.annotation.Propagation.MANDATORY, rollbackFor = Exception.class)
+    public String normalizedBranchRouteForPublish(CmsTopic topic, List<ThemeStateKey> declarations) {
+        requirePublicationWriteTransaction(topic);
+        List<ThemeStateKey> captured = publicationDeclarations(topic, declarations);
+        if (topicRouteRuntimeService == null) throw new IllegalStateException("主题发布内容冻结服务缺失");
+        String normalized = "BRANCH_GRAPH".equalsIgnoreCase(topic.getRouteMode()) ? normalizedBranchGraph(topic) : null;
+        String frozen = topicRouteRuntimeService.freezePublication(topic, normalized, captured);
+        if (StringUtils.isBlank(frozen)) throw new IllegalStateException("主题发布内容快照为空");
+        return frozen;
+    }
+
+    private String normalizedBranchGraph(CmsTopic topic) {
         CmsTopicNode probe = new CmsTopicNode();
         probe.setTopicId(topic.getId());
         probe.setStatus(1L);
@@ -779,7 +921,7 @@ public class TopicPublicationContentGuard {
                     topic.getRouteGraphJson(), nodeIds, declaredRouteOutcomes(topic.getId()));
             topicRoutePublishGate.assertPublishable(normalized);
         } catch (IllegalArgumentException invalid) { throw located(topic, "routeGraphJson", invalid); }
-        return fullSnapshot ? topicRouteRuntimeService.freezePublication(topic, normalized) : normalized;
+        return normalized;
     }
 
     public List<NodeDTO> extractAllNodes(List<ChapterDTO> chapters) {
