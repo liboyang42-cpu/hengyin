@@ -24,7 +24,7 @@ function reasonLabels(res) {
 function run(page, app, id, submit) {
   if (!id || page._contentReporting) return false;
   // 2026-10-24 游客写前登录:举报写库,游客先弹「登录后继续」,登录后恢复这次举报。
-  if (app.ensureLoginFor && !app.ensureLoginFor('report', function () { run(page, app, id, submit); })) return false;
+  if (app.ensureLoginFor && !app.ensureLoginFor('report', function () { run(page, app, id, submit); }, { owner: page, target: () => [id, page.data && page.data.id, page.data && page.data.clubId] })) return false;
   const owner = String(app.getUserID() || '');
   const current = function () { return !page._unloaded && !page._disposed && owner === String(app.getUserID() || ''); };
   const done = function () { page._contentReporting = false; };

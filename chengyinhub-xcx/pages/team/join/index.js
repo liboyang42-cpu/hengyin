@@ -2,6 +2,8 @@ const toast = require('../../../utils/toast.js');
 const app = getApp();
 
 Page({
+  onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; },
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; },
   data: {
     statusBarHeight: app.globalData.statusBarHeight,
     navBarHeight: app.globalData.navBarHeight,
@@ -98,7 +100,7 @@ Page({
   },
 
   join() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('team', () => this.join())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('team', () => this.join(), { owner: this, target: () => [this.inviteCode] })) return; // 2026-10-24 游客写前登录
     if (this.data.joining) return;
     const that = this;
     this.setData({ joining: true, joinError: '' });

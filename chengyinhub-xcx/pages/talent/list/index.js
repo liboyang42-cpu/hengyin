@@ -277,8 +277,8 @@ Page({
     this.loadImUnread();
   },
 
-  onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() {
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; merchantTheme.merchantPageRestore(); },
+  onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     merchantTheme.merchantPageRestore();
     this._unloaded = true;
     this._feedRequestId = (this._feedRequestId || 0) + 1;
@@ -642,7 +642,7 @@ Page({
 
   // 加入俱乐部(即时)
   onClubJoin(e) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('club', () => this.onClubJoin(e))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('club', () => this.onClubJoin(e), { owner: this, target: () => [e.currentTarget.dataset.id] })) return; // 2026-10-24 游客写前登录
     var id = e.currentTarget.dataset.id;
     if (!id) return;
     var that = this;

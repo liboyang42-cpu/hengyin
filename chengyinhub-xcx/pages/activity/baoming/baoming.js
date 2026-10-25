@@ -178,6 +178,7 @@ function waitlistPaymentText(data) {
 }
 
 Page({
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; },
   /**
    * 页面的初始数据
    */
@@ -972,7 +973,7 @@ Page({
   },
 
   joinWaitlist() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('signup', () => this.joinWaitlist())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('signup', () => this.joinWaitlist(), { owner: this, target: () => [this.data.activityId, this.data.selectedTicket && this.data.selectedTicket.id] })) return; // 2026-10-24 游客写前登录
     const that = this;
     const ticket = that.data.selectedTicket;
     if (that.data.waitlistLoading || !ticket || !ticket.id) return;
@@ -1446,7 +1447,7 @@ Page({
    * 处理付款
    */
   handlePayment() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('checkout', () => this.handlePayment())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('checkout', () => this.handlePayment(), { owner: this, target: () => [this.data.activityId, this.data.selectedTicket && this.data.selectedTicket.id, this.data.waitlistOfferId] })) return; // 2026-10-24 游客写前登录
     const that = this;
 
     // 详情未就绪时禁止下单:此时票种/金额都不可信,CTA 之外再兜一道
@@ -1901,7 +1902,7 @@ Page({
   /**
    * 生命周期函数--监听页面卸载
    */
-  onUnload() {
+  onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._destroyed = true;
     this._activityInfoEpoch = (this._activityInfoEpoch || 0) + 1;
     this._participantEpoch = (this._participantEpoch || 0) + 1;

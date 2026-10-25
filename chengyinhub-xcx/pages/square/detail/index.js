@@ -21,6 +21,7 @@ const { isRecordList } = require('../../../utils/response-shape.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const { buildSquareShare } = require('../utils/square-share.js');
 Page({
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; },
   /**
    * 页面的初始数据
    */
@@ -196,7 +197,7 @@ Page({
 
   // 添加评论（回车发送）
   addComment: function () {
-    if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.addComment())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.addComment(), { owner: this, target: () => [this.data.id] })) return; // 2026-10-24 游客写前登录
     var that = this;
     const content = String(that.data.commentContent || '').trim();
     
@@ -260,7 +261,7 @@ Page({
 
   // 添加回复评论（回车发送）
   addReplyComment: function () {
-    if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.addReplyComment())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.addReplyComment(), { owner: this, target: () => [this.data.id, this.data.replyId] })) return; // 2026-10-24 游客写前登录
     var that = this;
     const content = String(that.data.replyContent || '').trim();
     if (!that.data.replyId || that.data.list.some(row => String(row.id) === String(that.data.replyId) && (row.deletedPlaceholder === true || row.lifecycle === 'DELETED'))) { toast('回复目标已变化，请重新选择'); return; }
@@ -453,7 +454,7 @@ Page({
   },
 
   followClick(e) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.followClick(e))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.followClick(e), { owner: this, target: () => [this.data.id, this.data.info && this.data.info.memberId] })) return; // 2026-10-24 游客写前登录
     var that = this
     let item = that.data.info
     if (!item || !item.memberId || that._followRequestInFlight) return;
@@ -514,7 +515,7 @@ Page({
   },
 
   lickClick(e) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.lickClick(e))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.lickClick(e), { owner: this, target: () => [this.data.id] })) return; // 2026-10-24 游客写前登录
     var that = this
     let id = that.data.id
     if (!id || that._likeRequestInFlight) return;
@@ -555,7 +556,7 @@ Page({
   },
 
   favoriteClick() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.favoriteClick())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.favoriteClick(), { owner: this, target: () => [this.data.id, this.data.info && this.data.info.id] })) return; // 2026-10-24 游客写前登录
     const info = this.data.info || {};
     if (!info.id || this._favoriteRequestInFlight) return;
     this._favoriteRequestInFlight = true;
@@ -591,7 +592,7 @@ Page({
   },
 
   commentFollowClick(e) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.commentFollowClick(e))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.commentFollowClick(e), { owner: this, target: () => [this.data.id, this.data.list[e.currentTarget.dataset.index] && this.data.list[e.currentTarget.dataset.index].id, this.data.list[e.currentTarget.dataset.index] && this.data.list[e.currentTarget.dataset.index].memberId] })) return; // 2026-10-24 游客写前登录
     const index = Number(e.currentTarget.dataset.index);
     const item = this.data.list[index];
     if (item && (item.deletedPlaceholder === true || item.lifecycle === 'DELETED')) return;
@@ -665,7 +666,7 @@ Page({
   },
 
   commentLikeClick(e) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.commentLikeClick(e))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.commentLikeClick(e), { owner: this, target: () => [this.data.id, this.data.list[e.currentTarget.dataset.index] && this.data.list[e.currentTarget.dataset.index].id] })) return; // 2026-10-24 游客写前登录
     var that = this
     let index = e.currentTarget.dataset.index;
     let item = that.data.list[index]
@@ -719,7 +720,7 @@ Page({
   onReportReasonCancel() { reportSheet.cancel(this); },
 
   reportSquare() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportSquare())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportSquare(), { owner: this, target: () => [this.data.id] })) return; // 2026-10-24 游客写前登录
     const that = this;
     const id = that.data.id, owner = String(app.getUserID() || ''), current = () => !that._unloaded && String(that.data.id) === String(id) && owner === String(app.getUserID() || '');
     modal.show({
@@ -778,7 +779,7 @@ Page({
   },
 
   reportSquareFromActions() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportSquareFromActions())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportSquareFromActions(), { owner: this, target: () => [this.data.id] })) return; // 2026-10-24 游客写前登录
     this.setData({ postActionShow: false });
     this.reportSquare();
   },
@@ -862,7 +863,7 @@ Page({
   },
 
   reportComment(e) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportComment(e))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportComment(e), { owner: this, target: () => [this.data.id, this.data.list[e.currentTarget.dataset.index] && this.data.list[e.currentTarget.dataset.index].id] })) return; // 2026-10-24 游客写前登录
     const that = this;
     const owner = String(app.getUserID() || ''), postId = String(that.data.id), current = () => !that._unloaded && String(that.data.id) === postId && owner === String(app.getUserID() || '');
     const index = e.currentTarget.dataset.index;
@@ -1244,7 +1245,7 @@ Page({
     this.getList(this.data.page_no + 1);
   },
 
-  onUnload() {
+  onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._unloaded = true;
     reportSheet.cancel(this);
     if (this._likeBurstTimer) {

@@ -314,7 +314,7 @@ Page({
   },
   closePublishSheet() { this.setData({ publishSheetShow: false }); },
 
-  onUnload() {
+  onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._homeSeq = (this._homeSeq || 0) + 1;
     this._topicTemplateSeq = (this._topicTemplateSeq || 0) + 1;
     this._useTtSeq = (this._useTtSeq || 0) + 1;
@@ -350,7 +350,7 @@ Page({
     this._lastScrollTop = currentScrollTop;
   },
 
-  onHide() {
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     merchantTheme.merchantPageRestore();
     // 离开时先把卡片藏好(cy-fly-wait 透明),下次回到本页 onShow 再飞进来,不会先闪一帧旧卡
     this.setData({ flyClass: this.data.reducedMotion ? '' : 'cy-fly-wait' });
@@ -670,7 +670,7 @@ Page({
   // 主题模板 = 整包复制成草稿，进专业编辑器配章节/节点/票种。
   // 不能只把名字塞进简易 AI：那会丢掉模板结构。
   goTopicConfig(e) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.goTopicConfig(e))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.goTopicConfig(e), { owner: this, target: () => [e && e.currentTarget && e.currentTarget.dataset.item && e.currentTarget.dataset.item.id, this.data.operationScope] })) return; // 2026-10-24 游客写前登录
     if (this._blockedByScope()) return;
     // B-05:后端每次调用都整包复制出新主题草稿,连点两下就是两份。
     // 没有幂等键,就先在客户端把在途点击挡住,成功/失败都放行下一次。
@@ -730,7 +730,7 @@ Page({
   // 本方法因此在本页 WXML 上没有绑定点;保留是因为它带着「圈层不得整包复制」与只读岗位两道闸,
   // 详情页要接这条动作时直接复用 —— 删掉等于把闸一起删了。
   useTt(e) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.useTt(e))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.useTt(e), { owner: this, target: () => [e.currentTarget.dataset.item && e.currentTarget.dataset.item.id, this.data.operationScope] })) return; // 2026-10-24 游客写前登录
     if (this._ttUsing) return;
     if (this._blockedByScope()) return;
     const item = (e.currentTarget.dataset || {}).item || {};

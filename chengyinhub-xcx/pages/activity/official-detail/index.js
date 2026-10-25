@@ -156,14 +156,14 @@ Page({
 
   onShow() { this._navigating = false; merchantTheme.merchantPageShow(); },
 
-  onHide() { merchantTheme.merchantPageRestore(); },
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; merchantTheme.merchantPageRestore(); },
 
   onScroll(event) {
     const next = Number(event && event.detail && event.detail.scrollTop) > 180;
     if (next !== this.data.navScrolled) this.setData({ navScrolled: next });
   },
 
-  onUnload() {
+  onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     merchantTheme.merchantPageRestore();
     this._fetchSeq = (this._fetchSeq || 0) + 1;
   },
@@ -467,7 +467,7 @@ Page({
   },
 
   doSignup() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('signup', () => this.doSignup())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('signup', () => this.doSignup(), { owner: this, target: () => [this.data.id] })) return; // 2026-10-24 游客写前登录
     // BL-199:报名/完成任务共用在途标记,连点只发一次。
     if (this._ctaBusy) return;
     this._ctaBusy = true;
