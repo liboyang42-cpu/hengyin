@@ -29,8 +29,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <insert id="insertGrowthBadge" parameterType="com.chengyinhub.business.domain.GrowthBadge" useGeneratedKeys="true" keyProperty="id">
-        insert into growth_badge (badge_code, badge_name, badge_desc, icon_url, unlock_rule, status, sort_no, club_id, create_time)
-        values (#{badgeCode}, #{badgeName}, #{badgeDesc}, #{iconUrl}, #{unlockRule}, #{status}, #{sortNo}, #{clubId}, now())
+        insert into growth_badge (badge_code, badge_name, badge_desc, icon_url, unlock_rule, status, sort_no, club_id, create_time
+            <if test="assetType != null">, asset_type</if>
+            <if test="unlockRuleJson != null">, unlock_rule_json</if>
+            <if test="triggerEvent != null">, trigger_event</if>)
+        values (#{badgeCode}, #{badgeName}, #{badgeDesc}, #{iconUrl}, #{unlockRule}, #{status}, #{sortNo}, #{clubId}, now()
+            <if test="assetType != null">, #{assetType}</if>
+            <if test="unlockRuleJson != null">, #{unlockRuleJson}</if>
+            <if test="triggerEvent != null">, #{triggerEvent}</if>)
     </insert>
 
     <select id="selectByClub" resultMap="GrowthBadgeResult">

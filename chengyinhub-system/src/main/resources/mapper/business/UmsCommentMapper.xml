@@ -79,6 +79,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="reviewTargetExists" resultType="boolean">
         select exists(
             <choose>
+                <when test="ownerType == 4">select 1 from roam_poi where id=#{ownerId} and status=1 and template_id is not null and (application_type is null or audit_status=1)</when>
                 <when test="ownerType == 1">select 1 from cms_topic where id = #{ownerId} and del_flag = 0</when>
                 <otherwise>select 1 from cms_activity where id = #{ownerId} and del_flag = 0</otherwise>
             </choose>
@@ -187,4 +188,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by id
     </select>
 
+    <select id="hasCompletedPoi" resultType="boolean">
+        select exists(select 1 from roam_poi_reward_log where poi_id=#{poiId} and member_id=#{memberId} and status=1)
+    </select>
+    <select id="countPoiReviews" resultType="int">
+        select count(*) from ums_comment where owner_type=4 and owner_id=#{poiId} and member_id=#{memberId}
+            and del_flag=0 and (reply_id is null or reply_id=0)
+    </select>
 </mapper>

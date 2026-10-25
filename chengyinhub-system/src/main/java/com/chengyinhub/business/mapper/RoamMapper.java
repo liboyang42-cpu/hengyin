@@ -18,6 +18,14 @@ import java.util.Map;
  * 迷雾格与 POI 发现均靠唯一键做幂等,XP 只在 finish 结算一次。
  */
 public interface RoamMapper {
+    RoamPoi selectOfficialPoiForUpdate(@Param("id") Long id);
+    int insertOfficialPoi(RoamPoi poi);
+    int updateOfficialPoi(RoamPoi poi);
+    int approveOfficialPoi(@Param("id") Long id, @Param("badgeCode") String badgeCode);
+    int rejectOfficialPoi(@Param("id") Long id, @Param("reason") String reason);
+    int savePoiEvidence(@Param("poiId") Long poiId, @Param("memberId") Long memberId,
+                        @Param("photoUrl") String photoUrl, @Param("answer") String answer);
+
 
     /** C-6 后台奖励调证：据点及奖励日志只读查询。 */
     List<Map<String,Object>> selectAdminRewardEvidence(@Param("poiId") Long poiId, @Param("memberId") Long memberId,

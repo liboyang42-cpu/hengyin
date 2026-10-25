@@ -12,6 +12,9 @@
     "cy-error": "/components/cy/error/index",
     "cy-option-sheet": "/components/cy/option-sheet/index",
     "cy-result-sheet": "/components/cy/result-sheet/index",
-    "cy-icon": "/components/cy/icon/index"
+    "cy-icon": "/components/cy/icon/index",
+    "cy-proto-cam": "/components/cy/proto-cam/index",
+    "cy-privacy-gate": "/components/cy/privacy-gate/index",
+    "cy-loading-mask": "/components/cy/loading-mask/index"
   }
 }

@@ -55,6 +55,11 @@ const CODE_TO_GLYPH = {
   ID_CITY_LIT: 'citylit',
   ID_ROAM_FIRST: 'roam'             // 库里既有的第 11 枚,不在 PRD 十张之列
 };
+// 官方地点挑战的地点勋章(ROAM_POI_<地点ID>,每个地点一枚)统一用「点亮一隅」:城市网格里点亮的那一格就是这个地点。
+function glyphFor(code) {
+  const key = String(code || '');
+  return CODE_TO_GLYPH[key] || (/^ROAM_POI_\d+$/.test(key) ? 'citylit' : undefined);
+}
 
 // 详情只展示日期,兼容后端 Date 的字符串与时间戳序列化。
 function isValidDateParts(year, month, day) {
@@ -107,7 +112,7 @@ function itemToBadge(item) {
     code: item.badgeCode || '',        // 稳定 ID:玩法侧带着它跳进来做回读,不能在映射里丢掉
     name: item.badgeName || '勋章', en: item.nameEn || '',
     iconUrl: '',                       // 勋章墙用统一单色徽记(程序化 glyph;正式素材经 glyph_url 替换)
-    glyph: CODE_TO_GLYPH[item.badgeCode],
+    glyph: glyphFor(item.badgeCode),
     rarity: track,                     // 类别占用配色轨道,不是稀有度(PRD §7.6)
     tierKey: CAT_META[track].key, tierZh: CAT_META[track].zh,
     locked: !item.unlocked,
@@ -132,7 +137,7 @@ function medalToBadge(item) {
       name: item.medalName || '成就徽章',
       style: item.style || 'glow',
       iconUrl: item.medalImg || '',
-      glyph: CODE_TO_GLYPH[item.badgeCode],
+      glyph: glyphFor(item.badgeCode),
       rarity: 1, tierKey: 'ACHIEVEMENT', tierZh: '成就徽章',
       locked: false,
       time,

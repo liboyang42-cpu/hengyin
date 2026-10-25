@@ -92,7 +92,7 @@ function activityView(row, teams, getImgUrl) {
 
 function build(items, teams, layers, getImgUrl) {
   const visible = layers || { activities: true, teams: true, posts: true };
-  const rows = (items || []).filter((row) => validPoint(row) && (row.kind === 'activity' || row.kind === 'topic'));
+  const rows = (items || []).filter((row) => validPoint(row) && H.isMapItem(row));
   const teamRows = (teams || []).filter((row) => validPoint(row) && Number(row.teamId) > 0);
   const cards = rows.map((row) => activityView(row, teamRows, getImgUrl));
   const markers = [];

@@ -35,6 +35,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <where>  
             <if test="memberId != null "> and member_id = #{memberId}</if>
             <if test="ownerType != null "> and owner_type = #{ownerType}</if>
+            <if test="ownerType != null and ownerType == 4"> and (reply_id is null or reply_id=0)</if>
             <if test="ownerId != null "> and owner_id = #{ownerId}</if>
             <if test="rating != null "> and rating = #{rating}</if>
             <if test="contents != null  and contents != ''"> and contents = #{contents}</if>

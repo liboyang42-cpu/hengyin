@@ -47,6 +47,44 @@ public class RoamPoiAdminController extends BaseController
     @Autowired
     private IMmsMerchantService mmsMerchantService;
 
+    @Autowired
+    private com.chengyinhub.business.service.OfficialRoamPoiService officialPois;
+
+    @PreAuthorize("@ss.hasPermi('business:roamPoi:edit')")
+    @org.springframework.web.bind.annotation.PostMapping("/official")
+    @Log(title = "保存官方据点草稿", businessType = BusinessType.UPDATE)
+    public AjaxResult saveOfficial(@org.springframework.web.bind.annotation.RequestBody
+            com.chengyinhub.business.domain.dto.OfficialRoamPoiDraft draft) {
+        return success(officialPois.save(getUserId(), draft));
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:roamPoi:list')")
+    @GetMapping("/official/{id}")
+    public AjaxResult officialDraft(@PathVariable Long id) {
+        RoamPoi poi = roamMapper.selectOfficialPoiForUpdate(id);
+        if (poi == null) return error("官方地点不存在");
+        Map<String, Object> draft = new LinkedHashMap<>();
+        draft.put("poi", poi);
+        draft.put("game", poi.getTemplateId() == null ? null : memberTemplateService.selectCmsMemberTemplateById(poi.getTemplateId()));
+        return success(draft);
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:roamPoi:edit')")
+    @PutMapping("/official/{id}/approve")
+    @Log(title = "审核官方据点", businessType = BusinessType.UPDATE)
+    public AjaxResult approveOfficial(@PathVariable Long id) {
+        officialPois.approve(id); return success();
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:roamPoi:edit')")
+    @PutMapping("/official/{id}/reject")
+    @Log(title = "驳回官方据点", businessType = BusinessType.UPDATE)
+    public AjaxResult rejectOfficial(@PathVariable Long id, String reason) {
+        if (reason == null || reason.trim().isEmpty() || reason.length() > 200) return error("请填写200字内驳回原因");
+        if (roamMapper.rejectOfficialPoi(id, reason.trim()) != 1) return error("据点状态已变化，请刷新");
+        return success();
+    }
+
     /** 治理列表:全量含下架(status 可筛);商家 POI 连昵称。 */
     @PreAuthorize("@ss.hasPermi('business:roamPoi:list')")
     @GetMapping("/list")

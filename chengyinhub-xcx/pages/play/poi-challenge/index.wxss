@@ -1,0 +1,4 @@
+page { background: #000; } /* ds-ok 玩家侧深色,与游玩页同底 */
+.pc-page { min-height: 100vh; }
+.pc-page__state { padding: 240rpx var(--cy-space-4) 0; }
+.pc-page__exit { margin-top: var(--cy-space-4); min-height: 88rpx; display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); }

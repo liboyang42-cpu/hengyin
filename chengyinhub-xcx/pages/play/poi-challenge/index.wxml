@@ -1,0 +1,24 @@
+<!-- 官方地点挑战:一次一屏。拍照 / 答题用游玩页的 cy-playkit-qa,勋章用 v13 cy-medal-screen,不另画。 -->
+<view class="pc-page">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
+  <view wx:if="{{step === 'loading'}}" class="pc-page__state"><cy-skeleton /></view>
+  <view wx:elif="{{step === 'error'}}" class="pc-page__state">
+    <cy-error title="挑战暂时打不开" sub="{{errorText}}" retry="重试" bind:retry="retry" />
+    <view class="pc-page__exit" bindtap="exit" aria-role="button" aria-label="返回地图" hover-class="cy-pressed" hover-stay-time="80">返回地图</view>
+  </view>
+
+  <cy-playkit-qa wx:if="{{step === 'photo'}}" id="photoKit" show mode="shot" theme="dark"
+    title="{{node.templateTitle || node.name}}" shot-lead="{{node.photoRequireDesc || '拍下你到达这里的样子'}}"
+    shot-note="照片只作挑战凭证，不会公开"
+    bind:shoot="onShoot" bind:continue="onPhotoContinue" bind:verdict="onPhotoVerdict" bind:close="exit" />
+
+  <cy-playkit-qa wx:if="{{step === 'quiz'}}" id="quizKit" show mode="pick" theme="dark"
+    title="{{node.questionName}}" lead="{{node.templateTitle || ''}}" options="{{options}}"
+    bind:submit="onPick" bind:continue="onQuizContinue" bind:verdict="onQuizVerdict" bind:close="exit" />
+
+  <cy-medal-screen show="{{step === 'done'}}" items="{{medal.items}}" title="{{medal.title}}" sub="{{medal.sub}}"
+    back-top="{{backTop}}" primary-text="投一张换一张" secondary-text="查看徽章墙"
+    bind:close="exit" bind:primary="onMedalPrimary" bind:secondary="onMedalSecondary" />
+</view>

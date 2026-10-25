@@ -6,6 +6,7 @@
  * 原生 map 的 marker 只能是图片,所以在离屏 canvas 上按原型尺寸画成一张图,anchor 落在点位本体中心。
  * 纯函数(画法 + 点位规格),便于单测;取图、存图由页面做。 */
 
+const { keepItem } = require('./map-layers.js');
 const SCALE = 3;
 const BOX = {
   spot: { w: 100, h: 86, cx: 50, cy: 58 },
@@ -30,13 +31,13 @@ function pinSpecs(input) {
   const o = input || {};
   const out = [];
   (o.items || []).forEach((it) => {
-    if (!it || it.kind === 'hangout' || it.id == null) return;
+    if (!keepItem(it) || it.id == null || !text(it.picUrl)) return;
     const topic = it.kind === 'topic';
     out.push({ id: Number(it.id) * 10 + (topic ? 3 : 2), kind: 'spot', img: text(it.picUrl),
       tag: topic ? (Number(it.productType) === 2 ? '自由探索' : '城市定向') : short(it.name, 6) });
   });
   (o.pois || []).forEach((p) => {
-    if (!p || p.id == null) return;
+    if (!p || p.id == null || !text(p.coverImg)) return;
     const shop = Number(p.type) === 2;
     out.push({ id: Number(p.id) * 10 + (shop ? 7 : 6), kind: shop ? 'shop' : 'spot', img: text(p.coverImg),
       tag: short(firstTag(p.tags) || (shop ? '商家' : '地点'), 6) });

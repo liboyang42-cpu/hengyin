@@ -18,7 +18,8 @@
       "pages": [
         "index",
         "merchant/index",
-        "circle/index"
+        "circle/index",
+        "poi-challenge/index"
       ]
     },
     {

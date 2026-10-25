@@ -7,6 +7,7 @@
  * 边缘:离中心超过可视半径 65% 的点缩小、去名牌;超过 120% 的点不画。「我」的点永远保留。
  * 纯函数,便于单测。 */
 
+const { isMapItem } = require('../../utils/roam-hangout.js');
 const POI_TAG = { 1: 6, 2: 7 };          // marker id = poiId*10+6(地标)/ +7(商家);1/2/3 主题活动、4 队伍、9 我
 const SELF_MARKER_ID = 9;
 
@@ -40,7 +41,7 @@ function distanceM(a, b) {
 function filterOptions(pois, items) {
   const place = [], shop = [];
   const add = (arr, t) => { if (t && arr.indexOf(t) < 0) arr.push(t); };
-  (items || []).forEach((it) => { if (it && it.kind === 'topic') add(place, '主题'); else if (it && it.kind === 'activity') add(place, '活动'); });
+  (items || []).filter((it) => keepItem(it)).forEach((it) => { if (it && it.kind === 'topic') add(place, '主题'); else if (it && it.kind === 'activity') add(place, '活动'); });
   (pois || []).forEach((p) => splitTags(p && p.tags).forEach((t) => add(poiKind(p) === 'shop' ? shop : place, t)));
   return { place: ['全部地点'].concat(place.slice(0, 12)), shop: ['全部商家'].concat(shop.slice(0, 12)) };
 }
@@ -48,6 +49,7 @@ function filterOptions(pois, items) {
 /** 当前筛选下某个点位留不留。layer: all | team | place | shop;sub: 下拉选中的那一项('' = 全部) */
 function keepTeam(filter) { return !filter || filter.layer === 'all' || filter.layer === 'team'; }
 function keepItem(it, filter) {
+  if (!isMapItem(it)) return false;
   if (!filter || filter.layer === 'all') return true;
   if (filter.layer !== 'place') return false;
   if (!filter.sub) return true;
@@ -126,4 +128,30 @@ function poiCard(p) {
   };
 }
 
-module.exports = { POI_TAG, distanceM, splitTags, poiKind, filterOptions, keepTeam, keepItem, keepPoi, buildPoiMarkers, parsePoiMarkerId, edgeLod, poiCard };
+function poiGalleryPath(cover) {
+  return typeof cover === 'string' && /^[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*\.(?:jpg|png|webp)$/.test(cover)
+    ? '/profile/' + cover.replace(/\.[^.]+$/, '.gallery.json') : '';
+}
+
+function poiGallery(data, id, cover) {
+  if (!data || data.poiId !== Number(id) || data.coverKey !== cover || !poiGalleryPath(cover)
+      || !Array.isArray(data.images) || data.images.length > 6) return { keys: [], credit: '' };
+  const directory = cover.slice(0, cover.lastIndexOf('/') + 1);
+  const keys = data.images.filter((item) => item && typeof item.key === 'string'
+    && item.key.startsWith(directory) && poiGalleryPath(item.key)
+    && Number.isInteger(item.width) && Number.isInteger(item.height)
+    && Math.max(item.width, item.height) >= 1600 && Math.min(item.width, item.height) >= 800)
+    .map((item) => item.key);
+  return { keys: Array.from(new Set(keys)), credit: typeof data.credit === 'string' ? data.credit.slice(0, 2000) : '' };
+}
+
+/** 官方地点公开引述:只认带原文、来源和 https 链接的条目,最多 6 条;label = 来源 · 作者 · 日期 */
+function poiQuotes(json) {
+  let rows = [];
+  try { rows = JSON.parse(json || '[]'); } catch (e) { return []; }
+  if (!Array.isArray(rows)) return [];
+  return rows.filter((q) => q && text(q.text) && text(q.source) && /^https:\/\//.test(text(q.url))).slice(0, 6)
+    .map((q) => ({ text: text(q.text), url: text(q.url), label: [text(q.source), text(q.author), text(q.date)].filter(Boolean).join(' · ') }));
+}
+
+module.exports = { poiQuotes, poiGalleryPath, poiGallery, POI_TAG, distanceM, splitTags, poiKind, filterOptions, keepTeam, keepItem, keepPoi, buildPoiMarkers, parsePoiMarkerId, edgeLod, poiCard };

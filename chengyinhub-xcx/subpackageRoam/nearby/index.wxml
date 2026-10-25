@@ -19,25 +19,25 @@
        的定义,接过来时只能把它接到 openRange 上 —— 那就是底部「范围」角控件已经在做的事,
        一个动作两个入口、名字还不一样。要么等产品定筛选维度再做真的,要么现在不留半成品。删。 -->
   <!-- 2026-10-14 地图优化(用户确认原型):深色计数条 + 地图/列表切换;位置仍在胶囊下 10px(hudTop) -->
-  <view class="mt-top" style="top:{{hudTop}}px;">
-    <view class="mt-top__pill"><view class="mt-top__dot"></view><text class="mt-top__t" aria-role="text">{{headerText}}</text></view>
-    <view class="mt-mode">
-      <view class="mt-mode__i {{viewMode === 'map' ? 'is-on' : ''}}" data-mode="map" bindtap="setViewMode" aria-role="tab" aria-selected="{{viewMode === 'map'}}" aria-label="地图" hover-class="cy-pressed" hover-stay-time="80">地图</view>
-      <view class="mt-mode__i {{viewMode === 'list' ? 'is-on' : ''}}" data-mode="list" bindtap="setViewMode" aria-role="tab" aria-selected="{{viewMode === 'list'}}" aria-label="列表" hover-class="cy-pressed" hover-stay-time="80">列表</view>
-    </view>
-  </view>
-
+  <!-- 2026-10-25 业主:计数条挪到底部横滑卡片的标题;顶部只留筛选(文字,可展开)+ 地图 / 列表(图标) -->
+  <!-- 2026-10-25 业主:筛选与地图 / 列表同一行并排(flex),筛选在自己的格子里横滑,不压到图标 -->
+  <view class="mt-toprow" style="top:{{hudTop + 10}}px;">
   <!-- 2026-10-22 业主:计数条下面一行筛选 —— 全部 / 主题队伍 / 地点▾ / 商家▾。
        地点、商家点开是下拉,选项只来自本屏真实数据(主题 / 活动、POI 标签),不预置分类。 -->
-  <scroll-view class="mt-filter" scroll-x enhanced show-scrollbar="{{false}}" style="top:{{hudTop + 52}}px;">
+  <scroll-view class="mt-toprow__chips" scroll-x enhanced show-scrollbar="{{false}}">
     <view class="mt-chip {{layer === 'all' ? 'is-on' : ''}}" data-layer="all" bindtap="onLayerTap" aria-role="button" aria-label="全部节点" hover-class="cy-pressed" hover-stay-time="80">全部</view>
     <view class="mt-chip {{layer === 'team' ? 'is-on' : ''}}" data-layer="team" bindtap="onLayerTap" aria-role="button" aria-label="只看主题队伍" hover-class="cy-pressed" hover-stay-time="80">主题队伍</view>
     <view class="mt-chip {{layer === 'place' ? 'is-on' : ''}}" data-layer="place" bindtap="onLayerTap" aria-role="button" aria-label="地点玩法{{layer === 'place' && layerSub ? '：' + layerSub : ''}}，展开选项" hover-class="cy-pressed" hover-stay-time="80">{{layer === 'place' && layerSub ? layerSub : '地点玩法'}}<view class="mt-chip__caret {{layerSheet === 'place' ? 'is-up' : ''}}"></view></view>
     <view class="mt-chip {{layer === 'shop' ? 'is-on' : ''}}" data-layer="shop" bindtap="onLayerTap" aria-role="button" aria-label="商家{{layer === 'shop' && layerSub ? '：' + layerSub : ''}}，展开选项" hover-class="cy-pressed" hover-stay-time="80">{{layer === 'shop' && layerSub ? layerSub : '商家'}}<view class="mt-chip__caret {{layerSheet === 'shop' ? 'is-up' : ''}}"></view></view>
   </scroll-view>
+    <view class="mt-mode">
+      <view class="mt-mode__i {{viewMode === 'map' ? 'is-on' : ''}}" data-mode="map" bindtap="setViewMode" aria-role="tab" aria-selected="{{viewMode === 'map'}}" aria-label="地图" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="map" size="36" /></view>
+      <view class="mt-mode__i {{viewMode === 'list' ? 'is-on' : ''}}" data-mode="list" bindtap="setViewMode" aria-role="tab" aria-selected="{{viewMode === 'list'}}" aria-label="列表" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="list" size="36" /></view>
+    </view>
+  </view>
 
   <!-- 列表模式:范围内全部队伍,点一行 = 点地图上的那支(同一张队伍卡) -->
-  <scroll-view class="mt-list" scroll-y enhanced show-scrollbar="{{false}}" wx:if="{{viewMode === 'list'}}" style="top:{{hudTop + 104}}px;">
+  <scroll-view class="mt-list" scroll-y enhanced show-scrollbar="{{false}}" wx:if="{{viewMode === 'list'}}" style="top:{{hudTop + 56}}px;">
     <view class="mt-list__sec">{{rangeText}}内 · {{listRows.length || 0}} 个</view>
     <view class="mt-row mt-row--list" wx:for="{{listRows}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}" bindtap="onListRowTap"
           aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">
@@ -58,9 +58,23 @@
 
   <!-- P1 角控件(稿 591:1020 / 591:1022)。开卡片时收起。 -->
   <!-- 底栏:范围 · 我的队伍。开任何半屏时收起(9-08 裁决沿用) -->
-  <view class="mt-corners" wx:if="{{!sheet && viewMode === 'map'}}" style="bottom:{{safeBottom + 26}}px;">
+  <!-- 2026-10-25 业主:附近的队伍 / 地点挪到底部横滑卡片(同漫游首页「附近活动」卡,加高);点卡片 = 点列表那一行 -->
+  <view class="mt-strip" wx:if="{{!sheet && viewMode === 'map' && listRows.length}}" style="padding-bottom:{{safeBottom + 16}}px;">
+    <view class="mt-strip__head"><text>{{headerText}}</text></view>
+    <scroll-view class="mt-strip__cards" scroll-x enhanced show-scrollbar="{{false}}"><view class="mt-strip__track">
+      <view class="mt-card" wx:for="{{listRows}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}" bindtap="onListRowTap"
+            aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">
+        <image wx:if="{{item.img}}" class="mt-card__cover" src="{{item.img}}" mode="aspectFill" lazy-load="true" />
+        <view wx:else class="mt-card__cover mt-card__cover--{{item.tone}}"></view>
+        <view class="mt-card__shade"></view>
+        <view class="mt-card__copy"><text class="mt-card__tag mt-card__tag--{{item.tone}}">{{item.badge}}</text><text class="mt-card__title">{{item.name}}</text><text class="mt-card__meta" wx:if="{{item.sub}}">{{item.sub}}</text></view>
+      </view>
+    </view></scroll-view>
+  </view>
+  <!-- 范围保留文字胶囊;我的队伍改图标 + 人数角标。卡片条在时整体抬到卡片条上方 -->
+  <view class="mt-corners" wx:if="{{!sheet && viewMode === 'map'}}" style="bottom:{{listRows.length ? 'calc(' + (safeBottom + 16) + 'px + 410rpx)' : (safeBottom + 26) + 'px'}};">
     <view class="mt-corner" bindtap="openRange" aria-role="button" aria-label="{{rangeText}}" hover-class="cy-pressed" hover-stay-time="80">{{rangeText}}</view>
-    <view class="mt-corner" bindtap="openMyTeamsPage" aria-role="button" aria-label="{{myTeamsText}}" hover-class="cy-pressed" hover-stay-time="80">{{myTeamsText}}</view>
+    <view class="mt-corner mt-corner--icon" bindtap="openMyTeamsPage" aria-role="button" aria-label="{{myTeamsText}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="mtab-customers" size="40" /><text class="mt-corner__n" wx:if="{{myTeamsN}}">{{myTeamsN}}</text></view>
   </view>
 
   <!-- P2 / P3 / P4 / 被拒 / 已加入:队伍卡(稿 593:1017 · 594:1030 · 594:1060) -->
@@ -161,7 +175,7 @@
 
   <!-- v13 下拉:贴在筛选按钮下面的深色菜单,每项带个数,选中打勾;点空白收起 -->
   <view class="mdd-mask" wx:if="{{layerSheet}}" bindtap="closeLayerSheet" aria-role="button" aria-label="收起选项" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="mdd {{mddIn ? 'is-in' : ''}} {{reducedMotion ? 'is-still' : ''}}" wx:if="{{layerSheet}}" style="top:{{hudTop + 52 + 44}}px; left:{{mddLeft}}px;" aria-role="listbox">
+  <view class="mdd {{mddIn ? 'is-in' : ''}} {{reducedMotion ? 'is-still' : ''}}" wx:if="{{layerSheet}}" style="top:{{hudTop + 10 + 40}}px; left:{{mddLeft}}px;" aria-role="listbox">
     <view wx:for="{{layerItems}}" wx:key="label" class="mdd__i {{item.on ? 'on' : ''}}" data-index="{{index}}" bindtap="onLayerPickTap" aria-role="option" aria-selected="{{item.on}}" aria-label="{{item.label}}" hover-class="mdd__i--press" hover-stay-time="60">
       <text>{{item.label}}</text><text class="mdd__hot" wx:if="{{item.hot}}">{{item.hot}}</text><text class="mdd__n">{{item.count}}</text>
     </view>
@@ -171,7 +185,7 @@
        背面上滑展开到胶囊下面;点地图收回。队伍卡点一下进原来的队伍半屏(申请 / 审批都在那儿)。 -->
   <block wx:if="{{sheet === 'poi' && poiCard}}">
   <view class="pdim pdim--clear {{poiCardIn ? 'is-in' : ''}}" bindtap="closePoiCard" aria-role="button" aria-label="收起卡片" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="pc {{poiCardIn ? 'is-in' : ''}} {{poiExpand ? 'is-x' : ''}} {{reducedMotion ? 'pc--reduced' : ''}}" style="{{poiExpand ? 'top:' + hudTop + 'px; bottom:' + (safeBottom + 20) + 'px;' : 'top:' + pcTop + 'px;'}}"
+  <view class="pc {{poiCardIn ? 'is-in' : ''}} {{poiExpand ? 'is-x' : ''}} {{camOpen ? 'is-cam' : ''}} {{reducedMotion ? 'pc--reduced' : ''}}" style="{{poiExpand ? 'top:' + hudTop + 'px; bottom:' + (safeBottom + 20) + 'px;' : 'top:' + pcTop + 'px;'}}"
         bindtouchstart="onPcStart" bindtouchend="onPcEnd">
     <view class="pc__chip" wx:if="{{!poiExpand}}"><text class="pc__chip-i" style="background:{{poiCard.chipColor}};">{{poiCard.chipLetter}}</text><text>{{poiCard.chipText}}</text></view>
     <!-- 点位长成卡:先是点位那张圆照片(白圈),一边放大一边从圆变成圆角卡;展开时按原卡位置裁切再放开 -->
@@ -179,7 +193,11 @@
     <view class="pc__in {{poiFlip ? 'is-flip' : ''}}">
       <view class="pc__f" bindtap="onPoiFront" aria-role="button" aria-label="{{poiCard.kind === 'team' ? '查看队伍' : '翻面看介绍'}}" hover-class="cy-pressed" hover-stay-time="80">
         <view class="pc__ph">
-          <image wx:if="{{poiCard.img}}" class="pc__img" src="{{poiCard.img}}" mode="aspectFill" />
+          <!-- 官方地点有多张照片:正面就能左右滑,点一下照样翻面 -->
+          <swiper wx:if="{{poiCard.official && poiCard.thumbs.length > 1}}" class="pc__img" circular current="{{poiPhoto}}" bindchange="onPoiSwipe">
+            <swiper-item wx:for="{{poiCard.thumbs}}" wx:key="index"><image class="pc__img" src="{{item}}" mode="aspectFill" /></swiper-item>
+          </swiper>
+          <image wx:elif="{{poiCard.img}}" class="pc__img" src="{{poiCard.img}}" mode="aspectFill" />
           <view wx:else class="pc__img pc__img--ph"></view>
           <view class="pc__phs"></view>
           <text class="pc__rib" wx:if="{{poiCard.ribbon}}">{{poiCard.ribbon}}</text>
@@ -194,17 +212,68 @@
       <view class="pc__b">
         <view class="pb__hd"><text class="pb__t">{{poiCard.title}}</text><view class="pb__x" bindtap="closePoiCard" aria-role="button" aria-label="收起" hover-class="cy-pressed" hover-stay-time="80"><view class="pb__xi"></view></view></view>
         <text class="pb__sub" wx:if="{{poiCard.address}}">{{poiCard.address}}</text>
-        <text class="pb__rt" wx:if="{{poiCard.metaStrong}}">{{poiCard.metaStrong}}</text>
+        <text class="pb__rt" wx:if="{{poiCard.ratingText || poiCard.metaStrong}}">{{poiCard.ratingText}}{{poiCard.ratingText && poiCard.metaStrong ? ' · ' : ''}}{{poiCard.metaStrong}}</text>
         <scroll-view class="pb__sc" scroll-y="{{poiExpand}}" enhanced show-scrollbar="{{false}}">
+          <!-- 官方地点展开后:照片在最上面左右滑,点开看原图 -->
+          <view class="pb__gal" wx:if="{{poiExpand && poiCard.official && poiCard.thumbs.length}}">
+            <swiper class="pb__sw" circular="{{poiCard.thumbs.length > 1}}" current="{{poiPhoto}}" bindchange="onPoiSwipe">
+              <swiper-item wx:for="{{poiCard.thumbs}}" wx:key="index"><image class="pb__swi" src="{{item}}" mode="aspectFill" data-index="{{index}}" catchtap="onPoiImagePreview" aria-role="button" aria-label="查看第{{(index || 0) + 1}}张照片" hover-class="cy-pressed" hover-stay-time="80" /></swiper-item>
+            </swiper>
+            <text class="pb__cnt" wx:if="{{poiCard.thumbs.length > 1}}">{{poiPhoto + 1}} / {{poiCard.thumbs.length}}</text>
+          </view>
           <text class="pb__d">{{poiCard.desc || '这里还没有介绍。'}}</text>
           <text class="pb__more" wx:if="{{!poiExpand}}">上滑看全部</text>
-          <view class="pb__th" wx:if="{{poiCard.thumbs.length}}"><image wx:for="{{poiCard.thumbs}}" wx:key="index" src="{{item}}" mode="aspectFill" /></view>
-          <view class="pb__info" wx:if="{{poiExpand}}"><view class="pb__row" wx:for="{{poiCard.rows}}" wx:key="k"><text class="pb__rk">{{item.k}}</text><text>{{item.v}}</text></view></view>
+          <view class="pb__th" wx:if="{{poiCard.thumbs.length && !(poiExpand && poiCard.official)}}"><image wx:for="{{poiCard.thumbs}}" wx:key="index" wx:if="{{index < 3}}" src="{{item}}" mode="{{poiExpand ? 'widthFix' : 'aspectFill'}}" data-index="{{index}}" catchtap="onPoiImagePreview" aria-role="button" aria-label="查看第{{(index || 0) + 1}}张照片" hover-class="cy-pressed" hover-stay-time="80" /></view>
+          <!-- 官方地点展开:玩法 → 小红书 / 基本信息 → 玩家评价,内容把卡填满 -->
+          <block wx:if="{{poiExpand && poiCard.official}}">
+            <view class="pb__game" wx:if="{{poiCard.game}}">
+              <view class="pb__game-h"><text class="pb__game-k">地点玩法</text><text class="pb__game-st" wx:if="{{poiCard.game.completed}}">已完成</text></view>
+              <text class="pb__game-t">{{poiCard.game.title || '地点挑战'}}</text>
+              <text class="pb__game-d" wx:if="{{poiCard.game.desc}}">{{poiCard.game.desc}}</text>
+              <view class="pb__steps"><text class="pb__step" wx:for="{{poiCard.game.steps}}" wx:key="*this">{{index + 1}} {{item}}</text></view>
+            </view>
+            <view class="pb__info">
+              <view class="pb__row pb__row--link" bindtap="onPoiXhs" aria-role="button" aria-label="去小红书看笔记" hover-class="cy-pressed" hover-stay-time="80"><text class="pb__rk">小红书</text><text class="pb__xhs">复制地点名去搜笔记</text></view>
+              <view class="pb__row" wx:for="{{poiCard.rows}}" wx:key="k"><text class="pb__rk">{{item.k}}</text><text class="pb__rv">{{item.v}}</text></view>
+            </view>
+            <!-- 网上怎么说:注明出处的报道 / 游记摘录,和玩家评价分开,不冒充玩家 -->
+            <block wx:if="{{poiCard.quotes.length}}">
+              <view class="pb__rv-h"><text>网上怎么说</text></view>
+              <scroll-view class="pb__hs" scroll-x enhanced show-scrollbar="{{false}}"><view class="pb__hs-track">
+                <view class="pb__qt" wx:for="{{poiCard.quotes}}" wx:key="url" data-index="{{index}}" bindtap="onPoiQuote" aria-role="button" aria-label="复制原文链接:{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
+                  <text class="pb__qt-t">「{{item.text}}」</text>
+                  <text class="pb__qt-s">{{item.label}} · 复制原文链接</text>
+                </view>
+              </view></scroll-view>
+            </block>
+            <view class="pb__rv-h"><text>玩家评价</text><text class="pb__rv-n" wx:if="{{poiCard.reviews.length}}">{{poiCard.reviews.length}}</text></view>
+            <scroll-view class="pb__hs" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{poiCard.reviews.length}}"><view class="pb__hs-track">
+              <view class="pb__cm" wx:for="{{poiCard.reviews}}" wx:key="id">
+                <view class="pb__cm-h"><text class="pb__cm-n">{{item.name}}</text><text class="pb__cm-time">{{item.time}}</text></view>
+                <text class="pb__cm-s">{{item.stars ? '★ ' + item.stars : ''}}</text>
+                <text class="pb__cm-t">{{item.text}}</text>
+              </view>
+            </view></scroll-view>
+            <text class="pb__cm-empty" wx:if="{{poiCard.reviewsLoaded && !poiCard.reviews.length}}">还没有评价。完成挑战后来写第一条。</text>
+            <view class="pb__mine" wx:if="{{poiCard.game.completed && !poiCard.reviewed}}">
+              <view class="pb__stars"><text wx:for="{{[1,2,3,4,5]}}" wx:key="*this" class="pb__star {{poiCard.myStars >= item ? 'on' : ''}}" data-n="{{item}}" bindtap="onReviewStar" aria-role="button" aria-label="{{item}} 星" hover-class="cy-pressed" hover-stay-time="80">★</text></view>
+              <textarea class="pb__ta" value="{{poiCard.myText}}" maxlength="200" placeholder="说说这次挑战和这个地方" placeholder-class="pb__ph" bindinput="onReviewInput" auto-height fixed aria-label="写评价" />
+              <view class="pb__send {{poiCard.reviewBusy ? 'is-off' : ''}}" bindtap="onReviewSubmit" aria-role="button" aria-label="发布评价" hover-class="cy-pressed" hover-stay-time="80">{{poiCard.reviewBusy ? '发布中…' : '发布评价'}}</view>
+            </view>
+            <view class="pb__photo-note pb__source" wx:if="{{poiCard.photoCredit}}" bindtap="onPoiPhotoCredit" aria-role="button" aria-label="照片来源与许可" hover-class="cy-pressed" hover-stay-time="80">照片来源与许可 {{poiCard.creditOpen ? '收起' : '展开'}}</view>
+            <text class="pb__photo-note" wx:if="{{poiCard.creditOpen}}" user-select>{{poiCard.photoCredit}}</text>
+          </block>
+          <block wx:else>
+            <view class="pb__photo-note pb__source" wx:if="{{poiCard.photoCredit && poiExpand}}" bindtap="onPoiPhotoCredit" aria-role="button" aria-label="照片来源与许可" hover-class="cy-pressed" hover-stay-time="80">照片来源与许可 {{poiCard.creditOpen ? '收起' : '展开'}}</view>
+            <text class="pb__photo-note" wx:if="{{poiCard.creditOpen}}" user-select>{{poiCard.photoCredit}}</text>
+            <view class="pb__info" wx:if="{{poiExpand}}"><view class="pb__row" wx:for="{{poiCard.rows}}" wx:key="k"><text class="pb__rk">{{item.k}}</text><text>{{item.v}}</text></view></view>
+          </block>
+        </scroll-view>
+        <text class="pb__hint2" wx:if="{{poiExpand && poiCard.hint}}">{{poiCard.hint}}</text>
           <view class="pb__cta" wx:if="{{poiExpand}}">
             <view class="pb__btn pb__btn--s" wx:if="{{poiCard.secondary}}" bindtap="onPoiSecondary" aria-role="button" aria-label="{{poiCard.secondary}}" hover-class="cy-pressed" hover-stay-time="80">{{poiCard.secondary}}</view>
             <view class="pb__btn pb__btn--w" bindtap="onPoiPrimary" aria-role="button" aria-label="{{poiCard.primary}}" hover-class="cy-pressed" hover-stay-time="80">{{poiCard.primary}}</view>
           </view>
-        </scroll-view>
         <view class="pb__ft" wx:if="{{!poiExpand}}"><view class="pb__hint" bindtap="onPoiExpand" aria-role="button" aria-label="展开" hover-class="cy-pressed" hover-stay-time="80"><view class="pb__up"></view>上滑展开</view><text>{{poiCard.chipText}}</text></view>
       </view>
     </view>
@@ -213,6 +282,12 @@
     <view class="pc__tail" wx:if="{{!poiExpand}}"></view>
   </view>
   </block>
+
+  <!-- 到了地点点「开始挑战」:取景卡直接浮在地图上(与漫游页、城市签同一件 cy-proto-cam);
+       开着时点位卡让开,同一时刻只有一层。关掉回到卡片,拍到一张就进整屏玩法。 -->
+  <cy-proto-cam show="{{camOpen}}" bind:shot="onSpotShot" bind:close="closeSpotCam" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
 
   <cy-option-sheet show="{{rangeSheetShow}}" title="范围" items="{{rangeItems}}" default-index="{{rangeIndex}}"
     bind:select="onRangePick" bind:cancel="closeRange" />

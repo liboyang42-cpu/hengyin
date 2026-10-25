@@ -17,6 +17,7 @@ public class PlayerBadge
     private String badgeCode;
     private String badgeName;
     private String iconUrl;
+    /** 1首次、2通关、3里程、4连续、5等级、6官方据点。 */
     private Integer sourceType;
     private Long sourceId;
     private Date obtainTime;
