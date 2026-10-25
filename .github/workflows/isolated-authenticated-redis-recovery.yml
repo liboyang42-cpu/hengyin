@@ -89,7 +89,28 @@ jobs:
             python3 -B ci/test_gameplay_process_recovery_probe.py
           fi
       - name: Install existing pinned schema client
+        if: ${{ !(github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'restore-application-startup' || inputs.probe_mode == 'gameplay-process-recovery' || inputs.probe_mode == 'gameplay-capacity-mixed')) }}
         run: python3 -m pip install --disable-pip-version-check PyMySQL==1.1.1
+      - name: Install the same pinned driver in the task-owned isolated Python
+        id: isolated_python
+        if: ${{ github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'restore-application-startup' || inputs.probe_mode == 'gameplay-process-recovery' || inputs.probe_mode == 'gameplay-capacity-mixed') }}
+        run: |
+          set -euo pipefail
+          venv="$RUNNER_TEMP/chengyin-auth-python-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          test ! -e "$venv" && test ! -L "$venv"
+          mkdir -m 700 "$venv"
+          printf '%s/%s/%s\n' "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" > "$venv/.chengyin-owner"
+          python3 -m venv "$venv"
+          "$venv/bin/python3" -I -m pip install --no-user --disable-pip-version-check PyMySQL==1.1.1
+          "$venv/bin/python3" -I - <<'PY'
+          import crypt, importlib.metadata, pathlib, sys
+          import pymysql
+          assert sys.prefix != sys.base_prefix
+          assert importlib.metadata.version('PyMySQL') == '1.1.1'
+          assert pathlib.Path(pymysql.__file__).resolve().is_relative_to(pathlib.Path(sys.prefix).resolve())
+          assert crypt.METHOD_BLOWFISH in crypt.methods
+          PY
+          printf '%s\n' "$venv/bin" >> "$GITHUB_PATH"
       - name: Package the same candidate without repeating tests
         run: mvn -B -DskipTests package
       - name: Execute the fixed isolated workload
@@ -109,6 +130,18 @@ jobs:
             sudo apt-get install -y strace
           fi
           bash ci/authenticated-redis-recovery.sh 2>&1 | tee "$TMPDIR/entry.log"
+      - name: Remove only this task-owned isolated Python
+        if: ${{ always() && steps.isolated_python.outcome != 'skipped' }}
+        run: |
+          set -euo pipefail
+          venv="$RUNNER_TEMP/chengyin-auth-python-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          test ! -L "$venv"
+          if [ -e "$venv" ]; then
+            test -d "$venv"
+            test "$(cat "$venv/.chengyin-owner")" = "$GITHUB_REPOSITORY/$GITHUB_RUN_ID/$GITHUB_RUN_ATTEMPT"
+            rm -rf -- "$venv"
+          fi
+          test ! -e "$venv" && test ! -L "$venv"
       - name: Preserve explicit safe evidence including failures
         if: ${{ !cancelled() && steps.recovery.outcome != 'skipped' && !(github.event_name == 'workflow_dispatch' && inputs.probe_mode == 'restore-application-startup') }}
         uses: actions/upload-artifact@v4

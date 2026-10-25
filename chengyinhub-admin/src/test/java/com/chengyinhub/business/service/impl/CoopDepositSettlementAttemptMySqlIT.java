@@ -205,16 +205,41 @@ class CoopDepositSettlementAttemptMySqlIT {
     }
 
     @Test
-    void lateSuccessDuringCloseCannotDeductAndRetryPersistsOriginalPaidFact() {
-        closesAsPaid = true;
-        Map<String, Object> before = row();
-        assertThrows(IllegalStateException.class, this::resolve);
-        assertEquals(before, row());
-        assertFalse(resolve());
-        assertEquals(2, mapper.selectCoopInviteById(89L).getDepositStatus());
-        assertEquals("WXTX89", mapper.selectCoopInviteById(89L).getDepositPaidTransactionId());
-        assertEquals(AMOUNT, mapper.selectCoopInviteById(89L).getDepositAmount());
-        assertNull(db.queryForObject("SELECT closed_confirmed_at FROM wx_pay_order_intent", java.sql.Timestamp.class));
+    void lateSuccessDuringCloseCannotDeductAndRetryPersistsOriginalPaidFact() throws Exception {
+        CoopDepositSettlementAttemptMySqlIT isolated = new CoopDepositSettlementAttemptMySqlIT();
+        try {
+            isolated.originalSchemaAndMapper(); isolated.originalIntentAndRealServices();
+            var real = isolated.installRealFactRecoveryStorage();
+            isolated.closesAsPaid = true;
+            Map<String, Object> before = isolated.row();
+            IllegalStateException late = assertThrows(IllegalStateException.class, isolated::resolve);
+            assertTrue(late.getMessage().contains("DEPOSIT_PAYMENT_SUCCESS_DURING_CLOSE"));
+            assertEquals(before, isolated.row());
+            var stored = real.findPaymentSuccess("merchant", BUSINESS, "WXTX89");
+            assertNotNull(stored, "The original outside-transaction SUCCESS must commit despite the blocked local decision");
+            var reference = stored.reference();
+            assertEquals(BUSINESS, stored.facts().businessOutTradeNo());
+            assertEquals(BUSINESS, stored.facts().wxOutTradeNo());
+            assertEquals("WXTX89", stored.facts().transactionId());
+            assertEquals(5000L, stored.facts().totalFen());
+            assertEquals(isolated.db.queryForObject("SELECT request_hash FROM wx_pay_order_intent WHERE out_trade_no=?",
+                    String.class, BUSINESS), stored.facts().intentRequestHash());
+            assertEquals(reference, real.requireVerified(reference).reference());
+            assertEquals(1, isolated.db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact", Integer.class));
+            assertNull(isolated.db.queryForObject("SELECT closed_confirmed_at FROM wx_pay_order_intent", java.sql.Timestamp.class));
+            assertFalse(isolated.resolve());
+            assertEquals(2, isolated.mapper.selectCoopInviteById(89L).getDepositStatus());
+            assertEquals("WXTX89", isolated.mapper.selectCoopInviteById(89L).getDepositPaidTransactionId());
+            assertEquals(AMOUNT, isolated.mapper.selectCoopInviteById(89L).getDepositAmount());
+            assertNull(isolated.db.queryForObject("SELECT closed_confirmed_at FROM wx_pay_order_intent", java.sql.Timestamp.class));
+            assertEquals(reference, real.findPaymentSuccess("merchant", BUSINESS, "WXTX89").reference());
+            assertEquals(1, isolated.db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact", Integer.class));
+            Map<String, Object> paid = isolated.row();
+            assertFalse(isolated.resolve());
+            assertEquals(paid, isolated.row(), "Exact original SUCCESS replay must not mutate the paid receipt again");
+            verify(isolated.gateway, times(1)).closePaymentAttempt(BUSINESS, BUSINESS);
+            verify(isolated.gateway, never()).lockClosablePaymentAttemptForUpdate(anyString(), anyString());
+        } finally { isolated.cleanupOnlyOwnedSchema(); }
     }
 
     @Test

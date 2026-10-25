@@ -166,6 +166,7 @@ class CrossDomainFaultIsolationMySqlIT {
                 for (Map<String,Object> originalQuota : quotaIdentities)
                     assertEquals(originalQuota, storage.db.queryForMap("SELECT member_id,biz_type,pool,original_day,counter_key,nonce,receipt_key FROM ai_quota_reservation WHERE receipt_key=?", originalQuota.get("receipt_key")));
                 assertEquals(originalState, storage.db.queryForObject("SELECT state_json FROM topic_route_session", String.class));
+                storage.assertRouteAccessFixture();
                 observations.add(Map.of("stage", "recovered", "schedulerEffects", scheduler.effects(), "schedulerEntries", scheduler.attempts(),
                         "providerPosts", transport.aiRequests.get(), "notificationUnknown", storage.subscriptionCalls.get()));
                 System.out.println("T19_OBSERVATIONS " + com.alibaba.fastjson2.JSON.toJSONString(observations));

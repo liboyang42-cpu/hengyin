@@ -152,6 +152,28 @@ class CoopSettlementPerMerchantTest {
         assertEquals(0, new BigDecimal(expected).compareTo(s.getAmount()), msg + "(实际 " + s.getAmount() + ")");
     }
 
+    @Test
+    void declaredCompositionScopeCannotTurnAnUnvisitedMerchantIntoPositivePayable() {
+        topicWideVerified(); merchantVerified(MERCHANT_A, 100, "5000"); merchantVerified(MERCHANT_B, 0, "0");
+        when(coopOrderMapper.selectEffectiveOrdersByTopicId(TOPIC)).thenReturn(Arrays.asList(
+                merchantOrder(1L, MERCHANT_A, 2, null, "20"), merchantOrder(2L, MERCHANT_B, 2, null, "20")));
+        PreparedCoopPlanFixture.topic(TOPIC);
+        var claims = (com.chengyinhub.business.service.ICoopSettlementClaimService)
+                ReflectionTestUtils.getField(svc, "coopSettlementClaimService");
+        var plans = coopOrderMapper.selectEffectiveOrdersByTopicId(TOPIC).stream()
+                .map(order -> claims.prepare(order, new java.util.Date())).toList();
+        com.chengyinhub.business.service.support.CoopSettlementContract.requireIndependentOrderScopes(plans);
+        assertEquals(0, new BigDecimal("2000").compareTo(plans.get(0).getOriginAmount()));
+        assertEquals(0, BigDecimal.ZERO.compareTo(plans.get(1).getOriginAmount()));
+        assertEquals(0, plans.get(1).getVerifiedHeads());
+        assertEquals(0, BigDecimal.ZERO.compareTo(plans.get(1).getEligibleSales()));
+        for (var plan : plans) for (var line : plan.getOriginLines()) {
+            assertEquals(Long.valueOf(1), line.getRegistrationId());
+            com.chengyinhub.business.service.support.CoopSettlementContract.requireHeaderEquality(plan.getSnapshot(), line);
+        }
+        verify(coopSettlementMapper, never()).insertCoopSettlement(any());
+    }
+
     /**
      * ★ 端到端断言(自由探索常态):3 家中标固定型 ¥20/人头,100 人全在 A 处核销。
      * 旧口径:三家各按全主题 100 人头拿 2000 → 商家合计 6000 > 销售额-平台-保底

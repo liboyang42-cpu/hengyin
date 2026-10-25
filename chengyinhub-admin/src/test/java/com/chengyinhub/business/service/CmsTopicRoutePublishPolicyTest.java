@@ -30,6 +30,22 @@ import static org.mockito.Mockito.when;
 
 class CmsTopicRoutePublishPolicyTest {
 
+    // Unit call context only: mapper doubles are not MySQL/Spring rollback evidence.
+    private boolean publicationWasActive, publicationWasReadOnly;
+    @org.junit.jupiter.api.BeforeEach
+    void enterPublicationWriteContext() {
+        publicationWasActive = org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive();
+        publicationWasReadOnly = org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly();
+        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
+        org.springframework.transaction.support.TransactionSynchronizationManager.setCurrentTransactionReadOnly(false);
+    }
+    @org.junit.jupiter.api.AfterEach
+    void restorePublicationWriteContext() {
+        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(publicationWasActive);
+        org.springframework.transaction.support.TransactionSynchronizationManager.setCurrentTransactionReadOnly(publicationWasReadOnly);
+    }
+
+
     private static void stubLockedTopicRead(CmsTopicMapper topicMapper) {
         when(topicMapper.selectCmsTopicByIdForUpdate(anyLong()))
                 .thenAnswer(inv -> topicMapper.selectCmsTopicById(inv.getArgument(0)));
@@ -49,7 +65,7 @@ class CmsTopicRoutePublishPolicyTest {
         ReflectionTestUtils.setField(service, "omsTicketMapper", mock(OmsTicketMapper.class));
         when(topicMapper.clearDraftIfDraft(10L)).thenReturn(1);
         CmsTopic topic = new CmsTopic();
-        topic.setId(10L); topic.setProductType(ProductType.FREE_EXPLORE);
+        topic.setId(10L); topic.setMemberId(100L); topic.setProductType(ProductType.FREE_EXPLORE);
         topic.setRouteMode("BRANCH_GRAPH"); topic.setPublishMode("simple");
         // R19-DRAFT2 的发布完整度闸(名称/招募截止)先过,才能测到路线模式这道闸。
         topic.setName("夜跑路线");
@@ -77,7 +93,7 @@ class CmsTopicRoutePublishPolicyTest {
         ReflectionTestUtils.setField(service, "omsTicketMapper", mock(OmsTicketMapper.class));
         when(topicMapper.clearDraftIfDraft(10L)).thenReturn(1);
         CmsTopic topic = new CmsTopic();
-        topic.setId(10L); topic.setProductType(ProductType.ORIENTEERING);
+        topic.setId(10L); topic.setMemberId(100L); topic.setProductType(ProductType.ORIENTEERING);
         topic.setRouteMode("BRANCH_GRAPH"); topic.setPublishMode("simple");
         topic.setName("夜跑路线");
         topic.setRouteGraphJson("{\"schemaVersion\":1,\"startNodeId\":1,\"terminalNodeIds\":[2,3]," +
@@ -95,7 +111,10 @@ class CmsTopicRoutePublishPolicyTest {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(10L));
 
-        assertEquals("路线 edge impossible 没有确定性可达状态夹具", error.getMessage());
+        assertEquals("路线 edge impossible 没有确定性可达状态夹具 [path=routeGraphJson.edges[0], fromNodeId=1, toNodeId=2]",
+                error.getCause().getMessage());
+        org.junit.jupiter.api.Assertions.assertTrue(error.getMessage().contains("path=routeGraphJson"));
+        org.junit.jupiter.api.Assertions.assertTrue(error.getMessage().contains("edge impossible"));
         verify(topicMapper, never()).updateCmsTopic(any(CmsTopic.class));
         verify(topicMapper, never()).publishRouteSnapshot(any(Long.class), any(String.class), any(java.util.Date.class));
     }
@@ -127,7 +146,7 @@ class CmsTopicRoutePublishPolicyTest {
         when(topicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
         when(topicMapper.publishRouteSnapshot(eq(10L), any(String.class), any(java.util.Date.class))).thenReturn(1);
         CmsTopic topic = new CmsTopic();
-        topic.setId(10L); topic.setProductType(ProductType.ORIENTEERING);
+        topic.setId(10L); topic.setMemberId(100L); topic.setProductType(ProductType.ORIENTEERING);
         topic.setRouteMode("BRANCH_GRAPH"); topic.setPublishMode("simple");
         topic.setName("夜跑路线");
         topic.setRouteGraphJson("{\"schemaVersion\":1,\"startNodeId\":\"1\",\"terminalNodeIds\":[\"2\"]," +
@@ -164,10 +183,10 @@ class CmsTopicRoutePublishPolicyTest {
         com.chengyinhub.business.service.support.TopicBundleReviewService bundles =
                 mock(com.chengyinhub.business.service.support.TopicBundleReviewService.class);
         ReflectionTestUtils.setField(service, "topicBundleReviewService", bundles);
-        when(bundles.freezeForSubmission(10L, null)).thenReturn(
+        when(bundles.freezeForSubmission(10L, 100L)).thenReturn(
                 new com.chengyinhub.business.service.support.TopicBundleReviewService.Submission(
                         "{\"schemaVersion\":2}", java.util.Collections.emptyList()));
-        when(auditTaskService.submitOrRefreshTopicBundle(eq(10L), eq(null), any(String.class))).thenReturn(99L);
+        when(auditTaskService.submitOrRefreshTopicBundle(eq(10L), eq(100L), any(String.class))).thenReturn(99L);
         com.chengyinhub.business.domain.AuditTask task = new com.chengyinhub.business.domain.AuditTask();
         task.setId(99L);
         task.setStatus(com.chengyinhub.business.domain.AuditTask.STATUS_PENDING);
@@ -184,7 +203,7 @@ class CmsTopicRoutePublishPolicyTest {
         when(topicMapper.clearDraftIfDraft(10L)).thenReturn(1);
         when(topicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
         CmsTopic topic = new CmsTopic();
-        topic.setId(10L); topic.setProductType(ProductType.ORIENTEERING);
+        topic.setId(10L); topic.setMemberId(100L); topic.setProductType(ProductType.ORIENTEERING);
         topic.setRouteMode("BRANCH_GRAPH"); topic.setPublishMode("pro");
         topic.setName("夜跑路线");
         when(topicMapper.selectCmsTopicById(10L)).thenReturn(topic);
@@ -260,15 +279,22 @@ class CmsTopicRoutePublishPolicyTest {
         ReflectionTestUtils.setField(service,"cmsTopicNodeMapper",mock(CmsTopicNodeMapper.class));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         CmsTopic topic = new CmsTopic();
-        topic.setId(10L); topic.setStatus(1); topic.setRouteMode("LINEAR");
+        topic.setId(10L); topic.setMemberId(100L); topic.setStatus(1); topic.setRouteMode("LINEAR");
+        CmsTopicNodeMapper nodeMapper = (CmsTopicNodeMapper) ReflectionTestUtils.getField(service, "cmsTopicNodeMapper");
+        when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
+                .thenReturn(java.util.Collections.singletonList(node(1L, null)));
         when(topicMapper.selectCmsTopicById(10L)).thenReturn(topic);
-        when(topicMapper.publishRouteSnapshot(eq(10L), eq(null), any(java.util.Date.class))).thenReturn(1);
+        when(topicMapper.publishRouteSnapshot(eq(10L), any(String.class), any(java.util.Date.class))).thenReturn(1);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(10L);
 
-        verify(topicMapper).publishRouteSnapshot(
-                eq(10L), nullable(String.class), any(java.util.Date.class));
+        org.mockito.ArgumentCaptor<String> snapshot = org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(topicMapper).publishRouteSnapshot(eq(10L), snapshot.capture(), any(java.util.Date.class));
+        // The authored LINEAR graph remains absent; formal publication now persists complete frozen content.
+        org.junit.jupiter.api.Assertions.assertNull(topic.getRouteGraphJson());
+        org.junit.jupiter.api.Assertions.assertTrue(snapshot.getValue().contains("\"runtimeSnapshotVersion\":1"));
+        org.junit.jupiter.api.Assertions.assertTrue(snapshot.getValue().contains("\"routeMode\":\"LINEAR\""));
     }
 
     @SuppressWarnings("unchecked")

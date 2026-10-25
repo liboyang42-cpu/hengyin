@@ -26,14 +26,7 @@ class CoopOrderStationFulfillmentMySqlIT {
 
     @BeforeEach void confirmedSource() throws Exception {
         flow.canonicalScopeAndCash();
-        P0AcceptanceSchema.baseTables(flow.storage.db, "cms_registration_merchant");
-        P0AcceptanceSchema.migrations(flow.storage.source, "migration_business_audit_event_20260823.sql");
-        String governance = Files.readString(P0AcceptanceSchema.repoRoot().resolve(
-                "chengyinhub-admin/sql/migration_approval_governance_20260828.sql"), StandardCharsets.UTF_8);
-        var alter = java.util.regex.Pattern.compile("(?s)ALTER TABLE business_audit_event\\s+.*?;").matcher(governance);
-        assertTrue(alter.find()); flow.storage.db.execute(alter.group()); assertFalse(alter.find());
-        // Root owns this exact canonical additive file; do not handwrite/replace its shape here.
-        P0AcceptanceSchema.migrations(flow.storage.source, MIGRATION);
+        // flow installs the full canonical station dependency graph exactly once.
         receipts = flow.sql.getMapper(CoopOrderStationFulfillmentMapper.class);
         audits = flow.sql.getMapper(BusinessAuditEventMapper.class);
         flow.storage.db.update("INSERT INTO cms_registration_merchant(id,member_id,topic_id,mode,audit_status,del_flag) VALUES(31,88,11,2,1,0),(32,88,11,2,1,0)");
@@ -105,7 +98,8 @@ class CoopOrderStationFulfillmentMySqlIT {
     }
 
     @Test void failureAfterActualAuditAndReceiptRollsBackWholeLocalVerification() {
-        assertThrows(IllegalStateException.class, () -> verify(1, 31, true, true));
+        IllegalStateException injected = assertThrows(IllegalStateException.class, () -> verify(1, 31, true, true));
+        assertEquals("INJECTED_AFTER_REAL_STATION_RECEIPT", injected.getMessage());
         assertEquals(0, count("business_audit_event")); assertEquals(0, count("coop_order_station_fulfillment"));
         assertEquals(0, flow.storage.db.queryForObject("SELECT verification_status FROM cms_registration WHERE id=1", Integer.class));
         assertEquals(2, count("cms_registration_payment_fact")); assertEquals(2, count("wx_verified_payment_fact"));
@@ -197,11 +191,31 @@ class CoopOrderStationFulfillmentMySqlIT {
         assertEquals(1, count("coop_order_station_fulfillment")); assertEquals(0, count("coop_settlement"));
     }
 
+    @Test void originalFrozenWindowKeepsInclusiveStartAndExclusiveEndWithoutTimezoneTolerance() {
+        for (String outside : List.of("2026-10-01 08:59:59", "2026-10-01 10:00:00")) {
+            IllegalStateException rejected = assertThrows(IllegalStateException.class,
+                    () -> verifyAt(1, 31, true, false, outside));
+            assertTrue(rejected.getMessage().contains("FROZEN_WINDOW_OR_SCOPE_CONFLICT"));
+            assertEquals(0, count("business_audit_event")); assertEquals(0, count("coop_order_station_fulfillment"));
+            assertEquals(0, flow.storage.db.queryForObject("SELECT verification_status FROM cms_registration WHERE id=1", Integer.class));
+        }
+        long audit = verifyAt(1, 31, true, false, "2026-10-01 09:00:00");
+        var proof = flow.storage.tx.execute(status -> receipts.selectByAuditForUpdate(audit));
+        assertNotNull(proof);
+        Timestamp start = flow.storage.db.queryForObject("SELECT start_time FROM oms_ticket WHERE id=21", Timestamp.class);
+        assertNotNull(start); assertNotNull(proof.getFulfilledAt());
+        assertEquals(start.getTime(), proof.getFulfilledAt().getTime());
+        assertEquals(1, count("coop_order_station_fulfillment"));
+    }
+
     private long verify(long registration, long station, boolean capture, boolean fail) {
+        return verifyAt(registration, station, capture, fail, "2026-10-01 09:30:00");
+    }
+    private long verifyAt(long registration, long station, boolean capture, boolean fail, String verifiedAt) {
         return flow.storage.tx.execute(status -> {
             flow.topics.selectCmsTopicByIdForUpdate(11L); receipts.selectRegistrationForUpdate(registration);
-            assertEquals(1, flow.storage.db.update("UPDATE cms_registration SET verification_status=1,verifier_id=88,verification_time='2026-10-01 09:30:00' "
-                    + "WHERE id=? AND verification_status=0 AND payment_status=2 AND registration_status=2", registration));
+            assertEquals(1, flow.storage.db.update("UPDATE cms_registration SET verification_status=1,verifier_id=88,verification_time=? "
+                    + "WHERE id=? AND verification_status=0 AND payment_status=2 AND registration_status=2", verifiedAt, registration));
             BusinessAuditEvent event = audit(registration, station, CoopOrderStationScope.ACTION, "station-" + registration,
                     "{\"verificationStatus\":0}", "{\"verificationStatus\":1}");
             assertEquals(1, audits.insertBusinessAuditEvent(event)); assertNotNull(event.getId());
@@ -214,7 +228,10 @@ class CoopOrderStationFulfillmentMySqlIT {
         BusinessAuditEvent event = new BusinessAuditEvent(); event.setDomainType("REGISTRATION"); event.setDomainId(registration);
         event.setOwnerMemberId(88L); event.setActorType("MEMBER"); event.setActorMemberId(88L); event.setActorRoleCode("OWNER");
         event.setAction(action); event.setTargetType("CMS_REGISTRATION"); event.setTargetId(registration); event.setRelationId(station);
-        event.setBeforeJson(before); event.setAfterJson(after); event.setRequestId(request); event.setCreateTime(Timestamp.valueOf("2026-10-01 09:30:00"));
+        event.setBeforeJson(before); event.setAfterJson(after); event.setRequestId(request);
+        // Use the exact persisted source through the same GMT+8 connection as the
+        // ticket/window reader. Timestamp.valueOf would interpret this in the JVM zone.
+        event.setCreateTime(flow.storage.db.queryForObject("SELECT verification_time FROM cms_registration WHERE id=?", Timestamp.class, registration));
         return event;
     }
     private Optional<Long> record(long audit) { return flow.storage.tx.execute(status -> flow.claimOwner.recordConfirmedStationFulfillment(audit)); }

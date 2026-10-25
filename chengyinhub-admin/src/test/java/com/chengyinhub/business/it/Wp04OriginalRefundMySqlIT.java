@@ -78,6 +78,23 @@ class Wp04OriginalRefundMySqlIT {
                 "migration_complaint_period_funds_gate_20260917.sql", "migration_20261024_registration_payment_fact.sql");
     }
 
+    /** Full current station dependency shape, shared by the original-order fixtures.
+     * Execute once on the owned fresh schema; never emulate just the newly selected column. */
+    static void stationScopeSchema(DriverManagerDataSource source) throws Exception {
+        JdbcTemplate db = new JdbcTemplate(source);
+        P0AcceptanceSchema.baseTables(db, "cms_registration_merchant");
+        P0AcceptanceSchema.migrations(source, "migration_business_audit_event_20260823.sql");
+        String governance = Files.readString(P0AcceptanceSchema.repoRoot().resolve(
+                "chengyinhub-admin/sql/migration_approval_governance_20260828.sql"),
+                java.nio.charset.StandardCharsets.UTF_8);
+        var alter = java.util.regex.Pattern.compile("(?s)ALTER TABLE business_audit_event\\s+.*?;").matcher(governance);
+        assertTrue(alter.find()); db.execute(alter.group()); assertFalse(alter.find());
+        P0AcceptanceSchema.migrations(source, "migration_20261025_coop_order_station_fulfillment.sql");
+        assertEquals("YES", db.queryForObject("SELECT is_nullable FROM information_schema.columns "
+                + "WHERE table_schema=DATABASE() AND table_name='coop_invite' AND column_name='supply_station_id'", String.class));
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM coop_invite WHERE supply_station_id IS NOT NULL", Integer.class));
+    }
+
     @AfterEach void dropOnlyThisSuccessfullyCreatedDatabase() {
         if (createdDatabase!=null) {
             assertTrue(createdDatabase.matches("chengyin_mybatis_g_original_[a-f0-9]{12}[A-Za-z0-9_]*"));
@@ -103,6 +120,7 @@ class Wp04OriginalRefundMySqlIT {
         if (depositStage != null) {
             P0AcceptanceSchema.baseTables(db,"coop_invite","coop_order","coop_complaint");
             P0AcceptanceSchema.migrations(source,"migration_coop_deposit_refund_state_20260913.sql");
+            stationScopeSchema(source);
         }
         SqlSessionTemplate sql=P0AcceptanceSchema.sql(source,"CmsRegistrationPaymentFactMapper","CoopSettlementOriginalMapper","CoopSettlementCashEvidenceMapper","CoopSettlementEvidenceMapper",
 

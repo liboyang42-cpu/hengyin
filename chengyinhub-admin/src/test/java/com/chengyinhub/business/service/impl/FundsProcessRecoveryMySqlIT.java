@@ -3,6 +3,7 @@ package com.chengyinhub.business.service.impl;
 import com.chengyinhub.business.domain.MemberCashWithdraw;
 import com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.*;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
@@ -32,7 +33,9 @@ import static com.chengyinhub.business.service.impl.FundsRecoveryProcessProbe.*;
 @Timeout(120)
 @org.junit.jupiter.api.parallel.Execution(org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD)
 class FundsProcessRecoveryMySqlIT {
-    private static final ObjectMapper JSON = new ObjectMapper();
+    // Same installed Java-time support as JsonUtils/TopicContentGraphMySqlFixture. Keep
+    // all other original mapper defaults and every original SQL row/column in the digest.
+    private static final ObjectMapper JSON = new ObjectMapper().registerModule(new JavaTimeModule());
     private static final long MEMBER = 10001, OTHER = 10002;
     private final List<Child> children = new ArrayList<>();
     private final List<Map<String, Object>> cases = new ArrayList<>();

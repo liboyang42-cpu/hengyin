@@ -34,7 +34,7 @@ class TopicPublicationDeclarationsTest {
     private boolean oldActive, oldReadOnly;
     private static final String OPTION = "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"PICK\","
             + "\"options\":[{\"id\":\"A\",\"label\":\"记住选择\",\"effects\":[{\"op\":\"ADD_TAG\",\"value\":\"tag.option\"}]}]}}";
-    private static final String RUNTIME = "{\"schemaVersion\":1,\"scenes\":[{\"id\":\"one\",\"name\":\"场景\","
+    private static final String RUNTIME = "{\"schemaVersion\":1,\"currentScene\":\"one\",\"scenes\":[{\"id\":\"one\",\"name\":\"场景\","
             + "\"journeyStory\":{\"schemaVersion\":1,\"ending\":{\"endings\":[{\"code\":\"found\",\"title\":\"找到\","
             + "\"when\":[{\"var\":\"clue.current\",\"op\":\"GTE\",\"value\":1}]},{\"code\":\"default\",\"title\":\"默认\",\"fallback\":true}]}}}]}";
 
@@ -386,7 +386,7 @@ class TopicPublicationDeclarationsTest {
     @Test void nestedSceneAndChapterBudgetReuseOneCurrentProjectionIncludingNpcNodeScope() {
         CmsTopicChapter chapter=new CmsTopicChapter();chapter.setId(22L);chapter.setTopicId(7L);currentChapters.add(chapter);
         currentNodes.get(0).setChapterId(22L);
-        topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"capacity\":0,\"chapters\":[{\"index\":0,\"hpCost\":0,\"luckCost\":0}],\"scenes\":[{\"id\":\"one\",\"name\":\"场景\",\"journeyStory\":{\"schemaVersion\":1,\"openingChapterId\":22}}]}");
+        topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"capacity\":0,\"chapters\":[{\"index\":0,\"hpCost\":0,\"luckCost\":0}],\"currentScene\":\"one\",\"scenes\":[{\"id\":\"one\",\"name\":\"场景\",\"journeyStory\":{\"schemaVersion\":1,\"openingChapterId\":22}}]}");
         forbidOrdinaryChildReads();
         assertDoesNotThrow(()->guard.assertThemeRuntimeReferences(topic,captured()));
         verify(references,times(1)).currentForPublication(topic);verify(references,never()).collect(any());
@@ -396,7 +396,7 @@ class TopicPublicationDeclarationsTest {
     @Test void nestedJourneyStillRejectsInactiveDispositionNodeWithOriginalSceneDiagnostic() {
         CmsTopicNode inactive=new CmsTopicNode();inactive.setId(12L);inactive.setTopicId(7L);inactive.setStatus(0L);inactive.setTemplateId(201L);currentNodes.add(inactive);
         CmsMemberTemplate branch=new CmsMemberTemplate();branch.setId(201L);branch.setAdvancedConfigJson("{\"schemaVersion\":1,\"branch\":{\"enabled\":true}}");currentTemplates.put(201L,branch);
-        topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"scenes\":[{\"id\":\"one\",\"name\":\"场景\",\"journeyStory\":{\"schemaVersion\":1,\"ending\":{\"dispositionNodeId\":12,\"endings\":[{\"code\":\"default\",\"title\":\"默认\",\"fallback\":true}]}}}]}");
+        topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"currentScene\":\"one\",\"scenes\":[{\"id\":\"one\",\"name\":\"场景\",\"journeyStory\":{\"schemaVersion\":1,\"ending\":{\"dispositionNodeId\":12,\"endings\":[{\"code\":\"default\",\"title\":\"默认\",\"fallback\":true}]}}}]}");
         forbidOrdinaryChildReads();
         ServiceException error=assertThrows(ServiceException.class,()->guard.assertThemeRuntimeReferences(topic,captured()));
         assertTrue(error.getMessage().contains("dispositionNodeId"));

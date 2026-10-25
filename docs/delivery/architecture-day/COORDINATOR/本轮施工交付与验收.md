@@ -1,3 +1,15 @@
+<!-- 347b-current-runtime-and-source-status -->
+本批实际运行失败修补源码已全部收齐并root统一集成，当前完成一次源码核对，正在秘密扫描与新公共隔离候选冻结；Java／JUnit／DB／故障／CI尚未复验，all_complete=false。
+
+原A–H完整包、调用者、共享装配和测试SOURCE均已交付，原A/E/H七类发布测试在D真实供体上收口，未从零覆盖。root仅补同源Controller三态回归与严格实际登记。76类／920条普通@Test只是源登记；46份变化Java测试中的721个原测试方法身份保留，当前728个方法声明，不当参数化执行数或通过数。11个变化Python源语法及全76类source precheck无问题，不是Java/DB验收。原client／ledger／旧SQL／POM依赖与权限政策未改。
+
+唯一下一执行计划见347b-runtime-repair-execution-plan.json：标准仅backend；真库12个失败类＋8个真正受改变夹具／caller影响的类；mixed及完整restore各原入口；七cohort先固定payment-gap诊断，明确DIAGNOSTIC_PARTIAL/NOT_FULL，原完整七份summary仍严格保留。已过且未受影响项目不重复。Docker source-create原首因仍UNKNOWN，不能源码诊断包当实际修复通过。
+
+347b旧证据保留其原SHA：HTTP36实际全PASS并独立核清理；真库64类708实际全PASS，另12类失败；后台15386例58failure121error647skip，179项是重复首因非179独立业务BUG。旧绿色不转签新工作源。source/caller/完整case/事务/金额授权UNKNOWN/原身份/精确清理不缩水，完整WP00–WP17/Q1–Q10/A01–A15/T01–T22/G0–G5和后续多身份／恢复回退／混合容量仍未全验。UI／设备／真实provider／生产NOT_RUN，禁止PRmerge／生产DDL部署／微信／真实付费。
+
+<!-- prior-status-history -->
+以下保留历史阶段记录，旧pending／计数／绿色不覆盖以上当前事实。
+
 fb871定点验收已结束：15个原生小程序分片实际10,767／10,767通过，failure／error／skip／cancelled均0；已独立读原日志、ZIP CRC、源/run/attempt/1511文件manifest和逐片回执，汇总仅backend／dependency_audit两项未成功，fullSuiteVerified=false。Fast／mini静态／迁移安全／布局及秘密扫描作业成功。这些仍不等于全目标完成。
 
 新暴露的四个Java夹具编译接线与voice控制记录缺字段已由原C／H／G／E并行交齐、root精确集成，原case和断言保留；生产src/main、小程序树及旧SQL均未变。F独立回读同cache/settings的5份日志，暂无证据支持改依赖／镜像／M2／默认offline，真实HTTP404和旧repository ID仍UNKNOWN，不猜修。原真库矩阵在重复同一编译首因后已取消，取消类不签PASS或CLEAN。下一同源候选先跑原backend／SBOM与一个失败真库类准入，编译前置过后再继续尚未真正执行的HTTP／恢复／剩余真库；不重跑已通过未受影响的小程序／静态／迁移项目。

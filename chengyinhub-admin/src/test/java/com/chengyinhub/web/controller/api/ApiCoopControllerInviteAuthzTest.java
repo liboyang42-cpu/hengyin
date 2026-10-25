@@ -549,6 +549,29 @@ class ApiCoopControllerInviteAuthzTest {
         assertTrue(sent.get(0).getDepositRefundPending(), "主题已结算但退款仍冻结时必须给付款方重试入口");
     }
 
+    @Test
+    void listPreservesSupplyStationUnknownConfirmedAndNotApplicableStates() {
+        CoopInvite legacy = invite(0);
+        legacy.setFromId(ME);
+        CoopInvite confirmed = invite(0);
+        confirmed.setFromId(ME);
+        confirmed.setSupplyStationId(601L);
+        CoopInvite club = invite(1);
+        club.setFromId(ME);
+        when(coopInviteService.selectCoopInviteListReadOnly(any()))
+                .thenReturn(java.util.Arrays.asList(legacy, confirmed, club));
+        when(cmsTopicService.selectCmsTopicById(TOPIC)).thenReturn(null);
+
+        AjaxResult result = c.list(null);
+
+        assertEquals(200, result.get("code"));
+        assertNull(legacy.getRequiresSupplyStation());
+        assertEquals(Boolean.TRUE, confirmed.getRequiresSupplyStation());
+        assertEquals(Boolean.FALSE, club.getRequiresSupplyStation());
+        assertNull(legacy.getSupplyStationId());
+        assertEquals(Long.valueOf(601L), confirmed.getSupplyStationId());
+    }
+
     /**
      * ★ club 发布的邀约里 from_id 存的是 clubId,不是 memberId(F-53 的语义分叉)。
      * 受邀方接受后,订阅消息与 1:1 会话必须打给俱乐部主理人;把 clubId 当 memberId 用

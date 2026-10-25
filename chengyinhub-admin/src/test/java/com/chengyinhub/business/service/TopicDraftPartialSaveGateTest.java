@@ -106,27 +106,36 @@ class TopicDraftPartialSaveGateTest {
         when(topicMapper.insertCmsTopic(any(CmsTopic.class))).thenAnswer(inv -> {
             CmsTopic topic = inv.getArgument(0);
             topic.setId(TOPIC);
-            when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+            org.mockito.Mockito.doReturn(topic).when(topicMapper).selectCmsTopicById(TOPIC);
             return 1;
         });
         when(topicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
-        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC))
-                .thenAnswer(inv -> topicMapper.selectCmsTopicById(TOPIC));
+        // when(currentRead) executes the bridge and records its nested ordinary read; thenAnswer
+        // would overwrite that ordinary read with a self-call (the original XML's line-114 loop).
+        // doAnswer attaches only to the current-read method and preserves the persisted-row port.
+        org.mockito.Mockito.doAnswer(inv -> topicMapper.selectCmsTopicById(TOPIC))
+                .when(topicMapper).selectCmsTopicByIdForUpdate(TOPIC);
         when(topicMapper.publishRouteSnapshot(anyLong(), any(), any())).thenReturn(1);
+        java.util.List<CmsTopicChapter> writtenChapters = new ArrayList<>();
+        java.util.List<CmsTopicNode> writtenNodes = new ArrayList<>();
         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
-                .thenReturn(Collections.<CmsTopicChapter>emptyList());
+                .thenAnswer(call -> new ArrayList<>(writtenChapters));
         when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
-                .thenReturn(Collections.<CmsTopicNode>emptyList());
+                .thenAnswer(call -> new ArrayList<>(writtenNodes));
+        org.mockito.Mockito.doAnswer(call -> writtenChapters.removeIf(row -> row.getId().equals(call.getArgument(0))) ? 1 : 0)
+                .when(chapterMapper).deleteCmsTopicChapterById(anyLong());
+        org.mockito.Mockito.doAnswer(call -> writtenNodes.removeIf(row -> row.getId().equals(call.getArgument(0))) ? 1 : 0)
+                .when(nodeMapper).deleteCmsTopicNodeById(anyLong());
         when(ticketMapper.selectOmsTicketList(any(OmsTicket.class)))
                 .thenReturn(Collections.<OmsTicket>emptyList());
         // CORE OWN-C03-13/15：章节、自办活动插入后须生成有效身份，否则 fail-closed；夹具按真实插入回填 id。
         java.util.concurrent.atomic.AtomicLong ids = new java.util.concurrent.atomic.AtomicLong(600L);
         org.mockito.Mockito.lenient().when(chapterMapper.insertCmsTopicChapter(any(CmsTopicChapter.class))).thenAnswer(inv -> {
-            ((CmsTopicChapter) inv.getArgument(0)).setId(ids.incrementAndGet());
+            CmsTopicChapter row = inv.getArgument(0); row.setId(ids.incrementAndGet()); writtenChapters.add(row);
             return 1;
         });
         org.mockito.Mockito.lenient().when(nodeMapper.insertCmsTopicNode(any(CmsTopicNode.class))).thenAnswer(inv -> {
-            ((CmsTopicNode) inv.getArgument(0)).setId(ids.incrementAndGet());
+            CmsTopicNode row = inv.getArgument(0); row.setId(ids.incrementAndGet()); writtenNodes.add(row);
             return 1;
         });
         CmsActivityMapper shellActivities = (CmsActivityMapper) ReflectionTestUtils.getField(svc, "cmsActivityMapper");
@@ -134,6 +143,7 @@ class TopicDraftPartialSaveGateTest {
             ((CmsActivity) inv.getArgument(0)).setId(880001L);
             return 1;
         });
+        svc = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(svc);
     }
 
     // ---------- 夹具 ----------
@@ -320,8 +330,9 @@ class TopicDraftPartialSaveGateTest {
         CmsTopic draft = aiSimpleDraftTopic();
         draft.setRecruitDeadline(new Date(System.currentTimeMillis() + 86_400_000L));
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(draft);
-        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(draft);
-        when(((com.chengyinhub.business.service.support.TopicSupplyReviewService) org.springframework.test.util.ReflectionTestUtils.getField(svc, "supplyReviewService")).lockTopic(TOPIC)).thenReturn(draft);
+        org.mockito.Mockito.doReturn(draft).when(topicMapper).selectCmsTopicByIdForUpdate(TOPIC);
+        org.mockito.Mockito.doReturn(draft).when((com.chengyinhub.business.service.support.TopicSupplyReviewService)
+                org.springframework.test.util.ReflectionTestUtils.getField(svc, "supplyReviewService")).lockTopic(TOPIC);
         when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
                 .thenReturn(Collections.singletonList(nodeWithCoords("31.23", "121.45")));
         when(ticketMapper.selectOmsTicketList(any(OmsTicket.class))).thenReturn(Collections.singletonList(
@@ -364,8 +375,9 @@ class TopicDraftPartialSaveGateTest {
         CmsTopic draft = aiSimpleDraftTopic();
         draft.setRecruitDeadline(new Date(System.currentTimeMillis() + 86_400_000L));
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(draft);
-        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(null);
-        when(((com.chengyinhub.business.service.support.TopicSupplyReviewService) org.springframework.test.util.ReflectionTestUtils.getField(svc, "supplyReviewService")).lockTopic(TOPIC)).thenReturn(null);
+        org.mockito.Mockito.doReturn(null).when(topicMapper).selectCmsTopicByIdForUpdate(TOPIC);
+        org.mockito.Mockito.doReturn(null).when((com.chengyinhub.business.service.support.TopicSupplyReviewService)
+                org.springframework.test.util.ReflectionTestUtils.getField(svc, "supplyReviewService")).lockTopic(TOPIC);
         when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
                 .thenReturn(Collections.singletonList(nodeWithCoords("31.23", "121.45")));
 
@@ -503,8 +515,9 @@ class TopicDraftPartialSaveGateTest {
         CmsTopic draft = aiSimpleDraftTopic();
         draft.setRecruitDeadline(new Date(System.currentTimeMillis() + 86_400_000L));
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(draft);
-        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(draft);
-        when(((com.chengyinhub.business.service.support.TopicSupplyReviewService) org.springframework.test.util.ReflectionTestUtils.getField(svc, "supplyReviewService")).lockTopic(TOPIC)).thenReturn(draft);
+        org.mockito.Mockito.doReturn(draft).when(topicMapper).selectCmsTopicByIdForUpdate(TOPIC);
+        org.mockito.Mockito.doReturn(draft).when((com.chengyinhub.business.service.support.TopicSupplyReviewService)
+                org.springframework.test.util.ReflectionTestUtils.getField(svc, "supplyReviewService")).lockTopic(TOPIC);
         when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
                 .thenReturn(Collections.singletonList(nodeWithCoords("31.23", "121.45")));
 

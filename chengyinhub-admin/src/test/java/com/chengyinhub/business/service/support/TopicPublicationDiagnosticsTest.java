@@ -17,8 +17,25 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /** Real facade -> publication owner -> content/structure/reference/gate algorithms.
- * Mapper, quota and runtime-port doubles establish unit call ordering only, not DB rollback, auth or full compilation. */
+ * Real runtime/compiler with mapper/quota doubles models call ordering and frozen-route content only;
+ * thread flags and controlled rows do not establish DB rollback, auth or live Spring propagation. */
 class TopicPublicationDiagnosticsTest {
+
+    // Unit call context only: mapper doubles are not MySQL/Spring rollback evidence.
+    private boolean publicationWasActive, publicationWasReadOnly;
+    @org.junit.jupiter.api.BeforeEach
+    void enterPublicationWriteContext() {
+        publicationWasActive = org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive();
+        publicationWasReadOnly = org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly();
+        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
+        org.springframework.transaction.support.TransactionSynchronizationManager.setCurrentTransactionReadOnly(false);
+    }
+    @org.junit.jupiter.api.AfterEach
+    void restorePublicationWriteContext() {
+        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(publicationWasActive);
+        org.springframework.transaction.support.TransactionSynchronizationManager.setCurrentTransactionReadOnly(publicationWasReadOnly);
+    }
+
     private static final long TOPIC = 7L;
     private static final String GRAPH = """
             {"schemaVersion":1,"startNodeId":1,"terminalNodeIds":[2,3],"variables":{"score":0},"edges":[
@@ -31,7 +48,8 @@ class TopicPublicationDiagnosticsTest {
     private final CmsTopicNodeMapper nodes = mock(CmsTopicNodeMapper.class);
     private final CmsMemberTemplateMapper templates = mock(CmsMemberTemplateMapper.class);
     private final ThemeStateKeyService keys = mock(ThemeStateKeyService.class);
-    private final ITopicRouteRuntimeService runtime = mock(ITopicRouteRuntimeService.class);
+    private com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl runtime;
+    private final ThemeStateKeyMapper keyRows = mock(ThemeStateKeyMapper.class);
     private final IQuotaService quota = mock(IQuotaService.class);
     private final IAuditTaskService audit = mock(IAuditTaskService.class);
     private final IUmsCreativeSquareService square = mock(IUmsCreativeSquareService.class);
@@ -46,10 +64,27 @@ class TopicPublicationDiagnosticsTest {
         topic.setProductType(1); topic.setRouteMode("BRANCH_GRAPH"); topic.setRouteGraphJson(GRAPH);
         CmsTopicChapter chapter = new CmsTopicChapter(); chapter.setId(11L); chapter.setTopicId(TOPIC);
         for (long id = 1; id <= 3; id++) {
-            CmsTopicNode node = new CmsTopicNode(); node.setId(id); node.setTopicId(TOPIC);
+            CmsTopicNode node = new CmsTopicNode(); node.setId(id); node.setTopicId(TOPIC); node.setChapterId(11L);
             node.setStatus(1L); node.setName("同名地点"); nodeRows.add(node);
         }
         when(topics.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topics.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
+        when(keyRows.lockTopicForStateKeyWrite(TOPIC)).thenReturn(TOPIC);
+        when(keyRows.selectByTopicIdForUpdate(TOPIC)).thenReturn(List.of());
+        when(keys.listCurrentDeclarations(TOPIC)).thenReturn(List.of());
+        when(chapters.selectByTopicForUpdate(TOPIC)).thenReturn(List.of(chapter));
+        when(nodes.selectByTopicForUpdate(TOPIC)).thenReturn(nodeRows);
+        when(templates.selectCmsMemberTemplateByIdsForUpdate(anyList())).thenAnswer(c -> {
+            List<Long> ids = c.getArgument(0); List<CmsMemberTemplate> rows = new ArrayList<>();
+            for (Long id : ids) if (bindings.containsKey(id)) rows.add(bindings.get(id)); return rows;
+        });
+        runtime = spy(new com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl(
+                mock(TopicRouteSessionMapper.class), topics, nodes, templates,
+                mock(PlayerNodeProgressMapper.class), mock(CmsActivityMapper.class),
+                mock(CmsRegistrationMapper.class), mock(PlayerActivityRoleMapper.class),
+                () -> 1L, java.time.Clock.systemUTC(), RouteReachabilityProvider.UNKNOWN));
+        ReflectionTestUtils.setField(runtime, "cmsTopicChapterMapper", chapters);
+        ReflectionTestUtils.setField(runtime, "themeStateKeyMapper", keyRows);
         when(topics.lockTopicContentBudget(TOPIC)).thenReturn(TOPIC);
         when(chapters.countContentByTopicForUpdate(TOPIC)).thenReturn(1L);
         when(nodes.countContentByTopicForUpdate(TOPIC)).thenReturn(3L);
@@ -70,13 +105,17 @@ class TopicPublicationDiagnosticsTest {
         ReflectionTestUtils.setField(guard, "cmsTopicNodeMapper", nodes);
         ReflectionTestUtils.setField(guard, "cmsMemberTemplateMapper", templates);
         ReflectionTestUtils.setField(guard, "themeStateKeyService", keys);
-        ReflectionTestUtils.setField(guard, "topicStateKeyRefService", new TopicStateKeyRefService(nodes, templates, chapters));
+        TopicStateKeyRefService references = new TopicStateKeyRefService(nodes, templates, chapters);
+        ReflectionTestUtils.setField(references, "cmsTopicMapper", topics);
+        ReflectionTestUtils.setField(guard, "topicStateKeyRefService", references);
         ReflectionTestUtils.setField(guard, "npcProfileMapper", mock(NpcProfileMapper.class));
         ReflectionTestUtils.setField(guard, "topicRouteRuntimeService", runtime);
         ReflectionTestUtils.setField(guard, "routeOutcomeReader", new TopicRouteOutcomeReader(nodes, templates));
         TopicPublicationService publication = new TopicPublicationService();
         ReflectionTestUtils.setField(publication, "cmsTopicMapper", topics);
         ReflectionTestUtils.setField(publication, "publicationContentGuard", guard);
+        ReflectionTestUtils.setField(publication, "themeStateKeyService", keys);
+        ReflectionTestUtils.setField(publication, "topicRouteRuntimeService", runtime);
         ReflectionTestUtils.setField(publication, "quotaService", quota);
         ReflectionTestUtils.setField(publication, "auditTaskService", audit);
         ReflectionTestUtils.setField(publication, "umsCreativeSquareService", square);
@@ -94,6 +133,7 @@ class TopicPublicationDiagnosticsTest {
         verify(topics, never()).publishRouteSnapshot(any(), any(), any());
         verify(topics, never()).updateCmsTopic(any());
         verify(runtime, never()).freezePublication(any(), any());
+        verify(runtime, never()).freezePublication(any(), any(), anyList());
         verify(keys, never()).register(anyLong(), anyList());
         verifyNoInteractions(quota, audit, square, activity);
     }
@@ -125,7 +165,7 @@ class TopicPublicationDiagnosticsTest {
         location(error, "journeyStoryJson"); noPublicationEffects();
     }
     @Test void nestedSceneReferenceKeepsTheActualSceneIndexInsteadOfPretendingTopLevelStory() {
-        topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"scenes\":[{\"id\":\"summer\",\"name\":\"夏天\","
+        topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"currentScene\":\"summer\",\"scenes\":[{\"id\":\"summer\",\"name\":\"夏天\","
                 + "\"journeyStory\":{\"schemaVersion\":1,\"openingChapterId\":999}}]}");
         ServiceException error = assertThrows(ServiceException.class, () -> facade.publishApprovedRouteSnapshot(TOPIC));
         assertTrue(error.getMessage().contains("openingChapterId"));
@@ -157,20 +197,30 @@ class TopicPublicationDiagnosticsTest {
         assertTrue(error.getMessage().contains("routeGraphJson.edges[0]")); assertTrue(error.getMessage().contains("fromNodeId=1, toNodeId=2"));
         location(error, "routeGraphJson"); assertNotNull(error.getCause()); noPublicationEffects();
     }
-    @Test void validCompositionPersistsTheSameNormalizedBytesThroughTheOriginalFacade() {
+    @Test void validCompositionPersistsTheSameNormalizedBytesThroughTheOriginalFacade() throws Exception {
         facade.publishApprovedRouteSnapshot(TOPIC);
         Map<Long,Set<String>> outcomes = new LinkedHashMap<>();
         for (long id = 1; id <= 3; id++) outcomes.put(id, Set.of("CHOICE:COMPLETED"));
         String expected = new TopicRouteConfigValidator().validateAndNormalize(GRAPH, Set.of(1L,2L,3L), outcomes);
         ArgumentCaptor<String> snapshot = ArgumentCaptor.forClass(String.class);
         verify(topics).publishRouteSnapshot(eq(TOPIC), snapshot.capture(), any());
-        assertEquals(expected, snapshot.getValue(), "diagnostics must not change valid published JSON or order");
+        // Formal publication now stores the complete frozen content, with the same normalized route fields.
+        com.fasterxml.jackson.databind.node.ObjectNode frozen =
+                (com.fasterxml.jackson.databind.node.ObjectNode) new com.fasterxml.jackson.databind.ObjectMapper().readTree(snapshot.getValue());
+        com.fasterxml.jackson.databind.node.ObjectNode route = new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+        new com.fasterxml.jackson.databind.ObjectMapper().readTree(expected).fieldNames()
+                .forEachRemaining(field -> route.set(field, frozen.get(field)));
+        assertEquals(expected, route.toString(), "diagnostics must not change valid published route JSON or order");
+        assertEquals(1, frozen.path("runtimeSnapshotVersion").asInt());
+        assertEquals(3, frozen.path("routeStations").size());
+        verify(runtime).freezePublication(eq(topic), eq(expected), eq(List.of()));
         verifyNoInteractions(quota, audit, square, activity);
     }
     @Test void databaseFailureIsPropagatedWithoutBeingRelabeledAsAuthorConfiguration() {
         template(2, 200, "{\"schemaVersion\":1}");
         DataAccessResourceFailureException unavailable = new DataAccessResourceFailureException("controlled storage failure");
         doThrow(unavailable).when(templates).selectCmsMemberTemplateById(200L);
+        doThrow(unavailable).when(templates).selectCmsMemberTemplateByIdsForUpdate(argThat(ids -> ids.contains(200L)));
         assertSame(unavailable, assertThrows(DataAccessResourceFailureException.class, () -> facade.publishApprovedRouteSnapshot(TOPIC)));
         noPublicationEffects();
     }

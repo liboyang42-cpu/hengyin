@@ -7,12 +7,25 @@ on:
         description: Reviewed full40 source, identical to this workflow commit
         required: true
         type: string
+      restore_scope:
+        description: Full seven cohorts or fixed payment-gap DIAGNOSTIC_PARTIAL only
+        required: false
+        type: choice
+        default: full-seven
+        options:
+          - full-seven
+          - payment-gap-diagnostic
   workflow_call:
     inputs:
       source_sha:
         description: Reviewed full40 source, identical to the actual caller workflow commit
         required: true
         type: string
+      restore_scope:
+        description: full-seven or payment-gap-diagnostic (DIAGNOSTIC_PARTIAL)
+        required: false
+        type: string
+        default: full-seven
 
 permissions:
   contents: read
@@ -20,6 +33,7 @@ permissions:
 env:
   SOURCE_SHA: ${{ inputs.source_sha }}
   WORKFLOW_SHA: ${{ github.workflow_sha }}
+  RESTORE_SCOPE: ${{ inputs.restore_scope }}
 
 jobs:
   restore-source-build:
@@ -35,6 +49,7 @@ jobs:
           [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
           test "$SOURCE_SHA" = "$GITHUB_SHA"
           test "$SOURCE_SHA" = "$WORKFLOW_SHA"
+          case "$RESTORE_SCOPE" in full-seven|payment-gap-diagnostic) ;; *) exit 2 ;; esac
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
@@ -63,6 +78,7 @@ jobs:
           retention-days: 1
           include-hidden-files: true
   isolated-restore-business-reconciliation:
+    name: ${{ inputs.restore_scope == 'payment-gap-diagnostic' && 'DIAGNOSTIC_PARTIAL payment-gap' || format('Restore {0}', matrix.cohort) }}
     needs: restore-source-build
     runs-on: ubuntu-24.04
     timeout-minutes: 45
@@ -70,14 +86,7 @@ jobs:
       fail-fast: false
       max-parallel: 20
       matrix:
-        cohort:
-          - payment-gap
-          - withdrawal-complete
-          - withdrawal-gap
-          - refund-complete
-          - refund-gap
-          - voice-complete
-          - voice-gap
+        cohort: ${{ fromJSON(inputs.restore_scope == 'payment-gap-diagnostic' && '["payment-gap"]' || '["payment-gap","withdrawal-complete","withdrawal-gap","refund-complete","refund-gap","voice-complete","voice-gap"]') }}
     env:
       CHENGYIN_CI_RESTORE_BUSINESS: 'true'
       CHENGYIN_RESTORE_BUSINESS_COHORT: ${{ matrix.cohort }}
@@ -100,6 +109,10 @@ jobs:
       - name: Run the fixed two UUID restore drill and exact cleanup
         id: restore
         run: python3 -I ci/restore_business_reconciliation_host.py
+      - name: Mark DIAGNOSTIC_PARTIAL scope without a full verdict
+        if: ${{ always() && inputs.restore_scope == 'payment-gap-diagnostic' }}
+        run: |
+          printf '%s\n' '## DIAGNOSTIC_PARTIAL — payment-gap only' 'NOT_FULL: six other cohorts and the seven-receipt/three-positive verifier were not run. No full recovery or production release verdict.' >> "$GITHUB_STEP_SUMMARY"
       - name: Preserve only scoped public JSON receipts
         if: ${{ always() && steps.restore.outcome != 'skipped' }}
         uses: actions/upload-artifact@v4
@@ -112,7 +125,7 @@ jobs:
             ${{ runner.temp }}/isolated-restore-business-reconciliation/reconciliation.json
             ${{ runner.temp }}/isolated-restore-business-reconciliation/finalized.json
   restore-business-summary:
-    if: ${{ always() }}
+    if: ${{ always() && inputs.restore_scope == 'full-seven' }}
     needs: [restore-source-build, isolated-restore-business-reconciliation]
     runs-on: ubuntu-24.04
     timeout-minutes: 5

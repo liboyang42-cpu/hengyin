@@ -19,10 +19,18 @@ on:
         type: boolean
         default: false
       run_restore_fixtures:
-        description: 仅运行同提交的固定七项隔离恢复验收，与 HTTP 互斥，仅构建一次 JAR
+        description: 同提交隔离恢复：默认七项，显式诊断仅 payment-gap；与 HTTP 互斥且只构建一次 JAR
         required: false
         type: boolean
         default: false
+      restore_scope:
+        description: full-seven 完整验收或 payment-gap-diagnostic（DIAGNOSTIC_PARTIAL，非完整通过）
+        required: false
+        type: choice
+        default: full-seven
+        options:
+          - full-seven
+          - payment-gap-diagnostic
 
 permissions:
   contents: read
@@ -42,6 +50,7 @@ jobs:
       WORKFLOW_SHA: ${{ github.workflow_sha }}
       RUN_HTTP_FIXTURES: ${{ inputs.run_http_fixtures }}
       RUN_RESTORE_FIXTURES: ${{ inputs.run_restore_fixtures }}
+      RESTORE_SCOPE: ${{ inputs.restore_scope }}
     steps:
       - name: Validate source and exclusive mode
         run: |
@@ -51,6 +60,13 @@ jobs:
           case "$RUN_HTTP_FIXTURES:$RUN_RESTORE_FIXTURES" in
             false:false|true:false|false:true) ;;
             *) echo "Select exactly one optional fixture mode, or neither for the original JAR build" >&2; exit 2 ;;
+          esac
+          case "$RESTORE_SCOPE" in
+            full-seven) ;;
+            payment-gap-diagnostic)
+              test "$RUN_RESTORE_FIXTURES" = true
+              test "$RUN_HTTP_FIXTURES" = false ;;
+            *) echo "Unknown fixed restore scope" >&2; exit 2 ;;
           esac
           if [[ "$RUN_RESTORE_FIXTURES" = true ]]; then
             test "$SOURCE_SHA" = "$GITHUB_SHA"
@@ -105,9 +121,10 @@ jobs:
     with:
       source_sha: ${{ inputs.source_sha }}
   restore-fixtures:
-    name: Run seven isolated restore cohorts
+    name: ${{ inputs.restore_scope == 'payment-gap-diagnostic' && 'DIAGNOSTIC_PARTIAL payment-gap restore' || 'Run seven isolated restore cohorts' }}
     needs: admission
     if: github.repository == 'liboyang42-cpu/hengyin' && github.event_name == 'workflow_dispatch' && inputs.run_restore_fixtures && !inputs.run_http_fixtures
     uses: ./.github/workflows/isolated-restore-business-reconciliation.yml
     with:
       source_sha: ${{ inputs.source_sha }}
+      restore_scope: ${{ inputs.restore_scope }}

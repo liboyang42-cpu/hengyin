@@ -1604,7 +1604,8 @@ public class ApiCoopController extends BaseController {
             boolean supplyCandidate = Integer.valueOf(0).equals(it.getInviteType())
                     && CoopInvite.TO_MERCHANT.equals(it.getToType()) && it.getNodeId() == null;
             // A recorded V1 station proves applicability; missing historical topic/type is not false.
-            it.setRequiresSupplyStation(supplyCandidate ? (it.getSupplyStationId() == null ? null : true) : false);
+            it.setRequiresSupplyStation(supplyCandidate
+                    ? (it.getSupplyStationId() == null ? null : Boolean.TRUE) : Boolean.FALSE);
             if (tid == null || tid <= 0) continue;
             if (!cache.containsKey(tid)) {
                 CmsTopic t = null;

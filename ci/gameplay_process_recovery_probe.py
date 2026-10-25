@@ -666,11 +666,11 @@ def finalize(name, schema, out, original_exit):
     report = json.loads(path.read_text())
     report.setdefault('businessResultBeforeCleanup', report['result'])
     try:
+        require(original_exit == 0, 'original shell/cleanup did not succeed')
         if os.environ.get('CHENGYIN_CI_GAMEPLAY_CAPACITY') == 'true':
             shared = load('gameplay_final_f_capacity', 'ci/capacity_mixed_probe.py')
             result = shared.finalize(name, schema, out, original_exit)
             require(result is None or type(result) is int and result == 0, 'F scoped mixed finalization failed')
-        require(original_exit == 0, 'original shell/cleanup did not succeed')
         require(report['sourceSha'] == os.environ['GITHUB_SHA'] and report['schema'] == schema
                 and schema == 'cy_e2e_auth_' + name[8:], 'final receipt source/namespace mismatch')
         require(report['result'] == 'BUSINESS_ASSERTIONS_PASSED_CLEANUP_PENDING'

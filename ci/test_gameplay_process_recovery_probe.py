@@ -161,6 +161,27 @@ class GameplayProcessRecoveryControls(unittest.TestCase):
             self.assertEqual(json.loads((out / 'gameplay-process-recovery.json').read_text())['result'],
                              'PASS_SCOPED_GAMEPLAY_PROCESS_RECOVERY')
 
+    def test_failed_mixed_before_observe_never_calls_missing_capacity_finalizer(self):
+        name, schema = 'cy-auth-' + 'a' * 32, 'cy_e2e_auth_' + 'a' * 32
+        original = {'sourceSha': 'b' * 40, 'schema': schema, 'result': 'FAIL_OR_UNKNOWN_NO_RETRY',
+                    'failureType': 'ModuleNotFoundError', 'reason': "No module named 'pymysql'"}
+        for original_exit in (1, 124):
+            with self.subTest(original_exit=original_exit), tempfile.TemporaryDirectory() as directory, \
+                    mock.patch.object(probe, 'gate'), \
+                    mock.patch.dict(os.environ, {'GITHUB_SHA': 'b' * 40, 'CHENGYIN_CI_GAMEPLAY_CAPACITY': 'true'}), \
+                    mock.patch.object(probe, 'load') as shared:
+                out = Path(directory)
+                (out / 'gameplay-process-recovery.json').write_text(json.dumps(original))
+                with self.assertRaisesRegex(RuntimeError, 'original shell/cleanup did not succeed'):
+                    probe.finalize(name, schema, out, original_exit)
+                shared.assert_not_called()
+                written = json.loads((out / 'gameplay-process-recovery.json').read_text())
+                self.assertEqual(original['result'], written['businessResultBeforeCleanup'])
+                self.assertEqual(original['failureType'], written['failureType'])
+                self.assertEqual(original['reason'], written['reason'])
+                self.assertEqual('FAIL_OR_UNKNOWN_CLEANUP_OR_SCOPE', written['result'])
+                self.assertFalse((out / 'capacity-mixed.json').exists())
+
     def test_child_is_test_only_and_observes_real_controller_without_fake_success_or_provider(self):
         child = ROOT / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GameplayProcessRecoveryChild.java'
         source = child.read_text()

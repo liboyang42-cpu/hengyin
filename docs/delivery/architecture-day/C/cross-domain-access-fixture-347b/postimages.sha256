@@ -1,0 +1,3 @@
+5660f745f4b43326d94115752a56d5be374d60f399785f256cd227ddebbce597  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainStorageFixture.java
+dd0454ec0e3d585878233a5c7d73d9db49db650399ee50476641c4289870a94d  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainFaultIsolationMySqlIT.java
+7bfde9b7e7f876fa9ff05c40371d18b26f3a99e2ebe0f7881f526c250854c31c  docs/delivery/architecture-day/C/cross-domain-access-fixture-347b/README.md

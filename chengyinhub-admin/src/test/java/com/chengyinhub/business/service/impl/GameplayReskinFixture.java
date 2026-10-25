@@ -88,9 +88,12 @@ public class GameplayReskinFixture {
             CmsTopic parent = topics.get(call.getArgument(0)); return parent == null ? null : parent.getId();
         });
         when(keyMapper.selectByTopicId(anyLong())).thenReturn(keys);
+        when(keyMapper.selectByTopicIdForUpdate(anyLong())).thenReturn(keys);
         keyService=new ThemeStateKeyService(keyMapper);
         ReflectionTestUtils.setField(publisher,"themeStateKeyService",keyService);
-        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(publisher, "topicStateKeyRefService",new TopicStateKeyRefService(nodeMapper,templateMapper,chapterMapper));
+        TopicStateKeyRefService currentReferences=new TopicStateKeyRefService(nodeMapper,templateMapper,chapterMapper);
+        ReflectionTestUtils.setField(currentReferences,"cmsTopicMapper",topicMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(publisher, "topicStateKeyRefService",currentReferences);
         for(String name:Arrays.asList("rescue","load_ok","end01","end02","end03","end04","ev01","ev02","ev03","ev04","ev05")) {
             ThemeStateKey key=new ThemeStateKey();key.setStateKey("clue."+name);key.setKeyType("flag");key.setScope("run");key.setInitialValue(0);keys.add(key);
         }
@@ -102,13 +105,21 @@ public class GameplayReskinFixture {
         when(topicMapper.publishRouteSnapshot(anyLong(),anyString(),any())).thenAnswer(call->{CmsTopic row=topics.get(call.getArgument(0));row.setPublishedRouteGraphJson(call.getArgument(1));row.setPublishedConfigVersion(1L);row.setPublishedThemeRuntimeConfigJson(row.getThemeRuntimeConfigJson());return 1;});
         when(chapterMapper.insertCmsTopicChapter(any())).thenAnswer(call->{CmsTopicChapter row=call.getArgument(0);row.setId(++sequence);chapters.put(row.getId(),row);return 1;});
         when(chapterMapper.selectCmsTopicChapterList(any())).thenAnswer(call->{CmsTopicChapter q=call.getArgument(0);List<CmsTopicChapter> result=new ArrayList<>();for(CmsTopicChapter row:chapters.values())if(row.getTopicId().equals(q.getTopicId()))result.add(row);return result;});
+        when(chapterMapper.selectByTopicForUpdate(anyLong())).thenAnswer(call -> chapters.values().stream()
+                .filter(row -> row.getTopicId().equals(call.getArgument(0))).toList());
         when(nodeMapper.insertCmsTopicNode(any())).thenAnswer(call->{CmsTopicNode row=call.getArgument(0);row.setId(++sequence);nodes.put(row.getId(),row);return 1;});
         when(nodeMapper.selectCmsTopicNodeList(any())).thenAnswer(call->{CmsTopicNode q=call.getArgument(0);List<CmsTopicNode> result=new ArrayList<>();for(CmsTopicNode row:nodes.values())if(row.getTopicId().equals(q.getTopicId()))result.add(row);return result;});
+        when(nodeMapper.selectByTopicForUpdate(anyLong())).thenAnswer(call -> nodes.values().stream()
+                .filter(row -> row.getTopicId().equals(call.getArgument(0))).toList());
         when(nodeMapper.selectCmsTopicNodeById(anyLong())).thenAnswer(call->nodes.get(call.getArgument(0)));
         when(nodeMapper.deleteCmsTopicNodeById(anyLong())).thenAnswer(call -> nodes.remove(call.getArgument(0)) == null ? 0 : 1);
         when(chapterMapper.deleteCmsTopicChapterById(anyLong())).thenAnswer(call -> chapters.remove(call.getArgument(0)) == null ? 0 : 1);
         when(templateMapper.selectCmsMemberTemplateById(anyLong())).thenAnswer(call->templates.get(call.getArgument(0)));
         when(templateMapper.selectCmsMemberTemplateByIds(any())).thenAnswer(call->{List<CmsMemberTemplate> result=new ArrayList<>();for(Long id:(List<Long>)call.getArgument(0))if(templates.containsKey(id))result.add(templates.get(id));return result;});
+        when(templateMapper.selectCmsMemberTemplateByIdsForUpdate(any())).thenAnswer(call -> {
+            List<Long> ids=call.getArgument(0);
+            return ids.stream().map(templates::get).filter(Objects::nonNull).toList();
+        });
         for(JsonNode raw:resource("reference.json").path("templates")) {
             CmsMemberTemplate template=new CmsMemberTemplate();template.setId(raw.path("id").asLong());template.setMemberId(7L);template.setStatus(1L);template.setDraftStatus(1);template.setTitle(raw.path("title").asText());template.setValidationMethod(raw.path("validationMethod").asInt());template.setAdvancedConfigJson(new AdvancedGameConfigValidator().validateAndNormalize(raw.path("config").toString()));template.setQuestionAnswer(raw.path("answer").asText(null));templates.put(template.getId(),template);
         }
@@ -116,6 +127,22 @@ public class GameplayReskinFixture {
         ReflectionTestUtils.setField(route,"cmsTopicChapterMapper",chapterMapper);ReflectionTestUtils.setField(route,"themeStateKeyMapper",keyMapper);
         com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(publisher, "topicRouteRuntimeService",route);
         activeTopics=topicMapper;activeGames=gameMapper;configureRuntime();
+        // Use the same platform transaction/proxy mechanism as useSql; connections remain unit doubles.
+        javax.sql.DataSource data=mock(javax.sql.DataSource.class);
+        when(data.getConnection()).thenAnswer(call -> {
+            java.sql.Connection connection=mock(java.sql.Connection.class);
+            when(connection.getAutoCommit()).thenReturn(true);return connection;
+        });
+        var tx=new org.springframework.jdbc.datasource.DataSourceTransactionManager(data);
+        var advice=new org.springframework.transaction.interceptor.TransactionInterceptor(tx,
+                new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource());
+        var keyProxy=new org.springframework.aop.framework.ProxyFactory(keyService);keyProxy.setProxyTargetClass(true);keyProxy.addAdvice(advice);
+        keyService=(ThemeStateKeyService)keyProxy.getProxy();
+        ReflectionTestUtils.setField(publisher,"themeStateKeyService",keyService);
+        var authorProxy=new org.springframework.aop.framework.ProxyFactory(publisher);authorProxy.setInterfaces(ICmsTopicService.class);authorProxy.addAdvice(advice);
+        authoring=(ICmsTopicService)authorProxy.getProxy();
+        var gameProxy=new org.springframework.aop.framework.ProxyFactory(runtime);gameProxy.setInterfaces(IGameSessionRuntimeService.class);gameProxy.addAdvice(advice);
+        play=(IGameSessionRuntimeService)gameProxy.getProxy();
     }
     private void wireAuthoringGuards(CmsTopicMapper topics, CmsTopicChapterMapper chapters,
                                      CmsTopicNodeMapper nodes, CmsMemberTemplateMapper templates,

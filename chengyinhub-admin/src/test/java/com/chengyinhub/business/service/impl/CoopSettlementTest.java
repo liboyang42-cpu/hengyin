@@ -573,6 +573,12 @@ class CoopSettlementTest {
         topic.setId(704L); topic.setMemberId(900001L);
         when(cmsRegistrationMapper.selectVerifiedSalesByTopicId(704L)).thenReturn(new BigDecimal("100"));
         when(cmsRegistrationMapper.selectVerifiedHeadsByTopicId(704L)).thenReturn(2);
+        // The original settled merchant contract is still prepared/validated before
+        // its existing head suppresses a second write. Give it its original scope,
+        // rather than an empty default plan that cannot prove the original identity.
+        when(cmsRegistrationMapper.selectVerifiedRegistrationIdsByTopicId(704L)).thenReturn(List.of(10L, 11L));
+        when(cmsRegistrationMapper.selectVerifiedSalesByTopicAndMerchant(704L, 900002L)).thenReturn(new BigDecimal("100"));
+        when(cmsRegistrationMapper.selectVerifiedHeadsByTopicAndMerchant(704L, 900002L)).thenReturn(2);
         when(coopOrderMapper.selectEffectiveOrdersByTopicId(704L)).thenReturn(
                 Collections.singletonList(order(1L, 900002L, 1, "30", null)));
         when(coopSettlementMapper.countByOrderId(1L)).thenReturn(1); // 已挂单,商家行跳过

@@ -214,9 +214,18 @@ class CashWithdrawFundEvidenceMySqlIT {
         return CashWithdrawTransferIntent.fromRequest(w.getId(), "unit-merchant", "unit-channel-appid",
                 w.getOutBatchNo(), w.getOutDetailNo(), w.getAmount(), "unit-channel-openid", "城瘾分润提现");
     }
-    private CashWithdrawTransferIntent originalIntent(MemberCashWithdraw w) {
+    private CashWithdrawTransferIntent originalIntentMatcher(MemberCashWithdraw w) {
         return argThat(i -> i != null && w.getId().equals(i.withdrawalId())
                 && w.getOutBatchNo().equals(i.outBatchNo()) && w.getOutDetailNo().equals(i.outDetailNo()));
+    }
+    /** A stored DTO value is not a Mockito matcher (whose return value is null). */
+    private CashWithdrawTransferIntent readOriginalIntent(MemberCashWithdraw w) {
+        var submissions = cash.selectFundFacts(w.getId()).stream()
+                .filter(f -> CashWithdrawFundFact.SUBMIT_INTENT.equals(f.getKind())).toList();
+        assertEquals(1, submissions.size(), "Read the unique original submission, never an arbitrary latest fact");
+        CashWithdrawTransferIntent intent = submissions.getFirst().transferIntent();
+        intent.requireMatches(w);
+        return intent;
     }
     private Map<String, String> observation(MemberCashWithdraw w, Map<String, String> values) {
         CashWithdrawTransferIntent intent = cash.selectFundFacts(w.getId()).stream()
@@ -366,7 +375,7 @@ class CashWithdrawFundEvidenceMySqlIT {
     }
     @Test void recoveryRacingOriginalIntentClaimCannotBothAuthorizeRefundAndSubmission() throws Exception {
         MemberCashWithdraw w = processExitAfterDebitCommit();
-        when(channel.queryTransferResult(originalIntent(w))).thenAnswer(i -> {
+        when(channel.queryTransferResult(originalIntentMatcher(w))).thenAnswer(i -> {
             assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
             assertEquals(1, count(w.getId(), "SUBMIT_INTENT"));
             return Map.of("result", "UNKNOWN", "error", "NOT_FOUND");
@@ -398,7 +407,7 @@ class CashWithdrawFundEvidenceMySqlIT {
         MemberCashWithdraw w = original();
         assertTrue(admission.debitCash(w.getId(), memberId, w.getAmount(), "unit-merchant", "unit-channel-appid", "城瘾分润提现").deducted);
         fact(w, "UNKNOWN"); state(w.getId(), 3);
-        when(channel.queryTransferResult(originalIntent(w)))
+        when(channel.queryTransferResult(originalIntentMatcher(w)))
                 .thenReturn(Map.of("result", "UNKNOWN", "error", "NOT_FOUND"));
         service.requery(w.getId());
         assertThrows(IllegalStateException.class, () -> service.manualRefund(w.getId(), "maker", "旧未知", 3));
@@ -420,7 +429,7 @@ class CashWithdrawFundEvidenceMySqlIT {
         MemberCashWithdraw w = service.withdraw(memberId, new BigDecimal("30.00")); money("70");
         assertEquals(1, count(w.getId(), "SUBMIT_INTENT")); state(w.getId(), 3);
         for (String result : new String[]{"PROCESSING", "UNKNOWN", "NOT_FOUND"}) {
-            when(channel.queryTransferResult(originalIntent(w))).thenReturn(Map.of("result", result));
+            when(channel.queryTransferResult(originalIntentMatcher(w))).thenReturn(Map.of("result", result));
             service.requery(w.getId());
             assertThrows(IllegalStateException.class, () -> service.manualRefund(w.getId(), "maker", "调查", 3));
         }
@@ -452,7 +461,7 @@ class CashWithdrawFundEvidenceMySqlIT {
     }
     @Test void closedWithoutFinalDetailCannotAuthorizeRefund() {
         MemberCashWithdraw w = accepted();
-        when(channel.queryTransferResult(originalIntent(w)))
+        when(channel.queryTransferResult(originalIntentMatcher(w)))
                 .thenReturn(observation(w, Map.of("result", "FAIL", "batchStatus", "CLOSED")));
         service.requery(w.getId()); state(w.getId(), 3);
         assertThrows(IllegalStateException.class, () -> service.manualRefund(w.getId(), "maker", "CLOSED仍待核查", 3));
@@ -463,7 +472,7 @@ class CashWithdrawFundEvidenceMySqlIT {
         when(channel.transferToBalance(any(CashWithdrawTransferIntent.class))).thenAnswer(i -> {
             CashWithdrawTransferIntent sent = i.getArgument(0);
             Long id = sent.withdrawalId();
-            when(channel.queryTransferResult(originalIntent(cash.selectById(id)))).thenReturn(Map.of("result", "UNKNOWN"));
+            when(channel.queryTransferResult(originalIntentMatcher(cash.selectById(id)))).thenReturn(Map.of("result", "UNKNOWN"));
             service.requery(id); // Prior ambiguous observation commits before the later local rejection.
             return Map.of("ok", "false", "ambiguous", "false", "notSent", "true", "requestHash", sent.requestHash(), "error", "local rejection");
         });
@@ -486,20 +495,33 @@ class CashWithdrawFundEvidenceMySqlIT {
     }
     @Test void finalFailureRefundsOnceAndRepeatedQueryHasNoEconomicEffect() {
         MemberCashWithdraw w = accepted();
-        when(channel.queryTransferResult(originalIntent(w)))
+        when(channel.queryTransferResult(originalIntentMatcher(w)))
                 .thenReturn(observation(w, Map.of("result", "FAIL", "detailStatus", "FAIL", "detailId", "provider-detail")));
         service.requery(w.getId()); service.requery(w.getId());
         assertEquals(2, cash.selectById(w.getId()).getStatus()); assertEquals(1, count(w.getId(), "REFUND")); money("100");
     }
     @Test void outerTransactionIsSuspendedBeforeSubmittingToChannel() {
         MemberCashWithdraw w = new TransactionTemplate(manager).execute(status -> {
-            MemberCashWithdraw result = accepted(); status.setRollbackOnly(); return result;
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+            // The production owner rejects a held caller transaction before any financial write.
+            assertThrows(IllegalStateException.class, () -> service.withdraw(memberId, new BigDecimal("30.00")));
+            assertTrue(cash.selectByMember(memberId).isEmpty()); verifyNoInteractions(channel);
+            // This controlled outer transaction owns no original money-row lock. Explicitly
+            // suspend it at the caller boundary; never hide a held business lock in production.
+            TransactionTemplate outside = new TransactionTemplate(manager);
+            outside.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_NOT_SUPPORTED);
+            MemberCashWithdraw result = outside.execute(paused -> {
+                assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+                return accepted();
+            });
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+            status.setRollbackOnly(); return result;
         });
         assertNotNull(w); money("70"); assertEquals(1, count(w.getId(), "SUBMIT_INTENT"));
     }
     @Test void lateSuccessDuringInvestigationOrReviewBlocksCredit() {
         MemberCashWithdraw w = accepted(); state(w.getId(), 3);
-        when(channel.queryTransferResult(originalIntent(w)))
+        when(channel.queryTransferResult(originalIntentMatcher(w)))
                 .thenReturn(observation(w, Map.of("result", "SUCCESS", "detailStatus", "SUCCESS")));
         service.requery(w.getId());
         assertEquals(1, cash.selectById(w.getId()).getStatus());
@@ -521,7 +543,7 @@ class CashWithdrawFundEvidenceMySqlIT {
         doAnswer(i -> {
             memberMapper.addBalance(i.getArgument(0), i.getArgument(1)); throw new IllegalStateException("failure after SQL write");
         }).when(members).addBalance(anyLong(), any());
-        when(channel.queryTransferResult(originalIntent(w))).thenReturn(observation(w, Map.of("result", "FAIL", "detailStatus", "FAIL")));
+        when(channel.queryTransferResult(originalIntentMatcher(w))).thenReturn(observation(w, Map.of("result", "FAIL", "detailStatus", "FAIL")));
         service.requery(w.getId());
         assertEquals(3, cash.selectById(w.getId()).getStatus()); assertNull(cash.selectById(w.getId()).getBalanceRefundId());
         assertEquals(0, count(w.getId(), "REFUND")); money("70");
@@ -529,7 +551,7 @@ class CashWithdrawFundEvidenceMySqlIT {
     @Test void committedRefundWithLostCommitReplyNeverReopensOrCreditsAgain() {
         MemberCashWithdraw w = accepted();
         ReflectionTestUtils.setField(target, "transactionManager", loseCommitReplyAt(3));
-        when(channel.queryTransferResult(originalIntent(w)))
+        when(channel.queryTransferResult(originalIntentMatcher(w)))
                 .thenReturn(observation(w, Map.of("result", "FAIL", "detailStatus", "FAIL")));
         service.requery(w.getId()); // Preparation and FINAL_FAIL commit; REFUND commits but its acknowledgement is lost.
         assertEquals(2, cash.selectById(w.getId()).getStatus()); assertNotNull(cash.selectById(w.getId()).getBalanceRefundId());
@@ -597,7 +619,7 @@ class CashWithdrawFundEvidenceMySqlIT {
         WxPayConfig current = (WxPayConfig) ReflectionTestUtils.getField(target, "wxPayConfig");
         ReflectionTestUtils.setField(current, "merchantId", "new-merchant");
         ReflectionTestUtils.setField(current, "appid", "new-appid");
-        when(channel.queryTransferResult(originalIntent(w))).thenAnswer(i -> {
+        when(channel.queryTransferResult(originalIntentMatcher(w))).thenAnswer(i -> {
             assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
             CashWithdrawTransferIntent queried = i.getArgument(0);
             assertEquals(original.submissionIntentId(), queried.submissionIntentId());
@@ -636,7 +658,7 @@ class CashWithdrawFundEvidenceMySqlIT {
         Map<String, String> wrong = observation(w, Map.of("result", result, "detailStatus", result));
         if ("detailId".equals(field)) wrong.remove(field);
         else wrong.put(field, "transferAmount".equals(field) ? "3001" : "foreign-" + field);
-        when(channel.queryTransferResult(originalIntent(w))).thenReturn(wrong);
+        when(channel.queryTransferResult(originalIntentMatcher(w))).thenReturn(wrong);
         service.requery(w.getId());
         assertEquals(0, cash.selectById(w.getId()).getStatus());
         assertEquals(0, count(w.getId(), "SUCCESS")); assertEquals(0, count(w.getId(), "FINAL_FAIL"));
@@ -685,7 +707,7 @@ class CashWithdrawFundEvidenceMySqlIT {
     @Test void matchingLateSuccessDuringSecondPersonReviewPreventsCredit() {
         MemberCashWithdraw w = accepted(); fact(w, "FINAL_FAIL"); state(w.getId(), 3);
         assertTrue(service.manualRefund(w.getId(), "maker", "原失败待复核", 3));
-        when(channel.queryTransferResult(originalIntent(w)))
+        when(channel.queryTransferResult(originalIntentMatcher(w)))
                 .thenReturn(observation(w, Map.of("result", "SUCCESS", "detailStatus", "SUCCESS")));
         service.requery(w.getId());
         assertEquals(1, cash.selectById(w.getId()).getStatus());
@@ -702,7 +724,7 @@ class CashWithdrawFundEvidenceMySqlIT {
         MemberCashWithdraw w = service.withdraw(memberId, new BigDecimal("30.00"));
         Long intentId = cash.selectFundFacts(w.getId()).stream().filter(f -> "SUBMIT_INTENT".equals(f.getKind()))
                 .findFirst().orElseThrow().getId();
-        when(channel.queryTransferResult(originalIntent(w))).thenAnswer(i -> {
+        when(channel.queryTransferResult(originalIntentMatcher(w))).thenAnswer(i -> {
             assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
             assertTrue(Boolean.TRUE.equals(ReflectionTestUtils.invokeMethod(target, "recordChannelFact", w.getId(), "ACCEPTED",
                     Map.of("batchId", "provider-batch-" + w.getId(), "batchStatus", "ACCEPTED"), intentId)));
@@ -737,7 +759,7 @@ class CashWithdrawFundEvidenceMySqlIT {
                 .thenReturn(Map.of("ok", "false", "ambiguous", "true"));
         MemberCashWithdraw w = service.withdraw(memberId, new BigDecimal("30.00"));
         db.update("UPDATE member_cash_withdraw SET submit_time=DATE_SUB(CURRENT_TIMESTAMP,INTERVAL 7 HOUR) WHERE id=?", w.getId());
-        when(channel.queryTransferResult(originalIntent(w))).thenReturn(Map.of("result", "UNKNOWN", "error", "NOT_FOUND"));
+        when(channel.queryTransferResult(originalIntentMatcher(w))).thenReturn(Map.of("result", "UNKNOWN", "error", "NOT_FOUND"));
         service.syncPendingWithdrawals(1000); // This class's private schema retains append-only prior originals.
         assertEquals(3, cash.selectById(w.getId()).getStatus());
         assertThrows(IllegalStateException.class, () -> service.manualRefund(w.getId(), "maker", "超时不等于失败", 3));
@@ -950,7 +972,7 @@ class CashWithdrawFundEvidenceMySqlIT {
         assertEquals(0, count(original.getId(), "UNKNOWN")); money("100");
         CashWithdrawTransferIntent snapshot = transferIntents.selectByWithdrawId(original.getId());
         snapshot.requireValid(); assertTrue(snapshot.submitted()); assertTrue(snapshot.locallyRejected());
-        CashWithdrawTransferIntent intent = originalIntent(original);
+        CashWithdrawTransferIntent intent = readOriginalIntent(original);
         assertEquals(intent.requestHash(), cash.selectFundFacts(original.getId()).stream()
                 .filter(f -> "NOT_ACCEPTED".equals(f.getKind())).findFirst().orElseThrow().getRequestHash());
         assertEquals(intent.submissionIntentId(), cash.selectFundFacts(original.getId()).stream()

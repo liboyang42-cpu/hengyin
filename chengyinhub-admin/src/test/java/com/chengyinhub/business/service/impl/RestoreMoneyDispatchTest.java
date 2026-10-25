@@ -56,7 +56,8 @@ class RestoreMoneyDispatchTest {
         Process owned = launch.start();
         try {
             assertTrue(owned.waitFor(45, TimeUnit.SECONDS), "fixed restore-money child did not exit: " + scenario);
-            assertEquals(0, owned.exitValue(), "fixed restore-money contract failed: " + scenario);
+            assertEquals(0, owned.exitValue(), "fixed restore-money contract failed: " + scenario
+                    + "; " + Probe.describeExit(owned.exitValue()));
         } finally {
             if (owned.isAlive()) {
                 owned.destroyForcibly();
@@ -66,6 +67,24 @@ class RestoreMoneyDispatchTest {
     }
 
     public static final class Probe {
+        private enum Phase { SETUP, ADMISSION, CHANNEL_CALL, MANUAL_HOLD, VERIFY_ORIGINAL }
+        private static Phase phase = Phase.SETUP;
+        private static final String[] FAILURE_TYPES = {"ASSERTION", "NULL_VALUE", "STATE", "ARGUMENT", "SQL", "OTHER"};
+        // Fixed codes below 128 carry no exception message, environment, SQL or provider payload.
+        private static int failureCode(Throwable failure) {
+            int type = failure instanceof AssertionError ? 0 : failure instanceof NullPointerException ? 1
+                    : failure instanceof IllegalStateException ? 2 : failure instanceof IllegalArgumentException ? 3
+                    : failure instanceof java.sql.SQLException || failure instanceof org.springframework.dao.DataAccessException ? 4 : 5;
+            return 20 + phase.ordinal() * 8 + type;
+        }
+        private static String describeExit(int exit) {
+            if (exit == 0) return "childExit=0,phase=COMPLETE,type=NONE";
+            int code = exit - 20;
+            if (code < 0 || code / 8 >= Phase.values().length || code % 8 >= FAILURE_TYPES.length)
+                return "childExit=" + exit + ",phase=UNKNOWN,type=UNKNOWN";
+            return "childExit=" + exit + ",phase=" + Phase.values()[code / 8].name()
+                    + ",type=" + FAILURE_TYPES[code % 8];
+        }
         public static void main(String[] args) {
             try {
                 assertEquals(1, args.length);
@@ -83,7 +102,7 @@ class RestoreMoneyDispatchTest {
                 }
             } catch (Throwable failure) {
                 System.err.println("RESTORE_MONEY_CONTRACT_FAILED");
-                System.exit(1);
+                System.exit(failureCode(failure));
             }
         }
 
@@ -93,6 +112,7 @@ class RestoreMoneyDispatchTest {
         }
 
         private static void fresh() {
+            phase = Phase.ADMISSION;
             var rows = mock(MemberCashWithdrawMapper.class);
             var cash = new CashWithdrawServiceImpl();
             ReflectionTestUtils.setField(cash, "mapper", rows);
@@ -188,6 +208,12 @@ class RestoreMoneyDispatchTest {
 
         private static WechatPaymentSdkGateway gateway(TransferBatchService sdk) throws Exception {
             var result = new WechatPaymentSdkGateway();
+            // The actual master-V1 query also checks the configured merchant. Use the same
+            // explicit original fixture channel as the immutable DTO and captured SDK binding.
+            var config = new com.chengyinhub.common.config.WxPayConfig();
+            ReflectionTestUtils.setField(config, "merchantId", "merchant");
+            ReflectionTestUtils.setField(config, "appid", "wx-original");
+            ReflectionTestUtils.setField(result, "wxPayConfig", config);
             Class<?> type = Class.forName(WechatPaymentSdkGateway.class.getName() + "$TransferClientBinding");
             var constructor = type.getDeclaredConstructor(TransferBatchService.class, String.class, String.class, String.class);
             constructor.setAccessible(true);
@@ -278,6 +304,7 @@ class RestoreMoneyDispatchTest {
         }
 
         private static void masterObservation(String outcome) throws Exception {
+            phase = Phase.SETUP;
             var original = new MemberCashWithdraw(); original.setId(81L); original.setMemberId(9L);
             original.setAmount(new BigDecimal("30.00")); original.setOutBatchNo("CW81");
             original.setOutDetailNo("CD81"); original.setOpenid("openid-original");
@@ -307,12 +334,17 @@ class RestoreMoneyDispatchTest {
             ReflectionTestUtils.setField(service, "wechatPayService", facade);
             ReflectionTestUtils.setField(service, "alarmService", mock(AlarmService.class));
             var members = mock(IUmsMemberService.class); ReflectionTestUtils.setField(service, "umsMemberService", members);
+            phase = Phase.CHANNEL_CALL;
             service.requery(81L); service.requery(81L);
+            phase = Phase.MANUAL_HOLD;
             blocked(() -> service.manualRefund(81L, "maker", "restore pause"));
             blocked(() -> service.manualRefund(81L, "checker", "restore pause"));
+            phase = Phase.VERIFY_ORIGINAL;
             assertEquals(snapshot, snapshots.selectByWithdrawId(81L)); assertEquals(unsigned.requestHash(), snapshot.requestHash());
             assertTrue(snapshot.hasDebitSnapshot()); assertNull(original.getBalanceDeductId()); assertNull(original.getBalanceRefundId());
             assertEquals("SUCCESS".equals(outcome) ? MemberCashWithdraw.STATUS_SUCCESS : MemberCashWithdraw.STATUS_PROCESSING, original.getStatus());
+            verify(sdk, times("SUCCESS".equals(outcome) ? 1 : 2)).getTransferBatchByOutNo(any());
+            verify(sdk, times("UNKNOWN".equals(outcome) ? 0 : "SUCCESS".equals(outcome) ? 1 : 2)).getTransferDetailByOutNo(any());
             verify(rows, never()).insertFundFact(any()); verify(snapshots, never()).insert(any());
             verify(sdk, never()).initiateBatchTransfer(any()); verifyNoInteractions(members);
         }

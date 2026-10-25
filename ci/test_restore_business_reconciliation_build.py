@@ -152,7 +152,7 @@ class RestoreManualRouterControls(unittest.TestCase):
     def invoke(self, script, **changes):
         env = {'SOURCE_SHA': 'a' * 40, 'GITHUB_SHA': 'a' * 40, 'WORKFLOW_SHA': 'a' * 40,
                'GITHUB_REPOSITORY': 'liboyang42-cpu/hengyin', 'GITHUB_EVENT_NAME': 'workflow_dispatch',
-               'RUN_HTTP_FIXTURES': 'false', 'RUN_RESTORE_FIXTURES': 'false'}
+               'RUN_HTTP_FIXTURES': 'false', 'RUN_RESTORE_FIXTURES': 'false', 'RESTORE_SCOPE': 'full-seven'}
         env.update(changes)
         # Execute only the real fixed admission block; no checkout, build, provider or resource command.
         return subprocess.run(['/bin/bash', '--noprofile', '--norc', '-e', '-o', 'pipefail', '-c', script],
@@ -205,6 +205,41 @@ class RestoreManualRouterControls(unittest.TestCase):
         self.assertEqual(1, callee.count('mvn -B -pl chengyinhub-admin -am -DskipTests install'))
         self.assertIn('max-parallel: 20', callee)
         self.assertIn('needs: [restore-source-build, isolated-restore-business-reconciliation]', callee)
+
+    def test_diagnostic_scope_is_explicit_fixed_and_legal_only_for_restore_without_http(self):
+        caller, callee = self.sources()
+        parent = self.admission(caller, 'Validate source and exclusive mode', '\n  jar:\n')
+        child = self.admission(callee, 'Validate caller source before checkout', '\n      - uses:')
+        for http, restore, success in [('false', 'false', False), ('true', 'false', False),
+                                       ('false', 'true', True), ('true', 'true', False)]:
+            with self.subTest(http=http, restore=restore):
+                self.assertEqual(success, self.invoke(parent, RESTORE_SCOPE='payment-gap-diagnostic',
+                    RUN_HTTP_FIXTURES=http, RUN_RESTORE_FIXTURES=restore) == 0)
+        self.assertEqual(0, self.invoke(child, RESTORE_SCOPE='payment-gap-diagnostic'))
+        for invalid in ('', 'payment-gap', 'voice-gap', 'all', 'full-seven,voice-gap', 'foreign'):
+            with self.subTest(scope=invalid):
+                self.assertNotEqual(0, self.invoke(parent, RESTORE_SCOPE=invalid, RUN_RESTORE_FIXTURES='true'))
+                self.assertNotEqual(0, self.invoke(child, RESTORE_SCOPE=invalid))
+        for source in (caller, callee):
+            self.assertRegex(source, r'restore_scope:\n        description:[^\n]+\n        required: false\n        type: choice\n        default: full-seven\n        options:\n          - full-seven\n          - payment-gap-diagnostic')
+        self.assertIn('      restore_scope: ${{ inputs.restore_scope }}\n', caller)
+        called = callee.split('  workflow_call:', 1)[1].split('permissions:', 1)[0]
+        self.assertRegex(called, r'restore_scope:\n        description:[^\n]+\n        required: false\n        type: string\n        default: full-seven')
+
+    def test_diagnostic_job_names_and_summary_fence_never_claim_full_seven_acceptance(self):
+        caller, callee = self.sources()
+        self.assertIn("name: ${{ inputs.restore_scope == 'payment-gap-diagnostic' && 'DIAGNOSTIC_PARTIAL payment-gap restore' || 'Run seven isolated restore cohorts' }}", caller)
+        self.assertIn("name: ${{ inputs.restore_scope == 'payment-gap-diagnostic' && 'DIAGNOSTIC_PARTIAL payment-gap' || format('Restore {0}', matrix.cohort) }}", callee)
+        consumer, summary = callee.split('  restore-business-summary:\n', 1)
+        self.assertIn("    if: ${{ always() && inputs.restore_scope == 'full-seven' }}\n", summary)
+        self.assertNotIn('--summarize', consumer)
+        self.assertEqual(1, summary.count('python3 -I ci/restore_business_reconciliation_host.py --summarize'))
+        marker = consumer.split('      - name: Mark DIAGNOSTIC_PARTIAL scope without a full verdict\n', 1)[1]
+        self.assertIn("if: ${{ always() && inputs.restore_scope == 'payment-gap-diagnostic' }}", marker)
+        self.assertIn('NOT_FULL:', marker)
+        self.assertIn('seven-receipt/three-positive verifier were not run', marker)
+        self.assertIn('"$GITHUB_STEP_SUMMARY"', marker)
+        self.assertIn('pattern: isolated-restore-business-reconciliation-*-${{ github.run_attempt }}', summary)
 
     def test_reusable_validates_real_source_before_checkout_and_preserves_downstream_identity(self):
         _, callee = self.sources()

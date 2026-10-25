@@ -2,10 +2,15 @@ package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.Club;
 import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.domain.CmsTopicChapter;
+import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.domain.dto.ChapterDTO;
 import com.chengyinhub.business.domain.dto.NodeDTO;
 import com.chengyinhub.business.domain.dto.TopicCreateDTO;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
+import com.chengyinhub.business.mapper.CmsTopicChapterMapper;
+import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
+import com.chengyinhub.business.service.support.TopicPublicationTestWiring;
 import com.chengyinhub.business.service.IClubService;
 import com.chengyinhub.business.service.ICouponRewardAuthorizationService;
 import com.chengyinhub.common.constant.ProductType;
@@ -16,6 +21,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -23,6 +30,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -39,6 +48,8 @@ class TopicCreateOpenClubPoolTest {
 
     private CmsTopicServiceImpl svc;
     private CmsTopicMapper cmsTopicMapper;
+    private final List<CmsTopicChapter> writtenChapters = new ArrayList<>();
+    private final List<CmsTopicNode> writtenNodes = new ArrayList<>();
 
     @BeforeEach
     void setUp() {
@@ -74,6 +85,47 @@ class TopicCreateOpenClubPoolTest {
             when(cmsTopicMapper.selectCmsTopicById(700L)).thenReturn(topic);
             return 1;
         });
+        ReflectionTestUtils.setField(svc, "themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
+                Mockito.mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
+        wirePublicationInputs();
+        svc = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(svc);
+    }
+
+    /** Feed the existing real compiler the rows actually inserted from the request, not an empty freeze stub. */
+    private void wirePublicationInputs() {
+        CmsTopicChapterMapper chapters = (CmsTopicChapterMapper) TopicPublicationTestWiring.get(svc, "cmsTopicChapterMapper");
+        CmsTopicNodeMapper nodes = (CmsTopicNodeMapper) TopicPublicationTestWiring.get(svc, "cmsTopicNodeMapper");
+        AtomicLong chapterIds = new AtomicLong(801L), nodeIds = new AtomicLong(901L);
+        Mockito.doAnswer(call -> {
+            CmsTopicChapter row = call.getArgument(0); row.setId(chapterIds.getAndIncrement());
+            writtenChapters.add(row); return 1;
+        }).when(chapters).insertCmsTopicChapter(any());
+        Mockito.doAnswer(call -> {
+            CmsTopicNode row = call.getArgument(0); row.setId(nodeIds.getAndIncrement());
+            writtenNodes.add(row); return 1;
+        }).when(nodes).insertCmsTopicNode(any());
+        when(chapters.selectCmsTopicChapterList(any())).thenAnswer(call -> new ArrayList<>(writtenChapters));
+        when(nodes.selectCmsTopicNodeList(any())).thenAnswer(call -> new ArrayList<>(writtenNodes));
+        when(chapters.selectByTopicForUpdate(700L)).thenAnswer(call -> new ArrayList<>(writtenChapters));
+        when(nodes.selectByTopicForUpdate(700L)).thenAnswer(call -> new ArrayList<>(writtenNodes));
+        Mockito.doAnswer(call -> {
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+            DataSourceTransactionManager manager = (DataSourceTransactionManager) ReflectionTestUtils.getField(svc, "transactionManager");
+            assertTrue(TransactionSynchronizationManager.hasResource(manager.getDataSource()));
+            var frozen = new com.fasterxml.jackson.databind.ObjectMapper().readTree((String) call.getArgument(1));
+            assertEquals(1, frozen.path("runtimeSnapshotVersion").asInt());
+            assertEquals(writtenNodes.size(), frozen.path("routeStations").size());
+            assertEquals(writtenNodes.get(0).getId().longValue(), frozen.path("routeStations").get(0).path("nodeId").asLong());
+            assertTrue(frozen.path("nodeAnswers").path(String.valueOf(writtenNodes.get(0).getId())).path("templateId").isNull());
+            return 1;
+        }).when(cmsTopicMapper).publishRouteSnapshot(any(), any(), any());
+    }
+
+    private ArrayList<ChapterDTO> runnableChapters() {
+        NodeDTO node = new NodeDTO(); node.setName("原请求地点"); node.setAddress("人民广场"); node.setNodeTime(30);
+        ChapterDTO chapter = new ChapterDTO(); chapter.setName("原请求章节");
+        chapter.setNodes(new ArrayList<>(Collections.singletonList(node)));
+        return new ArrayList<>(Collections.singletonList(chapter));
     }
 
     private TopicCreateDTO freeExploreDto(Integer openClubPool) {
@@ -82,7 +134,7 @@ class TopicCreateOpenClubPoolTest {
         dto.setProductType(2); // FREE_EXPLORE
         dto.setRecruitDeadline(new Date(System.currentTimeMillis() + 86400000L));
         dto.setPublishMode("simple");
-        dto.setChapters(new ArrayList<>());
+        dto.setChapters(runnableChapters());
         dto.setOpenClubPool(openClubPool);
         return dto;
     }
@@ -98,7 +150,7 @@ class TopicCreateOpenClubPoolTest {
         dto.setName("测试城市定向");
         dto.setProductType(ProductType.ORIENTEERING);
         dto.setPublishMode("simple");
-        dto.setChapters(new ArrayList<>());
+        dto.setChapters(runnableChapters());
         dto.setOpenClubPool(openClubPool);
         return dto;
     }
@@ -346,6 +398,7 @@ class TopicCreateOpenClubPoolTest {
     void createAiSimpleTopic_rejectsUnconfirmedNodeLocations() {
         TopicCreateDTO dto = freeExploreDto(0);
         dto.setPublishMode("ai_simple");
+        dto.setChapters(new ArrayList<>()); // Preserve the original absent-location negative control.
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
         assertThrows(IllegalArgumentException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, 42L, "tester"));

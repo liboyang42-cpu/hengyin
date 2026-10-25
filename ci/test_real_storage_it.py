@@ -310,12 +310,12 @@ class RegistryContractTest(unittest.TestCase):
     def test_confirmed_station_proof_uses_canonical_source_and_original_isolated_gate(self):
         reg = registry()
         fqcn = 'com.chengyinhub.business.it.CoopOrderStationFulfillmentMySqlIT'
-        self.assertEqual({'tests': 12, 'storage': ['mysql'], 'gates': {}}, reg['classes'][fqcn])
+        self.assertEqual({'tests': 13, 'storage': ['mysql'], 'gates': {}}, reg['classes'][fqcn])
         for batch in ('architecture-day-funds-closure', 'architecture-day-integrated-changes'):
             self.assertEqual(1, reg['batches'][batch]['classes'].count(fqcn))
         facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
         self.assertEqual([], problems)
-        self.assertEqual(12, facts['declared_tests'])
+        self.assertEqual(13, facts['declared_tests'])
         source = (_HERE.parent / facts['path']).read_text()
         self.assertIn('new Wp04CoopOrderScopeMySqlIT()', source)
         self.assertIn('flow.canonicalScopeAndCash()', source)
@@ -531,14 +531,14 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-topic-cash-fence": 5,
                     "architecture-day-scheduler-two-process": 3,
                     "architecture-day-cash-recovery": 10,
-                    "architecture-day-funds-closure": 273,
+                    "architecture-day-funds-closure": 274,
                     "architecture-day-npc-voice-asr": 14,
                     "architecture-day-clm-commerce-proof": 8,
                     "architecture-day-media-retry-budget": 8,
                     "architecture-day-before-start-notice": 12,
                     "architecture-day-commerce-generic-guard": 6,
                     "architecture-day-refund-lifecycle": 72,
-                    "architecture-day-integrated-changes": 919, "payment-intent-correctness": 30}
+                    "architecture-day-integrated-changes": 920, "payment-intent-correctness": 30}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}

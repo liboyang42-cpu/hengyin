@@ -69,22 +69,75 @@ class OWN_C04_22Test {
             old.setCreateTime(new Date(0));
             // Persisted ff2b-only original below; the stale list snapshot is not a second debit proof.
             when(f.mapper.selectPendingForQuery(1)).thenReturn(Collections.singletonList(old));
+            f.stored.get().setCreateTime(new Date(0));
+            f.evidence.seedSubmissionIntent(1L);
+            CashWithdrawTransferIntent originalIntent = f.mapper.selectFundFacts(1L).stream()
+                    .filter(fact -> CashWithdrawFundFact.SUBMIT_INTENT.equals(fact.getKind()))
+                    .findFirst().orElseThrow().transferIntent();
+            originalIntent.requireValid();
+            assertNull(f.transferEvidence.get(1L), "This historical source remains FUND_FACT-only");
             MemberCashWithdraw current = row(frozen ? MemberCashWithdraw.STATUS_PROCESSING : MemberCashWithdraw.STATUS_SUCCESS);
             current.setFrozen(frozen ? 1 : 0); current.setWechatBatchStatus("AUTHORITATIVE");
             when(f.provider.queryTransferResult(org.mockito.ArgumentMatchers.argThat(i -> i != null && "CW1".equals(i.outBatchNo()) && "CD1".equals(i.outDetailNo())))).thenAnswer(i -> {
-                current.setBalanceDeductId(f.stored.get().getBalanceDeductId());
-                f.stored.set(current); // Concurrent lifecycle change preserves the original immutable debit linkage.
+                assertEquals(originalIntent, i.getArgument(0), "Query the committed original identity/hash, not current config");
                 Map<String,String> result = new HashMap<>(); result.put("result", "UNKNOWN");
                 result.put("batchStatus", "OLD-OBSERVATION"); return result;
             });
-            when(f.mapper.updateReceiptIfProcessing(any())).thenReturn(0);
-            f.evidence.seedSubmissionIntent(1L);
+            when(f.mapper.updateReceiptIfProcessing(any())).thenAnswer(i -> {
+                // UNKNOWN has passed the current evidence lock. The concurrent writer wins
+                // immediately before this receipt CAS, so this is the intended stale-CAS window.
+                assertEquals(MemberCashWithdraw.STATUS_PROCESSING, f.stored.get().getStatus());
+                current.setBalanceDeductId(f.stored.get().getBalanceDeductId());
+                f.stored.set(current);
+                return 0;
+            });
             assertEquals(1, f.service.syncPendingWithdrawals(1));
-            verify(f.mapper).updateReceiptIfProcessing(any());
+            ArgumentCaptor<MemberCashWithdraw> observation = ArgumentCaptor.forClass(MemberCashWithdraw.class);
+            verify(f.mapper).updateReceiptIfProcessing(observation.capture());
+            assertNull(observation.getValue().getStatus(), "A stale receipt cannot write a lifecycle status");
+            assertEquals("OLD-OBSERVATION", observation.getValue().getWechatBatchStatus());
+            verify(f.provider).queryTransferResult(originalIntent);
             verify(f.mapper, never()).updateMemberCashWithdraw(any());
             verify(f.mapper, never()).updateStatusIfProcessing(any());
             verify(f.members, never()).addBalance(anyLong(), any());
             assertEquals("AUTHORITATIVE", f.stored.get().getWechatBatchStatus());
+            assertEquals(frozen ? MemberCashWithdraw.STATUS_PROCESSING : MemberCashWithdraw.STATUS_SUCCESS,
+                    f.stored.get().getStatus());
+            assertEquals(frozen ? 1 : 0, f.stored.get().getFrozen());
+            assertEquals(originalIntent.requestHash(), originalIntent.canonicalRequestHash());
+            assertEquals(1, f.mapper.selectFundFacts(1L).stream()
+                    .filter(fact -> CashWithdrawFundFact.DEBIT.equals(fact.getKind())).count());
+            verify(f.mapper, never()).insertFundFact(argThat(fact -> CashWithdrawFundFact.DEBIT.equals(fact.getKind())));
+        }
+    }
+
+    @Test void terminalOrFreezeCommittedDuringQueryIsRefusedBeforeAnyNewObservation() {
+        for (boolean frozen : new boolean[]{false, true}) {
+            Fixture f = new Fixture();
+            MemberCashWithdraw original = f.stored.get(); original.setCreateTime(new Date(0));
+            when(f.mapper.selectPendingForQuery(1)).thenReturn(Collections.singletonList(original));
+            f.evidence.seedSubmissionIntent(1L);
+            CashWithdrawTransferIntent intent = f.mapper.selectFundFacts(1L).stream()
+                    .filter(fact -> CashWithdrawFundFact.SUBMIT_INTENT.equals(fact.getKind()))
+                    .findFirst().orElseThrow().transferIntent();
+            MemberCashWithdraw newer = row(frozen ? MemberCashWithdraw.STATUS_PROCESSING : MemberCashWithdraw.STATUS_SUCCESS);
+            newer.setFrozen(frozen ? 1 : 0); newer.setWechatBatchStatus("AUTHORITATIVE");
+            newer.setBalanceDeductId(original.getBalanceDeductId());
+            when(f.provider.queryTransferResult(intent)).thenAnswer(call -> {
+                f.stored.set(newer); // Preserve the earlier interleaving as well as the receipt-CAS window above.
+                return Map.of("result", "UNKNOWN", "batchStatus", "OLD-OBSERVATION");
+            });
+
+            assertEquals(1, f.service.syncPendingWithdrawals(1));
+
+            verify(f.provider).queryTransferResult(intent);
+            verify(f.mapper, never()).insertFundFact(any());
+            verify(f.mapper, never()).updateReceiptIfProcessing(any());
+            verify(f.mapper, never()).updateStatusIfProcessing(any());
+            verify(f.members, never()).addBalance(anyLong(), any());
+            assertSame(newer, f.stored.get());
+            assertEquals("AUTHORITATIVE", newer.getWechatBatchStatus());
+            assertEquals(original.getBalanceDeductId(), newer.getBalanceDeductId());
         }
     }
 

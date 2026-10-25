@@ -8,6 +8,7 @@ import com.chengyinhub.business.domain.CoopSettlement;
 import com.chengyinhub.business.domain.dto.CoopGroupSettlementBasis;
 import com.chengyinhub.business.domain.dto.CoopSettlementPlan;
 import com.chengyinhub.business.domain.dto.CoopSettlementSnapshot;
+import com.chengyinhub.business.domain.dto.CoopSettlementOriginLine;
 import com.chengyinhub.business.mapper.*;
 import com.chengyinhub.business.service.ICoopSettlementClaimService;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -57,12 +58,35 @@ final class PreparedCoopPlanFixture {
             snapshot.setOrderId(order.getId());
             snapshot.setTopicId(topicId);
             snapshot.setInitiatorMemberId(900001L);
-            snapshot.setCompensationMode(Integer.valueOf(1).equals(order.getShareMode()) ? "SALES_PERCENT" : "FIXED_PER_FULFILLMENT");
+            snapshot.setBeneficiaryRole(club ? "CLUB" : "MERCHANT");
+            snapshot.setBeneficiaryId(order.getToId());
+            snapshot.setServiceUnit(club ? "ORGANIZER_LEAD" : "MERCHANT_PARTICIPATION");
+            snapshot.setCommercialContextType("TOPIC_EDITION"); snapshot.setCommercialContextId(topicId);
+            snapshot.setScopeType("TOPIC"); snapshot.setScopeId(topicId);
+            snapshot.setCompensationMode(Integer.valueOf(0).equals(order.getShareMode()) ? "NONE"
+                    : Integer.valueOf(1).equals(order.getShareMode()) ? "SALES_PERCENT" : "FIXED_PER_FULFILLMENT");
             snapshot.setShareRate(order.getShareRate());
             snapshot.setFixedFee(order.getFixedFee());
+            // Explicit composition inputs, not fabricated scan/seat/audit receipts.
+            // Keep the original scalar head-count oracle (including zero) and its
+            // amount; attach the declared original registration scope and exact
+            // attribution so the real cross-order invariant is exercised too.
+            List<Long> scopeIds = registrations.selectVerifiedRegistrationIdsByTopicId(topicId);
+            List<CoopSettlementOriginLine> scope = new ArrayList<>();
+            if (scopeIds != null) for (Long registrationId : scopeIds) {
+                CoopSettlementOriginLine line = new CoopSettlementOriginLine(registrationId,
+                        scope.isEmpty() ? amount : BigDecimal.ZERO);
+                line.setEligibleSalesSnapshot(scope.isEmpty() ? sales : BigDecimal.ZERO);
+                line.setSettlementRoute("COOP_ORDER"); line.setSourceContractType("COOP_ORDER");
+                line.setSourceContractId(order.getId());
+                line.setCommercialContextType(snapshot.getCommercialContextType()); line.setCommercialContextId(topicId);
+                line.setBeneficiaryRole(snapshot.getBeneficiaryRole()); line.setBeneficiaryId(snapshot.getBeneficiaryId());
+                line.setServiceUnit(snapshot.getServiceUnit()); scope.add(line);
+            }
             CoopSettlementPlan plan = mock(CoopSettlementPlan.class);
-            when(plan.getRoute()).thenReturn("COOP_ORDER");
+            when(plan.getRoute()).thenReturn("NONE".equals(snapshot.getCompensationMode()) ? "NONE" : "COOP_ORDER");
             when(plan.getSnapshot()).thenReturn(snapshot);
+            when(plan.getOriginLines()).thenReturn(List.copyOf(scope));
             when(plan.getVerifiedHeads()).thenReturn(count);
             when(plan.getEligibleSales()).thenReturn(sales);
             when(plan.getOriginAmount()).thenReturn(amount);

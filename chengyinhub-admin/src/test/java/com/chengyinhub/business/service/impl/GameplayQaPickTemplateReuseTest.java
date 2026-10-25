@@ -166,27 +166,53 @@ class GameplayQaPickTemplateReuseTest {
         final AtomicLong ids = new AtomicLong(1000);
         final TopicRouteRuntimeServiceImpl route;
         final AdvancedGameRuntimeServiceImpl advanced = new AdvancedGameRuntimeServiceImpl();
+        final org.springframework.transaction.support.TransactionTemplate publication;
 
-        Fixture() {
+        Fixture() throws Exception {
+            javax.sql.DataSource data = mock(javax.sql.DataSource.class);
+            when(data.getConnection()).thenAnswer(call -> {
+                java.sql.Connection connection = mock(java.sql.Connection.class);
+                when(connection.getAutoCommit()).thenReturn(true);
+                return connection;
+            });
+            publication = new org.springframework.transaction.support.TransactionTemplate(
+                    new org.springframework.jdbc.datasource.DataSourceTransactionManager(data));
             TopicRouteSessionMapper routes = mock(TopicRouteSessionMapper.class);
             CmsTopicMapper topicMapper = mock(CmsTopicMapper.class);
             CmsTopicNodeMapper nodeMapper = mock(CmsTopicNodeMapper.class);
             CmsMemberTemplateMapper templateMapper = mock(CmsMemberTemplateMapper.class);
             CmsRegistrationMapper registrations = mock(CmsRegistrationMapper.class);
             CmsActivityMapper activities = mock(CmsActivityMapper.class);
+            CmsTopicChapterMapper chapters = mock(CmsTopicChapterMapper.class);
+            ThemeStateKeyMapper keys = mock(ThemeStateKeyMapper.class);
             IShopDayProofService arrival = mock(IShopDayProofService.class);
             CurrentRegistrationStubs.currentFromProbe(registrations);
             when(topicMapper.selectCmsTopicById(anyLong())).thenAnswer(call -> topics.get(call.getArgument(0)));
+            when(topicMapper.selectCmsTopicByIdForUpdate(anyLong())).thenAnswer(call -> topics.get(call.getArgument(0)));
+            when(chapters.selectCmsTopicChapterList(any())).thenReturn(Collections.emptyList());
+            when(chapters.selectByTopicForUpdate(anyLong())).thenReturn(Collections.emptyList());
             when(nodeMapper.selectCmsTopicNodeById(anyLong())).thenAnswer(call -> nodes.get(call.getArgument(0)));
             when(nodeMapper.selectCmsTopicNodeList(any())).thenAnswer(call -> {
                 CmsTopicNode probe = call.getArgument(0);
                 return new ArrayList<>(nodes.values().stream().filter(node -> node.getTopicId().equals(probe.getTopicId())).toList());
             });
+            when(nodeMapper.selectByTopicForUpdate(anyLong())).thenAnswer(call ->
+                    new ArrayList<>(nodes.values().stream().filter(node -> node.getTopicId().equals(call.getArgument(0))).toList()));
             when(templateMapper.selectCmsMemberTemplateById(anyLong())).thenAnswer(call -> templates.get(call.getArgument(0)));
             when(templateMapper.selectCmsMemberTemplateByIds(any())).thenAnswer(call -> {
                 List<Long> selected = call.getArgument(0);
                 return new ArrayList<>(selected.stream().map(templates::get).filter(Objects::nonNull).toList());
             });
+            when(templateMapper.selectCmsMemberTemplateByIdsForUpdate(any())).thenAnswer(call -> {
+                List<Long> selected = call.getArgument(0);
+                return new ArrayList<>(selected.stream().map(templates::get).filter(Objects::nonNull).toList());
+            });
+            when(keys.lockTopicForStateKeyWrite(anyLong())).thenAnswer(call -> {
+                CmsTopic original = topics.get(call.getArgument(0)); return original == null ? null : original.getId();
+            });
+            when(keys.selectByTopicId(anyLong())).thenAnswer(call -> ThemeStateKeyDeclarationSnapshot.includingRuleAttributes(
+                    call.getArgument(0),Collections.emptyList(),JourneyRules.parse(topics.get(call.getArgument(0)).getJourneyRulesJson())));
+            when(keys.selectByTopicIdForUpdate(anyLong())).thenAnswer(call -> keys.selectByTopicId(call.getArgument(0)));
             when(arrival.hasArrived(anyLong(), anyLong(), anyLong())).thenReturn(true);
             when(routes.selectByOwner(eq(0L), anyLong(), eq(PLAYER), anyString())).thenAnswer(call -> routeSessions.get(call.getArgument(1)));
             when(routes.selectCurrentByOwner(eq(0L), anyLong(), eq(PLAYER))).thenAnswer(call -> routeSessions.get(call.getArgument(1)));
@@ -209,6 +235,8 @@ class GameplayQaPickTemplateReuseTest {
             route = new TopicRouteRuntimeServiceImpl(routes, topicMapper, nodeMapper, templateMapper,
                     mock(PlayerNodeProgressMapper.class), null, registrations, null, arrival, () -> 1L, () -> 10,
                     Clock.fixed(Instant.ofEpochMilli(NOW), ZoneOffset.UTC), RouteReachabilityProvider.UNKNOWN);
+            ReflectionTestUtils.setField(route,"cmsTopicChapterMapper",chapters);
+            ReflectionTestUtils.setField(route,"themeStateKeyMapper",keys);
             GameRuntimeSessionMapper sessions = mock(GameRuntimeSessionMapper.class);
             PlayAttemptLogMapper logs = mock(PlayAttemptLogMapper.class);
             when(sessions.selectAccessibleById(anyLong(), eq(PLAYER))).thenAnswer(call -> games.get(call.getArgument(0)));
@@ -248,6 +276,7 @@ class GameplayQaPickTemplateReuseTest {
             ObjectNode game = theme.putObject("gameplayRuntime").put("runtimeScope", "PLAYER");
             game.putObject("survival").put("zeroHpPolicy", "BLOCK_HP_COST").put("actionLimitPolicy", "BLOCK_OVERFLOW");
             game.putArray("acts").addObject().put("actKey", "a").putArray("questKeys").add("q");
+            ((ObjectNode) game.path("acts").get(0)).putObject("completionRule").put("type","ALL");
             game.putArray("quests").addObject().put("questKey", "q").put("actKey", "a").put("nodeId", nodeId)
                     .put("locationKey", "gate").put("settlementSlot", "q");
             topic.setThemeRuntimeConfigJson(theme.toString()); topics.put(topicId, topic);
@@ -255,9 +284,11 @@ class GameplayQaPickTemplateReuseTest {
             node.setStatus(1L); node.setMerchantMemberId(30L); node.setTemplateId(templateId); nodes.put(nodeId, node);
             CmsMemberTemplate template = new CmsMemberTemplate(); template.setId(templateId); template.setMemberId(PLAYER);
             template.setValidationMethod(3); template.setAdvancedConfigJson(pick(question, correct)); templates.put(templateId, template);
-            topic.setThemeRuntimeConfigJson(route.compileTemplateRules(topic));
-            topic.setPublishedThemeRuntimeConfigJson(topic.getThemeRuntimeConfigJson());
-            topic.setPublishedRouteGraphJson(route.freezePublication(topic, null));
+            publication.executeWithoutResult(status -> {
+                topic.setThemeRuntimeConfigJson(route.compileTemplateRules(topic));
+                topic.setPublishedThemeRuntimeConfigJson(topic.getThemeRuntimeConfigJson());
+                topic.setPublishedRouteGraphJson(route.freezePublication(topic, null));
+            });
             route.state(PLAYER, topicId, 0L);
             TopicRouteSession session = routeSessions.get(topicId);
             route.recordPlayerArrival(PLAYER, topicId, 0L, nodeId, "arrival-" + topicId, session.getVersion());

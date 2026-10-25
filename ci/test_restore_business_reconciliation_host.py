@@ -166,8 +166,10 @@ class RestoreHostControls(unittest.TestCase):
 
     def test_each_actual_cohort_has_one_fixed_matrix_job_and_unique_artifact_identity(self):
         source = (host.ROOT / '.github/workflows/isolated-restore-business-reconciliation.yml').read_text()
-        matrix = source.split('        cohort:\n', 1)[1].split('    env:\n', 1)[0]
-        actual = [line.strip()[2:] for line in matrix.splitlines() if line.strip().startswith('- ')]
+        matrix = source.split("        cohort: ${{ fromJSON(inputs.restore_scope == 'payment-gap-diagnostic' && '", 1)[1].split("') }}", 1)[0]
+        diagnostic, full = matrix.split("' || '", 1)
+        self.assertEqual(['payment-gap'], json.loads(diagnostic))
+        actual = json.loads(full)
         self.assertEqual(list(host.COHORTS), actual)
         self.assertEqual(7, len(set(actual)))
         self.assertIn('max-parallel: 20', source)
@@ -268,6 +270,7 @@ class RestoreHostControls(unittest.TestCase):
         summary = source.split('  restore-business-summary:\n', 1)[1]
         self.assertIn('needs: [restore-source-build, isolated-restore-business-reconciliation]', summary)
         self.assertIn('if: ${{ always() }}', summary)
+        self.assertIn("    if: ${{ always() && inputs.restore_scope == 'full-seven' }}\n", summary)
         self.assertIn('pattern: isolated-restore-business-reconciliation-*-${{ github.run_attempt }}', summary)
         self.assertIn('python3 -I ci/restore_business_reconciliation_host.py --summarize', summary)
         self.assertNotIn('merge-multiple: true', summary)
@@ -291,6 +294,147 @@ class RestoreHostControls(unittest.TestCase):
                         with self.assertRaises(ValueError):
                             host.summarize_receipts(root, SHA, '123', '1', expected_build=expected)
                         verifier.summarize_completed_cohorts.assert_not_called()
+
+
+    def test_source_create_failure_keeps_fixed_invocation_and_private_stderr_digest_for_every_cohort(self):
+        secret = 'SYNTHETIC_PASSWORD_NEVER_PUBLISH'
+        raw = ('unrecognized rejection ' + secret + ' /private/owner/source.cnf SELECT private_provider_payload').encode()
+        for cohort in host.COHORTS:
+            with self.subTest(cohort=cohort), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp); private = root / 'private'; private.mkdir(); output = root / 'out'; output.mkdir()
+                worker = host.Host(root, private, output, SCOPE, cohort)
+                network = {'Id': 'e' * 64, 'Name': worker.name, 'Internal': True,
+                           'Labels': {'chengyin.restore-business': SCOPE}}
+                replies = [subprocess.CompletedProcess([], 0, b'pulled', b''),
+                           subprocess.CompletedProcess([], 0, ('e' * 64).encode(), b''),
+                           subprocess.CompletedProcess([], 125, b'PRIVATE_STDOUT', raw),
+                           subprocess.CompletedProcess([], 0, b'removed', b'')]
+                env = dict(self.environment(), GITHUB_RUN_ID='123', GITHUB_RUN_ATTEMPT='2')
+                with mock.patch.dict(os.environ, env, clear=True), \
+                     mock.patch.object(host.secrets, 'token_urlsafe', return_value=secret), \
+                     mock.patch.object(host, 'inspect', side_effect=[None, None, None, network, None]), \
+                     mock.patch.object(host.subprocess, 'run', side_effect=replies) as run:
+                    with self.assertRaises(ValueError):
+                        worker.provision()
+                    self.assertEqual({'network': 'e' * 64, 'source': None}, worker.created)
+                    self.assertEqual(1, worker.finish(1))
+                command = run.call_args_list[2]
+                self.assertEqual(host.DOCKER + ['create', '--name', worker.name + '-source',
+                    '--cidfile', str(private / 'source.cid'), '--label', 'chengyin.restore-business=' + SCOPE,
+                    '--network', worker.name, '--memory=1g', '--memory-swap=1g', '--cpus=1', '--pids-limit=256',
+                    '--tmpfs', '/var/lib/mysql:rw,size=768m', '-p', '127.0.0.1::3306',
+                    '-e', 'MYSQL_ROOT_PASSWORD', '-e', 'MYSQL_ROOT_HOST=%', host.IMAGE,
+                    '--skip-log-bin', '--performance-schema=OFF', '--event-scheduler=OFF'], command.args[0])
+                self.assertEqual(secret, command.kwargs['env']['MYSQL_ROOT_PASSWORD'])
+                self.assertEqual(4, run.call_count, 'one create only; cleanup is not another provision attempt')
+                receipt = json.loads((output / 'host.json').read_text())
+                self.assertEqual((SHA, SCOPE, cohort, '123', '2'),
+                    tuple(receipt[k] for k in ('sourceSha', 'scope', 'cohort', 'runId', 'runAttempt')))
+                failure = receipt['firstFailure']
+                self.assertEqual(('source-create', 'DOCKER_CONTAINER_CREATE', 'COMMAND_EXIT', 125, 'UNKNOWN'),
+                    tuple(failure[k] for k in ('stage', 'operation', 'failureType', 'returnCode', 'reasonCode')))
+                self.assertEqual(host.hashlib.sha256(raw).hexdigest(), failure['stderrSha256'])
+                self.assertEqual(len(raw), failure['stderrBytes']); self.assertTrue(failure['stderrCaptured'])
+                self.assertEqual(1, receipt['originalExit']); self.assertEqual(1, receipt['exitCode'])
+                self.assertFalse(receipt['probeFinalized']); self.assertEqual('EXACT_ABSENCE', receipt['resourceCleanup'])
+                self.assertEqual([], receipt['cleanupFailures']); self.assertFalse(private.exists())
+                public = json.dumps(receipt)
+                for value in (secret, str(private), 'source.cnf', 'SELECT', 'private_provider_payload', 'PRIVATE_STDOUT', 'MYSQL_ROOT_PASSWORD'):
+                    self.assertNotIn(value, public)
+
+    def test_known_docker_reasons_publish_only_fixed_excerpts_never_the_matching_raw_line(self):
+        samples = [(b'Cannot connect to the Docker daemon', 'DOCKER_DAEMON_UNAVAILABLE'),
+                   (b'permission denied', 'DOCKER_PERMISSION_DENIED'),
+                   (b'unknown flag: --private', 'DOCKER_OPTION_UNSUPPORTED'),
+                   (b'invalid mount config for type "tmpfs"', 'DOCKER_TMPFS_REJECTED'),
+                   (b'conflicting options: private', 'DOCKER_OPTION_CONFLICT'),
+                   (b'Conflict. The container name /private is already in use', 'DOCKER_CONTAINER_NAME_CONFLICT'),
+                   (b'port is already allocated', 'DOCKER_PORT_CONFLICT'),
+                   (b'no space left on device', 'DOCKER_STORAGE_UNAVAILABLE')]
+        for raw, expected in samples:
+            raw += b' SYNTHETIC_SECRET /private/owned.cnf provider=private'
+            with self.subTest(expected=expected):
+                code, excerpt = host.safe_command_reason('DOCKER_CONTAINER_CREATE', raw)
+                self.assertEqual(expected, code)
+                for secret in ('SYNTHETIC_SECRET', '/private', 'owned.cnf', 'provider='):
+                    self.assertNotIn(secret, excerpt)
+                self.assertEqual('UNKNOWN', host.safe_command_reason('PROBE_FINALIZE', raw)[0])
+        self.assertEqual('UNKNOWN', host.safe_command_reason('DOCKER_CONTAINER_CREATE', b'novel error')[0])
+
+
+    def test_create_timeout_lost_ack_still_removes_only_exact_owned_container_and_network(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); private = root / 'private'; private.mkdir(); output = root / 'out'; output.mkdir()
+            worker = host.Host(root, private, output, SCOPE, 'withdrawal-gap'); worker.stage = 'source-create'
+            worker.created = {'source': None, 'network': 'e' * 64}
+            container = {'Id': 'c' * 64, 'Name': '/' + worker.name + '-source',
+                         'Config': {'Image': host.IMAGE, 'Labels': {'chengyin.restore-business': SCOPE}},
+                         'NetworkSettings': {'Networks': {worker.name: {}}}}
+            network = {'Id': 'e' * 64, 'Name': worker.name, 'Internal': True,
+                       'Labels': {'chengyin.restore-business': SCOPE}}
+            raw = b'PRIVATE_TIMEOUT_STDERR'
+            timeout = subprocess.TimeoutExpired('PRIVATE_COMMAND_NOT_FOR_JSON', 120, stderr=raw)
+            with mock.patch.dict(os.environ, {'GITHUB_SHA': SHA, 'GITHUB_RUN_ID': '123', 'GITHUB_RUN_ATTEMPT': '2'}), \
+                 mock.patch.object(host.subprocess, 'run', side_effect=[timeout,
+                     subprocess.CompletedProcess([], 0, b'c', b''), subprocess.CompletedProcess([], 0, b'e', b'')]) as run, \
+                 mock.patch.object(host, 'inspect', side_effect=[container, None, network, None]):
+                with self.assertRaises(subprocess.TimeoutExpired):
+                    worker.command(host.DOCKER + ['create', '--name', worker.name + '-source'])
+                self.assertEqual(7, worker.finish(7))
+            self.assertEqual([host.DOCKER + ['container', 'rm', '-f', 'c' * 64],
+                              host.DOCKER + ['network', 'rm', 'e' * 64]], [c.args[0] for c in run.call_args_list[1:]])
+            receipt = json.loads((output / 'host.json').read_text())
+            self.assertEqual('COMMAND_TIMEOUT', receipt['firstFailure']['failureType'])
+            self.assertIsNone(receipt['firstFailure']['returnCode'])
+            self.assertEqual(host.hashlib.sha256(raw).hexdigest(), receipt['firstFailure']['stderrSha256'])
+            self.assertEqual(7, receipt['originalExit']); self.assertEqual(7, receipt['exitCode'])
+            self.assertEqual('EXACT_ABSENCE', receipt['resourceCleanup'])
+            self.assertNotIn('PRIVATE_', json.dumps(receipt))
+
+    def test_cleanup_daemon_error_is_unknown_not_absent_and_cannot_overwrite_first_create_failure(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); private = root / 'private'; private.mkdir(); output = root / 'out'; output.mkdir()
+            worker = host.Host(root, private, output, SCOPE, 'voice-gap'); worker.stage = 'source-create'
+            worker.created = {'source': None}
+            with mock.patch.object(host.subprocess, 'run', return_value=subprocess.CompletedProcess([], 125, b'', b'original rejection')):
+                with self.assertRaises(ValueError):
+                    worker.command(host.DOCKER + ['create'])
+            original = dict(worker.first_failure)
+            with mock.patch.object(host.subprocess, 'run', return_value=subprocess.CompletedProcess([], 1, b'', b'Cannot connect to the Docker daemon')), \
+                 mock.patch.dict(os.environ, {'GITHUB_SHA': SHA}):
+                self.assertEqual(1, worker.finish(1))
+            receipt = json.loads((output / 'host.json').read_text())
+            self.assertEqual(original, receipt['firstFailure'])
+            self.assertEqual(['source'], receipt['cleanupFailures'])
+            self.assertEqual('UNKNOWN', receipt['resourceCleanup'])
+            self.assertEqual(1, receipt['exitCode'])
+
+    def test_recorded_command_failure_cannot_turn_green_even_if_caller_passes_zero(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); private = root / 'private'; private.mkdir(); output = root / 'out'; output.mkdir()
+            worker = host.Host(root, private, output, SCOPE, 'payment-gap'); worker.stage = 'source-create'
+            worker.remember_failure('COMMAND_EXIT', 'DOCKER_CONTAINER_CREATE', 125, b'unknown rejection')
+            worker.resources.write_text('{}'); (output / 'reconciliation.json').write_text('{}')
+            with mock.patch.object(worker, 'command') as finalize, mock.patch.dict(os.environ, {'GITHUB_SHA': SHA}):
+                self.assertEqual(1, worker.finish(0))
+            self.assertEqual('1', finalize.call_args.args[0][-1])
+            self.assertEqual(1, json.loads((output / 'host.json').read_text())['exitCode'])
+
+    def test_command_start_failure_has_no_invented_stderr_and_success_keeps_original_stdout(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            worker = host.Host(root, root, root, SCOPE, 'refund-complete'); worker.stage = 'target-create'
+            with mock.patch.object(host.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0, b'c' * 64 + b'\n', b'')):
+                self.assertEqual('c' * 64, worker.command(host.DOCKER + ['create']))
+            self.assertIsNone(worker.first_failure)
+            with mock.patch.object(host.subprocess, 'run', side_effect=FileNotFoundError('/private/command')):
+                with self.assertRaises(FileNotFoundError):
+                    worker.command(host.DOCKER + ['create'])
+            self.assertEqual('target-create', worker.first_failure['stage'])
+            self.assertEqual('COMMAND_START_ERROR', worker.first_failure['failureType'])
+            self.assertFalse(worker.first_failure['stderrCaptured'])
+            self.assertIsNone(worker.first_failure['stderrSha256'])
+            self.assertNotIn('/private', json.dumps(worker.first_failure))
 
 
 if __name__ == '__main__':

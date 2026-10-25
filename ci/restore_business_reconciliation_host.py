@@ -111,6 +111,41 @@ def owned_object(kind, row, scope, side=None):
                 and row.get('Labels', {}).get('chengyin.restore-business') == scope, 'foreign network')
 
 
+def command_operation(args):
+    # Fixed labels only: never publish argv, paths, SQL, environment values or arbitrary commands.
+    if args[:len(DOCKER)] == DOCKER:
+        tail = args[len(DOCKER):]
+        for prefix, operation in ((['pull'], 'DOCKER_PULL'), (['network', 'create'], 'DOCKER_NETWORK_CREATE'),
+                (['create'], 'DOCKER_CONTAINER_CREATE'), (['start'], 'DOCKER_CONTAINER_START'),
+                (['container', 'rm'], 'DOCKER_CONTAINER_REMOVE'), (['network', 'rm'], 'DOCKER_NETWORK_REMOVE')):
+            if tail[:len(prefix)] == prefix:
+                return operation
+    if args[:4] == [sys.executable, '-I', str(PROBE), 'finalize']:
+        return 'PROBE_FINALIZE'
+    return 'OWNED_COMMAND_UNKNOWN'
+
+
+def safe_command_reason(operation, stderr):
+    # Match bounded raw bytes, emit only fixed reviewed excerpts. Never echo the matched line.
+    if operation.startswith('DOCKER_') and stderr is not None:
+        text = stderr[:16384].lower()
+        for needles, code, excerpt in (
+                ((b'cannot connect to the docker daemon', b'error during connect'),
+                 'DOCKER_DAEMON_UNAVAILABLE', 'Docker daemon connection failed; existence remains unknown'),
+                ((b'permission denied',), 'DOCKER_PERMISSION_DENIED', 'Docker reported permission denied'),
+                ((b'unknown flag:',), 'DOCKER_OPTION_UNSUPPORTED', 'Docker reported an unsupported option'),
+                ((b'invalid mount config for type "tmpfs"', b'invalid tmpfs'),
+                 'DOCKER_TMPFS_REJECTED', 'Docker rejected tmpfs configuration'),
+                ((b'conflicting options:',), 'DOCKER_OPTION_CONFLICT', 'Docker reported conflicting options'),
+                ((b'conflict. the container name ',), 'DOCKER_CONTAINER_NAME_CONFLICT', 'Docker reported a container name conflict'),
+                ((b'port is already allocated', b'address already in use'),
+                 'DOCKER_PORT_CONFLICT', 'Docker reported an allocated address or port'),
+                ((b'no space left on device',), 'DOCKER_STORAGE_UNAVAILABLE', 'Docker reported no space left on device')):
+            if any(needle in text for needle in needles):
+                return code, excerpt
+    return 'UNKNOWN', 'No reviewed safe reason matched; do not infer the Docker rejection cause'
+
+
 class Host:
     def __init__(self, root, private, output, scope, cohort):
         self.root, self.private, self.output, self.scope = root, private, output, scope
@@ -120,10 +155,34 @@ class Host:
         self.created = {}
         self.resources = private / 'resources.json'
         self.stage = 'preparation'
+        self.first_failure = None
+
+    def remember_failure(self, failure_type, operation='OWNER', returncode=None, stderr=None, error=None):
+        if self.first_failure is not None:
+            return  # Cleanup/finalize failures must not replace the original preparation failure.
+        if isinstance(stderr, str):
+            stderr = stderr.encode('utf-8')
+        reason, excerpt = safe_command_reason(operation, stderr)
+        self.first_failure = {'stage': self.stage, 'failureType': failure_type, 'operation': operation,
+                              'returnCode': returncode, 'reasonCode': reason, 'safeReasonExcerpt': excerpt,
+                              'stderrCaptured': stderr is not None,
+                              'stderrBytes': len(stderr) if stderr is not None else None,
+                              'stderrSha256': hashlib.sha256(stderr).hexdigest() if stderr is not None else None,
+                              'errorType': type(error).__name__ if error is not None else None}
 
     def command(self, args, env=None, timeout=120):
-        result = subprocess.run(args, capture_output=True, env=env, timeout=timeout)
-        require(result.returncode == 0, 'owned command failed at ' + self.stage)
+        operation = command_operation(args)
+        try:
+            result = subprocess.run(args, capture_output=True, env=env, timeout=timeout)
+        except subprocess.TimeoutExpired as failure:
+            self.remember_failure('COMMAND_TIMEOUT', operation, stderr=failure.stderr, error=failure)
+            raise
+        except OSError as failure:
+            self.remember_failure('COMMAND_START_ERROR', operation, error=failure)
+            raise
+        if result.returncode != 0:
+            self.remember_failure('COMMAND_EXIT', operation, result.returncode, result.stderr)
+            raise ValueError('owned command failed at ' + self.stage)
         return result.stdout.decode().strip()
 
     def provision(self):
@@ -205,7 +264,7 @@ class Host:
 
     def finish(self, original_exit):
         failures = self.cleanup()
-        result = original_exit or (1 if failures else 0)
+        result = original_exit or (1 if failures or self.first_failure is not None else 0)
         finalized = False
         if self.resources.exists() and (self.output / 'reconciliation.json').is_file():
             try:
@@ -225,9 +284,11 @@ class Host:
             failures.append('private')
             result = result or 1
         receipt = {'sourceSha': os.environ['GITHUB_SHA'], 'scope': self.scope, 'cohort': self.cohort,
+                   'runId': os.environ.get('GITHUB_RUN_ID'), 'runAttempt': os.environ.get('GITHUB_RUN_ATTEMPT'),
                    'originalExit': original_exit, 'exitCode': result, 'cleanupFailures': failures,
                    'resourceCleanup': 'EXACT_ABSENCE' if not failures else 'UNKNOWN',
                    'probeFinalized': finalized, 'lastStage': self.stage,
+                   'firstFailure': self.first_failure,
                    'acceptance': 'NOT_FULL_T20_OR_PRODUCTION_ACCEPTANCE'}
         write_private(self.output / 'host.json', json.dumps(receipt, sort_keys=True, indent=2))
         return result
@@ -277,7 +338,8 @@ def main():
         host.provision()
         host.stage = 'probe'
         code = host.run_probe()
-    except BaseException:
+    except BaseException as failure:
+        host.remember_failure('HOST_EXCEPTION_UNKNOWN', error=failure)
         code = code or 1
     finally:
         for sig, handler in previous_signals.items():

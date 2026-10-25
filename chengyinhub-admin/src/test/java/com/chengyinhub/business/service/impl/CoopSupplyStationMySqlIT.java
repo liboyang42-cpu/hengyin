@@ -51,8 +51,12 @@ class CoopSupplyStationMySqlIT {
         DriverManagerDataSource source=new DriverManagerDataSource(prefix+name+params,MybatisItDatabase.user(),MybatisItDatabase.password());
         db=new JdbcTemplate(source); assertEquals(ownedSchema,db.queryForObject("SELECT DATABASE()",String.class));
         new ResourceDatabasePopulator(new ClassPathResource("it-schema/coop-it-schema.sql"),
-                new ClassPathResource("it-schema/cms-topic-it-schema.sql"),
-                new ClassPathResource("it-schema/merchant-it-schema.sql")).execute(source);
+                new ClassPathResource("it-schema/cms-topic-it-schema.sql")).execute(source);
+        // This house snapshot is one complete CREATE without a trailing semicolon;
+        // Spring's newline fallback would execute only "CREATE TABLE mms_merchant (".
+        try (java.sql.Connection connection = source.getConnection()) {
+            com.chengyinhub.business.it.ItSchema.apply(connection, "it-schema/merchant-it-schema.sql");
+        }
         Path root=Files.exists(Path.of("sql/base_schema_20260818.sql"))?Path.of(""):Path.of("..");
         String base=Files.readString(root.resolve("sql/base_schema_20260818.sql"));
         int start=base.indexOf("CREATE TABLE `cms_registration_merchant` (");

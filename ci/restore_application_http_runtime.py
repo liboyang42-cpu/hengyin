@@ -59,6 +59,8 @@ def write_private(path, value):
 
 class ApplicationSlot:
     """Replaces only this task's original app slot between fixed child boots. No resource creation."""
+    runtime_report_write=staticmethod(write_private)
+
     def __init__(self,name,schema,out,credentials):
         gate(os.environ)
         require(re.fullmatch('cy-auth-[0-9a-f]{32}',name) and schema=='cy_e2e_auth_'+name[8:], 'exact original scope')

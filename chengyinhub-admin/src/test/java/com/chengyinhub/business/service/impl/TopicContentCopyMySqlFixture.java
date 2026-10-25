@@ -228,8 +228,9 @@ final class TopicContentCopyMySqlFixture implements AutoCloseable {
         ReflectionTestUtils.setField(couponReads, "smsCouponMapper", new SqlSessionTemplate(factory.getObject()).getMapper(SmsCouponMapper.class));
         CouponRewardAuthorizationServiceImpl ownerGuard = new CouponRewardAuthorizationServiceImpl();
         ReflectionTestUtils.setField(ownerGuard, "smsCouponService", couponReads);
-        ReflectionTestUtils.setField(org.springframework.test.util.AopTestUtils.getUltimateTargetObject(templates),
-                "couponRewardAuthorizationService", ownerGuard);
+        CmsMemberTemplateServiceImpl templateOwner =
+                org.springframework.test.util.AopTestUtils.getUltimateTargetObject(templates);
+        ReflectionTestUtils.setField(templateOwner, "couponRewardAuthorizationService", ownerGuard);
     }
 
     void assertUnchanged() { assertEquals(before, snapshot(), "all rows must roll back or remain unchanged"); }

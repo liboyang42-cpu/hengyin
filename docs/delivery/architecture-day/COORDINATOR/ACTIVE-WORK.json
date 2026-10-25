@@ -3808,5 +3808,696 @@
         "seven original restore cohorts"
       ]
     }
+  },
+  "final_concentrated_acceptance_347b": {
+    "source": "347bcd0226c3bed71616e38ea7c1391fc76efe5c",
+    "tree": "37a46f313f20fa33112b7cc5482c6e86baa4d66c",
+    "parent": "fb871607e4c4a5a038776201ff0b785f999f9ab1",
+    "runs": {
+      "standard_selected_backend_dependency": 40220558637,
+      "storage_canary_Clm8": 40220563375,
+      "http": 40220849379,
+      "mixed": 40220853485,
+      "restore_http": 40220857316,
+      "restore_cohorts": 40220862215,
+      "storage_remaining75": 40221047209
+    },
+    "attempt": 1,
+    "state": "ALL_SOURCE_ASSEMBLED_UNIFIED_SOURCE_REVIEW_PASS_PENDING_SCAN_AND_FREEZE",
+    "remaining_source_tasks": [],
+    "source_packages": {
+      "C": "08ddfa0fa9dac055e9bbe6ccdb57813ac5c90569",
+      "G": "3fb6ea3968e29532bac0fcb53e06cce192df1dd6",
+      "E": "2a05d1363c5bd6495ae390f2825a06b1ef976b13",
+      "H": "9783db40b6a18191c1572eeff1f149ab52bba47b",
+      "F_docs_no_runtime_change": "431b193f1e2dc755eceb3e6e0a3415faa540bc0d"
+    },
+    "client_unchanged_since_verified_fb871": true,
+    "production_unchanged_since_fb871": false,
+    "all_complete": false,
+    "next": "One unified source case/gate/caller review and secret scan; freeze new isolated candidate before impacted execution plan. Overall all_complete=false.",
+    "observed": {
+      "shared_compilation": "SBOMjob121251116623 Build backend artifact and Generate SBOM steps actualSUCCESS; scan not yet accepted",
+      "storage_canary": {
+        "state": "ACTUAL_MYSQL8PASS0FAIL0ERROR0SKIP0DUPLICATE_CLEAN",
+        "source": "347bcd0226c3bed71616e38ea7c1391fc76efe5c",
+        "run": 40220563375,
+        "receipt": "/private/tmp/hengyin-347b-Clm8-real-storage-readback.json",
+        "artifact": 12609498053,
+        "xml_sha256": "99b05641e4c49b1f13986b295fbc26f416ac18e24a9098a0bb25d32cc9a38e38",
+        "container_removed": true
+      },
+      "storage_remaining75": {
+        "run": 40221047209,
+        "fully_passed_classes": 63,
+        "fully_passed_tests": 700,
+        "combined_with_same_source_canary_classes": 64,
+        "combined_with_canary_tests": 708,
+        "failed_classes": 12,
+        "independent_xml_case_hash_cleanup_readback": "/private/tmp/hengyin-347b-passed-storage-readback.json",
+        "whole_batch_accepted": false
+      },
+      "restore_http": "40220857316FAIL before boot; isolated interpreter driver path and failed lifecycle SOURCE repaired, NOT_RETESTED",
+      "standard_backend": "ActualJUnit15386/58failure121error647skip;179failures grouped35classes, not179BUG. Original8owners each exact complete purpose package dispatched; existing passing client/static not reopened",
+      "dependency_audit": "121251116623 actual JAR/SBOM/dependency audit SUCCESS; no all-business claim",
+      "mixed": "Actual trace authenticated_redis_recovery_probe.database:157 importpymysql under-I failed; F shared controlled interpreter source task covers same fixed pinned driver",
+      "restore_cohorts": "7original subjobs all source-create failure; host only EXTACT_ABSENCE cleanup, first cause hidden by generic command error. B bounded shared host diagnostics/fix source package, no invented root cause",
+      "http": {
+        "state": "ACTUAL_HTTP36_SOURCE_CASES_PASS0FAIL0ERROR0SKIP0DUPLICATE_CLEAN",
+        "run": 40220849379,
+        "readback": "/private/tmp/hengyin-347b-http36-readback.json",
+        "raw_original_xml": "runner hash only; not independently downloaded",
+        "whole_business_accepted": false
+      }
+    },
+    "runtime_failure_purpose_packages": "docs/delivery/architecture-day/COORDINATOR/347b-runtime-failure-purpose-packages.json",
+    "source_deliveries_since_runtime": {
+      "C_failed_lifecycle": {
+        "donor": "62ca0e7d26a827d0cf78c5aeb3c0eabf5c29c625",
+        "state": "ALL5_POSTIMAGES_EXACT_SOURCE_APPLIED_NOT_RUN",
+        "receipt": "/private/tmp/hengyin-347b-C-failed-lifecycle-integration.json"
+      },
+      "G_full_settlement": {
+        "state": "SOURCE_APPLIED_NOT_RETESTED",
+        "donor": "c9a16be03cdedff2d636ad6ab51d3eff1d80626e",
+        "direct_parent": "d9031fd2286ac8c3c6adf199ead08513cecaacc1",
+        "full_parent": "347bcd0226c3bed71616e38ea7c1391fc76efe5c",
+        "files": [
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CoopOrderStationFulfillmentMySqlIT.java",
+            "sha256": "629e557f5ca79955554be32aad9084bd4ca929c6dac8a75b38f590e8523039da"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CoopOrderScopeMySqlIT.java",
+            "sha256": "cb188c2b7a72e37ab2c55af059193aed2733ac188246455c531d8be9bd426feb"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04OriginalRefundMySqlIT.java",
+            "sha256": "b26ce091fea49602594cda207a2a2c6bff057170cc7c84278be292f9709c0ce6"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptMySqlIT.java",
+            "sha256": "9583858aca773a1cb8fcad63f1243ef904500fe69d3f9aa6b2e9cfa46984ea8a"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementGroupBasisTest.java",
+            "sha256": "f857a3485cb1414dfac5ab955a62e0d09145e5fbe72e8abedf1fa683c22e6ceb"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPerMerchantTest.java",
+            "sha256": "557bab2c83b7ec47f98b8e1ba67557d80b911ac37194feedb24adb2134fcc2ed"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java",
+            "sha256": "8b44053ad1d65ca329bb39cc34949c38d8e419a88fe4ef4e0b2566d5ad69f5b1"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/Wp04TopicSettlementEntryGuardsTest.java",
+            "sha256": "a0e12c443d3bfdd59cffa0db8dd27f6030e97c1c5f70375c8e9fbc17acacbce3"
+          },
+          {
+            "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+            "sha256": "2b9be1f532c89d8d725fe48617dd713eb33d584cab1d8b3dd7177bef2277d5ac"
+          },
+          {
+            "path": "docs/delivery/architecture-day/G/347b-settlement-fixtures/ATTEMPT-LATE-SUCCESS.md",
+            "sha256": "140714defed398a2eb7dfab7ecee416d424995ab5d56448e55941e7fdb7de449"
+          },
+          {
+            "path": "docs/delivery/architecture-day/G/347b-settlement-fixtures/ATTEMPT-POSTIMAGE.sha256",
+            "sha256": "0af246f959c41527a52e1cffa43c572d1ad384640d5a1a2cba8351325acfbd6c"
+          },
+          {
+            "path": "docs/delivery/architecture-day/G/347b-settlement-fixtures/POSTIMAGE.sha256",
+            "sha256": "9730774c5a92120288814db8bfbaed900800fdeeea6855b14a4e06ac31c76d71"
+          },
+          {
+            "path": "docs/delivery/architecture-day/G/347b-settlement-fixtures/README.md",
+            "sha256": "1c0a8e2b012019c242ae37c55dad29de821848f11c5ec8c9f697b842dc0a9b9a"
+          },
+          {
+            "path": "docs/delivery/architecture-day/G/347b-settlement-fixtures/SHARED-POSTIMAGE.sha256",
+            "sha256": "ae084861bc1e26e52d5857bf7c76868d1452413f54003b267df3c4cb09af7ce5"
+          },
+          {
+            "path": "docs/delivery/architecture-day/G/347b-settlement-fixtures/prepared-fixture.review.patch.b64",
+            "sha256": "add04635be44b9aebd0a4da5b5ffc286c59cd41657ffb837d3f01acbf79bb726"
+          }
+        ],
+        "shared": {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PreparedCoopPlanFixture.java",
+          "sha256": "a5fa7b05d8736a8b9ac363a9d01783f9177e7e76b3e1d56d51a1785efd83a0c2",
+          "decoded_patch_sha256": "86ae4020db5629a7df4b115f220b4bc2b85f15965bb473f3663643291e1e0524",
+          "author_manifest_path_is_donor_temporary_only": "/tmp/g-347b-shared/PreparedCoopPlanFixture.java",
+          "code_unchanged": true
+        }
+      },
+      "C_isolation_followup": {
+        "state": "SOURCE_APPLIED_NOT_RETESTED",
+        "donor": "6c39192df6d3ede992c4dd9109f629cf9f57c0e0",
+        "base": "347bcd0226c3bed71616e38ea7c1391fc76efe5c",
+        "patch_sha256": "80417b3e062d122342e7de5cdbdd235476770d81c8dacd92ff1ef8d01086c48a",
+        "files": [
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainFaultIsolationMySqlIT.java",
+            "sha256": "dd0454ec0e3d585878233a5c7d73d9db49db650399ee50476641c4289870a94d"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainStorageFixture.java",
+            "sha256": "5660f745f4b43326d94115752a56d5be374d60f399785f256cd227ddebbce597"
+          },
+          {
+            "path": "docs/delivery/architecture-day/C/cross-domain-access-fixture-347b/README.md",
+            "sha256": "7bfde9b7e7f876fa9ff05c40371d18b26f3a99e2ebe0f7881f526c250854c31c"
+          },
+          {
+            "path": "docs/delivery/architecture-day/C/cross-domain-access-fixture-347b/postimages.sha256",
+            "sha256": "29102f115510b3701396b49c12084ee862200e6036ab9d3f1fb06b28e9310c8d"
+          }
+        ]
+      },
+      "A_funds": {
+        "state": "SOURCE_APPLIED_NOT_RETESTED",
+        "donor": "85b80b0299e7ab5c1f4122d0b8404f2d14dfb681",
+        "base": "347bcd0226c3bed71616e38ea7c1391fc76efe5c",
+        "patch_sha256": "387d30fa94d500602835421d49dfb71becae08cafab9ac4ce7d5dfe958abe9f7",
+        "files": [
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_22Test.java",
+            "sha256": "fbd80f4d89d4951b22d3fa33f77f711785959dc4ffab702307bf62131866c877"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RestoreMoneyDispatchMySqlIT.java",
+            "sha256": "69f9545fb0b9f4967f17f261f2545a2e072c137441143a8c6b6efba0d01acf6a"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawFundEvidenceMySqlIT.java",
+            "sha256": "3b4f7b118e031b163a99961d9d810c1ef6c85bb656d58b96c2a8a7916d86456f"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/FundsProcessRecoveryMySqlIT.java",
+            "sha256": "20fc4cace226ea655221f9ad3080ac50e42fa8d64aaa0fdc2670495ce94a62f7"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RestoreMoneyDispatchTest.java",
+            "sha256": "068515488446bc99174909e90e756bdf50aca469039c298b8aea1b2fe6dc4c2e"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/DoublePaymentReproductionTest.java",
+            "sha256": "14f13f760cbd8e367b6a8c26755437e00712400dd2de305a330d54794172a647"
+          },
+          {
+            "path": "docs/delivery/architecture-day/A/funds-fixtures-347b/DELIVERY.md",
+            "sha256": "df7a3343364ecb182f18b5c27cafd05af25f3be227fd39788b64060033fc8637"
+          },
+          {
+            "path": "docs/delivery/architecture-day/A/funds-fixtures-347b/SOURCE_SHA256SUMS",
+            "sha256": "d2792a0c6b7929a6c1bcfbeeafbdaa4f97d7e18c7a9c0fb0055ea37f7ca5db7b"
+          }
+        ]
+      },
+      "B_host_diagnostics": {
+        "state": "SOURCE_APPLIED_NOT_RETESTED",
+        "base": "347bcd0226c3bed71616e38ea7c1391fc76efe5c",
+        "patch_sha256": "643a71fb35fe795f65a320d978776f719473c7b29e7b86457ac054a5cdc86bc7",
+        "postimages": {
+          "ci/restore_business_reconciliation_host.py": "394f73750d175e8e8aec9137c0c0fefd0a65fa5fd0a9b0f7ee92e5102383e39c",
+          "ci/test_restore_business_reconciliation_host.py": "6d0dbf2113ac1a9028a5fac46b4ebc0174398ac38a499da5c5aa76c37dded8a8",
+          "docs/delivery/architecture-day/B/restore-host-command-diagnostics/README.md": "079fb94b429a334024e48b23031edb28356b7af7b50d6700e45ab7644df9b07b"
+        }
+      },
+      "E_nullable_publication": {
+        "state": "SOURCE_APPLIED_NOT_RETESTED",
+        "donor": "a3ae2ac1d331d386963eef896b6175b76c374fd1",
+        "base": "347bcd0226c3bed71616e38ea7c1391fc76efe5c",
+        "patch_sha256": "0970c18e4496ba6a158f7c0daac0053f4635deb970e41b262f6b340cefc4c366",
+        "files": [
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishNarrativeNpcGuardTest.java",
+            "sha256": "3b84d26ca900ef6f12ec4581326c28d063a1f2647e3acea6abf8bd703a50987d"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishStateKeyGuardTest.java",
+            "sha256": "c249785d4b651bb1a66f766490faeeae14284cbdac9f4d41385b1d15235c65d1"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicRoutePublishPolicyTest.java",
+            "sha256": "de3b3c1b4bdc5423270757cf8eca4e61f443f2dcf18f434338999e06ea435e00"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicSysVarPublishGateTest.java",
+            "sha256": "40fbe6b43b8595a03688e14658f532f229a538a0b9eeb86d1b657a35dcc6fa7e"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPublishJourneyStoryGateTest.java",
+            "sha256": "a64106f221de452e6b65e393c63dfb7c9be548300bfef33f3fb69651f115ed90"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSupplyStationContractTest.java",
+            "sha256": "829ab8fdf8e359e549020adf5fd98fe75f16686d3b62fac058fdafb65196a443"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSupplyStationMySqlIT.java",
+            "sha256": "928856705145dbbdd0d1e52ea37cc91c50869eb40bb67c6322beb0387d58dfcf"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicContentCopyMySqlFixture.java",
+            "sha256": "08b237cd2a54f9ca7676e8359c16b57c0ac590e0cfd9bdca54995657a938d79e"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationDeclarationsTest.java",
+            "sha256": "92c4d4a1ba64b9378169bbe6cd5f1154bf1dc803a2ab3878f9bad192d94ef7ca"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationDiagnosticsTest.java",
+            "sha256": "aa053cbeea8f57283f524065081a3c5e0066f02ceaa16bf85245d1cd4c8bb3c2"
+          },
+          {
+            "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java",
+            "sha256": "eb753caadd09d46308b665fc1b159e1e58937bf47808f91edbd381c656dd9c64"
+          },
+          {
+            "path": "docs/delivery/architecture-day/E/347b-publication-nullable-repair/README.md",
+            "sha256": "c714eb92450a61feb124f27d1bf4bb3d1ca22364b871040875b0085f5a997554"
+          },
+          {
+            "path": "docs/delivery/architecture-day/E/347b-publication-nullable-repair/owned.patch.b64",
+            "sha256": "59b65a77669576ffc986871373d01f9b83ccf9ff0b33a7bb6c0cbf40ea7979c4"
+          },
+          {
+            "path": "docs/delivery/architecture-day/E/347b-publication-nullable-repair/source-manifest.json",
+            "sha256": "afdb83ca370bcc7c194d7b703abb6c8c63e2541e53b074c96e6c36d03ed348ca"
+          }
+        ]
+      },
+      "F_interpreter_cleanup": {
+        "state": "SOURCE_APPLIED_NOT_RETESTED",
+        "donor": "5f1ea6613071954cc41761579567d7b46f8eb493",
+        "base": "347bcd0226c3bed71616e38ea7c1391fc76efe5c",
+        "patch_sha256": "b686c9514cbd4f1bbd0c83c59595af993409b6640eee738bfd567fb95b3d0c6b",
+        "files": [
+          {
+            "path": ".github/workflows/isolated-authenticated-redis-recovery.yml",
+            "sha256": "97d1b8dcdc5db90a77bb51403d5ee760bc4449e18bc399fb34aba1126534bb12"
+          },
+          {
+            "path": "ci/authenticated_redis_recovery_probe.py",
+            "sha256": "7020f911657b8c42227dc16ca50df7ae9f834f22258087a238ab57f6a68b82d1"
+          },
+          {
+            "path": "ci/test_authenticated_redis_recovery_probe.py",
+            "sha256": "f23378150d51b2580f114b51e6dccb29c19d83a55b06c0ae6231d47aa7705cfb"
+          },
+          {
+            "path": "docs/delivery/architecture-day/F/isolated-python-cleanup-347b/CONTRACT.sha256",
+            "sha256": "262d941e1ddad7fe5e52661d5558a9d621a0333e7ab9642132547e297cdce990"
+          },
+          {
+            "path": "docs/delivery/architecture-day/F/isolated-python-cleanup-347b/PATCH.sha256",
+            "sha256": "b0ea7f6e6513e45cd4fd5e9fe742ca31de705fe68ca33cc3393790f1474520a2"
+          },
+          {
+            "path": "docs/delivery/architecture-day/F/isolated-python-cleanup-347b/POSTIMAGES.sha256",
+            "sha256": "ccf6bd62f494bc5c332baa623291db3465fd0e04170dc7107fad6650dc63ef91"
+          },
+          {
+            "path": "docs/delivery/architecture-day/F/isolated-python-cleanup-347b/README.md",
+            "sha256": "c764d481a2c7ec414c94c83d4e5e3a8f236afad8a2b4745c8b94e45c9e68307d"
+          },
+          {
+            "path": "docs/delivery/architecture-day/F/isolated-python-cleanup-347b/SHARED-FINALIZE.sha256",
+            "sha256": "88de4c93eab22aec0e0a46d4332be0a8c5335442056f554896496eb14a3f039a"
+          },
+          {
+            "path": "docs/delivery/architecture-day/F/isolated-python-cleanup-347b/contract-review.patch.b64",
+            "sha256": "7a9e5cc3f8b7d1a00c3ab5c2d60e38ecd95e58331422c17a7971cf73035dceff"
+          },
+          {
+            "path": "docs/delivery/architecture-day/F/isolated-python-cleanup-347b/mixed-finalize.review.patch.b64",
+            "sha256": "59401cedbb363e9fc5ccf80f447c12277aebc152d6ddb817be5ed0b222649acb"
+          },
+          {
+            "path": "docs/delivery/architecture-day/F/isolated-python-cleanup-347b/review.patch.b64",
+            "sha256": "fbc456a5e82ce89e55b3f6f0257a20002de053f24457ece9d292ace19a06f831"
+          }
+        ]
+      },
+      "H_native_consumers": {
+        "state": "SOURCE_APPLIED_NOT_RETESTED",
+        "donor": "9dc5f7cdf49eb955b1cf272179c2d2dbc73ee494",
+        "base": "347bcd0226c3bed71616e38ea7c1391fc76efe5c",
+        "patch_sha256": "12e808da905fed79aa69020457ad40be987d9a2a1528c47626d994a74f2232d7",
+        "files": [
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImplTest.java",
+            "sha256": "5c158b9e16d0d869906a8b526442a7f0ac58de6712962e0993837be11af84b51"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSharedRouteQueryTest.java",
+            "sha256": "4ff3cc8469a662782824072130439df2549a045cf4037d6d0a8fea8c53034a09"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayDraftCopyTest.java",
+            "sha256": "a611e5146328ab86aadaebf939e609da6cfbda393c3410ab4237011a1a975639"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayQaPickTemplateReuseTest.java",
+            "sha256": "562d48708402cc28555c85ef8470a536b358b8d50608f92b265c0d4a6b8bf2b5"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinMySqlIT.java",
+            "sha256": "b7b7da1fd537fcad552ef8515949d48054f7430a00e2753db2c902e39ab5647b"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPuzzleHintTest.java",
+            "sha256": "f0a54b91cbefa7e5982ee3eab4d8a0a667ec69b2f50dd14fd978f31dfee92ea3"
+          },
+          {
+            "path": "docs/delivery/architecture-day/H/TG-native-fixtures-347/MANIFEST.json",
+            "sha256": "8b4512c878a4a7560fcbf1231c59a6dd756c37dc273d23ee4408b0db326b233a"
+          },
+          {
+            "path": "docs/delivery/architecture-day/H/TG-native-fixtures-347/PARENT-BLOBS.json",
+            "sha256": "8427154d59fb79a06564169bd11cf1d5256d56ba77d9ce6ee9f6c2c5b8a52bce"
+          },
+          {
+            "path": "docs/delivery/architecture-day/H/TG-native-fixtures-347/PATCHES.sha256",
+            "sha256": "77fb71bbbab94f762ca661bb55f3b7acd18a30b576435af7d2dacfb0087bf66f"
+          },
+          {
+            "path": "docs/delivery/architecture-day/H/TG-native-fixtures-347/POSTIMAGE.sha256",
+            "sha256": "be34aef9e0d40b94177740fbf063c1994cc86f0801450e8496cf00df20aa90af"
+          },
+          {
+            "path": "docs/delivery/architecture-day/H/TG-native-fixtures-347/README.md",
+            "sha256": "5a3e034fbee8fa06a6fa4b6e62b7bb7a65ec26e71887f10ac911294ff982fe19"
+          },
+          {
+            "path": "docs/delivery/architecture-day/H/TG-native-fixtures-347/owned.review.patch.b64",
+            "sha256": "dc5129c71803c49bef72cee138c4cc7cda530bd23f9ad1acd18c37a69e596c4e"
+          },
+          {
+            "path": "docs/delivery/architecture-day/H/TG-native-fixtures-347/shared-reskin-fixture.review.patch.b64",
+            "sha256": "212c1531dda172accad758fbcd56960befc023f576e2012f79ff8b4789c0cc96"
+          }
+        ]
+      },
+      "H_shared_fixture": {
+        "state": "SHARED_REVIEW_APPLIED_NOT_RETESTED",
+        "decoded_patch_sha256": "ce5e3140995f855b8664147ffb54ff270c8d07a1948cd0e2534b9d957141bdbf",
+        "postimages": {
+          "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFixture.java": "095da74733bc46988182bf3b279b336472a7d8426f5d0f3bcc0b0fa0005ad973"
+        }
+      },
+      "F_shared_mixed_finalize": {
+        "state": "SHARED_REVIEW_APPLIED_NOT_RETESTED",
+        "decoded_patch_sha256": "45fc48155f66bce08c27e23caa78284cf5498d805a1e4b7b9d75c03fddfa84ce",
+        "postimages": {
+          "ci/gameplay_process_recovery_probe.py": "3e24687159ee67acb512cf4499ae99e8722f08d825745b4d939225f6b0558d1e",
+          "ci/test_gameplay_process_recovery_probe.py": "8c38f5eb631694f856858d52b7fb194a79c607e952629f0c3a2832f730f90995"
+        }
+      },
+      "D_publication_shared": {
+        "state": "SOURCE_EXACT_APPLIED_NOT_RETESTED",
+        "donor": "a119071a7d1dbe68d4db55876653db0a57eb2782",
+        "helper": "bc2b738fbd58dea6c8eabdb9d00eea22b21f364c",
+        "base": "347bcd0226c3bed71616e38ea7c1391fc76efe5c",
+        "patch_sha256": "3c67abc842d21d297fb9f8581d98632bcdef4b057fe719a0f4453e28732ef283",
+        "files": [
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDraftPartialSaveGateTest.java",
+            "sha256": "9b977bcf5763b2521e7af56f290b8a2ca902a4fefceae1430ca6d8c68798c75c"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowTransactionTest.java",
+            "sha256": "6734b3b06989ea5983b9c1da7f8ed87427eaa558115c86bd6336a662a15f5247"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java",
+            "sha256": "8ddc0d6e5c7fb597ebd665184efd9c57cb29a159a81560c616d06a559c3ea4ea"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationTestWiring.java",
+            "sha256": "e80a731fafe4871cd058d9b85a5159ca837244fb3b9e73e951b75bf413d9384a"
+          },
+          {
+            "path": "docs/delivery/architecture-day/D/publication-fixtures-347b/CANDIDATE.sha256",
+            "sha256": "96b016b8f136e38f8efa0b98db853512e0c6ee71c32bdfec128228cca018c0e3"
+          },
+          {
+            "path": "docs/delivery/architecture-day/D/publication-fixtures-347b/ORIGINAL-CASES.json",
+            "sha256": "5b00666ee82746366ac92b32eda0ab1586dcbd9ec7c8720f0f7aadb5458bb58f"
+          },
+          {
+            "path": "docs/delivery/architecture-day/D/publication-fixtures-347b/README.md",
+            "sha256": "5bf88e5c159fb35429251753b69cb40efb98a89b353a3936236941a87203bc9c"
+          },
+          {
+            "path": "docs/delivery/architecture-day/D/publication-fixtures-347b/transferred-seven-unfinished.review.patch",
+            "sha256": "a699c0d91af88dfee7819c7ceb300819abe44a5687741cb9351887d012e4b5e5"
+          }
+        ],
+        "transferred_seven_wip_not_applied": "2b68c327d0c6f247e76af108700ca626b6fb7197",
+        "root_transport_normalization": {
+          "original_patch_sha256": "a699c0d91af88dfee7819c7ceb300819abe44a5687741cb9351887d012e4b5e5",
+          "base64_file_sha256": "335e7ca91178e93a7c5f095be76adbe4f0866b090dacc6161fa13c45e0554854",
+          "same_decoded_bytes": true,
+          "production_and_test_source_unchanged": true
+        }
+      },
+      "A_publication_final": {
+        "state": "OWNED_SOURCE_EXACT_APPLIED_NOT_RETESTED",
+        "head": "4309f2119d73a4f706cc166968df0d03eb7bbb80",
+        "direct_parent": "2b68c327d0c6f247e76af108700ca626b6fb7197",
+        "integration_base": "347bcd0226c3bed71616e38ea7c1391fc76efe5c",
+        "other_D_WIP_files_not_applied": true,
+        "patch_sha256": "3657933d4220a4305e172ce715ab7434ad4f9ad758ee5ce628d5b145710445e6",
+        "files": [
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicUpdateByOwnerTest.java",
+            "sha256": "f51cde93179656bf91da1bc1b63a87c6f89ad9f4ba4a7344a59dce926144018c"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateOpenClubPoolTest.java",
+            "sha256": "a0fd4851d59d21d377c364fafa5d65e95b9f9337af48ce085ef31107b177b835"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateSaveDraftSideEffectTest.java",
+            "sha256": "6c649fe5d669eacf1ea0b624eacc18436b44c5b1c6db8225ad4770bbc2d87d5f"
+          },
+          {
+            "path": "docs/delivery/architecture-day/A/topic-publication-fixtures-347b/DELIVERY.md",
+            "sha256": "88b373427e24a04c6ae34c93f35e32cdc100f461dcce496db7ffb6e402799749"
+          },
+          {
+            "path": "docs/delivery/architecture-day/A/topic-publication-fixtures-347b/SOURCE_SHA256SUMS",
+            "sha256": "ec0bfc04ed37a3e325d1ae0822feb9e81815315df476c285e43a8677bf5fbf09"
+          }
+        ]
+      },
+      "B_fixed_canary_caller": {
+        "state": "EXACT_SOURCE_APPLIED_NOT_RETESTED",
+        "base": "347bcd0226c3bed71616e38ea7c1391fc76efe5c",
+        "previous_643a_host_diagnostics_retained": true,
+        "patch_bytes": 16129,
+        "patch_sha256": "f71c1a4a2cdf0454819e9150801528e0224eb2831f99a84add85d5fcf2e4b66f",
+        "postimages": {
+          ".github/workflows/backend-jar.yml": "57bab2afedb73c1b8cb5d4e03e805393ea4f17988ed715f7b8dceb92fbea58c7",
+          ".github/workflows/isolated-restore-business-reconciliation.yml": "dc9fc0fe048ac0fa8984ed234d8725ed1ac010b556df3435bcafe90134916c5c",
+          "ci/test_restore_business_reconciliation_build.py": "f202038455f241c32911579bc76e956b7cde4ae2d3252bc047b67754bb303b57",
+          "ci/test_restore_business_reconciliation_host.py": "5fc2383cb8ab932651cb3e6e26a2d4548afd351e9bad305eb1f0f3a8bb50883d",
+          "docs/delivery/architecture-day/B/restore-payment-gap-diagnostic/README.md": "13de9b664cd3f5ec32a6865a0e3fd2c92402164acf051fa46efcc41ade13d4c4"
+        },
+        "default_full_seven_preserved": true,
+        "fixed_canary_is_diagnostic_not_full_acceptance": true
+      },
+      "E_publication_final": {
+        "state": "OWNED_SOURCE_EXACT_APPLIED_NOT_RETESTED",
+        "head": "936f360beea3f0c66caa0444946ca33f7826f185",
+        "direct_parent": "2b68c327d0c6f247e76af108700ca626b6fb7197",
+        "integration_base": "347bcd0226c3bed71616e38ea7c1391fc76efe5c",
+        "other_D_WIP_files_not_applied": true,
+        "integration_patch_sha256": "95f6eef0564ac5f279605059d1ab372b4d348be2b4e9e2a26bb7f5c551240be9",
+        "author_owned_wip_delta_sha256": "540a3fb00b84b0dabdc6848da95fc8a35707b5eb5601521db6464c8c746369c8",
+        "files": [
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishDraftTest.java",
+            "sha256": "6ce5768307140e695858e95cbcb70772c8d56e8f183e5eac327eeda2357daa85"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleReviewDecouplingTest.java",
+            "sha256": "8b19d43f7ab263ea4a17bd287acf7569c2a83ce3bfc8e07998aa11fd97d5955a"
+          },
+          {
+            "path": "docs/delivery/architecture-day/E/draft-sale-347b-repair/README.md",
+            "sha256": "626e43ce134fbc453c9f83cf7e44089287d1a44aed6a8573c0366542d91220ad"
+          },
+          {
+            "path": "docs/delivery/architecture-day/E/draft-sale-347b-repair/owned.patch.b64",
+            "sha256": "2f032dd16606baaa4ef69b451b07abdd5bf1240a3ed8e61528f7c839f5fd6d3d"
+          },
+          {
+            "path": "docs/delivery/architecture-day/E/draft-sale-347b-repair/source-manifest.json",
+            "sha256": "f2ffcc208716d7561db84b3dfb23db9064347669dbf7c9b32b87ebca28dcf592"
+          }
+        ]
+      },
+      "H_publication_final": {
+        "state": "OWNED_SOURCE_EXACT_APPLIED_NOT_RETESTED",
+        "head": "81391e906cfbda3152821d0d031baf0cbf2b9a80",
+        "direct_parent": "2b68c327d0c6f247e76af108700ca626b6fb7197",
+        "integration_base": "347bcd0226c3bed71616e38ea7c1391fc76efe5c",
+        "other_D_WIP_files_not_applied": true,
+        "integration_patch_sha256": "c44f606dde046053afd2058ee8f61a2bf514acdfa0d234dbfb3c47c10a9a9614",
+        "files": [
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicEditActivityShellTicketSyncChainTest.java",
+            "sha256": "447709374f5aa09dc04bf575e3b0d775913f8530c8f9aef43ed5aeaa48b99a18"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPendingReviewSelfHostShellTest.java",
+            "sha256": "d79f2349e8703d2f3cca8c5fa755612274fbb9be06b9c84e9af05acb3597460b"
+          },
+          {
+            "path": "docs/delivery/architecture-day/H/shell-publication-fixtures-347/CASE-IDENTITY.txt",
+            "sha256": "0171cc06cd327154a114c1707bb37bd7f294dab74d30e4bdceb35704e4d4e101"
+          },
+          {
+            "path": "docs/delivery/architecture-day/H/shell-publication-fixtures-347/MANIFEST.json",
+            "sha256": "7ac82f546884658893c6c8c933d3460e6d404b4f3a5aa1f9b86c15618d46268a"
+          },
+          {
+            "path": "docs/delivery/architecture-day/H/shell-publication-fixtures-347/PATCHES.sha256",
+            "sha256": "b92783331789b98e0db7c3f79a08a749af3ce17e66539c0195b4b1efd7e749b4"
+          },
+          {
+            "path": "docs/delivery/architecture-day/H/shell-publication-fixtures-347/POSTIMAGE.sha256",
+            "sha256": "7b660101c3c41cf994b978c2ab1a8598b050f43bd338e0d6dfe48db5df298283"
+          },
+          {
+            "path": "docs/delivery/architecture-day/H/shell-publication-fixtures-347/README.md",
+            "sha256": "9e2a3ef4e6d035d943c3d0b04af08b6316c160b156308a30fe94d696a66f23bc"
+          },
+          {
+            "path": "docs/delivery/architecture-day/H/shell-publication-fixtures-347/complete-from-347b.review.patch.b64",
+            "sha256": "b721e6cdc4d018767b2577c679bebbf5ce7e0bedb1cbbd960b092275b05b0a3a"
+          },
+          {
+            "path": "docs/delivery/architecture-day/H/shell-publication-fixtures-347/delta-from-wip.review.patch.b64",
+            "sha256": "e7417f9681277ff481113b520a28d121aecd3100b0b9a7f8a62606c443e35aa3"
+          }
+        ]
+      }
+    },
+    "actual_runtime_failed_mysql_classes": [
+      "Wp04CoopOrderScopeMySqlIT",
+      "Wp04OriginalRefundMySqlIT",
+      "CoopOrderStationFulfillmentMySqlIT",
+      "GameplayReskinMySqlIT",
+      "CashWithdrawFundEvidenceMySqlIT",
+      "TopicContentCopyMySqlIT",
+      "CoopDepositSettlementAttemptMySqlIT",
+      "CoopDepositRefundMybatisIntegrationTest",
+      "CoopSupplyStationMySqlIT",
+      "FundsProcessRecoveryMySqlIT",
+      "CrossDomainFaultIsolationMySqlIT",
+      "RestoreMoneyDispatchMySqlIT"
+    ],
+    "production_changes_since_runtime": [
+      "CmsTopicServiceImpl: reject first unpaid continuation after original-attempt late SUCCESS before setoff; explicit replay consumes original verified fact",
+      "CoopInviteServiceImpl and ApiCoopController: preserve Boolean nullable classification without auto-unboxing"
+    ],
+    "publication_ownership_split": {
+      "D": [
+        "TopicPublicationTestWiring",
+        "TopicDraftPartialSaveGateTest",
+        "ChapterFlowTransactionTest",
+        "ChapterFlowWriteServiceTest"
+      ],
+      "A": [
+        "TopicCreateOpenClubPoolTest",
+        "TopicCreateSaveDraftSideEffectTest",
+        "TopicUpdateByOwnerTest"
+      ],
+      "E": [
+        "CmsTopicPublishDraftTest",
+        "TopicSaleReviewDecouplingTest"
+      ],
+      "H": [
+        "TopicEditActivityShellTicketSyncChainTest",
+        "TopicPendingReviewSelfHostShellTest"
+      ]
+    },
+    "publication_seven_handoff": {
+      "source": "2b68c327d0c6f247e76af108700ca626b6fb7197",
+      "helper": "bc2b738fbd58dea6c8eabdb9d00eea22b21f364c",
+      "state": "ACTUAL_WIP_HANDOFF_TO_A_E_H_NO_REWRITE",
+      "complete": false
+    },
+    "draft_impact_selection": "/private/tmp/hengyin-347b-repair-impact-selection-draft.json",
+    "latest_actual_handoff": "D完整a119071a7d1dbe68d4db55876653db0a57eb2782已root逐后像exact集成（helper父bc2b738），PartialSave19／ChapterFlow2+44源case保留NOT_RUN。其转出7类真实WIP2b68c327d0c6f247e76af108700ca626b6fb7197已实际发原A/E/H差分收口，禁止重写已完成源，优先复用D新增显式transactional(T)现成Spring代理。D冻结无待写源，A三类/E两类/H两类当前新turn仍未最终交付。另原B已获必要最小caller任务：原backend-jar和原seven-cohort reusable仅默认full7或显式固定payment-gap诊断canary，PARTIAL不调用原严格7summary/不签full；不新增workflow/框架/通用selector。交现有直接entry控制SOURCE，源齐再验；不要又让7cohort在共同未知source-create首因重复失败。",
+    "publication_final_current_turns": {
+      "A": {
+        "thread": "01a16a22-3076-7196-88f5-86d5b2c83036",
+        "host": "durable",
+        "turn": "01a17478-337d-7090-89af-0b0a3f3289cd",
+        "cursor": "1e9feea5-2ea9-4d63-a7a0-0e845f8692e0:32",
+        "state": "SOURCE_EXACT_APPLIED_FROZEN_NOT_RUN",
+        "head": "4309f2119d73a4f706cc166968df0d03eb7bbb80"
+      },
+      "E": {
+        "thread": "01a16a23-2723-72e4-813f-03d7f1aa6017",
+        "host": "durable",
+        "turn": "01a17478-408e-75ef-9a1b-34cfb60c0ad1",
+        "cursor": "bf46e2e6-88ca-4fad-a205-efca84d15256:38",
+        "state": "SOURCE_EXACT_APPLIED_FROZEN_NOT_RUN",
+        "head": "936f360beea3f0c66caa0444946ca33f7826f185"
+      },
+      "H": {
+        "thread": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
+        "host": "durable",
+        "turn": "01a1747f-1e77-7368-a1d2-53ce9f0fb30b",
+        "cursor": "14018e83-052e-4771-a1ef-d3708b18cc1b:32",
+        "state": "SOURCE_EXACT_APPLIED_FROZEN_NOT_RUN",
+        "head": "81391e906cfbda3152821d0d031baf0cbf2b9a80"
+      },
+      "D": {
+        "thread": "01a16a22-f399-7110-ba27-ef3f7245603b",
+        "host": "durable",
+        "head": "a119071a7d1dbe68d4db55876653db0a57eb2782",
+        "cursor": "392a0141-0cc8-4147-8a14-b181aa78db38:30",
+        "state": "COMPLETE_EXACT_SOURCE_APPLIED_FROZEN"
+      }
+    },
+    "root_controller_nullable_repair": {
+      "production": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopController.java",
+      "test": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCoopControllerInviteAuthzTest.java",
+      "added_case": "listPreservesSupplyStationUnknownConfirmedAndNotApplicableStates",
+      "state": "SOURCE_ONLY_NOT_RUN",
+      "contract": "Boolean object branches preserve null/true/false; no new authority or historical station reconstruction"
+    },
+    "source_registry_update": {
+      "state": "SOURCE_METADATA_UPDATED_NOT_TESTED",
+      "class": "com.chengyinhub.business.it.CoopOrderStationFulfillmentMySqlIT",
+      "author_source": "c9a16be03cdedff2d636ad6ab51d3eff1d80626e",
+      "ordinary_test_declarations_before": 12,
+      "ordinary_test_declarations_after": 13,
+      "new_source_case": "originalFrozenWindowKeepsInclusiveStartAndExclusiveEndWithoutTimezoneTolerance",
+      "registered_classes": 76,
+      "integrated_source_declarations": 920,
+      "funds_closure_source_declarations": 274,
+      "gates_and_source_cleanup_controls_unchanged": true,
+      "not_runtime_pass": true,
+      "final_precheck_after_remaining_H_source": true
+    },
+    "next_execution_plan": "docs/delivery/architecture-day/COORDINATOR/347b-runtime-repair-execution-plan.json",
+    "B_fixed_diagnostic_current_turn": {
+      "thread": "01a16a22-956c-723f-b51b-afcbee69802b",
+      "host": "durable",
+      "turn": "01a17481-9219-7158-afb0-7b77ea92b535",
+      "cursor": "b03dff2c-10cc-4156-add7-1e422e41c5d1:35",
+      "state": "COMPLETE_EXACT_SOURCE_APPLIED_FROZEN_NOT_RUN"
+    },
+    "unified_source_manifest": "docs/delivery/architecture-day/COORDINATOR/347b-runtime-repair-unified-source.json"
   }
 }

@@ -154,11 +154,16 @@ class CoopSupplyStationContractTest {
         original.setSupplyStationName("client-forged");
         CoopInvite wrong=invite(42L,101L); wrong.setTopicId(8L);
         CoopInvite legacy=invite(43L,null);
-        when(invites.selectCoopInviteListReadOnly(any(),any())).thenReturn(List.of(original,wrong,legacy));
+        CoopInvite club=invite(44L,null); club.setInviteType(1); club.setToType("club");
+        CoopInvite node=invite(45L,null); node.setInviteType(2); node.setNodeId(9L);
+        when(invites.selectCoopInviteListReadOnly(any(),any())).thenReturn(List.of(original,wrong,legacy,club,node));
         List<CoopInvite> rows=service.selectCoopInviteListReadOnly(new CoopInvite());
         assertEquals("原站101",rows.get(0).getSupplyStationName()); assertNull(rows.get(1).getSupplyStationName());
         assertNull(rows.get(2).getSupplyStationName()); assertNull(rows.get(2).getSupplyStationId());
         assertEquals(Boolean.TRUE,rows.get(0).getRequiresSupplyStation()); assertNull(rows.get(2).getRequiresSupplyStation());
+        assertEquals(Boolean.FALSE,rows.get(3).getRequiresSupplyStation());
+        assertEquals(Boolean.FALSE,rows.get(4).getRequiresSupplyStation());
+        assertNull(rows.get(3).getSupplyStationName()); assertNull(rows.get(4).getSupplyStationName());
         verify(invites,times(1)).selectSupplyStationNames(anyList()); verify(invites,never()).updateCoopInvite(any());
         verify(invites,never()).selectSupplyStations(any(),any());
     }

@@ -1913,7 +1913,8 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
             row.setSupplyStationName(null);
             boolean candidate = Integer.valueOf(0).equals(row.getInviteType())
                     && CoopInvite.TO_MERCHANT.equals(row.getToType()) && row.getNodeId() == null;
-            row.setRequiresSupplyStation(candidate ? (row.getSupplyStationId() == null ? null : true) : false);
+            row.setRequiresSupplyStation(candidate
+                    ? (row.getSupplyStationId() == null ? null : Boolean.TRUE) : Boolean.FALSE);
             if (row.getSupplyStationId() != null && row.getTopicId() != null && row.getToId() != null
                     && CoopInvite.TO_MERCHANT.equals(row.getToType())) selected.add(row);
         }

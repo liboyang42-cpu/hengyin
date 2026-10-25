@@ -1,0 +1,116 @@
+{
+  "parent": "347bcd0226c3bed71616e38ea7c1391fc76efe5c",
+  "code_patch_sha256": "0313aeb6998c6b75630a6119c18ae82a173b7cf3b1cc17c13b1027045dc196d5",
+  "code_files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishNarrativeNpcGuardTest.java",
+      "preimage_blob_sha1": "369739025e0d7f546038f34e3f59a49f258d0391",
+      "preimage_sha256": "7e6d87fb815d23dd7167226dfdeed50b048853e2cd6a0671c3b51d758af9d023",
+      "postimage_blob_sha1": "d86dd150b6819c1712fa77c5fce7e608c3f2e9d9",
+      "postimage_sha256": "3b84d26ca900ef6f12ec4581326c28d063a1f2647e3acea6abf8bd703a50987d"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishStateKeyGuardTest.java",
+      "preimage_blob_sha1": "8391398cbfb242addba037bcc4f5314d841c476a",
+      "preimage_sha256": "22589985e213ef201f2c518239056dabf2fafb4410b241c4e0333ac1abf7a26f",
+      "postimage_blob_sha1": "263bdc97add40b7d403f9f5f8f26efd6a7f2a31f",
+      "postimage_sha256": "c249785d4b651bb1a66f766490faeeae14284cbdac9f4d41385b1d15235c65d1"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicRoutePublishPolicyTest.java",
+      "preimage_blob_sha1": "8081a68a64d8162abde68cef91f7ac7d3711ee94",
+      "preimage_sha256": "b054bda27b68ff7b6057598c80259dda1640796c0c603ab350aceecaf56ec22a",
+      "postimage_blob_sha1": "c176c5d7f8b8242f588a670e548111f6072f74e9",
+      "postimage_sha256": "de3b3c1b4bdc5423270757cf8eca4e61f443f2dcf18f434338999e06ea435e00"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicSysVarPublishGateTest.java",
+      "preimage_blob_sha1": "8822df1a1c3282d9e5c2f9051aea8296525469d2",
+      "preimage_sha256": "51f526267e6da00b7a73d6f8277ab7409a7acf7abe3b6e90cb75da72a3017fef",
+      "postimage_blob_sha1": "2f63a2467a8ac59273e2577c685a95528ae5f575",
+      "postimage_sha256": "40fbe6b43b8595a03688e14658f532f229a538a0b9eeb86d1b657a35dcc6fa7e"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPublishJourneyStoryGateTest.java",
+      "preimage_blob_sha1": "e24cd5a6a064ffa767e591791bf8c445e3bd016d",
+      "preimage_sha256": "c9ea4e9761b61ba7d834e9a493fab63687f5e25ae6d69573e7c0eefd116b0b84",
+      "postimage_blob_sha1": "18c3e35f03a1a75cc965d6a92d2a55201a2acaf9",
+      "postimage_sha256": "a64106f221de452e6b65e393c63dfb7c9be548300bfef33f3fb69651f115ed90"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSupplyStationContractTest.java",
+      "preimage_blob_sha1": "5e51bdd7383a8ba4c6ea10f6a5e40bd3d1844232",
+      "preimage_sha256": "a86cf33586ac39d57d57a0a037aae176333b1dc2411251e81e547e5539f80b7b",
+      "postimage_blob_sha1": "64e67299e9133c3b23f9bf70b83b66122ffb07f4",
+      "postimage_sha256": "829ab8fdf8e359e549020adf5fd98fe75f16686d3b62fac058fdafb65196a443"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationDeclarationsTest.java",
+      "preimage_blob_sha1": "6d54a3e294b4c6ecf8fe87d2009a8f2f35754d2e",
+      "preimage_sha256": "558b7dc3b85c2d991bc4b33723beb08ca86077b1abc989fb1f0b32138ab173b4",
+      "postimage_blob_sha1": "63c675c0cae3c3c6f1b36645ee4d471d398e3035",
+      "postimage_sha256": "92c4d4a1ba64b9378169bbe6cd5f1154bf1dc803a2ab3878f9bad192d94ef7ca"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationDiagnosticsTest.java",
+      "preimage_blob_sha1": "917f88dfaa2b28c2644c5219ab09e5b2ab875a71",
+      "preimage_sha256": "93f51bcc9fc54bb62496f302b60dcd735e3d64a6f1e9b6b4d668d1290fc6944e",
+      "postimage_blob_sha1": "6957fa7d9e1bdf8f3b77045d0eb4dbe3c79f1bf9",
+      "postimage_sha256": "aa053cbeea8f57283f524065081a3c5e0066f02ceaa16bf85245d1cd4c8bb3c2"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java",
+      "preimage_blob_sha1": "3b467f7e3af79e3c30b5767bac0bab7f8ffc07b4",
+      "preimage_sha256": "fcebffaf77401781a46aeabe00f4846291139ccf39eab575d39247315d2e79a2",
+      "postimage_blob_sha1": "bce013b019aafe1b6dea9ed36a794c4b75769c67",
+      "postimage_sha256": "eb753caadd09d46308b665fc1b159e1e58937bf47808f91edbd381c656dd9c64"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSupplyStationMySqlIT.java",
+      "preimage_blob_sha1": "b11f13d616f95dee7cb682d3a03ac3c870c3bfc2",
+      "preimage_sha256": "86ae4fbde974aa60830d03d11d6de1c8b2baffcc0555b1f974fd2e0650b6fdab",
+      "postimage_blob_sha1": "03a2cc21a4e59e801137dc0bb26030869e7a258e",
+      "postimage_sha256": "928856705145dbbdd0d1e52ea37cc91c50869eb40bb67c6322beb0387d58dfcf"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicContentCopyMySqlFixture.java",
+      "preimage_blob_sha1": "b1d868e993f1d8417de4122fce0a5d7866ea9167",
+      "preimage_sha256": "4aac0f20fb9ea7ec79f35f1d3ca79cb39ae456455e4d424593c964b29b34c10d",
+      "postimage_blob_sha1": "3a433b1347da9adc3cbee88a7d7b039535b4d259",
+      "postimage_sha256": "08b237cd2a54f9ca7676e8359c16b57c0ac590e0cfd9bdca54995657a938d79e"
+    }
+  ],
+  "unchanged_owned_tests": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopInviteServiceImplTest.java",
+      "blob_sha1": "b4220834d26386cd3ce619fcd48fd0d2c57637d5",
+      "status": "unchanged; original scenarios/assertions retained"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/FreeExploreSupplyNodeTermsAcceptanceTest.java",
+      "blob_sha1": "8ea509a98d27598e3852fafec9ed7be31445f67c",
+      "status": "unchanged; original scenarios/assertions retained"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCoopControllerInviteAuthzTest.java",
+      "blob_sha1": "53819713f0c9cda4669c1957cffd3341dae47087",
+      "status": "unchanged; original scenarios/assertions retained"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCoopSupplyStationsTest.java",
+      "blob_sha1": "548bcc4f5f5fd67274f9650af2f883c38ce93820",
+      "status": "unchanged; original scenarios/assertions retained"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopDepositRefundMybatisIntegrationTest.java",
+      "blob_sha1": "c9cf100f41768e032f6caf9e89133ec6d13e6b7a",
+      "status": "unchanged; original scenarios/assertions retained"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicContentCopyMySqlIT.java",
+      "blob_sha1": "174f2aea602145dccc584d03268ad478d293cadf",
+      "status": "unchanged; original scenarios/assertions retained"
+    }
+  ],
+  "tests_parse_compilation_db_ci": "NOT_RUN"
+}

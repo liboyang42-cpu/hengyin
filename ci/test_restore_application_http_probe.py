@@ -3,7 +3,11 @@ import copy
 from contextlib import nullcontext
 from decimal import Decimal
 import importlib.util
+import json
+import os
 from pathlib import Path
+import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -200,6 +204,163 @@ class RestoreHttpDirectControls(unittest.TestCase):
         self.assertIn('assert_owner_events(evidence',source)
         self.assertIn('tool.backup(',source);self.assertIn('tool.restore(',source)
         self.assertIn('original_exit==0',source)
+
+
+class RestoreHttpFailureLifecycleControls(unittest.TestCase):
+    """C lifecycle controls only; owner transport/host admission are explicit doubles, not acceptance."""
+    name='cy-auth-'+'a'*32
+    schema='cy_e2e_auth_'+'a'*32
+    env={'GITHUB_SHA':'a'*40,'GITHUB_RUN_ID':'31','GITHUB_RUN_ATTEMPT':'1'}
+
+    def failed_report(self):
+        return dict(sourceSha='a'*40,runId='31',runAttempt='1',schema=self.schema,jarSha256='b'*64,
+                    result='NOT_COMPLETED',productionDispatchRelease=False,applicationStartAttempted=False,
+                    phase='SOURCE_DATABASE_PREPARATION',firstFailurePhase='SOURCE_DATABASE_PREPARATION',
+                    firstFailureType='ModuleNotFoundError',boots=[],completeBoots=[],checks=[],
+                    ownedAppCids=[],removedAppCids=[],applicationStop='NO_ACTIVE_APP_SLOT',
+                    privateCleanup='EXACT_OWN_SUBTREE_REMOVED',sourceMysqlCid='1'*64,targetMysqlCid='2'*64,redisCid='3'*64)
+
+    def owner(self,app=None,log='NOT_STARTED'):
+        ids={'mysql':'1'*64,'restore-mysql':'2'*64,'redis':'3'*64}
+        if app:ids['app']=app
+        return {'resourceCleanup':{'cleanup':'CONFIRMED_EXACT_OWNED_REMOVAL','ownedRemoved':[
+                    {'name':self.name+'-'+suffix,'id':cid,'independentNoSuch':True} for suffix,cid in ids.items()]},
+                'applicationLogStatus':log,'applicationLogPreserved':log=='PRESERVED'}
+
+    def finalization(self,report,owner=None,original_exit=1,deny_absence=False):
+        # Execute the real finalize/JSON/absence-classification logic against fixed transport results.
+        # No Docker, application, MySQL, Redis or driver is invoked by these controls.
+        auth=module('restore_http_failure_original_absence','authenticated_redis_recovery_probe.py')
+        fake_auth=SimpleNamespace(DOCKER=auth.DOCKER,require_absent=auth.require_absent)
+        fake_runtime=SimpleNamespace(gate=lambda env:None)
+        commands=[]
+        def absent(argv,**kwargs):
+            commands.append(argv)
+            kind='network' if argv[-3:-1]==['network','inspect'] else 'container'
+            error=('permission denied; do-not-export-inner-detail' if deny_absence else 'Error: No such '+kind+': '+argv[-1])
+            return SimpleNamespace(returncode=1,stderr=error.encode())
+        with tempfile.TemporaryDirectory() as directory:
+            out=Path(directory)
+            if report is not None:
+                (out/'restore-http-application.json').write_text(report if isinstance(report,str) else json.dumps(report))
+            value=self.owner() if owner is None else owner
+            (out/'authenticated-redis-recovery.json').write_text(value if isinstance(value,str) else json.dumps(value))
+            def load(name,path):return fake_runtime if path.endswith('runtime.py') else fake_auth
+            failure=None
+            with patch.dict(os.environ,self.env),patch.object(P,'load',side_effect=load),patch.object(P.subprocess,'run',side_effect=absent):
+                try:P.finalize(self.name,self.schema,out,original_exit)
+                except ValueError as caught:failure=caught
+            proof=json.loads((out/'restore-http-cleanup.json').read_text())
+        return proof,failure,commands
+
+    def success_report(self):
+        report=self.failed_report();report.pop('firstFailureType');report.pop('firstFailurePhase')
+        report.update(applicationStartAttempted=True,phase='RESTORED_HELD_WORKLOAD',
+                      result='SCOPED_RESTORE_HTTP_STARTUP_AND_REAL_OWNER_HOLD_VERIFIED',
+                      applicationStop='STOPPED_EXACT_APP_CID',networkId='d'*64,
+                      sourceServerUuid='11111111-1111-1111-1111-111111111111',
+                      targetServerUuid='22222222-2222-2222-2222-222222222222')
+        owned=[str(i)*64 for i in (4,5,6,7,8)];report['ownedAppCids']=owned;report['removedAppCids']=owned[:-1]
+        boots=[]
+        for i,mode in enumerate(('false','false','true','invalid','')):
+            boots.append(dict(bootId='boot-'+str(i),appCid=owned[i],javaPid=17,side='source' if i==0 else 'target',
+                              serverUuid=report['sourceServerUuid'] if i==0 else report['targetServerUuid'],
+                              restoreMode=mode,guardHeld=mode!='false',schedulerStarted=True,
+                              sourceSha=report['sourceSha'],schema=report['schema'],jarSha256=report['jarSha256']))
+        report['completeBoots']=boots[:2];report['boots']=boots[2:]
+        report['checks']=[{'case':'original_complete_cohort','providerSubmits':1}]+[
+            {'case':'held-full-http-and-actual-wake','mode':mode,'newDispatches':0} for mode in P.HELD_MODES]
+        return report
+
+    def test_zero_boot_failure_preserves_original_cause_and_resource_proof_without_acceptance(self):
+        proof,failure,commands=self.finalization(self.failed_report())
+        self.assertIsInstance(failure,ValueError);self.assertEqual(proof['result'],'NOT_ACCEPTED')
+        self.assertEqual(proof['firstFailureType'],'ModuleNotFoundError')
+        self.assertEqual(proof['firstFailurePhase'],'SOURCE_DATABASE_PREPARATION')
+        self.assertEqual(proof['originalExit'],1);self.assertTrue(proof['confirmedPreStartFailure'])
+        self.assertEqual(proof['resourceCleanup'],'CONFIRMED_EXACT_OWNED_REMOVAL')
+        self.assertEqual(proof['applicationLogStatus'],'NOT_STARTED');self.assertFalse(proof['productionDispatchRelease'])
+        self.assertEqual(len(commands),8) # Five exact names plus the three known created backing CIDs.
+
+    def test_zero_boot_failure_cannot_turn_green_if_outer_exit_is_wrongly_zero(self):
+        proof,failure,_=self.finalization(self.failed_report(),original_exit=0)
+        self.assertIsInstance(failure,ValueError);self.assertEqual(proof['result'],'NOT_ACCEPTED')
+        self.assertNotEqual(proof['resourceCleanup'],'CLEAN')
+
+    def test_attempt_is_persisted_before_a_failed_create_and_never_inferred_from_empty_cids(self):
+        snapshots=[];report=self.failed_report()
+        class Slot:
+            def runtime_report_write(self,path,value):snapshots.append(copy.deepcopy(value))
+            def start(self,*args,**kwargs):
+                if snapshots[-1]['applicationStartAttempted'] is not True:raise AssertionError('missing durable attempt checkpoint')
+                raise RuntimeError('do-not-export-inner-detail')
+        with self.assertRaisesRegex(RuntimeError,'do-not-export-inner-detail'):
+            P.start_application(Slot(),report,Path('unused'),'SOURCE_APPLICATION_START','source','false','original-uuid')
+        self.assertTrue(report['applicationStartAttempted']);self.assertEqual(report['ownedAppCids'],[])
+        self.assertEqual(snapshots[0]['phase'],'SOURCE_APPLICATION_START');self.assertFalse(P.confirmed_pre_start_failure(report))
+
+    def test_attempted_create_with_no_cid_cannot_claim_no_app_logs_needed(self):
+        report=self.failed_report();report.update(applicationStartAttempted=True,phase='SOURCE_APPLICATION_START',firstFailurePhase='SOURCE_APPLICATION_START')
+        proof,failure,_=self.finalization(report)
+        self.assertIsInstance(failure,ValueError);self.assertFalse(proof['confirmedPreStartFailure'])
+        self.assertEqual(proof['result'],'NOT_ACCEPTED')
+        self.assertTrue(any(row['phase']=='READ_OR_VERIFY_OWNER_CLEANUP' for row in proof['finalizationFailures']))
+
+    def test_attempted_start_with_unavailable_logs_remains_failure_even_after_resource_removal(self):
+        report=self.failed_report();report.update(applicationStartAttempted=True,phase='SOURCE_APPLICATION_START',firstFailurePhase='SOURCE_APPLICATION_START')
+        proof,failure,_=self.finalization(report,self.owner(log='UNAVAILABLE'))
+        self.assertIsInstance(failure,ValueError);self.assertEqual(proof['result'],'NOT_ACCEPTED')
+        self.assertEqual(proof['applicationLogStatus'],'UNAVAILABLE');self.assertNotEqual(proof['resourceCleanup'],'CLEAN')
+        self.assertEqual(proof['firstFailureType'],'ModuleNotFoundError')
+
+    def test_wrong_source_run_attempt_or_schema_cannot_supply_failure_identity(self):
+        for key,value in (('sourceSha','f'*40),('runId','999'),('runAttempt','2'),('schema','foreign')):
+            with self.subTest(key=key):
+                report=self.failed_report();report[key]=value;report['ownedAppCids']=['9'*64]
+                proof,failure,commands=self.finalization(report)
+                self.assertIsInstance(failure,ValueError);self.assertEqual(proof['result'],'NOT_ACCEPTED')
+                self.assertNotIn('firstFailureType',proof)
+                self.assertTrue(any(row['phase']=='READ_APPLICATION_REPORT' for row in proof['finalizationFailures']))
+                self.assertNotIn('9'*64,[argv[-1] for argv in commands])
+
+    def test_corrupt_or_missing_report_retains_safe_error_and_independent_absence(self):
+        for damaged in ('{"token":"do-not-export-inner-detail",',None):
+            with self.subTest(damaged=damaged is None):
+                proof,failure,commands=self.finalization(damaged)
+                self.assertIsInstance(failure,ValueError);self.assertEqual(proof['result'],'NOT_ACCEPTED')
+                self.assertEqual(proof['originalExit'],1);self.assertEqual(len(commands),8)
+                self.assertNotIn('do-not-export-inner-detail',json.dumps(proof))
+
+    def test_claimed_success_with_zero_boots_is_rejected_without_index_error(self):
+        report=self.success_report();report.update(boots=[],completeBoots=[],ownedAppCids=[],removedAppCids=[])
+        proof,failure,_=self.finalization(report,self.owner(app='8'*64,log='PRESERVED'),original_exit=0)
+        self.assertIsInstance(failure,ValueError);self.assertEqual(proof['result'],'NOT_ACCEPTED')
+        self.assertTrue(any(row['phase']=='VERIFY_SUCCESSFUL_APPLICATION_LIFECYCLE' for row in proof['finalizationFailures']))
+
+    def test_unknown_absence_cannot_hide_original_failure_or_publish_inner_detail(self):
+        proof,failure,_=self.finalization(self.failed_report(),deny_absence=True)
+        self.assertIsInstance(failure,ValueError);self.assertEqual(proof['resourceCleanup'],'UNKNOWN')
+        self.assertEqual(proof['firstFailureType'],'ModuleNotFoundError');self.assertEqual(proof['result'],'NOT_ACCEPTED')
+        self.assertTrue(all(not row['absent'] for row in proof['absence']))
+        self.assertNotIn('do-not-export-inner-detail',json.dumps(proof))
+
+    def test_exact_five_boot_success_still_requires_four_cids_logs_and_original_zero_exit(self):
+        report=self.success_report();owner=self.owner(app=report['ownedAppCids'][-1],log='PRESERVED')
+        proof,failure,_=self.finalization(report,owner,original_exit=0)
+        self.assertIsNone(failure);self.assertEqual(proof['result'],'SCOPED_HTTP_RESTORE_EVIDENCE_COMPLETE_NO_PRODUCTION_RELEASE')
+        self.assertEqual(proof['resourceCleanup'],'CLEAN');self.assertFalse(proof['productionDispatchRelease'])
+        proof,failure,_=self.finalization(report,owner,original_exit=1)
+        self.assertIsInstance(failure,ValueError);self.assertEqual(proof['result'],'NOT_ACCEPTED')
+
+    def test_success_cannot_drop_a_boot_change_original_jar_or_backing_cid(self):
+        for change in ('boot','jar','cid'):
+            with self.subTest(change=change):
+                report=self.success_report();owner=self.owner(app=report['ownedAppCids'][-1],log='PRESERVED')
+                if change=='boot':report['boots'].pop()
+                elif change=='jar':report['boots'][0]['jarSha256']='f'*64
+                else:owner['resourceCleanup']['ownedRemoved'][0]['id']='9'*64
+                proof,failure,_=self.finalization(report,owner,original_exit=0)
+                self.assertIsInstance(failure,ValueError);self.assertEqual(proof['result'],'NOT_ACCEPTED')
 
 
 if __name__=='__main__':unittest.main()

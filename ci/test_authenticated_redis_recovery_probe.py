@@ -532,6 +532,140 @@ class AuthenticatedRedisSafetyTest(unittest.TestCase):
             self.assertFalse(network)
             self.assertEqual(report['resourceCleanup']['cleanup'], 'CONFIRMED_EXACT_OWNED_REMOVAL')
 
+    @staticmethod
+    def restore_prestart_env():
+        return {'GITHUB_EVENT_NAME': 'workflow_dispatch', 'GITHUB_REPOSITORY': 'liboyang42-cpu/hengyin',
+                'GITHUB_SHA': 'b' * 40, 'GITHUB_RUN_ID': '123', 'GITHUB_RUN_ATTEMPT': '1'}
+
+    @staticmethod
+    def restore_prestart_report():
+        return {'sourceSha': 'b' * 40, 'schema': 'cy_e2e_auth_' + 'a' * 32,
+                'jarSha256': 'c' * 64,
+                'runId': '123', 'runAttempt': '1', 'applicationStartAttempted': False,
+                'boots': [], 'completeBoots': [], 'checks': [], 'ownedAppCids': [], 'removedAppCids': [],
+                'applicationStop': 'NO_ACTIVE_APP_SLOT', 'result': 'NOT_COMPLETED',
+                'privateCleanup': 'EXACT_OWN_SUBTREE_REMOVED',
+                'phase': 'SOURCE_DATABASE_PREPARATION', 'firstFailurePhase': 'SOURCE_DATABASE_PREPARATION',
+                'firstFailureType': 'ModuleNotFoundError', 'productionDispatchRelease': False,
+                'sourceMysqlCid': '2' * 64, 'targetMysqlCid': '4' * 64, 'redisCid': '3' * 64}
+
+    def test_same_run_restore_before_first_start_has_no_log_but_stays_failed_after_exact_cleanup(self):
+        for phase in ('PRE_APPLICATION_PREPARATION', 'SOURCE_DATABASE_PREPARATION'):
+            with self.subTest(phase=phase), tempfile.TemporaryDirectory() as directory, \
+                    mock.patch.dict(probe.os.environ, self.restore_prestart_env(), clear=True):
+                out = Path(directory); original = self.restore_prestart_report()
+                original.update(phase=phase, firstFailurePhase=phase, firstFailureType='_ControlledFailure')
+                probe.write_report(out, 'restore-http-application.json', original)
+                report, removed, network = self.cleanup_fixture(out, None, restore=True)
+                self.assertEqual(report['applicationLogStatus'], 'NOT_STARTED')
+                self.assertFalse(report['applicationLogPreserved'])
+                self.assertEqual(report['result'], 'FAIL_BEFORE_BUSINESS_PROBE')
+                self.assertNotIn('cleanupFailure', report)
+                self.assertEqual(report['resourceCleanup']['cleanup'], 'CONFIRMED_EXACT_OWNED_REMOVAL')
+                self.assertEqual(len(removed), 3)
+                self.assertFalse(network)
+
+    def test_restore_prestart_marker_never_accepts_started_unknown_or_foreign_evidence(self):
+        changes = [('applicationStartAttempted', True), ('applicationStartAttempted', None),
+                   ('applicationStartAttempted', 0), ('applicationStartAttempted', 'false'),
+                   ('boots', [{'appCid': '1' * 64}]), ('ownedAppCids', ['1' * 64]),
+                   ('completeBoots', [{}]), ('completeBoots', {}), ('checks', [{}]),
+                   ('jarSha256', ''), ('jarSha256', None), ('jarSha256', 'G' * 64),
+                   ('privateCleanup', 'UNKNOWN'), ('firstFailurePhase', None),
+                   ('firstFailurePhase', 'SOURCE_APPLICATION_START'),
+                   ('removedAppCids', ['1' * 64]), ('applicationStop', 'UNKNOWN'),
+                   ('sourceSha', 'c' * 40), ('schema', 'foreign'), ('runId', 'old'), ('runAttempt', '2'),
+                   ('sourceMysqlCid', '9' * 64), ('targetMysqlCid', '2' * 64),
+                   ('result', 'SCOPED_RESTORE_HTTP_STARTUP_AND_REAL_OWNER_HOLD_VERIFIED'),
+                   ('firstFailureType', {'canary': 'never accept dynamic cause'}), ('productionDispatchRelease', True)]
+        for key, value in changes:
+            with self.subTest(key=key, value=value), tempfile.TemporaryDirectory() as directory, \
+                    mock.patch.dict(probe.os.environ, self.restore_prestart_env(), clear=True):
+                out = Path(directory); original = self.restore_prestart_report(); original[key] = value
+                probe.write_report(out, 'restore-http-application.json', original)
+                report, removed, network = self.cleanup_fixture(out, None, restore=True)
+                self.assertEqual(report['applicationLogStatus'], 'UNAVAILABLE')
+                self.assertIn('cleanupFailure', report)
+                self.assertEqual(report['resourceCleanup']['cleanup'], 'CONFIRMED_EXACT_OWNED_REMOVAL')
+                self.assertEqual(len(removed), 3)
+                self.assertFalse(network)
+        for key in ('sourceSha', 'schema', 'runId', 'runAttempt', 'jarSha256', 'applicationStartAttempted',
+                    'boots', 'completeBoots', 'checks', 'ownedAppCids', 'removedAppCids', 'applicationStop',
+                    'result', 'privateCleanup', 'firstFailurePhase', 'firstFailureType', 'productionDispatchRelease'):
+            with self.subTest(missing=key), tempfile.TemporaryDirectory() as directory, \
+                    mock.patch.dict(probe.os.environ, self.restore_prestart_env(), clear=True):
+                out = Path(directory); original = self.restore_prestart_report(); original.pop(key)
+                probe.write_report(out, 'restore-http-application.json', original)
+                report, removed, network = self.cleanup_fixture(out, None, restore=True)
+                self.assertEqual(report['applicationLogStatus'], 'UNAVAILABLE')
+                self.assertIn('cleanupFailure', report)
+                self.assertEqual(len(removed), 3)
+                self.assertFalse(network)
+
+    def test_restore_prestart_missing_corrupt_or_linked_report_never_waives_logs(self):
+        for case in ('missing', 'corrupt', 'array', 'missing_marker', 'symlink', 'original_auth_corrupt', 'original_auth_pass'):
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as directory, \
+                    mock.patch.dict(probe.os.environ, self.restore_prestart_env(), clear=True):
+                out = Path(directory); target = out / 'restore-http-application.json'
+                if case == 'corrupt': target.write_text('{bad')
+                elif case == 'array': target.write_text('[]')
+                elif case == 'missing_marker':
+                    original = self.restore_prestart_report(); original.pop('applicationStartAttempted')
+                    probe.write_report(out, target.name, original)
+                elif case == 'symlink':
+                    source = out / 'controlled.json'; source.write_text(json.dumps(self.restore_prestart_report()))
+                    target.symlink_to(source)
+                elif case.startswith('original_auth_'):
+                    probe.write_report(out, target.name, self.restore_prestart_report())
+                original_auth = ('{bad' if case == 'original_auth_corrupt' else
+                                 {'result': 'PASS_AUTHENTICATED_REFUND_LEASE_REDIS_RECOVERY'} if case == 'original_auth_pass' else None)
+                report, removed, network = self.cleanup_fixture(out, original_auth, restore=True)
+                self.assertEqual(report['applicationLogStatus'], 'UNAVAILABLE')
+                self.assertIn('cleanupFailure', report)
+                self.assertEqual(len(removed), 3)
+                self.assertFalse(network)
+
+    def test_restore_prestart_cannot_waive_real_app_log_failure_or_unknown_physical_absence(self):
+        for case in ('app_log_error', 'daemon', 'pull_request', 'normal_mode'):
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as directory, \
+                    mock.patch.dict(probe.os.environ, self.restore_prestart_env(), clear=True):
+                out = Path(directory)
+                probe.write_report(out, 'restore-http-application.json', self.restore_prestart_report())
+                if case == 'pull_request': probe.os.environ['GITHUB_EVENT_NAME'] = 'pull_request'
+                report, removed, network = self.cleanup_fixture(out, None, restore=case != 'normal_mode',
+                    app=case == 'app_log_error', logs='error', daemon_error=case == 'daemon')
+                self.assertNotEqual(report.get('applicationLogStatus'), 'NOT_STARTED')
+                self.assertIn('cleanupFailure', report)
+                if case == 'daemon':
+                    self.assertTrue(network)
+                    self.assertEqual(report['resourceCleanup']['cleanup'], 'NOT_CONFIRMED')
+                else:
+                    self.assertFalse(network)
+                    self.assertEqual(report['resourceCleanup']['cleanup'], 'CONFIRMED_EXACT_OWNED_REMOVAL')
+
+    def test_isolated_driver_install_uses_owned_venv_and_keeps_original_modes_and_I(self):
+        workflow = (path.parents[1] / '.github/workflows/isolated-authenticated-redis-recovery.yml').read_text()
+        original = workflow.split('      - name: Install existing pinned schema client\n', 1)[1].split('      - name:', 1)[0]
+        isolated = workflow.split('      - name: Install the same pinned driver in the task-owned isolated Python\n', 1)[1].split('      - name:', 1)[0]
+        modes = "github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'restore-application-startup' || inputs.probe_mode == 'gameplay-process-recovery' || inputs.probe_mode == 'gameplay-capacity-mixed')"
+        self.assertIn('if: ${{ !(' + modes + ') }}', original)
+        self.assertIn('if: ${{ ' + modes + ' }}', isolated)
+        self.assertIn('run: python3 -m pip install --disable-pip-version-check PyMySQL==1.1.1', original)
+        for text in ('python3 -m venv "$venv"', '"$venv/bin/python3" -I -m pip install --no-user',
+                     'PyMySQL==1.1.1', "importlib.metadata.version('PyMySQL') == '1.1.1'",
+                     'sys.prefix != sys.base_prefix', 'crypt.METHOD_BLOWFISH',
+                     'printf \'%s\\n\' "$venv/bin" >> "$GITHUB_PATH"'):
+            self.assertIn(text, isolated)
+        self.assertNotIn('--system-site-packages', isolated)
+        self.assertNotIn('PYTHONPATH', isolated)
+        cleanup = workflow.split('      - name: Remove only this task-owned isolated Python\n', 1)[1].split('      - name:', 1)[0]
+        self.assertIn("always() && steps.isolated_python.outcome != 'skipped'", cleanup)
+        self.assertIn('"$venv/.chengyin-owner"', cleanup)
+        self.assertIn('test ! -L "$venv"', cleanup)
+        self.assertIn('rm -rf -- "$venv"', cleanup)
+        self.assertLess(workflow.index('bash ci/authenticated-redis-recovery.sh'), workflow.index('Remove only this task-owned isolated Python'))
+        self.assertLess(workflow.index('Remove only this task-owned isolated Python'), workflow.index('Preserve explicit safe evidence'))
+
     def test_restore_startup_admission_is_manual_exclusive_and_child_mode_only(self):
         env = {'GITHUB_ACTIONS': 'true', 'RUNNER_OS': 'Linux', 'RUNNER_ENVIRONMENT': 'github-hosted',
                'GITHUB_REPOSITORY': 'liboyang42-cpu/hengyin', 'GITHUB_WORKFLOW': 'Isolated authenticated Redis recovery',

@@ -4,6 +4,14 @@ import com.chengyinhub.business.service.impl.CmsTopicServiceImpl;
 import com.chengyinhub.business.service.impl.TopicPublicationService;
 import com.chengyinhub.business.service.impl.TopicQueryService;
 import com.chengyinhub.business.service.impl.TopicContentCopyServiceImpl;
+import com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl;
+import com.chengyinhub.business.mapper.CmsTopicMapper;
+import com.chengyinhub.business.mapper.CmsTopicChapterMapper;
+import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
+import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
+import com.chengyinhub.business.mapper.ThemeStateKeyMapper;
+import com.chengyinhub.business.domain.CmsTopicChapter;
+import com.chengyinhub.business.domain.CmsTopicNode;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.List;
@@ -27,9 +35,9 @@ public final class TopicPublicationTestWiring {
         TopicPublicationService publication = (TopicPublicationService) ReflectionTestUtils.getField(facade, "topicPublicationService");
         TopicPublicationContentGuard content = (TopicPublicationContentGuard) ReflectionTestUtils.getField(facade, "publicationContentGuard");
         TopicSelfHostActivityService activity = (TopicSelfHostActivityService) ReflectionTestUtils.getField(facade, "selfHostActivityService");
-        if (publication == null || Mockito.mockingDetails(publication).isMock()) publication = new TopicPublicationService();
-        if (content == null || Mockito.mockingDetails(content).isMock()) content = new TopicPublicationContentGuard();
-        if (activity == null || Mockito.mockingDetails(activity).isMock()) activity = new TopicSelfHostActivityService();
+        if (publication == null || plainMock(publication)) publication = new TopicPublicationService();
+        if (content == null || plainMock(content)) content = new TopicPublicationContentGuard();
+        if (activity == null || plainMock(activity)) activity = new TopicSelfHostActivityService();
         ReflectionTestUtils.setField(facade, "topicPublicationService", publication);
         ReflectionTestUtils.setField(facade, "publicationContentGuard", content);
         ReflectionTestUtils.setField(facade, "selfHostActivityService", activity);
@@ -37,11 +45,13 @@ public final class TopicPublicationTestWiring {
         ReflectionTestUtils.setField(publication, "selfHostActivityService", activity);
         TopicQueryService query = (TopicQueryService) ReflectionTestUtils.getField(facade, "topicQueryService");
         Object existingCopy = ReflectionTestUtils.getField(facade, "topicContentCopyService");
-        if (query == null || Mockito.mockingDetails(query).isMock()) query = new TopicQueryService();
-        if (existingCopy == null || Mockito.mockingDetails(existingCopy).isMock()) existingCopy = new TopicContentCopyServiceImpl();
+        if (query == null || plainMock(query)) query = new TopicQueryService();
+        if (existingCopy == null || plainMock(existingCopy)) existingCopy = new TopicContentCopyServiceImpl();
         ReflectionTestUtils.setField(facade, "topicQueryService", query);
         ReflectionTestUtils.setField(facade, "topicContentCopyService", existingCopy);
-        List<Object> result = new ArrayList<>(List.of(publication, content, activity, query,
+        List<Object> result = new ArrayList<>(List.of(AopTestUtils.getUltimateTargetObject(publication),
+                AopTestUtils.getUltimateTargetObject(content), AopTestUtils.getUltimateTargetObject(activity),
+                AopTestUtils.getUltimateTargetObject(query),
                 AopTestUtils.getUltimateTargetObject(existingCopy)));
         Object graph = ReflectionTestUtils.getField(facade, "contentGraphAuthoringService");
         if (graph != null && !Mockito.mockingDetails(graph).isMock())
@@ -61,8 +71,10 @@ public final class TopicPublicationTestWiring {
                 && !Mockito.mockingDetails(topicMapper).isSpy()
                 && Mockito.mockingDetails(topicMapper).getStubbings().stream().noneMatch(stub ->
                 "lockTopicContentBudget".equals(stub.getInvocation().getMethod().getName()))) {
-            Mockito.when(topicMapper.lockTopicContentBudget(org.mockito.ArgumentMatchers.anyLong()))
-                    .thenAnswer(call -> call.getArgument(0));
+            Mockito.lenient().doAnswer(call -> {
+                var current = topicMapper.selectCmsTopicByIdForUpdate(call.getArgument(0));
+                return current == null ? null : current.getId();
+            }).when(topicMapper).lockTopicContentBudget(org.mockito.ArgumentMatchers.anyLong());
         }
         // Unit-only current-read port: retain the fixture's original topic/owner/status rows.
         Object stateKeys = get(facade, "themeStateKeyService");
@@ -72,10 +84,10 @@ public final class TopicPublicationTestWiring {
             if (keys != null && Mockito.mockingDetails(keys).isMock() && !Mockito.mockingDetails(keys).isSpy()
                     && Mockito.mockingDetails(keys).getStubbings().stream().noneMatch(stub ->
                     "lockTopicForStateKeyWrite".equals(stub.getInvocation().getMethod().getName()))) {
-                Mockito.when(keys.lockTopicForStateKeyWrite(org.mockito.ArgumentMatchers.anyLong())).thenAnswer(call -> {
+                Mockito.lenient().doAnswer(call -> {
                     var parent = topicMapper.selectCmsTopicByIdForUpdate(call.getArgument(0));
                     return parent == null ? null : parent.getId();
-                });
+                }).when(keys).lockTopicForStateKeyWrite(org.mockito.ArgumentMatchers.anyLong());
             }
         }
         // Real MySQL mappers and spies always execute their real FOR UPDATE statement.
@@ -83,8 +95,8 @@ public final class TopicPublicationTestWiring {
                 && !Mockito.mockingDetails(topicMapper).isSpy()
                 && Mockito.mockingDetails(topicMapper).getStubbings().stream().noneMatch(stub ->
                 "selectCmsTopicByIdForUpdate".equals(stub.getInvocation().getMethod().getName()))) {
-            Mockito.when(topicMapper.selectCmsTopicByIdForUpdate(org.mockito.ArgumentMatchers.anyLong()))
-                    .thenAnswer(call -> topicMapper.selectCmsTopicById(call.getArgument(0)));
+            Mockito.lenient().doAnswer(call -> topicMapper.selectCmsTopicById(call.getArgument(0)))
+                    .when(topicMapper).selectCmsTopicByIdForUpdate(org.mockito.ArgumentMatchers.anyLong());
         }
         TopicBundleReviewService bundle = (TopicBundleReviewService) get(facade, "topicBundleReviewService");
         if (bundle != null && Mockito.mockingDetails(bundle).isMock() && !Mockito.mockingDetails(bundle).isSpy()
@@ -108,7 +120,7 @@ public final class TopicPublicationTestWiring {
                     org.mockito.ArgumentMatchers.anyList())).thenAnswer(call -> runtime.freezePublication(call.getArgument(0), call.getArgument(1)));
         }
         TopicContentWriteGuard guard = (TopicContentWriteGuard) ReflectionTestUtils.getField(facade, "contentWriteGuard");
-        if (guard == null) {
+        if (guard == null || plainMock(guard)) {
             guard = new TopicContentWriteGuard(topicMapper,
                     (com.chengyinhub.business.mapper.CmsTopicChapterMapper) ReflectionTestUtils.getField(facade, "cmsTopicChapterMapper"),
                     (com.chengyinhub.business.mapper.CmsMemberTemplateMapper) get(facade, "cmsMemberTemplateMapper"),
@@ -128,7 +140,108 @@ public final class TopicPublicationTestWiring {
                 }
             }
         }
+        wireCurrentPublication(facade);
         return value;
+    }
+
+    private static boolean plainMock(Object value) {
+        return value != null && Mockito.mockingDetails(value).isMock() && !Mockito.mockingDetails(value).isSpy();
+    }
+
+    private static boolean unstubbed(Object value, String method) {
+        return plainMock(value) && Mockito.mockingDetails(value).getStubbings().stream()
+                .noneMatch(stub -> method.equals(stub.getInvocation().getMethod().getName()));
+    }
+
+    /** Adapt new current-read names to each unit fixture's original facts, never to fabricated rows.
+     * Real mapper beans/spies and explicit current-read stubs are left alone. */
+    private static void wireCurrentPublication(CmsTopicServiceImpl facade) {
+        CmsTopicMapper topics = (CmsTopicMapper) get(facade, "cmsTopicMapper");
+        CmsTopicChapterMapper chapters = (CmsTopicChapterMapper) get(facade, "cmsTopicChapterMapper");
+        CmsTopicNodeMapper nodes = (CmsTopicNodeMapper) get(facade, "cmsTopicNodeMapper");
+        CmsMemberTemplateMapper templates = (CmsMemberTemplateMapper) get(facade, "cmsMemberTemplateMapper");
+        if (unstubbed(chapters, "selectByTopicForUpdate")) {
+            Mockito.lenient().doAnswer(call -> {
+                CmsTopicChapter query = new CmsTopicChapter(); query.setTopicId(call.getArgument(0));
+                return chapters.selectCmsTopicChapterList(query);
+            }).when(chapters).selectByTopicForUpdate(org.mockito.ArgumentMatchers.anyLong());
+        }
+        if (unstubbed(nodes, "selectByTopicForUpdate")) {
+            Mockito.lenient().doAnswer(call -> {
+                CmsTopicNode query = new CmsTopicNode(); query.setTopicId(call.getArgument(0));
+                return nodes.selectCmsTopicNodeList(query);
+            }).when(nodes).selectByTopicForUpdate(org.mockito.ArgumentMatchers.anyLong());
+        }
+        if (unstubbed(templates, "selectCmsMemberTemplateByIdsForUpdate")) {
+            Mockito.lenient().doAnswer(call -> {
+                List<com.chengyinhub.business.domain.CmsMemberTemplate> result = new ArrayList<>();
+                for (Long id : (List<Long>) call.getArgument(0)) {
+                    var row = templates.selectCmsMemberTemplateById(id);
+                    if (row != null) result.add(row);
+                }
+                return result;
+            }).when(templates).selectCmsMemberTemplateByIdsForUpdate(org.mockito.ArgumentMatchers.anyList());
+        }
+        Object service = get(facade, "themeStateKeyService");
+        if (!(service instanceof ThemeStateKeyService) || plainMock(service)) return;
+        ThemeStateKeyMapper keys = (ThemeStateKeyMapper) ReflectionTestUtils.getField(service, "themeStateKeyMapper");
+        if (unstubbed(keys, "selectByTopicIdForUpdate")) {
+            Mockito.lenient().doAnswer(call -> keys.selectByTopicId(call.getArgument(0)))
+                    .when(keys).selectByTopicIdForUpdate(org.mockito.ArgumentMatchers.anyLong());
+        }
+        if (topics == null || chapters == null || nodes == null || templates == null || keys == null) return;
+        Object references = get(facade, "topicStateKeyRefService");
+        if (references == null || (plainMock(references)
+                && Mockito.mockingDetails(references).getStubbings().isEmpty())) {
+            references = new TopicStateKeyRefService(nodes, templates, chapters);
+            set(facade, "topicStateKeyRefService", references);
+        }
+        if (references instanceof TopicStateKeyRefService && !plainMock(references))
+            ReflectionTestUtils.setField(references, "cmsTopicMapper", topics);
+        Object runtime = get(facade, "topicRouteRuntimeService");
+        if (runtime == null || (plainMock(runtime) && Mockito.mockingDetails(runtime).getStubbings().isEmpty())) {
+            TopicRouteRuntimeServiceImpl actual = new TopicRouteRuntimeServiceImpl(null, topics, nodes, null,
+                    (com.chengyinhub.business.mapper.CmsActivityMapper) get(facade, "cmsActivityMapper"),
+                    (com.chengyinhub.business.mapper.CmsRegistrationMapper) get(facade, "cmsRegistrationMapper"));
+            ReflectionTestUtils.setField(actual, "templateMapper", templates);
+            ReflectionTestUtils.setField(actual, "themeStateKeyMapper", keys);
+            ReflectionTestUtils.setField(actual, "cmsTopicChapterMapper", chapters);
+            set(facade, "topicRouteRuntimeService", actual);
+        }
+    }
+
+    /** Genuine Spring transaction interception for the original Mockito mapper unit fixtures.
+     * The connection is a controlled resource double, not a database or rollback claim. SQL is forbidden.
+     * JDBC/H2 fixtures keep their existing real DataSourceTransactionManager/proxy instead. */
+    @SuppressWarnings("unchecked")
+    public static <T> T transactional(T value) {
+        wire(value);
+        if (org.springframework.aop.support.AopUtils.isAopProxy(value)) return value;
+        CmsTopicServiceImpl target = facade(value);
+        if (target == null) throw new IllegalArgumentException("Expected the real topic fixture target");
+        org.springframework.transaction.PlatformTransactionManager manager =
+                (org.springframework.transaction.PlatformTransactionManager) ReflectionTestUtils.getField(target, "transactionManager");
+        if (manager == null || plainMock(manager)) {
+            javax.sql.DataSource source = Mockito.mock(javax.sql.DataSource.class);
+            try {
+                Mockito.doAnswer(call -> {
+                    java.sql.Connection connection = Mockito.mock(java.sql.Connection.class);
+                    Mockito.when(connection.getAutoCommit()).thenReturn(true);
+                    Mockito.doThrow(new AssertionError("Unit mapper fixture must not execute JDBC SQL"))
+                            .when(connection).prepareStatement(org.mockito.ArgumentMatchers.anyString());
+                    Mockito.doThrow(new AssertionError("Unit mapper fixture must not execute JDBC SQL"))
+                            .when(connection).createStatement();
+                    return connection;
+                }).when(source).getConnection();
+            } catch (java.sql.SQLException impossible) { throw new IllegalStateException(impossible); }
+            manager = new org.springframework.jdbc.datasource.DataSourceTransactionManager(source);
+            ReflectionTestUtils.setField(target, "transactionManager", manager);
+        }
+        org.springframework.aop.framework.ProxyFactory factory = new org.springframework.aop.framework.ProxyFactory(target);
+        factory.setProxyTargetClass(true);
+        factory.addAdvice(new org.springframework.transaction.interceptor.TransactionInterceptor(manager,
+                new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource()));
+        return (T) factory.getProxy(CmsTopicServiceImpl.class.getClassLoader());
     }
 
     /** Preserve the old "mock every injected collaborator" fixtures after fields move to their real owner. */
