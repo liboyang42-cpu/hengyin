@@ -232,6 +232,7 @@ Page({
     // HO-26 集合时间(承接方领队改运营详情):显示值取 /api/topic/info-to-user 的 activityList
     // (与本场同一个 activity.startDate),改完回读,不本地先改。
     opsTimeAvailable: false,
+    opsTimeLocked: false,
     opsTimeText: '',
     opsTimeSheetVisible: false,
     opsTimeSubmitting: false,
@@ -270,6 +271,7 @@ Page({
   // 「接下来」卡会停在改期前的 activityList(实测返回后仍写旧日期,退出重进才对)。
   // 首展闸照 pages/club/customers/index.js:首屏由 onLoad 负责,返回即重拉。
   onShow() {
+    this._syncOpsTimeContext();
     this._navigating = false; if (!this._hasShown) { this._hasShown = true; return; }
     if (!this.data.loaded || this.data.loadError || this.data.missingParam) return;
     this.fetchDetail();
@@ -324,7 +326,12 @@ Page({
     const seq = (this._detailSeq || 0) + 1;
     this._detailSeq = seq;
     const memberId = app.getUserID && app.getUserID();
-    const current = () => seq === this._detailSeq && memberId === (app.getUserID && app.getUserID());
+    const activityId = this._directorActivityId;
+    const topicId = this._topicId;
+    const clubId = this._clubId;
+    const current = () => !this._opsDisposed && seq === this._detailSeq
+      && activityId === this._directorActivityId && topicId === this._topicId && clubId === this._clubId
+      && memberId === (app.getUserID && app.getUserID());
     const that = this;
     app.sendRequest({
       hideLoading: true,
@@ -412,15 +419,36 @@ Page({
   },
 
   syncOpsTime() {
+    this._syncOpsTimeContext();
     const match = this._opsTimeMatch();
     this.setData({
       opsTimeAvailable: !!match,
+      opsTimeLocked: this._opsTimeSoldKey === this._opsTimeContextKey(),
       opsTimeText: match ? (Number(match[2]) + '月' + Number(match[3]) + '日 ' + match[4]) : '',
     });
   },
 
+  _opsTimeContextKey() {
+    return JSON.stringify([app.getUserID && app.getUserID(), this._clubId, this._topicId, this._directorActivityId]);
+  },
+
+  _syncOpsTimeContext() {
+    const key = this._opsTimeContextKey();
+    if (this._opsTimeObservedContext !== undefined && this._opsTimeObservedContext !== key) {
+      this._detailSeq = (this._detailSeq || 0) + 1;
+      this._invalidateOpsTime();
+    }
+    this._opsTimeObservedContext = key;
+  },
+
+  _invalidateOpsTime() {
+    this._opsTimeRequest = null;
+    this.setData({ opsTimeSubmitting: false, opsTimeSheetVisible: false, 'resultSheet.show': false });
+  },
+
   openOpsTimeSheet() {
-    if (this.data.opsTimeSubmitting) return;
+    this._syncOpsTimeContext();
+    if (this.data.opsTimeSubmitting || this._opsTimeSoldKey === this._opsTimeContextKey()) return;
     const match = this._opsTimeMatch();
     if (!match) { this.syncOpsTime(); return; }
     this.setData({
@@ -430,6 +458,7 @@ Page({
   },
 
   closeOpsTimeSheet() {
+    this._syncOpsTimeContext();
     if (this.data.opsTimeSubmitting) return;
     this.setData({ opsTimeSheetVisible: false });
   },
@@ -438,7 +467,8 @@ Page({
   onOpsTimeChange(e) { this.setData({ 'opsTimeDraft.time': (e.detail && e.detail.value) || '' }); },
 
   confirmOpsTime() {
-    if (this.data.opsTimeSubmitting) return;
+    this._syncOpsTimeContext();
+    if (this.data.opsTimeSubmitting || this._opsTimeSoldKey === this._opsTimeContextKey()) return;
     const activityId = this._directorActivityId;
     const draft = this.data.opsTimeDraft || {};
     if (!activityId) return;
@@ -447,11 +477,19 @@ Page({
       return;
     }
     const that = this;
-    const failSheet = function (why) {
+    const context = this._opsTimeContextKey();
+    const request = {};
+    this._opsTimeRequest = request;
+    const current = () => {
+      if (that._opsDisposed || that._opsTimeRequest !== request) return false;
+      that._syncOpsTimeContext();
+      return that._opsTimeRequest === request;
+    };
+    const failSheet = function (why, unknown) {
       that.setData({
         opsTimeSubmitting: false,
         opsTimeSheetVisible: false,
-        resultSheet: { show: true, kind: 'fail', title: '集合时间没改成', sub: '', why: why, duration: OPS_RESULT_SHEET_MS },
+        resultSheet: { show: true, kind: 'fail', title: unknown ? '集合时间结果待确认' : '集合时间没改成', sub: '', why: why, duration: OPS_RESULT_SHEET_MS },
       });
     };
     this.setData({ opsTimeSubmitting: true });
@@ -461,28 +499,54 @@ Page({
       data: jsonBody({ activityId: activityId, startDate: draft.date + ' ' + draft.time + ':00' }),
       header: jsonHeader(),
       success(res) {
+        if (!current()) return;
+        that._opsTimeRequest = null;
         // 后端拒绝文案(已售锁定 / 只有承接方领队可改)是写给主理人看的,原样进失败半屏
-        if (!isSuccess(res)) { failSheet((res && res.msg) || '稍后再试一次'); return; }
+        if (!isSuccess(res)) {
+          failSheet((res && res.msg) || '稍后再试一次');
+          if (res && res.errorCode === 'CLUB_OPS_SOLD_LOCKED') {
+            that._opsTimeSoldKey = context;
+            that.setData({ opsTimeLocked: true });
+            that.fetchDetail();
+          }
+          return;
+        }
+        const receipt = res && res.data;
+        let notice = '保存已完成；通知状态未确认';
+        if (receipt && receipt.organizerNotified === false && receipt.noticeReceipt === 'LOGGED_ONLY') {
+          notice = '已保存并留痕，未推送通知发起人';
+        }
+
         that.setData({
           opsTimeSubmitting: false,
           opsTimeSheetVisible: false,
           resultSheet: {
             show: true, kind: 'success', title: '集合时间已更新',
-            sub: '退款截止为集合前 24 小时', why: '', duration: OPS_RESULT_SHEET_MS,
+            sub: notice, why: '', duration: OPS_RESULT_SHEET_MS,
           },
         });
         that.fetchDetail(); // 回读真源:新时间从 activityList 重新取,不在本地先改
       },
-      fail() {
+      fail(error) {
+        if (!current()) return;
+        if (error && error.reason === 'sessionChanged') { that._invalidateOpsTime(); return; }
+        that._opsTimeRequest = null;
         // 传输层失败 = 写结果未知,不能下「没改成」的结论;回读让页面显示服务端真相
-        failSheet('网络异常，结果待确认；已重新读取当前时间');
+        failSheet('网络异常，结果待确认；已重新读取当前时间', true);
         that.fetchDetail();
       },
       successStatusAbnormal(res, statusCode) {
+        if (!current()) return;
+        that._opsTimeRequest = null;
         const status = Number(statusCode);
         const definite = status >= 400 && status < 500 && status !== 408; // 4xx = 明确拒绝;5xx/408 = 结果未知
-        failSheet(definite ? ((res && res.msg) || '服务拒绝了这次修改') : '服务暂不可用，结果待确认；已重新读取当前时间');
-        if (!definite) that.fetchDetail();
+        failSheet(definite ? ((res && res.msg) || '服务拒绝了这次修改') : '服务暂不可用，结果待确认；已重新读取当前时间', !definite);
+        const sold = res && res.errorCode === 'CLUB_OPS_SOLD_LOCKED';
+        if (definite && sold) {
+          that._opsTimeSoldKey = context;
+          that.setData({ opsTimeLocked: true });
+        }
+        if (!definite || sold) that.fetchDetail();
       },
     });
   },
@@ -1135,6 +1199,12 @@ Page({
 
   ...DIRECTOR_METHODS,
   ...planFallback.methods(),
+
+  onUnload() {
+    this._opsDisposed = true;
+    this._detailSeq = (this._detailSeq || 0) + 1;
+    this._invalidateOpsTime();
+  },
 
   goBack() {
     const pages = getCurrentPages();

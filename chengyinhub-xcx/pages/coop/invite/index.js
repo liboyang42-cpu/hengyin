@@ -593,8 +593,10 @@ Page({
          页内 sendResult 仍然是持久的那份,面板消失后它还在。 */
       that.setData({
         resultSheet: {
-          show: true, kind: 'fail', title: '邀请没发出去',
-          sub: recruitClosed ? '这个主题现在不在招商期，重试也发不出去；换一个招商中的主题再发。' : '协作邀请未能送达，可以直接重试。',
+          show: true, kind: 'fail', title: okNames.length ? '协作邀请部分发送成功' : '邀请没发出去',
+          sub: okNames.length
+            ? '已发起 ' + okNames.length + ' 条，失败 ' + failed.length + ' 条。仅重试失败对象。' + (recruitClosed ? '这个主题现在不在招商期，请先换一个招商中的主题再发。' : '')
+            : recruitClosed ? '这个主题现在不在招商期，重试也发不出去；换一个招商中的主题再发。' : '协作邀请未能送达，可以直接重试。',
           meta: that.data.topicName ? ('关联主题 · ' + that.data.topicName) : '',
           pill: '', why: failed[0] || '服务暂不可用，请稍后重试',
           primaryText: '', secondaryText: '', duration: RESULT_SHEET_MS,

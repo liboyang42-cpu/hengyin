@@ -244,6 +244,20 @@ test('部分失败后只保留失败对象，重试不会重复发送成功项',
     env.requests[1].complete()
     assert.deepEqual(env.page.data.selected, [{ toId: 22, name: '乙店' }])
     assert.match(env.page.data.sendResult, /已发起 1 条；失败：乙店:容量不足/)
+    assert.equal(env.page.data.resultSheet.kind, 'fail')
+    assert.equal(env.page.data.resultSheet.title, '协作邀请部分发送成功')
+    assert.equal(env.page.data.resultSheet.sub, '已发起 1 条，失败 1 条。仅重试失败对象。')
+    const redirects = []
+    global.wx.redirectTo = options => redirects.push(options)
+    const receipt = env.page.data.sendResult
+    env.page.onResultSheetClose()
+    assert.equal(env.page.data['resultSheet.show'], false)
+    assert.deepEqual(redirects, [], '关闭部分失败面板留在当前页')
+    assert.equal(env.page.data.sendResult, receipt)
+    assert.deepEqual(env.page.data.selected, [{ toId: 22, name: '乙店' }])
+    env.page.confirmInvite()
+    assert.equal(env.requests.length, 3, '重试只发一条')
+    assert.equal(JSON.parse(env.requests[2].data).toId, 22, '只重试乙店，不重复发送甲店')
   } finally {
     env.restore()
   }

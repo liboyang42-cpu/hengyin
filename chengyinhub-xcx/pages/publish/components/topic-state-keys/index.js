@@ -141,8 +141,8 @@ Component({
           this.setData({ saving: false, adding: false, notice: '已注册，发布前请确认节点引用都已配置' })
           this.load()
         },
-        fail: () => { if (!current()) return; this._saveOperation = null; this.setData({ saving: false, formError: '网络异常，没有注册成功，可以再试一次' }) },
-        successStatusAbnormal: () => { if (!current()) return; this._saveOperation = null; this.setData({ saving: false, formError: '网络异常，没有注册成功，可以再试一次' }) },
+        fail: () => { if (!current()) return; this._saveOperation = null; this.setData({ saving: false, formError: '网络异常，注册结果未确认' }) },
+        successStatusAbnormal: () => { if (!current()) return; this._saveOperation = null; this.setData({ saving: false, formError: '网络异常，注册结果未确认' }) },
       })
     },
     onAskDelete(e) {
@@ -183,8 +183,8 @@ Component({
           dc.done()
           this.load()
         },
-        fail: () => fail('网络异常，没有删除成功，可以再试一次'),
-        successStatusAbnormal: () => fail('网络异常，没有删除成功，可以再试一次'),
+        fail: () => fail('网络异常，删除结果未确认'),
+        successStatusAbnormal: () => fail('网络异常，删除结果未确认'),
       })
     },
   },

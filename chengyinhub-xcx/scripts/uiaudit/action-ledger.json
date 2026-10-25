@@ -847704,7 +847704,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:747"
+        "staticSource": "pages/club/topic-detail/index.js:811"
       }
     },
     {
@@ -847774,7 +847774,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1139"
+        "staticSource": "pages/club/topic-detail/index.js:1209"
       }
     },
     {
@@ -847844,7 +847844,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:687"
+        "staticSource": "pages/club/topic-detail/index.js:751"
       }
     },
     {
@@ -847914,7 +847914,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:693"
+        "staticSource": "pages/club/topic-detail/index.js:757"
       }
     },
     {
@@ -848152,12 +848152,12 @@
         "selectorHint": ".ctd-opstime__edit",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": "修改集合时间",
-        "ariaLabelExpression": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{opsTimeLocked ? '已有报名，时间地点不可改；备注仍可改' : '修改集合时间'}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": null,
+        "ariaDisabledExpression": "{{opsTimeLocked}}",
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
@@ -848174,10 +848174,21 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [],
+        "apis": [
+          "/api/role/info"
+        ],
         "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
       "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
@@ -848188,7 +848199,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:422"
+        "staticSource": "pages/club/topic-detail/index.js:449"
       }
     },
     {
@@ -851433,7 +851444,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1017"
+        "staticSource": "pages/club/topic-detail/index.js:1081"
       }
     },
     {
@@ -851590,7 +851601,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:757"
+        "staticSource": "pages/club/topic-detail/index.js:821"
       }
     },
     {
@@ -851657,7 +851668,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1129"
+        "staticSource": "pages/club/topic-detail/index.js:1193"
       }
     },
     {
@@ -851810,7 +851821,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1130"
+        "staticSource": "pages/club/topic-detail/index.js:1194"
       }
     },
     {
@@ -851944,7 +851955,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1120"
+        "staticSource": "pages/club/topic-detail/index.js:1184"
       }
     },
     {
@@ -852078,7 +852089,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1122"
+        "staticSource": "pages/club/topic-detail/index.js:1186"
       }
     },
     {
@@ -852499,7 +852510,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1121"
+        "staticSource": "pages/club/topic-detail/index.js:1185"
       }
     },
     {
@@ -853896,7 +853907,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1123"
+        "staticSource": "pages/club/topic-detail/index.js:1187"
       }
     },
     {
@@ -854049,7 +854060,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1127"
+        "staticSource": "pages/club/topic-detail/index.js:1191"
       }
     },
     {
@@ -854116,7 +854127,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1026"
+        "staticSource": "pages/club/topic-detail/index.js:1090"
       }
     },
     {
@@ -854186,7 +854197,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:687"
+        "staticSource": "pages/club/topic-detail/index.js:751"
       }
     },
     {
@@ -854256,7 +854267,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:747"
+        "staticSource": "pages/club/topic-detail/index.js:811"
       }
     },
     {
@@ -854326,7 +854337,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:693"
+        "staticSource": "pages/club/topic-detail/index.js:757"
       }
     },
     {
@@ -854393,7 +854404,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1017"
+        "staticSource": "pages/club/topic-detail/index.js:1081"
       }
     },
     {
@@ -854463,7 +854474,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1108"
+        "staticSource": "pages/club/topic-detail/index.js:1172"
       }
     },
     {
@@ -854534,7 +854545,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1110"
+        "staticSource": "pages/club/topic-detail/index.js:1174"
       }
     },
     {
@@ -854646,7 +854657,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1077"
+        "staticSource": "pages/club/topic-detail/index.js:1141"
       }
     },
     {
@@ -854758,7 +854769,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1077"
+        "staticSource": "pages/club/topic-detail/index.js:1141"
       }
     },
     {
@@ -854870,7 +854881,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1077"
+        "staticSource": "pages/club/topic-detail/index.js:1141"
       }
     },
     {
@@ -854937,7 +854948,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:973"
+        "staticSource": "pages/club/topic-detail/index.js:1037"
       }
     },
     {
@@ -855004,7 +855015,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:831"
+        "staticSource": "pages/club/topic-detail/index.js:895"
       }
     },
     {
@@ -855081,7 +855092,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:869"
+        "staticSource": "pages/club/topic-detail/index.js:933"
       }
     },
     {
@@ -855148,7 +855159,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:885"
+        "staticSource": "pages/club/topic-detail/index.js:949"
       }
     },
     {
@@ -855257,7 +855268,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:887"
+        "staticSource": "pages/club/topic-detail/index.js:951"
       }
     },
     {
@@ -855324,7 +855335,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:951"
+        "staticSource": "pages/club/topic-detail/index.js:1015"
       }
     },
     {
@@ -855433,7 +855444,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:928"
+        "staticSource": "pages/club/topic-detail/index.js:992"
       }
     },
     {
@@ -855500,7 +855511,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:979"
+        "staticSource": "pages/club/topic-detail/index.js:1043"
       }
     },
     {
@@ -855659,7 +855670,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:984"
+        "staticSource": "pages/club/topic-detail/index.js:1048"
       }
     },
     {
@@ -855712,10 +855723,21 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [],
+        "apis": [
+          "/api/role/info"
+        ],
         "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
       "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
@@ -855726,7 +855748,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:432"
+        "staticSource": "pages/club/topic-detail/index.js:460"
       }
     },
     {
@@ -855793,7 +855815,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:437"
+        "staticSource": "pages/club/topic-detail/index.js:466"
       }
     },
     {
@@ -855860,7 +855882,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:438"
+        "staticSource": "pages/club/topic-detail/index.js:467"
       }
     },
     {
@@ -855913,10 +855935,21 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [],
+        "apis": [
+          "/api/role/info"
+        ],
         "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
       "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
@@ -855927,7 +855960,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:432"
+        "staticSource": "pages/club/topic-detail/index.js:460"
       }
     },
     {
@@ -856080,7 +856113,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:440"
+        "staticSource": "pages/club/topic-detail/index.js:469"
       }
     },
     {
@@ -856147,7 +856180,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:490"
+        "staticSource": "pages/club/topic-detail/index.js:554"
       }
     },
     {
@@ -856214,7 +856247,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1018"
+        "staticSource": "pages/club/topic-detail/index.js:1082"
       }
     },
     {
@@ -856281,7 +856314,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:725"
+        "staticSource": "pages/club/topic-detail/index.js:789"
       }
     },
     {
@@ -856417,7 +856450,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:727"
+        "staticSource": "pages/club/topic-detail/index.js:791"
       }
     },
     {
@@ -856917,7 +856950,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:667"
+        "staticSource": "pages/club/topic-detail/index.js:731"
       }
     },
     {
@@ -857641,7 +857674,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:280"
+        "staticSource": "pages/coop/invite-detail/index.js:287"
       }
     },
     {
@@ -857711,7 +857744,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:373"
+        "staticSource": "pages/coop/invite-detail/index.js:380"
       }
     },
     {
@@ -857822,7 +857855,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:390"
+        "staticSource": "pages/coop/invite-detail/index.js:397"
       }
     },
     {
@@ -857939,7 +857972,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:450"
+        "staticSource": "pages/coop/invite-detail/index.js:457"
       }
     },
     {
@@ -857981,32 +858014,74 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "read",
       "interactionMode": "tap",
-      "baseActionClass": "state",
+      "baseActionClass": "read",
       "effectClasses": [
+        "read",
         "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/coop/review/summary",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/coop/review/summary"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/review/summary",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:544"
+        "staticSource": "pages/coop/invite-detail/index.js:555"
       }
     },
     {
@@ -858141,7 +858216,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:421"
+        "staticSource": "pages/coop/invite-detail/index.js:428"
       }
     },
     {
@@ -858208,7 +858283,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:445"
+        "staticSource": "pages/coop/invite-detail/index.js:452"
       }
     },
     {
@@ -858343,7 +858418,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:300"
+        "staticSource": "pages/coop/invite-detail/index.js:307"
       }
     },
     {
@@ -858477,7 +858552,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:299"
+        "staticSource": "pages/coop/invite-detail/index.js:306"
       }
     },
     {
@@ -858612,7 +858687,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:310"
+        "staticSource": "pages/coop/invite-detail/index.js:317"
       }
     },
     {
@@ -858683,7 +858758,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:609"
+        "staticSource": "pages/coop/invite-detail/index.js:640"
       }
     },
     {
@@ -858750,7 +858825,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:500"
+        "staticSource": "pages/coop/invite-detail/index.js:507"
       }
     },
     {
@@ -858817,7 +858892,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:507"
+        "staticSource": "pages/coop/invite-detail/index.js:514"
       }
     },
     {
@@ -858927,7 +859002,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:512"
+        "staticSource": "pages/coop/invite-detail/index.js:519"
       }
     },
     {
@@ -858994,7 +859069,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:555"
+        "staticSource": "pages/coop/invite-detail/index.js:568"
       }
     },
     {
@@ -859114,7 +859189,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:559"
+        "staticSource": "pages/coop/invite-detail/index.js:572"
       }
     },
     {
@@ -859184,7 +859259,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:618"
+        "staticSource": "pages/coop/invite-detail/index.js:649"
       }
     },
     {
@@ -859261,7 +859336,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:282"
+        "staticSource": "pages/coop/invite-detail/index.js:289"
       }
     },
     {
@@ -859863,7 +859938,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:616"
+        "staticSource": "pages/coop/invite/index.js:618"
       }
     },
     {
@@ -1081077,7 +1081152,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:114"
+        "staticSource": "pages/publish/simple/index.js:159"
       }
     },
     {
@@ -1081144,7 +1081219,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:257"
+        "staticSource": "pages/publish/simple/index.js:307"
       }
     },
     {
@@ -1081211,7 +1081286,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:260"
+        "staticSource": "pages/publish/simple/index.js:310"
       }
     },
     {
@@ -1081278,7 +1081353,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:261"
+        "staticSource": "pages/publish/simple/index.js:311"
       }
     },
     {
@@ -1081345,7 +1081420,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:262"
+        "staticSource": "pages/publish/simple/index.js:312"
       }
     },
     {
@@ -1081427,7 +1081502,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:263"
+        "staticSource": "pages/publish/simple/index.js:313"
       }
     },
     {
@@ -1081498,7 +1081573,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:279"
+        "staticSource": "pages/publish/simple/index.js:329"
       }
     },
     {
@@ -1081569,7 +1081644,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:279"
+        "staticSource": "pages/publish/simple/index.js:329"
       }
     },
     {
@@ -1081636,7 +1081711,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:113"
+        "staticSource": "pages/publish/simple/index.js:158"
       }
     },
     {
@@ -1081683,6 +1081758,7 @@
       "baseActionClass": "read",
       "effectClasses": [
         "read",
+        "navigation",
         "state"
       ],
       "accessBoundary": null,
@@ -1081690,7 +1081766,8 @@
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "pages/template/index"
         ],
         "apis": [
           "/api/ai/theme/draft",
@@ -1081750,7 +1081827,7 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
@@ -1081761,7 +1081838,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:115"
+        "staticSource": "pages/publish/simple/index.js:160"
       }
     },
     {

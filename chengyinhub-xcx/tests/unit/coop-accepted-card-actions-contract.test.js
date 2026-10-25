@@ -703,6 +703,8 @@ test('评价断网不断言未提交:回读到评分即显示已评价,回读前
   assert.equal(e.page.data.reviewVerifying, false);
   assert.equal(e.page.data.myReviewStars, '★★★★');
   assert.equal(e.page.data.actionReceipt, '评价已提交');
+  e.page.reviewCoop();
+  assert.equal(e.page.data.reviewSheetShow, false, '已评价不再打开提交表单');
 });
 
 test('评价网关超时回读没有评分才允许重新评价;回读失败不放行成已提交', () => {
@@ -721,6 +723,16 @@ test('评价网关超时回读没有评分才允许重新评价;回读失败不�
   f.requests.filter(r => r.url === '/api/coop/review/summary').at(-1).fail();
   assert.equal(f.page.data.actionReceipt, '');
   assert.match(f.page.data.actionError, /暂未确认/);
+  const count = f.requests.length;
+  f.page.reviewCoop();
+  assert.equal(f.page.data.reviewSheetShow, false, '回读失败后再次点击只能查询');
+  assert.equal(f.requests.length, count + 1);
+  assert.equal(f.requests.at(-1).url, '/api/coop/review/summary');
+  assert.equal(f.requests.filter(r => r.url === '/api/coop/review/save').length, 1);
+  f.requests.at(-1).success({code:200,data:{reviews:[]}});
+  assert.equal(f.page.data.reviewSheetShow, false, '确认没有评价也不自动打开表单');
+  f.page.reviewCoop();
+  assert.equal(f.page.data.reviewSheetShow, true, '权威空列表确认后允许主动重提');
 
   // 明确的 4xx 是确定失败,照旧提示,不进入核对
   const g = detailContextHarness();
@@ -740,4 +752,72 @@ test('评价结果核对期间换号或刷新,旧回读不写新页面', () => {
   const before = JSON.stringify(e.page.data);
   verify.success({code:200,data:{reviews:[{fromId:1,topicId:8,rating:5}]}});
   assert.equal(JSON.stringify(e.page.data), before);
+});
+
+test('评价未知的畸形摘要保持待确认,再次点击仍只读;其他人的合法评分不是我的评价', () => {
+  for (const data of [null, {}, {reviews:null}, {reviews:[null]}, {reviews:[{}]},
+    {reviews:[{fromId:1,topicId:8,rating:0}]}, {reviews:[{fromId:1,topicId:8,rating:4.5}]},
+    {reviews:[{fromId:1,topicId:8,rating:'5'}]}, {reviews:[{fromId:1,topicId:8,toId:99,rating:5}]}]) {
+    const e = detailContextHarness();
+    e.page.reviewCoop(); e.page.onReviewSheetSelect({detail:{index:0}});
+    e.requests.find(r => r.url === '/api/coop/review/save').fail();
+    e.requests.at(-1).success({code:200,data});
+    assert.equal(e.page.data.actionReceipt, '');
+    assert.match(e.page.data.actionError, /暂未确认/);
+    e.page.reviewCoop();
+    assert.equal(e.page.data.reviewSheetShow, false);
+    assert.equal(e.requests.at(-1).url, '/api/coop/review/summary');
+    assert.equal(e.requests.filter(r => r.url === '/api/coop/review/save').length, 1);
+    e.requests.at(-1).success({code:200,data:{reviews:[{fromId:2,topicId:8,rating:5}]}});
+    e.page.reviewCoop();
+    assert.equal(e.page.data.reviewSheetShow, true);
+  }
+});
+
+test('评价提交单飞,旧摘要或旧提交回包不清新回读busy;刷新后未知仍先查询', () => {
+  const e = detailContextHarness();
+  const initial = e.requests.find(r => r.url === '/api/coop/review/summary');
+  e.page.reviewCoop(); e.page.onReviewSheetSelect({detail:{index:0}});
+  const save = e.requests.find(r => r.url === '/api/coop/review/save');
+  e.page.reviewCoop();
+  assert.equal(e.page.data.reviewSheetShow, false, 'POST在途不能重复提交');
+  initial.success({code:200,data:{reviews:[{fromId:1,topicId:8,rating:5}]}});
+  assert.equal(e.page.data.myReviewStars, '', '提交前摘要不能结算本次提交');
+  save.fail();
+  e.requests.at(-1).fail();
+  e.page.onHide(); e.page.onShow();
+  e.page.reviewCoop();
+  const verify = e.requests.at(-1);
+  assert.equal(verify.url, '/api/coop/review/summary');
+  save.success({code:200}); save.fail();
+  assert.equal(e.page.data.reviewVerifying, true);
+  assert.equal(e.page._reviewing, true);
+  assert.equal(e.page.data.myReviewStars, '');
+  verify.success({code:200,data:{reviews:[{fromId:1,topicId:8,rating:4}]}});
+  assert.equal(e.page.data.actionReceipt, '评价已提交');
+});
+
+test('评价未知的切号/换邀请/卸载迟回不能写页面或清新busy', () => {
+  for (const change of ['identity', 'invite', 'unload']) {
+    const e = detailContextHarness();
+    e.page.reviewCoop(); e.page.onReviewSheetSelect({detail:{index:0}});
+    e.requests.find(r => r.url === '/api/coop/review/save').fail();
+    const old = e.requests.at(-1);
+    if (change === 'identity') { e.app._memberId = 2; e.page.onShow(); }
+    if (change === 'invite') {
+      const invite = Object.assign({}, e.page.data.invite, {inviteId:'9'});
+      e.page.onLoad({inviteId:'9',box:'received'});
+      e.page.applyInvite(invite);
+    }
+    if (change === 'unload') e.page.onUnload();
+    if (change !== 'unload') {
+      e.page.reviewCoop();
+      assert.equal(e.page.data.reviewSheetShow, true, '不同身份/邀请正常首次流程不受旧未知阻塞');
+    }
+    const before = JSON.stringify(e.page.data);
+    const busy = e.page._reviewing;
+    old.success({code:200,data:{reviews:[]}}); old.fail();
+    assert.equal(JSON.stringify(e.page.data), before);
+    assert.equal(e.page._reviewing, busy);
+  }
 });
