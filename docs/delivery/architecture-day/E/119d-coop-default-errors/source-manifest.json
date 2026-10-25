@@ -1,0 +1,21 @@
+{
+  "parent": "df37bf0e49ba85d175ce943e2580404414af040c",
+  "code_patch_sha256": "79dfd7c65205554a16e6e27d9fd6ddca37747f786ed54e648794d65b78d9630d",
+  "files": [
+    {
+      "path": "chengyinhub-xcx/pages/coop/invite/index.js",
+      "original_blob_sha1": "88d2f65375a4198a2b239cb2cf91af88f586891e",
+      "original_sha256": "cd1a85dc2f08c5b3187ed43684aad268df1374453ab77f539fee9463bfa2e091",
+      "postimage_blob_sha1": "a10efd88f4cac55814fdda232203a12dcdc1c675",
+      "postimage_sha256": "dfed856e17d9dd9323ce6ebb0eb5e6962ca6261aee47d0e6c133cf3ae7a9e49c"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/coop-supply-station-contract.test.js",
+      "original_blob_sha1": "f7bd3a03530989760a72d54d82d4fccd52b10522",
+      "original_sha256": "32ba27332be1e93b176be608c48517fd9bb73a7ced456e3a74d7fd8a8be186c2",
+      "postimage_blob_sha1": "7a2e60f66c3421147f5adf48eadd2694ddb684cc",
+      "postimage_sha256": "3c93e12412e453af49c2b2fffbb3a5d0adbd85edecdffc2de2619ecb84d198db"
+    }
+  ],
+  "tests": "NOT_RUN"
+}

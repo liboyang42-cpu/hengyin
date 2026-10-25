@@ -810237,7 +810237,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-inbox/index.js:177"
+        "staticSource": "pages/activity/official-inbox/index.js:179"
       }
     },
     {
@@ -810355,7 +810355,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-inbox/index.js:139"
+        "staticSource": "pages/activity/official-inbox/index.js:141"
       }
     },
     {
@@ -810473,7 +810473,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-inbox/index.js:139"
+        "staticSource": "pages/activity/official-inbox/index.js:141"
       }
     },
     {
@@ -810591,7 +810591,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-inbox/index.js:139"
+        "staticSource": "pages/activity/official-inbox/index.js:141"
       }
     },
     {
@@ -854539,7 +854539,8 @@
           {
             "url": "/api/coop/supply-stations",
             "method": "GET",
-            "auth": "authenticated"
+            "auth": "authenticated",
+            "source": "server-controller"
           },
           {
             "url": "/api/login/code",
@@ -854713,7 +854714,8 @@
           {
             "url": "/api/coop/supply-stations",
             "method": "GET",
-            "auth": "authenticated"
+            "auth": "authenticated",
+            "source": "server-controller"
           },
           {
             "url": "/api/login/code",
@@ -854813,7 +854815,8 @@
           {
             "url": "/api/coop/supply-stations",
             "method": "GET",
-            "auth": "authenticated"
+            "auth": "authenticated",
+            "source": "server-controller"
           },
           {
             "url": "/api/login/code",
@@ -855341,7 +855344,8 @@
           {
             "url": "/api/coop/supply-stations",
             "method": "GET",
-            "auth": "authenticated"
+            "auth": "authenticated",
+            "source": "server-controller"
           },
           {
             "url": "/api/login/code",
@@ -855435,7 +855439,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:772"
+        "staticSource": "pages/coop/invite/index.js:773"
       }
     },
     {
@@ -855717,7 +855721,8 @@
           {
             "url": "/api/coop/supply-stations",
             "method": "GET",
-            "auth": "authenticated"
+            "auth": "authenticated",
+            "source": "server-controller"
           },
           {
             "url": "/api/login/code",
@@ -856312,7 +856317,8 @@
           {
             "url": "/api/coop/supply-stations",
             "method": "GET",
-            "auth": "authenticated"
+            "auth": "authenticated",
+            "source": "server-controller"
           },
           {
             "url": "/api/login/code",
@@ -856522,7 +856528,8 @@
           {
             "url": "/api/coop/supply-stations",
             "method": "GET",
-            "auth": "authenticated"
+            "auth": "authenticated",
+            "source": "server-controller"
           },
           {
             "url": "/api/login/code",
@@ -956198,7 +956205,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-qa/index.js:199"
+        "staticSource": "pages/play/components/playkit-qa/index.js:201"
       }
     },
     {
@@ -956321,7 +956328,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-qa/index.js:198"
+        "staticSource": "pages/play/components/playkit-qa/index.js:200"
       }
     },
     {
@@ -956459,7 +956466,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-qa/index.js:241"
+        "staticSource": "pages/play/components/playkit-qa/index.js:243"
       }
     },
     {
@@ -956582,7 +956589,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-qa/index.js:204"
+        "staticSource": "pages/play/components/playkit-qa/index.js:206"
       }
     },
     {
@@ -956706,7 +956713,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-qa/index.js:340"
+        "staticSource": "pages/play/components/playkit-qa/index.js:342"
       }
     },
     {
@@ -956829,7 +956836,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-qa/index.js:339"
+        "staticSource": "pages/play/components/playkit-qa/index.js:341"
       }
     },
     {
@@ -956953,7 +956960,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-qa/index.js:197"
+        "staticSource": "pages/play/components/playkit-qa/index.js:199"
       }
     },
     {
@@ -957077,7 +957084,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-qa/index.js:337"
+        "staticSource": "pages/play/components/playkit-qa/index.js:339"
       }
     },
     {
@@ -957210,7 +957217,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-qa/index.js:331"
+        "staticSource": "pages/play/components/playkit-qa/index.js:333"
       }
     },
     {
@@ -957348,7 +957355,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-qa/index.js:242"
+        "staticSource": "pages/play/components/playkit-qa/index.js:244"
       }
     },
     {
@@ -1058130,7 +1058137,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8594"
+        "staticSource": "pages/publish/fabu/index.js:8593"
       }
     },
     {
@@ -1166963,7 +1166970,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/template/index.js:620"
+        "staticSource": "pages/template/index.js:619"
       }
     },
     {
@@ -1167133,7 +1167140,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/template/index.js:620"
+        "staticSource": "pages/template/index.js:619"
       }
     },
     {
@@ -1167929,7 +1167936,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/template/index.js:620"
+        "staticSource": "pages/template/index.js:619"
       }
     },
     {
@@ -1168099,7 +1168106,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/template/index.js:804"
+        "staticSource": "pages/template/index.js:803"
       }
     },
     {

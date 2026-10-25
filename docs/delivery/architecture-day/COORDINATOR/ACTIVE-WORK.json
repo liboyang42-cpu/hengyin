@@ -667,7 +667,7 @@
       "acceptance": false
     }
   },
-  "known_remaining_implementation": "All current assigned original A-H production/callers/assembly/config/test SOURCE, C full restored HTTP application/query fix, F final shared host, B registered same-commit seven-cohort caller are integrated and frozen. No cloud source task pending. Root final source/scanning/single-candidate freeze then unified impacted acceptance remain; actual new failures only targeted fixes. Tests/compile/runtime/CI NOT_RUN; all_complete=false.",
+  "known_remaining_implementation": "Original first-failure A-H repair and necessary partial manual source all assembled. Root freeze and impacted same-source acceptance remain; original Q1-Q10 end conditions still not all accepted.",
   "remaining_acceptance_groups": [
     "Real HTTP multi-identity and authorized provider unknown-result scenarios",
     "Whole-business process termination/recovery and rollback evidence",
@@ -3563,5 +3563,128 @@
       "new_control_methods_source": 4
     },
     "state": "ALL_ASSIGNED_SOURCE_INTEGRATED_ROOT_FINAL_FREEZE_NOT_RUN"
+  },
+  "final_concentrated_acceptance_119d": {
+    "source": "119d3f87bbf89162d47db837c404b361915d1b81",
+    "tree": "1d96922c384e9fd1cbacb447ef0dc2e9eb8bf407",
+    "attempt": 1,
+    "all_complete": false,
+    "runs": {
+      "standard": 40215793929,
+      "storage": 40215798308,
+      "http": 40215802616,
+      "mixed": 40215827511,
+      "restore_http": 40215831253,
+      "restore_cohorts": 40215835621
+    },
+    "observed": {
+      "storage": "Plan91 controls actualPASS; class CoopDepositSettlementAttemptMySqlIT missing original B_PAYMENT_INTENT_DDL_APPROVED registry. MySQLRedis matrixNOT_RUN",
+      "http": "All3 original classes stopped at same pure gate; manual router LF assertion1 and SQLinventory4 errors. No actualHTTP36 acceptance",
+      "mixed": "Original auth24+capacity11+gameplay11 controlsPASS; admin productioncompile2 generic type errors before runtime workload",
+      "restore_http": "Original auth24+CfullHTTP26 controlsPASS; Fentry4 control methods fail1/error2 in source stub before application/DB restore run",
+      "restore_cohorts": "Actual new registered caller admissionPASS; original seven-cohort same-commit reused workflow reached build controls.37 methods36pass1fail exact hash-rejection regex; no Java build/cohorts run",
+      "standard": "19job metadata success;11failed jobs. Productioncompile same2 errors; mini6shards1/5/8/12/15/18 fail; migrations/fast/static source gates fail; successes not whole product acceptance"
+    },
+    "repair_policy": "Collect actual first causes by original owner; no new audit; complete required source/callers/fixtures before next targeted validation. Do not rerun passed unaffected projects or reuse green across SHA.",
+    "tasks": {
+      "A": {
+        "thread": "01a16a22-3076-7196-88f5-86d5b2c83036",
+        "owned": "club detail real helper/direct verification adapter fixtures; localDateText undefined in same original page",
+        "state": "SOURCE_APPLIED_NOT_RETESTED",
+        "donor": "de67e2ce34b004520bf56a9169765603bc95173e"
+      },
+      "B": {
+        "thread": "01a16a22-956c-723f-b51b-afcbee69802b",
+        "owned": "ci/test_http_e2e_entry.py exact ManualRouter separator LF fixture; production caller preserved",
+        "state": "SOURCE_APPLIED_NOT_RETESTED",
+        "donor": "f3353b41ab8f85d2fecddcc2c2a95ef5be3b755effab476c8298e10b0fa6bfb7"
+      },
+      "C": {
+        "thread": "01a16a22-c697-7637-ae29-cdff6341000b",
+        "owned": "test_restore_business_reconciliation_probe.py exact original hash negative controls",
+        "delivered": "7bbf2cb473bae21c424e1f60c675f2b5886c9bab",
+        "state": "SOURCE_APPLIED_NOT_RETESTED",
+        "donor": "7bbf2cb473bae21c424e1f60c675f2b5886c9bab"
+      },
+      "D": {
+        "thread": "01a16a22-f399-7110-ba27-ef3f7245603b",
+        "owned": "QA observer and original single/multiselect handler/tests; square lifecycle direct test contract",
+        "state": "SOURCE_APPLIED_NOT_RETESTED",
+        "donor": "bb89d6377648c205ea294bf9a794267d98fb4e81"
+      },
+      "E": {
+        "thread": "01a16a23-2723-72e4-813f-03d7f1aa6017",
+        "owned": "cooperation Inbox/Invite actual callers/direct fixtures, actual GET auth matrix, visible errors and reviewed silent allowlist proposal",
+        "state": "SOURCE_APPLIED_NOT_RETESTED",
+        "donor": "3c8e69748a495d1364e8cc7ba7f7076863c20a34"
+      },
+      "F": {
+        "thread": "01a16a23-5e0c-736b-9fc1-d4d070393009",
+        "owned": "registry exact existing payment intent gate and control SOURCE; restore HTTP entry shell stub SOURCE",
+        "state": "SOURCE_APPLIED_NOT_RETESTED",
+        "donor": "d91070dab64ba8ba46dc0dd903a71fbf2e64da42"
+      },
+      "G": {
+        "thread": "01a16a23-8904-73e8-a024-378a96f0800c",
+        "owned": "actual migration inventory/notice_forward execution AST/old dependencies comparator, necessary direct controls and root shared review; no old SQL change",
+        "state": "SOURCE_APPLIED_NOT_RETESTED",
+        "donor": "99a99c8d505a98fd8c2af320ded9382d9055d713"
+      },
+      "H": {
+        "thread": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
+        "owned": "PlayNodeQueryApplication typed collection caller/consumer contract compile fix and direct fixtures",
+        "state": "SOURCE_APPLIED_NOT_RETESTED",
+        "donor": "ccb0edf2bdbd488c03375a12df46bcd1fc41328f"
+      }
+    },
+    "C_metadata": {
+      "donor": "4dad7acb6e1877421d52d510adc5a39423747812",
+      "state": "ROOT_COMPOSED_SOURCE_NOT_RUN",
+      "u4Debt": "126->123 actual existing reads",
+      "u4Dynamic": "67 same reasons/cap; map anchor8695 current",
+      "u5Silent": "Original42 keys/cap preserved; no44cap proposal",
+      "receipt": "/private/tmp/hengyin-119d-C-UI-metadata-root-composition.json"
+    },
+    "F_manual_selected_entry": {
+      "thread": "01a16a23-5e0c-736b-9fc1-d4d070393009",
+      "host": "durable",
+      "turn": "01a17425-4450-73fc-829a-ae71052781ee",
+      "cursor": "446d298a-e8e5-46b0-bbe8-4c4beccfc008:39",
+      "state": "SOURCE_APPLIED_NOT_RETESTED",
+      "purpose": "Current ci.yml dispatch forces all20shards and unaffected successful jobs; same-SHA rerun would execute old source. Minimal explicit partial same-source selection with strict original default/PR/push and manifest/gates; no new workflow/framework.",
+      "donor": "f829aa0495cf7901a849161d1dea440c79f9465f",
+      "receipt": "/private/tmp/hengyin-119d-F-selected-ci-source-integration.json"
+    },
+    "root_remaining": "All actual repair source assembled; scan/freeze one new source, then selected impacted validation. No second dispatch yet.",
+    "impacted_revalidation_source_plan": "/private/tmp/hengyin-119d-impacted-revalidation-source-plan.json",
+    "next_selection": {
+      "jobs": [
+        "fast_gates",
+        "backend",
+        "mini_unit",
+        "mini_static",
+        "dependency_audit",
+        "migration_safety"
+      ],
+      "mini_shards": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        15,
+        18,
+        19,
+        20
+      ],
+      "source_impact_test_files": 30,
+      "not_full_CI": true
+    }
   }
 }

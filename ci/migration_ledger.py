@@ -57,6 +57,10 @@ EXPLICIT_AUXILIARY_SQL = {
     "chengyinhub-admin/src/test/resources/it-schema/official-broadcast-delivery-it-schema.sql": "TEST_FIXTURE",
     "docs/delivery/architecture-day/A/schema-candidate.sql": "AUXILIARY_NOT_EXECUTED",
     "docs/delivery/architecture-day/A/schema-preflight.sql": "AUXILIARY_NOT_EXECUTED",
+    # Historical source-only station proposal; canonical executable DDL is the
+    # separately managed migration_20261025_coop_order_station_fulfillment.sql.
+    "docs/delivery/architecture-day/G/supply-order-fulfillment-contract/PROPOSED_TABLE.sql":
+        "AUXILIARY_NOT_EXECUTED",
     # Only the reviewed synthetic schema for the disposable, network-isolated startup gate.
     "ci/upgrade-startup/schema.sql": "TEST_FIXTURE",
     "chengyinhub-admin/sql/_四账映射与守恒规则_20260725.sql": "REFERENCE_ONLY",

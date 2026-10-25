@@ -1685,7 +1685,9 @@
       "storage": [
         "mysql"
       ],
-      "gates": {},
+      "gates": {
+        "B_PAYMENT_INTENT_DDL_APPROVED": "1"
+      },
       "note": "G961 exact observed-attempt closure/fence with real gateway, original coop_invite mapper and transaction; SDK doubles. Explicit hosted scratch DDL admission, owned UUID schema and CLEAN required. No real provider or whole financial-domain acceptance."
     },
     "com.chengyinhub.business.it.Wp04PaidHalfStateMySqlIT": {

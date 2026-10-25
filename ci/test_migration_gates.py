@@ -26,6 +26,9 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 from sql_splitter import split_statements, unterminated_token  # noqa: E402
 from migration_gates import (  # noqa: E402
     _collation_key,
+    _cmd_dep_order,
+    _schema_contract_dump,
+    master_dependencies,
     check_dependency_declared,
     check_dependency_ratchet,
     check_dependency_order,
@@ -1122,6 +1125,17 @@ class 依赖声明棘轮(unittest.TestCase):
 
 
 class SharedLedgerExecutionOrder(unittest.TestCase):
+    def test_notice_contract_dump_keeps_reviewed_empty_ast_fields(self):
+        import ast
+        # Fixed 3.11-format serialization: hosted 3.14's compact default must
+        # not change source fingerprints, nor may we refresh the approved hashes.
+        self.assertEqual(
+            "Call(func=Name(id='connect', ctx=Load()), args=[], keywords=[])",
+            _schema_contract_dump(ast.parse("connect()", mode="eval").body))
+        self.assertNotEqual(
+            _schema_contract_dump(ast.parse("connect()", mode="eval").body),
+            _schema_contract_dump(ast.parse("connect(database='foreign')", mode="eval").body))
+
     def setUp(self):
         self.tmp = tempfile.mkdtemp(prefix="ledger-order-gate-")
         sql = os.path.join(self.tmp, "chengyinhub-admin/sql")
@@ -1335,6 +1349,53 @@ class 依赖顺序门禁_选批口径(unittest.TestCase):
 
     def _base(self):
         return self._git("rev-parse", "HEAD").stdout.strip()
+
+    def _dependencies(self, dependencies):
+        import json
+        path = os.path.join(self.tmp, "ci")
+        os.makedirs(path, exist_ok=True)
+        with open(os.path.join(path, "migration-dependencies.json"), "w", encoding="utf-8") as handle:
+            json.dump({"schemaVersion": 1, "dependencies": dependencies}, handle)
+
+    def _diverged_dependency_refs(self):
+        self._dependencies({"original": ["upstream"], "upstream": []})
+        self._commit("fixed source declarations")
+        base = self._base()
+        self._git("checkout", "-q", "-b", "future-master")
+        self._dependencies({"original": ["upstream"], "upstream": [], "future": ["original"]})
+        self._commit("later independent master declarations")
+        future = self._base()
+        self._git("update-ref", "refs/remotes/origin/master", future)
+        self._git("checkout", "-q", "-b", "candidate", base)
+        self._dependencies({"original": ["upstream"], "upstream": [], "candidate": []})
+        self._commit("candidate keeps fixed source edges")
+        return base, future
+
+    def test_dependency_ratchet_uses_fixed_base_not_future_master(self):
+        base, _ = self._diverged_dependency_refs()
+        expected = {"original": ["upstream"], "upstream": []}
+        self.assertEqual((expected, base), master_dependencies(self.tmp, base))
+        self.assertEqual((expected, base), master_dependencies(self.tmp))
+        # No new migration is needed to enforce the ratchet; later unrelated
+        # master additions must not become false candidate deletions.
+        self.assertEqual(0, _cmd_dep_order(self.tmp, ["--base", base]))
+
+    def test_fixed_base_deleted_edge_is_rejected_even_without_new_sql(self):
+        base, _ = self._diverged_dependency_refs()
+        self._dependencies({"original": [], "upstream": [], "candidate": []})
+        self.assertEqual(1, _cmd_dep_order(self.tmp, ["--base", base]))
+
+    def test_fixed_base_deleted_entry_is_rejected_even_without_new_sql(self):
+        base, _ = self._diverged_dependency_refs()
+        self._dependencies({"upstream": [], "candidate": []})
+        self.assertEqual(1, _cmd_dep_order(self.tmp, ["--base", base]))
+
+    def test_unreadable_or_nonancestor_explicit_base_cannot_fallback(self):
+        _, future = self._diverged_dependency_refs()
+        for base in ("not-a-ref", future):
+            with self.subTest(base=base):
+                self.assertEqual((None, None), master_dependencies(self.tmp, base))
+                self.assertEqual(1, _cmd_dep_order(self.tmp, ["--base", base]))
 
     def test_负控_只改了历史迁移的注释不许进批(self):
         """★ 本次假阳性的回归钉子。

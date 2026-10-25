@@ -1,0 +1,124 @@
+{
+  "parent": "119d3f87bbf89162d47db837c404b361915d1b81",
+  "execution": "NOT_RUN_TEXT_JSON_HASH_ONLY",
+  "before": {
+    "u1Variable": {
+      "count": 9,
+      "digest": "a0741e529f5609892e4ac66fa518d7c6961bc64be13056e41b8ac0c9344ec600"
+    },
+    "u3Debt": {
+      "count": 62,
+      "digest": "27c9924fc0b0ee61e2a20f5c176adf2d4e3e19c6b4ecfcd71e7aee7d9ab376ea"
+    },
+    "u4Debt": {
+      "count": 126,
+      "digest": "59f04254321eda0cacb5d216367dc59cf382c1dfc41b2157d2f7f6b1ebb4c670"
+    },
+    "u4Dynamic": {
+      "count": 67,
+      "digest": "6f4d2eb8dc8fc4cdeaae10d0072ddfd7847712d00ea99b331e72d3c66b4af629"
+    },
+    "u5Silent": {
+      "count": 42,
+      "digest": "a9d7a00ff553806666e697e29909777a702c737df6cdc642ce0b79586f621e9f"
+    }
+  },
+  "after": {
+    "u1Variable": {
+      "count": 9,
+      "digest": "a0741e529f5609892e4ac66fa518d7c6961bc64be13056e41b8ac0c9344ec600"
+    },
+    "u3Debt": {
+      "count": 62,
+      "digest": "27c9924fc0b0ee61e2a20f5c176adf2d4e3e19c6b4ecfcd71e7aee7d9ab376ea"
+    },
+    "u4Debt": {
+      "count": 123,
+      "digest": "f375335de9bb4b957b74a224725b7e11c6980462227cf98217b087a6fb0bf41a"
+    },
+    "u4Dynamic": {
+      "count": 67,
+      "digest": "0e35d463de88f05eb632cc978046798b78401867e05759ac4a3c0b8e782b63d4"
+    },
+    "u5Silent": {
+      "count": 44,
+      "digest": "4e05a135f31ffd5131486dbca90a30940eb45aa573617ef02053c7e18c96773f"
+    }
+  },
+  "removedDebtKeys": [
+    "chengyinhub-xcx/pages/activity/baoming/baoming.js#activityId",
+    "chengyinhub-xcx/pages/activity/baoming/baoming.js#waitlistOfferId",
+    "chengyinhub-xcx/pages/square/detail/index.js#replyId"
+  ],
+  "newReadReasons": {
+    "chengyinhub-xcx/pages/publish/fabu/index.js:8486": "/api/template/list 公共玩法整库分页只读；局部 fail 先核未卸载、原 memberId/operationScope/登录 epoch/读取 token，失败清列表并写 publicTempState=error，WXML cy-inline-error 的重试及重开游戏选择层均调用 getPublicTempList 重读原库；重复页/坏 ID/提前空页同样进入错误态，不伪装 ready、不执行采用写；静态不能展开 fail 引用，关闭全局 toast 避免双提示。owner=小程序；复核=2026-10-25",
+    "chengyinhub-xcx/pages/template/index.js:564": "/api/template/list 游戏整库分页只读；current 同时核 seq/关键词/原账号/operationScope/登录 epoch，局部 fail 只在当前 game tab 写 errorMsg，finished+current 控制 loading；未加载列表由 cy-error 展示并经 retryTemplateLoad→loadTab→getGameRows 重读，切 tab 不把旧失败画到其他列表，未完成缓存保持未加载；静态不能展开 fail 引用，不执行模板采用写。owner=小程序；复核=2026-10-25"
+  },
+  "u4DynamicRelocation": {
+    "source": "chengyinhub-xcx/pages/publish/fabu/index.js",
+    "oldCommit": "fa5c263440573992701263d6bee60830844a49b8",
+    "oldLine": 8666,
+    "newLine": 8696,
+    "radiusLines": 7,
+    "oldContextSha256": "145931b390695613dada19536c9a8415a83a0da2f9a806ac80bc0455663daa09",
+    "newContextSha256": "145931b390695613dada19536c9a8415a83a0da2f9a806ac80bc0455663daa09",
+    "contextExactlyEqual": true,
+    "function": "buildRouteMap",
+    "producer": "chengyinhub-xcx/pages/publish/utils/publish/route-map-view.js#buildRouteMapView",
+    "fixedKeys": [
+      "mapMarkers",
+      "mapPolyline",
+      "mapInclude",
+      "hasRoute"
+    ],
+    "conditionalFixedKeys": [
+      "mapCenter"
+    ],
+    "reasonUnchanged": true
+  },
+  "scope": {
+    "productionChanged": false,
+    "checkerChanged": false,
+    "u4DynamicCeilingUnchanged": 67,
+    "u5CheckerCeilingAtParent": 42,
+    "u5COnlyNewCount": 44,
+    "u5SharedChange": "u5-ceiling.review.patch for root only; no broad waiver",
+    "inviteEntriesApplied": false,
+    "invitePending": "E owns final source; parent anchors425/468 are context only, not claimed final positions"
+  },
+  "debtConsumptionEvidence": [
+    {
+      "key": "chengyinhub-xcx/pages/activity/baoming/baoming.js#activityId",
+      "source": "chengyinhub-xcx/pages/activity/baoming/baoming.js",
+      "readLines": [
+        649,
+        650,
+        677,
+        1450
+      ],
+      "use": "current activity parameter admission, real info request and login continuation target"
+    },
+    {
+      "key": "chengyinhub-xcx/pages/activity/baoming/baoming.js#waitlistOfferId",
+      "source": "chengyinhub-xcx/pages/activity/baoming/baoming.js",
+      "readLines": [
+        1450,
+        1500,
+        1521,
+        1654,
+        1684
+      ],
+      "use": "original offer admission, login target and quote/create payload"
+    },
+    {
+      "key": "chengyinhub-xcx/pages/square/detail/index.js#replyId",
+      "source": "chengyinhub-xcx/pages/square/detail/index.js",
+      "readLines": [
+        264,
+        267,
+        291
+      ],
+      "use": "original reply target continuation, deleted target rejection and actual reply_id"
+    }
+  ]
+}

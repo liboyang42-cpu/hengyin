@@ -44,6 +44,27 @@ class RepoFixture(unittest.TestCase):
 
 
 class ManifestContract(RepoFixture):
+    def test_station_proposal_is_exact_auxiliary_not_an_execution_exemption(self):
+        path = "docs/delivery/architecture-day/G/supply-order-fulfillment-contract/PROPOSED_TABLE.sql"
+        text = "CREATE TABLE coop_order_station_fulfillment (id BIGINT);\n"
+        self.write(path, text)
+        canonical = "chengyinhub-admin/sql/migration_20261025_coop_order_station_fulfillment.sql"
+        self.write(canonical, text)
+        report = audit_inventory(self.tmp)
+        self.assertEqual([], report["problems"])
+        self.assertEqual([(path, "AUXILIARY_NOT_EXECUTED")],
+                         [(item["path"], item["classification"]) for item in report["auxiliarySql"]])
+        self.assertEqual([canonical], [item["path"] for item in report["migrations"]])
+        manifest = build_manifest(self.tmp, TARGET, dependencies={})
+        self.assertEqual([canonical], [item["path"] for item in manifest["migrations"]])
+        unknown = path.replace("PROPOSED_TABLE.sql", "UNREVIEWED_TABLE.sql")
+        self.write(unknown, text)
+        self.assertEqual({("UNMANAGED_SQL_LOCATION", unknown)},
+                         {(item["code"], item["path"]) for item in audit_inventory(self.tmp)["problems"]})
+        with self.assertRaises(LedgerError) as rejected:
+            build_manifest(self.tmp, TARGET, dependencies={})
+        self.assertEqual("SQL inventory is unsafe", str(rejected.exception))
+
     def test_architecture_day_auxiliary_paths_are_exact_not_directory_exceptions(self):
         reviewed = {
             "chengyinhub-admin/src/test/resources/architecture-day-a-fixture.sql": "TEST_FIXTURE",

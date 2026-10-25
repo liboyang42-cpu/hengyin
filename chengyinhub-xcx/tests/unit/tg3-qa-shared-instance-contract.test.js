@@ -127,3 +127,22 @@ test('only server receipt updates produce pass/failure feedback; the next theme 
     assert.equal(Object.hasOwn(option, 'correct'), false); assert.equal(Object.hasOwn(option, 'isCorrect'), false);
   }
 });
+
+test('QA observer只写派生字段，异步上下文只读冻结且立即识别原session/node变化', () => {
+  const factory = componentFactory(), mounted = factory.mount(FIRST());
+  const watched = Object.keys(factory.definition.observers).find(key => key.startsWith('show, options,')).split(',').map(key => key.trim());
+  const propertyWrites = mounted.writes.flatMap(patch => Object.keys(patch).filter(key => watched.includes(key)));
+  assert.deepEqual(propertyWrites, [], 'observer不得直接写回任何原监听属性');
+  const before = plain(mounted.instance.data), writes = mounted.writes.length;
+  const context = mounted.instance._qaContext();
+  assert.equal(Object.isFrozen(context), true);
+  assert.deepEqual(plain(mounted.instance.data), before);
+  assert.equal(mounted.writes.length, writes, '获取局身份快照不能调用setData');
+  assert.equal(mounted.instance._isQaContextCurrent(context), true);
+  mounted.instance.data.sessionId = 999;
+  assert.equal(mounted.instance._isQaContextCurrent(context), false, '新session即使尚未通知observer也不能接旧回调');
+  mounted.instance.data.sessionId = before.sessionId;
+  mounted.instance.data.nodeId = 999;
+  assert.equal(mounted.instance._isQaContextCurrent(context), false, '原node也参与异步身份');
+  assert.equal(mounted.writes.length, writes);
+});

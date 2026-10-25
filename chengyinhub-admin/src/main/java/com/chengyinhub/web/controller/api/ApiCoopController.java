@@ -52,6 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -429,7 +430,7 @@ public class ApiCoopController extends BaseController {
         return AjaxResult.success("已发起", d);
     }
 
-    @org.springframework.web.bind.annotation.GetMapping("/supply-stations")
+    @GetMapping("/supply-stations")
     public AjaxResult supplyStations(@org.springframework.web.bind.annotation.RequestParam("topicId") Long topicId,
                                     @org.springframework.web.bind.annotation.RequestParam("merchantMemberId") Long merchantMemberId) {
         Long principal;

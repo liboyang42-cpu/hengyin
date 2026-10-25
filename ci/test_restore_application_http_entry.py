@@ -154,8 +154,11 @@ OUT=/public-only
 PRIVATE=/private-only
 MYSQL_IMAGE=pinned-original-image
 CHENGYIN_CI_RESTORE_HTTP_STARTUP=true
-GITHUB_EVENT_NAME=EVENT_NAME
-docker() { printf 'CREATE_TARGET\\n'; return 0; }
+GITHUB_EVENT_NAME=__EVENT_VALUE__
+# A separate witness FD survives the real docker command's stdout redirection.
+exec 3>&1
+printf 'EVENT:%s\\n' "$GITHUB_EVENT_NAME" >&3
+docker() { printf 'CREATE_TARGET\\n' >&3; return 0; }
 python3() {
   case "$3" in
     restore-mysql-ready) printf 'NATIVE_READY\\n'; return READY_STATUS ;;
@@ -168,10 +171,13 @@ timeout() {
   [[ "$1" == --signal=TERM && "$2" == --kill-after=20s && "$3" == 1550s ]] || return 96
   shift 3; "$@"
 }
-'''.replace('EVENT_NAME', event).replace('READY_STATUS', str(ready)).replace('RUN_STATUS', str(run))
+'''.replace('__EVENT_VALUE__', event).replace('READY_STATUS', str(ready)).replace('RUN_STATUS', str(run))
                 result = subprocess.run(['bash', '-c', stub + branch], capture_output=True, text=True, timeout=5)
                 self.assertEqual(expected, result.returncode, result.stderr)
                 lines = result.stdout.splitlines()
+                self.assertIn('EVENT:' + event, lines)
+                self.assertEqual(1 if event == 'workflow_dispatch' else 0, lines.count('CREATE_TARGET'))
+                self.assertEqual(1 if event == 'workflow_dispatch' else 0, lines.count('NATIVE_READY'))
                 should_run = event == 'workflow_dispatch' and ready == 0
                 self.assertEqual(1 if should_run else 0, lines.count('RUN_ONCE'))
                 if should_run:

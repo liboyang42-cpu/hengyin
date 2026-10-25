@@ -561,7 +561,6 @@ Page({
     };
     const load = pageNum => app.sendRequest({
       hideLoading: true,
-      silentError: true,
       url: '/api/template/list',
       method: 'POST',
       // 分类置顶在完整列表上计算；不再把固定第一页误当成整库。

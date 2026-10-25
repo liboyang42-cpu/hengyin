@@ -53,7 +53,8 @@ function creation(productType = 1) {
 }
 function stations(f, rows) {
   const request = byUrl(f, '/api/coop/supply-stations').at(-1);
-  assert.equal(request.method, 'GET'); assert.deepEqual(plain(request.data), { topicId: '9', merchantMemberId: '11' });
+  assert.equal(request.method, 'GET'); assert.notEqual(request.auth, false, '据点读取沿默认认证，不可匿名');
+  assert.deepEqual(plain(request.data), { topicId: '9', merchantMemberId: '11' });
   request.success({ code: 200, data: { requiresSupplyStation: true, stations: rows } });
 }
 const options = [{ supplyStationId: '101', stationName: '西门据点' }, { supplyStationId: '102', stationName: '东门据点' }];
@@ -87,6 +88,9 @@ test('empty, malformed, duplicate or node-only station lists never select or per
 test('a changed local target or station invalidates the confirmation instead of resending another intent', () => {
   const f = creation(); stations(f, options); choose(f); f.page.sendInvite(); choose(f, 0);
   f.page.confirmInvite(); assert.equal(f.writes().length, 0);
+  assert.equal(f.page.data.sendResult, '邀约对象或核销据点已变化，请重新确认');
+  assert.equal(f.tips.at(-1), '对象或据点已变，请重新确认');
+  assert.ok(f.tips.at(-1).length <= 16, '完整说明留在页内，toast 保持可读长度');
   f.page.sendInvite(); f.page.confirmInvite(); assert.equal(JSON.parse(f.writes()[0].data).supplyStationId, '101');
 });
 test('an in-flight or unknown creation retains its original station across hide/show and never retries', () => {
@@ -107,6 +111,44 @@ test('late station reads cannot attach to a different topic, account, selection 
     assert.ok(!f.page.data.selected.length || f.page.data.selected[0].supplyStationId === '');
     assert.equal(f.writes().length, 0);
   }
+});
+test('scoped station GET preserves default transport feedback and page retry without an invite', () => {
+  for (const reject of [request => request.fail({ errMsg: 'request:fail timeout' }),
+    request => request.successStatusAbnormal({ code: 503, msg: '据点读取暂不可用' }),
+    request => request.success({ code: 200, data: { requiresSupplyStation: false, stations: options } })]) {
+    const f = creation(), request = byUrl(f, '/api/coop/supply-stations')[0];
+    assert.notEqual(request.auth, false); assert.equal(request.silentError, undefined, '沿 request-client 默认可见错误，不新增静默豁免');
+    reject(request);
+    assert.equal(f.page.data.selected[0].supplyState, 'error');
+    assert.ok(f.page.data.selected[0].supplyError);
+    assert.equal(f.page.data.selected[0].supplyStationId, '');
+    assert.equal(f.writes().length, 0); assert.equal(f.tips.length, 0);
+    const previous = byUrl(f, '/api/coop/supply-stations').length;
+    f.page.retrySupplyStations();
+    assert.equal(byUrl(f, '/api/coop/supply-stations').length, previous + 1);
+  }
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/coop/invite/index.wxml'), 'utf8');
+  assert.match(wxml, /<cy-error[^>]*item\.supplyState === 'error'[^>]*sub="\{\{item\.supplyError\}\}"[^>]*bind:retry="retrySupplyStations"/);
+});
+test('owner topic metadata failures stay visible and cannot guess a station requirement or send', () => {
+  for (const reject of [request => request.fail({ errMsg: 'request:fail timeout' }),
+    request => request.successStatusAbnormal({ code: 503, msg: '主题读取暂不可用' }),
+    request => request.success({ code: 200, data: { rows: [{ id: '9', name: '原主题' }], total: 1 } })]) {
+    const f = pageFixture(CREATE);
+    f.page.onLoad({ type: '0', topicId: '9', toId: '11' });
+    const request = byUrl(f, '/api/topic/list')[0];
+    assert.equal(request.data.is_my, 1); assert.notEqual(request.auth, false);
+    assert.equal(request.silentError, undefined, '主题类型读取沿默认可见错误，不新增静默豁免');
+    reject(request);
+    assert.equal(f.page.data.supplyTopicState, 'error'); assert.ok(f.page.data.supplyTopicError);
+    assert.equal(byUrl(f, '/api/coop/supply-stations').length, 0);
+    assert.equal(f.writes().length, 0); assert.equal(f.tips.length, 0);
+    const previous = byUrl(f, '/api/topic/list').length;
+    f.page.retrySupplyTopic();
+    assert.equal(byUrl(f, '/api/topic/list').length, previous + 1);
+  }
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/coop/invite/index.wxml'), 'utf8');
+  assert.match(wxml, /<cy-error[^>]*supplyTopicState === 'error'[^>]*sub="\{\{supplyTopicError\}\}"[^>]*bind:retry="retrySupplyTopic"/);
 });
 test('CLUB and known non-classic flows never request supply stations and preserve their original payload', () => {
   const club = pageFixture(CREATE); club.page.onLoad({ type: '1', topicId: '9', toId: '11' });

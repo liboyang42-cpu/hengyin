@@ -99,12 +99,14 @@ Page({
   _submitAction(context) {
     const { partyId, action, organizerInvite, isAccept } = context;
     const reason = isAccept ? '' : (action === 'decline' ? '主体拒绝本场邀约' : '主体退出本场职责');
-    const url = organizerInvite
-      ? '/api/official/v2/organizer-invites/' + partyId + '/' + (action === 'accept' ? 'accept' : 'decline')
-      : '/api/official/v2/parties/' + partyId + '/' + action.toUpperCase();
+    let url;
+    if (organizerInvite) {
+      if (action === 'accept') url = '/api/official/v2/organizer-invites/' + partyId + '/accept';
+      else url = '/api/official/v2/organizer-invites/' + partyId + '/decline';
+    } else url = '/api/official/v2/parties/' + partyId + '/' + action.toUpperCase();
     // URL 只来自上面的两组已登记官方动作端点；partyId 来自当前服务端邀约行，
     // action 也已在 act 入口收敛为 accept / decline / withdraw，不能由外部拼任意路径。
-    // 保留两个路由字面量，供 API 存在性门禁逐条核对后端 Mapping。
+    // 分别保留动作路由字面量，供 API 存在性门禁逐条核对后端 Mapping。
 
     app.sendRequest({
       method: 'POST',

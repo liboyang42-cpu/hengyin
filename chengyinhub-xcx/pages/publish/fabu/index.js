@@ -8483,7 +8483,6 @@ Page({
     let received = 0;
     const load = pageNum => app.sendRequest({
       hideLoading: true,
-      silentError: true,
       url: '/api/template/list',
       method: 'POST',
       data: { pageNum: pageNum, pageSize: pageSize },

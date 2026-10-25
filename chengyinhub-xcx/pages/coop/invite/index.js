@@ -422,7 +422,7 @@ Page({
     // walk its real pages instead of interpreting nodeId or a route parameter as a station/type.
     const readPage = pageNum => {
       if (!current()) return;
-      app.sendRequest({ hideLoading: true, silentError: true, url: '/api/topic/list', method: 'POST',
+      app.sendRequest({ hideLoading: true, url: '/api/topic/list', method: 'POST',
         data: { is_my: 1, scope: this.data.operationScope, invite_target: 'merchant', pageNum, pageSize: 50 },
         success: res => {
           if (!current()) return;
@@ -465,7 +465,7 @@ Page({
         update({ supplyState: 'error', supplyError: failureText(value, '据点读取失败，请重试') });
         delete this._supplyRequests[merchantMemberId];
       };
-      app.sendRequest({ hideLoading: true, silentError: true, url: '/api/coop/supply-stations', method: 'GET',
+      app.sendRequest({ hideLoading: true, url: '/api/coop/supply-stations', method: 'GET',
         data: { topicId, merchantMemberId },
         success: res => {
           if (!current()) return;
@@ -666,7 +666,8 @@ Page({
     if (this._submitting) return;
     if (!this._supplyReady()) return;
     if (Number(this.data.activeType) === 0 && this._preparedSupplyScope !== this._submitScope()) {
-      toast('邀约对象或核销据点已变化，请重新确认'); return;
+      this.setData({ sendResult: '邀约对象或核销据点已变化，请重新确认' });
+      toast('对象或据点已变，请重新确认'); return;
     }
     if (Number(this.data.shareMode) === 2
         && !(Number.isFinite(Number(this.data.fixedFee)) && Number(this.data.fixedFee) > 0)) {

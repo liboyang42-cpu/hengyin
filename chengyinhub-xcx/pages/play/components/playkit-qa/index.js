@@ -175,12 +175,14 @@ Component({
   },
   methods: {
     _qaContext() {
-      return { epoch: this._qaEpoch || 0, sessionId: String(this.data.sessionId || ''), nodeId: String(this.data.nodeId || '') };
+      // 只读的异步快照，不创建/写回 observer 监听的组件属性。
+      return Object.freeze({ epoch: this._qaEpoch || 0,
+        identity: JSON.stringify([String(this.data.sessionId || ''), String(this.data.nodeId || '')]) });
     },
     _isQaContextCurrent(context) {
       return !!context && !this._qaDisposed && this._qaVisible !== false
-        && context.epoch === (this._qaEpoch || 0) && context.sessionId === String(this.data.sessionId || '')
-        && context.nodeId === String(this.data.nodeId || '');
+        && context.epoch === (this._qaEpoch || 0)
+        && context.identity === JSON.stringify([String(this.data.sessionId || ''), String(this.data.nodeId || '')]);
     },
     /** 服务端给的那个 answerId 排在第几个。没给、或找不着就是 -1(那就什么都不亮)。 */
     _answerIndex() {

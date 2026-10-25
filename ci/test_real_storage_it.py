@@ -246,6 +246,33 @@ class RegistryContractTest(unittest.TestCase):
         self.assertNotIn("B_PAYMENT_INTENT_DDL_APPROVED", rs.child_env(inherited, {}))
         self.assertEqual([], rs.scan_java('// assertEquals("1", System.getenv("B_PAYMENT_INTENT_DDL_APPROVED"));')["gates"])
 
+    def test_deposit_attempt_requires_its_existing_exact_payment_intent_admission(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.service.impl.CoopDepositSettlementAttemptMySqlIT'
+        flag = 'B_PAYMENT_INTENT_DDL_APPROVED'
+        self.assertEqual({'tests': 11, 'storage': ['mysql'], 'gates': {flag: '1'}},
+                         {key: reg['classes'][fqcn][key] for key in ('tests', 'storage', 'gates')})
+        for batch in ('architecture-day-deposit-attempt', 'architecture-day-integrated-changes'):
+            self.assertEqual(1, reg['batches'][batch]['classes'].count(fqcn))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(11, facts['declared_tests'])
+        self.assertEqual([{'named': flag, 'matches': '1'}], facts['source_gates'])
+        for gates in ({}, {flag: '0'}, {flag: 'true'}):
+            rejected = copy.deepcopy(reg)
+            rejected['classes'][fqcn]['gates'] = gates
+            with self.subTest(gates=gates):
+                self.assertTrue(rs.precheck(rejected, _HERE.parent, fqcn)[1],
+                                'missing/wrong explicit approval must fail before storage, never silently skip')
+        inherited = {'PATH': '/usr/bin', flag: '1'}
+        self.assertNotIn(flag, rs.child_env(inherited, {}))
+        extra = rs.class_env(reg, fqcn, mysql_port=40001, suffix='_gh123456a1')
+        self.assertEqual('1', extra[flag])
+        self.assertEqual('1', rs.child_env({'PATH': '/usr/bin', flag: '0'}, extra)[flag])
+        approval_line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
+                             if line.strip().startswith(flag + ':'))
+        self.assertIn("matrix.simple == 'CoopDepositSettlementAttemptMySqlIT'", approval_line)
+
     def test_order_scope_uses_original_isolated_fixture_without_broadening_admission(self):
         reg = registry()
         fqcn = 'com.chengyinhub.business.it.Wp04CoopOrderScopeMySqlIT'
