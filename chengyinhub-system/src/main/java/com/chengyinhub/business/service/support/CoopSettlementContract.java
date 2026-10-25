@@ -88,15 +88,35 @@ public final class CoopSettlementContract {
     public static void requireIndependentOrderScopes(List<CoopSettlementPlan> plans) {
         if (plans == null) throw manualRepair("ORDER_SCOPE_PLANS_REQUIRED");
         java.util.Set<Long> orders = new java.util.HashSet<>();
+        Long topicId = null;
+        Long initiatorId = null;
         Map<String, Map<Long, Long>> registrationsByBeneficiary = new LinkedHashMap<>();
         for (CoopSettlementPlan plan : plans) {
             CoopSettlementSnapshot snapshot = plan == null ? null : plan.getSnapshot();
-            requireSupportedCashPath(snapshot);
-            if (snapshot.getOrderId() == null || snapshot.getOrderId() <= 0
+            // Scope invariants are separate from prepare's mandatory cash-path admission.
+            // A legitimate CLUB/ORGANIZER plan can be checked here without enabling its cash route.
+            if (snapshot == null || snapshot.getOrderId() == null || snapshot.getOrderId() <= 0
+                    || snapshot.getTopicId() == null || snapshot.getTopicId() <= 0
+                    || snapshot.getInitiatorMemberId() == null || snapshot.getInitiatorMemberId() <= 0
+                    || snapshot.getBeneficiaryId() == null || snapshot.getBeneficiaryId() <= 0
+                    || !("MERCHANT".equals(snapshot.getBeneficiaryRole()) && "MERCHANT_PARTICIPATION".equals(snapshot.getServiceUnit())
+                        || "CLUB".equals(snapshot.getBeneficiaryRole()) && "ORGANIZER_LEAD".equals(snapshot.getServiceUnit()))
+                    || snapshot.getCommercialContextId() == null || snapshot.getCommercialContextId() <= 0
+                    || !("TOPIC_EDITION".equals(snapshot.getCommercialContextType()) || "ACTIVITY".equals(snapshot.getCommercialContextType()))
+                    || "TOPIC_EDITION".equals(snapshot.getCommercialContextType()) && !same(snapshot.getTopicId(), snapshot.getCommercialContextId())
+                    || snapshot.getScopeId() == null || snapshot.getScopeId() <= 0
+                    || !("TOPIC".equals(snapshot.getScopeType()) || "NODE".equals(snapshot.getScopeType()) || "ACTIVITY".equals(snapshot.getScopeType()))
+                    || "TOPIC".equals(snapshot.getScopeType()) && !same(snapshot.getTopicId(), snapshot.getScopeId())
                     || !orders.add(snapshot.getOrderId()) || plan.getOriginLines() == null
                     || !("NONE".equals(plan.getRoute()) && "NONE".equals(snapshot.getCompensationMode())
-                        || "COOP_ORDER".equals(plan.getRoute()) && !"NONE".equals(snapshot.getCompensationMode())))
+                        || "COOP_ORDER".equals(plan.getRoute())
+                            && ("SALES_PERCENT".equals(snapshot.getCompensationMode()) || "FIXED_PER_FULFILLMENT".equals(snapshot.getCompensationMode()))
+                            && !plan.getOriginLines().isEmpty())
+                    || topicId != null && !same(topicId, snapshot.getTopicId())
+                    || initiatorId != null && !same(initiatorId, snapshot.getInitiatorMemberId()))
                 throw manualRepair("ORIGINAL_ORDER_SCOPE_IDENTITY_UNPROVEN");
+            topicId = snapshot.getTopicId();
+            initiatorId = snapshot.getInitiatorMemberId();
             String beneficiary = snapshot.getBeneficiaryRole() + ":" + snapshot.getBeneficiaryId();
             Map<Long, Long> occupied = registrationsByBeneficiary.computeIfAbsent(beneficiary, ignored -> new TreeMap<>());
             java.util.Set<Long> local = new java.util.HashSet<>();

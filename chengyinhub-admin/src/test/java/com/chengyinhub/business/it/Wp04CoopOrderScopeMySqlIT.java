@@ -2,6 +2,9 @@ package com.chengyinhub.business.it;
 
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;
+import com.chengyinhub.business.domain.dto.CoopSettlementSnapshot;
+import com.chengyinhub.business.domain.dto.CoopSettlementPlan;
+import com.chengyinhub.business.domain.dto.CoopSettlementOriginLine;
 import com.chengyinhub.business.mapper.*;
 import com.chengyinhub.business.service.*;
 import com.chengyinhub.business.service.impl.*;
@@ -30,6 +33,7 @@ class Wp04CoopOrderScopeMySqlIT {
     CmsTopicMapper topics;
     CoopOrderMapper orders;
     CmsTopicServiceImpl topicOwner;
+    FrozenCoopOrderSettlementSnapshotReader originalReader;
 
     @BeforeEach void canonicalScopeAndCash() throws Exception {
         storage.isolatedOriginalSchema(); // Retain explicit loopback/hosted/DDL/UUID cleanup gates.
@@ -90,9 +94,9 @@ class Wp04CoopOrderScopeMySqlIT {
                 "SELECT id,topic_id FROM cms_topic_node WHERE id=?", (rs, n) -> {
                     CmsTopicNode node = new CmsTopicNode(); node.setId(rs.getLong("id")); node.setTopicId(rs.getLong("topic_id")); return node;
                 }, (Long) call.getArgument(0)));
-        var frozenReader = new FrozenCoopOrderSettlementSnapshotReader(new FailClosedCoopOrderLineupSource(orders, invites),
+        originalReader = new FrozenCoopOrderSettlementSnapshotReader(new FailClosedCoopOrderLineupSource(orders, invites),
                 topics, nodes, tickets);
-        var claims = new CoopSettlementClaimServiceImpl(frozenReader, new SnapshotFulfillmentWindowResolver(), evidence,
+        var claims = new CoopSettlementClaimServiceImpl(originalReader, new SnapshotFulfillmentWindowResolver(), evidence,
                 new SettlementClaimServiceImpl(sql.getMapper(SettlementClaimMapper.class)), sql.getMapper(CoopSettlementMapper.class),
                 sql.getMapper(CoopSettlementDetailMapper.class), sql.getMapper(CoopSettlementAdjustmentMapper.class));
         ReflectionTestUtils.setField(claims, "topicMapper", topics);
@@ -180,6 +184,120 @@ class Wp04CoopOrderScopeMySqlIT {
                 + "VALUES(22,1,11,2,0,'2026-10-01 09:00:00','2026-10-01 10:00:00')");
         storage.db.update("UPDATE coop_order SET scope_type_snapshot='NODE',scope_id_snapshot=31,eligible_purchase_kinds_snapshot='EXPLORE_PASS' WHERE id=702");
         rejectsWithoutEconomicWrites("UNSUPPORTED_CASH_PATH");
+    }
+
+    @Test void completeClubScopePlanDoesNotEnableRealUnsupportedClubCashPrepare() {
+        order(701, 1, "SALES_PERCENT", 88);
+        storage.db.update("INSERT INTO coop_invite(id,invite_type,from_type,from_id,to_type,to_id,topic_id,status,del_flag) "
+                + "VALUES(901,1,'talent',7,'club',88,11,1,0)");
+        storage.db.update("UPDATE coop_order SET invite_id=901,to_type='club',role_snapshot='ORGANIZER',"
+                + "fulfillment_evidence_rule_snapshot='COOP_GROUP_VERIFY' WHERE id=701");
+        CoopSettlementSnapshot snapshot = storage.tx.execute(status -> {
+            topics.selectCmsTopicByIdForUpdate(11L);
+            return originalReader.read(orders.selectEffectiveOrdersByTopicId(11L).get(0));
+        });
+        assertNotNull(snapshot); assertEquals("CLUB", snapshot.getBeneficiaryRole());
+        assertEquals("ORGANIZER_LEAD", snapshot.getServiceUnit());
+        // Shape-only plan for the pure invariant guard; this is not a fulfillment/payment claim.
+        assertDoesNotThrow(() -> CoopSettlementContract.requireIndependentOrderScopes(List.of(scopePlan(snapshot, 1L))));
+        // The actual production prepare, reached through Topic, must still deny this cash route.
+        rejectsWithoutEconomicWrites("UNSUPPORTED_CASH_PATH");
+    }
+
+    @Test void scopeGuardRejectsMissingSnapshotAndBrokenOriginalIdentities() {
+        assertThrows(IllegalStateException.class, () -> CoopSettlementContract.requireIndependentOrderScopes(null));
+        assertThrows(IllegalStateException.class, () -> CoopSettlementContract.requireIndependentOrderScopes(Collections.singletonList(null)));
+        assertThrows(IllegalStateException.class, () -> CoopSettlementContract.requireIndependentOrderScopes(
+                List.of(new CoopSettlementPlan(null, "COOP_ORDER", List.of()))));
+        List<java.util.function.Consumer<CoopSettlementSnapshot>> invalid = List.of(
+                value -> value.setOrderId(null), value -> value.setOrderId(0L),
+                value -> value.setTopicId(null), value -> value.setTopicId(-1L),
+                value -> value.setInitiatorMemberId(null), value -> value.setInitiatorMemberId(0L),
+                value -> value.setBeneficiaryId(null), value -> value.setBeneficiaryId(0L),
+                value -> value.setCommercialContextId(null), value -> value.setCommercialContextId(0L),
+                value -> value.setCommercialContextType("OTHER"), value -> value.setCommercialContextId(99L),
+                value -> value.setScopeId(null), value -> value.setScopeId(0L),
+                value -> value.setScopeType("OTHER"), value -> value.setScopeId(99L));
+        for (var change : invalid) {
+            var snapshot = scopeSnapshot(701L); change.accept(snapshot);
+            assertThrows(IllegalStateException.class, () -> CoopSettlementContract.requireIndependentOrderScopes(List.of(scopePlan(snapshot, 1L))));
+        }
+        var first = scopeSnapshot(701L); var otherTopic = scopeSnapshot(702L);
+        otherTopic.setTopicId(12L); otherTopic.setCommercialContextId(12L); otherTopic.setScopeId(12L);
+        assertThrows(IllegalStateException.class, () -> CoopSettlementContract.requireIndependentOrderScopes(
+                List.of(scopePlan(first, 1L), scopePlan(otherTopic, 2L))));
+        var otherInitiator = scopeSnapshot(702L); otherInitiator.setInitiatorMemberId(99L);
+        assertThrows(IllegalStateException.class, () -> CoopSettlementContract.requireIndependentOrderScopes(
+                List.of(scopePlan(first, 1L), scopePlan(otherInitiator, 2L))));
+    }
+
+    @Test void scopeGuardRejectsForgedRolesUnitsRoutesAndUnprovenLines() {
+        List<java.util.function.Consumer<CoopSettlementSnapshot>> invalid = List.of(
+                value -> value.setBeneficiaryRole(null), value -> value.setBeneficiaryRole("PLATFORM"),
+                value -> value.setServiceUnit(null), value -> value.setServiceUnit("UNKNOWN"),
+                value -> value.setServiceUnit("ORGANIZER_LEAD"), value -> value.setBeneficiaryRole("CLUB"),
+                value -> value.setCompensationMode(null), value -> value.setCompensationMode("UNKNOWN"));
+        for (var change : invalid) {
+            var snapshot = scopeSnapshot(701L); change.accept(snapshot);
+            assertThrows(IllegalStateException.class, () -> CoopSettlementContract.requireIndependentOrderScopes(List.of(scopePlan(snapshot, 1L))));
+        }
+        var snapshot = scopeSnapshot(701L); var valid = scopePlan(snapshot, 1L);
+        for (var malformed : List.of(new CoopSettlementPlan(snapshot, "UNKNOWN", valid.getOriginLines()),
+                new CoopSettlementPlan(snapshot, "COOP_ORDER", null), new CoopSettlementPlan(snapshot, "COOP_ORDER", List.of())))
+            assertThrows(IllegalStateException.class, () -> CoopSettlementContract.requireIndependentOrderScopes(List.of(malformed)));
+        List<java.util.function.Consumer<CoopSettlementOriginLine>> badLines = List.of(
+                value -> value.setEligibleSalesSnapshot(null), value -> value.setEligibleSalesSnapshot(new BigDecimal("-1")),
+                value -> value.setOriginAmount(null), value -> value.setOriginAmount(new BigDecimal("-1")),
+                value -> value.setSourceContractId(999L), value -> value.setCommercialContextId(999L),
+                value -> value.setServiceUnit("ORGANIZER_LEAD"));
+        for (var change : badLines) {
+            var plan = scopePlan(snapshot, 1L); change.accept(plan.getOriginLines().get(0));
+            assertThrows(IllegalStateException.class, () -> CoopSettlementContract.requireIndependentOrderScopes(List.of(plan)));
+        }
+        assertThrows(IllegalStateException.class, () -> CoopSettlementContract.requireIndependentOrderScopes(List.of(
+                new CoopSettlementPlan(snapshot, "COOP_ORDER", Collections.singletonList(null)))));
+        assertThrows(IllegalStateException.class, () -> CoopSettlementContract.requireIndependentOrderScopes(List.of(
+                scopePlan(snapshot, 0L))));
+        assertThrows(IllegalStateException.class, () -> CoopSettlementContract.requireIndependentOrderScopes(List.of(
+                scopePlan(snapshot, null))));
+        var repeatedLine = scopePlan(snapshot, 1L).getOriginLines().get(0);
+        assertThrows(IllegalStateException.class, () -> CoopSettlementContract.requireIndependentOrderScopes(List.of(
+                new CoopSettlementPlan(snapshot, "COOP_ORDER", List.of(repeatedLine, repeatedLine)))));
+    }
+
+    @Test void scopeGuardAllowsDisjointShapeButRejectsSharedSalesIncludingNoneInBothOrders() {
+        var first = scopeSnapshot(701L); var second = scopeSnapshot(702L);
+        assertDoesNotThrow(() -> CoopSettlementContract.requireIndependentOrderScopes(
+                List.of(scopePlan(first, 1L), scopePlan(second, 2L))));
+        assertThrows(IllegalStateException.class, () -> CoopSettlementContract.requireIndependentOrderScopes(
+                List.of(scopePlan(first, 1L), scopePlan(second, 1L))));
+        first.setCompensationMode("NONE");
+        var none = scopePlan(first, 1L); var paid = scopePlan(second, 1L);
+        for (var sequence : List.of(List.of(none, paid), List.of(paid, none))) {
+            IllegalStateException rejected = assertThrows(IllegalStateException.class,
+                    () -> CoopSettlementContract.requireIndependentOrderScopes(sequence));
+            assertTrue(rejected.getMessage().contains("ORIGINAL_ORDER_SCOPE_OVERLAP"));
+        }
+        assertThrows(IllegalStateException.class, () -> CoopSettlementContract.requireIndependentOrderScopes(
+                List.of(scopePlan(second, 1L), scopePlan(second, 2L))));
+    }
+
+    private static CoopSettlementSnapshot scopeSnapshot(Long orderId) {
+        var snapshot = new CoopSettlementSnapshot(); snapshot.setOrderId(orderId); snapshot.setTopicId(11L);
+        snapshot.setInitiatorMemberId(7L); snapshot.setBeneficiaryRole("MERCHANT"); snapshot.setBeneficiaryId(88L);
+        snapshot.setServiceUnit("MERCHANT_PARTICIPATION"); snapshot.setCommercialContextType("TOPIC_EDITION");
+        snapshot.setCommercialContextId(11L); snapshot.setScopeType("TOPIC"); snapshot.setScopeId(11L);
+        snapshot.setCompensationMode("SALES_PERCENT"); return snapshot;
+    }
+
+    private static CoopSettlementPlan scopePlan(CoopSettlementSnapshot snapshot, Long registrationId) {
+        var line = new CoopSettlementOriginLine(registrationId,
+                "NONE".equals(snapshot.getCompensationMode()) ? BigDecimal.ZERO : BigDecimal.ONE);
+        line.setEligibleSalesSnapshot(new BigDecimal("10")); line.setSettlementRoute("COOP_ORDER");
+        line.setSourceContractType("COOP_ORDER"); line.setSourceContractId(snapshot.getOrderId());
+        line.setCommercialContextType(snapshot.getCommercialContextType()); line.setCommercialContextId(snapshot.getCommercialContextId());
+        line.setBeneficiaryRole(snapshot.getBeneficiaryRole()); line.setBeneficiaryId(snapshot.getBeneficiaryId()); line.setServiceUnit(snapshot.getServiceUnit());
+        return new CoopSettlementPlan(snapshot, "NONE".equals(snapshot.getCompensationMode()) ? "NONE" : "COOP_ORDER", List.of(line));
     }
 
     private void order(long id, int mode, String compensation, long merchant) {
