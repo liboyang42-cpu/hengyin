@@ -3,7 +3,9 @@
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
 import tempfile
+import textwrap
 import unittest
 
 SPEC = importlib.util.spec_from_file_location('restore_build', Path(__file__).with_name('restore_business_reconciliation_build.py'))
@@ -136,6 +138,90 @@ class RestoreBuildControls(unittest.TestCase):
                      mock.patch.object(build.sys, 'argv', ['build', 'pack']), \
                      self.subTest(value=value), self.assertRaises(ValueError):
                     build.main()
+
+
+class RestoreManualRouterControls(unittest.TestCase):
+    def sources(self):
+        caller = (build.ROOT / '.github/workflows/backend-jar.yml').read_text()
+        callee = (build.ROOT / '.github/workflows/isolated-restore-business-reconciliation.yml').read_text()
+        return caller, callee
+
+    def admission(self, source, name, end):
+        return textwrap.dedent(source.split('      - name: ' + name + '\n        run: |\n', 1)[1].split(end, 1)[0])
+
+    def invoke(self, script, **changes):
+        env = {'SOURCE_SHA': 'a' * 40, 'GITHUB_SHA': 'a' * 40, 'WORKFLOW_SHA': 'a' * 40,
+               'GITHUB_REPOSITORY': 'liboyang42-cpu/hengyin', 'GITHUB_EVENT_NAME': 'workflow_dispatch',
+               'RUN_HTTP_FIXTURES': 'false', 'RUN_RESTORE_FIXTURES': 'false'}
+        env.update(changes)
+        # Execute only the real fixed admission block; no checkout, build, provider or resource command.
+        return subprocess.run(['/bin/bash', '--noprofile', '--norc', '-e', '-o', 'pipefail', '-c', script],
+                              env=env, capture_output=True, timeout=5).returncode
+
+    def test_original_jar_http_and_restore_modes_are_exclusive_before_child_jobs(self):
+        caller, _ = self.sources()
+        script = self.admission(caller, 'Validate source and exclusive mode', '\n  jar:\n')
+        for http, restore, success in [('false', 'false', True), ('true', 'false', True),
+                                       ('false', 'true', True), ('true', 'true', False)]:
+            with self.subTest(http=http, restore=restore):
+                self.assertEqual(success, self.invoke(script, RUN_HTTP_FIXTURES=http,
+                                                     RUN_RESTORE_FIXTURES=restore) == 0)
+        # The original build/HTTP inputs may name another reviewed commit; only restore requires the workflow commit.
+        for http in ('false', 'true'):
+            self.assertEqual(0, self.invoke(script, RUN_HTTP_FIXTURES=http, SOURCE_SHA='b' * 40))
+
+    def test_restore_admission_rejects_foreign_source_context_and_unknown_modes(self):
+        caller, _ = self.sources()
+        script = self.admission(caller, 'Validate source and exclusive mode', '\n  jar:\n')
+        for change in [{'SOURCE_SHA': value} for value in ('', 'a' * 39, 'A' * 40, 'g' * 40, 'b' * 40)] + [
+                {'WORKFLOW_SHA': 'b' * 40}, {'GITHUB_SHA': 'b' * 40},
+                {'GITHUB_REPOSITORY': 'foreign/repository'}, {'GITHUB_EVENT_NAME': 'push'},
+                {'RUN_HTTP_FIXTURES': ''}, {'RUN_RESTORE_FIXTURES': 'invalid'}]:
+            with self.subTest(change=change):
+                self.assertNotEqual(0, self.invoke(script, **dict({'RUN_RESTORE_FIXTURES': 'true'}, **change)))
+
+    def test_registered_router_reuses_only_the_same_commit_seven_cohort_workflow(self):
+        caller, callee = self.sources()
+        self.assertRegex(caller, r'run_restore_fixtures:\n        description:[^\n]+\n        required: false\n        type: boolean\n        default: false')
+        self.assertEqual(3, caller.count('    needs: admission\n'))
+        jar = caller.split('\n  jar:\n', 1)[1].split('\n  http-fixtures:\n', 1)[0]
+        self.assertIn('&& !inputs.run_http_fixtures && !inputs.run_restore_fixtures\n', jar)
+        restore = caller.split('\n  restore-fixtures:\n', 1)[1]
+        self.assertIn("    if: github.repository == 'liboyang42-cpu/hengyin' && github.event_name == 'workflow_dispatch' && inputs.run_restore_fixtures && !inputs.run_http_fixtures\n", restore)
+        self.assertIn('    uses: ./.github/workflows/isolated-restore-business-reconciliation.yml\n', restore)
+        self.assertIn('      source_sha: ${{ inputs.source_sha }}\n', restore)
+        self.assertNotIn('runs-on:', restore); self.assertNotIn('steps:', restore); self.assertNotIn('mvn ', restore)
+        self.assertIn('      WORKFLOW_SHA: ${{ github.workflow_sha }}\n', caller)
+        self.assertIn('  WORKFLOW_SHA: ${{ github.workflow_sha }}\n', callee)
+        self.assertIn('  SOURCE_SHA: ${{ inputs.source_sha }}\n', callee)
+        self.assertNotIn('inputs.source_sha ||', callee)
+        self.assertRegex(callee, r'  workflow_call:\n    inputs:\n      source_sha:\n        description:[^\n]+\n        required: true\n        type: string')
+        for workflow in (caller, callee):
+            self.assertIn('  workflow_dispatch:', workflow)
+            self.assertNotRegex(workflow, r'(?m)^\s+(?:push|pull_request|schedule|secrets|GITHUB_SHA):')
+            self.assertNotIn('secrets.', workflow)
+            self.assertIn('contents: read', workflow)
+        self.assertEqual(1, caller.count('run: mvn -B -q -DskipTests package'))
+        self.assertEqual(1, callee.count('mvn -B -pl chengyinhub-admin -am -DskipTests install'))
+        self.assertIn('max-parallel: 20', callee)
+        self.assertIn('needs: [restore-source-build, isolated-restore-business-reconciliation]', callee)
+
+    def test_reusable_validates_real_source_before_checkout_and_preserves_downstream_identity(self):
+        _, callee = self.sources()
+        script = self.admission(callee, 'Validate caller source before checkout', '\n      - uses:')
+        self.assertEqual(0, self.invoke(script))
+        for change in [{'SOURCE_SHA': value} for value in ('', 'a' * 39, 'A' * 40, 'b' * 40)] + [
+                {'GITHUB_SHA': 'b' * 40}, {'WORKFLOW_SHA': 'b' * 40}, {'WORKFLOW_SHA': ''},
+                {'GITHUB_REPOSITORY': 'foreign/repository'}, {'GITHUB_EVENT_NAME': 'workflow_call'}]:
+            with self.subTest(change=change):
+                self.assertNotEqual(0, self.invoke(script, **change))
+        self.assertLess(callee.index('name: Validate caller source before checkout'),
+                        callee.index('uses: actions/checkout@v4'))
+        consumer = callee.split('      - name: Verify and reuse the exact build without compiling again\n', 1)[1].split('      - name:', 1)[0]
+        summary = callee.split('      - name: Validate caller source before summary\n', 1)[1].split('      - uses:', 1)[0]
+        for source in (consumer, summary):
+            self.assertIn('test "$SOURCE_SHA" = "$GITHUB_SHA"', source)
+            self.assertIn('test "$SOURCE_SHA" = "$WORKFLOW_SHA"', source)
 
 
 if __name__ == '__main__':

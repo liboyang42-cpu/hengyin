@@ -18,6 +18,11 @@ on:
         required: false
         type: boolean
         default: false
+      run_restore_fixtures:
+        description: 仅运行同提交的固定七项隔离恢复验收，与 HTTP 互斥，仅构建一次 JAR
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -27,9 +32,34 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  admission:
+    name: Validate manual source and exclusive mode
+    if: github.repository == 'liboyang42-cpu/hengyin' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      WORKFLOW_SHA: ${{ github.workflow_sha }}
+      RUN_HTTP_FIXTURES: ${{ inputs.run_http_fixtures }}
+      RUN_RESTORE_FIXTURES: ${{ inputs.run_restore_fixtures }}
+    steps:
+      - name: Validate source and exclusive mode
+        run: |
+          test "$GITHUB_REPOSITORY" = liboyang42-cpu/hengyin
+          test "$GITHUB_EVENT_NAME" = workflow_dispatch
+          [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          case "$RUN_HTTP_FIXTURES:$RUN_RESTORE_FIXTURES" in
+            false:false|true:false|false:true) ;;
+            *) echo "Select exactly one optional fixture mode, or neither for the original JAR build" >&2; exit 2 ;;
+          esac
+          if [[ "$RUN_RESTORE_FIXTURES" = true ]]; then
+            test "$SOURCE_SHA" = "$GITHUB_SHA"
+            test "$SOURCE_SHA" = "$WORKFLOW_SHA"
+          fi
   jar:
     name: Build backend jar
-    if: github.repository == 'liboyang42-cpu/hengyin' && !inputs.run_http_fixtures
+    needs: admission
+    if: github.repository == 'liboyang42-cpu/hengyin' && !inputs.run_http_fixtures && !inputs.run_restore_fixtures
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -69,7 +99,15 @@ jobs:
           if-no-files-found: error
   http-fixtures:
     name: Run isolated HTTP fixtures
-    if: github.repository == 'liboyang42-cpu/hengyin' && github.event_name == 'workflow_dispatch' && inputs.run_http_fixtures
+    needs: admission
+    if: github.repository == 'liboyang42-cpu/hengyin' && github.event_name == 'workflow_dispatch' && inputs.run_http_fixtures && !inputs.run_restore_fixtures
     uses: ./.github/workflows/gameplay-http-e2e.yml
+    with:
+      source_sha: ${{ inputs.source_sha }}
+  restore-fixtures:
+    name: Run seven isolated restore cohorts
+    needs: admission
+    if: github.repository == 'liboyang42-cpu/hengyin' && github.event_name == 'workflow_dispatch' && inputs.run_restore_fixtures && !inputs.run_http_fixtures
+    uses: ./.github/workflows/isolated-restore-business-reconciliation.yml
     with:
       source_sha: ${{ inputs.source_sha }}

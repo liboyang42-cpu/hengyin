@@ -1,0 +1,9 @@
+5d36f41ba4364192c99f1b6b2793c7e45ea7f61a21fbd1aed969d89258e926ab  ci/authenticated-redis-recovery.sh
+b0dcf63c571533d897feb19c1bf2c6d571cf97f288fcd2c96995ff6b8ad569be  .github/workflows/isolated-authenticated-redis-recovery.yml
+c26195893041a475bc56ea892344f99c4a498508495fc01631ac45a79a988c10  ci/test_restore_application_http_entry.py
+6dae2de6469ca77f6aeed4590d9b2d0ec04a1b11dbff976495582418648ba152  docs/delivery/architecture-day/F/final-acceptance-entry-wiring-90e/C-RESTORE-APPLICATION-HANDOFF.md
+5b5b9f069074b72cb28c634b8b3ceff8895c05717352275b54ee8e2a940a252e  docs/delivery/architecture-day/F/final-acceptance-entry-wiring-90e/README.md
+85fcb5f2bac1b450a37cbb067310f7c0ebba3bdb4ebcd94ca76b342d84039bfb  docs/delivery/architecture-day/F/final-acceptance-entry-wiring-90e/POSTIMAGES.sha256
+c9c6fd7c43480d52804feda8f91f16d558fa87b2f627d17f3c4327251a1c2b4a  docs/delivery/architecture-day/F/restore-http-entry-9496/README.md
+61d0558808455ff4bddcff1934bfa59aa7a859f1d97e64682988f9716f411bed  docs/delivery/architecture-day/F/restore-http-entry-9496/PATCH.sha256
+835f3149f92e5ad4a528a2f7927ef3c64afdc1d6f9f7700fa79869291e7d1f5a  docs/delivery/architecture-day/F/restore-http-entry-9496/review.patch.b64

@@ -27,7 +27,7 @@
 | `business.it.TemplateAdoptionRoundTripMySqlIT` 6；`business.it.ThemeStateKeyDeclarationMySqlIT` 6；`business.service.impl.TopicPublicationBindingMySqlIT` 9 | 同一个 integrated batch；原 registry storage/gates/database_base、源码 scratch admission 不变 | 各自原 XML、source/precheck/Maven/CLEAN/teardown receipt。其余 integrated 成员完整保留；不再同时派重复的主题/资金子 batch来凑并行 |
 | `ThemeRuntimeMySqlIT` 参数化入口 | 保留标准 `ci/backend-test.sh` 的 `MYBATIS_ITS`、原 `IT_LIST` Maven 参数及 `ci/assert_it_ran.py` 回读 | 标准 Backend 原 XML/source identity；不塞普通 `@Test` registry，不用源码声明数代替参数化执行数 |
 | 固定 7 restore cohort | 原 `isolated-restore-business-reconciliation.yml` 手动入口；真实 hosted/repo/run/attempt/source；parent 恢复标志 absent | 一次 `restore-business-build-<attempt>` 的全文件 hash manifest + JAR；七份 `isolated-restore-business-reconciliation-<cohort>-<attempt>`，各只有 `host.json/reconciliation.json/finalized.json`；原 summary artifact。complete3 仍走原 C verifier；gap4 保持 BLOCKED，不授权生产 release |
-| C 完整应用恢复启动 | **尚未接通；不登记新 count、不派发**。沿原 authenticated-redis workflow/host；见 `C-RESTORE-APPLICATION-HANDOFF.md` | C 尚未交最终 source/argv/JSON 字段；不能以旧 recovery/7 cohort 签全应用启动 |
+| C 完整应用恢复启动 | C `c382451` + `bec4054` 最终 SOURCE 与 F `restore-http-entry-9496` shared 接线已齐；root 合成后唯一执行，不登记新 Java count。沿原 authenticated-redis workflow/host；见 `C-RESTORE-APPLICATION-HANDOFF.md` | 实际 run/四槽 cleanup/finalize，固定三 JSON；全部 NOT_RUN，不能以旧 recovery/7 cohort 签全应用启动 |
 
 普通 lane 的 `run` 使用原 Maven `test` / test classpath，没有 `package`。其 XML 摘要和 B 的 loaded class/resource 摘要应与 source/run/attempt 一起回读，不能冒充七 cohort 的 once-build JAR。普通 teardown 的 `removed` 沿原机制记录；不扩称已经具备恢复 host 那种精确 CID/label 外层不存在性证明。
 

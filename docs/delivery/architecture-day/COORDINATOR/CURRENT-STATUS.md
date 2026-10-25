@@ -1,75 +1,29 @@
 # 当前施工状态（唯一当前摘要）
 
-当前是**复用主链源码已集成，完整恢复启动及最后验收接线仍在施工**：`ALL_NEW_TESTS_NOT_RUN / all_complete=false`。公共90e及9a99都是未验SOURCE检查点；原复用主链、A/B收口与恢复目标owner准备已公开，后续D/E/F与root必要增量继续组合，完整同源验收候选尚未冻结，不继承旧绿色。
+**本批必要源码已收齐并集成，进入单一候选冻结和统一验收准备。** `all_complete=false`。当前所有新测试／编译／应用启动／数据库／故障／CI仍为 **NOT_RUN**；下面的SOURCE交付、摘要与计数不等于运行通过。
 
-**最新实际进展：**H ce2bee0408baedcb4cd6ea7bc39ab8ea97236b16已交付并集成，三份原补丁摘要匹配且33个后像全部exact。原A–H完整源码包已收齐，停止轮询等待H。root已用原generator在最终client源生成一次action-ledger，5125控件只是登记，不是UI通过。接下来冻结同一公共隔离候选，原owner并行完成最后集中审查与实际问题的完整必要增量；仍不测试、不编译，所有原WP／Q／A／T／G目标仍all_complete=false。
+本批父检查点为公共 `9496e7028ef3793ac19a1687f9391fff9ff33e72`（tree `ec60ba4c3f8c327ec393e1d4344d3f43ed6e2b40`）。最终冻结commit／tree由root外部收据与实际workflow头独立绑定，不能把当前增量套成9496、90e或6fcd的旧绿色。
 
-**90e最后集中收口历史：**原A已收齐，E后端继续；原B已完成资金与恢复组合源码核对并交一处夹具修补，root已应用。`cms_registration_payment_fact` 的规范主键是 `registration_id`，原统一 `ORDER BY id` 会在首次快照处失败；现仅该表改按原主键排序，其他表、原案例及所有断言保留。原5165字节补丁摘要和README作者后像精确；Java作者像较父格式多一个EOF LF，root保留父单EOF并记录原／合成摘要，未冒称字节exact作者。未执行任何测试、编译或数据库验证。
+| 已完成源码包 | 真实交付与边界 |
+|---|---|
+| D 前端复用 | 5450c43a的3供体／3作者后像exact。原interactionType、audioDuration=0保留；原39场景＋4测试SOURCE。原u4Dynamic67项只2锚等量平移，理由／cap不变；必要生成一次原ledger仍5125静态控件，非UI通过。 |
+| E 后台复用与券归属 | 037afa2e的8代码＋3文档已装；37989字节原code patch／8作者后像exact。沿现有券授权owner覆盖采用、整主题复制及正式发布，未新增策略／依赖／表；复制IT25→28、声明unit32→35、新unit16均NOT_RUN。 |
+| C 完整恢复应用 | c382451b的7供体／6作者摘要exact；bec4054查询无参调用增量3文件exact，控制SOURCE原25＋1。实际完整Spring/Security/MVC/Quartz子类、原app槽位、canonical备份恢复及原业务读取／派发hold均是未执行源码。 |
+| F 共享完整应用入口 | 726625eb的10供体／9作者后像和decoded patch641118e0全部exact；原资源owner创建restore-mysql／readiness→C run→原四槽cleanup→C finalize／三JSON，4个直接控制SOURCE。默认与旧4模式／七cohort合同保留。 |
+| B 已注册七cohort调用入口 | 完整三块18546字节patch9eb49c8d及5作者后像exact。原backend-jar已注册入口复用同commit的七cohort，不合并默认分支注册新入口，不复制job。admission拒绝双选／错source，restore-only不重复build JAR或旧HTTP；原7控制＋4新控制SOURCE，原HTTP路由负控随真实互斥合同同步。 |
+| root 原共享资源owner | 固定restore-mysql身份／relay／独立UUID／四槽清理、导入后startup_probe本schema四CRUD。带参数CREATE USER字面Host%%按原driver合同修正，无参GRANT仍Host%；7个控制方法源码保留。无SQL／资源实际执行。 |
 
-**并行收口安排（覆盖此前仅剩E的安排）：**
+原A/B/G/H既有生产／资金／消费／恢复包均保留冻结，不派无收益复审或待命。当前没有尚未交付的云端源码任务；只有root最终核源／白名单／秘密扫描／单源冻结及之后统一验收。真实新失败按原owner定点补完整caller／fixture，不恢复全仓审计或逐补丁测试。
 
-原A完整运行消费核对已收齐，原B完整资金恢复核对及夹具查询修补已集成；两者冻结，不重开已完成工作。
+当前真库registry是 **76类／919条普通@Test源码声明**；资金闭环273，extra／port-extra133。C新test-classpath主类不是普通MySQL套件，不重复登记凑数。ledger5125亦非UI实跑。
 
-原E继续后台作者、库、采用与正式发布生产链；前端从E明确移交原D，E不再编辑小程序或Vue。
+最终入口和输入见《本轮施工交付与验收》顶部：标准CI、联合真库、原三类HTTP、一次gameplay-capacity-mixed、一次restore-application-startup，以及backend-jar的七cohort复用。全部绑定同一实际source/run/attempt/JAR／fixture／UUID／原身份及精确清理。通过且未受影响的旧项目不重复；新source不能移用旧绿。
 
-原D负责完整小程序／Vue复用作者链、实际采用绑定和所有必要调用者／测试源码；不得改H会话与UNKNOWN策略、baseline或ledger。
+完整WP00–WP17／Q1–Q10／A01–A15／T01–T22／G0–G5不缩水；以上源码收齐不是全目标完成。全业务恢复回退／真实多身份／固定预算混合故障仍按实际证据验收，缺证不当BUG。UI／设备、真实渠道和生产未验证；本阶段不授权PR合并、生产DDL／部署／恢复放行、微信或真实付费。旧ccd5／pool／auth／f194／ff2b／6fcd只保原SHA与边界。
 
-原C按原WP14/T20补实际恢复库上完整HTTP应用启动和派发hold的验证源码，复用原fresh schema／bootstrap／JAR／网络／清理owner。现固定owner夹具明确未覆盖此边界；缺覆盖不是生产BUG。不得以jobs/provider已disabled或health200冒称restore guard有效。
+全游戏复用继续沿原库／注册／采用／绑定／冻结owner；42个backend key和8组相邻机制是检索目录，不是42个成品游戏或第二个运行注册。新增主题不得复制已有题型／游戏实现，先走现有索引与正式采用／绑定入口；不另造热插拔平台。
 
-原F独立完成当前真实已交源码的登记、显式门控、唯一执行、JSON证据和汇总接线，以共享review.patch交root；不先猜C新接口／新case数，不造总控平台或重复job。
-
-root固定新增手动mode restore-application-startup与CHENGYIN_CI_RESTORE_HTTP_STARTUP测试入场标志，默认／PR仍recovery。实际启动CHENGYIN_RESTORE_MODE由C用env设置并读回，不能导出空串当正常或用-D伪装。资源与脚本／workflow／registry由root唯一合成，C先交真实需要而不是自建provisioner。
-
-所有owner交完整实现／caller／配置／fixture／测试SOURCE和原case保留，不只一个小修；全部源码齐后统一冻结与验收，当前仍不测试、不编译、不启动资源。
-
-**并行产生的实际交付已集成：**D5450完整3文件／3作者后像exact，原前端39case保留＋4SOURCE；E037afa完整8代码／3文档已收，37989字节code patch及8作者后像exact，原复制IT25→28、声明unit32→35、新unit16共22SOURCE。F59d08＋bfa完整12供体和11作者记录已收，8个代码／workflow原像核对后接入；只将合法raw diff-context空白转成精确base64运输，随后严格登记测试的E新增3例预期由916→919，原门控／断言不删。联合现为76类／919源码声明，非实跑。原u4Dynamic67项只两锚等量平移／同7行上下文；D真实client改动后必要生成一次现成ledger，仍5125静态控件，不是UI测试。
-
-root继续和C并行：原owner已写固定restore-mysql身份、原loopback relay、独立UUID/readiness／四槽清理，以及canonical导入后只给startup_probe本schema四CRUD的restore-runtime-user SOURCE；拒绝已有用户重绑／额外全局权限，7个新增控制方法均未执行。C的完整真实HTTP应用启动／hold／run-finalize／安全输出源码仍未交齐，宿主最后唯一mode仍须按它的实际接口接通；不以健康200、provider disabled或旧七cohort代替。当前不测试、不编译、不启动资源，all_complete=false。
-
-用户要求所有必要实现、调用者、装配、配置及配套测试源码齐后再最后统一审查／验证。当前没有运行测试、编译、HTTP、数据库、故障注入或CI。差分／后像摘要／源登记不等于行为通过。
-
-| 原 owner | 当前源码事实 | 剩余 |
-|---|---|---|
-| A | 恢复资金197ac0ca完整20供体exact，8相邻生产窄hunk＋1unit已串，新真库SOURCE已登记 | 包冻结；15＋1 unit与1MySQL均NOT_RUN，完整T20未验 |
-| B | 资金恢复8块／84497字节原摘要、3后像全部exact装配；14源码声明和两显式门已登记 | 原包冻结；固定SOURCE_SHA仅JSON收据已接原storage artifact，未运行／未验收 |
-| C | 完整568b6b15增量10供体／9作者摘要exact，35新控制SOURCE；报名旧5线／37控制保留，guard真实owner及3类complete/gap已装 | 包冻结；七项宿主／一次build分发／收据summary均SOURCE未跑，不当完整T20或生产放行 |
-| D | QA实例围栏0e6b05e7＋全部内容库分页e8a25307已装 | root最后源齐后更新派生ledger／精确锚点 |
-| E | 新T19 f3d45560的8后像／5code摘要及原patch均exact；1例MySQL＋Redis入口已登记 | 包冻结；与原E内容包一样均未运行／未验收 |
-| F | 非资金5d071d34完整51供体及作者manifest exact，手机号共享2路径已串，common保留 | 包冻结；26＋1测试SOURCE未跑，旧best-effort退款通知不冒称自动恢复 |
-| G | e306ae9b完整producer：22供体exact＋1与F干净合成＋5共享review摘要核对后已接 | 已交包冻结；测试均NOT_RUN |
-| H | ce2bee完整26 owned＋6共享＋1夹具已串，33后像全部匹配作者摘要，新增45个测试方法源码 | 包冻结；未编译／未测试／未验收 |
-
-原B资金物理恢复14例SOURCE已按完整原补丁和三后像精确装配，并已接登记／门控／JSON-only收据；原提现AssertionError和C章节子链均不能替代资金进程恢复。另外按原Q4/T19与WP14/T20，原E/C已接跨域隔离和备份恢复对账完整SOURCE包，保留现成AI／地图预算、通知／调度测试及canonical备份工具。H完整生产消费source现已收齐；A/F完整消费者和C完整恢复SOURCE及root配置已装，不把任一局部包到齐当全部。
-
-所有原8聊天ID／host、交付摘要和文件级收据见ACTIVE-WORK.json。阶段完成不代表全目标完成，其他包已有源码不因H未齐而反复重派或回归。
-
-当前关键合同：新发布冻结完整内容／作者stateKeys，原局不读作者未来修改；已有局优先，新内容版用已冻结原规则／剧情／节点配置复用原需局helper，旧无新标志V1原路径。最终不增加contentSnapshotOnly。提示／答案仍按原授权投影，活跃安全撤销、金额、UNKNOWN、角色和精确清理不放宽。
-
-[全游戏复用索引](全游戏复用索引-20261025.md)已从A／D实际源合成，42 backend key＋8组相邻机制只是源码目录；原生产注册、validator及判定owner仍唯一权威。整主题和小游戏采用继续用原接口，不按主题名复制新引擎；未开放完成桥和原只读入口不因索引出现而启用。
-
-当前联合真库登记暂为**76类／916条源码声明**，含B采用6、F声明6、G发布绑定9、B资金物理恢复14及E组合隔离1；资金闭环273、extra／port-extra为133。原70类保留，严格计数与拒绝过期登记的测试源码已同步；source precheck和测试均未运行。H本包只增普通unit源码、未新增真库登记类；最终76／916仍只是源码算术。
-
-root已经把原隔离入口组合为4个固定手动模式，默认／PR仍recovery；C只替换同一app，MySQL／Redis／schema／network／cleanup沿原owner；组合模式只一次终态finalize，原失败和清理未知不能转绿。源码不等于恢复或容量PASS。
-
-
-历史a7eee仅报名gap／fresh SDK关断的缺口现已由C568b补齐三域complete/gap源码和真实A/F owner调用；这仍是未运行的固定方法集，不能冒称全域派发／完整T20已验。原报名五条gap完整保留。共享启动CHENGYIN_RESTORE_MODE只控制本次启动，不能证明过去未发送；无新恢复平台／表／审批系统，不自动重建丢失意图／放行生产。H既定消费合同不变。
-共用源现已取回：F公共`f874583cab3a05026078ef51a5609644587bd2d9`仅一common类，后像`0b20d9cd…`exact；缺省／精确false正常，任何其他已设置值含空值均hold，捕获一次且无setter。实际源已给A/C，不再等待或猜共用签名；A197ac0和F5d071完整消费者、测试源码及共享hunk现已装齐；C568b完整恢复SOURCE及root七项入口已装，所有验证仍NOT_RUN。正常启动不能按approval门模式给此变量导出空串。
-
-
-## 收齐后的统一流程
-
-已核对现有统一入口：标准CI、原real-storage联合批、原HTTP all-three、一次gameplay-capacity-mixed组合及新增固定7项restore workflow；未执行。后台新增unit原未被contract命令选中，已接入同一admin job的现成test:unit，不加job／依赖。标准CI保持独立2181 verifier pin；公开仓库不满足原部署／镜像workflow的私库条件，未执行部署动作。
-
-1. H完整owned patch／共享窄hunk与G／F／E已合内容现已逐作者后像精确组合33／33；B资金恢复原字节及登记已齐；E跨域隔离已接；A/F完整守卫、C568b完整恢复SOURCE及root七项同JAR宿主／资源／汇总源码已装齐。任何必要源码未齐都不进入测试，原场景不删。
-2. 复核最终源码case／gates／批次、派生ledger和精确锚点；做完整源／秘密扫描，冻结同一公开隔离候选。
-3. 最后集中审查、执行必要同源验证并独立回读；无影响的已通过项目不重复，失败保原证据再定点修。
-4. remaining_acceptance_groups仍按真实身份、全业务终止／恢复／回退和固定预算容量／混故障的实际范围收口。C／F仅其具体验收入口，不是所有业务或供应商已验。UI／设备／真钱渠道／生产未验，也无本轮部署／生产DDL／微信／PR合并授权。
-
-旧ccd5、pool4cda、auth4da9、f194／ff2b及6fcd各保原source/run/JAR边界；6fcd HTTP36／36不转签本批，6fcd标准14项失败及存储前置失败历史保留。
-
-## 下方为保留的阶段记录
-
-下方旧pending／旧计数／旧候选只描述其当时阶段，**不能覆盖本摘要、最新ACTIVE和实际源／收据**。
+以下为历史记录，旧pending／计数／绿色不覆盖以上当前事实。
 
 <!-- retained-stage-history -->
 

@@ -1,29 +1,46 @@
-# C 完整应用恢复启动：唯一保留接点（未接通）
+# C 完整应用恢复启动：实际 shared 接线（SOURCE / NOT_RUN）
 
-本页只记录 root/C 已给出的固定合同，不能据此派发、生成假字段或当可运行入口。现有 `recovery` 和 PR 默认行为保留；7 cohort 不变、不代表完整应用启动。
+原占位接点已由 F `restore-http-entry-9496` 片填齐，本页同步实际合同，不再等待 argv。这是源码接通，不是启动、业务、清理或恢复验收通过。root 合成供体并冻结后唯一执行；F 没有运行测试/编译/语法解析/资源/HTTP/CI。
 
-已收到的真实合同：
+- F parent：公共 `9496e7028ef3793ac19a1687f9391fff9ff33e72`，tree `ec60ba4c3f8c327ec393e1d4344d3f43ed6e2b40`。
+- C owned 包：`c382451bddbfdaaaa1231a544605685f8863f7bf` + `bec4054ca7e95b2f44a104cd3f39588d700f4f65`。后者仅修无参 SQL caller 并增一个直接控制，当前 26 控制 SOURCE 保原25；F 不复制覆盖它们，workflow 只调用原控制脚本一次，不硬编码计数。
+- root 原 helper：9496 已含 target suffix/readiness/relay/四槽 cleanup 和 `restore-runtime-user`。root 另串行修 CREATE USER 参数中 `%` 转义；F 不修改 helper/账户合同。
 
-- 复用 `.github/workflows/isolated-authenticated-redis-recovery.yml`、`ci/authenticated-redis-recovery.sh` 和原 authenticated resource owner；不得新写 provisioning/第二套 fullschema/app 启动器。
-- 唯一新增手动 choice：`restore-application-startup`；仅此 choice 令 `CHENGYIN_CI_RESTORE_HTTP_STARTUP=true`，其余默认/PR 为 false。这个布尔量仅为测试入场，不能登记为 DDL/业务审批。
-- C 已给 `ci/restore_application_http_probe.py run NAME SCHEMA OUT PRIVATE_CREDENTIALS`；finalize 沿同一身份并加 `ORIGINAL_EXIT`，最终 argv、handler、字段/安全输出名单仍待 C 源码确认。
-- root 已交公共 preparation `9a99c208010147bf7227f078147c83f7ab4c3cc9`（parent `90e18550ae75e83641e85bf4bb218f08922c7d3e`，tree `2c243d923ee7747b48d0382df9336b73d7c22f44`）的原 owner helper 扩展；仅 SOURCE，非完整候选或运行证明。唯一 `<NAME>-restore-mysql` 的 exact label/internal network、1CPU/1GiB/tmpfs768MiB、独立 UUID/同版本、无 publish port 仍由 root 完成宿主接线；F 不编辑 resource owner。
-- 原 Redis 留同一登录主体，原 app slot 逐次真实启动。父进程 `CHENGYIN_RESTORE_MODE` 必须 absent；C 在每个真实 app 子进程的 env 分别设 true/invalid/empty，不能设置 Spring `-D` 冒充 `System.getenv`，不能导出空串给整个 workflow。
+## 固定入场与真实调用
 
-最终原 workflow review.patch 必须原子包含：固定 choice、check/execution 两个 step 的同一布尔入场、真实 C check/runner/finalizer 调用、只有 C 确认安全 JSON 路径的上传。shell 在原 prepare/trace setup 完成后、原第一 app launch 前选择 C handler；不同时跑旧 exercise 或另 provision资源。执行原非零先保存；即使 run 失败也沿原 owner 清理并调用确认后的 finalize，原非零不能被成功 finalize 覆盖，UNKNOWN cleanup 不得 PASS。私有 credentials、原响应/SQL/日志控制符与秘密不可扩进公共路径。
+复用 `.github/workflows/isolated-authenticated-redis-recovery.yml` / `ci/authenticated-redis-recovery.sh`。旧四 choice、PR/default recovery、hosted/repository/workflow/job、原 freshschema/bootstrap/JAR/strace/资源 owner 保留；不新增工作流/job/provisioner/注册类，不改七 cohort/M1。
 
-当前未填：C 最终 public SHA、完整 handler/检查命令、finalize 精确 argv、JSON schema/path、安全 upload 白名单、source/JAR/run/attempt/PID/UUID/actor 的实际字段。收到真实 source 后，只在这一接点追加窄 review.patch；不预注册新的 Java class/count，不造 output JSON。不提供只加 choice 却仍运行旧 recovery 的半成品补丁，以免模式名称误签覆盖。此缺项不阻止本目录其余已完成 source/收据绑定增量交 root 应用。
+唯一新增 choice `restore-application-startup`，仅 `workflow_dispatch` 该选择在既有 controls/execution 两个 step 设置 `CHENGYIN_CI_RESTORE_HTTP_STARTUP=true`，其它均 false。旧三个 workload flag 在新选择下均 false。parent **不设置** `CHENGYIN_RESTORE_MODE`，包括不设空值；业务模式只由 C 在每个真实 app 子进程 env 设置，禁止 `-D` 替代。
 
-## 已逐字回读的 root helper 接口（9a99，未执行）
+既有 controls 阶段只在新 flag true 时各一次调用 `ci/test_restore_application_http_probe.py`、`ci/test_restore_application_http_entry.py`。package 仍一次原 `mvn -B -DskipTests package`；无额外 JAR/重复旧测试。
 
-实际文件 `ci/authenticated_redis_recovery_probe.py`，SHA256 `39a016ce87872a914b76183c4b383aa69774235fb17c2c69c23c31efa8c8a65e`；配套控制源码 `ci/test_authenticated_redis_recovery_probe.py`，SHA256 `e9d6fb8058faca12983438e3ab4d9c7ee5f33c4dc7ffabd2d0eca8139cbbda0e`。F 仅 `git show` 回读和摘要，没有 import/测试/启动，不复制覆盖这两个文件。
+shell 原 source MySQL/Redis/network → native readiness → prepare/fullschema/bootstrap → trace-libs 顺序不变。原第一 app launch 前，新分支使用原 pinned `$MYSQL_IMAGE` 在同 internal network/label 创建唯一 `<NAME>-restore-mysql`，1CPU/1GiB、memory-swap 同上限、768MiB tmpfs、无 publish port，再调用：
 
-| 实际接口 | 固定调用合同 |
-|---|---|
-| `mysql_endpoint(name, suffix='mysql')` | suffix 只允许 `mysql` / `restore-mysql`，返回原 `id/networkId/ip/pid`。目标槽额外检查 pinned image；不能将任意 container/address 传入 |
-| `mysql_relay(name, baseline, suffix='mysql')` | baseline 是对应 readiness 内的 `mysqlReadiness` 对象，消费其 `endpoint`；绑定前、每连接和关闭后继续核相同身份。不手填端口/IP，不绕原 loopback relay |
-| `mysql_ready(name, schema, out, private, port, suffix='mysql')` | 目标 suffix 写 `OUT/restore-mysql-readiness.json` 的 `mysqlReadiness`，原 source 仍 `schema-summary.json`；目标 result 必须 `OWNED_MYSQL_TCP_READY`、与 source 同 version/network 且 UUID/CID 不同 |
-| CLI `restore-mysql-ready NAME SCHEMA OUT PRIVATE_CREDENTIALS 0` | 仅 `workflow_dispatch` 且固定 restore flag true 入场；原固定 NAME/SCHEMA 校验及 local hosted daemon 检查保留。不能拿旧 source readiness 顶替目标回执 |
-| 原 `cleanup(name, schema, out, private, port)` | restore flag true 精确处理 `app/restore-mysql/mysql/redis`，普通仍三槽。目标核 pinned image/label/network，并在 readiness 已记录 CID 时核同 CID；按 CID 和名称回读不存在。原异常/UNKNOWN 仍阻断 |
+```text
+python3 -B ci/authenticated_redis_recovery_probe.py restore-mysql-ready NAME SCHEMA OUT PRIVATE_CREDENTIALS 0
+timeout --signal=TERM --kill-after=20s 1550s python3 -I ci/restore_application_http_probe.py run NAME SCHEMA OUT PRIVATE_CREDENTIALS
+```
 
-原 `validate_execution_env` 已拒绝 restore 模式与 capacity/gameplay 组合，并要求 parent 中恢复业务变量 absent。后续 workflow 只将新 choice 映射为固定 flag，其余三 workload flag 均 false；不为了新接点覆盖原 helper 或放松 complete verifier。root/C 的 private 描述和 app-launch/runtime-user 需求仍待最终来源，未假定 9a99 已实现 app handler/宿主目标 provisioning。
+target readiness 写 `OUT/restore-mysql-readiness.json` 的 `mysqlReadiness`，不覆盖 source `schema-summary.json`；同版本/network、不同 UUID/CID 和原 relay 身份核对由 root helper 执行。C run 在 canonical import 后自行调用 root `restore-runtime-user NAME SCHEMA OUT PRIVATE_CREDENTIALS 0`；runtime user 只原 startup_probe 四 CRUD，不 root fallback，F 不重复创建。
+
+C 内层1500秒，shell外层1550秒/TERM/KILL。旧25min小于 run 本身预算，仅此新手动模式上限55min，留一次构建/schema/readiness/cleanup总窗口；旧四模式25min不变。上限不是实测耗时/SLO，CPU/内存 profile 不变。
+
+run 成功或失败均经原 EXIT trap：先原四槽 cleanup，再原 private 父目录清理，随后：
+
+```text
+python3 -I ci/restore_application_http_probe.py finalize NAME SCHEMA OUT ORIGINAL_EXIT
+```
+
+finalize **不带 private 参数**。C run 清自己的 PRIVATE/restore-http，最后 app 停止但留 container 给原 owner 日志及 cleanup。trap 保留最初非零；原状态零但 owner/private/finalize 未确认则转非零。finalize 再核历史 CID、四固定槽/network 缺席及原 owner 四 known CID/independentNoSuch；不以清理成功抹掉原失败。新分支结束，不执行旧 exercise/capacity/gameplay。
+
+## 唯一公共输出与局限
+
+新模式关闭旧 recovery 的日志/trace/schema artifact 上传，只允许新 artifact `isolated-restore-http-application-<attempt>` 内固定三路径，位于原唯一 `cy-auth.*` OUT 目录：
+
+1. `restore-http-application.json`：实际 source/run/attempt/JAR/schema、五 boot/业务观察/原身份、首失败、private/app stop 状态。
+2. `restore-http-provenance.json`：同源 JAR/child class postimages/canonical tool、source/target CID、受控 provider 边界。
+3. `restore-http-cleanup.json`：原 originalExit、历史 CID/四槽/network absence、原 owner 清理，不授权生产 release。
+
+失败仍保留实际存在的安全部分，缺文件不得补造。`if-no-files-found=error` 只保证至少有输入，不等于三份都已验证；真实通过须原 run/finalize 及 root 逐项回读。新模式不上传 entry/application log、whole OUT、private/dump/trace、runtime-user/原 readiness。旧四模式 artifact 名称/路径/行为保留。
+
+C full-app 场景限 task-owned complete 提现原ID读回及晚到支付事实 gap；provider 为受控 transport，不是真渠道/验签。源码齐不证明执行成功，不签全域T20/Q4/Q8、生产 dispatch fence、RPO/RTO或解除恢复授权。全部等待 root 同一冻结 SHA 最终验证。

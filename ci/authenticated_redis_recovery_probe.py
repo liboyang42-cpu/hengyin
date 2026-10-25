@@ -443,7 +443,7 @@ def prepare_restore_runtime_user(name, schema, out, private, port):
         require(cur.fetchone() == (1,), 'restored authentication table missing')
         cur.execute('SELECT COUNT(*) FROM mysql.user WHERE User=%s AND Host=%s', ('startup_probe', '%'))
         require(cur.fetchone() == (0,), 'runtime user already exists; do not rebind its credentials or grants')
-        cur.execute("CREATE USER 'startup_probe'@'%' IDENTIFIED BY %s", ('synthetic-local-only',))
+        cur.execute("CREATE USER 'startup_probe'@'%%' IDENTIFIED BY %s", ('synthetic-local-only',))
         cur.execute('GRANT SELECT,INSERT,UPDATE,DELETE ON `' + schema + "`.* TO 'startup_probe'@'%'")
         grantee = "'startup_probe'@'%'"
         cur.execute('SELECT TABLE_SCHEMA,PRIVILEGE_TYPE,IS_GRANTABLE FROM information_schema.SCHEMA_PRIVILEGES '

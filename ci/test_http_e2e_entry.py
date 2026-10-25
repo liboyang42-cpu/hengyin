@@ -768,9 +768,11 @@ class ManualRouterTest(unittest.TestCase):
             self.assertRegex(parent, r'run_http_fixtures:\n        description:[^\n]+\n        required: false\n        type: boolean\n        default: false')
             self.assertRegex(child, r'  workflow_call:\n    inputs:\n      source_sha:\n        description:[^\n]+\n        required: true\n        type: string')
             jar = parent.split('\n  jar:\n', 1)[1].split('\n  http-fixtures:\n', 1)[0]
-            http = parent.split('\n  http-fixtures:\n', 1)[1]
-            self.assertIn("    if: github.repository == 'liboyang42-cpu/hengyin' && !inputs.run_http_fixtures\n", jar)
-            self.assertIn("    if: github.repository == 'liboyang42-cpu/hengyin' && github.event_name == 'workflow_dispatch' && inputs.run_http_fixtures\n", http)
+            http = parent.split('\n  http-fixtures:\n', 1)[1].split('\n  restore-fixtures:\n', 1)[0]
+            self.assertIn("    if: github.repository == 'liboyang42-cpu/hengyin' && !inputs.run_http_fixtures && !inputs.run_restore_fixtures\n", jar)
+            self.assertIn("    if: github.repository == 'liboyang42-cpu/hengyin' && github.event_name == 'workflow_dispatch' && inputs.run_http_fixtures && !inputs.run_restore_fixtures\n", http)
+            self.assertIn('    needs: admission\n', jar)
+            self.assertIn('    needs: admission\n', http)
             self.assertIn('    uses: ./.github/workflows/gameplay-http-e2e.yml\n', http)
             self.assertIn('    with:\n      source_sha: ${{ inputs.source_sha }}\n', http)
             self.assertNotIn('runs-on:', http); self.assertNotIn('steps:', http)
@@ -789,7 +791,7 @@ class ManualRouterTest(unittest.TestCase):
         mutations = [
             (caller.replace('default: false', 'default: true'), callee),
             (caller.replace('&& !inputs.run_http_fixtures', ''), callee),
-            (caller.replace(" && inputs.run_http_fixtures\n", "\n"), callee),
+            (caller.replace(" && inputs.run_http_fixtures && !inputs.run_restore_fixtures\n", " && !inputs.run_restore_fixtures\n"), callee),
             (caller.replace('uses: ./.github/workflows/gameplay-http-e2e.yml',
                             'uses: liboyang42-cpu/hengyin/.github/workflows/gameplay-http-e2e.yml@master'), callee),
             (caller.replace('    with:\n      source_sha:', '    secrets: inherit\n    with:\n      source_sha:'), callee),

@@ -600,8 +600,10 @@ class AuthenticatedRedisSafetyTest(unittest.TestCase):
                 if case == 'complete':
                     relay.assert_called_once_with(name, target, suffix='restore-mysql')
                     connect.assert_called_once_with(35002)
-                    self.assertEqual(writes, ["CREATE USER 'startup_probe'@'%' IDENTIFIED BY %s",
+                    self.assertEqual(writes, ["CREATE USER 'startup_probe'@'%%' IDENTIFIED BY %s",
                                      'GRANT SELECT,INSERT,UPDATE,DELETE ON `' + schema + "`.* TO 'startup_probe'@'%'"])
+                    self.assertEqual(writes[0] % ("'synthetic-local-only'",),
+                                     "CREATE USER 'startup_probe'@'%' IDENTIFIED BY 'synthetic-local-only'")
                     saved = json.loads(report.read_text())
                     self.assertEqual(saved['result'], 'OWNED_RESTORED_RUNTIME_USER_PREPARED')
                     self.assertEqual(saved['serverUuid'], target_uuid)
