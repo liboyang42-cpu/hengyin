@@ -1,0 +1,29 @@
+{
+  "task": "H-shell-publication-fixtures-final",
+  "parent": "2b68c327d0c6f247e76af108700ca626b6fb7197",
+  "parent_tree": "8d9e7733cc69c092dd910e785ef60443455c7b44",
+  "original_failure_source": "347bcd0226c3bed71616e38ea7c1391fc76efe5c",
+  "helper_contract": "bc2b738fbd58dea6c8eabdb9d00eea22b21f364c / a119071a7d1dbe68d4db55876653db0a57eb2782 identical helper blob 98b13099fbea520e3c4c475b1662c5c493f19904",
+  "owned_java_files": 2,
+  "production_changes": 0,
+  "original_test_declarations": 31,
+  "new_test_methods": 0,
+  "validation": "ALL_NOT_RUN",
+  "all_complete": false,
+  "entries": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicEditActivityShellTicketSyncChainTest.java",
+      "original_347b_blob": "09efc8b51af8560125ef214c1d350dd1b9e68ac0",
+      "wip_blob": "01d436b352ebd62c054f0197b95a95e62d140885",
+      "original_test_declarations": 18,
+      "postimage_sha256": "447709374f5aa09dc04bf575e3b0d775913f8530c8f9aef43ed5aeaa48b99a18"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPendingReviewSelfHostShellTest.java",
+      "original_347b_blob": "637e290acc1d23a4895ccaa9cb998b42157d0ae0",
+      "wip_blob": "c6f47ea252da075c31d683925a8cdce67d5c102a",
+      "original_test_declarations": 13,
+      "postimage_sha256": "d79f2349e8703d2f3cca8c5fa755612274fbb9be06b9c84e9af05acb3597460b"
+    }
+  ]
+}

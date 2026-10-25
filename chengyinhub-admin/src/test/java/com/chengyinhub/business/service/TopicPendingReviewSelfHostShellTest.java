@@ -99,6 +99,7 @@ class TopicPendingReviewSelfHostShellTest {
         task.setId(99L);
         task.setStatus(com.chengyinhub.business.domain.AuditTask.STATUS_PENDING);
         when(audits.selectAuditTaskById(99L)).thenReturn(task);
+        wirePublicationContent();
         ReflectionTestUtils.setField(svc, "themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
                 Mockito.mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
         svc = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(svc);
@@ -125,7 +126,15 @@ class TopicPendingReviewSelfHostShellTest {
             if (patch.getStatus() != null && patch.getUserStatus() != null) {
                 assertEquals(after.getStatus(), patch.getStatus());
                 assertEquals(after.getUserStatus(), patch.getUserStatus());
-                current.set(after);
+            }
+            CmsTopic stored=current.get();
+            if(stored==null || !TOPIC.equals(patch.getId()))return 0;
+            var source=new org.springframework.beans.BeanWrapperImpl(patch);
+            var target=new org.springframework.beans.BeanWrapperImpl(stored);
+            for(var property:source.getPropertyDescriptors()) {
+                String name=property.getName();
+                if(source.isReadableProperty(name) && target.isWritableProperty(name)
+                        && source.getPropertyValue(name)!=null)target.setPropertyValue(name,source.getPropertyValue(name));
             }
             return 1;
         }).when(topicMapper).updateCmsTopic(any(CmsTopic.class));
@@ -149,6 +158,7 @@ class TopicPendingReviewSelfHostShellTest {
         ArgumentCaptor<CmsActivity> activityCap = ArgumentCaptor.forClass(CmsActivity.class);
         verify(activityMapper, atMostOnce()).insertCmsActivity(activityCap.capture());
         assertEquals(1, activityCap.getAllValues().size(), "先上后审必须同步生成可玩的活动");
+        assertRealPublishedContent();
     }
 
     /** 正面对照:简易版免审直发(status=1)照旧建公开壳,审核通过后的售卖面不能断。 */
@@ -172,6 +182,7 @@ class TopicPendingReviewSelfHostShellTest {
         assertEquals(Integer.valueOf(0), shell.getDelFlag());
         assertEquals(TOPIC, shell.getTopicId());
         assertEquals(OWNER, shell.getMemberId(), "自办壳承接方 = 发布者本人");
+        assertRealPublishedContent();
     }
 
     /** 审核通过回调:补建壳一次;重复回调(幂等)不再建第二个壳。 */
@@ -340,5 +351,62 @@ class TopicPendingReviewSelfHostShellTest {
         CmsActivity a = cap.getValue();
         return "status=" + a.getStatus() + ", publishStatus=" + a.getPublishStatus()
                 + ", delFlag=" + a.getDelFlag() + ", topicId=" + a.getTopicId();
+    }
+
+    /** Same current chapter/node/template facts feed the guards and the real publication compiler. */
+    private void wirePublicationContent() {
+        var chapters=(CmsTopicChapterMapper)ReflectionTestUtils.getField(svc,"cmsTopicChapterMapper");
+        var nodes=(CmsTopicNodeMapper)ReflectionTestUtils.getField(svc,"cmsTopicNodeMapper");
+        var templates=(CmsMemberTemplateMapper)com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(svc,"cmsMemberTemplateMapper");
+        var chapter=new com.chengyinhub.business.domain.CmsTopicChapter();
+        chapter.setId(970011L);chapter.setTopicId(TOPIC);chapter.setName("入场核对");chapter.setSortId(1L);chapter.setRequired(1);
+        var node=new com.chengyinhub.business.domain.CmsTopicNode();
+        node.setId(970021L);node.setTopicId(TOPIC);node.setChapterId(chapter.getId());node.setTemplateId(970031L);
+        node.setStatus(1L);node.setName("营业时间核对");node.setSortId(1L);
+        var template=new com.chengyinhub.business.domain.CmsMemberTemplate();
+        template.setId(970031L);template.setMemberId(OWNER);template.setTitle("营业时间核对");
+        template.setStatus(1L);template.setDraftStatus(1);template.setPublishStatus(1L);template.setCheckStatus(1);template.setDelFlag(0);
+        template.setValidationMethod(1);template.setQuestionName("场地何时开放？");template.setQuestionAnswer("18:00");
+        template.setAdvancedConfigJson(new com.chengyinhub.business.service.support.AdvancedGameConfigValidator().validateAndNormalize(
+                "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"场地何时开放？\",\"answerText\":\"18:00\",\"maxTries\":0,\"xp\":0}}"));
+        Mockito.doAnswer(call -> {
+            com.chengyinhub.business.domain.CmsTopicChapter query=call.getArgument(0);
+            return query!=null && TOPIC.equals(query.getTopicId()) ? java.util.List.of(chapter) : java.util.List.of();
+        }).when(chapters).selectCmsTopicChapterList(any());
+        Mockito.doAnswer(call -> chapter.getId().equals(call.getArgument(0)) ? chapter : null)
+                .when(chapters).selectCmsTopicChapterById(anyLong());
+        Mockito.doAnswer(call -> {
+            com.chengyinhub.business.domain.CmsTopicNode query=call.getArgument(0);
+            return query!=null && TOPIC.equals(query.getTopicId())
+                    && (query.getStatus()==null || query.getStatus().equals(node.getStatus()))
+                    ? java.util.List.of(node) : java.util.List.of();
+        }).when(nodes).selectCmsTopicNodeList(any());
+        Mockito.doAnswer(call -> node.getId().equals(call.getArgument(0)) ? node : null)
+                .when(nodes).selectCmsTopicNodeById(anyLong());
+        Mockito.doAnswer(call -> template.getId().equals(call.getArgument(0)) ? template : null)
+                .when(templates).selectCmsMemberTemplateById(anyLong());
+        Mockito.doAnswer(call -> {
+            java.util.List<Long> ids=call.getArgument(0);
+            return ids.contains(template.getId()) ? java.util.List.of(template) : java.util.List.of();
+        }).when(templates).selectCmsMemberTemplateByIds(org.mockito.ArgumentMatchers.anyList());
+        Mockito.doAnswer(call -> {
+            CmsTopic row=topicMapper.selectCmsTopicById(call.getArgument(0));if(row==null)return 0;
+            String snapshot=call.getArgument(1);assertTrue(snapshot!=null && !snapshot.isBlank());
+            row.setPublishedRouteGraphJson(snapshot);
+            row.setPublishedConfigVersion(row.getPublishedConfigVersion()==null ? 1L : row.getPublishedConfigVersion()+1);
+            return 1;
+        }).when(topicMapper).publishRouteSnapshot(anyLong(),any(),any(Date.class));
+    }
+
+    private void assertRealPublishedContent() {
+        CmsTopic row=topicMapper.selectCmsTopicById(TOPIC);
+        var snapshot=org.junit.jupiter.api.Assertions.assertDoesNotThrow(() ->
+                new com.fasterxml.jackson.databind.ObjectMapper().readTree(row.getPublishedRouteGraphJson()));
+        assertEquals(1,snapshot.path("runtimeSnapshotVersion").asInt());
+        assertEquals(1,snapshot.path("stateKeySnapshotVersion").asInt());
+        var content=snapshot.path("nodeAnswers").path("970021");
+        assertEquals(970031L,content.path("templateId").asLong());
+        assertEquals(TOPIC.longValue(),content.path("nodePresentation").path("topicId").asLong());
+        assertEquals("18:00",content.path("questionAnswer").asText());
     }
 }
