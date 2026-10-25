@@ -3686,5 +3686,127 @@
       "source_impact_test_files": 30,
       "not_full_CI": true
     }
+  },
+  "final_concentrated_acceptance_fb871": {
+    "source": "fb871607e4c4a5a038776201ff0b785f999f9ab1",
+    "tree": "b859b07a802ab3c6303e167aef4a8a21c094ef56",
+    "parent": "119d3f87bbf89162d47db837c404b361915d1b81",
+    "attempt": 1,
+    "runs": {
+      "standard_selected": 40219238315,
+      "storage": 40219261122,
+      "http": 40219266741,
+      "mixed": 40219270669,
+      "restore_http": 40219276507,
+      "restore_cohorts": 40219281220
+    },
+    "state": "RUNNING_WITH_ACTUAL_FIRST_FAILURES",
+    "scope": "PARTIAL_SELECTED_STANDARD_AND_ORIGINAL_UNEXECUTED_BUSINESS_LANES",
+    "all_complete": false,
+    "source_ready": true,
+    "repair_owners": "Original A-H all first-failure packages applied; no pending old implementation",
+    "observed": {
+      "selected_admission": "job121246989355SUCCESS; original default/selected controls actual executed",
+      "migration_layout": "job121247109765SUCCESS",
+      "restore_cohorts": "build pure-controls job121247137408 FAILURE; summary secondary missing receipts; actual cohort matrix NOT_RUN; root reading original new log",
+      "standard_selected": "Completed: 15native shards actual10767PASS0fail/skip; fast/static/migrationlayout/migrationsafety/secret/admission jobsSUCCESS; backend/SBOM same4fixture compile roots; selected summary failure is expected until backend passes, not whole suite",
+      "storage": "Plan admitted, class matrix reached actual execution but none signed; common4testCompile roots plus one Maven repositoryID/404 dependency resolution. Exact task run40219261122 cancellation requested after shared failure evidence to stop wasted remaining jobs; CLEAN not asserted on cancelled jobs.",
+      "source_scan_evidence": {
+        "job_id": 121246989027,
+        "result": "SUCCESS"
+      }
+    },
+    "known_remaining": "All4actual new fixture source packages integrated; F bounded same-cache evidence no runtime source change. Freeze one source; next only backend/dependency and one failed original DB class first to avoid76 repeated common compile failures. After common compilation proved, continue actual unexecuted lanes; no mini/static/migration repeat.",
+    "actual_new_repair_tasks": {
+      "C": {
+        "thread": "01a16a22-c697-7637-ae29-cdff6341000b",
+        "owned": "ci/test_restore_business_domain_facts.py",
+        "reason": "Actual35controls2ERROR voice placeholder record missing case/operation; original37probe controls nowPASS",
+        "state": "SOURCE_APPLIED_NOT_RETESTED",
+        "donor": "08ddfa0fa9dac055e9bbe6ccdb57813ac5c90569"
+      },
+      "H": {
+        "thread": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
+        "owned": "RestoreMoneyDispatchTest.java and RestoreDispatchConsumersTest.java; original38 methods/guards retained",
+        "reason": "ActualtestCompile167 no ClubEventOpsServiceImpl defaultconstructor; productiongeneric compile first cause passed; actual other entry/DB log also CommunityPostServiceImpl constructor227 mismatch",
+        "state": "SOURCE_APPLIED_NOT_RETESTED",
+        "donor": "9783db40b6a18191c1572eeff1f149ab52bba47b"
+      },
+      "G": {
+        "thread": "01a16a23-8904-73e8-a024-378a96f0800c",
+        "owned": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicPublicationBindingMySqlIT.java",
+        "reason": "ActualtestCompile218 ambiguous numeric assertion / generic jdbc result bounds",
+        "state": "SOURCE_APPLIED_NOT_RETESTED",
+        "donor": "3fb6ea3968e29532bac0fcb53e06cce192df1dd6"
+      },
+      "E": {
+        "thread": "01a16a23-2723-72e4-813f-03d7f1aa6017",
+        "owned": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicBundleReviewServiceTest.java",
+        "reason": "ActualtestCompile four locations eight same anyLong staticimport diagnostics",
+        "state": "SOURCE_APPLIED_NOT_RETESTED",
+        "donor": "2a05d1363c5bd6495ae390f2825a06b1ef976b13"
+      },
+      "F": {
+        "thread": "01a16a23-5e0c-736b-9fc1-d4d070393009",
+        "owned": "Actual real_storage_it.py / real-storage-it.yml Maven caller/cache context if necessary",
+        "state": "SOURCE_EVIDENCE_APPLIED_NO_RUNTIME_CHANGE",
+        "reason": "One actual class model read failed repositoryID present-but-unavailable/central404, same source elsewhere reached testCompile; no POM changes/new dependencies/proxy bypass authorized",
+        "donor": "431b193f1e2dc755eceb3e6e0a3415faa540bc0d",
+        "conclusion": "Same cache/settings in5 original logs; repositoryID warning not sufficient cause. Actual old repoID and HTTP404 status UNKNOWN. No evidence authorizes POM/settings/M2/mirror/offline change; original one-class source retry after compiler fixtures complete."
+      }
+    },
+    "first_failure_evidence": {
+      "seven": {
+        "path": "/private/tmp/hengyin-fb871-seven-build.log",
+        "bytes": 22413,
+        "sha256": "517b1d6552f9f0230c9896499374a1067529c2ce783d7faa4376a576f6271657"
+      },
+      "sbom": {
+        "path": "/private/tmp/hengyin-fb871-sbom.log",
+        "bytes": 34199,
+        "sha256": "c78d26f005a5e4cd96824d8b9587c3c0b50e72bcd03597d3446b4e0ff710c664"
+      }
+    },
+    "selected_native_mini_actual_readback": {
+      "path": "/private/tmp/hengyin-fb871-15-mini-log-readback.json",
+      "source": "fb871607e4c4a5a038776201ff0b785f999f9ab1",
+      "run": 40219238315,
+      "shards": 15,
+      "actual_tests": 10767,
+      "pass": 10767,
+      "failure": 0,
+      "skip": 0,
+      "full_ci_verified": false
+    },
+    "storage_run_cancelled_confirmed": true,
+    "selected_summary_artifact": {
+      "id": 12609526189,
+      "zip_sha256": "8f6a52af28f73e6c0fff4925ed96b6a36b2ea10b539c7f27e2c0819a5027115f",
+      "crc": "PASS",
+      "problems": [
+        "SELECTED_JOB_NOT_SUCCESS:backend",
+        "SELECTED_JOB_NOT_SUCCESS:dependency_audit"
+      ],
+      "mini_evidence_problems": [],
+      "fullSuiteVerified": false
+    },
+    "hosted_mini_manifest_matches_source_mapping": true,
+    "next_revalidation": {
+      "state": "ALL_REQUIRED_SOURCE_ASSEMBLED_PENDING_FREEZE",
+      "first_existing_standard_jobs": [
+        "backend",
+        "dependency_audit"
+      ],
+      "first_existing_storage_class": "ClmCommercePaymentProofMySqlIT",
+      "purpose": "Admit common testCompile and exact failed resolver before allocating remaining76class jobs again",
+      "unaffected_mini_and_static_not_repeated": true,
+      "remaining_original_business_entries_after_compile": [
+        "storage remaining75 classes excluding canary if PASS",
+        "HTTP36",
+        "gameplay-capacity-mixed",
+        "restore-application-startup",
+        "seven original restore cohorts"
+      ]
+    }
   }
 }

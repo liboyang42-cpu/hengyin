@@ -73,7 +73,16 @@ def voice(unknown=False):
     profiles=[dict(id=v['npc_id'],voice_version=v['profile_version'],voice_id=v['voice_id']) for v in values]
     snapshot={'tables':{'npc_profile':table(profiles),'npc_voice_enrollment_intent':table(values)},
               'highWater':{'npc_voice_enrollment_intent':{'max':len(values),'next':len(values)+1}}}
-    provider={'records':[{'frozen':'prefix'}],'originals':originals,'states':states,'submits':{k:1 for k in originals}}
+    # Parsed-event controls use RestoreVoiceReconciliationFixture's real vocabulary;
+    # they do not substitute for the separately verified raw journal/hash chain.
+    records=[]
+    for case,original in originals.items():
+        events=[('SUBMIT','IN_FLIGHT'),('RESULT',states[case])]
+        if case=='known_voice':events.append(('QUERY','READY'))
+        for operation,state in events:
+            records.append(dict(domain='VOICE',case=case,operation=operation,state=state,
+                                identity=copy.deepcopy(original)))
+    provider={'records':records,'originals':originals,'states':states,'submits':{k:1 for k in originals}}
     return snapshot,provider
 
 
@@ -94,11 +103,24 @@ class CompleteFactsControls(unittest.TestCase):
         self.assertTrue(evaluate('voice-complete',voice())['normalBootEligible'])
 
     def test_unknown_voice_remains_manual_and_cannot_enter_normal_boot(self):
-        result=evaluate('voice-gap',voice(True));self.assertFalse(result['normalBootEligible']);self.assertEqual('BLOCKED',result['candidateState'])
+        s,p=voice(True)
+        unknown=[row for row in p['records'] if row['case']=='unknown_voice']
+        self.assertEqual([('SUBMIT','IN_FLIGHT'),('RESULT','UNKNOWN')],
+                         [(row['operation'],row['state']) for row in unknown])
+        self.assertTrue(all(row['domain']=='VOICE' and row['identity']==p['originals']['unknown_voice'] for row in unknown))
+        result=evaluate('voice-gap',(s,p));self.assertFalse(result['normalBootEligible']);self.assertEqual('BLOCKED',result['candidateState'])
+        self.assertEqual('PROVIDER_ORIGINAL_UNQUERYABLE_MANUAL',
+                         next(row['reason'] for row in result['differences'] if row['case']=='unknown_voice'))
 
     def test_unknown_voice_cannot_use_prefix_query_or_invented_id(self):
-        s,p=voice(True);p['records'].append({'case':'unknown_voice','operation':'QUERY'})
-        with self.assertRaisesRegex(ValueError,'never query'):evaluate('voice-gap',(s,p))
+        with self.subTest(fence='unknown_original_cannot_be_queried'):
+            s,p=voice(True)
+            p['records'].append(dict(domain='VOICE',case='unknown_voice',operation='QUERY',state='UNKNOWN',
+                                     identity=copy.deepcopy(p['originals']['unknown_voice'])))
+            with self.assertRaisesRegex(ValueError,'never query'):evaluate('voice-gap',(s,p))
+        with self.subTest(fence='prefix_match_cannot_supply_an_original_voice_id'):
+            s,p=voice(True);p['originals']['unknown_voice']['voiceId']='prefix-match-not-the-original'
+            with self.assertRaisesRegex(ValueError,'^unqueryable voice must remain UNKNOWN$'):evaluate('voice-gap',(s,p))
 
     def test_source_post_backup_rows_cannot_be_ignored_in_complete_case(self):
         s,p=cash();fault=copy.deepcopy(s);put(fault,'ums_member','balance','69.00')

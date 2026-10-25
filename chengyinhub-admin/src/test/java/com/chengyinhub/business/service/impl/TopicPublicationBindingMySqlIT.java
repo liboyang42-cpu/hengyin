@@ -215,7 +215,8 @@ class TopicPublicationBindingMySqlIT {
             try (var f = fixture()) {
                 if (!withTemplate) f.db.update("update cms_topic_node set template_id=null where topic_id=100");
                 TopicPublicationService publication = (TopicPublicationService) f.get("topicPublicationService");
-                assertEquals(1, f.tx.execute(tx -> publication.persistCreatedRouteSnapshot(100L)));
+                Integer publishedRows = f.tx.execute(tx -> publication.persistCreatedRouteSnapshot(100L));
+                assertEquals(Integer.valueOf(1), publishedRows);
                 JsonNode frozen = JSON.readTree(f.topics.selectCmsTopicById(100L).getPublishedRouteGraphJson());
                 assertEquals(1, frozen.path("runtimeSnapshotVersion").asInt());
                 assertEquals(1, frozen.path("stateKeySnapshotVersion").asInt());
