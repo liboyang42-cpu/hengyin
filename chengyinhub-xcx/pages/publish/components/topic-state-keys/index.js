@@ -54,6 +54,20 @@ Component({
       const current = this._captureContext()
       return Object.keys(current).every(key => current[key] === context[key])
     },
+    _callbackCurrent(context) {
+      // Callers first check their request/operation identity. A superseded callback
+      // must never reset another operation, even if the session has since renewed.
+      if (!this._attached || this._context !== context) return false
+      if (this._isCurrentContext(context)) return true
+      const current = this._captureContext()
+      if (Object.keys(current).every(key => key === 'authorization' || current[key] === context[key])) {
+        // Same-member silent renewal can finish while this page stays visible.
+        // Release the old view/dialog and read afresh; do not apply or replay its write.
+        this._syncContext()
+        this.load()
+      }
+      return false
+    },
     _syncContext() {
       if (!this._attached) return null
       if (!this._isCurrentContext(this._context)) {
@@ -79,7 +93,7 @@ Component({
       const context = this._syncContext()
       if (!context || !context.topicId) return
       const seq = (this._seq = (this._seq || 0) + 1)
-      const current = () => this._isCurrentContext(context) && seq === this._seq
+      const current = () => seq === this._seq && this._callbackCurrent(context)
       this.setData({ state: this.data.keys.length ? 'ready' : 'loading', notice: '' })
       app.sendRequest({
         url: '/api/topic/state-keys', method: 'GET', hideLoading: true, silentError: true,
@@ -114,7 +128,7 @@ Component({
         return
       }
       const operation = this._saveOperation = {}
-      const current = () => this._canWrite(context) && this._saveOperation === operation
+      const current = () => this._saveOperation === operation && this._callbackCurrent(context)
       this.setData({ saving: true, formError: '' })
       app.sendRequest({
         url: '/api/topic/state-keys', method: 'POST', hideLoading: true, silentError: true,
@@ -150,7 +164,7 @@ Component({
           || !confirmation || confirmation.key !== key || !this._isCurrentContext(confirmation.context)
           || e.detail.params.contextEpoch !== context.epoch) return
       const operation = this._deleteOperation = {}
-      const current = () => this._canWrite(context) && this._deleteOperation === operation
+      const current = () => this._deleteOperation === operation && this._callbackCurrent(context)
       this.setData({ deleting: key, deleteError: '' })
       dc.busyOn()
       const fail = (text) => {
