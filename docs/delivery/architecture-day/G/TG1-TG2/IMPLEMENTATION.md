@@ -1,6 +1,6 @@
 # TG1/TG2：审核、发布与原局内容绑定
 
-结论：本候选完成 G 所有发布源码的 RR 当前读接线及配套测试源码；不是完整游戏库或最终 TG1/TG2 验收。新增 13 个测试声明均 NOT_RUN。没有执行 Node/Python/Java/JUnit/MySQL/HTTP 测试或 CI。只执行源码读取、Git 差分及文件摘要。
+结论：本候选完成 G 所有发布源码的 RR 当前读接线及配套测试源码；不是完整游戏库或最终 TG1/TG2 验收。新增 14 个测试声明均 NOT_RUN。没有执行 Node/Python/Java/JUnit/MySQL/HTTP 测试或 CI。只执行源码读取、Git 差分及文件摘要。
 
 - 公共父提交：`fa5c263440573992701263d6bee60830844a49b8`。
 - 独立分支：`codex/architecture-day-g-tg1-tg2-binding`。
@@ -67,9 +67,9 @@
 
 ## 5. 配套测试源码（全部 NOT_RUN）
 
-新增 13 个普通 `@Test` 声明，无参数展开、无 skip：
+新增 14 个普通 `@Test` 声明，无参数展开、无 skip：
 
-- `TopicBundleReviewServiceTest` +3：作者运行配置进入 hash/变更拒绝；派生发布字段不误判作者变更；未绑定运行配置的旧提交要求重新提交。
+- `TopicBundleReviewServiceTest` +4：作者运行配置进入 hash/变更拒绝；派生发布字段不误判作者变更；未绑定运行配置的旧提交要求重新提交；完整模板已有 `interactionType` 保留及变更拒绝。
 - `TopicRoutePublicationCurrentReadTest` +4：单次当前投影及锁端口次序；预览不加锁；失败后不缓存上一投影；旧父对象不污染当前发布。它们是 Mapper-port unit，不是数据库锁证明。
 - `TopicPublicationBindingMySqlIT` +6：已批准模板 A/B/A 的 RR 交错；提交也采用当前行；审核后编辑拒绝且不写版本；锁持有到冻结/提交后编辑才完成；发布后重复开局保持原配置；缺模板不发布部分包。复用原 `TopicContentGraphMySqlFixture` 隔离建库/真实 Mapper/事务及原 cleanup，不缩表、不假造审核或付款事实。这六例覆盖真实 bundle/compiler+发布 Mapper，不冒充整条 AuditTask/HTTP 审核验收。
 
@@ -79,6 +79,10 @@
 
 ## 6. 集成和回退
 
-root 按完整候选增量合入，保留 E91a3/A/D/B/C 同期修改。必要共享 hunk 只有 runtime 工厂一行与原通用 topic 锁查询的 cache 属性；原声明/业务 SQL及 registry/CI 不改。root 可按新增 13 声明登记最后统一验证，不能在当前源码交付阶段视作已验证。
+root 按完整候选增量合入，保留 E91a3/A/D/B/C 同期修改。必要共享 hunk 只有 runtime 工厂一行与原通用 topic 锁查询的 cache 属性；原声明/业务 SQL及 registry/CI 不改。root 可按新增 14 声明登记最后统一验证，不能在当前源码交付阶段视作已验证。
 
 无 DDL/数据迁移。回退源码不会改写既有发布/运行快照；不要删除审批回执或重算旧版本。新审核快照的显式运行配置字段由内容 hash 自校验保留，但回退至不绑定该字段的旧代码无法继续保证这批新审核的同一内容合同，需恢复安全版本后重新送审；不得改历史 hash 来制造通过。
+
+## B 的完整采用字段接缝
+
+本增量只补直接测试源码，不修改 B 文件或新增生产字段列表：`CmsMemberTemplate.interactionType` 已有普通 getter，原 `CmsMemberTemplateMapper.selectCmsMemberTemplateVo` 的列与 resultMap 已含 `interaction_type`，本次当前投影持有完整实体；`TopicBundleReviewService.templateContent` 对该实体整体序列化，只移除已有元数据/审核状态字段，因此该字段已进入送审内容与 hash。新增测试声明验证原字段保存且批准前变更会失败。上文的运行消费者闭合边界保持 OPEN：`interactionType` 目前的实际调用者是原 `TopicQueryService` 的主题模板发现投影，不凭标签推断新的运行协议；不将已有判定快照的字段子集冒充完整展示内容。B 的 DTO 修复由 B 原片提供，G 不覆盖。该新增测试亦 NOT_RUN。

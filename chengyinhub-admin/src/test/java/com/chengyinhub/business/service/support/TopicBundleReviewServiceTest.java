@@ -378,6 +378,19 @@ class TopicBundleReviewServiceTest {
         verify(templateMapper, never()).approveBundledDraft(anyLong(), anyLong());
     }
 
+    @Test
+    void completeTemplateContentKeepsInteractionTypeAndRejectsItsPostSubmissionChange() throws Exception {
+        template.setInteractionType("hidden_menu");
+        TopicBundleReviewService.Submission submission = service.freezeForSubmission(10L, 7L);
+        JsonNode frozen = new ObjectMapper().readTree(submission.getSnapshotJson());
+        assertEquals("hidden_menu", frozen.path("bundledTemplates").get(0).path("content").path("interactionType").asText());
+        stubLockedRows();
+        template.setInteractionType("photo_spot");
+        assertThrows(IllegalStateException.class,
+                () -> service.applyDecision(10L, 7L, submission.getSnapshotJson(), true));
+        verify(templateMapper, never()).approveBundledDraft(anyLong(), anyLong());
+    }
+
     private void stubLockedRows() {
         when(topicMapper.selectCmsTopicByIdForUpdate(10L)).thenReturn(topic);
         CmsTopicChapter chapter = chapterMapper.selectCmsTopicChapterList(new CmsTopicChapter()).get(0);
