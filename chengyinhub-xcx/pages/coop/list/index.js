@@ -12,7 +12,7 @@ const { createPaymentVerifier } = require('../../../utils/checkout/payment-verif
 const { isRecordList } = require('../../../utils/response-shape.js');
 
 // 邀约整形与文案与详情页共用一份,见 utils/coop-invite-view.js —— 两处各写一份必漂
-const { TYPE_LABEL, STATUS_LABEL, decorate, parseInviteId, INVITE_ID_ERROR } = require('../../../utils/coop-invite-view.js');
+const { TYPE_LABEL, STATUS_LABEL, decorate, parseInviteId, INVITE_ID_ERROR, supplyStationView, supplyStationConfirmation, sameSupplyStationConfirmation } = require('../../../utils/coop-invite-view.js');
 
 function identityKey() {
   const gd = app.globalData || {};
@@ -179,7 +179,7 @@ Page({
     this._initWorkflow();
   },
 
-  onHide() { this._hidden = true; merchantTheme.merchantPageRestore(); },
+  onHide() { this._hidden = true; this._inviteDecisionEpoch = (this._inviteDecisionEpoch || 0) + 1; merchantTheme.merchantPageRestore(); },
   onUnload() {
     this._unloaded = true;
     this._listEpoch = (this._listEpoch || 0) + 1;
@@ -1010,12 +1010,31 @@ Page({
     const that = this;
     const actionKey = (accept ? 'accept:' : 'reject:') + id;
     if (!this._beginAction(actionKey, id)) return;
+    const owner = identityKey(), epoch = this._listEpoch || 0, decisionEpoch = this._inviteDecisionEpoch || 0;
+    const original = () => (that.data.received || []).find(row => parseInviteId(row.inviteId || row.id) === parseInviteId(id));
+    let station = null;
+    try { if (accept) station = supplyStationConfirmation(original()); }
+    catch (error) { this._finishAction(actionKey, '', error.message); return; }
+    const isCurrent = () => !that._unloaded && !that._hidden && owner === identityKey()
+      && epoch === (that._listEpoch || 0) && decisionEpoch === (that._inviteDecisionEpoch || 0)
+      && that._actionPendingKey === actionKey;
     const send = function (reason) {
+      if (!isCurrent()) return;
+      const payload = { id: id, status: accept ? 1 : 2, handleReason: reason || '' };
+      if (station) {
+        try {
+          if (!sameSupplyStationConfirmation(original(), station)) {
+            that._finishAction(actionKey, '', '邀约或核销据点已变化，请刷新后重新确认'); return;
+          }
+        } catch (error) { that._finishAction(actionKey, '', error.message); return; }
+        payload.supplyStationId = station.supplyStationId;
+      }
       app.sendRequest({
         url: '/api/coop/handle', method: 'POST',
-        data: JSON.stringify({ id: id, status: accept ? 1 : 2, handleReason: reason || '' }),
+        data: JSON.stringify(payload),
         header: { 'Content-Type': 'application/json' },
         success(res) {
+          if (!isCurrent()) return;
           if (res.code == '200') {
             that._finishAction(actionKey, accept ? '已接受合作' : '已拒绝', '');
             that.load();
@@ -1023,10 +1042,17 @@ Page({
             that._finishAction(actionKey, '', failureText(res, accept ? '接受失败' : '拒绝失败'));
           }
         },
-        fail(value) { that._finishAction(actionKey, '', failureText(value, accept ? '接受失败' : '拒绝失败')); },
+        fail(value) { if (isCurrent()) that._finishAction(actionKey, '', failureText(value, accept ? '接受失败' : '拒绝失败')); },
       });
     };
-    if (accept) { send(''); return; }
+    if (accept) {
+      if (!station) { send(''); return; }
+      modal.show({ title: '确认核销据点', content: '确认核销据点：' + supplyStationView(original()).supplyStationText + '，接受后归属冻结，不能换站。',
+        confirmText: '确认并接受', cancelText: '再核对一下',
+        success(r) { if (!isCurrent()) return; if (r && r.confirm) send(''); else that._finishAction(actionKey, '', ''); },
+        fail() { if (isCurrent()) that._finishAction(actionKey, '', '操作确认没有打开，请重试'); } });
+      return;
+    }
     // 拒绝要给理由:对方拿着这句话才知道下一步该改什么(稿上「回复对方」那栏)
     // 走 utils/modal.js —— 全仓原生弹层已收编,生产 JS 不许再直接 wx.showModal
     modal.show({
@@ -1040,6 +1066,7 @@ Page({
       // CU-M-49(同页同根因):空理由不关面板
       validate(r) { return typeof r === 'string' && r.trim() ? '' : '请填写拒绝理由'; },
       success(r) {
+        if (!isCurrent()) return;
         if (!r.confirm) { that._finishAction(actionKey, '', ''); return; }
         const reason = (r.content || '').trim();
         if (!reason) { that._finishAction(actionKey, '', '请填写拒绝理由'); return; }
