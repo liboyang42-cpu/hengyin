@@ -50,6 +50,19 @@ import static org.mockito.Mockito.when;
  */
 class TopicSaleReviewDecouplingTest {
 
+    private javax.sql.DataSource publicationDataSource;
+    private boolean callerTransactionActive;
+
+    @org.junit.jupiter.api.AfterEach
+    void publicationTransactionReleasesItsResource() {
+        if (publicationDataSource != null)
+            org.junit.jupiter.api.Assertions.assertFalse(
+                    org.springframework.transaction.support.TransactionSynchronizationManager.hasResource(publicationDataSource));
+        org.junit.jupiter.api.Assertions.assertEquals(callerTransactionActive,
+                org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+    }
+
+
     private static final Long ME = 100L;
     private static final Long TOPIC = 7L;
 
@@ -62,13 +75,28 @@ class TopicSaleReviewDecouplingTest {
 
     @BeforeEach
     void setUp() {
+        callerTransactionActive = org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive();
         topicMapper = mock(CmsTopicMapper.class);
         CmsTopicChapterMapper chapterMapper = mock(CmsTopicChapterMapper.class);
         CmsTopicNodeMapper nodeMapper = mock(CmsTopicNodeMapper.class);
         java.util.List<com.chengyinhub.business.domain.CmsTopicChapter> writtenChapters = new ArrayList<>();
         java.util.List<com.chengyinhub.business.domain.CmsTopicNode> writtenNodes = new ArrayList<>();
-        when(chapterMapper.selectByTopicForUpdate(anyLong())).thenAnswer(call -> new ArrayList<>(writtenChapters));
-        when(nodeMapper.selectByTopicForUpdate(anyLong())).thenAnswer(call -> new ArrayList<>(writtenNodes));
+        when(chapterMapper.selectByTopicForUpdate(anyLong())).thenAnswer(call -> writtenChapters.stream()
+                .filter(row -> call.getArgument(0).equals(row.getTopicId())).collect(java.util.stream.Collectors.toCollection(ArrayList::new)));
+        when(nodeMapper.selectByTopicForUpdate(anyLong())).thenAnswer(call -> writtenNodes.stream()
+                .filter(row -> call.getArgument(0).equals(row.getTopicId())).collect(java.util.stream.Collectors.toCollection(ArrayList::new)));
+        when(chapterMapper.selectCmsTopicChapterList(any())).thenAnswer(call -> {
+            com.chengyinhub.business.domain.CmsTopicChapter query = call.getArgument(0);
+            if (query == null) return Collections.emptyList();
+            return writtenChapters.stream().filter(row -> java.util.Objects.equals(query.getTopicId(), row.getTopicId()))
+                    .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+        });
+        when(nodeMapper.selectCmsTopicNodeList(any())).thenAnswer(call -> {
+            com.chengyinhub.business.domain.CmsTopicNode query = call.getArgument(0);
+            if (query == null) return Collections.emptyList();
+            return writtenNodes.stream().filter(row -> java.util.Objects.equals(query.getTopicId(), row.getTopicId()))
+                    .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+        });
         java.util.concurrent.atomic.AtomicLong chapterIds = new java.util.concurrent.atomic.AtomicLong(100L);
         java.util.concurrent.atomic.AtomicLong nodeIds = new java.util.concurrent.atomic.AtomicLong(200L);
         when(chapterMapper.insertCmsTopicChapter(any())).thenAnswer(call -> {
@@ -128,6 +156,8 @@ class TopicSaleReviewDecouplingTest {
         stored = new CmsTopic();
         stored.setId(TOPIC);
         stored.setMemberId(ME);
+        stored.setProductType(ProductType.ORIENTEERING);
+        stored.setPublishMode("pro");
         stored.setStatus(2);
         stored.setLifecycle(TopicLifecycleState.PRICING.getCode());
         stored.setDelFlag(0);
@@ -137,11 +167,16 @@ class TopicSaleReviewDecouplingTest {
         stored.setSelfPlay(1);
         stored.setSelfPlayPrice(new BigDecimal("5"));
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(stored);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(stored);
         when(topicMapper.selectTopicIsDraft(TOPIC)).thenReturn(0);
         doAnswer(invocation -> {
             CmsTopic patch = invocation.getArgument(0);
             if (patch.getName() != null) stored.setName(patch.getName());
             if (patch.getSelfPlayPrice() != null) stored.setSelfPlayPrice(patch.getSelfPlayPrice());
+            if (patch.getProductType() != null) stored.setProductType(patch.getProductType());
+            if (patch.getPublishMode() != null) stored.setPublishMode(patch.getPublishMode());
+            if (patch.getCheckStatus() != null) stored.setCheckStatus(patch.getCheckStatus());
+            if (patch.getThemeRuntimeConfigJson() != null) stored.setThemeRuntimeConfigJson(patch.getThemeRuntimeConfigJson());
             if (patch.getStatus() != null) stored.setStatus(patch.getStatus());
             if (patch.getUserStatus() != null) stored.setUserStatus(patch.getUserStatus());
             return 1;
@@ -157,9 +192,21 @@ class TopicSaleReviewDecouplingTest {
             return AuditTask.BIZ_TOPIC_SALE_REVIEW.equals(q.getBizType())
                     ? new ArrayList<>(Collections.singletonList(pendingSale)) : new ArrayList<AuditTask>();
         });
-        ReflectionTestUtils.setField(svc, "themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
-                mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
+        com.chengyinhub.business.mapper.ThemeStateKeyMapper keys =
+                mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class);
+        when(keys.lockTopicForStateKeyWrite(TOPIC)).thenAnswer(call -> {
+            org.junit.jupiter.api.Assertions.assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+            org.junit.jupiter.api.Assertions.assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.hasResource(publicationDataSource));
+            return topicMapper.selectCmsTopicByIdForUpdate(TOPIC).getId();
+        });
+        when(keys.selectByTopicIdForUpdate(TOPIC)).thenReturn(Collections.emptyList());
+        ReflectionTestUtils.setField(svc, "themeStateKeyService",
+                new com.chengyinhub.business.service.support.ThemeStateKeyService(keys));
         svc = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(svc);
+        org.springframework.jdbc.datasource.DataSourceTransactionManager transactions =
+                (org.springframework.jdbc.datasource.DataSourceTransactionManager)
+                com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(svc, "transactionManager");
+        publicationDataSource = transactions.getDataSource();
     }
 
     private static Date daysFromNow(int days) {
