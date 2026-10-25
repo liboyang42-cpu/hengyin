@@ -50,6 +50,7 @@ public class MapGeocodeServiceImpl implements IMapGeocodeService {
         }
 
         String requestKey = "C|" + cacheKey;
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (!claim(requestKey)) return null;
         try {
             cached = cityCache.get(cacheKey);
@@ -74,6 +75,7 @@ public class MapGeocodeServiceImpl implements IMapGeocodeService {
         }
         String cleanAddress = address.trim(), cleanRegion = region == null ? "" : region.trim();
         String requestKey = "F|" + cleanAddress.length() + ":" + cleanAddress + cleanRegion.length() + ":" + cleanRegion;
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (!claim(requestKey)) return null;
         try {
             StringBuilder url = new StringBuilder(FORWARD_GEOCODE_URL).append(urlEncode(address.trim()));

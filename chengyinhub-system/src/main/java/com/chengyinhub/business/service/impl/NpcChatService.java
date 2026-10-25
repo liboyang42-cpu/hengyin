@@ -97,6 +97,7 @@ public class NpcChatService
 
     public NpcChatResp chat(NpcChatReq req, Long userId)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         String requestId = requestIdOf(req);
         if (userId == null)
         {
@@ -183,6 +184,7 @@ public class NpcChatService
     public NpcChatResp chatWithShop(String requestId, Long userId, Long nodeId,
                                     Long merchantId, String shopMemory, String rawMessage)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (nodeId != null && nodeId > MAX_CHAT_ENTITY_ID)
         {
             return response(requestId, NpcChatRequest.STATUS_REJECTED, "NOT_RUN", "INVALID_REQUEST", null,
@@ -195,6 +197,7 @@ public class NpcChatService
     /** 店铺主页对话；使用负数空间的下半区，避免与按节点对话的会话键碰撞。 */
     public NpcChatResp chatWithMerchant(NpcChatReq req, Long userId, Long merchantId)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         String requestId = requestIdOf(req);
         if (merchantId == null || merchantId <= 0 || merchantId > MAX_CHAT_ENTITY_ID)
         {
@@ -356,6 +359,10 @@ public class NpcChatService
                     && NpcChatRequest.STATUS_SUCCEEDED.equals(current.getOutcomeStatus()))
                 current.setAudioUrl(response.getAudioUrl());
             return current;
+        }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused)
+        {
+            throw paused;
         }
         catch (AiServiceException e)
         {

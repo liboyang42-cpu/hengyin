@@ -79,6 +79,7 @@ public class OpenAiCompatibleLlmClient implements LlmClient
     @Override
     public String chat(String systemPrompt, String userPrompt)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         requireReady();
 
         JSONObject body = new JSONObject();
@@ -105,6 +106,7 @@ public class OpenAiCompatibleLlmClient implements LlmClient
     @Override
     public String chatVision(String systemPrompt, String imageUrl, String userPrompt)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         requireReady();
 
         JSONObject body = new JSONObject();
@@ -158,6 +160,7 @@ public class OpenAiCompatibleLlmClient implements LlmClient
     /** Text/vision share one bounded authenticated POST; no provider retry is allowed. */
     private String post(JSONObject body)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         requireReady();
         long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(Math.min(timeoutMs, 10_000));
         String url = completionUrl(baseUrl);
@@ -180,6 +183,7 @@ public class OpenAiCompatibleLlmClient implements LlmClient
             phase = "parse";
             return responseText(result);
         }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
         catch (AiProviderNotSentException notSent)
         {
             logFailure("not-sent", 0, "NOT_SENT");

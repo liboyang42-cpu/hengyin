@@ -98,6 +98,7 @@ public class PhotoCheckVisionService
     private PreparedReview reviewOnce(Long memberId, String imageUrl, String requirement,
             String plannedReservation, java.util.function.Consumer<InputSnapshot> beforeModel)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         consentGuard.requireCurrentAgreement(memberId, "photo_model_processing", "object_photo");
         String url = imageUrl == null ? "" : imageUrl.trim();
         if (url.isEmpty())
@@ -114,6 +115,7 @@ public class PhotoCheckVisionService
         {
             reservation = chargeQuota(memberId, plannedReservation);
         }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
         catch (RuntimeException unavailable)
         {
             alarm("拍照视觉审核额度不可用", "memberId=" + memberId);
@@ -137,6 +139,7 @@ public class PhotoCheckVisionService
             }
             aiGatewayService.stageQuota(memberId, BIZ_TYPE, reservation, "MODEL_STARTED");
         }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
         catch (RuntimeException unsent)
         {
             // chatVision 尚未调用，只有此路径可以按原预占补偿。
@@ -157,6 +160,7 @@ public class PhotoCheckVisionService
             alarm("拍照视觉审核请求未发送", "memberId=" + memberId);
             return unavailable("照片暂时无法审核", "NOT_SENT", "PROVIDER_NOT_SENT");
         }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
         catch (RuntimeException unknown)
         {
             // 供应商可能已计费；保留原预占，首个本地降级结果仍由原意图持久化。

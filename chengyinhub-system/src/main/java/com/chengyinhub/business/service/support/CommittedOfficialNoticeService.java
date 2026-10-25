@@ -92,6 +92,8 @@ public class CommittedOfficialNoticeService {
      * An existing identity is read before any profile/config preparation. It is never re-rendered or rearmed. */
     @Transactional(propagation=Propagation.NEVER)
     public Delivery beforeStart(Long ticketId, Long recipient, String topicName, Date startsAt) {
+        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode())
+            return readBeforeStart(ticketId, recipient);
         outsideTransaction();
         String key=beforeStartKey(ticketId,recipient);
         long planned=startsAt==null ? 0L : startsAt.getTime();
@@ -167,6 +169,7 @@ public class CommittedOfficialNoticeService {
     }
 
     private void wake(Long id) {
+        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return;
         try { executor.schedule(() -> {
             try { deliver(id); }
             catch(RuntimeException failure) { pending(id,failure); }
@@ -176,6 +179,7 @@ public class CommittedOfficialNoticeService {
 
     /** Invoked after commit or by the existing recovery task; no business connection spans a WeChat call. */
     public void deliver(Long id) {
+        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return;
         outsideTransaction();
         CommittedOfficialNoticeWx frozen=independent.execute(tx -> {
             CommittedOfficialNoticeWx row=mapper.selectByIdForUpdate(id);validate(row);return row;
@@ -229,6 +233,7 @@ public class CommittedOfficialNoticeService {
 
     /** Enumerated entries, not a delivered count. Fixed high-water mark; failed entries cannot starve later pages. */
     public int reconcilePending() {
+        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return 0;
         outsideTransaction();
         Long maximum=mapper.maxPendingId();
         if(maximum==null) return 0;

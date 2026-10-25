@@ -64,6 +64,7 @@ public class NpcAsrIntentService {
     }
     /** Caller has already checked the original node/registration gate and detected the actual audio format. */
     public NpcAsrIntent recognize(Long user,String rawRid,Long node,Long merchant,byte[] audio,String format) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         String rid=rawRid==null?null:rawRid.trim();
         key(user,rid,node);
         if (merchant==null || merchant<=0 || audio==null || audio.length==0 || audio.length>2*1024*1024
@@ -104,12 +105,15 @@ public class NpcAsrIntentService {
                 throw new IllegalStateException("NPC ASR original reservation unavailable");
             // Persist the cost boundary before the provider. Expiry cannot prove an ASR was not sent.
             quota.stageQuota(user,QUOTA_BIZ,reservation,"ASR_STARTED");
+        } catch(com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch(RuntimeException notDispatched) {
             // No speech call has occurred on this path; persist this local NOT_SENT proof before compensation.
             return finish(admitted.receipt(),"NOT_SENT",null);
         }
         String text;
         try { text=speech.transcribe(audio,format); }
+        catch(com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
         catch(RuntimeException failure) {
             return finish(admitted.receipt(),notSent(failure)?"NOT_SENT":"UNKNOWN",null);
         }
@@ -142,6 +146,7 @@ public class NpcAsrIntentService {
     }
     /** Commit this one-way handoff before calling the original text service. Unknown commit means stop. */
     public boolean beginHandoff(Long user,String rawRid,Long node,Long merchant) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         String rid=rawRid==null?null:rawRid.trim();
         key(user,rid,node);
         return Boolean.TRUE.equals(locked(user,() -> {

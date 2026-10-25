@@ -37,6 +37,7 @@ public class BeforeStartNotifyTask {
     private AlarmService alarmService;
 
     public void run() {
+        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return;
         try {
             BeforeStartNotifyResult r = teamGroupService.notifyBeforeStartBatch();
             String summary = "scanned=" + r.getScanned()

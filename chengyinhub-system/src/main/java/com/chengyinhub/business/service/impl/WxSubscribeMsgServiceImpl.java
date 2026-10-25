@@ -95,6 +95,7 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
 
     private boolean send(String openid, String templateId, String page, Map<String, String> fields,
                          Long memberId, String templateKey, String businessEvent, boolean frozenPage) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (StringUtils.isEmpty(openid)) {
             log.debug("[订阅消息] 无 openid,跳过 templateChars={}", safeLength(templateId)); // 用户没走微信登录,属正常
             return false;
@@ -146,6 +147,7 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
             log.info("[订阅消息] send ok templateChars={}", safeLength(templateId));
             return true;
         } catch (Exception ex) {
+            if (ex instanceof com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) throw paused;
             log.warn("[订阅消息] 发送失败 templateChars={} reason={}",
                     safeLength(templateId), ex.getClass().getSimpleName());
             return false;
@@ -181,6 +183,7 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
 
     /** HTTP 缝:HttpUtils 是静态方法且本仓 Mockito 无 inline mock maker,测试覆写此方法注入响应。 */
     String post(String url, String body) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         return HttpUtils.sendPost(url, body, "application/json");
     }
 

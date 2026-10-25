@@ -33,6 +33,7 @@ public class RoamRecallService {
      * 未扫描未发送」显式落日志:sys_job_log 的 SUCCESS 不能替空跑背书。
      */
     public int runDue(Date now) {
+        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return 0;
         if (!enabled) {
             log.info("漫游召回未开启(feature.roamRecall.enabled=false),本轮跳过:未扫描、未发送");
             return 0;

@@ -49,6 +49,7 @@ public class NpcVoiceEnrollmentService
     public NpcProfile enroll(Long actorMemberId, int scopeType, Long scopeId, Long npcId, String sample,
             String requestId, Long previousIntentId, boolean duplicateChargeConsent, Supplier<String> approvedProcessingUrl)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         outsideBusinessTransaction();
         validate(scopeType, scopeId, npcId);
         if (actorMemberId == null || actorMemberId <= 0 || sample == null
@@ -72,6 +73,7 @@ public class NpcVoiceEnrollmentService
         {
             voiceId = provider.enroll(processingUrl);
         }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
         catch (RuntimeException failure)
         {
             // Only the exact trusted transport class/disposition is positive evidence. No messages, status or timeout guesses.

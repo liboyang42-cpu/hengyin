@@ -51,6 +51,7 @@ public class DashScopeSpeechToTextService implements SpeechToTextService
     @Override
     public String transcribe(byte[] audio, String format)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (!available())
         {
             throw new AiServiceException("语音识别未开通");
@@ -101,6 +102,7 @@ public class DashScopeSpeechToTextService implements SpeechToTextService
                         Map.of("X-DashScope-SSE", "disable"));
             }
         }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
         catch (AiServiceException e)
         {
             throw e;

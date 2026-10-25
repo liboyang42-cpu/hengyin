@@ -182,6 +182,7 @@ public class NodeNpcService {
 
     public NpcProfile voiceEnroll(Long actorMemberId, Long ownerMemberId, Long nodeId, String rawSample,
             String requestId, Long previousIntentId, boolean duplicateChargeConsent) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         chapterMerchantNodeService.requireOwnLiveNode(ownerMemberId, nodeId);
         consentGuard.requireCurrentAgreement(actorMemberId, "voice_clone_processing", "merchant_voice");
 

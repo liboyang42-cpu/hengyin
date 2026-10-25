@@ -160,6 +160,7 @@ public class TopicRouteServiceImpl implements ITopicRouteService
                 log.warn("[TopicRoute] provider network failure reason={}",
                         error.getClass().getSimpleName());
             }
+            catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
             catch (RuntimeException error)
             {
                 log.warn("[TopicRoute] provider segment response rejected reason={}",

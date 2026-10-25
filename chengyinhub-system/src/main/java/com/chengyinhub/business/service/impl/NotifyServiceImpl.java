@@ -40,10 +40,13 @@ public class NotifyServiceImpl implements INotifyService {
      * 不短路:即使第一条成功,其余通道也要发 —— push 成功不代表站内信可以不写。
      */
     private boolean fanout(NotifyMessage m) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         boolean anyDelivered = false;
         for (NotifyChannel c : channels) {
             try {
                 if (c.send(m)) anyDelivered = true;
+            } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+                throw paused;
             } catch (Throwable t) {
                 // ⚠️ 这里必须是 Throwable,不能只接 RuntimeException/Exception。
                 // 通道是**旁路**,上游是带 @Transactional(rollbackFor=Exception.class) 的资金路径。

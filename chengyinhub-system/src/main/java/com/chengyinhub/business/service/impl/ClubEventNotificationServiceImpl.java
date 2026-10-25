@@ -68,6 +68,7 @@ public class ClubEventNotificationServiceImpl implements IClubEventNotificationS
 
     @Override
     public ClubEventCampaign send(Long actorMemberId, ClubEventCampaignRequest request) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         Validated validated = validate(actorMemberId, request, true);
         ClubEventCampaign replay = mapper.selectCampaignByRequest(
                 validated.clubId, actorMemberId, validated.requestId);
@@ -116,6 +117,7 @@ public class ClubEventNotificationServiceImpl implements IClubEventNotificationS
 
     @Override
     public ClubEventCampaign retryFailed(Long actorMemberId, Long campaignId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         ClubEventCampaign campaign = loadAuthorizedCampaign(actorMemberId, campaignId);
         return dispatch(campaign, transactionService.claimAuthorized(actorMemberId, campaign, 500,
                 new Date(System.currentTimeMillis() + CLAIM_LEASE_MILLIS)));
@@ -123,6 +125,7 @@ public class ClubEventNotificationServiceImpl implements IClubEventNotificationS
 
     @Override
     public int retryDue() {
+        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return 0;
         int processed = 0;
         List<Long> campaignIds = mapper.selectDueCampaignIds(new Date(), 10);
         if (campaignIds == null) return 0;
