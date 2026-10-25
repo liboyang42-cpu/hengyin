@@ -422,7 +422,7 @@ Page({
     // walk its real pages instead of interpreting nodeId or a route parameter as a station/type.
     const readPage = pageNum => {
       if (!current()) return;
-      app.sendRequest({ hideLoading: true, silentError: true, url: '/api/topic/list', method: 'POST',
+      app.sendRequest({ hideLoading: true, url: '/api/topic/list', method: 'POST',
         data: { is_my: 1, scope: this.data.operationScope, invite_target: 'merchant', pageNum, pageSize: 50 },
         success: res => {
           if (!current()) return;
@@ -465,7 +465,7 @@ Page({
         update({ supplyState: 'error', supplyError: failureText(value, '据点读取失败，请重试') });
         delete this._supplyRequests[merchantMemberId];
       };
-      app.sendRequest({ hideLoading: true, silentError: true, url: '/api/coop/supply-stations', method: 'GET',
+      app.sendRequest({ hideLoading: true, url: '/api/coop/supply-stations', method: 'GET',
         data: { topicId, merchantMemberId },
         success: res => {
           if (!current()) return;

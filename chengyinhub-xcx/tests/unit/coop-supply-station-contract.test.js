@@ -112,12 +112,12 @@ test('late station reads cannot attach to a different topic, account, selection 
     assert.equal(f.writes().length, 0);
   }
 });
-test('scoped station GET failures are visible and retryable without an invite or duplicate toast', () => {
+test('scoped station GET preserves default transport feedback and page retry without an invite', () => {
   for (const reject of [request => request.fail({ errMsg: 'request:fail timeout' }),
     request => request.successStatusAbnormal({ code: 503, msg: '据点读取暂不可用' }),
     request => request.success({ code: 200, data: { requiresSupplyStation: false, stations: options } })]) {
     const f = creation(), request = byUrl(f, '/api/coop/supply-stations')[0];
-    assert.notEqual(request.auth, false); assert.equal(request.silentError, true);
+    assert.notEqual(request.auth, false); assert.equal(request.silentError, undefined, '沿 request-client 默认可见错误，不新增静默豁免');
     reject(request);
     assert.equal(f.page.data.selected[0].supplyState, 'error');
     assert.ok(f.page.data.selected[0].supplyError);
@@ -137,7 +137,8 @@ test('owner topic metadata failures stay visible and cannot guess a station requ
     const f = pageFixture(CREATE);
     f.page.onLoad({ type: '0', topicId: '9', toId: '11' });
     const request = byUrl(f, '/api/topic/list')[0];
-    assert.equal(request.data.is_my, 1); assert.notEqual(request.auth, false); assert.equal(request.silentError, true);
+    assert.equal(request.data.is_my, 1); assert.notEqual(request.auth, false);
+    assert.equal(request.silentError, undefined, '主题类型读取沿默认可见错误，不新增静默豁免');
     reject(request);
     assert.equal(f.page.data.supplyTopicState, 'error'); assert.ok(f.page.data.supplyTopicError);
     assert.equal(byUrl(f, '/api/coop/supply-stations').length, 0);
