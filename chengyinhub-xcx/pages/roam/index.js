@@ -2706,16 +2706,22 @@ Page({
     if (this._roamStartPending) return;
     // 未登录不开漫游:没有会话时 /api/roam/* 全被后端 401 挡下 —— 据点层永远「没加载出来」、
     // 每次揭雾上报弹一次「请先登录」、结算永远失败,而页面自己没有任何出路。
-    // 先补一次登录(单航班,与首登共享在途锁);仍没会话就把门闩放掉,给一句人话让人再点。
+    // 2026-10-24 owner 拍板「游客可浏览，写入时弹窗登录」:开漫游会写足迹进度,游客先弹「登录后继续」
+    // (app.requireLogin,单航班 firstLogin),登录成功恢复本次开局;点「暂不登录」页面原样不动。
+    // 仍没会话就把门闩放掉,给一句人话让人再点。
     // ⚠️ 只在能拿到会话 API 时才判:getApp 抛 / getUserID 不存在(测试沙箱、极早期初始化)
     //    一律放行走原流程 —— 门闩语义不能因为判登录这层新闸被改变。
     let loginApp = null;
     try { loginApp = getApp(); } catch (e) { loginApp = null; }
     if (loginApp && typeof loginApp.getUserID === 'function' && !loginApp.getUserID()) {
       this._roamStartPending = true;
-      Promise.resolve(loginApp.firstLogin ? loginApp.firstLogin() : null).then(() => {
+      const asked = typeof loginApp.requireLogin === 'function'
+        ? loginApp.requireLogin({ reason: 'roam' })
+        : Promise.resolve(loginApp.firstLogin ? loginApp.firstLogin() : null);
+      Promise.resolve(asked).then((ok) => {
         this._roamStartPending = false;
         if (typeof loginApp.getUserID === 'function' && loginApp.getUserID()) { this.goStart(); return; }
+        if (ok === false) return; // 用户选「暂不登录」:不报错,留在游客浏览态
         this.setData({ introError: '登录失败，请重试', locErr: false });
       });
       return;

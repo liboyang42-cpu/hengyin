@@ -364,6 +364,8 @@ Page({
         method: 'POST',
         data: { code },
         hideLoading: true,
+        // 2026-10-24 游客可浏览:扫门口码 = 开始游玩(按本人进度分流),游客 401 时由请求层弹「登录后继续」,登录后重发一次。
+        write: true, loginReason: 'play',
         success(res) {
           const path = pathForScanEntry(res && res.data);
           if ((res.code == 200 || res.code == '200') && path) {
@@ -377,8 +379,9 @@ Page({
           cyToast((res && res.msg) || '这张码无法打开');
           that.finishDoorSceneFallback();
         },
-        fail() {
-          cyToast('这张码无法打开');
+        fail(res, status) {
+          // 游客在登录弹窗里点了「暂不登录」:不报「码无法打开」,直接回到可浏览的首页。
+          if (!(Number(status) === 401 && !app.getUserID())) cyToast('这张码无法打开');
           that.finishDoorSceneFallback();
         },
       });
@@ -406,6 +409,9 @@ Page({
   retryPendingInviter() {
     const inviterId = this._pendingInviter;
     if (!inviterId || this._unloaded) return;
+    // 2026-10-24 游客可浏览:打开不再建号,被邀请的游客要等首次登录(写前登录弹窗)后才有身份 ——
+    // 没身份时留着 pending,回到首页 onShow 再补发,别在游客态把邀请关系消费掉。
+    if (!app.getUserID()) return;
     this._pendingInviter = '';
     this.handleInviter(inviterId);
   },
@@ -506,6 +512,8 @@ Page({
 
     const that = this;
 
+    // 2026-10-24:游客在别处登录后回到首页,补发一次待发的邀请关系(A-01)。
+    if (this._pendingInviter) this.retryPendingInviter();
     // 热启动扫小程序码只在 App.onShow 收下 pending。这里消费一次就清掉。
     if (this.consumeDoorScene()) return;
     if (this._doorSceneInFlight) return;

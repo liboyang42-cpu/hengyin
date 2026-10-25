@@ -21,6 +21,7 @@ import com.chengyinhub.business.service.support.TopicRouteModePolicy;
 import com.chengyinhub.business.service.ICmsTopicNodeService;
 import com.chengyinhub.business.service.IPlayerNodeProgressService;
 import com.chengyinhub.business.service.support.TopicCompletionRulePolicy;
+import com.chengyinhub.common.annotation.Anonymous;
 import com.chengyinhub.common.constant.ProductType;
 import com.github.pagehelper.PageHelper;
 import com.chengyinhub.common.config.WxPayConfig;
@@ -1021,6 +1022,9 @@ public class ApiCreativeSquareController extends BaseController {
     @Parameters({
             @Parameter(name = "id", description = "广场id")
     })
+    // owner 2026-10-24「游客可浏览」:与已匿名开放的 /list 同一投影,游客 member_id=0 只看已审核未删内容,
+    // 点赞/收藏/关注等本人态由 enrichCreativeSquareList 按 0 算为否。
+    @Anonymous
     public AjaxResult viewCreativeSquareInfo(String id) {
         ViewCreativeSquare viewCreativeSquare = new ViewCreativeSquare();
 

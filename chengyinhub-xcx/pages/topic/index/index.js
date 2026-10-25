@@ -659,6 +659,7 @@ Page({
   },
 
   toggleFav() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.toggleFav())) return; // 2026-10-24 游客写前登录
     const id = (this.data.info && this.data.info.id) || this.data.id;
     if (!id || this._favBusy) return;
     const next = !this.data.faved;
@@ -733,6 +734,7 @@ Page({
 
   /* 自玩:弹层只说清买的是什么,按钮「去结算」进确认订单页(业主:随时开玩不直接付款) */
   onSelfPlayGoCheckout() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('checkout', () => this.onSelfPlayGoCheckout())) return; // 2026-10-24 游客写前登录
     if (this.lockedTip()) return;
     const info = this.data.info || {};
     const win = motion.passWindow({ topicEnd: info.endDate });
@@ -1096,6 +1098,7 @@ Page({
   
   // 提交评价
   submitComment() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.submitComment())) return; // 2026-10-24 游客写前登录
     const that = this;
     if (!that.data.canSubmitComment) return;
     const {
@@ -1157,6 +1160,7 @@ Page({
   },
 
   bmClick(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('signup', () => this.bmClick(e))) return; // 2026-10-24 游客写前登录
 
     if(app.getUserType()==2){
       toast('商家用户不可报名主题');
@@ -1407,6 +1411,7 @@ Page({
 
   // M2 购买自玩通行证:确认(90天有效期+安全须知)→ /create(ownerType=1) → 支付 → play?topicId=
   selfPlayBuy() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('checkout', () => this.selfPlayBuy())) return; // 2026-10-24 游客写前登录
     const that = this;
     if (that.data.merchantClosed) { toast('商家暂停营业，暂不可报名', { icon: 'none' }); return; }
     const info = that.data.info || {};
@@ -2270,6 +2275,7 @@ Page({
 
   // FOLLOWUP-A-1:举报主题,流程与动态详情 reportSquare 同一套(utils/content-report.js)
   reportTopic() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportTopic())) return; // 2026-10-24 游客写前登录
     if (!this.data.canReport) return;
     contentReport.reportTopic(this, app, this.data.id);
   },

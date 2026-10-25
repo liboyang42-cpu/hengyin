@@ -115,6 +115,23 @@ test('新用户冷启动:?inviter= 在登录落地后补发,邀请关系落库',
   assert.equal(ctx.storage.has_inviter, true, '成功后必须记账，避免重复写入');
 });
 
+// 2026-10-24 owner 拍板「游客可浏览，写入时弹窗登录」:打开不再建号,appReady 时被邀请人仍是游客。
+// 邀请关系必须留到首次登录之后再补发,不能在游客态被消费掉(否则 A-01 根因②换个形状复现)。
+test('2026-10-24 游客冷启动:appReady 时仍无身份则保留待发邀请,登录后回到首页补发一次', async () => {
+  const ctx = setupPage({ storage: {} });
+  ctx.page.onLoad({ inviter: '42' });
+  ctx.landLogin();
+  await flush();
+  assert.equal(setInviterRequest(ctx), undefined, '游客态不发 setInviter(写接口,会被登录闸挡)');
+  assert.equal(ctx.page._pendingInviter, '42', '游客态不得消费待发邀请');
+  ctx.storage.user_id = 7;   // 用户在别处的写前登录弹窗里点了「微信登录」
+  ctx.page.retryPendingInviter();
+  const req = setInviterRequest(ctx);
+  assert.ok(req, '登录后补发邀请');
+  assert.equal(String(req.data.inviter_id), '42');
+  assert.equal(ctx.page._pendingInviter, '', '只补发一次');
+});
+
 test('老分享卡片:?id= 仍能落地(读取端兼容两个键)', async () => {
   const ctx = setupPage({ storage: {} });
   ctx.page.onLoad({ id: '42' });

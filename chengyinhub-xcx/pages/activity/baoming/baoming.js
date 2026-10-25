@@ -972,6 +972,7 @@ Page({
   },
 
   joinWaitlist() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('signup', () => this.joinWaitlist())) return; // 2026-10-24 游客写前登录
     const that = this;
     const ticket = that.data.selectedTicket;
     if (that.data.waitlistLoading || !ticket || !ticket.id) return;
@@ -1445,6 +1446,7 @@ Page({
    * 处理付款
    */
   handlePayment() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('checkout', () => this.handlePayment())) return; // 2026-10-24 游客写前登录
     const that = this;
 
     // 详情未就绪时禁止下单:此时票种/金额都不可信,CTA 之外再兜一道

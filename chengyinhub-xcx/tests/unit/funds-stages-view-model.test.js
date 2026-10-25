@@ -128,16 +128,16 @@ test('真实请求封装的余额首登和权限拒绝只回传当前账号结�
   })
   h.app.sendRequest = o => client.send(o); h.app.globalData.user_id = ''; h.comp.load()
   h.requests[0].success({ statusCode: 401, data: { code: 401 } })
-  h.requests[1].success({ statusCode: 200, data: walletResponse(60) })
-  assert.strictEqual(h.requests.length, 3); assert.strictEqual(h.comp.data.stages, null)
-  assert.strictEqual(h.events.length, 0)
-  h.requests[2].success({ statusCode: 200, data: walletResponse(20) })
-  assert.strictEqual(h.comp.data.stages.withdrawable, '20.00'); assert.strictEqual(h.events.length, 1)
-  h.comp.load(); h.requests[3].success({ statusCode: 403, data: { msg: '无权限' } })
+  // 2026-10-24 owner 拍板「游客可浏览，写入时弹窗登录」:游客读私有余额 401 不再静默首登建号。
+  assert.strictEqual(logins, 0); assert.strictEqual(h.requests.length, 1); assert.strictEqual(h.comp.data.stages, null)
+  h.app.globalData.user_id = 990001; h.comp.load()
+  h.requests[1].success({ statusCode: 200, data: walletResponse(20) })
+  assert.strictEqual(h.comp.data.stages.withdrawable, '20.00'); assert.strictEqual(h.events[h.events.length - 1].detail.known, true)
+  h.comp.load(); h.requests[2].success({ statusCode: 403, data: { msg: '无权限' } })
   assert.strictEqual(h.comp.data.stages, null); assert.strictEqual(h.events[h.events.length - 1].detail.known, false)
   h.comp.load(); h.app.globalData.user_id = 990002
-  h.requests[4].success({ statusCode: 401, data: { code: 401 } })
-  assert.strictEqual(logins, 1); assert.strictEqual(h.requests.length, 5); assert.strictEqual(h.comp.data.stages, null)
+  h.requests[3].success({ statusCode: 401, data: { code: 401 } })
+  assert.strictEqual(logins, 0); assert.strictEqual(h.requests.length, 4); assert.strictEqual(h.comp.data.stages, null)
 })
 
 test('余额换号后重读清除旧值，旧成功/失败不覆盖新余额或重新发出旧可提现事件', () => {

@@ -6617,6 +6617,7 @@ Page({
 
   // 发布弹层「继续发布」:仅在无 blocking 时出现,置一次性放行标记后重走 submitForm
   confirmPublishCheck() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.confirmPublishCheck())) return; // 2026-10-24 游客写前登录
     if (this._identityRegistering) return;
     this.syncIdentityReady();
     if (this.data.legacyScopePending) return; // 旧草稿归属没确认:发出去也会被 sendData 静默拦下
@@ -7069,6 +7070,7 @@ Page({
 
   // 提交表单
   submitForm() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.submitForm())) return; // 2026-10-24 游客写前登录
     // 一次性消费放行标记:必须在任何 early return 之前取走并清掉,
     // 否则「确认发布 → 下面某条校验拦下」会把 true 留到下一次点击,让那一版内容静默绕过预检。
     const precheckAcked = this._precheckAcked;

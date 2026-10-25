@@ -1,5 +1,6 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.annotation.Anonymous;
 import com.chengyinhub.common.core.text.Convert;
 import java.util.ArrayList;
 import java.util.Date;
@@ -584,6 +585,9 @@ public class ApiClubController extends BaseController {
 
     @Operation(summary = "俱乐部目录(已通过)")
     @PostMapping("/list")
+    // owner 2026-10-24「游客可浏览」:目录对游客只读开放。游客只看得到公开可见的团(canViewClub),
+    // 不打 isJoined/isOwner,出参走 PublicClubVO 白名单。
+    @Anonymous
     public AjaxResult list(@RequestBody(required = false) Club query) {
         if (query == null) query = new Club();
         query.setStatus(1L); // 仅展示审核通过
@@ -610,6 +614,9 @@ public class ApiClubController extends BaseController {
 
     @Operation(summary = "俱乐部详情")
     @PostMapping("/detail")
+    // owner 2026-10-24「游客可浏览」:公开资料对游客只读开放。非公开团对游客仍「只对成员开放」;
+    // 游客的 isOwner/isJoined/viewerIsAdmin=false、myJoinReviewReason=""、待审数=0,出参走 PublicClubVO 白名单。
+    @Anonymous
     public AjaxResult detail(@RequestBody Club body) {
         if (body.getId() == null) return error("缺少俱乐部ID");
         Club club = clubService.selectClubById(body.getId());

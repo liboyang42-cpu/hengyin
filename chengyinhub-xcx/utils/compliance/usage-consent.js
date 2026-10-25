@@ -82,6 +82,8 @@ function createUsageConsent(options) {
     try { options.wx.setStorageSync(KEY, choice); } catch (e) {}
     waiters.splice(0).forEach(w => w.resolve());
     const login = await options.login();
+    // owner 2026-10-24:游客同意后保持游客(不建号);服务端留痕等首次登录后由 syncPending 补传。
+    if (login && login.guest === true) return login;
     if (!login || login.ok === false || !(Number(options.getUserID()) > 0)
         || !options.getAuthorization() || options.getAuthorization() === 'dev-token') throw new Error('登录未完成，请重试');
     await syncPending();
