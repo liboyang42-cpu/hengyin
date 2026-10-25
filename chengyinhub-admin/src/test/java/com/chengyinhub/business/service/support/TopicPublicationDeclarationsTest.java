@@ -295,10 +295,12 @@ class TopicPublicationDeclarationsTest {
     @Test void formalBranchReusesTheExistingDiagnosticBeforeCallingCompleteFreeze() {
         CmsTopicNode terminal=new CmsTopicNode();terminal.setId(12L);terminal.setTopicId(7L);terminal.setStatus(1L);
         CmsTopicNode start=new CmsTopicNode();start.setId(11L);start.setTopicId(7L);start.setStatus(1L);start.setTemplateId(101L);
+        currentNodes.clear(); currentNodes.addAll(List.of(start,terminal));
         when(nodes.selectCmsTopicNodeList(any())).thenReturn(List.of(start,terminal));topic.setRouteMode("BRANCH_GRAPH");
         topic.setRouteGraphJson("{\"schemaVersion\":1,\"startNodeId\":11,\"terminalNodeIds\":[12],\"edges\":[{\"id\":\"go\",\"fromNodeId\":11,\"toNodeId\":12,\"trigger\":{\"type\":\"CHOICE\",\"outcomeCode\":\"COMPLETED\"},\"conditions\":[{\"op\":\"GT\",\"var\":\"missing\",\"value\":0}]}]}");
         IllegalArgumentException error=assertThrows(IllegalArgumentException.class,()->guard.normalizedBranchRouteForPublish(topic,List.of()));
-        assertTrue(error.getMessage().contains("使用未声明变量"));assertTrue(error.getMessage().contains("topicId=7, path=routeGraphJson"));assertNotNull(error.getCause());
+        assertTrue(error.getMessage().contains("使用未声明变量"), error.getMessage());
+        assertTrue(error.getMessage().contains("topicId=7, path=routeGraphJson"), error.getMessage());assertNotNull(error.getCause());
         verify(runtime,never()).freezePublication(any(),any(),any());verify(runtime,never()).compileTemplateRules(any());verifyNoInteractions(keys);
     }
 
@@ -396,11 +398,12 @@ class TopicPublicationDeclarationsTest {
     @Test void nestedJourneyStillRejectsInactiveDispositionNodeWithOriginalSceneDiagnostic() {
         CmsTopicNode inactive=new CmsTopicNode();inactive.setId(12L);inactive.setTopicId(7L);inactive.setStatus(0L);inactive.setTemplateId(201L);currentNodes.add(inactive);
         CmsMemberTemplate branch=new CmsMemberTemplate();branch.setId(201L);branch.setAdvancedConfigJson("{\"schemaVersion\":1,\"branch\":{\"enabled\":true}}");currentTemplates.put(201L,branch);
-        topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"currentScene\":\"one\",\"scenes\":[{\"id\":\"one\",\"name\":\"场景\",\"journeyStory\":{\"schemaVersion\":1,\"ending\":{\"dispositionNodeId\":12,\"endings\":[{\"code\":\"default\",\"title\":\"默认\",\"fallback\":true}]}}}]}");
+        topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"currentScene\":\"one\",\"scenes\":[{\"id\":\"one\",\"name\":\"场景\",\"journeyStory\":{\"schemaVersion\":1,\"ending\":{\"dispositionNodeId\":12,\"endings\":[{\"code\":\"selected\",\"title\":\"原处置结局\",\"when\":[{\"var\":\"sys.outcome.12\",\"op\":\"EQ\",\"value\":1}]},{\"code\":\"default\",\"title\":\"默认\",\"fallback\":true}]}}}]}");
         forbidOrdinaryChildReads();
         ServiceException error=assertThrows(ServiceException.class,()->guard.assertThemeRuntimeReferences(topic,captured()));
-        assertTrue(error.getMessage().contains("dispositionNodeId"));
-        assertTrue(error.getMessage().contains("path=themeRuntimeConfigJson.scenes[0].journeyStory"));
+        assertTrue(error.getMessage().contains("dispositionNodeId"), error.getMessage());
+        assertTrue(error.getMessage().contains("path=themeRuntimeConfigJson.scenes[0].journeyStory"), error.getMessage());
+        assertInstanceOf(IllegalArgumentException.class, error.getCause());
         verify(references,times(1)).currentForPublication(topic);verify(references,never()).collect(any());verifyNoInteractions(keys);
     }
 

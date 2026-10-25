@@ -858,8 +858,10 @@ public class TopicPublicationContentGuard {
             journeyStoryValidator.validate(raw, com.chengyinhub.business.service.support.JourneyStoryValidator.Context.of(
                     chapterIds, journeyStoryAvailableNpcIds(topic.getId(), current), nodeIds, branchNodeRefs, outcomeNodeRefs));
         } catch (RuntimeException e) {
-            throw new ServiceException("主题的剧情配置引用无效,主题发布失败:" + e.getMessage()
+            ServiceException invalid = new ServiceException("主题的剧情配置引用无效,主题发布失败:" + e.getMessage()
                     + publicationLocation(topic, fieldPath));
+            invalid.initCause(e);
+            throw invalid;
         }
     }
 
