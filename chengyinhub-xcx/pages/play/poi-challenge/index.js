@@ -158,6 +158,9 @@ Page({
     const place = (this.data.node && this.data.node.name) || '这一站';
     wx.redirectTo({ url: '/subpackageRoam/citystamp/index?kind=sign&place=' + encodeURIComponent(place) });
   },
-  onMedalSecondary() { wx.redirectTo({ url: BADGE_WALL }); },
+  onMedalSecondary() { // 带上勋章码:徽章墙会在墙上找到这一枚并写明「已在墙上」
+    const code = (this._result && this._result.badgeCode) || (this.data.node && this.data.node.badgeCode) || '';
+    wx.redirectTo({ url: BADGE_WALL + (code ? '?badgeCode=' + encodeURIComponent(code) : '') });
+  },
   exit() { wx.navigateBack({ fail: () => wx.redirectTo({ url: '/subpackageRoam/nearby/index' }) }); },
 });

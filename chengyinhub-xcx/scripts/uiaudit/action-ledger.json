@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5139,
+  "controlCount": 5140,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -1026253,7 +1026253,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/poi-challenge/index.js:162"
+        "staticSource": "pages/play/poi-challenge/index.js:165"
       }
     },
     {
@@ -1026601,7 +1026601,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/poi-challenge/index.js:162"
+        "staticSource": "pages/play/poi-challenge/index.js:165"
       }
     },
     {
@@ -1026926,7 +1026926,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/poi-challenge/index.js:162"
+        "staticSource": "pages/play/poi-challenge/index.js:165"
       }
     },
     {
@@ -1027331,7 +1027331,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/poi-challenge/index.js:162"
+        "staticSource": "pages/play/poi-challenge/index.js:165"
       }
     },
     {
@@ -1260082,7 +1260082,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:388"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:393"
       }
     },
     {
@@ -1260149,7 +1260149,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:402"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:407"
       }
     },
     {
@@ -1260217,7 +1260217,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:396"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:401"
       }
     },
     {
@@ -1260285,7 +1260285,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:396"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:401"
       }
     },
     {
@@ -1260352,7 +1260352,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:402"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:407"
       }
     },
     {
@@ -1260419,7 +1260419,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:443"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:448"
       }
     },
     {
@@ -1260486,7 +1260486,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:443"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:448"
       }
     },
     {
@@ -1260556,7 +1260556,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:459"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:464"
       }
     },
     {
@@ -1260626,7 +1260626,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:463"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:468"
       }
     },
     {
@@ -1260693,7 +1260693,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:445"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:450"
       }
     },
     {
@@ -1260760,7 +1260760,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:452"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:457"
       }
     },
     {
@@ -1260878,7 +1260878,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:335"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:340"
       }
     },
     {
@@ -1260945,7 +1260945,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:437"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:442"
       }
     },
     {
@@ -1261013,7 +1261013,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:416"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:421"
       }
     },
     {
@@ -1261080,7 +1261080,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:437"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:442"
       }
     },
     {
@@ -1268815,7 +1268815,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:1108"
+        "staticSource": "subpackageRoam/nearby/index.js:1114"
       }
     },
     {
@@ -1269126,7 +1269126,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:1068"
+        "staticSource": "subpackageRoam/nearby/index.js:1074"
       }
     },
     {
@@ -1269193,7 +1269193,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:1108"
+        "staticSource": "subpackageRoam/nearby/index.js:1114"
       }
     },
     {
@@ -1269260,7 +1269260,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:1068"
+        "staticSource": "subpackageRoam/nearby/index.js:1074"
       }
     },
     {
@@ -1269337,7 +1269337,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:1089"
+        "staticSource": "subpackageRoam/nearby/index.js:1095"
       }
     },
     {
@@ -1269414,7 +1269414,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:1089"
+        "staticSource": "subpackageRoam/nearby/index.js:1095"
       }
     },
     {
@@ -1269491,11 +1269491,88 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:1063"
+        "staticSource": "subpackageRoam/nearby/index.js:1064"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:232:bindtap:onReviewStar:44",
+      "id": "subpackageRoam/nearby/index.wxml:228:bindtap:onPoiQuote:44",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onPoiQuote",
+        "line": 228,
+        "selectorHint": ".pb__qt",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "复制原文链接:{{item.label}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [
+        "setClipboardData"
+      ],
+      "successCapabilities": [
+        "setClipboardData"
+      ],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:1070"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:240:bindtap:onReviewStar:45",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269518,7 +1269595,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "onReviewStar",
-        "line": 232,
+        "line": 240,
         "selectorHint": ".pb__star",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1269558,11 +1269635,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:1069"
+        "staticSource": "subpackageRoam/nearby/index.js:1075"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:233:bindinput:onReviewInput:45",
+      "id": "subpackageRoam/nearby/index.wxml:241:bindinput:onReviewInput:46",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269585,7 +1269662,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onReviewInput",
-        "line": 233,
+        "line": 241,
         "selectorHint": ".pb__ta",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1269625,11 +1269702,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:1070"
+        "staticSource": "subpackageRoam/nearby/index.js:1076"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:234:bindtap:onReviewSubmit:46",
+      "id": "subpackageRoam/nearby/index.wxml:242:bindtap:onReviewSubmit:47",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269652,7 +1269729,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onReviewSubmit",
-        "line": 234,
+        "line": 242,
         "selectorHint": ".pb__send",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1269750,11 +1269827,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:1071"
+        "staticSource": "subpackageRoam/nearby/index.js:1077"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:236:bindtap:onPoiPhotoCredit:47",
+      "id": "subpackageRoam/nearby/index.wxml:244:bindtap:onPoiPhotoCredit:48",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269777,7 +1269854,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPoiPhotoCredit",
-        "line": 236,
+        "line": 244,
         "selectorHint": ".pb__photo-note",
         "visibleCondition": "{{poiCard.photoCredit}}",
         "disabledCondition": null,
@@ -1269817,11 +1269894,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:1090"
+        "staticSource": "subpackageRoam/nearby/index.js:1096"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:240:bindtap:onPoiPhotoCredit:48",
+      "id": "subpackageRoam/nearby/index.wxml:248:bindtap:onPoiPhotoCredit:49",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269844,7 +1269921,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPoiPhotoCredit",
-        "line": 240,
+        "line": 248,
         "selectorHint": ".pb__photo-note",
         "visibleCondition": "{{poiCard.photoCredit && poiExpand}}",
         "disabledCondition": null,
@@ -1269884,11 +1269961,78 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:1090"
+        "staticSource": "subpackageRoam/nearby/index.js:1096"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:247:bindtap:onPoiSecondary:49",
+      "id": "subpackageRoam/nearby/index.wxml:25:bindtap:setViewMode:3",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "setViewMode",
+        "line": 25,
+        "selectorHint": ".mt-mode__i",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "地图",
+        "ariaLabelExpression": null,
+        "ariaRole": "tab",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:486"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:255:bindtap:onPoiSecondary:50",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269911,7 +1270055,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPoiSecondary",
-        "line": 247,
+        "line": 255,
         "selectorHint": ".pb__btn",
         "visibleCondition": "{{poiCard.secondary}}",
         "disabledCondition": null,
@@ -1269965,7 +1270109,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:248:bindtap:onPoiPrimary:50",
+      "id": "subpackageRoam/nearby/index.wxml:256:bindtap:onPoiPrimary:51",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269990,7 +1270134,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPoiPrimary",
-        "line": 248,
+        "line": 256,
         "selectorHint": ".pb__btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1270088,74 +1270232,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:25:bindtap:setViewMode:3",
-      "route": "subpackageRoam/nearby/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageRoam/nearby/index.wxml",
-        "js": "subpackageRoam/nearby/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "setViewMode",
-        "line": 25,
-        "selectorHint": ".mt-mode__i",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "地图",
-        "ariaLabelExpression": null,
-        "ariaRole": "tab",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:486"
-      }
-    },
-    {
-      "id": "subpackageRoam/nearby/index.wxml:250:bindtap:onPoiExpand:51",
+      "id": "subpackageRoam/nearby/index.wxml:258:bindtap:onPoiExpand:52",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270178,7 +1270255,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPoiExpand",
-        "line": 250,
+        "line": 258,
         "selectorHint": ".pb__hint",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1270218,7 +1270295,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:1092"
+        "staticSource": "subpackageRoam/nearby/index.js:1098"
       }
     },
     {
@@ -1270289,7 +1270366,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:261:bind:close:closeSpotCam:53",
+      "id": "subpackageRoam/nearby/index.wxml:269:bind:close:closeSpotCam:54",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270312,7 +1270389,7 @@
         "tag": "cy-proto-cam",
         "event": "bind:close",
         "handler": "closeSpotCam",
-        "line": 261,
+        "line": 269,
         "selectorHint": "cy-proto-cam[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1270352,11 +1270429,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:1040"
+        "staticSource": "subpackageRoam/nearby/index.js:1041"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:261:bind:shot:onSpotShot:52",
+      "id": "subpackageRoam/nearby/index.wxml:269:bind:shot:onSpotShot:53",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270379,7 +1270456,7 @@
         "tag": "cy-proto-cam",
         "event": "bind:shot",
         "handler": "onSpotShot",
-        "line": 261,
+        "line": 269,
         "selectorHint": "cy-proto-cam[bind:shot]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1270461,11 +1270538,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:1042"
+        "staticSource": "subpackageRoam/nearby/index.js:1043"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:263:bind:settled:onPrivacyGateSettled:54",
+      "id": "subpackageRoam/nearby/index.wxml:271:bind:settled:onPrivacyGateSettled:55",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270488,7 +1270565,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 263,
+        "line": 271,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1270528,11 +1270605,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:1039"
+        "staticSource": "subpackageRoam/nearby/index.js:1040"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:266:bind:cancel:closeRange:56",
+      "id": "subpackageRoam/nearby/index.wxml:274:bind:cancel:closeRange:57",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270555,7 +1270632,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "closeRange",
-        "line": 266,
+        "line": 274,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1270599,7 +1270676,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:266:bind:select:onRangePick:55",
+      "id": "subpackageRoam/nearby/index.wxml:274:bind:select:onRangePick:56",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270622,7 +1270699,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onRangePick",
-        "line": 266,
+        "line": 274,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1270732,7 +1270809,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:271:bind:close:onResultClose:59",
+      "id": "subpackageRoam/nearby/index.wxml:279:bind:close:onResultClose:60",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270755,7 +1270832,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:close",
         "handler": "onResultClose",
-        "line": 271,
+        "line": 279,
         "selectorHint": "cy-result-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1270799,7 +1270876,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:271:bind:primary:onResultPrimary:57",
+      "id": "subpackageRoam/nearby/index.wxml:279:bind:primary:onResultPrimary:58",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270822,7 +1270899,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:primary",
         "handler": "onResultPrimary",
-        "line": 271,
+        "line": 279,
         "selectorHint": "cy-result-sheet[bind:primary]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1270868,7 +1270945,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:271:bind:secondary:onResultClose:58",
+      "id": "subpackageRoam/nearby/index.wxml:279:bind:secondary:onResultClose:59",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270891,7 +1270968,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:secondary",
         "handler": "onResultClose",
-        "line": 271,
+        "line": 279,
         "selectorHint": "cy-result-sheet[bind:secondary]",
         "visibleCondition": null,
         "disabledCondition": null,

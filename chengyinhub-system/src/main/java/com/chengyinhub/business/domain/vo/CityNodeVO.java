@@ -13,6 +13,14 @@ public class CityNodeVO {
     public void setAverageRating(Double value) { averageRating = value; }
     public Integer getRatingCount() { return ratingCount; }
     public void setRatingCount(Integer value) { ratingCount = value; }
+    /** 官方地点公开引述(注明出处的报道 / 游记摘录),与玩家评价分开展示 */
+    private String quotesJson;
+    /** 地点玩法介绍(模板 description) */
+    private String templateDesc;
+    public String getQuotesJson() { return quotesJson; }
+    public void setQuotesJson(String value) { quotesJson = value; }
+    public String getTemplateDesc() { return templateDesc; }
+    public void setTemplateDesc(String value) { templateDesc = value; }
     private String galleryJson;
     private Boolean photoRequired;
     private String photoRequireDesc;

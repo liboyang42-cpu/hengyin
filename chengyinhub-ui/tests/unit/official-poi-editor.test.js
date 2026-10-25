@@ -40,3 +40,16 @@ test('official editor requires photos and rejects stale detail responses after c
   resolve({ data: { poi: { id: 42, name: '过期资料' } } }); await loading
   assert.equal(h.vm.poi.name, '')
 })
+
+test('official editor round-trips labeled public quotes and refuses quotes without source link', async () => {
+  const calls = []
+  const h = mount({ saveOfficialPoi: payload => { calls.push(payload); return Promise.resolve({ code: 200 }) },
+    officialPoiDraft: () => Promise.resolve({ data: { poi: { id: 42, name: '多伦', coverImg: 'a/b.jpg', quotesJson: JSON.stringify([{ text: '环境很安静', source: '去哪儿', author: '少年鲍勃', date: '2024-05-07', url: 'https://touch.travel.qunar.com/comment/57019655' }]) } } }) })
+  await h.vm.load()
+  assert.equal(h.vm.quotes.length, 1); assert.equal(h.vm.quotes[0].author, '少年鲍勃')
+  h.vm.pictures = '/profile/a/b.jpg'
+  h.vm.quotes.push({ text: '没有出处的一句', source: '', author: '', date: '', url: '' })
+  await h.vm.save(); assert.equal(calls.length, 0); assert.match(h.vm.error, /来源/)
+  h.vm.quotes.pop(); await h.vm.save()
+  assert.deepEqual(JSON.parse(calls[0].poi.quotesJson), [{ text: '环境很安静', source: '去哪儿', author: '少年鲍勃', date: '2024-05-07', url: 'https://touch.travel.qunar.com/comment/57019655' }])
+})

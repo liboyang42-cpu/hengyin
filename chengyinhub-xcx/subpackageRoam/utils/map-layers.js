@@ -145,4 +145,13 @@ function poiGallery(data, id, cover) {
   return { keys: Array.from(new Set(keys)), credit: typeof data.credit === 'string' ? data.credit.slice(0, 2000) : '' };
 }
 
-module.exports = { poiGalleryPath, poiGallery, POI_TAG, distanceM, splitTags, poiKind, filterOptions, keepTeam, keepItem, keepPoi, buildPoiMarkers, parsePoiMarkerId, edgeLod, poiCard };
+/** 官方地点公开引述:只认带原文、来源和 https 链接的条目,最多 6 条;label = 来源 · 作者 · 日期 */
+function poiQuotes(json) {
+  let rows = [];
+  try { rows = JSON.parse(json || '[]'); } catch (e) { return []; }
+  if (!Array.isArray(rows)) return [];
+  return rows.filter((q) => q && text(q.text) && text(q.source) && /^https:\/\//.test(text(q.url))).slice(0, 6)
+    .map((q) => ({ text: text(q.text), url: text(q.url), label: [text(q.source), text(q.author), text(q.date)].filter(Boolean).join(' · ') }));
+}
+
+module.exports = { poiQuotes, poiGalleryPath, poiGallery, POI_TAG, distanceM, splitTags, poiKind, filterOptions, keepTeam, keepItem, keepPoi, buildPoiMarkers, parsePoiMarkerId, edgeLod, poiCard };

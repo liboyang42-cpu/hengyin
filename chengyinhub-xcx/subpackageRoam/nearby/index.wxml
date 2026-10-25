@@ -222,6 +222,14 @@
               <view class="pb__row pb__row--link" bindtap="onPoiXhs" aria-role="button" aria-label="去小红书看笔记" hover-class="cy-pressed" hover-stay-time="80"><text class="pb__rk">小红书</text><text class="pb__xhs">复制地点名去搜笔记</text></view>
               <view class="pb__row" wx:for="{{poiCard.rows}}" wx:key="k"><text class="pb__rk">{{item.k}}</text><text class="pb__rv">{{item.v}}</text></view>
             </view>
+            <!-- 网上怎么说:注明出处的报道 / 游记摘录,和玩家评价分开,不冒充玩家 -->
+            <block wx:if="{{poiCard.quotes.length}}">
+              <view class="pb__rv-h"><text>网上怎么说</text></view>
+              <view class="pb__qt" wx:for="{{poiCard.quotes}}" wx:key="url" data-index="{{index}}" bindtap="onPoiQuote" aria-role="button" aria-label="复制原文链接:{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
+                <text class="pb__qt-t">「{{item.text}}」</text>
+                <text class="pb__qt-s">{{item.label}} · 复制原文链接</text>
+              </view>
+            </block>
             <view class="pb__rv-h"><text>玩家评价</text><text class="pb__rv-n" wx:if="{{poiCard.reviews.length}}">{{poiCard.reviews.length}}</text></view>
             <view class="pb__cm" wx:for="{{poiCard.reviews}}" wx:key="id">
               <view class="pb__cm-h"><text class="pb__cm-n">{{item.name}}</text><text class="pb__cm-s">{{item.stars ? '★ ' + item.stars : ''}}</text><text class="pb__cm-time">{{item.time}}</text></view>

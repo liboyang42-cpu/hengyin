@@ -1,3 +1,4 @@
+// 2026-10-25 地点勋章用「点亮一隅」徽记 + 地点卡公开引述:badge-wall 201→206(同一行 this.setData(patch))、nearby 评价列表读取 1003→1004,上下文逐字相同、理由不变;u4Dynamic / u5Silent digest 按同一算法重算。
 // 2026-10-25 官方地点卡片展开详情:nearby/index.js 既有 3 条锚点仅行号位移(213→215、240→242、934→940,上下文逐字相同),u5Silent 新增节点补读与评价列表两条(41→43);u1Variable / u5Silent digest 按同一算法重算。
 // 2026-10-24 草稿设置恢复：12 条既有 fabu 动态调用的行及上下各一行逐字相同，仅行号 +12；恢复调用理由补齐五个受类型保护的固定设置，登记数与棘轮仍为62。
 // 2026-10-24 预览返回等待原生退场：六条既有动态 setData 调用上下文逐字节相同，仅更新行号及摘要，棘轮仍为 62。
@@ -819,7 +820,7 @@ module.exports = {
 // 2026-10-17 合并 master 进漫游上线分支:roam/index.js 14 条、nearby/index.js 2 条既有调用仅行号位移(按 master 源码逐行回读定位);漫游两栏改版删掉 /api/registration/list 静默读取(749),U5 29→28。digest 按同一算法显式重算。
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):45 个既有锚点仅行号位移换 key + 本线 6 处新增登记,digest 按门禁同一算法(sha256 of sorted keys joined by \n)重算。
 // 2026-10-20 合并 master(#327 等)进 #293:两侧重锚逐条按合并后源码同一行文本定位一致(fabu 12 条、merchantinfo 2 条、scene-club-edit 1 条),square/list 196/1259 随 #325 点赞修复后移一行;digest 按门禁同一算法重算。
-"07024707d93018f9628508e0262ea40aea32f494210a85d8999604be657f3843",
+"cc0c430f3d48cccccc8093396b5fc631e8209a71023b530d6ae60aaf947b8fb2",
 // 2026-10-20 R5 尾段(#327,owner 批准 12 条重锚):fabu 729→731、898→900、2524→2530、3570→3588、3951→3969、4957→4990、5215→5248、5866→5899、5876→5909、5929→5962、6270→6303、7936→8060,逐行比对 master 原行一字未改,理由与条数 58 不变;digest 按同一算法显式重算。
       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点
       //   行号从 2360 移到 2573(见下方 u5Silent 区块的逐条说明)。等量换 key,显式改 digest。
@@ -1008,7 +1009,7 @@ module.exports = {
       //   逐条回读仍是「只为读章节 recruitEnabled、失败不弹全局 toast」这一处,静默理由一字未改,条数 27 不变。
 // 2026-10-17 合并 master 进漫游上线分支:roam/index.js 14 条、nearby/index.js 2 条既有调用仅行号位移(按 master 源码逐行回读定位);漫游两栏改版删掉 /api/registration/list 静默读取(749),U5 29→28。digest 按同一算法显式重算。
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):锚点位移 + 举报半屏/AI 对话组件下沉会员分包换路径 + 本线 9 处新增登记,digest 按同一算法重算。
-"1b0e3f02c289719124510fb435eca85d53d5cd647a3794ee7db95be67ebc6afe"
+"5cb4d3b985048a9546ada0fcef85af4767b9b002728c74b8fb4aa93d4290d56d"
 
     }
   },
@@ -1324,7 +1325,7 @@ module.exports = {
     "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js:651": "可承接章节失败态只在 categoryMissing 布尔判定下二选一；两个对象分支的键均在本方法写死，state/error/allChaptersList 被 WXML 消费，loading 是已精确登记的页内控制字段；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/subpackageB/pages/im/list/index.js:323": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/subpackageMember/coupon-qr/index.js:227": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
-    "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.js:201": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
+    "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.js:206": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/subpackageP3/pages/stamp-camera/index/index.js:74": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/templatedetail/templatedetail.js:176": "onLoad 的 data 由本方法构造：先写路由参数派生的固定键，dev 环境命中 mock 时交给 patchNormalized；patchNormalized 以 info/gallery/coverUrl/capRows/detailStats/materialChips/sceneChips/isTopicTemplate/difficultyLetter/difficultyLabel 十项逐个赋值，服务端对象只作为值参与归一化，不展开为 setData 字段名；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/templatedetail/templatedetail.js:251": "onLoad 的 data 由本方法构造：先写路由参数派生的固定键，dev 环境命中 mock 时交给 patchNormalized；patchNormalized 以 info/gallery/coverUrl/capRows/detailStats/materialChips/sceneChips/isTopicTemplate/difficultyLetter/difficultyLabel 十项逐个赋值，服务端对象只作为值参与归一化，不展开为 setData 字段名；owner=小程序，复核=2026-09-30",
@@ -1367,7 +1368,7 @@ module.exports = {
   "u5Silent": {
     // 2026-10-25 官方地点卡片:展开详情两条背景读取逐项登记。
     "chengyinhub-xcx/subpackageRoam/nearby/index.js:984": "官方地点卡展开时补读节点(相册 / 玩法 / 完成状态 / 评分):卡片已先用地图点位数据渲染名称、地址、介绍和封面,读不到只是少相册与玩法块,开始挑战前挑战页会重新读同一节点并在失败时给错误页和重试;只写回仍开着的同一张卡;owner=上海据点,复核=2026-10-25",
-    "chengyinhub-xcx/subpackageRoam/nearby/index.js:1003": "官方地点卡评价列表背景读取:失败时不显示评价区空态文案(reviewsLoaded=false),卡片其余内容与按钮照常,重新点开卡片会重读;不承载提交;只写回仍开着的同一张卡;owner=上海据点,复核=2026-10-25",
+    "chengyinhub-xcx/subpackageRoam/nearby/index.js:1004": "官方地点卡评价列表背景读取:失败时不显示评价区空态文案(reviewsLoaded=false),卡片其余内容与按钮照常,重新点开卡片会重读;不承载提交;只写回仍开着的同一张卡;owner=上海据点,复核=2026-10-25",
     "chengyinhub-xcx/subpackageRoam/nearby/index.js:940": "可选公开相册补充读取，缺失或失败保留已显示的封面与正常导航，不将缺失侧车伪报为地点不可用；不承载提交或奖励，重新点开可重读；owner=上海据点，复核=2026-10-24",
     "chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js:481": "可选照片署名与许可补充读取，缺失时保留后端相册、玩法和导航，不阻断任务；没有写入或奖励成功提示；owner=上海据点，复核=2026-10-24",
     // 2026-10-19 Claude 小程序线移植到 master:本线新增 9 处 silentError 逐项登记(超冻结上限 30,棘轮/上限/digest 待审批后同步)。

@@ -112,6 +112,28 @@ public class OfficialRoamPoiService {
             for (Object image : images) { if (!(image instanceof String)) throw new IllegalArgumentException(); asset((String) image); }
             if (!images.contains(p.getCoverImg())) throw new IllegalArgumentException();
         } catch (RuntimeException invalid) { throw new ServiceException("相册需含封面及1至6张有效平台图片"); }
+        quotes(p.getQuotesJson());
+    }
+
+    /** 公开引述:可空;至多 6 条,每条原文 ≤160 字,必须写明来源与 https 原文链接,作者 / 日期可选。
+     *  展示时标出处,不进玩家评价,所以这里只核对形状,不核对内容真伪(真伪由运营核对原文)。 */
+    static void quotes(String json) {
+        if (json == null || json.trim().isEmpty()) return;
+        try {
+            JSONArray rows = JSON.parseArray(json);
+            if (rows == null || rows.size() > 6) throw new IllegalArgumentException();
+            for (Object row : rows) {
+                if (!(row instanceof com.alibaba.fastjson2.JSONObject)) throw new IllegalArgumentException();
+                com.alibaba.fastjson2.JSONObject q = (com.alibaba.fastjson2.JSONObject) row;
+                String text = q.getString("text"), source = q.getString("source"), url = q.getString("url");
+                if (text == null || text.trim().isEmpty() || text.length() > 160) throw new IllegalArgumentException();
+                if (source == null || source.trim().isEmpty() || source.length() > 40) throw new IllegalArgumentException();
+                if (url == null || url.length() > 500 || !url.matches("https://[^\\s]+")) throw new IllegalArgumentException();
+                String author = q.getString("author"), date = q.getString("date");
+                if ((author != null && author.length() > 40) || (date != null && !date.matches("\\d{4}-\\d{2}-\\d{2}")))
+                    throw new IllegalArgumentException();
+            }
+        } catch (RuntimeException invalid) { throw new ServiceException("公开引述需为至多6条、每条含原文、来源和 https 原文链接"); }
     }
 
     private static void required(String value, int limit, String label) {

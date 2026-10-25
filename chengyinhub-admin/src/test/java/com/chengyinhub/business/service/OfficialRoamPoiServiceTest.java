@@ -47,6 +47,21 @@ class OfficialRoamPoiServiceTest {
         assertFalse(quizOnly.poi.getPhotoRequired());
     }
 
+    @Test void publicQuotesNeedTextSourceAndHttpsLinkAndStayOptional() {
+        OfficialRoamPoiDraft d = draft();
+        OfficialRoamPoiService.validate(d);
+        d.poi.setQuotesJson("[{\"text\":\"环境很安静\",\"source\":\"去哪儿\",\"author\":\"少年鲍勃\",\"date\":\"2024-05-07\",\"url\":\"https://touch.travel.qunar.com/comment/57019655\"}]");
+        OfficialRoamPoiService.validate(d);
+        for (String bad : new String[] {
+                "[{\"text\":\"无出处\",\"url\":\"https://a.example/x\"}]",
+                "[{\"text\":\"非https\",\"source\":\"媒体\",\"url\":\"http://a.example/x\"}]",
+                "[{\"text\":\"坏日期\",\"source\":\"媒体\",\"date\":\"2024/5/7\",\"url\":\"https://a.example/x\"}]",
+                "{\"text\":\"不是数组\"}" }) {
+            d.poi.setQuotesJson(bad);
+            assertThrows(ServiceException.class, () -> OfficialRoamPoiService.validate(d), bad);
+        }
+    }
+
     @Test void rejectsInvalidAnswersCoordinatesAndRemoteImagesBeforeWriting() {
         OfficialRoamPoiDraft badAnswer = draft(); badAnswer.game.setCorrectAnswer("D");
         assertThrows(ServiceException.class, () -> OfficialRoamPoiService.validate(badAnswer));

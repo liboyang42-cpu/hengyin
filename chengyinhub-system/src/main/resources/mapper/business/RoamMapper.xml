@@ -20,6 +20,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <resultMap type="RoamPoi" id="RoamPoiResult">
+        <result property="quotesJson" column="quotes_json" />
         <result property="galleryJson" column="gallery_json" />
         <result property="photoRequired" column="photo_required" />
         <result property="badgeCode" column="badge_code" />
@@ -441,6 +442,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <!-- ===== 商家节点(漫游 · roam_poi type=2 联合商家+模板)===== -->
     <resultMap type="com.chengyinhub.business.domain.vo.CityNodeVO" id="CityNodeVOResult">
+        <result property="quotesJson" column="quotes_json" />
+        <result property="templateDesc" column="template_desc" />
         <result property="galleryJson" column="gallery_json" />
         <result property="photoRequired" column="photo_required" />
         <result property="photoRequireDesc" column="photo_require_desc" />
@@ -480,7 +483,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select (select round(avg(c.rating),1) from ums_comment c where c.owner_type=4 and c.owner_id=p.id
                     and c.status=1 and c.del_flag=0 and (c.reply_id is null or c.reply_id=0)) as average_rating,
                (select count(*) from ums_comment c where c.owner_type=4 and c.owner_id=p.id
-                    and c.status=1 and c.del_flag=0 and c.rating between 1 and 5 and (c.reply_id is null or c.reply_id=0)) as rating_count, p.gallery_json, p.photo_required, p.badge_code, t.photo_require_desc,
+                    and c.status=1 and c.del_flag=0 and c.rating between 1 and 5 and (c.reply_id is null or c.reply_id=0)) as rating_count, p.gallery_json, p.quotes_json, t.description as template_desc, p.photo_required, p.badge_code, t.photo_require_desc,
                p.id as poi_id, p.name as name, p.description as description, p.lat as lat, p.lng as lng,
                p.radius_m as radius_m, p.node_level as node_level, p.tags as tags, p.cover_img as cover_img,
                p.city_code as city_code, p.status as status,
@@ -841,18 +844,18 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id=#{id} and member_id=#{memberId} and (poi_id is not null or trigger_lat is not null or trigger_lng is not null)
     </update>
     <select id="selectOfficialPoiForUpdate" resultMap="RoamPoiResult">
-        select gallery_json, photo_required, badge_code, <include refid="poiCols" /> from roam_poi where id=#{id} and type=1 and merchant_id is null for update
+        select gallery_json, quotes_json, photo_required, badge_code, <include refid="poiCols" /> from roam_poi where id=#{id} and type=1 and merchant_id is null for update
     </select>
     <insert id="insertOfficialPoi" useGeneratedKeys="true" keyProperty="id">
         insert into roam_poi (name,type,lat,lng,radius_m,address,description,xp,city_code,status,audit_status,
-                              application_type,template_id,tags,cover_img,gallery_json,photo_required,create_time)
+                              application_type,template_id,tags,cover_img,gallery_json,quotes_json,photo_required,create_time)
         values (#{name},1,#{lat},#{lng},#{radiusM},#{address},#{description},#{xp},#{cityCode},0,0,
-                3,#{templateId},#{tags},#{coverImg},#{galleryJson},#{photoRequired},#{createTime})
+                3,#{templateId},#{tags},#{coverImg},#{galleryJson},#{quotesJson},#{photoRequired},#{createTime})
     </insert>
     <update id="updateOfficialPoi">
         update roam_poi set name=#{name},lat=#{lat},lng=#{lng},radius_m=#{radiusM},address=#{address},
             description=#{description},city_code=#{cityCode},template_id=#{templateId},tags=#{tags},
-            cover_img=#{coverImg},gallery_json=#{galleryJson},photo_required=#{photoRequired},application_type=3,
+            cover_img=#{coverImg},gallery_json=#{galleryJson},quotes_json=#{quotesJson},photo_required=#{photoRequired},application_type=3,
             status=0,audit_status=0,audit_reason=null
         where id=#{id} and type=1 and merchant_id is null
     </update>

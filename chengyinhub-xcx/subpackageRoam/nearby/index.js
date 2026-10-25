@@ -992,7 +992,8 @@ Page({
         this.setData({
           'poiCard.thumbs': thumbs.length ? thumbs : this.data.poiCard.thumbs,
           'poiCard.img': this.data.poiCard.img || thumbs[0] || '',
-          'poiCard.game': { title: n.templateTitle || '', desc: n.templateDesc || n.templateDescription || '', steps, completed: n.completed === true, radiusM: Number(n.radiusM) || 80 },
+          'poiCard.game': { title: n.templateTitle || '', desc: n.templateDesc || '', steps, completed: n.completed === true, radiusM: Number(n.radiusM) || 80 },
+          'poiCard.quotes': L.poiQuotes(n.quotesJson),
           'poiCard.ratingText': n.ratingCount ? '★ ' + Number(n.averageRating || 0).toFixed(1) + ' · ' + n.ratingCount + ' 条评价' : '',
           'poiCard.metaStrong': n.completed === true ? '已完成挑战' : this.data.poiCard.metaStrong,
           'poiCard.primary': n.completed === true ? '投一张换一张' : '开始挑战',
@@ -1064,6 +1065,11 @@ Page({
     const c = this.data.poiCard;
     if (!c) return;
     wx.setClipboardData({ data: c.title, success: () => cyToast('已复制「' + c.title + '」，去小红书搜索看看笔记') });
+  },
+  /* 公开引述:小程序打不开外站,点一下复制原文链接,去浏览器看出处 */
+  onPoiQuote(e) {
+    const q = ((this.data.poiCard || {}).quotes || [])[Number(e.currentTarget.dataset.index)];
+    if (q && q.url) wx.setClipboardData({ data: q.url, success: () => cyToast('原文链接已复制，可在浏览器打开') });
   },
   onPoiSwipe(e) { this.setData({ poiPhoto: (e && e.detail && e.detail.current) || 0 }); },
   onReviewStar(e) { this.setData({ 'poiCard.myStars': Number(e.currentTarget.dataset.n) || 0 }); },

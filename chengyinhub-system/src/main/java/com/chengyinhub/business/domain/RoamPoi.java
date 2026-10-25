@@ -8,6 +8,10 @@ public class RoamPoi {
     private String galleryJson;
     private Boolean photoRequired;
     private String badgeCode;
+    /** 公开引述 JSON 数组:[{text,source,author,date,url}];展示时注明出处,不冒充玩家评价。 */
+    private String quotesJson;
+    public String getQuotesJson() { return quotesJson; }
+    public void setQuotesJson(String value) { quotesJson = value; }
     public String getGalleryJson() { return galleryJson; }
     public void setGalleryJson(String value) { galleryJson = value; }
     public Boolean getPhotoRequired() { return photoRequired; }
