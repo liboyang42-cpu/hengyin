@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.business.service.support.CoopOrderStationScope;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.chengyinhub.business.domain.CmsTopic;
@@ -133,6 +134,13 @@ public class FrozenCoopOrderSettlementSnapshotReader implements ICoopOrderSettle
                 throw repair("FROZEN_FIXED_FEE_UNPROVEN");
             }
             snapshot.setFixedFee(fee);
+        }
+
+        java.util.Optional<CoopOrderStationScope> billing =
+                CoopOrderStationScope.read(order);
+        if (billing.isPresent()) {
+            snapshot.setBillingStationId(billing.get().getStationId());
+            snapshot.setOrderTermsSha256(billing.get().getTermsHash());
         }
 
         // 既有票务写闸在售卖条款冻结后禁止修改时间；没有开售标记不读取作结算依据。

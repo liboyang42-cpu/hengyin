@@ -6,6 +6,12 @@ import java.util.List;
 
 /** W2 冻结列的窄 seam DTO；本类不把未合并字段塞回 CoopOrder。 */
 public class CoopSettlementSnapshot {
+    private Long billingStationId;
+    private String orderTermsSha256;
+    public Long getBillingStationId() { return billingStationId; }
+    public void setBillingStationId(Long value) { billingStationId = value; }
+    public String getOrderTermsSha256() { return orderTermsSha256; }
+    public void setOrderTermsSha256(String value) { orderTermsSha256 = value; }
     private Long orderId;
     private Long topicId;
     private Long initiatorMemberId;

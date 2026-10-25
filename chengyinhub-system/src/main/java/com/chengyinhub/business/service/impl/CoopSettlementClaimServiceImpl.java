@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.business.mapper.CoopOrderStationFulfillmentMapper;
+import com.chengyinhub.business.service.support.CoopOrderStationScope;
 import com.chengyinhub.business.domain.CoopOrder;
 import com.chengyinhub.business.domain.CoopSettlement;
 import com.chengyinhub.business.domain.CoopSettlementDetail;
@@ -39,6 +41,9 @@ public class CoopSettlementClaimServiceImpl implements ICoopSettlementClaimServi
 
     @Autowired
     private CmsTopicMapper topicMapper;
+
+    @Autowired
+    private CoopOrderStationFulfillmentMapper stationFulfillments;
 
     @Autowired
     private CoopSettlementOriginalLedger originalLedger;
@@ -125,6 +130,73 @@ public class CoopSettlementClaimServiceImpl implements ICoopSettlementClaimServi
             throw new IllegalStateException(CoopSettlementContract.LEDGER_CONFLICT
                     + ":调整事件幂等终态不一致 claimId=" + claimId + ",eventKey=" + eventKey);
         }
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
+    public java.util.Optional<Long> recordConfirmedStationFulfillment(Long verificationAuditEventId) {
+        if (!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()
+                || org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly())
+            throw CoopOrderStationScope.fail("ORIGINAL_TRANSACTION_REQUIRED");
+        if (verificationAuditEventId == null || verificationAuditEventId <= 0)
+            throw CoopOrderStationScope.fail("AUDIT_ID_REQUIRED");
+        var location = stationFulfillments.selectAuditRegistrationLocation(verificationAuditEventId);
+        if (location == null || location.getId() == null || !Long.valueOf(1L).equals(location.getOwnerType()) || location.getOwnerId() == null)
+            throw CoopOrderStationScope.fail("AUDIT_LOCATION_UNPROVEN");
+        var topic = topicMapper.selectCmsTopicByIdForUpdate(location.getOwnerId());
+        if (topic == null || !location.getOwnerId().equals(topic.getId()))
+            throw CoopOrderStationScope.fail("TOPIC_FENCE_REQUIRED");
+        var registration = stationFulfillments.selectRegistrationForUpdate(location.getId());
+        if (registration == null || !Long.valueOf(1L).equals(registration.getOwnerType()) || !topic.getId().equals(registration.getOwnerId()))
+            throw CoopOrderStationScope.fail("REGISTRATION_SCOPE_CONFLICT");
+        var audit = stationFulfillments.selectAuditForUpdate(verificationAuditEventId);
+        if (audit == null || !"REGISTRATION".equals(audit.getDomainType()) || !registration.getId().equals(audit.getDomainId())
+                || !"CMS_REGISTRATION".equals(audit.getTargetType()) || !registration.getId().equals(audit.getTargetId())
+                || !CoopOrderStationScope.ACTION.equals(audit.getAction())
+                || audit.getRelationId() == null || audit.getRelationId() <= 0 || audit.getOwnerMemberId() == null)
+            throw CoopOrderStationScope.fail("AUDIT_SOURCE_CONFLICT");
+        var orders = stationFulfillments.selectEffectiveOrdersForUpdate(topic.getId());
+        CoopOrderStationScope.requireDistinctStations(orders);
+        java.util.List<CoopOrder> matching = new java.util.ArrayList<>();
+        for (CoopOrder order : orders) {
+            var scope = CoopOrderStationScope.read(order);
+            if (scope.isPresent() && topic.getId().equals(order.getTopicId()) && audit.getOwnerMemberId().equals(order.getToId())
+                    && audit.getRelationId().equals(scope.get().getStationId())) matching.add(order);
+        }
+        var original = stationFulfillments.selectByAuditForUpdate(verificationAuditEventId);
+        if (matching.isEmpty()) {
+            if (original != null) throw CoopOrderStationScope.fail("ORIGINAL_BINDING_CHANGED");
+            return java.util.Optional.empty(); // no applicable confirmed V1 contract, not a receipt or financial success
+        }
+        if (matching.size() != 1) throw CoopOrderStationScope.fail("AMBIGUOUS_ORDER");
+        CoopOrder order = matching.get(0);
+        CoopSettlementSnapshot snapshot = snapshotReader.read(order);
+        CoopSettlementContract.requireSupportedCashPath(snapshot);
+        var scope = CoopOrderStationScope.read(order).orElseThrow();
+        if (snapshot == null || !order.getId().equals(snapshot.getOrderId()) || !topic.getId().equals(snapshot.getTopicId())
+                || !scope.getStationId().equals(snapshot.getBillingStationId()) || !scope.getTermsHash().equals(snapshot.getOrderTermsSha256())
+                || snapshot.getFulfillmentStartInclusive() == null || snapshot.getFulfillmentEndExclusive() == null
+                || audit.getCreateTime() == null || audit.getCreateTime().before(snapshot.getFulfillmentStartInclusive())
+                || !audit.getCreateTime().before(snapshot.getFulfillmentEndExclusive()))
+            throw CoopOrderStationScope.fail("FROZEN_WINDOW_OR_SCOPE_CONFLICT");
+        CoopOrderStationScope.requireCurrentAudit(audit,
+                stationFulfillments.selectVerificationEventsForUpdate(registration.getId()));
+        var expected = CoopOrderStationScope.expected(order, registration, audit);
+        if (original != null) {
+            CoopOrderStationScope.requireSame(original, expected);
+            return java.util.Optional.of(original.getId());
+        }
+        if (!Integer.valueOf(0).equals(topic.getIsSettlement()))
+            throw CoopOrderStationScope.fail("CLOSED_TOPIC");
+        var station = stationFulfillments.selectStationForUpdate(expected.getStationId());
+        if (station == null || !topic.getId().equals(station.getTopicId()) || !expected.getBeneficiaryMemberId().equals(station.getMemberId())
+                || !Long.valueOf(1L).equals(station.getAuditStatus()) || !Integer.valueOf(0).equals(station.getDelFlag()))
+            throw CoopOrderStationScope.fail("CURRENT_STATION_CONFLICT");
+        if (stationFulfillments.insertConfirmed(expected) != 1 || expected.getId() == null)
+            throw CoopOrderStationScope.fail("SOURCE_INSERT_CONFLICT");
+        var inserted = stationFulfillments.selectByAuditForUpdate(verificationAuditEventId);
+        CoopOrderStationScope.requireSame(inserted, expected);
+        return java.util.Optional.of(inserted.getId());
     }
 
     @Override

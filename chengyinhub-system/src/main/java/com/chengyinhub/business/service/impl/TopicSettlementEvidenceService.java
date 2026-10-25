@@ -1,5 +1,9 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.business.mapper.CoopOrderStationFulfillmentMapper;
+import com.chengyinhub.business.domain.CoopOrderStationFulfillment;
+import com.chengyinhub.business.service.support.CoopOrderStationScope;
+import com.chengyinhub.business.service.support.CoopSettlementContract;
 import com.chengyinhub.business.domain.dto.CoopGroupSettlementBasis;
 import com.chengyinhub.business.domain.dto.CoopSettlementCandidate;
 import com.chengyinhub.business.domain.dto.CoopSettlementSnapshot;
@@ -24,6 +28,8 @@ public class TopicSettlementEvidenceService {
     private final CmsRegistrationMapper registrationMapper;
     private final CoopGroupVerifyMapper groupVerifyMapper;
     private final CoopSettlementEvidenceMapper evidenceMapper;
+    @org.springframework.beans.factory.annotation.Autowired
+    private CoopOrderStationFulfillmentMapper stationFulfillments;
     @org.springframework.beans.factory.annotation.Autowired
     private com.chengyinhub.business.service.RegistrationSeatSettlementReader registrationSeats;
 
@@ -74,6 +80,8 @@ public class TopicSettlementEvidenceService {
         if (snapshot == null || snapshot.getTopicId() == null) {
             throw new IllegalArgumentException("snapshot.topicId 不能为空，不能将 economic context id 当 topic id");
         }
+        if (snapshot.getBillingStationId() != null || snapshot.getOrderTermsSha256() != null)
+            return lockStationCandidates(snapshot, settlementCutoff);
         List<Long> activityIds = activityMapper
                 .selectActiveActivityIdsByTopicId(snapshot.getTopicId());
         List<CoopSettlementCandidate> candidates = evidenceMapper.selectTopicEvidenceCandidatesForUpdate(snapshot,
@@ -108,6 +116,62 @@ public class TopicSettlementEvidenceService {
             }
         }
         return candidates;
+    }
+
+    /** Exact V1 proof selection. No merchant aggregate, live station attribution or seat expansion. */
+    private List<CoopSettlementCandidate> lockStationCandidates(CoopSettlementSnapshot snapshot, Date cutoff) {
+        CoopSettlementContract.requireSupportedCashPath(snapshot);
+        if (snapshot.getBillingStationId() == null || snapshot.getBillingStationId() <= 0
+                || snapshot.getOrderTermsSha256() == null || !snapshot.getOrderTermsSha256().matches("[0-9a-f]{64}")
+                || cutoff == null || snapshot.getFulfillmentStartInclusive() == null)
+            throw CoopOrderStationScope.fail("FROZEN_SCOPE_REQUIRED");
+        // Current registration locks precede proof/audit locks, including direct prepare callers.
+        if (evidenceMapper.selectTopicCashRowsForUpdate(snapshot.getTopicId()) == null
+                || evidenceMapper.selectTopicActivityCashRowsForUpdate(snapshot.getTopicId()) == null)
+            throw CoopOrderStationScope.fail("CURRENT_REGISTRATIONS_REQUIRED");
+        var orders = stationFulfillments.selectEffectiveOrdersForUpdate(snapshot.getTopicId());
+        CoopOrderStationScope.requireDistinctStations(orders);
+        var matches = orders.stream().filter(order -> snapshot.getOrderId().equals(order.getId())).toList();
+        if (matches.size() != 1) throw CoopOrderStationScope.fail("CURRENT_ORDER_REQUIRED");
+        var order = matches.get(0);
+        var scope = CoopOrderStationScope.read(order)
+                .orElseThrow(() -> CoopOrderStationScope.fail("CONFIRMED_SCOPE_REQUIRED"));
+        if (!snapshot.getTopicId().equals(order.getTopicId()) || !snapshot.getBeneficiaryId().equals(order.getToId())
+                || !snapshot.getBillingStationId().equals(scope.getStationId()) || !snapshot.getOrderTermsSha256().equals(scope.getTermsHash()))
+            throw CoopOrderStationScope.fail("FROZEN_SCOPE_DRIFT");
+        var proofs = stationFulfillments.selectByOrderForUpdate(order.getId());
+        if (proofs == null) throw CoopOrderStationScope.fail("CURRENT_PROOFS_REQUIRED");
+        java.util.Map<Long, CoopOrderStationFulfillment> valid = new java.util.HashMap<>();
+        java.util.Set<Long> registrations = new java.util.HashSet<>();
+        for (var proof : proofs) {
+            if (proof == null || proof.getRegistrationId() == null || proof.getVerificationAuditId() == null)
+                throw CoopOrderStationScope.fail("PROOF_IDENTITY_REQUIRED");
+            var registration = stationFulfillments.selectRegistrationForUpdate(proof.getRegistrationId());
+            var events = stationFulfillments.selectVerificationEventsForUpdate(proof.getRegistrationId());
+            if (events == null || events.isEmpty())
+                throw CoopOrderStationScope.fail("ORIGINAL_AUDIT_MISSING");
+            // Retain old immutable generations, but never charge them after a later verify/reverse.
+            if (!proof.getVerificationAuditId().equals(events.get(events.size() - 1).getId())) continue;
+            var audit = stationFulfillments.selectAuditForUpdate(proof.getVerificationAuditId());
+            CoopOrderStationScope.requireCurrentAudit(audit, events);
+            var expected = CoopOrderStationScope.expected(order, registration, audit);
+            CoopOrderStationScope.requireSame(proof, expected);
+            if (!registrations.add(proof.getRegistrationId()))
+                throw CoopOrderStationScope.fail("CURRENT_PROOF_OVERLAP");
+            valid.put(proof.getId(), proof);
+        }
+        var candidates = stationFulfillments.selectV1CandidatesForUpdate(snapshot, cutoff);
+        if (candidates == null) throw CoopOrderStationScope.fail("CURRENT_CANDIDATES_REQUIRED");
+        List<CoopSettlementCandidate> selected = new java.util.ArrayList<>();
+        for (var candidate : candidates) {
+            var proof = candidate == null ? null : valid.get(candidate.getStationFulfillmentId());
+            if (proof == null) continue; // an old generation is not a current fulfillment
+            if (!proof.getRegistrationId().equals(candidate.getRegistrationId()) || candidate.getEligibleSalesSnapshot() == null
+                    || proof.getSalesBasisAmount().compareTo(candidate.getEligibleSalesSnapshot()) != 0)
+                throw CoopOrderStationScope.fail("CANDIDATE_SOURCE_CONFLICT");
+            selected.add(candidate);
+        }
+        return selected;
     }
 
     /** 在报名锁之后当前读退款事实；已批准退款的净额/调整链尚未接通，也须拒结。 */

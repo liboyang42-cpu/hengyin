@@ -1,0 +1,13 @@
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
+@@ -3518,6 +3518,9 @@
+         event.setDomainType(domainType);
+         event.setDomainId(domainId);
+         event.setOwnerMemberId(ownerMemberId);
++        if ("REGISTRATION_STATION_REDEEM".equals(action)) {
++            event.setActorType(BusinessAuditEvent.ACTOR_TYPE_MEMBER);
++        }
+         event.setActorMemberId(actorMemberId);
+         event.setActorRoleCode(actorRoleCode);
+         event.setAction(action);

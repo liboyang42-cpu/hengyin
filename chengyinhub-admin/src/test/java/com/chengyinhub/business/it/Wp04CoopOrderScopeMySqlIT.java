@@ -34,6 +34,7 @@ class Wp04CoopOrderScopeMySqlIT {
     CoopOrderMapper orders;
     CmsTopicServiceImpl topicOwner;
     FrozenCoopOrderSettlementSnapshotReader originalReader;
+    CoopSettlementClaimServiceImpl claimOwner;
 
     @BeforeEach void canonicalScopeAndCash() throws Exception {
         storage.isolatedOriginalSchema(); // Retain explicit loopback/hosted/DDL/UUID cleanup gates.
@@ -47,7 +48,8 @@ class Wp04CoopOrderScopeMySqlIT {
                 "CoopSettlementCashEvidenceMapper", "CoopSettlementEvidenceMapper", "CoopSettlementMapper",
                 "CoopSettlementAdjustmentMapper", "SettlementClaimMapper", "CoopSettlementDetailMapper",
                 "CoopInviteMapper", "CoopOrderMapper", "CmsActivityMapper", "RegistrationSeatMapper",
-                "UmsMemberSettlementDebtMapper", "UmsMemberBalanceDetailMapper", "CoopSettlementManualCaseMapper");
+                "UmsMemberSettlementDebtMapper", "UmsMemberBalanceDetailMapper", "CoopSettlementManualCaseMapper",
+                "CoopOrderStationFulfillmentMapper", "BusinessAuditEventMapper");
         storage.db.update("INSERT INTO ums_member(id,balance) VALUES(7,0),(77,0),(88,0),(99,0)");
         storage.db.update("INSERT INTO cms_topic(id,name,product_type,member_id,lifecycle,selling_started_at,del_flag,end_date,"
                 + "is_settlement,fee_platform_rate,fee_guarantee_base_rate,fee_guarantee_step_rate,fee_guarantee_max_merchant) "
@@ -100,6 +102,9 @@ class Wp04CoopOrderScopeMySqlIT {
                 new SettlementClaimServiceImpl(sql.getMapper(SettlementClaimMapper.class)), sql.getMapper(CoopSettlementMapper.class),
                 sql.getMapper(CoopSettlementDetailMapper.class), sql.getMapper(CoopSettlementAdjustmentMapper.class));
         ReflectionTestUtils.setField(claims, "topicMapper", topics);
+        claimOwner = claims;
+        ReflectionTestUtils.setField(claims, "stationFulfillments", sql.getMapper(CoopOrderStationFulfillmentMapper.class));
+        ReflectionTestUtils.setField(evidence, "stationFulfillments", sql.getMapper(CoopOrderStationFulfillmentMapper.class));
         var originalRows = sql.getMapper(CoopSettlementOriginalMapper.class);
         var cash = sql.getMapper(CoopSettlementCashEvidenceMapper.class);
         var consumption = new RegistrationPaymentConsumptionReadService(consumedRows);
