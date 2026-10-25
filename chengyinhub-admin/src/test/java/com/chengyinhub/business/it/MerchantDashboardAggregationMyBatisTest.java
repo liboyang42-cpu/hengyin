@@ -67,7 +67,7 @@ class MerchantDashboardAggregationMyBatisTest {
         db = new JdbcTemplate(source);
         assertTrue(db.queryForObject("select version()", String.class).startsWith("8.0."));
         String schema = Files.readString(Path.of("..", "sql", "base_schema_20260818.sql"));
-        for (String table : Arrays.asList("ums_member_balance_detail", "cms_registration")) {
+        for (String table : Arrays.asList("ums_member_balance_detail", "cms_registration", "cms_topic", "cms_activity")) {
             String head = "CREATE TABLE `" + table + "`";
             String ddl = ItSchema.splitStatements(schema.substring(schema.indexOf(head))).get(0);
             assertTrue(ddl.startsWith(head));
@@ -80,7 +80,8 @@ class MerchantDashboardAggregationMyBatisTest {
         factory.setDataSource(source);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
         factory.setMapperLocations(new ClassPathResource("mapper/business/UmsMemberBalanceDetailMapper.xml"),
-                new ClassPathResource("mapper/business/CmsRegistrationMapper.xml"));
+                new ClassPathResource("mapper/business/CmsRegistrationMapper.xml"),
+                new ClassPathResource("mapper/business/CmsTopicMapper.xml"));
         sql = new SqlSessionTemplate(factory.getObject());
         transactionManager = new DataSourceTransactionManager(source);
     }
@@ -101,6 +102,8 @@ class MerchantDashboardAggregationMyBatisTest {
     void reset() {
         db.execute("delete from ums_member_balance_detail");
         db.execute("delete from cms_registration");
+        db.execute("delete from cms_topic");
+        db.execute("delete from cms_activity");
     }
 
     @Test
@@ -165,6 +168,40 @@ class MerchantDashboardAggregationMyBatisTest {
         assertArrayEquals(new long[] {1, 0},
                 service.countPaidVerificationByOwners(2L, Collections.singletonList(7L)).get(7L));
         assertTrue(service.countPaidVerificationByOwners(1L, Collections.emptyList()).isEmpty());
+    }
+
+    /** W2 复用本类真实MySQL/schema fixture，只测新增窄投影，不执行订单或资金写侧。 */
+    @Test
+    void todoBatchProjectionsKeepMissingDeletedNullAndOwnerTypeSemantics() {
+        db.update("insert into cms_topic(id,end_date,del_flag) values(7,'2026-10-01 12:00:00',2),(8,null,0)");
+        db.update("insert into cms_activity(id,end_date,del_flag) values(7,'2026-10-20 12:00:00',2)");
+        registration(101, 1, 7, 0, 0, 3); // 新投影不得加支付/报名状态过滤。
+        registration(102, 2, 7, 2, 0, 2); // 同id活动读自己的日期，不读主题日期。
+        registration(103, 1, 8, 2, 0, 2); // null结束时间。
+        registration(104, 1, 999, 2, 0, 2); // 项目已不存在仍保留报名归属。
+        registration(105, 3, 7, 2, 0, 2); // 未知ownerType保持日期null。
+        registration(106, 1, 7, 2, 0, 2); // 请求ID集之外的报名。
+        CmsRegistrationServiceImpl service = new CmsRegistrationServiceImpl();
+        ReflectionTestUtils.setField(service, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
+        Map<Long, com.chengyinhub.business.domain.vo.MerchantTodoRegistrationVO> owners =
+                service.selectTodoRegistrationOwners(Arrays.asList(101L, 101L, 102L, 103L, 104L, 105L, 999L));
+        assertEquals(java.util.Set.of(101L, 102L, 103L, 104L, 105L), owners.keySet());
+        assertEquals(db.queryForObject("select end_date from cms_topic where id=7", Date.class).getTime(), owners.get(101L).getEndDate().getTime());
+        assertEquals(db.queryForObject("select end_date from cms_activity where id=7", Date.class).getTime(), owners.get(102L).getEndDate().getTime());
+        assertEquals(2L, owners.get(102L).getOwnerType());
+        assertNull(owners.get(103L).getEndDate()); assertNull(owners.get(104L).getEndDate());
+        assertEquals(999L, owners.get(104L).getOwnerId()); assertNull(owners.get(105L).getEndDate());
+        com.chengyinhub.business.mapper.CmsTopicMapper topicMapper = sql.getMapper(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        com.chengyinhub.business.service.impl.CmsTopicServiceImpl topics = new com.chengyinhub.business.service.impl.CmsTopicServiceImpl();
+        ReflectionTestUtils.setField(topics, "cmsTopicMapper", topicMapper);
+        Map<Long, Date> ends = topics.selectTodoTopicEndDates(Arrays.asList(7L, 8L, 999L));
+        assertEquals(java.util.Set.of(7L, 8L), ends.keySet()); assertNull(ends.get(8L));
+        assertEquals(ends.get(7L), owners.get(101L).getEndDate());
+        // 直接打mapper也必须fail-closed，不能把空IN退成全表。
+        assertTrue(topicMapper.selectTodoTopicEndDates(Collections.emptySet()).isEmpty());
+        assertTrue(topicMapper.selectTodoTopicEndDates(null).isEmpty());
+        assertTrue(sql.getMapper(CmsRegistrationMapper.class).selectTodoRegistrationOwners(Collections.emptySet()).isEmpty());
+        assertTrue(sql.getMapper(CmsRegistrationMapper.class).selectTodoRegistrationOwners(null).isEmpty());
     }
 
     @Test

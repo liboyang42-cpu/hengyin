@@ -4,7 +4,7 @@ const path = require('node:path')
 const test = require('node:test')
 const vm = require('../helpers/ui-sandbox-vm.js')
 
-// BL-197:俱乐部动态点赞/举报——业务失败与网络失败都要有提示;切换式点赞在返回前不重复发
+// BL-197:俱乐部动态点赞/举报——业务失败与网络失败都要有提示;目标态点赞在返回前不重复发
 
 const toasts = []
 
@@ -71,6 +71,7 @@ function createDetailHarness() {
   const requests = []
   const app = {
     globalData: {},
+    getUserID: () => '7',
     sendRequest(request) { requests.push(request) },
   }
   const page = loadPage('pages/club/detail/index.js', app, {
@@ -102,7 +103,7 @@ function byUrl(requests, url) {
 
 const likeEvent = (id) => ({ detail: { postId: id }, currentTarget: { dataset: {} } })
 
-test('点赞业务失败提示服务端文案,网络失败提示「网络异常，请重试」,成功只回读', () => {
+test('点赞业务失败提示服务端文案,网络失败定点回读当前状态,成功保持原加载行为', () => {
   const h = createDetailHarness()
   toasts.length = 0
   h.page.onLikePost(likeEvent(5))
@@ -113,16 +114,16 @@ test('点赞业务失败提示服务端文案,网络失败提示「网络异常�
   byUrl(h.requests, '/api/club/post/like')[1].success({ code: '500' })
   assert.equal(toasts.pop(), '点赞没成功')
 
-  // 断网=结果未知:不再提示「请重试」,而是回读 post/list 核对(详见下方 club-like-unknown 用例)
+  // 断网=结果未知:不再提示「请重试」,而是回读 like-state 核对(详见下方 club-like-unknown 用例)
   h.page.onLikePost(likeEvent(5))
   byUrl(h.requests, '/api/club/post/like')[2].fail()
   assert.equal(toasts.pop(), '点赞结果未确认，正在确认')
-  byUrl(h.requests, '/api/club/post/list')[0].success({ code: '200', data: [{ id: 5, isLiked: false, likeCount: 0 }] })
-  assert.equal(toasts.pop(), '点赞没成功，可以再试一次')
+  byUrl(h.requests, '/api/club/post/like-state')[0].success({ code: '200', data: { id: '5', clubId: '9', isLiked: false, likeCount: 0 } })
+  assert.equal(toasts.pop(), '当前未点赞，可再次操作')
 
   h.page.onLikePost(likeEvent(5))
   byUrl(h.requests, '/api/club/post/like')[3].success({ code: '200', data: { liked: true } })
-  assert.equal(byUrl(h.requests, '/api/club/post/list').length, 2)
+  assert.equal(byUrl(h.requests, '/api/club/post/list').length, 1)
 })
 
 test('同一条动态返回前重复点赞只发一次,不同动态互不影响', () => {
@@ -152,18 +153,17 @@ test('举报动态与举报评论网络失败有提示,成功沿用服务端 msg
   assert.equal(toasts.pop(), '已举报,平台将尽快处理')
 })
 
-// PRIVATE-GROUP-club-like-unknown:切换式点赞断网后结果未知——保持锁定、按严格布尔 isLiked 回读、
-// 与发起时的目标意图比对后才放行;锁按 owner+俱乐部隔离。目标状态幂等依赖后端,这里只验回读。
-test('点赞结果未知:锁不放,再点只回读不切换;回读与目标一致才算已生效', () => {
+// UNKNOWN 只读当前状态快照，严格核对原帖和俱乐部；不能断言原写请求从未执行。
+test('点赞结果未知:锁不放,再点只回读不切换;回读原帖当前状态后才放行', () => {
   const h = createDetailHarness()
   toasts.length = 0
   h.page.data.posts = [{ id: 5, isLiked: false, likeCount: 2 }]
   h.page.onLikePost(likeEvent(5))
   byUrl(h.requests, '/api/club/post/like')[0].fail()
   assert.equal(toasts.pop(), '点赞结果未确认，正在确认')
-  const reads = () => byUrl(h.requests, '/api/club/post/list')
+  const reads = () => byUrl(h.requests, '/api/club/post/like-state')
   assert.equal(reads().length, 1)
-  assert.deepEqual(JSON.parse(reads()[0].data), { id: '9', clubId: '9' })
+  assert.deepEqual(JSON.parse(reads()[0].data), { id: '5', clubId: '9' })
 
   // 回读在途:再点既不切换也不重复回读
   h.page.onLikePost(likeEvent(5))
@@ -178,38 +178,38 @@ test('点赞结果未知:锁不放,再点只回读不切换;回读与目标一�
   assert.equal(reads().length, 2)
 
   // 非严格布尔(如未登录时后端不标、字符串 "true")不算确认
-  reads()[1].success({ code: '200', data: [{ id: 5, isLiked: 'true', likeCount: 3 }] })
+  reads()[1].success({ code: '200', data: { id: '5', clubId: '9', isLiked: 'true', likeCount: 3 } })
   assert.equal(toasts.pop(), '点赞结果未确认，请稍后再点确认')
   h.page.onLikePost(likeEvent(5))
   assert.equal(byUrl(h.requests, '/api/club/post/like').length, 1)
   // 帖子不在回读结果里也不算确认
-  reads()[2].success({ code: '200', data: [{ id: 6, isLiked: true }] })
+  reads()[2].success({ code: '200', data: { id: '6', clubId: '9', isLiked: true } })
   h.page.onLikePost(likeEvent(5))
   assert.equal(byUrl(h.requests, '/api/club/post/like').length, 1)
 
-  // 严格 true 且目标是点赞 → 已生效,回写这一条并放锁
-  reads()[3].success({ code: '200', data: [{ id: 5, isLiked: true, likeCount: 3 }] })
-  assert.equal(toasts.pop(), '已点赞')
+  // 严格 true → 当前已赞,回写这一条并放锁
+  reads()[3].success({ code: '200', data: { id: '5', clubId: '9', isLiked: true, likeCount: 3 } })
+  assert.equal(toasts.pop(), '当前已点赞')
   assert.equal(h.page.data.posts[0].isLiked, true)
   assert.equal(h.page.data.posts[0].likeCount, 3)
   h.page.onLikePost(likeEvent(5))
   assert.equal(byUrl(h.requests, '/api/club/post/like').length, 2)
 })
 
-test('目标意图取自发起时的 isLiked:已赞时未知回读到 false 才是「已取消」', () => {
+test('目标意图取自发起时的 isLiked:已赞时未知回读到 false 只说明当前未赞', () => {
   const h = createDetailHarness()
   toasts.length = 0
   h.page.data.posts = [{ id: 5, isLiked: true, likeCount: 3 }]
   h.page.onLikePost(likeEvent(5))
   byUrl(h.requests, '/api/club/post/like')[0].fail()
-  byUrl(h.requests, '/api/club/post/list')[0].success({ code: '200', data: [{ id: 5, isLiked: false, likeCount: 2 }] })
-  assert.equal(toasts.pop(), '已取消点赞')
+  byUrl(h.requests, '/api/club/post/like-state')[0].success({ code: '200', data: { id: '5', clubId: '9', isLiked: false, likeCount: 2 } })
+  assert.equal(toasts.pop(), '当前未点赞，可再次操作')
   assert.equal(h.page.data.posts[0].isLiked, false)
 
   h.page.onLikePost(likeEvent(5))
   byUrl(h.requests, '/api/club/post/like')[1].fail()
-  byUrl(h.requests, '/api/club/post/list')[1].success({ code: '200', data: [{ id: 5, isLiked: false, likeCount: 2 }] })
-  assert.equal(toasts.pop(), '点赞没成功，可以再试一次')
+  byUrl(h.requests, '/api/club/post/like-state')[1].success({ code: '200', data: { id: '5', clubId: '9', isLiked: false, likeCount: 2 } })
+  assert.equal(toasts.pop(), '当前未点赞，可再次操作')
 })
 
 test('未知锁按 owner+俱乐部隔离:换号后旧回读丢弃,新账号可直接点赞', () => {
@@ -227,7 +227,7 @@ test('未知锁按 owner+俱乐部隔离:换号后旧回读丢弃,新账号可�
   assert.equal(like('/api/club/post/like').length, 2)
   // A 的迟到回读不能改 B 的页面
   toasts.length = 0
-  like('/api/club/post/list')[0].success({ code: '200', data: [{ id: 5, isLiked: true, likeCount: 9 }] })
+  like('/api/club/post/like-state')[0].success({ code: '200', data: { id: '5', clubId: '9', isLiked: true, likeCount: 9 } })
   assert.equal(h.page.data.posts[0].isLiked, false)
   assert.equal(toasts.length, 0)
   // 换俱乐部同理:另一个俱乐部的同 id 帖子不受旧锁影响
@@ -287,4 +287,158 @@ test('动态流分页:续页在途时整页回读,迟到的续页结果丢弃', 
   lists()[1].success({ code: '200', data: page(20, 1) })
   assert.equal(h.page.data.posts.length, 20)
   assert.equal(h.page.data.posts[0].id, 41)
+})
+
+const stateUrl = '/api/club/post/like-state'
+const stateReply = (id, clubId = '9', isLiked = true, likeCount = 3) =>
+  ({ code: 200, data: { id: String(id), clubId, isLiked, likeCount } })
+function unknownLike(h, id) {
+  h.page.onLikePost(likeEvent(id))
+  const writes = byUrl(h.requests, '/api/club/post/like')
+  writes[writes.length - 1].fail()
+  const reads = byUrl(h.requests, stateUrl)
+  return reads[reads.length - 1]
+}
+
+test('首条/51条以后/80条置顶之外的原帖都只定点回读，不加载或扫描列表', () => {
+  for (const pinned of [0, 1]) {
+    const h = createDetailHarness()
+    h.page.data.posts = Array.from({ length: 81 }, (_, index) =>
+      ({ id: String(1000 - index), clubId: '9', isPinned: pinned, isLiked: false }))
+    const read = unknownLike(h, '920')
+    assert.deepEqual(JSON.parse(read.data), { id: '920', clubId: '9' })
+    read.success(stateReply('920', '9', true, null))
+    assert.equal(h.page.data.posts[80].isLiked, true)
+    assert.equal(h.page.data.posts[80].likeCount, null, 'null计数保持真实')
+    assert.equal(h.page.data.posts[0].isLiked, false, '不更新邻帖')
+    assert.equal(byUrl(h.requests, '/api/club/post/list').length, 0)
+    assert.equal(byUrl(h.requests, '/api/club/post/like').length, 1, '回读不自动POST')
+  }
+})
+
+test('合法Long全范围无加1/Number损精；不安全number及非法ID不发送', () => {
+  for (const id of ['1', '9007199254740993', '9223372036854775807']) {
+    const h = createDetailHarness()
+    h.page.data.clubId = '9223372036854775807'
+    h.page.data.posts = [{ id, isLiked: false }]
+    const read = unknownLike(h, id)
+    assert.deepEqual(JSON.parse(read.data), { id, clubId: '9223372036854775807' })
+    assert.equal(JSON.parse(h.requests[0].data).postId, id)
+    read.success(stateReply(id, h.page.data.clubId))
+    assert.equal(h.page.data.posts[0].isLiked, true)
+  }
+  for (const id of [0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1, '9223372036854775808', '1e3', '']) {
+    const h = createDetailHarness()
+    h.page.onLikePost(likeEvent(id))
+    assert.equal(h.requests.length, 0)
+  }
+})
+
+test('不存在/404/拒权/邻帖/跨club/非布尔/畸形均保持未知，下次只查原帖', () => {
+  const bad = [
+    { code: 404 }, { code: 403 }, { code: 200, data: null }, { code: 200, data: [] },
+    stateReply('6'), stateReply('5', '10'), stateReply('5', '9', 'true'),
+    stateReply('5', '9', 1), { code: 200, data: { id: '5', isLiked: true } },
+    stateReply('9223372036854775808'),
+    stateReply('5', '9', true, '3'), stateReply('5', '9', true, 1.5),
+  ]
+  for (const reply of bad) {
+    const h = createDetailHarness()
+    h.page.data.posts = [{ id: 5, isLiked: false, likeCount: 2 }]
+    unknownLike(h, 5).success(reply)
+    h.page.onLikePost(likeEvent(5))
+    assert.equal(byUrl(h.requests, stateUrl).length, 2)
+    assert.equal(byUrl(h.requests, '/api/club/post/like').length, 1)
+    assert.equal(h.page.data.posts[0].isLiked, false)
+    assert.equal(h.page.data.posts[0].likeCount, 2)
+  }
+  const h = createDetailHarness()
+  unknownLike(h, 5).successStatusAbnormal({ code: 404 })
+  h.page.onLikePost(likeEvent(5))
+  assert.equal(byUrl(h.requests, stateUrl).length, 2)
+})
+
+test('并发定点读互相独立，重复点击单飞，旧读重复回执不清新reading/pending', () => {
+  const h = createDetailHarness()
+  h.page.data.posts = [{ id: 5, isLiked: false }, { id: 6, isLiked: false }]
+  const old = unknownLike(h, 5)
+  const other = unknownLike(h, 6)
+  h.page.onLikePost(likeEvent(5))
+  assert.equal(byUrl(h.requests, stateUrl).length, 2)
+  old.fail()
+  h.page.onLikePost(likeEvent(5))
+  const current = byUrl(h.requests, stateUrl)[2]
+  const entry = h.page._likingPosts['7|9|5']
+  const reading = entry.reading
+  old.fail()
+  old.success(stateReply('5'))
+  assert.equal(h.page._likingPosts['7|9|5'], entry)
+  assert.equal(entry.reading, reading)
+  h.page.onLikePost(likeEvent(5))
+  assert.equal(byUrl(h.requests, stateUrl).length, 3)
+  other.success(stateReply('6'))
+  assert.equal(h.page.data.posts[1].isLiked, true)
+  assert.equal(h.page.data.posts[0].isLiked, false)
+  current.success(stateReply('5'))
+  assert.equal(h.page.data.posts[0].isLiked, true)
+  h.page.onLikePost(likeEvent(5))
+  const fresh = h.page._likingPosts['7|9|5']
+  current.fail()
+  current.success(stateReply('5', '9', false))
+  assert.equal(h.page._likingPosts['7|9|5'], fresh)
+})
+
+test('发送前拒绝旧owner/club上下文；切换往返后迟到回包不解新锁', () => {
+  for (const change of ['owner', 'club', 'detail']) {
+    const h = createDetailHarness()
+    let owner = '7'
+    h.appRef.getUserID = () => owner
+    h.page.data.posts = [{ id: 5, isLiked: false }]
+    const old = unknownLike(h, 5)
+    const key = '7|9|5'
+    old.fail()
+    if (change === 'owner') owner = '8'
+    if (change === 'club') h.page.data.clubId = '10'
+    if (change === 'detail') h.page._detailRequestSeq = 1
+    h.page.readbackPostLike(key)
+    assert.equal(byUrl(h.requests, stateUrl).length, 1, '旧key不发查询')
+    h.page.onLikePost(likeEvent(6)) // 观察并建立新的上下文，原scope永久失效。
+    owner = '7'; h.page.data.clubId = '9'
+    if (change === 'detail') h.page._detailRequestSeq = 2
+    h.page.onLikePost(likeEvent(5))
+    const fresh = byUrl(h.requests, stateUrl)[1]
+    const entry = h.page._likingPosts[key]
+    const reading = entry.reading
+    old.success(stateReply('5'))
+    old.fail()
+    assert.equal(h.page._likingPosts[key], entry)
+    assert.equal(entry.reading, reading)
+    assert.equal(h.page.data.posts[0].isLiked, false)
+    fresh.success(stateReply('5'))
+    assert.equal(h.page.data.posts[0].isLiked, true)
+  }
+})
+
+test('旧POST重复回执及卸载回包不加载列表或清新pending', () => {
+  const h = createDetailHarness()
+  h.page.data.posts = [{ id: 5, isLiked: false }]
+  const read = unknownLike(h, 5)
+  const oldPost = byUrl(h.requests, '/api/club/post/like')[0]
+  read.success(stateReply('5'))
+  h.page.onLikePost(likeEvent(5))
+  const fresh = h.page._likingPosts['7|9|5']
+  oldPost.success({ code: 200 })
+  oldPost.fail()
+  assert.equal(h.page._likingPosts['7|9|5'], fresh)
+  assert.equal(byUrl(h.requests, '/api/club/post/list').length, 0)
+  byUrl(h.requests, '/api/club/post/like')[1].fail()
+  const pending = h.page._likingPosts['7|9|5']
+  const latest = byUrl(h.requests, stateUrl)[1]
+  h.page._sceneGuardDestroyed = true
+  latest.success(stateReply('5', '9', false))
+  latest.fail()
+  h.page.readbackPostLike('7|9|5')
+  assert.equal(h.page._likingPosts['7|9|5'], pending)
+  assert.equal(byUrl(h.requests, stateUrl).length, 2)
+  assert.equal(h.page.data.posts[0].isLiked, true)
 })

@@ -80,6 +80,9 @@ public interface ICmsTopicService
      */
     public CmsTopic selectCmsTopicById(Long id);
 
+    /** 商家待办窄投影：只读指定主题的 id/endDate，空集合不查询。 */
+    Map<Long, java.util.Date> selectTodoTopicEndDates(java.util.Collection<Long> topicIds);
+
     /** 后台逐期漫游导流开关窄读。 */
     Integer selectRoamReferralEnabledById(Long id);
 

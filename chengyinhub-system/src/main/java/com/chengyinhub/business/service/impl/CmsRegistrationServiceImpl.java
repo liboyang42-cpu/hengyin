@@ -237,6 +237,17 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     }
 
     @Override
+    public Map<Long, com.chengyinhub.business.domain.vo.MerchantTodoRegistrationVO> selectTodoRegistrationOwners(
+            java.util.Collection<Long> registrationIds) {
+        Map<Long, com.chengyinhub.business.domain.vo.MerchantTodoRegistrationVO> owners = new java.util.HashMap<>();
+        if (registrationIds == null || registrationIds.isEmpty()) return owners;
+        for (com.chengyinhub.business.domain.vo.MerchantTodoRegistrationVO row : cmsRegistrationMapper.selectTodoRegistrationOwners(registrationIds)) {
+            owners.put(row.getId(), row);
+        }
+        return owners;
+    }
+
+    @Override
     public Map<Long, long[]> countPaidVerificationByOwners(Long ownerType, java.util.Collection<Long> ownerIds) {
         Map<Long, long[]> out = new java.util.HashMap<>();
         if (ownerType == null || ownerIds == null || ownerIds.isEmpty()) return out;
