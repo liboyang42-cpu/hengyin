@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-25T07:11:40.851201+00:00",
+  "updated_utc": "2026-10-25T07:19:13.911534+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -2444,7 +2444,7 @@
     "all_complete": false
   },
   "theme_game_reuse_implementation": {
-    "state": "FOUR_APPROVED_OUTCOMES_EXACT_SOURCE_WORK_IN_PROGRESS",
+    "state": "ALL_GAME_REUSE_COMPLETE_WORKPACKAGES_IN_PROGRESS_NOT_ACCEPTED",
     "source_checkpoint": {
       "state": "FROZEN_SOURCE_CHECKPOINT_NOT_ACCEPTED",
       "sha": "fa5c263440573992701263d6bee60830844a49b8",
@@ -2473,33 +2473,42 @@
         "thread": "01a16a22-3076-7196-88f5-86d5b2c83036",
         "host": "durable",
         "turn": "01a171e3-a6fe-700e-8c5f-87c632147a78",
-        "cursor": "1e9feea5-2ea9-4d63-a7a0-0e845f8692e0:13",
-        "owned": "Backend qaPick actual reuse/SupportMatrix/TemplateRules/direct tests; no G/E files"
+        "cursor": "1e9feea5-2ea9-4d63-a7a0-0e845f8692e0:16",
+        "owned": "All backend mechanisms actual key/implementation/proof crosswalk, SupportMatrix/TemplateRules and direct tests; QA only first example, no G/E files"
       },
       "D": {
         "thread": "01a16a22-f399-7110-ba27-ef3f7245603b",
         "host": "durable",
-        "turn": "01a171e3-cdcb-71a7-8d18-55a312f5c6f4",
-        "cursor": "392a0141-0cc8-4147-8a14-b181aa78db38:14",
-        "owned": "Existing client playkit-qa and actual direct same-contract callers/tests; no auth/session/ledger"
+        "turn": "01a171f2-4ac0-76af-aa13-4125a8e65a72",
+        "cursor": "392a0141-0cc8-4147-8a14-b181aa78db38:18",
+        "owned": "All MiniProgram catalog/editor/adoption/binding/render/submit chain and necessary direct source/tests; preserve H session and prior D0e6; no ledger/baseline"
       },
       "G": {
         "thread": "01a16a23-8904-73e8-a024-378a96f0800c",
         "host": "durable",
         "turn": "01a171e3-c098-70e1-8d14-3d19d206011e",
-        "cursor": "4b361718-0fcf-48df-970f-92288ff9076c:23",
-        "owned": "BundleReview/PublicationService/PublicationCompiler and truly necessary publication SQL/tests; verify full hash/lock transaction before claiming A→A′ gap"
+        "cursor": "4b361718-0fcf-48df-970f-92288ff9076c:25",
+        "owned": "Publication full locked-current-content -> compiler -> release/run snapshot chain and direct fixtures; real RR seam, preserve hashes/locks"
       },
       "E": {
         "thread": "01a16a23-2723-72e4-813f-03d7f1aa6017",
         "host": "durable",
         "turn": "01a171e3-b3c0-7376-a09a-26b336389ec6",
-        "cursor": "bf46e2e6-88ca-4fad-a205-efca84d15256:11",
-        "owned": "PublicationContentGuard/RoutePublishGate/actual validators and direct diagnostics/tests; no separate compiler/DBcapability column"
+        "cursor": "bf46e2e6-88ca-4fad-a205-efca84d15256:14",
+        "owned": "PublicationContentGuard/RoutePublishGate/actual validators and direct diagnostics/tests; no separate compiler/DBcapability column",
+        "state": "SOURCE_DELIVERY_INTEGRATED_NO_EMPTY_REVIEW_TASK"
+      },
+      "B": {
+        "thread": "01a16a22-956c-723f-b51b-afcbee69802b",
+        "host": "durable",
+        "turn": "01a171f2-56fb-732e-a180-a445881ef31a",
+        "cursor": "b03dff2c-10cc-4156-add7-1e422e41c5d1:17",
+        "state": "SOURCE_MAP_COMPLETE_IMPLEMENTATION_WORKPACKAGE_NEXT",
+        "owned": "Existing complete game content library/adopt/copy/IDs/necessary production direct tests; no new library/version table, no D/C/G files"
       }
     },
     "root_ownership": "Shared contracts, construction and reuse instructions/catalog, integration, source metadata/ledger, final same-source verification",
-    "other_original_owners": "B/C/F/H closed, no empty standby tasks",
+    "other_original_owners": "C assigned only concrete admin advanced-template management gap under complete plan; F/H closed with no empty standby.",
     "reference_06_sha256": "5d3224e7854f708f32adefd6cdcafd06373e5bd5b993e6c60e840338f3933fc0",
     "reference_07_sha256": "6d129b6aced3c0b9040b9445b440ffb0db4453e1b1896aff85bdd92a3faf17fa",
     "reference_not_runtime_proof": true,
@@ -2511,6 +2520,90 @@
       "Actual used capabilities must be covered and supported; do not copy reversed subset expression"
     ],
     "acceptance": "Once all necessary implementations/callers/fixtures are complete, root performs concentrated same-candidate review and impacted CI/MySQL/HTTP; no intermediate CI or unimpacted passing reruns",
-    "all_complete": false
+    "all_complete": false,
+    "execution_policy": "No tests of any kind now. Complete all-game code/callers/config/fixtures first, then root unified impacted verification; no intermediate Node/Python/Java/DB/HTTP/CI.",
+    "previous_goal_turn_classification": "PROGRESS: exact A Java test/E7/D7 source integrated; all-games scope and complete source-backed master plan written, B real library map obtained; no tests/CI run.",
+    "source_observations": {
+      "A": {
+        "state": "SOURCE_CONFIRMED_NOT_NEW_TEST_PASS",
+        "qa_contract": "qaPick -> qa.mode PICK; normal SUBMIT_QA and guided qa share AdvancedActionJudgement.submitQa",
+        "keep_distinct": [
+          "legacy validationMethod3",
+          "profile",
+          "branch"
+        ],
+        "next": "Add actual two-theme shared-production judgement tests/source usage map; no evidence for grader rewrite"
+      },
+      "D": {
+        "state": "SOURCE_CONFIRMED_NOT_RUNTIME_REPRODUCED",
+        "chain": "publish/temp -> playkit-view -> playkit/index.wxml -> playkit-qa",
+        "gap": "Original component lacks run-instance input; burning not reset on config switch and photo async may return after reuse",
+        "next": "Minimal component/dispatcher lifecycle and actual instance fencing plus direct tests SOURCE ONLY"
+      },
+      "E": {
+        "state": "SOURCE_CONFIRMED_NOT_NEW_TEST_PASS",
+        "existing": "Production content/reference validators + route config validator -> deterministic gate using original engine",
+        "gap": "Some runtime/template item/node errors omit field/node/template identity; edge error omits array location",
+        "next": "Only diagnostic context and real publication entry tests, no duplicate engine/provider fallback"
+      },
+      "G": {
+        "state": "SOURCE_SEAM_IMPLEMENTATION_IN_PROGRESS",
+        "next": "Compile from same locked current projection; do not remove existing bundle hash/ordered locks or add unrelated engine"
+      },
+      "B": {
+        "state": "SOURCE_CONFIRMED_NOT_RUNTIME",
+        "chain": "cms_member_template -> cms_template_library -> adopt-draft owned draft -> node templateId -> original frozen publication/run",
+        "gap": "Admin editor has basic 1/2/3 fields; personal/library/preset ID distinction and source content version must not be conflated; actual stock and published coverage UNKNOWN"
+      }
+    },
+    "latest_repeated_attachment": {
+      "sha256": "45d6973a9d82baa8053726eb4c44052c1e2f03302feccbce63842013147f2248",
+      "bytes": 9363,
+      "read": true,
+      "semantic_scope": "Same report07 four contracts and three proposed changes; no new implementation scope or second task dispatch",
+      "accepted": "Existing bundling, supported template contracts, original publication validators as concrete code references",
+      "requires_evidence": "A-to-Aprime reachable path must be checked with current applyDecision hash/lock and audit transaction",
+      "not_directly_adopted": [
+        "new capabilities DB column without demonstrated need",
+        "publish existential fixture used as runtime reachability proof"
+      ],
+      "all_complete": false
+    },
+    "all_games_master_plan": "全游戏资源库与主题复用完整施工方案-20261025.md",
+    "latest_human_scope": "All games reusable, not only QA. Give each original cloud owner complete purpose/plan/code-callers-fixtures deliverables; no tests until all necessary source ready.",
+    "all_games_inventory": {
+      "state": "SOURCE_ONLY_PARTIAL_CROSSWALK",
+      "backend_types": 32,
+      "backend_addons": 10,
+      "backend_keys": 42,
+      "not_game_count_or_market_inventory": true,
+      "crosswalk_owners": [
+        "A",
+        "D",
+        "B"
+      ],
+      "missing_from_matrix_example": "compare has Advanced submission/judgement but no implication of generic/R5 proof support"
+    },
+    "integrated_source_deliveries": {
+      "receipt": "/private/tmp/hengyin-TG-A-D-E-source-integration.json",
+      "A": {
+        "state": "CODE_POSTIMAGE_EXACT_DOC_TRANSPORT_PENDING",
+        "test_sha256": "65c4df37055692026f0b8c5d2d0f56ffed71b7df763ddb0a601dc482a2c11339",
+        "full_chat_patch": "NOT_APPLIED_TRUNCATED_README",
+        "tests": "NOT_RUN"
+      },
+      "E": {
+        "state": "ALL_7_FILES_POSTIMAGE_EXACT",
+        "donor": "91a3bdd2aea254e39fe245337bfdd3f89122cf10",
+        "tests": "NOT_RUN"
+      },
+      "D": {
+        "state": "ALL_7_FILES_POSTIMAGE_EXACT",
+        "donor": "0e6b05e617f2099c5e0d32659ac3f99968ff7c3c",
+        "tests": "NOT_RUN"
+      },
+      "all_complete": false
+    },
+    "ledger_requires_final_source_refresh": true
   }
 }
