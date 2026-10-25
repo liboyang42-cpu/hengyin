@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.config.RestoreDispatchGuard;
 import com.chengyinhub.common.annotation.CriticalPath;
 import com.chengyinhub.common.observability.CriticalPathCode;
 import com.chengyinhub.common.utils.StringUtils;
@@ -77,6 +78,8 @@ public class RefundPayoutServiceImpl implements IRefundPayoutService {
         }
         try {
             doPayout(refundId);
+        } catch (RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (Exception e) {
             // claim 前的 DB 故障仍保持 PENDING；claim 后故障保持 DISPATCHING，只能按原身份查证。
             // 此处不能无条件改成人工态，否则 CAS loser/瞬时 DB 抖动会覆盖另一个 worker 的真实结果。
@@ -102,6 +105,11 @@ public class RefundPayoutServiceImpl implements IRefundPayoutService {
         if (refundAmount == null || refundAmount.compareTo(BigDecimal.ZERO) <= 0) {
             return;
         }
+        if (RestoreDispatchGuard.isRestoreMode()) {
+            observeOriginalDuringRestore(refund);
+            return;
+        }
+        RestoreDispatchGuard.requireDispatchAllowed();
         // Decide first submission versus recovery under the same original refund row lock as claim.
         // Otherwise a delayed worker can read PENDING before another worker's UNKNOWN and resubmit it.
         final RefundApplication observed = refund;
@@ -181,6 +189,8 @@ public class RefundPayoutServiceImpl implements IRefundPayoutService {
             // 「退款额 > 订单额」拒掉。全额退时二者恰好相等,所以这个错只有部分退才暴露。
             requestResult = wechatPayService.submitRefund(receipt.reference(), registration.getRegistrationNo(), expectedRefundNo,
                     refundAmount, paidCash, refund.getReason());
+        } catch (RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (Exception e) {
             // UNKNOWN keeps DISPATCHING: lease expiry authorizes a same-identity query, never a second create.
             payoutRemark = "原路退款调用异常:" + e.getMessage();
@@ -200,6 +210,18 @@ public class RefundPayoutServiceImpl implements IRefundPayoutService {
             payoutRemark = "原路退款受理失败(微信拒绝/CLOSED/ABNORMAL),待人工处理";
         }
         refundService.markPayoutResult(refundId, leaseToken, wxAccepted, payoutRemark);
+    }
+
+    /** No claim, number allocation, submission or synthetic failure during restore. */
+    private void observeOriginalDuringRestore(RefundApplication refund) {
+        if (StringUtils.isBlank(refund.getRefundNo()) || refund.getSourceId() == null) return;
+        RegistrationPaymentFactReceipt receipt = payoutTransaction().execute(tx ->
+                paymentConsumption.findConsumedPayment(refund.getSourceId()).orElse(null));
+        if (receipt == null || !refund.getSourceId().equals(receipt.registrationId())) return;
+        java.util.Map<String, String> facts = wechatPayService.queryRefundFacts(receipt.reference(), refund.getRefundNo());
+        // The original verifier and inbox registration still run. RefundService pauses the economic
+        // mutation after registration, so a valid SUCCESS is retained without a false DONE.
+        if (facts != null) refundService.handleRefundNotify(facts);
     }
 
     private void recoverOriginalRefund(Long refundId, String leaseToken, RegistrationPaymentFactReceipt receipt,

@@ -1,0 +1,26 @@
+path	line	source
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java	206	res = wechatPayService.transferToBalance(submission);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMembershipServiceImpl.java	245	payParams = wechatPayService.createGenericOrder(invoice.getOutTradeNo(),
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMembershipServiceImpl.java	294	payParams = wechatPayService.createGenericOrder(invoice.getOutTradeNo(),
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMembershipServiceImpl.java	343	closeAccepted = wechatPayService.closePaymentAttempt(invoice.getOutTradeNo(), closingObservation.get("wx_out_trade_no"));
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java	1206	wechatPayService.closePaymentAttempt(observed.getDepositOutTradeNo(), attempt);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopDepositRefundService.java	131	result = wechatPayService.submitRefund(dispatch.originalPayment(), dispatch.outTradeNo(),
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java	229	if (!wechatPayService.closePaymentAttempt(outTradeNo, observed.get("wx_out_trade_no"))) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java	301	result.putAll(wechatPayService.createGenericOrder(order.getOrderSn(), order.getPayAmount(),
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundPayoutServiceImpl.java	190	requestResult = wechatPayService.submitRefund(receipt.reference(), registration.getRegistrationNo(), expectedRefundNo,
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java	157	? wechatPayService.createAppOrder(registration)
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java	158	: wechatPayService.createOrder(registration);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java	1054	closed = wechatPayService.closePaymentAttempt(order.original().registrationNo(),
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java	37	java.math.BigDecimal totalAmount, String reason){ return gateway.submitRefund(outTradeNo, outRefundNo, refundAmount, totalAmount, reason); }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java	43	return gateway.submitRefund(originalPayment,outTradeNo,outRefundNo,refundAmount,totalAmount,reason);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java	49	String appid){ return gateway.transferToBalance(outBatchNo, outDetailNo, amountYuan, openid, remark, appid); }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java	55	public Map<String, String> transferToBalance(CashWithdrawTransferIntent intent) { return gateway.transferToBalance(intent); }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java	61	public Map<String, String> createOrder(CmsRegistration registration){ return gateway.createOrder(registration); }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java	64	public Map<String, String> createAppOrder(CmsRegistration registration){ return gateway.createAppOrder(registration); }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java	68	String description){ return gateway.createGenericAppOrder(outTradeNo, amountYuan, description); }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java	71	public Map<String, String> createGenericOrder(String outTradeNo, java.math.BigDecimal amountYuan, String description, String openid){ return gateway.createGenericOrder(outTradeNo, amountYuan, description, openid); }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java	91	public boolean closePaymentAttempt(String businessOutTradeNo, String observedWxOutTradeNo){ return gateway.closePaymentAttempt(businessOutTradeNo, observedWxOutTradeNo); }
+chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java	204	closeAccepted = wechatPayService.closePaymentAttempt(registration.getRegistrationNo(), wxOrder.get("wx_out_trade_no"));
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopController.java	141	java.util.Map<String, String> payParams = wechatPayService.createGenericOrder(
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopController.java	220	java.util.Map<String, String> payParams = wechatPayService.createGenericAppOrder(
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantCommerceController.java	62	return success(commerceService.createOrder(access.getOwnerMemberId(), access.getMerchantId(),

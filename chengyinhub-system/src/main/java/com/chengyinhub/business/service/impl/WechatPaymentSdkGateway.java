@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.config.RestoreDispatchGuard;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -180,6 +182,7 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
     public RefundRequestResult submitRefund(String outTradeNo, String outRefundNo,
                                             java.math.BigDecimal refundAmount,
                                             java.math.BigDecimal totalAmount, String reason) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         requireObservationOutsideBusinessTransaction();
         try {
             if (toWechatRefundCents(refundAmount)>toWechatRefundCents(totalAmount)
@@ -192,6 +195,8 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
             var original=verifiedFacts.findPaymentSuccess(outTradeNo);
             if (original==null) return RefundRequestResult.UNKNOWN;
             return submitRefund(original.reference(),outTradeNo,outRefundNo,refundAmount,totalAmount,reason);
+        } catch (RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (RuntimeException unavailableOrConflicting) {
             return RefundRequestResult.UNKNOWN;
         }
@@ -201,6 +206,7 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
     public RefundRequestResult submitRefund(WechatVerifiedPaymentFact.Reference originalPayment,
                                             String outTradeNo, String outRefundNo, java.math.BigDecimal refundAmount,
                                             java.math.BigDecimal totalAmount, String reason) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         requireObservationOutsideBusinessTransaction();
         final long refundCents;
         final long totalCents;
@@ -224,6 +230,8 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
             // WeChat transaction_id identifies the paid attempt, even when another alias is now current.
             return submitRefundRequest(clients.refunds(),paid.wxOutTradeNo(),paid.transactionId(),
                     outRefundNo,refundCents,totalCents,reason);
+        } catch (RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (RuntimeException unavailable) {
             logger.warn("原支付事实约束的退款提交未知 type={}",unavailable.getClass().getSimpleName());
             return RefundRequestResult.UNKNOWN;
@@ -232,6 +240,7 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
 
     private RefundRequestResult submitRefundRequest(RefundService client,String wxOrderNo,String transactionId,
             String outRefundNo,long refundCents,long totalCents,String reason) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         try {
             CreateRequest request = new CreateRequest();
             request.setTransactionId(transactionId);
@@ -273,11 +282,13 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
     public Map<String, String> transferToBalance(String outBatchNo, String outDetailNo,
                                                   java.math.BigDecimal amountYuan, String openid, String remark,
                                                   String appid) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         return submitTransfer(transferBatchService, outBatchNo, outDetailNo, amountYuan, openid, remark, appid);
     }
 
     private Map<String, String> submitTransfer(TransferBatchService client, String outBatchNo, String outDetailNo,
             java.math.BigDecimal amountYuan, String openid, String remark, String appid) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         Map<String, String> r = new HashMap<>();
         r.put("ambiguous", "false");
         if (client == null) {
@@ -457,6 +468,7 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
 
     @Override
     public Map<String, String> transferToBalance(CashWithdrawTransferIntent intent) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         // A persisted master debit snapshot has its own existing validation/dispatch claim.
         // Do not reinterpret this as a ledger SUBMIT_INTENT or convert its V1 hash.
         boolean debitSnapshot = intent != null && intent.hasDebitSnapshot();
@@ -566,6 +578,7 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
      */
     @Override
     public Map<String, String> createOrder(CmsRegistration registration) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (!isReady()) {
             throw PaymentPreorderException.definiteFailure("支付服务暂不可用，请稍后再试", null);
         }
@@ -573,12 +586,16 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
         PrepayRequest request;
         try {
             request = buildPrepayRequest(registration);
+        } catch (RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (Exception e) {
             throw PaymentPreorderException.definiteFailure("创建微信支付订单参数异常：" + e.getMessage(), e);
         }
         try {
             // 一旦进入 SDK 网络调用，异常无法证明微信未受理；保持 PAYING 等回调自动恢复。
             return createOrderWithExtension(request);
+        } catch (RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (Exception e) {
             throw PaymentPreorderException.resultUncertain("创建微信支付订单结果未知：" + e.getMessage(), e);
         }
@@ -598,11 +615,14 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
      */
     @Override
     public Map<String, String> createAppOrder(CmsRegistration registration) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         requireAppChannelAppid();
         requireNotifyUrl();
         com.wechat.pay.java.service.payments.app.model.PrepayRequest request;
         try {
             request = buildAppPrepayRequest(registration);
+        } catch (RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (Exception e) {
             throw PaymentPreorderException.definiteFailure("创建 App 支付订单参数异常：" + e.getMessage(), e);
         }
@@ -612,11 +632,14 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
     @Override
     public Map<String, String> createGenericAppOrder(String outTradeNo, java.math.BigDecimal amountYuan,
                                                       String description) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         String appAppid = requireAppChannelAppid();
         requireNotifyUrl();
         com.wechat.pay.java.service.payments.app.model.PrepayRequest request;
         try {
             request = buildGenericAppPrepayRequest(outTradeNo, amountYuan, description, appAppid);
+        } catch (RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (Exception e) {
             throw PaymentPreorderException.definiteFailure("创建 App 支付订单参数异常：" + e.getMessage(), e);
         }
@@ -678,6 +701,7 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
 
     private Map<String, String> prepayApp(
             com.wechat.pay.java.service.payments.app.model.PrepayRequest request) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         request.setOutTradeNo(freezePaymentIntent(request.getOutTradeNo(), request.getMchid(), request.getAppid(), "APP",
                 request.getAmount().getCurrency(), request.getAmount().getTotal(), "",
                 request.getDescription(), request.getNotifyUrl()));
@@ -732,6 +756,7 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
 
     @Override
     public Map<String, String> createGenericOrder(String outTradeNo, java.math.BigDecimal amountYuan, String description, String openid) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (!isReady()) {
             throw new IllegalStateException("支付服务暂不可用，请稍后再试");
         }
@@ -759,6 +784,8 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
             return createOrderWithExtension(request);
         } catch (PaymentPreorderException deferredOriginal) {
             throw deferredOriginal;
+        } catch (RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (Exception e) {
             throw new RuntimeException("创建微信支付订单异常：" + e.getMessage(), e);
         }
@@ -820,6 +847,7 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
      * 方法一：使用JsapiServiceExtension创建订单（推荐）- 修正版
      */
     private Map<String, String> createOrderWithExtension(PrepayRequest request) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         request.setOutTradeNo(freezePaymentIntent(request.getOutTradeNo(), request.getMchid(), request.getAppid(), "JSAPI",
                 request.getAmount().getCurrency(), request.getAmount().getTotal(),
                 request.getPayer() == null ? "" : request.getPayer().getOpenid(),
@@ -848,6 +876,7 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
      * 方法二：备用方案 - 使用基础JsapiService并手动生成支付参数
      */
     private Map<String, String> createOrderWithManualSign(PrepayRequest request) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         request.setOutTradeNo(freezePaymentIntent(request.getOutTradeNo(), request.getMchid(), request.getAppid(), "JSAPI",
                 request.getAmount().getCurrency(), request.getAmount().getTotal(),
                 request.getPayer() == null ? "" : request.getPayer().getOpenid(),
@@ -1092,6 +1121,7 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
 
     @Override
     public boolean closePaymentAttempt(String businessOutTradeNo, String observedWxOutTradeNo) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         requireObservationOutsideBusinessTransaction();
         if (businessOutTradeNo == null || observedWxOutTradeNo == null
                 || !businessOutTradeNo.equals(businessPaymentOrderNo(observedWxOutTradeNo))) {
@@ -1370,8 +1400,7 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
         return queryRefundFacts(notification.getOutRefundNo());
     }
     private static boolean matchesProviderSuccessTime(java.time.Instant expected,String raw) {
-        try { return expected.equals(providerSuccessTime(raw)); }
-        catch (RuntimeException invalidTime) { return false; }
+        try { return expected.equals(providerSuccessTime(raw)); } catch (RuntimeException invalidTime) { return false; }
     }
     private void assertOriginalFactSnapshot(WechatVerifiedPaymentFact fact) {
         if (!verifiedProviderMerchant().equals(fact.mchid())

@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.config.RestoreDispatchGuard;
+
 import com.chengyinhub.business.service.PaymentPreorderException;
 import com.chengyinhub.business.service.WechatPaymentOrderOwner;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,7 @@ public class WechatPaymentIntentStore {
 
     String freezePaymentIntent(String outTradeNo, String mchid, String appid, String tradeType,
                              String currency, Integer totalFen, String openid, String description, String notifyUrl, Runnable verifyHistoricalOrder) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
             throw PaymentPreorderException.resultUncertain("支付调用必须在领域意图提交后、事务外执行", null);
         }
@@ -96,6 +99,8 @@ public class WechatPaymentIntentStore {
                 }
                 return wxOrderNo;
             });
+        } catch (RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (Exception error) {
             // 原意图可能已经调用过微信；本次拒绝不能释放原 PAYING 或变更原身份。
             throw PaymentPreorderException.resultUncertain("支付永久意图未确认或与首次提交冲突", error);

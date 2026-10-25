@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.support;
 
+import com.chengyinhub.common.config.RestoreDispatchGuard;
+
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.domain.CashWithdrawFundFact;
 import org.springframework.stereotype.Service;
@@ -37,11 +39,13 @@ public class WithdrawalBalanceAdmissionService {
     /** Original cash identity is already committed; finish this transaction before calling the channel. */
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public Admission debitCash(Long id, Long memberId, BigDecimal amount) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         return debitCash(id, memberId, amount, null, null, null);
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public Admission debitCash(Long id, Long memberId, BigDecimal amount, String mchid, String appid, String remark) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         com.chengyinhub.business.domain.MemberCashWithdraw original = cash.selectByIdForUpdate(id);
         if (original == null || memberId == null || !memberId.equals(original.getMemberId())
                 || amount == null || original.getAmount() == null || amount.compareTo(original.getAmount()) != 0
@@ -96,6 +100,7 @@ public class WithdrawalBalanceAdmissionService {
     }
 
     private Admission debit(Long memberId, BigDecimal amount, boolean cashLeg) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (memberId == null || amount == null || amount.signum() <= 0)
             throw new IllegalArgumentException("Invalid withdrawal admission");
         BigDecimal before = members.selectBalanceForUpdate(memberId);

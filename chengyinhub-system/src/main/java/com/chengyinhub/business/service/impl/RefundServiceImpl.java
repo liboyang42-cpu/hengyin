@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.config.RestoreDispatchGuard;
+
 import com.chengyinhub.common.annotation.CriticalPath;
 import com.chengyinhub.common.observability.CriticalPathCode;
 import com.chengyinhub.business.domain.CmsRegistration;
@@ -205,6 +207,7 @@ public class RefundServiceImpl implements IRefundService {
 
     @Override
     public String claimManualPayout(Long refundId, Long handlerId) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (refundId == null || handlerId == null) {
             throw new IllegalArgumentException("退款单与处理人不能为空");
         }
@@ -223,6 +226,7 @@ public class RefundServiceImpl implements IRefundService {
 
     @Override
     public String takeoverExpiredManualPayout(Long refundId, Long handlerId) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (refundId == null || handlerId == null) {
             throw new IllegalArgumentException("退款单与处理人不能为空");
         }
@@ -246,6 +250,7 @@ public class RefundServiceImpl implements IRefundService {
     @Override
     public int handleManualPayout(Long refundId, String method, String receiptUrl, String remark,
                                   Long handlerId, String leaseToken) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (refundId == null || handlerId == null) {
             throw new IllegalArgumentException("退款单与处理人不能为空");
         }
@@ -359,6 +364,7 @@ public class RefundServiceImpl implements IRefundService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int verifyManualPayout(Long refundId, Long reviewer2Id) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (refundId == null || reviewer2Id == null) {
             throw new IllegalArgumentException("退款单与复核人不能为空");
         }
@@ -433,6 +439,9 @@ public class RefundServiceImpl implements IRefundService {
             return false;
         }
         final RefundApplication original = refund;
+        // registerVerified above retains the exact callback for later recovery. Pausing settlement
+        // is neither a channel failure nor a completed refund; no new money/points/clawback here.
+        if (RestoreDispatchGuard.isRestoreMode()) return false;
         final Map<String, String> originalFacts = new java.util.HashMap<>(facts);
         IWxPaymentCallbackInboxService.Mutation mutation = new IWxPaymentCallbackInboxService.Mutation() {
                     @Override public boolean isCurrent(WxPaymentCallbackInbox inbox) {
@@ -522,6 +531,7 @@ public class RefundServiceImpl implements IRefundService {
     }
 
     private boolean updatePayoutTerminal(RefundApplication refund, int expectedStatus, String message) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (refundApplicationMapper.updatePayoutResult(refund.getId(), expectedStatus, message) == 1) {
             if (expectedStatus == RefundApplication.PAYOUT_SUCCESS) {
                 coopSettlementClaimService.reverseCompletedRegistrationRefund(refund.getId());
@@ -570,6 +580,7 @@ public class RefundServiceImpl implements IRefundService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int saveRefund(RefundApplication refund) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (refund == null || refund.getSourceType() == null || refund.getSourceId() == null
                 || refund.getRefundAmount() == null || refund.getRefundAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("source and refundAmount are required");
@@ -621,6 +632,7 @@ public class RefundServiceImpl implements IRefundService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int saveBackOfficeRefund(RefundApplication refund) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         ensureWithinOrderCash(refund);
         return saveRefund(refund);
     }
@@ -662,6 +674,7 @@ public class RefundServiceImpl implements IRefundService {
     @Transactional(rollbackFor = Exception.class)
     @CriticalPath(value = CriticalPathCode.CP_REFUND_FAILED, op = "review")
     public int reviewRefund(RefundReviewDTO request, Long operatorId) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (request == null || request.getId() == null) {
             throw new IllegalArgumentException("refund id is required");
         }

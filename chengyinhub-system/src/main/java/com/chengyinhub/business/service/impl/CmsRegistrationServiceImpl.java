@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.config.RestoreDispatchGuard;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -423,6 +425,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             String sourceChannelCode,
             ClubWaitlistClaim waitlistClaim
     ) {
+        RestoreDispatchGuard.requireDispatchAllowed();
 
         int qty = (count == null || count <= 0) ? 1 : count;
 
@@ -724,6 +727,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             String realName, String phone, String address, String email,
             List<RegistrationTicketItem> tickets, String requestId,
             Long sourceClubId, String sourceChannelCode) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         String parentOrderNo = "P" + DateUtils.parseDateToStr("yyyyMMdd", new Date())
                 + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
@@ -832,6 +836,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     private CmsRegistration createSelfPlayPassInternal(Long memberId, Long topicId,
                                                        String realName, String phone, String requestId,
                                                        String requestFingerprint) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         // 自玩配额没有独立库存列，锁主题行作为同主题建单的串行点；不能先做普通读再计数，
         // 否则并发非会员会同时看见同一个剩余名额并绕过会员保留规则。
         CmsTopic lockedTopic = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
@@ -1506,6 +1511,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
     @Override
     public CmsRegistration preparePaymentRetry(Long registrationId, Long memberId) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         return requirePayableRegistration(cmsRegistrationMapper.selectCmsRegistrationById(registrationId), memberId);
     }
 
@@ -1542,6 +1548,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Transactional(rollbackFor = Exception.class)
     public List<CmsRegistration> create(Long memberId, RegistrationRequest request,
                                         String normalizedRequestId, String requestFingerprint) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         List<CmsRegistration> created = new ArrayList<>();
         CmsActivity originalActivity = null;
         if (Integer.valueOf(2).equals(request.getOwnerType())) {
@@ -1625,6 +1632,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Override
     @Transactional(rollbackFor = Exception.class, noRollbackFor = RegistrationOrderExpiredException.class)
     public CmsRegistration beginPaymentAttempt(Long registrationId, Long memberId) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         CmsRegistration observed = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
         if (observed == null || observed.getMemberId() == null || !observed.getMemberId().equals(memberId)) {
             throw new RuntimeException("报名不存在或无权操作");
@@ -1668,6 +1676,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void releasePaymentAttempt(Long registrationId) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (hasVerifiedSuccessBeforeRelease(registrationId))
             throw new IllegalStateException("原支付成功事实已保存，不能释放支付尝试，请恢复原业务结果");
         if (cmsRegistrationMapper.releasePaymentProcessing(registrationId, new Date()) > 0) {
@@ -2034,6 +2043,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
      * 生成报名编号
      */
     private String generateRegistrationNo(Integer ownerType) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         String typePrefix = ownerType == 1 ? "T" : "A"; // T-主题，A-活动
         String dateStr = DateUtils.parseDateToStr("yyyyMMdd", new Date());
         String randomStr = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
@@ -2204,6 +2214,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             return registrationPaymentCallbackFailure(outTradeNo, "inbox_identity_conflict");
         }
         final String[] outcome = new String[1];
+        // The verified provider fact and original inbox identity remain durable. Do not consume a
+        // restored event into fresh points/inventory/settlement effects or pretend inbox DONE.
+        if (RestoreDispatchGuard.isRestoreMode()) return "FAIL";
         IWxPaymentCallbackInboxService.Mutation mutation = new IWxPaymentCallbackInboxService.Mutation() {
                     @Override
                     public boolean isCurrent(WxPaymentCallbackInbox inbox) {
@@ -2359,6 +2372,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String completeZeroAmountPayment(String registrationNo) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         CmsRegistration registration = getByRegistrationNo(registrationNo);
         if (registration == null) return "FAIL";
         RegistrationTopicFence.LockedOrder lockedOrder = RegistrationTopicFence.lock(registration,
@@ -2390,6 +2404,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
     /** 新支付和历史半成品重放共用同一依赖项对账；各下游用自己的业务键幂等。 */
     private String completePaymentSuccess(RegistrationTopicFence.LockedOrder locked, String transactionId) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         CmsRegistration registration = locked.registration();
         Date paidAt = new Date();
         boolean paymentTransitioned = cmsRegistrationMapper.claimPaymentSuccess(
@@ -2751,6 +2766,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Override
     @Transactional
     public boolean cancelRegistration(Long registrationId, Long memberId, String userName) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         CmsRegistration registration = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
         if (registration == null) {
             throw new RuntimeException("报名记录不存在");
@@ -2873,6 +2889,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Override
     @Transactional
     public boolean closeExpiredOne(Long registrationId) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (hasVerifiedSuccessBeforeRelease(registrationId)) return false;
         if (cmsRegistrationMapper.closeExpired(registrationId, "order-close-task", 4) == 0) {
             return false;
@@ -2890,6 +2907,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Transactional(rollbackFor = Exception.class)
     public boolean settleClosedPayingOne(CmsRegistration observed, String observedWxOutTradeNo,
                                          String releaseReason, String updateBy, int finalStatus) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         CmsRegistration current = RegistrationTopicFence.lock(observed, cmsRegistrationMapper,
                 cmsActivityMapper, cmsTopicMapper).registration();
         if (StringUtils.isBlank(observedWxOutTradeNo) || paymentAttemptGateway == null
@@ -2908,6 +2926,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Override
     @Transactional
     public boolean settlePayingOne(Long registrationId, String releaseReason, String updateBy, int finalStatus) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (hasVerifiedSuccessBeforeRelease(registrationId)) return false;
         if (cmsRegistrationMapper.closeExpiredPaying(registrationId, updateBy, finalStatus) == 0) {
             return false;

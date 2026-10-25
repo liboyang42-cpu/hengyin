@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.config.RestoreDispatchGuard;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.dto.RegistrationOrderResult;
 import com.chengyinhub.business.domain.dto.RegistrationQuoteResult;
@@ -85,6 +86,7 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
     @Override
     @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
     public RegistrationCheckoutResult retryPayment(Long memberId, Long registrationId, boolean appChannel) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         requireNoActiveTransaction();
         if (!wechatPayService.isReady()) {
             throw new RegistrationCheckoutException(503, "支付服务暂不可用，请稍后再试");
@@ -148,6 +150,7 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
      * 两条通道**只有下单这一步不同**,失败处理与状态机完全一致。
      */
     private Map<String, String> createWechatOrder(CmsRegistration registration, boolean appChannel) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         requireNoActiveTransaction();
         try {
             return appChannel
@@ -156,6 +159,8 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
         } catch (PaymentPreorderException failure) {
             // 本次发送前拒绝也不能证明这个原号之前未被受理；保留 PAYING，交原号查单/关单恢复。
             throw failure;
+        } catch (RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (RuntimeException unknown) {
             throw PaymentPreorderException.resultUncertain(
                     unknown.getMessage() == null ? "微信预下单结果未知" : unknown.getMessage(), unknown);

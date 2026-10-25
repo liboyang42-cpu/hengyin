@@ -1,0 +1,335 @@
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java
+@@ -60,6 +60,7 @@
+     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
+     public Map<String, String> createOrder(Long memberId, Long merchantId, String openid, String bizType,
+                                            String requestId) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         requirePaymentOutsideTransaction();
+         if (!selfCheckoutEnabled) {
+             throw new IllegalStateException("自助开通暂未开放，请联系官方人工开通");
+@@ -145,6 +146,7 @@
+
+     private boolean applyVerifiedPayment(String outTradeNo, boolean paid, Integer paidAmountFen, String transactionId,
+             WechatVerifiedPaymentFactService.Stored verified) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         if (!paid || !supportsOutTradeNo(outTradeNo) || paidAmountFen == null
+                 || transactionId == null || transactionId.trim().isEmpty()) return false;
+         OmsOrder order = orderMapper.selectCommerceOrderForUpdate(outTradeNo);
+@@ -236,6 +238,7 @@
+     }
+
+     private boolean closeObservedOrder(OmsOrder order, String observedWxOutTradeNo) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         return Boolean.TRUE.equals(paymentTransaction().execute(status -> {
+             if (!wechatPayService.lockClosablePaymentAttemptForUpdate(order.getOrderSn(), observedWxOutTradeNo)) return false;
+             return orderMapper.markCommerceOrderClosed(order.getId()) == 1;
+@@ -295,6 +298,7 @@
+     }
+
+     private Map<String, String> paymentResponse(OmsOrder order, String openid) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         String status = statusOf(order);
+         Map<String, String> result = new LinkedHashMap<>();
+         if ("pending".equals(status)) {
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMembershipServiceImpl.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMembershipServiceImpl.java
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMembershipServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMembershipServiceImpl.java
+@@ -225,6 +225,7 @@
+     @Override
+     @Transactional(propagation = Propagation.NEVER)
+     public ClubMembershipRenewalVO renew(Long principalMemberId, ClubMembershipRenewRequest request) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         requirePaymentOutsideTransaction();
+         requireRequest(request, request == null ? null : request.getClubId());
+         requireMember(principalMemberId, request.getClubId());
+@@ -247,6 +248,8 @@
+                     "俱乐部会费-" + invoice.getPlanNameSnapshot(), intent.wxOpenId);
+             requirePaymentParams(payParams);
+             payJson = JSON.writeValueAsString(payParams);
++        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
++            throw paused;
+         } catch (Exception uncertain) {
+             result.setPayParams(Collections.<String, String>emptyMap());
+             result.setPaymentState("PREPAY_UNKNOWN");
+@@ -288,6 +291,7 @@
+         if (!blank(invoice.getPayParamsJson())) return result;
+         // D-12：会费开关关闭时只拦新的微信预下单；上面的查单对账仍照常执行。
+         featureGate.requireEnabled();
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         Map<String, String> payParams;
+         String payJson;
+         try {
+@@ -296,6 +300,8 @@
+                     "俱乐部会费-" + invoice.getPlanNameSnapshot(), intent.wxOpenId);
+             requirePaymentParams(payParams);
+             payJson = JSON.writeValueAsString(payParams);
++        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
++            throw paused;
+         } catch (Exception uncertain) {
+             result.setPayParams(Collections.<String, String>emptyMap());
+             result.setPaymentState("PREPAY_UNKNOWN");
+@@ -341,6 +347,8 @@
+         boolean closeAccepted;
+         try {
+             closeAccepted = wechatPayService.closePaymentAttempt(invoice.getOutTradeNo(), closingObservation.get("wx_out_trade_no"));
++        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
++            throw paused;
+         } catch (Exception closeUnknown) {
+             throw new ServiceException("微信关单结果未确认，原账单继续保留", HttpStatus.CONFLICT);
+         }
+@@ -489,6 +497,7 @@
+
+     private boolean applyVerifiedPayment(String outTradeNo, boolean paid, Integer amountFen, String transactionId,
+             WechatVerifiedPaymentFactService.Stored verified) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         if (!supportsOutTradeNo(outTradeNo) || !paid || amountFen == null || amountFen <= 0
+                 || blank(transactionId) || transactionId.trim().length() > 64) return false;
+         // 先做不加锁的不可变快照定位，只用来发现锁键；真正状态决策在统一锁序下重读。
+@@ -1024,6 +1033,7 @@
+
+     private ClubMembershipInvoice freezeInvoice(ClubAccessContext access, ClubMembershipPlan plan,
+                                                   String key, String fingerprint) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         ClubMembershipInvoice invoice = new ClubMembershipInvoice();
+         invoice.setClubId(access.getClubId());
+         invoice.setOwnerMemberIdSnapshot(access.getOwnerMemberId());
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java
+@@ -275,6 +275,7 @@
+     @Transactional(rollbackFor = Exception.class)
+     public Long settleCart(Long memberId, String username, String rawCartIds, String remark, String rawAddressId)
+     {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         Long[] cartIds = parseCartIds(rawCartIds);
+         lockCartsForSettlement(memberId, cartIds);
+         List<ViewMemberCart> carts = loadValidatedCarts(memberId, cartIds);
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OmsOrderServiceImpl.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OmsOrderServiceImpl.java
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OmsOrderServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OmsOrderServiceImpl.java
+@@ -62,6 +62,7 @@
+     @Override
+     public int insertOmsOrder(OmsOrder omsOrder)
+     {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         if (omsOrder == null) throw invalidOrder();
+         requireNonCommerceInput(omsOrder);
+         omsOrder.setCreateTime(DateUtils.getNowDate());
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java
+@@ -1460,6 +1460,7 @@
+     @Override
+     @Transactional(rollbackFor = Exception.class)
+     public java.util.Map<String, Object> prepareDeposit(Long inviteId, Long callerMemberId) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         CoopInvite location = coopInviteMapper.selectCoopInviteById(inviteId);
+         if (location == null) throw new IllegalStateException("邀约不存在");
+         CmsTopic topic = location.getTopicId() == null ? null
+@@ -1526,6 +1527,7 @@
+     @Override
+     @Transactional(rollbackFor = Exception.class)
+     public CoopInvite authorizeDepositRefundRetry(Long inviteId, Long operatorMemberId) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         CoopInvite location = coopInviteMapper.selectCoopInviteById(inviteId);
+         if (location == null) throw new IllegalStateException("邀约不存在");
+         CmsTopic topic = location.getTopicId() == null ? null
+@@ -1660,6 +1662,7 @@
+     }
+
+     private boolean applyConfirmedDepositPaid(String outTradeNo, Long paidCents, String transactionId) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         CoopInvite inv = coopInviteMapper.selectByDepositOutTradeNoForUpdate(outTradeNo);
+         if (inv == null || isLegacyMerchantNodeInvite(inv) || inv.getDepositAmount() == null
+                 || paidCents == null || transactionId == null || transactionId.trim().isEmpty()) return false;
+@@ -1695,6 +1698,7 @@
+
+     @Override
+     public int deductDeposit(Long inviteId) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         return coopInviteMapper.deductHeldDeposit(inviteId);
+     }
+
+@@ -1712,6 +1716,7 @@
+     @Override
+     @Transactional(rollbackFor = Exception.class)
+     public void requestDepositRefund(Long inviteId, Long operatorMemberId) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         CoopInvite invite = authorizeDepositRefundRetry(inviteId, operatorMemberId);
+         depositRefundService.requestLocked(invite);
+     }
+@@ -1719,6 +1724,7 @@
+     @Override
+     @Transactional(rollbackFor = Exception.class)
+     public void requestTopicDepositRefunds(Long topicId) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         CmsTopic topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
+         if (topic == null || !Integer.valueOf(1).equals(topic.getIsSettlement()))
+             throw new IllegalStateException("主题尚未完成结算，不能退保证金");
+@@ -1735,6 +1741,7 @@
+     @Override
+     @Transactional(rollbackFor = Exception.class)
+     public Long createCoopOrder(CoopOrder order) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         if (order == null || order.getInviteId() == null) throw new IllegalStateException("原已接受邀约必填");
+         CoopInvite located = coopInviteMapper.selectCoopInviteById(order.getInviteId());
+         if (located == null) throw new IllegalStateException("原邀约不可核实");
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java
+@@ -553,6 +553,7 @@
+     // 原「@Transactional 整批 + per-topic 吞异常」= 一个主题炸回滚整批、且失败主题部分写入随批提交、
+     // 无 is_settlement=0 领取闸 ⇒ 并发/重入重复入账。照抄活动线 HF-02。
+     public int executeTopicSettlement() {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         int settledCount = 0;
+
+         // 1. 获取需要结算的主题列表
+@@ -678,6 +679,7 @@
+      * 结算单个主题
+      */
+     private boolean settleTopic(CmsTopic topic, SettlementRule rule) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         // 扫描结果只提供定位身份；在任何状态/合同/资金读取前取得共同 topic 锁并使用当前行。
+         topic = lockSettlementTopic(topic == null ? null : topic.getId());
+         if (Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) {
+@@ -1343,6 +1345,7 @@
+
+     @Override
+     public int payoutDueCoopSettlements() {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         Date now = new Date();
+         List<CoopSettlement> due = coopSettlementMapper.selectDuePayouts(now);
+         TransactionTemplate tx = new TransactionTemplate(transactionManager);
+@@ -1384,6 +1387,7 @@
+
+     /** 单张结算独立事务内完成领取、余额、流水和终态；返回 null 表示本轮未发生正额打款。 */
+     private CoopSettlement payoutOneDueCoopSettlement(Long settlementId, Long observedTopicId, Date now) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         CmsTopic topic = lockSettlementTopic(observedTopicId);
+         // 同topic先按头ID锁定并读取全部当前净额。未决定承担方的负头不能靠先付别的头耗尽资金。
+         List<CoopSettlement> topicHeads = coopSettlementOriginalMapper.selectTopicHeadsForUpdate(topic.getId());
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java
+@@ -436,6 +436,7 @@
+     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class, propagation = org.springframework.transaction.annotation.Propagation.NEVER)
+     public ClubEventCancellationResult cancelOccurrence(Long actorMemberId, String username,
+                                                          ClubEventCancellationRequest request) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         requireCancellationOutsideTransaction();
+         ClubEventCancellationRequest frozen = freezeCancellationRequest(request);
+         PreparedOccurrence prepared = cancellationTransaction(Isolation.READ_COMMITTED, () -> {
+@@ -615,6 +616,7 @@
+                                                                Long authorizedClubId, Long activityId,
+                                                                String reason,
+                                                                boolean authorizedTopicCancellation, RegistrationCancellationPayments observed) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         WrapperPreparation prepared = prepareWrapperCancellation(actorMemberId, authorizedTopicId,
+                 authorizedClubId, activityId, reason, authorizedTopicCancellation);
+         ClubEventSeries series = prepared.series();
+@@ -715,6 +717,7 @@
+     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY, rollbackFor = Exception.class)
+     public ActivityCancelResult cancelAuthorizedTopicWithObservedPayments(Long actorMemberId, Long topicId,
+             Long clubId, Long activityId, String reason, RegistrationCancellationPayments observed) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         requireCancellationTransaction();
+         if (!positive(topicId) || !positive(clubId)) throw badRequest("主题取消范围不完整");
+         return cancelActivityWithClubWrapUp(actorMemberId, topicId, clubId, activityId, reason, true, observed);
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopDepositRefundService.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopDepositRefundService.java
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopDepositRefundService.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopDepositRefundService.java
+@@ -28,6 +28,7 @@
+
+     /** 调用方必须已在业务事务内锁定邀约并完成退款资格校验。 */
+     public void requestLocked(CoopInvite invite) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         if (!TransactionSynchronizationManager.isActualTransactionActive()) {
+             throw new IllegalStateException("保证金退款意图必须与业务事务一起提交");
+         }
+@@ -70,6 +71,15 @@
+     public void refresh(Long inviteId, boolean force) {
+         if (TransactionSynchronizationManager.isActualTransactionActive())
+             throw new IllegalStateException("保证金退款查证不能悬挂未提交的业务事务");
++        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) {
++            // No dispatch lease, new refund identity or synthetic failure on a restored row.
++            CoopInvite original = newTransaction().execute(status -> mapper.selectDepositFactByIdForUpdate(inviteId));
++            if (original != null && linked(original) && !blank(original.getDepositRefundNo())) {
++                Map<String, String> observed = wechatPayService.queryRefundFacts(original.getDepositRefundNo());
++                if (observed != null) handle(observed);
++            }
++            return;
++        }
+         String token = UUID.randomUUID().toString();
+         CoopInvite owned = newTransaction().execute(status -> {
+             if (mapper.claimDepositRefundDispatch(inviteId, token, force) != 1) return null;
+@@ -130,6 +140,8 @@
+         try {
+             result = wechatPayService.submitRefund(dispatch.originalPayment(), dispatch.outTradeNo(),
+                     dispatch.refundNo(), dispatch.refundAmount(), dispatch.totalAmount(), "合作保证金退款");
++        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
++            throw paused;
+         } catch (Exception e) { result = RefundRequestResult.UNKNOWN; }
+         String next = result == RefundRequestResult.ACCEPTED ? "PROCESSING"
+                 : result == RefundRequestResult.DEFINITIVE_FAILED ? "MANUAL" : "UNKNOWN";
+@@ -143,6 +155,7 @@
+
+     /** No SDK/current-attempt read. The caller's short transaction owns this exact invite/lease. */
+     private RefundDispatch prepareDispatch(CoopInvite observed, String token) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         CoopInvite current = mapper.selectDepositFactByIdForUpdate(observed.getId());
+         if (current == null || !token.equals(current.getDepositRefundLeaseToken())
+                 || !Integer.valueOf(2).equals(current.getDepositStatus())
+@@ -210,6 +223,9 @@
+             if (next == null) return false;
+             if ("SUCCESS".equals(row.getDepositRefundState())) return true;
+             if ("PROCESSING".equals(next) && "MANUAL".equals(row.getDepositRefundState())) return true;
++            // The gateway has retained a verified success fact. Pause local economic consumption,
++            // leaving the original state/number available for the original recovery flow.
++            if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return false;
+             if (mapper.confirmDepositRefundResult(row.getId(), row.getDepositOutTradeNo(), refundNo,
+                     expected, next) != 1) throw new IllegalStateException("保证金退款终态写入失败");
+             return true;
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RestoreMoneyDispatchTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RestoreMoneyDispatchTest.java
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RestoreMoneyDispatchTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RestoreMoneyDispatchTest.java
+@@ -43,6 +43,8 @@
+
+     @Test void restoreRefundReconciliationKeepsOriginalQueryButNeverInventsAMissingRefundNumber() throws Exception { child("true", "refund-scheduler"); }
+
++    @Test void adjacentOwnersPauseBeforeTheirOwnNumbersOrEconomicEffects() throws Exception { child("true", "adjacent"); }
++
+     private static void child(String flag, String scenario) throws Exception {
+         String classpath = System.getProperty("surefire.test.class.path", System.getProperty("java.class.path"));
+         ProcessBuilder launch = new ProcessBuilder(Path.of(System.getProperty("java.home"), "bin", "java").toString(),
+@@ -69,6 +71,7 @@
+                 switch (args[0]) {
+                     case "fresh", "invalid" -> fresh();
+                     case "normal" -> normal();
++                    case "adjacent" -> adjacent();
+                     case "unknown", "success", "fail" -> cashObservation(args[0]);
+                     case "master-UNKNOWN", "master-SUCCESS", "master-FAIL" -> masterObservation(args[0].substring(7));
+                     case "callback" -> callback();
+@@ -150,6 +153,20 @@
+             verifyNoInteractions(intentJdbc);
+         }
+
++        private static void adjacent() {
++            blocked(() -> new MerchantCommerceService(false).createOrder(9L, 1L, "openid-original", "premium_template", "original"));
++            blocked(() -> new ClubMembershipServiceImpl().renew(9L, null));
++            blocked(() -> new OmsOrderServiceImpl().insertOmsOrder(null));
++            blocked(() -> new UmsMemberCartServiceImpl().settleCart(9L, "actor", "1", null, "1"));
++            blocked(() -> new CoopInviteServiceImpl().prepareDeposit(1L, 9L));
++            blocked(() -> new CoopInviteServiceImpl().authorizeDepositRefundRetry(1L, 9L));
++            blocked(() -> new CoopInviteServiceImpl().createCoopOrder(null));
++            blocked(() -> new CoopDepositRefundService().requestLocked(null));
++            blocked(() -> new CmsTopicServiceImpl().executeTopicSettlement());
++            blocked(() -> new CmsTopicServiceImpl().payoutDueCoopSettlements());
++            blocked(() -> new ClubEventOpsServiceImpl().cancelOccurrence(9L, "actor", null));
++        }
++
+         private static CashWithdrawTransferIntent request() {
+             CashWithdrawTransferIntent unsigned = CashWithdrawTransferIntent.fromRequest(81L, "merchant", "wx-original",
+                     "CW81", "CD81", new BigDecimal("30.00"), "openid-original", "城瘾分润提现");
