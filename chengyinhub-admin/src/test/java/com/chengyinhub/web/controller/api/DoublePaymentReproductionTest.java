@@ -7,6 +7,7 @@ import com.chengyinhub.business.access.merchant.MerchantRoleCode;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.CmsRegistrationMerchant;
 import com.chengyinhub.business.domain.CmsRegistrationScan;
+import com.chengyinhub.business.domain.BusinessAuditEvent;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CoopInvite;
 import com.chengyinhub.business.domain.CoopOrder;
@@ -34,7 +35,9 @@ import com.chengyinhub.business.mapper.ClubMemberMapper;
 import com.chengyinhub.business.mapper.BusinessAuditEventMapper;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.mapper.CmsRegistrationMapper;
+import com.chengyinhub.business.mapper.CmsRegistrationMerchantMapper;
 import com.chengyinhub.business.mapper.CmsRegistrationScanMapper;
+import com.chengyinhub.business.mapper.CoopOrderStationFulfillmentMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.CoopComplaintMapper;
 import com.chengyinhub.business.mapper.CoopGroupMemberVerifyMapper;
@@ -43,6 +46,7 @@ import com.chengyinhub.business.mapper.CoopOrderMapper;
 import com.chengyinhub.business.mapper.CoopSettlementMapper;
 import com.chengyinhub.business.mapper.SettlementDetailMapper;
 import com.chengyinhub.business.service.ICmsActivityService;
+import com.chengyinhub.business.service.ICmsRegistrationService;
 import com.chengyinhub.business.service.ICmsRegistrationMerchantService;
 import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.business.service.ICoopInviteService;
@@ -66,7 +70,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
+import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
+import org.springframework.transaction.interceptor.TransactionInterceptor;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -115,6 +122,7 @@ class DoublePaymentReproductionTest {
     private static final Long PUBLISHER = 900001L;
     private static final Long PLAYER = 900003L;
     private static final Long COOP_ORDER = 41L;
+    private static final Long STATION = 601L;
     private static final String CODE = "T2-DOUBLE-PAY";
 
     private CmsRegistrationMapper registrationMapper;
@@ -129,6 +137,8 @@ class DoublePaymentReproductionTest {
     private IUmsMemberService topicMemberService;
     private CmsRegistrationScan originalScan;
     private OmsTicket frozenTicket;
+    private BusinessAuditEvent originalVerificationAudit;
+    private CoopOrderStationFulfillmentMapper stationFulfillments;
 
     @BeforeEach
     void setUp() {
@@ -148,6 +158,10 @@ class DoublePaymentReproductionTest {
         // A包核销在原事务内按原ID锁读当前订单(requireCurrentUsableRegistration)；同一已付原行。
         when(registrationMapper.selectCmsRegistrationByIdForUpdate(REGISTRATION)).thenReturn(registration);
         when(registrationMapper.verifyIfNotVerified(REGISTRATION, MERCHANT)).thenAnswer(call -> {
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive(), "核销 CAS 必须位于原业务事务");
+            if (!Integer.valueOf(2).equals(registration.getPaymentStatus())
+                    || !Integer.valueOf(2).equals(registration.getRegistrationStatus())
+                    || Integer.valueOf(1).equals(registration.getVerificationStatus())) return 0;
             registration.setVerificationStatus(1);
             return 1;
         });
@@ -197,6 +211,7 @@ class DoublePaymentReproductionTest {
 
         CmsRegistrationServiceImpl registrationService = new CmsRegistrationServiceImpl();
         ReflectionTestUtils.setField(registrationService, "cmsRegistrationMapper", registrationMapper);
+        ReflectionTestUtils.setField(registrationService, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(registrationService, "cmsRegistrationScanMapper", scanMapper);
         ReflectionTestUtils.setField(registrationService, "coopGroupMemberVerifyMapper",
                 mock(CoopGroupMemberVerifyMapper.class));
@@ -208,11 +223,20 @@ class DoublePaymentReproductionTest {
         ReflectionTestUtils.setField(registrationService, "growthService",
                 mock(com.chengyinhub.business.service.IGrowthService.class));
         BusinessAuditEventMapper auditMapper = mock(BusinessAuditEventMapper.class);
-        when(auditMapper.insertBusinessAuditEvent(any())).thenReturn(1);
+        when(auditMapper.insertBusinessAuditEvent(any())).thenAnswer(call -> {
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive(), "原审计与核销 CAS 同事务");
+            BusinessAuditEvent audit = call.getArgument(0);
+            audit.setId(701L); originalVerificationAudit = audit;
+            return 1;
+        });
+        when(auditMapper.selectByTarget("CMS_REGISTRATION", REGISTRATION)).thenAnswer(call ->
+                originalVerificationAudit == null ? Collections.emptyList() : List.of(originalVerificationAudit));
         ReflectionTestUtils.setField(registrationService, "businessAuditEventMapper", auditMapper);
 
-        PlatformTransactionManager transactionManager = mock(PlatformTransactionManager.class);
-        when(transactionManager.getTransaction(any())).thenReturn(mock(TransactionStatus.class));
+        // Existing resource-boundary unit managers provide actual Spring transaction markers;
+        // mapper doubles do not prove database commit/rollback. Topic close uses REQUIRES_NEW.
+        PlatformTransactionManager transactionManager =
+                com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.unitWriteTransactions();
         CoopComplaintMapper complaintMapper = mock(CoopComplaintMapper.class);
         topicService = new CmsTopicServiceImpl();
         org.springframework.test.util.ReflectionTestUtils.setField(topicService, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
@@ -239,16 +263,43 @@ class DoublePaymentReproductionTest {
         // 不装这件,主题结算会以 NPE 被 per-topic catch 吞掉 —— 那是装配缺件,不是被测行为。
         topicPointsAwardService = mock(IPointsAwardService.class);
         ReflectionTestUtils.setField(topicService, "pointsAwardService", topicPointsAwardService);
-        installOriginalCoopEvidence(registration, topicMapper, coopOrderMapper, coopInviteMapper);
+        CoopSettlementClaimServiceImpl settlement =
+                installOriginalCoopEvidence(registration, topicMapper, coopOrderMapper, coopInviteMapper);
+        ReflectionTestUtils.setField(registrationService, "coopSettlementClaimService", settlement);
 
         ICmsRegistrationMerchantService merchantService = mock(ICmsRegistrationMerchantService.class);
         CmsRegistrationMerchant winner = new CmsRegistrationMerchant();
+        winner.setId(STATION);
         winner.setMemberId(MERCHANT);
         winner.setTopicId(TOPIC);
         winner.setAuditStatus(1L);
+        winner.setDelFlag(0);
         winner.setValidationMethod(1);
+        CmsRegistrationMerchantMapper stations = mock(CmsRegistrationMerchantMapper.class);
+        when(stations.selectCmsRegistrationMerchantByIdForUpdate(STATION)).thenAnswer(call -> {
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive(), "据点归属须在原核销事务内当前读");
+            return winner;
+        });
+        ReflectionTestUtils.setField(registrationService, "cmsRegistrationMerchantMapper", stations);
         when(merchantService.selectCmsRegistrationMerchantList(any()))
                 .thenReturn(Collections.singletonList(winner));
+
+        // Let the real G owner read the audit we actually inserted and the original legacy order.
+        // There is no supplyBillingScope on this old order: the real reader returns Optional.empty,
+        // rather than a mocked successful attribution or a manufactured V1 station receipt.
+        stationFulfillments = mock(CoopOrderStationFulfillmentMapper.class);
+        when(stationFulfillments.selectAuditRegistrationLocation(701L)).thenAnswer(call -> {
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+            assertNotNull(originalVerificationAudit);
+            assertEquals(701L, originalVerificationAudit.getId());
+            return registration;
+        });
+        when(stationFulfillments.selectRegistrationForUpdate(REGISTRATION)).thenReturn(registration);
+        when(stationFulfillments.selectAuditForUpdate(701L)).thenAnswer(call -> originalVerificationAudit);
+        when(stationFulfillments.selectEffectiveOrdersForUpdate(TOPIC)).thenAnswer(call ->
+                coopOrderMapper.selectEffectiveOrdersByTopicId(TOPIC));
+        when(stationFulfillments.selectByAuditForUpdate(701L)).thenReturn(null);
+        ReflectionTestUtils.setField(settlement, "stationFulfillments", stationFulfillments);
 
         ClubMemberServiceImpl clubMemberService = new ClubMemberServiceImpl();
         ReflectionTestUtils.setField(clubMemberService, "coopOrderMapper", coopOrderMapper);
@@ -257,7 +308,13 @@ class DoublePaymentReproductionTest {
 
         controller = spy(new ApiRegistrationController());
         doReturn(MERCHANT).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "registrationService", registrationService);
+        ProxyFactory registrationProxy = new ProxyFactory(registrationService);
+        registrationProxy.setInterfaces(ICmsRegistrationService.class);
+        registrationProxy.addAdvice(new TransactionInterceptor(
+                com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.unitBusinessTransactions(),
+                new AnnotationTransactionAttributeSource()));
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "registrationService",
+                (ICmsRegistrationService) registrationProxy.getProxy());
         ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "registrationMerchantService", merchantService);
         ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "coopOrderMapper", coopOrderMapper);
         ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "clubMemberService", clubMemberService);
@@ -289,6 +346,13 @@ class DoublePaymentReproductionTest {
     void topicWithCoopOrder_paysMerchantOnlyThroughCoopLedger() {
         AjaxResult verification = controller.scanQrCode("topic", CODE);
         assertEquals("核销成功", verification.get("msg"));
+        assertNotNull(originalVerificationAudit);
+        assertEquals("REGISTRATION_STATION_REDEEM", originalVerificationAudit.getAction());
+        assertEquals(REGISTRATION, originalVerificationAudit.getDomainId());
+        assertEquals(MERCHANT, originalVerificationAudit.getOwnerMemberId());
+        assertEquals(STATION, originalVerificationAudit.getRelationId());
+        verify(stationFulfillments).selectAuditForUpdate(originalVerificationAudit.getId());
+        verify(stationFulfillments, never()).insertConfirmed(any());
         // 本单测在 Mapper 边界装入已封窗的票证据；不调用票务写侧，不模拟真实数据库时间旅行。
         assertNotNull(originalScan);
         long until = System.nanoTime() + java.util.concurrent.TimeUnit.MILLISECONDS.toNanos(100);
@@ -348,6 +412,7 @@ class DoublePaymentReproductionTest {
         registration.setMemberId(PLAYER);
         registration.setPaymentStatus(2);
         registration.setRegistrationStatus(2); // 已付订单的真实状态即报名成功
+        registration.setVerificationStatus(0);
         registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setFeePlatformRate(new BigDecimal("0.10"));
         registration.setTicketId(801L);
@@ -393,7 +458,7 @@ class DoublePaymentReproductionTest {
     }
 
     /** Real reader/evidence/claim services; only persistence boundaries use controlled fixture rows. */
-    private void installOriginalCoopEvidence(CmsRegistration registration,
+    private CoopSettlementClaimServiceImpl installOriginalCoopEvidence(CmsRegistration registration,
             CmsTopicMapper topics, CoopOrderMapper orders, CoopInviteMapper invites) {
         evidenceMapper = mock(CoopSettlementEvidenceMapper.class);
         com.chengyinhub.business.service.impl.OriginalCloseRefundHistoryFixture.install(topicService, TOPIC, Collections.emptyList());
@@ -450,6 +515,7 @@ class DoublePaymentReproductionTest {
         ReflectionTestUtils.setField(settlement,"topicMapper",topics);
         ReflectionTestUtils.setField(topicService, "coopSettlementEvidenceMapper", evidenceMapper);
         ReflectionTestUtils.setField(topicService, "coopSettlementClaimService", settlement);
+        return settlement;
     }
 
     private SettlementRule entryRule() {
