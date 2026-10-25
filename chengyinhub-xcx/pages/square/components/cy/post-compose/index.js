@@ -518,6 +518,7 @@ Component({
     },
 
     onPublish() {
+      if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.onPublish())) return; // 2026-10-24 游客写前登录
       const that = this;
       if (that._disposed || !that._composeVisible) return;
       if (String(app.getUserID() || '') !== String(that._memberId || '')) {

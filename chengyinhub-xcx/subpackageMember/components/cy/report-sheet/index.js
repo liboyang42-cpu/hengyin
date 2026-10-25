@@ -77,6 +77,7 @@ Component({
     },
     backToPick() { if (!this._busy) this.setData({ stage: 'pick' }) },
     submit() {
+      if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.submit())) return; // 2026-10-24 游客写前登录
       if (this._busy) return
       const checked = model.checkDescription(this.data.description)
       if (!checked.ok) { this.setData({ descriptionError: checked.error }); return }

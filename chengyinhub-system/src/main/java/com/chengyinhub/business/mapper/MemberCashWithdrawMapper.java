@@ -47,6 +47,9 @@ public interface MemberCashWithdrawMapper {
     /** 仅当仍处理中(status=0)时更新为终态,保证 SUCCESS/退款单次性;返回受影响行数 */
     public int updateStatusIfProcessing(MemberCashWithdraw w);
 
+    /** A matching original channel success may also resolve an escalated/manual-review withdrawal. */
+    int updateSuccessIfPending(MemberCashWithdraw w);
+
     /** 后台列表:按状态/会员过滤(均可空) */
     public List<MemberCashWithdraw> selectForAdmin(MemberCashWithdraw query);
 

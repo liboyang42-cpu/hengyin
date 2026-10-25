@@ -3,6 +3,7 @@ package com.chengyinhub.business.service;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.MemberCashWithdraw;
+import com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent;
 import com.chengyinhub.business.domain.OmsTicket;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.mapper.CmsRegistrationMapper;
@@ -155,10 +156,15 @@ class FundIdempotencyConcurrencyTest {
             return 1;
         });
         when(mapper.selectById(withdrawalId)).thenReturn(pending);
+        when(mapper.updateMemberCashWithdraw(any())).thenReturn(1);
+        CashWithdrawIntentTestSupport evidence = new CashWithdrawIntentTestSupport();
         when(mapper.selectPendingForQuery(1)).thenReturn(Collections.singletonList(pending));
         AtomicBoolean statusClaimed = new AtomicBoolean();
-        when(mapper.updateStatusIfProcessing(any())).thenAnswer(invocation ->
-                statusClaimed.compareAndSet(false, true) ? 1 : 0);
+        when(mapper.updateStatusIfProcessing(any())).thenAnswer(invocation -> {
+            if (!statusClaimed.compareAndSet(false, true)) return 0;
+            pending.setStatus(invocation.getArgument(0, MemberCashWithdraw.class).getStatus());
+            return 1;
+        });
 
         IUmsMemberService memberService = mock(IUmsMemberService.class);
         UmsMember member = new UmsMember();
@@ -182,6 +188,8 @@ class FundIdempotencyConcurrencyTest {
             result.put("ok", "false");
             result.put("ambiguous", "false");
             result.put("error", "微信明确拒绝");
+            result.put("notSent", "true");
+            result.put("requestHash", invocation.getArgument(0, CashWithdrawTransferIntent.class).requestHash());
             return result;
         });
         Map<String, String> queryFailure = new HashMap<>();
@@ -199,7 +207,11 @@ class FundIdempotencyConcurrencyTest {
         org.springframework.transaction.PlatformTransactionManager transactions = mock(org.springframework.transaction.PlatformTransactionManager.class);
         when(transactions.getTransaction(any())).thenReturn(mock(org.springframework.transaction.TransactionStatus.class));
         ReflectionTestUtils.setField(service, "transactionManager", transactions);
-        when(mapper.updateStatusIfManual(any())).thenReturn(1);
+        when(mapper.updateStatusIfManual(any())).thenAnswer(invocation -> {
+            pending.setStatus(invocation.getArgument(0, MemberCashWithdraw.class).getStatus());
+            return 1;
+        });
+        ReflectionTestUtils.setField(service, "transferIntents", evidence.mapper);
         ReflectionTestUtils.setField(service, "mapper", mapper);
         ReflectionTestUtils.setField(service, "umsMemberService", memberService);
         ReflectionTestUtils.setField(service, "wechatPayService", wechatPayService);
@@ -215,7 +227,7 @@ class FundIdempotencyConcurrencyTest {
         ReflectionTestUtils.setField(service, "frozenAmountResolver",
                 new WithdrawalFrozenAmountResolver(bountyService, cooldownService));
         ReflectionTestUtils.setField(service, "balanceAdmissionService",
-                com.chengyinhub.business.longrun.OWN_C04_21Test.cashFixture(memberService, mapper, (com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver) ReflectionTestUtils.getField(service, "frozenAmountResolver")));
+                com.chengyinhub.business.longrun.OWN_C04_21Test.cashFixture(memberService, mapper, (com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver) ReflectionTestUtils.getField(service, "frozenAmountResolver"), evidence.mapper));
         // Keep the original single-winner assertion, and persist that winner's lifecycle for later fact checks.
         org.mockito.Mockito.doAnswer(invocation -> {
             if (!statusClaimed.compareAndSet(false, true)) return 0;
@@ -242,6 +254,7 @@ class FundIdempotencyConcurrencyTest {
         }
 
         verify(memberService, times(1)).addBalance(memberId, amount);
+        verify(evidence.mapper).markSubmitted(eq(withdrawalId), eq(evidence.get(withdrawalId).requestHash()));
         ArgumentCaptor<MemberCashWithdraw> claims = ArgumentCaptor.forClass(MemberCashWithdraw.class);
         verify(mapper, times(1)).updateStatusIfProcessing(claims.capture());
         List<MemberCashWithdraw> actualClaims = claims.getAllValues();

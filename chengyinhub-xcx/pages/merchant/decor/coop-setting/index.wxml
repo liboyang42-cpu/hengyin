@@ -22,7 +22,7 @@
     <cy-error load-failure
       size="lg"
       style="display: flex; flex-direction: column; flex: 1; min-height: 0"
-      icon="/images/no_data.svg"
+      icon="empty-state"
       fill
       title="{{loadErrorKind === 'network' ? '网络没连上' : '承接设置加载失败'}}"
       sub="{{loadError}}"

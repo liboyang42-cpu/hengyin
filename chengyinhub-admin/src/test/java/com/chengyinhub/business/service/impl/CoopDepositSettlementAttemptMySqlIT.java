@@ -171,6 +171,7 @@ class CoopDepositSettlementAttemptMySqlIT {
         var order = inOrder(gateway);
         order.verify(gateway).queryOrderStatus(BUSINESS);
         order.verify(gateway).closePaymentAttempt(BUSINESS, BUSINESS);
+        order.verify(gateway).queryOrderStatus(BUSINESS);
         order.verify(gateway).lockClosablePaymentAttemptForUpdate(BUSINESS, BUSINESS);
         verify(gateway, never()).closeOrder(anyString());
     }

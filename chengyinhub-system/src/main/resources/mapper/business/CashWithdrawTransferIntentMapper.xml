@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CashWithdrawTransferIntentMapper">
+    <resultMap id="intent" type="com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent">
+        <constructor>
+            <idArg column="withdraw_id" javaType="java.lang.Long"/>
+            <arg column="member_id" javaType="java.lang.Long"/>
+            <arg column="mchid" javaType="java.lang.String"/>
+            <arg column="appid" javaType="java.lang.String"/>
+            <arg column="out_batch_no" javaType="java.lang.String"/>
+            <arg column="out_detail_no" javaType="java.lang.String"/>
+            <arg column="amount_fen" javaType="_long"/>
+            <arg column="openid" javaType="java.lang.String"/>
+            <arg column="remark" javaType="java.lang.String"/>
+            <arg column="request_version" javaType="_int"/>
+            <arg column="request_hash" javaType="java.lang.String"/>
+            <arg column="balance_before" javaType="java.math.BigDecimal"/>
+            <arg column="balance_after" javaType="java.math.BigDecimal"/>
+            <arg column="submitted" javaType="_boolean"/>
+            <arg column="locally_rejected" javaType="_boolean"/>
+        </constructor>
+    </resultMap>
+    <select id="selectByWithdrawId" resultMap="intent" useCache="false" flushCache="true">
+        SELECT withdraw_id, member_id, mchid, appid, out_batch_no, out_detail_no, amount_fen,
+               openid, remark, request_version, request_hash, balance_before, balance_after,
+               submit_time IS NOT NULL AS submitted, local_rejection_time IS NOT NULL AS locally_rejected
+        FROM member_cash_withdraw_transfer_intent WHERE withdraw_id = #{withdrawId}
+    </select>
+    <insert id="insert">
+        INSERT INTO member_cash_withdraw_transfer_intent
+        (withdraw_id, member_id, mchid, appid, out_batch_no, out_detail_no, amount_fen, openid,
+         remark, request_version, request_hash, balance_before, balance_after)
+        VALUES (#{withdrawId}, #{memberId}, #{mchid}, #{appid}, #{outBatchNo}, #{outDetailNo},
+                #{amountFen}, #{openid}, #{remark}, #{requestVersion}, #{requestHash}, #{balanceBefore}, #{balanceAfter})
+    </insert>
+    <update id="markSubmitted">
+        UPDATE member_cash_withdraw_transfer_intent SET submit_time = CURRENT_TIMESTAMP(3)
+        WHERE withdraw_id = #{withdrawId} AND request_hash = #{requestHash} AND submit_time IS NULL
+          AND EXISTS (SELECT 1 FROM member_cash_withdraw w WHERE w.id = #{withdrawId}
+                      AND w.status = 0 AND w.del_flag = 0 AND (w.frozen IS NULL OR w.frozen = 0))
+    </update>
+    <update id="markLocallyRejected">
+        UPDATE member_cash_withdraw_transfer_intent SET local_rejection_time = CURRENT_TIMESTAMP(3)
+        WHERE withdraw_id = #{withdrawId} AND request_hash = #{requestHash}
+          AND submit_time IS NOT NULL AND local_rejection_time IS NULL
+    </update>
+</mapper>

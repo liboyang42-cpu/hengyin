@@ -7,7 +7,12 @@
 </block>
 <view class="cy-error {{fill ? 'cy-error--fill' : ''}} {{size === 'lg' ? 'cy-error--lg' : ''}}" wx:else
       aria-role="alert" aria-live="polite" aria-label="{{aria || title}}{{!aria && sub ? '，' + sub : ''}}">
-  <image wx:if="{{icon}}" class="cy-error-ic" src="{{icon}}" mode="widthFix" aria-hidden="true" />
+  <!-- icon="empty-state":与 cy-empty 同一张两层空态插画(2026-10-24 owner Figma node 2807:12251),替代旧 no_data.svg -->
+  <view wx:if="{{icon === 'empty-state'}}" class="cy-error-art" aria-hidden="true">
+    <image class="cy-error-art__bg" src="/images/empty_state_bg.svg" mode="aspectFit" />
+    <image class="cy-error-art__figure" src="/images/empty_state_figure.svg" mode="aspectFit" />
+  </view>
+  <image wx:elif="{{icon}}" class="cy-error-ic" src="{{icon}}" mode="widthFix" aria-hidden="true" />
   <view class="cy-error-title">{{title}}</view>
   <view wx:if="{{sub}}" class="cy-error-sub">{{sub}}</view>
   <view wx:if="{{retry}}" class="cy-error-retry" hover-class="cy-error-retry--press" hover-stay-time="80" aria-role="button" aria-label="{{retryLabel}}" bindtap="onRetry">{{retryLabel}}</view>

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-25T02:02:45.042185+00:00",
+  "updated_utc": "2026-10-25T02:42:06.152141+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -23,7 +23,7 @@
       "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280"
     },
     "B": {
-      "state": "ACTIVE_PUBLIC_MASTER_16_FUNDS_CONFLICT_PATCHES",
+      "state": "ACTIVE_FUNDS_CONFLICT_IMPLEMENTATION_SCOPE_UNBLOCKED",
       "task": "ExactpublicHEAD3wayfundsJava/tests composition preservingbothguards/cases; existingSQLhash/compatibilityreportonly",
       "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
       "host_id": "durable",
@@ -65,7 +65,7 @@
       "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280"
     },
     "E": {
-      "state": "ACTIVE_PUBLIC_MASTER_TOPIC_CONFLICT_PATCH",
+      "state": "DELIVERED_PUBLIC_MASTER_TOPIC_FROZEN_PENDING_COMBINED_SOURCE",
       "task": "OnlyCmsTopicServiceImpl truepublicmergeconflict, preservecandidatefacades/boundaries and publicmasterpaymentguards",
       "thread_id": "01a16a23-2723-72e4-813f-03d7f1aa6017",
       "host_id": "durable",
@@ -144,7 +144,31 @@
     "Negative organizer margin from actual fulfillment cost: durable manual handling; no automatic balance or deposit debit",
     "NPC ASR and same subsequent NPC chat share existing quota: reserve before ASR, release only proven NOT_SENT, retain UNKNOWN, no second debit on text handoff; shop gen pool unchanged",
     "Voice enrollment UNKNOWN can start a separate original request only after explicit duplicate-cost confirmation; retain original record, never auto-resend",
-    "Each successful partial-refund component reversal must sum exactly to that actual refund; allocate penny remainders within original order components; no temporary missing pennies"
+    "Each successful partial-refund component reversal must sum exactly to that actual refund; allocate penny remainders within original order components; no temporary missing pennies",
+    {
+      "id": "UNPAID_DEPOSIT_FROM_ORDER_RECEIVABLE",
+      "state": "HUMAN_APPROVED_AUTOMATIC_ORIGINAL_ADJUSTMENT_IMPLEMENTING",
+      "scenario": "Samepartner owes50deposit andhas50receivablefromsame topic",
+      "conflict": "Publicmaster2positiveCoopSettlementTestcasesexpectdirect50setoff; candidateoriginal-order lines explicitlyreject CLAIM_DEPOSIT_ADJUSTMENT_REQUIRED",
+      "options": [
+        "Preservereceivable,persistpendingmanualcase; afterhumanconfirmationrecordseparateoriginal-order50adjustmentandsetoff",
+        "Automaticsetoffwithimmutableadjustmentboundoriginalorder"
+      ],
+      "recommended": 0,
+      "do_not_infer_approval": true,
+      "affected_only": [
+        "TwoCoopSettlementTestpositivecases",
+        "Actualunpaid-depositadjustment/businessflow"
+      ],
+      "independent_work": "Bcontinueswithdrawal/SDK/fixtureconflicts;rootsharedCI/SQLcontinue",
+      "existing_guards": "RetaincoopOrderId/original50assertions/manualguard, no fabricatedadjustment/no deletedtest",
+      "quality_classification": "Conflictingbusinesscontracts; notproof16businessbugs/onepolicyneeded",
+      "approved_choice": 1,
+      "human_answer": "结算时自动抵扣，但必须生成关联原订单的不可变调整凭证",
+      "authority": "Direct user question reply call_e39e3991cd20426591608496cdca3733",
+      "owner": "G",
+      "no_longer_pending": true
+    }
   ],
   "pending_business_decisions": [],
   "actual_minimal_checks": {
@@ -1566,6 +1590,327 @@
       },
       "master_new_class": "com.chengyinhub.business.service.CashWithdrawTransferIntentMySqlIT (9 source declarations)",
       "note": "Pure source scanner on unresolvedpreview auto-merged files only; nottestpasses; finalregistry/gate/count resolution waits B/E actualcombinedsource; retainpublicgatecontrols andalloriginalcases"
+    },
+    "technical_decisions": {
+      "canonical_old_sql": "Use publicmaster byte-identical CREATEtransfer_intent SHA256f2488f404fa9c1940377b47cbe531351bd2e31e3f8b1fc50aa7b2813ba00e55c",
+      "new_additive": "20261025_cash_withdraw_fund_request_compat exactff2b8column+CHECKALTER semantics;dependencyfundfact;nohistoricalbackfill",
+      "legacy_identity": "Originalmaster intent recovers only fromitsoriginalbalance/submit/hash proof; originalfundfact fromitsproof; no syntheticcrossledgerDEBIT/SUBMIT_INTENT/currentconfigbackfill, contradictions remainUNKNOWN/manual",
+      "new_economic_action": "Singleoriginaldebit, requiredlocalrecords inexistingtransaction, no doubleeconomic effects",
+      "B_extended_scope": [
+        "WechatPaymentSdkGateway.java and direct transferclassification fixture",
+        "CashWithdrawFundEvidenceMySqlIT.java and bothDDLcaller wiring",
+        "CashWithdrawTransferIntentMySqlIT.java direct three-migration fixture; new source cases counted only after final delivery"
+      ],
+      "pending_source_state": "NewSQL/DAG workingtree only; oldSQL not yetselectedmaster andB/Esource notassembled; NOT_RUN_NOT_A_CANDIDATE"
+    },
+    "root_ci_preparation": {
+      "path": "/private/tmp/hengyin-public-master-root-resolutions",
+      "manifest": {
+        "status": "PREPARED_ONLY_NOT_APPLIED_NOT_RUN_RECHECK_AFTER_B_SOURCE",
+        "candidate": "ff2b0ea1cf0ca3f097de446b5eda85beb3fad1a0",
+        "master": "892efe6f765a5748065569fd886ee9b00ef71d4b",
+        "files": {
+          "ci/funds_it_gate.py": "97c131a50a998e0ec14adeb70b5c94c8a5a150d0be2aa230b415df200d2c6b49",
+          "ci/test_funds_it_gate.py": "069b66bf236ce4a69d4b5b86459f064fa8e13e4e75931c9b8643975b2bf1da46",
+          "ci/migration-dependencies.json": "725c319ffa86f3134bfb4e4bb359c7b90bd775d126ae80d2870b5f206569db64",
+          "ci/real-storage-it-registry.json": "43284be7eac462a7278686a608652815dd522051aa35f79e5f82cb64bcc71728",
+          "ci/test_real_storage_it.py": "8c54e93cdd60b3bc42b1412cc1b9bb5b9723c53847a49545ebcdf28dc9d7f960"
+        },
+        "counts": "Provisional exact declarations from unchanged auto-merged sources; recalculate after B/E complete. No test PASS claim.",
+        "strict_payment_gate": "Preserve master B_PAYMENT_INTENT_DDL_APPROVED and source assert scanner; retain candidate14 callback/4intent source cases, no dropped gate controls."
+      },
+      "execution": "Only Python syntax compilation and source/dictionary identity assertions; noJavaDBtests/noCI",
+      "apply_state": "APPLIED_TO_WORKING_SOURCE_FINAL_G_INVENTORY_PENDING",
+      "recheck": "Exactcasecounts/gates/totals must be recalculated after final B sources, not inherited from provisional819/30",
+      "source_reconciliation": {
+        "class": "CashWithdrawFundEvidenceMySqlIT",
+        "old_declarations": 53,
+        "new_declarations": 57,
+        "source_gates": "B_PAYMENT_INTENT_DDL_APPROVED=1",
+        "integrated_total": 823,
+        "note": "Source declarations only. B preserves53 oldcases adds4 provenancecontrols. Final G change may require newcount; no test PASS.",
+        "G_original_refund": {
+          "prior": 15,
+          "current": 25,
+          "added_declarations": 10,
+          "original_refund_batch": 25,
+          "funds_closure_batch": 219,
+          "integrated_batch": 833,
+          "runtime": "NOT_RUN"
+        }
+      }
+    },
+    "automatic_source_preparation": {
+      "path": "/private/tmp/hengyin-public-master-automatic-source",
+      "effective_changed_nonconflict_paths": 11,
+      "state": "PREPARED_ONLY_NOT_APPLIED_NOT_EXECUTABLE_NOT_RUN",
+      "canonical_master_sql_hash_verified": "f2488f404fa9c1940377b47cbe531351bd2e31e3f8b1fc50aa7b2813ba00e55c",
+      "overlays": [
+        "All B final owned files, including auto-added transfer intent fixtures/helpers if modified",
+        "E exact CoopDepositPaymentSettlementTest blob, not raw automatic master fixture",
+        "Root five CI final source-count reconciliation and new additive migration"
+      ],
+      "note": "62incomingpaths is not an apply list; only11 effective nonconflict paths differ from candidate in preview. No projectsource applied."
+    },
+    "B_partial_delivery_request": {
+      "state": "SENT_AWAITING_SNAPSHOT_AND_OWNERSHIP_LIST",
+      "request": "Completed production snapshot plus exact untouched unit fixtures eligible for original A/H parallel handoff; nobody touches B files before explicit handoff",
+      "delivery": "No complete source patch yet; B progress commentary is not delivery"
+    },
+    "B_latest_progress": {
+      "turn": "01a170d4-23a9-7279-ac81-04d1b725ff15",
+      "cursor": "b03dff2c-10cc-4156-add7-1e422e41c5d1:9",
+      "state": "COMPLETE_INDEPENDENT_DELTA_RECONSTRUCTED_EXACT_SOURCE_STAGING_ONLY",
+      "patch": "/private/tmp/hengyin-b-public-master-complete-ready.patch",
+      "bytes": 129134,
+      "sha256": "5a8800de120f1543f7bd7cd2f9d9f9ef939e53579dcd6758315aab60a057095d",
+      "source_staging": "/private/tmp/hengyin-b-public-master-assembled",
+      "delta_files": 15,
+      "apply_check": "PASS",
+      "production_test_execution": "NOT_RUN",
+      "source_count_claim": "B declared163 across12tests is not runtime pass count; final actual inventory required",
+      "pending_handoff": "CoopSettlementTest/new approved policy ownedG; one untouched gateway bind fixture ownedA"
+    },
+    "new_policy_work": {
+      "G": {
+        "state": "DELIVERED_ALL_CODE_HASH_EXACT_APPLIED_NOT_RUN",
+        "scope": "Approved auto deposit setoff production and necessary direct MySQL fixture only; CoopSettlementTest handed to originalA",
+        "baseline": "7b1412f4cd37d293576499e92c7d44b36ee7c766",
+        "no_overlap": "G onlyapprovedpolicy production/directMySQL; CoopSettlementTest now exclusivelyA; B deliveredfunds frozen",
+        "java_db_ci": "NOT_RUN",
+        "latest_observation": {
+          "cursor": "4b361718-0fcf-48df-970f-92288ff9076c:12",
+          "turn": "01a17113-a8f9-70ec-b1e9-9e9f0fa0650d",
+          "state": "completed",
+          "error": null
+        },
+        "unit_handoff": {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java",
+          "to": "A",
+          "state": "G_UNIT_RESTORED_PARENT_DONOR_SENT_TO_A",
+          "preserve_existing_work": "G reports any already prepared unitdelta separately for A; no overwrite or dropped assertions",
+          "public_commit": "24fcaa092c2190da84533162641c130e7ff48d56",
+          "donor_path": "docs/delivery/architecture-day/G/order-deposit-setoff/unit-donor.review.patch",
+          "contract_path": "docs/delivery/architecture-day/G/order-deposit-setoff/A_CALLER_CONTRACT.md",
+          "existing_shared_signature": "appendExecutedAdjustment(Long,String,BigDecimal) unchanged",
+          "new_schema": "NONE according toGcurrentcontract",
+          "donor_not_production": true
+        },
+        "public_head": "7e4ce69c61096a7c60e2f8aef2f7e9399e9537eb",
+        "parent": "24fcaa092c2190da84533162641c130e7ff48d56",
+        "code_files": 4,
+        "docs_applied": 3,
+        "patch_sha256": "e96acac9ceec004ada0532322be0383a918f41fde1125a9e9e7d8294bfa2862b",
+        "receipt": "/private/tmp/hengyin-g-order-deposit-setoff-receipt.json",
+        "new_mysql_declarations": 10,
+        "excluded_doc_only": "Duplicate raw unit donor remains at public24fc for A; five literalblankcontextwhitespace lines rejected by strict apply before anywrite, no production/test source excluded"
+      },
+      "A": {
+        "state": "DELIVERED_HASH_EXACT_APPLIED",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayTransferIntentGatewayTest.java",
+        "parent_blob": "f15d6521aaaf4a2d978d43ea59856f20c69fd78a",
+        "scope": "Explicit original wx-original app binding in four-argumentTransferClientBinding; preserve all original assertions",
+        "java_db_ci": "NOT_RUN",
+        "patch_sha256": "6258873c492f1cf6cbc10b05e593f4f5278bfabc54f71a41ac8522a8e7de1764",
+        "source_sha256": "990270033c8db947c751c4c4f1a395ab83061446fc589ddaa12a1ff2238dd1c4",
+        "patch_bytes": 1262,
+        "original_cases": 12,
+        "original_assertion_calls": 45
+      },
+      "A_deposit_unit": {
+        "state": "DELIVERED_FROZEN_BYTE_EXACT_APPLIED_NOT_RUN",
+        "thread": "01a16a22-3076-7196-88f5-86d5b2c83036",
+        "host": "durable",
+        "scope": "Only CoopSettlementTest whole unit fixture and A task docs; approved immutable original gross plus negative adjustment/net50setoff semantics; preserve both public source case sets",
+        "base": "ff2b0ea1cf0ca3f097de446b5eda85beb3fad1a0 + publicmaster892efe6f765a5748065569fd886ee9b00ef71d4b",
+        "production_owner": "G",
+        "contract": "Existing appendExecutedAdjustment preferred; any necessary new interface is root-coordinated, never guessed",
+        "Java_DB_CI": "NOT_RUN",
+        "turn": "01a17137-67a3-75c2-af0a-7fd68693a889",
+        "cursor": "1e9feea5-2ea9-4d63-a7a0-0e845f8692e0:6",
+        "donor_commit": "24fcaa092c2190da84533162641c130e7ff48d56",
+        "final_production_forwarded": "7e4ce69c61096a7c60e2f8aef2f7e9399e9537eb; no new interfaces/schema, no waitingforproduction",
+        "source_declared_cases": 29,
+        "original_chat_patch_sha256": "454329fbe85c232c2b3afda559d7d016db2725d904e95e219d5254cf9e55e5b2",
+        "applicable_canonical_patch_sha256": "5f49219ec50b0fe4e72fb1227992b752e81b91c5bb02c9740ddcb4d5cd362463",
+        "source_sha256": "9ade861adeb6496738df7cf4d3328facd075833dad997ef7a8d43a8f52d8e913",
+        "source_bytes": 70633,
+        "receipt": "/private/tmp/hengyin-a-deposit-unit-receipt.json",
+        "transport_note": "Originalchatpatchcontainedone spuriousEOFblankcontext; canonicalpatch reconstructed toexactauthorpostimagehash, no test/code change. Rawcheckfailuresretained."
+      }
+    },
+    "working_source_assembly": {
+      "state": "ALL_NECESSARY_SOURCE_CALLERS_TESTS_GENERATED_ARTIFACTS_COLLECTED_FREEZE_PENDING",
+      "receipt": "/private/tmp/hengyin-public-master-working-source-assembly.json",
+      "source_files_applied": 30,
+      "canonical_public_sql": "f2488f404fa9c1940377b47cbe531351bd2e31e3f8b1fc50aa7b2813ba00e55c",
+      "E_adapted_test_preserved": true,
+      "head_index_merge_changed": false,
+      "Java_DB_CI": "NOT_RUN",
+      "first_prewrite_guard": "Top-levelDAGshape assertionfailedbeforeanywrite; correctednesteddependenciesassertionandrerun preservedsource"
+    },
+    "public_master_refresh": {
+      "via": "GitHub connected compare_commits",
+      "base": "892efe6f765a5748065569fd886ee9b00ef71d4b",
+      "head": "master",
+      "status": "identical",
+      "ahead_by": 0,
+      "behind_by": 0,
+      "checked_utc": "2026-10-25T03:28:12Z",
+      "note": "Read-only metadata, no merge/fetch/worktree action; refresh again at final freeze if needed"
+    },
+    "first_source_collection": {
+      "state": "ALL_B_E_G_A_NECESSARY_ORIGINAL_CODE_COLLECTED_AND_APPLIED",
+      "new_scope_source_precheck": {
+        "classes": 66,
+        "source_declarations": 833,
+        "problems": 0,
+        "not_test_execution": true
+      },
+      "final_runtime": "NOT_RUN",
+      "freeze_recheck_result": "Publicmasterhad20furthercommits/92paths; mustreconcileknownlatestinput51f0beforefinalfreeze"
+    },
+    "latest_master_reconciliation": {
+      "state": "ALL_THREE_CONFLICTS_RESOLVED_AND_ALL_NECESSARY_SOURCE_APPLIED_READY_FOR_FINAL_FREEZE",
+      "old_head": "89a669060ab2f871b2fec9fcd5b14ad813e99ea8",
+      "snapshot_tree": "1b0634964c67521ab4aaa6debbfcfe860ec9fe24",
+      "unpublished_source_snapshot": "769c0ad170cc98b0b56dca848deabad96bb82efc",
+      "original_public_master": "892efe6f765a5748065569fd886ee9b00ef71d4b",
+      "latest_public_master": "51f05499c1523648a328f57bcd7927f6d9546003",
+      "latest_incoming_commits": 20,
+      "latest_incoming_paths": 92,
+      "preview_tree": "a39fb16f53ff25d159627e9ed51ef0d33a76315c",
+      "conflict_paths": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+        "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+        "chengyinhub-xcx/tests/lint/ui-integrity-baseline.js"
+      ],
+      "merge_returncode": 1,
+      "head_ref_changed": false,
+      "worktree_changed_by_merge": false,
+      "Java_DB_CI": "NOT_RUN",
+      "auto_applied_paths": 89,
+      "auto_receipt": "/private/tmp/hengyin-public-master-51f0-auto-apply.json",
+      "frozen_incoming_base": "51f05499c1523648a328f57bcd7927f6d9546003",
+      "do_not_chase_unbounded_head": "Pin51f0forcurrentcandidate; latermasterdeltasremainseparateintegrationevidence, no continuousrerunoldPASStests",
+      "owners": {
+        "E": {
+          "paths": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/registration/RegistrationQueryApplication.java",
+            "directApiRegistrationServerNowTest fixture"
+          ],
+          "state": "DELIVERED_BYTE_EXACT_SOURCE_APPLIED_NOT_RUN",
+          "scope": "Preservethincontroller andmoveexactmaster12lineclocksemantics totheexistingqueryapplication actual3readpaths",
+          "public_head": "c372dda2058a2ac3fe7ff0607bb011d99eed05ee",
+          "parent": "ff2b0ea1cf0ca3f097de446b5eda85beb3fad1a0",
+          "receipt": "/private/tmp/hengyin-e-server-now-integration-receipt.json",
+          "controller_unchanged": true,
+          "query_added_lines": 12,
+          "test_declarations": 4,
+          "original_master_cases": 3,
+          "Java_DB_CI_UI": "NOT_RUN"
+        },
+        "D": {
+          "paths": [
+            "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+            "chengyinhub-xcx/tests/lint/ui-integrity-baseline.js"
+          ],
+          "state": "DELIVERED_SINGLEFILE_BYTE_EXACT_APPLIED",
+          "scope": "Only UIintegritybaseline minimumoriginalanchor reconciliation plusnecessarygeneratorseam ifreal; root requestedsoleledgergeneration takeover toavoid4019file cloudmaterialization",
+          "generation_handoff": {
+            "to": "root",
+            "state": "AWAITING_D_CONFIRM_IF_WRITE_ALREADY_EXECUTED",
+            "instruction": "Ifnotexecutedstopmaterializingwholeclient androotrunssoleexistingNodewrite oncorrectunion; ifexecutedreturnactualhash/command anddo notduplicate",
+            "transport": "Singleturn readsize-limit; usecompact/publiccommit/smallpatchnohugeledgerdump"
+          },
+          "commit": "b7f031c33f68ccd6c0c0b6f37424b78b6789f86c",
+          "parent": "ff2b0ea1cf0ca3f097de446b5eda85beb3fad1a0",
+          "sha256": "37b7510c1ea0abf5b262118a6da276a0fce801a71efdfb32eb635e9d401bd254",
+          "anchor_shifts": 36,
+          "source_permission_scope": "originalreasons/count/capsunchanged",
+          "controls": "Owner syntax/minimalprotectionPASS, nofullUIevidence"
+        },
+        "root_generated_ledger": {
+          "state": "SOLE_LOCAL_GENERATION_COMPLETED_EXIT0",
+          "command": "node scripts/uiaudit/build-action-ledger.js --write",
+          "node": "v24.15.0",
+          "controls": 5121,
+          "sha256": "a7e9ba3fe1e634a150d844c6352079e46295997ac95338fb2ee8a250a4ce365e",
+          "source_union_excluded_generated_sha256": "96432d72fbd0b937eb309b742980a207f55edce70cf5917256eaf4022c5fc76c",
+          "meaning": "Generatedsourceledgeronly,notUI/business/runtimePASScount",
+          "Java_DB_CI_UI": "NOT_RUN"
+        }
+      },
+      "xcx_union_input": {
+        "excluded_generated_paths": [
+          "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+          "chengyinhub-xcx/tests/lint/ui-integrity-baseline.js"
+        ],
+        "files": 4019,
+        "sha256": "96432d72fbd0b937eb309b742980a207f55edce70cf5917256eaf4022c5fc76c",
+        "algorithm": "sha256(json.dumps(sorted([mode,blob,path],key=path),ensure_ascii=False,separators=(comma,colon)).encode(UTF8))"
+      },
+      "CI": "NOT_RUN_PENDING_E_D_SOURCE",
+      "A_B_G": "DELIVERED_FROZEN_NO_REDISPATCH"
     }
+  },
+  "public_master_topic_delivery": {
+    "sha": "7b1412f4cd37d293576499e92c7d44b36ee7c766",
+    "parent": "ff2b0ea1cf0ca3f097de446b5eda85beb3fad1a0",
+    "state": "OWNED_PATCH_APPLIED_4CODE_BLOBS_EXACT_PENDING_B_AND_SHARED_ROOT",
+    "production_scope": "One method27line delta,4actualconflicthunks, preservefacades/shorttransaction/typedReference/locks; closeacknotterminal,requerysameattemptoutsideTX",
+    "tests": "Originalcandidate2Attemptfixtures updated and masternew8methods/18parametercases retained withtypedfixture; notnewPASS",
+    "auto_merge_override": "Adopt E fullCoopDepositPaymentSettlementTest blob, do not overwrite with rawmasterversion later",
+    "java_db_ci": "NOT_RUN"
+  },
+  "worker_progress_not_delivery": {
+    "B": {
+      "turn": "01a170d4-23a9-7279-ac81-04d1b725ff15",
+      "state": "inProgress",
+      "last_claim": "Sharedcashrecoveryanddualproofimplemented; mapperfixturewiringcontinues; twoolddepositsetoffpositivecasepolicycollisionraised",
+      "delivery_received": false
+    },
+    "E": {
+      "state": "7b1412f4 applied/frozen, no open task"
+    }
+  },
+  "pending_settlement_policy": {
+    "id": "UNPAID_DEPOSIT_FROM_ORDER_RECEIVABLE",
+    "state": "HUMAN_APPROVED_AUTOMATIC_ORIGINAL_ADJUSTMENT_IMPLEMENTING",
+    "scenario": "Samepartner owes50deposit andhas50receivablefromsame topic",
+    "conflict": "Publicmaster2positiveCoopSettlementTestcasesexpectdirect50setoff; candidateoriginal-order lines explicitlyreject CLAIM_DEPOSIT_ADJUSTMENT_REQUIRED",
+    "options": [
+      "Preservereceivable,persistpendingmanualcase; afterhumanconfirmationrecordseparateoriginal-order50adjustmentandsetoff",
+      "Automaticsetoffwithimmutableadjustmentboundoriginalorder"
+    ],
+    "recommended": 0,
+    "do_not_infer_approval": true,
+    "affected_only": [
+      "TwoCoopSettlementTestpositivecases",
+      "Actualunpaid-depositadjustment/businessflow"
+    ],
+    "independent_work": "Bcontinueswithdrawal/SDK/fixtureconflicts;rootsharedCI/SQLcontinue",
+    "existing_guards": "RetaincoopOrderId/original50assertions/manualguard, no fabricatedadjustment/no deletedtest",
+    "quality_classification": "Conflictingbusinesscontracts; notproof16businessbugs/onepolicyneeded",
+    "approved_choice": 1,
+    "human_answer": "结算时自动抵扣，但必须生成关联原订单的不可变调整凭证",
+    "authority": "Direct user question reply call_e39e3991cd20426591608496cdca3733",
+    "owner": "G",
+    "no_longer_pending": true
+  },
+  "final_concentrated_acceptance_51f0": {
+    "state": "SOURCE_COMPLETE_SCAN_FREEZE_PENDING",
+    "base": "51f05499c1523648a328f57bcd7927f6d9546003",
+    "scope_complete": false,
+    "standard_ci": "NOT_RUN",
+    "real_storage": "NOT_RUN",
+    "http": "NOT_RUN",
+    "planned_reviews": {
+      "A": "Independent combinedwithdrawal/DTO/SDKadmissionevidence",
+      "B": "Independent combinedsettlement/deposit/originalrefundnetconsistency",
+      "H": "Independent clientguest/auth/requestaccountjournalintegration only touchedsource"
+    },
+    "no_merge_deploy": true
   }
 }

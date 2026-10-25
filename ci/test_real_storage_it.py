@@ -212,6 +212,34 @@ class RegistryContractTest(unittest.TestCase):
         self.assertEqual([], problems)
         self.assertEqual(3, facts['declared_tests'])
 
+    def test_payment_intent_requires_its_exact_hosted_ddl_approval(self):
+        reg = registry()
+        members = reg["batches"]["payment-intent-correctness"]["classes"]
+        self.assertEqual(4, len(members))
+        for fqcn, count in zip(members[:2], (4, 14)):
+            with self.subTest(fqcn=fqcn):
+                self.assertEqual(count, reg["classes"][fqcn]["tests"])
+                report, problems = rs.precheck(reg, _HERE.parent, fqcn)
+                self.assertEqual([], problems)
+                self.assertEqual([{"named": "B_PAYMENT_INTENT_DDL_APPROVED", "matches": "1"}], report["source_gates"])
+                for gates in ({}, {"B_PAYMENT_INTENT_DDL_APPROVED": "0"}):
+                    rejected = copy.deepcopy(reg)
+                    rejected["classes"][fqcn]["gates"] = gates
+                    self.assertTrue(rs.precheck(rejected, _HERE.parent, fqcn)[1])
+                env = rs.class_env(reg, fqcn, mysql_port=40001, suffix="_gh123456a1")
+                self.assertEqual("1", env["B_PAYMENT_INTENT_DDL_APPROVED"])
+                self.assertEqual("127.0.0.1", env["CHENGYIN_MYBATIS_IT_HOST"])
+        for fqcn, count in zip(members[2:], (9, 3)):
+            self.assertEqual(count, reg["classes"][fqcn]["tests"])
+            self.assertEqual({"CHENGYIN_FUNDS_MYSQL_IT": "1"}, reg["classes"][fqcn]["gates"])
+            self.assertEqual([], rs.precheck(reg, _HERE.parent, fqcn)[1])
+            rejected = copy.deepcopy(reg)
+            rejected["classes"][fqcn]["gates"] = {}
+            self.assertTrue(rs.precheck(rejected, _HERE.parent, fqcn)[1])
+        inherited = {"PATH": "/usr/bin", "B_PAYMENT_INTENT_DDL_APPROVED": "1"}
+        self.assertNotIn("B_PAYMENT_INTENT_DDL_APPROVED", rs.child_env(inherited, {}))
+        self.assertEqual([], rs.scan_java('// assertEquals("1", System.getenv("B_PAYMENT_INTENT_DDL_APPROVED"));')["gates"])
+
     def test_batch_totals_match_the_remaining_receipt(self):
         # 23 条真库 + OWN_C01_51 外层 4 条普通；AI 15+7；E04-07 5+5（原回执41/43新增回归）；E02-22 9 + E02-25 2 + 三夹具 3；B05 3；F3 12（含死锁重试负控）。
         # 类条数全局唯一，按 master 侧登记：冲回 3→4、券生命周期 12→16、分享快照并发 2→3（extra-storage 71→76）。
@@ -226,8 +254,8 @@ class RegistryContractTest(unittest.TestCase):
                     "port-core-funds": 27, "port-ai-quota": 24,
                     "port-f3-growth": 12, "port-f3-evidence": 4,
                     "funnel-max-date": 4, "port-prelaunch-69": 36,
-                    "p0-acceptance-ac1": 13, "architecture-day-batch1": 66,
-                    "architecture-day-wave2": 74, "architecture-day-photo": 15,
+                    "p0-acceptance-ac1": 13, "architecture-day-batch1": 70,
+                    "architecture-day-wave2": 78, "architecture-day-photo": 15,
                     "architecture-day-broadcast-migration": 10, "architecture-day-settlement": 7,
                     "architecture-day-state-recovery": 50,
                     "architecture-day-runtime-governance": 36,
@@ -245,7 +273,7 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-payment-inbox": 14,
                     "architecture-day-verified-payment-facts": 4,
                     "architecture-day-registration-seats": 7,
-                    "architecture-day-original-refund": 15,
+                    "architecture-day-original-refund": 25,
                     "architecture-day-deposit-attempt": 11,
                     "architecture-day-topic-content-budget": 15,
                     "architecture-day-committed-official-notice": 19,
@@ -257,14 +285,14 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-topic-cash-fence": 5,
                     "architecture-day-scheduler-two-process": 3,
                     "architecture-day-cash-recovery": 10,
-                    "architecture-day-funds-closure": 200,
+                    "architecture-day-funds-closure": 219,
                     "architecture-day-npc-voice-asr": 14,
                     "architecture-day-clm-commerce-proof": 8,
                     "architecture-day-media-retry-budget": 8,
                     "architecture-day-before-start-notice": 12,
                     "architecture-day-commerce-generic-guard": 6,
                     "architecture-day-refund-lifecycle": 72,
-                    "architecture-day-integrated-changes": 810}
+                    "architecture-day-integrated-changes": 833, "payment-intent-correctness": 30}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}

@@ -160,6 +160,7 @@ Page({
   },
 
   lickClick(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.lickClick(e))) return; // 2026-10-24 游客写前登录
     var that = this
     let index = feedIndexFromEvent(e);
     let type = (e.detail && e.detail.type) || e.currentTarget.dataset.type;
@@ -214,6 +215,7 @@ Page({
   },
 
   favoriteClick(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.favoriteClick(e))) return; // 2026-10-24 游客写前登录
     const index = feedIndexFromEvent(e);
     const item = this.data.list[index];
     if (!item || !item.id) return;
@@ -250,6 +252,7 @@ Page({
   },
 
   followClick(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.followClick(e))) return; // 2026-10-24 游客写前登录
     var that = this
     const index = feedIndexFromEvent(e);
     let topicList = that.data.list
@@ -410,6 +413,7 @@ Page({
   onReportReasonCancel() { reportSheet.cancel(this); },
 
   reportSquare: function (id = this.data.currentActionId) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportSquare(id))) return; // 2026-10-24 游客写前登录
     const that = this;
     const owner = String(app.getUserID() || ''), current = () => !that._unloaded && owner === String(app.getUserID() || '');
     const item = that.data.list.find(row => String(row.id) === String(id));
@@ -861,6 +865,7 @@ Page({
 
   // 提交表单数据
   submitFormData() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.submitFormData())) return; // 2026-10-24 游客写前登录
     const that = this;
     if (typeof app.canUseCommunity !== 'function' || !app.canUseCommunity(true)) {
       toast('当前账号未开放广场发布');
@@ -1126,10 +1131,13 @@ Page({
         bizId: id
       });
       return Object.assign(require('../utils/square-share.js').buildSquareShare(post), {
+        // U-171 分享回执:只有老基础库会回调 success/fail,新基础库不回调 —— 能拿到时如实记一笔。
         success: function (res) {
+          analytics.track('square_share_complete', { bizType: 'square', bizId: id });
           toast.success('分享成功');
         },
         fail: function (res) {
+          analytics.track('square_share_fail', { bizType: 'square', bizId: id, properties: { reason: 'cancelled' } });
           toast('分享取消');
         }
       });

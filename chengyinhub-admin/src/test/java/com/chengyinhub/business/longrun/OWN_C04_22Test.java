@@ -1,6 +1,7 @@
 package com.chengyinhub.business.longrun;
 
 import com.chengyinhub.business.domain.*;
+import com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent;
 import com.chengyinhub.business.mapper.MemberCashWithdrawMapper;
 import com.chengyinhub.business.service.*;
 import com.chengyinhub.business.service.impl.*;
@@ -43,7 +44,7 @@ class OWN_C04_22Test {
                 verify(f.mapper, never()).updateMemberCashWithdraw(org.mockito.ArgumentMatchers.argThat(w -> w.getStatus() != null));
                 verify(f.mapper, never()).updateStatusIfProcessing(any());
                 verify(f.members, never()).addBalance(anyLong(), any());
-                verify(f.admission).debitCash(1L, 7L, new BigDecimal("20.00"));
+                verify(f.admission).debitCash(1L, 7L, new BigDecimal("20.00"), "unit-merchant", "appid", "城瘾分润提现");
                 verify(f.provider).transferToBalance(any(com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent.class));
             }
         }
@@ -65,7 +66,8 @@ class OWN_C04_22Test {
         for (boolean frozen : new boolean[]{false, true}) {
             Fixture f = new Fixture();
             MemberCashWithdraw old = row(MemberCashWithdraw.STATUS_PROCESSING);
-            old.setCreateTime(new Date(0)); // A stale snapshot would otherwise trigger the existing timeout path.
+            old.setCreateTime(new Date(0));
+            // Persisted ff2b-only original below; the stale list snapshot is not a second debit proof.
             when(f.mapper.selectPendingForQuery(1)).thenReturn(Collections.singletonList(old));
             MemberCashWithdraw current = row(frozen ? MemberCashWithdraw.STATUS_PROCESSING : MemberCashWithdraw.STATUS_SUCCESS);
             current.setFrozen(frozen ? 1 : 0); current.setWechatBatchStatus("AUTHORITATIVE");
@@ -105,6 +107,7 @@ class OWN_C04_22Test {
         final IUmsMemberService members = mock(IUmsMemberService.class);
         final IWechatPayService provider = mock(IWechatPayService.class);
         final WithdrawalBalanceAdmissionService admission = mock(WithdrawalBalanceAdmissionService.class);
+        final com.chengyinhub.business.service.CashWithdrawIntentTestSupport transferEvidence = new com.chengyinhub.business.service.CashWithdrawIntentTestSupport();
         final AtomicReference<MemberCashWithdraw> stored = new AtomicReference<>(row(MemberCashWithdraw.STATUS_PROCESSING));
         Fixture() {
             UmsMember member = new UmsMember(); member.setId(7L); member.setWxOpenId("openid"); member.setBalance(new BigDecimal("100"));
@@ -119,8 +122,11 @@ class OWN_C04_22Test {
                     new BigDecimal("100"), new BigDecimal("80"), frozen, true);
             when(mapper.selectById(1L)).thenAnswer(i -> stored.get());
             evidence = new com.chengyinhub.business.service.impl.CashWithdrawEvidenceFixture(mapper);
-            when(admission.debitCash(eq(1L), eq(7L), any())).thenAnswer(i -> {
-                evidence.seedDebit(1L); return admitted;
+            when(admission.debitCash(eq(1L), eq(7L), any(), any(), any(), any())).thenAnswer(i -> {
+                evidence.seedDebit(1L);
+                com.chengyinhub.business.longrun.OWN_C04_21Test.seedSnapshot(transferEvidence, stored.get(),
+                        "unit-merchant", "appid", false);
+                return admitted;
             });
             // master 设计：原提现单由 CashWithdrawServiceImpl 直接插入（无独立 FailureRecoveryService）。
             when(mapper.insertMemberCashWithdraw(any())).thenAnswer(i -> { i.getArgument(0, MemberCashWithdraw.class).setId(1L); return 1; });
@@ -131,6 +137,7 @@ class OWN_C04_22Test {
             com.chengyinhub.common.config.WxPayConfig config = mock(com.chengyinhub.common.config.WxPayConfig.class);
             when(config.getAppid()).thenReturn("appid");
             when(config.getMerchantId()).thenReturn("unit-merchant");
+            ReflectionTestUtils.setField(service, "transferIntents", transferEvidence.mapper);
             ReflectionTestUtils.setField(service, "mapper", mapper);
             ReflectionTestUtils.setField(service, "umsMemberService", members);
             ReflectionTestUtils.setField(service, "wechatPayService", provider);

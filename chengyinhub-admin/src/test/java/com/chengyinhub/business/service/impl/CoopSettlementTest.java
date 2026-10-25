@@ -7,6 +7,16 @@ import com.chengyinhub.business.domain.CoopOrder;
 import com.chengyinhub.business.domain.CoopSettlement;
 import com.chengyinhub.business.domain.SettlementRule;
 import com.chengyinhub.business.domain.UmsMember;
+import com.chengyinhub.business.domain.CoopSettlementAdjustment;
+import com.chengyinhub.business.domain.CoopSettlementDetail;
+import com.chengyinhub.business.domain.SettlementClaim;
+import com.chengyinhub.business.domain.dto.CoopSettlementCandidate;
+import com.chengyinhub.business.domain.dto.CoopSettlementSnapshot;
+import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;
+import com.chengyinhub.business.mapper.CoopSettlementOriginalMapper;
+import com.chengyinhub.business.mapper.CoopSettlementAdjustmentMapper;
+import com.chengyinhub.business.mapper.CoopSettlementDetailMapper;
+import com.chengyinhub.business.mapper.SettlementClaimMapper;
 import com.chengyinhub.business.mapper.CmsRegistrationMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.CoopComplaintMapper;
@@ -31,7 +41,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.SimpleTransactionStatus;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -127,12 +138,15 @@ class CoopSettlementTest {
         ReflectionTestUtils.setField(svc, "pointsAwardService", pointsAwardService);
         ReflectionTestUtils.setField(svc, "settlementRuleService", settlementRuleService);
         ReflectionTestUtils.setField(svc, "notifyService", mock(INotifyService.class));
-        PlatformTransactionManager transactionManager = mock(PlatformTransactionManager.class);
-        when(transactionManager.getTransaction(any())).thenReturn(new SimpleTransactionStatus());
+        PlatformTransactionManager transactionManager = unitTransactions();
         ReflectionTestUtils.setField(svc, "transactionManager", transactionManager);
-        ReflectionTestUtils.setField(svc, "coopSettlementOriginalMapper", mock(com.chengyinhub.business.mapper.CoopSettlementOriginalMapper.class));
-        ReflectionTestUtils.setField(svc, "coopSettlementAdjustmentMapper", mock(com.chengyinhub.business.mapper.CoopSettlementAdjustmentMapper.class));
+        ReflectionTestUtils.setField(svc, "coopSettlementOriginalMapper", mock(CoopSettlementOriginalMapper.class));
+        ReflectionTestUtils.setField(svc, "coopSettlementAdjustmentMapper", mock(CoopSettlementAdjustmentMapper.class));
         when(coopSettlementMapper.insertCoopSettlement(any())).thenReturn(1);
+        var noOriginalRefunds = (CoopSettlementOriginalMapper)
+                ReflectionTestUtils.getField(svc, "coopSettlementOriginalMapper");
+        when(noOriginalRefunds.selectApprovedRegistrationRefundIdsForOriginalCloseForUpdate(any())).thenReturn(List.of());
+        when(noOriginalRefunds.selectAdjustmentsForSettlementForUpdate(any())).thenReturn(List.of());
     }
 
     private CoopOrder order(Long id, Long toId, int shareMode, String rate, String fee) {
@@ -364,31 +378,21 @@ class CoopSettlementTest {
     }
 
     @Test
-    void settleCoopTopic_preservesClaimOriginUntilDepositAdjustmentExists() {
-        CmsTopic topic = new CmsTopic();
-        topic.setId(706L); topic.setMemberId(900001L);
-        when(cmsRegistrationMapper.selectVerifiedSalesByTopicId(706L)).thenReturn(new BigDecimal("100"));
-        when(cmsRegistrationMapper.selectVerifiedHeadsByTopicId(706L)).thenReturn(2);
-        everyMerchantServedEveryone(706L, 2, "100", 900002L);
-        when(coopOrderMapper.selectEffectiveOrdersByTopicId(706L))
-                .thenReturn(Collections.singletonList(order(1L, 900002L, 1, "50", null)));
-        when(coopSettlementMapper.countByOrderId(any())).thenReturn(0);
+    void settleCoopTopic_preservesClaimOriginUntilDepositAdjustmentExists() throws Exception {
+        SetoffFixture fixture = new SetoffFixture(706L, order(1L, 900002L, 1, "50", null));
+        CoopInvite due = unpaidInvite(fixture, 88L, 5, "50.00");
+        fixture.rejectAdjustmentWrites = true;
 
-        CoopInvite due = new CoopInvite();
-        due.setId(88L); due.setTopicId(706L); due.setStatus(1); due.setInviteType(0);
-        due.setToType("merchant"); due.setToId(900002L); due.setDepositStatus(5);
-        due.setDepositAmount(new BigDecimal("50.00"));
-        when(coopInviteMapper.selectCoopInviteList(any())).thenReturn(Collections.singletonList(due));
-        when(coopInviteMapper.selectCoopInviteByIdForUpdate(88L)).thenReturn(due);
-        when(coopInviteService.depositOwedParty(due)).thenReturn(900002L);
-        when(coopInviteMapper.updateDepositIfCurrent(88L, 5, new BigDecimal("50.00"), 3, new BigDecimal("50.00")))
-                .thenReturn(1);
+        IllegalStateException failure = assertThrows(IllegalStateException.class, () -> svc.executeTopicSettlement());
 
-        IllegalStateException failure = assertThrows(IllegalStateException.class,
-                () -> PreparedCoopPlanFixture.settle(svc, topic, new BigDecimal("100")));
-        assertTrue(failure.getMessage().contains("CLAIM_DEPOSIT_ADJUSTMENT_REQUIRED"));
-        verify(coopSettlementMapper, never()).insertCoopSettlement(any());
+        assertTrue(failure.getMessage().contains("LEDGER_CONFLICT"));
+        assertAmount("50.00", fixture.orderHead(1L), "调整写失败不能把原始头改为净额");
+        assertTrue(fixture.adjustments.isEmpty());
+        assertEquals(Integer.valueOf(5), due.getDepositStatus());
         verify(coopInviteMapper, never()).updateDepositIfCurrent(any(), any(), any(), any(), any());
+        verify(umsMemberService, never()).addBalance(any(), any());
+        verify(pointsAwardService, never()).awardPublisherSettlement(any(), any());
+        // Map storage does not prove rollback of the previously inserted gross head/details; G's MySQL test owns it.
     }
 
     @Test
@@ -459,8 +463,10 @@ class CoopSettlementTest {
         legacy.setTopicId(710L); legacy.setStatus(1); legacy.setDepositStatus(5);
         when(coopInviteMapper.selectCoopInviteList(any())).thenReturn(Collections.singletonList(legacy));
 
-        ReflectionTestUtils.invokeMethod(svc, "applyUnpaidDepositSetoffs", topic,
-                new ArrayList<CoopSettlement>(), new Date(), new Date(), 0, BigDecimal.ZERO, "");
+        PlatformTransactionManager manager = (PlatformTransactionManager)ReflectionTestUtils.getField(svc, "transactionManager");
+        new TransactionTemplate(manager).executeWithoutResult(status ->
+                ReflectionTestUtils.invokeMethod(svc, "applyUnpaidDepositSetoffs", topic,
+                        new ArrayList<CoopSettlement>(), new Date(), new Date(), 0, BigDecimal.ZERO, ""));
 
         verify(coopInviteMapper, never()).selectCoopInviteByIdForUpdate(92L);
         verify(wechatPayService, never()).queryOrderStatus(any());
@@ -618,4 +624,493 @@ class CoopSettlementTest {
         verify(coopSettlementMapper).markPaidIfPending(eq(12L), any());
         verify(coopSettlementMapper, times(0)).markPaidIfPending(eq(11L), any());
     }
+    @Test
+    void settleCoopTopic_deductsUnpaidDepositFromActualPayersReceivable() throws Exception {
+        SetoffFixture fixture = new SetoffFixture(706L, order(1L, 900002L, 1, "50", null));
+        CoopInvite due = unpaidInvite(fixture, 88L, 5, "50.00");
+
+        assertEquals(1, svc.executeTopicSettlement());
+
+        Map<String,List<CoopSettlement>> lines = capturedLines();
+        assertClaimDepositSetoff(fixture, due, 1L, "50.00", "50.00", "0.00");
+        assertLineTotal("50.00", lines.get("DEPOSIT_DEDUCTION"), "抵扣额单列平台入账以便对账");
+        assertAmount("33.00", lines.get("INITIATOR_MARGIN").get(0), "非应缴方发起人收益不得被错扣");
+        assertEquals(Integer.valueOf(3), due.getDepositStatus());
+        verify(coopInviteMapper).updateDepositIfCurrent(eq(88L), eq(5), eq(new BigDecimal("50.00")), eq(3), eq(new BigDecimal("50.00")));
+        verify(wechatPayService, never()).queryOrderStatus(any());
+        verify(umsMemberService, never()).addBalance(any(), any());
+    }
+
+    @Test
+    void settleCoopTopic_resolvesPaymentInProgressBeforeDeducting() throws Exception {
+        SetoffFixture fixture = new SetoffFixture(707L, order(1L, 900002L, 1, "50", null));
+        CoopInvite paying = unpaidInvite(fixture, 89L, 1, "50.00");
+        closedOriginalAttempt(paying, true, "CLOSED");
+
+        assertEquals(1, svc.executeTopicSettlement());
+
+        assertClaimDepositSetoff(fixture, paying, 1L, "50.00", "50.00", "0.00");
+        Map<String,List<CoopSettlement>> lines = capturedLines();
+        assertLineTotal("50.00", lines.get("DEPOSIT_DEDUCTION"), "原 attempt 确认关闭后才抵扣");
+        InOrder paymentOrder = inOrder(wechatPayService, coopInviteMapper);
+        paymentOrder.verify(wechatPayService).queryOrderStatus("DEP89T100");
+        paymentOrder.verify(wechatPayService).closePaymentAttempt("DEP89T100", "WXP-deposit-89");
+        paymentOrder.verify(wechatPayService).queryOrderStatus("WXP-deposit-89");
+        paymentOrder.verify(wechatPayService).lockClosablePaymentAttemptForUpdate("DEP89T100", "WXP-deposit-89");
+        paymentOrder.verify(coopInviteMapper).updateDepositIfCurrent(eq(89L), eq(1), any(), eq(5), any());
+        verify(wechatPayService, never()).closeOrder(any());
+        verify(coopInviteMapper).updateDepositIfCurrent(eq(89L), eq(1), any(), eq(5), any());
+        verify(coopInviteMapper).updateDepositIfCurrent(eq(89L), eq(5), any(), eq(3), any());
+    }
+
+    @Test
+    void settleCoopTopic_knownDepositWithoutPayerReceivableKeepsDebtAndOtherPayeeGross() throws Exception {
+        SetoffFixture fixture = new SetoffFixture(711L, order(1L, 900003L, 1, "30", null));
+        CoopInvite due = unpaidInvite(fixture, 93L, 5, "50.00");
+
+        assertEquals(1, svc.executeTopicSettlement());
+
+        assertAmount("30.00", fixture.orderHead(1L), "不得拿其他受款人应收抵缴保证金");
+        assertEquals(0, new BigDecimal("30.00").compareTo(fixture.net(fixture.orderHead(1L))));
+        assertTrue(fixture.adjustments.isEmpty());
+        assertEquals(Integer.valueOf(5), due.getDepositStatus());
+        assertEquals(0, new BigDecimal("50.00").compareTo(due.getDepositAmount()));
+        assertTrue(!capturedLines().containsKey("DEPOSIT_DEDUCTION"));
+        verify(coopInviteMapper, never()).updateDepositIfCurrent(eq(93L), any(), any(), eq(3), any());
+    }
+
+    @Test
+    void settleCoopTopic_insufficientPayerReceivableCollectsOnlyAvailableAndKeepsRemainder() throws Exception {
+        SetoffFixture fixture = new SetoffFixture(712L, order(1L, 900002L, 1, "30", null));
+        CoopInvite due = unpaidInvite(fixture, 94L, 5, "50.00");
+
+        assertEquals(1, svc.executeTopicSettlement());
+
+        assertClaimDepositSetoff(fixture, due, 1L, "30.00", "30.00", "0.00");
+        assertLineTotal("30.00", capturedLines().get("DEPOSIT_DEDUCTION"), "不足50仅收可用30");
+        assertEquals(Integer.valueOf(5), due.getDepositStatus());
+        assertEquals(0, new BigDecimal("20.00").compareTo(due.getDepositAmount()));
+        verify(coopInviteMapper).updateDepositIfCurrent(eq(94L), eq(5), eq(new BigDecimal("50.00")), eq(5), eq(new BigDecimal("20.00")));
+        verify(coopInviteMapper, never()).updateDepositIfCurrent(eq(94L), any(), any(), eq(3), any());
+    }
+
+    @Test
+    void settleCoopTopic_repeatedCloseAndOriginalAdjustmentEventNeverDeductAgain() throws Exception {
+        SetoffFixture fixture = new SetoffFixture(713L, order(1L, 900002L, 1, "50", null));
+        CoopInvite due = unpaidInvite(fixture, 95L, 5, "50.00");
+        assertEquals(1, svc.executeTopicSettlement());
+        var originalEvents = new ArrayList<>(fixture.adjustments.values());
+        assertTrue(!originalEvents.isEmpty());
+        int originalHeads = fixture.heads.size();
+
+        assertEquals(1, svc.executeTopicSettlement());
+        for (var event : originalEvents) fixture.repeatAdjustment(event);
+
+        assertEquals(originalHeads, fixture.heads.size());
+        assertEquals(originalEvents.size(), fixture.adjustments.size());
+        for (var event : originalEvents) assertTrue(fixture.adjustments.values().stream().anyMatch(current ->
+                current.getClaimId().equals(event.getClaimId()) && current.getEventKey().equals(event.getEventKey())
+                        && current.getAmount().compareTo(event.getAmount()) == 0));
+        assertClaimDepositSetoff(fixture, due, 1L, "50.00", "50.00", "0.00");
+        verify(coopInviteMapper, times(1)).updateDepositIfCurrent(eq(95L), eq(5), any(), eq(3), any());
+    }
+
+    @Test
+    void settleCoopTopic_closeAckWithoutOriginalClosedFactBlocksAllEconomicWrites() throws Exception {
+        SetoffFixture fixture = new SetoffFixture(714L, order(1L, 900002L, 1, "50", null));
+        CoopInvite paying = unpaidInvite(fixture, 96L, 1, "50.00");
+        closedOriginalAttempt(paying, true, "NOTPAY");
+
+        assertThrows(IllegalStateException.class, () -> svc.executeTopicSettlement());
+
+        assertTrue(fixture.heads.isEmpty()); assertTrue(fixture.details.isEmpty()); assertTrue(fixture.adjustments.isEmpty());
+        assertEquals(Integer.valueOf(1), paying.getDepositStatus());
+        verify(wechatPayService).queryOrderStatus("WXP-deposit-96");
+        verify(coopInviteMapper, never()).updateDepositIfCurrent(any(), any(), any(), any(), any());
+        verify(pointsAwardService, never()).awardPublisherSettlement(any(), any());
+    }
+
+    @Test
+    void settleCoopTopic_unknownOriginalPaymentBlocksSetoffWithoutNewAttempt() throws Exception {
+        SetoffFixture fixture = new SetoffFixture(715L, order(1L, 900002L, 1, "50", null));
+        CoopInvite paying = unpaidInvite(fixture, 97L, 1, "50.00");
+        when(wechatPayService.queryOrderStatus("DEP97T100"))
+                .thenReturn(depositObservation("DEP97T100", "WXP-deposit-97", "UNKNOWN"));
+
+        assertThrows(IllegalStateException.class, () -> svc.executeTopicSettlement());
+
+        assertTrue(fixture.heads.isEmpty()); assertTrue(fixture.details.isEmpty()); assertTrue(fixture.adjustments.isEmpty());
+        assertEquals(Integer.valueOf(1), paying.getDepositStatus());
+        verify(wechatPayService, never()).closePaymentAttempt(any(), any());
+        verify(coopInviteMapper, never()).updateDepositIfCurrent(any(), any(), any(), any(), any());
+        verify(coopSettlementMapper, never()).insertCoopSettlement(any());
+    }
+
+    @Test
+    void settleCoopTopic_failedCloseAckWithConfirmedOriginalClosedFactCanDeduct() throws Exception {
+        SetoffFixture fixture = new SetoffFixture(716L, order(1L, 900002L, 1, "50", null));
+        CoopInvite paying = unpaidInvite(fixture, 98L, 1, "50.00");
+        closedOriginalAttempt(paying, false, "CLOSED");
+
+        assertEquals(1, svc.executeTopicSettlement());
+
+        assertClaimDepositSetoff(fixture, paying, 1L, "50.00", "50.00", "0.00");
+        verify(wechatPayService).queryOrderStatus("WXP-deposit-98");
+        assertEquals(Integer.valueOf(3), paying.getDepositStatus());
+    }
+
+    @Test
+    void settleCoopTopic_closeReadbackSuccessConsumesExactTypedReferenceAndNeverSetsOff() throws Exception {
+        SetoffFixture fixture = new SetoffFixture(717L, order(1L, 900002L, 1, "50", null));
+        CoopInvite paying = unpaidInvite(fixture, 99L, 1, "50.00");
+        closedOriginalAttempt(paying, true, "SUCCESS");
+        var reference = new WechatVerifiedPaymentFact.Reference(90099L, "a".repeat(64));
+        Map<String,String> success = depositObservation("DEP99T100", "WXP-deposit-99", "SUCCESS");
+        success.put("currency", "CNY"); success.put("total", "5000"); success.put("transaction_id", "WX-DEPOSIT-99");
+        success.put("verified_fact_id", Long.toString(reference.id())); success.put("verified_fact_hash", reference.hash());
+        when(wechatPayService.queryOrderStatus("WXP-deposit-99")).thenAnswer(call -> {
+            assertTrue(!TransactionSynchronizationManager.isActualTransactionActive());
+            return success;
+        });
+        when(wechatPayService.lockPaymentAttemptForUpdate("DEP99T100", "WXP-deposit-99")).thenAnswer(call -> {
+            requireUnitTransaction(); return true;
+        });
+        when(coopInviteService.markDepositPaid("DEP99T100", 5000L, "WX-DEPOSIT-99", reference)).thenAnswer(call -> {
+            requireUnitTransaction(); paying.setDepositStatus(2); paying.setDepositPaidTransactionId("WX-DEPOSIT-99"); return true;
+        });
+
+        assertEquals(1, svc.executeTopicSettlement());
+
+        assertAmount("50.00", fixture.orderHead(1L), "已付保证金不再扣合作应收");
+        assertEquals(0, new BigDecimal("50.00").compareTo(fixture.net(fixture.orderHead(1L))));
+        assertTrue(fixture.adjustments.isEmpty()); assertEquals(Integer.valueOf(2), paying.getDepositStatus());
+        assertTrue(!capturedLines().containsKey("DEPOSIT_DEDUCTION"));
+        verify(coopInviteService).markDepositPaid("DEP99T100", 5000L, "WX-DEPOSIT-99", reference);
+        verify(coopInviteService).requestTopicDepositRefunds(717L);
+        verify(coopInviteMapper, never()).updateDepositIfCurrent(eq(99L), any(), any(), eq(5), any());
+        verify(coopInviteMapper, never()).updateDepositIfCurrent(eq(99L), any(), any(), eq(3), any());
+    }
+
+    @Test
+    void unpaidDepositSetoff_usesOnlyPositiveNetOfEachOriginalOrder() throws Exception {
+        CoopOrder first = order(1L, 900002L, 1, "30", null), second = order(2L, 900002L, 1, "30", null);
+        SetoffFixture fixture = new SetoffFixture(718L, first, second);
+        CoopInvite due = unpaidInvite(fixture, 100L, 5, "50.00");
+        List<CoopSettlement> pending = new ArrayList<>();
+        new TransactionTemplate(fixture.transactions).executeWithoutResult(status -> {
+            for (CoopOrder order : List.of(first, second)) {
+                CoopSettlement head = new CoopSettlement();
+                head.setTopicId(718L); head.setCoopOrderId(order.getId()); head.setMerchantId(900002L);
+                head.setLineType("MERCHANT_VERIFY"); head.setPayeeType("merchant"); head.setStatus(0); head.setCashHeadKind("MEMBER"); head.setDelFlag(0);
+                fixture.claimService.persist(fixture.claimService.prepare(order, new Date()), head);
+                pending.add(head);
+            }
+            CoopSettlement firstHead = fixture.orderHead(1L);
+            for (var detail : fixture.details.values())
+                if (firstHead.getId().equals(detail.getSettlementId()))
+                    fixture.claimService.appendExecutedAdjustment(detail.getClaimId(), "UNIT_PRIOR_ADJUSTMENT",
+                            detail.getOriginAmount().negate());
+            ReflectionTestUtils.invokeMethod(svc, "applyUnpaidDepositSetoffs", fixture.topic,
+                    pending, new Date(), new Date(), 2, new BigDecimal("100"), "10,11,20,21");
+        });
+
+        assertAmount("30.00", fixture.orderHead(1L), "已调整订单毛额不变");
+        assertAmount("30.00", fixture.orderHead(2L), "可用订单毛额不变");
+        assertEquals(0, fixture.net(fixture.orderHead(1L)).compareTo(BigDecimal.ZERO));
+        assertEquals(0, fixture.net(fixture.orderHead(2L)).compareTo(BigDecimal.ZERO));
+        assertEquals(Integer.valueOf(5), due.getDepositStatus());
+        assertEquals(0, new BigDecimal("20.00").compareTo(due.getDepositAmount()));
+        assertLineTotal("30.00", pending.stream().filter(h -> "DEPOSIT_DEDUCTION".equals(h.getLineType())).toList(),
+                "可用净额0+30只收30，不能再次抵扣已归零订单");
+        verify(coopInviteMapper).updateDepositIfCurrent(eq(100L), eq(5), eq(new BigDecimal("50.00")), eq(5), eq(new BigDecimal("20.00")));
+        for (var adjustment : fixture.adjustments.values()) {
+            var detail = fixture.details.get(adjustment.getClaimId());
+            assertEquals(detail.getSettlementId(), adjustment.getSettlementId());
+            if (detail.getSettlementId().equals(fixture.orderHead(1L).getId()))
+                assertEquals("UNIT_PRIOR_ADJUSTMENT", adjustment.getEventKey(), "已归零的原订单不能追加第二次保证金扣减");
+        }
+    }
+
+    private CoopInvite unpaidInvite(SetoffFixture fixture, long inviteId, int state, String amount) {
+        CoopInvite invite = new CoopInvite(); invite.setId(inviteId); invite.setTopicId(fixture.topic.getId());
+        invite.setStatus(1); invite.setInviteType(0); invite.setToType("merchant"); invite.setToId(900002L);
+        invite.setDepositStatus(state); invite.setDepositAmount(new BigDecimal(amount));
+        if (state == 1) invite.setDepositOutTradeNo("DEP" + inviteId + "T100");
+        when(coopInviteMapper.selectCoopInviteList(any())).thenReturn(List.of(invite));
+        when(coopInviteMapper.selectAcceptedByTopicForUpdate(fixture.topic.getId())).thenReturn(List.of(invite));
+        when(coopInviteMapper.selectCoopInviteByIdForUpdate(inviteId)).thenReturn(invite);
+        when(coopInviteService.depositOwedParty(invite)).thenReturn(900002L);
+        when(coopInviteMapper.updateDepositIfCurrent(eq(inviteId), any(), any(), any(), any())).thenAnswer(call -> {
+            requireUnitTransaction();
+            if (!java.util.Objects.equals(invite.getDepositStatus(), call.getArgument(1))
+                    || invite.getDepositAmount().compareTo(call.getArgument(2)) != 0) return 0;
+            if (Integer.valueOf(5).equals(call.getArgument(1)))
+                for (var adjustment : fixture.adjustments.values())
+                    if (adjustment.getEventKey().startsWith("UNPAID_DEPOSIT:" + fixture.topic.getId() + ":" + inviteId + ":"))
+                        org.junit.jupiter.api.Assertions.assertSame(fixture.adjustmentTransactions.get(adjustment.getId()),
+                                fixture.transactionResource(), "欠款 CAS 必须与原负调整同事务");
+            invite.setDepositStatus(call.getArgument(3)); invite.setDepositAmount(call.getArgument(4)); return 1;
+        });
+        return invite;
+    }
+
+    private Map<String,String> depositObservation(String business, String attempt, String state) {
+        Map<String,String> observation = new HashMap<>();
+        observation.put("out_trade_no", business); observation.put("wx_out_trade_no", attempt);
+        observation.put("trade_state", state); return observation;
+    }
+
+    private void closedOriginalAttempt(CoopInvite invite, boolean closeAck, String terminalState) {
+        String business = invite.getDepositOutTradeNo(), attempt = "WXP-deposit-" + invite.getId();
+        Map<String,String> paying = depositObservation(business, attempt, "NOTPAY");
+        Map<String,String> terminal = depositObservation(business, attempt, terminalState);
+        when(wechatPayService.queryOrderStatus(business)).thenAnswer(call -> {
+            assertTrue(!TransactionSynchronizationManager.isActualTransactionActive());
+            return paying;
+        });
+        when(wechatPayService.closePaymentAttempt(business, attempt)).thenAnswer(call -> {
+            assertTrue(!TransactionSynchronizationManager.isActualTransactionActive());
+            return closeAck;
+        });
+        when(wechatPayService.queryOrderStatus(attempt)).thenAnswer(call -> {
+            assertTrue(!TransactionSynchronizationManager.isActualTransactionActive());
+            return terminal;
+        });
+        when(wechatPayService.lockClosablePaymentAttemptForUpdate(business, attempt)).thenAnswer(call -> {
+            requireUnitTransaction(); return true;
+        });
+    }
+
+    private void assertClaimDepositSetoff(SetoffFixture fixture, CoopInvite invite,
+            long orderId, String gross, String deduction, String net) {
+        CoopSettlement head = fixture.orderHead(orderId);
+        assertAmount(gross, head, "原订单毛额头不可被保证金抵扣覆盖");
+        assertEquals(Long.valueOf(orderId), head.getSourceContractId());
+        assertEquals("COOP_ORDER", head.getSourceContractType());
+        BigDecimal detailGross = fixture.details.values().stream().filter(d -> head.getId().equals(d.getSettlementId()))
+                .map(CoopSettlementDetail::getOriginAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        assertEquals(0, new BigDecimal(gross).compareTo(detailGross));
+        BigDecimal signed = fixture.adjustments.values().stream().filter(a -> head.getId().equals(a.getSettlementId()))
+                .map(CoopSettlementAdjustment::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        assertEquals(0, new BigDecimal(deduction).negate().compareTo(signed));
+        assertEquals(0, new BigDecimal(net).compareTo(fixture.net(head)));
+        for (var adjustment : fixture.adjustments.values()) {
+            var detail = fixture.details.get(adjustment.getClaimId());
+            assertTrue(detail != null && detail.getSettlementId().equals(adjustment.getSettlementId()));
+            var claim = fixture.claimsByKey.values().stream().filter(c -> c.getId().equals(adjustment.getClaimId())).findFirst().orElseThrow();
+            assertEquals(detail.getRegistrationId(), claim.getFulfillmentId());
+            assertEquals("COOP_ORDER", claim.getSettlementRoute());
+            assertEquals("COOP_ORDER", claim.getSourceContractType());
+            assertEquals(fixture.heads.get(detail.getSettlementId()).getCoopOrderId(), claim.getSourceContractId());
+            assertEquals("TOPIC_EDITION", claim.getCommercialContextType());
+            assertEquals(fixture.topic.getId(), claim.getCommercialContextId());
+            assertEquals(Long.valueOf(900002L), claim.getBeneficiaryId());
+            assertEquals("ADJUSTMENT", adjustment.getEntryKind()); assertEquals("EXECUTED", adjustment.getStatus());
+            assertTrue(adjustment.getAmount().signum() < 0);
+            CoopSettlement originalHead = fixture.heads.get(detail.getSettlementId());
+            assertEquals("UNPAID_DEPOSIT:" + fixture.topic.getId() + ":" + invite.getId() + ":"
+                    + originalHead.getCoopOrderId() + ":" + originalHead.getId(), adjustment.getEventKey());
+            var receipts = fixture.heads.values().stream().filter(receipt ->
+                    "DEPOSIT_DEDUCTION".equals(receipt.getLineType()) && adjustment.getId().equals(receipt.getSourceContractId())).toList();
+            assertEquals(1, receipts.size(), "每条负调整只生成一个保证金收款凭证");
+            assertEquals("DEPOSIT_SETOFF", receipts.get(0).getSourceContractType());
+            assertEquals("DEPOSIT_SETOFF", receipts.get(0).getSettlementRoute());
+            assertEquals(0, adjustment.getAmount().negate().compareTo(receipts.get(0).getAmount()));
+        }
+        verify(coopSettlementMapper, never()).updateCoopSettlement(any());
+    }
+
+    private void assertLineTotal(String expected, List<CoopSettlement> lines, String message) {
+        BigDecimal total = lines.stream().map(CoopSettlement::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        assertEquals(0, new BigDecimal(expected).compareTo(total), message);
+    }
+
+    /**
+     * Unit storage boundary only: real prepare/claim/persist/append code runs above these maps.
+     * This does not simulate MySQL rollback, provider verification or concurrent locking.
+     */
+    private final class SetoffFixture {
+        final Map<Long, CoopSettlement> heads = new java.util.LinkedHashMap<>();
+        final Map<String, SettlementClaim> claimsByKey = new java.util.LinkedHashMap<>();
+        final Map<Long, CoopSettlementDetail> details = new java.util.LinkedHashMap<>();
+        final Map<String, CoopSettlementAdjustment> adjustments = new java.util.LinkedHashMap<>();
+        final Map<Long,Object> adjustmentTransactions = new HashMap<>();
+        final CoopSettlementDetailMapper detailMapper =
+                mock(CoopSettlementDetailMapper.class);
+        final CoopSettlementAdjustmentMapper adjustmentMapper =
+                mock(CoopSettlementAdjustmentMapper.class);
+        final CoopSettlementClaimServiceImpl claimService;
+        final CmsTopic topic;
+        final PlatformTransactionManager transactions;
+        long nextId = 1000L;
+        boolean rejectAdjustmentWrites;
+
+        SetoffFixture(long topicId, CoopOrder... orders) throws Exception {
+            transactions = unitTransactions();
+            topic = new CmsTopic(); topic.setId(topicId); topic.setMemberId(900001L); topic.setProductType(1);
+            when(cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId)).thenReturn(topic);
+            when(cmsTopicMapper.selectTopicsForSettlement()).thenReturn(List.of(topic));
+            when(cmsTopicMapper.claimTopicForSettlement(topicId)).thenReturn(1);
+            when(cmsRegistrationMapper.selectTotalSalesByTopicId(topicId)).thenReturn(new BigDecimal("100"));
+            when(cmsRegistrationMapper.selectVerifiedSalesByTopicId(topicId)).thenReturn(new BigDecimal("100"));
+            when(cmsRegistrationMapper.selectVerifiedHeadsByTopicId(topicId)).thenReturn(2);
+            everyMerchantServedEveryone(topicId, 2, "100", 900002L);
+            when(coopOrderMapper.selectEffectiveOrdersByTopicId(topicId)).thenReturn(Arrays.asList(orders));
+            SettlementRule rule = new SettlementRule(); rule.setMerchantRate(new BigDecimal("0.90"));
+            rule.setCreatorRate(BigDecimal.ZERO);
+            when(settlementRuleService.getActiveRule(0L, "topic")).thenReturn(rule);
+            OriginalCloseRefundHistoryFixture.install(svc, topicId, List.of());
+            var originalRows = mock(CoopSettlementOriginalMapper.class);
+            when(originalRows.selectApprovedRegistrationRefundIdsForOriginalCloseForUpdate(topicId)).thenReturn(List.of());
+            when(originalRows.selectOriginalDetailsForHeadForUpdate(any())).thenAnswer(call ->
+                    details.values().stream().filter(d -> java.util.Objects.equals(d.getSettlementId(), call.getArgument(0))).toList());
+            when(originalRows.selectAdjustmentsForSettlementForUpdate(any())).thenReturn(List.of());
+            ReflectionTestUtils.setField(svc, "coopSettlementOriginalMapper", originalRows);
+            ReflectionTestUtils.setField(svc, "transactionManager", transactions);
+            ReflectionTestUtils.setField(svc, "coopSettlementAdjustmentMapper", adjustmentMapper);
+
+            SettlementClaimMapper claimMapper =
+                    mock(SettlementClaimMapper.class);
+            when(claimMapper.insertClaim(any())).thenAnswer(call -> {
+                requireUnitTransaction();
+                SettlementClaim claim = call.getArgument(0);
+                if (claimsByKey.containsKey(claim.economicKey()))
+                    throw new org.springframework.dao.DuplicateKeyException("unit economic key");
+                claim.setId(nextId++); claimsByKey.put(claim.economicKey(), claim); return 1;
+            });
+            when(claimMapper.selectByEconomicKeyForUpdate(any())).thenAnswer(call ->
+                    claimsByKey.get(((SettlementClaim)call.getArgument(0)).economicKey()));
+            when(coopSettlementMapper.insertCoopSettlement(any())).thenAnswer(call -> {
+                requireUnitTransaction();
+                CoopSettlement head = call.getArgument(0); head.setId(nextId++);
+                if ("DEPOSIT_DEDUCTION".equals(head.getLineType()))
+                    org.junit.jupiter.api.Assertions.assertSame(adjustmentTransactions.get(head.getSourceContractId()),
+                            transactionResource(), "保证金正凭证与原负调整必须属于同一事务");
+                heads.put(head.getId(), copyHead(head)); return 1;
+            });
+            when(coopSettlementMapper.selectByTopicId(topicId)).thenAnswer(call ->
+                    heads.values().stream().filter(h -> topicId == h.getTopicId()).map(this::copyHead).toList());
+            when(coopSettlementMapper.countByOrderId(any())).thenAnswer(call ->
+                    (int)heads.values().stream().filter(h -> java.util.Objects.equals(h.getCoopOrderId(), call.getArgument(0))).count());
+            when(coopSettlementMapper.selectByIdForUpdate(any())).thenAnswer(call -> copyHead(heads.get(call.getArgument(0))));
+            when(coopSettlementMapper.selectByClaimId(any())).thenAnswer(call -> {
+                var detail = details.get(call.getArgument(0));
+                return detail == null ? null : copyHead(heads.get(detail.getSettlementId()));
+            });
+            when(detailMapper.insertIgnoreDetail(any())).thenAnswer(call -> {
+                requireUnitTransaction();
+                CoopSettlementDetail detail = call.getArgument(0);
+                if (details.containsKey(detail.getClaimId())) return 0;
+                detail.setId(nextId++); details.put(detail.getClaimId(), detail); return 1;
+            });
+            when(detailMapper.selectByClaimIdForUpdate(any())).thenAnswer(call -> details.get(call.getArgument(0)));
+            when(detailMapper.refreshOriginAggregate(any())).thenAnswer(call -> {
+                requireUnitTransaction();
+                CoopSettlement head = heads.get(call.getArgument(0)); if (head == null) return 0;
+                var rows = details.values().stream().filter(d -> head.getId().equals(d.getSettlementId())).toList();
+                head.setAmount(rows.stream().map(CoopSettlementDetail::getOriginAmount)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add));
+                head.setVerifiedHeads((int)rows.stream().map(CoopSettlementDetail::getRegistrationId).distinct().count());
+                return 1;
+            });
+            when(adjustmentMapper.insertIgnoreAdjustment(any())).thenAnswer(call -> {
+                requireUnitTransaction();
+                CoopSettlementAdjustment row = call.getArgument(0);
+                String key = row.getClaimId() + "|" + row.getEntryKind() + "|" + row.getEventKey();
+                if (rejectAdjustmentWrites || adjustments.containsKey(key)) return 0;
+                row.setId(nextId++); adjustments.put(key, row);
+                adjustmentTransactions.put(row.getId(), transactionResource()); return 1;
+            });
+            when(adjustmentMapper.selectByClaimEventForUpdate(any(), any(), any())).thenAnswer(call ->
+                    adjustments.get(call.getArgument(0) + "|" + call.getArgument(1) + "|" + call.getArgument(2)));
+            when(adjustmentMapper.selectExecutedBySettlementForUpdate(any())).thenAnswer(call ->
+                    adjustments.values().stream().filter(a -> java.util.Objects.equals(a.getSettlementId(), call.getArgument(0))
+                            && "EXECUTED".equals(a.getStatus())).toList());
+            when(adjustmentMapper.sumExecutedBySettlement(any())).thenAnswer(call ->
+                    adjustments.values().stream().filter(a -> java.util.Objects.equals(a.getSettlementId(), call.getArgument(0))
+                            && "EXECUTED".equals(a.getStatus())).map(CoopSettlementAdjustment::getAmount)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add));
+
+            com.chengyinhub.business.service.ICoopOrderSettlementSnapshotReader snapshots =
+                    mock(com.chengyinhub.business.service.ICoopOrderSettlementSnapshotReader.class);
+            Map<Long, CoopSettlementSnapshot> frozen = new HashMap<>();
+            for (CoopOrder order : orders) {
+                order.setTopicId(topicId); order.setStatus(0); order.setDelFlag(0); order.setToType("merchant");
+                var snapshot = new CoopSettlementSnapshot();
+                snapshot.setOrderId(order.getId()); snapshot.setTopicId(topicId); snapshot.setInitiatorMemberId(900001L);
+                snapshot.setProductType(1); snapshot.setTermsVersion("v1"); snapshot.setCatalogFrozenAt(new Date(0));
+                snapshot.setFulfillmentStartInclusive(new Date(0)); snapshot.setFulfillmentEndExclusive(new Date(1000000));
+                snapshot.setCommercialContextType("TOPIC_EDITION"); snapshot.setCommercialContextId(topicId);
+                snapshot.setBeneficiaryRole("MERCHANT"); snapshot.setBeneficiaryId(order.getToId());
+                snapshot.setServiceUnit("MERCHANT_PARTICIPATION"); snapshot.setScopeType("TOPIC"); snapshot.setScopeId(topicId);
+                snapshot.setEligiblePurchaseKinds(List.of("GUIDED_TICKET")); snapshot.setFulfillmentEvidenceRule("REGISTRATION_SCAN");
+                snapshot.setCompensationMode("SALES_PERCENT"); snapshot.setShareRate(order.getShareRate());
+                frozen.put(order.getId(), snapshot);
+            }
+            when(snapshots.read(any())).thenAnswer(call -> frozen.get(((CoopOrder)call.getArgument(0)).getId()));
+            TopicSettlementEvidenceService evidence = mock(TopicSettlementEvidenceService.class);
+            when(evidence.lockCandidates(any(), any())).thenAnswer(call -> {
+                CoopSettlementSnapshot snapshot = call.getArgument(0);
+                var first = depositCandidate(topicId, snapshot.getOrderId()*10);
+                var second = depositCandidate(topicId, snapshot.getOrderId()*10+1);
+                return List.of(first, second);
+            });
+            claimService = new CoopSettlementClaimServiceImpl(snapshots, new SnapshotFulfillmentWindowResolver(), evidence,
+                    new SettlementClaimServiceImpl(claimMapper), coopSettlementMapper, detailMapper, adjustmentMapper);
+            ReflectionTestUtils.setField(claimService, "topicMapper", cmsTopicMapper);
+            ReflectionTestUtils.setField(svc, "coopSettlementClaimService", claimService);
+        }
+
+        Object transactionResource() {
+            requireUnitTransaction();
+            var source = ((org.springframework.jdbc.datasource.DataSourceTransactionManager)transactions).getDataSource();
+            Object resource = TransactionSynchronizationManager.getResource(source);
+            assertTrue(resource != null, "actual Spring JDBC transaction resource required");
+            return resource;
+        }
+        CoopSettlement copyHead(CoopSettlement source) {
+            if (source == null) return null;
+            CoopSettlement copy = new CoopSettlement(); org.springframework.beans.BeanUtils.copyProperties(source, copy); return copy;
+        }
+        CoopSettlement orderHead(long orderId) {
+            return heads.values().stream().filter(h -> Long.valueOf(orderId).equals(h.getCoopOrderId())).findFirst().orElseThrow();
+        }
+        BigDecimal net(CoopSettlement head) {
+            return new TransactionTemplate(transactions).execute(status ->
+                    ReflectionTestUtils.invokeMethod(svc, "currentCoopHeadNet", copyHead(head)));
+        }
+        void repeatAdjustment(CoopSettlementAdjustment row) {
+            new TransactionTemplate(transactions).executeWithoutResult(status ->
+                    claimService.appendExecutedAdjustment(row.getClaimId(), row.getEventKey(), row.getAmount()));
+        }
+    }
+
+    private static void requireUnitTransaction() {
+        assertTrue(TransactionSynchronizationManager.isActualTransactionActive(),
+                "claim/detail/adjustment writes must participate in the same business transaction");
+    }
+
+    private static CoopSettlementCandidate depositCandidate(long topicId, long registrationId) {
+        var row = new CoopSettlementCandidate();
+        row.setRegistrationId(registrationId); row.setSourceTopicId(topicId); row.setOrderQuantity(1L);
+        row.setTicketOwnerMatches(true); row.setFulfillmentStartInclusive(new Date(0));
+        row.setFulfillmentEndExclusive(new Date(1000000)); row.setOwnerType(1L); row.setOwnerId(topicId);
+        row.setRegistrationStatus(2); row.setPaymentStatus(2); row.setVerificationStatus(1);
+        row.setPurchaseKind("GUIDED_TICKET"); row.setEligibleSalesSnapshot(new BigDecimal("50.00"));
+        row.setScopeCovered(true); row.setMerchantScanPresent(true); row.setMerchantScanTime(new Date(900000));
+        return row;
+    }
+
+    private static PlatformTransactionManager unitTransactions() {
+        // G donor wiring: real Spring transaction synchronization, mocked JDBC only; no SQL rollback claim.
+        var data = mock(javax.sql.DataSource.class);
+        var connection = mock(java.sql.Connection.class);
+        try {
+            when(data.getConnection()).thenReturn(connection);
+        } catch (java.sql.SQLException impossibleMockFailure) {
+            throw new AssertionError("Unit connection fixture setup failed", impossibleMockFailure);
+        }
+        return new org.springframework.jdbc.datasource.DataSourceTransactionManager(data);
+    }
+
 }

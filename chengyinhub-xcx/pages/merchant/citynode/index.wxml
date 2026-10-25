@@ -33,7 +33,7 @@
 
   <cy-skeleton type="list" count="{{2}}" wx:if="{{accessState === 'loading' || (accessState === 'ready' && loading)}}" />
   <cy-error load-failure class="cn-retry cy-fade-in" size="lg" style="display:flex;flex-direction:column;flex:1;min-height:0;"
-    icon="/images/no_data.svg" wx:elif="{{accessState === 'error' || (accessState === 'ready' && loadErr)}}" fill
+    icon="empty-state" wx:elif="{{accessState === 'error' || (accessState === 'ready' && loadErr)}}" fill
     title="{{accessState === 'error' ? '商家权限加载失败' : '节点加载失败'}}"
     sub="{{accessState === 'error' ? accessErrorText : ''}}" retry="重试" bind:retry="retry" auto-back="{{accessState === 'error' || !listEverLoaded}}" />
   <cy-error size="lg" style="flex:1;min-height:0;" retry=""

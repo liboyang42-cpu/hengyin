@@ -13,6 +13,8 @@ const motion = require('../../utils/motion.js');
 const config = require('../../utils/config.js');
 const { pickLocation } = require('../../utils/location/location-manager.js');
 const analytics = require('../../utils/analytics.js');
+// U-171 分享回执的渠道码(埋点只放码,不放中文渠道名以外的任何内容)
+const ROAM_SHARE_CHANNEL_CODE = { '广场': 'square', '保存': 'album', '朋友圈': 'moments', '小红书': 'xhs' };
 const { activityShareFromEvent } = require('../../utils/activity-share.js');
 const { buildPlayHeader, buildPlayHud, createSessionClock } = require('../../utils/play-ui-contract.js');
 const {
@@ -2704,16 +2706,22 @@ Page({
     if (this._roamStartPending) return;
     // 未登录不开漫游:没有会话时 /api/roam/* 全被后端 401 挡下 —— 据点层永远「没加载出来」、
     // 每次揭雾上报弹一次「请先登录」、结算永远失败,而页面自己没有任何出路。
-    // 先补一次登录(单航班,与首登共享在途锁);仍没会话就把门闩放掉,给一句人话让人再点。
+    // 2026-10-24 owner 拍板「游客可浏览，写入时弹窗登录」:开漫游会写足迹进度,游客先弹「登录后继续」
+    // (app.requireLogin,单航班 firstLogin),登录成功恢复本次开局;点「暂不登录」页面原样不动。
+    // 仍没会话就把门闩放掉,给一句人话让人再点。
     // ⚠️ 只在能拿到会话 API 时才判:getApp 抛 / getUserID 不存在(测试沙箱、极早期初始化)
     //    一律放行走原流程 —— 门闩语义不能因为判登录这层新闸被改变。
     let loginApp = null;
     try { loginApp = getApp(); } catch (e) { loginApp = null; }
     if (loginApp && typeof loginApp.getUserID === 'function' && !loginApp.getUserID()) {
       this._roamStartPending = true;
-      Promise.resolve(loginApp.firstLogin ? loginApp.firstLogin() : null).then(() => {
+      const asked = typeof loginApp.requireLogin === 'function'
+        ? loginApp.requireLogin({ reason: 'roam' })
+        : Promise.resolve(loginApp.firstLogin ? loginApp.firstLogin() : null);
+      Promise.resolve(asked).then((ok) => {
         this._roamStartPending = false;
         if (typeof loginApp.getUserID === 'function' && loginApp.getUserID()) { this.goStart(); return; }
+        if (ok === false) return; // 用户选「暂不登录」:不报错,留在游客浏览态
         this.setData({ introError: '登录失败，请重试', locErr: false });
       });
       return;
@@ -4969,13 +4977,24 @@ Page({
       cyToast('当前可见范围不发布到' + (ch === '保存' ? '相册' : ch));
       return Promise.resolve({ ok: false, channel: ch, saved: false, posted: false, blocked: true });
     }
-    analytics.track('roam_share_channel', { bizType: 'roam', bizId: Number(this._activeShareSessionId()) || 0, properties: { channel: ch } });
-    if (ch === '广场') return this._shareToSquare();
+    const shareBizId = Number(this._activeShareSessionId()) || 0;
+    analytics.track('roam_share_channel', { bizType: 'roam', bizId: shareBizId, properties: { channel: ch } });
+    // U-171 分享回执:选了渠道之后的成败也要落埋点;properties 只放渠道码/结果码,不放文案与帖子内容。
+    const receipt = (r) => {
+      const res = r || {};
+      const channel = ROAM_SHARE_CHANNEL_CODE[ch] || 'other';
+      if (res.ok) analytics.track('roam_share_complete', { bizType: 'roam', bizId: shareBizId, properties: { channel } });
+      else analytics.track('roam_share_fail', { bizType: 'roam', bizId: shareBizId,
+        properties: { channel, reason: res.cancelled ? 'cancelled' : (res.blocked ? 'blocked' : 'failed') } });
+      return r;
+    };
+    if (ch === '广场') return this._shareToSquare().then(receipt);
     if (ch === '保存') {
       return this._exportAndSave('生成卡片', () => this._drawShareCard(this.data.share.idx), this._shareScope())
-        .then((r) => ({ ok: r.saved, channel: ch, saved: r.saved, posted: false, cancelled: r.outcome === ALBUM_SAVE.CANCELLED }));
+        .then((r) => ({ ok: r.saved, channel: ch, saved: r.saved, posted: false, cancelled: r.outcome === ALBUM_SAVE.CANCELLED }))
+        .then(receipt);
     }
-    return this._shareToAlbumGuide(ch);
+    return this._shareToAlbumGuide(ch).then(receipt);
   },
 
   /**

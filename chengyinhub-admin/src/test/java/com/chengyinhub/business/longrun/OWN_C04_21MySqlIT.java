@@ -75,6 +75,9 @@ class OWN_C04_21MySqlIT {
             org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(connection,
                     new org.springframework.core.io.FileSystemResource(java.nio.file.Path.of(
                             System.getProperty("architecture.a.repo", ".."), "chengyinhub-admin/sql/migration_20261024_cash_withdraw_transfer_intent.sql")));
+            org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(connection,
+                    new org.springframework.core.io.FileSystemResource(java.nio.file.Path.of(
+                            System.getProperty("architecture.a.repo", ".."), "chengyinhub-admin/sql/migration_20261025_cash_withdraw_fund_request_compat.sql")));
         }
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(source);
@@ -83,7 +86,8 @@ class OWN_C04_21MySqlIT {
                 new ClassPathResource("mapper/business/UmsMemberMapper.xml"),
                 new ClassPathResource("mapper/business/MerchantReferralBountyMapper.xml"),
                 new ClassPathResource("mapper/business/PlayerWithdrawalCooldownMapper.xml"),
-                new ClassPathResource("mapper/business/MemberCashWithdrawMapper.xml")});
+                new ClassPathResource("mapper/business/MemberCashWithdrawMapper.xml"),
+                new ClassPathResource("mapper/business/CashWithdrawTransferIntentMapper.xml")});
         SqlSessionTemplate sql = new SqlSessionTemplate(factory.getObject());
         context = new AnnotationConfigApplicationContext();
         context.register(Transactions.class);
@@ -93,6 +97,7 @@ class OWN_C04_21MySqlIT {
         context.registerBean(MerchantReferralBountyMapper.class, () -> sql.getMapper(MerchantReferralBountyMapper.class));
         context.registerBean(PlayerWithdrawalCooldownMapper.class, () -> sql.getMapper(PlayerWithdrawalCooldownMapper.class));
         context.registerBean(MemberCashWithdrawMapper.class, () -> sql.getMapper(MemberCashWithdrawMapper.class));
+        context.registerBean(CashWithdrawTransferIntentMapper.class, () -> sql.getMapper(CashWithdrawTransferIntentMapper.class));
         // Legacy display-only dependencies are not invoked by resolveForWithdrawal; no mocked mapper/provider.
         context.registerBean(WithdrawalFrozenAmountResolver.class, () -> new WithdrawalFrozenAmountResolver(null, null));
         context.registerBean(WithdrawalBalanceAdmissionService.class);
@@ -143,12 +148,12 @@ class OWN_C04_21MySqlIT {
         money("70", db.queryForObject("SELECT balance FROM ums_member WHERE id=42", BigDecimal.class));
     }
     @Test void cashRequiresNewCommitsAndReleasesFinancialRowsBeforeCallerContinues() {
-        db.update("INSERT INTO member_cash_withdraw(id,member_id,amount,status,frozen,del_flag,out_batch_no,out_detail_no) VALUES(?,42,30,0,0,0,?,?)", cashId, "CW" + cashId, "CD" + cashId);
+        db.update("INSERT INTO member_cash_withdraw(id,member_id,amount,status,frozen,del_flag,openid,out_batch_no,out_detail_no) VALUES(?,42,30,0,0,0,'openid',?,?)", cashId, "CW" + cashId, "CD" + cashId);
         db.update("INSERT INTO player_withdrawal_cooldown VALUES(1,42,10,DATE_ADD(CURRENT_TIMESTAMP(3),INTERVAL 1 DAY))");
         db.update("INSERT INTO merchant_referral_bounty VALUES(1,42,1,10,DATE_ADD(CURRENT_TIMESTAMP(3),INTERVAL 1 DAY),'0')");
         rr().executeWithoutResult(outer -> {
             db.queryForObject("SELECT balance FROM ums_member WHERE id=42", BigDecimal.class);
-            WithdrawalBalanceAdmissionService.Admission result = admission.debitCash(cashId,42L,new BigDecimal("30"));
+            WithdrawalBalanceAdmissionService.Admission result = admission.debitCash(cashId,42L,new BigDecimal("30"),"merchant","wx-original","remark");
             assertTrue(result.deducted); money("100",result.before); money("70",result.after);
             // A real independent connection must acquire these locks while outer is still alive.
             awaitWriter(() -> {
@@ -159,6 +164,7 @@ class OWN_C04_21MySqlIT {
                         assertTrue(row.next()); money("70", row.getBigDecimal(1));
                     }
                     statement.executeQuery("SELECT id FROM member_cash_withdraw WHERE id=" + cashId + " FOR UPDATE").close();
+                    statement.executeQuery("SELECT withdraw_id FROM member_cash_withdraw_transfer_intent WHERE withdraw_id=" + cashId + " FOR UPDATE").close();
                     statement.executeQuery("SELECT id FROM merchant_referral_bounty WHERE inviter_member_id=42 FOR UPDATE").close();
                     statement.executeQuery("SELECT id FROM player_withdrawal_cooldown WHERE member_id=42 FOR UPDATE").close();
                     connection.commit();
@@ -167,12 +173,12 @@ class OWN_C04_21MySqlIT {
         });
     }
     @Test void insufficientCashAdmissionFinalizesOriginalRowAndCannotDebitAfterLaterCredit() {
-        db.update("INSERT INTO member_cash_withdraw(id,member_id,amount,status,frozen,del_flag,out_batch_no,out_detail_no) VALUES(?,42,120,0,0,0,?,?)", cashId, "CW" + cashId, "CD" + cashId);
-        WithdrawalBalanceAdmissionService.Admission first = admission.debitCash(cashId,42L,new BigDecimal("120"));
+        db.update("INSERT INTO member_cash_withdraw(id,member_id,amount,status,frozen,del_flag,openid,out_batch_no,out_detail_no) VALUES(?,42,120,0,0,0,'openid',?,?)", cashId, "CW" + cashId, "CD" + cashId);
+        WithdrawalBalanceAdmissionService.Admission first = admission.debitCash(cashId,42L,new BigDecimal("120"),"merchant","wx-original","remark");
         assertFalse(first.deducted); assertTrue(first.currentRequestEligible);
         assertEquals(MemberCashWithdraw.STATUS_FAILED_NO_DEBIT, db.queryForObject("SELECT status FROM member_cash_withdraw WHERE id=?", Integer.class, cashId));
         awaitWriter(() -> rr().executeWithoutResult(writer -> db.update("UPDATE ums_member SET balance=200 WHERE id=42")));
-        WithdrawalBalanceAdmissionService.Admission late = admission.debitCash(cashId,42L,new BigDecimal("120"));
+        WithdrawalBalanceAdmissionService.Admission late = admission.debitCash(cashId,42L,new BigDecimal("120"),"merchant","wx-original","remark");
         assertFalse(late.currentRequestEligible); assertFalse(late.deducted);
         money("200", db.queryForObject("SELECT balance FROM ums_member WHERE id=42", BigDecimal.class));
         assertEquals(MemberCashWithdraw.STATUS_FAILED_NO_DEBIT, db.queryForObject("SELECT status FROM member_cash_withdraw WHERE id=?", Integer.class, cashId));

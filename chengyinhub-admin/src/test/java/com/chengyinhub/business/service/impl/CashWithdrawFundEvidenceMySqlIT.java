@@ -54,6 +54,7 @@ class CashWithdrawFundEvidenceMySqlIT {
     private boolean created;
     private DriverManagerDataSource source;
     private PlatformTransactionManager manager;
+    private CashWithdrawTransferIntentMapper transferIntents;
     private MemberCashWithdrawMapper cash;
     private UmsMemberMapper memberMapper;
     private WithdrawalFrozenAmountResolver frozen;
@@ -88,15 +89,18 @@ class CashWithdrawFundEvidenceMySqlIT {
             db.update("UPDATE member_cash_withdraw SET balance_deduct_id=? WHERE id=1", debit);
             db.update("INSERT INTO member_cash_withdraw_fund_fact(withdrawal_id,member_id,amount,out_batch_no,out_detail_no,kind,create_time) VALUES(1,1,30,'CW1','CD1','SUBMIT_INTENT',CURRENT_TIMESTAMP)");
             ScriptUtils.executeSqlScript(connection, new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20261024_cash_withdraw_transfer_intent.sql")));
+            ScriptUtils.executeSqlScript(connection, new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20261025_cash_withdraw_fund_request_compat.sql")));
         }
         manager = new DataSourceTransactionManager(source);
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean(); factory.setDataSource(source);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
         factory.setMapperLocations(new Resource[]{new ClassPathResource("mapper/business/MemberCashWithdrawMapper.xml"),
+                new ClassPathResource("mapper/business/CashWithdrawTransferIntentMapper.xml"),
                 new ClassPathResource("mapper/business/UmsMemberMapper.xml"),
                 new ClassPathResource("mapper/business/MerchantReferralBountyMapper.xml"),
                 new ClassPathResource("mapper/business/PlayerWithdrawalCooldownMapper.xml")});
         SqlSessionTemplate sql = new SqlSessionTemplate(factory.getObject());
+        transferIntents = sql.getMapper(CashWithdrawTransferIntentMapper.class);
         cash = sql.getMapper(MemberCashWithdrawMapper.class); memberMapper = sql.getMapper(UmsMemberMapper.class);
         frozen = new WithdrawalFrozenAmountResolver(null, null);
         ReflectionTestUtils.setField(frozen, "bountyMapper", sql.getMapper(MerchantReferralBountyMapper.class));
@@ -111,7 +115,7 @@ class CashWithdrawFundEvidenceMySqlIT {
         return (T) proxy.getProxy();
     }
     private WithdrawalBalanceAdmissionService admissionFor(MemberCashWithdrawMapper mapper) {
-        return transactional(new WithdrawalBalanceAdmissionService(memberMapper, frozen, mapper));
+        return transactional(new WithdrawalBalanceAdmissionService(memberMapper, frozen, mapper, transferIntents));
     }
 
     @BeforeEach void service() {
@@ -133,6 +137,7 @@ class CashWithdrawFundEvidenceMySqlIT {
 
     private void installService(WithdrawalBalanceAdmissionService cashAdmission) {
         target = new CashWithdrawServiceImpl();
+        ReflectionTestUtils.setField(target, "transferIntents", transferIntents);
         ReflectionTestUtils.setField(target, "mapper", cash);
         ReflectionTestUtils.setField(target, "umsMemberService", members);
         ReflectionTestUtils.setField(target, "wechatPayService", channel);
@@ -193,6 +198,13 @@ class CashWithdrawFundEvidenceMySqlIT {
             assertNotNull(intent.submissionIntentId());
             assertEquals(1, count(intent.withdrawalId(), "SUBMIT_INTENT"));
             assertEquals(intent.requestHash(), db.queryForObject("SELECT request_hash FROM member_cash_withdraw_fund_fact WHERE id=?", String.class, intent.submissionIntentId()));
+            CashWithdrawTransferIntent snapshot = transferIntents.selectByWithdrawId(intent.withdrawalId());
+            assertNotNull(snapshot, "The same original debit must have committed both proof representations before SDK entry");
+            snapshot.requireValid(); assertTrue(snapshot.submitted());
+            assertEquals(snapshot.canonicalRequestHash(), snapshot.requestHash());
+            assertEquals(intent.canonicalRequestHash(), intent.requestHash());
+            assertEquals(intent.mchid(), snapshot.mchid()); assertEquals(intent.appid(), snapshot.appid());
+            assertEquals(intent.openid(), snapshot.openid()); assertEquals(intent.amountFen(), snapshot.amountFen());
             return Map.of("ok", "true", "batchStatus", "ACCEPTED", "batchId", "provider-batch-" + intent.withdrawalId());
         });
         return service.withdraw(memberId, new BigDecimal("30.00"));
@@ -265,9 +277,10 @@ class CashWithdrawFundEvidenceMySqlIT {
         var sdk = mock(com.wechat.pay.java.service.transferbatch.TransferBatchService.class);
         WechatPayServiceImpl gateway = WechatPayTestWiring.facade();
         Class<?> binding = Class.forName(WechatPaymentSdkGateway.class.getName() + "$TransferClientBinding");
-        var constructor = binding.getDeclaredConstructor(com.wechat.pay.java.service.transferbatch.TransferBatchService.class, String.class);
+        var constructor = binding.getDeclaredConstructor(com.wechat.pay.java.service.transferbatch.TransferBatchService.class,
+                String.class, String.class, String.class);
         constructor.setAccessible(true);
-        WechatPayTestWiring.setField(gateway, "transferClientBinding", constructor.newInstance(sdk, "unit-merchant"));
+        WechatPayTestWiring.setField(gateway, "transferClientBinding", constructor.newInstance(sdk, "unit-merchant", "unit-channel-appid", null));
         ReflectionTestUtils.setField(target, "wechatPayService", gateway); return sdk;
     }
 
@@ -278,8 +291,8 @@ class CashWithdrawFundEvidenceMySqlIT {
     }
     @Test void debitCommitReplyLostKeepsOriginalEvidenceAndNeverResubmitsOrRedebits() {
         MemberCashWithdraw w = original();
-        assertTrue(admission.debitCash(w.getId(), memberId, w.getAmount()).deducted); // committed; caller loses reply
-        assertFalse(admission.debitCash(w.getId(), memberId, w.getAmount()).currentRequestEligible);
+        assertTrue(admission.debitCash(w.getId(), memberId, w.getAmount(), "unit-merchant", "unit-channel-appid", "城瘾分润提现").deducted); // committed; caller loses reply
+        assertFalse(admission.debitCash(w.getId(), memberId, w.getAmount(), "unit-merchant", "unit-channel-appid", "城瘾分润提现").currentRequestEligible);
         MemberCashWithdraw debited = cash.selectById(w.getId());
         assertNotNull(debited.getBalanceDeductId()); assertEquals(1, count(w.getId(), "DEBIT")); money("70");
         state(w.getId(), 3);
@@ -291,8 +304,8 @@ class CashWithdrawFundEvidenceMySqlIT {
     /** Inject process exit after the real REQUIRES_NEW debit committed, bypassing withdraw's Exception catch. */
     private MemberCashWithdraw processExitAfterDebitCommit() {
         WithdrawalBalanceAdmissionService interrupted = mock(WithdrawalBalanceAdmissionService.class);
-        when(interrupted.debitCash(anyLong(), eq(memberId), any())).thenAnswer(i -> {
-            assertTrue(admission.debitCash(i.getArgument(0), i.getArgument(1), i.getArgument(2)).deducted);
+        when(interrupted.debitCash(anyLong(), eq(memberId), any(), any(), any(), any())).thenAnswer(i -> {
+            assertTrue(admission.debitCash(i.getArgument(0), i.getArgument(1), i.getArgument(2), i.getArgument(3), i.getArgument(4), i.getArgument(5)).deducted);
             throw new AssertionError("simulated process exit before SUBMIT_INTENT");
         });
         installService(interrupted);
@@ -383,7 +396,7 @@ class CashWithdrawFundEvidenceMySqlIT {
     }
     @Test void oldUnknownWithoutIntentRemainsInvestigationAndCannotRefund() {
         MemberCashWithdraw w = original();
-        assertTrue(admission.debitCash(w.getId(), memberId, w.getAmount()).deducted);
+        assertTrue(admission.debitCash(w.getId(), memberId, w.getAmount(), "unit-merchant", "unit-channel-appid", "城瘾分润提现").deducted);
         fact(w, "UNKNOWN"); state(w.getId(), 3);
         when(channel.queryTransferResult(originalIntent(w)))
                 .thenReturn(Map.of("result", "UNKNOWN", "error", "NOT_FOUND"));
@@ -398,7 +411,7 @@ class CashWithdrawFundEvidenceMySqlIT {
     @Test void evidenceBindFailureRollsBackTheDebitAndItsFact() {
         MemberCashWithdraw w = original(); MemberCashWithdrawMapper failing = spy(cash);
         doReturn(0).when(failing).bindDebitEvidence(any());
-        assertThrows(IllegalStateException.class, () -> admissionFor(failing).debitCash(w.getId(), memberId, w.getAmount()));
+        assertThrows(IllegalStateException.class, () -> admissionFor(failing).debitCash(w.getId(), memberId, w.getAmount(), "unit-merchant", "unit-channel-appid", "城瘾分润提现"));
         money("100"); assertEquals(0, count(w.getId(), "DEBIT")); assertNull(cash.selectById(w.getId()).getBalanceDeductId());
     }
     @Test void providerAcceptedButErrorOrNotFoundCannotRefund() {
@@ -428,7 +441,7 @@ class CashWithdrawFundEvidenceMySqlIT {
     }
     @Test void positiveNonAcceptanceRefundsOnce() {
         when(channel.transferToBalance(any(CashWithdrawTransferIntent.class)))
-                .thenReturn(Map.of("ok", "false", "ambiguous", "false", "error", "not submitted"));
+                .thenAnswer(i -> Map.of("ok", "false", "ambiguous", "false", "notSent", "true", "requestHash", i.getArgument(0, CashWithdrawTransferIntent.class).requestHash(), "error", "not submitted"));
         assertThrows(IllegalStateException.class, () -> service.withdraw(memberId, new BigDecimal("30.00")));
         MemberCashWithdraw w = cash.selectByMember(memberId).get(0);
         assertEquals(2, w.getStatus()); assertNotNull(w.getBalanceRefundId());
@@ -494,7 +507,7 @@ class CashWithdrawFundEvidenceMySqlIT {
         assertEquals(0, count(w.getId(), "REFUND")); money("70");
     }
     @Test void manualCreditThenExceptionRollsBackWholeFinancialTransaction() {
-        MemberCashWithdraw w = original(); admission.debitCash(w.getId(), memberId, w.getAmount()); state(w.getId(), 3);
+        MemberCashWithdraw w = original(); admission.debitCash(w.getId(), memberId, w.getAmount(), "unit-merchant", "unit-channel-appid", "城瘾分润提现"); state(w.getId(), 3);
         assertTrue(service.manualRefund(w.getId(), "maker", "未提交", 3));
         doAnswer(i -> {
             memberMapper.addBalance(i.getArgument(0), i.getArgument(1)); throw new IllegalStateException("failure after SQL write");
@@ -571,7 +584,7 @@ class CashWithdrawFundEvidenceMySqlIT {
         catch (InterruptedException e) { Thread.currentThread().interrupt(); throw new AssertionError(e); }
     }
     @Test void persistedFactsCannotBeEditedOrDeleted() {
-        MemberCashWithdraw w = original(); admission.debitCash(w.getId(), memberId, w.getAmount());
+        MemberCashWithdraw w = original(); admission.debitCash(w.getId(), memberId, w.getAmount(), "unit-merchant", "unit-channel-appid", "城瘾分润提现");
         assertThrows(RuntimeException.class, () -> db.update("UPDATE member_cash_withdraw_fund_fact SET amount=1 WHERE withdrawal_id=?", w.getId()));
         assertThrows(RuntimeException.class, () -> db.update("DELETE FROM member_cash_withdraw_fund_fact WHERE withdrawal_id=?", w.getId()));
         assertEquals(1, count(w.getId(), "DEBIT")); money("70");
@@ -639,7 +652,7 @@ class CashWithdrawFundEvidenceMySqlIT {
     @Test void corruptHistoricalHashKeepsOriginalFunds() { historicalIncompleteIntentIsNotRecreatedFromCurrentConfiguration("HASH"); }
 
     private void historicalIncompleteIntentIsNotRecreatedFromCurrentConfiguration(String mode) {
-        MemberCashWithdraw w = original(); admission.debitCash(w.getId(), memberId, w.getAmount());
+        MemberCashWithdraw w = original(); admission.debitCash(w.getId(), memberId, w.getAmount(), "unit-merchant", "unit-channel-appid", "城瘾分润提现");
         new TransactionTemplate(manager).executeWithoutResult(tx -> {
             cash.selectByIdForUpdate(w.getId());
             CashWithdrawFundFact legacy = CashWithdrawFundFact.of(w, "SUBMIT_INTENT");
@@ -761,9 +774,9 @@ class CashWithdrawFundEvidenceMySqlIT {
         // Reuse B's exact narrow fixture binding; this does not prove real certificate/client initialization.
         Class<?> binding = Class.forName(WechatPaymentSdkGateway.class.getName() + "$TransferClientBinding");
         java.lang.reflect.Constructor<?> constructor = binding.getDeclaredConstructor(
-                com.wechat.pay.java.service.transferbatch.TransferBatchService.class, String.class);
+                com.wechat.pay.java.service.transferbatch.TransferBatchService.class, String.class, String.class, String.class);
         constructor.setAccessible(true);
-        WechatPayTestWiring.setField(gateway, "transferClientBinding", constructor.newInstance(sdk, "unit-merchant"));
+        WechatPayTestWiring.setField(gateway, "transferClientBinding", constructor.newInstance(sdk, "unit-merchant", "unit-channel-appid", null));
         ReflectionTestUtils.setField(target, "wechatPayService", gateway);
         when(sdk.initiateBatchTransfer(any())).thenAnswer(i -> {
             assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
@@ -804,5 +817,99 @@ class CashWithdrawFundEvidenceMySqlIT {
         assertEquals(1, count(w.getId(), "FAIL".equals(outcome) ? "FINAL_FAIL" : "SUCCESS"));
         money("FAIL".equals(outcome) ? "100" : "70");
         verify(sdk, times(1)).initiateBatchTransfer(any()); verifyNoInteractions(channel);
+    }
+
+    /** Construct a genuine pre-integration master debit: no DEBIT/SUBMIT_INTENT rows are synthesized. */
+    private MemberCashWithdraw masterOnlyOriginal(boolean submitted) {
+        MemberCashWithdraw original = original();
+        new TransactionTemplate(manager).executeWithoutResult(status -> {
+            MemberCashWithdraw locked = cash.selectByIdForUpdate(original.getId());
+            BigDecimal before = memberMapper.selectBalanceForUpdate(memberId);
+            assertEquals(1, memberMapper.deductWithdrawableBalance(memberId, locked.getAmount(), BigDecimal.ZERO));
+            CashWithdrawTransferIntent snapshot = CashWithdrawTransferIntent.create(locked, "unit-merchant",
+                    "unit-channel-appid", "城瘾分润提现", before, before.subtract(locked.getAmount()));
+            assertEquals(1, transferIntents.insert(snapshot));
+            if (submitted) assertEquals(1, transferIntents.markSubmitted(locked.getId(), snapshot.requestHash()));
+        });
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM member_cash_withdraw_fund_fact WHERE withdrawal_id=?",
+                Integer.class, original.getId()));
+        return cash.selectById(original.getId());
+    }
+
+    @Test void historicalMasterSnapshotSuccessRecoversWithoutConvertingItsIdentityOrDebitingAgain() {
+        MemberCashWithdraw original = masterOnlyOriginal(true);
+        CashWithdrawTransferIntent snapshot = transferIntents.selectByWithdrawId(original.getId());
+        state(original.getId(), MemberCashWithdraw.STATUS_REFUND_PENDING_REVIEW);
+        when(channel.queryTransferResult(any(CashWithdrawTransferIntent.class))).thenAnswer(call -> {
+            assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+            assertEquals(snapshot, call.getArgument(0));
+            return com.chengyinhub.business.service.CashWithdrawIntentTestSupport.facts(snapshot, "SUCCESS");
+        });
+        service.requery(original.getId()); service.requery(original.getId());
+        assertEquals(MemberCashWithdraw.STATUS_SUCCESS, cash.selectById(original.getId()).getStatus());
+        assertEquals(snapshot, transferIntents.selectByWithdrawId(original.getId())); money("70");
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM member_cash_withdraw_fund_fact WHERE withdrawal_id=?",
+                Integer.class, original.getId()));
+        verify(members, never()).addBalance(anyLong(), any());
+        verify(channel, never()).transferToBalance(any(CashWithdrawTransferIntent.class));
+    }
+
+    @Test void historicalMasterNeverSubmittedSnapshotUsesOriginalTwoPersonRefundWithoutLedgerConversion() {
+        MemberCashWithdraw original = masterOnlyOriginal(false);
+        CashWithdrawTransferIntent snapshot = transferIntents.selectByWithdrawId(original.getId());
+        service.requery(original.getId());
+        assertTrue(service.manualRefund(original.getId(), "maker", "原快照未提交", 3));
+        assertTrue(service.manualRefund(original.getId(), "checker", "原快照复核", 4));
+        assertFalse(service.manualRefund(original.getId(), "other", "原回执重放", 4));
+        money("100"); assertEquals(2, cash.selectById(original.getId()).getStatus());
+        assertEquals(snapshot, transferIntents.selectByWithdrawId(original.getId()));
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM member_cash_withdraw_fund_fact WHERE withdrawal_id=?",
+                Integer.class, original.getId()));
+        verify(members, times(1)).addBalance(memberId, new BigDecimal("30.00"));
+        verifyNoInteractions(channel);
+    }
+
+    @Test void historicalMasterRefundThenLateSuccessRetainsConflictWithoutInventingDebitOrSubmissionFacts() {
+        MemberCashWithdraw original = masterOnlyOriginal(true);
+        CashWithdrawTransferIntent snapshot = transferIntents.selectByWithdrawId(original.getId());
+        when(channel.queryTransferResult(any(CashWithdrawTransferIntent.class)))
+                .thenReturn(com.chengyinhub.business.service.CashWithdrawIntentTestSupport.facts(snapshot, "FAIL"));
+        service.requery(original.getId()); money("100");
+        assertEquals(MemberCashWithdraw.STATUS_FAILED_REFUNDED, cash.selectById(original.getId()).getStatus());
+        when(channel.queryTransferResult(any(CashWithdrawTransferIntent.class)))
+                .thenReturn(com.chengyinhub.business.service.CashWithdrawIntentTestSupport.facts(snapshot, "SUCCESS"));
+        service.requery(original.getId());
+        assertEquals(2, cash.selectById(original.getId()).getStatus()); money("100");
+        assertEquals(1, count(original.getId(), "UNKNOWN"));
+        assertEquals(0, count(original.getId(), "DEBIT")); assertEquals(0, count(original.getId(), "SUBMIT_INTENT"));
+        assertEquals(0, count(original.getId(), "REFUND"));
+        CashWithdrawFundFact conflict = cash.selectFundFacts(original.getId()).get(0);
+        assertEquals("SUCCESS", conflict.getChannelDetailStatus());
+        assertEquals(snapshot.requestHash(), conflict.getRequestHash()); assertNull(conflict.getSubmissionIntentId());
+        assertEquals(snapshot, transferIntents.selectByWithdrawId(original.getId()));
+        verify(members, times(1)).addBalance(memberId, new BigDecimal("30.00"));
+    }
+
+    @Test void twoIndividuallyValidButConflictingOriginalFormatsNeverChooseAnEconomicWinner() {
+        MemberCashWithdraw original = accepted();
+        CashWithdrawTransferIntent snapshot = transferIntents.selectByWithdrawId(original.getId());
+        CashWithdrawTransferIntent foreign = CashWithdrawTransferIntent.create(original, "different-merchant",
+                snapshot.appid(), snapshot.remark(), snapshot.balanceBefore(), snapshot.balanceAfter());
+        // Deliberate corruption in the isolated fixture; neither production hash is recomputed/overwritten by recovery.
+        db.update("UPDATE member_cash_withdraw_transfer_intent SET mchid=?,request_hash=? WHERE withdraw_id=?",
+                foreign.mchid(), foreign.requestHash(), original.getId());
+        CashWithdrawTransferIntent conflicting = transferIntents.selectByWithdrawId(original.getId());
+        assertDoesNotThrow(conflicting::requireValid);
+        String ledgerHash = db.queryForObject("SELECT request_hash FROM member_cash_withdraw_fund_fact WHERE withdrawal_id=? AND kind='SUBMIT_INTENT'",
+                String.class, original.getId());
+        service.requery(original.getId());
+        assertEquals(MemberCashWithdraw.STATUS_FAILED_MANUAL, cash.selectById(original.getId()).getStatus());
+        assertThrows(IllegalStateException.class, () -> service.manualRefund(original.getId(), "maker", "冲突不得回补", null));
+        money("70"); assertEquals(0, count(original.getId(), "REFUND"));
+        assertEquals(ledgerHash, db.queryForObject("SELECT request_hash FROM member_cash_withdraw_fund_fact WHERE withdrawal_id=? AND kind='SUBMIT_INTENT'",
+                String.class, original.getId()));
+        assertEquals(conflicting, transferIntents.selectByWithdrawId(original.getId()));
+        verify(channel, never()).queryTransferResult(any(CashWithdrawTransferIntent.class));
+        verify(members, never()).addBalance(anyLong(), any());
     }
 }

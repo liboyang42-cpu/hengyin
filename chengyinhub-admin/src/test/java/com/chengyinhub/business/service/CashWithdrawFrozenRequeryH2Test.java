@@ -90,6 +90,7 @@ class CashWithdrawFrozenRequeryH2Test {
     private ICashWithdrawService service;
     private IUmsMemberService umsMemberService;
     private IWechatPayService wechatPayService;
+    private CashWithdrawIntentTestSupport evidence;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -121,6 +122,8 @@ class CashWithdrawFrozenRequeryH2Test {
         wechatPayService = mock(IWechatPayService.class);
 
         CashWithdrawServiceImpl target = new CashWithdrawServiceImpl();
+        evidence = new CashWithdrawIntentTestSupport();
+        ReflectionTestUtils.setField(target, "transferIntents", evidence.mapper);
         ReflectionTestUtils.setField(target, "transactionManager",
                 new org.springframework.jdbc.datasource.DataSourceTransactionManager(dataSource));
         ReflectionTestUtils.setField(target, "mapper", mapper);

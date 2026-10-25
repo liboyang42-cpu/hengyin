@@ -579,7 +579,8 @@
         "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT",
         "com.chengyinhub.business.it.WechatVerifiedPaymentFactMySqlIT",
         "com.chengyinhub.business.it.Wp04OriginalProducerMySqlIT",
-        "com.chengyinhub.business.it.CoopSettlementManualCaseReadMySqlIT"
+        "com.chengyinhub.business.it.CoopSettlementManualCaseReadMySqlIT",
+        "com.chengyinhub.business.service.CashWithdrawTransferIntentMySqlIT"
       ],
       "note": "One source-bound joint A/B/G batch, no duplicate class jobs: original funds, callback/refund, immutable consumption, components, late-success and approved-refund guard. Exact source SHA, declared zero-skip XML and independent CLEAN required. No production/provider/HTTP or unresolved allocation-policy acceptance."
     },
@@ -660,9 +661,21 @@
         "com.chengyinhub.business.service.CoopDepositRefundMybatisIntegrationTest",
         "com.chengyinhub.business.it.Wp04OriginalProducerMySqlIT",
         "com.chengyinhub.business.service.ai.AiQuotaRecoveryMySqlRedisIT",
-        "com.chengyinhub.business.it.CoopSettlementManualCaseReadMySqlIT"
+        "com.chengyinhub.business.it.CoopSettlementManualCaseReadMySqlIT",
+        "com.chengyinhub.business.service.CashWithdrawTransferIntentMySqlIT"
       ],
       "note": "65 unique registered storage classes, 810 declared cases, including original producer/refund, manual-case read projection and ASR shared quota. One matrix max-parallel20, no duplicates. Source SHA, original XML, zero skip and independent CLEAN required. Static inventory is not execution, HTTP/provider/restart/load/deployment acceptance."
+    },
+    "payment-intent-correctness": {
+      "lineage": "Combined public PR598 payment contracts and preserved architecture cases; execution evidence is separate",
+      "registered_source": "ff2b0ea1cf0ca3f097de446b5eda85beb3fad1a0",
+      "note": "Source lineage: ff2b architecture plus public master892efe6f. Final source is dispatched candidate SHA; declarations are not PASS counts.",
+      "classes": [
+        "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT",
+        "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT",
+        "com.chengyinhub.business.service.CashWithdrawTransferIntentMySqlIT",
+        "com.chengyinhub.business.longrun.OWN_C04_21MySqlIT"
+      ]
     }
   },
   "classes": {
@@ -731,11 +744,12 @@
       "gates": {}
     },
     "com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT": {
-      "tests": 15,
+      "tests": 25,
       "storage": [
         "mysql"
       ],
-      "gates": {}
+      "gates": {},
+      "note": " G7e4ce69 approved original-order unpaiddeposit setoff adds10 ordinary methods; originalcaseidentitiesretained, runtimeNOT_RUN pending unifiedcandidate."
     },
     "com.chengyinhub.business.it.RegistrationSeatMySqlIT": {
       "tests": 7,
@@ -1353,13 +1367,15 @@
       "gates": {}
     },
     "com.chengyinhub.business.service.impl.CashWithdrawFundEvidenceMySqlIT": {
-      "tests": 53,
+      "tests": 57,
       "storage": [
         "mysql"
       ],
-      "gates": {},
+      "gates": {
+        "B_PAYMENT_INTENT_DDL_APPROVED": "1"
+      },
       "database_base": "architecture_a",
-      "note": "Architecture day A afcabd575fd03f7437f12b1210077266a270b88f: 53 fixed ordinary tests; four parameterized scenarios expanded with original arguments and bodies preserved; adds above/exact SDK integer-fen boundary cases. Real MySQL with deterministic SDK stub; no provider acceptance. Historical receipts remain bound to their original source and counts."
+      "note": "B public-master compatibility delta 5a8800de source: original53 ordinary methods retained plus4 original-intent provenance/visibility/conflict cases =57 declarations. Original approval assertion retained and registered explicitly. Source inventory only, Java/MySQL/CI NOT_RUN; prior53 execution evidence is not transferred."
     },
     "com.chengyinhub.business.service.impl.OfficialBroadcastDeliveryMySqlIT": {
       "tests": 10,
@@ -1624,16 +1640,22 @@
       "storage": [
         "mysql"
       ],
-      "gates": {},
-      "note": "Eight source cases: original business/DONE atomicity, replay/fence, fresh RR read and outer false/exception/rollback/commit release. New afterCompletion release source repair awaits real MySQL acceptance. Original after-commit notice is an explicit scheduler double."
+      "gates": {
+        "B_PAYMENT_INTENT_DDL_APPROVED": "1"
+      },
+      "note": "Eight source cases: original business/DONE atomicity, replay/fence, fresh RR read and outer false/exception/rollback/commit release. New afterCompletion release source repair awaits real MySQL acceptance. Original after-commit notice is an explicit scheduler double.",
+      "database_base": "cyit"
     },
     "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT": {
       "tests": 4,
       "storage": [
         "mysql"
       ],
-      "gates": {},
-      "note": "Four real MySQL intent/commit/concurrency contracts, actual gateway and SDK doubles, JDBC-backed domain mapper adapter. Dedicated UUID scratch only; no real payment/provider or full MyBatis four-domain acceptance."
+      "gates": {
+        "B_PAYMENT_INTENT_DDL_APPROVED": "1"
+      },
+      "note": "Four real MySQL intent/commit/concurrency contracts, actual gateway and SDK doubles, JDBC-backed domain mapper adapter. Dedicated UUID scratch only; no real payment/provider or full MyBatis four-domain acceptance.",
+      "database_base": "cyit"
     },
     "com.chengyinhub.business.service.impl.CoopDepositSettlementAttemptMySqlIT": {
       "tests": 11,
@@ -1701,6 +1723,16 @@
       ],
       "gates": {},
       "note": "G e57f0a32 source only: actual read Mapper and redacted projection; original-refund UUID scratch admission plus exact read flag. No write/resolve/debit API. NOT_RUN."
+    },
+    "com.chengyinhub.business.service.CashWithdrawTransferIntentMySqlIT": {
+      "tests": 9,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
+      "database_base": "cyit"
     }
   }
 }

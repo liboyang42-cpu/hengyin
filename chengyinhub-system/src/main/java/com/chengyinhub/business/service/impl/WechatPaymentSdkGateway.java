@@ -71,7 +71,10 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
     private RefundService refundService;
     private TransferBatchService transferBatchService;
     /** One immutable publication couples the client with its SDK credential merchant, never a mutable property. */
-    private record TransferClientBinding(TransferBatchService client, String mchid) { }
+    private record TransferClientBinding(TransferBatchService client, String mchid, String wxAppid, String appAppid) {
+        /** Legacy fixture shape contains no application proof and cannot authorize a typed transfer. */
+        private TransferClientBinding(TransferBatchService client, String mchid) { this(client, mchid, null, null); }
+    }
     private volatile TransferClientBinding transferClientBinding;
     private record VerifiedProviderClients(JsapiService payments, RefundService refunds, String mchid) { }
     private volatile VerifiedProviderClients verifiedProviderClients;
@@ -124,7 +127,8 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
                 // 初始化NotificationParser
                 notificationParser = new NotificationParser(notificationConfig);
                 transferBatchService = builtTransferClient;
-                transferClientBinding = new TransferClientBinding(builtTransferClient, boundMerchantId);
+                transferClientBinding = new TransferClientBinding(builtTransferClient, boundMerchantId,
+                        wxPayConfig.getAppid(), wxPayConfig.getAppAppid());
                 // Publish query clients bound to the very same SDK credential; mutable properties are not provider evidence.
                 jsapiService = new JsapiService.Builder().httpClient(transferHttpClient).build();
                 refundService = new RefundService.Builder().httpClient(transferHttpClient).build();
@@ -453,24 +457,47 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
 
     @Override
     public Map<String, String> transferToBalance(CashWithdrawTransferIntent intent) {
+        // A persisted master debit snapshot has its own existing validation/dispatch claim.
+        // Do not reinterpret this as a ledger SUBMIT_INTENT or convert its V1 hash.
+        boolean debitSnapshot = intent != null && intent.hasDebitSnapshot();
+        if (debitSnapshot) {
+            intent.requireValid();
+            if (!intent.submitted() || intent.locallyRejected()
+                    || !intent.mchid().equals(wxPayConfig.getMerchantId())
+                    || !(intent.appid().equals(wxPayConfig.getAppid())
+                        || intent.appid().equals(wxPayConfig.getAppAppid()))
+                    || org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
+                return Map.of("ok", "false", "ambiguous", "false", "notSent", "true",
+                        "requestHash", intent.requestHash(), "error", "原提现渠道未就绪或配置已变化，未发起转账");
+            }
+        }
+        final TransferClientBinding bound;
         try {
-            TransferClientBinding bound = originalTransferClient(intent);
-            // No normalization here: these exact parameters were sealed by the DTO owner before submission.
-            return submitTransfer(bound.client(), intent.outBatchNo(), intent.outDetailNo(),
-                    java.math.BigDecimal.valueOf(intent.amountFen(), 2), intent.openid(),
-                    intent.effectiveRemark(), intent.appid());
+            bound = originalTransferClient(intent);
         } catch (RuntimeException invalidOriginal) {
             Map<String, String> result = new HashMap<>();
-            result.put("ok", "false"); result.put("ambiguous", "true");
+            result.put("ok", "false"); result.put("ambiguous", debitSnapshot ? "false" : "true");
+            result.put("notSent", Boolean.toString(debitSnapshot));
+            if (intent != null) result.put("requestHash", intent.requestHash());
             result.put("error", "原提现意图或client商户绑定无法核验，保留原号查证");
             return result;
         }
+        // The definitely-not-sent catch ends before SDK entry. Later exceptions remain unknown.
+        Map<String, String> result = submitTransfer(bound.client(), intent.outBatchNo(), intent.outDetailNo(),
+                java.math.BigDecimal.valueOf(intent.amountFen(), 2), intent.openid(),
+                intent.effectiveRemark(), intent.appid());
+        result.put("requestHash", intent.requestHash());
+        result.put("notSent", String.valueOf("false".equals(result.get("ok"))
+                && "false".equals(result.get("ambiguous"))));
+        return result;
     }
 
     @Override
     public Map<String, String> queryTransferResult(CashWithdrawTransferIntent intent) {
         try {
             TransferClientBinding bound = originalTransferClient(intent);
+            if (intent.hasDebitSnapshot() && !intent.mchid().equals(wxPayConfig.getMerchantId()))
+                return Map.of("result", "UNKNOWN", "error", "原提现商户渠道未就绪，须按原号核查");
             Map<String, String> result = queryTransfer(bound.client(), bound.mchid(),
                     intent.outBatchNo(), intent.outDetailNo());
             String state = result.get("result");
@@ -514,7 +541,8 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
             throw new IllegalArgumentException("原提现参数不能被重写或归一化");
         }
         TransferClientBinding bound = transferClientBinding;
-        if (bound == null || bound.client() == null || !intent.mchid().equals(bound.mchid())) {
+        if (bound == null || bound.client() == null || !intent.mchid().equals(bound.mchid())
+                || !(intent.appid().equals(bound.wxAppid()) || intent.appid().equals(bound.appAppid()))) {
             throw new IllegalStateException("原商户与SDK client绑定不符，不得改渠道重发");
         }
         return bound;

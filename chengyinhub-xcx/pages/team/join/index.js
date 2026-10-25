@@ -98,6 +98,7 @@ Page({
   },
 
   join() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('team', () => this.join())) return; // 2026-10-24 游客写前登录
     if (this.data.joining) return;
     const that = this;
     this.setData({ joining: true, joinError: '' });

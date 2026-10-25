@@ -80,7 +80,7 @@
 
   <!-- 请求失败/部分数据失败:身份卡仍可见,但不能把缺失的城市纪念章静默当成完整结果 -->
   <cy-error load-failure="{{loadFail && !wallAuthRequired && !wallAccessDenied}}" class="bw-error-state" wx:if="{{loadFail || partialFail || (glFail && viewMode === 'wall')}}" fill size="lg"
-    icon="/images/no_data.svg"
+    icon="empty-state"
     title="{{wallAuthRequired ? '登录后查看我的勋章' : loadFail ? '勋章数据没有到达' : partialFail ? '部分勋章数据未到达，当前结果不完整' : glFail ? '勋章墙渲染失败' : ''}}"
     sub="{{partialFail ? '部分内容未更新' : ''}}"
     retry="{{wallAuthRequired ? '登录' : '重试'}}" bind:retry="retryWall" />

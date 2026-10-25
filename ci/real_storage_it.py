@@ -41,7 +41,7 @@ SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 FQCN_RE = re.compile(r"^(?:[a-z][a-z0-9_]*\.)+[A-Z][A-Za-z0-9_]*$")
 SIMPLE_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_]*$")
 BATCH_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
-GATE_NAME_RE = re.compile(r"^CHENGYIN_[A-Z0-9_]+$")
+GATE_NAME_RE = re.compile(r"^(?:CHENGYIN_[A-Z0-9_]+|B_PAYMENT_INTENT_DDL_APPROVED)$")
 GATE_VALUE_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
 IDENT_RE = re.compile(r"^[A-Za-z0-9_]+$")
 MODULE_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
@@ -244,7 +244,8 @@ def public_env(env):
 
 def child_env(base, extra):
     """去掉继承来的 CHENGYIN_*，只留本类登记的那组，避免别的门控把其它测试一起打开。"""
-    env = {key: value for key, value in base.items() if not key.startswith("CHENGYIN_")}
+    env = {key: value for key, value in base.items()
+           if not key.startswith("CHENGYIN_") and key != "B_PAYMENT_INTENT_DDL_APPROVED"}
     env.update(extra)
     return env
 
@@ -366,6 +367,9 @@ def scan_java(source):
     for match in GATE_START_RE.finditer(code):
         args = annotation_args(code, match.end() - 1)
         gates.append((java_string_value(args, "named"), java_string_value(args, "matches")))
+    # These two reviewed suites fail before DDL unless explicitly approved; retain their non-skipping assertion.
+    if re.search(r'^\s*assertEquals\(\s*"1"\s*,\s*System\.getenv\(\s*"B_PAYMENT_INTENT_DDL_APPROVED"\s*\)\s*\);', code, re.MULTILINE):
+        gates.append(("B_PAYMENT_INTENT_DDL_APPROVED", "1"))
     return {
         "declared_tests": len(TEST_RE.findall(bare)),
         "dynamic": sorted(set(DYNAMIC_RE.findall(bare))),

@@ -67,6 +67,20 @@
         "Pending payload and recovery records remain isolated by account"
       ],
       "pricing_caveat": "Do not assert every voice creation is paid. Source default is CosyVoice-v2; official CosyVoice creation is free, Qwen creation has different billing; runtime overrides not inspected. Preserve explicit new-intent confirmation with accurate model-specific or neutral wording."
+    },
+    {
+      "id": "UNPAID_DEPOSIT_FROM_ORDER_RECEIVABLE",
+      "owner": "G",
+      "authority": "Direct user question reply call_e39e3991cd20426591608496cdca3733",
+      "decision": "结算时自动抵扣，但必须生成关联原订单的不可变调整凭证",
+      "invariants": [
+        "Automatic setoff is bound to the actual original order/claim/head and original unpaid invite identity",
+        "Original frozen settlement gross and allocation components remain immutable",
+        "Append-only adjustment and deposit collected amount conserve the actual setoff in one local transaction",
+        "Only the same payer positive available receivable funds the setoff; never another party balance or deposit",
+        "Replay/concurrency cannot deduct twice; unresolved payment preserves original reconciliation fence"
+      ],
+      "implementation_state": "IN_PROGRESS_NOT_RUN_NOT_ACCEPTED"
     }
   ],
   "shared_contracts": {

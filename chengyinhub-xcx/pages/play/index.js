@@ -21,6 +21,7 @@ const { classifyVerificationOutcome, createVerificationWorkflow } = require('../
 const { routeColorForKey, ROUTE_BORDER_COLOR } = require('../../utils/play-visual-tokens.js');
 const { getPlayMapState, getPlayRouteNodeState } = require('../../utils/play-state-contract.js');
 const gameSessionClient = require('../../utils/game-session-client.js');
+const { reportBlocksParseFailure } = require('./utils/chapter-blocks-health.js');   // P1-021 块流回落埋点
 const audioSession = require('./utils/audio-session.js');       // 音频打断/恢复 + 长音频不熄屏
 const { createPoller } = require('./utils/poller.js');           // 带领场进度:退避轮询
 const playAccuracy = require('./utils/play-accuracy.js');       // 到达定位精度阈值(80m)与提示
@@ -4249,6 +4250,9 @@ Page({
         description: chapter.description, blocks: chapter.blocks,
         atmospherePreset: chapter.atmospherePreset, atmosphereClass: chapter.atmosphereClass }];
     }
+    this._blocksParseSeen = this._blocksParseSeen || {};
+    list.forEach((c) => reportBlocksParseFailure(analytics, this._blocksParseSeen,
+      c && (c.chapterId != null ? c.chapterId : c.id), c && c.blocks));
     return list.map((c, i) => ({
       key: 'c' + i,
       opening: c.opening === true,
@@ -4280,6 +4284,8 @@ Page({
 
   buildChapter(d, nodes) {
     const c = (d.chapters && d.chapters[0]) || {};
+    this._blocksParseSeen = this._blocksParseSeen || {};
+    reportBlocksParseFailure(analytics, this._blocksParseSeen, c.id || c.chapterId, c.blocks);
     const placeholderName = isChapterPlaceholderName(c.name);
     return {
       id: c.id || c.chapterId || '',

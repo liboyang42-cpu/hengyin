@@ -196,6 +196,7 @@ Page({
 
   // 添加评论（回车发送）
   addComment: function () {
+    if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.addComment())) return; // 2026-10-24 游客写前登录
     var that = this;
     const content = String(that.data.commentContent || '').trim();
     
@@ -259,6 +260,7 @@ Page({
 
   // 添加回复评论（回车发送）
   addReplyComment: function () {
+    if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.addReplyComment())) return; // 2026-10-24 游客写前登录
     var that = this;
     const content = String(that.data.replyContent || '').trim();
     if (!that.data.replyId || that.data.list.some(row => String(row.id) === String(that.data.replyId) && (row.deletedPlaceholder === true || row.lifecycle === 'DELETED'))) { toast('回复目标已变化，请重新选择'); return; }
@@ -451,6 +453,7 @@ Page({
   },
 
   followClick(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.followClick(e))) return; // 2026-10-24 游客写前登录
     var that = this
     let item = that.data.info
     if (!item || !item.memberId || that._followRequestInFlight) return;
@@ -511,6 +514,7 @@ Page({
   },
 
   lickClick(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.lickClick(e))) return; // 2026-10-24 游客写前登录
     var that = this
     let id = that.data.id
     if (!id || that._likeRequestInFlight) return;
@@ -551,6 +555,7 @@ Page({
   },
 
   favoriteClick() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.favoriteClick())) return; // 2026-10-24 游客写前登录
     const info = this.data.info || {};
     if (!info.id || this._favoriteRequestInFlight) return;
     this._favoriteRequestInFlight = true;
@@ -586,6 +591,7 @@ Page({
   },
 
   commentFollowClick(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.commentFollowClick(e))) return; // 2026-10-24 游客写前登录
     const index = Number(e.currentTarget.dataset.index);
     const item = this.data.list[index];
     if (item && (item.deletedPlaceholder === true || item.lifecycle === 'DELETED')) return;
@@ -659,6 +665,7 @@ Page({
   },
 
   commentLikeClick(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.commentLikeClick(e))) return; // 2026-10-24 游客写前登录
     var that = this
     let index = e.currentTarget.dataset.index;
     let item = that.data.list[index]
@@ -712,6 +719,7 @@ Page({
   onReportReasonCancel() { reportSheet.cancel(this); },
 
   reportSquare() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportSquare())) return; // 2026-10-24 游客写前登录
     const that = this;
     const id = that.data.id, owner = String(app.getUserID() || ''), current = () => !that._unloaded && String(that.data.id) === String(id) && owner === String(app.getUserID() || '');
     modal.show({
@@ -770,6 +778,7 @@ Page({
   },
 
   reportSquareFromActions() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportSquareFromActions())) return; // 2026-10-24 游客写前登录
     this.setData({ postActionShow: false });
     this.reportSquare();
   },
@@ -853,6 +862,7 @@ Page({
   },
 
   reportComment(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportComment(e))) return; // 2026-10-24 游客写前登录
     const that = this;
     const owner = String(app.getUserID() || ''), postId = String(that.data.id), current = () => !that._unloaded && String(that.data.id) === postId && owner === String(app.getUserID() || '');
     const index = e.currentTarget.dataset.index;
@@ -964,9 +974,15 @@ Page({
       bizId: this.data.id
     });
     const info = this.data.info && this.data.info.id != null ? this.data.info : { id: this.data.id, status: -1 };
+    const shareBizId = this.data.id;
     return Object.assign(buildSquareShare(info), {
+      // U-171 分享回执:只有老基础库会回调 success/fail,新基础库不回调 —— 能拿到时如实记一笔。
       success: function (res) {
+        analytics.track('square_share_complete', { bizType: 'square', bizId: shareBizId });
         toast.success('分享成功');
+      },
+      fail: function () {
+        analytics.track('square_share_fail', { bizType: 'square', bizId: shareBizId, properties: { reason: 'cancelled' } });
       }
     });
   },

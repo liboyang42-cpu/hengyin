@@ -15,6 +15,7 @@
     "photo_check_intent_20261023": ["20261023_advanced_command_fingerprint"],
     "20261023_cash_withdraw_fund_fact": ["member_cash_withdraw"],
     "20261024_cash_withdraw_transfer_intent": ["20261023_cash_withdraw_fund_fact"],
+    "20261025_cash_withdraw_fund_request_compat": ["20261023_cash_withdraw_fund_fact"],
     "20261023_wx_pay_order_intent": [],
     "20261024_wx_verified_payment_fact": ["wx_payment_callback_inbox_outbox_20260725"],
     "20261024_wx_success_fact_business_index": ["20261024_wx_verified_payment_fact"],

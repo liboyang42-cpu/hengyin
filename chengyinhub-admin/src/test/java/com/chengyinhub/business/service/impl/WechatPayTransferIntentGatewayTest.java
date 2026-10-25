@@ -211,9 +211,9 @@ class WechatPayTransferIntentGatewayTest {
 
     private void bind(String merchant) throws Exception {
         Class<?> binding = Class.forName(WechatPaymentSdkGateway.class.getName() + "$TransferClientBinding");
-        Constructor<?> constructor = binding.getDeclaredConstructor(TransferBatchService.class, String.class);
+        Constructor<?> constructor = binding.getDeclaredConstructor(TransferBatchService.class, String.class, String.class, String.class);
         constructor.setAccessible(true);
-        ReflectionTestUtils.setField(gateway, "transferClientBinding", constructor.newInstance(sdk, merchant));
+        ReflectionTestUtils.setField(gateway, "transferClientBinding", constructor.newInstance(sdk, merchant, "wx-original", null));
     }
 
     private TransferBatchGet batch(String status) {

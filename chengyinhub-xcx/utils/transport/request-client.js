@@ -52,6 +52,37 @@ function withFreshConsentRequestId(param, newRequestId) {
   return Object.assign({}, param, { data: asString ? JSON.stringify(next) : next });
 }
 
+// owner 2026-10-24(本 C00 文件为该任务获授权改动,见 PR CY-HANDOFF):「游客可浏览,写入时弹窗登录」。
+// 游客(发起时无会员、无 token)的请求被 401 拦下时**不再静默 wx.login 建号**:
+//   - 写请求 → deps.promptLogin(param)(同一个「登录后继续」弹窗);登录成功用新身份重发恰好一次,取消/失败照常 fail。
+//   - 读请求 → 不弹窗、不建号、不 toast,按 401 交给调用方的 fail(页面显示游客态/未登录态)。
+// 写/读判定:param.write 显式优先;GET 一律读;PUT/PATCH/DELETE 一律写;POST 看路径末段的动词
+// (含 list/info/detail 等读名词即读,含 create/join/like/report 等写动词即写,其余按读处理 —— 宁可少弹也不在浏览时弹)。
+var READ_TOKENS = ['list', 'info', 'detail', 'details', 'home', 'data', 'page', 'search', 'query', 'count',
+  'summary', 'stats', 'feed', 'feeds', 'latest', 'status', 'config', 'features', 'capabilities', 'taxonomy',
+  'nearby', 'leaderboard', 'members', 'history', 'records', 'preview', 'check', 'mine', 'my', 'get', 'view'];
+var WRITE_TOKENS = ['add', 'create', 'save', 'update', 'edit', 'delete', 'remove', 'join', 'apply', 'quit',
+  'signup', 'enroll', 'pay', 'checkout', 'order', 'submit', 'publish', 'like', 'unlike', 'favorite', 'bookmark',
+  'follow', 'unfollow', 'action', 'report', 'comment', 'reply', 'use', 'start', 'finish', 'arrive', 'checkin',
+  'reveal', 'discover', 'visit', 'claim', 'redeem', 'invite', 'accept', 'reject', 'respond', 'cancel',
+  'withdraw', 'transfer', 'register', 'set', 'toggle', 'send', 'draft', 'vote', 'rate', 'posts', 'comments',
+  'replies', 'reports', 'team', 'teams', 'remix', 'copy', 'appeal'];
+
+function pathTokens(url) {
+  var path = String(url || '').split('?')[0].replace(/\/+$/, '');
+  var last = path.slice(path.lastIndexOf('/') + 1);
+  return last.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase().split(/[-_.]+/).filter(Boolean);
+}
+
+function isWriteRequest(param, method) {
+  if (param && typeof param.write === 'boolean') return param.write;
+  if (method === 'GET') return false;
+  if (method !== 'POST') return true;
+  var tokens = pathTokens(param && param.url);
+  if (tokens.some(function (t) { return READ_TOKENS.indexOf(t) >= 0; })) return false;
+  return tokens.some(function (t) { return WRITE_TOKENS.indexOf(t) >= 0; });
+}
+
 function createRequestClient(deps) {
   deps = deps || {};
   var wxRequest = deps.wxRequest;
@@ -61,6 +92,7 @@ function createRequestClient(deps) {
   var upgradePrompted = false;
   var getUserID = deps.getUserID || function () { return ''; };
   var reLogin = deps.reLogin || function (cb) { cb(false); };
+  var promptLogin = deps.promptLogin || function () { return Promise.resolve(false); };
   var showToast = deps.showToast || function () {};
   var hideToast = deps.hideToast || function () {};
   var getErrorMessage = deps.getErrorMessage || function (res, fb) { return fb; };
@@ -156,6 +188,27 @@ function createRequestClient(deps) {
           state.retried = true;
           suppressComplete = true; // 本次被重试/重登失败接管,complete 不在此处双触发
           if (ownerChanged()) { stopForSessionChange(); return; }
+          // 游客:不静默建号。写 → 弹登录窗,登录成功用新身份重发一次;读 → 安静地按 401 失败。
+          if (!state.owner && !state.authorization && !getUserID() && !getAuthorization()) {
+            var failAsGuest = function () {
+              hideToast();
+              if (typeof param.fail == 'function') param.fail(res.data, res && res.statusCode == 401 ? 401 : bodyCode);
+              typeof param.complete == 'function' && param.complete(res && res.data ? res.data : res);
+            };
+            if (!isWriteRequest(param, method)) { failAsGuest(); return; }
+            Promise.resolve().then(function () { return promptLogin(param); }).then(function (ok) {
+              if (state.aborted || state.sessionChanged) return;
+              var owner = String(getUserID() || '');
+              if (ok && owner && getAuthorization()) {
+                state.owner = owner;
+                state.authorization = getAuthorization();
+                send(param, customSiteUrl, state);
+                return;
+              }
+              failAsGuest();
+            }, function () { if (!state.aborted && !state.sessionChanged) failAsGuest(); });
+            return;
+          }
           reLogin(function (ok, result) {
             if (state.aborted || state.sessionChanged) return;
             // 只有自己完成的首登可把匿名请求绑定到新身份，外部换号不能冒充首登。
@@ -271,4 +324,4 @@ function createRequestClient(deps) {
   return { send: send };
 }
 
-module.exports = { createRequestClient: createRequestClient };
+module.exports = { createRequestClient: createRequestClient, isWriteRequest: isWriteRequest };

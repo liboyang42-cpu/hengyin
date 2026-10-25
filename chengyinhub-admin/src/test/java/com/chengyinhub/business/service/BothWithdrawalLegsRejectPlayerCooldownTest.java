@@ -3,6 +3,7 @@ package com.chengyinhub.business.service;
 import com.chengyinhub.business.domain.MemberCashWithdraw;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.dto.WithdrawalDTO;
+import com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent;
 import com.chengyinhub.business.mapper.MemberCashWithdrawMapper;
 import com.chengyinhub.business.mapper.PlayerWithdrawalCooldownMapper;
 import com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper;
@@ -49,6 +50,7 @@ class BothWithdrawalLegsRejectPlayerCooldownTest {
 
     private UmsMemberWithdrawalServiceImpl bankLeg;
     private CashWithdrawServiceImpl wechatLeg;
+    private CashWithdrawIntentTestSupport evidence;
 
     @BeforeEach
     void setUp() {
@@ -80,6 +82,8 @@ class BothWithdrawalLegsRejectPlayerCooldownTest {
                 com.chengyinhub.business.longrun.OWN_C04_21Test.bankFixture(umsMemberMapper, resolver));
 
         wechatLeg = new CashWithdrawServiceImpl();
+        evidence = new com.chengyinhub.business.service.CashWithdrawIntentTestSupport();
+        ReflectionTestUtils.setField(wechatLeg, "transferIntents", evidence.mapper);
         org.springframework.transaction.PlatformTransactionManager cashTransactions = mock(org.springframework.transaction.PlatformTransactionManager.class);
         when(cashTransactions.getTransaction(any())).thenReturn(mock(org.springframework.transaction.TransactionStatus.class));
         ReflectionTestUtils.setField(wechatLeg, "transactionManager", cashTransactions);
@@ -95,7 +99,7 @@ class BothWithdrawalLegsRejectPlayerCooldownTest {
           ReflectionTestUtils.setField(wechatLeg, "wxPayConfig", __cfg); }
         ReflectionTestUtils.setField(wechatLeg, "frozenAmountResolver", resolver);
         ReflectionTestUtils.setField(wechatLeg, "balanceAdmissionService",
-                com.chengyinhub.business.longrun.OWN_C04_21Test.cashFixture(umsMemberService, cashMapper, resolver));
+                com.chengyinhub.business.longrun.OWN_C04_21Test.cashFixture(umsMemberService, cashMapper, resolver, evidence.mapper));
 
         UmsMember member = new UmsMember();
         member.setId(MEMBER);

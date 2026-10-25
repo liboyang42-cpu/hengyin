@@ -1,16 +1,26 @@
--- REVIEW CANDIDATE ONLY. No production DDL executed by task A.
--- Apply only after the original fund-fact migration; preserve all original rows and append-only triggers.
--- NULL request_version remains historical/unprovable. Never backfill merchant/app/hash from current config.
-ALTER TABLE member_cash_withdraw_fund_fact
-    ADD COLUMN request_mchid VARCHAR(64) COLLATE utf8mb4_bin NULL,
-    ADD COLUMN request_appid VARCHAR(64) COLLATE utf8mb4_bin NULL,
-    ADD COLUMN request_amount_fen BIGINT NULL,
-    ADD COLUMN request_openid VARCHAR(128) COLLATE utf8mb4_bin NULL,
-    ADD COLUMN request_remark VARCHAR(32) COLLATE utf8mb4_bin NULL,
-    ADD COLUMN request_version INT NULL,
-    ADD COLUMN request_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NULL,
-    ADD COLUMN channel_batch_id VARCHAR(64) COLLATE utf8mb4_bin NULL,
-    ADD CONSTRAINT ck_cash_fund_request CHECK (request_version IS NULL OR
-        (request_version = 1 AND request_mchid IS NOT NULL AND request_appid IS NOT NULL
-         AND request_openid IS NOT NULL AND request_remark IS NOT NULL AND request_hash IS NOT NULL
-         AND request_amount_fen IS NOT NULL AND request_amount_fen > 0 AND request_amount_fen = amount * 100));
+-- Immutable original debit/transfer identity. No historical identity is inferred or backfilled.
+-- Run through the migration ledger once; a direct rerun must fail instead of accepting a different table.
+CREATE TABLE member_cash_withdraw_transfer_intent (
+    withdraw_id BIGINT NOT NULL,
+    member_id BIGINT NOT NULL,
+    mchid VARCHAR(32) NOT NULL,
+    appid VARCHAR(64) NOT NULL,
+    out_batch_no VARCHAR(32) NOT NULL,
+    out_detail_no VARCHAR(32) NOT NULL,
+    amount_fen BIGINT NOT NULL,
+    openid VARCHAR(128) NOT NULL,
+    remark VARCHAR(128) NOT NULL,
+    request_version INT NOT NULL,
+    request_hash CHAR(64) NOT NULL,
+    balance_before DECIMAL(18,2) NOT NULL,
+    balance_after DECIMAL(18,2) NOT NULL,
+    debit_time DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    submit_time DATETIME(3) NULL,
+    local_rejection_time DATETIME(3) NULL,
+    PRIMARY KEY (withdraw_id),
+    UNIQUE KEY uk_cash_transfer_batch (mchid, out_batch_no),
+    CONSTRAINT chk_cash_intent_amount CHECK (amount_fen > 0 AND balance_after >= 0
+        AND (balance_before - balance_after) * 100 = amount_fen),
+    CONSTRAINT chk_cash_intent_version CHECK (request_version = 1),
+    CONSTRAINT chk_cash_intent_rejection CHECK (local_rejection_time IS NULL OR submit_time IS NOT NULL)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;

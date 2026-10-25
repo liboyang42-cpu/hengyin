@@ -44,6 +44,7 @@ class Wp04OriginalRefundMySqlIT {
     WechatVerifiedPaymentFactService facts;
     WechatVerifiedPaymentFact.Reference originalPayment, refundFact;
     AtomicBoolean failAfterWalletReceipt=new AtomicBoolean();
+    private DepositSetoffStage depositStage;
 
     @BeforeEach void isolatedOriginalSchema() throws Exception {
         assertEquals("github-hosted",System.getenv("RUNNER_ENVIRONMENT"));
@@ -99,10 +100,14 @@ class Wp04OriginalRefundMySqlIT {
     void applyNewSchemaAndFreezeOriginalOrder(boolean paid, String refundApp, boolean bindOriginalPaymentReceipt,
             boolean bindConsumedPaymentReceipt, BigDecimal initialRefundAmount) throws Exception {
         P0AcceptanceSchema.migrations(source,MIGRATION);
+        if (depositStage != null) {
+            P0AcceptanceSchema.baseTables(db,"coop_invite","coop_order","coop_complaint");
+            P0AcceptanceSchema.migrations(source,"migration_coop_deposit_refund_state_20260913.sql");
+        }
         SqlSessionTemplate sql=P0AcceptanceSchema.sql(source,"CmsRegistrationPaymentFactMapper","CoopSettlementOriginalMapper","CoopSettlementCashEvidenceMapper","CoopSettlementEvidenceMapper",
 
                 "CoopSettlementMapper","CoopSettlementAdjustmentMapper","WechatVerifiedPaymentFactMapper",
-                "UmsMemberSettlementDebtMapper","UmsMemberBalanceDetailMapper");
+                "UmsMemberSettlementDebtMapper","UmsMemberBalanceDetailMapper","SettlementClaimMapper","CoopSettlementDetailMapper","CoopInviteMapper","CoopComplaintMapper");
         originals=sql.getMapper(CoopSettlementOriginalMapper.class); cash=sql.getMapper(CoopSettlementCashEvidenceMapper.class);
         facts=WechatVerifiedFactTestSupport.realFacts(source);
         db.update("INSERT INTO ums_member(id,balance) VALUES(7,2.00),(77,0.00)");
@@ -112,7 +117,11 @@ class Wp04OriginalRefundMySqlIT {
         originalPayment=facts.recordVerified(payment());
         db.update("UPDATE cms_registration SET payment_status=2,registration_status=2,transaction_id='WXTX1' WHERE id=1");
         refundFact=facts.recordVerified(refund(refundApp,"RF901","WXREF1",initialRefundAmount));
-        db.update("INSERT INTO coop_settlement(id,topic_id,merchant_id,cash_head_kind,line_type,payee_type,status,amount,del_flag) VALUES(11,11,NULL,'ACCOUNTING','PLATFORM','platform',1,1,0),(12,11,7,'MEMBER','INITIATOR_MARGIN','initiator',?,9,0)",paid?1:0);
+        if (depositStage == null) {
+            db.update("INSERT INTO coop_settlement(id,topic_id,merchant_id,cash_head_kind,line_type,payee_type,status,amount,del_flag) VALUES(11,11,NULL,'ACCOUNTING','PLATFORM','platform',1,1,0),(12,11,7,'MEMBER','INITIATOR_MARGIN','initiator',?,9,0)",paid?1:0);
+        } else {
+            db.update("INSERT INTO coop_settlement(id,topic_id,merchant_id,cash_head_kind,line_type,payee_type,status,amount,del_flag) VALUES(11,11,NULL,'ACCOUNTING','PLATFORM','platform',1,1,0)");
+        }
         if (paid) {
             db.update("INSERT INTO ums_member_balance_detail(member_id,current_balance,after_balance,change_balance,change_reason,event_type,event_id,change_type,del_flag,create_time) VALUES(7,0,9,9,'Coop结算打款 - 主题11',5,12,1,0,NOW())");
             // Controlled historical spend fixture explains the remaining 2.00; it does not test a spend service.
@@ -160,11 +169,35 @@ class Wp04OriginalRefundMySqlIT {
         contribution.setSnapshotPaymentStatus(2); contribution.setSnapshotRegistrationStatus(2); contribution.setSnapshotVerificationStatus(0);
         contribution.setSnapshotPayableAmount(money("10")); contribution.setSalesBasisAmount(money("10"));
         contribution.setRegistrationSnapshot("{\"wechatPaymentAmount\":10.00}"); contribution.setSourceFingerprint(HASH);
+        if (depositStage != null) {
+            when(members.lockMemberById(7L)).thenAnswer(call -> db.queryForObject("SELECT id FROM ums_member WHERE id=7 FOR UPDATE",Long.class));
+            when(members.selectUmsMemberById(7L)).thenAnswer(call -> db.queryForObject("SELECT id,balance FROM ums_member WHERE id=7",(rs,n) -> {
+                UmsMember member=new UmsMember();member.setId(rs.getLong(1));member.setBalance(rs.getBigDecimal(2));return member;
+            }));
+            when(members.addBalance(eq(7L),any())).thenAnswer(call -> {
+                BigDecimal amount=call.getArgument(1);return db.update("UPDATE ums_member SET balance=balance+? WHERE id=7",amount);
+            });
+            depositStage.initialize(sql,topics,members,ledger,debts);
+        }
         tx.executeWithoutResult(status -> {
             if (bindConsumedPaymentReceipt) assertEquals(1,consumedPayments.insertConsumed(1L,originalPayment.id(),originalPayment.hash()));
-            owner.freezeOriginals(close,List.of(contribution),List.of(component(11L,null,"ACCOUNTING","PLATFORM","1"),component(12L,7L,"MEMBER","INITIATOR_MARGIN","9")));
+            if (depositStage == null) {
+                owner.freezeOriginals(close,List.of(contribution),List.of(component(11L,null,"ACCOUNTING","PLATFORM","1"),component(12L,7L,"MEMBER","INITIATOR_MARGIN","9")));
+            } else {
+                depositStage.persistOriginal();
+                List<CoopSettlement> credits=depositStage.deferred?List.of():depositStage.apply();
+                List<CoopSettlementOriginalComponent> components=new ArrayList<>();
+                components.add(component(11L,null,"ACCOUNTING","PLATFORM","1"));
+                for(var head:depositStage.sourceHeads) {
+                    var merchant=component(head.getId(),7L,"MEMBER","MERCHANT_VERIFY",head.getAmount().toPlainString());
+                    merchant.setSourceClaimId(depositStage.sourceDetails.get(head.getId()).getClaimId());components.add(merchant);
+                }
+                owner.freezeOriginals(close,List.of(contribution),components);
+                depositStage.persistCredits(credits);
+            }
         });
-        assertEquals(2,count("coop_settlement_original_component"));
+        if(depositStage!=null && depositStage.splitOrders) assertEquals(3,count("coop_settlement_original_component"));
+        else assertEquals(2,count("coop_settlement_original_component"));
         db.update("INSERT INTO refund_application(id,refund_no,source_type,source_id,owner_type,owner_id,status,payout_status,refund_amount,paid_amount,del_flag) VALUES(901,'RF901','registration',1,1,11,1,0,?,10,0)",initialRefundAmount);
     }
 
@@ -420,6 +453,216 @@ class Wp04OriginalRefundMySqlIT {
         terminalSuccessAndHook(902L);terminalSuccessAndHook(901L);
         assertEquals(2,count("coop_settlement_refund_receipt"));assertEquals(effects,count("coop_settlement_original_adjustment"));
         assertMoney("2",balance());assertEquals(0,count("ums_member_settlement_debt"));
+    }
+
+    /** Real original head/claim/adjustment/invite SQL. Prepared contract admission is tested elsewhere. */
+    private final class DepositSetoffStage {
+        final java.util.SortedMap<Long,BigDecimal> owed = new java.util.TreeMap<>();
+        final boolean deferred;
+        boolean failAfterSetoff;
+        boolean splitOrders;
+        final List<CoopSettlement> sourceHeads=new ArrayList<>();
+        final Map<Long,CoopSettlementDetail> sourceDetails=new HashMap<>();
+        CmsTopicServiceImpl topicService;
+        CoopSettlementClaimServiceImpl claimOwner;
+        CoopSettlementMapper heads;
+        CoopSettlement head;
+        CoopSettlementDetail detail;
+        DepositSetoffStage(String amount, boolean deferred) { owed.put(88L,money(amount));this.deferred=deferred; }
+        void initialize(SqlSessionTemplate sql, CmsTopicMapper topics, UmsMemberMapper members,
+                IUmsMemberBalanceDetailService balanceDetails, SettlementDebtLedger debts) {
+            heads=sql.getMapper(CoopSettlementMapper.class);
+            claimOwner=new CoopSettlementClaimServiceImpl(mock(com.chengyinhub.business.service.ICoopOrderSettlementSnapshotReader.class),
+                    mock(com.chengyinhub.business.service.FulfillmentWindowResolver.class),mock(TopicSettlementEvidenceService.class),
+                    new SettlementClaimServiceImpl(sql.getMapper(SettlementClaimMapper.class)),heads,
+                    sql.getMapper(CoopSettlementDetailMapper.class),sql.getMapper(CoopSettlementAdjustmentMapper.class));
+            ReflectionTestUtils.setField(claimOwner,"topicMapper",topics);
+            topicService=new CmsTopicServiceImpl();
+            ReflectionTestUtils.setField(topicService,"cmsTopicMapper",topics);
+            ReflectionTestUtils.setField(topicService,"coopInviteMapper",sql.getMapper(CoopInviteMapper.class));
+            ReflectionTestUtils.setField(topicService,"coopInviteService",new CoopInviteServiceImpl());
+            ReflectionTestUtils.setField(topicService,"coopSettlementMapper",heads);
+            ReflectionTestUtils.setField(topicService,"coopSettlementOriginalMapper",originals);
+            ReflectionTestUtils.setField(topicService,"coopSettlementAdjustmentMapper",sql.getMapper(CoopSettlementAdjustmentMapper.class));
+            ReflectionTestUtils.setField(topicService,"coopSettlementClaimService",claimOwner);
+            ReflectionTestUtils.setField(topicService,"coopComplaintMapper",sql.getMapper(CoopComplaintMapper.class));
+            ReflectionTestUtils.setField(topicService,"umsMemberMapper",members);
+            ReflectionTestUtils.setField(topicService,"umsMemberBalanceDetailService",balanceDetails);
+            ReflectionTestUtils.setField(topicService,"settlementDebtLedger",debts);
+            db.update("INSERT INTO coop_order(id,topic_id,from_id,to_id,to_type,share_mode,share_rate,terms_version,status,del_flag) "
+                    +"VALUES(701,11,7,7,'merchant',1,90,'original-v1',0,0)");
+            if(splitOrders) {
+                db.update("INSERT INTO cms_activity(id,member_id,topic_id,del_flag) VALUES(61,7,11,0)");
+                db.update("INSERT INTO coop_order(id,topic_id,game_id,from_id,to_id,to_type,share_mode,share_rate,terms_version,status,del_flag) "
+                        +"VALUES(702,11,61,7,7,'merchant',1,50,'original-v1',0,0)");
+            }
+            // Reverse insertion order deliberately; the production method must use original invite IDs.
+            for(Long id:new java.util.TreeSet<>(owed.keySet()).descendingSet()) db.update(
+                    "INSERT INTO coop_invite(id,invite_type,from_type,from_id,to_type,to_id,topic_id,status,deposit_status,deposit_amount,del_flag) "
+                            +"VALUES(?,0,'talent',7,'merchant',7,11,1,5,?,0)",id,owed.get(id));
+        }
+        void persistOriginal() {
+            db.queryForObject("SELECT id FROM cms_topic WHERE id=11 FOR UPDATE",Long.class);
+            db.queryForObject("SELECT id FROM cms_registration WHERE id=1 FOR UPDATE",Long.class);
+            if(splitOrders) { persistLine(702L,"ACTIVITY",61L,"5");persistLine(701L,"TOPIC_EDITION",11L,"4"); }
+            else persistLine(701L,"TOPIC_EDITION",11L,"9");
+            head=sourceHeads.get(0);detail=sourceDetails.get(head.getId());
+        }
+        void persistLine(Long order,String context,Long contextId,String amount) {
+            var snapshot=new com.chengyinhub.business.domain.dto.CoopSettlementSnapshot();
+            snapshot.setTopicId(11L);snapshot.setOrderId(order);snapshot.setInitiatorMemberId(7L);
+            snapshot.setCommercialContextType(context);snapshot.setCommercialContextId(contextId);
+            snapshot.setBeneficiaryRole("MERCHANT");snapshot.setBeneficiaryId(7L);snapshot.setServiceUnit("MERCHANT_PARTICIPATION");
+            var line=new com.chengyinhub.business.domain.dto.CoopSettlementOriginLine(1L,money(amount));line.setEligibleSalesSnapshot(money("10"));
+            var plan=new com.chengyinhub.business.domain.dto.CoopSettlementPlan(snapshot,"COOP_ORDER",List.of(line));
+            var row=new CoopSettlement();row.setTopicId(11L);row.setCoopOrderId(order);row.setMerchantId(7L);
+            row.setCashHeadKind("MEMBER");row.setLineType("MERCHANT_VERIFY");row.setPayeeType("merchant");
+            row.setStatus(0);row.setDelFlag(0);row.setAmount(money(amount));row.setCreateTime(new Date());
+            row.setPayableTime(new Date(1700000000000L));
+            claimOwner.persist(plan,row);sourceHeads.add(row);
+            sourceDetails.put(row.getId(),originals.selectOriginalDetailsForHeadForUpdate(row.getId()).get(0));
+        }
+        List<CoopSettlement> apply() {
+            db.queryForObject("SELECT id FROM cms_topic WHERE id=11 FOR UPDATE",Long.class);
+            var topic=new CmsTopic();topic.setId(11L);topic.setMemberId(7L);
+            List<CoopSettlement> pending=new ArrayList<>(sourceHeads);
+            ReflectionTestUtils.invokeMethod(topicService,"applyUnpaidDepositSetoffs",topic,pending,new Date(),new Date(),1,money("10"),"1");
+            if(failAfterSetoff) throw new IllegalStateException("INJECTED_AFTER_REAL_SETOFF_AND_INVITE_CAS");
+            return pending.stream().filter(row -> "DEPOSIT_DEDUCTION".equals(row.getLineType())).toList();
+        }
+        void persistCredits(List<CoopSettlement> credits) {
+            for(CoopSettlement credit:credits) { assertEquals(1,heads.insertCoopSettlement(credit));assertNotNull(credit.getId()); }
+        }
+        void repeat() { tx.executeWithoutResult(status -> persistCredits(apply())); }
+        BigDecimal net() { return tx.execute(status -> {
+            db.queryForObject("SELECT id FROM cms_topic WHERE id=11 FOR UPDATE",Long.class);
+            return ReflectionTestUtils.invokeMethod(topicService,"currentCoopHeadNet",heads.selectByIdForUpdate(head.getId()));
+        }); }
+    }
+
+    @Test void unpaidDepositOriginalGrossAndReceiptFreezeAtomicallyThenPartialRefundUsesNet() throws Exception {
+        depositStage=new DepositSetoffStage("5",false);
+        applyNewSchemaAndFreezeOriginalOrder(false,"wx-original",true,false,money("2"));
+        assertMoney("9",db.queryForObject("SELECT amount FROM coop_settlement WHERE id=?",BigDecimal.class,depositStage.head.getId()));
+        assertMoney("-5",db.queryForObject("SELECT SUM(amount) FROM coop_settlement_adjustment",BigDecimal.class));
+        assertMoney("5",db.queryForObject("SELECT SUM(amount) FROM coop_settlement WHERE line_type='DEPOSIT_DEDUCTION'",BigDecimal.class));
+        assertMoney("4",depositStage.net());
+        assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM coop_settlement credit JOIN coop_settlement_adjustment a "
+                +"ON credit.source_contract_type='DEPOSIT_SETOFF' AND credit.source_contract_id=a.id "
+                +"JOIN coop_settlement_detail d ON d.claim_id=a.claim_id AND d.settlement_id=a.settlement_id "
+                +"WHERE a.event_key=concat('UNPAID_DEPOSIT:11:88:701:',a.settlement_id)",Integer.class));
+        assertMoney("9",db.queryForObject("SELECT original_amount FROM coop_settlement_original_component WHERE settlement_id=?",BigDecimal.class,depositStage.head.getId()));
+        terminalSuccessAndHook();
+        assertMoney("2.20",depositStage.net());
+        assertMoney("-2",db.queryForObject("SELECT SUM(amount) FROM coop_settlement_original_adjustment",BigDecimal.class));
+        int receipts=count("coop_settlement_adjustment");depositStage.repeat();terminalSuccessAndHook();
+        assertEquals(receipts,count("coop_settlement_adjustment"));assertEquals(1,count("coop_settlement_refund_receipt"));
+    }
+
+    @Test void unpaidDepositPayoutUsesAdjustedNetOnceAndKeepsOriginalGross() throws Exception {
+        depositStage=new DepositSetoffStage("5",false);
+        applyNewSchemaAndFreezeOriginalOrder(false,"wx-original");
+        Long headId=depositStage.head.getId();
+        CoopSettlement paid=tx.execute(status -> ReflectionTestUtils.invokeMethod(depositStage.topicService,
+                "payoutOneDueCoopSettlement",headId,11L,new Date()));
+        assertNotNull(paid);assertEquals(headId,paid.getId());assertMoney("4",paid.getAmount());
+        assertMoney("6",balance());assertMoney("9",db.queryForObject("SELECT amount FROM coop_settlement WHERE id=?",BigDecimal.class,headId));
+        assertMoney("4",db.queryForObject("SELECT change_balance FROM ums_member_balance_detail WHERE event_type=5 AND event_id=?",BigDecimal.class,headId));
+        assertEquals(1,db.queryForObject("SELECT status FROM coop_settlement WHERE id=?",Integer.class,headId));
+        assertNull(tx.execute(status -> ReflectionTestUtils.invokeMethod(depositStage.topicService,
+                "payoutOneDueCoopSettlement",headId,11L,new Date())));
+        assertMoney("6",balance());assertEquals(1,count("ums_member_balance_detail"));
+        assertEquals(1,count("coop_settlement_adjustment"));assertEquals(0,count("ums_member_settlement_debt"));
+    }
+
+    @Test void unpaidDepositInsufficientOriginalReceivableRetainsRemainingAndReplaysNoEffect() throws Exception {
+        depositStage=new DepositSetoffStage("50",false);
+        applyNewSchemaAndFreezeOriginalOrder(false,"wx-original");
+        assertMoney("0",depositStage.net());
+        assertMoney("41",db.queryForObject("SELECT deposit_amount FROM coop_invite WHERE id=88",BigDecimal.class));
+        assertEquals(5,db.queryForObject("SELECT deposit_status FROM coop_invite WHERE id=88",Integer.class));
+        depositStage.repeat();depositStage.repeat();
+        assertEquals(1,count("coop_settlement_adjustment"));
+        assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM coop_settlement WHERE line_type='DEPOSIT_DEDUCTION'",Integer.class));
+        assertMoney("41",db.queryForObject("SELECT deposit_amount FROM coop_invite WHERE id=88",BigDecimal.class));
+    }
+
+    @Test void unpaidDepositZeroDebtKeepsAllMoneyAndCreatesNoReceipt() throws Exception {
+        depositStage=new DepositSetoffStage("0",false);
+        applyNewSchemaAndFreezeOriginalOrder(false,"wx-original");
+        assertMoney("9",depositStage.net());assertEquals(0,count("coop_settlement_adjustment"));
+        assertEquals(0,db.queryForObject("SELECT COUNT(*) FROM coop_settlement WHERE line_type='DEPOSIT_DEDUCTION'",Integer.class));
+    }
+
+    @Test void unpaidDepositMultipleInvitesUseStableOriginalIdOrderAndCannotOverdraw() throws Exception {
+        depositStage=new DepositSetoffStage("7",false);depositStage.owed.put(87L,money("4"));
+        applyNewSchemaAndFreezeOriginalOrder(false,"wx-original");
+        assertMoney("0",depositStage.net());
+        assertMoney("-4",db.queryForObject("SELECT amount FROM coop_settlement_adjustment WHERE event_key LIKE 'UNPAID_DEPOSIT:11:87:%'",BigDecimal.class));
+        assertMoney("-5",db.queryForObject("SELECT amount FROM coop_settlement_adjustment WHERE event_key LIKE 'UNPAID_DEPOSIT:11:88:%'",BigDecimal.class));
+        assertMoney("2",db.queryForObject("SELECT deposit_amount FROM coop_invite WHERE id=88",BigDecimal.class));
+        assertEquals(3,db.queryForObject("SELECT deposit_status FROM coop_invite WHERE id=87",Integer.class));
+        assertEquals(5,db.queryForObject("SELECT deposit_status FROM coop_invite WHERE id=88",Integer.class));
+    }
+
+    @Test void unpaidDepositMultipleOriginalOrdersAllocateByFrozenOrderIdAndRetainGross() throws Exception {
+        depositStage=new DepositSetoffStage("5",false);depositStage.splitOrders=true;
+        applyNewSchemaAndFreezeOriginalOrder(false,"wx-original");
+        assertMoney("-4",db.queryForObject("SELECT amount FROM coop_settlement_adjustment WHERE event_key LIKE 'UNPAID_DEPOSIT:11:88:701:%'",BigDecimal.class));
+        assertMoney("-1",db.queryForObject("SELECT amount FROM coop_settlement_adjustment WHERE event_key LIKE 'UNPAID_DEPOSIT:11:88:702:%'",BigDecimal.class));
+        assertMoney("4",db.queryForObject("SELECT amount FROM coop_settlement WHERE coop_order_id=701",BigDecimal.class));
+        assertMoney("5",db.queryForObject("SELECT amount FROM coop_settlement WHERE coop_order_id=702",BigDecimal.class));
+        assertMoney("5",db.queryForObject("SELECT SUM(amount) FROM coop_settlement WHERE line_type='DEPOSIT_DEDUCTION'",BigDecimal.class));
+        assertMoney("9",db.queryForObject("SELECT SUM(original_amount) FROM coop_settlement_original_component WHERE line_type='MERCHANT_VERIFY'",BigDecimal.class));
+        depositStage.repeat();assertEquals(2,count("coop_settlement_adjustment"));
+    }
+
+    @Test void unpaidDepositFailureAfterAdjustmentAndCasRollsBackAllLocalEffects() throws Exception {
+        depositStage=new DepositSetoffStage("5",true);
+        applyNewSchemaAndFreezeOriginalOrder(false,"wx-original");
+        depositStage.failAfterSetoff=true;
+        assertThrows(IllegalStateException.class,depositStage::repeat);
+        assertEquals(0,count("coop_settlement_adjustment"));
+        assertEquals(5,db.queryForObject("SELECT deposit_status FROM coop_invite WHERE id=88",Integer.class));
+        assertMoney("5",db.queryForObject("SELECT deposit_amount FROM coop_invite WHERE id=88",BigDecimal.class));
+        depositStage.failAfterSetoff=false;depositStage.repeat();
+        assertMoney("4",depositStage.net());assertEquals(1,count("coop_settlement_adjustment"));
+    }
+
+    @Test void unpaidDepositConcurrentTransactionsWriteOneOriginalEventAndOnePlatformReceipt() throws Exception {
+        depositStage=new DepositSetoffStage("5",true);
+        applyNewSchemaAndFreezeOriginalOrder(false,"wx-original");
+        ExecutorService workers=Executors.newFixedThreadPool(2);CountDownLatch start=new CountDownLatch(1);
+        try {
+            Callable<Void> apply=()->{assertTrue(start.await(5,TimeUnit.SECONDS));depositStage.repeat();return null;};
+            Future<Void> one=workers.submit(apply),two=workers.submit(apply);start.countDown();
+            one.get(20,TimeUnit.SECONDS);two.get(20,TimeUnit.SECONDS);
+        } finally {workers.shutdownNow();assertTrue(workers.awaitTermination(5,TimeUnit.SECONDS));}
+        assertEquals(1,count("coop_settlement_adjustment"));
+        assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM coop_settlement WHERE line_type='DEPOSIT_DEDUCTION'",Integer.class));
+        assertMoney("4",depositStage.net());
+    }
+
+    @Test void unpaidDepositCannotUseAnotherMembersOriginalReceivable() throws Exception {
+        depositStage=new DepositSetoffStage("5",true);
+        applyNewSchemaAndFreezeOriginalOrder(false,"wx-original");
+        db.update("UPDATE coop_invite SET to_id=77 WHERE id=88");
+        depositStage.repeat();
+        assertEquals(0,count("coop_settlement_adjustment"));
+        assertEquals(0,db.queryForObject("SELECT COUNT(*) FROM coop_settlement WHERE line_type='DEPOSIT_DEDUCTION'",Integer.class));
+        assertMoney("9",depositStage.net());assertMoney("5",db.queryForObject("SELECT deposit_amount FROM coop_invite WHERE id=88",BigDecimal.class));
+        assertEquals(5,db.queryForObject("SELECT deposit_status FROM coop_invite WHERE id=88",Integer.class));
+        assertMoney("2",balance());
+    }
+
+    @Test void unpaidDepositUnknownPaymentRemainsBlockedWithZeroReceipts() throws Exception {
+        depositStage=new DepositSetoffStage("5",true);
+        applyNewSchemaAndFreezeOriginalOrder(false,"wx-original");
+        db.update("UPDATE coop_invite SET deposit_status=1,deposit_out_trade_no='DEP88-ORIGINAL' WHERE id=88");
+        assertThrows(IllegalStateException.class,depositStage::repeat);
+        assertEquals(0,count("coop_settlement_adjustment"));
+        assertEquals(1,db.queryForObject("SELECT deposit_status FROM coop_invite WHERE id=88",Integer.class));
+        assertEquals("DEP88-ORIGINAL",db.queryForObject("SELECT deposit_out_trade_no FROM coop_invite WHERE id=88",String.class));
     }
 
     private static final String[] NEW={"coop_settlement_original_component","coop_settlement_refund_receipt","coop_settlement_original_adjustment"};

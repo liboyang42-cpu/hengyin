@@ -69,12 +69,14 @@ class CoopDepositSettlementAttemptTest {
     void payerrorClosesExactObservedAttemptThenFencesBeforeUnpaidCas() {
         when(gateway.queryOrderStatus(BUSINESS)).thenReturn(facts("PAYERROR"));
         when(gateway.closePaymentAttempt(BUSINESS, ATTEMPT)).thenReturn(true);
+        when(gateway.queryOrderStatus(ATTEMPT)).thenReturn(facts("CLOSED"));
         when(gateway.lockClosablePaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenReturn(true);
         when(mapper.updateDepositIfCurrent(89L, 1, AMOUNT, 5, AMOUNT)).thenReturn(1);
         assertTrue(resolve());
         var order = inOrder(gateway, mapper);
         order.verify(gateway).queryOrderStatus(BUSINESS);
         order.verify(gateway).closePaymentAttempt(BUSINESS, ATTEMPT);
+        order.verify(gateway).queryOrderStatus(ATTEMPT);
         order.verify(gateway).lockClosablePaymentAttemptForUpdate(BUSINESS, ATTEMPT);
         order.verify(mapper).updateDepositIfCurrent(89L, 1, AMOUNT, 5, AMOUNT);
         verify(gateway, never()).closeOrder(anyString());
@@ -187,6 +189,10 @@ class CoopDepositSettlementAttemptTest {
         when(gateway.closePaymentAttempt(BUSINESS, ATTEMPT)).thenAnswer(call -> {
             assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
             return true;
+        });
+        when(gateway.queryOrderStatus(ATTEMPT)).thenAnswer(call -> {
+            assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+            return facts("CLOSED");
         });
         when(gateway.lockClosablePaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenAnswer(call -> {
             assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());

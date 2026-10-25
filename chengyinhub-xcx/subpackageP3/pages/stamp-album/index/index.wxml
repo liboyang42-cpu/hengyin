@@ -22,7 +22,7 @@
   <!-- 失败 / 首屏加载 / 真空态三条挂同一条 wx:if 链,互斥:失败时空态不得替它背书。
        整屏失败态只在「一枚都还没渲染出来」时用;已经有邮票时那是**续页**失败,不该整屏报错 -->
   <cy-empty class="al-state-fill" fill="{{true}}" wx:if="{{readAccess}}" title="{{readAccess === 'login' ? '登录后查看自己的册子' : '当前账号无法查看'}}" sub="{{readAccess === 'login' ? '' : '请返回重新进入'}}" cta="{{readAccess === 'login' ? '去登录' : ''}}" bind:cta="loginToRead" />
-  <cy-error load-failure class="al-state-fill" fill="{{true}}" size="lg" icon="/images/no_data.svg" wx:elif="{{error && !items.length}}" title="集邮册无法打开" retry="重新载入" bind:retry="retryLoad" auto-back />
+  <cy-error load-failure class="al-state-fill" fill="{{true}}" size="lg" icon="empty-state" wx:elif="{{error && !items.length}}" title="集邮册无法打开" retry="重新载入" bind:retry="retryLoad" auto-back />
   <cy-skeleton wx:elif="{{loading && !items.length}}" type="card" count="{{2}}" />
   <cy-empty wx:elif="{{loaded && total === 0}}" title="还没有邮票" cta="打开集邮相机" bind:cta="goCamera" />
 

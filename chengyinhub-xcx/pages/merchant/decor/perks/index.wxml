@@ -22,7 +22,7 @@
     size="lg"
     fill
     wx:elif="{{loadState === 'error'}}"
-    icon="/images/no_data.svg"
+    icon="empty-state"
     title="权益加载失败"
     sub="{{loadError}}"
     retry="重试"

@@ -30,6 +30,7 @@ on:
         required: true
         type: choice
         options:
+          - payment-intent-correctness
           - core-funds
           - ai-quota
           - e04-07-coupon
