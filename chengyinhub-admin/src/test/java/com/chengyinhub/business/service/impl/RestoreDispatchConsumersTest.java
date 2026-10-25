@@ -217,6 +217,13 @@ class RestoreDispatchConsumersTest {
         WxSubscribeChannel wx = mock(WxSubscribeChannel.class);
         PlatformTransactionManager manager = transactions();
         CommittedOfficialNoticeService service = new CommittedOfficialNoticeService(mapper, intents, im, wx, manager, executor);
+        CommunityPostMapper communityRows = mock(CommunityPostMapper.class);
+        IContentSafetyGate communitySafety = mock(IContentSafetyGate.class);
+        IAuditTaskService communityAudit = mock(IAuditTaskService.class);
+        CommunityTrustService communityTrust = mock(CommunityTrustService.class);
+        ICommunityMediaReceiptService communityReceipts = mock(ICommunityMediaReceiptService.class);
+        CommunityPostServiceImpl communityPosts = new CommunityPostServiceImpl(communityRows,
+                new CommunityPostLifecyclePolicy(), communitySafety, communityAudit, communityTrust, communityReceipts);
         try (var flag = restored()) {
             service.deliver(41L);
             assertEquals(0, service.reconcilePending());
@@ -224,9 +231,10 @@ class RestoreDispatchConsumersTest {
             assertEquals(0, new MerchantCrmCampaignServiceImpl().recoverStaleProcessing());
             new ImNotificationDeliveryTask().deliverPending();
             new BeforeStartNotifyTask().run();
-            blocked(() -> new CommunityPostServiceImpl().runMaintenance(10));
+            blocked(() -> communityPosts.runMaintenance(10));
         }
         verifyNoInteractions(mapper, executor, intents, im, wx);
+        verifyNoInteractions(communityRows, communitySafety, communityAudit, communityTrust, communityReceipts);
         verify(manager, never()).getTransaction(any());
     }
 
