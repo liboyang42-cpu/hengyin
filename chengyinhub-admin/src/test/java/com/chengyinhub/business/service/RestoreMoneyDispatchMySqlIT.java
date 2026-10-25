@@ -135,7 +135,10 @@ class RestoreMoneyDispatchMySqlIT {
         }
         private static Map<String, List<Map<String, Object>>> financialRows(JdbcTemplate db) {
             Map<String, List<Map<String, Object>>> result = new LinkedHashMap<>();
-            for (String fixed : MONEY_TABLES) result.put(fixed, db.queryForList("SELECT * FROM " + fixed + " ORDER BY id"));
+            for (String fixed : MONEY_TABLES) {
+                String key = "cms_registration_payment_fact".equals(fixed) ? "registration_id" : "id";
+                result.put(fixed, db.queryForList("SELECT * FROM " + fixed + " ORDER BY " + key));
+            }
             return result;
         }
         private static List<Map<String, Object>> highWater(JdbcTemplate db, String schema) {

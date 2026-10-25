@@ -21,6 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCKER = ['docker', '--context', 'default']
+RESTORE_MYSQL_IMAGE = 'mysql:8.0.45@sha256:4af1f8815716546f5b12410f7621f37f93db8dd11a184706ef59111930b8c2ff'
 LEASE_COLUMNS = {'payout_lease_owner', 'payout_lease_token', 'payout_lease_expires_at', 'update_time'}
 FINANCIAL_TABLES = ('cms_registration', 'ums_member', 'ums_member_balance_detail',
                     'ums_member_points_detail', 'settlement_detail', 'wx_payment_callback_inbox',
@@ -55,6 +56,12 @@ def validate_execution_env(env):
                        ('CHENGYIN_CI_AUTH_REDIS_RECOVERY', 'true')]:
         require(env.get(key) == value, 'wrong hosted scope: ' + key)
     require(env.get('GITHUB_EVENT_NAME') in ('pull_request', 'workflow_dispatch'), 'unsupported event')
+    if env.get('CHENGYIN_CI_RESTORE_HTTP_STARTUP') == 'true':
+        require(env.get('GITHUB_EVENT_NAME') == 'workflow_dispatch', 'restore startup is manual only')
+        require('CHENGYIN_RESTORE_MODE' not in env, 'restore mode belongs to the owned application child')
+        require(all(env.get(key, 'false') == 'false' for key in
+                    ('CHENGYIN_CI_CAPACITY_MIXED', 'CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY',
+                     'CHENGYIN_CI_GAMEPLAY_CAPACITY')), 'restore startup cannot mix workload modes')
     require(not env.get('DOCKER_HOST') and not env.get('DOCKER_CONTEXT'), 'Docker override forbidden')
     require(env.get('GITHUB_WORKFLOW_REF', '').startswith(
         'liboyang42-cpu/hengyin/.github/workflows/isolated-authenticated-redis-recovery.yml@refs/'),
@@ -163,13 +170,16 @@ def write_report(out, name, report):
     path.chmod(0o600)
 
 
-def mysql_endpoint(name):
-    obj = json.loads(command(DOCKER + ['inspect', name + '-mysql'], timeout=5))[0]
+def mysql_endpoint(name, suffix='mysql'):
+    require(suffix in ('mysql', 'restore-mysql'), 'unknown owned MySQL slot')
+    obj = json.loads(command(DOCKER + ['inspect', name + '-' + suffix], timeout=5))[0]
     network = json.loads(command(DOCKER + ['network', 'inspect', name], timeout=5))[0]
-    require(obj['Name'] == '/' + name + '-mysql'
+    require(obj['Name'] == '/' + name + '-' + suffix
             and obj['Config'].get('Labels', {}).get('chengyin.auth-recovery') == name
             and re.fullmatch(r'[0-9a-f]{64}', obj['Id']) is not None,
             'MySQL relay target not owned')
+    if suffix == 'restore-mysql':
+        require(obj['Config'].get('Image') == RESTORE_MYSQL_IMAGE, 'restore MySQL image changed')
     require(network['Name'] == name and network['Internal'] is True
             and network.get('Labels', {}).get('chengyin.auth-recovery') == name
             and set(obj['NetworkSettings']['Networks']) == {name}, 'MySQL relay network not owned')
@@ -185,10 +195,10 @@ def mysql_endpoint(name):
 
 
 @contextlib.contextmanager
-def mysql_relay(name, baseline):
+def mysql_relay(name, baseline, suffix='mysql'):
     """Host-only transport for the original loopback-only builder/bootstrap."""
     expected = baseline['endpoint']
-    require(mysql_endpoint(name) == expected, 'MySQL relay identity changed before bind')
+    require(mysql_endpoint(name, suffix) == expected, 'MySQL relay identity changed before bind')
     closing = threading.Event()
     sockets = set()
     guard = threading.Lock()
@@ -198,7 +208,7 @@ def mysql_relay(name, baseline):
         def handle(self):
             upstream = None
             try:
-                require(mysql_endpoint(name) == expected, 'MySQL relay identity changed before connect')
+                require(mysql_endpoint(name, suffix) == expected, 'MySQL relay identity changed before connect')
                 upstream = socket.create_connection((expected['ip'], 3306), timeout=5)
                 with guard:
                     sockets.update((self.request, upstream))
@@ -234,7 +244,7 @@ def mysql_relay(name, baseline):
     phase_error = None
     try:
         yield server.server_address[1]
-        require(mysql_endpoint(name) == expected, 'MySQL relay identity changed after phase')
+        require(mysql_endpoint(name, suffix) == expected, 'MySQL relay identity changed after phase')
     except BaseException as exc:
         phase_error = exc
         raise
@@ -265,15 +275,17 @@ def mysql_relay(name, baseline):
             require(not failures, 'MySQL relay failed: ' + '; '.join(failures))
 
 
-def mysql_ready(name, schema, out, private, port):
+def mysql_ready(name, schema, out, private, port, suffix='mysql'):
     """Wait for the one created server, not its socket-only initialization server."""
+    require(suffix in ('mysql', 'restore-mysql'), 'unknown owned MySQL readiness slot')
+    report_name = 'schema-summary.json' if suffix == 'mysql' else 'restore-mysql-readiness.json'
     deadline = time.monotonic() + 120
     cid = None
     facts = {'result': 'NOT_READY'}
     try:
         while time.monotonic() < deadline:
-            obj = json.loads(command(DOCKER + ['inspect', name + '-mysql'], timeout=5))[0]
-            require(obj['Name'] == '/' + name + '-mysql'
+            obj = json.loads(command(DOCKER + ['inspect', name + '-' + suffix], timeout=5))[0]
+            require(obj['Name'] == '/' + name + '-' + suffix
                     and obj['Config'].get('Labels', {}).get('chengyin.auth-recovery') == name
                     and re.fullmatch(r'[0-9a-f]{64}', obj['Id']) is not None,
                     'MySQL readiness target not owned')
@@ -283,7 +295,7 @@ def mysql_ready(name, schema, out, private, port):
                          ('Pid', 'Running', 'Paused', 'Restarting', 'ExitCode', 'OOMKilled')},
                          requestedPortBindings=obj['HostConfig'].get('PortBindings'),
                          actualPorts=obj['NetworkSettings'].get('Ports'))
-            write_report(out, 'schema-summary.json', {'mysqlReadiness': facts})
+            write_report(out, report_name, {'mysqlReadiness': facts})
             require(obj['State']['Running'] and not obj['State']['OOMKilled']
                     and not obj['State']['Restarting'], 'MySQL exited or unhealthy before TCP readiness')
             try:
@@ -295,7 +307,14 @@ def mysql_ready(name, schema, out, private, port):
                     uuid, version = check.stdout.decode().strip().split('\t')
                     require(version == '8.0.45' and re.fullmatch(r'[a-f0-9-]{36}', uuid) is not None,
                             'unexpected MySQL native identity/version')
-                    facts.update(endpoint=mysql_endpoint(name), serverUuid=uuid, version=version)
+                    facts.update(endpoint=mysql_endpoint(name, suffix), serverUuid=uuid, version=version)
+                    if suffix == 'restore-mysql':
+                        source = json.loads((out / 'schema-summary.json').read_text())['mysqlReadiness']
+                        require(source['result'] == 'OWNED_MYSQL_TCP_READY'
+                                and source['version'] == version and source['serverUuid'] != uuid
+                                and source['id'] != cid
+                                and source['endpoint']['networkId'] == facts['endpoint']['networkId'],
+                                'restore target is not an independent same-version server in the owned network')
                     facts['result'] = 'OWNED_MYSQL_TCP_READY'
                     break
             except subprocess.TimeoutExpired:
@@ -315,7 +334,7 @@ def mysql_ready(name, schema, out, private, port):
                              logTail=redact((logs.stdout + logs.stderr).decode(errors='replace'), SECRET_VALUES))
             except (OSError, subprocess.TimeoutExpired) as exc:
                 facts['logFailureType'] = type(exc).__name__
-        write_report(out, 'schema-summary.json', {'mysqlReadiness': facts})
+        write_report(out, report_name, {'mysqlReadiness': facts})
 
 
 def prepare(name, schema, out, private, port):
@@ -409,13 +428,16 @@ def cleanup(name, schema, out, private, port):
     except (OSError, UnicodeError, ValueError) as exc:
         report = {'result': 'FAIL_UNKNOWN', 'reportReadFailure': {'type': type(exc).__name__}}
     # The shell exits on either failed pre-app phase, before docker run ...-app.
-    pre_app_failure = (report.get('fixturePhase') in ('mysql-ready', 'prepare')
+    pre_app_failure = (report.get('fixturePhase') in ('mysql-ready', 'prepare', 'restore-mysql-ready')
                        and report.get('result') == 'FAIL_OR_UNKNOWN_NO_RETRY'
                        and bool(report.get('failureType')) and not report.get('events'))
     summary = {'cleanup': 'NOT_CONFIRMED', 'ownedRemoved': []}
     logs_available = False
     app_absent = False
-    for suffix in ('app', 'mysql', 'redis'):
+    suffixes = ('app', 'mysql', 'redis')
+    if os.environ.get('CHENGYIN_CI_RESTORE_HTTP_STARTUP') == 'true':
+        suffixes = ('app', 'restore-mysql', 'mysql', 'redis')
+    for suffix in suffixes:
         target = name + '-' + suffix
         inspected = subprocess.run(DOCKER + ['container', 'inspect', target], capture_output=True, timeout=20)
         if inspected.returncode:
@@ -428,6 +450,14 @@ def cleanup(name, schema, out, private, port):
                 'cleanup container not owned')
         cid = obj['Id']
         require(re.fullmatch(r'[0-9a-f]{64}', cid) is not None, 'invalid owned CID')
+        if suffix == 'restore-mysql':
+            require(obj['Config'].get('Image') == RESTORE_MYSQL_IMAGE
+                    and set(obj['NetworkSettings']['Networks']) <= {name}, 'restore MySQL provenance changed')
+            readiness = out / 'restore-mysql-readiness.json'
+            require(not readiness.is_symlink(), 'restore readiness is not an owned regular receipt')
+            if readiness.is_file():
+                recorded = json.loads(readiness.read_text())['mysqlReadiness'].get('id')
+                require(recorded is None or recorded == cid, 'restore MySQL CID changed before cleanup')
         if suffix == 'app':
             # Fence an unsettled HTTP request before bringing its authentication store back.
             if obj['State']['Running']:
@@ -721,7 +751,10 @@ def main():
     mode, name, schema, output, private_file, port = sys.argv[1:]
     require(re.fullmatch(r'cy-auth-[0-9a-f]{32}', name) is not None
             and schema == 'cy_e2e_auth_' + name[8:], 'fixed fixture scope required')
-    require(mode in ('mysql-ready', 'prepare', 'exercise', 'cleanup'), 'unknown fixture phase')
+    require(mode in ('mysql-ready', 'prepare', 'exercise', 'cleanup', 'restore-mysql-ready'), 'unknown fixture phase')
+    if mode == 'restore-mysql-ready':
+        require(os.environ.get('CHENGYIN_CI_RESTORE_HTTP_STARTUP') == 'true'
+                and os.environ.get('GITHUB_EVENT_NAME') == 'workflow_dispatch', 'restore readiness not admitted')
     require(command(DOCKER + ['context', 'inspect', '--format', '{{.Endpoints.docker.Host}}']).strip()
             == b'unix:///var/run/docker.sock', 'not local hosted daemon')
     SECRET_VALUES.extend([os.environ['CHENGYIN_AUTH_FIXTURE_DB_PASSWORD'], 'synthetic-local-only'])
@@ -733,6 +766,8 @@ def main():
             require(baseline['result'] == 'OWNED_MYSQL_TCP_READY', 'native MySQL readiness missing')
             with mysql_relay(name, baseline) as relay_port:
                 {'prepare': prepare, 'exercise': exercise}[mode](name, schema, out, private, relay_port)
+        elif mode == 'restore-mysql-ready':
+            mysql_ready(name, schema, out, private, port, suffix='restore-mysql')
         else:
             {'mysql-ready': mysql_ready, 'cleanup': cleanup}[mode](name, schema, out, private, port)
     except BaseException as exc:

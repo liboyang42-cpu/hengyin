@@ -1,8 +1,26 @@
 # 当前施工状态（唯一当前摘要）
 
-当前是**完整源码已收齐、root统一收口阶段**：`ALL_NEW_TESTS_NOT_RUN / all_complete=false`。root HEAD 仍为 docs-only `ceb4e5f923091dc0fc5e5b6b7670d60c27bff85f`，工作树包含后续真实源码组合；尚未冻结本批最终候选，不能拿该 HEAD 或旧绿色签收 dirty 内容。
+当前是**完整源码已收齐、root统一收口阶段**：`ALL_NEW_TESTS_NOT_RUN / all_complete=false`。已合成并公共推送源码候选 `90e18550ae75e83641e85bf4bb218f08922c7d3e`（tree `55ad70d6e20746d7b47ce368ca1d08f2014b59ff`）；当前工作树包含最后集中审查的必要增量与证据，尚非下一完整冻结候选，不继承旧绿色。
 
 **最新实际进展：**H ce2bee0408baedcb4cd6ea7bc39ab8ea97236b16已交付并集成，三份原补丁摘要匹配且33个后像全部exact。原A–H完整源码包已收齐，停止轮询等待H。root已用原generator在最终client源生成一次action-ledger，5125控件只是登记，不是UI通过。接下来冻结同一公共隔离候选，原owner并行完成最后集中审查与实际问题的完整必要增量；仍不测试、不编译，所有原WP／Q／A／T／G目标仍all_complete=false。
+
+**90e最后集中收口历史：**原A已收齐，E后端继续；原B已完成资金与恢复组合源码核对并交一处夹具修补，root已应用。`cms_registration_payment_fact` 的规范主键是 `registration_id`，原统一 `ORDER BY id` 会在首次快照处失败；现仅该表改按原主键排序，其他表、原案例及所有断言保留。原5165字节补丁摘要和README作者后像精确；Java作者像较父格式多一个EOF LF，root保留父单EOF并记录原／合成摘要，未冒称字节exact作者。未执行任何测试、编译或数据库验证。
+
+**并行收口安排（覆盖此前仅剩E的安排）：**
+
+原A完整运行消费核对已收齐，原B完整资金恢复核对及夹具查询修补已集成；两者冻结，不重开已完成工作。
+
+原E继续后台作者、库、采用与正式发布生产链；前端从E明确移交原D，E不再编辑小程序或Vue。
+
+原D负责完整小程序／Vue复用作者链、实际采用绑定和所有必要调用者／测试源码；不得改H会话与UNKNOWN策略、baseline或ledger。
+
+原C按原WP14/T20补实际恢复库上完整HTTP应用启动和派发hold的验证源码，复用原fresh schema／bootstrap／JAR／网络／清理owner。现固定owner夹具明确未覆盖此边界；缺覆盖不是生产BUG。不得以jobs/provider已disabled或health200冒称restore guard有效。
+
+原F独立完成当前真实已交源码的登记、显式门控、唯一执行、JSON证据和汇总接线，以共享review.patch交root；不先猜C新接口／新case数，不造总控平台或重复job。
+
+root固定新增手动mode restore-application-startup与CHENGYIN_CI_RESTORE_HTTP_STARTUP测试入场标志，默认／PR仍recovery。实际启动CHENGYIN_RESTORE_MODE由C用env设置并读回，不能导出空串当正常或用-D伪装。资源与脚本／workflow／registry由root唯一合成，C先交真实需要而不是自建provisioner。
+
+所有owner交完整实现／caller／配置／fixture／测试SOURCE和原case保留，不只一个小修；全部源码齐后统一冻结与验收，当前仍不测试、不编译、不启动资源。
 
 用户要求所有必要实现、调用者、装配、配置及配套测试源码齐后再最后统一审查／验证。当前没有运行测试、编译、HTTP、数据库、故障注入或CI。差分／后像摘要／源登记不等于行为通过。
 

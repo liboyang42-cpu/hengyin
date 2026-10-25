@@ -222,7 +222,7 @@ class AuthenticatedRedisSafetyTest(unittest.TestCase):
             with self.subTest(kind=kind, error=error), self.assertRaises(RuntimeError):
                 probe.require_absent(kind, target, code, error)
 
-    def cleanup_fixture(self, out, report, *, app=False, logs='ok', daemon_error=False):
+    def cleanup_fixture(self, out, report, *, app=False, logs='ok', daemon_error=False, restore=False):
         """Protocol double only: exact owned resources; never invokes Docker."""
         name = 'cy-auth-' + 'a' * 32
         path = out / 'authenticated-redis-recovery.json'
@@ -236,9 +236,12 @@ class AuthenticatedRedisSafetyTest(unittest.TestCase):
                 'Config': {'Labels': {'chengyin.auth-recovery': name}},
                 'State': {'Running': False, 'Paused': False},
             }
-            for i, suffix in enumerate(('app', 'mysql', 'redis'), 1)
+            for i, suffix in enumerate(('app', 'mysql', 'redis') + (('restore-mysql',) if restore else ()), 1)
             if app or suffix != 'app'
         }
+        if restore:
+            objects[name + '-restore-mysql']['Config']['Image'] = probe.RESTORE_MYSQL_IMAGE
+            objects[name + '-restore-mysql']['NetworkSettings'] = {'Networks': {name: {}}}
         network = {'Name': name, 'Id': 'd' * 64, 'Internal': True,
                    'Labels': {'chengyin.auth-recovery': name}}
         network_present = True
@@ -279,7 +282,8 @@ class AuthenticatedRedisSafetyTest(unittest.TestCase):
             raise AssertionError('unexpected command: ' + repr(operation))
 
         with mock.patch.object(probe.subprocess, 'run', side_effect=run), \
-                mock.patch.object(probe, 'command', side_effect=command):
+                mock.patch.object(probe, 'command', side_effect=command), \
+                mock.patch.dict(probe.os.environ, {'CHENGYIN_CI_RESTORE_HTTP_STARTUP': 'true' if restore else 'false'}):
             try:
                 probe.cleanup(name, 'cy_e2e_auth_' + 'a' * 32, out, out / 'private.json', 0)
             except RuntimeError as exc:
@@ -415,6 +419,132 @@ class AuthenticatedRedisSafetyTest(unittest.TestCase):
             self.assertEqual(report['reportReadFailure'], {'type': 'PermissionError'})
             self.assertEqual(report['resourceCleanup']['cleanup'], 'NOT_CONFIRMED')
             self.assertNotIn('not-public-canary', json.dumps(report))
+
+
+    def test_restore_target_is_a_fixed_slot_in_the_same_owned_network(self):
+        name = 'cy-auth-' + 'a' * 32
+        expected = {'id': 'b' * 64, 'networkId': 'c' * 64, 'ip': '172.19.0.3', 'pid': 124}
+        obj = {'Id': expected['id'], 'Name': '/' + name + '-restore-mysql',
+               'Config': {'Image': probe.RESTORE_MYSQL_IMAGE, 'Labels': {'chengyin.auth-recovery': name}},
+               'State': {'Running': True, 'Paused': False, 'OOMKilled': False, 'Restarting': False, 'Pid': 124},
+               'NetworkSettings': {'Networks': {name: {'NetworkID': expected['networkId'], 'IPAddress': expected['ip']}}}}
+        network = {'Id': expected['networkId'], 'Name': name, 'Internal': True,
+                   'Labels': {'chengyin.auth-recovery': name}, 'IPAM': {'Config': [{'Subnet': '172.19.0.0/16'}]}}
+        with mock.patch.object(probe, 'command', side_effect=[json.dumps([obj]), json.dumps([network])]) as run:
+            self.assertEqual(probe.mysql_endpoint(name, 'restore-mysql'), expected)
+            self.assertEqual(run.call_args_list[0].args[0][-1], name + '-restore-mysql')
+        for kind in ('label', 'image', 'network'):
+            changed = copy.deepcopy(obj)
+            if kind == 'label':
+                changed['Config']['Labels']['chengyin.auth-recovery'] = 'other-task'
+            elif kind == 'image':
+                changed['Config']['Image'] = 'foreign-image'
+            else:
+                changed['NetworkSettings']['Networks'] = {'other-network': {}}
+            with self.subTest(kind=kind), mock.patch.object(probe, 'command', side_effect=[json.dumps([changed]), json.dumps([network])]), self.assertRaises(RuntimeError):
+                probe.mysql_endpoint(name, 'restore-mysql')
+        for suffix in ('source', '../mysql', 'foreign-mysql', ''):
+            with self.subTest(suffix=suffix), mock.patch.object(probe, 'command') as run, self.assertRaises(RuntimeError):
+                probe.mysql_endpoint(name, suffix)
+            run.assert_not_called()
+
+    def test_restore_relay_uses_original_loopback_owner_and_preserves_phase_failure(self):
+        name = 'cy-auth-' + 'a' * 32
+        endpoint = {'id': 'b' * 64, 'networkId': 'c' * 64, 'ip': '172.19.0.3', 'pid': 124}
+        for fail in (False, True):
+            with self.subTest(fail=fail):
+                server, listener = mock.Mock(), mock.Mock()
+                server.server_address = ('127.0.0.1', 35001)
+                listener.is_alive.return_value = False
+                with mock.patch.object(probe, 'mysql_endpoint', return_value=endpoint) as identity, \
+                        mock.patch.object(probe.socketserver, 'ThreadingTCPServer', return_value=server) as bind, \
+                        mock.patch.object(probe.threading, 'Thread', return_value=listener):
+                    if fail:
+                        with self.assertRaisesRegex(RuntimeError, 'original restore phase'):
+                            with probe.mysql_relay(name, {'endpoint': endpoint}, suffix='restore-mysql'):
+                                raise RuntimeError('original restore phase')
+                    else:
+                        with probe.mysql_relay(name, {'endpoint': endpoint}, suffix='restore-mysql') as port:
+                            self.assertEqual(port, 35001)
+                    self.assertEqual(identity.call_args_list, [mock.call(name, 'restore-mysql')] * (1 if fail else 2))
+                    self.assertEqual(bind.call_args.args[0], ('127.0.0.1', 0))
+                    server.shutdown.assert_called_once()
+                    server.server_close.assert_called_once()
+                    listener.join.assert_called_once_with(timeout=5)
+
+    def test_restore_native_readiness_preserves_source_receipt_and_rejects_same_uuid(self):
+        name = 'cy-auth-' + 'a' * 32
+        source_uuid = '11111111-1111-4111-8111-111111111111'
+        for same_uuid in (False, True):
+            with self.subTest(same_uuid=same_uuid), tempfile.TemporaryDirectory() as directory:
+                out = Path(directory)
+                source = {'mysqlReadiness': {'result': 'OWNED_MYSQL_TCP_READY', 'id': 'b' * 64,
+                          'serverUuid': source_uuid, 'version': '8.0.45', 'endpoint': {'networkId': 'c' * 64}}}
+                original = json.dumps(source)
+                (out / 'schema-summary.json').write_text(original)
+                target_uuid = source_uuid if same_uuid else '22222222-2222-4222-8222-222222222222'
+                obj = {'Id': 'd' * 64, 'Name': '/' + name + '-restore-mysql',
+                       'Config': {'Labels': {'chengyin.auth-recovery': name}},
+                       'State': {'Pid': 124, 'Running': True, 'Paused': False, 'Restarting': False, 'ExitCode': 0, 'OOMKilled': False},
+                       'HostConfig': {'PortBindings': None}, 'NetworkSettings': {'Ports': {}}}
+                native = subprocess.CompletedProcess([], 0, (target_uuid + '\t8.0.45\n').encode(), b'')
+                logs = subprocess.CompletedProcess([], 0, b'controlled native diagnostic', b'')
+                endpoint = {'id': 'd' * 64, 'networkId': 'c' * 64, 'ip': '172.19.0.3', 'pid': 124}
+                with mock.patch.object(probe, 'command', return_value=json.dumps([obj]).encode()), \
+                        mock.patch.object(probe, 'mysql_endpoint', return_value=endpoint), \
+                        mock.patch.object(probe.subprocess, 'run', side_effect=[native, logs]):
+                    if same_uuid:
+                        with self.assertRaisesRegex(RuntimeError, 'independent same-version'):
+                            probe.mysql_ready(name, 'cy_e2e_auth_' + 'a' * 32, out, out / 'private.json', 0, suffix='restore-mysql')
+                    else:
+                        probe.mysql_ready(name, 'cy_e2e_auth_' + 'a' * 32, out, out / 'private.json', 0, suffix='restore-mysql')
+                self.assertEqual((out / 'schema-summary.json').read_text(), original)
+                facts = json.loads((out / 'restore-mysql-readiness.json').read_text())['mysqlReadiness']
+                self.assertEqual(facts['result'], 'FAIL_NO_RESTART' if same_uuid else 'OWNED_MYSQL_TCP_READY')
+                self.assertEqual(facts['serverUuid'], target_uuid)
+
+    def test_restore_cleanup_removes_only_four_fixed_slots_and_requires_known_cid(self):
+        name = 'cy-auth-' + 'a' * 32
+        for changed in (False, True):
+            with self.subTest(changed=changed), tempfile.TemporaryDirectory() as directory:
+                out = Path(directory)
+                (out / 'restore-mysql-readiness.json').write_text(json.dumps({'mysqlReadiness': {'id': ('9' if changed else '4') * 64}}))
+                report, removed, network = self.cleanup_fixture(out, {'result': 'BUSINESS_ASSERTIONS_PASSED_AWAITING_CLEANUP'}, app=True, restore=True)
+                if changed:
+                    self.assertNotIn(name + '-restore-mysql', removed)
+                    self.assertTrue(network)
+                    self.assertNotEqual(report.get('resourceCleanup', {}).get('cleanup'), 'CONFIRMED_EXACT_OWNED_REMOVAL')
+                else:
+                    self.assertEqual(removed, [name + '-' + suffix for suffix in ('app', 'restore-mysql', 'mysql', 'redis')])
+                    self.assertFalse(network)
+                    self.assertEqual(report['resourceCleanup']['cleanup'], 'CONFIRMED_EXACT_OWNED_REMOVAL')
+
+    def test_restore_readiness_failure_before_app_keeps_original_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            out = Path(directory)
+            original = {'fixturePhase': 'restore-mysql-ready', 'result': 'FAIL_OR_UNKNOWN_NO_RETRY',
+                        'failureType': 'ReadinessError', 'reason': 'original controlled failure'}
+            report, removed, network = self.cleanup_fixture(out, original, restore=True)
+            self.assertEqual(report['result'], original['result'])
+            self.assertEqual(report['fixturePhase'], original['fixturePhase'])
+            self.assertEqual(report['applicationLogStatus'], 'NOT_STARTED')
+            self.assertEqual(len(removed), 3)
+            self.assertFalse(network)
+            self.assertEqual(report['resourceCleanup']['cleanup'], 'CONFIRMED_EXACT_OWNED_REMOVAL')
+
+    def test_restore_startup_admission_is_manual_exclusive_and_child_mode_only(self):
+        env = {'GITHUB_ACTIONS': 'true', 'RUNNER_OS': 'Linux', 'RUNNER_ENVIRONMENT': 'github-hosted',
+               'GITHUB_REPOSITORY': 'liboyang42-cpu/hengyin', 'GITHUB_WORKFLOW': 'Isolated authenticated Redis recovery',
+               'GITHUB_JOB': 'isolated-authenticated-redis-recovery', 'GITHUB_EVENT_NAME': 'workflow_dispatch',
+               'GITHUB_WORKFLOW_REF': 'liboyang42-cpu/hengyin/.github/workflows/isolated-authenticated-redis-recovery.yml@refs/heads/fixed',
+               'CHENGYIN_CI_AUTH_REDIS_RECOVERY': 'true', 'CHENGYIN_CI_RESTORE_HTTP_STARTUP': 'true'}
+        with mock.patch.object(probe.sys, 'platform', 'linux'):
+            probe.validate_execution_env(env)
+            for key, value in (('GITHUB_EVENT_NAME', 'pull_request'), ('CHENGYIN_RESTORE_MODE', ''),
+                               ('CHENGYIN_RESTORE_MODE', 'false'), ('CHENGYIN_CI_CAPACITY_MIXED', 'true'),
+                               ('CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY', 'true'), ('CHENGYIN_CI_GAMEPLAY_CAPACITY', 'true')):
+                with self.subTest(key=key, value=value), self.assertRaises(RuntimeError):
+                    probe.validate_execution_env(dict(env, **{key: value}))
 
 
 if __name__ == '__main__':
