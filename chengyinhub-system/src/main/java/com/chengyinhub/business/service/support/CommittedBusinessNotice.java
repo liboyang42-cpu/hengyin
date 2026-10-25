@@ -54,6 +54,7 @@ public class CommittedBusinessNotice {
 
     /** Reuse AsyncManager's existing scheduler after commit; no outer DB connection is held while waiting. */
     public void dispatchInNewTransaction(String eventKey, Long businessId, Supplier<Boolean> delivery) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         try {
             existingExecutor.schedule(() -> { deliverInNewTransaction(eventKey, businessId, delivery); }, 10, TimeUnit.MILLISECONDS);
         } catch (Throwable rejected) {
@@ -72,6 +73,7 @@ public class CommittedBusinessNotice {
 
     /** For the dispatched task or callers that already released their business transaction. */
     public boolean deliverInNewTransaction(String eventKey, Long businessId, Supplier<Boolean> delivery) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         try {
             if (Boolean.TRUE.equals(independentTransaction.execute(status -> delivery.get()))) return true;
         } catch (Throwable failure) {

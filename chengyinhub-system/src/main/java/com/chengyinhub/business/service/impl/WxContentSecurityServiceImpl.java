@@ -161,6 +161,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     @Override
     public String checkText(String content, String openid)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (StringUtils.isEmpty(content))
         {
             return null;
@@ -264,6 +265,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
             log.info("[内容安全] 文本需人工复审，suggest={}，contentLength={}", suggest, content.length());
             return IWxContentSecurityService.REVIEW_REQUIRED;
         }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
         catch (TokenConfigurationException e)
         {
             return MSG_UNAVAILABLE;
@@ -282,6 +284,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     @Override
     public String checkMediaAsync(String mediaUrl, String openid)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (!isEnabled() || StringUtils.isBlank(mediaUrl) || StringUtils.isBlank(openid))
         {
             return null;
@@ -329,6 +332,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
             // 送检成功，返回 trace_id；最终结果由微信经「消息推送」异步回调（监听 wxa_media_check 事件）
             return Convert.toStr(resp.get("trace_id"));
         }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
         catch (Exception e)
         {
             log.error("[内容安全] 图片送检异常。exceptionType={}", e.getClass().getSimpleName());
@@ -339,6 +343,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     @Override
     public void submitMediaCheck(int bizType, Long bizId, String imgArr, String openid)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (!isEnabled() || bizId == null || StringUtils.isEmpty(imgArr))
         {
             return;
@@ -364,6 +369,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     @Override
     public String submitMediaCheckOne(int bizType, Long bizId, String fetchUrl, String identity, String openid)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (!isEnabled() || bizId == null || StringUtils.isEmpty(fetchUrl) || StringUtils.isEmpty(identity))
         {
             return null;
@@ -398,6 +404,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                     bizType, bizId, img.length());
             return null;
         }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
         catch (Exception e)
         {
             // C4:送检异常不可静默,ERROR 供人工复审(异步模型不阻断已发布内容,但必须可发现)
@@ -1423,6 +1430,9 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
 
     String sendPost(String url, String body, String contentType)
     {
+        if (url != null && (url.startsWith(WX_MSG_SEC_CHECK_URL + "?")
+                || url.startsWith(WX_MEDIA_CHECK_URL + "?")))
+            com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         HttpURLConnection connection = null;
         try
         {

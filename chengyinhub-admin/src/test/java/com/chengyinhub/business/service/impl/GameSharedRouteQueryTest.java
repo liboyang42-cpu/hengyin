@@ -151,4 +151,96 @@ class GameSharedRouteQueryTest {
         verify(mapper).selectSessionByActivity(70L); verify(activities).selectCmsActivityById(70L);
         verifyNoMoreInteractions(mapper, activities); verifyNoInteractions(teams);
     }
+
+    private ObjectNode originalContent(long source, long template, String title) {
+        ObjectNode content = json.createObjectNode().put("contentSnapshotVersion", 1).put("templateId", template);
+        content.putObject("nodePresentation").put("id", source).put("topicId", 80L).put("templateId", template);
+        content.putObject("templatePresentation").put("title", title);
+        return content;
+    }
+
+    @Test void originalContentQueryDoesNotRefreshTimersLockWriteOrShareMutableConfig() throws Exception {
+        ObjectNode config = (ObjectNode) json.readTree(session.getModuleConfigSnapshotJson());
+        config.putObject("nodeAnswers").set("11", originalContent(11L, 31L, "原题"));
+        config.putObject("nodeConfigs").putObject("11"); config.put("journeyStory","");
+        session.setModuleConfigSnapshotJson(config.toString());
+        String oldRun = run.getVariablesJson(), oldTeam = team.getVariablesJson(), oldConfig = session.getModuleConfigSnapshotJson();
+        ObjectNode first = (ObjectNode) runtime.querySharedRouteSnapshot(7L, 80L, 70L, 11L);
+        assertEquals(2, first.path("authorityEpoch").asInt());
+        ((ObjectNode) first.path("nodeAnswers").path("11").path("templatePresentation")).put("title", "mutable caller");
+        assertEquals("原题", runtime.querySharedRouteSnapshot(7L, 80L, 70L, 11L)
+                .path("nodeAnswers").path("11").path("templatePresentation").path("title").asText());
+        assertEquals(oldRun, run.getVariablesJson()); assertEquals(oldTeam, team.getVariablesJson());
+        assertEquals(oldConfig, session.getModuleConfigSnapshotJson()); assertEquals(4, session.getRevision());
+        verify(mapper, times(2)).selectSessionByActivity(70L); verify(mapper, times(2)).selectActiveTeamId(70L, 7L);
+        verify(mapper, times(2)).selectStoryState(50L, "RUN", 50L); verify(mapper, times(2)).selectStoryState(50L, "TEAM", 90L);
+        verify(teams, times(2)).hasPaidRegistration(7L, 2, 70L); verify(activities, times(2)).selectCmsActivityById(70L);
+        verifyNoMoreInteractions(mapper, teams, activities);
+    }
+
+    private void mappedQuests(boolean active) throws Exception {
+        ObjectNode config = (ObjectNode) json.readTree(session.getModuleConfigSnapshotJson());
+        config.putObject("nodeAnswers").set("101", originalContent(101L, 31L, "第一原题"));
+        config.with("nodeAnswers").set("102", originalContent(102L, 32L, "第二原题"));
+        config.putObject("nodeConfigs").putObject("101"); config.with("nodeConfigs").putObject("102"); config.put("journeyStory","");
+        ObjectNode gameplay = (ObjectNode) config.path("themeConfig").path("gameplayRuntime");
+        gameplay.putArray("quests").addObject().put("questKey", "q1").put("nodeId", 101L).put("locationKey", "desk");
+        gameplay.withArray("quests").addObject().put("questKey", "q2").put("nodeId", 102L).put("locationKey", "desk");
+        session.setModuleConfigSnapshotJson(config.toString());
+        ObjectNode control = (ObjectNode) json.readTree(run.getVariablesJson());
+        control.putObject("bindings").putObject("desk").put("nodeId", 11L).put("version", 4L);
+        run.setVariablesJson(control.toString());
+        TopicRouteEngine.State state = json.readValue(team.getVariablesJson(), TopicRouteEngine.State.class);
+        if (active) state.getThemeRuntime().putObject("gameplay").put("activeQuest", "q2");
+        team.setVariablesJson(json.writeValueAsString(state));
+        com.chengyinhub.business.domain.GameStationRun station = new com.chengyinhub.business.domain.GameStationRun();
+        station.setNodeId(11L); when(mapper.selectStation(50L, 11L)).thenReturn(station);
+    }
+
+    @Test void currentOriginalQuestMappingDoesNotBecomeTheOtherSourcesContent() throws Exception {
+        mappedQuests(true);
+        com.fasterxml.jackson.databind.JsonNode snapshot = runtime.querySharedRouteSnapshot(7L, 80L, 70L, 11L);
+        com.fasterxml.jackson.databind.JsonNode answer = com.chengyinhub.business.service.support.NodeJourneySnapshot.answerFromSnapshot(snapshot, 11L);
+        assertEquals(102L, answer.path("nodePresentation").path("id").asLong());
+        assertEquals(32L, answer.path("templateId").asLong());
+        assertEquals("第二原题", answer.path("templatePresentation").path("title").asText());
+        assertEquals(2, snapshot.path("authorityEpoch").asInt());
+    }
+
+    @Test void ambiguousMappedSourceIsRejectedInsteadOfSelectingAFutureQuest() throws Exception {
+        mappedQuests(false);
+        GameSessionException denied = assertThrows(GameSessionException.class,
+                () -> runtime.querySharedRouteSnapshot(7L, 80L, 70L, 11L));
+        assertEquals("GAME_ROUTE_LOCKED", denied.getErrorCode());
+        verify(mapper, never()).selectStation(anyLong(), anyLong());
+    }
+
+    @Test void contentQueryKeepsMissingRunAndFrozenTeamGuards() {
+        when(mapper.selectStoryState(50L, "RUN", 50L)).thenReturn(null);
+        assertEquals("GAME_CONFIG_INVALID", assertThrows(GameSessionException.class,
+                () -> runtime.querySharedRouteSnapshot(7L, 80L, 70L, 11L)).getErrorCode());
+        when(mapper.selectStoryState(50L, "RUN", 50L)).thenReturn(run);
+        when(mapper.selectActiveTeamId(70L, 7L)).thenReturn(91L);
+        assertEquals("GAME_TEAM_REQUIRED", assertThrows(GameSessionException.class,
+                () -> runtime.querySharedRouteSnapshot(7L, 80L, 70L, 11L)).getErrorCode());
+        verify(mapper, never()).updateStoryStateCas(any());
+        verify(mapper, never()).insertStoryState(any());
+    }
+
+    @Test void sharedClueLabelsUseOriginalCompleteDeclarationsInsteadOfLiveRegistry() throws Exception {
+        ObjectNode config = (ObjectNode) json.readTree(session.getModuleConfigSnapshotJson());
+        com.chengyinhub.business.domain.ThemeStateKey clue = new com.chengyinhub.business.domain.ThemeStateKey();
+        clue.setStateKey("clue.original"); clue.setKeyType("flag"); clue.setScope("run"); clue.setLabel("原线索");
+        com.chengyinhub.business.service.support.JourneyInitialState.freezeKeys(config, java.util.List.of(clue),
+                com.chengyinhub.business.domain.JourneyRules.parse(config.path("journeyRules").toString()));
+        assertEquals(1, config.path("stateKeySnapshotVersion").asInt());
+        session.setModuleConfigSnapshotJson(config.toString());
+        com.chengyinhub.business.mapper.ThemeStateKeyMapper live = mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class);
+        ReflectionTestUtils.setField(runtime, "themeStateKeyMapper", live);
+        when(live.selectByTopicId(80L)).thenThrow(new AssertionError("clue labels cannot reinterpret an original session"));
+        java.util.Map<?, ?> labels = ReflectionTestUtils.invokeMethod(runtime, "clueLabels", session);
+        assertNotNull(labels); assertEquals("原线索", labels.get("clue.original"));
+        verifyNoInteractions(live);
+        assertEquals(config.toString(), session.getModuleConfigSnapshotJson());
+    }
 }

@@ -213,6 +213,7 @@ public class AiThemeDraftRequestService
     /** First prepare persists the identity and original plan before writing a TTL body. */
     public AiThemeDraftIntentView prepare(Long memberId, AiThemeDraftPrepareReq req)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         // Match the current simple caller boundary; preserve the original bytes for context/hash.
         if (req == null || req.idea() == null || req.idea().length() > 300 || req.idea().trim().isEmpty())
             throw rejected(400, "AI_DRAFT_INVALID_REQUEST", null);
@@ -271,6 +272,7 @@ public class AiThemeDraftRequestService
     /** Only a positively committed PREPARED -> PROCESSING winner may leave for Creator. */
     public AiThemeDraftIntentView execute(Long memberId, AiThemeDraftExecuteReq req)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         requireIntentAdmission(); requireNoIntentTransaction(); requireMember(memberId);
         if (req == null || !serverId(req.requestId())) throw rejected(400, "AI_DRAFT_PREPARE_REQUIRED", null);
         AiThemeDraftIntentRow row = ownedIntent(memberId, req.requestId());
@@ -304,6 +306,8 @@ public class AiThemeDraftRequestService
             if (result != null && result.getDraft() != null)
             { state = "SUCCEEDED"; provider = "RECEIVED"; reason = null; }
         }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused)
+        { throw paused; }
         catch (AiThemeDraftPlanRejectedException preflight)
         {
             provider = "NOT_SENT";

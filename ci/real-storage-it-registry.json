@@ -596,7 +596,9 @@
         "com.chengyinhub.business.it.CoopSettlementManualCaseReadMySqlIT",
         "com.chengyinhub.business.service.CashWithdrawTransferIntentMySqlIT",
         "com.chengyinhub.business.it.RegistrationStationFulfillmentMySqlIT",
-        "com.chengyinhub.business.service.impl.CoopSupplyStationMySqlIT"
+        "com.chengyinhub.business.service.impl.CoopSupplyStationMySqlIT",
+        "com.chengyinhub.business.service.impl.FundsProcessRecoveryMySqlIT",
+        "com.chengyinhub.business.service.RestoreMoneyDispatchMySqlIT"
       ],
       "note": "One source-bound joint A/B/G batch, no duplicate class jobs: original funds, callback/refund, immutable consumption, components, late-success and approved-refund guard. Exact source SHA, declared zero-skip XML and independent CLEAN required. No production/provider/HTTP or unresolved allocation-policy acceptance."
     },
@@ -682,7 +684,13 @@
         "com.chengyinhub.business.it.CoopSettlementManualCaseReadMySqlIT",
         "com.chengyinhub.business.service.CashWithdrawTransferIntentMySqlIT",
         "com.chengyinhub.business.it.RegistrationStationFulfillmentMySqlIT",
-        "com.chengyinhub.business.service.impl.CoopSupplyStationMySqlIT"
+        "com.chengyinhub.business.service.impl.CoopSupplyStationMySqlIT",
+        "com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT",
+        "com.chengyinhub.business.it.ThemeStateKeyDeclarationMySqlIT",
+        "com.chengyinhub.business.service.impl.TopicPublicationBindingMySqlIT",
+        "com.chengyinhub.business.service.impl.FundsProcessRecoveryMySqlIT",
+        "com.chengyinhub.business.it.CrossDomainFaultIsolationMySqlIT",
+        "com.chengyinhub.business.service.RestoreMoneyDispatchMySqlIT"
       ],
       "note": "65 unique registered storage classes, 810 declared cases, including original producer/refund, manual-case read projection and ASR shared quota. One matrix max-parallel20, no duplicates. Source SHA, original XML, zero skip and independent CLEAN required. Static inventory is not execution, HTTP/provider/restart/load/deployment acceptance."
     }
@@ -1237,7 +1245,7 @@
       "database_base": "cyit"
     },
     "com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT": {
-      "tests": 4,
+      "tests": 6,
       "storage": [
         "mysql"
       ],
@@ -1771,6 +1779,50 @@
         "mysql"
       ],
       "gates": {}
+    },
+    "com.chengyinhub.business.it.ThemeStateKeyDeclarationMySqlIT": {
+      "tests": 6,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {}
+    },
+    "com.chengyinhub.business.service.impl.TopicPublicationBindingMySqlIT": {
+      "tests": 9,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {}
+    },
+    "com.chengyinhub.business.service.impl.FundsProcessRecoveryMySqlIT": {
+      "tests": 14,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "B_PAYMENT_INTENT_DDL_APPROVED": "1",
+        "B_FUNDS_PROCESS_RECOVERY_APPROVED": "1"
+      },
+      "database_base": "architecture_a",
+      "note": "Original funds physical recovery SOURCE: parent public fa5c, exact B patch fc9999651e8b7602728af56c67fa599b261e47db3c3cd2351fc24ca7eef24d9b. Fourteen ordinary declarations; fixed owned test-classpath child, both original fact sources and controlled provider. All Java/MySQL/fault execution NOT_RUN; not real channel or full T13 acceptance."
+    },
+    "com.chengyinhub.business.it.CrossDomainFaultIsolationMySqlIT": {
+      "tests": 1,
+      "storage": [
+        "mysql",
+        "redis"
+      ],
+      "gates": {},
+      "note": "E T19 combined SOURCE donor f3d455608bbd4f6967f177ba284f5bb7f203acc9, exact5code+3docs. Requires original B_PAYMENT_FACT_DDL_APPROVED through existing workflow to canonical helper. Same-window AI/map/notification/payment/state/scheduler controlled fixture; all execution NOT_RUN, not provider/HTTP/UAT/full T19 acceptance."
+    },
+    "com.chengyinhub.business.service.RestoreMoneyDispatchMySqlIT": {
+      "tests": 1,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "database_base": "architecture_a",
+      "note": "A restore-money SOURCE donor197ac0ca: one fixed startup child; canonical RegistrationFunds factory, true mode before all money identity/effect admission, original verified fact retained. Child exact schema <base>_rdispatch_funds_core_it<suffix> absent before creation; old factory full cleanup plus independent outer container/schema readback required. Both original fact approvals are exact-class workflow environment, not silent-skip permissions. All execution NOT_RUN; no provider/wholeT20 acceptance."
     }
   }
 }

@@ -64,6 +64,49 @@ public final class TopicPublicationTestWiring {
             Mockito.when(topicMapper.lockTopicContentBudget(org.mockito.ArgumentMatchers.anyLong()))
                     .thenAnswer(call -> call.getArgument(0));
         }
+        // Unit-only current-read port: retain the fixture's original topic/owner/status rows.
+        Object stateKeys = get(facade, "themeStateKeyService");
+        if (topicMapper != null && stateKeys instanceof ThemeStateKeyService && !Mockito.mockingDetails(stateKeys).isMock()) {
+            var keys = (com.chengyinhub.business.mapper.ThemeStateKeyMapper)
+                    ReflectionTestUtils.getField(stateKeys, "themeStateKeyMapper");
+            if (keys != null && Mockito.mockingDetails(keys).isMock() && !Mockito.mockingDetails(keys).isSpy()
+                    && Mockito.mockingDetails(keys).getStubbings().stream().noneMatch(stub ->
+                    "lockTopicForStateKeyWrite".equals(stub.getInvocation().getMethod().getName()))) {
+                Mockito.when(keys.lockTopicForStateKeyWrite(org.mockito.ArgumentMatchers.anyLong())).thenAnswer(call -> {
+                    var parent = topicMapper.selectCmsTopicByIdForUpdate(call.getArgument(0));
+                    return parent == null ? null : parent.getId();
+                });
+            }
+        }
+        // Real MySQL mappers and spies always execute their real FOR UPDATE statement.
+        if (topicMapper != null && Mockito.mockingDetails(topicMapper).isMock()
+                && !Mockito.mockingDetails(topicMapper).isSpy()
+                && Mockito.mockingDetails(topicMapper).getStubbings().stream().noneMatch(stub ->
+                "selectCmsTopicByIdForUpdate".equals(stub.getInvocation().getMethod().getName()))) {
+            Mockito.when(topicMapper.selectCmsTopicByIdForUpdate(org.mockito.ArgumentMatchers.anyLong()))
+                    .thenAnswer(call -> topicMapper.selectCmsTopicById(call.getArgument(0)));
+        }
+        TopicBundleReviewService bundle = (TopicBundleReviewService) get(facade, "topicBundleReviewService");
+        if (bundle != null && Mockito.mockingDetails(bundle).isMock() && !Mockito.mockingDetails(bundle).isSpy()
+                && Mockito.mockingDetails(bundle).getStubbings().stream().noneMatch(stub ->
+                "freezeForSubmission".equals(stub.getInvocation().getMethod().getName())
+                        && stub.getInvocation().getArguments().length == 3)) {
+            // Unit-only port adaptation: preserve the original fixture snapshot and original assertions.
+            Mockito.when(bundle.freezeForSubmission(org.mockito.ArgumentMatchers.anyLong(),
+                    org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyList()))
+                    .thenAnswer(call -> bundle.freezeForSubmission(call.getArgument(0), call.getArgument(1)));
+        }
+        com.chengyinhub.business.service.ITopicRouteRuntimeService runtime =
+                (com.chengyinhub.business.service.ITopicRouteRuntimeService) get(facade, "topicRouteRuntimeService");
+        if (runtime != null && Mockito.mockingDetails(runtime).isMock() && !Mockito.mockingDetails(runtime).isSpy()
+                && Mockito.mockingDetails(runtime).getStubbings().stream().anyMatch(stub ->
+                "freezePublication".equals(stub.getInvocation().getMethod().getName()) && stub.getInvocation().getArguments().length == 2)
+                && Mockito.mockingDetails(runtime).getStubbings().stream().noneMatch(stub ->
+                "freezePublication".equals(stub.getInvocation().getMethod().getName()) && stub.getInvocation().getArguments().length == 3)) {
+            // Adapt only an explicitly supplied original unit port. Never fabricate a missing snapshot.
+            Mockito.when(runtime.freezePublication(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.nullable(String.class),
+                    org.mockito.ArgumentMatchers.anyList())).thenAnswer(call -> runtime.freezePublication(call.getArgument(0), call.getArgument(1)));
+        }
         TopicContentWriteGuard guard = (TopicContentWriteGuard) ReflectionTestUtils.getField(facade, "contentWriteGuard");
         if (guard == null) {
             guard = new TopicContentWriteGuard(topicMapper,

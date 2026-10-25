@@ -1460,6 +1460,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public java.util.Map<String, Object> prepareDeposit(Long inviteId, Long callerMemberId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         CoopInvite location = coopInviteMapper.selectCoopInviteById(inviteId);
         if (location == null) throw new IllegalStateException("邀约不存在");
         CmsTopic topic = location.getTopicId() == null ? null
@@ -1526,6 +1527,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public CoopInvite authorizeDepositRefundRetry(Long inviteId, Long operatorMemberId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         CoopInvite location = coopInviteMapper.selectCoopInviteById(inviteId);
         if (location == null) throw new IllegalStateException("邀约不存在");
         CmsTopic topic = location.getTopicId() == null ? null
@@ -1660,6 +1662,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     }
 
     private boolean applyConfirmedDepositPaid(String outTradeNo, Long paidCents, String transactionId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         CoopInvite inv = coopInviteMapper.selectByDepositOutTradeNoForUpdate(outTradeNo);
         if (inv == null || isLegacyMerchantNodeInvite(inv) || inv.getDepositAmount() == null
                 || paidCents == null || transactionId == null || transactionId.trim().isEmpty()) return false;
@@ -1695,6 +1698,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
 
     @Override
     public int deductDeposit(Long inviteId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         return coopInviteMapper.deductHeldDeposit(inviteId);
     }
 
@@ -1712,6 +1716,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void requestDepositRefund(Long inviteId, Long operatorMemberId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         CoopInvite invite = authorizeDepositRefundRetry(inviteId, operatorMemberId);
         depositRefundService.requestLocked(invite);
     }
@@ -1719,6 +1724,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void requestTopicDepositRefunds(Long topicId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         CmsTopic topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
         if (topic == null || !Integer.valueOf(1).equals(topic.getIsSettlement()))
             throw new IllegalStateException("主题尚未完成结算，不能退保证金");
@@ -1735,6 +1741,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createCoopOrder(CoopOrder order) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (order == null || order.getInviteId() == null) throw new IllegalStateException("原已接受邀约必填");
         CoopInvite located = coopInviteMapper.selectCoopInviteById(order.getInviteId());
         if (located == null) throw new IllegalStateException("原邀约不可核实");

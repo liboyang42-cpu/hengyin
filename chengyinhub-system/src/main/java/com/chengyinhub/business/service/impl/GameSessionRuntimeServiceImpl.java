@@ -44,6 +44,7 @@ import com.chengyinhub.business.util.AdvancedGamePublicProjection;
 import com.chengyinhub.business.service.ITopicRouteRuntimeService;
 import com.chengyinhub.business.domain.JourneyRules;
 import com.chengyinhub.business.service.support.JourneyInitialState;
+import com.chengyinhub.business.service.support.NodeJourneySnapshot;
 import com.chengyinhub.business.service.support.ThemeRuntimeEngine;
 import com.chengyinhub.business.service.support.GameplayRuntimeConfig;
 import com.chengyinhub.business.service.support.GameplaySupportMatrix;
@@ -1389,6 +1390,80 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public JsonNode querySharedRouteSnapshot(Long memberId, Long topicId, Long activityId, Long nodeId) {
+        if (activityId == null || activityId <= 0) return null;
+        GameSession session = runtimeMapper.selectSessionByActivity(activityId);
+        if (!isSharedRoute(session)) return null;
+        if (!Objects.equals(topicId, session.getTopicId())) throw error("GAME_FORBIDDEN_SCOPE", "活动与主题不匹配");
+        CmsActivity activity = requireActivity(activityId, true);
+        PlayerScope player = requirePlayer(GameActorContext.player(memberId), activity);
+        ObjectNode control = sharedRunControl().persistedRunControl(session);
+        if (control == null) throw error("GAME_CONFIG_INVALID", "本局共享运行控制账不可用");
+        int epoch = control.path("authorityEpoch").asInt(1);
+        TopicRouteEngine.State state = routeOwnerState(requireRouteOwner(session, player.teamId));
+        ObjectNode original = (ObjectNode) sessionConfig(session).deepCopy();
+        NodeJourneySnapshot.requireContentSnapshot(original);
+        ObjectNode snapshot = original.deepCopy();
+        snapshot.put("gameSessionId", session.getId()).put("teamId", player.teamId).put("authorityEpoch", epoch);
+        snapshot.set("contentTags", objectMapper.valueToTree(state.getTags()));
+        JsonNode operation = state.getThemeRuntime().path("activeOperation");
+        java.util.Set<Long> targets = new java.util.LinkedHashSet<>();
+        if (nodeId != null) {
+            if (nodeId <= 0) throw error("GAME_BAD_REQUEST", "节点身份不可用");
+            targets.add(nodeId);
+        } else {
+            // One request captures RUN, TEAM and the original content once, not one run per node.
+            for (JsonNode quest : routeGameplay(session).path("quests"))
+                targets.add(control.path("bindings").path(quest.path("locationKey").asText())
+                        .path("nodeId").asLong(quest.path("nodeId").asLong()));
+            if (operation.isObject()) targets.add(operation.path("nodeId").asLong());
+        }
+        for (Long target : targets) {
+            if (activeChallenge(session, state, target)) continue;
+            Long source = null;
+            if (operation.isObject() && operation.path("nodeId").asLong() == target) {
+                if (operation.has("epoch") && operation.path("epoch").asInt() != epoch)
+                    throw error("GAME_STATE_CONFLICT", "原操作权威版本已变更");
+                source = operation.path("sourceNodeId").asLong();
+            } else {
+                String active = state.getThemeRuntime().path("gameplay").path("activeQuest").asText("");
+                java.util.Set<Long> candidates = new java.util.LinkedHashSet<>();
+                for (JsonNode quest : routeGameplay(session).path("quests")) {
+                    long actual = control.path("bindings").path(quest.path("locationKey").asText())
+                            .path("nodeId").asLong(quest.path("nodeId").asLong());
+                    if (actual != target) continue;
+                    candidates.add(quest.path("nodeId").asLong());
+                    if (quest.path("questKey").asText().equals(active)) source = quest.path("nodeId").asLong();
+                }
+                if (source == null && candidates.size() == 1) source = candidates.iterator().next();
+                if (source == null && candidates.size() > 1) {
+                    if (nodeId != null) throw error("GAME_ROUTE_LOCKED", "本站内容需要原任务身份");
+                    // Whole-page read omits an ambiguous physical binding; it cannot choose a future source.
+                    for (String field : Arrays.asList("nodeConfigs", "nodeAnswers", "nodeJourney"))
+                        snapshot.with(field).remove(String.valueOf(target));
+                    continue;
+                }
+            }
+            if (source != null && !Objects.equals(source, target)) {
+                if (source <= 0 || runtimeMapper.selectStation(session.getId(), target) == null)
+                    throw error("GAME_FORBIDDEN_SCOPE", "内容映射不属于本场站点");
+                for (String field : Arrays.asList("nodeConfigs", "nodeAnswers", "nodeJourney")) {
+                    JsonNode block = original.path(field).get(String.valueOf(source));
+                    if (block == null) snapshot.with(field).remove(String.valueOf(target));
+                    else snapshot.with(field).set(String.valueOf(target), block.deepCopy());
+                }
+            }
+            JsonNode content = snapshot.path("nodeAnswers").get(String.valueOf(target));
+            if (NodeJourneySnapshot.hasContent(content)
+                    && (content.path("nodePresentation").path("topicId").asLong() != topicId
+                    || content.path("nodePresentation").path("id").asLong() != (source == null ? target : source)))
+                throw error("GAME_CONFIG_INVALID", "本局内容归属不可用");
+        }
+        return snapshot;
+    }
+
+    @Override
     public com.chengyinhub.business.domain.route.TopicRouteState sharedRouteState(Long memberId, Long topicId, Long activityId) {
         JsonNode snapshot = sharedRouteSnapshot(memberId, topicId, activityId, null);
         if (snapshot == null) return null;
@@ -1923,8 +1998,9 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     /** 主题登记的线索名称（clue.* → label）。 */
     private Map<String,String> clueLabels(GameSession session) {
         Map<String,String> labels=new LinkedHashMap<>();
-        if(themeStateKeyMapper==null || session.getTopicId()==null)return labels;
-        for(com.chengyinhub.business.domain.ThemeStateKey key:safe(themeStateKeyMapper.selectByTopicId(session.getTopicId())))
+        List<com.chengyinhub.business.domain.ThemeStateKey> definitions = JourneyInitialState.frozenDefinitions(sessionConfig(session));
+        if(definitions==null && (themeStateKeyMapper==null || session.getTopicId()==null))return labels;
+        for(com.chengyinhub.business.domain.ThemeStateKey key:safe(definitions==null?themeStateKeyMapper.selectByTopicId(session.getTopicId()):definitions))
             if(key!=null && key.getStateKey()!=null && key.getStateKey().startsWith("clue."))labels.put(key.getStateKey(),key.getLabel()==null||key.getLabel().isEmpty()?"线索":key.getLabel());
         return labels;
     }

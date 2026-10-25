@@ -436,6 +436,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class, propagation = org.springframework.transaction.annotation.Propagation.NEVER)
     public ClubEventCancellationResult cancelOccurrence(Long actorMemberId, String username,
                                                          ClubEventCancellationRequest request) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         requireCancellationOutsideTransaction();
         ClubEventCancellationRequest frozen = freezeCancellationRequest(request);
         PreparedOccurrence prepared = cancellationTransaction(Isolation.READ_COMMITTED, () -> {
@@ -615,6 +616,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
                                                                Long authorizedClubId, Long activityId,
                                                                String reason,
                                                                boolean authorizedTopicCancellation, RegistrationCancellationPayments observed) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         WrapperPreparation prepared = prepareWrapperCancellation(actorMemberId, authorizedTopicId,
                 authorizedClubId, activityId, reason, authorizedTopicCancellation);
         ClubEventSeries series = prepared.series();
@@ -715,6 +717,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY, rollbackFor = Exception.class)
     public ActivityCancelResult cancelAuthorizedTopicWithObservedPayments(Long actorMemberId, Long topicId,
             Long clubId, Long activityId, String reason, RegistrationCancellationPayments observed) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         requireCancellationTransaction();
         if (!positive(topicId) || !positive(clubId)) throw badRequest("主题取消范围不完整");
         return cancelActivityWithClubWrapUp(actorMemberId, topicId, clubId, activityId, reason, true, observed);

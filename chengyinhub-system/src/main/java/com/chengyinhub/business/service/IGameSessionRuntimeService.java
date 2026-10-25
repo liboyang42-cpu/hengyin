@@ -13,6 +13,8 @@ import java.util.Map;
 public interface IGameSessionRuntimeService {
     /** Persisted projection: null only when no shared session applies; a missing shared RUN rejects without initialization/refresh. */
     com.chengyinhub.business.domain.route.TopicRouteState querySharedRouteState(Long memberId, Long topicId, Long activityId);
+    /** Server-only original snapshot. No initialization, zero-HP refresh, effects or writes. */
+    default com.fasterxml.jackson.databind.JsonNode querySharedRouteSnapshot(Long memberId, Long topicId, Long activityId, Long nodeId) { return null; }
     default com.chengyinhub.business.domain.route.TopicRouteState sharedRouteState(Long memberId, Long topicId, Long activityId) { return null; }
     default com.fasterxml.jackson.databind.JsonNode sharedRouteSnapshot(Long memberId, Long topicId, Long activityId, Long nodeId) { return null; }
     default com.fasterxml.jackson.databind.JsonNode recordSharedZeroChallengeResult(Long memberId,Long topicId,Long activityId,Long nodeId,String instance,String submissionId,boolean passed,Long hits,boolean retry,Integer authorityEpoch) { throw new UnsupportedOperationException(); }

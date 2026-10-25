@@ -53,6 +53,7 @@ class ThemeRuntimeMySqlIT {
             ItSchema.applyMigrations(c,"sql/migration_m9_play_attempt_log.sql","sql/migration_20260820_new_city_preference_chain.sql","sql/migration_20260917_play_note.sql","sql/migration_20261023_advanced_command_fingerprint.sql");
             exec(c,"CREATE TABLE play_team_member (team_id BIGINT, member_id BIGINT, status INT) ENGINE=InnoDB");
             ItSchema.applyMigrations(c,"sql/migration_theme_runtime_20261004.sql","sql/migration_play_predict_20260906.sql","sql/migration_photo_check_intent_20261023.sql");
+            ItSchema.applyMigrations(c,"sql/migration_theme_state_key_20260916.sql","sql/migration_20261022_theme_state_key_attribute_def.sql");
             String medalMigration=new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("sql/migration_20260902_node_medal_claim.sql")),java.nio.charset.StandardCharsets.UTF_8);
             int start=medalMigration.indexOf("CREATE TABLE IF NOT EXISTS `node_medal_claim`");
             exec(c,"DROP TABLE IF EXISTS node_medal_claim");
@@ -60,7 +61,7 @@ class ThemeRuntimeMySqlIT {
         }
         Configuration cfg=new Configuration();cfg.setEnvironment(new Environment("theme",new SpringManagedTransactionFactory(),ds));
         cfg.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
-        for(String mapper:Arrays.asList("CmsTopicMapper","CmsTopicNodeMapper","CmsTopicChapterMapper","CmsMemberTemplateMapper","PlayerNodeProgressMapper","CmsRegistrationMapper","GameRuntimeSessionMapper","PlayAttemptLogMapper","TopicRouteSessionMapper","ThemeBroadcastMapper","NodeMedalClaimMapper","PlayNoteMapper","PlayPredictMapper","PhotoCheckIntentMapper")) {
+        for(String mapper:Arrays.asList("CmsTopicMapper","CmsTopicNodeMapper","CmsTopicChapterMapper","CmsMemberTemplateMapper","PlayerNodeProgressMapper","CmsRegistrationMapper","GameRuntimeSessionMapper","PlayAttemptLogMapper","TopicRouteSessionMapper","ThemeBroadcastMapper","NodeMedalClaimMapper","PlayNoteMapper","PlayPredictMapper","PhotoCheckIntentMapper","ThemeStateKeyMapper")) {
             String resource="mapper/business/"+mapper+".xml";
             try(InputStream in=ThemeRuntimeMySqlIT.class.getClassLoader().getResourceAsStream(resource)){new XMLMapperBuilder(in,cfg,resource,cfg.getSqlFragments()).parse();}
         }
@@ -69,6 +70,7 @@ class ThemeRuntimeMySqlIT {
         org.mockito.Mockito.when(arrival.hasArrived(org.mockito.ArgumentMatchers.anyLong(),org.mockito.ArgumentMatchers.anyLong(),org.mockito.ArgumentMatchers.anyLong())).thenReturn(true);
         target=new TopicRouteRuntimeServiceImpl(sql.getMapper(TopicRouteSessionMapper.class),sql.getMapper(CmsTopicMapper.class),sql.getMapper(CmsTopicNodeMapper.class),sql.getMapper(CmsMemberTemplateMapper.class),sql.getMapper(PlayerNodeProgressMapper.class),null,sql.getMapper(CmsRegistrationMapper.class),null,arrival,()->123L,()->10,Clock.systemUTC(),RouteReachabilityProvider.UNKNOWN);
         ReflectionTestUtils.setField(target,"cmsTopicChapterMapper",sql.getMapper(CmsTopicChapterMapper.class));
+        ReflectionTestUtils.setField(target,"themeStateKeyMapper",sql.getMapper(ThemeStateKeyMapper.class));
         ReflectionTestUtils.setField(target,"themeNodeMedals",sql.getMapper(NodeMedalClaimMapper.class));
         im=org.mockito.Mockito.mock(com.chengyinhub.business.service.IImService.class);
         ReflectionTestUtils.setField(target,"themeBroadcastService",new com.chengyinhub.business.service.support.ThemeBroadcastService(sql.getMapper(ThemeBroadcastMapper.class),im));
@@ -78,7 +80,7 @@ class ThemeRuntimeMySqlIT {
         org.mockito.Mockito.reset(im);
         ReflectionTestUtils.setField(target,"clock",Clock.systemUTC());
         try(Connection c=ds.getConnection()) {
-            for(String table:Arrays.asList("photo_check_intent","play_predict_bet","play_predict_result","play_attempt_log","game_runtime_session","node_medal_claim","theme_broadcast_delivery","topic_route_action","topic_route_session","player_node_progress","cms_registration","cms_topic_node","cms_member_template","cms_topic_chapter","cms_topic"))exec(c,"DELETE FROM "+table);
+            for(String table:Arrays.asList("theme_state_key","photo_check_intent","play_predict_bet","play_predict_result","play_attempt_log","game_runtime_session","node_medal_claim","theme_broadcast_delivery","topic_route_action","topic_route_session","player_node_progress","cms_registration","cms_topic_node","cms_member_template","cms_topic_chapter","cms_topic"))exec(c,"DELETE FROM "+table);
             String config="{\"schemaVersion\":1,\"capacity\":3,\"replayEnabled\":true,\"items\":[{\"id\":\"food\",\"kind\":\"ITEM\",\"name\":\"口粮\",\"image\":\"https://example.test/food.png\",\"stat\":\"HP\",\"delta\":2}],\"endings\":[{\"id\":\"end\",\"title\":\"结束\",\"fallback\":true,\"success\":false}]}";
             try(PreparedStatement st=c.prepareStatement("INSERT INTO cms_topic(id,member_id,name,del_flag,route_mode,published_config_version,journey_rules_json,theme_runtime_config_json,published_theme_runtime_config_json) VALUES(10,7,'测试',0,'LINEAR',1,?,?,?)")) {
                 st.setString(1,"{\"schemaVersion\":1,\"checkEnabled\":true,\"hp\":{\"enabled\":true,\"max\":10,\"init\":6},\"recovery\":{\"stageRestHpFloor\":0,\"stageRestLuckFloor\":0,\"stationEndIfHurt\":0}}");st.setString(2,config);st.setString(3,config);st.executeUpdate();

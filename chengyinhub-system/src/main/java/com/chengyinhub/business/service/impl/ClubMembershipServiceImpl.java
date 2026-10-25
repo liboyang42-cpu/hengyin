@@ -225,6 +225,7 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
     @Override
     @Transactional(propagation = Propagation.NEVER)
     public ClubMembershipRenewalVO renew(Long principalMemberId, ClubMembershipRenewRequest request) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         requirePaymentOutsideTransaction();
         requireRequest(request, request == null ? null : request.getClubId());
         requireMember(principalMemberId, request.getClubId());
@@ -247,6 +248,8 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
                     "俱乐部会费-" + invoice.getPlanNameSnapshot(), intent.wxOpenId);
             requirePaymentParams(payParams);
             payJson = JSON.writeValueAsString(payParams);
+        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (Exception uncertain) {
             result.setPayParams(Collections.<String, String>emptyMap());
             result.setPaymentState("PREPAY_UNKNOWN");
@@ -288,6 +291,7 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
         if (!blank(invoice.getPayParamsJson())) return result;
         // D-12：会费开关关闭时只拦新的微信预下单；上面的查单对账仍照常执行。
         featureGate.requireEnabled();
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         Map<String, String> payParams;
         String payJson;
         try {
@@ -296,6 +300,8 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
                     "俱乐部会费-" + invoice.getPlanNameSnapshot(), intent.wxOpenId);
             requirePaymentParams(payParams);
             payJson = JSON.writeValueAsString(payParams);
+        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (Exception uncertain) {
             result.setPayParams(Collections.<String, String>emptyMap());
             result.setPaymentState("PREPAY_UNKNOWN");
@@ -341,6 +347,8 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
         boolean closeAccepted;
         try {
             closeAccepted = wechatPayService.closePaymentAttempt(invoice.getOutTradeNo(), closingObservation.get("wx_out_trade_no"));
+        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (Exception closeUnknown) {
             throw new ServiceException("微信关单结果未确认，原账单继续保留", HttpStatus.CONFLICT);
         }
@@ -489,6 +497,7 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
 
     private boolean applyVerifiedPayment(String outTradeNo, boolean paid, Integer amountFen, String transactionId,
             WechatVerifiedPaymentFactService.Stored verified) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (!supportsOutTradeNo(outTradeNo) || !paid || amountFen == null || amountFen <= 0
                 || blank(transactionId) || transactionId.trim().length() > 64) return false;
         // 先做不加锁的不可变快照定位，只用来发现锁键；真正状态决策在统一锁序下重读。
@@ -1024,6 +1033,7 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
 
     private ClubMembershipInvoice freezeInvoice(ClubAccessContext access, ClubMembershipPlan plan,
                                                   String key, String fingerprint) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         ClubMembershipInvoice invoice = new ClubMembershipInvoice();
         invoice.setClubId(access.getClubId());
         invoice.setOwnerMemberIdSnapshot(access.getOwnerMemberId());

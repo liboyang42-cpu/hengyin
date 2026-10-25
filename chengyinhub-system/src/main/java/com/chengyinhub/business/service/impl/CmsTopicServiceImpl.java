@@ -553,6 +553,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     // 原「@Transactional 整批 + per-topic 吞异常」= 一个主题炸回滚整批、且失败主题部分写入随批提交、
     // 无 is_settlement=0 领取闸 ⇒ 并发/重入重复入账。照抄活动线 HF-02。
     public int executeTopicSettlement() {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         int settledCount = 0;
 
         // 1. 获取需要结算的主题列表
@@ -678,6 +679,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      * 结算单个主题
      */
     private boolean settleTopic(CmsTopic topic, SettlementRule rule) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         // 扫描结果只提供定位身份；在任何状态/合同/资金读取前取得共同 topic 锁并使用当前行。
         topic = lockSettlementTopic(topic == null ? null : topic.getId());
         if (Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) {
@@ -1343,6 +1345,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
     @Override
     public int payoutDueCoopSettlements() {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         Date now = new Date();
         List<CoopSettlement> due = coopSettlementMapper.selectDuePayouts(now);
         TransactionTemplate tx = new TransactionTemplate(transactionManager);
@@ -1384,6 +1387,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
     /** 单张结算独立事务内完成领取、余额、流水和终态；返回 null 表示本轮未发生正额打款。 */
     private CoopSettlement payoutOneDueCoopSettlement(Long settlementId, Long observedTopicId, Date now) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         CmsTopic topic = lockSettlementTopic(observedTopicId);
         // 同topic先按头ID锁定并读取全部当前净额。未决定承担方的负头不能靠先付别的头耗尽资金。
         List<CoopSettlement> topicHeads = coopSettlementOriginalMapper.selectTopicHeadsForUpdate(topic.getId());
@@ -2550,13 +2554,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
         contentGraphAuthoringService.persistTemplateInteractionRules(topicId);
         if (!saveDraft && simpleMode && !"BRANCH_GRAPH".equalsIgnoreCase(dto.getRouteMode())) {
-            CmsTopic ready = cmsTopicMapper.selectCmsTopicById(topicId);
-            if (requiresFullRuntimeSnapshot(ready) && topicPublicationService.persistRouteSnapshot(topicId,normalizedBranchRouteForPublish(ready),new Date()) != 1) throw new IllegalStateException("主题模板规则发布失败");
+            if (topicPublicationService.persistCreatedRouteSnapshot(topicId) != 1) throw new IllegalStateException("主题模板规则发布失败");
         }
         if (!saveDraft && simpleMode && "BRANCH_GRAPH".equalsIgnoreCase(dto.getRouteMode())) {
-            CmsTopic publishedTopic = cmsTopicMapper.selectCmsTopicById(topicId);
-            String snapshot = normalizedBranchRouteForPublish(publishedTopic);
-            if (topicPublicationService.persistRouteSnapshot(topicId, snapshot, new Date()) != 1) {
+            if (topicPublicationService.persistCreatedRouteSnapshot(topicId) != 1) {
                 throw new IllegalStateException("路线发布快照保存失败");
             }
         }

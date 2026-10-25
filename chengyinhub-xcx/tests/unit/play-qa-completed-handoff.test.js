@@ -21,7 +21,7 @@ function qa(passed, finished, mode = 'type') {
     selectComponent: () => null,
     triggerEvent(name, detail) { events.push({ name, detail }); },
   });
-  qaDef.observers['show, options, mode, multi, passed, finished, judge, lastOptionId, lastOptionIds, feedbackText, feedbackImages'].call(instance,
+  qaDef.observers['show, options, mode, multi, passed, finished, judge, lastOptionId, lastOptionIds, feedbackText, feedbackImages, sessionId, nodeId'].call(instance,
     true, [], mode, false, passed, finished);
   clearTimeout(instance._introTimer);
   return { instance, events };

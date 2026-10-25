@@ -8,6 +8,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="id"    column="id"    />
         <result property="memberId"    column="member_id"    />
         <result property="memberTemplateId"    column="member_template_id"    />
+        <result property="interactionType"    column="interaction_type"    />
         <result property="categoryId"    column="category_id"    />
         <result property="title"    column="title"    />
         <result property="description"    column="description"    />
@@ -78,7 +79,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
 
     <sql id="selectCmsTemplateLibraryVo">
-        select id, member_id,member_template_id, category_id, title, description, img_url,players,usage_location,required_materials, duration, difficulty, is_sync, rule_instructions, merchant_guide, reward_rules_json, validation_method, sensor_type, sensor_config, question_name, question_answer, feedback_text, coupon_id, story_text, story_img, story_json, hint1, hint2, answer_reveal, photo_require_desc, photo_review, audio_url, audio_duration, question_a, question_b, question_c, question_d, correct_answer, question_img, question_audio, question_option_media_json, preference_json, advanced_config_json, activity_categoryids, status, publish_status, reason, del_flag,rating,use_num,pack_type, create_by, create_time, update_by, update_time from cms_template_library
+        select id, member_id,member_template_id, category_id, title, description, img_url,players,usage_location,required_materials, duration, difficulty, is_sync, rule_instructions, merchant_guide, reward_rules_json, validation_method, sensor_type, sensor_config, question_name, question_answer, feedback_text, coupon_id, story_text, story_img, story_json, hint1, hint2, answer_reveal, photo_require_desc, photo_review, audio_url, audio_duration, question_a, question_b, question_c, question_d, correct_answer, question_img, question_audio, question_option_media_json, preference_json, advanced_config_json, activity_categoryids, status, publish_status, reason, del_flag,rating,use_num,pack_type, create_by, create_time, update_by, update_time,
+        (select original.interaction_type from cms_member_template original
+         where original.id = cms_template_library.member_template_id
+           and original.member_id = cms_template_library.member_id) as interaction_type
+        from cms_template_library
     </sql>
 
     <select id="selectByMemberTemplateForUpdate" resultMap="CmsTemplateLibraryResult">
@@ -149,7 +154,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         mt.question_b, mt.question_c, mt.question_d, mt.correct_answer, mt.question_img, mt.question_audio, mt.question_option_media_json, mt.preference_json, mt.advanced_config_json, mt.activity_categoryids, mt.status, mt.publish_status, mt.reason, mt.del_flag,
         mt.rating,mt.use_num,mt.create_by, mt.create_time, mt.update_by, mt.update_time,
         c.category_name,
-        c.icon
+        c.icon,
+        (select original.interaction_type from cms_member_template original
+         where original.id = mt.member_template_id
+           and original.member_id = mt.member_id) as interaction_type
         FROM
         cms_template_library mt
         LEFT JOIN

@@ -50,6 +50,8 @@ public class PuzzlePlayServiceImpl implements IPuzzlePlayService
     private final ICmsPointsSettingService settingsService;
     private final IUmsMemberService memberService;
     private final IUmsMemberPointsDetailService detailService;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.service.ITopicRouteRuntimeService topicRouteRuntimeService;
 
     public PuzzlePlayServiceImpl(ICmsMemberTemplateService templateService, PlayAttemptLogMapper attemptLogMapper,
             PlayerNodeProgressMapper progressMapper, UmsMemberMapper memberMapper,
@@ -78,7 +80,9 @@ public class PuzzlePlayServiceImpl implements IPuzzlePlayService
     @Override
     public PuzzleHintResult requestHint(Long memberId, Long topicId, CmsTopicNode node, Long activityId, int level)
     {
-        CmsMemberTemplate template = selectPuzzleTemplate(node);
+        CmsMemberTemplate template = originalHintTemplate(memberId, topicId, node, activityId);
+        if (template != null && !Integer.valueOf(1).equals(template.getValidationMethod())
+                && !Integer.valueOf(3).equals(template.getValidationMethod())) template = null;
         if (template == null) throw new IllegalArgumentException("该节点未配置文字或选项谜题");
         List<Integer> configuredLevels = new ArrayList<>();
         List<String> configuredHints = new ArrayList<>();
@@ -125,6 +129,16 @@ public class PuzzlePlayServiceImpl implements IPuzzlePlayService
         List<String> shownHints = revealedHints(configuredLevels, configuredHints, currentLevel);
         return new PuzzleHintResult(currentLevel, shownHints, configuredHints.size(),
                 PuzzleScorePolicy.solvedScore(currentLevel));
+    }
+
+    /** Hint/reveal bodies remain server-only and keep the original unlock/attempt ledger. */
+    private CmsMemberTemplate originalHintTemplate(Long memberId, Long topicId, CmsTopicNode node, Long activityId) {
+        if (node == null) return null;
+        com.fasterxml.jackson.databind.JsonNode answer = topicRouteRuntimeService == null ? null
+                : topicRouteRuntimeService.nodeAnswers(memberId, topicId, activityId, node.getId());
+        if (com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContent(answer))
+            return com.chengyinhub.business.service.support.NodeJourneySnapshot.contentTemplate(answer);
+        return node.getTemplateId() == null ? null : templateService.selectCmsMemberTemplateById(node.getTemplateId());
     }
 
     @Override
@@ -247,7 +261,14 @@ public class PuzzlePlayServiceImpl implements IPuzzlePlayService
         if (memberId == null || memberId <= 0) return hintFailure("请先登录");
         if (nodeId == null || nodeId <= 0) return hintFailure("缺少节点ID");
         CmsTopicNode node = nodeService.selectCmsTopicNodeById(nodeId);
-        if (node == null || node.getTemplateId() == null) return hintFailure("该节点无提示");
+        if (node == null) return hintFailure("该节点无提示");
+        if (node.getTemplateId() == null) {
+            Long originalActivity;
+            try { originalActivity = StringUtils.isBlank(activityId) ? 0L : Long.valueOf(activityId); }
+            catch (NumberFormatException invalid) { return hintFailure("该节点无提示"); }
+            if (originalHintTemplate(memberId, node.getTopicId(), node, originalActivity) == null)
+                return hintFailure("该节点无提示");
+        }
         // ★ 与 /puzzle/hint 同口径的准入闸(2026-09-16 补):原来只验登录,任何登录用户拿到
         //   nodeId 就能读走任意节点(含别人场次/付费内容)的提示正文,规则没开时还免费直出。
         //   老客户端只发 nodeId:用节点自己的 topicId 兜底当自玩上下文(仍要持该主题通行证),
@@ -262,7 +283,7 @@ public class PuzzlePlayServiceImpl implements IPuzzlePlayService
         if (leadErr != null) return hintFailure(leadErr);
         String routeErr = accessService.routeAccessError(memberId, ctx.activityId(), ctx.topicId(), nodeScope(node), null);
         if (routeErr != null) return hintFailure(routeErr);
-        CmsMemberTemplate tpl = templateService.selectCmsMemberTemplateById(node.getTemplateId());
+        CmsMemberTemplate tpl = originalHintTemplate(memberId, ctx.topicId(), node, ctx.activityId());
         if (tpl == null || (StringUtils.isEmpty(tpl.getHint1()) && StringUtils.isEmpty(tpl.getHint2()))) {
             return hintFailure("该节点无提示");
         }

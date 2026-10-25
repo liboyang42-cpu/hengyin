@@ -1,0 +1,106 @@
+name: Isolated restore business reconciliation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  restore-source-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Check the same source and pure controls once for the matrix
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -B ci/test_restore_business_reconciliation_probe.py
+          python3 -B ci/test_restore_business_domain_facts.py
+          python3 -B ci/test_restore_business_reconciliation_host.py
+          python3 -B ci/test_restore_business_reconciliation_build.py
+      - name: Compile one exact candidate and copy only its existing test dependencies
+        run: |
+          mvn -B -pl chengyinhub-admin -am -DskipTests install
+          mvn -B -pl chengyinhub-admin dependency:copy-dependencies -DincludeScope=test "-DoutputDirectory=$GITHUB_WORKSPACE/chengyinhub-admin/target/restore-lib" -Dmdep.useRepositoryLayout=true
+          python3 -I ci/restore_business_reconciliation_build.py pack
+      - uses: actions/upload-artifact@v4
+        with:
+          name: restore-business-build-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/restore-business-build/
+          if-no-files-found: error
+          retention-days: 1
+          include-hidden-files: true
+  isolated-restore-business-reconciliation:
+    needs: restore-source-build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        cohort:
+          - payment-gap
+          - withdrawal-complete
+          - withdrawal-gap
+          - refund-complete
+          - refund-gap
+          - voice-complete
+          - voice-gap
+    env:
+      CHENGYIN_CI_RESTORE_BUSINESS: 'true'
+      CHENGYIN_RESTORE_BUSINESS_COHORT: ${{ matrix.cohort }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/download-artifact@v4
+        with:
+          name: restore-business-build-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/restore-business-build/
+      - name: Verify and reuse the exact build without compiling again
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -I ci/restore_business_reconciliation_build.py unpack
+      - name: Run the fixed two UUID restore drill and exact cleanup
+        id: restore
+        run: python3 -I ci/restore_business_reconciliation_host.py
+      - name: Preserve only scoped public JSON receipts
+        if: ${{ always() && steps.restore.outcome != 'skipped' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: isolated-restore-business-reconciliation-${{ matrix.cohort }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            ${{ runner.temp }}/isolated-restore-business-reconciliation/host.json
+            ${{ runner.temp }}/isolated-restore-business-reconciliation/reconciliation.json
+            ${{ runner.temp }}/isolated-restore-business-reconciliation/finalized.json
+  restore-business-summary:
+    if: ${{ always() }}
+    needs: [restore-source-build, isolated-restore-business-reconciliation]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: isolated-restore-business-reconciliation-*-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/restore-business-receipts/
+      - name: Independently bind all seven receipts and the original complete-cohort verifier
+        if: ${{ always() }}
+        run: python3 -I ci/restore_business_reconciliation_host.py --summarize
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: restore-business-summary-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 7
+          path: ${{ runner.temp }}/restore-business-summary/summary.json

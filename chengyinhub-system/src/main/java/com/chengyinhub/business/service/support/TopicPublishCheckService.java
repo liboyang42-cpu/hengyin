@@ -28,6 +28,7 @@ import java.util.Set;
  */
 @Service
 public class TopicPublishCheckService {
+    private static final com.fasterxml.jackson.databind.ObjectMapper PREVIEW_JSON = new com.fasterxml.jackson.databind.ObjectMapper();
 
     public static final String CODE_TOPIC_BUNDLE_INVALID = "TOPIC_BUNDLE_INVALID";
     public static final String CODE_STATE_KEY_UNREGISTERED = "STATE_KEY_UNREGISTERED";
@@ -102,9 +103,11 @@ public class TopicPublishCheckService {
         }
 
         List<CmsTopicNode> nodes = enabledNodes(topic.getId());
-        boolean anyBlockNeedsJourneyState = collectBlockConfigIssues(nodes, unparsableNodes, issues);
+        Set<String> derivedTemplateClues = new LinkedHashSet<String>();
+        boolean anyBlockNeedsJourneyState = collectBlockConfigIssues(nodes, unparsableNodes, issues, derivedTemplateClues);
 
         Map<String, String> registered = registeredKeys(topic.getId());
+        for (String clue : derivedTemplateClues) registered.putIfAbsent(clue, ThemeStateKey.TYPE_FLAG);
         Set<String> thoughtDoneTags = new LinkedHashSet<String>();
         if (refs.getParseErrors().stream().noneMatch(error ->
                 TopicStateKeyRefService.KIND_JOURNEY_RULES.equals(error.getKind()))) {
@@ -132,7 +135,7 @@ public class TopicPublishCheckService {
      * JSON 都解析不了的节点已由收集阶段报出(同一句「不是合法 JSON」),这里不重复报。
      */
     private boolean collectBlockConfigIssues(List<CmsTopicNode> nodes, Set<Long> unparsableNodes,
-                                             List<PublishCheckIssue> issues) {
+                                             List<PublishCheckIssue> issues, Set<String> derivedTemplateClues) {
         boolean anyBlockNeedsJourneyState = false;
         Set<Long> nodeIdSet = new LinkedHashSet<Long>();
         for (CmsTopicNode node : nodes) {
@@ -152,10 +155,12 @@ public class TopicPublishCheckService {
             }
             try {
                 advancedGameConfigValidator.validateAndNormalize(template.getAdvancedConfigJson());
+                derivedTemplateClues.addAll(StateKeyRefs.declaredTemplateClues(
+                        PREVIEW_JSON.readTree(template.getAdvancedConfigJson())).keySet());
                 // R22-SEC S16:NODE_COMPLETED 引用的 nodeId 归属与发布闸同一口径,试检查也提前报出。
                 advancedGameConfigValidator.assertCompletedNodeIdsOwned(
                         template.getAdvancedConfigJson(), nodeIdSet);
-            } catch (RuntimeException e) {
+            } catch (java.io.IOException | RuntimeException e) {
                 issues.add(PublishCheckIssue.error(CODE_BLOCK_CONFIG_INVALID, node.getId(),
                         "节点「" + TopicStateKeyRefService.nodeLabel(node) + "」的高级玩法配置不合法:" + e.getMessage()));
             }

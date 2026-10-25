@@ -28,7 +28,18 @@ cleanup() {
   rm -f "$PRIVATE/mysql-version"
   rm -f "$PRIVATE/startup.log"
   rmdir "$PRIVATE" || unknown=1
-  if [ "$unknown" -ne 0 ]; then result=1; fi
+  if [ "$unknown" -ne 0 ] && [ "$result" -eq 0 ]; then result=1; fi
+  if [ "${CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY:-false}" = true ]; then
+    if ! python3 -I "$ROOT/ci/gameplay_process_recovery_probe.py" finalize "$RUN_NAME" "$SCHEMA" "$OUT" "$result"; then
+      unknown=1
+      if [ "$result" -eq 0 ]; then result=1; fi
+    fi
+  elif [ "${CHENGYIN_CI_CAPACITY_MIXED:-false}" = true ]; then
+    if ! python3 -B "$ROOT/ci/capacity_mixed_probe.py" finalize "$RUN_NAME" "$SCHEMA" "$OUT" "$PRIVATE/credentials.json" "$result"; then
+      unknown=1
+      if [ "$result" -eq 0 ]; then result=1; fi
+    fi
+  fi
   printf 'Fixture terminal exit=%s cleanupUnknown=%s evidence=%s\n' "$result" "$unknown" "$OUT"
   exit "$result"
 }
@@ -55,6 +66,12 @@ STRACE=$(command -v strace)
 while read -r library; do cp -L "$library" "$OUT/trace-libs/"; done < <(ldd "$STRACE" | awk '/=> \// && $1 != "libc.so.6" {print $3}')
 MYSQL_IP=$(docker inspect "$MYSQL_CID" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
 REDIS_IP=$(docker inspect "$REDIS_CID" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+if [ "${CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY:-false}" = true ]; then
+  # The test-classpath child replaces only this fixture's application launch.
+  python3 -I "$ROOT/ci/gameplay_process_recovery_probe.py" --check-host-only
+  timeout --signal=TERM --kill-after=20s 920s python3 -I "$ROOT/ci/gameplay_process_recovery_probe.py" run "$RUN_NAME" "$SCHEMA" "$OUT" "$PRIVATE/credentials.json"
+  exit 0
+fi
 docker run -d --name "$RUN_NAME-app" --label "chengyin.auth-recovery=$RUN_NAME" --network "$RUN_NAME" --dns 127.0.0.1 \
   --memory=1g --memory-swap=1g --cpus=1 --read-only --tmpfs /tmp:rw,size=256m --cap-drop ALL --cap-add SYS_PTRACE \
   --user "$(id -u):$(id -g)" -e LD_LIBRARY_PATH=/trace-libs \
@@ -76,8 +93,12 @@ for attempt in $(seq 1 150); do
 done
 test "$ready" = true
 rm "$PRIVATE/startup.log"
-python3 -B "$ROOT/ci/authenticated_redis_recovery_probe.py" exercise "$RUN_NAME" "$SCHEMA" "$OUT" "$PRIVATE/credentials.json" "$PORT"
+if [ "${CHENGYIN_CI_CAPACITY_MIXED:-false}" = true ]; then
+  python3 -B "$ROOT/ci/capacity_mixed_probe.py" observe "$RUN_NAME" "$SCHEMA" "$OUT" "$PRIVATE/credentials.json" "$PORT"
+else
+  python3 -B "$ROOT/ci/authenticated_redis_recovery_probe.py" exercise "$RUN_NAME" "$SCHEMA" "$OUT" "$PRIVATE/credentials.json" "$PORT"
+fi
 python3 -I "$ROOT/ci/upgrade_startup_network.py" "$OUT/network.trace" "$MYSQL_IP" "$REDIS_IP"
 docker inspect "$APP_CID" "$MYSQL_CID" "$REDIS_CID" \
   --format '{{.Id}} {{.Name}} networks={{range $key, $value := .NetworkSettings.Networks}}{{$key}} {{end}}' > "$OUT/isolation.log"
-echo 'PASS authenticated refund-lease Redis fault recovery; no cash/payment/human UI acceptance'
+echo 'Isolated workload assertions finished; final acceptance still requires EXIT cleanup evidence'

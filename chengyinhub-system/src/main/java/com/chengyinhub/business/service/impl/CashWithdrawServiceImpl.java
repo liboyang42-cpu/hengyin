@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.config.RestoreDispatchGuard;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Date;
@@ -82,6 +84,7 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
 
     @Override
     public MemberCashWithdraw withdraw(Long memberId, BigDecimal amountYuan) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         requireOutsideTransaction();
         if (memberId == null) throw new IllegalStateException("请先登录");
         if (amountYuan == null) throw new IllegalStateException("请输入提现金额");
@@ -173,6 +176,8 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
                     balanceAdmissionService.debitCash(id, memberId, amount, transferMchid, transferAppid, "城瘾分润提现");
             deducted = admission.deducted;
             currentRequestEligible = admission.currentRequestEligible;
+        } catch (RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (Exception e) {
             // DB/mapper 未知异常 → 扣款状态不明(DB 可能已扣但响应丢失),绝不自动退款,置待人工+告警
             claimFailedRefund(id, DateUtils.getNowDate(),
@@ -199,6 +204,8 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         Map<String, String> res;
         try {
             res = wechatPayService.transferToBalance(submission);
+        } catch (RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (Exception uncertain) {
             // Intent is already committed. Exception type never proves the channel did not act.
             res = Map.of("ok", "false", "ambiguous", "true", "errorCode", "SUBMIT_EXCEPTION");
@@ -249,6 +256,8 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         }
         try {
             refundFailedClaim(w, failedAt);
+        } catch (RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (Exception e) {
             // 回补事务结果可能未知(提交成功但回包丢失):绝不无条件改回 3,否则人工会再补一次。
             // 只在仍为待人工(3)时补备注;已是 2 则保持终态。
@@ -272,6 +281,8 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         for (MemberCashWithdraw w : pending) {
             try {
                 syncOne(w);
+            } catch (RestoreDispatchGuard.Blocked paused) {
+                throw paused;
             } catch (Exception e) {
                 logger.error("提现状态同步异常 id={}: {}", w.getId(), e.getMessage(), e);
             }
@@ -289,6 +300,7 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         Date now = DateUtils.getNowDate();
         Map<String, String> q;
         try { q = wechatPayService.queryTransferResult(query.intent()); }
+        catch (RestoreDispatchGuard.Blocked paused) { throw paused; }
         catch (Exception uncertain) {
             q = Map.of("result", "UNKNOWN", "errorCode", "QUERY_EXCEPTION");
             logger.warn("提现查单结果未知 id={} intentId={} type={}", id,
@@ -314,6 +326,8 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         // CLOSED alone has not been certified as proof that this detail can never succeed.
         if ("FAIL".equals(result) && "FAIL".equals(q.get("detailStatus"))) {
             if (!recordChannelFact(id, CashWithdrawFundFact.FINAL_FAIL, q, query.intent().submissionIntentId())) return;
+            // Keep the original channel fact, but recovery admission is not permission to credit money.
+            if (RestoreDispatchGuard.isRestoreMode()) return;
             // ★先 CAS 抢占 status 0->3(暂置待人工),赢家独占退款;输者直接返回,绝不重复退款
             if (!claimFailedRefund(id, now, "微信转账失败",
                     emptyToNull(q.get("failReasonCode")), emptyToNull(q.get("detailId")))) {
@@ -324,6 +338,8 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
                 if (refundFailedClaim(w, now)) {
                     logger.warn("提现失败已退款 id={} member={} amount={}", id, w.getMemberId(), w.getAmount());
                 }
+            } catch (RestoreDispatchGuard.Blocked paused) {
+                throw paused;
             } catch (Exception e) {
                 // 退款失败 → 保持待人工 + 告警;备注只写到仍为 3 的行,不误导已回补(2)的单
                 noteManualIfStillPending(id, "渠道失败且自动退款失败,待人工:" + safe(e.getMessage()));
@@ -451,6 +467,7 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
 
     /** 状态领取与余额回补同事务，失败回滚后才可转人工。 */
     private boolean refundFailedClaim(MemberCashWithdraw withdrawal, Date now) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         return Boolean.TRUE.equals(new org.springframework.transaction.support.TransactionTemplate(transactionManager)
                 .execute(status -> {
                     MemberCashWithdraw original = mapper.selectByIdForUpdate(withdrawal.getId());
@@ -549,6 +566,7 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
     }
 
     private CashWithdrawTransferIntent recordSubmissionIntent(Long id, CashWithdrawTransferIntent request) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         return new org.springframework.transaction.support.TransactionTemplate(transactionManager)
                 .execute(status -> {
                     MemberCashWithdraw w = mapper.selectByIdForUpdate(id);
@@ -804,6 +822,16 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
             }
             if ("FAIL".equals(result)) {
                 requireSnapshotRefund(original, intent, facts);
+                if (RestoreDispatchGuard.isRestoreMode()) {
+                    // Retain the original provider observation without inventing ledger DEBIT facts
+                    // for this master-only V1 source or claiming a balance refund.
+                    MemberCashWithdraw observation = new MemberCashWithdraw();
+                    observation.setId(original.getId()); observation.setLastQueryTime(now);
+                    observation.setWechatBatchStatus(facts.get("batchStatus"));
+                    observation.setWechatDetailId(facts.get("detailId"));
+                    mapper.updateReceiptIfProcessing(observation);
+                    return null;
+                }
                 return claimFailedRefund(original.getId(), now, "微信转账失败", facts.get("failReasonCode"), facts.get("detailId"));
             }
             MemberCashWithdraw observation = new MemberCashWithdraw();
@@ -830,6 +858,8 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
                     throw new IllegalStateException("提现余额回补失败");
                 return null;
             });
+        } catch (RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (RuntimeException failure) {
             noteManualIfStillPending(captured.withdrawal().getId(), "原渠道失败且自动回补未完成，保留人工核查");
             alarmService.alarm("提现待人工", "原快照自动回补失败 id=" + captured.withdrawal().getId());
@@ -922,6 +952,7 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
 
     @Override
     public boolean manualRefund(Long id, String operator, String note, Integer expectedStatus) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         requireOutsideTransaction();
         MakerCheckerGuard.requireActor(operator, "operator");
         // This unlocked read only chooses the path. The mutation rechecks its source under the original lock.
@@ -960,6 +991,7 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         if (prepared.intent() != null && prepared.intent().submitted() && !prepared.intent().locallyRejected()) {
             Map<String, String> facts;
             try { facts = wechatPayService.queryTransferResult(prepared.intent()); }
+            catch (RestoreDispatchGuard.Blocked paused) { throw paused; }
             catch (RuntimeException unknown) { facts = Map.of("result", "UNKNOWN"); }
             observed = facts;
             if (observed != null && "SUCCESS".equals(observed.get("result"))) {
@@ -973,6 +1005,7 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
 
     private boolean manualRefundLocked(Long id, String operator, String note, Integer expectedStatus,
             ChannelQuery prepared, Map<String, String> observed) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         MakerCheckerGuard.requireActor(operator, "operator");
         MemberCashWithdraw w = mapper.selectByIdForUpdate(id);
         if (w == null) {

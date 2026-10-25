@@ -53,6 +53,7 @@ Development/test backends, backend builds and Java tests, MySQL and Redis stay o
 ## 主题与玩法复用（2026-10-25 用户批准）
 
 - 范围是全部现有游戏，答题只是样例。完整目的、各 owner 工作包和收口闸见 `docs/delivery/architecture-day/COORDINATOR/全游戏资源库与主题复用完整施工方案-20261025.md`；现在只写齐代码、调用者和测试源码，全部齐后由 root 统一测试，不逐补丁跑控制或 CI。
+- 后续工单先查 `docs/delivery/architecture-day/COORDINATOR/全游戏复用索引-20261025.md` 及其 JSON 的原 owner／入口，再核当前生产源码。索引由原机制表与客户端声明合成，不是第二注册表；只读／退场／无完成桥条目不能因为出现在索引里就放开。
 
 - 新主题优先作为现有引擎的内容和配置。先读 `docs/delivery/architecture-day/COORDINATOR/主题游戏模块与模板复用施工-20261025.md`，并查真实能力、模板绑定、渲染、提交和服务端判定调用者；不得仅凭名称搜索就认定没有现成实现。
 - 工单必须写出准备复用的能力 key、实现路径、可变配置和测试。已有选项答题等机制能满足时，新增题目／主题配置并调用原实现；不得复制判题引擎或增加主题专属答题分支。冻结配置的必要数据副本不算重复实现。

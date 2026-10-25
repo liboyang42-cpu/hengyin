@@ -47,6 +47,8 @@ public class TopicPublicationService {
     private com.chengyinhub.business.service.support.AppMediaPublicationGuard mediaPublicationGuard;
     @Autowired private TopicPublicationContentGuard publicationContentGuard;
     @Autowired private TopicSelfHostActivityService selfHostActivityService;
+    @Autowired private com.chengyinhub.business.service.ITopicRouteRuntimeService topicRouteRuntimeService;
+    @Autowired private com.chengyinhub.business.service.support.ThemeStateKeyService themeStateKeyService;
     private static <T> List<T> nullToEmpty(List<T> rows) { return rows == null ? Collections.<T>emptyList() : rows; }
 
     public boolean canResubmitSupplyReview(Long id, Long ownerId) {
@@ -68,7 +70,7 @@ public class TopicPublicationService {
             publicationContentGuard.assertOrdinarySupplyRestored(topic);
             publicationContentGuard.assertPublishReady(topic);
             com.chengyinhub.business.service.support.TopicBundleReviewService.Submission submission =
-                    topicBundleReviewService.freezeForSubmission(id, topic.getMemberId());
+                    prepareTopicBundle(id, topic.getMemberId()).submission;
             Long taskId = auditTaskService.submitOrRefreshTopicBundle(id, topic.getMemberId(), submission.getSnapshotJson());
             if (Integer.valueOf(TopicLifecycleState.PENDING_REVIEW.getCode()).equals(topic.getLifecycle())) {
                 AuditTask oldProject = supplyReviewService.cancelledReview(id, AuditTask.BIZ_TOPIC_PROJECT_REVIEW);
@@ -93,16 +95,17 @@ public class TopicPublicationService {
         publicationContentGuard.assertBranchGraphOnlyForOrienteering(topic.getRouteMode(), topic.getProductType());
         boolean simple = isSimplePublishMode(topic.getPublishMode());
         // 两种发布方式都立即可玩，必须在公开前完成引用校验。
-        publicationContentGuard.assertStateKeysRegistered(topic);
+        List<ThemeStateKey> declarations = prepareDeclarations(topic);
+        publicationContentGuard.assertStateKeysRegistered(topic, declarations);
         publicationContentGuard.assertThoughtRefsResolvable(topic);
         // R8-STORY:剧情配置的章节 / NPC 引用在可见前同样要能对上主题现码
         publicationContentGuard.assertJourneyStoryReferences(topic);
-        publicationContentGuard.assertThemeRuntimeReferences(topic);
+        publicationContentGuard.assertThemeRuntimeReferences(topic, declarations);
         // R11-A:节点叙事段(enter / outcome)的 npcId 同一道归属闸
         publicationContentGuard.assertBlockNarrativeNpcReferences(topic);
         // R14:块配置条件里 sys.* 引用的 nodeId 同一道归属闸
         publicationContentGuard.assertBlockSysVarReferences(topic);
-        String publishedRouteSnapshot = simple ? publicationContentGuard.normalizedBranchRouteForPublish(topic) : null;
+        String publishedRouteSnapshot = simple ? publicationContentGuard.normalizedBranchRouteForPublish(topic, declarations) : null;
         if (!StringUtils.isEmpty(topic.getCircleThemeCode())) {
             CmsTopicChapter circleQuery = new CmsTopicChapter();
             circleQuery.setTopicId(id);
@@ -179,9 +182,34 @@ public class TopicPublicationService {
         auditTaskService.submit(AuditTask.BIZ_TOPIC, topic.getId(), topic.getMemberId(), "post_review_flag", snap);
     }
 
+    private static final class PreparedBundle {
+        final com.chengyinhub.business.service.support.TopicBundleReviewService.Submission submission;
+        final List<ThemeStateKey> declarations;
+        PreparedBundle(com.chengyinhub.business.service.support.TopicBundleReviewService.Submission submission,
+                List<ThemeStateKey> declarations) { this.submission = submission; this.declarations = declarations; }
+    }
+
+    /** Both original derivations finish before the one final author-declaration copy. */
+    private List<ThemeStateKey> prepareDeclarations(CmsTopic current) {
+        topicRouteRuntimeService.deriveTemplateCluesForPublication(current);
+        publicationContentGuard.deriveOptionTagsForPublication(current);
+        return com.chengyinhub.business.service.support.ThemeStateKeyDeclarationSnapshot.copy(current.getId(),
+                themeStateKeyService.listCurrentDeclarations(current.getId()));
+    }
+
+    private PreparedBundle prepareTopicBundle(Long topicId, Long memberId) {
+        CmsTopic current = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
+        if (current == null || memberId == null || !memberId.equals(current.getMemberId()))
+            throw new IllegalStateException("无权提交该主题审核");
+        List<ThemeStateKey> declarations = prepareDeclarations(current);
+        publicationContentGuard.assertStateKeysRegistered(current, declarations);
+        publicationContentGuard.assertThemeRuntimeReferences(current, declarations);
+        return new PreparedBundle(topicBundleReviewService.freezeForSubmission(topicId, memberId, declarations), declarations);
+    }
+
     public TopicBundleSubmitResultVO submitTopicBundle(Long topicId, Long memberId) {
-        com.chengyinhub.business.service.support.TopicBundleReviewService.Submission submission =
-                topicBundleReviewService.freezeForSubmission(topicId, memberId);
+        PreparedBundle prepared = prepareTopicBundle(topicId, memberId);
+        com.chengyinhub.business.service.support.TopicBundleReviewService.Submission submission = prepared.submission;
         publicationContentGuard.assertTopicSizeWithinLimits(topicId);
         Long taskId = auditTaskService.submitOrRefreshTopicBundle(topicId, memberId, submission.getSnapshotJson());
         AuditTask task = auditTaskService.selectAuditTaskById(taskId);
@@ -189,7 +217,8 @@ public class TopicPublicationService {
                 && !AuditTask.STATUS_ESCALATED.equals(task.getStatus()))) {
             throw new IllegalStateException("审核任务状态读取失败");
         }
-        boolean published = publishBeforeReview(topicId, memberId);
+        boolean published = publishBeforeReview(topicId, memberId, prepared.declarations);
+        topicBundleReviewService.assertDeclarationsUnchanged(topicId, submission.getSnapshotJson());
         String reviewState = AuditTask.STATUS_ESCALATED.equals(task.getStatus()) ? "ESCALATED" : "PENDING";
         TopicBundleSubmitResultVO result = new TopicBundleSubmitResultVO(
                 topicId, taskId, reviewState, submission.getBundledTemplateIds());
@@ -245,19 +274,23 @@ public class TopicPublicationService {
     }
 
     public boolean publishBeforeReview(Long topicId, Long memberId) {
+        return publishBeforeReview(topicId, memberId, null);
+    }
+
+    private boolean publishBeforeReview(Long topicId, Long memberId, List<ThemeStateKey> declarations) {
         mediaPublicationGuard.requireTopicPublication(topicId);
         // Re-publishing an existing topic does not pass through publishDraftInternal.
         publicationContentGuard.assertTopicSizeWithinLimits(topicId);
         CmsTopic current = cmsTopicMapper.selectCmsTopicById(topicId);
         if (com.chengyinhub.business.util.TopicContentSafetyHold.isHeld(current)) {
             // 已发布过的主题照常刷新路线快照,复核通过上架时就是最新内容;未发布的由过审时统一发布。
-            if (Integer.valueOf(1).equals(current.getStatus())) publishValidatedRouteSnapshot(current);
+            if (Integer.valueOf(1).equals(current.getStatus())) publishValidatedRouteSnapshot(current, declarations);
             requestContentSafetyRelistReview(topicId, memberId);
             return false;
         }
         String quotaError = quotaService.lockAndCheckThemeOnline(memberId, topicId);
         if (quotaError != null) throw new ServiceException(quotaError);
-        publishValidatedRouteSnapshot(cmsTopicMapper.selectCmsTopicById(topicId));
+        publishValidatedRouteSnapshot(cmsTopicMapper.selectCmsTopicById(topicId), declarations);
         CmsTopic published = new CmsTopic();
         published.setId(topicId);
         published.setStatus(1);
@@ -319,30 +352,52 @@ public class TopicPublicationService {
 
 
     public void publishApprovedRouteSnapshot(Long topicId) {
-        CmsTopic topic = cmsTopicMapper.selectCmsTopicById(topicId);
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
         if (topic == null || !Integer.valueOf(1).equals(topic.getStatus())) {
             throw new IllegalStateException("主题尚未成功通过审核，拒绝推进路线发布快照");
         }
         publicationContentGuard.assertTopicSizeWithinLimits(topicId);
-        publishValidatedRouteSnapshot(topic);
+        // Approval has already bound the declaration hash. Consume it; never derive new rows here.
+        List<ThemeStateKey> declarations = com.chengyinhub.business.service.support.ThemeStateKeyDeclarationSnapshot.copy(topicId,
+                themeStateKeyService.listCurrentDeclarations(topicId));
+        publishValidatedRouteSnapshot(topic, declarations);
     }
 
     private void publishValidatedRouteSnapshot(CmsTopic topic) {
+        publishValidatedRouteSnapshot(topic, null);
+    }
+
+    private String compileValidatedRouteSnapshot(CmsTopic topic, List<ThemeStateKey> declarations) {
         if (topic == null) throw new IllegalStateException("主题不存在");
         Long topicId = topic.getId();
-        publicationContentGuard.assertStateKeysRegistered(topic);
+        CmsTopic current = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
+        if (current == null || !topicId.equals(current.getId())) throw new IllegalStateException("发布主题当前版本不存在");
+        topic = current;
+        if (declarations == null) declarations = prepareDeclarations(current);
+        publicationContentGuard.assertStateKeysRegistered(topic, declarations);
         publicationContentGuard.assertThoughtRefsResolvable(topic);
         // R8-STORY:剧情配置的章节 / NPC 引用同上
         publicationContentGuard.assertJourneyStoryReferences(topic);
-        publicationContentGuard.assertThemeRuntimeReferences(topic);
+        publicationContentGuard.assertThemeRuntimeReferences(topic, declarations);
         // R11-A:节点叙事段(enter / outcome)的 npcId 同一道归属闸
         publicationContentGuard.assertBlockNarrativeNpcReferences(topic);
         // R14:块配置条件里 sys.* 引用的 nodeId 同一道归属闸
         publicationContentGuard.assertBlockSysVarReferences(topic);
-        String snapshot = publicationContentGuard.normalizedBranchRouteForPublish(topic);
-        if (persistRouteSnapshot(topicId, snapshot, new Date()) != 1) {
+        return publicationContentGuard.normalizedBranchRouteForPublish(topic, declarations);
+    }
+
+    private void publishValidatedRouteSnapshot(CmsTopic topic, List<ThemeStateKey> declarations) {
+        String snapshot = compileValidatedRouteSnapshot(topic, declarations);
+        if (persistRouteSnapshot(topic.getId(), snapshot, new Date()) != 1)
             throw new IllegalStateException("路线发布快照保存失败");
-        }
+    }
+
+    /** Existing direct-create callers retain their original lifecycle/permission and rowcount handling. */
+    public int persistCreatedRouteSnapshot(Long topicId) {
+        CmsTopic current = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
+        if (current == null) throw new IllegalStateException("发布主题当前版本不存在");
+        String snapshot = compileValidatedRouteSnapshot(current, null);
+        return persistRouteSnapshot(topicId, snapshot, new Date());
     }
 
     /** The publication owner is the single route-publication write port; callers retain original guards and rowcount checks. */

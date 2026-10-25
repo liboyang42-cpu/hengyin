@@ -61,6 +61,7 @@ public class TencentMapClient {
     }
 
     public String get(String endpoint) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         String key = mapKey;
         if (!isReady() || StringUtils.isEmpty(key) || endpoint == null || key.length() > MAX_KEY_CHARACTERS
                 || endpoint.length() > MAX_REQUEST_CHARACTERS - key.length() - 5) {
@@ -78,6 +79,7 @@ public class TencentMapClient {
 
     /** 保持 HTTP 调用可替换，以便离线验证配置失败和错误处理。 */
     protected String request(String url) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         final URL target;
         try {
             URI uri = URI.create(url);

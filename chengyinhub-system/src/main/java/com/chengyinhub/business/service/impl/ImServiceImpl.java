@@ -1391,6 +1391,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     @Transactional(rollbackFor = Exception.class)
     public Long deliverSystemNotification(Long intentId)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         Map<String, Object> intent = notificationIntentMapper.selectByIdForUpdate(intentId);
         if (intent == null) throw new ServiceException("原通知不存在", 404);
         if ("DELIVERED".equals(intent.get("status")))

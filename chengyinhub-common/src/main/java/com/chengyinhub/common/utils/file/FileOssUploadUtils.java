@@ -112,6 +112,7 @@ public class FileOssUploadUtils {
      * @throws Exception
      */
     public static final JSONObject upload(MultipartFile file) throws IOException {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         return upload(file, false);
     }
 
@@ -122,6 +123,7 @@ public class FileOssUploadUtils {
      */
     public static JSONObject uploadAftercareEvidence(MultipartFile file, String uploaderMemberId,
                                                      Long merchantId, Long refundId) throws IOException {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         OSSClient ossClient = createOssClient();
         try {
             return uploadAftercareEvidence(file, uploaderMemberId, merchantId, refundId,
@@ -147,6 +149,7 @@ public class FileOssUploadUtils {
      */
     public static JSONObject uploadWithOwner(MultipartFile file, String ownerMemberId, String bizType)
             throws IOException {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         OSSClient ossClient = "COMMUNITY_POST".equals(bizType)
                 ? createCommunityOssClient() : createOssClient();
         try {
@@ -157,6 +160,7 @@ public class FileOssUploadUtils {
     }
 
     public static JSONObject uploadPendingWithOwner(MultipartFile file,String ownerMemberId,String bizType) throws IOException {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (StringUtils.isBlank(ownerMemberId)) throw new IllegalArgumentException("待审媒体缺少作者归属");
         OSSClient client=createOssClient();
         try {
@@ -198,6 +202,7 @@ public class FileOssUploadUtils {
     }
     private static JSONObject upload(MultipartFile file, boolean aftercareEvidence, OSSClient ossClient,
                                      String bucketName, ObjectMetadata ownerMetadata,boolean signPublic) throws IOException {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         JSONObject jsobj1 = new JSONObject();
         try {
             String fileRelName = aftercareEvidence
@@ -795,6 +800,7 @@ public class FileOssUploadUtils {
      * 删除由本服务上传到当前 OSS bucket 的对象。外部历史 URL 返回 false，绝不越权删除。
      */
     public static boolean deleteOwnedObjectIfPresent(String objectKeyOrUrl) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (StringUtils.isBlank(objectKeyOrUrl)) return false;
         String bucket = requiredEnv(OSS_BUCKET_NAME_ENV);
         String endpoint = requiredEnv(OSS_ENDPOINT_ENV);

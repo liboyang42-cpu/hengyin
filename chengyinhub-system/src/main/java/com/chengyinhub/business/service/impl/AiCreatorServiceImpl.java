@@ -100,12 +100,14 @@ public class AiCreatorServiceImpl implements IAiCreatorService
     @Override
     public AiMerchantPlanResp merchantPlan(AiMerchantPlanReq req, Long memberId)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         return aiTopicPlanService.generate(req, memberId);
     }
 
     @Override
     public AiThemeDraftResp themeDraft(AiThemeDraftReq req, Long memberId)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         String role = resolveRole(memberId);
         return executeThemeDraft(req, memberId, role, null);
     }
@@ -113,6 +115,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
     @Override
     public AiThemeDraftPlan planThemeDraft(Long memberId, String nonce)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         try {
             if (nonce == null || !nonce.matches("[a-f0-9]{32}")) throw rejected(Code.PLAN_INVALID);
             String role = resolvePreparedRole(memberId);
@@ -141,6 +144,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
     @Override
     public AiThemeDraftResp themeDraftPrepared(AiThemeDraftReq req, Long memberId, AiThemeDraftPlan plan)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         // This is the only boundary that can assert a zero-effect local rejection.
         try {
             if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
@@ -163,6 +167,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
 
     private AiThemeDraftResp executeThemeDraft(AiThemeDraftReq req, Long memberId, String role, AiThemeDraftPlan plan)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         PlayerThemeDraftQuotaReservation reservation = null;
         boolean accepted = false;
         boolean inputBlocked = false;
@@ -207,6 +212,12 @@ public class AiCreatorServiceImpl implements IAiCreatorService
             if (reservation != null) resp.setRemainingQuota(reservation.remaining);
             accepted = true;
             return resp;
+        }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused)
+        {
+            // A restored process cannot prove what happened after its backup.
+            providerOutcomeUnknown = true;
+            throw paused;
         }
         catch (AiThemeDraftPlanRejectedException failure)
         {
@@ -273,6 +284,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
     @Override
     public AiNodeGenResp nodeGenerate(AiNodeGenReq req, Long memberId)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         String role = resolveRole(memberId);
         JSONObject user = new JSONObject();
         user.put("nodeName", req.getNodeName());
@@ -301,6 +313,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
     @Override
     public AiTemplateFillResp templateFill(AiTemplateFillReq req, Long memberId)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         String role = resolveRole(memberId);
         JSONObject user = new JSONObject();
         user.put("shopName", req.getShopName());
@@ -337,6 +350,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
     @Override
     public AiChapterOverviewResp chapterOverview(AiChapterOverviewReq req, Long memberId)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         String role = resolveRole(memberId);
         JSONObject user = new JSONObject();
         user.put("chapterName", req.getChapterName());
@@ -364,6 +378,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
     @Override
     public AiSafetyPrecheckResp safetyPrecheck(AiSafetyPrecheckReq req, Long memberId)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         String role = resolveRole(memberId);
         // 1. 实际文本内容安全检测
         StringBuilder sb = new StringBuilder();
@@ -439,6 +454,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
     @Override
     public AiMerchantTaskSuggestResp merchantTaskSuggest(AiMerchantTaskSuggestReq req, Long memberId)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         String role = resolveRole(memberId);
         JSONObject user = new JSONObject();
         user.put("merchantContext", req.getMerchantContext());
@@ -466,6 +482,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
     @Override
     public AiClubDesignResp clubDesign(AiClubDesignReq req, Long memberId)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         String role = resolveRole(memberId);
         JSONObject user = new JSONObject();
         user.put("idea", req.getIdea());
@@ -496,6 +513,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
     @Override
     public com.chengyinhub.business.domain.vo.ai.AiMerchantInsightResp merchantInsight(String factsJson, Long memberId)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         String role = resolveRole(memberId);
         AiGatewayResult r = gateway.generate(memberId, role, "merchant_insight", SYS_MERCHANT_INSIGHT, factsJson);
         // 失败关闭:mock 输出是假解读,放出去商家会照假建议办活动。

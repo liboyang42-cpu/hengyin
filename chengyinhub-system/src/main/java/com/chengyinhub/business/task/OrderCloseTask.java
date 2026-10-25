@@ -1,5 +1,7 @@
 package com.chengyinhub.business.task;
 
+import com.chengyinhub.common.config.RestoreDispatchGuard;
+
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.service.ICmsRegistrationService;
 import com.chengyinhub.business.service.IWechatPayService;
@@ -72,6 +74,8 @@ public class OrderCloseTask {
                 scanned++;
                 try {
                     if (cmsRegistrationService.closeExpiredOne(id)) closed++;
+                } catch (RestoreDispatchGuard.Blocked paused) {
+                    log.info("过期关单暂停 reason=RECOVERY_DISPATCH_BLOCKED");
                 } catch (Exception e) {
                     log.error("过期关单失败 registrationId={}", id, e);
                 } finally {
@@ -175,6 +179,9 @@ public class OrderCloseTask {
                     if ("SUCCESS".equalsIgnoreCase(tradeState)) {
                         // 钱真的到了:走支付回调同一条链路补记,不能关单回补。
                         String result = cmsRegistrationService.handleWechatPayCallback(wxOrder);
+                        // The original verified callback/inbox is retained above. A paused business
+                        // consumer is not a provider failure, and must not be counted as applied.
+                        if (RestoreDispatchGuard.isRestoreMode()) continue;
                         if ("SUCCESS".equalsIgnoreCase(result)) {
                             applied++;
                         } else {
@@ -186,13 +193,17 @@ public class OrderCloseTask {
                         }
                         continue;
                     }
+                    // Keep querying original attempts, but neither close externally nor release
+                    // points/inventory locally from a restored database.
+                    if (RestoreDispatchGuard.isRestoreMode()) continue;
                     if ("NOTPAY".equalsIgnoreCase(tradeState) || "USERPAYING".equalsIgnoreCase(tradeState)
                             || "PAYERROR".equalsIgnoreCase(tradeState)) {
                         // 未支付不是终态(PAYERROR 能否再付未核实,按裁决保守同处理):先把微信订单关掉,关单被微信接受才可能安全本地关单。
                         boolean closeAccepted;
                         try {
                             closeAccepted = wechatPayService.closePaymentAttempt(registration.getRegistrationNo(), wxOrder.get("wx_out_trade_no"));
-                        } catch (Exception closeFailure) {
+                        } catch (RestoreDispatchGuard.Blocked paused) { throw paused; }
+                        catch (Exception closeFailure) {
                             closeAccepted = false;
                             log.error("支付中过期订单关微信单失败 registrationId={}", id, closeFailure);
                         }
@@ -214,6 +225,8 @@ public class OrderCloseTask {
                     if (closeObservedRegistration(registration, wxOrder.get("wx_out_trade_no"))) {
                         closed++;
                     }
+                } catch (RestoreDispatchGuard.Blocked paused) {
+                    log.info("支付派发与本地关单暂停 reason=RECOVERY_DISPATCH_BLOCKED");
                 } catch (Exception e) {
                     uncertain++;
                     if (firstFailure == null) {

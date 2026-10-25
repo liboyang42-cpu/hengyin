@@ -12,6 +12,9 @@ import pathlib
 import re
 import tempfile
 import unittest
+import os
+import textwrap
+from unittest import mock
 
 _HERE = pathlib.Path(__file__).resolve().parent
 _SPEC = importlib.util.spec_from_file_location("real_storage_it", _HERE / "real_storage_it.py")
@@ -89,11 +92,11 @@ class RegistryContractTest(unittest.TestCase):
         self.assertEqual({'B_PAYMENT_INTENT_DDL_APPROVED': '1'}, reg['classes'][fqcn]['gates'])
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
                     if line.strip().startswith('B_PAYMENT_INTENT_DDL_APPROVED:'))
-        self.assertEqual("B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'CoopDepositSettlementAttemptMySqlIT' || matrix.simple == 'CashWithdrawFundEvidenceMySqlIT' || matrix.simple == 'RefundPayoutMybatisIntegrationTest') && '1' || '' }}", line)
+        self.assertEqual("B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'CoopDepositSettlementAttemptMySqlIT' || matrix.simple == 'CashWithdrawFundEvidenceMySqlIT' || matrix.simple == 'RefundPayoutMybatisIntegrationTest' || matrix.simple == 'FundsProcessRecoveryMySqlIT') && '1' || '' }}", line)
         flag = "A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED"
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
                     if line.strip().startswith(flag + ":"))
-        self.assertEqual("A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest' || matrix.simple == 'RefundPayoutMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT') && '1' || '' }}", line)
+        self.assertEqual("A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest' || matrix.simple == 'RefundPayoutMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT' || matrix.simple == 'RestoreMoneyDispatchMySqlIT') && '1' || '' }}", line)
         self.assertEqual({flag: "1"}, rs.child_env({flag: "1"}, {}))
 
     def test_refund_lifecycle_batch_has_unique_original_suites_and_exact_gates(self):
@@ -166,7 +169,7 @@ class RegistryContractTest(unittest.TestCase):
         flag = 'B_PAYMENT_FACT_DDL_APPROVED'
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
                     if line.strip().startswith(flag + ':'))
-        self.assertEqual("B_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'OmsOrderCommerceGuardMySqlIT' || matrix.simple == 'ClmCommercePaymentProofMySqlIT' || matrix.simple == 'WechatVerifiedPaymentFactMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RefundNotificationMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest' || matrix.simple == 'RefundPayoutMybatisIntegrationTest') && '1' || '' }}", line)
+        self.assertEqual("B_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'OmsOrderCommerceGuardMySqlIT' || matrix.simple == 'ClmCommercePaymentProofMySqlIT' || matrix.simple == 'WechatVerifiedPaymentFactMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RefundNotificationMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest' || matrix.simple == 'RefundPayoutMybatisIntegrationTest' || matrix.simple == 'CrossDomainFaultIsolationMySqlIT' || matrix.simple == 'RestoreMoneyDispatchMySqlIT') && '1' || '' }}", line)
         self.assertEqual({flag: '1'}, rs.child_env({flag: '1'}, {}))
         facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
         self.assertEqual([], problems)
@@ -312,6 +315,142 @@ class RegistryContractTest(unittest.TestCase):
         self.assertIn('new CoopInviteServiceImpl()', source)
         self.assertIn('new DataSourceTransactionManager(source)', source)
 
+    def test_reuse_publication_and_declarations_cannot_omit_real_storage_source_cases(self):
+        reg = registry()
+        expected = {
+            'com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT': 6,
+            'com.chengyinhub.business.it.ThemeStateKeyDeclarationMySqlIT': 6,
+            'com.chengyinhub.business.service.impl.TopicPublicationBindingMySqlIT': 9,
+        }
+        for fqcn, count in expected.items():
+            with self.subTest(fqcn=fqcn):
+                self.assertEqual(count, reg['classes'][fqcn]['tests'])
+                self.assertEqual(['mysql'], reg['classes'][fqcn]['storage'])
+                self.assertEqual({}, reg['classes'][fqcn]['gates'])
+                self.assertEqual(1, reg['batches']['architecture-day-integrated-changes']['classes'].count(fqcn))
+                facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+                self.assertEqual([], problems)
+                self.assertEqual(count, facts['declared_tests'])
+                stale = copy.deepcopy(reg)
+                stale['classes'][fqcn]['tests'] -= 1
+                self.assertTrue(rs.precheck(stale, _HERE.parent, fqcn)[1])
+
+    def test_funds_process_source_has_exact_gates_count_and_unique_batch_routes(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.service.impl.FundsProcessRecoveryMySqlIT'
+        gates = {'B_PAYMENT_INTENT_DDL_APPROVED': '1', 'B_FUNDS_PROCESS_RECOVERY_APPROVED': '1'}
+        self.assertEqual({'tests': 14, 'storage': ['mysql'], 'gates': gates,
+                          'database_base': 'architecture_a'},
+                         {key: reg['classes'][fqcn][key] for key in ('tests', 'storage', 'gates', 'database_base')})
+        for batch in ('architecture-day-funds-closure', 'architecture-day-integrated-changes'):
+            self.assertEqual(1, reg['batches'][batch]['classes'].count(fqcn))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(14, facts['declared_tests'])
+        for flag in gates:
+            denied = copy.deepcopy(reg)
+            denied['classes'][fqcn]['gates'].pop(flag)
+            self.assertTrue(rs.precheck(denied, _HERE.parent, fqcn)[1])
+        stale = copy.deepcopy(reg)
+        stale['classes'][fqcn]['tests'] = 13
+        self.assertTrue(rs.precheck(stale, _HERE.parent, fqcn)[1])
+        env = rs.class_env(reg, fqcn, mysql_port=33060, suffix='_unit_b_funds')
+        for flag in gates:
+            self.assertEqual('1', env[flag])
+            self.assertNotIn(flag, rs.child_env({flag: '1', 'PATH': '/usr/bin'}, {}))
+            self.assertEqual([], rs.scan_java('// assertEquals("1", System.getenv("' + flag + '"));')['gates'])
+        self.assertIsNone(rs.GATE_NAME_RE.fullmatch('B_FUNDS_ARBITRARY_APPROVED'))
+        self.assertEqual([], workflow_problems(WORKFLOW.read_text(), reg))
+        self.assertIn("B_FUNDS_PROCESS_RECOVERY_APPROVED: " +
+                      "${{ matrix.simple == 'FundsProcessRecoveryMySqlIT' && '1' || '' }}",
+                      WORKFLOW.read_text())
+
+    def test_funds_process_artifact_step_exports_only_exact_source_json(self):
+        workflow = WORKFLOW.read_text()
+        step = workflow.split('      - name: Collect funds process JSON receipts\n', 1)[1]
+        step = step.split('      - name: Upload class receipt\n', 1)[0]
+        self.assertIn("if: always() && matrix.simple == 'FundsProcessRecoveryMySqlIT'", step)
+        script = textwrap.dedent(step.split("          python3 - <<'PY'\n", 1)[1]
+                                 .split('          PY\n', 1)[0])
+        for case in ('valid', 'missing', 'bad_sha', 'symlink', 'invalid_json'):
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as temp:
+                original = pathlib.Path.cwd()
+                try:
+                    os.chdir(temp)
+                    source = pathlib.Path('candidate/chengyinhub-admin/target/funds-process-recovery') / SHA / 'run'
+                    if case != 'missing':
+                        source.mkdir(parents=True)
+                        (source / 'identity.json').write_text('{bad' if case == 'invalid_json'
+                                                             else json.dumps({'sourceSha': SHA}))
+                        (source / 'stdout.log').write_text('private diagnostic sentinel')
+                    if case == 'symlink':
+                        outside = pathlib.Path('outside.json')
+                        outside.write_text('{}')
+                        (source / 'escape.json').symlink_to(outside.resolve())
+                    with mock.patch.dict(os.environ, {'SOURCE_SHA': 'not-a-sha' if case == 'bad_sha' else SHA}):
+                        if case == 'valid':
+                            exec(script, {})
+                            output = pathlib.Path('out/funds-process-recovery') / SHA / 'run'
+                            self.assertEqual({'sourceSha': SHA}, json.loads((output / 'identity.json').read_text()))
+                            self.assertEqual(['identity.json'], sorted(path.name for path in output.iterdir()))
+                        else:
+                            with self.assertRaises(ValueError):
+                                exec(script, {})
+                    self.assertEqual([], list(pathlib.Path('out').rglob('*.log')))
+                    self.assertEqual([], list(pathlib.Path('out').rglob('escape.json')))
+                finally:
+                    os.chdir(original)
+
+    def test_cross_domain_isolation_has_both_stores_and_its_existing_fact_approval(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.it.CrossDomainFaultIsolationMySqlIT'
+        self.assertEqual({'tests': 1, 'storage': ['mysql', 'redis'], 'gates': {}},
+                         {key: reg['classes'][fqcn][key] for key in ('tests', 'storage', 'gates')})
+        self.assertEqual(1, reg['batches']['architecture-day-integrated-changes']['classes'].count(fqcn))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(1, facts['declared_tests'])
+        stale = copy.deepcopy(reg)
+        stale['classes'][fqcn]['tests'] = 0
+        self.assertTrue(rs.precheck(stale, _HERE.parent, fqcn)[1])
+        env = rs.class_env(reg, fqcn, mysql_port=33060, redis_port=36379, suffix='_unit_isolation')
+        self.assertEqual('127.0.0.1', env['CHENGYIN_MYBATIS_IT_HOST'])
+        self.assertEqual('33060', env['CHENGYIN_MYBATIS_IT_PORT'])
+        self.assertIn('CHENGYIN_MYBATIS_IT_PASSWORD', env)
+        self.assertEqual('127.0.0.1', env['CHENGYIN_AI_REDIS_IT_HOST'])
+        self.assertEqual('36379', env['CHENGYIN_AI_REDIS_IT_PORT'])
+        self.assertEqual('0', env['CHENGYIN_AI_REDIS_IT_DATABASE'])
+        helper = (_HERE.parent / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainStorageFixture.java').read_text()
+        self.assertIn('assertEquals("1", required("B_PAYMENT_FACT_DDL_APPROVED"))', helper)
+        flag = next(line.strip() for line in WORKFLOW.read_text().splitlines()
+                    if line.strip().startswith('B_PAYMENT_FACT_DDL_APPROVED:'))
+        self.assertIn("matrix.simple == 'CrossDomainFaultIsolationMySqlIT'", flag)
+        self.assertEqual([], workflow_problems(WORKFLOW.read_text(), reg))
+
+    def test_restore_money_source_routes_the_fixed_child_and_both_original_fact_approvals(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.service.RestoreMoneyDispatchMySqlIT'
+        self.assertEqual({'tests': 1, 'storage': ['mysql'], 'gates': {}, 'database_base': 'architecture_a'},
+                         {key: reg['classes'][fqcn][key] for key in ('tests', 'storage', 'gates', 'database_base')})
+        for batch in ('architecture-day-funds-closure', 'architecture-day-integrated-changes'):
+            self.assertEqual(1, reg['batches'][batch]['classes'].count(fqcn))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(1, facts['declared_tests'])
+        stale = copy.deepcopy(reg)
+        stale['classes'][fqcn]['tests'] = 0
+        self.assertTrue(rs.precheck(stale, _HERE.parent, fqcn)[1])
+        env = rs.class_env(reg, fqcn, mysql_port=33060, suffix='_unit_restore')
+        self.assertEqual('architecture_a', env['CHENGYIN_TEST_MYSQL_DATABASE_BASE'])
+        self.assertEqual('_unit_restore', env['CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX'])
+        self.assertEqual('127.0.0.1', env['CHENGYIN_TEST_MYSQL_HOST'])
+        workflow = WORKFLOW.read_text()
+        for flag in ('B_PAYMENT_FACT_DDL_APPROVED', 'A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED'):
+            line = next(line.strip() for line in workflow.splitlines() if line.strip().startswith(flag + ':'))
+            self.assertIn("matrix.simple == 'RestoreMoneyDispatchMySqlIT'", line)
+        self.assertNotIn('CHENGYIN_RESTORE_MODE:', workflow)
+        self.assertEqual([], workflow_problems(workflow, reg))
+
     def test_batch_totals_match_the_remaining_receipt(self):
         # 23 条真库 + OWN_C01_51 外层 4 条普通；AI 15+7；E04-07 5+5（原回执41/43新增回归）；E02-22 9 + E02-25 2 + 三夹具 3；B05 3；F3 12（含死锁重试负控）。
         # 类条数全局唯一，按 master 侧登记：冲回 3→4、券生命周期 12→16、分享快照并发 2→3（extra-storage 71→76）。
@@ -320,9 +459,9 @@ class RegistryContractTest(unittest.TestCase):
         # p0-acceptance-ac1(AC1)：核销 5 + 跨账号 3 + 城市跑 2 + 自由探索供给闸 2 + 注销 1。
         # port-*：同批 master 侧移植，类与条数同原批；port-core-funds 27；port-ai-quota 22；port-f3-growth 12；port-f3-evidence 4。
         expected = {"core-funds": 27, "ai-quota": 24, "e04-07-coupon": 10, "community-e02": 14,
-                    "b05-visibility": 3, "f3-growth": 12, "extra-storage": 131,
+                    "b05-visibility": 3, "f3-growth": 12, "extra-storage": 133,
                     "port-e04-07-coupon": 10, "port-community-e02": 14, "port-b05-visibility": 3,
-                    "port-extra-storage": 131,
+                    "port-extra-storage": 133,
                     "port-core-funds": 27, "port-ai-quota": 24,
                     "port-f3-growth": 12, "port-f3-evidence": 4,
                     "funnel-max-date": 4, "port-prelaunch-69": 36,
@@ -357,14 +496,14 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-topic-cash-fence": 5,
                     "architecture-day-scheduler-two-process": 3,
                     "architecture-day-cash-recovery": 10,
-                    "architecture-day-funds-closure": 258,
+                    "architecture-day-funds-closure": 273,
                     "architecture-day-npc-voice-asr": 14,
                     "architecture-day-clm-commerce-proof": 8,
                     "architecture-day-media-retry-budget": 8,
                     "architecture-day-before-start-notice": 12,
                     "architecture-day-commerce-generic-guard": 6,
                     "architecture-day-refund-lifecycle": 72,
-                    "architecture-day-integrated-changes": 879, "payment-intent-correctness": 30}
+                    "architecture-day-integrated-changes": 916, "payment-intent-correctness": 30}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}
@@ -377,7 +516,7 @@ class RegistryContractTest(unittest.TestCase):
             "com.chengyinhub.business.service.impl.ImLegacyReadLockMySqlIT": (5, "CHENGYIN_IM_LEGACY_LOCK_MYSQL_IT"),
             "com.chengyinhub.business.it.CoopClubApplyInboxMySqlIT": (1, None),
             "com.chengyinhub.business.it.CoopServiceRealDbIT": (1, None),
-            "com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT": (4, None),
+            "com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT": (6, None),
             "com.chengyinhub.business.mapper.ActivityCancelPlayerProjectionMyBatisIT": (1, None),
             "com.chengyinhub.business.service.TemplateClearFieldsMySqlIT": (3, None),
             "com.chengyinhub.business.service.impl.GameplayReskinMySqlIT": (1, None),

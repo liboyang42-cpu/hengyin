@@ -108,6 +108,10 @@ public class PlayNodeContext {
     public CmsMemberTemplate frozenTemplateView(CmsTopicNode node,
             com.fasterxml.jackson.databind.JsonNode frozenAnswer)
     {
+        if (hasFrozenContent(frozenAnswer)) {
+            com.chengyinhub.business.service.support.NodeJourneySnapshot.contentNode(frozenAnswer, node);
+            return com.chengyinhub.business.service.support.NodeJourneySnapshot.contentTemplate(frozenAnswer);
+        }
         CmsMemberTemplate tpl = new CmsMemberTemplate();
         tpl.setId(node.getTemplateId());
         if (frozenAnswer.hasNonNull("validationMethod")) {
@@ -132,10 +136,22 @@ public class PlayNodeContext {
     /** 本局适用的模板判定视图:开局冻结优先,老局快照没有该键时回退实时模板。 */
     public CmsMemberTemplate effectiveTemplate(Long memberId, Long topicId, Long activityId, CmsTopicNode node)
     {
-        if (node == null || node.getTemplateId() == null) return null;
+        if (node == null) return null;
         com.fasterxml.jackson.databind.JsonNode frozen = frozenAnswer(memberId, topicId, activityId, node.getId());
+        if (hasFrozenContent(frozen)) return frozenTemplateView(node, frozen);
+        if (node.getTemplateId() == null) return null;
         return frozen == null ? cmsMemberTemplateService.selectCmsMemberTemplateById(node.getTemplateId())
                 : frozenTemplateView(node, frozen);
+    }
+
+    /** 新内容标志具有权威性，缺结构不降级成 live；旧判定快照缺标志保持原行为。 */
+    public boolean hasFrozenContent(com.fasterxml.jackson.databind.JsonNode content) {
+        return com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContent(content);
+    }
+
+    /** Current status/QR/access fields remain original; only original content is projected. */
+    public CmsTopicNode frozenNodeView(CmsTopicNode original, com.fasterxml.jackson.databind.JsonNode content) {
+        return com.chengyinhub.business.service.support.NodeJourneySnapshot.contentNode(content, original);
     }
 
     /**
@@ -162,13 +178,13 @@ public class PlayNodeContext {
 
     /** 判定方式只看本局模板视图(开局冻结优先,由 effectiveTemplate 解析),不另读实时模板。 */
     public boolean isAppSensorNode(CmsTopicNode node, CmsMemberTemplate template) {
-        if (node == null || node.getTemplateId() == null) return false;
+        if (node == null || node.getTemplateId() == null && (template == null || template.getId() == null)) return false;
         return template != null && template.getValidationMethod() != null
                 && template.getValidationMethod() == ValidationMethod.APP_SENSOR;
     }
 
     public boolean isPhotoFilterNode(CmsTopicNode node, CmsMemberTemplate template) {
-        if (node == null || node.getTemplateId() == null) return false;
+        if (node == null || node.getTemplateId() == null && (template == null || template.getId() == null)) return false;
         return template != null && SensorChallengePolicy.isPhotoFilter(
                 template.getValidationMethod(), template.getSensorType());
     }

@@ -62,6 +62,7 @@ public class OmsOrderServiceImpl implements IOmsOrderService
     @Override
     public int insertOmsOrder(OmsOrder omsOrder)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (omsOrder == null) throw invalidOrder();
         requireNonCommerceInput(omsOrder);
         omsOrder.setCreateTime(DateUtils.getNowDate());

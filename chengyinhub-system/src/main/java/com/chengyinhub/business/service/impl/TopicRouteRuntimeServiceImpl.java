@@ -834,7 +834,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             String failCostTag = textField(context.check, "failCostTag");
             if (failCostTag != null && !failCostTag.isEmpty()) {
                 context.state.getTags().add(failCostTag);
-                failCostLabel = failCostTagLabel(topicId, failCostTag);
+                failCostLabel = failCostTagLabel(context.session, failCostTag);
             }
             if (context.rules.getHp().isEnabled()) {
                 int damage = (tier == null ? 0 : tier.getDamage())
@@ -984,9 +984,9 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
      * 代价标签的展示名:注册表里该 tag 的 label。未注册 / 没填 label / 注册表未注入一律回落
      * 空串,不抛错 —— 回执只是展示,不能因为展示名缺失把一次已经成立的结算打回。
      */
-    private String failCostTagLabel(Long topicId, String tag) {
-        if (themeStateKeyMapper == null) return "";
-        List<ThemeStateKey> rows = themeStateKeyMapper.selectByTopicId(topicId);
+    private String failCostTagLabel(TopicRouteSession session, String tag) {
+        List<ThemeStateKey> rows = JourneyInitialState.frozenDefinitions(session.getConfigSnapshotJson());
+        if (rows == null) rows = themeStateKeyMapper == null ? null : themeStateKeyMapper.selectByTopicId(session.getTopicId());
         if (rows == null) return "";
         for (ThemeStateKey row : rows) {
             if (row != null && tag.equals(row.getStateKey())) {
@@ -1004,13 +1004,65 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Override
     @Transactional(readOnly = true)
     public JsonNode nodeAnswers(Long memberId, Long topicId, Long activityId, Long nodeId) {
+        if (nodeId == null || nodeId <= 0L) return null;
+        JsonNode snapshot = queryNodeContentSnapshot(memberId, topicId, activityId, nodeId);
+        JsonNode answer = NodeJourneySnapshot.answerFromSnapshot(snapshot, nodeId);
+        if (NodeJourneySnapshot.hasContent(answer)
+                && answer.path("nodePresentation").path("topicId").asLong() != topicId)
+            throw new IllegalStateException("本局内容归属不可用");
+        return answer;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public JsonNode queryNodeContentSnapshot(Long memberId, Long topicId, Long activityId, Long nodeId) {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L
-                || nodeId == null || nodeId <= 0L) {
-            return null;
-        }
+                || nodeId != null && nodeId <= 0L) return null;
+        JsonNode shared = gameSessionRuntimeService == null ? null
+                : gameSessionRuntimeService.querySharedRouteSnapshot(memberId, topicId, activityId, nodeId);
+        if (shared != null) return shared;
         TopicRouteSession session = currentScopedSession(memberId, topicId, activityId);
-        if (session == null || !memberId.equals(session.getMemberId())) return null;
-        return NodeJourneySnapshot.answer(session.getConfigSnapshotJson(), nodeId);
+        if (session != null) {
+            if (!memberId.equals(session.getMemberId())) throw new IllegalStateException("本局内容归属不可用");
+            // An old existing run is never filled from a newer publication.
+            JsonNode snapshot = session.getConfigSnapshotJson() == null ? JSON.createObjectNode()
+                    : validator.readTree(session.getConfigSnapshotJson()).deepCopy();
+            NodeJourneySnapshot.requireContentSnapshot(snapshot);
+            if (snapshot.isObject()) {
+                ((ObjectNode) snapshot).remove(java.util.Arrays.asList("gameSessionId", "teamId", "authorityEpoch", "runtimeInstance"));
+                ((ObjectNode) snapshot).put("contentRouteSessionId", session.getId());
+                if (NodeJourneySnapshot.hasContentSnapshots(snapshot))
+                    ((ObjectNode) snapshot).set("contentTags", JSON.valueToTree(readEngineState(session.getStateJson()).getTags()));
+            }
+            if (nodeId != null) {
+                JsonNode answer = NodeJourneySnapshot.answerFromSnapshot(snapshot, nodeId);
+                if (NodeJourneySnapshot.hasContent(answer)
+                        && (answer.path("nodePresentation").path("id").asLong() != nodeId
+                        || answer.path("nodePresentation").path("topicId").asLong() != topicId))
+                    throw new IllegalStateException("本局内容归属不可用");
+            }
+            return snapshot;
+        }
+        JsonNode publication=publishedContentSnapshot(topicId);
+        JsonNode games=advancedGameRuntimeService == null ? null
+                : advancedGameRuntimeService.queryDefaultNodeContents(memberId,activityId,topicId);
+        if (games == null || games.isEmpty()) return publication;
+        ObjectNode content=publication == null ? JSON.createObjectNode() : (ObjectNode) publication.deepCopy();
+        content.set("originalNodeGames",games.deepCopy());
+        return content;
+    }
+
+    /** Caller admission remains at the original command/query boundary; no session is created here. */
+    private JsonNode publishedContentSnapshot(Long topicId) {
+        CmsTopic topic = topicMapper.selectCmsTopicById(topicId);
+        if (topic == null || topic.getPublishedConfigVersion() == null || topic.getPublishedConfigVersion() <= 0L
+                || topic.getPublishedRouteGraphJson() == null || topic.getPublishedRouteGraphJson().trim().isEmpty()) return null;
+        JsonNode snapshot = validator.readTree(topic.getPublishedRouteGraphJson());
+        if (!NodeJourneySnapshot.hasContentSnapshots(snapshot)) return null;
+        NodeJourneySnapshot.requireContentSnapshot(snapshot);
+        ObjectNode copy = (ObjectNode) snapshot.deepCopy();
+        copy.remove(java.util.Arrays.asList("contentRouteSessionId", "contentTags", "gameSessionId", "teamId", "authorityEpoch", "runtimeInstance"));
+        return copy;
     }
 
     private TopicRouteSession ensureBranchSession(Scope scope) {
@@ -1034,7 +1086,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         TopicRouteEngine.State initial = engine.initial(snapshot);
         JourneyRules branchRules = JourneyRules.parse(validator.readTree(snapshot).path(NodeJourneySnapshot.JOURNEY_RULES_KEY).toString());
         applyJourneyInitials(branchRules, initial);
-        seedCharacter(scope.memberId, scope.topic.getId(), branchRules, initial);
+        seedCharacter(scope.memberId, scope.topic.getId(), branchRules, initial, snapshot);
         // 进入第一个节点 = 进入首个章节:阶段休整同样适用;action 行等 session 落库后再登记。
         CmsTopicNode firstNode = findNode(nodes, initial.getCurrentNodeId());
         Map<String, Object> stageRest = genericConfig(validator.readTree(snapshot).path("themeConfig")) ? null : applyStageRest(null, scope.memberId, initial,
@@ -1070,7 +1122,23 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     private boolean journeyConfigured(Scope scope, JourneyTemplateProbe probe) {
         // 已有本局:旅程是否启用以建局快照为准 —— 创作者之后清空模板/主题规则也不退回无局线性读模型。
         if (currentSession(scope.memberId, scope.topic.getId(), scope.activityId) != null) return true;
-        if (scope.topic.getPublishedRouteGraphJson() != null && validator.readTree(scope.topic.getPublishedRouteGraphJson()).path("runtimeSnapshotVersion").asInt() == 1) return true;
+        if (scope.topic.getPublishedRouteGraphJson() != null) {
+            JsonNode published = validator.readTree(scope.topic.getPublishedRouteGraphJson());
+            if (published.path("runtimeSnapshotVersion").asInt() == 1) {
+                if (!NodeJourneySnapshot.hasContentSnapshots(published)) return true; // original V1 contract
+                NodeJourneySnapshot.requireContentSnapshot(published);
+                // ROOT_FINAL_CONTRACT_V3: original helpers consume frozen facts, never future live author rows.
+                String frozenRules = NodeJourneySnapshot.journeyRules(published.toString());
+                if (frozenRules == null) throw new IllegalStateException("本局数值规则快照不可用");
+                JsonNode ruleFields = validator.readTree(frozenRules);
+                if (JourneyRules.parse(frozenRules).hasRuntimeState() || ruleFields.path("attributes").size() > 0
+                        || ruleFields.path("statLinks").size() > 0 || published.path("themeConfig").isObject()
+                        || JourneyStory.openingChapterId(NodeJourneySnapshot.journeyStory(published.toString())) != null) return true;
+                for (JsonNode block : published.path("nodeConfigs"))
+                    if (blockNeedsJourneyState(block.toString())) return true;
+                return false;
+            }
+        }
         List<CmsTopicNode> liveNodes = probe.liveNodes;
         if (JourneyStory.openingChapterId(scope.topic.getJourneyStoryJson()) != null) return true;
         if (liveNodes.isEmpty()) return false;
@@ -1111,7 +1179,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     /** A publication operation owns its compiler inputs; it never captures this runtime or changes transactions. */
     private TopicRoutePublicationCompiler publicationCompiler() {
         return new TopicRoutePublicationCompiler(nodeMapper, templateMapper, cmsTopicChapterMapper,
-                themeStateKeyMapper, clock, JSON, validator);
+                themeStateKeyMapper, clock, JSON, validator, topicMapper);
     }
 
     @Override
@@ -1122,6 +1190,16 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Override
     public String freezePublication(CmsTopic topic, String routeSnapshot) {
         return publicationCompiler().freezePublication(topic, routeSnapshot);
+    }
+
+    @Override
+    public void deriveTemplateCluesForPublication(CmsTopic topic) {
+        publicationCompiler().deriveTemplateCluesForPublication(topic);
+    }
+
+    @Override
+    public String freezePublication(CmsTopic topic, String routeSnapshot, List<ThemeStateKey> declarations) {
+        return publicationCompiler().freezePublication(topic, routeSnapshot, declarations);
     }
 
     @Override
@@ -1211,12 +1289,12 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
      * F2 T02:persist_scope=topic 的属性跨局保留 —— 建新一局时先结转上一局、再灌回新局。
      * 只动已由 journeyRules 初始化的变量;主题没有 topic 作用域键时什么都不改(老主题行为不变)。
      */
-    private void seedCharacter(Long memberId, Long topicId, JourneyRules rules, TopicRouteEngine.State state) {
+    private void seedCharacter(Long memberId, Long topicId, JourneyRules rules, TopicRouteEngine.State state, String snapshot) {
         if (!rules.hasRuntimeState()) return;
         // F6:动量初值 / 常驻侧面。没开 rpg 的主题什么都不写。
         JourneyRpg.seedRun(rules, state);
         if (themeCharacterService == null) return;
-        themeCharacterService.seedRun(memberId, topicId, rules, state);
+        themeCharacterService.seedRun(memberId, topicId, rules, state, snapshot);
     }
 
     private void applyJourneyInitials(JourneyRules rules, TopicRouteEngine.State state) {
@@ -1275,7 +1353,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         initial.setStatus(current == null ? TopicRouteState.COMPLETED : "ACTIVE");
         JourneyRules initialRules = JourneyRules.parse(validator.readTree(frozenSnapshot).path(NodeJourneySnapshot.JOURNEY_RULES_KEY).toString());
         applyJourneyInitials(initialRules, initial);
-        seedCharacter(scope.memberId, scope.topic.getId(), initialRules, initial);
+        seedCharacter(scope.memberId, scope.topic.getId(), initialRules, initial, frozenSnapshot);
         // 建局时所在节点也可能是某章节的第一个节点:同样适用阶段休整。
         CmsTopicNode firstNode = findNode(liveNodes, current);
         Map<String, Object> stageRest = genericConfig(validator.readTree(frozenSnapshot).path("themeConfig")) ? null : applyStageRest(null, scope.memberId, initial,
@@ -2918,10 +2996,21 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Override
     public JsonNode nodeRuntimeConfig(Long memberId,Long topicId,Long nodeId,Long activityId) {
         JsonNode shared = sharedSnapshot(memberId, topicId, activityId, nodeId);
-        if (shared != null) return shared.path("nodeConfigs").get(String.valueOf(nodeId));
+        if (shared != null) { JsonNode config=shared.path("nodeConfigs").get(String.valueOf(nodeId)); return config==null?null:config.deepCopy(); }
         TopicRouteSession session=currentSession(memberId,topicId,activityId);
-        if(session==null || !themeConfig(session).isObject())return null;
-        return validator.readTree(session.getConfigSnapshotJson()).path("nodeConfigs").get(String.valueOf(nodeId));
+        if(session==null) {
+            JsonNode publication=queryNodeContentSnapshot(memberId,topicId,activityId,nodeId);
+            if(publication==null)return null;
+            NodeJourneySnapshot.answerFromSnapshot(publication,nodeId);
+            publication=NodeJourneySnapshot.nodeContentSource(publication,nodeId);
+            JsonNode config=publication.path("nodeConfigs").get(String.valueOf(nodeId));
+            return config==null?null:config.deepCopy();
+        }
+        JsonNode snapshot=validator.readTree(session.getConfigSnapshotJson());
+        // New original content also exists for non-generic legacy mechanics, without themeConfig.
+        if(!snapshot.path("themeConfig").isObject() && !NodeJourneySnapshot.hasContent(NodeJourneySnapshot.answerFromSnapshot(snapshot,nodeId)))return null;
+        JsonNode config=snapshot.path("nodeConfigs").get(String.valueOf(nodeId));
+        return config==null?null:config.deepCopy();
     }
 
     private void applyThemeRescue(TopicRouteSession session,TopicRouteEngine.State state,JourneyRules rules) {
@@ -3641,7 +3730,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         TopicRouteEngine.State initial=branch ? engine.initial(write(root)) : new TopicRouteEngine.State();initial.setStatus("ACTIVE");
         if(!branch){initial.setCurrentNodeId(liveNodes.get(0).getId());initial.setRecommendedNodeId(liveNodes.get(0).getId());}
         if(!branch)for(CmsTopicNode node:liveNodes)initial.getNodeStates().put(node.getId(),node.getId().equals(initial.getCurrentNodeId())?TopicRouteState.PLAYABLE:TopicRouteState.DISCOVERED_LOCKED);
-        initial.getVisitedNodeIds().add(initial.getCurrentNodeId());JourneyRules replayRules = JourneyRules.parse(root.path(NodeJourneySnapshot.JOURNEY_RULES_KEY).toString());applyJourneyInitials(replayRules,initial);seedCharacter(memberId,previous.getTopicId(),replayRules,initial);themeEngine.initialize(frozen,initial);
+        initial.getVisitedNodeIds().add(initial.getCurrentNodeId());JourneyRules replayRules = JourneyRules.parse(root.path(NodeJourneySnapshot.JOURNEY_RULES_KEY).toString());applyJourneyInitials(replayRules,initial);seedCharacter(memberId,previous.getTopicId(),replayRules,initial,snapshot);themeEngine.initialize(frozen,initial);
         CmsTopicNode firstNode=findNode(liveNodes,initial.getCurrentNodeId());
         Map<String,Object> stageRest=genericConfig(frozen)?null:applyStageRest(null,memberId,initial,replayRules,firstNode,false);
         child=new TopicRouteSession();child.setMemberId(memberId);child.setTopicId(previous.getTopicId());child.setActivityId(previous.getActivityId());child.setPlayInstanceId(instance);

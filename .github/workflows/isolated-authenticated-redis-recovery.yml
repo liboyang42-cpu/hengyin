@@ -6,6 +6,11 @@ on:
       - '.github/workflows/isolated-authenticated-redis-recovery.yml'
       - 'ci/authenticated_redis_recovery_probe.py'
       - 'ci/test_authenticated_redis_recovery_probe.py'
+      - 'ci/capacity_mixed_probe.py'
+      - 'ci/test_capacity_mixed_probe.py'
+      - 'ci/gameplay_process_recovery_probe.py'
+      - 'ci/test_gameplay_process_recovery_probe.py'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GameplayProcessRecoveryChild.java'
       - 'ci/authenticated-redis-recovery.sh'
       - 'ci/upgrade-startup/application.properties'
       - 'ci/upgrade-startup/logback.xml'
@@ -25,6 +30,16 @@ on:
       - 'chengyinhub-*/src/main/**'
       - '**/pom.xml'
   workflow_dispatch:
+    inputs:
+      probe_mode:
+        description: Fixed isolated fixture workload
+        type: choice
+        options:
+          - recovery
+          - capacity-mixed
+          - gameplay-process-recovery
+          - gameplay-capacity-mixed
+        default: recovery
 
 permissions:
   contents: read
@@ -45,18 +60,32 @@ jobs:
       - name: Verify hosted target and pure negative controls
         env:
           CHENGYIN_CI_AUTH_REDIS_RECOVERY: 'true'
+          CHENGYIN_CI_CAPACITY_MIXED: ${{ github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'capacity-mixed' || inputs.probe_mode == 'gameplay-capacity-mixed') && 'true' || 'false' }}
+          CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY: ${{ github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'gameplay-process-recovery' || inputs.probe_mode == 'gameplay-capacity-mixed') && 'true' || 'false' }}
+          CHENGYIN_CI_GAMEPLAY_CAPACITY: ${{ github.event_name == 'workflow_dispatch' && inputs.probe_mode == 'gameplay-capacity-mixed' && 'true' || 'false' }}
         run: |
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           python3 -I ci/authenticated_redis_recovery_probe.py --check-execution-only
           python3 -B ci/test_authenticated_redis_recovery_probe.py
+          if [ "$CHENGYIN_CI_CAPACITY_MIXED" = true ]; then
+            python3 -I ci/capacity_mixed_probe.py --check-execution-only
+            python3 -B ci/test_capacity_mixed_probe.py
+          fi
+          if [ "$CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY" = true ]; then
+            python3 -I ci/gameplay_process_recovery_probe.py --check-host-only
+            python3 -B ci/test_gameplay_process_recovery_probe.py
+          fi
       - name: Install existing pinned schema client
         run: python3 -m pip install --disable-pip-version-check PyMySQL==1.1.1
       - name: Package the same candidate without repeating tests
         run: mvn -B -DskipTests package
-      - name: Authenticated refund lease across Redis failure and recovery
+      - name: Execute the fixed isolated workload
         id: recovery
         env:
           CHENGYIN_CI_AUTH_REDIS_RECOVERY: 'true'
+          CHENGYIN_CI_CAPACITY_MIXED: ${{ github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'capacity-mixed' || inputs.probe_mode == 'gameplay-capacity-mixed') && 'true' || 'false' }}
+          CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY: ${{ github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'gameplay-process-recovery' || inputs.probe_mode == 'gameplay-capacity-mixed') && 'true' || 'false' }}
+          CHENGYIN_CI_GAMEPLAY_CAPACITY: ${{ github.event_name == 'workflow_dispatch' && inputs.probe_mode == 'gameplay-capacity-mixed' && 'true' || 'false' }}
           TMPDIR: ${{ runner.temp }}/isolated-authenticated-redis-recovery
         run: |
           set -o pipefail
@@ -76,6 +105,9 @@ jobs:
           path: |
             ${{ runner.temp }}/isolated-authenticated-redis-recovery/entry.log
             ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/authenticated-redis-recovery.json
+            ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/capacity-mixed.json
+            ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/gameplay-process-recovery.json
+            ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/gameplay-network.trace
             ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/application.log
             ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/schema-summary.json
             ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/network.trace

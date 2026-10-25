@@ -47,6 +47,7 @@ public class DashScopeVoiceClient implements VoiceCloneClient
     @Override
     public String enroll(String audioUrl) throws AiServiceException
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         requireUsable();
         if (audioUrl == null || audioUrl.trim().isEmpty())
         {
@@ -101,6 +102,7 @@ public class DashScopeVoiceClient implements VoiceCloneClient
     @Override
     public String synthesize(String voiceId, String text) throws AiServiceException
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         requireUsable();
         if (voiceId == null || voiceId.trim().isEmpty())
         {
@@ -147,6 +149,10 @@ public class DashScopeVoiceClient implements VoiceCloneClient
 
     private ProviderReply post(String url, JSONObject body, String what) throws AiServiceException
     {
+        // Original-id status queries remain available; enrollment/synthesis do not.
+        JSONObject input = body.getJSONObject("input");
+        if (input == null || !"query_voice".equals(input.getString("action")))
+            com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         String raw;
         String correlationId = java.util.UUID.randomUUID().toString(); // log correlation only, never an external business identity
         long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(Math.min(config.getTimeoutMs(), 10_000));
@@ -155,6 +161,7 @@ public class DashScopeVoiceClient implements VoiceCloneClient
         {
             raw = HttpUtils.sendJsonPost(url, body.toJSONString(), config.getApiKey(), deadline, lease);
         }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
         catch (AiServiceException e)
         {
             throw e;

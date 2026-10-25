@@ -1,0 +1,2047 @@
+{
+  "schema": 1,
+  "state": "DERIVED_REUSE_INDEX_SOURCE_ONLY_NOT_RUNTIME_ACCEPTANCE",
+  "productionRegistry": false,
+  "sourceInputs": [
+    {
+      "path": "docs/delivery/architecture-day/A/TG3/ALL-GAME-MECHANISMS.md",
+      "sha256": "ae9632e6668090adb418cae92fb9fb28cc2a69b52aca53c622c3f829c2830f11"
+    },
+    {
+      "path": "docs/delivery/architecture-day/D/TG3/all-games-source-index.json",
+      "sha256": "486aae137427c95e941ea89566c1f9ea6f86fe2d13fe6f6eea2f9e2e6b6c7b99"
+    }
+  ],
+  "sourceIdentity": {
+    "backendObservation": "fa5c263440573992701263d6bee60830844a49b8",
+    "rootComposition": "Pending final G/H source; this is an integration lookup, not a tested candidate",
+    "frontendDonorCommitSha": "e8a25307dd593da36ca7133d32167b6a7d819e62",
+    "frontendReportedSourceCommitSha": "0e6b05e617f2099c5e0d32659ac3f99968ff7c3c"
+  },
+  "derivation": "A explicit32 type+10 addon table rows; client cross-links only exact key or explicit section identity, no fuzzy label matching or new support inference",
+  "counts": {
+    "backendTypes": 32,
+    "backendAddons": 10,
+    "backendKeys": 42,
+    "clientSets": {
+      "catalogDiscoverableEntries": 34,
+      "r5ConcreteForms": 31,
+      "runtimePrioritySections": 34,
+      "registeredPlaykitComponents": 37
+    },
+    "adjacentMechanisms": 8
+  },
+  "notAccepted": [
+    "Runtime correctness",
+    "Actually published template stock",
+    "UI/device/provider/payment behavior",
+    "All combinations supported",
+    "Unsupported completion bridges reopened"
+  ],
+  "reusePipelines": {
+    "wholeTheme": {
+      "entry": "POST /api/template/topic-template/use",
+      "input": "{id,scope}",
+      "result": "data.topicId new owned theme draft",
+      "owners": [
+        "ApiTopicTemplateController",
+        "TopicContentCopyServiceImpl"
+      ],
+      "limits": "Does not copy ticket sales, financial facts or player runtime; original reference/owner remapping remains authoritative"
+    },
+    "miniGame": {
+      "entry": "POST /api/template/adopt-draft",
+      "identity": "library originalTemplateId -> new personal ID -> node.templateId",
+      "owners": [
+        "ApiTemplateController",
+        "TemplatePublishServiceImpl"
+      ],
+      "limits": "Server copies authorized source including private fields; public detail JSON is not adoption; later source edits do not rewrite the owned copy"
+    },
+    "clientChain": [
+      {
+        "owner": "pages/template/index.js",
+        "role": "官方内容发现；homeData 分类不是执行机制注册",
+        "calls": [
+          "POST /api/template/homeData",
+          "POST /api/template/list"
+        ]
+      },
+      {
+        "owner": "pages/templatedetail/templatedetail.js",
+        "role": "按 public/my 身份读取；既有编辑入口",
+        "calls": [
+          "POST /api/template/info",
+          "POST /api/template/myinfo"
+        ]
+      },
+      {
+        "owner": "pages/publish/temp/index.js + temp/r5-editor.js + node-game-catalog.js",
+        "role": "同一个选择目录/表单；detectGame/applyToConfig；demo 不落真实配置；getData 公共来源先采用，切个人ID再读，UNKNOWN不自动重发",
+        "calls": [
+          "GET /api/play/theme/support-matrix",
+          "POST /api/template/info",
+          "POST /api/template/adopt-draft",
+          "POST /api/template/myinfo"
+        ]
+      },
+      {
+        "owner": "pages/publish/fabu/index.js#_adoptPublicTemplate/_bindNodeTemplate",
+        "role": "官方资源先采用为会员草稿再节点绑定；不混淆公共资源ID与会员模板ID",
+        "calls": [
+          "POST /api/template/adopt-draft",
+          "POST /api/template/myinfo",
+          "POST /api/template/draft",
+          "POST /api/template/my-list"
+        ]
+      },
+      {
+        "owner": "pages/play/utils/playkit-view.js + components/playkit/index.wxml/index.json",
+        "role": "原会话视图选择 renderer；现有 serverAction/serverPayload 保留字段和单位适配",
+        "calls": []
+      },
+      {
+        "owner": "pages/play/index.js#onPlayKitAction/_submitPlayKitAction -> components/advanced-game/index.js#action",
+        "role": "原会话/版本/请求身份与 UNKNOWN 日志，不在组件判定正确答案",
+        "calls": [
+          "POST /api/play/advanced/start",
+          "GET /api/play/advanced/state",
+          "POST /api/play/advanced/action"
+        ]
+      }
+    ]
+  },
+  "entries": [
+    {
+      "key": "album",
+      "kind": "type",
+      "sourceLine": 52,
+      "backend": {
+        "keySectionMode": "album → album",
+        "configurationAndValidator": "images/url/line；:1776，R5另走上传内容",
+        "productionOwnerAndAction": "SUBMIT_ALBUM → Runtime.submitAlbum:2139",
+        "proofScopeAndLimits": "N；普通P，R5要求真实自有上传；旧相册展示不是上传证明",
+        "existingTestSources": "RuntimeTest.r5PhotoAndAlbumUseVerifiedServerEvidence"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "album",
+            "label": "相册",
+            "section": "album",
+            "validationMethod": 0,
+            "runtimeType": "album",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-album",
+                "condition": "{{kit.type === 'album'}}",
+                "bindings": {
+                  "shoot": "onShoot",
+                  "submit": "onSubmit",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {},
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "display",
+            "contractNote": "模板预览复用 playkit-album；正式相册为 dream 展示块，不作为待通关节点",
+            "submitAdapter": "submitAlbum",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "qaText",
+      "kind": "type",
+      "sourceLine": 53,
+      "backend": {
+        "keySectionMode": "qaText → qa / TYPE",
+        "configurationAndValidator": "title、answerText、maxTries；:1220",
+        "productionOwnerAndAction": "SUBMIT_QA → Judge.submitQa:664",
+        "proofScopeAndLimits": "N；O/R5；服务端原答案匹配；与旧 validationMethod=1 的字符串合同分开",
+        "existingTestSources": "JudgeTest；PersonalTest；新增 QaReuseTest"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "qaText",
+            "label": "文字问答",
+            "section": "qa",
+            "mode": "TYPE",
+            "validationMethod": 0,
+            "runtimeType": "qa",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-qa",
+                "condition": "{{kit.type === 'qa'}}",
+                "bindings": {
+                  "submit": "onSubmit",
+                  "shoot": "onShoot",
+                  "audio": "onAudio",
+                  "continue": "onContinue",
+                  "verdict": "onVerdict",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "qa:submit": "SUBMIT_QA"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "SUBMIT_QA",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "qaPick",
+      "kind": "type",
+      "sourceLine": 54,
+      "backend": {
+        "keySectionMode": "qaPick → qa / PICK",
+        "configurationAndValidator": "options[id,label,correct]、judge、multi、maxTries；:1220",
+        "productionOwnerAndAction": "同 SUBMIT_QA → submitQa；多选 submitQaMulti:758",
+        "proofScopeAndLimits": "N；O/R5；单/多选共享 owner。judge=false 是已知单选完成，非知识正确性；普通免费重答约束保留",
+        "existingTestSources": "RuntimeTest QA 单/多选/非法/重放；QaReuseTest 两主题"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "qaPick",
+            "label": "选项问答",
+            "section": "qa",
+            "mode": "PICK",
+            "validationMethod": 0,
+            "runtimeType": "qa",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-qa",
+                "condition": "{{kit.type === 'qa'}}",
+                "bindings": {
+                  "submit": "onSubmit",
+                  "shoot": "onShoot",
+                  "audio": "onAudio",
+                  "continue": "onContinue",
+                  "verdict": "onVerdict",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "qa:submit": "SUBMIT_QA"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "SUBMIT_QA",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "qaShot",
+      "kind": "type",
+      "sourceLine": 55,
+      "backend": {
+        "keySectionMode": "qaShot → qa / SHOT",
+        "configurationAndValidator": "imageUrl 相关配置、题面；:1220",
+        "productionOwnerAndAction": "SUBMIT_QA → Judge.submitQa；提出 PhotoEvidence，Runtime 核原上传",
+        "proofScopeAndLimits": "N；L/R5；R5核真实自有图片，不能冒作文字/选项正确性或 photoCheck 视觉审核",
+        "existingTestSources": "JudgeTest.photoQaReturns…；RuntimeTest 照片证据"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "qaShot",
+            "label": "拍照打卡",
+            "section": "qa",
+            "mode": "SHOT",
+            "validationMethod": 2,
+            "runtimeType": "qa",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-qa",
+                "condition": "{{kit.type === 'qa'}}",
+                "bindings": {
+                  "submit": "onSubmit",
+                  "shoot": "onShoot",
+                  "audio": "onAudio",
+                  "continue": "onContinue",
+                  "verdict": "onVerdict",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "qa:submit": "SUBMIT_QA"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "contractNote": "复用 QA SHOT；shoot 先上传再提交，不经过一步直发动作表",
+            "submitAdapter": "_submitKitPhoto",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "branch",
+      "kind": "type",
+      "sourceLine": 56,
+      "backend": {
+        "keySectionMode": "branch → branch",
+        "configurationAndValidator": "steps/options/nextStep/startStep、effects；:605",
+        "productionOwnerAndAction": "CHOOSE → Runtime.choose:1444",
+        "proofScopeAndLimits": "N；L；原步图/终点推进。R5已结算反馈 CHOOSE 是 outcomeFeedback，非另一个 branch 主证明",
+        "existingTestSources": "PlayKitBranchRandomPredictTest.branchShipsOnlyTheStepYouAreStandingOn"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "branch",
+            "label": "分支剧情",
+            "section": "branch",
+            "validationMethod": 0,
+            "runtimeType": "branch",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-branch",
+                "condition": "{{kit.type === 'branch'}}",
+                "bindings": {
+                  "choose": "onChoose",
+                  "verdict": "onVerdict",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "branch:choose": "CHOOSE"
+            },
+            "newR5Selection": false,
+            "legacyReadOnly": true,
+            "scope": "legacy-read-only",
+            "contractNote": "旧独立 branch 只读保留；R5 outcomeRules.version=1 的本站反馈不是新独立基础玩法",
+            "submitAdapter": "CHOOSE",
+            "newEditorSelection": "legacy read-only",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "sort",
+      "kind": "type",
+      "sourceLine": 57,
+      "backend": {
+        "keySectionMode": "sort → sort",
+        "configurationAndValidator": "items、answerOrder、maxAttempts、effects；:1373",
+        "productionOwnerAndAction": "SUBMIT_SORT → Judge.submitSort:842",
+        "proofScopeAndLimits": "N；O/R5；完整集合和顺序；普通 maxAttempts=0",
+        "existingTestSources": "RuntimeTest 排序；PersonalTest 题组；MatrixRuntimeTest"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "sort",
+            "label": "排序",
+            "section": "sort",
+            "validationMethod": 0,
+            "runtimeType": "sort",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-sort",
+                "condition": "{{kit.type === 'sort'}}",
+                "bindings": {
+                  "submit": "onSubmit",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "sort:submit": "SUBMIT_SORT"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "SUBMIT_SORT",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "match",
+      "kind": "type",
+      "sourceLine": 58,
+      "backend": {
+        "keySectionMode": "match → match",
+        "configurationAndValidator": "left/right、pairs、effects；:1426",
+        "productionOwnerAndAction": "SUBMIT_MATCH → Judge.submitMatch:903",
+        "proofScopeAndLimits": "N；O/R5；原左右集合一一匹配；不接受局部/伪造 passed",
+        "existingTestSources": "RuntimeTest 连线；PersonalTest 题组；MatrixRuntimeTest"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "match",
+            "label": "连线",
+            "section": "match",
+            "validationMethod": 0,
+            "runtimeType": "match",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-match",
+                "condition": "{{kit.type === 'match'}}",
+                "bindings": {
+                  "submit": "onSubmit",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "match:submit": "SUBMIT_MATCH"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "SUBMIT_MATCH",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "classify",
+      "kind": "type",
+      "sourceLine": 59,
+      "backend": {
+        "keySectionMode": "classify → classify",
+        "configurationAndValidator": "bins、items、answer、effects；:1489",
+        "productionOwnerAndAction": "SUBMIT_CLASSIFY → Judge.submitClassify:968",
+        "proofScopeAndLimits": "N；O/R5；每个原 item 的精确分箱",
+        "existingTestSources": "RuntimeTest 分类；PersonalTest 题组；MatrixRuntimeTest"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "classify",
+            "label": "分类",
+            "section": "classify",
+            "validationMethod": 0,
+            "runtimeType": "classify",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-classify",
+                "condition": "{{kit.type === 'classify'}}",
+                "bindings": {
+                  "submit": "onSubmit",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "classify:submit": "SUBMIT_CLASSIFY"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "SUBMIT_CLASSIFY",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "estimate",
+      "kind": "type",
+      "sourceLine": 60,
+      "backend": {
+        "keySectionMode": "estimate → estimate",
+        "configurationAndValidator": "min/max、answer、tolerance、unit/reveal；:976",
+        "productionOwnerAndAction": "SUBMIT_ESTIMATE → Judge.submitEstimate:465",
+        "proofScopeAndLimits": "N；L/R5；HIT 才成功，CLOSE 的安慰本局分不等于通过",
+        "existingTestSources": "RuntimeTest/PlaykitPayloadTest；Judge 原判定"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "estimate",
+            "label": "猜数字",
+            "section": "estimate",
+            "validationMethod": 8,
+            "runtimeType": "estimate",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-estimate",
+                "condition": "{{kit.type === 'estimate'}}",
+                "bindings": {
+                  "submit": "onSubmit",
+                  "verdict": "onVerdict",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "estimate:submit": "SUBMIT_ESTIMATE"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "SUBMIT_ESTIMATE",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "pricePair",
+      "kind": "type",
+      "sourceLine": 61,
+      "backend": {
+        "keySectionMode": "pricePair → pricePair",
+        "configurationAndValidator": "当前 items[id,name,image,correct]、maxTries；:1030",
+        "productionOwnerAndAction": "SUBMIT_PRICE_PAIR → Judge.submitPricePair:525",
+        "proofScopeAndLimits": "N；L/R5；历史名已为图片猜选，非金额比价算法；旧 price 数组由原 retireLegacyPricePair 禁用",
+        "existingTestSources": "RuntimeTest/PlaykitPayloadTest"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "pricePair",
+            "label": "猜图",
+            "section": "pricePair",
+            "validationMethod": 9,
+            "runtimeType": "pricepair",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-pricepair",
+                "condition": "{{kit.type === 'pricepair'}}",
+                "bindings": {
+                  "submit": "onSubmit",
+                  "verdict": "onVerdict",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "pricepair:submit": "SUBMIT_PRICE_PAIR"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "SUBMIT_PRICE_PAIR",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "hidden",
+      "kind": "type",
+      "sourceLine": 62,
+      "backend": {
+        "keySectionMode": "hidden → hiddenObject",
+        "configurationAndValidator": "image、hotspots[id,x,y,r]、maxTries；:1090",
+        "productionOwnerAndAction": "SUBMIT_HIDDEN_OBJECT → Judge.submitHiddenObject:577",
+        "proofScopeAndLimits": "N；L/R5；坐标命中、foundIds 去重；全部原热点才完整成功",
+        "existingTestSources": "RuntimeTest.r5HiddenObjectKeepsPartialHitsPendingAndOnlyWholeGameSettles"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "hidden",
+            "label": "找东西",
+            "section": "hiddenObject",
+            "validationMethod": 10,
+            "runtimeType": "hidden",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-hidden",
+                "condition": "{{kit.type === 'hidden'}}",
+                "bindings": {
+                  "submit": "onSubmit",
+                  "verdict": "onVerdict",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "hidden:submit": "SUBMIT_HIDDEN_OBJECT"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "SUBMIT_HIDDEN_OBJECT",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "predict",
+      "kind": "type",
+      "sourceLine": 63,
+      "backend": {
+        "keySectionMode": "predict → predict",
+        "configurationAndValidator": "question/options、closeAtHour、revealDays/revealHour；:1166",
+        "productionOwnerAndAction": "SUBMIT_PREDICT → Runtime.submitPredict:1916；PlayPredictServiceImpl.settle；Runtime.synchronizePredictSession",
+        "proofScopeAndLimits": "N＋R；L/R5；投注只是原 bet。冻结揭晓时间后核原 round/bet/actor/局；早揭晓不提前完成，闭局不换新局",
+        "existingTestSources": "RuntimeTest 三个 r5Predict…；PlayKitBranchRandomPredictTest"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "predict",
+            "label": "竞猜",
+            "section": "predict",
+            "validationMethod": 0,
+            "runtimeType": "predict",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-predict",
+                "condition": "{{kit.type === 'predict'}}",
+                "bindings": {
+                  "submit": "onSubmit",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "predict:submit": "SUBMIT_PREDICT"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "SUBMIT_PREDICT",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "random",
+      "kind": "type",
+      "sourceLine": 64,
+      "backend": {
+        "keySectionMode": "random → random",
+        "configurationAndValidator": "items[id,weight,content]、drawCount；:567",
+        "productionOwnerAndAction": "DRAW → Judge.draw",
+        "proofScopeAndLimits": "N；L/R5；服务端抽取、原抽数、抽过不再抽；matrix.addon 还将 random 当随主玩法附加",
+        "existingTestSources": "PlayKitBranchRandomPredictTest.randomShipsHowManyDrawsAndWhatYouGotButNeverTheBox"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "random",
+            "label": "抽卡",
+            "section": "random",
+            "validationMethod": 0,
+            "runtimeType": "random",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-random",
+                "condition": "{{kit.type === 'random'}}",
+                "bindings": {
+                  "draw": "onDraw",
+                  "drawn": "onDrawn",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "random:draw": "DRAW"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "DRAW",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "profile",
+      "kind": "type",
+      "sourceLine": 65,
+      "backend": {
+        "keySectionMode": "profile → profile",
+        "configurationAndValidator": "questions[text/pick]、options、required/avatar；:1635",
+        "productionOwnerAndAction": "SUBMIT_PROFILE → Runtime.submitProfile:2044",
+        "proofScopeAndLimits": "N；L/R5；原必填/审核/状态effects；偏好资料不是客观答题正确性",
+        "existingTestSources": "RuntimeTest/PlaykitPayloadTest"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "profile",
+            "label": "角色建档",
+            "section": "profile",
+            "validationMethod": 0,
+            "runtimeType": "profile",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-profile",
+                "condition": "{{kit.type === 'profile'}}",
+                "bindings": {
+                  "submit": "onSubmit",
+                  "avatar": "onAvatar",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "profile:submit": "SUBMIT_PROFILE"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "SUBMIT_PROFILE",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "note",
+      "kind": "type",
+      "sourceLine": 66,
+      "backend": {
+        "keySectionMode": "note → note",
+        "configurationAndValidator": "prompt、maxLength、presets、showPrevious；:1800",
+        "productionOwnerAndAction": "SUBMIT_NOTE → Runtime.submitNote:2203",
+        "proofScopeAndLimits": "N；L/R5；原文字安全和持久 note；不能复制为 QA 或跳过审核",
+        "existingTestSources": "RuntimeTest/PlaykitPayloadTest"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "note",
+            "label": "留言",
+            "section": "note",
+            "validationMethod": 0,
+            "runtimeType": "note",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-note",
+                "condition": "{{kit.type === 'note'}}",
+                "bindings": {
+                  "submit": "onSubmit",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "note:submit": "SUBMIT_NOTE"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "SUBMIT_NOTE",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "objectCard",
+      "kind": "type",
+      "sourceLine": 67,
+      "backend": {
+        "keySectionMode": "objectCard → photoCheck / CARD",
+        "configurationAndValidator": "requirement、minConfidence、maxTries、fallback、card样式；:1723",
+        "productionOwnerAndAction": "SUBMIT_PHOTO_CHECK → 原 actPhoto/submitPhotoCheck:2147；finishPendingCardMint:931",
+        "proofScopeAndLimits": "N；L/R5；共用 photoCheck，真实PASS后待铸卡；TX后铸卡不是新的完成凭证或备用默认成功",
+        "existingTestSources": "RuntimeTest 原 photo/card 组；PlaykitPayloadTest"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "objectCard",
+            "label": "拍物成卡",
+            "section": "photoCheck",
+            "mode": "CARD",
+            "validationMethod": 0,
+            "runtimeType": "photocheck",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-objectcard",
+                "condition": "{{kit.type === 'photocheck' && kit.mode === 'CARD' && !inline}}",
+                "bindings": {
+                  "shoot": "onShoot",
+                  "close": "onClose"
+                }
+              },
+              {
+                "tag": "cy-playkit-photocheck",
+                "condition": "{{kit.type === 'photocheck'}}",
+                "bindings": {
+                  "shoot": "onShoot",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {},
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "contractNote": "photoCheck.mode=CARD：整屏 playkit-objectcard，inline 为 playkit-photocheck；不是新判题引擎",
+            "submitAdapter": "_submitKitPhoto -> SUBMIT_PHOTO_CHECK",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "bingo",
+      "kind": "type",
+      "sourceLine": 68,
+      "backend": {
+        "keySectionMode": "bingo → 空 section",
+        "configurationAndValidator": "topic.complete_rule_json.bingo；TopicCompletionRulePolicy",
+        "productionOwnerAndAction": "节点完成 → PlayNodeCompletionApplication:524 → PlayBingoServiceImpl.onNodeDone:71 → BingoCells.evaluate",
+        "proofScopeAndLimits": "T；matrix P；真实已完成节点/时间累计，BingoCard 位图与奖励CAS。不是配置空就无实现；不支持任意外部事件条件",
+        "existingTestSources": "PlayBingoArrivalFactTest；PlayKitBingoRuntimeTest"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "bingo",
+            "label": "九宫格",
+            "section": "",
+            "validationMethod": 0,
+            "runtimeType": null,
+            "rendererBindings": [],
+            "serverActions": {},
+            "newR5Selection": false,
+            "legacyReadOnly": false,
+            "scope": "theme-level",
+            "contractNote": "目录 section 为空；R5 节点选择禁用，在主题里配置；运行视图仍可投影 bingo",
+            "submitAdapter": "服务端状态投影，verdict 为页面本地事件，不登记虚构提交动作",
+            "newEditorSelection": "not a selectable R5 node form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "steps",
+      "kind": "type",
+      "sourceLine": 69,
+      "backend": {
+        "keySectionMode": "steps → steps",
+        "configurationAndValidator": "goal、eyebrow、xp；:902",
+        "productionOwnerAndAction": "SUBMIT_STEPS → Runtime.submitSteps:1797 → VerifiedWeRunService（R5）",
+        "proofScopeAndLimits": "N；L/R5；会员/密文/水印/业务日核验后达标，不接收客户端自报步数完成",
+        "existingTestSources": "RuntimeTest.r5StepsRejectsOtherIdentityThenFreezesOnlyVerifiedGoal"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "steps",
+            "label": "计步挑战",
+            "section": "steps",
+            "validationMethod": 0,
+            "runtimeType": "walk",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-walk",
+                "condition": "{{kit.type === 'walk'}}",
+                "bindings": {
+                  "goalchange": "onGoalChange",
+                  "sync": "onSync",
+                  "claim": "onClaim",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "walk:sync": "SUBMIT_STEPS",
+              "walk:claim": "SUBMIT_STEPS"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "SUBMIT_STEPS",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "react",
+      "kind": "type",
+      "sourceLine": 70,
+      "backend": {
+        "keySectionMode": "react → reaction",
+        "configurationAndValidator": "rounds、goalMs；:2441",
+        "productionOwnerAndAction": "START_CHALLENGE＋SUBMIT_REACTION → Judge.submitReaction:1294",
+        "proofScopeAndLimits": "N；L/R5/原归零挑战；服务器 attempt、真实用时和最快轮判定。六项自报设备边界仍禁止资金权益",
+        "existingTestSources": "RuntimeTest reaction 原挑战/计时/重放组"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "react",
+            "label": "变色就点",
+            "section": "reaction",
+            "validationMethod": 0,
+            "runtimeType": "reaction",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-reaction",
+                "condition": "{{kit.type === 'reaction'}}",
+                "bindings": {
+                  "start": "onStart",
+                  "submit": "onSubmit",
+                  "verdict": "onVerdict",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "reaction:start": "START_CHALLENGE",
+              "reaction:submit": "SUBMIT_REACTION"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "START_CHALLENGE, SUBMIT_REACTION",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "shake",
+      "kind": "type",
+      "sourceLine": 71,
+      "backend": {
+        "keySectionMode": "shake → ballShake",
+        "configurationAndValidator": "goal、timed、seconds；:2458",
+        "productionOwnerAndAction": "START_CHALLENGE＋SUBMIT_BALL_SHAKE → Judge.submitBallShake:1334",
+        "proofScopeAndLimits": "N；L/R5/挑战；hits 与真实耗时可行性、达标线；不升级可信度",
+        "existingTestSources": "RuntimeTest.ballShakeRejectsMoreHitsThanTimeAllows、challengeBall…"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "shake",
+            "label": "弹球",
+            "section": "ballShake",
+            "validationMethod": 0,
+            "runtimeType": "ballshake",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-ballshake",
+                "condition": "{{kit.type === 'ballshake'}}",
+                "bindings": {
+                  "start": "onStart",
+                  "submit": "onSubmit",
+                  "verdict": "onVerdict",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "ballshake:start": "START_CHALLENGE",
+              "ballshake:submit": "SUBMIT_BALL_SHAKE"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "START_CHALLENGE, SUBMIT_BALL_SHAKE",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "quiet",
+      "kind": "type",
+      "sourceLine": 72,
+      "backend": {
+        "keySectionMode": "quiet → quietHold",
+        "configurationAndValidator": "seconds；:2476",
+        "productionOwnerAndAction": "START_CHALLENGE＋SUBMIT_QUIET_HOLD → Judge.submitQuietHold:1357",
+        "proofScopeAndLimits": "N；L/R5/挑战；服务器时钟＋heldMs；自报设备限制",
+        "existingTestSources": "RuntimeTest 原 quiet 组；PlaykitPayloadTest"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "quiet",
+            "label": "安静挑战",
+            "section": "quietHold",
+            "validationMethod": 0,
+            "runtimeType": "quiethold",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-quiethold",
+                "condition": "{{kit.type === 'quiethold'}}",
+                "bindings": {
+                  "start": "onStart",
+                  "submit": "onSubmit",
+                  "verdict": "onVerdict",
+                  "micdenied": "onMicDenied",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "quiethold:start": "START_CHALLENGE",
+              "quiethold:submit": "SUBMIT_QUIET_HOLD"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "START_CHALLENGE, SUBMIT_QUIET_HOLD",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "compass",
+      "kind": "type",
+      "sourceLine": 73,
+      "backend": {
+        "keySectionMode": "compass → compass",
+        "configurationAndValidator": "bearing、tolerance、holdSeconds、hint；:2488",
+        "productionOwnerAndAction": "START_CHALLENGE＋SUBMIT_COMPASS → Judge.submitCompass:1380",
+        "proofScopeAndLimits": "N；L/R5/挑战；原目标/角度域/最短圆弧容差；自报设备限制",
+        "existingTestSources": "RuntimeTest compass 域/环绕/一次结算组"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "compass",
+            "label": "罗盘指向",
+            "section": "compass",
+            "validationMethod": 0,
+            "runtimeType": "compass",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-compass",
+                "condition": "{{kit.type === 'compass'}}",
+                "bindings": {
+                  "start": "onStart",
+                  "submit": "onSubmit",
+                  "verdict": "onVerdict",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "compass:start": "START_CHALLENGE",
+              "compass:submit": "SUBMIT_COMPASS"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "START_CHALLENGE, SUBMIT_COMPASS",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "shout",
+      "kind": "type",
+      "sourceLine": 74,
+      "backend": {
+        "keySectionMode": "shout → shout",
+        "configurationAndValidator": "seconds；:2510",
+        "productionOwnerAndAction": "START_CHALLENGE＋SUBMIT_SHOUT → Judge.submitShout:1412",
+        "proofScopeAndLimits": "N；L/R5/挑战；原 attempt/heldMs/真实用时；自报设备限制",
+        "existingTestSources": "RuntimeTest shout start/held/一次/失败组"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "shout",
+            "label": "喊一嗓子",
+            "section": "shout",
+            "validationMethod": 0,
+            "runtimeType": "shout",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-shout",
+                "condition": "{{kit.type === 'shout'}}",
+                "bindings": {
+                  "start": "onStart",
+                  "submit": "onSubmit",
+                  "verdict": "onVerdict",
+                  "micdenied": "onMicDenied",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "shout:start": "START_CHALLENGE",
+              "shout:submit": "SUBMIT_SHOUT"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "START_CHALLENGE, SUBMIT_SHOUT",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "countdown",
+      "kind": "type",
+      "sourceLine": 75,
+      "backend": {
+        "keySectionMode": "countdown → countdown",
+        "configurationAndValidator": "seconds、doneText；:2522",
+        "productionOwnerAndAction": "SUBMIT_COUNTDOWN → Judge.submitCountdown:1429",
+        "proofScopeAndLimits": "N；L/R5/挑战；服务器实际等候时长，不认改设备时间",
+        "existingTestSources": "RuntimeTest.countdownRefusesToFinishEarly、countdownCompletesOnceTheClockRanOut"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "countdown",
+            "label": "倒计时",
+            "section": "countdown",
+            "validationMethod": 0,
+            "runtimeType": "countdown",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-countdown",
+                "condition": "{{kit.type === 'countdown'}}",
+                "bindings": {
+                  "start": "onStart",
+                  "finish": "onFinish",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "countdown:start": "START_CHALLENGE",
+              "countdown:finish": "SUBMIT_COUNTDOWN"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "START_CHALLENGE, SUBMIT_COUNTDOWN",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "stopwatch",
+      "kind": "type",
+      "sourceLine": 76,
+      "backend": {
+        "keySectionMode": "stopwatch → stopwatch",
+        "configurationAndValidator": "targetSeconds、toleranceMs、tries；:2535",
+        "productionOwnerAndAction": "START_CHALLENGE＋SUBMIT_STOPWATCH → Judge.submitStopwatch:1442",
+        "proofScopeAndLimits": "N；L/R5/挑战；原 attempt 单次消费、stoppedMs/用时复核；自报设备限制",
+        "existingTestSources": "RuntimeTest 原 stopwatch 组"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "stopwatch",
+            "label": "精准停表",
+            "section": "stopwatch",
+            "validationMethod": 0,
+            "runtimeType": "stopwatch",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-stopwatch",
+                "condition": "{{kit.type === 'stopwatch'}}",
+                "bindings": {
+                  "start": "onStart",
+                  "submit": "onSubmit",
+                  "verdict": "onVerdict",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "stopwatch:start": "START_CHALLENGE",
+              "stopwatch:submit": "SUBMIT_STOPWATCH"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "START_CHALLENGE, SUBMIT_STOPWATCH",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "photoCheck",
+      "kind": "type",
+      "sourceLine": 77,
+      "backend": {
+        "keySectionMode": "photoCheck → photoCheck",
+        "configurationAndValidator": "requirement、minConfidence、maxTries、fallback/frame；:1723",
+        "productionOwnerAndAction": "SUBMIT_PHOTO_CHECK → Runtime.actPhoto/submitPhotoCheck",
+        "proofScopeAndLimits": "N；L/R5；原图核验→锁外模型→原结果入账；R5仅PASS，不以UNKNOWN或FALLBACK_PASS作可信证明",
+        "existingTestSources": "RuntimeTest.r5PhotoMustVerifyExistingUploadBeforeAccepting、r5PhotoAndAlbum…"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "photoCheck",
+            "label": "拍照审核",
+            "section": "photoCheck",
+            "validationMethod": 0,
+            "runtimeType": "photocheck",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-objectcard",
+                "condition": "{{kit.type === 'photocheck' && kit.mode === 'CARD' && !inline}}",
+                "bindings": {
+                  "shoot": "onShoot",
+                  "close": "onClose"
+                }
+              },
+              {
+                "tag": "cy-playkit-photocheck",
+                "condition": "{{kit.type === 'photocheck'}}",
+                "bindings": {
+                  "shoot": "onShoot",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {},
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "contractNote": "拍照后先上传再向原会话提交；临时路径不能作为结果",
+            "submitAdapter": "_submitKitPhoto -> SUBMIT_PHOTO_CHECK",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "check",
+      "kind": "type",
+      "sourceLine": 78,
+      "backend": {
+        "keySectionMode": "check → check",
+        "configurationAndValidator": "checkId、tier easy/medium/hard、mods、条件/effects/bargain；:2122",
+        "productionOwnerAndAction": "ROLL_CHECK/REROLL_CHECK/SUBMIT_CHECK → Runtime:551 → Route/Shared GameplayCheckEngine",
+        "proofScopeAndLimits": "N；L/R5；原服务端骰据/重掷及费用；tier不是客户端任意DC。不能以 d20 动画结果替代原 check receipt",
+        "existingTestSources": "RuntimeTest；现有 check/Outcome 源码测试"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "check",
+            "label": "D20",
+            "section": "check",
+            "validationMethod": 0,
+            "runtimeType": null,
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-journey-check",
+                "condition": "{{kit.type === 'journeycheck'}}",
+                "bindings": {
+                  "action": "onCheckAction",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {},
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "encounter",
+            "contractNote": "journey-check：玩家页直接挂卡；编辑预览通过 playkit；不同于 diceRoll/d20",
+            "submitAdapter": "onJourneyCheckAction -> /api/play/check/roll|reroll|settle; r5 -> _r5CheckAction",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "d20",
+      "kind": "type",
+      "sourceLine": 79,
+      "backend": {
+        "keySectionMode": "d20 → diceRoll / d20",
+        "configurationAndValidator": "dc、modifier、rollMode、success/fail文案；:2388",
+        "productionOwnerAndAction": "ROLL_DICE → Judge.rollDice",
+        "proofScopeAndLimits": "N；L/R5；与d6同一owner；服务端抽值、原dc/优劣势；独立于check技能判定",
+        "existingTestSources": "RuntimeTest.rollDiceReturnsServerPipsAndKeepsThem；PlaykitPayloadTest"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "d20",
+            "label": "D20 加值",
+            "section": "diceRoll",
+            "mode": "d20",
+            "validationMethod": 0,
+            "runtimeType": "diceroll",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-diceroll",
+                "condition": "{{kit.type === 'diceroll'}}",
+                "bindings": {
+                  "roll": "onRoll",
+                  "count": "onCount",
+                  "settled": "onSettled",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "diceroll:roll": "ROLL_DICE"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "ROLL_DICE",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "typeIn",
+      "kind": "type",
+      "sourceLine": 80,
+      "backend": {
+        "keySectionMode": "typeIn → typeIn",
+        "configurationAndValidator": "target、caseSensitive、tries、seconds；:1835",
+        "productionOwnerAndAction": "SUBMIT_TYPE_IN → Judge.submitTypeIn:1077",
+        "proofScopeAndLimits": "N；L/R5/挑战；目标文本/原次数；R5时长来自原timer，不把旧seconds偷作新deadline",
+        "existingTestSources": "RuntimeTest.r5TypeInIgnoresLegacySecondsWithoutTimer"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "typeIn",
+            "label": "输入挑战",
+            "section": "typeIn",
+            "validationMethod": 0,
+            "runtimeType": "typein",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-typein",
+                "condition": "{{kit.type === 'typein'}}",
+                "bindings": {
+                  "start": "onStart",
+                  "submit": "onSubmit",
+                  "refresh": "onRefresh",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "typein:start": "START_CHALLENGE",
+              "typein:submit": "SUBMIT_TYPE_IN"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "START_CHALLENGE, SUBMIT_TYPE_IN",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "coin",
+      "kind": "type",
+      "sourceLine": 81,
+      "backend": {
+        "keySectionMode": "coin → coinFlip",
+        "configurationAndValidator": "heads/tails 内容；:2366",
+        "productionOwnerAndAction": "FLIP_COIN → Judge.flipCoin",
+        "proofScopeAndLimits": "N；L/R5；服务端随机且保留首次结果；完成随机动作不代表答对知识题",
+        "existingTestSources": "RuntimeTest.flipCoinKeepsTheFirstSideOnRepeat；JudgeTest"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "coin",
+            "label": "抛硬币",
+            "section": "coinFlip",
+            "validationMethod": 0,
+            "runtimeType": "coinflip",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-coinflip",
+                "condition": "{{kit.type === 'coinflip'}}",
+                "bindings": {
+                  "flip": "onFlip",
+                  "settled": "onSettled",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "coinflip:flip": "FLIP_COIN"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "FLIP_COIN",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "dice",
+      "kind": "type",
+      "sourceLine": 82,
+      "backend": {
+        "keySectionMode": "dice → diceRoll / d6",
+        "configurationAndValidator": "diceCount=1或2、六面内容；:2388",
+        "productionOwnerAndAction": "ROLL_DICE → 同 Judge.rollDice",
+        "proofScopeAndLimits": "N；L/R5；不复制第二套掷骰/重放算法",
+        "existingTestSources": "RuntimeTest.rollDiceReturnsServerPipsAndKeepsThem；PlaykitPayloadTest"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "dice",
+            "label": "掷骰子",
+            "section": "diceRoll",
+            "mode": "d6",
+            "validationMethod": 0,
+            "runtimeType": "diceroll",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-diceroll",
+                "condition": "{{kit.type === 'diceroll'}}",
+                "bindings": {
+                  "roll": "onRoll",
+                  "count": "onCount",
+                  "settled": "onSettled",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "diceroll:roll": "ROLL_DICE"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "ROLL_DICE",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "scan",
+      "kind": "type",
+      "sourceLine": 83,
+      "backend": {
+        "keySectionMode": "scan → scan",
+        "configurationAndValidator": "kind TEXT/VOICE/IMAGE/OVERLAY/NONE、reply/audio/image、arMode；:1304",
+        "productionOwnerAndAction": "SUBMIT_SCAN → Runtime.submitScan:2010；普通 /checkin 原 code guard",
+        "proofScopeAndLimits": "N；O（validationMethod=4），非R5主段；真实 node.checkin_code 相等，AR只展示；不能把模型/图片加载当扫码",
+        "existingTestSources": "MatrixRuntimeTest；RuntimeTest 扫码/overlay/AR；PersonalTest"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "scan",
+            "label": "扫码参与",
+            "section": "scan",
+            "validationMethod": 4,
+            "runtimeType": "scan",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-scan",
+                "condition": "{{kit.type === 'scan'}}",
+                "bindings": {
+                  "scanned": "onScanned",
+                  "audio": "onAudio",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "scan:scanned": "SUBMIT_SCAN"
+            },
+            "newR5Selection": false,
+            "legacyReadOnly": false,
+            "scope": "participation",
+            "contractNote": "findGame 可读旧 key；R5 基础选择列表不列出，原扫码提交合同保留",
+            "submitAdapter": "SUBMIT_SCAN",
+            "newEditorSelection": "not a selectable R5 node form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "timer",
+      "kind": "addon",
+      "sourceLine": 91,
+      "backend": {
+        "keySectionMode": "timer → timer",
+        "configurationAndValidator": "durationSeconds、timeoutResult；:554",
+        "productionOwnerAndAction": "Runtime.deadline:1437/原 expireIfNeeded，无独立完成提交",
+        "proofScopeAndLimits": "N；P；原开局服务器deadline，重入不重置；超时终态不是成功证明",
+        "existingTestSources": "RuntimeTest timer/timeout 组"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [],
+        "exactKeyModifiers": [
+          {
+            "key": "timer",
+            "scope": "addon",
+            "contract": "原玩法的限时修饰；不创建独立判题 renderer"
+          }
+        ],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "leaderboard",
+      "kind": "addon",
+      "sourceLine": 92,
+      "backend": {
+        "keySectionMode": "leaderboard → leaderboard",
+        "configurationAndValidator": "metric、scope ACTIVITY/TOPIC、limit；:684",
+        "productionOwnerAndAction": "GET advanced/leaderboard → Runtime.leaderboard",
+        "proofScopeAndLimits": "N；P；原局成员/活动或主题范围读；不新造排行榜写owner",
+        "existingTestSources": "RuntimeTest 原 leaderboard 组"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [],
+        "exactKeyModifiers": [
+          {
+            "key": "leaderboard",
+            "scope": "addon",
+            "contract": "排行榜修饰，保留原后端 support-matrix 限制"
+          }
+        ],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "multiplayer",
+      "kind": "addon",
+      "sourceLine": 93,
+      "backend": {
+        "keySectionMode": "multiplayer → multiplayer",
+        "configurationAndValidator": "mode SEQUENTIAL/ROLE_BASED、players、assignment、roles、turnOrder；:697",
+        "productionOwnerAndAction": "ASSIGN_ROLE/COMPLETE_UNIT → Runtime.assignRole/completeUnit；原TEAM owner",
+        "proofScopeAndLimits": "N；P；必须真实活动/队伍/当前成员/角色；同主题模板不能复制团队身份",
+        "existingTestSources": "RuntimeTest.multiplayerTemplateInSelfPlay…、WithoutTeam…、runtimeViewDoesNotExpose…"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [],
+        "exactKeyModifiers": [
+          {
+            "key": "multiplayer",
+            "scope": "addon",
+            "disabled": true,
+            "reason": "规则待定义",
+            "contract": "旧配置只读，不因组件复用重新启用"
+          }
+        ],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "timeWindow",
+      "kind": "addon",
+      "sourceLine": 94,
+      "backend": {
+        "keySectionMode": "timeWindow → timeWindow",
+        "configurationAndValidator": "openFrom/openTo、跨夜时段；:773",
+        "productionOwnerAndAction": "Runtime 原开放窗口 gate；SUBSCRIBE_TIME_WINDOW → subscribeTimeWindow",
+        "proofScopeAndLimits": "N；P；订阅仅原状态标记，不是完成；服务器判时，不因页面重入绕过",
+        "existingTestSources": "RuntimeTest.timeWindowGateFailsClosedOnMalformedClockText"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [],
+        "exactKeyModifiers": [
+          {
+            "key": "timeWindow",
+            "scope": "addon",
+            "contract": "MODIFIERS 时段限定，open 只读刷新原状态；subscribe 走原动作"
+          }
+        ],
+        "explicitSectionRuntimeRows": [
+          {
+            "section": "timeWindow",
+            "runtimeType": "timewindow",
+            "note": "MODIFIERS 时段限定，open 只读刷新原状态；subscribe 走原动作",
+            "legacyReadOnly": false,
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-timewindow",
+                "condition": "{{kit.type === 'timewindow'}}",
+                "bindings": {
+                  "subscribe": "onSubscribe",
+                  "open": "onOpen",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "timewindow:subscribe": "SUBSCRIBE_TIME_WINDOW"
+            }
+          }
+        ]
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "blindTaste",
+      "kind": "addon",
+      "sourceLine": 95,
+      "backend": {
+        "keySectionMode": "blindTaste → blindTaste",
+        "configurationAndValidator": "title/steps/hint/image、options、answerKey；:795",
+        "productionOwnerAndAction": "SUBMIT_BLIND_TASTE → Judge.submitBlindTaste:423",
+        "proofScopeAndLimits": "N；普通附加需主证明；R5可原答案判定；重复命中不再加分，不等于branch",
+        "existingTestSources": "RuntimeTest/PlaykitPayloadTest"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "blindTaste",
+            "section": "blindTaste",
+            "label": "闭眼盲品",
+            "runtimeType": "blindtaste",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-blindtaste",
+                "condition": "{{kit.type === 'blindtaste'}}",
+                "bindings": {
+                  "answer": "onAnswer",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "blindtaste:answer": "SUBMIT_BLIND_TASTE"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "SUBMIT_BLIND_TASTE",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "silentOrder",
+      "kind": "addon",
+      "sourceLine": 96,
+      "backend": {
+        "keySectionMode": "silentOrder → silentOrder",
+        "configurationAndValidator": "title、rule、limitSeconds；:827",
+        "productionOwnerAndAction": "原 runtime 投影；没有独立 SUBMIT_SILENT_ORDER",
+        "proofScopeAndLimits": "N；P；文案/现场提示不校验客观完成，也不阻断原 completeGate",
+        "existingTestSources": "RuntimeTest.musicCornerAndSilentOrderDoNotGateCompletion"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": [
+          {
+            "section": "silentOrder",
+            "runtimeType": "silentorder",
+            "note": "存量沉默点单；giveup 本地收尾，不编造通关动作，R5 只读",
+            "legacyReadOnly": true,
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-silentorder",
+                "condition": "{{kit.type === 'silentorder'}}",
+                "bindings": {
+                  "giveup": "onGiveUp",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {}
+          }
+        ]
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "diyName",
+      "kind": "addon",
+      "sourceLine": 97,
+      "backend": {
+        "keySectionMode": "diyName → diyName",
+        "configurationAndValidator": "title、maxLength、suggestions；:839",
+        "productionOwnerAndAction": "SUBMIT_DIY_NAME → Runtime.submitDiyName:1771",
+        "proofScopeAndLimits": "N；L附加；原会员openid内容安全检查/保存name；不能当客观答题",
+        "existingTestSources": "RuntimeTest/PlaykitPayloadTest"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": [
+          {
+            "section": "diyName",
+            "runtimeType": "diyname",
+            "note": "存量取名合同，R5 legacyRows 只读，不重新开放编辑",
+            "legacyReadOnly": true,
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-diyname",
+                "condition": "{{kit.type === 'diyname'}}",
+                "bindings": {
+                  "namechange": "onNameChange",
+                  "submit": "onSubmit",
+                  "close": "onClose",
+                  "requestclose": "onRequestClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "diyname:submit": "SUBMIT_DIY_NAME"
+            }
+          }
+        ]
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "musicCorner",
+      "kind": "addon",
+      "sourceLine": 98,
+      "backend": {
+        "keySectionMode": "musicCorner → musicCorner",
+        "configurationAndValidator": "trackName/audio/durationSeconds；:866",
+        "productionOwnerAndAction": "原 runtime 音乐投影，无独立完成 action",
+        "proofScopeAndLimits": "N；P；音轨时长不是通关计时，不能加入relax改变难度",
+        "existingTestSources": "RuntimeTest.musicCornerAndSilentOrderDoNotGateCompletion"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": [
+          {
+            "section": "musicCorner",
+            "runtimeType": "musiccorner",
+            "note": "存量音乐角，toggle 播放器事件，不当成新判题，R5 只读",
+            "legacyReadOnly": true,
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-musiccorner",
+                "condition": "{{kit.type === 'musiccorner'}}",
+                "bindings": {
+                  "toggle": "onToggle",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {}
+          }
+        ]
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "dailySign",
+      "kind": "addon",
+      "sourceLine": 99,
+      "backend": {
+        "keySectionMode": "dailySign → dailySign",
+        "configurationAndValidator": "poems、每首lines；:917",
+        "productionOwnerAndAction": "CLAIM_DAILY_SIGN → Runtime.claimDailySign:1832",
+        "proofScopeAndLimits": "N；普通附加；R5服务器日期＋原局确定选诗，原日重试不换签；非客户端随机答案",
+        "existingTestSources": "RuntimeTest/PlaykitPayloadTest"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [
+          {
+            "key": "dailySign",
+            "section": "dailySign",
+            "label": "今日城市签",
+            "runtimeType": "dailysign",
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-dailysign",
+                "condition": "{{kit.type === 'dailysign'}}",
+                "bindings": {
+                  "accept": "onAccept",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "dailysign:accept": "CLAIM_DAILY_SIGN"
+            },
+            "newR5Selection": true,
+            "legacyReadOnly": false,
+            "scope": "node-game",
+            "submitAdapter": "CLAIM_DAILY_SIGN",
+            "newEditorSelection": "R5 existing form",
+            "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+          }
+        ],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": []
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "key": "slowTask",
+      "kind": "addon",
+      "sourceLine": 100,
+      "backend": {
+        "keySectionMode": "slowTask → slowTask",
+        "configurationAndValidator": "startLabel/waitHint/unlockText/waitDays；:949",
+        "productionOwnerAndAction": "START_SLOW_TASK/CLAIM_SLOW_TASK → Runtime:1858/1873",
+        "proofScopeAndLimits": "N；L附加；原服务端startedDate、天数门槛、一次claim；不因模板复用复制等待完成",
+        "existingTestSources": "RuntimeTest/PlaykitPayloadTest"
+      },
+      "client": {
+        "exactKeyAuthorEntries": [],
+        "exactKeyModifiers": [],
+        "explicitSectionRuntimeRows": [
+          {
+            "section": "slowTask",
+            "runtimeType": "slowtask",
+            "note": "存量慢任务，START/CLAIM 原合同，R5 只读",
+            "legacyReadOnly": true,
+            "rendererBindings": [
+              {
+                "tag": "cy-playkit-slowtask",
+                "condition": "{{kit.type === 'slowtask'}}",
+                "bindings": {
+                  "start": "onSlowStart",
+                  "claim": "onSlowClaim",
+                  "close": "onClose"
+                }
+              }
+            ],
+            "serverActions": {
+              "slowtask:slowstart": "START_SLOW_TASK",
+              "slowtask:slowclaim": "CLAIM_SLOW_TASK"
+            }
+          }
+        ]
+      },
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    }
+  ],
+  "adjacentMechanisms": [
+    {
+      "name": "compare（对照找差异）",
+      "facts": "Validator.validateCompare:1558、Judge.SUBMIT_COMPARE/evaluate:108、submitCompare:1024 和 RuntimeTest 原对照用例实际存在；当前42行 matrix 没有 compare；OutcomeRules.MAIN_GAMEPLAYS 也没有它；verifyObjectiveAnswers 允许的题组不是 compare",
+      "limits": "统一目录不能说它“未实现”，也不能默认升级为普通或R5结算。若要作为可发布主玩法供选择，应由 A/G/E 同时明确目录行、原配置、证明消费者与发布约束；不能只 add 一行（add 会默认给 effectSlotSupport）就宣称已接通。本片不加白名单",
+      "sourceLine": 116,
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "name": "GPS/旧单题",
+      "facts": "Matrix.legacyProofs:50 与 basicCompletionKind:94；ApiPlayProgressController /arrive、/answer",
+      "limits": "已有入口继续复用；旧 validationMethod=1/3 的 answer 字符串与 advanced optionId 不等价。GPS 是基本完成证据，不是42行中的独立小游戏",
+      "sourceLine": 117,
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "name": "偏好题组",
+      "facts": "ApiPlayProgressController.preference/submitPreference → PlayPreferenceApplication；与 profile.questions、qa.PICK 是不同 caller",
+      "limits": "不以都带 options 就并入客观判题；本片未改偏好算法/标签/权利，不把仅看HTTP委托称为全链已核验",
+      "sourceLine": 118,
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "name": "backgroundMusic",
+      "facts": "Validator.validateBackgroundMusic:883；明确禁止 enabled 作为新玩法段",
+      "limits": "原气氛音轨复用；与 musicCorner 不同，不凑成第43个注册玩法",
+      "sourceLine": 119,
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "name": "present/roleViews/requires/effects/variants/clues",
+      "facts": "Validator 原各 helper；规则 owner 仍原主题/角色与状态边界",
+      "limits": "呈现/条件/状态效果/容错，不创建另一个可任意提交的主玩法；variants.relax 不可换题面/答案/奖励",
+      "sourceLine": 120,
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "name": "check.bargain",
+      "facts": "Validator.validateBargain:2160；仅原 check 开关、有限 bonus 与原代价效果",
+      "limits": "仍属 check；不把“交易”名字当成可增加现金/券/积分的授权",
+      "sourceLine": 121,
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "name": "普通附加与R5反馈",
+      "facts": "Matrix.addon(section) 对 branch/random 也返回true；Runtime.outcomeFeedback:3262",
+      "limits": "branch/random 的辅助身份与R5主结果/反馈要分开；R5反馈不能重跑已冻结主结果",
+      "sourceLine": 122,
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    },
+    {
+      "name": "多机制同时 enabled",
+      "facts": "Judge.mechanicsReady:190 与 sharedMechanicsReady:179；Judge.judgedOutcome/passedFact/serverGameplayDecision",
+      "limits": "老 completeGate 的“走完/已提交”不总是答对。R5主段与普通题组各有完整性约束；不能把 enabled 段随意混搭后调用一个布尔 passed",
+      "sourceLine": 123,
+      "evidence": "SOURCE_MAPPING_ONLY_NOT_RUN"
+    }
+  ],
+  "legacyReadOnlySections": [
+    "branch",
+    "silentOrder",
+    "diyName",
+    "musicCorner",
+    "slowTask",
+    "multiplayer"
+  ],
+  "clientOnlyAuthorEntries": [],
+  "boundaries": "Different contracts remain distinct. Bingo is topic aggregation, device/upload/provider facts retain original trust boundaries. Compare implementation is adjacent but has no current Matrix/R5 completion bridge; no enabling inferred."
+}

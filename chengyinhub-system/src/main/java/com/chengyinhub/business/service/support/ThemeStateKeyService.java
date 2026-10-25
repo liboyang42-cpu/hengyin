@@ -8,6 +8,8 @@ import com.chengyinhub.common.utils.DateUtils;
 import com.chengyinhub.common.utils.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -94,6 +96,7 @@ public class ThemeStateKeyService {
             validate(key);
             validateDefinition(key, false);
         }
+        lockTopic(topicId);
         Date now = DateUtils.getNowDate();
         for (ThemeStateKey key : keys) {
             key.setTopicId(topicId);
@@ -124,8 +127,9 @@ public class ThemeStateKeyService {
         if (patch.getStateKey() != null && !patch.getStateKey().equals(stateKey)) {
             throw invalid(ERR_RENAME, "状态键名不可修改:" + stateKey + "(改展示名请只改 label)");
         }
+        lockTopic(topicId);
         ThemeStateKey existing = StringUtils.isEmpty(stateKey) ? null
-                : themeStateKeyMapper.selectByTopicIdAndStateKey(topicId, stateKey);
+                : themeStateKeyMapper.selectByTopicIdAndStateKeyForUpdate(topicId, stateKey);
         if (existing == null) {
             throw new ServiceException("状态键不存在:" + stateKey, HttpStatus.NOT_FOUND).setDetailMessage(ERR_NOT_FOUND);
         }
@@ -182,12 +186,31 @@ public class ThemeStateKeyService {
         return rows == null ? new ArrayList<ThemeStateKey>() : rows;
     }
 
+    /** Explicit publication producer. Preview/runtime reads must keep using their original path.
+     * Caller reuses this projection through validation/hash/freeze in the same transaction. */
+    @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
+    public List<ThemeStateKey> listCurrentDeclarations(Long topicId) {
+        if (!TransactionSynchronizationManager.isActualTransactionActive()
+                || TransactionSynchronizationManager.isCurrentTransactionReadOnly()) {
+            throw invalid(ERR_INVALID, "状态键声明当前读需要原发布写事务");
+        }
+        if (topicId == null || topicId <= 0L) throw invalid(ERR_INVALID, "主题编号无效");
+        lockTopic(topicId);
+        List<ThemeStateKey> rows = themeStateKeyMapper.selectByTopicIdForUpdate(topicId);
+        if (rows == null) throw invalid(ERR_INVALID, "状态键声明读取未知");
+        for (ThemeStateKey row : rows) {
+            if (row == null || !topicId.equals(row.getTopicId())) throw invalid(ERR_INVALID, "状态键声明归属不一致");
+        }
+        return List.copyOf(rows);
+    }
+
     /**
      * 删除某主题的一个键;该键本来就不在时返回 false(不报错)。
      *
      * <p>「是否被引用」的闸不在这里:引用收集在 {@link TopicStateKeyRefService},由调用方
      * (创作者接口)先查引用位置再删 —— 这不是本表的仓储语义,不该塞进注册服务。
      */
+    @Transactional(rollbackFor = Exception.class)
     public boolean delete(Long topicId, String stateKey) {
         if (topicId == null || topicId <= 0L) {
             throw new ServiceException("主题编号无效,无法删除状态键");
@@ -195,7 +218,14 @@ public class ThemeStateKeyService {
         if (StringUtils.isEmpty(stateKey)) {
             throw new ServiceException("状态键名不能为空");
         }
+        lockTopic(topicId);
         return themeStateKeyMapper.deleteByTopicIdAndStateKey(topicId, stateKey) > 0;
+    }
+
+    private void lockTopic(Long topicId) {
+        if (!topicId.equals(themeStateKeyMapper.lockTopicForStateKeyWrite(topicId))) {
+            throw invalid(ERR_INVALID, "主题不存在,无法修改状态键声明");
+        }
     }
 
     /**

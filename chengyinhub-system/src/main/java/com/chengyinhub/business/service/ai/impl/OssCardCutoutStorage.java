@@ -95,6 +95,7 @@ public class OssCardCutoutStorage implements CardCutoutStorage {
 
     @Override
     public CardCutout transfer(String tempPngUrl, long ownerId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         String url = StringUtils.trimToEmpty(tempPngUrl);
         try {
             if (!isAliyunResultAddress(url)) {
@@ -367,6 +368,7 @@ public class OssCardCutoutStorage implements CardCutoutStorage {
 
     /** Vendor audio becomes a private immutable object and a real HOLD receipt, never the vendor URL. */
     public java.util.Map<String,Object> stageGeneratedAudio(Long ownerId, String vendorUrl) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if(ownerId==null || ownerId<=0 || mediaAssets==null || !isAliyunResultAddress(vendorUrl))
             throw new com.chengyinhub.common.exception.ServiceException("语音媒体来源暂不可用");
         try {

@@ -138,6 +138,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
     public AiGatewayResult generateThemeDraftPrepared(Long memberId, AiThemeDraftPlan plan,
             String systemPrompt, String userPrompt)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         Code invalid = themeDraftPlanProblem(memberId, plan);
         if (invalid != null) throw preparedRejection(plan, invalid);
         ThemeDraftSnapshot snapshot;
@@ -275,6 +276,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
     public AiGatewayResult generate(Long memberId, String role, String bizType,
                                      String systemPrompt, String userPrompt)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         // 玩家草稿由 Creator 的三次独立池计费；其他场景绑定本次原日预占。
         boolean playerThemeDraft = "player".equals(role) && "theme_draft".equals(bizType);
         String reservation = playerThemeDraft ? null : consumeQuota(memberId, bizType);
@@ -288,6 +290,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
     @Override
     public AiGatewayResult generateNpcAsrHandoff(com.chengyinhub.business.service.ai.NpcAsrQuotaHandoff original,
             String systemPrompt,String userPrompt) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (quotaRecovery==null) throw new IllegalStateException("NPC ASR quota persistence unavailable");
         quotaRecovery.requireNpcAsrHandoff(original);
         return generateReserved(original.memberId(), "player", "npc_shop_chat", systemPrompt, userPrompt,
@@ -296,6 +299,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
 
     @Override
     public void refundNpcAsrNotSent(Long memberId,String requestId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (quotaRecovery==null) throw new IllegalStateException("NPC ASR quota persistence unavailable");
         quotaRecovery.refundNpcAsrNotSent(memberId,requestId);
     }
@@ -315,6 +319,8 @@ public class AiGatewayServiceImpl implements AiGatewayService
             String assembledInput = (systemPrompt == null ? "" : systemPrompt) + "\n"
                     + (userPrompt == null ? "" : userPrompt);
             secIn = checkTextFully(assembledInput, openid);
+        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (RuntimeException unavailable) {
             if (!playerThemeDraft && !asrHandoff) refundQuota(memberId, bizType, reservation);
             throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
@@ -346,6 +352,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
             }
             modelName = prepared ? snapshot.clientName() : client == null ? null : client.name();
         }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
         catch (RuntimeException e)
         {
             // 「无可用的 AI 模型」= 配置错,纯我们的锅,用户没拿到任何东西 → 退额度。
@@ -367,6 +374,8 @@ public class AiGatewayServiceImpl implements AiGatewayService
         String modelText;
         try {
             if (!asrHandoff) stageGenerationQuota(memberId,bizType,reservation,"MODEL_STARTED",preparedPlan);
+        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (RuntimeException stageUnavailable) {
             // chat has not been invoked; preserve the original unsent compensation path.
             if (!playerThemeDraft && !asrHandoff) refundQuota(memberId, bizType, reservation);
@@ -381,6 +390,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
                 throw new IllegalStateException("AI 模型返回为空");
             }
         }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
         catch (com.chengyinhub.business.service.ai.AiProviderNotSentException notSent)
         {
             // Only the dedicated transport proof can compensate after MODEL_STARTED.
@@ -504,6 +514,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
     @Override
     public String consumeQuota(Long memberId, String bizType)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         return consumePlannedQuota(memberId, bizType, planQuotaReservation(memberId, bizType, IdUtils.simpleUUID()));
     }
 
@@ -520,6 +531,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
     @Override
     public String consumePlannedQuota(Long memberId, String bizType, String reservation)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (memberId == null || memberId <= 0 || receiptOf(memberId, bizType, reservation) == null)
             throw new IllegalArgumentException("Invalid original quota reservation");
         return consumePlannedQuota(memberId, bizType, reservation, dailyLimitOf(rateGroupOf(bizType)));
@@ -566,6 +578,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
     @Override
     public void refundQuota(Long memberId, String bizType, String reservation)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (reservation == null) return;
         int split = reservation.lastIndexOf('|');
         if (split <= 0) return;

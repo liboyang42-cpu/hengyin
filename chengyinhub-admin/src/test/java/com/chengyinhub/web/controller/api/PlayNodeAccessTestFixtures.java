@@ -155,8 +155,10 @@ public final class PlayNodeAccessTestFixtures {
             try { puzzle=advised.getTargetSource().getTarget(); }
             catch(Exception failed) { throw new IllegalStateException("Cannot rewire hint application fixture",failed); }
         }
-        if(puzzle instanceof com.chengyinhub.business.service.impl.PuzzlePlayServiceImpl)
+        if(puzzle instanceof com.chengyinhub.business.service.impl.PuzzlePlayServiceImpl) {
             ReflectionTestUtils.setField(puzzle,"accessService",access);
+            ReflectionTestUtils.setField(puzzle,"topicRouteRuntimeService",input.get("topicRouteRuntimeService"));
+        }
         GRAPHS.put(controller,graph);
     }
 }

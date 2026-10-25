@@ -28,6 +28,7 @@ public class CoopDepositRefundService {
 
     /** 调用方必须已在业务事务内锁定邀约并完成退款资格校验。 */
     public void requestLocked(CoopInvite invite) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (!TransactionSynchronizationManager.isActualTransactionActive()) {
             throw new IllegalStateException("保证金退款意图必须与业务事务一起提交");
         }
@@ -70,6 +71,15 @@ public class CoopDepositRefundService {
     public void refresh(Long inviteId, boolean force) {
         if (TransactionSynchronizationManager.isActualTransactionActive())
             throw new IllegalStateException("保证金退款查证不能悬挂未提交的业务事务");
+        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) {
+            // No dispatch lease, new refund identity or synthetic failure on a restored row.
+            CoopInvite original = newTransaction().execute(status -> mapper.selectDepositFactByIdForUpdate(inviteId));
+            if (original != null && linked(original) && !blank(original.getDepositRefundNo())) {
+                Map<String, String> observed = wechatPayService.queryRefundFacts(original.getDepositRefundNo());
+                if (observed != null) handle(observed);
+            }
+            return;
+        }
         String token = UUID.randomUUID().toString();
         CoopInvite owned = newTransaction().execute(status -> {
             if (mapper.claimDepositRefundDispatch(inviteId, token, force) != 1) return null;
@@ -130,6 +140,8 @@ public class CoopDepositRefundService {
         try {
             result = wechatPayService.submitRefund(dispatch.originalPayment(), dispatch.outTradeNo(),
                     dispatch.refundNo(), dispatch.refundAmount(), dispatch.totalAmount(), "合作保证金退款");
+        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (Exception e) { result = RefundRequestResult.UNKNOWN; }
         String next = result == RefundRequestResult.ACCEPTED ? "PROCESSING"
                 : result == RefundRequestResult.DEFINITIVE_FAILED ? "MANUAL" : "UNKNOWN";
@@ -143,6 +155,7 @@ public class CoopDepositRefundService {
 
     /** No SDK/current-attempt read. The caller's short transaction owns this exact invite/lease. */
     private RefundDispatch prepareDispatch(CoopInvite observed, String token) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         CoopInvite current = mapper.selectDepositFactByIdForUpdate(observed.getId());
         if (current == null || !token.equals(current.getDepositRefundLeaseToken())
                 || !Integer.valueOf(2).equals(current.getDepositStatus())
@@ -210,6 +223,9 @@ public class CoopDepositRefundService {
             if (next == null) return false;
             if ("SUCCESS".equals(row.getDepositRefundState())) return true;
             if ("PROCESSING".equals(next) && "MANUAL".equals(row.getDepositRefundState())) return true;
+            // The gateway has retained a verified success fact. Pause local economic consumption,
+            // leaving the original state/number available for the original recovery flow.
+            if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return false;
             if (mapper.confirmDepositRefundResult(row.getId(), row.getDepositOutTradeNo(), refundNo,
                     expected, next) != 1) throw new IllegalStateException("保证金退款终态写入失败");
             return true;

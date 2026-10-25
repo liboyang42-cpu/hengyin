@@ -28,6 +28,13 @@ public class CmsTemplateLibrary extends BaseEntity
     @Excel(name = "关联的用户模板ID")
     private Long memberTemplateId;
 
+    /** 沿 memberTemplateId/owner 读取的个人模板语义；公共投影不能独立改写。 */
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
+    private String interactionType;
+
+    public String getInteractionType() { return interactionType; }
+    public void setInteractionType(String interactionType) { this.interactionType = interactionType; }
+
     /** 模板类别ID */
     @Excel(name = "模板类别ID")
     private Long categoryId;

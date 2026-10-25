@@ -148,10 +148,12 @@ public class PlayPreferenceApplication {
             out.error = error("先扫店内静态码进店，再开始任务");
             return out;
         }
-        if (out.node.getTemplateId() == null) { out.error = error("该节点未配置偏好题"); return out; }
         // R18-FREEZE:偏好题判定配置(preferenceJson)按开局快照,老局快照没有该键时回退实时模板
         com.fasterxml.jackson.databind.JsonNode frozenAnswer =
                 playNodeContext.frozenAnswer(memberId, out.playCtx.topicId, out.playCtx.actId, out.node.getId());
+        if (out.node.getTemplateId() == null && !playNodeContext.hasFrozenContent(frozenAnswer)) {
+            out.error = error("该节点未配置偏好题"); return out;
+        }
         out.template = frozenAnswer == null
                 ? cmsMemberTemplateService.selectCmsMemberTemplateById(out.node.getTemplateId())
                 : playNodeContext.frozenTemplateView(out.node, frozenAnswer);

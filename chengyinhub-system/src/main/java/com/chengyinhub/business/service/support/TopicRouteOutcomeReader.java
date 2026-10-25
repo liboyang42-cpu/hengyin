@@ -27,11 +27,23 @@ public final class TopicRouteOutcomeReader {
 
     public Map<Long, Set<String>> declaredRouteOutcomes(Long topicId) {
         CmsTopicNode probe = new CmsTopicNode(); probe.setTopicId(topicId); probe.setStatus(1L);
+        return declaredRouteOutcomes(nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(probe)), node ->
+                node.getTemplateId() == null ? null : cmsMemberTemplateMapper.selectCmsMemberTemplateById(node.getTemplateId()));
+    }
+
+    public Map<Long, Set<String>> declaredRouteOutcomes(TopicStateKeyRefService.CurrentContent content) {
+        if (content == null || !org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()
+                || org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly())
+            throw new IllegalStateException("正式路线结果声明必须加入主题写事务");
+        return declaredRouteOutcomes(content.activeNodes(), node -> content.templates().get(node.getTemplateId()));
+    }
+
+    private Map<Long, Set<String>> declaredRouteOutcomes(List<CmsTopicNode> nodes,
+            java.util.function.Function<CmsTopicNode, CmsMemberTemplate> templateAt) {
         Map<Long, Set<String>> result = new LinkedHashMap<Long, Set<String>>();
-        for (CmsTopicNode node : nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(probe))) {
+        for (CmsTopicNode node : nodes) {
             Set<String> values = new LinkedHashSet<String>();
-            CmsMemberTemplate template = node.getTemplateId() == null ? null
-                    : cmsMemberTemplateMapper.selectCmsMemberTemplateById(node.getTemplateId());
+            CmsMemberTemplate template = templateAt.apply(node);
             boolean advancedGameplay = false;
             if (template != null && StringUtils.isNotBlank(template.getAdvancedConfigJson())) {
                 try {

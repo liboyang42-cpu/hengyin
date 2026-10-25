@@ -788,6 +788,8 @@ jobs:
       # 起服务、不需要浏览器,失败即门禁红。
       - name: Run admin UI route/permission contracts
         run: npm --prefix chengyinhub-ui run test:e2e:contract
+      - name: Run admin UI content units
+        run: npm --prefix chengyinhub-ui run test:unit
 
   secret_scan:
     name: Secret scan (gitleaks)

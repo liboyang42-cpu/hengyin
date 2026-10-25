@@ -184,14 +184,15 @@ jobs:
       VALIDATED_SOURCE_SHA: ${{ matrix.source_sha || inputs.source_sha }}
       BATCH: ${{ inputs.batch }}
       TIMEZONE: ${{ inputs.timezone }}
-      B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'CoopDepositSettlementAttemptMySqlIT' || matrix.simple == 'CashWithdrawFundEvidenceMySqlIT' || matrix.simple == 'RefundPayoutMybatisIntegrationTest') && '1' || '' }}
+      B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'CoopDepositSettlementAttemptMySqlIT' || matrix.simple == 'CashWithdrawFundEvidenceMySqlIT' || matrix.simple == 'RefundPayoutMybatisIntegrationTest' || matrix.simple == 'FundsProcessRecoveryMySqlIT') && '1' || '' }}
+      B_FUNDS_PROCESS_RECOVERY_APPROVED: ${{ matrix.simple == 'FundsProcessRecoveryMySqlIT' && '1' || '' }}
       WP04_TOPIC_CASH_DDL_APPROVED: ${{ matrix.simple == 'Wp04TopicCashFenceMySqlIT' && '1' || '' }}
-      B_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'OmsOrderCommerceGuardMySqlIT' || matrix.simple == 'ClmCommercePaymentProofMySqlIT' || matrix.simple == 'WechatVerifiedPaymentFactMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RefundNotificationMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest' || matrix.simple == 'RefundPayoutMybatisIntegrationTest') && '1' || '' }}
+      B_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'OmsOrderCommerceGuardMySqlIT' || matrix.simple == 'ClmCommercePaymentProofMySqlIT' || matrix.simple == 'WechatVerifiedPaymentFactMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RefundNotificationMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest' || matrix.simple == 'RefundPayoutMybatisIntegrationTest' || matrix.simple == 'CrossDomainFaultIsolationMySqlIT' || matrix.simple == 'RestoreMoneyDispatchMySqlIT') && '1' || '' }}
       WP04_ORIGINAL_REFUND_DDL_APPROVED: ${{ (matrix.simple == 'Wp04OriginalRefundMySqlIT' || matrix.simple == 'Wp04CoopOrderScopeMySqlIT' || matrix.simple == 'CoopOrderStationFulfillmentMySqlIT' || matrix.simple == 'Wp04OriginalProducerMySqlIT' || matrix.simple == 'CoopSettlementManualCaseReadMySqlIT') && '1' || '' }}
       WP04_MANUAL_CASE_READ_DDL_APPROVED: ${{ matrix.simple == 'CoopSettlementManualCaseReadMySqlIT' && '1' || '' }}
       WP04_ORIGINAL_PRODUCER_DDL_APPROVED: ${{ matrix.simple == 'Wp04OriginalProducerMySqlIT' && '1' || '' }}
       WP04_PAID_HALF_STATE_DDL_APPROVED: ${{ (matrix.simple == 'Wp04PaidHalfStateMySqlIT' || matrix.simple == 'Wp04ApprovedRefundFenceMySqlIT') && '1' || '' }}
-      A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest' || matrix.simple == 'RefundPayoutMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT') && '1' || '' }}
+      A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest' || matrix.simple == 'RefundPayoutMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT' || matrix.simple == 'RestoreMoneyDispatchMySqlIT') && '1' || '' }}
     steps:
       - name: Checkout gate scripts
         uses: actions/checkout@v4
@@ -230,6 +231,27 @@ jobs:
           if report.is_file():
               Path('out').mkdir(exist_ok=True)
               shutil.copyfile(report, 'out/im-query-plan-observation.json')
+          PY
+      - name: Collect funds process JSON receipts
+        if: always() && matrix.simple == 'FundsProcessRecoveryMySqlIT'
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, os, re, shutil
+          source_sha = os.environ['SOURCE_SHA']
+          if not re.fullmatch(r'[a-f0-9]{40}', source_sha):
+              raise ValueError('funds evidence requires the exact source SHA')
+          source = Path('candidate/chengyinhub-admin/target/funds-process-recovery') / source_sha
+          files = sorted(source.rglob('*.json'))
+          if source.is_symlink() or not files:
+              raise ValueError('funds process JSON receipts are absent or unsafe')
+          for path in files:
+              if path.is_symlink() or source.resolve() not in path.resolve().parents:
+                  raise ValueError('funds evidence cannot leave its source directory')
+              json.loads(path.read_text(encoding='utf-8'))
+              target = Path('out/funds-process-recovery') / source_sha / path.relative_to(source)
+              target.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copyfile(path, target)
           PY
       - name: Upload class receipt
         if: always()

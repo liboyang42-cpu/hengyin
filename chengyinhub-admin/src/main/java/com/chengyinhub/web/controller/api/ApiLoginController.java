@@ -314,6 +314,7 @@ public class ApiLoginController extends BaseController {
         if (member_id == 0L) {
             return error("请登录");
         }
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
 
 
         String access_token = getWxToken();

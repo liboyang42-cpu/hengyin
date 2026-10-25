@@ -302,10 +302,11 @@ public class PlayBasicCommandApplication {
 
         // 读节点绑定模板的验证方式 + 校验答案(R18-FREEZE:对错判定按开局快照,新发布不改写
         // 进行中的一局;老局快照没有 nodeAnswers 键时回退实时模板)
-        if (node.getTemplateId() == null) return error("该节点未配置答题");
         com.fasterxml.jackson.databind.JsonNode sharedAnswerRoute = gameSessionRuntimeService == null ? null
                 : gameSessionRuntimeService.sharedRouteSnapshot(memberId, ctx.topicId, actId, node.getId());
         com.fasterxml.jackson.databind.JsonNode frozenAnswer = sharedAnswerRoute == null ? playNodeContext.frozenAnswer(memberId, ctx.topicId, ctx.actId, node.getId()) : sharedAnswerRoute.path("nodeAnswers").path(String.valueOf(node.getId()));
+        if (node.getTemplateId() == null && !playNodeContext.hasFrozenContent(frozenAnswer)) return error("该节点未配置答题");
+        if (playNodeContext.hasFrozenContent(frozenAnswer)) playNodeContext.frozenNodeView(node, frozenAnswer);
         int vm;
         String questionAnswer;
         String correctAnswer;
@@ -387,7 +388,10 @@ public class PlayBasicCommandApplication {
         if (hasActivity == hasTopic) return error("activityId 与 topicId 必须且只能传一个");
 
         CmsTopicNode node = cmsTopicNodeService.selectCmsTopicNodeById(request.getNodeId());
-        if (node == null || node.getTemplateId() == null) return error("节点不存在或未配置玩法");
+        if (node == null) return error("节点不存在或未配置玩法");
+        if (node.getTemplateId() == null && !playNodeContext.hasFrozenContent(playNodeContext.frozenAnswer(
+                memberId, node.getTopicId(), hasActivity ? request.getActivityId() : 0L, node.getId())))
+            return error("节点不存在或未配置玩法");
         // 规则16 下架闸 + 已完成幂等豁免(与 photo 同口径,§7-2):未完成的新提交仍被拦
         String activityIdArg = hasActivity ? String.valueOf(request.getActivityId()) : null;
         if (playNodeContext.isDelistedNode(node) && !playNodeContext.hasCompletedNodeFact(memberId, activityIdArg, node)) {

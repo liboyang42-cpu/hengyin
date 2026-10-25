@@ -690,6 +690,26 @@ class ApiPlayProgressCompletionTruthTest
         AjaxResult pick=BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "c", null, "pick-proof", 3);assertEquals(200,pick.get("code"));verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,"pick-proof",3,"ANSWER");verify(progressService,never()).insertPlayerNodeProgress(any());verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
     }
 
+    @Test void originalPublishedAnswerSurvivesUnbindButDoesNotGrantLegacyCompletionOrRewards() throws Exception {
+        topic.setProductType(ProductType.ORIENTEERING);node.setTemplateId(null);
+        com.chengyinhub.business.service.ITopicRouteRuntimeService runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        PlayNodeAccessTestFixtures.setField(controller,"topicRouteRuntimeService",runtime);
+        when(runtime.canPlay(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString())).thenReturn(true);
+        when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
+        var content=new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+        content.put("contentSnapshotVersion",1).put("templateId",9L).put("validationMethod",1).put("questionAnswer","original-answer");
+        content.putObject("nodePresentation").put("id",NODE).put("topicId",TOPIC).put("templateId",9L);
+        content.putObject("templatePresentation").put("questionName","original-question");
+        when(runtime.nodeAnswers(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(content);
+        PlayerNodeProgress proof=new PlayerNodeProgress();proof.setStatus(0);when(proofService.markArrived(PLAYER,ACTIVITY,node)).thenReturn(proof);
+        assertEquals(200,BasicPlayCommandFixtures.answer(controller,String.valueOf(ACTIVITY),String.valueOf(NODE),
+                "original-answer",null,"frozen-unbound",0).get("code"));
+        verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,"frozen-unbound",0,"ANSWER");
+        verify(templateService,never()).selectCmsMemberTemplateById(any());
+        verify(progressService,never()).insertPlayerNodeProgress(any());
+        verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
+    }
+
     // ---------- N-02 排行榜前置证明:每种完成方式都落 player_node_progress(status=1) ----------
     // 线性排行榜按 status=1 行计分。下面四条逐一钉住扫码/拍照/答题/高级玩法门四种完成入口
     // 都写出同一形状的完成行;个人玩法(genericPlayer)的扫码/答题只落 status=0 到店凭证

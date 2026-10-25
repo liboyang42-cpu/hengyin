@@ -81,6 +81,7 @@ class NodeHintUnlockApplicationTest {
         doAnswer(call -> {writable();balance.addAndGet(-call.<Integer>getArgument(1));return true;}).when(members).deductPoints(eq(7L),anyInt());
         PuzzlePlayServiceImpl target=new PuzzlePlayServiceImpl(templates,mock(PlayAttemptLogMapper.class),
                 mock(PlayerNodeProgressMapper.class),mock(UmsMemberMapper.class),nodes,access,settings,members,details);
+        org.springframework.test.util.ReflectionTestUtils.setField(target,"topicRouteRuntimeService",routes);
         transactions=new BoundaryTransactions();ProxyFactory proxy=new ProxyFactory(target);proxy.setInterfaces(IPuzzlePlayService.class);
         proxy.addAdvice(new TransactionInterceptor(transactions,new AnnotationTransactionAttributeSource()));
         application=(IPuzzlePlayService)proxy.getProxy();
@@ -166,6 +167,23 @@ class NodeHintUnlockApplicationTest {
         result(activity(),10);template.setHint1("current hint");
         assertEquals("current hint",result(activity(),0).hints().hint1());
         verify(members,times(1)).deductPoints(7L,10);assertEquals(90,balance.get());assertEquals(1,ledger.size());
+    }
+    @Test void publishedHintAfterUnbindKeepsOriginalFeeReceiptScopeAndRetry() {
+        var content=new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+        content.put("contentSnapshotVersion",1).put("templateId",39L);
+        content.putObject("nodePresentation").put("id",401L).put("topicId",300L).put("templateId",39L);
+        content.putObject("templatePresentation");
+        content.put("hint1","original one").put("hint2","original two");
+        when(routes.nodeAnswers(7L,300L,500L,401L)).thenReturn(content);
+        node.setTemplateId(null);template.setHint1("later author edit");
+        assertEquals("original one",result(activity(),10).hints().hint1());
+        assertEquals("original two",result(activity(),0).hints().hint2());
+        assertEquals(Set.of("7:14:401"),ledger.keySet());assertEquals(90,balance.get());
+        var row=ledger.get("7:14:401");assertEquals(100L,row.getCurrentPoints());assertEquals(90L,row.getAfterPoints());
+        verify(members,times(1)).deductPoints(7L,10);verify(templates,never()).selectCmsMemberTemplateById(any());
+        clearInvocations(members,details);
+        assertNotNull(application.unlockNodeHint(new NodeHintUnlockCommand(8L,401L,"500",null)).failure());
+        verifyNoInteractions(members,details);assertEquals(90,balance.get());assertEquals(1,ledger.size());
     }
     @Test void existingBalancePrecheckP2IsCharacterizedWithoutReorderingLocks() {
         result(activity(),10);balance.set(0);

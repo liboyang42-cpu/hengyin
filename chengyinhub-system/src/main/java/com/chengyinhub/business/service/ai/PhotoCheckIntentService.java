@@ -43,6 +43,7 @@ public class PhotoCheckIntentService {
 
     @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
     public PhotoCheckIntentView prepare(PhotoCheckIntentCommand command) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         requireTransaction();
         validate(command);
         PhotoCheckIntentRow existing = mapper.selectByKey(command.memberId(), command.sessionId(), command.actionKey());
@@ -78,6 +79,7 @@ public class PhotoCheckIntentService {
 
     @Transactional(propagation = Propagation.NEVER)
     public PhotoCheckIntentView executeOnce(Long memberId, Long intentId, String requestFingerprint) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (TransactionSynchronizationManager.isActualTransactionActive()) {
             throw new IllegalStateException("Photo execution requires no active transaction");
         }
@@ -92,6 +94,8 @@ public class PhotoCheckIntentService {
         try {
             review = vision.reviewPrepared(memberId, command.imageReference(), command.requirement(),
                     original.getReservation(), snapshot -> saveSnapshot(original, snapshot));
+        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (RuntimeException failure) {
             // A thrown security refusal is never converted to a degraded result. A failed call is
             // conservatively uncertain; neither restart nor elapsed time grants another execution.

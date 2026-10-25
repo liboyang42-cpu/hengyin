@@ -1,0 +1,7 @@
+1eaac9811a427227d081ca772efae0ef2d1339cf2fa303554e876b98352b4197  chengyinhub-ui/src/views/business/membertemplate/index.vue
+421530859baf856333b8b88b37390292af245c57dfa31ddac8a3644bda298d53  chengyinhub-ui/src/views/business/membertemplate/detail.vue
+005e5d647a00d26920aaa7bb485f688735d5972dae7c3d90d1c5efb1be142088  chengyinhub-ui/src/views/business/membertemplate/TemplateContentFields.vue
+ff664e077c6b0c6c4c0a87dade69ecae251feb7eb4b72570465bead631c36641  chengyinhub-ui/src/views/business/membertemplate/template-content.js
+131b8c528f24a2693d20f0b1ae56c6f81732d6a159a23d9bbcc69000f93900d3  chengyinhub-ui/tests/unit/template-center-contract.test.js
+8cdf9ac3827fee1153b7145dde3254690aea4068fbc76d2ec55246714047c840  chengyinhub-ui/tests/unit/template-complete-content.test.js
+9f38ac1469a55502b5bab287982c4b28dff4c83613e26ebd2e4a4d41b5218ec4  docs/delivery/architecture-day/C/complete-template-admin/delivery.md

@@ -30,6 +30,8 @@ import java.util.Set;
 public final class StateKeyRefs {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final java.util.regex.Pattern TEMPLATE_CLUE = java.util.regex.Pattern.compile("^clue\\.h_[0-9a-f]{12}$");
+
 
     /**
      * 服务端保留变量前缀(共享契约 v4):sys.luck 只读写在效果里,其余 sys.hp / sys.asked /
@@ -39,6 +41,24 @@ public final class StateKeyRefs {
 
     private StateKeyRefs() {
     }
+
+    /** Original compiler clue declaration projection; pure data, no registry reads/writes or runtime facts. */
+    public static Map<String, String> declaredTemplateClues(JsonNode config) {
+        Map<String, String> labels = new java.util.LinkedHashMap<>();
+        if (config != null) collectTemplateClueDeclarations(config, labels);
+        return java.util.Collections.unmodifiableMap(labels);
+    }
+
+    private static void collectTemplateClueDeclarations(JsonNode n, Map<String,String> labels) {
+        if (n.isObject()) {
+            JsonNode names = n.path("clues");
+            if (names.isObject()) names.fields().forEachRemaining(row -> { if (TEMPLATE_CLUE.matcher(row.getKey()).matches() && row.getValue().isTextual()) labels.put(row.getKey(), row.getValue().asText()); });
+            String var = n.path("var").asText("");
+            if (TEMPLATE_CLUE.matcher(var).matches()) labels.putIfAbsent(var, var);
+            n.forEach(child -> collectTemplateClueDeclarations(child, labels));
+        } else if (n.isArray()) n.forEach(child -> collectTemplateClueDeclarations(child, labels));
+    }
+
 
     /** 复制节点模板时只翻译实际系统变量和 NODE_COMPLETED 引用，不修改题面文本。 */
     public static String remapNodeIds(String raw, Map<Long, Long> nodeMap) {

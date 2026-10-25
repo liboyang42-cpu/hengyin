@@ -16,6 +16,7 @@ public class ImNotificationDeliveryTask {
     @Autowired private IImService imService;
 
     public void deliverPending() {
+        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return;
         Long maxId = mapper.maxPendingId();
         if (maxId == null) return;
         long after = 0;

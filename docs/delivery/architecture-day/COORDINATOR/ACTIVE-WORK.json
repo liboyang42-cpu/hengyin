@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-25T07:19:13.911534+00:00",
+  "updated_utc": "2026-10-25T12:46:19.264683+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -667,7 +667,7 @@
       "acceptance": false
     }
   },
-  "known_remaining_implementation": "All presently identified residual source and fixture repairs integrated; only actual b626 final validation failures may reopen an original owner task. This is not completion of full governance scope.",
+  "known_remaining_implementation": "All currently assigned A-H full source packages are integrated, including H33 exact composed images. Root final source metadata/ledger/secret scan and one isolated candidate, then final parallel concentrated review and necessary same-source acceptance remain. Whole WP/Q/A/T/G acceptance is incomplete; no tests/compilation run for current source.",
   "remaining_acceptance_groups": [
     "Real HTTP multi-identity and authorized provider unknown-result scenarios",
     "Whole-business process termination/recovery and rollback evidence",
@@ -2444,7 +2444,7 @@
     "all_complete": false
   },
   "theme_game_reuse_implementation": {
-    "state": "ALL_GAME_REUSE_COMPLETE_WORKPACKAGES_IN_PROGRESS_NOT_ACCEPTED",
+    "state": "ALL_PLANNED_SOURCE_PACKAGES_COMPOSED_FINAL_SOURCE_CLOSURE_NOT_ACCEPTED",
     "source_checkpoint": {
       "state": "FROZEN_SOURCE_CHECKPOINT_NOT_ACCEPTED",
       "sha": "fa5c263440573992701263d6bee60830844a49b8",
@@ -2472,43 +2472,86 @@
       "A": {
         "thread": "01a16a22-3076-7196-88f5-86d5b2c83036",
         "host": "durable",
-        "turn": "01a171e3-a6fe-700e-8c5f-87c632147a78",
-        "cursor": "1e9feea5-2ea9-4d63-a7a0-0e845f8692e0:16",
-        "owned": "All backend mechanisms actual key/implementation/proof crosswalk, SupportMatrix/TemplateRules and direct tests; QA only first example, no G/E files"
+        "turn": "01a17206-1a41-7593-960d-dc789be3ec23",
+        "cursor": "1e9feea5-2ea9-4d63-a7a0-0e845f8692e0:20",
+        "owned": "All backend mechanisms actual key/implementation/proof crosswalk, SupportMatrix/TemplateRules and direct tests; QA only first example, no G/E files",
+        "state": "SOURCE_WORKPACKAGE_COMPLETE_FROZEN_NOT_ACCEPTED"
       },
       "D": {
         "thread": "01a16a22-f399-7110-ba27-ef3f7245603b",
         "host": "durable",
         "turn": "01a171f2-4ac0-76af-aa13-4125a8e65a72",
-        "cursor": "392a0141-0cc8-4147-8a14-b181aa78db38:18",
-        "owned": "All MiniProgram catalog/editor/adoption/binding/render/submit chain and necessary direct source/tests; preserve H session and prior D0e6; no ledger/baseline"
+        "cursor": "392a0141-0cc8-4147-8a14-b181aa78db38:22",
+        "owned": "All MiniProgram catalog/editor/adoption/binding/render/submit chain and necessary direct source/tests; preserve H session and prior D0e6; no ledger/baseline",
+        "state": "SOURCE_WORKPACKAGE_COMPLETE_FROZEN_NOT_ACCEPTED"
       },
       "G": {
         "thread": "01a16a23-8904-73e8-a024-378a96f0800c",
         "host": "durable",
-        "turn": "01a171e3-c098-70e1-8d14-3d19d206011e",
-        "cursor": "4b361718-0fcf-48df-970f-92288ff9076c:25",
-        "owned": "Publication full locked-current-content -> compiler -> release/run snapshot chain and direct fixtures; real RR seam, preserve hashes/locks"
+        "turn": "01a1721a-a906-74cb-abb3-902654177747",
+        "cursor": "4b361718-0fcf-48df-970f-92288ff9076c:41",
+        "owned": "RR12 delivered; complete publication/freeze producer with H actual metadata/identity consumer and F actual authored state-key current-read/hash contract; no H/F files",
+        "state": "FULL_PRODUCER_SOURCE_INTEGRATED_FROZEN_NOT_ACCEPTED"
       },
       "E": {
         "thread": "01a16a23-2723-72e4-813f-03d7f1aa6017",
         "host": "durable",
-        "turn": "01a171e3-b3c0-7376-a09a-26b336389ec6",
-        "cursor": "bf46e2e6-88ca-4fad-a205-efca84d15256:14",
-        "owned": "PublicationContentGuard/RoutePublishGate/actual validators and direct diagnostics/tests; no separate compiler/DBcapability column",
-        "state": "SOURCE_DELIVERY_INTEGRATED_NO_EMPTY_REVIEW_TASK"
+        "turn": "01a17224-5da9-7243-94e0-f98b29c85550",
+        "cursor": "bf46e2e6-88ca-4fad-a205-efca84d15256:23",
+        "owned": "ContentGuard autoRegisterOptionTags/registered-reference reads consume same current author declaration projection as G; preview remains existing read-only; preserve all91a3 diagnostics and direct tests, no G/H/F files",
+        "state": "CURRENT_CONTENT_CALLERS_SOURCE_INTEGRATED_FROZEN_NOT_ACCEPTED"
       },
       "B": {
         "thread": "01a16a22-956c-723f-b51b-afcbee69802b",
         "host": "durable",
-        "turn": "01a171f2-56fb-732e-a180-a445881ef31a",
-        "cursor": "b03dff2c-10cc-4156-add7-1e422e41c5d1:17",
-        "state": "SOURCE_MAP_COMPLETE_IMPLEMENTATION_WORKPACKAGE_NEXT",
+        "turn": "01a17202-79db-7505-8928-8a45a52cac5e",
+        "cursor": "b03dff2c-10cc-4156-add7-1e422e41c5d1:22",
+        "state": "SOURCE_WORKPACKAGE_COMPLETE_FROZEN_NOT_ACCEPTED",
         "owned": "Existing complete game content library/adopt/copy/IDs/necessary production direct tests; no new library/version table, no D/C/G files"
+      },
+      "C": {
+        "thread": "01a16a22-c697-7637-ae29-cdff6341000b",
+        "host": "durable",
+        "turn": "01a17202-aa62-70a9-8478-673f075c0c0a",
+        "cursor": "587dd7ff-a4ef-45f7-b8ca-5c38d84758ff:10",
+        "state": "SOURCE_WORKPACKAGE_COMPLETE_FROZEN_NOT_ACCEPTED",
+        "owned": "Existing admin membertemplate/templatelibrary Vue/API/component and truly necessary direct tests, advanced content management and lossless saves; no new library or duplicated 42 editors"
+      },
+      "H": {
+        "thread": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
+        "host": "durable",
+        "state": "FULL_SOURCE_INTEGRATED_FROZEN_NOT_ACCEPTED",
+        "owned": "Actual frozen presentation/Advanced identity/PlayNodeQuery; narrow pure-read personal/shared runtime review.patch + ThemeCharacter seed/card/read/casebook live declaration consumers, preserving old values/clamp/persistence policy; G frozen producer, F writer",
+        "turn": "01a1720e-1284-71bf-a916-cbbfbab80796",
+        "cursor": "14018e83-052e-4771-a1ef-d3708b18cc1b:23",
+        "basic_hint_handoff": "NOT_ALLOWED_ALREADY_EDITING_CONFIRMED_BY_H; do not dispatch A or overlap.",
+        "basic_hint_owned_paths": [
+          "PlayBasicCommandApplication.java",
+          "PlayPreferenceApplication.java",
+          "PuzzlePlayServiceImpl.java",
+          "PlayNodeContext.java"
+        ],
+        "commit": "ce2bee0408baedcb4cd6ea7bc39ab8ea97236b16",
+        "receipt": "/private/tmp/hengyin-H-final-consumer-source-integration.json",
+        "owned_files": 26,
+        "shared_files": 6,
+        "test_wiring_files": 1,
+        "new_test_source_methods": 45,
+        "exact_composed_postimages": "33/33",
+        "tests": "NOT_RUN",
+        "compilation": "NOT_RUN"
+      },
+      "F": {
+        "thread": "01a16a23-5e0c-736b-9fc1-d4d070393009",
+        "host": "durable",
+        "state": "PRODUCER_SOURCE_WORKPACKAGE_COMPLETE_FROZEN_NOT_ACCEPTED",
+        "owned": "ThemeStateKeyMapper/XML and actual authored declaration writer/current read/necessary tests; distinguish mutable runtime values, give G precise signature/lock; not old gate audit",
+        "turn": "01a1720e-2ae4-70b2-b031-4cd2e35ff436",
+        "cursor": "446d298a-e8e5-46b0-bbe8-4c4beccfc008:24"
       }
     },
     "root_ownership": "Shared contracts, construction and reuse instructions/catalog, integration, source metadata/ledger, final same-source verification",
-    "other_original_owners": "C assigned only concrete admin advanced-template management gap under complete plan; F/H closed with no empty standby.",
+    "other_original_owners": "E diagnostic delivered/frozen; H/F old tasks remain closed and only explicit new remaining source seams assigned. No ninth/local agent.",
     "reference_06_sha256": "5d3224e7854f708f32adefd6cdcafd06373e5bd5b993e6c60e840338f3933fc0",
     "reference_07_sha256": "6d129b6aced3c0b9040b9445b440ffb0db4453e1b1896aff85bdd92a3faf17fa",
     "reference_not_runtime_proof": true,
@@ -2522,7 +2565,7 @@
     "acceptance": "Once all necessary implementations/callers/fixtures are complete, root performs concentrated same-candidate review and impacted CI/MySQL/HTTP; no intermediate CI or unimpacted passing reruns",
     "all_complete": false,
     "execution_policy": "No tests of any kind now. Complete all-game code/callers/config/fixtures first, then root unified impacted verification; no intermediate Node/Python/Java/DB/HTTP/CI.",
-    "previous_goal_turn_classification": "PROGRESS: exact A Java test/E7/D7 source integrated; all-games scope and complete source-backed master plan written, B real library map obtained; no tests/CI run.",
+    "previous_goal_turn_classification": "PROGRESS plus VERIFIED_WAIT: current H exact original handle stillinProgress; captured240 regular dirty source preimages once after A/F/C integration so H patch cannot silently overwrite composed source. No tests/compile or timeout restart; H full package still pending.",
     "source_observations": {
       "A": {
         "state": "SOURCE_CONFIRMED_NOT_NEW_TEST_PASS",
@@ -2538,22 +2581,37 @@
         "state": "SOURCE_CONFIRMED_NOT_RUNTIME_REPRODUCED",
         "chain": "publish/temp -> playkit-view -> playkit/index.wxml -> playkit-qa",
         "gap": "Original component lacks run-instance input; burning not reset on config switch and photo async may return after reuse",
-        "next": "Minimal component/dispatcher lifecycle and actual instance fencing plus direct tests SOURCE ONLY"
+        "next": "Minimal component/dispatcher lifecycle and actual instance fencing plus direct tests SOURCE ONLY",
+        "all_games_boundary": "Existing node-game-catalog/r5-editor/playkit-view; R5 legacyRows branch/silentOrder/diyName/musicCorner/slowTask/multiplayer remain read-only, not reopened for new authoring.",
+        "source_gap_in_progress": "Node library choice only combines homepage recommended/hot/new slices; use existing list pagination with original owner/page/target fencing and server adopt/readback."
       },
       "E": {
         "state": "SOURCE_CONFIRMED_NOT_NEW_TEST_PASS",
         "existing": "Production content/reference validators + route config validator -> deterministic gate using original engine",
         "gap": "Some runtime/template item/node errors omit field/node/template identity; edge error omits array location",
-        "next": "Only diagnostic context and real publication entry tests, no duplicate engine/provider fallback"
+        "next": "Only diagnostic context and real publication entry tests, no duplicate engine/provider fallback",
+        "latest": "56bc8+2 root shared helpers and4e2986 caller files all exact source integration; formal current-content consumer closed at source level, no runtime acceptance. E frozen."
       },
       "G": {
         "state": "SOURCE_SEAM_IMPLEMENTATION_IN_PROGRESS",
-        "next": "Compile from same locked current projection; do not remove existing bundle hash/ordered locks or add unrelated engine"
+        "next": "Compile from same locked current projection; do not remove existing bundle hash/ordered locks or add unrelated engine",
+        "latest": "Production declaration derivation/capture/hash/freeze and two version markers implemented according to owner; complete source/test delivery still pending, not integrated proof."
       },
       "B": {
         "state": "SOURCE_CONFIRMED_NOT_RUNTIME",
         "chain": "cms_member_template -> cms_template_library -> adopt-draft owned draft -> node templateId -> original frozen publication/run",
-        "gap": "Admin editor has basic 1/2/3 fields; personal/library/preset ID distinction and source content version must not be conflated; actual stock and published coverage UNKNOWN"
+        "gap": "Admin editor has basic 1/2/3 fields; personal/library/preset ID distinction and source content version must not be conflated; actual stock and published coverage UNKNOWN",
+        "source_gaps_in_progress": [
+          "Validation before authoritative adoption overwrites request fields",
+          "clearFields after canonical copy / preserve explicit legitimate edit contract",
+          "Editing existing adopted copy re-reads live source secrets and medals",
+          "Publish DTO lacks existing interactionType"
+        ]
+      },
+      "H": {
+        "state": "SOURCE_IMPLEMENTATION_IN_PROGRESS_NOT_ACCEPTED",
+        "latest": "Basic/hint files already edited, remain H; frozen content does not restore revoked live-node/content-safety admission; shared pure-read and declaration consumers included",
+        "tests": "NOT_RUN"
       }
     },
     "latest_repeated_attachment": {
@@ -2587,23 +2645,726 @@
     "integrated_source_deliveries": {
       "receipt": "/private/tmp/hengyin-TG-A-D-E-source-integration.json",
       "A": {
-        "state": "CODE_POSTIMAGE_EXACT_DOC_TRANSPORT_PENDING",
+        "state": "JAVA_AND_BOTH_DOC_AUTHOR_POSTIMAGES_EXACT",
         "test_sha256": "65c4df37055692026f0b8c5d2d0f56ffed71b7df763ddb0a601dc482a2c11339",
         "full_chat_patch": "NOT_APPLIED_TRUNCATED_README",
-        "tests": "NOT_RUN"
+        "tests": "NOT_RUN",
+        "readme_sha256": "3dc624ace7d5d82154cee431dda297feddbc08ed1a05d1b6c9936f69b3e30e81",
+        "mechanisms_sha256": "ae9632e6668090adb418cae92fb9fb28cc2a69b52aca53c622c3f829c2830f11",
+        "readme_transport": "Single damaged base64 character F->f at index13298 recovered only after independent original-author SHA match; failed raw preserved. Do not claim original transport byte equality.",
+        "receipt": "/private/tmp/hengyin-A-TG-documents-byte-integration.json"
       },
       "E": {
         "state": "ALL_7_FILES_POSTIMAGE_EXACT",
         "donor": "91a3bdd2aea254e39fe245337bfdd3f89122cf10",
-        "tests": "NOT_RUN"
+        "tests": "NOT_RUN",
+        "current_declarations": {
+          "state": "ALL_8_POSTIMAGES_AND_AUTHOR_OWNED_PATCH_HASH_EXACT_NOT_ACCEPTED",
+          "donor": "56bc9324e1ebb7244130c6f9525a43262a046d88",
+          "parent": "91a3bdd2aea254e39fe245337bfdd3f89122cf10",
+          "owned_patch_sha256": "fa733b25d8008e0e0feb751e05693ef5f9ff49c7d1958a5903154717267efcba",
+          "new_test_declarations": 26,
+          "old_test_declarations_retained": 25,
+          "shared_applied": [
+            "StateKeyRefs pure clue helper subset",
+            "TopicPublishCheckService readonly preview caller"
+          ],
+          "shared_G_pending": [
+            "Compiler clue collection delegates to shared pure helper",
+            "Reference collector consumes same current child/template/chapter view"
+          ],
+          "receipt": "/private/tmp/hengyin-E-current-declarations-source-integration.json",
+          "tests": "NOT_RUN"
+        },
+        "current_content_callers": {
+          "state": "E_CURRENT_CALLERS_6_POSTIMAGES_AND3_AUTHOR_CODE_HASHES_EXACT_SOURCE_ONLY",
+          "donor": "4e29814c8e0257a53b6f7b2eb5c3b733203490d6",
+          "parent": "56bc9324e1ebb7244130c6f9525a43262a046d88",
+          "new_test_source_declarations": 6,
+          "old_source_cases_retained": [
+            26,
+            25
+          ],
+          "tests": "NOT_RUN",
+          "receipt": "/private/tmp/hengyin-E-current-callers-source-integration.json"
+        }
       },
       "D": {
         "state": "ALL_7_FILES_POSTIMAGE_EXACT",
         "donor": "0e6b05e617f2099c5e0d32659ac3f99968ff7c3c",
+        "tests": "NOT_RUN",
+        "all_games_followup": {
+          "state": "ALL_8_POSTIMAGES_EXACT_NOT_ACCEPTED",
+          "donor": "e8a25307dd593da36ca7133d32167b6a7d819e62",
+          "parent": "0e6b05e617f2099c5e0d32659ac3f99968ff7c3c",
+          "new_test_declarations": 15,
+          "tests": "NOT_RUN",
+          "receipt": "/private/tmp/hengyin-D-all-game-reuse-source-integration.json",
+          "pending": "Known two EOF newlines normalized only; root hash receipt retained; final ledger/baseline remains pending full source."
+        }
+      },
+      "all_complete": false,
+      "G": {
+        "state": "ALL_12_SOURCE_POSTIMAGES_EXACT_NOT_ACCEPTED",
+        "donor": "edf731c15090d2289553dd7f966f6c7d8ec7f5e2",
+        "parent": "fa5c263440573992701263d6bee60830844a49b8",
+        "new_test_declarations": 13,
+        "tests": "NOT_RUN",
+        "receipt": "/private/tmp/hengyin-G-TG1-TG2-source-integration.json",
+        "followup": {
+          "state": "ALL_3_POSTIMAGES_EXACT",
+          "donor": "db2ec9417b3dfa4f4c632df1eff787a1e16855f1",
+          "parent": "edf731c15090d2289553dd7f966f6c7d8ec7f5e2",
+          "new_test_declarations_total": 14,
+          "tests": "NOT_RUN"
+        },
+        "current_reference_dependency": {
+          "state": "G_CURRENT_COLLECTOR_3_POSTIMAGES_EXACT_SOURCE_ONLY",
+          "donor": "1718c569ffb9e09847a6199c85b27b2dafd56689",
+          "parent": "db2ec9417b3dfa4f4c632df1eff787a1e16855f1",
+          "new_test_declarations": 5,
+          "tests": "NOT_RUN",
+          "receipt": "/private/tmp/hengyin-G-current-reference-source-integration.json"
+        },
+        "full_producer": {
+          "state": "G_FULL_PRODUCER22_EXACT_PLUS1_COMPOSED_WIRING_AND5_SHARED_REVIEWS_APPLIED_NOT_ACCEPTED",
+          "donor": "e306ae9b38555262651991591d433876ae9069b3",
+          "parent": "1718c569ffb9e09847a6199c85b27b2dafd56689",
+          "exact_owned_files": 22,
+          "shared_wiring": "TopicPublicationTestWiring clean3way preserves F parent fence+G typed ports",
+          "shared_review_count": 5,
+          "owner_new_test_declarations": 24,
+          "tests": "NOT_RUN",
+          "receipt": "/private/tmp/hengyin-G-full-producer-source-integration.json",
+          "author_diff_scope_note": "Author announced5dfd... differs root gitdiff77e202... scope; no claim rawdiff equal, donor blobs/postimages exact where specified"
+        }
+      },
+      "C": {
+        "state": "ALL_8_SOURCE_POSTIMAGES_EXACT_NOT_ACCEPTED",
+        "donor": "820a9ef2a8756f07c3ae7951718826671c449b6c",
+        "parent": "fa5c263440573992701263d6bee60830844a49b8",
+        "old_test_declarations_retained": 10,
+        "new_test_declarations_author_report": 8,
+        "tests": "NOT_RUN",
+        "receipt": "/private/tmp/hengyin-C-TG3-admin-source-integration.json",
+        "limits": "Admin existing PUT/permissions and unknown/raw JSON/identity preserved; complex visual authoring stays existing MiniProgram; server rules remain authoritative"
+      },
+      "B": {
+        "state": "FULL_AUTHOR_PATCH_AND_ALL_14_POSTIMAGES_EXACT_NOT_ACCEPTED",
+        "parent": "fa5c263440573992701263d6bee60830844a49b8",
+        "patch_bytes": 64259,
+        "patch_sha256": "08cdb0502d4fe9b9bbf77eb081a5f172f375f3b1a1417d36ade50bac434dd9ae",
+        "receipt": "/private/tmp/hengyin-B-complete-game-reuse-source-integration.json",
+        "new_test_declarations": 14,
+        "tests": "NOT_RUN",
+        "public_commit": "ROOT_NOT_FROZEN_YET"
+      },
+      "F": {
+        "state": "ALL_10_POSTIMAGES_EXACT_PLUS_SHARED_3_REVIEW_HUNKS_APPLIED_NOT_ACCEPTED",
+        "donor": "e3068c120af738b954b72afd22ceec953477b6d2",
+        "parent": "edf731c15090d2289553dd7f966f6c7d8ec7f5e2",
+        "new_test_declarations": {
+          "unit": 5,
+          "mysql": 6
+        },
+        "old_unit_retained": 18,
+        "tests": "NOT_RUN",
+        "receipt": "/private/tmp/hengyin-F-state-key-declarations-source-integration.json",
+        "limits": "Writer/current-read producer only; G/E same projection hash/validation/freeze and H frozen runtime consumers still required",
+        "postprocessing": "Source transport normalization receipt: valid raw review patch encoded byte-identically, root README/manifest updated, originals remain donor e306/private archive. Integration exactness refers entry point, final current source uses root manifest."
+      },
+      "H": {
+        "thread": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
+        "host": "durable",
+        "state": "FULL_SOURCE_INTEGRATED_FROZEN_NOT_ACCEPTED",
+        "owned": "Actual frozen presentation/Advanced identity/PlayNodeQuery; narrow pure-read personal/shared runtime review.patch + ThemeCharacter seed/card/read/casebook live declaration consumers, preserving old values/clamp/persistence policy; G frozen producer, F writer",
+        "turn": "01a1720e-1284-71bf-a916-cbbfbab80796",
+        "cursor": "14018e83-052e-4771-a1ef-d3708b18cc1b:23",
+        "basic_hint_handoff": "NOT_ALLOWED_ALREADY_EDITING_CONFIRMED_BY_H; do not dispatch A or overlap.",
+        "basic_hint_owned_paths": [
+          "PlayBasicCommandApplication.java",
+          "PlayPreferenceApplication.java",
+          "PuzzlePlayServiceImpl.java",
+          "PlayNodeContext.java"
+        ],
+        "commit": "ce2bee0408baedcb4cd6ea7bc39ab8ea97236b16",
+        "receipt": "/private/tmp/hengyin-H-final-consumer-source-integration.json",
+        "owned_files": 26,
+        "shared_files": 6,
+        "test_wiring_files": 1,
+        "new_test_source_methods": 45,
+        "exact_composed_postimages": "33/33",
+        "tests": "NOT_RUN",
+        "compilation": "NOT_RUN"
+      }
+    },
+    "ledger_requires_final_source_refresh": true,
+    "master_plan_public_commit": "ceb4e5f923091dc0fc5e5b6b7670d60c27bff85f",
+    "complete_workpackage_dispatch": {
+      "state": "FIVE_ORIGINAL_CLOUD_CHATS_DISPATCHED",
+      "owners": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "F",
+        "G",
+        "H"
+      ],
+      "not_output_or_acceptance_count": true,
+      "tests": "NOT_RUN"
+    },
+    "remaining_shared_source_seams": [
+      "H actual presentation/identity fields -> G original frozen producer; no secret leaks/live historical backfill",
+      "F verify authored key declarations vs mutable runtime -> exact current read and G hash/freeze; no new variables policy",
+      "B canonical adoption/edit preservation -> D actual list/adopt/current personal ID and C lossless admin content fields"
+    ],
+    "pending_source_registration": {
+      "com.chengyinhub.business.service.impl.TopicPublicationBindingMySqlIT": {
+        "declarations": 6,
+        "storage": [
+          "mysql"
+        ],
+        "fixture": "TopicContentGraphMySqlFixture",
+        "registration": "PENDING_FINAL_COMPOSED_SOURCE_COUNT_AND_GATES",
         "tests": "NOT_RUN"
       },
-      "all_complete": false
+      "com.chengyinhub.business.it.ThemeStateKeyDeclarationMySqlIT": {
+        "declarations": 6,
+        "storage": [
+          "mysql"
+        ],
+        "registration": "PENDING_FINAL_SOURCE_COUNT_GATES",
+        "tests": "NOT_RUN"
+      }
     },
-    "ledger_requires_final_source_refresh": true
-  }
+    "next_integration": "All A-H planned source packages composed. Root final metadata/derived ledger/secret scan/freeze, then original owners final concentrated same-candidate review; no intermediate test or compile.",
+    "confirmed_shared_contracts": {
+      "whole_topic_use": "POST /api/template/topic-template/use {id,scope} -> returned topicId; ApiTopicTemplateController class mapping, not /api/topicTemplate/use shorthand",
+      "mini_game_adopt": "POST /api/template/adopt-draft originalTemplateId=libraryID -> personal template ID -> node.templateId",
+      "source_fields": "interactionType existing canonical member field preserved by C/D, B DTO in progress, G original full entity hash test added"
+    },
+    "shared_contracts_in_progress": {
+      "H_G": {
+        "location": "Original nodeAnswers[nodeId]",
+        "fields": [
+          "contentSnapshotVersion:1",
+          "templateId",
+          "templatePresentation exact real-consumer whitelist",
+          "nodePresentation exact identities and consumed map/narrative data",
+          "chapterAudioUrl"
+        ],
+        "secrets": "Answers/hints/reveals remain server-side and original authorized projection; no whole-template public DTO",
+        "legacy": "No marker keeps explicit old path, no live backfill of marked snapshots",
+        "read_ports": "H separate narrow pure-read runtime review.patch, preserve actor/scope/team/sourceNode mapping, no refreshZeroHpRead/ensure writes",
+        "pure_read_signature_from_H": "IGameSessionRuntimeService.querySharedRouteSnapshot(memberId,topicId,activityId,nodeId), defensive original-run projection; exact return type from H source delivery, no refreshZeroHpRead",
+        "shared_leaf": "JourneyInitialState producer freezeKeys only G; visibleKeys/rebuild consumer only H, review.patch applied serially by root",
+        "source_progress": "H ce2bee complete26 owned+6 shared+1 fixture all33 author postimages exact; no contentSnapshotOnly; source only NOT_RUN.",
+        "ordinary_linear_admission": {
+          "state": "ROOT_FINAL_CONTRACT_V3_EXISTING_H_HUNK_NO_NEW_FLAG",
+          "implementation": "Existing session first; with hasContentSnapshots use frozen journeyRules/journeyStory/nodeConfigs/themeConfig and existing JourneyRules.parse/NodeJourneySnapshot.needsJourneyState. Old V1 absent new content marker keeps old branch. No live backfill or extra contentSnapshotOnly.",
+          "source_evidence": "G cursor37 and H cursor19 both already implemented this no-new-field plan; root approved actual H hunk rather than making G copy runtime decision",
+          "supersedes": "All crossed preliminary boolean-marker suggestions; no further alternation",
+          "tests": "SOURCE_ONLY_NOT_RUN",
+          "latest_queue_observation": "H cursor23 completed, full source exact-composed on G final e306; no pending producer/consumer package."
+        }
+      },
+      "F_G": {
+        "declarations": "theme_state_key authored definitions, separate session state_json runtime values",
+        "methods": [
+          "Long lockTopicForStateKeyWrite(Long topicId)",
+          "List<ThemeStateKey> selectByTopicIdForUpdate(Long topicId)",
+          "selectByTopicIdAndStateKeyForUpdate(...) exact full params from F"
+        ],
+        "writers": "topic -> key ordering for register/update/delete and existing compiler direct auto registration",
+        "hash_freeze": "G consumes same locked final declaration projection in original author hash/validator/freeze; do not mutate unseen derived declarations after hash",
+        "tests": "NOT_RUN",
+        "snapshot_shape": "Existing top-level stateKeys full declared fields plus stateKeySnapshotVersion:1; no technical id/times/runtime values, no keylabel overriding full metadata"
+      },
+      "E_G": {
+        "actual_methods": [
+          "autoRegisterOptionTags",
+          "assertStateKeysRegistered",
+          "assertThemeRuntimeReferences"
+        ],
+        "actual_old_read": "ThemeStateKeyService.listByTopic(Long)",
+        "order": "Current topic/content locks -> existing clue derivation -> E current-read tag derivation -> G final declaration copy -> hash/overload validators/freeze; old single parameter stays readonly no derivation",
+        "state": "EXACT_METHOD_CONTRACT_RELAYED_TO_G_SOURCE_IN_PROGRESS",
+        "methods": [
+          "void deriveOptionTagsForPublication(CmsTopic topic)",
+          "void assertStateKeysRegistered(CmsTopic topic,List<ThemeStateKey> declarations)",
+          "void assertThemeRuntimeReferences(CmsTopic topic,List<ThemeStateKey> declarations)"
+        ],
+        "precheck_invariant": "Pure precheck must not persist derived declarations; original valid auto-derived tag/clue configuration must not be falsely blocked by removing writes. Preserve real invalid-reference rejection and original diagnostics; exact caller/source cases assigned E.",
+        "ordinary_content_freeze": {
+          "source_verified": "ContentGuard.normalizedBranchRouteForPublish returns null for ordinary non-branch topics when requiresFullRuntimeSnapshot=false; CmsTopicServiceImpl direct published create guards this before calling",
+          "E_method": "String normalizedBranchRouteForPublish(CmsTopic,List<ThemeStateKey>) -> existing freezePublication(...,declarations) for formal publication including ordinary/no-template nodes",
+          "G_owned_extra": "Only CmsTopicServiceImpl direct published persistence/delegation hunks in review.patch, no full service overwrite",
+          "preserve": "Do not globally force requiresFullRuntimeSnapshot=true or activate gameplay/attribute features. Single-arg precheck remains explicit readonly path.",
+          "tests": "SOURCE_ONLY_NOT_RUN"
+        },
+        "approval_no_derivation": "After approved hash, publishApprovedRouteSnapshot only consumes locked declarations; List normalizedBranchRoute directly calls freezePublication(topic,graph,declarations) final-declaration compile mode, no old auto-register compile call.",
+        "child_reference_RR": "TopicStateKeyRefService.collect(topic) ordinary child/template/chapter reads do not inherit current rows merely from G locks. G authorized minimum current-input/current-read overload and tests on original collector; keep original parse algorithms and readonly preview. E formal bridge signature to follow G source, no duplicate collectors/context caches.",
+        "child_current_reference_read": {
+          "owner": "G",
+          "reason": "TopicStateKeyRefService.collect ordinary child reads retain prior RR read view despite held locks",
+          "solution": "Minimal existing collector overload consuming same locked current nodes/templates/chapters; shared file review.patch, original algorithm and readonly preview retained; precise E bridge only if required",
+          "state": "G1718_COLLECTOR_AND_E4E298_CALLER_SOURCE_EXACT_COMPOSED_NOT_ACCEPTED",
+          "contract": [
+            "CurrentContent currentForPublication(CmsTopic topic)",
+            "RefCollection collectCurrent(CurrentContent content)",
+            "RefCollection collectForPublication(CmsTopic topic)"
+          ],
+          "current_fields": [
+            "topic()",
+            "nodes()",
+            "chapters()",
+            "templates()"
+          ],
+          "G_owner": "collector implementation/current reads and source tests",
+          "E_owner": "only ContentGuard formal callers and matching direct test source, parent56bc"
+        },
+        "formal_branch_route_bridge": {
+          "state": "G_ACTUAL_OUTCOME_AND_FORMAL_BRANCH_REVIEW_BOTH_ROOT_APPLIED_NOT_TESTED",
+          "actual_source": "ContentGuard List-declarations normalizedBranchRouteForPublish still calls normalizedBranchGraph(topic), whose enabled-node/outcome queries are ordinary reads",
+          "G_owner": "Necessary original TopicRouteOutcomeReader current-input overload review.patch, already in G full package",
+          "root_owner": "After G actual overload arrives, serial minimal formal branch-route current-content delegation in ContentGuard; readonly legacy normalizedBranchGraph stays explicit path, no duplicate route algorithm",
+          "E_delivery": "4e298 exact already integrated; do not pretend its current-theme-ref caller package also closes this separate formal branch route prevalidation",
+          "tests": "SOURCE_ONLY_NOT_RUN"
+        }
+      }
+    },
+    "known_runtime_declaration_consumers": [
+      "ThemeCharacterService.seedRun/cardKeys/card",
+      "TopicRouteRuntimeServiceImpl.failCostTagLabel",
+      "GameSessionRuntimeServiceImpl.clueLabels",
+      "PlayJourneyReadServiceImpl.casebook/JourneyInitialState visible frozen keys"
+    ],
+    "source_only_cleanup": {
+      "state": "COMPLETE_FOR_KNOWN_D_F_DELIVERIES",
+      "receipt": "/private/tmp/hengyin-all-games-source-normalization.json",
+      "D": "Two added EOF blank lines removed only, donor and root hashes retained",
+      "F": "Valid raw shared review.patch context archived and encoded as .b64; original bytes hash verified, README/manifest current; shared3hunks not reapplied",
+      "tests": "NOT_RUN"
+    },
+    "latest_source_registration": {
+      "state": "PROVISIONAL_SOURCE_REGISTRATION_NOT_FINAL_NOT_RUN",
+      "receipt": "/private/tmp/hengyin-theme-reuse-source-registration.json",
+      "integrated_classes": 76,
+      "integrated_declarations": 916,
+      "extra_storage_declarations": 133,
+      "tests": "NOT_RUN",
+      "source_precheck": "NOT_RUN",
+      "needs_final_G_H_recount": false,
+      "update_reason": "H full consumer adds ordinary unit source, no new real-storage class; final source-line declaration inventory retains76/916, no behavioral check executed.",
+      "native_fixture_impact": "ThemeRuntimeMySqlIT original ordinary/parameterized suites remain in ci/backend-test.sh explicit MYBATIS_ITS + assert_it_ran; no force into ordinary-only storage registry and no repeated dedicated job added.",
+      "needs_final_B_H_recount": false,
+      "needs_final_H_E_C_recount": false,
+      "needs_final_H_A_F_C_recount": false
+    },
+    "root_derived_reuse_index": {
+      "state": "DERIVED_SOURCE_LOOKUP_NOT_ACCEPTANCE",
+      "markdown": "全游戏复用索引-20261025.md",
+      "json": "全游戏复用索引-20261025.json",
+      "backend_rows": 42,
+      "adjacent_mechanism_rows": 8,
+      "receipt": "/private/tmp/hengyin-all-game-reuse-index-source.json",
+      "authority": "Original production registry/validator/runtime remain authoritative; no support inferred from index",
+      "AGENTS": "Future tickets first use exact row/current owner/source then implement complete callers/fixtures; no new theme-named duplicate handler",
+      "tests": "NOT_RUN"
+    },
+    "current_status_summary": "CURRENT-STATUS.md front canonical owner table; old stage notes explicitly historical, not current pending",
+    "root_admin_ui_unit_entry": {
+      "state": "SOURCE_TEST_CALLER_WIRED_NOT_RUN",
+      "receipt": "/private/tmp/hengyin-admin-ui-unit-ci-source-integration.json",
+      "workflow": ".github/workflows/ci.yml",
+      "job": "admin_ui_contract",
+      "command": "npm --prefix chengyinhub-ui run test:unit",
+      "tests": "NOT_RUN"
+    },
+    "final_entry_preparation": {
+      "state": "SOURCE_INPUTS_AND_COVERAGE_PLAN_NOT_EXECUTED",
+      "plan": "本轮施工交付与验收.md#本批源码齐后的统一验证入口尚未执行",
+      "source_inspected": [
+        ".github/workflows/ci.yml",
+        ".github/workflows/real-storage-it.yml",
+        ".github/workflows/gameplay-http-e2e.yml",
+        ".github/workflows/isolated-authenticated-redis-recovery.yml",
+        "ci/backend-test.sh",
+        "ci/architecture/compiled_controls.py"
+      ],
+      "verifier_pin": "2181ad835d2c7e6b5d5ca0f9692849c890c7d7d1",
+      "deploy_source_guard": "deploy.yml/deploy-ui.yml/codeup-mirror.yml require private liboyang42-cpu/chengyin repository; this public source branch CI has no matching deployment job condition. Source-only read, no action executed.",
+      "no_duplicate_runs": "Plan one combined gameplay-capacity-mixed rather than standalone original lease/F extra batch, classes selectors only on actual later failure",
+      "tests": "NOT_RUN"
+    },
+    "last_verified_cloud_wait": {
+      "thread": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
+      "host": "durable",
+      "cursor": "14018e83-052e-4771-a1ef-d3708b18cc1b:23",
+      "turn": "01a1720e-1284-71bf-a916-cbbfbab80796",
+      "status": "completed",
+      "commit": "ce2bee0408baedcb4cd6ea7bc39ab8ea97236b16"
+    },
+    "last_verified_cloud_waits": {
+      "H": {
+        "thread": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
+        "host": "durable",
+        "turn": "01a1720e-1284-71bf-a916-cbbfbab80796",
+        "cursor": "14018e83-052e-4771-a1ef-d3708b18cc1b:22",
+        "status": "inProgress",
+        "verified_utc": "2026-10-25T11:03:19.046238+00:00"
+      },
+      "B_funds": {
+        "thread": "01a16a22-956c-723f-b51b-afcbee69802b",
+        "host": "durable",
+        "turn": "01a172ad-2a19-7702-a4b0-f3d821331411",
+        "cursor": "b03dff2c-10cc-4156-add7-1e422e41c5d1:23",
+        "status": "inProgress",
+        "verified_utc": "2026-10-25T11:03:19.046238+00:00"
+      }
+    },
+    "root_pre_integration_image_guards": {
+      "receipt": "/private/tmp/hengyin-pre-H-B-source-image-guards.json",
+      "state": "SOURCE_PREIMAGES_RECORDED_NOT_FROZEN_NOT_ACCEPTED",
+      "dirty_files": 125,
+      "shared_files": 7,
+      "tests": "NOT_RUN",
+      "reason": "H shared runtime/read/visible-key patches must preserve G/F/E composed methods; B new recovery source cannot overwrite old complete money/content packages."
+    },
+    "root_pre_final_source_provenance": {
+      "state": "RECORDED_SOURCE_IMAGES_NOT_TEST_OR_ACCEPTANCE",
+      "receipt": "/private/tmp/hengyin-pre-final-source-provenance.json",
+      "files": 125,
+      "current_images_matching_recorded_donor_or_composition": 118,
+      "remaining_root_owned_documents_manifests": 7,
+      "F_normalized_source_manifest_rows_match": 9,
+      "tests": "NOT_RUN",
+      "limits": "Before pending B/H source; not final candidate or semantic validation. Root-owned docs have no author-exact claim."
+    },
+    "last_verified_wait_utc": "2026-10-25T11:52:42.002750+00:00",
+    "root_pre_AFCH_image_guards": {
+      "receipt": "/private/tmp/hengyin-pre-AFCH-composed-source-image-guards.json",
+      "files": 14,
+      "purpose": "Preserve root G/F/A source compositions before new restoration/shared consumer integration",
+      "tests": "NOT_RUN"
+    },
+    "pre_final_H_image_guards": {
+      "receipt": "/private/tmp/hengyin-pre-final-H-source-image-guards.json",
+      "files": 240,
+      "state": "SOURCE_PREIMAGES_ONLY_NOT_TEST_PASS",
+      "purpose": "Before H source merge, preserve all already composed A/F/C/G/root source images; mutable coordinator metadata may legitimately advance. No whole-repo audit or behavior check."
+    }
+  },
+  "remaining_acceptance_source_implementation": {
+    "state": "SOURCE_ONLY_WORKPACKAGES_DISPATCHED_NOT_ACCEPTED",
+    "basis": [
+      "remaining_acceptance_groups",
+      "WP13-WP17",
+      "Q2-Q4-Q6-Q8",
+      "T13-T17-T19"
+    ],
+    "not_new_product_or_audit": true,
+    "tests": "NOT_RUN",
+    "C": {
+      "thread": "01a16a22-c697-7637-ae29-cdff6341000b",
+      "host": "durable",
+      "old_admin_package": "C820a9ef2 stays frozen",
+      "purpose": "Core real HTTP multi-identity + exact child-process termination/restart/original request recovery SOURCE; reuse existing Generic/Freeze/auth startup, no duplicate framework or original36 edits",
+      "owned": "New test-only child/HTTP fixture and direct controls/docs, shared startup hunk only review.patch; no producer/runtime files",
+      "turn": "01a17242-8b25-7115-87bb-6c8fc01cc8a6",
+      "cursor": "587dd7ff-a4ef-45f7-b8ca-5c38d84758ff:15",
+      "F_contract_relayed": "F concrete observe/finalize/run_curve callback source contract sent to C; share original runner/resources, add real core-business request+SQL workload not only dict/getInfo",
+      "latest": "Complete public5b54677d source integrated6 postimages+5 author hashes exact. Actual final adapter72 fresh intents,3 waves at1/3/6 each24 tuples;144 HTTP requests including reads/replay/foreign guards. Earlier32/96 commentary superseded. All NOT_RUN.",
+      "F_preconditions_source_verified": "F observe validates financial protected tables0, mixed requires refund_application empty and itself inserts original never-submitted manual lease row20; C must not preseed it. F stamp only covers observe interval, not earlier physical recovery restart.",
+      "state": "C_COMPLETE_6_POSTIMAGES_AND_AUTHOR_MANIFEST_EXACT_SOURCE_ONLY",
+      "donor": "5b54677db0c96af4f59070706984bcbb303919cc",
+      "receipt": "/private/tmp/hengyin-C-process-recovery-source-integration.json",
+      "new_control_source_declarations": 11,
+      "tests": "NOT_RUN",
+      "shared_entry": "C actual review.patch semantically composed with F cleanup; author owned6 files stay exact"
+    },
+    "F": {
+      "thread": "01a16a23-5e0c-736b-9fc1-d4d070393009",
+      "host": "durable",
+      "old_declaration_package": "Fe306 and3 review hunks stay frozen",
+      "purpose": "Fixed-resource capacity curve plus owned SQL-pool/Redis mixed-fault SOURCE using original startup/isolation/cleanup, not rerun old20-blocked as capacity",
+      "owned": "New narrow probe/control source/docs, startup/workflow proposal only root integrates; coordinate runner contract with C",
+      "turn": "01a17242-7f03-77d5-b4c1-6f760ef60aac",
+      "cursor": "446d298a-e8e5-46b0-bbe8-4c4beccfc008:26",
+      "state": "SCOPED_COMPLETE_CHAT_SOURCE_MATERIALIZED_NOT_ACCEPTED",
+      "delivery": "No owner commit/editor/executor; complete3 assistant codeblocks written byroot, root hashes recorded but original file postimage not independently available",
+      "receipt": "/private/tmp/hengyin-F-capacity-mixed-chat-source-integration.json",
+      "limits": "Only dictionary/actor curve and SQL/Redis/lease mixed observation; actual business workload/capacity ceiling/provider isolation/wholeQ4Q8 still OPEN",
+      "runner_contract": "observe(name,schema,out,private,relay_port), finalize(name,schema,out,original_exit); actual run_curve(items,request,concurrency,stop,seconds=45) with24 tuples and1/3/6. stop is exact owned timeout stop, NOT sample_callback. distribution(records,duration). Exact source correction relayed C.",
+      "root_entry": {
+        "state": "ROOT_CAPACITY_ENTRY_SOURCE_COMPOSED_NOT_ACCEPTED",
+        "receipt": "/private/tmp/hengyin-root-capacity-entry-source-integration.json",
+        "tests": "NOT_RUN",
+        "manual_mode": "capacity-mixed",
+        "source_paths": [
+          ".github/workflows/isolated-authenticated-redis-recovery.yml",
+          "ci/authenticated-redis-recovery.sh"
+        ],
+        "C_mode": "Composed4 fixed manual modes; C owns F finalize in combined mode; no duplicate",
+        "source_control": "ci/test_capacity_mixed_probe.py: one new test method/five real EXIT function outcomes with external effects stubbed, source only NOT_RUN"
+      }
+    },
+    "root": "A/F/B/E/G/D complete source frozen, C568b complete source/notice hunk and root7-cohort one-build host/summary source composed. H complete content consumer still pending. No tests/compile/CI.",
+    "limits": [
+      "No new dependencies/fees/permissions/resources",
+      "No third-party live provider/paying writes",
+      "No global fault/cleanup or tests on task VM/Mac",
+      "Source inventories are not measured coverage or pass counts",
+      "Existing partial multi-identity and scheduler process tests preserved, not reimplemented merely because global runtime evidence missing"
+    ],
+    "all_complete": false,
+    "root_shared_entry": {
+      "state": "ROOT_C_F_SHARED_ENTRY_SOURCE_COMPOSED_NOT_ACCEPTED",
+      "receipt": "/private/tmp/hengyin-C-F-shared-entry-source-integration.json",
+      "modes": [
+        "recovery",
+        "capacity-mixed",
+        "gameplay-process-recovery",
+        "gameplay-capacity-mixed"
+      ],
+      "tests": "NOT_RUN"
+    },
+    "B_funds_physical_recovery": {
+      "state": "FULL3_SOURCE_POSTIMAGES_EXACT_AND_REGISTRATION_WIRED_FROZEN_NOT_ACCEPTED",
+      "thread": "01a16a22-956c-723f-b51b-afcbee69802b",
+      "host": "durable",
+      "basis": [
+        "WP02",
+        "WP03",
+        "WP13",
+        "WP17",
+        "T01",
+        "T02",
+        "T03",
+        "T05",
+        "T13",
+        "Q1",
+        "Q3",
+        "Q6"
+      ],
+      "source_evidence": "CashWithdrawFundEvidenceMySqlIT.processExitAfterDebitCommit uses real REQUIRES_NEW debit then AssertionError plus same-JVM reinstall; valuable original recovery evidence, not OS process termination",
+      "not_bug_claim": true,
+      "prior_B_packages": "Remain closed/frozen; no old16funds or content adoption reassignment",
+      "owned": "New funds process recovery IT/probe and direct necessary test-only reuse/controls/docs; no production/SQL/CI/H/G/E/C closed source changes",
+      "requirement": "Original funds IDs/hash/debit/refund/approval facts survive exact owned child physical exit/restart; provider controlled test-only, UNKNOWN not retried, both legacy formats preserved",
+      "tests": "NOT_RUN",
+      "original_wait_cursor": "b03dff2c-10cc-4156-add7-1e422e41c5d1:22",
+      "turn": "01a172ad-2a19-7702-a4b0-f3d821331411",
+      "cursor": "b03dff2c-10cc-4156-add7-1e422e41c5d1:27",
+      "live_status": "completed",
+      "owned_source_paths": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/FundsProcessRecoveryMySqlIT.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/FundsRecoveryProcessProbe.java"
+      ],
+      "runner_contract": "Existing real production admission/transactions; owned child Process handle, fixed stages and task nonce/isolated schema; test-only persisted gates/provider records, no arbitrary command/profile",
+      "important_boundary": "SUBMIT_INTENT committed is possible-dispatch even if controlled provider has not entered; recover original identity by query only, never resend",
+      "new_test_count": "PENDING_COMPLETE_SOURCE",
+      "patch_bytes": 84497,
+      "patch_sha256": "fc9999651e8b7602728af56c67fa599b261e47db3c3cd2351fc24ca7eef24d9b",
+      "source_declarations": 14,
+      "transport": "8 independent assistant chat diff blocks; every part and full84497bytes/fc999965 exact; all3 author postimages exact",
+      "source_integrated": true,
+      "transport_turn": "01a172d1-4cbd-764f-968d-1b7524fb35f2",
+      "receipt": "/private/tmp/hengyin-B-funds-process-recovery-source-integration.json",
+      "registration_receipt": "/private/tmp/hengyin-B-funds-process-source-registration.json",
+      "artifact_collection": "Existing storage workflow adds fixed exact SOURCE_SHA JSON-only capture; no raw stdout/stderr publication, no test execution",
+      "root_gate_source_wiring": "Exact REVIEWED_APPROVAL_GATES tuple now drives whitelist/assertion scanner/inherited-env removal; preserves B_PAYMENT_INTENT_DDL and adds only B_FUNDS_PROCESS_RECOVERY. No arbitrary approval wildcard, controls SOURCE only."
+    },
+    "existing_reuse_map": {
+      "state": "EXISTING_TARGETED_SOURCE_REUSE_MAP_NOT_EXECUTED",
+      "receipt": "/private/tmp/hengyin-existing-recovery-isolation-source-map.json",
+      "tests": "NOT_RUN",
+      "limits": "Connection loss, same-JVM reconstruction and local provider fixtures stay separate from physical funds restart and whole-system mixed fault."
+    },
+    "E_cross_domain_isolation": {
+      "state": "FULL8_DONOR_SOURCE_EXACT_AND_MYSQL_REDIS_ROUTE_REGISTERED_FROZEN_NOT_ACCEPTED",
+      "thread": "01a16a23-2723-72e4-813f-03d7f1aa6017",
+      "host": "durable",
+      "turn": "01a172ce-e219-7365-8fe0-568e31694a3a",
+      "cursor": "bf46e2e6-88ca-4fad-a205-efca84d15256:25",
+      "basis": [
+        "WP13",
+        "WP14",
+        "WP17",
+        "Q4",
+        "Q8",
+        "T19"
+      ],
+      "owned": "New cross-domain fault isolation integration/test-only transports/direct controls/docs; no production/old tests/B/H/rootCI edits",
+      "purpose": "Actual bounded AI/map/notification/scheduler failure window with original payment/state facts still usable; reuse existing local budgets and scheduler fixture, no duplicate narrow units",
+      "tests": "NOT_RUN",
+      "donor": "f3d455608bbd4f6967f177ba284f5bb7f203acc9",
+      "receipt": "/private/tmp/hengyin-E-cross-domain-isolation-source-integration.json",
+      "registration_receipt": "/private/tmp/hengyin-E-isolation-source-registration.json",
+      "source_declarations": 1
+    },
+    "C_restore_reconciliation": {
+      "state": "FULL10_DONOR_AND9_AUTHOR_MANIFEST_EXACT_SHARED_NOTICE_APPLIED_FROZEN_NOT_ACCEPTED",
+      "thread": "01a16a22-c697-7637-ae29-cdff6341000b",
+      "host": "durable",
+      "turn": "01a172f8-ef12-77cf-8241-962858a0b84e",
+      "cursor": "587dd7ff-a4ef-45f7-b8ca-5c38d84758ff:25",
+      "basis": [
+        "WP14",
+        "WP15",
+        "WP17",
+        "T20",
+        "Q1",
+        "Q3",
+        "Q6"
+      ],
+      "owned": "New isolated backup/restore original business reconciliation fixture/probe/direct control source/docs; preserve canonical existing backup helper and SQL/production/other owners",
+      "purpose": "Use canonical actual backup/restore and controlled durable provider facts, late-success/missing local intent, high-water safety and real recovery dispatch closure; no inferred NOT_SENT, auto-repay or fabricated recovery proof",
+      "existing_source": [
+        "scripts/db-backup-restore.py",
+        "ci/test_db_backup_restore.py"
+      ],
+      "tests": "NOT_RUN",
+      "donor": "568b6b15f0e101dbf893f86f862177e443e8ffbb",
+      "receipt": "/private/tmp/hengyin-C-full-restore-completion-source-integration.json",
+      "source_limits": [
+        "Fixed owner methods only, no global production fence proof",
+        "Controlled test providers, no real channel or quota Redis/automatic recovery consumer acceptance",
+        "Gap/UNKNOWN blocks, no reconstructed intent/release",
+        "No production restore, RPO/RTO or UAT acceptance"
+      ],
+      "continuation": "Keep original negative gap scenarios; extend actual guarded positive restore, refund/withdrawal/provider-task originals and typed reconciliation; no auto-rebind/new approval platform.",
+      "actual_consumers_relayed": [
+        "197ac0ca8f3f98970b4d2701097a3e8da839fdcc",
+        "5d071d3441bd736703608ce0b3a6db4f52fc030b"
+      ],
+      "latest": "All6 actual additional cohorts integrated using original B/A/F owners; original payment5/37controls/1Java retained. No actual tests/compile/DB/HTTP/JVM/fault/CI. Source is frozen, not fullT20 acceptance.",
+      "host_contract_update": "Original CLI/resources preserved, optional cohort actual names pending. New drill deadline900 suggested outer1200; root draft1050 probe wait plus exact cleanup, no execution.",
+      "result_contract": {
+        "negative": "SCOPED_DIFFERENCES_VERIFIED_RELEASE_BLOCKED",
+        "complete_readback": "SCOPED_COMPLETE_FACTS_NORMAL_BOOT_READBACK_VERIFIED",
+        "complete_finalized": "TEST_COHORT_NORMAL_READBACK_COMPLETE_NO_PRODUCTION_RELEASE",
+        "production_dispatch_authorized": false
+      },
+      "parent": "a7eee8e5b790938a89bc19276c6edf68e9bdfeff",
+      "shared_receipt": "/private/tmp/hengyin-C-registration-notice-wake-source-integration.json",
+      "source_control_declarations": {
+        "retained_python": 37,
+        "additional_python": 35,
+        "retained_Java": 1
+      },
+      "cohorts": [
+        "payment-gap",
+        "withdrawal-complete",
+        "withdrawal-gap",
+        "refund-complete",
+        "refund-gap",
+        "voice-complete",
+        "voice-gap"
+      ]
+    },
+    "restore_guard_shared_contract": {
+      "state": "COMMON_AND_AF_CONSUMERS_C_FIXED_RESTORE_SOURCE_COMPOSED_NOT_ACCEPTED",
+      "class": "com.chengyinhub.common.config.RestoreDispatchGuard",
+      "methods": [
+        "public static void requireDispatchAllowed()",
+        "public static boolean isRestoreMode()"
+      ],
+      "exception": "public static nested Blocked extends RuntimeException; reason RECOVERY_DISPATCH_BLOCKED, never NOT_SENT/provider failure",
+      "environment": "CHENGYIN_RESTORE_MODE: absent/false normal; true restore; other nonempty fail-closed; server startup only",
+      "normal_behavior": "Original policy/values/approval/identity/error classes retained",
+      "restore_behavior": "Pause new economic identities/effects and outbound production sends/unsafe automatic recovery; preserve original authorized queries, verified callback facts and reconciliation",
+      "not_authorized": [
+        "New recovery table/platform/approval API",
+        "Automatic reconstruction of missing original financial intention",
+        "Converting UNKNOWN to NOT_SENT",
+        "Production deployment/restore/DDL or live external calls"
+      ],
+      "owner_common_nonfunds": "F",
+      "owner_funds": "A",
+      "owner_fixture": "C",
+      "root": "Contract/integration/config/registry/workflow only",
+      "donor": "f874583cab3a05026078ef51a5609644587bd2d9",
+      "receipt": "/private/tmp/hengyin-F-shared-restore-guard-source-integration.json",
+      "sha256": "0b20d9cd912fa8a1e7f6f0e363d436c4b9c8150fe24e8e4afd1eac73dfada3ef",
+      "actual_environment": "Captured once: absent or exact false normal; every other present value including empty holds. Never export empty as normal.",
+      "shared_source_relay": "Actual public source and precise semantics sent to A/C; no remaining input dependency on a hypothetical common signature."
+    },
+    "F_restore_dispatch_guard": {
+      "state": "FULL51_DONOR_AND_AUTHOR_MANIFEST_EXACT_PHONE2_NARROW_SOURCE_INTEGRATED_FROZEN_NOT_ACCEPTED",
+      "thread": "01a16a23-5e0c-736b-9fc1-d4d070393009",
+      "host": "durable",
+      "turn": "01a17315-7a94-7217-89de-0cf9fa0c358a",
+      "cursor": "446d298a-e8e5-46b0-bbe8-4c4beccfc008:30",
+      "owned": "New minimum common guard plus actual non-funds send/quota auto-recovery callers/direct tests; no funds/H/G/C/E/rootCI/old schema changes",
+      "tests": "NOT_RUN",
+      "common_source_integrated": true,
+      "common_receipt": "/private/tmp/hengyin-F-shared-restore-guard-source-integration.json",
+      "whole_package_integrated": true,
+      "shared_notification_seam": "A completePaymentSuccess blocks before effects, callback retains fact/inbox then returns FAIL before consumption in restore. Immutable startup flag; no silent Runnable drop or invented refund notice identity. Old refund WX best-effort remains explicit limitation.",
+      "donor": "5d071d3441bd736703608ce0b3a6db4f52fc030b",
+      "parent": "f874583cab3a05026078ef51a5609644587bd2d9",
+      "receipt": "/private/tmp/hengyin-F-full-restore-consumers-source-integration.json",
+      "shared_receipt": "/private/tmp/hengyin-F-phone-restore-source-integration.json",
+      "source_declarations": {
+        "ordinary": 26,
+        "phone_shared": 1
+      }
+    },
+    "A_restore_funds_guard": {
+      "state": "FULL20_DONOR_EXACT_AND_SHARED9_NARROW_SOURCE_INTEGRATED_FROZEN_NOT_ACCEPTED",
+      "thread": "01a16a22-3076-7196-88f5-86d5b2c83036",
+      "host": "durable",
+      "turn": "01a172f6-67c4-7464-b5e9-6b93cf858750",
+      "cursor": "1e9feea5-2ea9-4d63-a7a0-0e845f8692e0:25",
+      "owned": "Existing financial identity/order/payment/refund/withdrawal/recovery owners/gateways and all direct necessary source fixtures; common helper remains F",
+      "tests": "NOT_RUN",
+      "donor": "197ac0ca8f3f98970b4d2701097a3e8da839fdcc",
+      "receipt": "/private/tmp/hengyin-A-full-restore-money-source-integration.json",
+      "shared_receipt": "/private/tmp/hengyin-A-adjacent-restore-money-source-integration.json",
+      "registration_receipt": "/private/tmp/hengyin-A-restore-money-source-registration.json",
+      "source_declarations": {
+        "unit_owned": 15,
+        "unit_shared": 1,
+        "mysql": 1
+      }
+    },
+    "root_restore_host_source": {
+      "state": "SEVEN_FIXED_COHORTS_ONE_EXACT_BUILD_TRANSFER_AND_SUMMARY_SOURCE_COMPOSED_NOT_RUN",
+      "receipt": "/private/tmp/hengyin-root-restore-full-source-wiring.json",
+      "source_controls": {
+        "host": 11,
+        "build": 6
+      },
+      "cohorts": [
+        "payment-gap",
+        "withdrawal-complete",
+        "withdrawal-gap",
+        "refund-complete",
+        "refund-gap",
+        "voice-complete",
+        "voice-gap"
+      ],
+      "same_jar": "One compile, exact source/run/attempt manifest, original Maven3.10 dependency copy, one artifact reused by7 isolated jobs; no inferred reproducible independent build",
+      "summary": "Exact7/source/JAR/tool/run/attempt/scope/exit/cleanup, delegates3 complete pairs to original C verifier; no production authorization",
+      "pending": "Final root source closure/freeze/concentrated review and same-source acceptance. H complete source is integrated; no active missing package.",
+      "tests": "NOT_RUN",
+      "all_complete": false
+    }
+  },
+  "complete_workpackage_instruction": {
+    "authority": "Direct human: complete purposeful construction plans, not small repair churn",
+    "plan": "全游戏资源库与主题复用完整施工方案-20261025.md",
+    "required": [
+      "Business end goal",
+      "Existing reuse owner/source",
+      "All code/callers/config/fixtures/test source",
+      "Shared contract/ownership",
+      "Exact parent/fullpatch/postimages",
+      "Limits/dependencies/NOT_RUN"
+    ],
+    "dispatch": "H full-package delivery reinforced; C actual A/F full donors relayed; A/F frozen without new audit tasks."
+  },
+  "historical_known_remaining_implementation": "All presently identified residual source and fixture repairs integrated; only actual b626 final validation failures may reopen an original owner task. This is not completion of full governance scope."
 }

@@ -1468,6 +1468,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     @Override
     @Transactional
     public Map<String, Integer> runMaintenance(Integer requestedLimit) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         int limit = boundedLimit(requestedLimit);
         Date now = new Date();
         int enforcementCount = 0;

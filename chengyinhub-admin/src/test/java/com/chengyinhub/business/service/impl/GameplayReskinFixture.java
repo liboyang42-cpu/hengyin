@@ -84,6 +84,9 @@ public class GameplayReskinFixture {
         when(noOffers.selectByTopic(anyLong())).thenReturn(Collections.emptyList());
         wireAuthoringGuards(topicMapper, chapterMapper, nodeMapper, templateMapper, freeTickets, noOffers);
         ThemeStateKeyMapper keyMapper=mock(ThemeStateKeyMapper.class);
+        when(keyMapper.lockTopicForStateKeyWrite(anyLong())).thenAnswer(call -> {
+            CmsTopic parent = topics.get(call.getArgument(0)); return parent == null ? null : parent.getId();
+        });
         when(keyMapper.selectByTopicId(anyLong())).thenReturn(keys);
         keyService=new ThemeStateKeyService(keyMapper);
         ReflectionTestUtils.setField(publisher,"themeStateKeyService",keyService);
@@ -244,7 +247,13 @@ public class GameplayReskinFixture {
     void useSql(org.mybatis.spring.SqlSessionTemplate database) {
         sql=database;activeTopics=sql.getMapper(CmsTopicMapper.class);activeGames=sql.getMapper(GameSessionRuntimeMapper.class);
         CmsTopicNodeMapper realNodes=sql.getMapper(CmsTopicNodeMapper.class);CmsTopicChapterMapper realChapters=sql.getMapper(CmsTopicChapterMapper.class);CmsMemberTemplateMapper realTemplates=sql.getMapper(CmsMemberTemplateMapper.class);
-        ThemeStateKeyMapper realKeys=sql.getMapper(ThemeStateKeyMapper.class);keyService=new ThemeStateKeyService(realKeys);
+        ThemeStateKeyMapper realKeys=sql.getMapper(ThemeStateKeyMapper.class);
+        var keysProxy = new org.springframework.aop.framework.ProxyFactory(new ThemeStateKeyService(realKeys));
+        keysProxy.setProxyTargetClass(true);
+        keysProxy.addAdvice(new org.springframework.transaction.interceptor.TransactionInterceptor(
+                new org.springframework.jdbc.datasource.DataSourceTransactionManager(sql.getConfiguration().getEnvironment().getDataSource()),
+                new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource()));
+        keyService=(ThemeStateKeyService)keysProxy.getProxy();
         ReflectionTestUtils.setField(publisher,"cmsTopicMapper",activeTopics);ReflectionTestUtils.setField(publisher,"cmsTopicNodeMapper",realNodes);ReflectionTestUtils.setField(publisher,"cmsTopicChapterMapper",realChapters);com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(publisher, "cmsMemberTemplateMapper",realTemplates);
         wireAuthoringGuards(activeTopics, realChapters, realNodes, realTemplates,
                 sql.getMapper(OmsTicketMapper.class), sql.getMapper(MerchantChapterOfferMapper.class));

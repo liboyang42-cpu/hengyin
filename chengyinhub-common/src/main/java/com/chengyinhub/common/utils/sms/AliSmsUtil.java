@@ -34,6 +34,7 @@ public class AliSmsUtil {
      */
     public static boolean sendCode(String accessKeyId, String accessKeySecret, String signName,
                                    String templateCode, String phone, String code) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         try {
             Config config = new Config()
                     .setAccessKeyId(accessKeyId)

@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.config.RestoreDispatchGuard;
+
 import com.chengyinhub.business.domain.dto.RegistrationCancellationPayments;
 import com.chengyinhub.business.domain.dto.RegistrationCancellationPayments.Identity;
 import com.chengyinhub.business.domain.dto.RegistrationCancellationPayments.Scope;
@@ -141,6 +143,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int cancelPaidRegistration(Long registrationId, Long operatorMemberId) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         CmsRegistration r = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
         if (r == null) throw new RuntimeException("报名不存在");
         if (operatorMemberId == null || !operatorMemberId.equals(r.getMemberId())) {
@@ -313,6 +316,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int cancelPaidRegistrationByOwner(Long registrationId, Long ownerMemberId) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         CmsRegistration r = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
         if (r == null) throw new RuntimeException("报名不存在");
         if (r.getOwnerType() == null) throw new RuntimeException("报名归属不明,不能清退");
@@ -381,6 +385,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER, rollbackFor = Exception.class)
     public com.chengyinhub.business.domain.dto.ActivityCancelResult cancelActivityByOwner(
             Long activityId, Long ownerMemberId, String reason) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         return cancelActivityOutsideTransaction(activityId, ownerMemberId, ownerMemberId, reason, false);
     }
 
@@ -388,6 +393,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER, rollbackFor = Exception.class)
     public com.chengyinhub.business.domain.dto.ActivityCancelResult cancelActivityByClubOperator(
             Long activityId, Long ownerMemberId, Long actorMemberId, String reason) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (actorMemberId == null || actorMemberId <= 0) {
             throw new ServiceException("活动取消操作人无效", HttpStatus.FORBIDDEN);
         }
@@ -398,6 +404,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER, rollbackFor = Exception.class)
     public com.chengyinhub.business.domain.dto.ActivityCancelResult cancelActivityByMerchantHost(
             Long activityId, Long merchantOwnerMemberId, Long actorMemberId, String reason) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (actorMemberId == null || actorMemberId <= 0) {
             throw new ServiceException("活动取消操作人无效", HttpStatus.FORBIDDEN);
         }
@@ -429,6 +436,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER, rollbackFor = Exception.class)
     public com.chengyinhub.business.domain.dto.ActivityCancelResult cancelTopicByHost(
             Long topicId, Long hostMemberId, Long actorMemberId, String reason) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         requireNoCancellationTransaction();
         if (actorMemberId == null || actorMemberId <= 0) {
             throw new ServiceException("主题取消操作人无效", HttpStatus.FORBIDDEN);
@@ -919,6 +927,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     public com.chengyinhub.business.domain.dto.ActivityCancelResult cancelActivityWithObservedPayments(
             Long activityId, Long ownerMemberId, Long actorMemberId, String reason, boolean refuseSettled,
             RegistrationCancellationPayments observed) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         requireCancellationTransaction();
         if (actorMemberId == null || actorMemberId <= 0)
             throw new ServiceException("活动取消操作人无效", HttpStatus.FORBIDDEN);
@@ -1044,7 +1053,8 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
                     try {
                         closed = wechatPayService.closePaymentAttempt(order.original().registrationNo(),
                                 order.providerFacts().get("wx_out_trade_no"));
-                    } catch (Exception uncertain) { closed = false; }
+                    } catch (RestoreDispatchGuard.Blocked paused) { throw paused; }
+                    catch (Exception uncertain) { closed = false; }
                     if (!closed) {
                         alarmCancelFailure("取消活动前原支付关闭未确认", "registrationId=" + order.original().id()
                                 + ";原身份保留,未执行本地回补,请按原号查证");
@@ -1426,6 +1436,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
      * 微信约束(§3.2):单笔订单退款 1 次/分钟频控 + 单笔最多 50 次部分退 —— 每票各调必被拒。
      */
     private boolean refundWholeOrder(CmsRegistration anyMember, String ticketName, String reason, Long actorMemberId) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         // 查询按 parent_order_no 过滤,anyMember 自己必在结果里 ⇒ 不会为空,无需兜底分支。
         List<CmsRegistration> order = cmsRegistrationMapper.selectByParentOrderNoForUpdate(anyMember.getParentOrderNo(), Long.valueOf(2L).equals(anyMember.getOwnerType()) ? anyMember.getOwnerId() : null);
         OrderRefundCash.assertOrderScope(order, anyMember);
@@ -1612,6 +1623,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
 
     /** 单笔报名退款:结算冲销+标记已退,现金微信原路退(受理失败进§6.1人工兜底队列);积分返还;恢复库存;退款提醒 */
     private void refundOne(CmsRegistration r, String ticketName, String reason) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         BigDecimal cash = r.getWechatPaymentAmount();
         boolean hasCash = cash != null && cash.compareTo(BigDecimal.ZERO) > 0;
         // 纯积分单没有退款申请唯一键兜底，必须先领取报名退款权；loser 不得碰库存、积分或权益。
@@ -1635,6 +1647,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
 
     /** 单笔退款在库存已成功回补后的后续流程;cash = 本次要原路退的现金(整单退时已扣掉同单已退部分)。 */
     private void refundOneAfterInventoryRestored(CmsRegistration r, BigDecimal cash, String ticketName, String reason) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         boolean hasCash = cash != null && cash.compareTo(BigDecimal.ZERO) > 0;
         if (hasCash) {
             // F-L4-02：待审核申请会让新退款单被拒并回滚整场取消；全额退款取代它（未打款，CAS 置驳回）。

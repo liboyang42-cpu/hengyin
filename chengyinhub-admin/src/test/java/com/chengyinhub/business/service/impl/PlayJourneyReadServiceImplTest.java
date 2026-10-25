@@ -133,6 +133,30 @@ class PlayJourneyReadServiceImplTest {
     }
 
     @Test
+    void casebookUsesCompleteOriginalDefinitionsWithoutReadingChangedRegistry() throws Exception {
+        ObjectMapper json = new ObjectMapper();
+        var snapshot = json.createObjectNode();
+        var rules = com.chengyinhub.business.domain.JourneyRules.parse("{\"schemaVersion\":1,\"stateEnabled\":true}");
+        snapshot.set("journeyRules", json.valueToTree(rules)); snapshot.put("journeyStory", "");
+        List<ThemeStateKey> declarations = Arrays.asList(
+                key("clue.original", "flag", "原线索", null), key("tag.original", "tag", "原代价", null));
+        for (ThemeStateKey declaration : declarations) declaration.setTopicId(TOPIC);
+        com.chengyinhub.business.service.support.JourneyInitialState.freezeKeys(snapshot, declarations, rules, TOPIC);
+        assertEquals(1, snapshot.path("stateKeySnapshotVersion").asInt());
+        session.setConfigSnapshotJson(snapshot.toString());
+        givenState("{\"clue.original\":1}", "[\"tag.original\"]");
+        when(themeStateKeyService.listByTopic(TOPIC)).thenThrow(new AssertionError("original casebook must not reread author declarations"));
+
+        Map<String, Object> book = service.casebook(MEMBER, TOPIC);
+
+        String response = json.writeValueAsString(book);
+        assertTrue(response.contains("原线索")); assertTrue(response.contains("原代价"));
+        assertEquals(1, ((List<?>) book.get("facts")).size());
+        assertEquals(1, ((List<?>) book.get("costs")).size());
+        assertEquals(snapshot.toString(), session.getConfigSnapshotJson());
+    }
+
+    @Test
     void oldCasebookCannotRevealRelationsAddedAfterStart() {
         session.setConfigSnapshotJson("{\"stateKeys\":[],\"journeyRules\":{\"schemaVersion\":1,"
                 + "\"stateEnabled\":true,\"attributes\":[]}}");

@@ -225,8 +225,8 @@ class TemplateMediaCallbackVisibilityTest {
     }
 
     private void seed() {
-        jdbc.execute("create table cms_member_template(id bigint primary key)");
-        jdbc.update("insert into cms_member_template values (" + MEMBER_TEMPLATE_ID + ")");
+        jdbc.execute("create table cms_member_template(id bigint primary key, member_id bigint, interaction_type varchar(32))");
+        jdbc.update("insert into cms_member_template(id,member_id) values (" + MEMBER_TEMPLATE_ID + ",11)");
         jdbc.execute("create table cms_template_library("
                 + "id bigint auto_increment primary key,"
                 + "member_id bigint, member_template_id bigint, category_id bigint,"

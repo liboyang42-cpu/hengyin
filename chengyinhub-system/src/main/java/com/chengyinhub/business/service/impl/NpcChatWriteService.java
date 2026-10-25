@@ -57,11 +57,13 @@ public class NpcChatWriteService
 
     public NpcChatRequest admit(NpcChatRequest request, String timeoutText)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         return locked(request.getUserId(), () -> admitLocked(request,timeoutText,null,null).request());
     }
 
     public ShopAdmission admitShop(NpcChatRequest request,String timeoutText,Long merchantId,String message)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         return locked(request.getUserId(), () -> admitLocked(request,timeoutText,merchantId,message));
     }
 

@@ -47,6 +47,7 @@ public class AiQuotaRecoveryService {
     }
 
     public void prepare(Long memberId,String bizType,String pool,String key,String receipt) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         AiQuotaReservationRecord row=new AiQuotaReservationRecord();
         row.setMemberId(memberId); row.setBizType(bizType); row.setPool(pool); row.setCounterKey(key);
         row.setOriginalDay(key.substring(key.length()-8)); row.setReceiptKey(receipt);
@@ -77,6 +78,7 @@ public class AiQuotaRecoveryService {
 
     /** The ASR provider was already attempted. Text execution consumes this same original, even after Redis TTL. */
     public void requireNpcAsrHandoff(NpcAsrQuotaHandoff handoff) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (handoff==null) throw unavailable();
         transaction.execute(status -> {
             NpcAsrIntent original=asrIntents.selectForUpdate(handoff.memberId(),handoff.requestId());
@@ -98,6 +100,7 @@ public class AiQuotaRecoveryService {
 
     /** Read the durable same-claim NOT_SENT proof. A normal text failure cannot enter this compensation path. */
     public void refundNpcAsrNotSent(Long userId,String requestId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         AiQuotaReservationRecord quota=transaction.execute(status -> {
             NpcAsrIntent original=asrIntents.selectQuotaRefundProof(userId,requestId);
             if (original==null || !original.isQuotaRefundPending()) return null;
@@ -143,6 +146,7 @@ public class AiQuotaRecoveryService {
     }
 
     public void requireRefund(String receipt,String reason) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         outcome(receipt,"REFUND_DUE",reason); // 独立事务已提交，之后 Redis 故障仍有原身份待办。
         AiQuotaReservationRecord row=mapper.selectByReceipt(receipt);
         if(row!=null) reconcile(row);
@@ -163,6 +167,7 @@ public class AiQuotaRecoveryService {
 
     /** 一页固定小批；每条失败推迟其自身，后续行仍被处理。无需安装新调度器。 */
     public void runDue() {
+        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return;
         for (NpcAsrIntent original:asrIntents.selectQuotaRefundPending(100)) {
             try { refundNpcAsrNotSent(original.getUserId(),original.getRequestId()); }
             catch(RuntimeException failure) { log.warn("NPC ASR quota refund pending id={} code={}",original.getId(),failure.getClass().getSimpleName()); }
@@ -175,6 +180,7 @@ public class AiQuotaRecoveryService {
     }
 
     private void reconcile(AiQuotaReservationRecord candidate) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         String owner=IdUtils.simpleUUID();
         AiQuotaReservationRecord row=transaction.execute(status -> {
             if(mapper.claim(candidate.getId(),candidate.getFenceVersion(),owner)!=1) return null;

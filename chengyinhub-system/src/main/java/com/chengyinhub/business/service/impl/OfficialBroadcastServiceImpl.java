@@ -74,6 +74,7 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
 
     @Override
     public OfficialBroadcast publish(OfficialBroadcast bc, Long actorMemberId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (bc == null || StringUtils.isEmpty(bc.getTitle())) {
             throw new ServiceException("通知标题不能为空");
         }
@@ -119,6 +120,7 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
     }
 
     int dispatch(OfficialBroadcast bc) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (bc == null || bc.getId() == null) return 0;
         // The remote call must never inherit a caller's transaction (including afterCommit resources).
         TransactionTemplate outside = new TransactionTemplate(transactionManager);
@@ -322,6 +324,7 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
 
     @Override
     public void runDueScheduled() {
+        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return;
         List<OfficialBroadcast> due = logMapper.selectRecoverableBroadcasts();
         if (due == null) return;
         for (OfficialBroadcast bc : due) {

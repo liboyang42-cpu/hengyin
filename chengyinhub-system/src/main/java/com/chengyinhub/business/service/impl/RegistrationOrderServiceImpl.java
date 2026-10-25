@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.config.RestoreDispatchGuard;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.dto.RegistrationOrderResult;
 import com.chengyinhub.business.domain.dto.RegistrationRequest;
@@ -69,6 +70,8 @@ public class RegistrationOrderServiceImpl implements IRegistrationOrderService {
                             : "该幂等键对应的报名已过期，请重新发起报名");
         }
         if (primary.getRequestFingerprint() == null) {
+            // Recovery cannot backfill an unretained original identity. Exact stored replays remain readable.
+            RestoreDispatchGuard.requireDispatchAllowed();
             if (!isPersistedRequestEquivalent(memberId, request, order)
                     || !registrationService.bindLegacyRequestFingerprint(
                     primary.getId(), requestId, requestFingerprint)) {
@@ -95,6 +98,7 @@ public class RegistrationOrderServiceImpl implements IRegistrationOrderService {
         if (replay != null) {
             return replay;
         }
+        RestoreDispatchGuard.requireDispatchAllowed();
         registrationOrderCreateGate.validate(memberId, request);
         replay = findReplay(memberId, request, requestId, requestFingerprint);
         if (replay != null) {

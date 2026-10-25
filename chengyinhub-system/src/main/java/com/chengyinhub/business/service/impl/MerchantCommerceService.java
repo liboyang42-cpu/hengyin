@@ -60,6 +60,7 @@ public class MerchantCommerceService implements IMerchantCommerceService {
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
     public Map<String, String> createOrder(Long memberId, Long merchantId, String openid, String bizType,
                                            String requestId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         requirePaymentOutsideTransaction();
         if (!selfCheckoutEnabled) {
             throw new IllegalStateException("自助开通暂未开放，请联系官方人工开通");
@@ -145,6 +146,7 @@ public class MerchantCommerceService implements IMerchantCommerceService {
 
     private boolean applyVerifiedPayment(String outTradeNo, boolean paid, Integer paidAmountFen, String transactionId,
             WechatVerifiedPaymentFactService.Stored verified) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (!paid || !supportsOutTradeNo(outTradeNo) || paidAmountFen == null
                 || transactionId == null || transactionId.trim().isEmpty()) return false;
         OmsOrder order = orderMapper.selectCommerceOrderForUpdate(outTradeNo);
@@ -236,6 +238,7 @@ public class MerchantCommerceService implements IMerchantCommerceService {
     }
 
     private boolean closeObservedOrder(OmsOrder order, String observedWxOutTradeNo) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         return Boolean.TRUE.equals(paymentTransaction().execute(status -> {
             if (!wechatPayService.lockClosablePaymentAttemptForUpdate(order.getOrderSn(), observedWxOutTradeNo)) return false;
             return orderMapper.markCommerceOrderClosed(order.getId()) == 1;
@@ -295,6 +298,7 @@ public class MerchantCommerceService implements IMerchantCommerceService {
     }
 
     private Map<String, String> paymentResponse(OmsOrder order, String openid) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         String status = statusOf(order);
         Map<String, String> result = new LinkedHashMap<>();
         if ("pending".equals(status)) {

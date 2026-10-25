@@ -350,7 +350,7 @@ function tagsToBound(tags) {
 /** 某个玩法段:分发器绑了、pickPlayKit 没产出的那些属性 */
 function unfedOf(section, bound) {
   const kit = pickPlayKit(
-    { sessionId: 's1', version: 1, playKit: { [section]: { title: 't' } } }, at(12, 0))
+    { sessionId: 's1', nodeId: 12, version: 1, playKit: { [section]: { title: 't' } } }, at(12, 0))
   assert.ok(kit, section + ' 段还不出 kit')
   return { type: kit.type, missing: (bound[kit.type] || []).filter((key) => !(key in kit)) }
 }

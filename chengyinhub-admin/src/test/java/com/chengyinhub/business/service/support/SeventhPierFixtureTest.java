@@ -74,7 +74,9 @@ class SeventhPierFixtureTest {
 
     @BeforeEach
     void registerStateKeys() throws Exception {
-        stateKeyService = new ThemeStateKeyService(mock(ThemeStateKeyMapper.class));
+        ThemeStateKeyMapper declarations = mock(ThemeStateKeyMapper.class);
+        when(declarations.lockTopicForStateKeyWrite(TOPIC_ID)).thenReturn(TOPIC_ID);
+        stateKeyService = new ThemeStateKeyService(declarations);
         List<ThemeStateKey> keys = readStateKeys();
         stateKeyService.register(TOPIC_ID, keys);
         registeredKeys = new LinkedHashSet<String>();
