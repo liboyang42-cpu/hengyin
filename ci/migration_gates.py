@@ -575,7 +575,7 @@ def check_dependency_order(batch_files, all_migration_files, dependencies):
 
 
 def check_dependency_ratchet(current_deps, master_deps):
-    """依赖声明【只许加不许删】(相对 github/master)。
+    """依赖声明【只许加不许删】(相对该批固定祖先基线)。
 
     没有这一条,上面那道顺序门一行 JSON 就能消掉:把 A 依赖 B 那条边删了,顺序门看不见边、
     当场转绿,而落库时该 1054 还是 1054。**「闸红了就把闸拆了」是最省事的绕法,必须先堵死。**
@@ -595,15 +595,38 @@ def check_dependency_ratchet(current_deps, master_deps):
     return problems
 
 
-def master_dependencies(root):
-    """取 github/master(回退 origin/master)上那一版 dependencies;取不到返回 None。"""
-    for ref in ("github/master", "origin/master"):
+def master_dependencies(root, base=None):
+    """Read the batch's fixed ancestor, never a later live-master declaration set.
+
+    Without --base, use the merge-base with the original remote preference. Explicit
+    unreadable/non-ancestor bases fail closed; they must not fall back to another ref.
+    """
+    refs = (base,) if base is not None else ("github/master", "origin/master")
+    for ref in refs:
         try:
+            resolved = subprocess.run(
+                ["git", "-C", root, "rev-parse", "--verify", "%s^{commit}" % ref],
+                capture_output=True, text=True)
+            if resolved.returncode != 0:
+                continue
+            commit = resolved.stdout.strip()
+            if base is None:
+                common = subprocess.run(
+                    ["git", "-C", root, "merge-base", commit, "HEAD"],
+                    capture_output=True, text=True)
+                if common.returncode != 0:
+                    continue
+                commit = common.stdout.strip()
+            ancestor = subprocess.run(
+                ["git", "-C", root, "merge-base", "--is-ancestor", commit, "HEAD"],
+                capture_output=True, text=True)
+            if ancestor.returncode != 0:
+                continue
             out = subprocess.run(
-                ["git", "-C", root, "show", "%s:%s" % (ref, DEPENDENCIES_JSON)],
+                ["git", "-C", root, "show", "%s:%s" % (commit, DEPENDENCIES_JSON)],
                 capture_output=True, text=True)
             if out.returncode == 0:
-                return json.loads(out.stdout)["dependencies"], ref
+                return json.loads(out.stdout)["dependencies"], commit
         except (OSError, ValueError, KeyError):
             pass
     return None, None
@@ -702,6 +725,15 @@ def check_manifest_dependency_order(manifest, batch, dependencies):
     return problems
 
 
+def _schema_contract_dump(node):
+    # Python 3.13+ omits empty AST lists by default. The reviewed fingerprints
+    # include them (e.g. Call.keywords=[]); retain those exact bytes on hosted
+    # Python 3.14 instead of replacing hashes or accepting a second source plan.
+    if sys.version_info >= (3, 13):
+        return ast.dump(node, show_empty=True)
+    return ast.dump(node)
+
+
 def check_schema_manifest_order_source(source):
     """Exact ledger pipeline + the one approved fresh-only notice forward plan."""
     import hashlib
@@ -746,9 +778,10 @@ def check_schema_manifest_order_source(source):
             # Exclude Python 3.12's added *empty* type_params field from the digest.
             if node.decorator_list or node.returns or node.type_comment or getattr(node, "type_params", []):
                 problems.append("schema runner must preserve notice forward function: " + name)
-            shape = repr((ast.dump(node.args), [ast.dump(statement) for statement in node.body]))
+            shape = repr((_schema_contract_dump(node.args),
+                          [_schema_contract_dump(statement) for statement in node.body]))
         else:
-            shape = ast.dump(node)
+            shape = _schema_contract_dump(node)
         if hashlib.sha256(shape.encode()).hexdigest() != digest:
             problems.append("schema runner must preserve notice forward contract: " + name)
 
@@ -893,14 +926,16 @@ def _cmd_dep_order(root, argv):
     --base 形态下由本函数自己算批(见 select_added_migrations)—— 批的口径就是这道门禁的
     判据本身,放在 shell 里算过一次就出过一次假阳性,收回来放在能被单测钉住的地方。
     """
+    explicit_base = None
     if argv[:1] == ["--base"]:
         if len(argv) < 2:
             print("::error::dep-order --base 缺少基线 ref")
             return 1
-        batch = select_added_migrations(root, argv[1])
+        explicit_base = argv[1]
+        batch = select_added_migrations(root, explicit_base)
         if batch is None:
-            print("  (取不到基线 diff,跳过,不阻塞)")
-            return 0
+            print("::error::无法读取指定基线 diff，不得跳过依赖检查")
+            return 1
     else:
         batch = [os.path.basename(p) for p in argv
                  if os.path.basename(p).startswith("migration_")]
@@ -908,8 +943,11 @@ def _cmd_dep_order(root, argv):
 
     # ★ 声明棘轮必须在「本批为空就跳过」【之前】跑:删一条依赖边跟本分支有没有新增迁移无关,
     #   任何一个 PR 都能删。放在早退之后 = 闸放错了层,一个不带新迁移的 PR 就能把边删干净。
-    master_deps, master_ref = master_dependencies(root)
+    master_deps, master_ref = master_dependencies(root, explicit_base)
     if master_deps is None:
+        if explicit_base is not None:
+            print("::error::无法读取指定祖先基线的依赖声明，不得回退到 live master")
+            return 1
         print("  (取不到 github/master 上的依赖声明,本次不校验「只许加不许删」)")
     else:
         lost = check_dependency_ratchet(dependencies, master_deps)
