@@ -91,7 +91,7 @@ final class CrossDomainStorageFixture implements AutoCloseable {
         DriverManagerDataSource ddl = new DriverManagerDataSource(url, user, password);
         JdbcTemplate setup = new JdbcTemplate(ddl);
         // Same canonical source sequence as ClmCommercePaymentProofMySqlIT; no guessed historical proof.
-        P0AcceptanceSchema.baseTables(setup, "sys_config", "ums_member", "club", "club_member", "oms_order", "merchant_subscription", "cms_registration");
+        P0AcceptanceSchema.baseTables(setup, "sys_config", "ums_member", "club", "club_member", "oms_order", "merchant_subscription", "oms_ticket", "cms_registration");
         P0AcceptanceSchema.migrations(ddl, "migration_club_open_settings_20260909.sql", "migration_club_role_membership_20260823.sql",
                 "migration_club_role_membership_resume_fence_20260826.sql", "migration_20260821_commerce_order_idempotency.sql",
                 "migration_business_audit_event_20260823.sql", "migration_20261023_wx_pay_order_intent.sql",
@@ -167,8 +167,17 @@ final class CrossDomainStorageFixture implements AutoCloseable {
     }
 
     private void installRoute() throws Exception {
-        db.update("INSERT INTO cms_topic(id,member_id,name,del_flag,published_config_version,route_mode) VALUES(80,?,'cashless witness',0,1,'BRANCH_GRAPH')", MEMBER);
-        db.update("INSERT INTO cms_registration(registration_no,owner_type,owner_id,topic_id,member_id,payment_status,registration_status) VALUES('T19-ACCESS',1,80,80,?,2,2)", MEMBER);
+        db.update("INSERT INTO cms_topic(id,member_id,name,product_type,del_flag,published_config_version,route_mode) VALUES(80,?,'cashless witness',2,0,1,'BRANCH_GRAPH')", MEMBER);
+        // A real same-owner FREE_EXPLORE ticket backs this zero-cash access fixture. It is
+        // unrelated to the original 19.90 commerce payment and is not a nullable/zero ticket ID.
+        db.update("INSERT INTO oms_ticket(id,member_id,owner_type,owner_id,name,price,mode,total_inventory,remaining_inventory,del_flag) "
+                + "VALUES(81,?,1,80,'cashless access',0.00,2,1,0,0)", MEMBER);
+        db.update("INSERT INTO cms_registration(registration_no,owner_type,owner_id,topic_id,member_id,ticket_id,ticket_name,ticket_price,order_num,"
+                + "original_amount,discount_amount,total_amount,payable_amount,point_used,point_deduct_amount,point_payment_amount,wechat_payment_amount,"
+                + "payment_type,payment_status,registration_status,payment_time,pay_expire_time,purchase_kind,expires_at) "
+                + "VALUES('T19-ACCESS',1,80,80,?,81,'cashless access',0.00,1,0.00,0.00,0.00,0.00,0,0.00,0.00,0.00,"
+                + "0,2,2,NOW(),DATE_ADD(NOW(),INTERVAL 30 MINUTE),3,DATE_ADD(NOW(),INTERVAL 1 DAY))", MEMBER);
+        assertRouteAccessFixture();
         var state = new TopicRouteEngine.State(); state.setStatus("ACTIVE"); state.setCurrentNodeId(11L);
         state.getNodeStates().put(11L, TopicRouteState.PLAYABLE);
         TopicRouteSession row = new TopicRouteSession(); row.setActivityId(0L); row.setTopicId(80L); row.setMemberId(MEMBER);
@@ -178,6 +187,21 @@ final class CrossDomainStorageFixture implements AutoCloseable {
         TopicRouteRuntimeServiceImpl target = new TopicRouteRuntimeServiceImpl(sql.getMapper(TopicRouteSessionMapper.class), sql.getMapper(CmsTopicMapper.class),
                 null, null, null, null, sql.getMapper(CmsRegistrationMapper.class), null, () -> 123L, Clock.systemUTC(), RouteReachabilityProvider.UNKNOWN);
         route = proxy(target);
+    }
+
+    void assertRouteAccessFixture() {
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM cms_registration r "
+                + "JOIN oms_ticket t ON t.id=r.ticket_id AND t.owner_type=r.owner_type AND t.owner_id=r.owner_id "
+                + "JOIN cms_topic p ON p.id=r.topic_id AND p.id=r.owner_id "
+                + "WHERE r.registration_no='T19-ACCESS' AND r.ticket_id=81 AND r.owner_type=1 AND r.owner_id=80 "
+                + "AND r.member_id=? AND t.member_id=? AND p.member_id=? AND p.product_type=2 AND t.mode=2 "
+                + "AND p.del_flag=0 AND t.del_flag=0 AND r.purchase_kind=3 AND r.order_num=1 "
+                + "AND r.payment_status=2 AND r.registration_status=2 AND r.payment_type=0 "
+                + "AND r.ticket_name=t.name AND t.price=0.00 AND r.ticket_price=t.price AND r.original_amount=0.00 AND r.discount_amount=0.00 "
+                + "AND r.total_amount=0.00 AND r.payable_amount=0.00 AND r.point_used=0 "
+                + "AND r.point_deduct_amount=0.00 AND r.point_payment_amount=0.00 AND r.wechat_payment_amount=0.00 "
+                + "AND r.payment_time IS NOT NULL AND r.pay_expire_time>r.payment_time AND r.expires_at>NOW() "
+                + "AND t.total_inventory=1 AND t.remaining_inventory=0", Integer.class, MEMBER, MEMBER, MEMBER));
     }
 
     private void installNotifications() throws Exception {
