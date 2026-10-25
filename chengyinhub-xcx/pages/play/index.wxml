@@ -8,6 +8,7 @@
 <!-- HUD 槽位契约:同槽同一时刻只允许一个浮层,优先级写在 hud-slots.wxs,别再手工调 top 避让 -->
 <wxs src="../../utils/wxs/hud-slots.wxs" module="hud" />
 <wxs src="./utils/wxs/ring.wxs" module="ring" />
+<wxs src="../../utils/wxs/list-key.wxs" module="lk" />
 
 <cy-advanced-game id="advancedGame" hide-panel="{{(!!playKit.kit && (chapterFull || playKit.show)) || (journeyCheck.r5 && journeyCheck.show)}}" show="{{advancedPlay.show}}" node="{{advancedPlay.node}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)"
   activity-id="{{activityId}}" topic-id="{{topicId}}" preview="{{isPreview}}" mock="{{isMock}}"
@@ -312,7 +313,7 @@
         <!-- 终章反转:对面回的话,左侧气泡;读到这一块整章翻成对话框(.chfull.is-chat) -->
         <view wx:elif="{{item.kind === 'reveal'}}" class="chfull__reveal" aria-role="text" aria-label="{{item.who || '对面'}}回复">
           <view wx:if="{{item.who}}" class="chfull__reveal-who">{{item.who}}</view>
-          <view class="chfull__reveal-b" wx:for="{{item.lines}}" wx:for-item="line" wx:key="*this">{{line}}</view>
+          <view class="chfull__reveal-b" wx:for="{{lk.rows(item.lines)}}" wx:for-item="line" wx:key="key">{{line.text}}</view>
         </view>
         <!-- 内心声音(咔哒等):原型 .voice —— 左对齐,名字前一颗发光的点,颜色随说话的那个声音 -->
         <view wx:elif="{{item.kind === 'voice'}}" class="chfull__voice" style="--vc:{{item.color}}" aria-role="text" aria-label="{{item.who}}:{{item.text}}">
@@ -714,8 +715,8 @@
           </view>
         </view>
         <view class="fx-hero__k fx-hero__in" style="--i:4" wx:if="{{hero.node.howto.length}}">怎么玩</view>
-        <view class="fx-hero__li fx-hero__in" style="--i:4" wx:for="{{hero.node.howto}}" wx:key="*this">
-          <text class="fx-hero__li-n">{{index + 1}}.</text><text class="fx-hero__li-t">{{item}}</text>
+        <view class="fx-hero__li fx-hero__in" style="--i:4" wx:for="{{lk.rows(hero.node.howto)}}" wx:key="key">
+          <text class="fx-hero__li-n">{{index + 1}}.</text><text class="fx-hero__li-t">{{item.text}}</text>
         </view>
         <view class="fx-hero__k fx-hero__in" style="--i:4" wx:if="{{hero.node.materials}}">需要准备</view>
         <view class="fx-hero__li fx-hero__in" style="--i:4" wx:if="{{hero.node.materials}}">
@@ -1129,7 +1130,7 @@
         <text class="gp2__neterr-t">{{gNetErr}}</text>
           <text class="gp2__neterr-r" wx:if="{{gNetRetryable}}" bindtap="retryGameSubmission" hover-class="cy-pressed" hover-stay-time="80">{{gRetryType === 'photo' ? '重新上传照片' : (gRetryType === 'gameScan' ? '重新扫码' : (gRetryType === 'puzzleReveal' ? '重新查看答案' : (gRetryType === 'gameCheckin' ? '重新核验' : '重新提交')))}}</text>
       </view>
-      <view class="gp2__hint" wx:for="{{shownHints}}" wx:key="*this">{{item}}</view>
+      <view class="gp2__hint" wx:for="{{lk.rows(shownHints)}}" wx:key="key">{{item.text}}</view>
       <view class="gp2__reveal" wx:if="{{revealed}}">{{game.reveal}}</view>
       <view class="gp2__scorecap" wx:if="{{game.puzzleScoring}}">当前最高 {{puzzleScoreCap}} 解谜分 · 不影响探索值</view>
       <view class="gp2__ctl">
@@ -1280,11 +1281,11 @@
     <view class="newos__plan" wx:if="{{newLifeOS.actions7Days.length || newLifeOS.actions30Days.length}}">
       <view class="newos__plan-col" wx:if="{{newLifeOS.actions7Days.length}}">
         <text class="newos__plan-k">未来 7 天</text>
-        <text class="newos__action" wx:for="{{newLifeOS.actions7Days}}" wx:key="*this">{{index + 1}}. {{item}}</text>
+        <text class="newos__action" wx:for="{{lk.rows(newLifeOS.actions7Days)}}" wx:key="key">{{index + 1}}. {{item.text}}</text>
       </view>
       <view class="newos__plan-col" wx:if="{{newLifeOS.actions30Days.length}}">
         <text class="newos__plan-k">未来 30 天</text>
-        <text class="newos__action" wx:for="{{newLifeOS.actions30Days}}" wx:key="*this">{{index + 1}}. {{item}}</text>
+        <text class="newos__action" wx:for="{{lk.rows(newLifeOS.actions30Days)}}" wx:key="key">{{index + 1}}. {{item.text}}</text>
       </view>
     </view>
   </view>
