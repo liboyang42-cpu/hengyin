@@ -1,0 +1,32 @@
+{
+  "source": "88cbb6cd4230a4834435ffc4075224b21dba3da2",
+  "backend_run": 40227580178,
+  "backend_job": 121272251495,
+  "attempt": 1,
+  "stage": "maven-compiler-plugin:testCompile",
+  "backend_log_sha256": "0442ad1925c0071f0cf6bf7c8b6001d050cb9b2b691821bc05a3c8c0f95a6804",
+  "diagnostic_count": 1,
+  "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPerMerchantTest.java",
+  "line": 175,
+  "diagnostic": "Missing existing static Mockito.verify import; earlier never() diagnostic resolution exposed the enclosing verify() symbol",
+  "fix": "Import existing org.mockito.Mockito.verify; original negative assertion unchanged",
+  "focused_LSP_errors_after_fix": 0,
+  "LSP_not_a_build_or_runtime_verification": true,
+  "storage": {
+    "source": "88cbb6cd4230a4834435ffc4075224b21dba3da2",
+    "run": 40227585631,
+    "attempt": 1,
+    "job": 121272259673,
+    "artifact": 12611671687,
+    "zip_sha256": "14710da0f897b4c340a9be73989292a4501d25b6eac92113f32c0ae2d9096ce7",
+    "crc": "PASS",
+    "failure_stage": "testCompile missing Mockito.verify, same as backend",
+    "actual_cases": 0,
+    "source_expected_cases": 13,
+    "cleanup": "CLEAN_NO_RESIDUAL_SCHEMAS_EXACT_CONTAINER_REMOVED",
+    "class_accepted": false
+  },
+  "admin_business_tests": "NOT_RUN",
+  "remaining_storage_and_fault_restore": "NOT_DISPATCHED",
+  "all_complete": false
+}

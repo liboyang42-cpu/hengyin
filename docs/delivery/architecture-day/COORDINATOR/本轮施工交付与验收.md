@@ -1,4 +1,8 @@
 <!-- 347b-current-runtime-and-source-status -->
+88c两条准入已结束于同一测试编译首因：CoopSettlementPerMerchantTest原负断言还缺Mockito.verify导入。原7条诊断已消失，此为解析never后暴露的外层verify符号；业务admin／Station13仍未执行，非业务失败。root已补该唯一导入并核原4份相关文件编辑器语义错误为0（非编译通过）；不改原case/assert/生产/CI/DDL。原88c Station制品12611671687 CRC／源／0case／独立精确CLEAN已核。下一新候选先只后台编译准入，再并行完整影响20类及原故障恢复入口，避免再复制同一未通过编译。all_complete=false。
+
+最新准入候选为88cbb6cd4230a4834435ffc4075224b21dba3da2，parenta66；仅一次补齐实际7条testCompile诊断的4份测试源码，原case/assert/生产/CI/schema未改，扫描后已push。已各dispatch一次同源复验：backend40227580178、Station13准入40227585631，API source均88c/attempt1，当前inProgress无新XML通过结论。a66两条原失败与清理证据保留，不转签；其余19类/mixed/fullrestore/单cohort尚未派发。整体all_complete=false。
+
 a66首轮实际后台验收在testCompile失败：4份测试源码7条精确类型／导入诊断，admin业务用例未执行，非7个业务BUG。root已一次修齐两处Long字面量及三项缺失导入，未改生产、原case或断言，修后尚未复验。原标准40226989357与单类准入40227001786保留原SHA／attempt；其余19类／mixed／完整restore／单cohort尚未派发，避免重复同一编译首因。下一步冻结这组极小完整修补，再定点准入。all_complete=false。
 
 最新统一候选已冻结推送：a66cfe6ed86306026fc4409f38938202611b0aa9（tree478af1f04a82daf712102b51d6e5215a1fa29fe8，parent347b），118文件／874529bytes差分经白名单、whitespace与gitleaks无泄漏。当前已启动两次同SHA/attempt1定点验收：standard40226989357只backend，storage40227001786只原失败Station13作为共同编译／门禁准入；尚无新实际用例结果。之后按影响计划继续其余19类及混合／完整恢复／固定单组诊断。未受影响已通过项目不重复。新源码不是旧347b绿色，全目标all_complete=false。

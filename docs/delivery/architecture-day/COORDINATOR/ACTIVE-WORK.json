@@ -4537,5 +4537,68 @@
       "cleanup": "CLEAN_NO_RESIDUAL_SCHEMAS_EXACT_CONTAINER_REMOVED",
       "business_accepted": false
     }
+  },
+  "final_concentrated_acceptance_88c": {
+    "state": "ENDED_TEST_COMPILE_FAILURE_MISSING_VERIFY_IMPORT",
+    "source": "88cbb6cd4230a4834435ffc4075224b21dba3da2",
+    "tree": "f2b07d81b9a95e1c3b16ab0e6821ed4609d087c3",
+    "parent": "a66cfe6ed86306026fc4409f38938202611b0aa9",
+    "branch": "codex/architecture-day-runtime-repairs-347b-20261025",
+    "runs": {
+      "standard_backend_selected": 40227580178,
+      "storage_admission_station13": 40227585631
+    },
+    "attempt": 1,
+    "change": "Only four test files fix seven actual testCompile diagnostics: two Long literals and three imports; no case/assertion/production/CI/schema change",
+    "previous_a66_runs_terminal_failed": [
+      40226989357,
+      40227001786
+    ],
+    "previous_a66_station_actual_cases": 0,
+    "previous_a66_station_cleanup": "independent CRC/receipt/source confirmed CLEAN and exact container removed",
+    "not_dispatched_yet": [
+      "remaining19storage",
+      "gameplay-capacity-mixed",
+      "restore-application-startup",
+      "payment-gap-diagnostic"
+    ],
+    "all_complete": false,
+    "last_observed_jobs": {
+      "backend": {
+        "id": 121272251495,
+        "state": "in_progress",
+        "active_step": "Build and test backend"
+      },
+      "storage_plan": {
+        "id": 121272152512,
+        "state": "success",
+        "scope": "metadata/controls only, not business pass"
+      },
+      "station13": {
+        "id": 121272259673,
+        "state": "in_progress",
+        "active_step": "Run class on real storage and read back"
+      }
+    },
+    "actual_new_cases_accepted": 0,
+    "next": "Freeze minimal complete import fix; run only backend selected first. After actual compilation succeeds, run full impacted20 storage once and original fault/restore/cohort entries. Do not duplicate Station13 before compile.",
+    "backend_job": 121272251495,
+    "backend_log_sha256": "0442ad1925c0071f0cf6bf7c8b6001d050cb9b2b691821bc05a3c8c0f95a6804",
+    "storage_admission_independent_readback": {
+      "source": "88cbb6cd4230a4834435ffc4075224b21dba3da2",
+      "run": 40227585631,
+      "attempt": 1,
+      "job": 121272259673,
+      "artifact": 12611671687,
+      "zip_sha256": "14710da0f897b4c340a9be73989292a4501d25b6eac92113f32c0ae2d9096ce7",
+      "crc": "PASS",
+      "failure_stage": "testCompile missing Mockito.verify, same as backend",
+      "actual_cases": 0,
+      "source_expected_cases": 13,
+      "cleanup": "CLEAN_NO_RESIDUAL_SCHEMAS_EXACT_CONTAINER_REMOVED",
+      "class_accepted": false
+    },
+    "new_fix": "One missing existing Mockito.verify import in same original negative assertion; no case/assertion/behavior change.",
+    "focused_editor_semantics": "Four original compilation-failure files: existing Java LSP error diagnostics empty after source fix; not a Maven compile/test pass."
   }
 }
