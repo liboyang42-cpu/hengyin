@@ -1,0 +1,43 @@
+{
+  "candidate": "ff2b0ea1cf0ca3f097de446b5eda85beb3fad1a0",
+  "public_master": "892efe6f765a5748065569fd886ee9b00ef71d4b",
+  "public_incoming_commits": 10,
+  "incoming_changed_files": 62,
+  "preview_conflict_files": 23,
+  "paths": [
+    "chengyinhub-admin/sql/migration_20261024_cash_withdraw_transfer_intent.sql",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_21MySqlIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_21Test.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_22Test.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/BothWithdrawalLegsRejectPlayerCooldownTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawFrozenRequeryH2Test.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawStateMachineTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/FundIdempotencyConcurrencyTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawServiceTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayTransferClassificationTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/WechatPayCallbackHttpAckTest.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/CashWithdrawTransferIntent.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IWechatPayService.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java",
+    "ci/funds_it_gate.py",
+    "ci/migration-dependencies.json",
+    "ci/real-storage-it-registry.json",
+    "ci/test_funds_it_gate.py",
+    "ci/test_real_storage_it.py"
+  ],
+  "preview_tree": "6770930f5a7157d42e509284c430c4a115c94322",
+  "preview_tree_status": "UNRESOLVED_NOT_EXECUTABLE",
+  "worktree_merge_performed": false,
+  "pr_merge_performed": false,
+  "owners": {
+    "B": "16fundsJava/testconflictpatches+SQLhash/compatibilityreportonly",
+    "E": "OnlyCmsTopicServiceImplconflictanddirectfixtures",
+    "root": "5sharedCI/registry/dependencyconflicts+soleactualintegration"
+  },
+  "immutable_sql": "Publicmastermigrationbytespreserved;BcannoteditexistingSQL,reportadditiveifneeded",
+  "java_db_tests": "NOT_RUN_NO_REPEATED_PASSED_SUITES"
+}

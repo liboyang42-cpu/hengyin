@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-25T01:50:27.135415+00:00",
+  "updated_utc": "2026-10-25T02:02:45.042185+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -23,8 +23,8 @@
       "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280"
     },
     "B": {
-      "state": "DELIVERED_RUNTIME_DIAGNOSTICS_SCOPED_VERIFIED_NO_OPEN_CODE_TASK",
-      "task": "Preserve first failure and cleanup despite malformed/unreadable report; never infer pre-app from bad metadata; two report readers plus one direct control, full fourfile patch including earlier docs",
+      "state": "ACTIVE_PUBLIC_MASTER_16_FUNDS_CONFLICT_PATCHES",
+      "task": "ExactpublicHEAD3wayfundsJava/tests composition preservingbothguards/cases; existingSQLhash/compatibilityreportonly",
       "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
       "host_id": "durable",
       "owned_symbols": [
@@ -32,7 +32,11 @@
         "Direct original-refund test source"
       ],
       "residual_delivery": "Complete2 main chatdiff blocks4files plus1shared historical factory review hunk applied,22original cases retained",
-      "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280"
+      "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280",
+      "exclusive_files": [
+        "16fundsJava/testfiles listed in public-master-integration-conflicts.json, excluding CmsTopic/ci",
+        "SQLdifference report only"
+      ]
     },
     "C": {
       "state": "DELIVERED_NO_OPEN_IDENTIFIED_FAILURE_CODE_TASK",
@@ -61,8 +65,8 @@
       "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280"
     },
     "E": {
-      "state": "DELIVERED_NO_OPEN_IDENTIFIED_FAILURE_CODE_TASK",
-      "task": "保留你原未交ledger工作，root已采用D等价完整实现，不继续旧ledger重复任务。现在新隔离分支只修主题/内容共同装配失败，拥有这些unit：TopicCreativePostVisibilitySyncTest（缺CmsTopicChapterMapper）、TopicSizeLimitsTest（预期IllegalState却NPE）、OWN_C03_13Test五例、OrdinarySupplyResumeTest十例（缺CmsTopicNodeMapper等）、CmsTopicPublishStateKeyGuardTest六例（预期ServiceException却NPE）、AuditTopicBudgetDecisionTest（当前锁读期望1次实为2次）；storage TopicContentGraphMySqlIT.runtimeBindingsUseCorrectOldAndCreatedClientMaps（工具costs报尚无通用结算完成证明）。复用现有内容/发布真实facade和共享测试fixture一次补正确装配；保留原limits、thought/statekey、发布归属、当前锁、内容复制客户端ID映射断言，不为了旧fixture放宽能力证明。只改这些测试+必要主题/内容直接根因，别碰别人资金/语音文件。若原执行器仍不可用，使用GitHub工具读公共源后交完整聊天diff，不重置/删除原工作区，立刻报告精确可用能力。",
+      "state": "ACTIVE_PUBLIC_MASTER_TOPIC_CONFLICT_PATCH",
+      "task": "OnlyCmsTopicServiceImpl truepublicmergeconflict, preservecandidatefacades/boundaries and publicmasterpaymentguards",
       "thread_id": "01a16a23-2723-72e4-813f-03d7f1aa6017",
       "host_id": "durable",
       "excluded_files": [
@@ -72,7 +76,12 @@
         "MerchantCommerceServiceTest.java"
       ],
       "residual_delivery": "2f09aa52011938785e686a42f0e1f58eb57833cc",
-      "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280"
+      "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280",
+      "exclusive_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+        "Direct necessary topic fixture only",
+        "docs/delivery/architecture-day/E/public-master-topic-integration/"
+      ]
     },
     "F": {
       "state": "DELIVERED_CONTEXT_SCOPE_WIRING_FROZEN_PENDING_RUNTIME",
@@ -1018,30 +1027,30 @@
     "full_scope_complete": false
   },
   "next_runtime_validation": {
-    "id": "GENERIC_HTTP_SAFE_SOURCE_CONTEXT_A6E8_01",
+    "id": "GENERIC_HTTP_CHECKIN_CONTRACT_FF2B_02",
     "workflow": "gameplay-http-e2e.yml",
     "http_scope": "generic-only",
-    "source_sha": "a6e8163e6983157d2e67a1e32ca2e7ced0b9593f",
-    "tree": "da2941cb0777161c743a8293353c48fca6f7e1e0",
-    "branch": "codex/architecture-day-generic-context-a6e8-20261025",
-    "run": 40151582031,
-    "status": "FAIL_SHARED_PLAYER_ARRIVAL_CHECKIN_CONFIRMED",
+    "source_sha": "ff2b0ea1cf0ca3f097de446b5eda85beb3fad1a0",
+    "tree": "bcbf6d53891830ec252e3ab612f1f37f24344b14",
+    "branch": "codex/architecture-day-checkin-ff2b-20261025",
+    "run": 40152207411,
+    "status": "PASS_GENERIC26_PARTIAL_DIAGNOSTIC_SCOPE",
     "owner": "root",
     "pending_owners": [],
     "jobs": [
       {
-        "databaseId": 121044044143,
+        "databaseId": 121045899589,
         "name": "http (GenericGameplayHttpE2eIT)",
         "status": "completed",
-        "conclusion": "failure"
+        "conclusion": "success"
       }
     ],
     "declared_cases_not_pass_count": 26,
-    "verification": "API headSha independentlyverifieda6e8 and exactlyoneGenericjob; transientreadEOF retriedonce, no duplicateworkflowdispatch",
-    "scope": "PARTIAL_DIAGNOSTIC_SCOPE fixedstage/endpoint only, businesscauseUNKNOWN; no productionfix, no inheritedFreeze10 PASS",
+    "verification": "APIheadSha independentlyverifiedff2b/exactoneGenericjob",
+    "scope": "Minimalfixturecontractrepaironly/no productionguardchange; actual26outcomespending/PARTIALscope",
     "prior_core_ci_repeated": false,
-    "conclusion": "failure",
-    "readback": "a6e8-generic-checkin-failure-readback.json"
+    "conclusion": "success",
+    "readback": "ff2b-generic-http-pass-readback.json"
   },
   "runtime_evidence_implementation": {
     "owner": "F",
@@ -1307,6 +1316,32 @@
       "scope": "OriginalthreeisolatedHTTPclasses after both necessary schema-caller and failure-receipt fixes; no realprovider/cash/UI",
       "conclusion": "failure",
       "readback": "f194-http-partial-and-generic-failure.json"
+    },
+    {
+      "id": "GENERIC_HTTP_SAFE_SOURCE_CONTEXT_A6E8_01",
+      "workflow": "gameplay-http-e2e.yml",
+      "http_scope": "generic-only",
+      "source_sha": "a6e8163e6983157d2e67a1e32ca2e7ced0b9593f",
+      "tree": "da2941cb0777161c743a8293353c48fca6f7e1e0",
+      "branch": "codex/architecture-day-generic-context-a6e8-20261025",
+      "run": 40151582031,
+      "status": "FAIL_SHARED_PLAYER_ARRIVAL_CHECKIN_CONFIRMED",
+      "owner": "root",
+      "pending_owners": [],
+      "jobs": [
+        {
+          "databaseId": 121044044143,
+          "name": "http (GenericGameplayHttpE2eIT)",
+          "status": "completed",
+          "conclusion": "failure"
+        }
+      ],
+      "declared_cases_not_pass_count": 26,
+      "verification": "API headSha independentlyverifieda6e8 and exactlyoneGenericjob; transientreadEOF retriedonce, no duplicateworkflowdispatch",
+      "scope": "PARTIAL_DIAGNOSTIC_SCOPE fixedstage/endpoint only, businesscauseUNKNOWN; no productionfix, no inheritedFreeze10 PASS",
+      "prior_core_ci_repeated": false,
+      "conclusion": "failure",
+      "readback": "a6e8-generic-checkin-failure-readback.json"
     }
   ],
   "worker_progress_cursors": {
@@ -1467,13 +1502,70 @@
     "parent": "a6e8163e6983157d2e67a1e32ca2e7ced0b9593f",
     "type": "COMPLETE_CHAT_DIFF_NO_DONOR_COMMIT",
     "patch_sha256": "4a7a6954a7d452a543455c10284892df24acd75c82645294f968802f72780b53",
-    "state": "APPLIED_CHECK_PASS_PENDING_TARGET",
+    "state": "FROZEN_PUSHED_SINGLE_TARGET_IN_PROGRESS",
     "root_cause": "Shared lifecycle checkin fixture omitted nodeId,expectedRouteVersion,routeSessionId; actualexecuteBasicIntent rejects missingversion/runtimebeforearrival",
     "production_unchanged": true,
     "fix": "RealHTTPaction-context reads and verifies same routeSession/current version before checkin, sends all required originalidentityfields",
     "assertions_before": 325,
     "assertions_after": 328,
     "original_cases": 26,
-    "java_db_ci": "NOT_RUN"
+    "java_db_ci": "NOT_RUN",
+    "integrated_source": "ff2b0ea1cf0ca3f097de446b5eda85beb3fad1a0",
+    "scan": "secret-file/diffPASS stagedgitleaks10555bytesnoleaks",
+    "runtime": "PASS26OF26_ZERO_SKIP_ERROR_FAILURE_INCLUDING_PRIOR16_IDENTITIES_FF2B"
+  },
+  "public_master_integration": {
+    "candidate": "ff2b0ea1cf0ca3f097de446b5eda85beb3fad1a0",
+    "public_master": "892efe6f765a5748065569fd886ee9b00ef71d4b",
+    "public_incoming_commits": 10,
+    "incoming_changed_files": 62,
+    "preview_conflict_files": 23,
+    "paths": [
+      "chengyinhub-admin/sql/migration_20261024_cash_withdraw_transfer_intent.sql",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_21MySqlIT.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_21Test.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_22Test.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/BothWithdrawalLegsRejectPlayerCooldownTest.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawFrozenRequeryH2Test.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawStateMachineTest.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/FundIdempotencyConcurrencyTest.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawServiceTest.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayTransferClassificationTest.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/WechatPayCallbackHttpAckTest.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/CashWithdrawTransferIntent.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IWechatPayService.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java",
+      "ci/funds_it_gate.py",
+      "ci/migration-dependencies.json",
+      "ci/real-storage-it-registry.json",
+      "ci/test_funds_it_gate.py",
+      "ci/test_real_storage_it.py"
+    ],
+    "preview_tree": "6770930f5a7157d42e509284c430c4a115c94322",
+    "preview_tree_status": "UNRESOLVED_NOT_EXECUTABLE",
+    "worktree_merge_performed": false,
+    "pr_merge_performed": false,
+    "owners": {
+      "B": "16fundsJava/testconflictpatches+SQLhash/compatibilityreportonly",
+      "E": "OnlyCmsTopicServiceImplconflictanddirectfixtures",
+      "root": "5sharedCI/registry/dependencyconflicts+soleactualintegration"
+    },
+    "immutable_sql": "Publicmastermigrationbytespreserved;BcannoteditexistingSQL,reportadditiveifneeded",
+    "java_db_tests": "NOT_RUN_NO_REPEATED_PASSED_SUITES",
+    "root_ci_source_observations": {
+      "registration_funds_exact_declarations": 96,
+      "canonical_source_counts_vs_stale_master_metadata": {
+        "AiQuotaRecoveryMySqlRedisIT": 9,
+        "RefundRetryAndRemainderMySqlIT": 6,
+        "RegistrationCallbackIntentMySqlIT": 14,
+        "WechatPaymentIntentMySqlIT": 4
+      },
+      "master_new_class": "com.chengyinhub.business.service.CashWithdrawTransferIntentMySqlIT (9 source declarations)",
+      "note": "Pure source scanner on unresolvedpreview auto-merged files only; nottestpasses; finalregistry/gate/count resolution waits B/E actualcombinedsource; retainpublicgatecontrols andalloriginalcases"
+    }
   }
 }
