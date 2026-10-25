@@ -21,6 +21,7 @@ import signal
 import subprocess
 import sys
 import time
+import uuid
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -96,6 +97,8 @@ def hosted(env):
     require(env.get('GITHUB_EVENT_NAME') == 'workflow_dispatch', 'explicit manual hosted drill only')
     require(not env.get('DOCKER_HOST') and not env.get('DOCKER_CONTEXT'), 'Docker override forbidden')
     require(re.fullmatch('[a-f0-9]{40}', env.get('GITHUB_SHA', '')), 'full source SHA required')
+    require(all(re.fullmatch('[1-9][0-9]*',env.get(key,'')) for key in ('GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT')),
+            'same-run/attempt identity required')
 
 
 def mysql_options(path, port):
@@ -180,21 +183,23 @@ def journal(path, scope):
 
 
 def table_rows(tool, args, table):
-    require(table in TABLES, 'unregistered table')
+    fixed_domains = module('restore_fixed_domain_tables', 'ci/restore_business_domain_facts.py')
+    require(table in TABLES or table in fixed_domains.ALL_TABLES, 'unregistered table')
     raw_columns = tool.mysql(args, "SELECT JSON_ARRAY(COLUMN_NAME,COLUMN_TYPE) FROM information_schema.COLUMNS"
                              " WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='" + table + "' ORDER BY ORDINAL_POSITION")
     columns = [json.loads(line) for line in raw_columns.splitlines() if line]
     require(columns and all(re.fullmatch('[a-zA-Z0-9_]+', c[0]) for c in columns), 'missing typed table definition')
     # Fixed table allowlist; metadata supplies column names only, never a query supplied by the runner.
-    expression = ','.join('CAST(' + tool.quoted(c[0]) + ' AS CHAR CHARACTER SET utf8mb4)' for c in columns)
+    expression = ','.join(('HEX(' + tool.quoted(c[0]) + ')' if re.match(r'^(?:binary|varbinary|\w*blob|bit)\b', c[1], re.I)
+                          else 'CAST(' + tool.quoted(c[0]) + ' AS CHAR CHARACTER SET utf8mb4)') for c in columns)
     raw = tool.mysql(args, 'SELECT JSON_ARRAY(' + expression + ') FROM ' + tool.quoted(table))
     rows = [json.loads(line) for line in raw.splitlines() if line]
     return {'columns': columns, 'rows': sorted(rows, key=lambda row: canonical(row))}
 
 
-def capture(tool, args):
-    result = {'tables': {t: table_rows(tool, args, t) for t in TABLES}, 'highWater': {}}
-    for table, key in HIGH_IDS.items():
+def capture(tool, args, tables=TABLES, high_ids=HIGH_IDS):
+    result = {'tables': {t: table_rows(tool, args, t) for t in tables}, 'highWater': {}}
+    for table, key in high_ids.items():
         row = json.loads(tool.mysql(args, "SET SESSION information_schema_stats_expiry=0; SELECT JSON_ARRAY(COALESCE((SELECT MAX(" + tool.quoted(key) + ") FROM "
                 + tool.quoted(table) + "),0),AUTO_INCREMENT) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE()"
                 " AND TABLE_NAME='" + table + "'"))
@@ -322,7 +327,11 @@ def wait_phase(child, phase, deadline):
 
 
 def child_environment(resources, options, journal_path):
-    env = dict(os.environ)
+    for forbidden in ('JAVA_TOOL_OPTIONS', 'JDK_JAVA_OPTIONS', '_JAVA_OPTIONS', 'CLASSPATH'):
+        require(not os.environ.get(forbidden), 'JVM argument injection forbidden')
+    # Pass task-owned credentials explicitly; never inherit payment/AI/production credentials or host tokens.
+    env = {key:os.environ[key] for key in ('PATH','JAVA_HOME','HOME','LANG','LC_ALL','TMPDIR','GITHUB_SHA',
+            'RUNNER_ENVIRONMENT','CHENGYIN_CI_RESTORE_BUSINESS') if key in os.environ}
     env.update({'CHENGYIN_RESTORE_SCOPE': resources['scope'], 'CHENGYIN_RESTORE_SOURCE_UUID': resources['source']['uuid'],
                 'CHENGYIN_TEST_MYSQL_HOST': '127.0.0.1', 'CHENGYIN_TEST_MYSQL_PORT': str(resources['source']['port']),
                 'CHENGYIN_TEST_MYSQL_DATABASE_BASE': 'cy_restore_' + resources['scope'],
@@ -341,6 +350,15 @@ def run(resources_path, output, private):
     require(output != private and output not in private.parents and private not in output.parents, 'private/public roots must be distinct')
     require(output.is_dir() and private.is_dir() and not list(output.iterdir()) and not private.stat().st_mode & 0o077, 'fresh owned evidence directories required')
     resources = json.loads(private_file(resources_path).read_text())
+    cohort = resources.get('cohort', 'payment-gap')
+    domains = module('restore_fixed_domain_readers', 'ci/restore_business_domain_facts.py')
+    require(cohort == 'payment-gap' or cohort in domains.SPECS, 'only seven fixed restore cohorts')
+    domain = None if cohort == 'payment-gap' else domains.SPECS[cohort]
+    child_name = CHILD if domain is None else domain['child']
+    tables = TABLES if domain is None else domain['tables']
+    high_ids = HIGH_IDS if domain is None else domain['ids']
+    read_journal = journal if domain is None else lambda path,scope:domains.journal(path,scope,cohort)
+    def snapshot(side): return capture(tool, args[side], tables, high_ids)
     require(Path(resources_path).resolve().parent == private, 'resource manifest must remain in this private root')
     tool = module('canonical_restore_tool', 'scripts/db-backup-restore.py')
     auth = module('original_owned_helpers', 'ci/authenticated_redis_recovery_probe.py')
@@ -376,20 +394,29 @@ def run(resources_path, output, private):
             and all((p.startswith(str(ROOT) + '/') and '/target/' in p)
                     or (p.startswith(str(Path.home() / '.m2/repository') + '/') and p.endswith('.jar'))
                     for p in entries), 'same-build test classes/Maven dependencies only')
-    child_class = ROOT / 'chengyinhub-admin/target/test-classes' / (CHILD.replace('.', '/') + '.class')
+    child_class = ROOT / 'chengyinhub-admin/target/test-classes' / (child_name.replace('.', '/') + '.class')
     require(child_class.is_file(), 'compiled test child missing; host must build once from this exact source')
     jar = ROOT / 'chengyinhub-admin/target/chengyinhub-admin.jar'
     with zipfile.ZipFile(jar) as package:
-        require(not any('RestoreBusinessReconciliationFixture' in p for p in package.namelist()), 'test entry must not be packaged')
-        build = dict(line.split('=', 1) for line in package.read('BOOT-INF/classes/META-INF/git.properties').decode().splitlines()
+        require(not any(('ReconciliationFixture' in p and 'Restore' in p) or 'RestoreProviderJournal' in p
+                        or 'FundsRecoveryProcessProbe' in p for p in package.namelist()), 'test entry must not be packaged')
+        # admin pom uses generateGitPropertiesFile=true/default outputDirectory/git.properties,
+        # includeOnlyProperties=^git.commit.id$. No synthetic META-INF fallback/build stamp is accepted.
+        build = dict(line.split('=', 1) for line in package.read('BOOT-INF/classes/git.properties').decode().splitlines()
                      if '=' in line and not line.startswith('#'))
-        require(build.get('git.commit.id.full', build.get('git.commit.id')) == resources['sourceSha'], 'JAR source identity mismatch')
+        require(build.get('git.commit.id') == resources['sourceSha'], 'JAR source identity mismatch')
     (private / 'provider').mkdir(mode=0o700)
     (private / 'backup').mkdir(mode=0o700)
     provider = private / 'provider/store.jsonl'
     with provider.open('xb') as stream:
         os.chmod(provider, 0o600); stream.flush(); os.fsync(stream.fileno())
     env = child_environment(resources, options['source'], provider)
+    env.update({'CHENGYIN_RESTORE_COHORT':cohort,'CHENGYIN_RESTORE_MODE':'false',
+                'CHENGYIN_RESTORE_BOOT':uuid.uuid4().hex})
+    if domain is not None:
+        # Reused refund test POJO validates its unused suite-config name in its constructor.
+        # Its lifecycle is never called: actual datasource/schema/UUID are explicitly supplied by this bridge.
+        env['CHENGYIN_TEST_MYSQL_DATABASE_BASE']='cy_restore_'+resources['scope'][:12]
     child, result, primary, created = None, {}, None, []
     source_creation_pending = False
     target_creation_pending = False
@@ -397,7 +424,8 @@ def run(resources_path, output, private):
     def deadline(signum, frame):
         raise TimeoutError('fixed restore drill deadline')
     old_alarm = signal.signal(signal.SIGALRM, deadline)
-    signal.alarm(600)
+    old_signals={s:signal.signal(s,deadline) for s in (signal.SIGTERM,signal.SIGINT,signal.SIGHUP)}
+    signal.alarm(600 if domain is None else 900)
     try:
         # Confirm both named schemas absent; never adopt or remove a pre-existing target.
         for side in ('source', 'target'):
@@ -407,19 +435,20 @@ def run(resources_path, output, private):
         # Failure before the fixed boundary may have partially created a schema. Do NOT adopt/drop it as confirmed ownership.
         source_creation_pending = True
         with (private / 'child.stderr').open('xb') as errors:
-            child = subprocess.Popen(['java', '-Xmx512m', '-cp', cp, CHILD], cwd=ROOT / 'chengyinhub-admin',
+            child = subprocess.Popen(['java', '-Xmx512m', '-cp', cp, child_name], cwd=ROOT / 'chengyinhub-admin',
                                      env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=errors, bufsize=0)
             wait_phase(child, 'BACKUP_READY', started + 180)
             created.append('source'); source_creation_pending = False
-            before = capture(tool, args['source']); p_before = journal(provider, resources['scope'])
+            before = snapshot('source'); p_before = read_journal(provider, resources['scope'])
             save(private / 'before.json', before)
             save(private / 'provider/before.json', p_before)
             args['source'].output = private / 'backup/backup.sql'
-            backup_started = now(); tool.backup(args['source']); backup_finished = now()
+            backup_started = now(); tool.backup(args['source']); backup_finished = now();backup_tick=time.monotonic()
             manifest = json.loads(Path(str(args['source'].output) + '.json').read_text())
             child.stdin.write(b'AFTER_BACKUP\n'); child.stdin.flush()
             wait_phase(child, 'FAULT_READY', started + 300)
-            fault_at = now(); fault = capture(tool, args['source']); p_after = journal(provider, resources['scope'])
+            fault_at = now();fault_gap=time.monotonic()-backup_tick
+            fault = snapshot('source'); p_after = read_journal(provider, resources['scope'])
             save(private / 'fault.json', fault)
             save(private / 'provider/after.json', p_after)
             child.stdin.write(b'STOP\n'); child.stdin.flush(); require(child.wait(timeout=20) == 0, 'source fixture failed')
@@ -435,21 +464,64 @@ def run(resources_path, output, private):
         restore_started, tick = now(), time.monotonic()
         tool.restore(args['target']) # Every original guard, checksum, trigger/definition and AUTO_INCREMENT check remains active.
         restore_finished, elapsed = now(), time.monotonic() - tick
-        restored = capture(tool, args['target'])
+        restored = snapshot('target')
         save(private / 'restored.json', restored)
-        proof = reconcile(before, fault, restored, p_before, p_after)
+        proof = (reconcile(before, fault, restored, p_before, p_after) if domain is None else
+                 domains.evaluate(cohort, before, fault, restored, p_before, p_after))
         # Exercise the actual disabled production gateway in a separate test-only JVM, without source setup or target writes.
-        guarded_env = dict(env, CHENGYIN_RESTORE_PHASE='RESTORED_GUARD',
-                           CHENGYIN_RESTORE_GUARD_FILE=str(private / 'provider/gateway.json'))
-        guard = subprocess.run(['java', '-Xmx256m', '-cp', cp, CHILD], cwd=ROOT / 'chengyinhub-admin',
-                               env=guarded_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=40)
-        require(guard.returncode == 0, 'disabled gateway probe failed')
-        gateway = json.loads(private_file(private / 'provider/gateway.json').read_text())
-        require(gateway == {'state': 'SDK_DISABLED_ONLY', 'createRejected': True,
-                            'allDispatchDomainsFenced': False, 'recoveryRelease': 'BLOCKED'}, 'gateway boundary changed')
-        require(capture(tool, args['target']) == restored and journal(provider, resources['scope']) == p_after,
-                'restore or guard created an economic effect/provider duplicate')
+        owner_proofs=[]; normal_available_at=None;normal_available_elapsed=None
+        if domain is None:
+            guarded_env = dict(env, CHENGYIN_RESTORE_PHASE='RESTORED_GUARD',
+                               CHENGYIN_RESTORE_GUARD_FILE=str(private / 'provider/gateway.json'))
+            guard = subprocess.run(['java', '-Xmx256m', '-cp', cp, CHILD], cwd=ROOT / 'chengyinhub-admin',
+                                   env=guarded_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=40)
+            require(guard.returncode == 0, 'disabled gateway probe failed')
+            gateway = json.loads(private_file(private / 'provider/gateway.json').read_text())
+            require(gateway == {'state': 'SDK_DISABLED_ONLY', 'createRejected': True,
+                                'allDispatchDomainsFenced': False, 'recoveryRelease': 'BLOCKED'}, 'gateway boundary changed')
+            require(snapshot('target') == restored and journal(provider, resources['scope']) == p_after,
+                    'restore or guard created an economic effect/provider duplicate')
+        else:
+            # Separate real JVM boots, never mutate a running production flag or auto-release a gap.
+            target_resources=dict(resources,source=resources['target'])
+            for phase in ['RESTORED_OWNER','RESTORED_INVALID_OWNER','RESTORED_EMPTY_OWNER'] + (['NORMAL_READBACK'] if proof['normalBootEligible'] else []):
+                mode={'RESTORED_OWNER':'true','RESTORED_INVALID_OWNER':'invalid-fixture-value','RESTORED_EMPTY_OWNER':'','NORMAL_READBACK':'false'}[phase]
+                boot=uuid.uuid4().hex
+                evidence=private / ('owner-'+phase+'.json')
+                phase_env=child_environment(target_resources,options['target'],provider)
+                phase_env.update({'CHENGYIN_RESTORE_PHASE':phase,'CHENGYIN_RESTORE_COHORT':cohort,
+                                  'CHENGYIN_RESTORE_MODE':mode,'CHENGYIN_RESTORE_BOOT':boot,
+                                  'CHENGYIN_TEST_MYSQL_DATABASE_BASE':'cy_restore_'+resources['scope'][:12],
+                                  'CHENGYIN_RESTORE_OWNER_EVIDENCE':str(evidence)})
+                previous_rows=snapshot('target');previous_external=read_journal(provider,resources['scope'])
+                before_path=private / ('owner-'+phase+'-before.json');after_path=private / ('owner-'+phase+'-after.json')
+                save(before_path,previous_rows)
+                with (private / ('owner-'+phase+'.stderr')).open('xb') as errors:
+                    process=subprocess.Popen(['java','-Xmx512m','-cp',cp,child_name],cwd=ROOT/'chengyinhub-admin',
+                                             env=phase_env,stdout=subprocess.DEVNULL,stderr=errors)
+                    try: require(process.wait(timeout=60)==0,'actual owner boot/readback failed')
+                    finally:
+                        if process.poll() is None:process.kill();process.wait(timeout=15)
+                observed=json.loads(private_file(evidence).read_text())
+                require(observed['pid']==process.pid and observed['boot']==boot and observed['startedAt'],'owner process identity')
+                current_rows=snapshot('target');current_external=read_journal(provider,resources['scope'])
+                save(after_path,current_rows)
+                observation=domains.verify_owner(cohort,observed,previous_rows,current_rows,previous_external,current_external,phase)
+                owner_proofs.append(dict(observation,pid=observed['pid'],boot=boot,startedAt=observed['startedAt'],startupMode=mode,
+                    fullBeforeRowsSha256=tool.digest(before_path),fullAfterRowsSha256=tool.digest(after_path),
+                    providerBeforeSha256=previous_external['sha256'],providerAfterSha256=current_external['sha256']))
+                if phase=='NORMAL_READBACK':normal_available_at=now();normal_available_elapsed=time.monotonic()-tick
+            gateway={'state':'ACTUAL_OWNER_BOOT_OBSERVED','coveredOwners':[domain['owner']],
+                     'allDispatchDomainsFenced':False,'recoveryRelease':'TEST_COHORT_ONLY' if normal_available_at else 'BLOCKED'}
+            observed_methods={method for o in owner_proofs if o['realOwnerBlocked'] for method in o['blockedMethods']}
+            proof['declaredDispatchMethods']=list(domain['blocked'])
+            proof['observedBlockedMethods']=sorted(observed_methods)
+            proof['allDeclaredDispatchMethodsFenced']=observed_methods==set(domain['blocked'])
+        final_provider=read_journal(provider,resources['scope'])
         result = {**proof, 'sourceSha': resources['sourceSha'], 'jarSha256': tool.digest(jar),
+                  'runtimeKind':'TEST_CLASSPATH_PRODUCTION_OWNERS','fullHttpApplicationStartup':'NOT_COVERED_BY_THIS_FIXTURE',
+                  'cohort':cohort,'runId':os.environ['GITHUB_RUN_ID'],'runAttempt':os.environ['GITHUB_RUN_ATTEMPT'],
+                  'sourceCid':resources['source']['cid'],'targetCid':resources['target']['cid'],
                   'resourcesSha256': tool.digest(Path(resources_path)),
                   'testChildSha256': tool.digest(child_class), 'classpathFileSha256': tool.digest(cpfile),
                   'classpathProofs': classpath_evidence(entries, tool),
@@ -457,16 +529,23 @@ def run(resources_path, output, private):
                   'canonicalToolSha256': tool.digest(ROOT / 'scripts/db-backup-restore.py'),
                   'scope': resources['scope'], 'sourceUuid': resources['source']['uuid'], 'targetUuid': resources['target']['uuid'],
                   'manifestSha256': tool.digest(Path(str(args['source'].output) + '.json')),
-                  'providerHead': p_after['head'], 'providerJournalSha256': p_after['sha256'], 'disabledGateway': gateway,
+                  'providerHead': final_provider['head'], 'providerJournalSha256': final_provider['sha256'], 'disabledGateway': gateway,
+                  'providerAfterFaultSha256':p_after['sha256'],
                   'providerBeforeSha256': tool.digest(private / 'provider/before.json'),
                   'times': {'backupStarted': backup_started, 'backupFinished': backup_finished, 'fault': fault_at,
                             'restoreStarted': restore_started, 'restoreFinished': restore_finished,
-                            'actualBackupToFaultSeconds': (dt.datetime.fromisoformat(fault_at) - dt.datetime.fromisoformat(backup_finished)).total_seconds(),
-                            'actualRestoreVerificationSeconds': elapsed, 'rpo': 'UNKNOWN_UNAPPROVED_BUSINESS_MEASURE',
-                            'rto': 'UNKNOWN_RECOVERY_RELEASE_BLOCKED'},
+                            'actualBackupToFaultSeconds': fault_gap,
+                            'actualRestoreVerificationSeconds': elapsed,'normalOriginalReadbackAvailableAt':normal_available_at,
+                            'rpo': ('UNKNOWN_UNAPPROVED_BUSINESS_MEASURE' if normal_available_at is None else
+                                    {'scope':cohort,'observedLostOriginalFacts':0,
+                                     'backupToFaultSeconds':fault_gap,
+                                     'productionSlo':'UNKNOWN_NOT_CLAIMED'}),
+                            'rto': 'UNKNOWN_RECOVERY_RELEASE_BLOCKED' if normal_available_at is None else normal_available_elapsed},
+                  'actualOwnerObservations':owner_proofs,
                   'rowProofs': {label: {t: {'rows': len(s['tables'][t]['rows']), 'sha256': sha(canonical(s['tables'][t]))}
-                                for t in TABLES} for label, s in [('backup', before), ('fault', fault), ('restored', restored)]},
-                  'businessResult': 'SCOPED_DIFFERENCES_VERIFIED_RELEASE_BLOCKED', 'cleanup': 'PENDING'}
+                                for t in tables} for label, s in [('backup', before), ('fault', fault), ('restored', restored)]},
+                  'businessResult': ('SCOPED_COMPLETE_FACTS_NORMAL_BOOT_READBACK_VERIFIED' if normal_available_at else
+                                     'SCOPED_DIFFERENCES_VERIFIED_RELEASE_BLOCKED'), 'cleanup': 'PENDING'}
     except BaseException as failure:
         primary = failure
         result = {'sourceSha': resources['sourceSha'], 'scope': resources['scope'], 'businessResult': 'FAIL',
@@ -483,6 +562,7 @@ def run(resources_path, output, private):
     finally:
         signal.alarm(0)
         signal.signal(signal.SIGALRM, old_alarm)
+        for signum,previous_handler in old_signals.items():signal.signal(signum,previous_handler)
         cleanup_failed = ['source-create-unconfirmed'] if source_creation_pending else []
         if target_creation_pending: cleanup_failed.append('target-create-unconfirmed')
         if child is not None and child.poll() is None:
@@ -534,9 +614,12 @@ def finalize(resources_path, output, original_exit):
         except BaseException: failures.append(kind + ':' + identifier)
     good = (original_exit == 0 and result['processExit'] == 0 and not failures
             and result['schemaCleanup'] == 'CONFIRMED_EXACT_CREATED_SCHEMAS_ABSENT')
+    positive=result['businessResult']=='SCOPED_COMPLETE_FACTS_NORMAL_BOOT_READBACK_VERIFIED'
     save(Path(output) / 'finalized.json', {'sourceSha': result['sourceSha'], 'scope': resources['scope'],
-         'originalExit': original_exit, 'result': 'SCOPED_OBSERVATION_COMPLETE_RELEASE_BLOCKED' if good else 'FAIL',
-         'candidateState': 'BLOCKED', 'dispatchRelease': False, 'resourceCleanup': 'UNKNOWN' if failures else 'EXACT_ABSENCE',
+         'cohort':resources.get('cohort','payment-gap'),
+         'originalExit': original_exit, 'result': ('TEST_COHORT_NORMAL_READBACK_COMPLETE_NO_PRODUCTION_RELEASE' if positive else
+             'SCOPED_OBSERVATION_COMPLETE_RELEASE_BLOCKED') if good else 'FAIL',
+         'candidateState': 'TEST_OWNED_RECONCILED' if good and positive else 'BLOCKED', 'dispatchRelease': False, 'resourceCleanup': 'UNKNOWN' if failures else 'EXACT_ABSENCE',
          'absenceFailures': failures, 'businessResult': result['businessResult']})
     require(good, 'original failure or incomplete cleanup; cannot finalize green')
 
