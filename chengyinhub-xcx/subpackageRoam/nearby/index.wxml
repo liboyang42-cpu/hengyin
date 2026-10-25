@@ -20,7 +20,7 @@
        一个动作两个入口、名字还不一样。要么等产品定筛选维度再做真的,要么现在不留半成品。删。 -->
   <!-- 2026-10-14 地图优化(用户确认原型):深色计数条 + 地图/列表切换;位置仍在胶囊下 10px(hudTop) -->
   <!-- 2026-10-25 业主:计数条挪到底部横滑卡片的标题;顶部只留筛选(文字,可展开)+ 地图 / 列表(图标) -->
-  <view class="mt-top mt-top--end" style="top:{{hudTop}}px;">
+  <view class="mt-top mt-top--end" style="top:{{hudTop + 10}}px;">
     <view class="mt-mode">
       <view class="mt-mode__i {{viewMode === 'map' ? 'is-on' : ''}}" data-mode="map" bindtap="setViewMode" aria-role="tab" aria-selected="{{viewMode === 'map'}}" aria-label="地图" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="map" size="36" /></view>
       <view class="mt-mode__i {{viewMode === 'list' ? 'is-on' : ''}}" data-mode="list" bindtap="setViewMode" aria-role="tab" aria-selected="{{viewMode === 'list'}}" aria-label="列表" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="list" size="36" /></view>

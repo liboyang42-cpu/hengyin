@@ -232,11 +232,12 @@ page { background: var(--cy-comp-sheet-player-page); }
 
 /* 2026-10-25 业主:顶部一行 = 筛选(文字)+ 地图 / 列表(图标);底部横滑卡片(漫游首页「附近活动」卡,加高,与标题左缘对齐) */
 .mt-top--end { justify-content: flex-end; pointer-events: none; }
-.mt-top--end .mt-mode { pointer-events: auto; height: 76rpx; }
-.mt-top--end .mt-mode__i { min-width: 76rpx; padding: 0; color: rgba(255,255,255,.6); } /* ds-ok 同 .mt-mode__i 未选 */
+.mt-top--end { height: 65rpx; }
+.mt-top--end .mt-mode { pointer-events: auto; height: 65rpx; padding: 4rpx; }
+.mt-top--end .mt-mode__i { min-width: 74rpx; padding: 0; color: rgba(255,255,255,.6); } /* ds-ok 同 .mt-mode__i 未选 */
 .mt-top--end .mt-mode__i.is-on { color: var(--cy-color-play-ink); }
-.mt-filter--row { right: 196rpx; padding-right: 0; }
-.mt-strip { position: absolute; left: 0; right: 0; bottom: 0; z-index: 18; padding-top: 31rpx; background: linear-gradient(180deg, rgba(17,17,17,0) 0%, rgba(17,17,17,.55) 30%, #111 100%); } /* ds-ok 同漫游首页 .entry-peek 渐隐底 */
+.mt-filter.mt-filter--row { right: auto; width: calc(100% - 196rpx); padding-right: 12rpx; }
+.mt-strip { position: absolute; left: 0; right: 0; bottom: 0; z-index: 18; padding-top: 54rpx; background: linear-gradient(180deg, rgba(17,17,17,0) 0, rgba(17,17,17,.88) 54rpx, #111 100%); } /* ds-ok 同漫游首页 .entry-peek 渐隐底;标题处已压暗,地图上白字可读 */
 .mt-strip__head { padding: 0 31rpx 19rpx; font-size: 33rpx; line-height: 42rpx; font-weight: 700; color: #fff; } /* ds-ok 同 .entry-peek__head */
 .mt-strip__cards { width: 100%; height: 300rpx; white-space: nowrap; }
 .mt-strip__track { display: inline-flex; gap: 23rpx; padding: 0 31rpx; }
