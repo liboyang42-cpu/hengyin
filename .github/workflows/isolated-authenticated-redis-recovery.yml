@@ -10,6 +10,11 @@ on:
       - 'ci/test_capacity_mixed_probe.py'
       - 'ci/gameplay_process_recovery_probe.py'
       - 'ci/test_gameplay_process_recovery_probe.py'
+      - 'ci/restore_application_http_probe.py'
+      - 'ci/restore_application_http_runtime.py'
+      - 'ci/test_restore_application_http_probe.py'
+      - 'ci/test_restore_application_http_entry.py'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java'
       - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GameplayProcessRecoveryChild.java'
       - 'ci/authenticated-redis-recovery.sh'
       - 'ci/upgrade-startup/application.properties'
@@ -39,6 +44,7 @@ on:
           - capacity-mixed
           - gameplay-process-recovery
           - gameplay-capacity-mixed
+          - restore-application-startup
         default: recovery
 
 permissions:
@@ -49,7 +55,9 @@ jobs:
     # Pinned: the probe copies host strace into the app container (needs a matching glibc)
     # and hashes the Redis ACL fixture with Python crypt, which Python 3.13 removed.
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    # Restore alone needs the 1500s inner / 1550s outer run plus build, schema and cleanup.
+    # This is an execution cap, not an observed SLO; all four original modes stay at 25.
+    timeout-minutes: ${{ github.event_name == 'workflow_dispatch' && inputs.probe_mode == 'restore-application-startup' && 55 || 25 }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -60,6 +68,7 @@ jobs:
       - name: Verify hosted target and pure negative controls
         env:
           CHENGYIN_CI_AUTH_REDIS_RECOVERY: 'true'
+          CHENGYIN_CI_RESTORE_HTTP_STARTUP: ${{ github.event_name == 'workflow_dispatch' && inputs.probe_mode == 'restore-application-startup' && 'true' || 'false' }}
           CHENGYIN_CI_CAPACITY_MIXED: ${{ github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'capacity-mixed' || inputs.probe_mode == 'gameplay-capacity-mixed') && 'true' || 'false' }}
           CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY: ${{ github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'gameplay-process-recovery' || inputs.probe_mode == 'gameplay-capacity-mixed') && 'true' || 'false' }}
           CHENGYIN_CI_GAMEPLAY_CAPACITY: ${{ github.event_name == 'workflow_dispatch' && inputs.probe_mode == 'gameplay-capacity-mixed' && 'true' || 'false' }}
@@ -67,6 +76,10 @@ jobs:
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           python3 -I ci/authenticated_redis_recovery_probe.py --check-execution-only
           python3 -B ci/test_authenticated_redis_recovery_probe.py
+          if [ "$CHENGYIN_CI_RESTORE_HTTP_STARTUP" = true ]; then
+            python3 -B ci/test_restore_application_http_probe.py
+            python3 -B ci/test_restore_application_http_entry.py
+          fi
           if [ "$CHENGYIN_CI_CAPACITY_MIXED" = true ]; then
             python3 -I ci/capacity_mixed_probe.py --check-execution-only
             python3 -B ci/test_capacity_mixed_probe.py
@@ -83,6 +96,7 @@ jobs:
         id: recovery
         env:
           CHENGYIN_CI_AUTH_REDIS_RECOVERY: 'true'
+          CHENGYIN_CI_RESTORE_HTTP_STARTUP: ${{ github.event_name == 'workflow_dispatch' && inputs.probe_mode == 'restore-application-startup' && 'true' || 'false' }}
           CHENGYIN_CI_CAPACITY_MIXED: ${{ github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'capacity-mixed' || inputs.probe_mode == 'gameplay-capacity-mixed') && 'true' || 'false' }}
           CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY: ${{ github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'gameplay-process-recovery' || inputs.probe_mode == 'gameplay-capacity-mixed') && 'true' || 'false' }}
           CHENGYIN_CI_GAMEPLAY_CAPACITY: ${{ github.event_name == 'workflow_dispatch' && inputs.probe_mode == 'gameplay-capacity-mixed' && 'true' || 'false' }}
@@ -96,7 +110,7 @@ jobs:
           fi
           bash ci/authenticated-redis-recovery.sh 2>&1 | tee "$TMPDIR/entry.log"
       - name: Preserve explicit safe evidence including failures
-        if: ${{ !cancelled() && steps.recovery.outcome != 'skipped' }}
+        if: ${{ !cancelled() && steps.recovery.outcome != 'skipped' && !(github.event_name == 'workflow_dispatch' && inputs.probe_mode == 'restore-application-startup') }}
         uses: actions/upload-artifact@v4
         with:
           name: isolated-authenticated-redis-recovery-${{ github.run_attempt }}
@@ -112,3 +126,14 @@ jobs:
             ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/schema-summary.json
             ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/network.trace
             ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/isolation.log
+      - name: Preserve only the three scoped restore HTTP JSON receipts
+        if: ${{ !cancelled() && steps.recovery.outcome != 'skipped' && github.event_name == 'workflow_dispatch' && inputs.probe_mode == 'restore-application-startup' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: isolated-restore-http-application-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            ${{ runner.temp }}/isolated-authenticated-redis-recovery/cy-auth.*/restore-http-application.json
+            ${{ runner.temp }}/isolated-authenticated-redis-recovery/cy-auth.*/restore-http-provenance.json
+            ${{ runner.temp }}/isolated-authenticated-redis-recovery/cy-auth.*/restore-http-cleanup.json
