@@ -140631,7 +140631,7 @@
       }
     },
     {
-      "id": "components/cy/empty/index.wxml:10:bindtap:onCta:0",
+      "id": "components/cy/empty/index.wxml:14:bindtap:onCta:0",
       "route": "component:components/cy/empty/index",
       "hostRoutes": [
         "pages/activity/baoming/baoming",
@@ -146814,7 +146814,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCta",
-        "line": 10,
+        "line": 14,
         "selectorHint": ".cy-empty-cta",
         "visibleCondition": "{{cta}}",
         "disabledCondition": null,
@@ -146855,11 +146855,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/empty/index.js:85"
+        "staticSource": "components/cy/empty/index.js:92"
       }
     },
     {
-      "id": "components/cy/error/index.wxml:13:bindtap:onRetry:1",
+      "id": "components/cy/error/index.wxml:18:bindtap:onRetry:1",
       "route": "component:components/cy/error/index",
       "hostRoutes": [
         "pages/activity/baoming/baoming",
@@ -153677,7 +153677,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onRetry",
-        "line": 13,
+        "line": 18,
         "selectorHint": ".cy-error-retry",
         "visibleCondition": "{{retry}}",
         "disabledCondition": null,
@@ -153722,7 +153722,7 @@
       }
     },
     {
-      "id": "components/cy/error/index.wxml:14:bindtap:onSecondary:2",
+      "id": "components/cy/error/index.wxml:19:bindtap:onSecondary:2",
       "route": "component:components/cy/error/index",
       "hostRoutes": [
         "pages/activity/baoming/baoming",
@@ -160540,7 +160540,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSecondary",
-        "line": 14,
+        "line": 19,
         "selectorHint": ".cy-error-secondary",
         "visibleCondition": "{{secondary}}",
         "disabledCondition": null,

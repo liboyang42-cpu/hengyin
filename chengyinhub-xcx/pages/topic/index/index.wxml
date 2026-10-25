@@ -30,7 +30,7 @@
     <cy-empty wx:if="{{missingTopicId}}" kind="missing-param" title="{{loadErrorTitle}}" sub="{{loadErrorSub}}" cta="返回发布广场" fill="{{true}}" size="lg" bind:cta="goTopicList" class="fill-slot" />
     <!-- PR10 F-W1-12:未登录(无会话 / 401)不是加载失败,给登录引导 -->
     <cy-empty wx:elif="{{loginRequired}}" kind="no-permission" title="登录后查看主题" cta="登录" fill="{{true}}" size="lg" bind:cta="onLoginRetry" class="fill-slot" />
-    <cy-error load-failure wx:else icon="/images/no_data.svg" title="{{loadErrorTitle}}" sub="{{loadErrorSub}}" retry="重新加载" fill="{{true}}" size="lg" bind:retry="onRetryLoad" class="fill-slot" auto-back="{{!everLoaded}}" />
+    <cy-error load-failure wx:else icon="empty-state" title="{{loadErrorTitle}}" sub="{{loadErrorSub}}" retry="重新加载" fill="{{true}}" size="lg" bind:retry="onRetryLoad" class="fill-slot" auto-back="{{!everLoaded}}" />
   </view>
 
   <!-- bbb 标准(2026-07-31):首屏请求返回前(既非错误也未加载完成)用骨架屏占位,不留黑屏 -->

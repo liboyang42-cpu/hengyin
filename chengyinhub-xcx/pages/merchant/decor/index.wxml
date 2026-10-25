@@ -28,7 +28,7 @@
     <cy-error load-failure
       size="lg"
       style="display: flex; flex-direction: column; flex: 1; min-height: 0"
-      icon="/images/no_data.svg"
+      icon="empty-state"
       fill
       title="品牌中心加载失败"
       sub="{{loadErrSub}}"
