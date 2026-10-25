@@ -166,14 +166,32 @@ def verified_xml(path, simple):
     return safe
 
 
-def validate_final(receipt, source=None):
-    names = selection(','.join(receipt.get('classes', [])))
+def receipt_identity(receipt, source=None):
+    if not isinstance(receipt, dict):
+        raise ValueError('Invalid HTTP receipt identity')
+    classes = receipt.get('classes')
+    if not isinstance(classes, list) or not all(isinstance(name, str) for name in classes):
+        raise ValueError('Missing reviewed HTTP class identity')
+    names = selection(','.join(classes))
     if source and receipt.get('sourceSha') != source:
         raise ValueError('Wrong source receipt')
-    if not re.fullmatch('[0-9a-f]{40}', receipt.get('sourceSha', '')):
+    if not isinstance(receipt.get('sourceSha'), str) or not re.fullmatch('[0-9a-f]{40}', receipt['sourceSha']):
         raise ValueError('Missing exact source SHA')
-    if receipt.get('profile') not in ('vps', 'github-hosted') or not re.fullmatch(r'cy_e2e_w1_http_[0-9_]+', receipt.get('database', '')):
+    if (receipt.get('profile') not in ('vps', 'github-hosted') or not isinstance(receipt.get('database'), str)
+            or not re.fullmatch(r'cy_e2e_w1_http_[0-9_]+', receipt['database'])):
         raise ValueError('Missing execution profile / owned schema identity')
+    return {key: receipt[key] for key in ('classes', 'sourceSha', 'profile', 'database')}
+
+
+def execution_identity(classes=None):
+    return receipt_identity({'classes': selection(classes if classes is not None else os.environ.get('CHENGYIN_HTTP_E2E_TESTS', '')),
+                             'sourceSha': os.environ.get('SOURCE_SHA', ''),
+                             'profile': os.environ.get('CHENGYIN_HTTP_E2E_PROFILE', 'vps'),
+                             'database': os.environ.get('CHENGYIN_HTTP_E2E_DATABASE', '')})
+
+
+def validate_final(receipt, source=None):
+    names = receipt_identity(receipt, source)['classes']
     if receipt.get('fixtureReportVerified') is not True:
         raise ValueError('Missing genuine completed fixture report')
     if receipt.get('state') != 'PASS' or receipt.get('javaExit') != 0:
@@ -197,6 +215,46 @@ def summarize(paths, source):
     return {'sourceSha': source, 'state': 'PASS_HTTP_FIXTURE_ONLY', 'classes': EXPECTED,
             'tests': 36, 'failures': 0, 'errors': 0, 'skipped': 0,
             'cleanupAllVerified': True, 'businessAccepted': False, 'migrationAccepted': False}
+
+
+def safe_receipt_diagnostic(value):
+    if not isinstance(value, dict):
+        return {}
+    allowed = {'stage': {'schema', 'redis-start', 'redis-ready', 'java-tmp', 'java-tests', 'xml-verify', 'cleanup', 'unknown'},
+               'reportState': {'UNAVAILABLE', 'INVALID', 'DRY_RUN', 'PLANNING', 'EXECUTING', 'FAILED', 'SUCCEEDED'},
+               'phase': {'plan-build', 'mysql-version', 'schema-absence', 'schema-create', 'schema-apply'},
+               'exceptionType': {'CalledProcessError', 'TimeoutExpired', 'ValueError', 'OSError', 'FileNotFoundError', 'PermissionError', 'JSONDecodeError', 'Exception'}}
+    result = {key: value[key] for key, values in allowed.items() if isinstance(value.get(key), str) and value[key] in values}
+    for key, minimum, maximum in [('exitCode', 0, 255), ('javaExit', 0, 255), ('mysqlErrorCode', 1, 99999),
+                                  ('mysqlLine', 1, 10000000), ('fileIndex', 1, 10000000)]:
+        item = value.get(key)
+        if type(item) is int and minimum <= item <= maximum:
+            result[key] = item
+    file = value.get('file')
+    if (isinstance(file, str) and re.fullmatch(r'(?:sql/|chengyinhub-admin/sql/)[A-Za-z0-9_./-]+\.sql', file)
+            and '..' not in pathlib.PurePosixPath(file).parts and (ROOT / file).is_file()):
+        result['file'] = file
+    return result
+
+
+def failure_summary(paths, source):
+    if not isinstance(source, str) or not re.fullmatch('[0-9a-f]{40}', source):
+        raise ValueError('Missing exact failure-summary source SHA')
+    receipts, seen = [], set()
+    for path in paths:
+        receipt = json.loads(path.read_text())
+        identity = receipt_identity(receipt, source)
+        if identity['profile'] != 'github-hosted' or seen.intersection(identity['classes']):
+            raise ValueError('Failure summary requires unique hosted class identities')
+        seen.update(identity['classes'])
+        cleanup = receipt.get('cleanup', {})
+        if not isinstance(cleanup, dict):
+            cleanup = {}
+        receipts.append(dict(identity, state='FAIL', diagnostic=safe_receipt_diagnostic(receipt.get('diagnostic')),
+                             cleanup={key: cleanup.get(key) if type(cleanup.get(key)) is bool else None
+                                      for key in ('mysqlAbsent', 'redisStoppedAndPortFree')}))
+    return {'sourceSha': source, 'state': 'FAIL_HTTP_FIXTURE_ONLY', 'receipts': receipts,
+            'missingClasses': sorted(set(EXPECTED) - seen), 'businessAccepted': False, 'migrationAccepted': False}
 
 
 def safe_diagnostic(report_path, stage, exit_code, java_exit):
@@ -294,14 +352,22 @@ def cli():
     s.add_argument('--source', required=True); s.add_argument('--output', type=pathlib.Path, required=True)
     a = p.parse_args()
     if a.command == 'summarize':
-        result = summarize(list(a.receipts.rglob('receipt.json')), a.source)
+        paths = list(a.receipts.rglob('receipt.json'))
+        try:
+            result = summarize(paths, a.source)
+        except ValueError:
+            result = failure_summary(paths, a.source)
+            a.output.parent.mkdir(parents=True, exist_ok=True)
+            a.output.write_text(json.dumps(result, indent=2) + '\n')
+            print('HTTP_FIXTURE_SUMMARY_FAILED ' + json.dumps(result, sort_keys=True), file=sys.stderr)
+            raise ValueError('HTTP fixtures did not pass; see safe failure summary') from None
         a.output.parent.mkdir(parents=True, exist_ok=True); a.output.write_text(json.dumps(result, indent=2) + '\n'); return
     a.output.mkdir(parents=True, exist_ok=True)
     dest = a.output / 'receipt.json'
     if a.command == 'verify':
-        names = selection(a.classes)
-        receipt = {'sourceSha': os.environ.get('SOURCE_SHA', ''), 'profile': os.environ.get('CHENGYIN_HTTP_E2E_PROFILE', 'vps'),
-                   'database': os.environ.get('CHENGYIN_HTTP_E2E_DATABASE', ''), 'classes': names,
+        identity = execution_identity(a.classes)
+        names = identity['classes']
+        receipt = {**identity,
                    'state': 'PENDING_CLEANUP', 'xmlVerified': False, 'publicXmlDerivedSanitized': True, 'originalXml': {}, 'migrationAccepted': False,
                    'businessAccepted': False}
         try:
@@ -386,21 +452,45 @@ def cli():
         finally:
             dest.write_text(json.dumps(receipt, indent=2) + '\n')
     else:
-        receipt = json.loads(dest.read_text()) if dest.exists() else {'state': 'FAIL', 'xmlVerified': False}
+        metadata_error = False
+        original = os.environ.get('CHENGYIN_HTTP_E2E_ORIGINAL_EXIT', '')
+        original_exit = int(original) if re.fullmatch(r'[0-9]{1,3}', original) and int(original) <= 255 else None
+        try:
+            identity = execution_identity()
+            receipt = json.loads(dest.read_text()) if dest.exists() else {**identity, 'state': 'FAIL', 'xmlVerified': False}
+            if receipt_identity(receipt) != identity:
+                raise ValueError('HTTP execution identity changed before finalization')
+            report_path = pathlib.Path(os.environ.get('CHENGYIN_HTTP_E2E_SCHEMA_REPORT', ''))
+            if report_path.is_file():
+                report = json.loads(report_path.read_text())
+                if not isinstance(report, dict) or report.get('database') != identity['database']:
+                    raise ValueError('HTTP schema report belongs to another execution')
+        except (OSError, ValueError, TypeError, AttributeError):
+            metadata_error = True
+            receipt = {'state': 'FAIL', 'xmlVerified': False}
         receipt.update(javaExit=a.java_exit, cleanup={'mysqlAbsent': a.mysql_clean == 'true',
                                                    'redisStoppedAndPortFree': a.redis_clean == 'true'})
-        receipt['state'] = 'PASS' if (a.java_exit == 0 and receipt.get('xmlVerified') is True and
+        receipt['state'] = 'PASS' if (original_exit == 0 and a.java_exit == 0 and receipt.get('xmlVerified') is True and
                                      all(receipt['cleanup'].values())) else 'FAIL'
+        if receipt['state'] == 'PASS':
+            try:
+                validate_final(receipt)
+            except ValueError:
+                receipt['state'] = 'FAIL'
         dest.write_text(json.dumps(receipt, indent=2) + '\n')
         if receipt['state'] != 'PASS':
-            original = os.environ.get('CHENGYIN_HTTP_E2E_ORIGINAL_EXIT', '')
             diagnostic = safe_diagnostic(pathlib.Path(os.environ.get('CHENGYIN_HTTP_E2E_SCHEMA_REPORT', '')),
                                          os.environ.get('CHENGYIN_HTTP_E2E_STAGE', ''),
-                                         int(original) if re.fullmatch(r'[0-9]{1,3}', original) else None, a.java_exit)
+                                         original_exit, a.java_exit)
             if diagnostic['stage'] == 'xml-verify' and a.java_exit != 0:
                 diagnostic['mavenFailure'] = safe_maven_failure(a.output.parent / 'run.log')
             (a.output / 'diagnostic.json').write_text(json.dumps(diagnostic, sort_keys=True) + '\n')
+            receipt.update(stage=diagnostic['stage'], originalExit=diagnostic['exitCode'], diagnostic=diagnostic)
+            dest.write_text(json.dumps(receipt, indent=2) + '\n')
             print('HTTP_FIXTURE_DIAGNOSTIC ' + json.dumps(diagnostic, sort_keys=True), file=sys.stderr)
+            if metadata_error:
+                raise ValueError('Invalid HTTP execution metadata; see safe diagnostic') from None
+            raise ValueError('HTTP fixture failed; see safe diagnostic') from None
         validate_final(receipt)
 
 
@@ -887,6 +977,140 @@ class FailureDiagnosticTest(unittest.TestCase):
             self.assertIn('CHENGYIN_HTTP_E2E_STAGE=' + stage, shell)
         self.assertIn('> "$OUT/fresh-schema.log" 2>&1', shell)
         self.assertIn('> "$OUT/run.log" 2>&1', shell)
+
+
+class BeforeVerifyFailureReceiptTest(unittest.TestCase):
+    marker = 'SYNTHETIC_PRIVATE_NEVER_PUBLISH'
+
+    def setup_failure(self, root, simple='FreezeReuseThemeHttpE2eIT'):
+        report = root / 'schema.json'
+        files = [{'path': 'sql/base_schema_20260818.sql'}] * 55 + [{'path': 'sql/migration_example.sql'}]
+        report.write_text(json.dumps({'mode': 'FAILED', 'database': 'cy_e2e_w1_http_123_456', 'files': files,
+                                     'failureDiagnostic': {'phase': 'schema-apply', 'exceptionType': 'CalledProcessError',
+                                                           'file': files[-1]['path'], 'mysqlErrorCode': 3821, 'stderr': self.marker},
+                                     'password': self.marker, 'sql': self.marker}))
+        return dict(os.environ, SOURCE_SHA='a' * 40, CHENGYIN_HTTP_E2E_PROFILE='github-hosted',
+                    CHENGYIN_HTTP_E2E_TESTS=simple, CHENGYIN_HTTP_E2E_DATABASE='cy_e2e_w1_http_123_456',
+                    CHENGYIN_HTTP_E2E_SCHEMA_REPORT=str(report), CHENGYIN_HTTP_E2E_STAGE='schema',
+                    CHENGYIN_HTTP_E2E_ORIGINAL_EXIT='1')
+
+    def finalize(self, public, env, java_exit=98, mysql='true', redis='true'):
+        return subprocess.run([sys.executable, str(ROOT / 'ci/test_http_e2e_entry.py'), 'finalize',
+                               '--output', str(public), '--java-exit', str(java_exit),
+                               '--mysql-clean', mysql, '--redis-clean', redis],
+                              env=env, text=True, capture_output=True, timeout=10)
+
+    def test_schema_failure_before_verify_preserves_all_three_identities_and_primary_diagnostic(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            for simple in EXPECTED:
+                case = root / simple; case.mkdir()
+                env = self.setup_failure(case, simple); public = case / 'public'
+                run = self.finalize(public, env)
+                self.assertNotEqual(0, run.returncode)
+                receipt = json.loads((public / 'receipt.json').read_text())
+                self.assertEqual({'classes': [simple], 'sourceSha': 'a' * 40, 'profile': 'github-hosted',
+                                  'database': 'cy_e2e_w1_http_123_456'}, receipt_identity(receipt))
+                self.assertEqual(('FAIL', False, 98, 'schema', 1),
+                                 (receipt['state'], receipt['xmlVerified'], receipt['javaExit'], receipt['stage'], receipt['originalExit']))
+                self.assertNotIn('tests', receipt); self.assertIsNot(receipt.get('fixtureReportVerified'), True)
+                self.assertEqual({'mysqlAbsent': True, 'redisStoppedAndPortFree': True}, receipt['cleanup'])
+                diagnostic = json.loads((public / 'diagnostic.json').read_text())
+                self.assertEqual(diagnostic, receipt['diagnostic'])
+                self.assertEqual((56, 3821, 'schema-apply', 1, 98),
+                                 tuple(diagnostic[k] for k in ('fileIndex', 'mysqlErrorCode', 'phase', 'exitCode', 'javaExit')))
+                self.assertIn('HTTP fixture failed; see safe diagnostic', run.stderr)
+                self.assertNotIn('Select only the exact reviewed HTTP classes', run.stderr)
+                self.assertNotIn(self.marker, run.stdout + run.stderr + json.dumps(receipt))
+                with self.assertRaises(ValueError): validate_final(receipt, 'a' * 40)
+            summary = root / 'summary.json'
+            run = subprocess.run([sys.executable, str(ROOT / 'ci/test_http_e2e_entry.py'), 'summarize',
+                                  '--receipts', str(root), '--source', 'a' * 40, '--output', str(summary)],
+                                 text=True, capture_output=True, timeout=10)
+            self.assertNotEqual(0, run.returncode)
+            result = json.loads(summary.read_text())
+            self.assertEqual('FAIL_HTTP_FIXTURE_ONLY', result['state']); self.assertEqual([], result['missingClasses'])
+            self.assertEqual(3, len(result['receipts'])); self.assertNotIn('tests', result)
+            for receipt in result['receipts']:
+                self.assertEqual(3821, receipt['diagnostic']['mysqlErrorCode'])
+                self.assertEqual(56, receipt['diagnostic']['fileIndex'])
+            self.assertNotIn(self.marker, summary.read_text() + run.stderr)
+
+    def test_preverify_missing_report_keeps_original_exit_and_unknown_cleanup_is_not_pass(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d); env = self.setup_failure(root)
+            pathlib.Path(env['CHENGYIN_HTTP_E2E_SCHEMA_REPORT']).unlink()
+            env.update(CHENGYIN_HTTP_E2E_STAGE='java-tmp', CHENGYIN_HTTP_E2E_ORIGINAL_EXIT='7')
+            run = self.finalize(root / 'public', env, mysql='false', redis='false')
+            self.assertNotEqual(0, run.returncode)
+            receipt = json.loads((root / 'public/receipt.json').read_text())
+            self.assertEqual(7, receipt['originalExit']); self.assertEqual('UNAVAILABLE', receipt['diagnostic']['reportState'])
+            self.assertEqual({'mysqlAbsent': False, 'redisStoppedAndPortFree': False}, receipt['cleanup'])
+            self.assertEqual('FAIL', receipt['state'])
+            with self.assertRaises(ValueError): validate_final(receipt)
+
+    def test_unknown_duplicate_and_foreign_input_metadata_is_rejected_without_public_canary(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d); base = self.setup_failure(root)
+            changes = [('CHENGYIN_HTTP_E2E_TESTS', self.marker),
+                       ('CHENGYIN_HTTP_E2E_TESTS', 'FreezeGameHttpE2eIT,FreezeGameHttpE2eIT'),
+                       ('SOURCE_SHA', self.marker), ('CHENGYIN_HTTP_E2E_PROFILE', self.marker),
+                       ('CHENGYIN_HTTP_E2E_DATABASE', self.marker),
+                       ('CHENGYIN_HTTP_E2E_DATABASE', 'cy_e2e_w1_http_999_999')]
+            for index, (key, value) in enumerate(changes):
+                with self.subTest(key=key, value=value):
+                    public = root / str(index); run = self.finalize(public, dict(base, **{key: value}))
+                    self.assertNotEqual(0, run.returncode)
+                    receipt = json.loads((public / 'receipt.json').read_text())
+                    self.assertEqual('FAIL', receipt['state']); self.assertNotIn('classes', receipt)
+                    self.assertNotIn(self.marker, run.stderr + run.stdout + json.dumps(receipt))
+                    self.assertEqual(3821, receipt['diagnostic']['mysqlErrorCode'])
+                    with self.assertRaises(ValueError): validate_final(receipt)
+
+    def test_existing_receipt_source_must_match_finalization_inputs(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d); env = self.setup_failure(root); public = root / 'public'; public.mkdir()
+            (public / 'receipt.json').write_text(json.dumps({'sourceSha': 'b' * 40, 'profile': 'github-hosted',
+                'database': env['CHENGYIN_HTTP_E2E_DATABASE'], 'classes': ['FreezeReuseThemeHttpE2eIT'],
+                'state': 'PENDING_CLEANUP', 'xmlVerified': False, 'token': self.marker}))
+            run = self.finalize(public, env)
+            self.assertNotEqual(0, run.returncode)
+            receipt = json.loads((public / 'receipt.json').read_text())
+            self.assertNotIn('sourceSha', receipt); self.assertNotIn(self.marker, json.dumps(receipt) + run.stderr)
+
+    def test_failure_summary_rejects_untrusted_identities_and_projects_diagnostic_only(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = pathlib.Path(d) / 'receipt.json'
+            base = {'sourceSha': 'a' * 40, 'profile': 'github-hosted', 'database': 'cy_e2e_w1_http_123_456',
+                    'classes': ['FreezeReuseThemeHttpE2eIT'], 'state': 'FAIL',
+                    'diagnostic': {'stage': 'schema', 'phase': 'schema-apply', 'mysqlErrorCode': 3821,
+                                   'fileIndex': 56, 'exitCode': 1, 'javaExit': 98, 'message': self.marker,
+                                   'stderr': self.marker, 'exceptionType': self.marker}, 'cleanup': {}}
+            path.write_text(json.dumps(base)); result = failure_summary([path], 'a' * 40)
+            self.assertNotIn(self.marker, json.dumps(result))
+            self.assertEqual({'mysqlAbsent': None, 'redisStoppedAndPortFree': None}, result['receipts'][0]['cleanup'])
+            self.assertEqual(98, result['receipts'][0]['diagnostic']['javaExit'])
+            for change in [{'sourceSha': 'b' * 40}, {'profile': 'vps'}, {'database': 'foreign'},
+                           {'classes': ['OtherTest']}, {'classes': ['FreezeGameHttpE2eIT'] * 2}]:
+                path.write_text(json.dumps(dict(base, **change)))
+                with self.assertRaises(ValueError): failure_summary([path], 'a' * 40)
+            path.write_text(json.dumps(base))
+            with self.assertRaises(ValueError): failure_summary([path, path], 'a' * 40)
+            with self.assertRaises(ValueError): failure_summary([], self.marker)
+
+    def test_original_failure_cannot_be_promoted_by_zero_java_exit_or_claimed_xml(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d); env = self.setup_failure(root); public = root / 'public'; public.mkdir()
+            receipt = {
+                'sourceSha': 'a' * 40, 'profile': 'github-hosted', 'database': env['CHENGYIN_HTTP_E2E_DATABASE'],
+                'classes': ['FreezeReuseThemeHttpE2eIT'], 'state': 'PENDING_CLEANUP', 'xmlVerified': True,
+                'fixtureReportVerified': True, 'tests': 2}
+            (public / 'receipt.json').write_text(json.dumps(receipt))
+            run = self.finalize(public, env, java_exit=0)
+            self.assertNotEqual(0, run.returncode)
+            actual = json.loads((public / 'receipt.json').read_text())
+            self.assertEqual('FAIL', actual['state']); self.assertEqual(1, actual['originalExit'])
+            with self.assertRaises(ValueError): validate_final(actual)
 
 
 class ProfileTest(unittest.TestCase):
