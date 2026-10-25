@@ -1,0 +1,68 @@
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFixture.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFixture.java
+index ba74c7d1..f11d79ab 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFixture.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFixture.java
+@@ -84,6 +84,9 @@ public class GameplayReskinFixture {
+         when(noOffers.selectByTopic(anyLong())).thenReturn(Collections.emptyList());
+         wireAuthoringGuards(topicMapper, chapterMapper, nodeMapper, templateMapper, freeTickets, noOffers);
+         ThemeStateKeyMapper keyMapper=mock(ThemeStateKeyMapper.class);
++        when(keyMapper.lockTopicForStateKeyWrite(anyLong())).thenAnswer(call -> {
++            CmsTopic parent = topics.get(call.getArgument(0)); return parent == null ? null : parent.getId();
++        });
+         when(keyMapper.selectByTopicId(anyLong())).thenReturn(keys);
+         keyService=new ThemeStateKeyService(keyMapper);
+         ReflectionTestUtils.setField(publisher,"themeStateKeyService",keyService);
+@@ -244,7 +247,13 @@ public class GameplayReskinFixture {
+     void useSql(org.mybatis.spring.SqlSessionTemplate database) {
+         sql=database;activeTopics=sql.getMapper(CmsTopicMapper.class);activeGames=sql.getMapper(GameSessionRuntimeMapper.class);
+         CmsTopicNodeMapper realNodes=sql.getMapper(CmsTopicNodeMapper.class);CmsTopicChapterMapper realChapters=sql.getMapper(CmsTopicChapterMapper.class);CmsMemberTemplateMapper realTemplates=sql.getMapper(CmsMemberTemplateMapper.class);
+-        ThemeStateKeyMapper realKeys=sql.getMapper(ThemeStateKeyMapper.class);keyService=new ThemeStateKeyService(realKeys);
++        ThemeStateKeyMapper realKeys=sql.getMapper(ThemeStateKeyMapper.class);
++        var keysProxy = new org.springframework.aop.framework.ProxyFactory(new ThemeStateKeyService(realKeys));
++        keysProxy.setProxyTargetClass(true);
++        keysProxy.addAdvice(new org.springframework.transaction.interceptor.TransactionInterceptor(
++                new org.springframework.jdbc.datasource.DataSourceTransactionManager(sql.getConfiguration().getEnvironment().getDataSource()),
++                new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource()));
++        keyService=(ThemeStateKeyService)keysProxy.getProxy();
+         ReflectionTestUtils.setField(publisher,"cmsTopicMapper",activeTopics);ReflectionTestUtils.setField(publisher,"cmsTopicNodeMapper",realNodes);ReflectionTestUtils.setField(publisher,"cmsTopicChapterMapper",realChapters);com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(publisher, "cmsMemberTemplateMapper",realTemplates);
+         wireAuthoringGuards(activeTopics, realChapters, realNodes, realTemplates,
+                 sql.getMapper(OmsTicketMapper.class), sql.getMapper(MerchantChapterOfferMapper.class));
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/SeventhPierFixtureTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/SeventhPierFixtureTest.java
+index 068fd576..e16d6448 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/SeventhPierFixtureTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/SeventhPierFixtureTest.java
+@@ -74,7 +74,9 @@ class SeventhPierFixtureTest {
+ 
+     @BeforeEach
+     void registerStateKeys() throws Exception {
+-        stateKeyService = new ThemeStateKeyService(mock(ThemeStateKeyMapper.class));
++        ThemeStateKeyMapper declarations = mock(ThemeStateKeyMapper.class);
++        when(declarations.lockTopicForStateKeyWrite(TOPIC_ID)).thenReturn(TOPIC_ID);
++        stateKeyService = new ThemeStateKeyService(declarations);
+         List<ThemeStateKey> keys = readStateKeys();
+         stateKeyService.register(TOPIC_ID, keys);
+         registeredKeys = new LinkedHashSet<String>();
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationTestWiring.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationTestWiring.java
+index f270131e..90ea7321 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationTestWiring.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationTestWiring.java
+@@ -65,6 +65,19 @@ public final class TopicPublicationTestWiring {
+                     .thenAnswer(call -> call.getArgument(0));
+         }
+         // Unit-only current-read port: retain the fixture's original topic/owner/status rows.
++        Object stateKeys = get(facade, "themeStateKeyService");
++        if (topicMapper != null && stateKeys instanceof ThemeStateKeyService && !Mockito.mockingDetails(stateKeys).isMock()) {
++            var keys = (com.chengyinhub.business.mapper.ThemeStateKeyMapper)
++                    ReflectionTestUtils.getField(stateKeys, "themeStateKeyMapper");
++            if (keys != null && Mockito.mockingDetails(keys).isMock() && !Mockito.mockingDetails(keys).isSpy()
++                    && Mockito.mockingDetails(keys).getStubbings().stream().noneMatch(stub ->
++                    "lockTopicForStateKeyWrite".equals(stub.getInvocation().getMethod().getName()))) {
++                Mockito.when(keys.lockTopicForStateKeyWrite(org.mockito.ArgumentMatchers.anyLong())).thenAnswer(call -> {
++                    var parent = topicMapper.selectCmsTopicByIdForUpdate(call.getArgument(0));
++                    return parent == null ? null : parent.getId();
++                });
++            }
++        }
+         // Real MySQL mappers and spies always execute their real FOR UPDATE statement.
+         if (topicMapper != null && Mockito.mockingDetails(topicMapper).isMock()
+                 && !Mockito.mockingDetails(topicMapper).isSpy()
