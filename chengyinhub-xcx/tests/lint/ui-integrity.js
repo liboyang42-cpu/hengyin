@@ -71,7 +71,8 @@ const NON_INCREASING_CEILING = Object.freeze({
   //   安全感受换取商家 ID 失败落半屏错误位、通知复盘写触达行、漫游头像堆/可参与官方活动与券统计为附属只读信息)。
   // 2026-10-24 上线合并 37 → 39:业主 UI(#508)合作 tab 帖文流与竞猜待答入口两处静默读取,逐项理由见 baseline。
   // 上海据点新增两处可选公开照片资料读取，逐项校验与失败保留封面理由见 baseline。
-  u5Silent: 41,
+  // 2026-10-25 官方地点卡片两条背景读取(节点补读 / 评价列表)逐项登记,41 → 43。
+  u5Silent: 43,
 });
 const EXCLUDED_DIRS = new Set([
   '.git', 'node_modules', 'miniprogram_npm', 'tests', 'scripts', 'coverage', 'dist',

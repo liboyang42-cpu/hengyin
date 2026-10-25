@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5114,
+  "controlCount": 5139,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -615,6 +615,7 @@
         "pages/merchant/index/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/fabu/index",
         "pages/roam/index",
@@ -630,6 +631,7 @@
         "subpackageP3/pages/stamp-camera/index/index",
         "subpackageRoam/citystamp/index",
         "subpackageRoam/my-teams/index",
+        "subpackageRoam/nearby/index",
         "subpackageRoam/poi-detail/index",
         "subpackageRoam/session/index"
       ],
@@ -856,6 +858,19 @@
         },
         {
           "route": "pages/play/merchant/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -1098,6 +1113,19 @@
         },
         {
           "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -2171,6 +2199,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -40885,6 +40914,100 @@
           ]
         },
         {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.pg__action",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/privacy/index",
           "segments": [
             {
@@ -74970,6 +75093,32 @@
           "route": "subpackageRoam/nearby/index",
           "segments": [
             {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.pg__action",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
+          "segments": [
+            {
               "selector": "cy-result-sheet",
               "index": 0
             },
@@ -84618,6 +84767,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -92467,6 +92617,23 @@
           "segments": [
             {
               "selector": "cy-safety-rating-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             },
             {
@@ -148226,6 +148393,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
         "pages/publish/temp/index",
@@ -151343,6 +151511,15 @@
           "segments": [
             {
               "selector": "cy-error.mp-empty",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             }
           ]
@@ -155162,6 +155339,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
         "pages/publish/temp/index",
@@ -158279,6 +158457,15 @@
           "segments": [
             {
               "selector": "cy-error.mp-empty",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             }
           ]
@@ -162098,6 +162285,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
         "pages/publish/temp/index",
@@ -165215,6 +165403,15 @@
           "segments": [
             {
               "selector": "cy-error.mp-empty",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             }
           ]
@@ -178394,6 +178591,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -178451,6 +178649,7 @@
         "subpackageP3/pages/stamp-camera/index/index",
         "subpackageRoam/citynode-code/index",
         "subpackageRoam/history/index",
+        "subpackageRoam/nearby/index",
         "subpackageRoam/official-route/index",
         "subpackageRoam/official-routes/index",
         "subpackageRoam/poi-detail/index",
@@ -179106,6 +179305,15 @@
           ]
         },
         {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#cy-loading",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/privacy/index",
           "segments": [
             {
@@ -179611,6 +179819,15 @@
         },
         {
           "route": "subpackageRoam/history/index",
+          "segments": [
+            {
+              "selector": "#cy-loading",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
           "segments": [
             {
               "selector": "#cy-loading",
@@ -257818,6 +258035,7 @@
         "pages/merchant/index/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/fabu/index",
         "pages/roam/index",
         "pages/searchmap/index",
@@ -257830,6 +258048,7 @@
         "subpackageP3/pages/stamp-camera/index/index",
         "subpackageRoam/citystamp/index",
         "subpackageRoam/my-teams/index",
+        "subpackageRoam/nearby/index",
         "subpackageRoam/session/index"
       ],
       "hostComponentPaths": [
@@ -257960,6 +258179,15 @@
           ]
         },
         {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/publish/fabu/index",
           "segments": [
             {
@@ -258060,6 +258288,15 @@
         },
         {
           "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -258157,6 +258394,7 @@
         "pages/merchant/index/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/fabu/index",
         "pages/roam/index",
         "pages/searchmap/index",
@@ -258169,6 +258407,7 @@
         "subpackageP3/pages/stamp-camera/index/index",
         "subpackageRoam/citystamp/index",
         "subpackageRoam/my-teams/index",
+        "subpackageRoam/nearby/index",
         "subpackageRoam/session/index"
       ],
       "hostComponentPaths": [
@@ -258299,6 +258538,15 @@
           ]
         },
         {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/publish/fabu/index",
           "segments": [
             {
@@ -258399,6 +258647,15 @@
         },
         {
           "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -258509,6 +258766,7 @@
         "pages/merchant/index/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/fabu/index",
         "pages/roam/index",
         "pages/searchmap/index",
@@ -258521,6 +258779,7 @@
         "subpackageP3/pages/stamp-camera/index/index",
         "subpackageRoam/citystamp/index",
         "subpackageRoam/my-teams/index",
+        "subpackageRoam/nearby/index",
         "subpackageRoam/session/index"
       ],
       "hostComponentPaths": [
@@ -258651,6 +258910,15 @@
           ]
         },
         {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/publish/fabu/index",
           "segments": [
             {
@@ -258751,6 +259019,15 @@
         },
         {
           "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -258848,6 +259125,7 @@
         "pages/merchant/index/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/fabu/index",
         "pages/roam/index",
         "pages/searchmap/index",
@@ -258860,6 +259138,7 @@
         "subpackageP3/pages/stamp-camera/index/index",
         "subpackageRoam/citystamp/index",
         "subpackageRoam/my-teams/index",
+        "subpackageRoam/nearby/index",
         "subpackageRoam/session/index"
       ],
       "hostComponentPaths": [
@@ -258990,6 +259269,15 @@
           ]
         },
         {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/publish/fabu/index",
           "segments": [
             {
@@ -259090,6 +259378,15 @@
         },
         {
           "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -259221,6 +259518,7 @@
         "pages/merchant/index/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/fabu/index",
         "pages/roam/index",
         "pages/searchmap/index",
@@ -259233,6 +259531,7 @@
         "subpackageP3/pages/stamp-camera/index/index",
         "subpackageRoam/citystamp/index",
         "subpackageRoam/my-teams/index",
+        "subpackageRoam/nearby/index",
         "subpackageRoam/session/index"
       ],
       "hostComponentPaths": [
@@ -259363,6 +259662,15 @@
           ]
         },
         {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/publish/fabu/index",
           "segments": [
             {
@@ -259463,6 +259771,15 @@
         },
         {
           "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -259602,6 +259919,7 @@
         "pages/merchant/index/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/fabu/index",
         "pages/roam/index",
         "pages/searchmap/index",
@@ -259614,6 +259932,7 @@
         "subpackageP3/pages/stamp-camera/index/index",
         "subpackageRoam/citystamp/index",
         "subpackageRoam/my-teams/index",
+        "subpackageRoam/nearby/index",
         "subpackageRoam/session/index"
       ],
       "hostComponentPaths": [
@@ -259744,6 +260063,15 @@
           ]
         },
         {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/publish/fabu/index",
           "segments": [
             {
@@ -259844,6 +260172,15 @@
         },
         {
           "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -260020,7 +260357,8 @@
       "route": "component:components/cy/proto-cam/index",
       "hostRoutes": [
         "pages/roam/index",
-        "subpackageRoam/citystamp/index"
+        "subpackageRoam/citystamp/index",
+        "subpackageRoam/nearby/index"
       ],
       "hostComponentPaths": [
         {
@@ -260034,6 +260372,15 @@
         },
         {
           "route": "subpackageRoam/citystamp/index",
+          "segments": [
+            {
+              "selector": "cy-proto-cam",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
           "segments": [
             {
               "selector": "cy-proto-cam",
@@ -260109,7 +260456,8 @@
       "route": "component:components/cy/proto-cam/index",
       "hostRoutes": [
         "pages/roam/index",
-        "subpackageRoam/citystamp/index"
+        "subpackageRoam/citystamp/index",
+        "subpackageRoam/nearby/index"
       ],
       "hostComponentPaths": [
         {
@@ -260123,6 +260471,15 @@
         },
         {
           "route": "subpackageRoam/citystamp/index",
+          "segments": [
+            {
+              "selector": "cy-proto-cam",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
           "segments": [
             {
               "selector": "cy-proto-cam",
@@ -260198,7 +260555,8 @@
       "route": "component:components/cy/proto-cam/index",
       "hostRoutes": [
         "pages/roam/index",
-        "subpackageRoam/citystamp/index"
+        "subpackageRoam/citystamp/index",
+        "subpackageRoam/nearby/index"
       ],
       "hostComponentPaths": [
         {
@@ -260212,6 +260570,15 @@
         },
         {
           "route": "subpackageRoam/citystamp/index",
+          "segments": [
+            {
+              "selector": "cy-proto-cam",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
           "segments": [
             {
               "selector": "cy-proto-cam",
@@ -260287,7 +260654,8 @@
       "route": "component:components/cy/proto-cam/index",
       "hostRoutes": [
         "pages/roam/index",
-        "subpackageRoam/citystamp/index"
+        "subpackageRoam/citystamp/index",
+        "subpackageRoam/nearby/index"
       ],
       "hostComponentPaths": [
         {
@@ -260301,6 +260669,15 @@
         },
         {
           "route": "subpackageRoam/citystamp/index",
+          "segments": [
+            {
+              "selector": "cy-proto-cam",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
           "segments": [
             {
               "selector": "cy-proto-cam",
@@ -260389,7 +260766,8 @@
       "route": "component:components/cy/proto-cam/index",
       "hostRoutes": [
         "pages/roam/index",
-        "subpackageRoam/citystamp/index"
+        "subpackageRoam/citystamp/index",
+        "subpackageRoam/nearby/index"
       ],
       "hostComponentPaths": [
         {
@@ -260403,6 +260781,15 @@
         },
         {
           "route": "subpackageRoam/citystamp/index",
+          "segments": [
+            {
+              "selector": "cy-proto-cam",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
           "segments": [
             {
               "selector": "cy-proto-cam",
@@ -264815,6 +265202,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -271018,6 +271406,19 @@
           "segments": [
             {
               "selector": "cy-safety-rating-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             },
             {
@@ -277772,6 +278173,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -283975,6 +284377,19 @@
           "segments": [
             {
               "selector": "cy-safety-rating-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             },
             {
@@ -290729,6 +291144,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -296932,6 +297348,19 @@
           "segments": [
             {
               "selector": "cy-safety-rating-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             },
             {
@@ -303686,6 +304115,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -309889,6 +310319,19 @@
           "segments": [
             {
               "selector": "cy-safety-rating-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             },
             {
@@ -316643,6 +317086,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -322846,6 +323290,19 @@
           "segments": [
             {
               "selector": "cy-safety-rating-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             },
             {
@@ -360912,6 +361369,7 @@
         "pages/merchant/team/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/fabu/index",
         "pages/roam/index",
@@ -360932,6 +361390,7 @@
         "subpackageRoam/citynode-code/index",
         "subpackageRoam/citystamp/index",
         "subpackageRoam/my-teams/index",
+        "subpackageRoam/nearby/index",
         "subpackageRoam/poi-detail/index",
         "subpackageRoam/session/index"
       ],
@@ -362923,6 +363382,66 @@
           ]
         },
         {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/privacy/index",
           "segments": [
             {
@@ -364757,6 +365276,66 @@
         },
         {
           "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -365158,6 +365737,7 @@
         "pages/merchant/team/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/fabu/index",
         "pages/roam/index",
@@ -365178,6 +365758,7 @@
         "subpackageRoam/citynode-code/index",
         "subpackageRoam/citystamp/index",
         "subpackageRoam/my-teams/index",
+        "subpackageRoam/nearby/index",
         "subpackageRoam/poi-detail/index",
         "subpackageRoam/session/index"
       ],
@@ -367169,6 +367750,66 @@
           ]
         },
         {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/privacy/index",
           "segments": [
             {
@@ -369003,6 +369644,66 @@
         },
         {
           "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -369404,6 +370105,7 @@
         "pages/merchant/team/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/fabu/index",
         "pages/roam/index",
@@ -369424,6 +370126,7 @@
         "subpackageRoam/citynode-code/index",
         "subpackageRoam/citystamp/index",
         "subpackageRoam/my-teams/index",
+        "subpackageRoam/nearby/index",
         "subpackageRoam/poi-detail/index",
         "subpackageRoam/session/index"
       ],
@@ -371415,6 +372118,66 @@
           ]
         },
         {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/privacy/index",
           "segments": [
             {
@@ -373249,6 +374012,66 @@
         },
         {
           "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -373650,6 +374473,7 @@
         "pages/merchant/team/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/fabu/index",
         "pages/roam/index",
@@ -373670,6 +374494,7 @@
         "subpackageRoam/citynode-code/index",
         "subpackageRoam/citystamp/index",
         "subpackageRoam/my-teams/index",
+        "subpackageRoam/nearby/index",
         "subpackageRoam/poi-detail/index",
         "subpackageRoam/session/index"
       ],
@@ -375661,6 +376486,66 @@
           ]
         },
         {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/privacy/index",
           "segments": [
             {
@@ -377495,6 +378380,66 @@
         },
         {
           "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -377896,6 +378841,7 @@
         "pages/merchant/team/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/fabu/index",
         "pages/roam/index",
@@ -377916,6 +378862,7 @@
         "subpackageRoam/citynode-code/index",
         "subpackageRoam/citystamp/index",
         "subpackageRoam/my-teams/index",
+        "subpackageRoam/nearby/index",
         "subpackageRoam/poi-detail/index",
         "subpackageRoam/session/index"
       ],
@@ -379907,6 +380854,66 @@
           ]
         },
         {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/privacy/index",
           "segments": [
             {
@@ -381741,6 +382748,66 @@
         },
         {
           "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -383109,6 +384176,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -401028,6 +402096,40 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -420650,6 +421752,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -438569,6 +439672,40 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -458190,6 +459327,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -476109,6 +477247,40 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -495730,6 +496902,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -513649,6 +514822,40 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -533270,6 +534477,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -551189,6 +552397,40 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -570810,6 +572052,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -588729,6 +589972,40 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -608351,6 +609628,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -626270,6 +627548,40 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -645892,6 +647204,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -663811,6 +665124,40 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -683433,6 +684780,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -701352,6 +702700,40 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -720974,6 +722356,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -738893,6 +740276,40 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -758515,6 +759932,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -776434,6 +777852,40 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -804111,6 +805563,7 @@
         "pages/play/circle/index",
         "pages/play/index",
         "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
         "pages/privacy/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -804830,6 +806283,15 @@
         },
         {
           "route": "pages/play/merchant/index",
+          "segments": [
+            {
+              "selector": "#cy-toast",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
           "segments": [
             {
               "selector": "#cy-toast",
@@ -922366,11 +923828,21 @@
       "id": "pages/play/components/medal-screen/index.wxml:3:catchtouchmove:noop:0",
       "route": "component:pages/play/components/medal-screen/index",
       "hostRoutes": [
-        "pages/play/index"
+        "pages/play/index",
+        "pages/play/poi-challenge/index"
       ],
       "hostComponentPaths": [
         {
           "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-medal-screen",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
           "segments": [
             {
               "selector": "cy-medal-screen",
@@ -922446,11 +923918,21 @@
       "id": "pages/play/components/medal-screen/index.wxml:35:bindtap:onSecondary:7",
       "route": "component:pages/play/components/medal-screen/index",
       "hostRoutes": [
-        "pages/play/index"
+        "pages/play/index",
+        "pages/play/poi-challenge/index"
       ],
       "hostComponentPaths": [
         {
           "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-medal-screen",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
           "segments": [
             {
               "selector": "cy-medal-screen",
@@ -922526,11 +924008,21 @@
       "id": "pages/play/components/medal-screen/index.wxml:36:bindtap:onPrimary:8",
       "route": "component:pages/play/components/medal-screen/index",
       "hostRoutes": [
-        "pages/play/index"
+        "pages/play/index",
+        "pages/play/poi-challenge/index"
       ],
       "hostComponentPaths": [
         {
           "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-medal-screen",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
           "segments": [
             {
               "selector": "cy-medal-screen",
@@ -922606,11 +924098,21 @@
       "id": "pages/play/components/medal-screen/index.wxml:5:bindtap:onClose:1",
       "route": "component:pages/play/components/medal-screen/index",
       "hostRoutes": [
-        "pages/play/index"
+        "pages/play/index",
+        "pages/play/poi-challenge/index"
       ],
       "hostComponentPaths": [
         {
           "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-medal-screen",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
           "segments": [
             {
               "selector": "cy-medal-screen",
@@ -922686,11 +924188,21 @@
       "id": "pages/play/components/medal-screen/index.wxml:7:bindtouchcancel:onEnd:5",
       "route": "component:pages/play/components/medal-screen/index",
       "hostRoutes": [
-        "pages/play/index"
+        "pages/play/index",
+        "pages/play/poi-challenge/index"
       ],
       "hostComponentPaths": [
         {
           "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-medal-screen",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
           "segments": [
             {
               "selector": "cy-medal-screen",
@@ -922765,11 +924277,21 @@
       "id": "pages/play/components/medal-screen/index.wxml:7:bindtouchend:onEnd:4",
       "route": "component:pages/play/components/medal-screen/index",
       "hostRoutes": [
-        "pages/play/index"
+        "pages/play/index",
+        "pages/play/poi-challenge/index"
       ],
       "hostComponentPaths": [
         {
           "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-medal-screen",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
           "segments": [
             {
               "selector": "cy-medal-screen",
@@ -922844,11 +924366,21 @@
       "id": "pages/play/components/medal-screen/index.wxml:7:bindtouchmove:onMove:3",
       "route": "component:pages/play/components/medal-screen/index",
       "hostRoutes": [
-        "pages/play/index"
+        "pages/play/index",
+        "pages/play/poi-challenge/index"
       ],
       "hostComponentPaths": [
         {
           "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-medal-screen",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
           "segments": [
             {
               "selector": "cy-medal-screen",
@@ -922923,11 +924455,21 @@
       "id": "pages/play/components/medal-screen/index.wxml:7:bindtouchstart:onStart:2",
       "route": "component:pages/play/components/medal-screen/index",
       "hostRoutes": [
-        "pages/play/index"
+        "pages/play/index",
+        "pages/play/poi-challenge/index"
       ],
       "hostComponentPaths": [
         {
           "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-medal-screen",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
           "segments": [
             {
               "selector": "cy-medal-screen",
@@ -923003,11 +924545,21 @@
       "id": "pages/play/components/medal-screen/index.wxml:8:bindtap:onTap:6",
       "route": "component:pages/play/components/medal-screen/index",
       "hostRoutes": [
-        "pages/play/index"
+        "pages/play/index",
+        "pages/play/poi-challenge/index"
       ],
       "hostComponentPaths": [
         {
           "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-medal-screen",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
           "segments": [
             {
               "selector": "cy-medal-screen",
@@ -923083,6 +924635,7 @@
       "route": "component:pages/play/components/play-stage/index",
       "hostRoutes": [
         "pages/play/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/temp/index"
       ],
       "hostComponentPaths": [
@@ -925170,6 +926723,58 @@
             },
             {
               "selector": "cy-playkit-walk",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#photoKit",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#photoKit",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#quizKit",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#quizKit",
               "index": 0
             },
             {
@@ -927286,6 +928891,7 @@
       "route": "component:pages/play/components/play-stage/index",
       "hostRoutes": [
         "pages/play/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/temp/index"
       ],
       "hostComponentPaths": [
@@ -929373,6 +930979,58 @@
             },
             {
               "selector": "cy-playkit-walk",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#photoKit",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#photoKit",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#quizKit",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#quizKit",
               "index": 0
             },
             {
@@ -931489,6 +933147,7 @@
       "route": "component:pages/play/components/play-stage/index",
       "hostRoutes": [
         "pages/play/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/temp/index"
       ],
       "hostComponentPaths": [
@@ -933576,6 +935235,58 @@
             },
             {
               "selector": "cy-playkit-walk",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#photoKit",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#photoKit",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#quizKit",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#quizKit",
               "index": 0
             },
             {
@@ -935693,6 +937404,7 @@
       "route": "component:pages/play/components/play-stage/index",
       "hostRoutes": [
         "pages/play/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/temp/index"
       ],
       "hostComponentPaths": [
@@ -937780,6 +939492,58 @@
             },
             {
               "selector": "cy-playkit-walk",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#photoKit",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#photoKit",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#quizKit",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#quizKit",
               "index": 0
             },
             {
@@ -939896,6 +941660,7 @@
       "route": "component:pages/play/components/play-verdict/index",
       "hostRoutes": [
         "pages/play/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/temp/index"
       ],
       "hostComponentPaths": [
@@ -942484,6 +944249,74 @@
             },
             {
               "selector": "cy-playkit-walk",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-verdict",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#photoKit",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-verdict",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#photoKit",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-verdict",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#quizKit",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-verdict",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#quizKit",
               "index": 0
             },
             {
@@ -959794,6 +961627,7 @@
       "route": "component:pages/play/components/playkit-qa/index",
       "hostRoutes": [
         "pages/play/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/temp/index"
       ],
       "hostComponentPaths": [
@@ -959819,6 +961653,24 @@
             },
             {
               "selector": "cy-playkit-qa",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#photoKit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#quizKit",
               "index": 0
             }
           ]
@@ -959917,6 +961769,7 @@
       "route": "component:pages/play/components/playkit-qa/index",
       "hostRoutes": [
         "pages/play/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/temp/index"
       ],
       "hostComponentPaths": [
@@ -959942,6 +961795,24 @@
             },
             {
               "selector": "cy-playkit-qa",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#photoKit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#quizKit",
               "index": 0
             }
           ]
@@ -960040,6 +961911,7 @@
       "route": "component:pages/play/components/playkit-qa/index",
       "hostRoutes": [
         "pages/play/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/temp/index"
       ],
       "hostComponentPaths": [
@@ -960065,6 +961937,24 @@
             },
             {
               "selector": "cy-playkit-qa",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#photoKit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#quizKit",
               "index": 0
             }
           ]
@@ -960178,6 +962068,7 @@
       "route": "component:pages/play/components/playkit-qa/index",
       "hostRoutes": [
         "pages/play/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/temp/index"
       ],
       "hostComponentPaths": [
@@ -960203,6 +962094,24 @@
             },
             {
               "selector": "cy-playkit-qa",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#photoKit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#quizKit",
               "index": 0
             }
           ]
@@ -960301,6 +962210,7 @@
       "route": "component:pages/play/components/playkit-qa/index",
       "hostRoutes": [
         "pages/play/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/temp/index"
       ],
       "hostComponentPaths": [
@@ -960326,6 +962236,24 @@
             },
             {
               "selector": "cy-playkit-qa",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#photoKit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#quizKit",
               "index": 0
             }
           ]
@@ -960425,6 +962353,7 @@
       "route": "component:pages/play/components/playkit-qa/index",
       "hostRoutes": [
         "pages/play/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/temp/index"
       ],
       "hostComponentPaths": [
@@ -960450,6 +962379,24 @@
             },
             {
               "selector": "cy-playkit-qa",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#photoKit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#quizKit",
               "index": 0
             }
           ]
@@ -960548,6 +962495,7 @@
       "route": "component:pages/play/components/playkit-qa/index",
       "hostRoutes": [
         "pages/play/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/temp/index"
       ],
       "hostComponentPaths": [
@@ -960573,6 +962521,24 @@
             },
             {
               "selector": "cy-playkit-qa",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#photoKit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#quizKit",
               "index": 0
             }
           ]
@@ -960672,6 +962638,7 @@
       "route": "component:pages/play/components/playkit-qa/index",
       "hostRoutes": [
         "pages/play/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/temp/index"
       ],
       "hostComponentPaths": [
@@ -960697,6 +962664,24 @@
             },
             {
               "selector": "cy-playkit-qa",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#photoKit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#quizKit",
               "index": 0
             }
           ]
@@ -960796,6 +962781,7 @@
       "route": "component:pages/play/components/playkit-qa/index",
       "hostRoutes": [
         "pages/play/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/temp/index"
       ],
       "hostComponentPaths": [
@@ -960821,6 +962807,24 @@
             },
             {
               "selector": "cy-playkit-qa",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#photoKit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#quizKit",
               "index": 0
             }
           ]
@@ -960929,6 +962933,7 @@
       "route": "component:pages/play/components/playkit-qa/index",
       "hostRoutes": [
         "pages/play/index",
+        "pages/play/poi-challenge/index",
         "pages/publish/temp/index"
       ],
       "hostComponentPaths": [
@@ -960954,6 +962959,24 @@
             },
             {
               "selector": "cy-playkit-qa",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#photoKit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "#quizKit",
               "index": 0
             }
           ]
@@ -1024161,6 +1026184,1154 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/play/merchant/index.js:222"
+      }
+    },
+    {
+      "id": "pages/play/poi-challenge/index.wxml:15:bind:close:exit:6",
+      "route": "pages/play/poi-challenge/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/poi-challenge/index.wxml",
+        "js": "pages/play/poi-challenge/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-playkit-qa",
+        "event": "bind:close",
+        "handler": "exit",
+        "line": 15,
+        "selectorHint": "#photoKit",
+        "visibleCondition": "{{step === 'photo'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageRoam/nearby/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/poi-challenge/index.js:162"
+      }
+    },
+    {
+      "id": "pages/play/poi-challenge/index.wxml:15:bind:continue:onPhotoContinue:4",
+      "route": "pages/play/poi-challenge/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/poi-challenge/index.wxml",
+        "js": "pages/play/poi-challenge/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-playkit-qa",
+        "event": "bind:continue",
+        "handler": "onPhotoContinue",
+        "line": 15,
+        "selectorHint": "#photoKit",
+        "visibleCondition": "{{step === 'photo'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/poi-challenge/index.js:95"
+      }
+    },
+    {
+      "id": "pages/play/poi-challenge/index.wxml:15:bind:shoot:onShoot:3",
+      "route": "pages/play/poi-challenge/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/poi-challenge/index.wxml",
+        "js": "pages/play/poi-challenge/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {
+        "denied": "getLocation"
+      },
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-playkit-qa",
+        "event": "bind:shoot",
+        "handler": "onShoot",
+        "line": 15,
+        "selectorHint": "#photoKit",
+        "visibleCondition": "{{step === 'photo'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "event-contract",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [
+        "getLocation"
+      ],
+      "successCapabilities": [
+        "getLocation"
+      ],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/city/nodes/{param}/complete",
+          "/api/common/uploadOSS",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/media/asset/",
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/city/nodes/{param}/complete",
+          "/api/common/uploadOSS",
+          "/api/config/features",
+          "/api/media/asset/",
+          "/api/media/asset/{param}/retry"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/city/nodes/{param}/complete",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/common/uploadOSS",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/media/asset/",
+            "method": "GET",
+            "auth": "authenticated"
+          },
+          {
+            "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/city/nodes/{param}/complete"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner",
+        "denied"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/poi-challenge/index.js:75"
+      }
+    },
+    {
+      "id": "pages/play/poi-challenge/index.wxml:15:bind:verdict:onPhotoVerdict:5",
+      "route": "pages/play/poi-challenge/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/poi-challenge/index.wxml",
+        "js": "pages/play/poi-challenge/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-playkit-qa",
+        "event": "bind:verdict",
+        "handler": "onPhotoVerdict",
+        "line": 15,
+        "selectorHint": "#photoKit",
+        "visibleCondition": "{{step === 'photo'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/poi-challenge/index.js:108"
+      }
+    },
+    {
+      "id": "pages/play/poi-challenge/index.wxml:19:bind:close:exit:10",
+      "route": "pages/play/poi-challenge/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/poi-challenge/index.wxml",
+        "js": "pages/play/poi-challenge/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-playkit-qa",
+        "event": "bind:close",
+        "handler": "exit",
+        "line": 19,
+        "selectorHint": "#quizKit",
+        "visibleCondition": "{{step === 'quiz'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageRoam/nearby/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/poi-challenge/index.js:162"
+      }
+    },
+    {
+      "id": "pages/play/poi-challenge/index.wxml:19:bind:continue:onQuizContinue:8",
+      "route": "pages/play/poi-challenge/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/poi-challenge/index.wxml",
+        "js": "pages/play/poi-challenge/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-playkit-qa",
+        "event": "bind:continue",
+        "handler": "onQuizContinue",
+        "line": 19,
+        "selectorHint": "#quizKit",
+        "visibleCondition": "{{step === 'quiz'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/poi-challenge/index.js:106"
+      }
+    },
+    {
+      "id": "pages/play/poi-challenge/index.wxml:19:bind:submit:onPick:7",
+      "route": "pages/play/poi-challenge/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/poi-challenge/index.wxml",
+        "js": "pages/play/poi-challenge/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {
+        "denied": "getLocation"
+      },
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-playkit-qa",
+        "event": "bind:submit",
+        "handler": "onPick",
+        "line": 19,
+        "selectorHint": "#quizKit",
+        "visibleCondition": "{{step === 'quiz'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "event-contract",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [
+        "getLocation"
+      ],
+      "successCapabilities": [
+        "getLocation"
+      ],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/city/nodes/{param}/complete",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/city/nodes/{param}/complete",
+          "/api/config/features"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/city/nodes/{param}/complete",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/city/nodes/{param}/complete"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner",
+        "denied"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/poi-challenge/index.js:101"
+      }
+    },
+    {
+      "id": "pages/play/poi-challenge/index.wxml:19:bind:verdict:onQuizVerdict:9",
+      "route": "pages/play/poi-challenge/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/poi-challenge/index.wxml",
+        "js": "pages/play/poi-challenge/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-playkit-qa",
+        "event": "bind:verdict",
+        "handler": "onQuizVerdict",
+        "line": 19,
+        "selectorHint": "#quizKit",
+        "visibleCondition": "{{step === 'quiz'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/poi-challenge/index.js:109"
+      }
+    },
+    {
+      "id": "pages/play/poi-challenge/index.wxml:23:bind:close:exit:11",
+      "route": "pages/play/poi-challenge/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/poi-challenge/index.wxml",
+        "js": "pages/play/poi-challenge/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-medal-screen",
+        "event": "bind:close",
+        "handler": "exit",
+        "line": 23,
+        "selectorHint": "cy-medal-screen[bind:close]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageRoam/nearby/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/poi-challenge/index.js:162"
+      }
+    },
+    {
+      "id": "pages/play/poi-challenge/index.wxml:23:bind:primary:onMedalPrimary:12",
+      "route": "pages/play/poi-challenge/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/poi-challenge/index.wxml",
+        "js": "pages/play/poi-challenge/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-medal-screen",
+        "event": "bind:primary",
+        "handler": "onMedalPrimary",
+        "line": 23,
+        "selectorHint": "cy-medal-screen[bind:primary]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageRoam/citystamp/index?kind=sign&place="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/poi-challenge/index.js:157"
+      }
+    },
+    {
+      "id": "pages/play/poi-challenge/index.wxml:23:bind:secondary:onMedalSecondary:13",
+      "route": "pages/play/poi-challenge/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/poi-challenge/index.wxml",
+        "js": "pages/play/poi-challenge/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-medal-screen",
+        "event": "bind:secondary",
+        "handler": "onMedalSecondary",
+        "line": 23,
+        "selectorHint": "cy-medal-screen[bind:secondary]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/poi-challenge/index.js:161"
+      }
+    },
+    {
+      "id": "pages/play/poi-challenge/index.wxml:5:bind:settled:onPrivacyGateSettled:0",
+      "route": "pages/play/poi-challenge/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/poi-challenge/index.wxml",
+        "js": "pages/play/poi-challenge/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-privacy-gate",
+        "event": "bind:settled",
+        "handler": "onPrivacyGateSettled",
+        "line": 5,
+        "selectorHint": "cy-privacy-gate[bind:settled]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/poi-challenge/index.js:72"
+      }
+    },
+    {
+      "id": "pages/play/poi-challenge/index.wxml:8:bind:retry:retry:1",
+      "route": "pages/play/poi-challenge/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/poi-challenge/index.wxml",
+        "js": "pages/play/poi-challenge/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {
+        "denied": "getLocation"
+      },
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-error",
+        "event": "bind:retry",
+        "handler": "retry",
+        "line": 8,
+        "selectorHint": "cy-error[bind:retry]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "event-contract",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [
+        "getLocation"
+      ],
+      "successCapabilities": [
+        "getLocation"
+      ],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/city/nodes/",
+          "/api/city/nodes/{param}/complete",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/city/nodes/",
+          "/api/city/nodes/{param}/complete",
+          "/api/config/features"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/city/nodes/",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/city/nodes/{param}/complete",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/city/nodes/{param}/complete"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner",
+        "denied"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/poi-challenge/index.js:70"
+      }
+    },
+    {
+      "id": "pages/play/poi-challenge/index.wxml:9:bindtap:exit:2",
+      "route": "pages/play/poi-challenge/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/poi-challenge/index.wxml",
+        "js": "pages/play/poi-challenge/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "exit",
+        "line": 9,
+        "selectorHint": ".pc-page__exit",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "返回地图",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageRoam/nearby/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/poi-challenge/index.js:162"
       }
     },
     {
@@ -1264300,7 +1267471,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:658"
+        "staticSource": "subpackageRoam/nearby/index.js:660"
       }
     },
     {
@@ -1264442,7 +1267613,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:658"
+        "staticSource": "subpackageRoam/nearby/index.js:660"
       }
     },
     {
@@ -1264509,7 +1267680,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:512"
+        "staticSource": "subpackageRoam/nearby/index.js:514"
       }
     },
     {
@@ -1264577,7 +1267748,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:528"
+        "staticSource": "subpackageRoam/nearby/index.js:530"
       }
     },
     {
@@ -1264644,7 +1267815,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:512"
+        "staticSource": "subpackageRoam/nearby/index.js:514"
       }
     },
     {
@@ -1264761,7 +1267932,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:696"
+        "staticSource": "subpackageRoam/nearby/index.js:698"
       }
     },
     {
@@ -1264819,11 +1267990,15 @@
           "pages/privacy/index"
         ],
         "apis": [
+          "/api/city/nodes/",
+          "/api/comment/list",
           "/api/config/features",
           "/api/login/code",
           "/api/role/info"
         ],
         "primaryApis": [
+          "/api/city/nodes/",
+          "/api/comment/list",
           "/api/config/features"
         ],
         "auxiliaryApis": [
@@ -1264831,6 +1268006,18 @@
           "/api/role/info"
         ],
         "apiContracts": [
+          {
+            "url": "/api/city/nodes/",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/comment/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
           {
             "url": "/api/config/features",
             "method": "POST",
@@ -1264863,7 +1268050,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:460"
+        "staticSource": "subpackageRoam/nearby/index.js:462"
       }
     },
     {
@@ -1264996,7 +1268183,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:468"
+        "staticSource": "subpackageRoam/nearby/index.js:470"
       }
     },
     {
@@ -1265157,7 +1268344,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:756"
+        "staticSource": "subpackageRoam/nearby/index.js:758"
       }
     },
     {
@@ -1265224,7 +1268411,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:512"
+        "staticSource": "subpackageRoam/nearby/index.js:514"
       }
     },
     {
@@ -1265292,7 +1268479,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:528"
+        "staticSource": "subpackageRoam/nearby/index.js:530"
       }
     },
     {
@@ -1265359,7 +1268546,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:512"
+        "staticSource": "subpackageRoam/nearby/index.js:514"
       }
     },
     {
@@ -1265427,7 +1268614,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:796"
+        "staticSource": "subpackageRoam/nearby/index.js:798"
       }
     },
     {
@@ -1265494,7 +1268681,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:872"
+        "staticSource": "subpackageRoam/nearby/index.js:874"
       }
     },
     {
@@ -1265561,7 +1268748,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:866"
+        "staticSource": "subpackageRoam/nearby/index.js:868"
       }
     },
     {
@@ -1265628,7 +1268815,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:998"
+        "staticSource": "subpackageRoam/nearby/index.js:1108"
       }
     },
     {
@@ -1265670,83 +1268857,32 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "external",
+      "actionClass": "state",
       "interactionMode": "event-contract",
-      "baseActionClass": "read",
+      "baseActionClass": "state",
       "effectClasses": [
-        "read",
-        "navigation",
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [
-        "openLocation"
-      ],
-      "successCapabilities": [
-        "openLocation"
-      ],
+      "externalCapabilities": [],
+      "successCapabilities": [],
       "targets": {
-        "routes": [
-          "pages/privacy/index",
-          "subpackageRoam/poi-detail/index?poiId="
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
-          "/api/team/applications"
-        ],
-        "primaryApis": [
-          "/api/config/features",
-          "/api/team/applications"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/team/applications",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "success"
       ],
-      "requiredPlatforms": [
-        "ios",
-        "android"
-      ],
-      "externalGate": "real-device-required",
+      "requiredPlatforms": [],
+      "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:953"
+        "staticSource": "subpackageRoam/nearby/index.js:960"
       }
     },
     {
@@ -1265814,7 +1268950,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:952"
+        "staticSource": "subpackageRoam/nearby/index.js:959"
       }
     },
     {
@@ -1265923,11 +1269059,78 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:947"
+        "staticSource": "subpackageRoam/nearby/index.js:954"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:195:bindtap:closePoiCard:38",
+      "id": "subpackageRoam/nearby/index.wxml:183:bindchange:onPoiSwipe:38",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "swiper",
+        "event": "bindchange",
+        "handler": "onPoiSwipe",
+        "line": 183,
+        "selectorHint": ".pc__img",
+        "visibleCondition": "{{poiCard.official && poiCard.thumbs.length > 1}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:1068"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:199:bindtap:closePoiCard:39",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1265950,7 +1269153,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closePoiCard",
-        "line": 195,
+        "line": 199,
         "selectorHint": ".pb__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1265990,11 +1269193,78 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:998"
+        "staticSource": "subpackageRoam/nearby/index.js:1108"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:201:catchtap:onPoiImagePreview:39",
+      "id": "subpackageRoam/nearby/index.wxml:205:bindchange:onPoiSwipe:40",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "swiper",
+        "event": "bindchange",
+        "handler": "onPoiSwipe",
+        "line": 205,
+        "selectorHint": ".pb__sw",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:1068"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:206:catchtap:onPoiImagePreview:41",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1266017,12 +1269287,12 @@
         "tag": "image",
         "event": "catchtap",
         "handler": "onPoiImagePreview",
-        "line": 201,
-        "selectorHint": "image[catchtap]",
+        "line": 206,
+        "selectorHint": ".pb__swi",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "查看第{{(index || 0) + 1}}张高清照片",
+        "ariaLabelExpression": "查看第{{(index || 0) + 1}}张照片",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -1266067,11 +1269337,424 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:978"
+        "staticSource": "subpackageRoam/nearby/index.js:1089"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:203:bindtap:onPoiPhotoCredit:40",
+      "id": "subpackageRoam/nearby/index.wxml:212:catchtap:onPoiImagePreview:42",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "image",
+        "event": "catchtap",
+        "handler": "onPoiImagePreview",
+        "line": 212,
+        "selectorHint": "image[catchtap]",
+        "visibleCondition": "{{index < 3}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "查看第{{(index || 0) + 1}}张照片",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [
+        "previewImage"
+      ],
+      "successCapabilities": [
+        "previewImage"
+      ],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:1089"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:222:bindtap:onPoiXhs:43",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onPoiXhs",
+        "line": 222,
+        "selectorHint": ".pb__row",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "去小红书看笔记",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [
+        "setClipboardData"
+      ],
+      "successCapabilities": [
+        "setClipboardData"
+      ],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:1063"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:232:bindtap:onReviewStar:44",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "text",
+        "event": "bindtap",
+        "handler": "onReviewStar",
+        "line": 232,
+        "selectorHint": ".pb__star",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{item}} 星",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:1069"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:233:bindinput:onReviewInput:45",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "textarea",
+        "event": "bindinput",
+        "handler": "onReviewInput",
+        "line": 233,
+        "selectorHint": ".pb__ta",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "写评价",
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:1070"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:234:bindtap:onReviewSubmit:46",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onReviewSubmit",
+        "line": 234,
+        "selectorHint": ".pb__send",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "发布评价",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/city/nodes/",
+          "/api/comment/add",
+          "/api/comment/list",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/city/nodes/",
+          "/api/comment/add",
+          "/api/comment/list",
+          "/api/config/features"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/city/nodes/",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/comment/add",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/comment/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:1071"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:236:bindtap:onPoiPhotoCredit:47",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1266094,7 +1269777,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPoiPhotoCredit",
-        "line": 203,
+        "line": 236,
         "selectorHint": ".pb__photo-note",
         "visibleCondition": "{{poiCard.photoCredit}}",
         "disabledCondition": null,
@@ -1266134,11 +1269817,78 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:979"
+        "staticSource": "subpackageRoam/nearby/index.js:1090"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:208:bindtap:onPoiSecondary:41",
+      "id": "subpackageRoam/nearby/index.wxml:240:bindtap:onPoiPhotoCredit:48",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onPoiPhotoCredit",
+        "line": 240,
+        "selectorHint": ".pb__photo-note",
+        "visibleCondition": "{{poiCard.photoCredit && poiExpand}}",
+        "disabledCondition": null,
+        "ariaLabel": "照片来源与许可",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:1090"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:247:bindtap:onPoiSecondary:49",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1266161,7 +1269911,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPoiSecondary",
-        "line": 208,
+        "line": 247,
         "selectorHint": ".pb__btn",
         "visibleCondition": "{{poiCard.secondary}}",
         "disabledCondition": null,
@@ -1266211,11 +1269961,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:977"
+        "staticSource": "subpackageRoam/nearby/index.js:979"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:209:bindtap:onPoiPrimary:42",
+      "id": "subpackageRoam/nearby/index.wxml:248:bindtap:onPoiPrimary:50",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1266231,14 +1269981,16 @@
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
+      "requiredCapabilityByBranch": {
+        "denied": "getLocation"
+      },
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
         "tag": "view",
         "event": "bindtap",
         "handler": "onPoiPrimary",
-        "line": 209,
+        "line": 248,
         "selectorHint": ".pb__btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1266263,15 +1270015,17 @@
       ],
       "accessBoundary": null,
       "externalCapabilities": [
+        "getLocation",
         "openLocation"
       ],
       "successCapabilities": [
+        "getLocation",
         "openLocation"
       ],
       "targets": {
         "routes": [
           "pages/privacy/index",
-          "subpackageRoam/poi-detail/index?poiId="
+          "subpackageRoam/citystamp/index?kind=sign&place="
         ],
         "apis": [
           "/api/config/features",
@@ -1266320,7 +1270074,8 @@
         "success",
         "error",
         "timeout",
-        "duplicate-trigger"
+        "duplicate-trigger",
+        "denied"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1266329,11 +1270084,78 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:960"
+        "staticSource": "subpackageRoam/nearby/index.js:967"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:211:bindtap:onPoiExpand:43",
+      "id": "subpackageRoam/nearby/index.wxml:25:bindtap:setViewMode:3",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "setViewMode",
+        "line": 25,
+        "selectorHint": ".mt-mode__i",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "地图",
+        "ariaLabelExpression": null,
+        "ariaRole": "tab",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:486"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:250:bindtap:onPoiExpand:51",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1266356,7 +1270178,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPoiExpand",
-        "line": 211,
+        "line": 250,
         "selectorHint": ".pb__hint",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1266371,8 +1270193,209 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "external",
+      "actionClass": "state",
       "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:1092"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:26:bindtap:setViewMode:4",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "setViewMode",
+        "line": 26,
+        "selectorHint": ".mt-mode__i",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "列表",
+        "ariaLabelExpression": null,
+        "ariaRole": "tab",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:486"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:261:bind:close:closeSpotCam:53",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-proto-cam",
+        "event": "bind:close",
+        "handler": "closeSpotCam",
+        "line": 261,
+        "selectorHint": "cy-proto-cam[bind:close]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:1040"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:261:bind:shot:onSpotShot:52",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-proto-cam",
+        "event": "bind:shot",
+        "handler": "onSpotShot",
+        "line": 261,
+        "selectorHint": "cy-proto-cam[bind:shot]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
       "baseActionClass": "read",
       "effectClasses": [
         "read",
@@ -1266380,40 +1270403,40 @@
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [
-        "openLocation"
-      ],
-      "successCapabilities": [
-        "openLocation"
-      ],
+      "externalCapabilities": [],
+      "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/privacy/index",
-          "subpackageRoam/poi-detail/index?poiId="
+          "pages/play/poi-challenge/index?poiId="
         ],
         "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
-          "/api/team/applications"
+          "/api/common/uploadOSS",
+          "/api/media/asset/",
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
-          "/api/config/features",
-          "/api/team/applications"
+          "/api/common/uploadOSS",
+          "/api/media/asset/",
+          "/api/media/asset/{param}/retry"
         ],
         "auxiliaryApis": [
-          "/api/login/code",
           "/api/role/info"
         ],
         "apiContracts": [
           {
-            "url": "/api/config/features",
+            "url": "/api/common/uploadOSS",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           },
           {
-            "url": "/api/login/code",
+            "url": "/api/media/asset/",
+            "method": "GET",
+            "auth": "authenticated"
+          },
+          {
+            "url": "/api/media/asset/{param}/retry",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1266423,35 +1270446,93 @@
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
-          },
-          {
-            "url": "/api/team/applications",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
           }
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
         "duplicate-trigger"
       ],
-      "requiredPlatforms": [
-        "ios",
-        "android"
-      ],
-      "externalGate": "real-device-required",
+      "requiredPlatforms": [],
+      "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:981"
+        "staticSource": "subpackageRoam/nearby/index.js:1042"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:221:bind:cancel:closeRange:45",
+      "id": "subpackageRoam/nearby/index.wxml:263:bind:settled:onPrivacyGateSettled:54",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-privacy-gate",
+        "event": "bind:settled",
+        "handler": "onPrivacyGateSettled",
+        "line": 263,
+        "selectorHint": "cy-privacy-gate[bind:settled]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:1039"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:266:bind:cancel:closeRange:56",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1266474,7 +1270555,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "closeRange",
-        "line": 221,
+        "line": 266,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1266514,11 +1270595,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:492"
+        "staticSource": "subpackageRoam/nearby/index.js:494"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:221:bind:select:onRangePick:44",
+      "id": "subpackageRoam/nearby/index.wxml:266:bind:select:onRangePick:55",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1266541,7 +1270622,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onRangePick",
-        "line": 221,
+        "line": 266,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1266647,11 +1270728,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:493"
+        "staticSource": "subpackageRoam/nearby/index.js:495"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:226:bind:close:onResultClose:48",
+      "id": "subpackageRoam/nearby/index.wxml:271:bind:close:onResultClose:59",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1266674,7 +1270755,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:close",
         "handler": "onResultClose",
-        "line": 226,
+        "line": 271,
         "selectorHint": "cy-result-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1266714,11 +1270795,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:771"
+        "staticSource": "subpackageRoam/nearby/index.js:773"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:226:bind:primary:onResultPrimary:46",
+      "id": "subpackageRoam/nearby/index.wxml:271:bind:primary:onResultPrimary:57",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1266741,7 +1270822,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:primary",
         "handler": "onResultPrimary",
-        "line": 226,
+        "line": 271,
         "selectorHint": "cy-result-sheet[bind:primary]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1266783,11 +1270864,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:772"
+        "staticSource": "subpackageRoam/nearby/index.js:774"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:226:bind:secondary:onResultClose:47",
+      "id": "subpackageRoam/nearby/index.wxml:271:bind:secondary:onResultClose:58",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1266810,7 +1270891,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:secondary",
         "handler": "onResultClose",
-        "line": 226,
+        "line": 271,
         "selectorHint": "cy-result-sheet[bind:secondary]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1266850,141 +1270931,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:771"
-      }
-    },
-    {
-      "id": "subpackageRoam/nearby/index.wxml:25:bindtap:setViewMode:3",
-      "route": "subpackageRoam/nearby/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageRoam/nearby/index.wxml",
-        "js": "subpackageRoam/nearby/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "setViewMode",
-        "line": 25,
-        "selectorHint": ".mt-mode__i",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "地图",
-        "ariaLabelExpression": null,
-        "ariaRole": "tab",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:484"
-      }
-    },
-    {
-      "id": "subpackageRoam/nearby/index.wxml:26:bindtap:setViewMode:4",
-      "route": "subpackageRoam/nearby/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageRoam/nearby/index.wxml",
-        "js": "subpackageRoam/nearby/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "setViewMode",
-        "line": 26,
-        "selectorHint": ".mt-mode__i",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "列表",
-        "ariaLabelExpression": null,
-        "ariaRole": "tab",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:484"
+        "staticSource": "subpackageRoam/nearby/index.js:773"
       }
     },
     {
@@ -1267051,7 +1270998,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:847"
+        "staticSource": "subpackageRoam/nearby/index.js:849"
       }
     },
     {
@@ -1267118,7 +1271065,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:847"
+        "staticSource": "subpackageRoam/nearby/index.js:849"
       }
     },
     {
@@ -1267185,7 +1271132,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:847"
+        "staticSource": "subpackageRoam/nearby/index.js:849"
       }
     },
     {
@@ -1267252,7 +1271199,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:847"
+        "staticSource": "subpackageRoam/nearby/index.js:849"
       }
     },
     {
@@ -1267310,12 +1271257,16 @@
           "pages/privacy/index"
         ],
         "apis": [
+          "/api/city/nodes/",
+          "/api/comment/list",
           "/api/config/features",
           "/api/login/code",
           "/api/role/info",
           "/api/team/applications"
         ],
         "primaryApis": [
+          "/api/city/nodes/",
+          "/api/comment/list",
           "/api/config/features",
           "/api/team/applications"
         ],
@@ -1267324,6 +1271275,18 @@
           "/api/role/info"
         ],
         "apiContracts": [
+          {
+            "url": "/api/city/nodes/",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/comment/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
           {
             "url": "/api/config/features",
             "method": "POST",
@@ -1267362,7 +1271325,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:485"
+        "staticSource": "subpackageRoam/nearby/index.js:487"
       }
     },
     {
@@ -1267496,7 +1271459,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:136"
+        "staticSource": "subpackageRoam/nearby/index.js:138"
       }
     },
     {
@@ -1267563,7 +1271526,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:483"
+        "staticSource": "subpackageRoam/nearby/index.js:485"
       }
     },
     {
@@ -1267633,7 +1271596,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:491"
+        "staticSource": "subpackageRoam/nearby/index.js:493"
       }
     },
     {
@@ -1267700,7 +1271663,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:512"
+        "staticSource": "subpackageRoam/nearby/index.js:514"
       }
     },
     {
@@ -1267768,7 +1271731,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:528"
+        "staticSource": "subpackageRoam/nearby/index.js:530"
       }
     },
     {
@@ -1267838,7 +1271801,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:125"
+        "staticSource": "subpackageRoam/nearby/index.js:127"
       }
     },
     {
@@ -1267905,7 +1271868,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:512"
+        "staticSource": "subpackageRoam/nearby/index.js:514"
       }
     },
     {
@@ -1268019,7 +1271982,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:560"
+        "staticSource": "subpackageRoam/nearby/index.js:562"
       }
     },
     {
@@ -1268163,7 +1272126,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:569"
+        "staticSource": "subpackageRoam/nearby/index.js:571"
       }
     },
     {
@@ -1268230,7 +1272193,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:512"
+        "staticSource": "subpackageRoam/nearby/index.js:514"
       }
     },
     {
@@ -1268298,7 +1272261,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:528"
+        "staticSource": "subpackageRoam/nearby/index.js:530"
       }
     },
     {
@@ -1268365,7 +1272328,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:512"
+        "staticSource": "subpackageRoam/nearby/index.js:514"
       }
     },
     {

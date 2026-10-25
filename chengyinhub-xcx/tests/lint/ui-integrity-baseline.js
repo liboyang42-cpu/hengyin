@@ -1,3 +1,4 @@
+// 2026-10-25 官方地点卡片展开详情:nearby/index.js 既有 3 条锚点仅行号位移(213→215、240→242、934→940,上下文逐字相同),u5Silent 新增节点补读与评价列表两条(41→43);u1Variable / u5Silent digest 按同一算法重算。
 // 2026-10-24 草稿设置恢复：12 条既有 fabu 动态调用的行及上下各一行逐字相同，仅行号 +12；恢复调用理由补齐五个受类型保护的固定设置，登记数与棘轮仍为62。
 // 2026-10-24 预览返回等待原生退场：六条既有动态 setData 调用上下文逐字节相同，仅更新行号及摘要，棘轮仍为 62。
 // 2026-10-24 上线合并(#563 + #508 + #554)：fabu 12 条 u4Dynamic 锚点仅行号位移(849→851、1105→1151、2806→2852、3872→3918、4253→4299、5316→5362、5575→5621、6231→6277、6241→6287、6294→6340、6635→6686、8601→8652)、profile 1994→1991，逐条以行及上下各一行与 origin/master 原位置逐字比对一致；u5Silent 新增合作 tab 帖文流与竞猜待答入口两条(37→39)。u4Dynamic/u5Silent digest 按同一算法重算。
@@ -293,7 +294,8 @@ module.exports = {
     // 2026-10-12主控明确批准本人投诉进展新增读取，精确登记故障/401/403边界；不是既有锚迁行。
     // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):本线 9 处 silentError 逐项登记(举报/纠错半屏、安全感受、通知复盘、漫游头像堆/官方活动、券统计),28 → 37。
     // 2026-10-24 上线合并(#563 bug 修复 + #508 业主 UI + #554 文案):业主 UI 带入两处静默读取逐项登记(合作 tab 帖文流失败落 feedState 错误卡并给重试;消息页竞猜待答入口读失败照样显示入口),37 → 39。
-    "u5Silent": 41,
+    // 2026-10-25 官方地点卡片展开详情:节点补读与评价列表两条静默背景读取逐项登记,41 → 43。
+    "u5Silent": 43,
     "keyDigest": {
       // 2026-09-24 卡包底图:play/index.js data 里加 topicCover 一行,u5Silent 那条已完成里程碑读取 5444→5445,
       //   新旧行内容一致、理由一字未改,u5Silent digest 按同算法显式重算(旧值复算吻合)。
@@ -399,7 +401,7 @@ module.exports = {
       // 受控路由、理由及 10 条登记保持，digest 仅随行号更新。
       // 2026-10-11 登录隔离及正常失败状态兼容：App consent wrapper 329→343，同一调用及理由，数量仍11。
       // 2026-10-14 W5尾项:profile 544→559/870→885、参与详情 176→177 仅行号下移，同一调用及理由，数量仍11。
-      "u1Variable": "007d06fa7167dfc73092ab1f9ce472e6c65aed3cd19317b2462112a541fae5d3",
+      "u1Variable": "8811bce1768f8601fb048125b99002fd47545a6128b5892a83e0dfb573525580",
       // 2026-08-25 816 并入:key 集合按上面的逐条核对结果变化,digest 显式更新。
       "u3Debt": // 2026-09-09 一枚圆钮:roam#onCenterHoldStart / onCenterHoldEnd 两笔零绑定债务已还
       //   —— 长按 3 秒结束的逻辑接到了主键的 touchstart/touchend 上。99→97,digest 显式更新。
@@ -1006,13 +1008,13 @@ module.exports = {
       //   逐条回读仍是「只为读章节 recruitEnabled、失败不弹全局 toast」这一处,静默理由一字未改,条数 27 不变。
 // 2026-10-17 合并 master 进漫游上线分支:roam/index.js 14 条、nearby/index.js 2 条既有调用仅行号位移(按 master 源码逐行回读定位);漫游两栏改版删掉 /api/registration/list 静默读取(749),U5 29→28。digest 按同一算法显式重算。
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):锚点位移 + 举报半屏/AI 对话组件下沉会员分包换路径 + 本线 9 处新增登记,digest 按同一算法重算。
-"dc748805e13085c88b38187b9330b2545a22618ffa2cda8091169d870fdbb6b6"
+"1b0e3f02c289719124510fb435eca85d53d5cd647a3794ee7db95be67ebc6afe"
 
     }
   },
   "cleanupPlan": {},
   "u1Variable": {
-    "chengyinhub-xcx/subpackageRoam/nearby/index.js:934": "公开照片侧车只由 poiGalleryPath 的平台相对图片键构造，拒绝外站、路径穿越和非图片后缀；poiGallery 再校验地点ID、封面与同目录高清图片，账号/卡片代际隔离迟到回包；owner=上海据点，复核=2026-10-24",
+    "chengyinhub-xcx/subpackageRoam/nearby/index.js:940": "公开照片侧车只由 poiGalleryPath 的平台相对图片键构造，拒绝外站、路径穿越和非图片后缀；poiGallery 再校验地点ID、封面与同目录高清图片，账号/卡片代际隔离迟到回包；owner=上海据点，复核=2026-10-24",
     "chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js:480": "公开图片许可仅取自白名单平台相对封面键对应的 .gallery.json，不接受外站与路径穿越，回包核对地点ID并限制文本长度，账号/页面代际隔离迟到回包；owner=上海据点，复核=2026-10-24",
     "chengyinhub-xcx/utils/community-post-api.js:75": "canonical 社区受控请求对象：BASE+path 只接固定发布/编辑阶段 helper 与举报闭包的枚举路由，举报回读仅显式切至本人 /api/community-trust/reports/mine；完整目标匹配 Controller，owner/current 检查及 pipeline success/fail 可见反馈保留，取消不报成功；owner=小程序，复核=213",
   // (本支) "chengyinhub-xcx/app.js:337": "consent adapter 的 options 只由 utils/compliance/consent-client.js 构造，该模块把唯一 endpoint 固定为 /api/compliance/consents；owner=小程序，复核=2026-09-15",
@@ -1363,7 +1365,10 @@ module.exports = {
   // 2026-09-08 二次合 master(#1047/#1048)后再次实测:play/index.js 的 my-completed 调用点
   //   落在 4945(master 侧记 4277、本分支侧记 4968,两侧对合并树都不对)。理由一字未改,digest 重算。
   "u5Silent": {
-    "chengyinhub-xcx/subpackageRoam/nearby/index.js:934": "可选公开相册补充读取，缺失或失败保留已显示的封面与正常导航，不将缺失侧车伪报为地点不可用；不承载提交或奖励，重新点开可重读；owner=上海据点，复核=2026-10-24",
+    // 2026-10-25 官方地点卡片:展开详情两条背景读取逐项登记。
+    "chengyinhub-xcx/subpackageRoam/nearby/index.js:984": "官方地点卡展开时补读节点(相册 / 玩法 / 完成状态 / 评分):卡片已先用地图点位数据渲染名称、地址、介绍和封面,读不到只是少相册与玩法块,开始挑战前挑战页会重新读同一节点并在失败时给错误页和重试;只写回仍开着的同一张卡;owner=上海据点,复核=2026-10-25",
+    "chengyinhub-xcx/subpackageRoam/nearby/index.js:1003": "官方地点卡评价列表背景读取:失败时不显示评价区空态文案(reviewsLoaded=false),卡片其余内容与按钮照常,重新点开卡片会重读;不承载提交;只写回仍开着的同一张卡;owner=上海据点,复核=2026-10-25",
+    "chengyinhub-xcx/subpackageRoam/nearby/index.js:940": "可选公开相册补充读取，缺失或失败保留已显示的封面与正常导航，不将缺失侧车伪报为地点不可用；不承载提交或奖励，重新点开可重读；owner=上海据点，复核=2026-10-24",
     "chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js:481": "可选照片署名与许可补充读取，缺失时保留后端相册、玩法和导航，不阻断任务；没有写入或奖励成功提示；owner=上海据点，复核=2026-10-24",
     // 2026-10-19 Claude 小程序线移植到 master:本线新增 9 处 silentError 逐项登记(超冻结上限 30,棘轮/上限/digest 待审批后同步)。
     "chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js:49": "BL-32/BL-218 举报半屏读原因:失败落 stage=loadfail 结果半屏(failText 带重试),seq 丢弃关掉重开后的旧回包;字段不以 error 命名,静态扫描证明不了;owner=小程序,复核=2026-12-31",
@@ -1375,7 +1380,7 @@ module.exports = {
     "chengyinhub-xcx/subpackageMember/components/cy/merchant-correction-sheet/index.js:46": "BL-67/BL-219 商家纠错半屏读纠错类型:失败落 stage=loadfail 结果态带重试,seq 丢弃关掉重开后的旧回包;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/subpackageMember/components/cy/merchant-correction-sheet/index.js:87": "BL-67 商家纠错提交:失败落 fail/unknown 结果态(含后端原因,同键可重试),关自动 toast 免双弹;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/subpackageMember/coupon/coupon.js:192": "BL-77 券统计卡是辅助只读信息:读取失败即不展示、不挡券列表,不弹 toast;owner=小程序,复核=2026-12-31",
-    "chengyinhub-xcx/subpackageRoam/nearby/index.js:213": "附近队伍地图层既有silent读取改为带参failed及计算两图层OR，静态扫描不能直接证明：真实401/403显示登录或权限并清队伍，普通失败按loadError留白且refresh/retryNearby可回读；owner/seq阻止迟到写回，57项Node含真实异常/按钮契约通过；owner=小程序，复核=2026-10-12",
+    "chengyinhub-xcx/subpackageRoam/nearby/index.js:215": "附近队伍地图层既有silent读取改为带参failed及计算两图层OR，静态扫描不能直接证明：真实401/403显示登录或权限并清队伍，普通失败按loadError留白且refresh/retryNearby可回读；owner/seq阻止迟到写回，57项Node含真实异常/按钮契约通过；owner=小程序，复核=2026-10-12",
     "chengyinhub-xcx/subpackageMember/complaint/index.js:232": "本人投诉进展辅助读取，普通500/网络失败保留同主旧列表或首载留白；401/code2 显式显示登录入口，403/400/422 写 historyAccessError，账号与可见代际变化先清旧历史，写操作错误不静默；服务端本人范围不传 memberId；owner=页面流程，复核=2026-10-16",
     "chengyinhub-xcx/pages/activity/list/index.js:201": "公开活动读取，失败写实例 _loadError/_loadErrorMsg 并由 applyFilter 派生 curError/errorMsg；普通500/网络失败沿既有 load-failure 留白或保留旧公开列表，公开数据可匿名读，不借私有登录态掩盖失败；owner=小程序，复核=2026-10-16",
     "chengyinhub-xcx/pages/activity/list/index.js:247": "本人参与活动读取，owner/token/seq/可见代际隔离旧回包；401/code2 显示登录单飞恢复，403 独立无权限提示，普通500/网络失败保留同主旧列表或首载 load-failure 留白，经 applyFilter 消费实例 _mineError/_mineErrorMsg；owner=小程序，复核=2026-10-16",
@@ -1422,7 +1427,7 @@ module.exports = {
       "chengyinhub-xcx/pages/roam/index.js:4430": "发现奖励卡上附带的附近探店日候选:失败或无候选返回 null,只是奖励卡少一条可选推荐,不影响主流程;弹错会打断奖励反馈；owner=小程序，复核=2026-09-30",
       "chengyinhub-xcx/pages/roam/index.js:4515": "商家打卡提交:失败按 net/unknown/server 分类返回,_sendCheckin 只给一句 toast 并把打卡卡收起(2026-09-16 拍板「漫游打卡不存在失败态」:visit.checkinErr 与 retryCheckin 已删,距离不够在 startVisit 就被拦下),关自动 toast 避免双弹;owner=小程序,复核=2026-09-30",
       "chengyinhub-xcx/pages/roam/index.js:4617": "三店连亮勋章配置读取:失败沿用兜底阈值与文案(SHOP_BADGE_FALLBACK_THRESHOLD),fail-open 不比改动前差;无用户可做的动作；owner=小程序，复核=2026-09-30",
-      "chengyinhub-xcx/subpackageRoam/nearby/index.js:240": "附近主题地图层只读：当前epoch/账号有效后401与403显示登录或权限提示并清图层；普通失败进入loadError读取留白，refresh/retryNearby可回读；异步icon生成受owner/seq约束，关闭通用toast避免拖图重复反馈；owner=小程序，复核=2026-10-12",
+      "chengyinhub-xcx/subpackageRoam/nearby/index.js:242": "附近主题地图层只读：当前epoch/账号有效后401与403显示登录或权限提示并清图层；普通失败进入loadError读取留白，refresh/retryNearby可回读；异步icon生成受owner/seq约束，关闭通用toast避免拖图重复反馈；owner=小程序，复核=2026-10-12",
       "chengyinhub-xcx/pages/roam/index.js:5066": "漫游分享发到广场的发帖请求:失败由同一 Promise 链接管——业务失败 fail(msg) 出 toast,网络/HTTP 异常与 catch 均提示「到广场核对，暂不要重复发布」并置 squarePostUnknown;关自动 toast 是避免双弹;owner=小程序,复核=2026-09-30",
       // 2026-09-18 合并 github/master(#1088):play/index.js 上方净增 28 行,
       //   loadMilestone 的 /api/play/my-completed 这条 silentError 调用点 5542→5570(门禁实测)。

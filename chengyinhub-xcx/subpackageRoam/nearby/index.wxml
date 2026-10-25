@@ -171,7 +171,7 @@
        背面上滑展开到胶囊下面;点地图收回。队伍卡点一下进原来的队伍半屏(申请 / 审批都在那儿)。 -->
   <block wx:if="{{sheet === 'poi' && poiCard}}">
   <view class="pdim pdim--clear {{poiCardIn ? 'is-in' : ''}}" bindtap="closePoiCard" aria-role="button" aria-label="收起卡片" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="pc {{poiCardIn ? 'is-in' : ''}} {{poiExpand ? 'is-x' : ''}} {{reducedMotion ? 'pc--reduced' : ''}}" style="{{poiExpand ? 'top:' + hudTop + 'px; bottom:' + (safeBottom + 20) + 'px;' : 'top:' + pcTop + 'px;'}}"
+  <view class="pc {{poiCardIn ? 'is-in' : ''}} {{poiExpand ? 'is-x' : ''}} {{camOpen ? 'is-cam' : ''}} {{reducedMotion ? 'pc--reduced' : ''}}" style="{{poiExpand ? 'top:' + hudTop + 'px; bottom:' + (safeBottom + 20) + 'px;' : 'top:' + pcTop + 'px;'}}"
         bindtouchstart="onPcStart" bindtouchend="onPcEnd">
     <view class="pc__chip" wx:if="{{!poiExpand}}"><text class="pc__chip-i" style="background:{{poiCard.chipColor}};">{{poiCard.chipLetter}}</text><text>{{poiCard.chipText}}</text></view>
     <!-- 点位长成卡:先是点位那张圆照片(白圈),一边放大一边从圆变成圆角卡;展开时按原卡位置裁切再放开 -->
@@ -179,7 +179,11 @@
     <view class="pc__in {{poiFlip ? 'is-flip' : ''}}">
       <view class="pc__f" bindtap="onPoiFront" aria-role="button" aria-label="{{poiCard.kind === 'team' ? '查看队伍' : '翻面看介绍'}}" hover-class="cy-pressed" hover-stay-time="80">
         <view class="pc__ph">
-          <image wx:if="{{poiCard.img}}" class="pc__img" src="{{poiCard.img}}" mode="aspectFill" />
+          <!-- 官方地点有多张照片:正面就能左右滑,点一下照样翻面 -->
+          <swiper wx:if="{{poiCard.official && poiCard.thumbs.length > 1}}" class="pc__img" circular current="{{poiPhoto}}" bindchange="onPoiSwipe">
+            <swiper-item wx:for="{{poiCard.thumbs}}" wx:key="index"><image class="pc__img" src="{{item}}" mode="aspectFill" /></swiper-item>
+          </swiper>
+          <image wx:elif="{{poiCard.img}}" class="pc__img" src="{{poiCard.img}}" mode="aspectFill" />
           <view wx:else class="pc__img pc__img--ph"></view>
           <view class="pc__phs"></view>
           <text class="pc__rib" wx:if="{{poiCard.ribbon}}">{{poiCard.ribbon}}</text>
@@ -194,16 +198,51 @@
       <view class="pc__b">
         <view class="pb__hd"><text class="pb__t">{{poiCard.title}}</text><view class="pb__x" bindtap="closePoiCard" aria-role="button" aria-label="收起" hover-class="cy-pressed" hover-stay-time="80"><view class="pb__xi"></view></view></view>
         <text class="pb__sub" wx:if="{{poiCard.address}}">{{poiCard.address}}</text>
-        <text class="pb__rt" wx:if="{{poiCard.metaStrong}}">{{poiCard.metaStrong}}</text>
+        <text class="pb__rt" wx:if="{{poiCard.ratingText || poiCard.metaStrong}}">{{poiCard.ratingText}}{{poiCard.ratingText && poiCard.metaStrong ? ' · ' : ''}}{{poiCard.metaStrong}}</text>
         <scroll-view class="pb__sc" scroll-y="{{poiExpand}}" enhanced show-scrollbar="{{false}}">
+          <!-- 官方地点展开后:照片在最上面左右滑,点开看原图 -->
+          <view class="pb__gal" wx:if="{{poiExpand && poiCard.official && poiCard.thumbs.length}}">
+            <swiper class="pb__sw" circular="{{poiCard.thumbs.length > 1}}" current="{{poiPhoto}}" bindchange="onPoiSwipe">
+              <swiper-item wx:for="{{poiCard.thumbs}}" wx:key="index"><image class="pb__swi" src="{{item}}" mode="aspectFill" data-index="{{index}}" catchtap="onPoiImagePreview" aria-role="button" aria-label="查看第{{(index || 0) + 1}}张照片" hover-class="cy-pressed" hover-stay-time="80" /></swiper-item>
+            </swiper>
+            <text class="pb__cnt" wx:if="{{poiCard.thumbs.length > 1}}">{{poiPhoto + 1}} / {{poiCard.thumbs.length}}</text>
+          </view>
           <text class="pb__d">{{poiCard.desc || '这里还没有介绍。'}}</text>
           <text class="pb__more" wx:if="{{!poiExpand}}">上滑看全部</text>
-          <view class="pb__th" wx:if="{{poiCard.thumbs.length}}"><image wx:for="{{poiCard.thumbs}}" wx:key="index" src="{{item}}" mode="{{poiExpand ? 'widthFix' : 'aspectFill'}}" data-index="{{index}}" catchtap="onPoiImagePreview" aria-role="button" aria-label="查看第{{(index || 0) + 1}}张高清照片" hover-class="cy-pressed" hover-stay-time="80" /></view>
-          <view class="pb__photo-note" wx:if="{{poiCard.thumbs.length}}">点击照片查看原图</view>
-          <view class="pb__photo-note pb__source" wx:if="{{poiCard.photoCredit}}" bindtap="onPoiPhotoCredit" aria-role="button" aria-label="照片来源与许可" hover-class="cy-pressed" hover-stay-time="80">照片来源与许可 {{poiCard.creditOpen ? '收起' : '展开'}}</view>
-          <text class="pb__photo-note" wx:if="{{poiCard.creditOpen}}" user-select>{{poiCard.photoCredit}}</text>
-          <view class="pb__info" wx:if="{{poiExpand}}"><view class="pb__row" wx:for="{{poiCard.rows}}" wx:key="k"><text class="pb__rk">{{item.k}}</text><text>{{item.v}}</text></view></view>
+          <view class="pb__th" wx:if="{{poiCard.thumbs.length && !(poiExpand && poiCard.official)}}"><image wx:for="{{poiCard.thumbs}}" wx:key="index" wx:if="{{index < 3}}" src="{{item}}" mode="{{poiExpand ? 'widthFix' : 'aspectFill'}}" data-index="{{index}}" catchtap="onPoiImagePreview" aria-role="button" aria-label="查看第{{(index || 0) + 1}}张照片" hover-class="cy-pressed" hover-stay-time="80" /></view>
+          <!-- 官方地点展开:玩法 → 小红书 / 基本信息 → 玩家评价,内容把卡填满 -->
+          <block wx:if="{{poiExpand && poiCard.official}}">
+            <view class="pb__game" wx:if="{{poiCard.game}}">
+              <view class="pb__game-h"><text class="pb__game-k">地点玩法</text><text class="pb__game-st" wx:if="{{poiCard.game.completed}}">已完成</text></view>
+              <text class="pb__game-t">{{poiCard.game.title || '地点挑战'}}</text>
+              <text class="pb__game-d" wx:if="{{poiCard.game.desc}}">{{poiCard.game.desc}}</text>
+              <view class="pb__steps"><text class="pb__step" wx:for="{{poiCard.game.steps}}" wx:key="*this">{{index + 1}} {{item}}</text></view>
+            </view>
+            <view class="pb__info">
+              <view class="pb__row pb__row--link" bindtap="onPoiXhs" aria-role="button" aria-label="去小红书看笔记" hover-class="cy-pressed" hover-stay-time="80"><text class="pb__rk">小红书</text><text class="pb__xhs">复制地点名去搜笔记</text></view>
+              <view class="pb__row" wx:for="{{poiCard.rows}}" wx:key="k"><text class="pb__rk">{{item.k}}</text><text class="pb__rv">{{item.v}}</text></view>
+            </view>
+            <view class="pb__rv-h"><text>玩家评价</text><text class="pb__rv-n" wx:if="{{poiCard.reviews.length}}">{{poiCard.reviews.length}}</text></view>
+            <view class="pb__cm" wx:for="{{poiCard.reviews}}" wx:key="id">
+              <view class="pb__cm-h"><text class="pb__cm-n">{{item.name}}</text><text class="pb__cm-s">{{item.stars ? '★ ' + item.stars : ''}}</text><text class="pb__cm-time">{{item.time}}</text></view>
+              <text class="pb__cm-t">{{item.text}}</text>
+            </view>
+            <text class="pb__cm-empty" wx:if="{{poiCard.reviewsLoaded && !poiCard.reviews.length}}">还没有评价。完成挑战后来写第一条。</text>
+            <view class="pb__mine" wx:if="{{poiCard.game.completed && !poiCard.reviewed}}">
+              <view class="pb__stars"><text wx:for="{{[1,2,3,4,5]}}" wx:key="*this" class="pb__star {{poiCard.myStars >= item ? 'on' : ''}}" data-n="{{item}}" bindtap="onReviewStar" aria-role="button" aria-label="{{item}} 星" hover-class="cy-pressed" hover-stay-time="80">★</text></view>
+              <textarea class="pb__ta" value="{{poiCard.myText}}" maxlength="200" placeholder="说说这次挑战和这个地方" placeholder-class="pb__ph" bindinput="onReviewInput" auto-height fixed aria-label="写评价" />
+              <view class="pb__send {{poiCard.reviewBusy ? 'is-off' : ''}}" bindtap="onReviewSubmit" aria-role="button" aria-label="发布评价" hover-class="cy-pressed" hover-stay-time="80">{{poiCard.reviewBusy ? '发布中…' : '发布评价'}}</view>
+            </view>
+            <view class="pb__photo-note pb__source" wx:if="{{poiCard.photoCredit}}" bindtap="onPoiPhotoCredit" aria-role="button" aria-label="照片来源与许可" hover-class="cy-pressed" hover-stay-time="80">照片来源与许可 {{poiCard.creditOpen ? '收起' : '展开'}}</view>
+            <text class="pb__photo-note" wx:if="{{poiCard.creditOpen}}" user-select>{{poiCard.photoCredit}}</text>
+          </block>
+          <block wx:else>
+            <view class="pb__photo-note pb__source" wx:if="{{poiCard.photoCredit && poiExpand}}" bindtap="onPoiPhotoCredit" aria-role="button" aria-label="照片来源与许可" hover-class="cy-pressed" hover-stay-time="80">照片来源与许可 {{poiCard.creditOpen ? '收起' : '展开'}}</view>
+            <text class="pb__photo-note" wx:if="{{poiCard.creditOpen}}" user-select>{{poiCard.photoCredit}}</text>
+            <view class="pb__info" wx:if="{{poiExpand}}"><view class="pb__row" wx:for="{{poiCard.rows}}" wx:key="k"><text class="pb__rk">{{item.k}}</text><text>{{item.v}}</text></view></view>
+          </block>
         </scroll-view>
+        <text class="pb__hint2" wx:if="{{poiExpand && poiCard.hint}}">{{poiCard.hint}}</text>
           <view class="pb__cta" wx:if="{{poiExpand}}">
             <view class="pb__btn pb__btn--s" wx:if="{{poiCard.secondary}}" bindtap="onPoiSecondary" aria-role="button" aria-label="{{poiCard.secondary}}" hover-class="cy-pressed" hover-stay-time="80">{{poiCard.secondary}}</view>
             <view class="pb__btn pb__btn--w" bindtap="onPoiPrimary" aria-role="button" aria-label="{{poiCard.primary}}" hover-class="cy-pressed" hover-stay-time="80">{{poiCard.primary}}</view>
@@ -216,6 +255,12 @@
     <view class="pc__tail" wx:if="{{!poiExpand}}"></view>
   </view>
   </block>
+
+  <!-- 到了地点点「开始挑战」:取景卡直接浮在地图上(与漫游页、城市签同一件 cy-proto-cam);
+       开着时点位卡让开,同一时刻只有一层。关掉回到卡片,拍到一张就进整屏玩法。 -->
+  <cy-proto-cam show="{{camOpen}}" bind:shot="onSpotShot" bind:close="closeSpotCam" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
 
   <cy-option-sheet show="{{rangeSheetShow}}" title="范围" items="{{rangeItems}}" default-index="{{rangeIndex}}"
     bind:select="onRangePick" bind:cancel="closeRange" />

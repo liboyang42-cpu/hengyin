@@ -14,6 +14,7 @@ const T = require('../utils/map-team.js'); const L = require('../utils/map-layer
 const cyToast = require('../../utils/toast.js');
 const modal = require('../../utils/modal.js');
 const mediaPreview = require('../../utils/media-preview.js');
+const loading = require('../../utils/loading.js');
 const M = require('../../utils/roam-hangout-marker.js');
 const { MAP_AVATAR_COLORS } = require('../../utils/play-visual-tokens.js'); const P = require('../utils/map-pins.js'); const kmText = (m) => T.rangeText(m).replace(/\s*km$/, ' 公里'); // v13 点位图 / 「范围 3 公里」
 
@@ -61,7 +62,7 @@ Page({
     rangeText: kmText(DEFAULT_RADIUS), pcTop: 200, mddLeft: 16,
     myTeamsText: T.myTeamsText(0),
     viewMode: 'map',        // map | list(2026-10-14 地图优化)
-    listRows: [], layer: 'all', layerSub: '', layerSheet: '', layerItems: [], poiCard: null, poiCardIn: false, poiFlip: false, poiExpand: false, pcClip: '', // 2026-10-22 筛选行与地标/商家点位卡
+    listRows: [], layer: 'all', layerSub: '', layerSheet: '', layerItems: [], poiCard: null, poiCardIn: false, poiFlip: false, poiExpand: false, pcClip: '', poiPhoto: 0, camOpen: false, privacyGateShow: false, // 2026-10-22 筛选行与地标/商家点位卡
     myReadAccess: '', myReadError: false, myLoaded: false,
     rangeItems: RANGE_ITEMS,
     rangeIndex: T.RADII.indexOf(DEFAULT_RADIUS),
@@ -117,6 +118,7 @@ Page({
     if (this._shownOnce) this.refresh(this.data.center); this._shownOnce = true; this._navigating = false;
     if (this._myReadOwner && this._myReadOwner !== this._myIdentity()) this.loadMyTeams(false);
     if (this._openMineOnShow) { this._openMineOnShow = false; this.openMyTeams(); }
+    const c = this.data.poiCard; if (c && c.official) this._loadSpot(c.id); // 挑战回来:完成状态、评价跟着刷新
   },
   onHide() { this._hidden = true; },
 
@@ -894,7 +896,9 @@ Page({
       return { kind: shop ? 'shop' : 'spot', id: c.id, chipLetter: tag.slice(0, 1), chipColor: shop ? '#FF9F0A' : '#34C759', chipText: tag, img: img(c.img), faces: [], countText: '', // ds-ok v13 商家橙 / 地点绿
         ribbon: '', title: c.title, subName: shop ? (p.merchantName || '') : c.tags.slice(1, 3).join(' · '), metaLine: c.address, metaStrong: c.found ? '到过' : '',
         address: c.address, desc: c.desc, thumbs: [], rows: [{ k: '类型', v: c.tags.join(' · ') || c.tag }].concat(c.address ? [{ k: '地址', v: c.address }] : []),
-        templateId: p.templateId || null, primary: p.templateId ? '查看玩法与详情' : '去这里', secondary: p.templateId ? '导航' : '', lat: c.lat, lng: c.lng };
+        // 官方地点(带玩法):背面展开就是完整详情 —— 相册左右滑、玩法、小红书、评价都在这张卡里,不再跳别的半屏
+        official: !!p.templateId, game: null, reviews: [], reviewsLoaded: false, ratingText: '',
+        primary: p.templateId ? '开始挑战' : '去这里', secondary: p.templateId ? '导航' : '', lat: c.lat, lng: c.lng };
     }
     const it = (this._items || []).find((x) => String(x.id) === String(id) && x.kind === kind);
     if (!it) return null;
@@ -926,6 +930,8 @@ Page({
     this._openPin = this._lastMarkerId; this._pcBox = { top: pcTop, h: Math.round(608 * (win.windowWidth || 375) / 750), w: Math.round(558 * (win.windowWidth || 375) / 750), W: win.windowWidth || 375, H: h };
     this.setData({ poiCard: card, poiCardIn: false, poiFlip: false, poiExpand: false, pcClip: '', sheet: 'poi', pcTop }); this._syncMarkers(); // 点开的那颗点位藏起来:卡片就是它长出来的
     this._poiInTimer = setTimeout(() => { if (!this._unloaded) this.setData({ poiCardIn: true }); }, 30);
+    this.setData({ poiPhoto: 0 });
+    if (card.official) this._loadSpot(card.id);
     const request = {}; this._poiGalleryRequest = request;
     const poi = kind === 'poi' && (this._pois || []).find((row) => String(row.id) === String(id));
     const url = poi && L.poiGalleryPath(poi.coverImg);
@@ -936,6 +942,7 @@ Page({
           if (this._unloaded || this._poiGalleryRequest !== request || this._myIdentity() !== identity
               || this.data.sheet !== 'poi' || !this.data.poiCard || String(this.data.poiCard.id) !== String(id)) return;
           const gallery = res && res.code === 200 && L.poiGallery(res.data, id, poi.coverImg);
+          if (gallery && this.data.poiCard.official) { if (gallery.credit) this.setData({ 'poiCard.photoCredit': gallery.credit }); return; } // 官方地点的相册以节点 galleryJson 为准
           if (gallery && gallery.keys.length) this.setData({
             'poiCard.thumbs': gallery.keys.map((key) => app.getImgUrl(key)).filter(Boolean), 'poiCard.photoCredit': gallery.credit,
           });
@@ -966,15 +973,119 @@ Page({
       wx.navigateTo({ url: (c.item === 'topic' ? TOPIC_PAGE : ACTIVITY_PAGE) + '?id=' + encodeURIComponent(c.id), complete: () => { this._navigating = false; } });
       return;
     }
-    if (c.templateId) {
-      if (this._navigating) return; this._navigating = true;
-      wx.navigateTo({ url: '/subpackageRoam/poi-detail/index?poiId=' + encodeURIComponent(c.id),
-        complete: () => { this._navigating = false; } });
-      return;
-    }
+    if (c.official) { this._startChallenge(); return; }
     this.onPoiNavigate();
   },
   onPoiSecondary() { this.onPoiNavigate(); },
+
+  /* 官方地点:节点详情(相册 / 玩法 / 完成状态 / 评分)+ 评价。只写回仍开着的同一张卡 */
+  _loadSpot(id) {
+    const live = () => !this._unloaded && this.data.poiCard && this.data.poiCard.official && String(this.data.poiCard.id) === String(id);
+    app.sendRequest({ url: '/api/city/nodes/' + id, method: 'GET', hideLoading: true, silentError: true, autoErrorToast: false,
+      success: (res) => {
+        const n = res && res.code == 200 && res.data;
+        if (!live() || !n) return;
+        let keys = [];
+        try { keys = JSON.parse(n.galleryJson || '[]'); } catch (e) { keys = []; }
+        const thumbs = (Array.isArray(keys) ? keys : []).filter((k) => typeof k === 'string' && k).map((k) => app.getImgUrl(k)).filter(Boolean);
+        const steps = [n.photoRequired ? '到场拍照' : '', n.validationMethod === 3 ? '观察答题' : '', n.badgeCode ? '收藏勋章' : ''].filter(Boolean);
+        this.setData({
+          'poiCard.thumbs': thumbs.length ? thumbs : this.data.poiCard.thumbs,
+          'poiCard.img': this.data.poiCard.img || thumbs[0] || '',
+          'poiCard.game': { title: n.templateTitle || '', desc: n.templateDesc || n.templateDescription || '', steps, completed: n.completed === true, radiusM: Number(n.radiusM) || 80 },
+          'poiCard.ratingText': n.ratingCount ? '★ ' + Number(n.averageRating || 0).toFixed(1) + ' · ' + n.ratingCount + ' 条评价' : '',
+          'poiCard.metaStrong': n.completed === true ? '已完成挑战' : this.data.poiCard.metaStrong,
+          'poiCard.primary': n.completed === true ? '投一张换一张' : '开始挑战',
+        });
+      },
+    });
+    const owner = String(app.getUserID ? app.getUserID() || '' : '');
+    app.sendRequest({ url: '/api/comment/list', method: 'POST', hideLoading: true, silentError: true, autoErrorToast: false,
+      data: { owner_type: 4, owner_id: id, pageNum: 1, pageSize: 10 },
+      success: (res) => {
+        const rows = res && res.code == 200 && res.data && res.data.rows;
+        if (!live()) return;
+        const list = Array.isArray(rows) ? rows : [];
+        this.setData({ 'poiCard.reviewsLoaded': Array.isArray(rows), 'poiCard.reviewed': list.some((r) => String(r.memberId) === owner),
+          'poiCard.reviews': list.map((r) => ({ id: r.id, name: r.memberNickname || '玩家', avatar: r.memberIcon ? app.getImgUrl(r.memberIcon) : '',
+            stars: Number(r.rating) || 0, text: r.contents || '', time: String(r.createTime || '').slice(0, 10) })) });
+      },
+    });
+  },
+  /* 开始挑战:先在卡里确认到没到,不到就在卡上写一句,不弹窗;到了进挑战页(拍照 / 答题 / 勋章各一屏) */
+  _startChallenge() {
+    const c = this.data.poiCard;
+    if (!c || this._navigating) return;
+    if (c.game && c.game.completed) { // 完成过:接原来的「投一张换一张」城市签
+      this._navigating = true;
+      wx.navigateTo({ url: '/subpackageRoam/citystamp/index?kind=sign&place=' + encodeURIComponent(c.title), complete: () => { this._navigating = false; } });
+      return;
+    }
+    this.setData({ 'poiCard.hint': '正在确认你的位置…' });
+    wx.getLocation({ type: 'gcj02',
+      success: (loc) => {
+        const cur = this.data.poiCard;
+        if (this._unloaded || !cur || String(cur.id) !== String(c.id)) return;
+        const d = L.distanceM({ lat: loc.latitude, lng: loc.longitude }, { lat: c.lat, lng: c.lng });
+        const near = ((cur.game && cur.game.radiusM) || 80) + 30;
+        if (!(d <= near)) { this.setData({ 'poiCard.hint': '还没到：离这里约 ' + (d >= 1000 ? (d / 1000).toFixed(1) + ' 公里' : Math.round(d) + ' 米') + '，走到附近再开始' }); return; }
+        this.setData({ 'poiCard.hint': '', camOpen: true }); // 到了:取景卡直接在地图上弹出
+      },
+      fail: () => { if (!this._unloaded) this.setData({ 'poiCard.hint': '需要定位才能确认你到了这里' }); },
+    });
+  },
+  /* 定位 / 相机触发隐私授权时在本页弹 gate,不被隐私页整页盖住 */
+  showPrivacyGate() { this.setData({ privacyGateShow: true }); },
+  onPrivacyGateSettled() { this.setData({ privacyGateShow: false }); },
+  closeSpotCam() { this.setData({ camOpen: false }); },
+  /* 拍到一张:先传上去拿地址,再进整屏玩法(答题 → 勋章);上传失败回到卡片,卡上写原因 */
+  onSpotShot(e) {
+    const path = (e && e.detail && e.detail.path) || '';
+    const c = this.data.poiCard;
+    this.setData({ camOpen: false });
+    if (!path || !c || this._uploading) return;
+    this._uploading = true;
+    loading.show('正在上传');
+    app.getUploadClient().uploadAll([path], {
+      onDone: (r) => {
+        this._uploading = false;
+        loading.hide();
+        if (this._unloaded) return;
+        const url = r && r.ok && r.results && r.results[0];
+        if (!url) { this.setData({ 'poiCard.hint': '照片没有传上去，再拍一次试试' }); return; }
+        this._navigating = true;
+        wx.navigateTo({ url: '/pages/play/poi-challenge/index?poiId=' + encodeURIComponent(c.id) + '&photo=' + encodeURIComponent(url),
+          complete: () => { this._navigating = false; } });
+      },
+    });
+  },
+  /* 小红书:小程序打不开外站,复制地点名去小红书搜 */
+  onPoiXhs() {
+    const c = this.data.poiCard;
+    if (!c) return;
+    wx.setClipboardData({ data: c.title, success: () => cyToast('已复制「' + c.title + '」，去小红书搜索看看笔记') });
+  },
+  onPoiSwipe(e) { this.setData({ poiPhoto: (e && e.detail && e.detail.current) || 0 }); },
+  onReviewStar(e) { this.setData({ 'poiCard.myStars': Number(e.currentTarget.dataset.n) || 0 }); },
+  onReviewInput(e) { this.setData({ 'poiCard.myText': e.detail.value }); },
+  onReviewSubmit() {
+    const c = this.data.poiCard;
+    if (!c || c.reviewBusy) return;
+    const text = String(c.myText || '').trim();
+    if (!(c.myStars >= 1)) { cyToast('先点星星打个分'); return; }
+    if (!text) { cyToast('写一句游玩感受'); return; }
+    this.setData({ 'poiCard.reviewBusy': true });
+    const done = (ok, msg) => {
+      if (this._unloaded || !this.data.poiCard || String(this.data.poiCard.id) !== String(c.id)) return;
+      this.setData({ 'poiCard.reviewBusy': false });
+      if (!ok) { cyToast(msg || '评价没有发出去，请重试'); return; }
+      this.setData({ 'poiCard.myText': '', 'poiCard.myStars': 0 }); cyToast('评价已发布'); this._loadSpot(c.id);
+    };
+    app.sendRequest({ url: '/api/comment/add', method: 'POST', hideLoading: true, silentError: true, autoErrorToast: false,
+      data: { owner_type: 4, owner_id: c.id, rating: c.myStars, contents: text, reply_id: 0 },
+      success: (res) => done(res && res.code == 200, res && res.msg),
+      fail: () => done(false), successStatusAbnormal: (res) => done(false, res && res.msg) });
+  },
   onPoiImagePreview(e) { mediaPreview.open((this.data.poiCard || {}).thumbs || [], Number(e.currentTarget.dataset.index)); },
   onPoiPhotoCredit() { if (this.data.poiCard) this.setData({ 'poiCard.creditOpen': !this.data.poiCard.creditOpen }); },
   onPoiFlip() { this.setData({ poiFlip: !this.data.poiFlip, poiExpand: false }); },
@@ -982,7 +1093,6 @@ Page({
   /* 展开 / 收起:卡片先按大小切到目标版式,再用裁切从原卡位置放开(或收回到原卡位置),看起来是卡在长大,
      不去逐帧动 top / width / height(那些属性每帧重排) */
   _expand(on) {
-    if (on && this.data.poiCard && this.data.poiCard.templateId) { this.onPoiPrimary(); return; }
     const b = this._pcBox, hud = this.data.hudTop, bottom = this.data.safeBottom + 20;
     if (!b || this.data.reducedMotion) { this.setData({ poiExpand: on, pcClip: '' }); return; }
     const inset = 'clip-path: inset(' + Math.max(0, b.top - hud) + 'px ' + Math.round((b.W - b.w) / 2 - 12) + 'px ' + Math.max(0, (b.H - bottom) - (b.top + b.h)) + 'px ' + Math.round((b.W - b.w) / 2 - 12) + 'px round 21px);'

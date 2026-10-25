@@ -72,6 +72,9 @@ const MATRIX = [
   ['pages/activity/official-detail/index.js', "url: '/api/official/events/' + id", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   ['pages/searchmap/index.js', "url: '/api/city/nodes'", 'required', 'member', 'global-read+viewer-personalization'],
   ['subpackageMember/components/cy/scene-roam-poi-detail/index.js', "url: '/api/city/nodes/' + this.data.poiId", 'required', 'member', 'global-read+viewer-personalization'],
+  // 2026-10-25 官方地点:地图点位卡展开读节点(相册 / 玩法 / 完成状态),挑战页读同一节点,与据点详情同端点同权限档。
+  ['subpackageRoam/nearby/index.js', "url: '/api/city/nodes/' + id", 'required', 'member', 'global-read+viewer-personalization'],
+  ['pages/play/poi-challenge/index.js', "url: '/api/city/nodes/' + this._poiId", 'required', 'member', 'global-read+viewer-personalization'],
   ['utils/game-session-client.js', "url: '/api/game/session/view'", 'required', 'player/merchant/club', 'activity-perspective-access'],
   ['utils/game-session-client.js', "url: '/api/game/session/merchant/entries'", 'required', 'merchant', 'self-merchant-game-entry'],
   /* 2026-09-11 本分支新增:承接页的「本站」入口自己也要按 topicId 过滤一遍本商家的场次
@@ -324,7 +327,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-22 L21 BL-185:fabu 云端草稿发布前 GET /api/topic/publish-check(本人主题/商家 Owner),70 → 71(batch3 集成在 batch2 的 70 上叠加;L21 原写 65 → 66)。
   // 2026-10-23 v13 动效落地(PR #528):主题页 NPC 资料 / 附近队伍 / 站点 + 地图页据点四处直接 GET,71 → 75(权限档见 MATRIX 同日注释)。
   // 2026-10-24 地点详情和地图新增两处已公开 /profile/** 相册元数据 GET。
-  assert.equal(directCount, 77, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-10-25 官方地点卡片 + 地点挑战页各一处 GET /api/city/nodes/{id}(已入 MATRIX),77 → 79。
+  assert.equal(directCount, 79, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

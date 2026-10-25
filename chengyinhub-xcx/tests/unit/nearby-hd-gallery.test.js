@@ -40,7 +40,7 @@ function mount() {
       }
     },
   };
-  return { page, requests, navigation, changeActor() { identity = 'actor-2'; } };
+  return { page, requests, navigation, wx, changeActor() { identity = 'actor-2'; } };
 }
 test('opening a card loads its public gallery without authorization and keeps navigation', () => {
   const h = mount(); h.page.openPinCard('poi', 10);
@@ -72,13 +72,21 @@ test('missing galleries retain the cover; closed cards and changed identities re
   assert.equal(h.page.data.poiCard.img, 'https://asset.example/' + cover);
 });
 
-test('a playable official place expands into the existing detail and ignores duplicate navigation', () => {
-  const h = mount(); h.page._pois[0].templateId = 88;
+test('a playable official place expands in the card; start checks arrival and opens the map camera, never a second sheet', () => {
+  const h = mount(); h.page._pois[0].templateId = 88; h.page._pois[0].lat = 31.2; h.page._pois[0].lng = 121.4;
   h.page.openPinCard('poi', 10);
-  assert.equal(h.page.data.poiCard.primary, '查看玩法与详情');
-  h.page.onPoiExpand(); h.page.onPoiPrimary();
-  assert.equal(h.navigation.length, 1);
-  assert.equal(h.navigation[0].url, '/subpackageRoam/poi-detail/index?poiId=10');
-  h.navigation[0].complete(); h.page.onPoiPrimary();
-  assert.equal(h.navigation.length, 2);
+  assert.equal(h.page.data.poiCard.official, true);
+  assert.equal(h.page.data.poiCard.primary, '开始挑战');
+  const node = h.requests.find((r) => r.url === '/api/city/nodes/10');
+  node.success({ code: 200, data: { galleryJson: JSON.stringify(['a.jpg', 'b.jpg']), templateTitle: '红色字母档案', validationMethod: 3, badgeCode: 'B', completed: false, radiusM: 80, ratingCount: 2, averageRating: 4.5 } });
+  assert.equal(JSON.stringify(h.page.data.poiCard.thumbs), JSON.stringify(['https://asset.example/a.jpg', 'https://asset.example/b.jpg']));
+  assert.equal(h.page.data.poiCard.ratingText, '★ 4.5 · 2 条评价');
+  h.page.onPoiExpand();
+  assert.equal(h.page.data.poiExpand, true); assert.equal(h.navigation.length, 0);
+  let located; h.wx.getLocation = (o) => { located = o; };
+  h.page.onPoiPrimary(); located.success({ latitude: 31.25, longitude: 121.4 });
+  assert.match(h.page.data.poiCard.hint, /^还没到/); assert.equal(h.page.data.camOpen, false);
+  h.page.onPoiPrimary(); located.success({ latitude: 31.2001, longitude: 121.4 });
+  assert.equal(h.page.data.camOpen, true); assert.equal(h.navigation.length, 0);
+  h.page.closeSpotCam(); assert.equal(h.page.data.camOpen, false);
 });
