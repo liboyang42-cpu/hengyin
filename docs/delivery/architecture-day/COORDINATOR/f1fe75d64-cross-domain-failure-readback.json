@@ -1,0 +1,54 @@
+{
+  "source": "f1fe75d646f8ae57864ee5603c68e70e7fabc854",
+  "run": 40237886431,
+  "attempt": 1,
+  "artifact": 12614719877,
+  "ZIP_sha256": "9366f63a390f23797d34f4c3f2e864d60ecf8c8c3927c4ad67d80c3ba3dacf77",
+  "CRC": "PASS",
+  "original_XML_hash_verified": true,
+  "case": "sameWindowRetainsOriginalEconomicIdentitiesAndRequiresUnpoisonedNotificationProgress",
+  "first_failure_message": "rolled-back calibration must leave no domain transaction: {transactions=[{state=RUNNING, rowsModified=0, mysqlConnectionId=35, rowsLocked=1}], stage=parent-domain-sql-transactions, observerConnectionId=80, activePoolConnections=0, scope=all-sessions-in-exact-owned-schema-no-excluded-ids, notificationRead={}} ==> expected: <0> but was: <1>",
+  "first_failure_source": "CrossDomainStorageFixture.assertTransactionOracleDetectsParentTransaction released calibration observation; wrapper IT:53",
+  "executed": {
+    "classes": [
+      "com.chengyinhub.business.it.CrossDomainFaultIsolationMySqlIT"
+    ],
+    "errors": 0,
+    "failures": 1,
+    "passed": 0,
+    "skipped": 0,
+    "testcases": [
+      {
+        "classname": "com.chengyinhub.business.it.CrossDomainFaultIsolationMySqlIT",
+        "name": "sameWindowRetainsOriginalEconomicIdentitiesAndRequiresUnpoisonedNotificationProgress",
+        "status": "failure",
+        "time": "7.048"
+      }
+    ],
+    "tests": 1
+  },
+  "cleanup": {
+    "mysql_leftover_schemas": [],
+    "mysql_schemas_after": [
+      "information_schema",
+      "mysql",
+      "performance_schema",
+      "sys"
+    ],
+    "redis_dbsize_after": 0,
+    "status": "CLEAN"
+  },
+  "teardown": {
+    "mysql": {
+      "container": "cy-rs-40237886431-1-crossdomainfaultisolationmysqlit-mysql",
+      "removed": true
+    },
+    "redis": {
+      "container": "cy-rs-40237886431-1-crossdomainfaultisolationmysqlit-redis",
+      "removed": true
+    }
+  },
+  "not_accepted_as_business_isolation": true,
+  "no_transport_runtime_pass_claim_before_calibration": true,
+  "all_complete": false
+}

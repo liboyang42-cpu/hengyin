@@ -1,0 +1,69 @@
+{
+  "source": "f1fe75d646f8ae57864ee5603c68e70e7fabc854",
+  "run": 40236711614,
+  "attempt": 1,
+  "artifact": 12615447625,
+  "ZIP_bytes": 12701331,
+  "ZIP_sha256": "8c87c7e39a89886f7e1a9fbcf83e9267e96e31d9228fdbc55475718b80ef8c98",
+  "CRC": "PASS",
+  "original_XML_hashes_verified": 1961,
+  "modules": {
+    "chengyinhub-admin": {
+      "tests": 15779,
+      "passed": 15146,
+      "skipped": 633
+    }
+  },
+  "duplicate_case_ids": 0,
+  "previous_15772_cases_preserved": true,
+  "previous_case_status_changes": [],
+  "new7_exact_source_identity_cases": [
+    {
+      "class": "com.chengyinhub.business.it.CrossDomainTransportStageTest",
+      "name": "wrongModelCountDuplicateFieldsTrailingDocumentAndDepthRemainFailures",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.CrossDomainTransportStageTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.it.CrossDomainTransportStageTest",
+      "name": "callerAndProviderQueuesAreFiniteAndPreserveWorkerBudgets",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.CrossDomainTransportStageTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.it.CrossDomainTransportStageTest",
+      "name": "malformedInputCannotLeakParserBodyCanaryOrBecomeAnAllowedDisconnect",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.CrossDomainTransportStageTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.it.CrossDomainTransportStageTest",
+      "name": "faultPhaseProtocolFailureStillSurfacesFromOwnedTransportCleanup",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.CrossDomainTransportStageTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.it.CrossDomainTransportStageTest",
+      "name": "exactByteLimitIsAcceptedButOneExtraByteIsRejectedAndClosed",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.CrossDomainTransportStageTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.it.CrossDomainTransportStageTest",
+      "name": "realVisionClientStillPostsAndParsesTheControlledHttpResponse",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.CrossDomainTransportStageTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.it.CrossDomainTransportStageTest",
+      "name": "fourOriginalLargeImagesAreDecodedWithoutMaterializingImageText",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.CrossDomainTransportStageTest.xml"
+    }
+  ],
+  "current_old40_failure_identity_all_passed": true,
+  "not_full_business_acceptance": true,
+  "skipped_are_not_passed": true,
+  "all_complete": false,
+  "summary_only_original_cases_private_receipt": true
+}
