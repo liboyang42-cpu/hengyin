@@ -1699,5 +1699,90 @@ class WorkflowWiringTest(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stderr)
 
 
+class CashTransferIntentTechnicalOwnerTest(unittest.TestCase):
+    setUp = InventoryAndDeltaTest.setUp
+    write = InventoryAndDeltaTest.write
+    commit = InventoryAndDeltaTest.commit
+    prepare_policy = InventoryAndDeltaTest.prepare_policy
+    source_cli = BusinessOwnerPolicyTest.source_cli
+    assert_rule = BusinessOwnerPolicyTest.assert_rule
+    target = "com.chengyinhub.business.mapper.CashWithdrawTransferIntentMapper"
+    admission = "com.chengyinhub.business.service.support.WithdrawalBalanceAdmissionService"
+    cash = "com.chengyinhub.business.service.impl.CashWithdrawServiceImpl"
+    dto = "com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent"
+    sdk = "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway"
+
+    def test_exact_primary_mapper_is_registered_without_granting_other_mappers_or_compilation(self):
+        trusted, _ = self.prepare_policy()
+        path = "chengyinhub-system/src/main/java/" + self.target.replace(".", "/") + ".java"
+        self.write(path, (gate.REPO / path).read_bytes())
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(0, status, report)
+        self.assertEqual("NOT_CHECKED_BY_SOURCE_GATE", report["technical_dependencies"]["compiled_inputs"])
+        foreign = path.replace("CashWithdrawTransferIntentMapper", "ForeignCashTransferMapper")
+        self.write(foreign, b"package com.chengyinhub.business.mapper; public interface ForeignCashTransferMapper {}")
+        self.assert_rule(self.source_cli(trusted, self.commit()), "NEW_UNOWNED_BOUNDARY")
+
+    def test_storage_consumers_and_only_three_necessary_forward_directions_are_exact(self):
+        policy = gate.technical_dependency_policy()
+        storage = policy["owners"]["A_TRANSFER_INTENT_STORAGE"]
+        self.assertEqual([self.target], storage["members"])
+        self.assertEqual([self.admission, self.cash], storage["allowed_consumers"])
+        edges = {edge for edge in policy["allowed_directions"] if "A_TRANSFER_INTENT_STORAGE" in edge}
+        self.assertEqual({("A_WITHDRAW_ADMISSION", "A_TRANSFER_INTENT_STORAGE"),
+                          ("A_TRANSFER_INTENT_STORAGE", "A_TRANSFER_INTENT_DTO")}, edges)
+        self.assertIn(("A_WITHDRAW_ADMISSION", "A_TRANSFER_INTENT_DTO"), policy["allowed_directions"])
+        self.assertIn(self.cash, storage["forbidden_backrefs"])
+        self.assertIn(self.sdk, storage["forbidden_backrefs"])
+        self.assertEqual([], storage["restricted_packages"]["com.chengyinhub.business.service."])
+        self.assertEqual([self.target], storage["restricted_packages"]["com.chengyinhub.business.mapper."])
+
+    def test_candidate_cannot_self_approve_consumer_or_delete_frozen_storage_owner(self):
+        trusted, _ = self.prepare_policy()
+        original = json.loads((trusted / "owners.json").read_text())
+        for change in ("sdk", "remove"):
+            with self.subTest(change=change):
+                value = copy.deepcopy(original)
+                owners = value["technical_dependency_policy"]["owners"]
+                if change == "sdk":
+                    next(o for o in owners if o["id"] == "A_TRANSFER_INTENT_STORAGE")["allowed_consumers"].append(self.sdk)
+                else:
+                    value["technical_dependency_policy"]["owners"] = [o for o in owners if o["id"] != "A_TRANSFER_INTENT_STORAGE"]
+                self.write("ci/architecture/owners.json", gate.encode(value))
+                status, report = self.source_cli(trusted, self.commit())
+                self.assertEqual(1, status, report)
+                self.assertIn("POLICY_CHANGE", report["error"])
+
+    def test_existing_dependency_checker_keeps_sdk_nested_consumers_backrefs_and_missing_input_red_or_unknown(self):
+        spec = importlib.util.spec_from_file_location("cash_port_dependency_fixture", gate.HERE / "collect_jdeps.py")
+        collector = importlib.util.module_from_spec(spec); spec.loader.exec_module(collector)
+        policy = gate.technical_dependency_policy()
+        index = {name: {"owner": "chengyinhub-system"}
+                 for name in (self.target, self.admission, self.cash, self.dto, self.sdk, self.cash + "$Late")}
+        legitimate = [(self.admission, self.target), (self.cash, self.target),
+                      (self.target, self.dto), (self.admission, self.dto)]
+        def check(pairs, current=index):
+            # Direct rule-only references, not fabricated JAR/raw validation evidence.
+            selected = {"synthetic-rule-only": {str(i): {"source_class": a, "target_class": b, "line": "synthetic rule witness"}
+                                               for i, (a, b) in enumerate(pairs)}}
+            return collector.technical_dependency_findings(current, selected, policy)
+        result = check(legitimate)
+        self.assertEqual([], result["findings"])
+        self.assertEqual("UNKNOWN", result["verdict"], "partial synthetic index cannot prove compiled coverage")
+        for consumer in (self.sdk, self.cash + "$Late", self.dto):
+            with self.subTest(consumer=consumer):
+                self.assertIn("EXACT_STORAGE_PORT_CONSUMER", {r["rule"] for r in check(legitimate + [(consumer, self.target)])["findings"]})
+        for target in (self.cash, self.sdk, self.admission):
+            with self.subTest(backref=target):
+                rules = {r["rule"] for r in check(legitimate + [(self.target, target)])["findings"]}
+                self.assertIn("OWNER_GOD_BACKREFERENCE", rules)
+                self.assertIn("RESTRICTED_OWNER_PACKAGE_REFERENCE", rules)
+        self.assertIn("NEW_OWNER_CYCLE", {r["rule"] for r in check(legitimate + [(self.target, self.admission)])["findings"]})
+        missing = dict(index); missing.pop(self.target)
+        result = check(legitimate, missing)
+        self.assertEqual("UNKNOWN", result["verdict"])
+        self.assertTrue(any(r["reason"] == "OWNER_TYPE_INPUT_UNKNOWN" and r["type"] == self.target for r in result["review_items"]))
+
+
 if __name__ == "__main__":
     unittest.main()

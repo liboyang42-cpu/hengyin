@@ -612,6 +612,31 @@
         ]
       },
       {
+        "id": "A_TRANSFER_INTENT_STORAGE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.mapper.CashWithdrawTransferIntentMapper"
+        ],
+        "allowed_consumers": [
+          "com.chengyinhub.business.service.support.WithdrawalBalanceAdmissionService",
+          "com.chengyinhub.business.service.impl.CashWithdrawServiceImpl"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.support.WithdrawalBalanceAdmissionService",
+          "com.chengyinhub.business.service.ICashWithdrawService",
+          "com.chengyinhub.business.service.impl.CashWithdrawServiceImpl",
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway"
+        ],
+        "restricted_packages": {
+          "com.chengyinhub.business.service.": [],
+          "com.chengyinhub.business.mapper.": [
+            "com.chengyinhub.business.mapper.CashWithdrawTransferIntentMapper"
+          ]
+        }
+      },
+      {
         "id": "D_CONTENT_SIZE_POLICY",
         "module": "chengyinhub-system",
         "members": [
@@ -1353,6 +1378,18 @@
       }
     ],
     "allowed_directions": [
+      [
+        "A_WITHDRAW_ADMISSION",
+        "A_TRANSFER_INTENT_STORAGE"
+      ],
+      [
+        "A_TRANSFER_INTENT_STORAGE",
+        "A_TRANSFER_INTENT_DTO"
+      ],
+      [
+        "A_WITHDRAW_ADMISSION",
+        "A_TRANSFER_INTENT_DTO"
+      ],
       [
         "C_HINT_APPLICATION",
         "C_NODE_ACCESS"
