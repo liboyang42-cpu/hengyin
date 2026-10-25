@@ -8,6 +8,8 @@ F独立回读 run40220857316/job121251920466 原日志：pip明确 `Defaulting t
 
 协调方已核原artifact12609009475/ZIP SHA256 `c3861ad6c800cc233cb1c7adcb6c12692101aab6028ecb7b264a2679d7d40ced` 只有application/provenance两JSON；F不重复下载或将其说成新运行/cleanup证明。旧run缺marker、缺cleanupJSON等事实不能由本source补造。
 
+追加协调方同源mixed真实trace：run40220853485/job121251908444，gameplay_process_recovery_probe.py:442 → 原auth.database:157 → `ModuleNotFoundError: No module named 'pymysql'`。仅此mixed模块名已确证，不再UNKNOWN；fullrestore原类型日志仍没有独立公开模块名。原f2ebc9受控解释器已覆盖这条真实-I caller，不重写/再派新环境包，版本/隔离不变。
+
 ## 实际caller / 环境
 
 | 固定模式 | 实际影响 |
@@ -30,6 +32,14 @@ C独占report字段：`applicationStartAttempted=false`初值，在第一次`slo
 已尝试启动、任何历史boot/CID、错源/错run/损坏/缺报告、app实际存在、daemon/absence未知皆继续原失败路径。成功原四CID清理、实际app log采集/失败守卫、原pre-app readiness失败合同逐字逻辑保留。原EXIT trap首个非零不变，新的venv清理不能改变C原失败。
 
 C还拥有同次原finalize IndexError接缝：其旧代码读取ownedAppCids[-1]，未启动时数组为空。请root/C在C-owned片按新marker处理失败收据，不能填假appCID/强求成功四CID或把业务失败签绿；F未动该文件，本片单独不能宣称整个失败收据闭环已运行通过。
+
+## Mixed共享finalize最小review hunk（未应用）
+
+同一mixed失败在F observe之前退出，`capacity-mixed.json`未生成。原gameplay.finalize却在已有`original_exit == 0`断言之前先调用shared capacity.finalize，后者781行无条件读原结果JSON，故报次错。无需改capacity业务判定或造缺失JSON。
+
+`mixed-finalize.review.patch.b64`只建议把gameplay原非零断言前移到shared调用前，原断言原样保留、成功路径所有检查不变。原报告仍保留ModuleNotFoundError/原reason及businessResultBeforeCleanup，保持FAIL，不把未执行F observe说成通过。配一个直接控制SOURCE：原exit1/124时shared loader不得调用、原首因保留、capacity JSON不得补造；原正向与所有旧断言不删。
+
+该hunk目标是`ci/gameplay_process_recovery_probe.py`及其原direct test，**F没有编辑/提交这两个共享文件的后像**，只在/tmp生成review并做Git apply --check。请root串行交原owner应用；decoded摘要见`SHARED-FINALIZE.sha256`。C fullrestore probe/runtime不在hunk。没有修独立capacity默认成功路径、没有新增日志类别/依赖/授权。
 
 ## 控制 / 交付
 
