@@ -17,6 +17,9 @@ public class CityNodeVO {
     private String quotesJson;
     /** 地点玩法介绍(模板 description) */
     private String templateDesc;
+    private String photoCredit;
+    public String getPhotoCredit() { return photoCredit; }
+    public void setPhotoCredit(String value) { photoCredit = value; }
     public String getQuotesJson() { return quotesJson; }
     public void setQuotesJson(String value) { quotesJson = value; }
     public String getTemplateDesc() { return templateDesc; }

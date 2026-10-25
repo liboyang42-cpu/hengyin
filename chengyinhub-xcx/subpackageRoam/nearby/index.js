@@ -994,6 +994,7 @@ Page({
           'poiCard.img': this.data.poiCard.img || thumbs[0] || '',
           'poiCard.game': { title: n.templateTitle || '', desc: n.templateDesc || '', steps, completed: n.completed === true, radiusM: Number(n.radiusM) || 80 },
           'poiCard.quotes': L.poiQuotes(n.quotesJson),
+          'poiCard.photoCredit': typeof n.photoCredit === 'string' ? n.photoCredit.slice(0, 1000) : this.data.poiCard.photoCredit,
           'poiCard.ratingText': n.ratingCount ? '★ ' + Number(n.averageRating || 0).toFixed(1) + ' · ' + n.ratingCount + ' 条评价' : '',
           'poiCard.metaStrong': n.completed === true ? '已完成挑战' : this.data.poiCard.metaStrong,
           'poiCard.primary': n.completed === true ? '投一张换一张' : '开始挑战',

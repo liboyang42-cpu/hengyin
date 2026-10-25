@@ -81,7 +81,7 @@ public class AppMediaOutputConfiguration {
             try {
                 JsonNode tree = json.readTree(value);
                 if (tree == null) return value;
-                JsonNode safe = projectTree(tree, "imagesJson".equals(field) ? "imageUrls" : "");
+                JsonNode safe = projectTree(tree, "imagesJson".equals(field) ? "imageUrls" : "galleryJson".equals(field) ? "gallery" : "");
                 return safe.equals(tree) ? value : json.writeValueAsString(safe);
             } catch (IOException invalidMediaJson) { return ""; }
         }

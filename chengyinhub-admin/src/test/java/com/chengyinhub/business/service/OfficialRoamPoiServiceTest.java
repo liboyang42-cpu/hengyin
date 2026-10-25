@@ -13,13 +13,14 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class OfficialRoamPoiServiceTest {
+    private static final String COVER = "/profile/upload/2026/10/25/0123456789abcdef0123456789abcdef.jpg";
     private OfficialRoamPoiDraft draft() {
         OfficialRoamPoiDraft d = new OfficialRoamPoiDraft();
         d.poi = new RoamPoi(); d.game = new CmsMemberTemplate();
         d.poi.setId(42L); d.poi.setName("街角艺术馆"); d.poi.setAddress("测试街42号");
         d.poi.setDescription("入口观察挑战"); d.poi.setCityCode("310100");
         d.poi.setLat(new BigDecimal("31.2")); d.poi.setLng(new BigDecimal("121.4"));
-        d.poi.setCoverImg("curated/entrance.jpg"); d.poi.setGalleryJson("[\"curated/entrance.jpg\"]");
+        d.poi.setCoverImg(COVER); d.poi.setGalleryJson("[\"" + COVER + "\"]");
         d.game.setTitle("寻找入口线索"); d.game.setPhotoRequireDesc("拍摄公共入口标识");
         d.game.setQuestionName("标识里出现哪一个字？"); d.game.setQuestionA("艺");
         d.game.setQuestionB("海"); d.game.setCorrectAnswer("A"); return d;
@@ -45,6 +46,16 @@ class OfficialRoamPoiServiceTest {
         quizOnly.game.setPhotoRequireDesc(null);
         assertEquals(42L, service.save(1L, quizOnly));
         assertFalse(quizOnly.poi.getPhotoRequired());
+    }
+
+    @Test void officialImagesMustBeRegisteredPlatformUploadsSoTheMediaFilterKeepsThem() {
+        OfficialRoamPoiService.asset(COVER);
+        OfficialRoamPoiService.asset("https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/0123456789abcdef0123456789abcdef.jpg");
+        for (String bad : new String[] { "curated/entrance.jpg", "chengyin-test/shanghai-curated-20261024/9912401.jpg",
+                "upload/2026/10/25/0123456789abcdef0123456789abcdef.jpg",
+                "https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/0123456789abcdef0123456789abcdef.jpg?Signature=x",
+                "https://example.com/a/../upload/0123456789abcdef0123456789abcdef.jpg", "/profile/upload/2026/10/25/x.webp" })
+            assertThrows(ServiceException.class, () -> OfficialRoamPoiService.asset(bad), bad);
     }
 
     @Test void publicQuotesNeedTextSourceAndHttpsLinkAndStayOptional() {

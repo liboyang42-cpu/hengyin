@@ -113,6 +113,7 @@ public class OfficialRoamPoiService {
             if (!images.contains(p.getCoverImg())) throw new IllegalArgumentException();
         } catch (RuntimeException invalid) { throw new ServiceException("相册需含封面及1至6张有效平台图片"); }
         quotes(p.getQuotesJson());
+        if (p.getPhotoCredit() != null && p.getPhotoCredit().length() > 1000) throw new ServiceException("照片来源与许可过长");
     }
 
     /** 公开引述:可空;至多 6 条,每条原文 ≤160 字,必须写明来源与 https 原文链接,作者 / 日期可选。
@@ -139,8 +140,13 @@ public class OfficialRoamPoiService {
     private static void required(String value, int limit, String label) {
         if (value == null || value.trim().isEmpty() || value.length() > limit) throw new ServiceException("请填写有效的" + label);
     }
-    private static void asset(String key) {
-        if (key == null || key.length() > 255 || !key.matches("[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*\\.(jpg|jpeg|png|webp)"))
-            throw new ServiceException("图片须为平台上传后的相对路径");
+    /** 只收平台上传并登记审核事实的图片引用:后台本地上传 /profile/upload/yyyy/MM/dd/<32位>.jpg,
+     *  或 OSS 上传对象 https://<桶域名>/upload/<32位>.jpg(不带签名参数)。其他写法在接口输出时会被
+     *  媒体审核过滤清空 —— 地图点位画不出照片、卡片没有封面,所以保存时就拒收。 */
+    static void asset(String key) {
+        if (key == null || key.length() > 255
+                || !(key.matches("/profile/upload/[0-9]{4}/[0-9]{2}/[0-9]{2}/[0-9a-f]{32}\\.(jpg|jpeg|png|gif)")
+                    || key.matches("https://[A-Za-z0-9.-]+/upload/[0-9a-f]{32}\\.(jpg|jpeg|png|gif)")))
+            throw new ServiceException("图片须为平台上传并审核通过的图片");
     }
 }

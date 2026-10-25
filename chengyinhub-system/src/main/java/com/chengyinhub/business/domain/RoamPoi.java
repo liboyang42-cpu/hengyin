@@ -10,6 +10,10 @@ public class RoamPoi {
     private String badgeCode;
     /** 公开引述 JSON 数组:[{text,source,author,date,url}];展示时注明出处,不冒充玩家评价。 */
     private String quotesJson;
+    /** 照片来源与许可署名(CC BY 等要求注明作者与许可),玩家在地点卡里可展开查看 */
+    private String photoCredit;
+    public String getPhotoCredit() { return photoCredit; }
+    public void setPhotoCredit(String value) { photoCredit = value; }
     public String getQuotesJson() { return quotesJson; }
     public void setQuotesJson(String value) { quotesJson = value; }
     public String getGalleryJson() { return galleryJson; }

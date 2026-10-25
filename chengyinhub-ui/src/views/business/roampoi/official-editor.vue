@@ -9,6 +9,7 @@
       <el-form-item label="分类标签"><el-input v-model="poi.tags" placeholder="多个标签用逗号分隔" maxlength="255" /></el-form-item>
       <el-form-item label="地点介绍"><el-input v-model="poi.description" type="textarea" maxlength="255" show-word-limit placeholder="推荐理由、开放安排及门票说明" /></el-form-item>
       <el-form-item label="地点相册"><image-upload v-model="pictures" :limit="6" :file-size="20" /><span>第一张作为封面；玩家详情完整展示原图比例。</span></el-form-item>
+      <el-form-item label="照片来源"><el-input v-model="poi.photoCredit" type="textarea" maxlength="1000" show-word-limit placeholder="作者 · 许可 · 原图链接；自有照片写「城瘾实拍」" /></el-form-item>
       <el-form-item label="公开引述">
         <div v-for="(quote, index) in quotes" :key="index" class="official-poi-quote">
           <el-input v-model="quote.text" type="textarea" maxlength="160" show-word-limit placeholder="原文摘录（逐字照抄，不改写）" />
@@ -39,13 +40,16 @@
 import ImageUpload from '@/components/ImageUpload'
 import { officialPoiDraft, saveOfficialPoi } from '@/api/business/roamPoi'
 
-const blankPoi = () => ({ name: '', address: '', cityCode: '', lat: null, lng: null, tags: '', description: '', photoRequired: true })
+const blankPoi = () => ({ name: '', address: '', cityCode: '', lat: null, lng: null, tags: '', description: '', photoCredit: '', photoRequired: true })
 const blankQuote = () => ({ text: '', source: '', author: '', date: '', url: '' })
 const blankGame = () => ({ title: '', description: '', photoRequireDesc: '', questionName: '', questionA: '', questionB: '', questionC: '', questionD: '', correctAnswer: 'A' })
+// 存平台图片引用本身(/profile/upload/… 或不带签名的 OSS /upload/… 地址),不能剥掉前缀:
+// 接口输出按这个引用查审核事实,剥掉之后查不到,封面会被清空。
 function assetKey(value) {
-  const text = String(value || '').trim()
-  const marker = text.indexOf('/profile/')
-  return marker >= 0 ? text.slice(marker + 9) : text.replace(/^\//, '')
+  const text = String(value || '').trim().split('?')[0]
+  const local = text.indexOf('/profile/upload/')
+  if (local >= 0) return text.slice(local)
+  return /^https:\/\/[^/]+\/upload\//.test(text) ? text : ''
 }
 export default {
   components: { ImageUpload },
@@ -69,13 +73,13 @@ export default {
         let quotes = []
         try { quotes = JSON.parse(this.poi.quotesJson || '[]') } catch (_) {}
         this.quotes = (Array.isArray(quotes) ? quotes : []).map(row => ({ ...blankQuote(), ...row }))
-        this.pictures = (Array.isArray(images) && images.length ? images : [this.poi.coverImg]).filter(Boolean).map(key => '/profile/' + assetKey(key)).join(',')
+        this.pictures = (Array.isArray(images) && images.length ? images : [this.poi.coverImg]).filter(Boolean).map(assetKey).filter(Boolean).join(',')
       } catch (_) { if (sequence === this.sequence) this.error = '据点资料读取失败，请关闭后重试' }
       finally { if (sequence === this.sequence) this.loading = false }
     },
     async save() {
       if (this.saving || this.loading) return
-      const images = this.pictures.split(',').filter(Boolean).map(assetKey)
+      const images = this.pictures.split(',').filter(Boolean).map(assetKey).filter(Boolean)
       if (!images.length) { this.error = '请添加地点照片'; return }
       const quotes = this.quotes.map(row => ({ text: row.text.trim(), source: row.source.trim(), author: row.author.trim(), date: row.date.trim(), url: row.url.trim() }))
         .filter(row => row.text || row.source || row.url)
