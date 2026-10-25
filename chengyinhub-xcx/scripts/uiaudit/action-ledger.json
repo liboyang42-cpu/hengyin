@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5141,
+  "controlCount": 5143,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -33790,6 +33790,32 @@
             },
             {
               "selector": "cy-btn",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 11
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
               "index": 2
             }
           ]
@@ -33856,6 +33882,32 @@
             {
               "selector": "cy-btn",
               "index": 7
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 8
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 9
             }
           ]
         },
@@ -39698,6 +39750,32 @@
             },
             {
               "selector": "cy-btn",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 11
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
               "index": 2
             }
           ]
@@ -39764,6 +39842,32 @@
             {
               "selector": "cy-btn",
               "index": 7
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 8
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 9
             }
           ]
         },
@@ -45494,6 +45598,32 @@
             },
             {
               "selector": "cy-btn",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 11
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
               "index": 2
             }
           ]
@@ -45560,6 +45690,32 @@
             {
               "selector": "cy-btn",
               "index": 7
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 8
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 9
             }
           ]
         },
@@ -65138,6 +65294,40 @@
             },
             {
               "selector": "cy-btn",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#roamPoiDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 11
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#roamPoiDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
               "index": 2
             }
           ]
@@ -65224,6 +65414,40 @@
             {
               "selector": "cy-btn",
               "index": 7
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#roamPoiDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 8
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#roamPoiDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 9
             }
           ]
         },
@@ -77606,6 +77830,40 @@
             },
             {
               "selector": "cy-btn",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "#roamDeepLink",
+              "index": 0
+            },
+            {
+              "selector": "#roamPoiDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 11
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "#roamDeepLink",
+              "index": 0
+            },
+            {
+              "selector": "#roamPoiDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
               "index": 2
             }
           ]
@@ -77692,6 +77950,40 @@
             {
               "selector": "cy-btn",
               "index": 7
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "#roamDeepLink",
+              "index": 0
+            },
+            {
+              "selector": "#roamPoiDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 8
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "#roamDeepLink",
+              "index": 0
+            },
+            {
+              "selector": "#roamPoiDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 9
             }
           ]
         },
@@ -946998,7 +947290,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-album/index.wxml:10:bindtap:onCta:1",
+      "id": "pages/play/components/playkit-album/index.wxml:11:bindtap:onCta:1",
       "route": "component:pages/play/components/playkit-album/index",
       "hostRoutes": [
         "pages/play/index",
@@ -947089,12 +947381,12 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCta",
-        "line": 10,
+        "line": 11,
         "selectorHint": "view[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "{{uploadFailure === 'retry' ? '重试上传这张照片' : uploaded ? '重新提交照片' : '拍照或选择照片'}}",
+        "ariaLabelExpression": "{{uploadFailure === 'review_pending' ? '查看/重试审核，批准后提交相册' : uploadFailure === 'retry' ? '重试上传这张照片' : uploaded ? '重新提交照片' : '拍照或选择照片'}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -947106,9 +947398,9 @@
       },
       "actionClass": "external",
       "interactionMode": "tap",
-      "baseActionClass": "other",
+      "baseActionClass": "state",
       "effectClasses": [
-        "other"
+        "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [
@@ -947125,7 +947417,7 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
@@ -947141,11 +947433,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-album/index.js:18"
+        "staticSource": "pages/play/components/playkit-album/index.js:20"
       }
     },
     {
-      "id": "pages/play/components/playkit-album/index.wxml:11:bindtap:choosePhoto:2",
+      "id": "pages/play/components/playkit-album/index.wxml:12:bindtap:choosePhoto:2",
       "route": "component:pages/play/components/playkit-album/index",
       "hostRoutes": [
         "pages/play/index",
@@ -947236,7 +947528,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "choosePhoto",
-        "line": 11,
+        "line": 12,
         "selectorHint": "view[bindtap]",
         "visibleCondition": "{{uploaded || uploadFailure === 'retry'}}",
         "disabledCondition": null,
@@ -947253,9 +947545,9 @@
       },
       "actionClass": "external",
       "interactionMode": "tap",
-      "baseActionClass": "other",
+      "baseActionClass": "state",
       "effectClasses": [
-        "other"
+        "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [
@@ -947272,7 +947564,7 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
@@ -947288,11 +947580,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-album/index.js:23"
+        "staticSource": "pages/play/components/playkit-album/index.js:33"
       }
     },
     {
-      "id": "pages/play/components/playkit-album/index.wxml:13:bindtap:close:3",
+      "id": "pages/play/components/playkit-album/index.wxml:14:bindtap:close:3",
       "route": "component:pages/play/components/playkit-album/index",
       "hostRoutes": [
         "pages/play/index",
@@ -947380,7 +947672,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "close",
-        "line": 13,
+        "line": 14,
         "selectorHint": ".album__back",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -947421,7 +947713,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-album/index.js:17"
+        "staticSource": "pages/play/components/playkit-album/index.js:19"
       }
     },
     {
@@ -947553,7 +947845,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-album/index.js:16"
+        "staticSource": "pages/play/components/playkit-album/index.js:18"
       }
     },
     {
@@ -1244909,6 +1245201,376 @@
       }
     },
     {
+      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:102:bind:tap:retry:26",
+      "route": "component:subpackageMember/components/cy/scene-roam-poi-detail/index",
+      "hostRoutes": [
+        "pages/merchant/index/index",
+        "pages/play/index",
+        "pages/roam/index",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#roamPoiDetail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "#roamDeepLink",
+              "index": 0
+            },
+            {
+              "selector": "#roamPoiDetail",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml",
+        "js": "subpackageMember/components/cy/scene-roam-poi-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bind:tap",
+        "handler": "retry",
+        "line": 102,
+        "selectorHint": "cy-btn[bind:tap]",
+        "visibleCondition": "{{interactionState !== 'unknown'}}",
+        "disabledCondition": "{{reverifyChecking || completing}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/city/nodes/",
+          "/api/comment/list",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/public-detail",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/city/nodes/",
+          "/api/comment/list",
+          "/api/config/features",
+          "/api/merchant/public-detail"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/city/nodes/",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/comment/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/public-detail",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:338"
+      }
+    },
+    {
+      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:103:bind:tap:reverifyOnSite:27",
+      "route": "component:subpackageMember/components/cy/scene-roam-poi-detail/index",
+      "hostRoutes": [
+        "pages/merchant/index/index",
+        "pages/play/index",
+        "pages/roam/index",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#roamPoiDetail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "#roamDeepLink",
+              "index": 0
+            },
+            {
+              "selector": "#roamPoiDetail",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml",
+        "js": "subpackageMember/components/cy/scene-roam-poi-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bind:tap",
+        "handler": "reverifyOnSite",
+        "line": 103,
+        "selectorHint": "cy-btn[bind:tap]",
+        "visibleCondition": null,
+        "disabledCondition": "{{reverifyChecking || reverifyReady || completing}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/city/nodes/",
+          "/api/comment/list",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/public-detail",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/city/nodes/",
+          "/api/comment/list",
+          "/api/config/features",
+          "/api/merchant/public-detail"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/city/nodes/",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/comment/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/public-detail",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:129"
+      }
+    },
+    {
       "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:14:bindtap:previewGallery:3",
       "route": "component:subpackageMember/components/cy/scene-roam-poi-detail/index",
       "hostRoutes": [
@@ -1245042,7 +1245704,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:269"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:339"
       }
     },
     {
@@ -1245169,7 +1245831,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:475"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:564"
       }
     },
     {
@@ -1245297,7 +1245959,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:610"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:725"
       }
     },
     {
@@ -1245424,7 +1246086,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:620"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:735"
       }
     },
     {
@@ -1245551,7 +1246213,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:620"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:735"
       }
     },
     {
@@ -1245793,7 +1246455,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:468"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:557"
       }
     },
     {
@@ -1245964,7 +1246626,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:273"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:343"
       }
     },
     {
@@ -1246135,7 +1246797,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:273"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:343"
       }
     },
     {
@@ -1246272,7 +1246934,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:306"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:376"
       }
     },
     {
@@ -1246400,7 +1247062,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:617"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:732"
       }
     },
     {
@@ -1246537,7 +1247199,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:306"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:376"
       }
     },
     {
@@ -1246664,7 +1247326,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:476"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:565"
       }
     },
     {
@@ -1246833,7 +1247495,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:488"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:577"
       }
     },
     {
@@ -1247030,7 +1247692,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:505"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:594"
       }
     },
     {
@@ -1247157,7 +1247819,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:504"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:593"
       }
     },
     {
@@ -1247284,7 +1247946,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:503"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:592"
       }
     },
     {
@@ -1247478,7 +1248140,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:522"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:611"
       }
     },
     {
@@ -1247615,7 +1248277,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:306"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:376"
       }
     },
     {
@@ -1247715,13 +1248377,13 @@
         "line": 86,
         "selectorHint": ".poi-footer__button",
         "visibleCondition": null,
-        "disabledCondition": "{{checkinPending || node.completed || completing || (!node.needRedeem && !node.canInteract)}}",
+        "disabledCondition": "{{(checkinPending && (!reverifyReady || reverifyStarted)) || node.completed || completing || (!node.needRedeem && !node.canInteract)}}",
         "ariaLabel": null,
         "ariaLabelExpression": null,
         "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": "{{checkinPending || node.completed || completing || (!node.needRedeem && !node.canInteract)}}",
+        "ariaDisabledExpression": "{{(checkinPending && (!reverifyReady || reverifyStarted)) || node.completed || completing || (!node.needRedeem && !node.canInteract)}}",
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
@@ -1247782,7 +1248444,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:379"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:450"
       }
     },
     {
@@ -1247883,13 +1248545,13 @@
         "line": 86,
         "selectorHint": ".poi-footer__button",
         "visibleCondition": null,
-        "disabledCondition": "{{checkinPending || node.completed || completing || (!node.needRedeem && !node.canInteract)}}",
+        "disabledCondition": "{{(checkinPending && (!reverifyReady || reverifyStarted)) || node.completed || completing || (!node.needRedeem && !node.canInteract)}}",
         "ariaLabel": null,
         "ariaLabelExpression": null,
         "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": "{{checkinPending || node.completed || completing || (!node.needRedeem && !node.canInteract)}}",
+        "ariaDisabledExpression": "{{(checkinPending && (!reverifyReady || reverifyStarted)) || node.completed || completing || (!node.needRedeem && !node.canInteract)}}",
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
@@ -1247952,7 +1248614,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:379"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:450"
       }
     },
     {
@@ -1248059,13 +1248721,13 @@
         "line": 86,
         "selectorHint": ".poi-footer__button",
         "visibleCondition": null,
-        "disabledCondition": "{{checkinPending || node.completed || completing || (!node.needRedeem && !node.canInteract)}}",
+        "disabledCondition": "{{(checkinPending && (!reverifyReady || reverifyStarted)) || node.completed || completing || (!node.needRedeem && !node.canInteract)}}",
         "ariaLabel": null,
         "ariaLabelExpression": null,
         "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": "{{checkinPending || node.completed || completing || (!node.needRedeem && !node.canInteract)}}",
+        "ariaDisabledExpression": "{{(checkinPending && (!reverifyReady || reverifyStarted)) || node.completed || completing || (!node.needRedeem && !node.canInteract)}}",
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
@@ -1248125,7 +1248787,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:379"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:450"
       }
     },
     {
@@ -1248362,13 +1249024,13 @@
         "line": 86,
         "selectorHint": ".poi-footer__button",
         "visibleCondition": null,
-        "disabledCondition": "{{checkinPending || node.completed || completing || (!node.needRedeem && !node.canInteract)}}",
+        "disabledCondition": "{{(checkinPending && (!reverifyReady || reverifyStarted)) || node.completed || completing || (!node.needRedeem && !node.canInteract)}}",
         "ariaLabel": null,
         "ariaLabelExpression": null,
         "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": "{{checkinPending || node.completed || completing || (!node.needRedeem && !node.canInteract)}}",
+        "ariaDisabledExpression": "{{(checkinPending && (!reverifyReady || reverifyStarted)) || node.completed || completing || (!node.needRedeem && !node.canInteract)}}",
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
@@ -1248443,7 +1249105,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:379"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:450"
       }
     },
     {
@@ -1248545,13 +1249207,13 @@
         "line": 86,
         "selectorHint": ".poi-footer__button",
         "visibleCondition": null,
-        "disabledCondition": "{{checkinPending || node.completed || completing || (!node.needRedeem && !node.canInteract)}}",
+        "disabledCondition": "{{(checkinPending && (!reverifyReady || reverifyStarted)) || node.completed || completing || (!node.needRedeem && !node.canInteract)}}",
         "ariaLabel": null,
         "ariaLabelExpression": null,
         "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": "{{checkinPending || node.completed || completing || (!node.needRedeem && !node.canInteract)}}",
+        "ariaDisabledExpression": "{{(checkinPending && (!reverifyReady || reverifyStarted)) || node.completed || completing || (!node.needRedeem && !node.canInteract)}}",
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
@@ -1248615,7 +1249277,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:379"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:450"
       }
     },
     {
@@ -1248742,7 +1249404,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:104"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:152"
       }
     },
     {
@@ -1248984,7 +1249646,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:96"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:144"
       }
     },
     {
@@ -1249111,7 +1249773,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:104"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:152"
       }
     },
     {
@@ -1249358,7 +1250020,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:358"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:429"
       }
     },
     {

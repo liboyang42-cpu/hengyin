@@ -404,7 +404,7 @@ module.exports = {
       // 受控路由、理由及 10 条登记保持，digest 仅随行号更新。
       // 2026-10-11 登录隔离及正常失败状态兼容：App consent wrapper 329→343，同一调用及理由，数量仍11。
       // 2026-10-14 W5尾项:profile 544→559/870→885、参与详情 176→177 仅行号下移，同一调用及理由，数量仍11。
-      "u1Variable": "fa375a979486b3c36423da35e6ef7e6bff7cf8a5ceb6b6ab28ccea8de5a0d0b2",
+      "u1Variable": "66025e05bf07b638bcb3718ebb22bd9a4dc4d327ddac38048714815e01b145cd",
       // 2026-08-25 816 并入:key 集合按上面的逐条核对结果变化,digest 显式更新。
       "u3Debt": // 2026-09-09 一枚圆钮:roam#onCenterHoldStart / onCenterHoldEnd 两笔零绑定债务已还
       //   —— 长按 3 秒结束的逻辑接到了主键的 touchstart/touchend 上。99→97,digest 显式更新。
@@ -1011,14 +1011,14 @@ module.exports = {
       //   逐条回读仍是「只为读章节 recruitEnabled、失败不弹全局 toast」这一处,静默理由一字未改,条数 27 不变。
 // 2026-10-17 合并 master 进漫游上线分支:roam/index.js 14 条、nearby/index.js 2 条既有调用仅行号位移(按 master 源码逐行回读定位);漫游两栏改版删掉 /api/registration/list 静默读取(749),U5 29→28。digest 按同一算法显式重算。
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):锚点位移 + 举报半屏/AI 对话组件下沉会员分包换路径 + 本线 9 处新增登记,digest 按同一算法重算。
-"50e41620c802dae44a569658f1ce2c0605f63a7e4f286157846e33d03790f774"
+"e1df60a3b810cc7fdfb29957ae1a71da2d22babae29c3610019842fcc2c087f6"
 
     }
   },
   "cleanupPlan": {},
   "u1Variable": {
     "chengyinhub-xcx/subpackageRoam/nearby/index.js:940": "公开照片侧车只由 poiGalleryPath 的平台相对图片键构造，拒绝外站、路径穿越和非图片后缀；poiGallery 再校验地点ID、封面与同目录高清图片，账号/卡片代际隔离迟到回包；owner=上海据点，复核=2026-10-24",
-    "chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js:480": "公开图片许可仅取自白名单平台相对封面键对应的 .gallery.json，不接受外站与路径穿越，回包核对地点ID并限制文本长度，账号/页面代际隔离迟到回包；owner=上海据点，复核=2026-10-24",
+    "chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js:569": "公开图片许可仅取自白名单平台相对封面键对应的 .gallery.json，不接受外站与路径穿越，回包核对地点ID并限制文本长度，账号/页面代际隔离迟到回包；owner=上海据点，复核=2026-10-24",
     "chengyinhub-xcx/utils/community-post-api.js:75": "canonical 社区受控请求对象：BASE+path 只接固定发布/编辑阶段 helper 与举报闭包的枚举路由，举报回读仅显式切至本人 /api/community-trust/reports/mine；完整目标匹配 Controller，owner/current 检查及 pipeline success/fail 可见反馈保留，取消不报成功；owner=小程序，复核=213",
   // (本支) "chengyinhub-xcx/app.js:337": "consent adapter 的 options 只由 utils/compliance/consent-client.js 构造，该模块把唯一 endpoint 固定为 /api/compliance/consents；owner=小程序，复核=2026-09-15",
   // (本支) "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:467": "_submitVerification 的 options 只来自本文件三处调用：verification-scan 的有限核销路由，以及 chapter/station 两个显式 /api 字面量；非法扫码在调用前返回，不存在外部 URL 直传；owner=小程序，复核=2026-09-15",
@@ -1372,7 +1372,7 @@ module.exports = {
     "chengyinhub-xcx/subpackageRoam/nearby/index.js:984": "官方地点卡展开时补读节点(相册 / 玩法 / 完成状态 / 评分):卡片已先用地图点位数据渲染名称、地址、介绍和封面,读不到只是少相册与玩法块,开始挑战前挑战页会重新读同一节点并在失败时给错误页和重试;只写回仍开着的同一张卡;owner=上海据点,复核=2026-10-25",
     "chengyinhub-xcx/subpackageRoam/nearby/index.js:1005": "官方地点卡评价列表背景读取:失败时不显示评价区空态文案(reviewsLoaded=false),卡片其余内容与按钮照常,重新点开卡片会重读;不承载提交;只写回仍开着的同一张卡;owner=上海据点,复核=2026-10-25",
     "chengyinhub-xcx/subpackageRoam/nearby/index.js:940": "可选公开相册补充读取，缺失或失败保留已显示的封面与正常导航，不将缺失侧车伪报为地点不可用；不承载提交或奖励，重新点开可重读；owner=上海据点，复核=2026-10-24",
-    "chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js:481": "可选照片署名与许可补充读取，缺失时保留后端相册、玩法和导航，不阻断任务；没有写入或奖励成功提示；owner=上海据点，复核=2026-10-24",
+    "chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js:570": "可选照片署名与许可补充读取，缺失时保留后端相册、玩法和导航，不阻断任务；没有写入或奖励成功提示；owner=上海据点，复核=2026-10-24",
     // 2026-10-19 Claude 小程序线移植到 master:本线新增 9 处 silentError 逐项登记(超冻结上限 30,棘轮/上限/digest 待审批后同步)。
     "chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js:49": "BL-32/BL-218 举报半屏读原因:失败落 stage=loadfail 结果半屏(failText 带重试),seq 丢弃关掉重开后的旧回包;字段不以 error 命名,静态扫描证明不了;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js:94": "BL-32 举报提交:失败落 fail/unknown 结果半屏(含后端原因,同 requestId 可重试不重复受理),关自动 toast 免双弹;owner=小程序,复核=2026-12-31",

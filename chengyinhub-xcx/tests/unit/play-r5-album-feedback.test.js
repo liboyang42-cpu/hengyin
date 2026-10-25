@@ -28,13 +28,14 @@ function feedbackView({ writable = true, ended = false, terminal = false, step =
 }
 
 let pageDef, albumDef, branchDef, wrapperDef, advancedDef;
-let uploads, requests, toasts, media, lastOperation;
+let uploads, requests, toasts, media, lastOperation, reviewModal;
 const app = { getUserID: () => 99, globalData: { features: {} }, isDevEnv: () => false };
 global.getApp = () => app;
 global.Behavior = value => value;
 global.wx = { getStorageSync: () => '', getWindowInfo: () => ({ statusBarHeight: 20 }),
   getSystemInfoSync: () => ({ statusBarHeight: 20 }), showLoading() {}, hideLoading() {},
   showToast: options => toasts.push(options.title), hideToast() {}, vibrateShort() {},
+  showModal: () => { assert.fail('相册审核确认必须经 house modal 宿主'); },
   chooseMedia: options => { media = options; } };
 global.Page = value => { pageDef = value; };
 require('../../pages/play/index.js');
@@ -61,12 +62,15 @@ function component(def, props) {
     setData, selectComponent: () => null });
 }
 beforeEach(() => {
-  uploads = []; requests = []; toasts = []; media = null;
+  uploads = []; requests = []; toasts = []; media = null; reviewModal = null;
+  global.getCurrentPages = () => [{ selectComponent: id => id === '#cy-modal-host'
+    ? { open: options => { reviewModal = options; } } : null }];
   app.sendRequest = options => { requests.push(options); };
-  app.getUploadClient = () => createUploadClient({
+  const uploadClient = createUploadClient({
     wxUploadFile(options) { uploads.push(options); return { abort() {} }; },
     getBaseUrl: () => 'http://127.0.0.1', getAuthorization: () => 'unit-test',
   });
+  app.getUploadClient = () => uploadClient; // 与 app.js 一致：原文件→assetId 缓存在同一上传器内。
   app.createPageBoundOperation = () => {
     let aborted = false;
     const listeners = [];
@@ -106,6 +110,118 @@ function choose(album) {
 }
 function uploadSuccess() { uploads[0].success({ data: JSON.stringify({ code: 200, url: PLAYER_PHOTO }) }); }
 const tick = () => new Promise(resolve => setImmediate(resolve));
+
+function pendingAlbum() {
+  const ctx = setup(albumView());
+  choose(ctx.album);
+  uploads[0].success({ data: JSON.stringify({ code: 200, assetId: 12, reviewState: 'HOLD', url: AUTHOR_PHOTO }) });
+  assert.equal(ctx.page._kit().uploadFailure, 'review_pending');
+  assert.equal(ctx.page._kit().uploaded, false);
+  assert.equal(ctx.page._kit().done, false);
+  assert.equal(requests.length, 0, 'HOLD 的 URL 不得提交');
+  ctx.album.data.uploadFailure = ctx.page._kit().uploadFailure;
+  return ctx;
+}
+function reviewAlbum(album) {
+  media = null;
+  album.onCta();
+  assert.equal(reviewModal.title, '查看/重试审核');
+  assert.match(reviewModal.content, /可能重新提交审核/);
+  assert.match(reviewModal.content, /审核批准后才会提交相册/);
+  assert.equal(reviewModal.confirmText, '查看重试');
+  reviewModal.success({ confirm: true });
+  assert.equal(media, null, '查看/重试审核不重新选图');
+  assert.equal(uploads.length, 1, '查看/重试审核不重复上传新资产');
+  assert.equal(requests.at(-1).url, '/api/media/asset/12');
+  assert.equal(requests.at(-1).method, 'GET');
+}
+
+test('相册审核：pending 可见说明、CTA 与 aria 明示审核及批准后提交', () => {
+  const fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/components/playkit-album/index.wxml'), 'utf8');
+  const pending = wxml.match(/<text wx:if="\{\{uploadFailure === 'review_pending'\}\}" aria-live="polite">([^<]+)<\/text>/);
+  assert.ok(pending);
+  assert.match(pending[1], /照片审核中，尚未提交相册/);
+  assert.match(pending[1], /查看\/重试审核，批准后才会提交相册/);
+  const cta = wxml.match(/<view bindtap="onCta"[^>]+>([^<]+)<\/view>/)[0];
+  const context = { uploadFailure: 'review_pending', uploaded: false };
+  const rendered = cta.replace(/\{\{([\s\S]*?)\}\}/g, (_, expression) => vm.runInNewContext(expression, context));
+  assert.match(rendered, /aria-label="查看\/重试审核，批准后提交相册"/);
+  assert.match(rendered, />查看\/重试审核<\/view>/);
+  assert.doesNotMatch(rendered, /拍照|选图|网络|已提交/);
+});
+
+test('相册审核：HOLD→APPROVED 查看原资产后才沿正常路径提交', async () => {
+  const { page, album } = pendingAlbum();
+  assert.deepEqual(page._albumRetry, { sessionId: 51, version: 0,
+    photo: { tempFilePath: '/tmp/player-evidence.jpg', size: 1024 } });
+  reviewAlbum(album);
+  requests[0].success({ code: 200, data: { assetId: 12, reviewState: 'APPROVED', url: PLAYER_PHOTO } });
+  assert.equal(requests.length, 2);
+  assert.deepEqual(JSON.parse(requests[1].data).payload, { imageUrls: [PLAYER_PHOTO] });
+  assert.equal(JSON.parse(requests[1].data).action, 'SUBMIT_ALBUM');
+  assert.equal(page._kit().done, false, '批准不是相册完成回执');
+  assert.equal(page._albumRetry, null);
+  requests[1].success({ code: 200, data: albumView(true) }); await tick();
+  assert.equal(page._kit().done, true);
+});
+
+test('相册审核：仍 HOLD 保留原图；取消审核操作不请求也不选图', () => {
+  const { page, album } = pendingAlbum();
+  const original = structuredClone(page._albumRetry);
+  reviewAlbum(album);
+  requests[0].success({ code: 200, data: { assetId: 12, reviewState: 'HOLD', url: AUTHOR_PHOTO } });
+  assert.equal(requests.length, 1);
+  assert.deepEqual(page._albumRetry, original);
+  assert.equal(page._kit().uploadFailure, 'review_pending');
+  album.choosePhoto(); // 旧选图事件也只能打开审核确认，不可创建第二个资产。
+  reviewModal.success({ confirm: false });
+  assert.equal(requests.length, 1); assert.equal(media, null);
+  reviewAlbum(album);
+  assert.equal(requests.length, 2);
+  lastOperation.abort();
+});
+
+test('相册审核：REJECTED 沿共享上传器原资产重审，拒绝 URL 不提交', () => {
+  const { page, album } = pendingAlbum();
+  reviewAlbum(album);
+  requests[0].success({ code: 200, data: { assetId: 12, reviewState: 'REJECTED', url: AUTHOR_PHOTO } });
+  assert.equal(requests[1].url, '/api/media/asset/12/retry');
+  assert.equal(requests[1].method, 'POST');
+  requests[1].success({ code: 200, data: { assetId: 12, reviewState: 'HOLD' } });
+  assert.equal(requests.length, 2); assert.equal(uploads.length, 1);
+  assert.equal(page._kit().uploadFailure, 'review_pending');
+  assert.equal(page._kit().uploaded, false);
+});
+
+for (const mode of ['session', 'version', 'done', 'abort', 'unknown']) {
+  test(`相册审核：${mode} 后不提交旧回包或发起新审核操作`, () => {
+    const { page, game, album } = pendingAlbum();
+    if (mode === 'unknown') {
+      game.data.unknown = true;
+      album.onCta(); reviewModal.success({ confirm: true });
+      assert.equal(requests.length, 0); assert.equal(uploads.length, 1);
+      return;
+    }
+    reviewAlbum(album);
+    if (mode === 'abort') lastOperation.abort();
+    else {
+      const next = mode === 'done' ? albumView(true) : structuredClone(game.data.state);
+      if (mode === 'session') next.sessionId++;
+      else if (mode === 'version') next.version++;
+      game.data.state = next;
+      page.data.playKit.kit = pickPlayKit(next);
+    }
+    requests[0].success({ code: 200, data: { assetId: 12, reviewState: 'APPROVED', url: PLAYER_PHOTO } });
+    assert.equal(requests.length, 1); assert.equal(uploads.length, 1);
+    assert.equal(page._kit().uploaded, false);
+    if (mode === 'done') {
+      album.data.done = true;
+      reviewModal = null; album.onCta(); album.choosePhoto();
+      assert.equal(reviewModal, null);
+    }
+  });
+}
 
 test('相册：真实组件→分发器→认证上传→SUBMIT_ALBUM，只提交玩家证据', async () => {
   const { page, album } = setup(albumView());
