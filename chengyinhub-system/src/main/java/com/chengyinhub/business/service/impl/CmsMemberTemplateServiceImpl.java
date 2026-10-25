@@ -22,6 +22,8 @@ import com.chengyinhub.business.service.ICmsMemberTemplateService;
 public class CmsMemberTemplateServiceImpl implements ICmsMemberTemplateService 
 {
     @Autowired
+    private com.chengyinhub.business.service.ICouponRewardAuthorizationService couponRewardAuthorizationService;
+    @Autowired
     private CmsMemberTemplateMapper cmsMemberTemplateMapper;
 
      @Override
@@ -132,6 +134,11 @@ public class CmsMemberTemplateServiceImpl implements ICmsMemberTemplateService
         if (source == null || (!forceCopy && newOwnerMemberId.equals(source.getMemberId()))) {
             return templateId;
         }
+        // A complete-topic copy uses this same funnel. Content reuse cannot transfer another owner's coupon asset.
+        java.util.Set<Long> coupons = new java.util.LinkedHashSet<>();
+        if (source.getCouponId() != null && source.getCouponId() > 0L) coupons.add(source.getCouponId());
+        coupons.addAll(new com.chengyinhub.business.service.support.RewardRulesValidator().couponIds(source.getRewardRulesJson()));
+        for (Long coupon : coupons) couponRewardAuthorizationService.assertOwnedRewardCoupon(coupon, newOwnerMemberId);
         CmsMemberTemplate copy = new CmsMemberTemplate();
         BeanUtils.copyProperties(source, copy);
         copy.setId(null);

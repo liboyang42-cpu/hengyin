@@ -25,6 +25,8 @@ import org.springframework.util.CollectionUtils;
 @Service
 public class TopicPublicationContentGuard {
     @Autowired
+    private com.chengyinhub.business.service.ICouponRewardAuthorizationService couponRewardAuthorizationService;
+    @Autowired
     private com.chengyinhub.business.service.support.TopicContentWriteGuard contentWriteGuard;
     @Autowired
     private com.chengyinhub.business.service.support.TopicRouteOutcomeReader routeOutcomeReader;
@@ -678,6 +680,14 @@ public class TopicPublicationContentGuard {
         TopicStateKeyRefService.CurrentContent current = topicStateKeyRefService.currentForPublication(topic);
         if (current == null || current.topic() == null || !topic.getId().equals(current.topic().getId()))
             throw new IllegalStateException("发布引用投影主题不一致");
+        // Also covers ordinary questions with no theme runtime config. Use the same locked templates,
+        // and each template's proven owner (which may be a merchant rather than the topic creator).
+        for (CmsMemberTemplate template : current.templates().values()) {
+            Set<Long> coupons = new LinkedHashSet<>();
+            if (template.getCouponId() != null && template.getCouponId() > 0L) coupons.add(template.getCouponId());
+            coupons.addAll(new RewardRulesValidator().couponIds(template.getRewardRulesJson()));
+            for (Long coupon : coupons) couponRewardAuthorizationService.assertOwnedRewardCoupon(coupon, template.getMemberId());
+        }
         assertThemeRuntimeReferencesUsing(current.topic(), () -> captured, false, current);
     }
 

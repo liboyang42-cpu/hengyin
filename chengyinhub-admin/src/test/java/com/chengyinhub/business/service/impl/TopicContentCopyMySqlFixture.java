@@ -62,6 +62,7 @@ final class TopicContentCopyMySqlFixture implements AutoCloseable {
     IUmsCreativeSquareService square;
     Map<String, List<Map<String, Object>>> before;
     boolean created;
+    boolean couponFixture;
 
     void open() throws Exception {
         assertTrue(Set.of("legacy", "extracted").contains(ownerMode), "explicit owner mode must be legacy/extracted");
@@ -206,7 +207,29 @@ final class TopicContentCopyMySqlFixture implements AutoCloseable {
     Map<String, List<Map<String, Object>>> snapshot() {
         Map<String, List<Map<String, Object>>> result = new LinkedHashMap<>();
         for (String table : TABLES) result.put(table, db.queryForList("select * from " + table + " order by id"));
+        if (couponFixture) result.put("sms_coupon", db.queryForList("select * from sms_coupon order by id"));
         return result;
+    }
+
+    /** The original coupon table/mapper/owner guard, installed only by the new copy-resource cases. */
+    void installCouponOwnership() throws Exception {
+        assertFalse(couponFixture);
+        Path root = Paths.get("").toAbsolutePath();
+        if (!Files.exists(root.resolve("sql/base_schema_20260818.sql"))) root = root.getParent();
+        String baseline = Files.readString(root.resolve("sql/base_schema_20260818.sql"));
+        int start = baseline.indexOf("CREATE TABLE `sms_coupon` (");
+        int closing = baseline.indexOf("\n) ENGINE", start), end = baseline.indexOf(";\n", closing);
+        assertTrue(start >= 0 && closing > start && end > closing, "canonical coupon table required");
+        db.execute(baseline.substring(start, end + 1)); couponFixture = true;
+        SqlSessionFactoryBean factory = new SqlSessionFactoryBean(); factory.setDataSource(source);
+        factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
+        factory.setMapperLocations(new ClassPathResource("mapper/business/SmsCouponMapper.xml"));
+        SmsCouponServiceImpl couponReads = new SmsCouponServiceImpl();
+        ReflectionTestUtils.setField(couponReads, "smsCouponMapper", new SqlSessionTemplate(factory.getObject()).getMapper(SmsCouponMapper.class));
+        CouponRewardAuthorizationServiceImpl ownerGuard = new CouponRewardAuthorizationServiceImpl();
+        ReflectionTestUtils.setField(ownerGuard, "smsCouponService", couponReads);
+        ReflectionTestUtils.setField(org.springframework.test.util.AopTestUtils.getUltimateTargetObject(templates),
+                "couponRewardAuthorizationService", ownerGuard);
     }
 
     void assertUnchanged() { assertEquals(before, snapshot(), "all rows must roll back or remain unchanged"); }

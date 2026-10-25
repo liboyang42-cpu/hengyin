@@ -336,6 +336,35 @@ class TopicPublicationDeclarationsTest {
         verify(keys,never()).register(any(),any());verify(keys,never()).listCurrentDeclarations(any());
     }
 
+    private com.chengyinhub.business.service.ISmsCouponService couponOwner(long id,long owner) {
+        var lookup=mock(com.chengyinhub.business.service.ISmsCouponService.class);
+        SmsCoupon coupon=new SmsCoupon();coupon.setId(id);coupon.setMemberId(owner);coupon.setDelFlag(0);
+        when(lookup.selectSmsCouponById(id)).thenReturn(coupon);
+        var authorization=new com.chengyinhub.business.service.impl.CouponRewardAuthorizationServiceImpl();
+        ReflectionTestUtils.setField(authorization,"smsCouponService",lookup);
+        ReflectionTestUtils.setField(guard,"couponRewardAuthorizationService",authorization);return lookup;
+    }
+    @Test void formalOrdinaryTopicRejectsForeignConditionalRewardBeforeTheNoRuntimeEarlyReturn() {
+        template.setMemberId(7L);template.setRewardRulesJson("[{\"outcomeCode\":\"COMPLETED\",\"couponId\":401}]");
+        var lookup=couponOwner(401L,99L);forbidOrdinaryChildReads();
+        assertThrows(IllegalArgumentException.class,()->guard.assertThemeRuntimeReferences(topic,captured()));
+        verify(lookup).selectSmsCouponById(401L);verify(references,times(1)).currentForPublication(topic);verifyNoInteractions(keys);
+        assertNull(topic.getThemeRuntimeConfigJson());
+    }
+    @Test void formalRewardScopeUsesTheCurrentTemplateOwnerAndDoesNotEnableRuntimeForOrdinaryQuestions() {
+        topic.setMemberId(99L);template.setMemberId(7L);template.setCouponId(401L);
+        template.setRewardRulesJson("[{\"outcomeCode\":\"COMPLETED\",\"couponId\":401}]");
+        var lookup=couponOwner(401L,7L);forbidOrdinaryChildReads();
+        assertDoesNotThrow(()->guard.assertThemeRuntimeReferences(topic,captured()));
+        verify(lookup,times(1)).selectSmsCouponById(401L);verify(references,times(1)).currentForPublication(topic);verifyNoInteractions(keys);
+        assertNull(topic.getThemeRuntimeConfigJson());
+    }
+    @Test void ordinaryReadonlyPreviewDoesNotGainTheFormalCouponLookupOrWrite() {
+        template.setMemberId(7L);template.setCouponId(401L);var lookup=couponOwner(401L,99L);
+        assertDoesNotThrow(()->guard.assertThemeRuntimeReferences(topic));
+        verifyNoInteractions(lookup,keys);verify(references,never()).currentForPublication(any());
+    }
+
     private void forbidOrdinaryChildReads() {
         doThrow(new AssertionError("formal references used ordinary node snapshot")).when(nodes).selectCmsTopicNodeList(any());
         doThrow(new AssertionError("formal references used ordinary chapter snapshot")).when(chapters).selectCmsTopicChapterList(any());

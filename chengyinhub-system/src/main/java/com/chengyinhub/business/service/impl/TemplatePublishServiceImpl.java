@@ -25,6 +25,7 @@ import com.chengyinhub.business.service.IAuditTaskService;
 import com.chengyinhub.business.service.support.SensorChallengePolicy;
 import com.chengyinhub.business.service.support.PreferenceResultEvaluator;
 import com.chengyinhub.business.service.ICapabilityGuard;
+import com.chengyinhub.business.service.ICouponRewardAuthorizationService;
 import com.chengyinhub.business.service.support.AdvancedGameConfigValidator;
 import com.chengyinhub.business.service.support.RewardRulesValidator;
 import com.chengyinhub.common.constant.ValidationMethod;
@@ -57,6 +58,9 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
      *  留在 controller 就写不出行为测试(与 ICmsTopicService 那条注释同一理由)。 */
     @Autowired
     private ICapabilityGuard capabilityGuard;
+
+    @Autowired
+    private ICouponRewardAuthorizationService couponRewardAuthorizationService;
 
     @Autowired
     private ICmsMemberTemplateService memberTemplateService;
@@ -112,6 +116,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         // 1. 保存到我的模板表
         CmsMemberTemplate memberTemplate = new CmsMemberTemplate();
         copyPropertiesToMemberTemplate(request, memberTemplate);
+        assertTemplateRewardOwnership(memberId, memberTemplate, existing);
         mediaPublicationGuard.requireTemplate(memberId, memberTemplate, true);
         validatePreferenceForReview(memberTemplate);
 
@@ -197,6 +202,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         }
         normalizeAndValidateSensorFields(template);
         normalizeAdvancedConfig(template);
+        assertTemplateRewardOwnership(template.getMemberId(), template, null);
         mediaPublicationGuard.requireTemplate(template.getMemberId(), template, true);
         validatePreferenceForReview(template);
         Date now = new Date();
@@ -222,6 +228,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         normalizeAdvancedConfig(template);
         CmsMemberTemplate existing = requireActiveTemplate(template.getId());
         template.setMemberId(existing.getMemberId());
+        assertTemplateRewardOwnership(existing.getMemberId(), template, existing);
         mediaPublicationGuard.requireTemplate(existing.getMemberId(), template, true);
         template.setOriginalTemplateId(existing.getOriginalTemplateId());
         if (Integer.valueOf(ValidationMethod.PREFERENCE_GROUP).equals(template.getValidationMethod())
@@ -247,6 +254,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         CmsMemberTemplate template = requireActiveTemplate(templateId);
         validatePreferenceForReview(template);
         if (!Integer.valueOf(1).equals(template.getDraftStatus())) throw new ServiceException("草稿请先发布");
+        assertTemplateRewardOwnership(template.getMemberId(), template, null);
         mediaPublicationGuard.requireTemplate(template.getMemberId(), template, true);
         withdrawProjections(templateId, false, template.getUpdateBy());
         prepareForReview(template, template.getUpdateBy(), new Date(), false);
@@ -274,6 +282,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         }
         validatePreferenceForReview(template);
         rejectSameTitleByAuthor(template, memberId);
+        assertTemplateRewardOwnership(memberId, template, null);
         Date now = new Date();
         CmsTemplateLibrary projection = findLiveProjection(templateId);
         boolean creating = projection == null;
@@ -325,6 +334,9 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
                 || !Integer.valueOf(1).equals(canonical.getCheckStatus())) {
             throw new RuntimeException("玩法个人审核通过后才能编辑模板广场投影");
         }
+        assertRewardCouponsOwned(canonical.getMemberId(),
+                projection.getCouponId() == null ? stored.getCouponId() : projection.getCouponId(),
+                projection.getRewardRulesJson() == null ? stored.getRewardRulesJson() : projection.getRewardRulesJson());
         projection.setId(stored.getId());
         projection.setMemberTemplateId(stored.getMemberTemplateId());
         projection.setMemberId(stored.getMemberId());
@@ -429,6 +441,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         normalizeAdvancedConfig(request, existing, true);
         CmsMemberTemplate saved = new CmsMemberTemplate();
         copyPropertiesToMemberTemplate(request, saved);
+        assertTemplateRewardOwnership(memberId, saved, existing);
         mediaPublicationGuard.requireTemplate(memberId, saved, true);
         saved.setInteractionType(input.getInteractionType());
         saved.setId(existing == null ? null : existing.getId());
@@ -692,6 +705,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         Date now = new Date();
         CmsMemberTemplate t = new CmsMemberTemplate();
         copyPropertiesToMemberTemplate(request, t);
+        assertTemplateRewardOwnership(memberId, t, existingDraft);
         mediaPublicationGuard.requireTemplate(memberId, t, false);
         t.setMemberId(memberId);
         t.setUpdateBy(username);
@@ -724,6 +738,21 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             }
             return t.getId();
         }
+    }
+
+    private void assertTemplateRewardOwnership(Long owner, CmsMemberTemplate patch, CmsMemberTemplate existing) {
+        Long coupon = patch.getCouponId() == null && existing != null ? existing.getCouponId() : patch.getCouponId();
+        String rules = patch.getRewardRulesJson();
+        boolean clearsRules = patch.getClearFields() != null && patch.getClearFields().contains("rewardRulesJson");
+        if (rules == null && existing != null && !clearsRules) rules = existing.getRewardRulesJson();
+        assertRewardCouponsOwned(owner, coupon, rules);
+    }
+
+    private void assertRewardCouponsOwned(Long owner, Long coupon, String rules) {
+        Set<Long> ids = new LinkedHashSet<>();
+        if (coupon != null && coupon > 0L) ids.add(coupon);
+        ids.addAll(rewardRulesValidator.couponIds(rules));
+        for (Long id : ids) couponRewardAuthorizationService.assertOwnedRewardCoupon(id, owner);
     }
 
     /**
@@ -1237,6 +1266,11 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             }
             if (review == null || !review.matches(memberTemplateId, memberId, libraryTemplates)) {
                 throw new ServiceException("上架复检暂不可用，请刷新后重试", HttpStatus.BAD_REQUEST);
+            }
+            assertTemplateRewardOwnership(memberId, memberTemplate, null);
+            for (CmsTemplateLibrary projection : libraryTemplates) {
+                if (projection != null && Integer.valueOf(0).equals(projection.getDelFlag()))
+                    assertRewardCouponsOwned(memberId, projection.getCouponId(), projection.getRewardRulesJson());
             }
         }
         boolean hasActiveProjection = false;
