@@ -564,14 +564,14 @@ public class PlayNodeQueryApplication {
             // 章节背景旁白:玩家端进入本章自动播放(2026-09-04 起音频不再是 blocks 里的块)
             cm.put("audioUrl", originalChapterAudio.containsKey(c.getId()) ? originalChapterAudio.get(c.getId()) : c.getAudioUrl());
             if (resolveBlocks && ChapterBlockReadSupport.isRequiredChapter(c)) {
-                List<Map<String,Object>> blocks;
+                List<Object> blocks;
                 if (read.contentSnapshot == null) blocks=ChapterBlockReadSupport.resolveFromTopicNodes(c,read.nodeList);
                 else {
                     blocks=java.util.Collections.emptyList();
                     for (com.fasterxml.jackson.databind.JsonNode chapter : read.contentSnapshot.path("thoughtChapters"))
                         if (chapter.path("chapterId").asLong()==c.getId() && chapter.path("blocks").isArray()) {
                             blocks=new com.fasterxml.jackson.databind.ObjectMapper().convertValue(chapter.path("blocks"),
-                                    new com.fasterxml.jackson.core.type.TypeReference<List<Map<String,Object>>>() {});
+                                    new com.fasterxml.jackson.core.type.TypeReference<List<Object>>() {});
                             break;
                         }
                 }
