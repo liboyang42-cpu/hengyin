@@ -1,0 +1,2407 @@
+{
+  "status": "SOURCE_CONFIRMED_NOT_RUNTIME_REPRODUCED",
+  "sourceRef": "0e6b05e617f2099c5e0d32659ac3f99968ff7c3c",
+  "derivation": "Literal declarations in GROUPS/ALL, BASE_GAMES forms/maps, R5 REMOVED, KIT_PRIORITY/TYPE_OF/ACTION_OF and WXML/JSON bindings. Source-text extraction only; no JS/module/test execution.",
+  "authorEntries": [
+    {
+      "key": "album",
+      "label": "相册",
+      "section": "album",
+      "validationMethod": 0,
+      "runtimeType": "album",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-album",
+          "condition": "{{kit.type === 'album'}}",
+          "bindings": {
+            "shoot": "onShoot",
+            "submit": "onSubmit",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {},
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "display",
+      "contractNote": "模板预览复用 playkit-album；正式相册为 dream 展示块，不作为待通关节点",
+      "submitAdapter": "submitAlbum",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "qaText",
+      "label": "文字问答",
+      "section": "qa",
+      "mode": "TYPE",
+      "validationMethod": 0,
+      "runtimeType": "qa",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-qa",
+          "condition": "{{kit.type === 'qa'}}",
+          "bindings": {
+            "submit": "onSubmit",
+            "shoot": "onShoot",
+            "audio": "onAudio",
+            "continue": "onContinue",
+            "verdict": "onVerdict",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "qa:submit": "SUBMIT_QA"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "SUBMIT_QA",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "qaPick",
+      "label": "选项问答",
+      "section": "qa",
+      "mode": "PICK",
+      "validationMethod": 0,
+      "runtimeType": "qa",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-qa",
+          "condition": "{{kit.type === 'qa'}}",
+          "bindings": {
+            "submit": "onSubmit",
+            "shoot": "onShoot",
+            "audio": "onAudio",
+            "continue": "onContinue",
+            "verdict": "onVerdict",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "qa:submit": "SUBMIT_QA"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "SUBMIT_QA",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "qaShot",
+      "label": "拍照打卡",
+      "section": "qa",
+      "mode": "SHOT",
+      "validationMethod": 2,
+      "runtimeType": "qa",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-qa",
+          "condition": "{{kit.type === 'qa'}}",
+          "bindings": {
+            "submit": "onSubmit",
+            "shoot": "onShoot",
+            "audio": "onAudio",
+            "continue": "onContinue",
+            "verdict": "onVerdict",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "qa:submit": "SUBMIT_QA"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "contractNote": "复用 QA SHOT；shoot 先上传再提交，不经过一步直发动作表",
+      "submitAdapter": "_submitKitPhoto",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "branch",
+      "label": "分支剧情",
+      "section": "branch",
+      "validationMethod": 0,
+      "runtimeType": "branch",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-branch",
+          "condition": "{{kit.type === 'branch'}}",
+          "bindings": {
+            "choose": "onChoose",
+            "verdict": "onVerdict",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "branch:choose": "CHOOSE"
+      },
+      "newR5Selection": false,
+      "legacyReadOnly": true,
+      "scope": "legacy-read-only",
+      "contractNote": "旧独立 branch 只读保留；R5 outcomeRules.version=1 的本站反馈不是新独立基础玩法",
+      "submitAdapter": "CHOOSE",
+      "newEditorSelection": "legacy read-only",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "sort",
+      "label": "排序",
+      "section": "sort",
+      "validationMethod": 0,
+      "runtimeType": "sort",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-sort",
+          "condition": "{{kit.type === 'sort'}}",
+          "bindings": {
+            "submit": "onSubmit",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "sort:submit": "SUBMIT_SORT"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "SUBMIT_SORT",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "match",
+      "label": "连线",
+      "section": "match",
+      "validationMethod": 0,
+      "runtimeType": "match",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-match",
+          "condition": "{{kit.type === 'match'}}",
+          "bindings": {
+            "submit": "onSubmit",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "match:submit": "SUBMIT_MATCH"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "SUBMIT_MATCH",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "classify",
+      "label": "分类",
+      "section": "classify",
+      "validationMethod": 0,
+      "runtimeType": "classify",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-classify",
+          "condition": "{{kit.type === 'classify'}}",
+          "bindings": {
+            "submit": "onSubmit",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "classify:submit": "SUBMIT_CLASSIFY"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "SUBMIT_CLASSIFY",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "estimate",
+      "label": "猜数字",
+      "section": "estimate",
+      "validationMethod": 8,
+      "runtimeType": "estimate",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-estimate",
+          "condition": "{{kit.type === 'estimate'}}",
+          "bindings": {
+            "submit": "onSubmit",
+            "verdict": "onVerdict",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "estimate:submit": "SUBMIT_ESTIMATE"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "SUBMIT_ESTIMATE",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "pricePair",
+      "label": "猜图",
+      "section": "pricePair",
+      "validationMethod": 9,
+      "runtimeType": "pricepair",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-pricepair",
+          "condition": "{{kit.type === 'pricepair'}}",
+          "bindings": {
+            "submit": "onSubmit",
+            "verdict": "onVerdict",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "pricepair:submit": "SUBMIT_PRICE_PAIR"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "SUBMIT_PRICE_PAIR",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "hidden",
+      "label": "找东西",
+      "section": "hiddenObject",
+      "validationMethod": 10,
+      "runtimeType": "hidden",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-hidden",
+          "condition": "{{kit.type === 'hidden'}}",
+          "bindings": {
+            "submit": "onSubmit",
+            "verdict": "onVerdict",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "hidden:submit": "SUBMIT_HIDDEN_OBJECT"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "SUBMIT_HIDDEN_OBJECT",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "predict",
+      "label": "竞猜",
+      "section": "predict",
+      "validationMethod": 0,
+      "runtimeType": "predict",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-predict",
+          "condition": "{{kit.type === 'predict'}}",
+          "bindings": {
+            "submit": "onSubmit",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "predict:submit": "SUBMIT_PREDICT"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "SUBMIT_PREDICT",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "random",
+      "label": "抽卡",
+      "section": "random",
+      "validationMethod": 0,
+      "runtimeType": "random",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-random",
+          "condition": "{{kit.type === 'random'}}",
+          "bindings": {
+            "draw": "onDraw",
+            "drawn": "onDrawn",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "random:draw": "DRAW"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "DRAW",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "profile",
+      "label": "角色建档",
+      "section": "profile",
+      "validationMethod": 0,
+      "runtimeType": "profile",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-profile",
+          "condition": "{{kit.type === 'profile'}}",
+          "bindings": {
+            "submit": "onSubmit",
+            "avatar": "onAvatar",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "profile:submit": "SUBMIT_PROFILE"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "SUBMIT_PROFILE",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "note",
+      "label": "留言",
+      "section": "note",
+      "validationMethod": 0,
+      "runtimeType": "note",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-note",
+          "condition": "{{kit.type === 'note'}}",
+          "bindings": {
+            "submit": "onSubmit",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "note:submit": "SUBMIT_NOTE"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "SUBMIT_NOTE",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "objectCard",
+      "label": "拍物成卡",
+      "section": "photoCheck",
+      "mode": "CARD",
+      "validationMethod": 0,
+      "runtimeType": "photocheck",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-objectcard",
+          "condition": "{{kit.type === 'photocheck' && kit.mode === 'CARD' && !inline}}",
+          "bindings": {
+            "shoot": "onShoot",
+            "close": "onClose"
+          }
+        },
+        {
+          "tag": "cy-playkit-photocheck",
+          "condition": "{{kit.type === 'photocheck'}}",
+          "bindings": {
+            "shoot": "onShoot",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {},
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "contractNote": "photoCheck.mode=CARD：整屏 playkit-objectcard，inline 为 playkit-photocheck；不是新判题引擎",
+      "submitAdapter": "_submitKitPhoto -> SUBMIT_PHOTO_CHECK",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "bingo",
+      "label": "九宫格",
+      "section": "",
+      "validationMethod": 0,
+      "runtimeType": null,
+      "rendererBindings": [],
+      "serverActions": {},
+      "newR5Selection": false,
+      "legacyReadOnly": false,
+      "scope": "theme-level",
+      "contractNote": "目录 section 为空；R5 节点选择禁用，在主题里配置；运行视图仍可投影 bingo",
+      "submitAdapter": "服务端状态投影，verdict 为页面本地事件，不登记虚构提交动作",
+      "newEditorSelection": "not a selectable R5 node form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "steps",
+      "label": "计步挑战",
+      "section": "steps",
+      "validationMethod": 0,
+      "runtimeType": "walk",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-walk",
+          "condition": "{{kit.type === 'walk'}}",
+          "bindings": {
+            "goalchange": "onGoalChange",
+            "sync": "onSync",
+            "claim": "onClaim",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "walk:sync": "SUBMIT_STEPS",
+        "walk:claim": "SUBMIT_STEPS"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "SUBMIT_STEPS",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "react",
+      "label": "变色就点",
+      "section": "reaction",
+      "validationMethod": 0,
+      "runtimeType": "reaction",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-reaction",
+          "condition": "{{kit.type === 'reaction'}}",
+          "bindings": {
+            "start": "onStart",
+            "submit": "onSubmit",
+            "verdict": "onVerdict",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "reaction:start": "START_CHALLENGE",
+        "reaction:submit": "SUBMIT_REACTION"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "START_CHALLENGE, SUBMIT_REACTION",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "shake",
+      "label": "弹球",
+      "section": "ballShake",
+      "validationMethod": 0,
+      "runtimeType": "ballshake",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-ballshake",
+          "condition": "{{kit.type === 'ballshake'}}",
+          "bindings": {
+            "start": "onStart",
+            "submit": "onSubmit",
+            "verdict": "onVerdict",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "ballshake:start": "START_CHALLENGE",
+        "ballshake:submit": "SUBMIT_BALL_SHAKE"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "START_CHALLENGE, SUBMIT_BALL_SHAKE",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "quiet",
+      "label": "安静挑战",
+      "section": "quietHold",
+      "validationMethod": 0,
+      "runtimeType": "quiethold",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-quiethold",
+          "condition": "{{kit.type === 'quiethold'}}",
+          "bindings": {
+            "start": "onStart",
+            "submit": "onSubmit",
+            "verdict": "onVerdict",
+            "micdenied": "onMicDenied",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "quiethold:start": "START_CHALLENGE",
+        "quiethold:submit": "SUBMIT_QUIET_HOLD"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "START_CHALLENGE, SUBMIT_QUIET_HOLD",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "compass",
+      "label": "罗盘指向",
+      "section": "compass",
+      "validationMethod": 0,
+      "runtimeType": "compass",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-compass",
+          "condition": "{{kit.type === 'compass'}}",
+          "bindings": {
+            "start": "onStart",
+            "submit": "onSubmit",
+            "verdict": "onVerdict",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "compass:start": "START_CHALLENGE",
+        "compass:submit": "SUBMIT_COMPASS"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "START_CHALLENGE, SUBMIT_COMPASS",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "shout",
+      "label": "喊一嗓子",
+      "section": "shout",
+      "validationMethod": 0,
+      "runtimeType": "shout",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-shout",
+          "condition": "{{kit.type === 'shout'}}",
+          "bindings": {
+            "start": "onStart",
+            "submit": "onSubmit",
+            "verdict": "onVerdict",
+            "micdenied": "onMicDenied",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "shout:start": "START_CHALLENGE",
+        "shout:submit": "SUBMIT_SHOUT"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "START_CHALLENGE, SUBMIT_SHOUT",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "countdown",
+      "label": "倒计时",
+      "section": "countdown",
+      "validationMethod": 0,
+      "runtimeType": "countdown",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-countdown",
+          "condition": "{{kit.type === 'countdown'}}",
+          "bindings": {
+            "start": "onStart",
+            "finish": "onFinish",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "countdown:start": "START_CHALLENGE",
+        "countdown:finish": "SUBMIT_COUNTDOWN"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "START_CHALLENGE, SUBMIT_COUNTDOWN",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "stopwatch",
+      "label": "精准停表",
+      "section": "stopwatch",
+      "validationMethod": 0,
+      "runtimeType": "stopwatch",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-stopwatch",
+          "condition": "{{kit.type === 'stopwatch'}}",
+          "bindings": {
+            "start": "onStart",
+            "submit": "onSubmit",
+            "verdict": "onVerdict",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "stopwatch:start": "START_CHALLENGE",
+        "stopwatch:submit": "SUBMIT_STOPWATCH"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "START_CHALLENGE, SUBMIT_STOPWATCH",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "photoCheck",
+      "label": "拍照审核",
+      "section": "photoCheck",
+      "validationMethod": 0,
+      "runtimeType": "photocheck",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-objectcard",
+          "condition": "{{kit.type === 'photocheck' && kit.mode === 'CARD' && !inline}}",
+          "bindings": {
+            "shoot": "onShoot",
+            "close": "onClose"
+          }
+        },
+        {
+          "tag": "cy-playkit-photocheck",
+          "condition": "{{kit.type === 'photocheck'}}",
+          "bindings": {
+            "shoot": "onShoot",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {},
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "contractNote": "拍照后先上传再向原会话提交；临时路径不能作为结果",
+      "submitAdapter": "_submitKitPhoto -> SUBMIT_PHOTO_CHECK",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "check",
+      "label": "D20",
+      "section": "check",
+      "validationMethod": 0,
+      "runtimeType": null,
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-journey-check",
+          "condition": "{{kit.type === 'journeycheck'}}",
+          "bindings": {
+            "action": "onCheckAction",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {},
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "encounter",
+      "contractNote": "journey-check：玩家页直接挂卡；编辑预览通过 playkit；不同于 diceRoll/d20",
+      "submitAdapter": "onJourneyCheckAction -> /api/play/check/roll|reroll|settle; r5 -> _r5CheckAction",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "d20",
+      "label": "D20 加值",
+      "section": "diceRoll",
+      "mode": "d20",
+      "validationMethod": 0,
+      "runtimeType": "diceroll",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-diceroll",
+          "condition": "{{kit.type === 'diceroll'}}",
+          "bindings": {
+            "roll": "onRoll",
+            "count": "onCount",
+            "settled": "onSettled",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "diceroll:roll": "ROLL_DICE"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "ROLL_DICE",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "typeIn",
+      "label": "输入挑战",
+      "section": "typeIn",
+      "validationMethod": 0,
+      "runtimeType": "typein",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-typein",
+          "condition": "{{kit.type === 'typein'}}",
+          "bindings": {
+            "start": "onStart",
+            "submit": "onSubmit",
+            "refresh": "onRefresh",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "typein:start": "START_CHALLENGE",
+        "typein:submit": "SUBMIT_TYPE_IN"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "START_CHALLENGE, SUBMIT_TYPE_IN",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "coin",
+      "label": "抛硬币",
+      "section": "coinFlip",
+      "validationMethod": 0,
+      "runtimeType": "coinflip",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-coinflip",
+          "condition": "{{kit.type === 'coinflip'}}",
+          "bindings": {
+            "flip": "onFlip",
+            "settled": "onSettled",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "coinflip:flip": "FLIP_COIN"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "FLIP_COIN",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "dice",
+      "label": "掷骰子",
+      "section": "diceRoll",
+      "mode": "d6",
+      "validationMethod": 0,
+      "runtimeType": "diceroll",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-diceroll",
+          "condition": "{{kit.type === 'diceroll'}}",
+          "bindings": {
+            "roll": "onRoll",
+            "count": "onCount",
+            "settled": "onSettled",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "diceroll:roll": "ROLL_DICE"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "ROLL_DICE",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "scan",
+      "label": "扫码参与",
+      "section": "scan",
+      "validationMethod": 4,
+      "runtimeType": "scan",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-scan",
+          "condition": "{{kit.type === 'scan'}}",
+          "bindings": {
+            "scanned": "onScanned",
+            "audio": "onAudio",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "scan:scanned": "SUBMIT_SCAN"
+      },
+      "newR5Selection": false,
+      "legacyReadOnly": false,
+      "scope": "participation",
+      "contractNote": "findGame 可读旧 key；R5 基础选择列表不列出，原扫码提交合同保留",
+      "submitAdapter": "SUBMIT_SCAN",
+      "newEditorSelection": "not a selectable R5 node form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "blindTaste",
+      "section": "blindTaste",
+      "label": "闭眼盲品",
+      "runtimeType": "blindtaste",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-blindtaste",
+          "condition": "{{kit.type === 'blindtaste'}}",
+          "bindings": {
+            "answer": "onAnswer",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "blindtaste:answer": "SUBMIT_BLIND_TASTE"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "SUBMIT_BLIND_TASTE",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    },
+    {
+      "key": "dailySign",
+      "section": "dailySign",
+      "label": "今日城市签",
+      "runtimeType": "dailysign",
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-dailysign",
+          "condition": "{{kit.type === 'dailysign'}}",
+          "bindings": {
+            "accept": "onAccept",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "dailysign:accept": "CLAIM_DAILY_SIGN"
+      },
+      "newR5Selection": true,
+      "legacyReadOnly": false,
+      "scope": "node-game",
+      "submitAdapter": "CLAIM_DAILY_SIGN",
+      "newEditorSelection": "R5 existing form",
+      "source": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js#GROUPS/ALL/BASE_GAMES/findGame"
+    }
+  ],
+  "runtimeSections": [
+    "qa",
+    "branch",
+    "predict",
+    "random",
+    "estimate",
+    "pricePair",
+    "sort",
+    "match",
+    "classify",
+    "hiddenObject",
+    "scan",
+    "profile",
+    "photoCheck",
+    "album",
+    "note",
+    "typeIn",
+    "coinFlip",
+    "diceRoll",
+    "reaction",
+    "ballShake",
+    "quietHold",
+    "compass",
+    "shout",
+    "countdown",
+    "stopwatch",
+    "blindTaste",
+    "diyName",
+    "silentOrder",
+    "steps",
+    "slowTask",
+    "musicCorner",
+    "dailySign",
+    "timeWindow",
+    "bingo"
+  ],
+  "runtimeTypeOf": {
+    "qa": "qa",
+    "scan": "scan",
+    "branch": "branch",
+    "estimate": "estimate",
+    "pricePair": "pricepair",
+    "sort": "sort",
+    "match": "match",
+    "classify": "classify",
+    "hiddenObject": "hidden",
+    "predict": "predict",
+    "random": "random",
+    "blindTaste": "blindtaste",
+    "diyName": "diyname",
+    "silentOrder": "silentorder",
+    "steps": "walk",
+    "musicCorner": "musiccorner",
+    "dailySign": "dailysign",
+    "timeWindow": "timewindow",
+    "slowTask": "slowtask",
+    "coinFlip": "coinflip",
+    "diceRoll": "diceroll",
+    "reaction": "reaction",
+    "ballShake": "ballshake",
+    "quietHold": "quiethold",
+    "compass": "compass",
+    "shout": "shout",
+    "countdown": "countdown",
+    "stopwatch": "stopwatch",
+    "profile": "profile",
+    "photoCheck": "photocheck",
+    "album": "album",
+    "note": "note",
+    "typeIn": "typein",
+    "bingo": "bingo"
+  },
+  "serverActions": {
+    "blindtaste:answer": "SUBMIT_BLIND_TASTE",
+    "diyname:submit": "SUBMIT_DIY_NAME",
+    "walk:sync": "SUBMIT_STEPS",
+    "walk:claim": "SUBMIT_STEPS",
+    "dailysign:accept": "CLAIM_DAILY_SIGN",
+    "timewindow:subscribe": "SUBSCRIBE_TIME_WINDOW",
+    "slowtask:slowstart": "START_SLOW_TASK",
+    "slowtask:slowclaim": "CLAIM_SLOW_TASK",
+    "coinflip:flip": "FLIP_COIN",
+    "diceroll:roll": "ROLL_DICE",
+    "estimate:submit": "SUBMIT_ESTIMATE",
+    "pricepair:submit": "SUBMIT_PRICE_PAIR",
+    "sort:submit": "SUBMIT_SORT",
+    "match:submit": "SUBMIT_MATCH",
+    "classify:submit": "SUBMIT_CLASSIFY",
+    "hidden:submit": "SUBMIT_HIDDEN_OBJECT",
+    "predict:submit": "SUBMIT_PREDICT",
+    "reaction:start": "START_CHALLENGE",
+    "ballshake:start": "START_CHALLENGE",
+    "quiethold:start": "START_CHALLENGE",
+    "shout:start": "START_CHALLENGE",
+    "countdown:start": "START_CHALLENGE",
+    "stopwatch:start": "START_CHALLENGE",
+    "compass:start": "START_CHALLENGE",
+    "reaction:submit": "SUBMIT_REACTION",
+    "ballshake:submit": "SUBMIT_BALL_SHAKE",
+    "quiethold:submit": "SUBMIT_QUIET_HOLD",
+    "compass:submit": "SUBMIT_COMPASS",
+    "shout:submit": "SUBMIT_SHOUT",
+    "countdown:finish": "SUBMIT_COUNTDOWN",
+    "stopwatch:submit": "SUBMIT_STOPWATCH",
+    "random:draw": "DRAW",
+    "branch:choose": "CHOOSE",
+    "qa:submit": "SUBMIT_QA",
+    "scan:scanned": "SUBMIT_SCAN",
+    "profile:submit": "SUBMIT_PROFILE",
+    "note:submit": "SUBMIT_NOTE",
+    "typein:start": "START_CHALLENGE",
+    "typein:submit": "SUBMIT_TYPE_IN"
+  },
+  "rendererBindings": [
+    {
+      "tag": "cy-playkit-timewindow",
+      "condition": "{{kit.type === 'timewindow'}}",
+      "bindings": {
+        "subscribe": "onSubscribe",
+        "open": "onOpen",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-blindtaste",
+      "condition": "{{kit.type === 'blindtaste'}}",
+      "bindings": {
+        "answer": "onAnswer",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-silentorder",
+      "condition": "{{kit.type === 'silentorder'}}",
+      "bindings": {
+        "giveup": "onGiveUp",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-diyname",
+      "condition": "{{kit.type === 'diyname'}}",
+      "bindings": {
+        "namechange": "onNameChange",
+        "submit": "onSubmit",
+        "close": "onClose",
+        "requestclose": "onRequestClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-musiccorner",
+      "condition": "{{kit.type === 'musiccorner'}}",
+      "bindings": {
+        "toggle": "onToggle",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-steps",
+      "condition": "{{kit.type === 'steps'}}",
+      "bindings": {
+        "refresh": "onRefresh",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-dailysign",
+      "condition": "{{kit.type === 'dailysign'}}",
+      "bindings": {
+        "accept": "onAccept",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-slowtask",
+      "condition": "{{kit.type === 'slowtask'}}",
+      "bindings": {
+        "start": "onSlowStart",
+        "claim": "onSlowClaim",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-coinflip",
+      "condition": "{{kit.type === 'coinflip'}}",
+      "bindings": {
+        "flip": "onFlip",
+        "settled": "onSettled",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-diceroll",
+      "condition": "{{kit.type === 'diceroll'}}",
+      "bindings": {
+        "roll": "onRoll",
+        "count": "onCount",
+        "settled": "onSettled",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-reaction",
+      "condition": "{{kit.type === 'reaction'}}",
+      "bindings": {
+        "start": "onStart",
+        "submit": "onSubmit",
+        "verdict": "onVerdict",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-ballshake",
+      "condition": "{{kit.type === 'ballshake'}}",
+      "bindings": {
+        "start": "onStart",
+        "submit": "onSubmit",
+        "verdict": "onVerdict",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-quiethold",
+      "condition": "{{kit.type === 'quiethold'}}",
+      "bindings": {
+        "start": "onStart",
+        "submit": "onSubmit",
+        "verdict": "onVerdict",
+        "micdenied": "onMicDenied",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-compass",
+      "condition": "{{kit.type === 'compass'}}",
+      "bindings": {
+        "start": "onStart",
+        "submit": "onSubmit",
+        "verdict": "onVerdict",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-shout",
+      "condition": "{{kit.type === 'shout'}}",
+      "bindings": {
+        "start": "onStart",
+        "submit": "onSubmit",
+        "verdict": "onVerdict",
+        "micdenied": "onMicDenied",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-countdown",
+      "condition": "{{kit.type === 'countdown'}}",
+      "bindings": {
+        "start": "onStart",
+        "finish": "onFinish",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-stopwatch",
+      "condition": "{{kit.type === 'stopwatch'}}",
+      "bindings": {
+        "start": "onStart",
+        "submit": "onSubmit",
+        "verdict": "onVerdict",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-qa",
+      "condition": "{{kit.type === 'qa'}}",
+      "bindings": {
+        "submit": "onSubmit",
+        "shoot": "onShoot",
+        "audio": "onAudio",
+        "continue": "onContinue",
+        "verdict": "onVerdict",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-branch",
+      "condition": "{{kit.type === 'branch'}}",
+      "bindings": {
+        "choose": "onChoose",
+        "verdict": "onVerdict",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-estimate",
+      "condition": "{{kit.type === 'estimate'}}",
+      "bindings": {
+        "submit": "onSubmit",
+        "verdict": "onVerdict",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-pricepair",
+      "condition": "{{kit.type === 'pricepair'}}",
+      "bindings": {
+        "submit": "onSubmit",
+        "verdict": "onVerdict",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-hidden",
+      "condition": "{{kit.type === 'hidden'}}",
+      "bindings": {
+        "submit": "onSubmit",
+        "verdict": "onVerdict",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-predict",
+      "condition": "{{kit.type === 'predict'}}",
+      "bindings": {
+        "submit": "onSubmit",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-random",
+      "condition": "{{kit.type === 'random'}}",
+      "bindings": {
+        "draw": "onDraw",
+        "drawn": "onDrawn",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-bingo",
+      "condition": "{{kit.type === 'bingo'}}",
+      "bindings": {
+        "verdict": "onVerdict",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-scan",
+      "condition": "{{kit.type === 'scan'}}",
+      "bindings": {
+        "scanned": "onScanned",
+        "audio": "onAudio",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-walk",
+      "condition": "{{kit.type === 'walk'}}",
+      "bindings": {
+        "goalchange": "onGoalChange",
+        "sync": "onSync",
+        "claim": "onClaim",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-profile",
+      "condition": "{{kit.type === 'profile'}}",
+      "bindings": {
+        "submit": "onSubmit",
+        "avatar": "onAvatar",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-objectcard",
+      "condition": "{{kit.type === 'photocheck' && kit.mode === 'CARD' && !inline}}",
+      "bindings": {
+        "shoot": "onShoot",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-photocheck",
+      "condition": "{{kit.type === 'photocheck'}}",
+      "bindings": {
+        "shoot": "onShoot",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-note",
+      "condition": "{{kit.type === 'note'}}",
+      "bindings": {
+        "submit": "onSubmit",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-typein",
+      "condition": "{{kit.type === 'typein'}}",
+      "bindings": {
+        "start": "onStart",
+        "submit": "onSubmit",
+        "refresh": "onRefresh",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-sort",
+      "condition": "{{kit.type === 'sort'}}",
+      "bindings": {
+        "submit": "onSubmit",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-match",
+      "condition": "{{kit.type === 'match'}}",
+      "bindings": {
+        "submit": "onSubmit",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-classify",
+      "condition": "{{kit.type === 'classify'}}",
+      "bindings": {
+        "submit": "onSubmit",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-journey-check",
+      "condition": "{{kit.type === 'journeycheck'}}",
+      "bindings": {
+        "action": "onCheckAction",
+        "close": "onClose"
+      }
+    },
+    {
+      "tag": "cy-playkit-album",
+      "condition": "{{kit.type === 'album'}}",
+      "bindings": {
+        "shoot": "onShoot",
+        "submit": "onSubmit",
+        "close": "onClose"
+      }
+    }
+  ],
+  "componentRegistrations": {
+    "cy-sheet": "/components/cy/sheet/index",
+    "cy-btn": "/components/cy/btn/index",
+    "cy-playkit-timewindow": "/pages/play/components/playkit-timewindow/index",
+    "cy-playkit-blindtaste": "/pages/play/components/playkit-blindtaste/index",
+    "cy-playkit-silentorder": "/pages/play/components/playkit-silentorder/index",
+    "cy-playkit-diyname": "/pages/play/components/playkit-diyname/index",
+    "cy-playkit-musiccorner": "/pages/play/components/playkit-musiccorner/index",
+    "cy-playkit-steps": "/pages/play/components/playkit-steps/index",
+    "cy-playkit-dailysign": "/pages/play/components/playkit-dailysign/index",
+    "cy-playkit-slowtask": "/pages/play/components/playkit-slowtask/index",
+    "cy-playkit-coinflip": "/pages/play/components/playkit-coinflip/index",
+    "cy-playkit-diceroll": "/pages/play/components/playkit-diceroll/index",
+    "cy-playkit-reaction": "/pages/play/components/playkit-reaction/index",
+    "cy-playkit-ballshake": "/pages/play/components/playkit-ballshake/index",
+    "cy-playkit-quiethold": "/pages/play/components/playkit-quiethold/index",
+    "cy-playkit-compass": "/pages/play/components/playkit-compass/index",
+    "cy-playkit-shout": "/pages/play/components/playkit-shout/index",
+    "cy-playkit-countdown": "/pages/play/components/playkit-countdown/index",
+    "cy-playkit-stopwatch": "/pages/play/components/playkit-stopwatch/index",
+    "cy-playkit-qa": "/pages/play/components/playkit-qa/index",
+    "cy-playkit-branch": "/pages/play/components/playkit-branch/index",
+    "cy-playkit-estimate": "/pages/play/components/playkit-estimate/index",
+    "cy-playkit-pricepair": "/pages/play/components/playkit-pricepair/index",
+    "cy-playkit-hidden": "/pages/play/components/playkit-hidden/index",
+    "cy-playkit-predict": "/pages/play/components/playkit-predict/index",
+    "cy-playkit-random": "/pages/play/components/playkit-random/index",
+    "cy-playkit-bingo": "/pages/play/components/playkit-bingo/index",
+    "cy-playkit-scan": "/pages/play/components/playkit-scan/index",
+    "cy-playkit-walk": "/pages/play/components/playkit-walk/index",
+    "cy-playkit-profile": "/pages/play/components/playkit-profile/index",
+    "cy-playkit-objectcard": "/pages/play/components/playkit-objectcard/index",
+    "cy-playkit-photocheck": "/pages/play/components/playkit-photocheck/index",
+    "cy-playkit-note": "/pages/play/components/playkit-note/index",
+    "cy-playkit-typein": "/pages/play/components/playkit-typein/index",
+    "cy-playkit-sort": "/pages/play/components/playkit-sort/index",
+    "cy-playkit-match": "/pages/play/components/playkit-match/index",
+    "cy-playkit-classify": "/pages/play/components/playkit-classify/index",
+    "cy-playkit-album": "/pages/play/components/playkit-album/index",
+    "cy-playkit-journey-check": "/pages/play/components/playkit-journey-check/index"
+  },
+  "legacyReadOnlySections": [
+    "branch",
+    "silentOrder",
+    "diyName",
+    "musicCorner",
+    "slowTask",
+    "multiplayer"
+  ],
+  "sources": [
+    {
+      "path": "chengyinhub-xcx/pages/play/components/advanced-game/index.js",
+      "gitBlob": "ef23d7dc80d66a130fc269bdde362b062d23fdde",
+      "sha256": "263684c469708279897cd512600e1dad1d653fe1ce4aafe9e94a59b25ee9deb2"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-album/index.js",
+      "gitBlob": "be8c366e3187bf400726d82973927580ff7c2c16",
+      "sha256": "176cf1df4fc4fa867f23f5dbfea675db5e2c511c2d753fd30666ccb3faeceb6e"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-ballshake/index.js",
+      "gitBlob": "1f4ba17d8cd35968cb15b64af17d5063dc3bc4d9",
+      "sha256": "cb011d664719ecb847388f40b858683b3621c2eb32965842a0b00f74c6f17072"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-bingo/index.js",
+      "gitBlob": "c3c25d7d577f4991f3e93743a052c586dbe79152",
+      "sha256": "64bb9e5e4d7ea0b03c83fcea74b81c8984d8d0d908e9ab1b974714cda4e5d712"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-blindtaste/index.js",
+      "gitBlob": "330c169cce0984d1e080e41405d58d06b1cd0bf8",
+      "sha256": "2f401300cb1fd74374d0e4ece6a98f2a150a74325fec68722253e2963d24737f"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-branch/index.js",
+      "gitBlob": "a1aefd6eada18b3dd320b603fd983e92d0c69965",
+      "sha256": "5d46543b594eca61507cae69752eafc8eebd5aa63066434f7fc187738e0b91e0"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-classify/index.js",
+      "gitBlob": "771ea6397a07e361b8628c39f959371fb6cff506",
+      "sha256": "b8ebdc361beffc7bdc2b0188332a66f9825b51f6f7236b9f0b64d3f16dd1d454"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-coinflip/index.js",
+      "gitBlob": "c0b19b103e28d93382171b5ab21676cfdee96ea0",
+      "sha256": "4d15d19a74fcd7cf87f290e5e4fbd15ddf6ff99c2f9de3aa983fb8d77f278066"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-compass/index.js",
+      "gitBlob": "2478571b539352856e4c2eccb98e4d39fc89e79d",
+      "sha256": "453fe18fdcdfcf3688c0aa68286195b473b1d514158991073f0c27caa828647a"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-countdown/index.js",
+      "gitBlob": "e03b4e3260403e015d6ea19387b6e90874883195",
+      "sha256": "3c8cee0a1c7241ee59c1c61359856612764eca8ea1b34074228d91b9cb275b2c"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-dailysign/index.js",
+      "gitBlob": "24f24c6a7d943c958268d05a26bd2070d5f0ec81",
+      "sha256": "f5c2d119e295dbb289b546d05c6edddfbc541b5e0e1283cf8cf810cf7d57bea0"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-diceroll/index.js",
+      "gitBlob": "493b3be710c8e4f28798caf499814f0f95fcf1fe",
+      "sha256": "5da4c254e3c358955c689dfb61386b86d4446798e674b2a95a29b78821c6f7b4"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-diyname/index.js",
+      "gitBlob": "c6c6e725c2498e0d82b0e1460223b565a898bc0e",
+      "sha256": "7b17cba9faf5cd14d467c57e2b1a53b35ef5ec39ca73e56e4c010e3dc81bff05"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-estimate/index.js",
+      "gitBlob": "11d1e5e58c4e8127690b5baf68c19c20b87213ed",
+      "sha256": "de312c037db528a97e1dfba016adf3ff424e04bd91c622c4dd14ba33cfc16c8b"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-hidden/index.js",
+      "gitBlob": "b3ba38f89585fef3c27f963e873919472c4d24a8",
+      "sha256": "d5beec2d1c5a765f60d5a095735de584a1488c5079e1b7ec1ba72178fd8068a5"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-journey-check/index.js",
+      "gitBlob": "c4ebe97cf8b705acced08b2d836c8188c782c597",
+      "sha256": "6e30cb5a685c241e1dbeef452de0ac1fc8b297f0b9fc704d8d4a68ae10e0ced7"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-match/index.js",
+      "gitBlob": "ff1d134117ea0ed4ba38033fdc51c4b7d2dafcaf",
+      "sha256": "7167aef0e9d142d39a73d0d0e68636de5a807b765339fedf2d9f6ca2f05650c1"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-musiccorner/index.js",
+      "gitBlob": "d97a586f2bd18542e05cff6e34f0b427feed66dc",
+      "sha256": "ebdd20ffec8eed18085b98b0bc5f20a38d5182e16089759463f6f790e4295809"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-note/index.js",
+      "gitBlob": "9c0e357fed013c48cc9259cdcfde48f16b930f3e",
+      "sha256": "017a5eb969e5d3057f64315fffa8e4b00a6fccff0c990e03a114ea1250b656ac"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-objectcard/index.js",
+      "gitBlob": "46a89f485b5936045545f38caf96936b4cc01c4d",
+      "sha256": "5af75213f9e7451c3ee254d0f0024a176f34bfd6f2807d6626a55f38d5cd5033"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-photocheck/index.js",
+      "gitBlob": "7bc5c3966c3f1a64f91b6579bbc38c2664090630",
+      "sha256": "55e72e679111d37b568a3be94efe4a827d365e0577ea3e08042aa96fa9b3d458"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-predict/index.js",
+      "gitBlob": "4fd9533c345e2db985ab4d752dd6e1d783fe6b7e",
+      "sha256": "2b0cac0167fb4a2f023eee24936503c5912ce7389fb7e74eb339dabd5b5d323a"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-pricepair/index.js",
+      "gitBlob": "b137783d60a65040a84904ecad755aa2596db5ff",
+      "sha256": "392453b151e9009228eca60244546019bbd1f70c1c3bc7c3d7e437311133c076"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-profile/index.js",
+      "gitBlob": "669b4175bbe8f56ad0fedecb94bd6e4caa1aeb6f",
+      "sha256": "0b805fd1ed582e717ec7fa2834e3667a783e447b790b98cd861b2acc1300d226"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-qa/index.js",
+      "gitBlob": null,
+      "sha256": "640569a4a89f2eefa8791c0a056e5aad37b9f66b1eebec1923f007c96edd246d"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-quiethold/index.js",
+      "gitBlob": "851ca7f0ead4243c7fd42de2f5dfcaf2d1a7e492",
+      "sha256": "51741a21d316a2dae6b104dbae592e66df34838cecdf3cae6d2d54426d83d581"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-random/index.js",
+      "gitBlob": "f6320e131a6ad691bf7fd080d508c85168083d16",
+      "sha256": "6cd56dd6b9b86f17c6ea886d7105cb0217fb5942f1135940bea5b6d1c40d07c1"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-reaction/index.js",
+      "gitBlob": "a597f1777981a08d13d51d6a63e11c72306db7cb",
+      "sha256": "8a273751f01995d48af590d69963b1396f565a9536e43afd145d43433cf22878"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-scan/index.js",
+      "gitBlob": "cc3d15831654281e8178ae10c6a07cdcda077b52",
+      "sha256": "71a75c4e31fad2ad1a44ad52df37675be9d5954c9c3c25d239cc1af96f4a0ff7"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-shout/index.js",
+      "gitBlob": "b5281bc74bc507a6a75e0c653652e5008bd09e23",
+      "sha256": "88bffebdf045cab6f107980dd0559354eee1ea36d78f6850551d5cb5735f1e1b"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-silentorder/index.js",
+      "gitBlob": "044c043250e59aca6b8ea607c0ab7deede29a524",
+      "sha256": "0ee22e1d63292f8b51c1a7e4342b0302506c5ab41bb157e556e4d08b409fcad9"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-slowtask/index.js",
+      "gitBlob": "14701ad037113437b1e1c9781d8eb5de9c76f0dd",
+      "sha256": "91b3b7a76ba57a9f1ce8629da58296a822b0a258becbbade530413ba43b46c22"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-sort/index.js",
+      "gitBlob": "0a94e4fb83efe7265a7985a0545df5bfba0f5de8",
+      "sha256": "2528d469b0816ba0c3df6bc50fb3ee4b61d737cf92d08554165e3899ab9218ce"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-steps/index.js",
+      "gitBlob": "104605136d274315c65c8f2485629c4764431284",
+      "sha256": "b02672b16452260c2ad7f2f6d50b4a4f1cf1a2776b47262ea9e77d03c4a4d717"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-stopwatch/index.js",
+      "gitBlob": "7e91386e04c5e33f76c4624b3c6886258cec255c",
+      "sha256": "8ecbaa4a35152e31a83cd76dbeb6069c9c70078af424b5ca3a692a088c9f1e9c"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-timewindow/index.js",
+      "gitBlob": "165bf39d1b5351e98d0fd6c0a13c0699cabd1e4b",
+      "sha256": "6f139846c6893f9b06b0c56f38084b0cbd14fb4e6383ecbabf9ce2b06d041d3c"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-typein/index.js",
+      "gitBlob": "f767370905f33f7337cc75e2a114aec81d6f7a5c",
+      "sha256": "b676c94fed18908a65b4ccaf3bb56be3c7c37d61ef92ca67a8fa7a910a17aa95"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-walk/index.js",
+      "gitBlob": "5aa106836ea6a5f667a4b4a494fabe92dc961af8",
+      "sha256": "fc84a86442c728e39dec5a1347c1d2c889b9e6cf201b4e4dd408d8ba20cf8b2e"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit/index.js",
+      "gitBlob": "6f5e9e94887071b5fa4b37e0ec6d4609b2173d64",
+      "sha256": "8eb3b27af19ce5e28d3f7c12f46556251f2c8cd3d57d8400505d1de133a32300"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit/index.json",
+      "gitBlob": "5cfc701f4795c1a77c46a7c3cb3bda2037b3178c",
+      "sha256": "71a61de6cc78dd7fdea3487fb355ed0fd9289701b09ffa9d26597608e1123447"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit/index.wxml",
+      "gitBlob": null,
+      "sha256": "59a44e9954ec2795929a68de8d1ae22c681aad112bfe2b55bfaa61e135eda55d"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/index.js",
+      "gitBlob": "6fad3dc6affaebd11cbd179a18b7fa4803904b40",
+      "sha256": "76a6937b782f4c46deeae667a488b572c9fe1e7a8983f512fbee610583ed447d"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/utils/playkit-view.js",
+      "gitBlob": null,
+      "sha256": "7d1c30bb34a5e6c5e02822936a9984427a540ee818eefc300951702ff6faab3a"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/fabu/index.js",
+      "gitBlob": "c5c6478fa92d74b0e5fc1e755cc98a0e736f89d3",
+      "sha256": "b08c2387f92ffaea66bcd3aa52f6625b96a19b188baf1b10151c18850043eef8"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/temp/index.js",
+      "gitBlob": "9b73a70b42256bd0771897e5002faee7c9adb878",
+      "sha256": "be8f526921f755cf35983e017599a2ab87259a03312aa54d6a3848a84ae8aece"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/temp/r5-editor.js",
+      "gitBlob": "feb8091d91d448481a726aa93a367cbc41b3f761",
+      "sha256": "94f4315620a6264aa9bae8c83702e5be2d867d17a3c2162aa1e213551050f6c7"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/utils/publish/advanced-game-config.js",
+      "gitBlob": "134061784eae2b994c6a3a7db69e4a4cffaae0d7",
+      "sha256": "9c1b0ca83c34c1b61966a620fb72861d6726cb57950c1bb5e7356c1b0b8d95bd"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/utils/publish/advanced-game-preview.js",
+      "gitBlob": "072fefad1cb23bde0690af8fba17b67bea7a28b1",
+      "sha256": "0d39152da0be250dae792b6ae9505799be603cda148e62087c63f9f912e29c53"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/utils/publish/gameplay-support-matrix.js",
+      "gitBlob": "36b35a6bdb93d9fa3a05ba5a9919e1dfdb76fb45",
+      "sha256": "23ef1c852c19eaea7e077146c18a5c65aad617aefdcda6f56dd51f87456a90b4"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/utils/publish/node-game-catalog.js",
+      "gitBlob": "82416571212db065ac8f6ac5b156d76f4bd41641",
+      "sha256": "9f1b78e4e57a1591ae32ba410ff439d42046fea3bb14f67ded6e1da374b26cc7"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/utils/publish/template-author-fields.js",
+      "gitBlob": "08e902ee8d7fa7abd7c4da45c80996c2c0e69d08",
+      "sha256": "5a815f767db4487f9323ead0caf4daa93caa472413cadee065040afb1324eea8"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/utils/publish/template-binding.js",
+      "gitBlob": "fb1e6fbac683b20155a15c900e356d6520969962",
+      "sha256": "a4beb1c16102382fce33d28c1dd6762c40c72f0050e6b1cea95a9066b97a2a87"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/template/index.js",
+      "gitBlob": "4988a554aca233515942b33693d5941610c16841",
+      "sha256": "5ba7517495186395aad57efe1c07ad1986d37332517927a7e2ebbe7e22ea7466"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/template/index.wxml",
+      "gitBlob": "7ee567fd6cf5b60c21ed83d1bec3def0464a1e64",
+      "sha256": "104b87d3dc5f2ff487fbae6840a74d86c00d8235ba1ab74a8d60904a8ada2fbd"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/templatedetail/templatedetail.js",
+      "gitBlob": "7c09795221e6dff579e46b675061a1afe6540e0d",
+      "sha256": "b17d4cf5434aacfb4008fdb7eda2b2140d8f655ab204562a7f985a42f9217345"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/fabu-template-binding-copy.test.js",
+      "gitBlob": "2cff05477155ff782ac29d12cd427c090b611972",
+      "sha256": "b0a2f5649b38f9aa280b40b5696d0a6e34680dde5234cbb5d871c4fe0dd398ba"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/generic-gameplay-r5-editor.test.js",
+      "gitBlob": "94bb4f538b299c96c5c33fea2be2b6ab236f417d",
+      "sha256": "106f9e4b3bb7ce589c21b2a102a52cfe83624fdc56485e5d4a66a3ee9e1c1a13"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/legacy-game-template-compat.test.js",
+      "gitBlob": "6b61a14f9ef8529b2f45a468073543bae352ae20",
+      "sha256": "3efbd085949a0a8cb849d5280e02e7ad4840fb8950c0b844d08b8661447ae8fd"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/playkit-view-contract.test.js",
+      "gitBlob": "665045fb28ab127a7300315c59c600375e4aab89",
+      "sha256": "58380b231b8ef68a9bfa5d64e58147d438a8f6b2a6db9fa0568663c4f638e64c"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/template-adopt-draft-and-preview-summary-contract.test.js",
+      "gitBlob": "11079ae979efcf25f4b367f1cde8441ad700ab2e",
+      "sha256": "99b539ade7d8af09dc353875a34ca9a89f02f7989e09977b62ea17c1b413176a"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/template-tab-failure-state-contract.test.js",
+      "gitBlob": "d7e3bf0364e701fb15c3b1dd5683678da1fa5652",
+      "sha256": "92c59c593a319f281d4b1f165cf0f4b85814d808e8adce32fd4aac954a49a021"
+    }
+  ],
+  "runtime": {
+    "Node": "NOT_RUN",
+    "Java": "NOT_RUN",
+    "DB": "NOT_RUN",
+    "HTTP": "NOT_RUN",
+    "Wechat": "NOT_RUN",
+    "CI": "NOT_RUN"
+  },
+  "counts": {
+    "catalogDiscoverableEntries": 34,
+    "r5ConcreteForms": 31,
+    "runtimePrioritySections": 34,
+    "registeredPlaykitComponents": 37
+  },
+  "countMeaning": "Counts derive from this source snapshot. Entries/forms/sections/renderers are different sets, not a universal number of game engines or live templates.",
+  "runtimeOnlySections": [
+    {
+      "section": "diyName",
+      "runtimeType": "diyname",
+      "note": "存量取名合同，R5 legacyRows 只读，不重新开放编辑",
+      "legacyReadOnly": true,
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-diyname",
+          "condition": "{{kit.type === 'diyname'}}",
+          "bindings": {
+            "namechange": "onNameChange",
+            "submit": "onSubmit",
+            "close": "onClose",
+            "requestclose": "onRequestClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "diyname:submit": "SUBMIT_DIY_NAME"
+      }
+    },
+    {
+      "section": "silentOrder",
+      "runtimeType": "silentorder",
+      "note": "存量沉默点单；giveup 本地收尾，不编造通关动作，R5 只读",
+      "legacyReadOnly": true,
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-silentorder",
+          "condition": "{{kit.type === 'silentorder'}}",
+          "bindings": {
+            "giveup": "onGiveUp",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {}
+    },
+    {
+      "section": "slowTask",
+      "runtimeType": "slowtask",
+      "note": "存量慢任务，START/CLAIM 原合同，R5 只读",
+      "legacyReadOnly": true,
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-slowtask",
+          "condition": "{{kit.type === 'slowtask'}}",
+          "bindings": {
+            "start": "onSlowStart",
+            "claim": "onSlowClaim",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "slowtask:slowstart": "START_SLOW_TASK",
+        "slowtask:slowclaim": "CLAIM_SLOW_TASK"
+      }
+    },
+    {
+      "section": "musicCorner",
+      "runtimeType": "musiccorner",
+      "note": "存量音乐角，toggle 播放器事件，不当成新判题，R5 只读",
+      "legacyReadOnly": true,
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-musiccorner",
+          "condition": "{{kit.type === 'musiccorner'}}",
+          "bindings": {
+            "toggle": "onToggle",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {}
+    },
+    {
+      "section": "timeWindow",
+      "runtimeType": "timewindow",
+      "note": "MODIFIERS 时段限定，open 只读刷新原状态；subscribe 走原动作",
+      "legacyReadOnly": false,
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-timewindow",
+          "condition": "{{kit.type === 'timewindow'}}",
+          "bindings": {
+            "subscribe": "onSubscribe",
+            "open": "onOpen",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {
+        "timewindow:subscribe": "SUBSCRIBE_TIME_WINDOW"
+      }
+    },
+    {
+      "section": "bingo",
+      "runtimeType": "bingo",
+      "note": "目录 section 为空；R5 节点选择禁用，在主题里配置；运行视图仍可投影 bingo",
+      "legacyReadOnly": false,
+      "rendererBindings": [
+        {
+          "tag": "cy-playkit-bingo",
+          "condition": "{{kit.type === 'bingo'}}",
+          "bindings": {
+            "verdict": "onVerdict",
+            "close": "onClose"
+          }
+        }
+      ],
+      "serverActions": {}
+    }
+  ],
+  "modifiers": [
+    {
+      "key": "timer",
+      "scope": "addon",
+      "contract": "原玩法的限时修饰；不创建独立判题 renderer"
+    },
+    {
+      "key": "timeWindow",
+      "scope": "addon",
+      "contract": "MODIFIERS 时段限定，open 只读刷新原状态；subscribe 走原动作"
+    },
+    {
+      "key": "leaderboard",
+      "scope": "addon",
+      "contract": "排行榜修饰，保留原后端 support-matrix 限制"
+    },
+    {
+      "key": "multiplayer",
+      "scope": "addon",
+      "disabled": true,
+      "reason": "规则待定义",
+      "contract": "旧配置只读，不因组件复用重新启用"
+    }
+  ],
+  "retainedCompatibilityRenderers": [
+    {
+      "type": "steps",
+      "canonicalSection": "steps",
+      "canonicalRenderer": "walk",
+      "evidence": "playkit-view-contract.test.js#ORPHAN_BRANCHES; playkit/index.js#KIT_TYPES",
+      "contract": "旧半屏壳已登记为保留兼容，正式 steps 投影 walk；本片不删除/激活第二条路径"
+    }
+  ],
+  "rendererSources": [
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-album/index.js",
+      "literalEmittedEvents": [
+        "close",
+        "submit",
+        "shoot"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-ballshake/index.js",
+      "literalEmittedEvents": [
+        "start",
+        "submit",
+        "verdict",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-bingo/index.js",
+      "literalEmittedEvents": [
+        "cell",
+        "verdict",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-blindtaste/index.js",
+      "literalEmittedEvents": [
+        "answer",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-branch/index.js",
+      "literalEmittedEvents": [
+        "choose",
+        "verdict",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-classify/index.js",
+      "literalEmittedEvents": [
+        "submit",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-coinflip/index.js",
+      "literalEmittedEvents": [
+        "flip",
+        "settled",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-compass/index.js",
+      "literalEmittedEvents": [
+        "start",
+        "submit",
+        "verdict",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-countdown/index.js",
+      "literalEmittedEvents": [
+        "finish",
+        "start",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-dailysign/index.js",
+      "literalEmittedEvents": [
+        "close",
+        "accept"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-diceroll/index.js",
+      "literalEmittedEvents": [
+        "settled",
+        "count",
+        "roll",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-diyname/index.js",
+      "literalEmittedEvents": [
+        "namechange",
+        "submit",
+        "close",
+        "requestclose"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-estimate/index.js",
+      "literalEmittedEvents": [
+        "submit",
+        "verdict",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-hidden/index.js",
+      "literalEmittedEvents": [
+        "submit",
+        "verdict",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-journey-check/index.js",
+      "literalEmittedEvents": [
+        "action",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-match/index.js",
+      "literalEmittedEvents": [
+        "submit",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-musiccorner/index.js",
+      "literalEmittedEvents": [
+        "toggle",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-note/index.js",
+      "literalEmittedEvents": [
+        "submit",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-objectcard/index.js",
+      "literalEmittedEvents": [
+        "shoot",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-photocheck/index.js",
+      "literalEmittedEvents": [
+        "shoot",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-predict/index.js",
+      "literalEmittedEvents": [
+        "submit",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-pricepair/index.js",
+      "literalEmittedEvents": [
+        "submit",
+        "verdict",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-profile/index.js",
+      "literalEmittedEvents": [
+        "avatar",
+        "submit",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-qa/index.js",
+      "literalEmittedEvents": [
+        "run",
+        "audio",
+        "submit",
+        "continue",
+        "shoot",
+        "verdict",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-quiethold/index.js",
+      "literalEmittedEvents": [
+        "micdenied",
+        "start",
+        "submit",
+        "verdict",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-random/index.js",
+      "literalEmittedEvents": [
+        "draw",
+        "drawn",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-reaction/index.js",
+      "literalEmittedEvents": [
+        "start",
+        "submit",
+        "verdict",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-scan/index.js",
+      "literalEmittedEvents": [
+        "scanned",
+        "audio",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-shout/index.js",
+      "literalEmittedEvents": [
+        "micdenied",
+        "start",
+        "submit",
+        "verdict",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-silentorder/index.js",
+      "literalEmittedEvents": [
+        "giveup",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-slowtask/index.js",
+      "literalEmittedEvents": [
+        "start",
+        "claim",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-sort/index.js",
+      "literalEmittedEvents": [
+        "submit",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-steps/index.js",
+      "literalEmittedEvents": [
+        "refresh",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-stopwatch/index.js",
+      "literalEmittedEvents": [
+        "start",
+        "submit",
+        "verdict",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-timewindow/index.js",
+      "literalEmittedEvents": [
+        "open",
+        "subscribe",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-typein/index.js",
+      "literalEmittedEvents": [
+        "start",
+        "submit",
+        "refresh",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/playkit-walk/index.js",
+      "literalEmittedEvents": [
+        "goalchange",
+        "claim",
+        "sync",
+        "close"
+      ],
+      "meaning": "literal source events, not a runtime trace"
+    }
+  ],
+  "legacyValidationMethods": {
+    "owner": "chengyinhub-xcx/pages/play/index.js",
+    "contract": "原完成方式/原 proof 合同保留，不按名称强并 Advanced game",
+    "methods": {
+      "0/null": "原到达",
+      "1": "原文字",
+      "2": "原拍照",
+      "3": "原选项",
+      "4": "原扫码",
+      "5": "原GPS",
+      "6": "原偏好",
+      "8": "原估数",
+      "9": "原猜图",
+      "10": "原找物"
+    }
+  },
+  "existingReusePipeline": [
+    {
+      "owner": "pages/template/index.js",
+      "role": "官方内容发现；homeData 分类不是执行机制注册",
+      "calls": [
+        "POST /api/template/homeData",
+        "POST /api/template/list"
+      ]
+    },
+    {
+      "owner": "pages/templatedetail/templatedetail.js",
+      "role": "按 public/my 身份读取；既有编辑入口",
+      "calls": [
+        "POST /api/template/info",
+        "POST /api/template/myinfo"
+      ]
+    },
+    {
+      "owner": "pages/publish/temp/index.js + temp/r5-editor.js + node-game-catalog.js",
+      "role": "同一个选择目录/表单；detectGame/applyToConfig；demo 不落真实配置；getData 公共来源先采用，切个人ID再读，UNKNOWN不自动重发",
+      "calls": [
+        "GET /api/play/theme/support-matrix",
+        "POST /api/template/info",
+        "POST /api/template/adopt-draft",
+        "POST /api/template/myinfo"
+      ]
+    },
+    {
+      "owner": "pages/publish/fabu/index.js#_adoptPublicTemplate/_bindNodeTemplate",
+      "role": "官方资源先采用为会员草稿再节点绑定；不混淆公共资源ID与会员模板ID",
+      "calls": [
+        "POST /api/template/adopt-draft",
+        "POST /api/template/myinfo",
+        "POST /api/template/draft",
+        "POST /api/template/my-list"
+      ]
+    },
+    {
+      "owner": "pages/play/utils/playkit-view.js + components/playkit/index.wxml/index.json",
+      "role": "原会话视图选择 renderer；现有 serverAction/serverPayload 保留字段和单位适配",
+      "calls": []
+    },
+    {
+      "owner": "pages/play/index.js#onPlayKitAction/_submitPlayKitAction -> components/advanced-game/index.js#action",
+      "role": "原会话/版本/请求身份与 UNKNOWN 日志，不在组件判定正确答案",
+      "calls": [
+        "POST /api/play/advanced/start",
+        "GET /api/play/advanced/state",
+        "POST /api/play/advanced/action"
+      ]
+    }
+  ],
+  "scopeLimits": [
+    "本索引只包含所列实际前端注册与真实 caller；不是运行验收或全仓不存在重复实现的证明。",
+    "未读取生产/测试模板数据，不据代码注释猜当前官方库条目数。",
+    "主题模板 /api/template/topic-template/list|use 是整主题复制，不与玩法模板ID合并。",
+    "预览 advanced-game-preview BUILDERS 复用同组件且不证明真实通关；样例/预览结果不得写回真实配置。",
+    "后端机制/模板资源 owner 矩阵分别由 A/B 交付；外部参考源码对照由 root 汇总。"
+  ],
+  "followupSourceChange": {
+    "path": "chengyinhub-xcx/tests/unit/playkit-view-contract.test.js",
+    "function": "unfedOf",
+    "change": "原通用会话视图补 nodeId:12；QA 新真实节点身份 prop 需由同一 view 提供",
+    "preserved": "所有原 test 名/断言与 KNOWN_UNFED={} 均不变；不增加缺字段豁免",
+    "runtime": "NOT_RUN"
+  },
+  "wholeTopicReusePipeline": {
+    "discovery": "pages/template/index.js#getTopicTemplates -> POST /api/template/topic-template/list",
+    "adopt": "pages/template/index.js#goTopicConfig -> POST /api/template/topic-template/use {id,scope}",
+    "result": "res.data.topicId -> /pages/publish/fabu/index?id=<new topic draft id>",
+    "identity": "主题库ID/新主题草稿ID与小游戏公共库ID/个人模板ID分开；不客户端拼装主题、不将preset.playTemplateId绑定到node.templateId",
+    "change": "原生产链保留，新增直接caller测试源码；不是运行验收"
+  },
+  "candidateSourceChanges": [
+    {
+      "path": "chengyinhub-xcx/pages/publish/fabu/index.js",
+      "symbols": [
+        "getPublicTempList",
+        "_nodeTemplateTargetCurrent",
+        "_adoptPublicTemplate",
+        "_bindNodeTemplate",
+        "onCreateGame"
+      ],
+      "change": "homeData推荐切片改为原list完整分页；采用与本人详情、子编辑器返回绑定原节点/账号/scope/主题/选择代次；异步读再加页面代次；个人读回前持续singleflight"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/template/index.js",
+      "symbols": [
+        "getGameRows"
+      ],
+      "change": "按原TableDataInfo.total读取完整游戏库；保留原数组响应和tab缓存/错误合同；不在中间页complete提前结束loading；绑定原搜索/page/account/scope"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/utils/publish/template-author-fields.js",
+      "symbols": [
+        "COPY_FIELDS"
+      ],
+      "change": "只把原服务端interactionType带入现有本人模板另存payload，不猜类型、不新增编辑规则；依赖B同字段DTO接线"
+    }
+  ],
+  "candidateSourcePostimages": [
+    {
+      "path": "chengyinhub-xcx/pages/publish/fabu/index.js",
+      "sha256": "1729209032f7423205559bf4f59fb5e6f105d1a2ad793e888d79f98a8eb86631"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/template/index.js",
+      "sha256": "0ce7197a4be82a53609cbb1c4b6158aeed94ad1139be252b9e8c75982f2d2b53"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/utils/publish/template-author-fields.js",
+      "sha256": "749119d3301c832c0719739a1dc9cddeaf56bf82c1804d1fd0a1072ac60c6508"
+    }
+  ],
+  "sourceManifestMeaning": "sources绑定增量父0e6的原始源码；candidateSourcePostimages为本片必要生产修补。源码字面提取/摘要，不是运行或测试结果。",
+  "directTestSources": [
+    {
+      "path": "chengyinhub-xcx/tests/unit/fabu-template-binding-copy.test.js",
+      "changes": "保留原case/断言，追加11case：完整库分页/空失败/畸形或重复页/旧读围栏/采用详情singleflight/旧节点账号主题scope/同ID新节点可重新读/子编辑器归属/interactionType保全"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/template-tab-failure-state-contract.test.js",
+      "changes": "保留原case/断言，追加4case：完整分页/中间complete/失败不缓存/旧搜索及页面/整套主题原采用入口"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/playkit-view-contract.test.js",
+      "function": "unfedOf",
+      "change": "原通用会话视图补 nodeId:12；QA 新真实节点身份 prop 需由同一 view 提供",
+      "preserved": "所有原 test 名/断言与 KNOWN_UNFED={} 均不变；不增加缺字段豁免",
+      "runtime": "NOT_RUN"
+    }
+  ]
+}

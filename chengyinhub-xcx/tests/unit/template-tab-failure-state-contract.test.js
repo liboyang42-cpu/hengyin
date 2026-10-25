@@ -172,3 +172,69 @@ test('开发版主题模板真实空结果和故障不注入演示主题', () =>
     if(response.code===200)assert.equal(h.page.data.listLoaded,true);else assert.equal(h.page.data.errorMsg,'真实故障');
   }
 });
+
+test('游戏库按原total完整分页，第一页complete不提前结束loading或缓存截断结果', () => {
+  const h = mountTemplatePage(); h.page.data.tab = 'game';
+  h.page.getGameRows();
+  const first = lastRequest(h, GAME_URL);
+  assert.deepEqual(first.data, { pageNum: 1, pageSize: 200, keyword: '' });
+  first.success({ code: 200, data: { rows: Array.from({ length: 200 }, (_, i) => ({ id: i + 1, title: '内容' + i })), total: 201 } });
+  first.complete();
+  assert.equal(h.page.data.loading, true);
+  assert.equal(h.page._gameLoaded, false);
+  const second = lastRequest(h, GAME_URL);
+  assert.deepEqual(second.data, { pageNum: 2, pageSize: 200, keyword: '' });
+  second.success({ code: 200, data: { rows: [{ id: 501, title: '未入首屏的新内容' }], total: 201 } });
+  second.complete();
+  assert.equal(h.page.data.loading, false);
+  assert.equal(h.page._gameLoaded, true);
+  assert.equal(h.page._gameRows.length, 201);
+  assert.equal(h.page._gameRows.at(-1).id, 501);
+});
+
+test('完整游戏库翻页失败或总数前空页不得缓存部分库为成功', () => {
+  for (const stop of ['network', 'empty']) {
+    const h = mountTemplatePage(); h.page.data.tab = 'game';
+    h.page.getGameRows(); const first = lastRequest(h, GAME_URL);
+    first.success({ code: 200, data: { rows: [{ id: 21, title: '一条内容' }], total: 2 } });
+    first.complete(); const second = lastRequest(h, GAME_URL);
+    if (stop === 'network') second.fail({ msg: '第二页失败' });
+    else second.success({ code: 200, data: { rows: [], total: 2 } });
+    second.complete();
+    assert.equal(h.page._gameLoaded, false);
+    assert.equal(h.page._gameRows.length, 0);
+    assert.ok(h.page.data.errorMsg);
+    assert.equal(h.page.data.loading, false);
+  }
+});
+
+test('游戏库搜索词或页面代次改变后旧分页不能继续、覆盖缓存或结束新loading', () => {
+  for (const mutate of [
+    p => { p.data.searchKeyword = '另一主题'; },
+    p => { p._loginContinuationEpoch = (p._loginContinuationEpoch || 0) + 1; },
+  ]) {
+    const h = mountTemplatePage(); h.page.data.tab = 'game'; h.page.getGameRows();
+    const first = lastRequest(h, GAME_URL), count = h.requests.length;
+    mutate(h.page);
+    first.success({ code: 200, data: { rows: [{ id: 21, title: '旧搜索内容' }], total: 2 } });
+    first.complete();
+    assert.equal(h.requests.length, count, '旧上下文不得继续取下一页');
+    assert.equal(h.page._gameRows.length, 0);
+    assert.equal(h.page._gameLoaded, false);
+    assert.equal(h.page.data.loading, true);
+  }
+});
+
+test('整套主题货架沿原整包采用进入新主题草稿，不混用小游戏库ID或adopt-draft', () => {
+  const h = mountTemplatePage(); let destination = '';
+  wx.navigateTo = options => { destination = options.url; };
+  loadTopics(h, [{ id: 31, name: '完整路线游戏', templateStatus: 'VERIFIED' }]);
+  h.page.goTopicConfig({ currentTarget: { dataset: { item: h.page.data.banner } } });
+  const use = lastRequest(h, '/api/template/topic-template/use');
+  assert.deepEqual(use.data, { id: 31, scope: '' });
+  assert.equal(destination, '');
+  use.success({ code: 200, data: { topicId: 8031 } });
+  assert.equal(destination, '/pages/publish/fabu/index?id=8031');
+  assert.equal(h.requests.some(r => r.url === '/api/template/adopt-draft'), false);
+});
+

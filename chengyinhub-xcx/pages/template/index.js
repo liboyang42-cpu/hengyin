@@ -547,21 +547,40 @@ Page({
     const that = this;
     const seq = (this._gameSeq || 0) + 1;
     this._gameSeq = seq;
+    const keyword = this.data.searchKeyword || '', scope = this.data.operationScope;
+    const owner = app.getUserID && app.getUserID(), epoch = this._loginContinuationEpoch;
+    const current = () => that._gameSeq === seq && keyword === (that.data.searchKeyword || '')
+      && scope === that.data.operationScope && owner === (app.getUserID && app.getUserID())
+      && epoch === that._loginContinuationEpoch;
+    const collected = [], pageSize = 200;
+    let received = 0, finished = false;
     this.setData({ loading: true, errorMsg: '' });
-    app.sendRequest({
+    const fail = res => {
+      finished = true;
+      if (current() && that.data.tab === 'game') that.setData({ errorMsg: app.getRequestErrorMessage(res, '玩法模板加载失败') });
+    };
+    const load = pageNum => app.sendRequest({
       hideLoading: true,
       silentError: true,
       url: '/api/template/list',
       method: 'POST',
-      // 置顶排序要在整份数据上算,所以一次取全 —— 后端 startPage() 默认只给 10 条。
-      // 现存玩法约 27 个,200 有余量;真长到接近这个数要改成分页 + 服务端排序。
+      // 分类置顶在完整列表上计算；不再把固定第一页误当成整库。
       // CU-M-64:带上关键词 —— /api/template/list 的 keyword 就是按 title 模糊(与列表同一口径)。
-      data: { pageNum: 1, pageSize: 200, keyword: this.data.searchKeyword || '' },
+      data: { pageNum: pageNum, pageSize: pageSize, keyword: keyword },
       success(res) {
-        if (that._gameSeq !== seq) return;
+        if (!current()) return;
         const rows = res && res.data ? (res.data.rows || res.data) : null;
-        if (res.code == '200' && isRecordList(rows)) {
-          that._gameRows = that.decorateGame(rows);
+        if (res && res.code == '200' && isRecordList(rows)) {
+          collected.push(...rows);
+          received += rows.length;
+          // 保留原数组/无分页响应合同；现 TableDataInfo 的 total 有值时必须完整读完。
+          if (res.data && Object.prototype.hasOwnProperty.call(res.data, 'total')) {
+            const total = Number(res.data.total);
+            if (!Number.isSafeInteger(total) || total < 0 || (!rows.length && received < total)) { fail(); return; }
+            if (received < total) { load(pageNum + 1); return; }
+          }
+          finished = true;
+          that._gameRows = that.decorateGame(collected);
           that._gameLoaded = true;
           // 回来时用户可能已切去主题 tab:数据照收进缓存,但屏幕状态只归当前 tab 管,
           // 否则会把还没加载的主题 tab 标成已加载,空缓存渲染成假空态。
@@ -569,22 +588,20 @@ Page({
             that.setData({ listLoaded: true, errorMsg: '' });
             that.rebuildLists();
           }
-        } else if (that.data.tab === 'game') {
+        } else {
           // 失败半边同样只归当前 tab 管:主题 tab 在途时游戏的迟到失败不许把
           // 错误文案画到主题的错误卡上。没画上也不丢——_gameLoaded 仍是 false,
           // 切回游戏 tab 会重新加载。
-          that.setData({ errorMsg: app.getRequestErrorMessage(res, '玩法模板加载失败') });
+          fail(res);
         }
       },
-      fail(res) {
-        if (that._gameSeq !== seq || that.data.tab !== 'game') return;
-        that.setData({ errorMsg: app.getRequestErrorMessage(res, '玩法模板加载失败') });
-      },
+      fail: fail,
       complete() {
         // tab 闸防掐掉另一 tab 在途的骨架屏;切去已加载 tab 的 loading 由 switchTab 显式清。
-        if (that._gameSeq === seq && that.data.tab === 'game') that.setData({ loading: false });
+        if (finished && current() && that.data.tab === 'game') that.setData({ loading: false });
       }
     });
+    load(1);
   },
 
   retryTemplateLoad() {
