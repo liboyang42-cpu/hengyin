@@ -6,6 +6,9 @@ const m = require('../../pages/topic/utils/topic-motion.js')
 
 test('封面轮换图:多图优先,其次单张封面,都没有就空', () => {
   assert.deepEqual(m.buildCoverImages({ imgArr: 'a.jpg, b.jpg,,c.jpg', imgUrl: 'x.jpg' }), ['a.jpg', 'b.jpg', 'c.jpg'])
+  // 服务端 AppMediaReferenceGuard 把多图签名地址用「;」拼回(requireAttachments),客户端两种分隔都要认
+  assert.deepEqual(m.buildCoverImages({ imgArr: 'https://o/upload/a.jpg?Signature=x%3D;https://o/upload/b.jpg?Signature=y' }),
+    ['https://o/upload/a.jpg?Signature=x%3D', 'https://o/upload/b.jpg?Signature=y'])
   assert.deepEqual(m.buildCoverImages({ imgUrl: 'x.jpg' }), ['x.jpg'])
   assert.deepEqual(m.buildCoverImages({}), [])
 })

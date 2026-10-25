@@ -4172,7 +4172,7 @@ Page({
         ? '' : (c.idxLabel || ('第 ' + (i + 1) + ' 章')),
       title: displayChapterName(c.name, i, '第 ' + (i + 1) + ' 章'),
       sub: c.description || '',
-      cover: c.imgArr ? String(c.imgArr).split(',')[0] : (c.cover || ''),
+      cover: c.imgArr ? String(c.imgArr).split(/[,;]/)[0] : (c.cover || ''),
       mileage: c.totalMileage ? (c.totalMileage + 'km') : '',
       timeText: c.totalTime ? Math.round(c.totalTime / 60) + ' 分钟' : '',
       description: c.description || '',
@@ -4206,7 +4206,7 @@ Page({
       // 不再原样上屏(也不落回主题名把章节标题变成主题名),统一显示「第 N 章」。
       name: displayChapterName(c.name, 0, d.topicName || '城市探索'),
       description: c.description || '跟着脚步走完这几处坐标，把散落的线索串成一段属于你的城市故事。',
-      cover: this._coverOf(c.imgArr ? String(c.imgArr).split(',')[0] : (c.cover || ''), nodes),
+      cover: this._coverOf(c.imgArr ? String(c.imgArr).split(/[,;]/)[0] : (c.cover || ''), nodes),
       mileage: c.totalMileage ? (c.totalMileage + 'km') : '',
       timeText: c.totalTime ? Math.round(c.totalTime / 60) + ' 分钟' : '',
       atmospherePreset: normalizeAtmosphere(c.atmospherePreset),
