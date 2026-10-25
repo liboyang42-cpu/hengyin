@@ -92,7 +92,7 @@ final class CrossDomainStorageFixture implements AutoCloseable {
         JdbcTemplate setup = new JdbcTemplate(ddl);
         // Same canonical source sequence as ClmCommercePaymentProofMySqlIT; no guessed historical proof.
         P0AcceptanceSchema.baseTables(setup, "sys_config", "ums_member", "club", "club_member", "oms_order", "merchant_subscription", "oms_ticket", "cms_registration");
-        P0AcceptanceSchema.migrations(ddl, "migration_club_open_settings_20260909.sql", "migration_club_role_membership_20260823.sql",
+        P0AcceptanceSchema.migrations(ddl, "migration_app_open_id.sql", "migration_club_open_settings_20260909.sql", "migration_club_role_membership_20260823.sql",
                 "migration_club_role_membership_resume_fence_20260826.sql", "migration_20260821_commerce_order_idempotency.sql",
                 "migration_business_audit_event_20260823.sql", "migration_20261023_wx_pay_order_intent.sql",
                 "migration_wx_payment_callback_inbox_outbox_20260725.sql", "migration_20261024_wx_verified_payment_fact.sql",
@@ -231,11 +231,45 @@ final class CrossDomainStorageFixture implements AutoCloseable {
         subscriptionServer.start();
         var provider = new CrossDomainSubscriptionProvider("http://127.0.0.1:" + subscriptionServer.getAddress().getPort() + "/subscribe", subscriptionCalls);
         var memberService = new UmsMemberServiceImpl(); set(memberService, "umsMemberMapper", sql.getMapper(UmsMemberMapper.class));
+        // The real notifier reads the complete current member projection before post(). Base schema
+        // alone lacks app_open_id; do not hide that mapper prerequisite behind the poison latch.
+        UmsMember recipient = memberService.selectUmsMemberById(MEMBER);
+        assertNotNull(recipient, "notification fixture must resolve its actual canonical member");
+        assertEquals(Long.valueOf(MEMBER), recipient.getId());
+        assertEquals("fixture-openid", recipient.getWxOpenId());
+        assertNull(recipient.getAppOpenId(), "no guessed App identity or migration backfill");
         set(provider, "umsMemberService", memberService);
         IWxContentSecurityService token = mock(IWxContentSecurityService.class); when(token.getAccessToken()).thenReturn("fixture-access");
         set(provider, "wxSec", token); set(provider, "tplOfficialEvent", "fixture-official-template");
         set(provider, "defaultPage", "pages/index/index");
         set(notifications, "wxSubscribeMsgService", provider);
+    }
+
+    String notificationProgressDiagnostic(java.util.concurrent.Future<?> dispatch) {
+        Map<String, Object> facts = new LinkedHashMap<>();
+        facts.put("providerPostEntries", subscriptionCalls.get());
+        facts.put("poisonLatchRemaining", poisonEntered.getCount());
+        facts.put("serverFailureTypes", subscriptionFailures.stream().map(t -> t.getClass().getSimpleName()).toList());
+        facts.put("dispatchDone", dispatch.isDone());
+        if (dispatch.isDone()) {
+            try { dispatch.get(0, TimeUnit.MILLISECONDS); facts.put("dispatchOutcome", "RETURNED"); }
+            catch (java.util.concurrent.ExecutionException failed) {
+                facts.put("dispatchFailureType", failed.getCause().getClass().getSimpleName());
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt(); facts.put("dispatchOutcome", "OBSERVER_INTERRUPTED");
+            } catch (java.util.concurrent.TimeoutException | java.util.concurrent.CancellationException unavailable) {
+                facts.put("dispatchOutcome", unavailable.getClass().getSimpleName());
+            }
+        }
+        try {
+            facts.put("originalPoisonReceiptStates", db.queryForList(
+                    "SELECT delivery_state FROM official_broadcast_log WHERE broadcast_id=? AND channel='subscribe' ORDER BY id",
+                    String.class, poisonId));
+        } catch (RuntimeException unavailable) {
+            facts.put("receiptReadFailureType", unavailable.getClass().getSimpleName());
+        }
+        // Only fixed fixture observations/types; never exception messages, SQL or provider bodies.
+        return "real subscribe poison entry not observed: " + facts;
     }
     long broadcast(String channels) {
         OfficialBroadcast row = new OfficialBroadcast(); row.setTitle("controlled broadcast"); row.setAudience("player"); row.setChannels(channels);

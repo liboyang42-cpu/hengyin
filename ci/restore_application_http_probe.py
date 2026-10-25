@@ -26,6 +26,28 @@ PRE_START_PHASES={'PRE_APPLICATION_PREPARATION','SOURCE_DATABASE_PREPARATION'}
 RUN_PHASES=PRE_START_PHASES|{'SOURCE_APPLICATION_START','SOURCE_WORKLOAD','CANONICAL_BACKUP_RESTORE',
         'RESTORED_NORMAL_APPLICATION_START','RESTORED_NORMAL_READBACK',
         'RESTORED_HELD_APPLICATION_START','RESTORED_HELD_WORKLOAD','APPLICATION_STOP','PRIVATE_CLEANUP'}
+SUBSTAGES={'APPLICATION_SLOT_START','APPLICATION_READY','READ_ORIGINAL_IDENTITIES','ADMIN_LOGIN',
+        'ADMIN_IDENTITY_READ','ORIGINAL_CHAPTER_COMMAND','ORIGINAL_WITHDRAW_COMMAND','ORIGINAL_WITHDRAW_REQUERY',
+        'READ_ORIGINAL_PROVIDER','COMPLETE_FACTS_SQL','ORIGINAL_CHAPTER_RECEIPT','NETWORK_PROOF',
+        'SOURCE_QUIESCENT_STOP','QUIESCENT_SQL_SNAPSHOT','CANONICAL_BACKUP','EMPTY_TARGET_CREATE',
+        'CANONICAL_RESTORE','RESTORED_SQL_COMPARE','TARGET_RUNTIME_USER','NORMAL_ORIGINAL_READBACK',
+        'HELD_OWNER_WORKLOAD','APPLICATION_STOP','PRIVATE_CLEANUP'}
+SAFE_REASON_CODES={'INVARIANT_REJECTED','UNCLASSIFIED_FAILURE','HTTP_OPERATION_REJECTED',
+        'CAPTCHA_CONTRACT_REJECTED','CAPTCHA_ORACLE_REJECTED','ADMIN_LOGIN_REJECTED',
+        'APP_STOP_EXIT_NOT_CONFIRMED','APP_EXITED_BEFORE_READY','APP_READINESS_TIMEOUT',
+        'APP_BOOT_IDENTITY_REJECTED','HTTP_STATUS_MALFORMED','HTTP_RESPONSE_NOT_JSON','HTTP_RESPONSE_NOT_OBJECT'}
+FACT_REASON_CODES={
+    'original controlled withdrawal must be terminal SUCCESS':'WITHDRAW_TERMINAL_FACT_REJECTED',
+    'original wire IDs':'ORIGINAL_WIRE_ID_REJECTED',
+    'independent original provider identity':'ORIGINAL_PROVIDER_FACT_REJECTED',
+    'complete original cash facts':'CASH_FACT_SET_REJECTED',
+    'one real debit; no fabricated opening balance reconciliation':'ORIGINAL_BALANCE_REJECTED',
+    'original chapter receipt complete':'ORIGINAL_CHAPTER_RECEIPT_REJECTED',
+    'original debit ledger linkage and amounts':'DEBIT_LEDGER_LINK_REJECTED',
+    'master immutable V1 original':'ORIGINAL_MASTER_V1_REJECTED',
+    'wire V1 and terminal original submission linkage':'ORIGINAL_SUBMIT_LINK_REJECTED',
+}
+SAFE_REASON_CODES.update(FACT_REASON_CODES.values())
 ALLOWED_MUTABLE={'sys_oper_log','sys_job_log','sys_logininfor'}
 LATE_TABLES={'wx_verified_payment_fact','wx_payment_callback_inbox','wx_payment_callback_fact_link'}
 REQUIRED_TABLES={'ums_member','member_cash_withdraw','member_cash_withdraw_fund_fact','member_cash_withdraw_transfer_intent',
@@ -39,7 +61,25 @@ def load(name,relative):
 
 
 def require(value,reason):
-    if not value:raise ValueError(reason)
+    if not value:
+        failure=ValueError(reason)
+        failure.restore_reason_code=FACT_REASON_CODES.get(reason,'INVARIANT_REJECTED');raise failure
+
+
+def failure_diagnostic(failure,phase,substage):
+    # Neither str(failure) nor its cause/traceback is public evidence.
+    kind=type(failure).__name__
+    code=getattr(failure,'restore_reason_code','UNCLASSIFIED_FAILURE')
+    return {'phase':phase if phase in RUN_PHASES else 'PRE_APPLICATION_PREPARATION',
+            'substage':substage if substage in SUBSTAGES else 'UNCLASSIFIED_SUBSTAGE',
+            'type':kind if re.fullmatch('[A-Za-z_][A-Za-z0-9_]{0,95}',kind) else 'UnclassifiedError',
+            'reasonCode':code if code in SAFE_REASON_CODES else 'UNCLASSIFIED_FAILURE'}
+
+
+def checkpoint(slot,report,path,phase,substage):
+    require(phase in RUN_PHASES and substage in SUBSTAGES,'fixed diagnostic checkpoint only')
+    report['phase']=phase;report['substage']=substage
+    slot.runtime_report_write(path,report)
 
 
 def canonical(value):
@@ -179,7 +219,11 @@ def assert_owner_events(events,boot):
 
 
 def good(response):
-    status,value=response;require(status==200 and value.get('code')==200,'real HTTP operation not successful');return value
+    status,value=response
+    if not (status==200 and value.get('code')==200):
+        failure=ValueError('real HTTP operation not successful')
+        failure.restore_reason_code='HTTP_OPERATION_REJECTED';raise failure
+    return value
 
 
 def refused(response):
@@ -195,9 +239,14 @@ def defaults(path,port):
 
 def start_application(slot,report,path,phase,side,mode,uuid,seed=False):
     # Persist intent before entering start, including validation/create/lost-reply failures.
-    report['applicationStartAttempted']=True;report['phase']=phase
-    slot.runtime_report_write(path,report)
-    return slot.start(side,mode,uuid,seed=seed)
+    report['applicationStartAttempted']=True
+    checkpoint(slot,report,path,phase,'APPLICATION_SLOT_START')
+    boot=slot.start(side,mode,uuid,seed=seed)
+    # Readiness is separate from a completed workload; original five-boot acceptance stays intact.
+    report.setdefault('readyBootObservations',[]).append({k:boot[k] for k in
+            ('bootId','side','restoreMode','guardHeld','jarSha256','appCid','javaPid','sourceSha','serverUuid','schema','schedulerStarted')})
+    checkpoint(slot,report,path,phase,'APPLICATION_READY')
+    return boot
 
 
 def run(name,schema,out,credentials):
@@ -208,7 +257,7 @@ def run(name,schema,out,credentials):
             'jarSha256':slot.jar_hash,'schema':schema,'result':'NOT_COMPLETED','productionDispatchRelease':False,
             'scope':'test-owned full Spring HTTP restore startup; controlled original withdrawal-complete and late payment gap only',
             'sourceOnlyUntilHostedRun':False,'boots':[],'completeBoots':[],'checks':[],
-            'ownedAppCids':[],'removedAppCids':[],'applicationStartAttempted':False,
+            'ownedAppCids':[],'removedAppCids':[],'readyBootObservations':[],'applicationStartAttempted':False,
             'phase':'PRE_APPLICATION_PREPARATION','resourceCleanup':'PENDING_OUTER_OWNER'}
     failure=None
     report['sourceMysqlCid']=slot.source['id'];report['targetMysqlCid']=slot.target['id'];report['redisCid']=slot.redis['Id']
@@ -244,20 +293,32 @@ def run(name,schema,out,credentials):
                 cur.execute('SELECT COUNT(*) FROM cms_registration');require(cur.fetchone()==(0,),'fresh source business fixture')
                 cur.execute("UPDATE sys_job SET status='1' WHERE status<>'1'")
             start_application(slot,report,report_path,'SOURCE_APPLICATION_START','source','false',identities['source']['uuid'],seed=True)
-            report['phase']='SOURCE_WORKLOAD'
+            checkpoint(slot,report,report_path,'SOURCE_WORKLOAD','READ_ORIGINAL_IDENTITIES')
             ids=json.loads((slot.root/'identities.json').read_text());actor=ids['a']['memberId'];a=ids['a']['token'];b=ids['b']['token']
+            checkpoint(slot,report,report_path,'SOURCE_WORKLOAD','ADMIN_LOGIN')
             admin=slot.login_admin();slot.redactions(a,b)
+            checkpoint(slot,report,report_path,'SOURCE_WORKLOAD','ADMIN_IDENTITY_READ')
             good(slot.http('/getInfo',admin))
+            checkpoint(slot,report,report_path,'SOURCE_WORKLOAD','ORIGINAL_CHAPTER_COMMAND')
             good(slot.http('/api/club/lead/unlock-chapter',a,ids['chapter'],form=True))
+            checkpoint(slot,report,report_path,'SOURCE_WORKLOAD','ORIGINAL_WITHDRAW_COMMAND')
             first=good(slot.http('/api/wallet/withdraw',a,{'amount':'30.00'}))
             wid=first['data']['id']
+            checkpoint(slot,report,report_path,'SOURCE_WORKLOAD','ORIGINAL_WITHDRAW_REQUERY')
             good(slot.http('/business/cashwithdraw/requery/'+str(wid),admin,{}))
+            checkpoint(slot,report,report_path,'SOURCE_WORKLOAD','READ_ORIGINAL_PROVIDER')
             original_provider=json.loads((slot.root/'withdrawal-provider.json').read_text())
+            checkpoint(slot,report,report_path,'SOURCE_WORKLOAD','COMPLETE_FACTS_SQL')
             before=snapshot(auth,sp,schema);assert_complete(before,actor,original_provider)
             original_provider_bytes=(slot.root/'withdrawal-provider.json').read_bytes()
             receipt_path='/api/club/lead/unlock-chapter-receipt?'+urllib.parse.urlencode({k:ids['chapter'][k] for k in ('activityId','commandId')})
+            checkpoint(slot,report,report_path,'SOURCE_WORKLOAD','ORIGINAL_CHAPTER_RECEIPT')
             original_receipt=good(slot.http(receipt_path,a))
-            slot.verify_network();slot.stop()
+            checkpoint(slot,report,report_path,'SOURCE_WORKLOAD','NETWORK_PROOF')
+            slot.verify_network()
+            checkpoint(slot,report,report_path,'SOURCE_WORKLOAD','SOURCE_QUIESCENT_STOP')
+            slot.stop()
+            checkpoint(slot,report,report_path,'SOURCE_WORKLOAD','QUIESCENT_SQL_SNAPSHOT')
             before=snapshot(auth,sp,schema) # Quiescent snapshot after real Quartz graceful shutdown.
             report['backupRows']=public_snapshot(before)
             report['providerJournalSha256']=sha(original_provider_bytes)
@@ -265,13 +326,14 @@ def run(name,schema,out,credentials):
                                      'case':'original_complete_cohort','withdrawalId':wid,'actorId':actor,
                                      'commandIdentityHash':sha(canonical(ids['chapter'])),'providerSubmits':1})
             paths={side:slot.root/(side+'.cnf') for side in ('source','target')}
-            report['phase']='CANONICAL_BACKUP_RESTORE'
+            checkpoint(slot,report,report_path,'CANONICAL_BACKUP_RESTORE','CANONICAL_BACKUP')
             defaults(paths['source'],sp);defaults(paths['target'],tp)
             args={side:argparse.Namespace(defaults_file=paths[side],database=schema,server_uuid=identities[side]['uuid'],confirm_test_target=True)
                   for side in ('source','target')}
             args['source'].output=slot.root/'backup.sql';report['backupStarted']=now()
             with contextlib.redirect_stdout(io.StringIO()):tool.backup(args['source'])
             report['backupCompleted']=now()
+            checkpoint(slot,report,report_path,'CANONICAL_BACKUP_RESTORE','EMPTY_TARGET_CREATE')
             with auth.database(tp) as db,db.cursor() as cur:
                 cur.execute('SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=%s',(schema,));require(cur.fetchone()==(0,),'never adopt a target schema')
                 with auth.database(sp) as source,source.cursor() as src:
@@ -279,11 +341,14 @@ def run(name,schema,out,credentials):
                 require(ddl.startswith('CREATE DATABASE `'+schema+'`'),'original database definition')
                 cur.execute(ddl)
             args['target'].backup=args['source'].output;report['restoreStarted']=now();tick=time.monotonic()
+            checkpoint(slot,report,report_path,'CANONICAL_BACKUP_RESTORE','CANONICAL_RESTORE')
             with contextlib.redirect_stdout(io.StringIO()):tool.restore(args['target'])
             report['restoreCompleted']=now();report['restoreSeconds']=time.monotonic()-tick
+            checkpoint(slot,report,report_path,'CANONICAL_BACKUP_RESTORE','RESTORED_SQL_COMPARE')
             require(snapshot(auth,tp,schema)==before,'canonical restore and independent complete rows/high waters')
             # mysql.user is outside the dump. Only the existing resource owner can install this runtime
             # account, with this exact schema DML grant. No root application datasource is accepted.
+            checkpoint(slot,report,report_path,'CANONICAL_BACKUP_RESTORE','TARGET_RUNTIME_USER')
             auth.command(['python3','-B',str(ROOT/'ci/authenticated_redis_recovery_probe.py'),'restore-runtime-user',
                           name,schema,str(out),str(Path(credentials).resolve()),'0'],timeout=60)
             runtime_proof=json.loads((out/'restore-runtime-user.json').read_text())
@@ -301,7 +366,7 @@ def run(name,schema,out,credentials):
             require(all(r['PRIVILEGE_TYPE']=='USAGE' for r in global_grants),'no global runtime grant')
             # Explicit separate false boot only for the independently proven complete original cohort.
             start_application(slot,report,report_path,'RESTORED_NORMAL_APPLICATION_START','target','false',identities['target']['uuid'])
-            report['phase']='RESTORED_NORMAL_READBACK'
+            checkpoint(slot,report,report_path,'RESTORED_NORMAL_READBACK','NORMAL_ORIGINAL_READBACK')
             require(good(slot.http(receipt_path,a))==original_receipt,'normal test-owned original receipt readback')
             good(slot.http('/api/wallet/withdraws',a,{}));good(slot.http('/business/cashwithdraw/requery/'+str(wid),admin,{}))
             require(snapshot(auth,tp,schema)==before,'normal original-ID readback created an effect/high-water change')
@@ -312,7 +377,7 @@ def run(name,schema,out,credentials):
             # a difference that remains held. It is never auto-repaired/reissued or marked READY.
             for mode in HELD_MODES:
                 boot=start_application(slot,report,report_path,'RESTORED_HELD_APPLICATION_START','target',mode,identities['target']['uuid'])
-                report['phase']='RESTORED_HELD_WORKLOAD'
+                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_OWNER_WORKLOAD')
                 mark=snapshot(auth,tp,schema)
                 require(good(slot.http(receipt_path,a))==original_receipt,'held original receipt unreadable')
                 denied=slot.http(receipt_path,b);refused(denied);require(not denied[1].get('data'),'other actor received original receipt')
@@ -374,6 +439,9 @@ def run(name,schema,out,credentials):
             report['fullHttpApplicationStartup']='ACTUAL_SPRING_SECURITY_MVC_QUARTZ_ON_RESTORED_FULL_SCHEMA'
     except BaseException as exc:
         failure=exc;report['firstFailureType']=type(exc).__name__;report['firstFailurePhase']=report['phase']
+        report['firstFailureDiagnostic']=failure_diagnostic(exc,report['phase'],report.get('substage'))
+        print('Restore HTTP failure diagnostic: '+json.dumps(report['firstFailureDiagnostic'],sort_keys=True),
+              file=__import__('sys').stderr)
         raise
     finally:
         try:
@@ -382,8 +450,17 @@ def run(name,schema,out,credentials):
             if slot.cid:report['stoppedApp']=slot.stopped
         except BaseException as cleanup:
             report['applicationStop']='UNKNOWN'
+            if hasattr(slot,'stopped'):report['stoppedApp']=slot.stopped
+            report['stopFailureDiagnostic']=failure_diagnostic(cleanup,'APPLICATION_STOP','APPLICATION_STOP')
             if failure is None:
                 failure=cleanup;report['firstFailurePhase']='APPLICATION_STOP'
+                report['firstFailureDiagnostic']=report['stopFailureDiagnostic']
+        # Safe fixed markers inside the existing JSON, not raw logs or another artifact channel.
+        try:report['applicationDiagnostic']=slot.diagnostic_summary()
+        except BaseException as diagnostic:
+            report['applicationDiagnostic']={'result':'UNKNOWN',
+                    'failure':failure_diagnostic(diagnostic,report['phase'],report.get('substage'))}
+        if hasattr(slot,'last_http'):report['lastHttpObservation']=slot.last_http
         report['ownedAppCids']=slot.owned;report['removedAppCids']=slot.removed
         report['productionDispatchRelease']=False
         report['allDispatchDomainsFenced']='NOT_CLAIMED_SPECIFIC_REAL_OWNERS_ONLY'
@@ -401,6 +478,7 @@ def run(name,schema,out,credentials):
                 report['privateCleanup']='UNKNOWN'
                 if failure is None:
                     failure=cleanup;report['firstFailurePhase']='PRIVATE_CLEANUP'
+                    report['firstFailureDiagnostic']=failure_diagnostic(cleanup,'PRIVATE_CLEANUP','PRIVATE_CLEANUP')
         if failure is not None:report.setdefault('firstFailureType',type(failure).__name__)
         slot.runtime_report_write(report_path,report)
         save(out/'restore-http-provenance.json',{'sourceSha':os.environ['GITHUB_SHA'],'jarSha256':slot.jar_hash,
