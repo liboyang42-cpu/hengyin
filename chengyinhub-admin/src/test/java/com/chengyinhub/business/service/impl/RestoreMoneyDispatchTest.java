@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.business.access.club.IClubAccessService;
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.dto.*;
 import com.chengyinhub.business.mapper.*;
@@ -164,7 +165,17 @@ class RestoreMoneyDispatchTest {
             blocked(() -> new CoopDepositRefundService().requestLocked(null));
             blocked(() -> new CmsTopicServiceImpl().executeTopicSettlement());
             blocked(() -> new CmsTopicServiceImpl().payoutDueCoopSettlements());
-            blocked(() -> new ClubEventOpsServiceImpl().cancelOccurrence(9L, "actor", null));
+            var clubAccess = mock(IClubAccessService.class);
+            var clubSessions = mock(IClubSessionService.class);
+            var clubEvents = mock(ClubEventOpsMapper.class);
+            var clubMembers = mock(ClubMemberMapper.class);
+            var clubLeads = mock(ClubLeadMapper.class);
+            var clubRoles = mock(IClubRoleAssignmentService.class);
+            var clubGroups = mock(ITeamGroupService.class);
+            var club = new ClubEventOpsServiceImpl(clubAccess, new ClubEventScheduleMaterializer(),
+                    clubSessions, clubEvents, clubMembers, clubLeads, clubRoles, clubGroups);
+            blocked(() -> club.cancelOccurrence(9L, "actor", null));
+            verifyNoInteractions(clubAccess, clubSessions, clubEvents, clubMembers, clubLeads, clubRoles, clubGroups);
         }
 
         private static CashWithdrawTransferIntent request() {
