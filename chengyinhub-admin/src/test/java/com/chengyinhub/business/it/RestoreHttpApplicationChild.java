@@ -58,21 +58,49 @@ public final class RestoreHttpApplicationChild {
     static JsonNode config;
     static ConfigurableApplicationContext application;
 
+    enum StartupStage { ADMISSION, SOURCE_IDENTITY, JAR_IDENTITY, ENVIRONMENT_GUARD, SPRING_RUN,
+        MYBATIS_OBSERVERS, DATASOURCE_IDENTITY, QUARTZ_PROPERTIES, QUARTZ_FACTORY,
+        SCHEDULER_LEADERSHIP, ORIGINAL_IDENTITIES, READY_PUBLISH, READY }
+    enum StartupReason { NONE, ASSERTION_REJECTED, SCHEDULER_LEADERSHIP_TIMEOUT, UNCLASSIFIED_FAILURE }
+    static volatile StartupStage startupStage = StartupStage.ADMISSION;
+    static boolean diagnosticAdmitted;
+
+    static final class StartupRejected extends IllegalStateException {
+        final StartupReason reason;
+        StartupRejected(String message, StartupReason reason) { super(message); this.reason=reason; }
+    }
+
     public static void main(String[] args) throws Exception {
+        try { runChild(args); }
+        catch (Exception | Error failure) {
+            try { startupObservation("FAILED", failure); }
+            catch (Exception diagnostic) { failure.addSuppressed(diagnostic); }
+            throw failure; // Preserve the original error; no message/cause/stack is projected publicly.
+        }
+    }
+
+    static void runChild(String[] args) throws Exception {
+        long readinessDeadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(180);
         require(args.length == 0 && "true".equals(System.getenv("CHENGYIN_CI_RESTORE_HTTP_STARTUP")), "test admission");
         require(Runtime.version().feature() == 21 && Files.isDirectory(PRIVATE) && !Files.isSymbolicLink(PRIVATE), "test mount/JDK");
+        startupStage = StartupStage.SOURCE_IDENTITY;
         config = JSON.readTree(Files.readAllBytes(PRIVATE.resolve("config.json")));
         require(config.path("schema").asText().matches("cy_e2e_auth_[0-9a-f]{32}"), "owned schema");
         require(config.path("sourceSha").asText().matches("[0-9a-f]{40}")
                 && config.path("sourceSha").asText().equals(System.getenv("GITHUB_SHA")), "full source");
         require(RestoreHttpApplicationChild.class.getProtectionDomain().getCodeSource().getLocation().toString()
                 .startsWith("file:/restore-http-testclasses"), "not a production entry");
-        require(sha(Files.readAllBytes(Path.of("/application.jar"))).equals(config.path("jarSha256").asText()), "same original JAR");
+        startupStage = StartupStage.JAR_IDENTITY;
+        startupRequire(sha(Files.readAllBytes(Path.of("/application.jar"))).equals(config.path("jarSha256").asText()), "same original JAR");
+        diagnosticAdmitted = true;
+        startupCheckpoint(StartupStage.ENVIRONMENT_GUARD);
         String mode = System.getenv("CHENGYIN_RESTORE_MODE");
-        require(Objects.equals(mode, config.path("restoreMode").asText()), "real process environment differs");
-        require(Set.of("true", "invalid", "", "false").contains(mode), "fixed four boot modes");
-        require(RestoreDispatchGuard.isRestoreMode() == !"false".equals(mode), "real static guard state");
-        SpringApplication app = new SpringApplication(RuoYiApplication.class, FixtureEndpoints.class, Observations.class);
+        startupRequire(Objects.equals(mode, config.path("restoreMode").asText()), "real process environment differs");
+        startupRequire(Set.of("true", "invalid", "", "false").contains(mode), "fixed four boot modes");
+        startupRequire(RestoreDispatchGuard.isRestoreMode() == !"false".equals(mode), "real static guard state");
+        startupCheckpoint(StartupStage.SPRING_RUN);
+        SpringApplication app = new SpringApplication(RuoYiApplication.class, FixtureEndpoints.class, Observations.class,
+                QuartzShutdownConfiguration.class);
         app.setAdditionalProfiles(PROFILE);
         application = app.run("--spring.config.location=file:/fixture/application.properties",
                 "--server.address=127.0.0.1", "--server.port=8080", "--spring.messages.basename=i18n/messages",
@@ -86,24 +114,31 @@ public final class RestoreHttpApplicationChild {
                 "--spring.quartz.wait-for-jobs-to-complete-on-shutdown=true",
                 "--withdrawal.fast-withdraw.enabled=true",
                 "--wx.pay.appid=restore-http-app", "--wx.pay.merchant-id=restore-http-mch");
+        startupCheckpoint(StartupStage.MYBATIS_OBSERVERS);
         var factories=application.getBeansOfType(org.apache.ibatis.session.SqlSessionFactory.class);
-        require(!factories.isEmpty(),"real MyBatis factories required");
+        startupRequire(!factories.isEmpty(),"real MyBatis factories required");
         factories.values().forEach(factory -> factory.getConfiguration().addInterceptor(new MapperObservations()));
+        startupCheckpoint(StartupStage.DATASOURCE_IDENTITY);
         JdbcTemplate db = application.getBean(JdbcTemplate.class);
-        require(config.path("serverUuid").asText().equals(db.queryForObject("SELECT @@server_uuid", String.class))
+        startupRequire(config.path("serverUuid").asText().equals(db.queryForObject("SELECT @@server_uuid", String.class))
                 && config.path("schema").asText().equals(db.queryForObject("SELECT DATABASE()", String.class)), "actual restored datasource");
-        require(application.getEnvironment().getProperty("chengyin.jobs.enabled", Boolean.class, false)
-                && application.getEnvironment().getProperty("spring.quartz.wait-for-jobs-to-complete-on-shutdown", Boolean.class, false)
-                && application.getBean(org.quartz.Scheduler.class).isStarted(), "real scheduler enabled and shutdown draining");
+        startupCheckpoint(StartupStage.QUARTZ_PROPERTIES);
+        startupRequire(application.getEnvironment().getProperty("chengyin.jobs.enabled", Boolean.class, false)
+                && application.getEnvironment().getProperty("spring.quartz.wait-for-jobs-to-complete-on-shutdown", Boolean.class, false),
+                "real scheduler enabled and shutdown draining");
+        startupCheckpoint(StartupStage.QUARTZ_FACTORY);
         var realScheduler = application.getBean(org.quartz.Scheduler.class);
-        var quartzFactories = application.getBeansOfType(org.springframework.scheduling.quartz.SchedulerFactoryBean.class);
-        require(quartzFactories.values().stream().anyMatch(factory -> factory.getScheduler() == realScheduler
-                && Boolean.TRUE.equals(new org.springframework.beans.DirectFieldAccessor(factory)
-                        .getPropertyValue("waitForJobsToCompleteOnShutdown"))), "actual Quartz factory must wait on shutdown");
+        assertQuartzFactory(application, realScheduler);
+        startupCheckpoint(StartupStage.SCHEDULER_LEADERSHIP);
+        // The real coordinator acquires its session lock on an independent thread. Never force
+        // factory auto-start or call maintainLeadership here; the parent retains its original 180s cap.
+        awaitScheduler(realScheduler, readinessDeadline);
+        startupCheckpoint(StartupStage.ORIGINAL_IDENTITIES);
         if (config.path("seed").asBoolean()) {
             require("false".equals(mode) && !Files.exists(PRIVATE.resolve("identities.json")), "seed once in isolated source transport fixture");
             seed(db);
         } else require(Files.isRegularFile(PRIVATE.resolve("identities.json")), "original identities required; no reseed");
+        startupCheckpoint(StartupStage.READY_PUBLISH);
         var ready = JSON.createObjectNode().put("sourceSha", config.path("sourceSha").asText())
                 .put("jarSha256", config.path("jarSha256").asText()).put("bootId", BOOT)
                 .put("javaPid", ProcessHandle.current().pid()).put("serverUuid", config.path("serverUuid").asText())
@@ -112,6 +147,82 @@ public final class RestoreHttpApplicationChild {
                 .put("port", ((ServletWebServerApplicationContext) application).getWebServer().getPort());
         write(PRIVATE.resolve("ready.json"), ready);
         application.registerShutdownHook();
+        startupStage = StartupStage.READY;
+        startupObservation("READY", null);
+    }
+
+    /** Test-classpath customization of the actual Boot factory; no new factory or leader bypass. */
+    @org.springframework.context.annotation.Configuration(proxyBeanMethods=false) @Profile(PROFILE)
+    public static class QuartzShutdownConfiguration {
+        @org.springframework.context.annotation.Bean
+        @Order(Ordered.LOWEST_PRECEDENCE)
+        public org.springframework.boot.quartz.autoconfigure.SchedulerFactoryBeanCustomizer restoreHttpQuartzShutdown() {
+            return factory -> factory.setWaitForJobsToCompleteOnShutdown(true);
+        }
+    }
+
+    static void assertQuartzFactory(ConfigurableApplicationContext context, org.quartz.Scheduler scheduler) {
+        var factories=context.getBeansOfType(org.springframework.scheduling.quartz.SchedulerFactoryBean.class);
+        startupRequire(factories.values().stream().anyMatch(factory -> factory.getScheduler() == scheduler
+                && Boolean.TRUE.equals(new org.springframework.beans.DirectFieldAccessor(factory)
+                        .getPropertyValue("waitForJobsToCompleteOnShutdown"))), "actual Quartz factory must wait on shutdown");
+    }
+
+    static void awaitScheduler(org.quartz.Scheduler scheduler, long deadlineNanos) throws Exception {
+        while (!scheduler.isStarted()) {
+            if (System.nanoTime() >= deadlineNanos)
+                throw new StartupRejected("real scheduler leadership did not start within original readiness window",
+                        StartupReason.SCHEDULER_LEADERSHIP_TIMEOUT);
+            Thread.sleep(100);
+        }
+    }
+
+    static void startupRequire(boolean value, String message) {
+        if (!value) throw new StartupRejected(message, StartupReason.ASSERTION_REJECTED);
+    }
+
+    static void startupCheckpoint(StartupStage stage) throws Exception {
+        startupStage=stage;startupObservation("PROGRESS", null);
+    }
+
+    static String startupFailureType(Throwable failure) {
+        if (failure == null) return "NONE";
+        if (failure instanceof StartupRejected || failure instanceof IllegalStateException) return "ILLEGAL_STATE";
+        if (failure instanceof org.springframework.beans.factory.UnsatisfiedDependencyException) return "UNSATISFIED_DEPENDENCY";
+        if (failure instanceof org.springframework.beans.factory.BeanCreationException) return "BEAN_CREATION";
+        if (failure instanceof java.sql.SQLException) return "SQL";
+        if (failure instanceof java.io.IOException) return "IO";
+        if (failure instanceof org.quartz.SchedulerException) return "SCHEDULER";
+        if (failure instanceof InterruptedException) return "INTERRUPTED";
+        return "OTHER";
+    }
+
+    static ObjectNode startupDocument(String status, Throwable failure) {
+        // Only fixed enums and already-bound identities. No message, cause, SQL, config or stack.
+        require(Set.of("PROGRESS","FAILED","READY").contains(status), "fixed startup observation status");
+        StartupReason reason=failure == null ? StartupReason.NONE
+                : failure instanceof StartupRejected rejected ? rejected.reason : StartupReason.UNCLASSIFIED_FAILURE;
+        return JSON.createObjectNode().put("sourceSha",config.path("sourceSha").asText())
+                .put("jarSha256",config.path("jarSha256").asText())
+                .put("classManifestSha256",config.path("classManifestSha256").asText())
+                .put("scope",config.path("scope").asText()).put("schema",config.path("schema").asText())
+                .put("restoreMode",config.path("restoreMode").asText())
+                .put("bootId",BOOT).put("javaPid",ProcessHandle.current().pid())
+                .put("stage",startupStage.name()).put("status",status).put("reasonCode",reason.name())
+                .put("failureType",startupFailureType(failure));
+    }
+
+    static void startupObservation(String status, Throwable failure) throws Exception {
+        if (!diagnosticAdmitted) return; // No evidence before source/JAR/test-classpath admission.
+        Path file=PRIVATE.resolve("startup.json"), next=PRIVATE.resolve("startup.next");
+        require(!Files.isSymbolicLink(file) && !Files.exists(next), "exclusive private startup observation");
+        byte[] bytes=JSON.writeValueAsBytes(startupDocument(status,failure));
+        require(bytes.length<=4096,"bounded startup observation");
+        try(FileChannel channel=FileChannel.open(next,StandardOpenOption.CREATE_NEW,StandardOpenOption.WRITE)) {
+            Files.setPosixFilePermissions(next,PosixFilePermissions.fromString("rw-------"));
+            ByteBuffer buffer=ByteBuffer.wrap(bytes);while(buffer.hasRemaining())channel.write(buffer);channel.force(true);
+        }
+        Files.move(next,file,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
     }
 
     static void seed(JdbcTemplate db) throws Exception {

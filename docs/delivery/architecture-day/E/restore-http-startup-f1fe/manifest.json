@@ -1,0 +1,86 @@
+{
+  "repository": "liboyang42-cpu/hengyin",
+  "parent": "f1fe75d646f8ae57864ee5603c68e70e7fabc854",
+  "parent_tree": "e293cc5976c22de88731ee792e75d16e6544fc7b",
+  "code_files": 5,
+  "delivery_files": 3,
+  "code_patch_bytes": 55163,
+  "code_patch_sha256": "72caf2891a2194e70dbc7714226bb59150e328f4b0a877d74e2f83506de772a4",
+  "files": [
+    {
+      "path": "ci/restore_application_http_runtime.py",
+      "preimage_git_blob_sha1": "51799e4ee52d558e27f235bd7a6015f5190efeee",
+      "postimage_git_blob_sha1": "fff96bb2311479b2630fc54ea7bb079460ac9a38",
+      "preimage_sha256": "dbe1c872b454300c01fae0c62b2b6ec973cfdd89f8b0fb238b8a69453e0028eb",
+      "postimage_sha256": "bd0932b6c5f58bbe6749be80f42b3b223bede93e948c9be874e9a94c7c91b2bd",
+      "postimage_bytes": 28645
+    },
+    {
+      "path": "ci/restore_application_http_probe.py",
+      "preimage_git_blob_sha1": "c94713586601fbdc28f4301dcd318afcedcf71d6",
+      "postimage_git_blob_sha1": "a414b5056f9cc379e731fa86a16455f13937c1c7",
+      "preimage_sha256": "e011055181575d1fcdd710d3e4f4d74b788dcbd5047104c55e6039409bca96ff",
+      "postimage_sha256": "b69115820e18c703487509477214b44cdf7fe2b0f427389e2ab1d8abce13716b",
+      "postimage_bytes": 49413
+    },
+    {
+      "path": "ci/test_restore_application_http_probe.py",
+      "preimage_git_blob_sha1": "6ce76e982afcdbf0b3b5d0fa1ad1f37b06835450",
+      "postimage_git_blob_sha1": "63aa3c2785d51bd72ab01666ae99a3b1c0da7e33",
+      "preimage_sha256": "1451dd127ef7da595da829cc0a70c2255490abca4ee8f8f4a20037958fc49ea6",
+      "postimage_sha256": "7bd72ec3a91f745416db4e90dd8f5ad3b20d4042f1236817c6b275df10245383",
+      "postimage_bytes": 51384
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java",
+      "preimage_git_blob_sha1": "9120087e14bf8484376d9396495a1f4b874881cc",
+      "postimage_git_blob_sha1": "e6872d8ffe394b2cd8d27a125e6bca22a62b2d4e",
+      "preimage_sha256": "07db92056af28476888e7075890b78d3d5a5c2c5876964fbd184ea1e00b8dc45",
+      "postimage_sha256": "f0e7b3283e2aa71e3fb9595bc1c8de099f1d2fe8309a0932b47d9dc22ec86500",
+      "postimage_bytes": 33892
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpStartupContractTest.java",
+      "preimage_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "09def1317f7a3932f71a4aee8dd038e56b3dce47",
+      "preimage_sha256": null,
+      "postimage_sha256": "d0367a8832a971f31308576b46699c08707655c9528aa553bfff24b85372f1cf",
+      "postimage_bytes": 9106
+    }
+  ],
+  "readme_sha256": "ae1a54fef7d8d75ff7a89bfe8d610a8341f6df020f996449ea739d069ab73503",
+  "actual_historical_child_reason": "UNKNOWN; only reviewed original IllegalStateException type, timeout and no-ready proof available",
+  "confirmed_source_seams": [
+    "Immediate isStarted assertion races real asynchronous MySQL leadership startup",
+    "Pre-ready original stop has no successful-boot proof",
+    "Original public log summary cannot identify the failing startup checkpoint"
+  ],
+  "new_python_control_methods": 8,
+  "new_java_test_methods": 5,
+  "old_tests_and_negative_assertions": "retained; existing fixture only receives exact launch/ready prerequisites",
+  "checks": {
+    "preimage_blob_identity": "MATCH",
+    "code_patch_apply_check": "CLEAN",
+    "diff_whitespace": "NO_DIAGNOSTICS",
+    "finite_secret_pattern_scan": "NO_MATCHES",
+    "full_gitleaks_scan": "NOT_RUN"
+  },
+  "tests": "NOT_RUN",
+  "parse_import_checks": "NOT_RUN",
+  "compile": "NOT_RUN",
+  "java_db_http_fault_ci": "NOT_RUN",
+  "limits_retained": [
+    "180s parent readiness",
+    "1500s original overall deadline",
+    "20s stop / 30s command",
+    "exit0 or143 only;137 rejected",
+    "five original boots / actual environment modes / original money and gap / exact cleanup"
+  ],
+  "runtime_proof_limitations": [
+    "No executed child startup/factory/leadership or graceful stop proof for this source",
+    "No evidence assigning historical failure to Quartz waiting or any specific startup condition",
+    "In-memory Java controls do not prove MySQL leadership or full application restoration",
+    "PRE_READY_JVM_EXIT_CONFIRMED is never a boot or SQL quiescence proof",
+    "No production release"
+  ]
+}

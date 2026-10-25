@@ -1,0 +1,791 @@
+diff --git a/ci/restore_application_http_runtime.py b/ci/restore_application_http_runtime.py
+index 51799e4ee52d558e27f235bd7a6015f5190efeee..fff96bb2311479b2630fc54ea7bb079460ac9a38 100644
+--- a/ci/restore_application_http_runtime.py
++++ b/ci/restore_application_http_runtime.py
+@@ -39,9 +39,18 @@ REASON_CODES = {
+     'complete Spring child exited before readiness': 'APP_EXITED_BEFORE_READY',
+     'bounded complete application startup timeout': 'APP_READINESS_TIMEOUT',
+     'actual child boot identity': 'APP_BOOT_IDENTITY_REJECTED',
++    'child startup rejected': 'APP_CHILD_STARTUP_REJECTED',
+ }
+ 
+ 
++STARTUP_STAGES={'ADMISSION','SOURCE_IDENTITY','JAR_IDENTITY','ENVIRONMENT_GUARD','SPRING_RUN',
++                'MYBATIS_OBSERVERS','DATASOURCE_IDENTITY','QUARTZ_PROPERTIES','QUARTZ_FACTORY',
++                'SCHEDULER_LEADERSHIP','ORIGINAL_IDENTITIES','READY_PUBLISH','READY'}
++STARTUP_REASONS={'NONE','ASSERTION_REJECTED','SCHEDULER_LEADERSHIP_TIMEOUT','UNCLASSIFIED_FAILURE'}
++STARTUP_FAILURE_TYPES={'NONE','ILLEGAL_STATE','UNSATISFIED_DEPENDENCY','BEAN_CREATION','SQL','IO',
++                       'SCHEDULER','INTERRUPTED','OTHER'}
++
++
+ def require(ok, reason):
+     if not ok:
+         failure=ValueError(reason)
+@@ -126,6 +135,7 @@ class ApplicationSlot:
+         self.token_secret=__import__('secrets').token_urlsafe(48)
+         self.deadline=time.monotonic()+1500
+         self.cid=None;self.boots=[];self.removed=[];self.owned=[];self.process=None
++        self.launch=None;self.pending_process=None;self.ready_for_current_launch=False;self.startup_observation=None
+         self.source=self.auth.mysql_endpoint(name,suffix='mysql')
+         self.target=self.auth.mysql_endpoint(name,suffix='restore-mysql')
+         require(self.source['id']!=self.target['id'] and self.source['networkId']==self.target['networkId'], 'distinct same-network DBs')
+@@ -164,37 +174,97 @@ class ApplicationSlot:
+         result=subprocess.run(self.auth.DOCKER+['container','inspect',self.name+'-app'],capture_output=True,timeout=15)
+         self.auth.require_absent('container',self.name+'-app',result.returncode,result.stderr.decode())
+ 
+-    def running_child_identity(self, boot, obj):
+-        """Bind this immutable CID/PID1 to its original boot, source, JAR and kernel start time."""
+-        require(obj['Id'] == self.cid and boot.get('appCid') == self.cid
+-                and type(boot.get('javaPid')) is int and boot['javaPid'] == 1
+-                and obj['Config']['Image'] == JDK and obj['Config']['Entrypoint'] == ['/trace/strace']
+-                and obj['Config']['Cmd'][:2] == ['-D', '-f']
+-                and 'GITHUB_SHA=' + boot['sourceSha'] in obj['Config']['Env']
+-                and 'CHENGYIN_RESTORE_MODE=' + boot['restoreMode'] in obj['Config']['Env']
+-                and obj['NetworkSettings']['Networks'][self.name]['NetworkID'] == self.source['networkId']
++    def running_launch_identity(self, obj):
++        """Independent pre-ready proof. It never manufactures a boot or business quiescence."""
++        launch=self.launch
++        require(isinstance(launch,dict) and launch['cid']==self.cid and obj['Id']==self.cid
++                and obj['Name']=='/'+self.name+'-app'
++                and obj['Config']['Labels'].get('chengyin.auth-recovery')==self.name
++                and obj['Config']['Image']==JDK and obj['Config']['Entrypoint']==['/trace/strace']
++                and obj['Config']['Cmd'][:2]==['-D','-f']
++                and 'GITHUB_SHA='+launch['sourceSha'] in obj['Config']['Env']
++                and 'CHENGYIN_RESTORE_MODE='+launch['restoreMode'] in obj['Config']['Env']
++                and set(obj['NetworkSettings']['Networks'])=={self.name}
++                and obj['NetworkSettings']['Networks'][self.name]['NetworkID']==self.source['networkId']
+                 and obj['State']['Running'] and not obj['State']['Restarting'] and not obj['State']['OOMKilled']
+-                and type(obj['State']['Pid']) is int and obj['State']['Pid'] > 0,
++                and type(obj['State']['Pid']) is int and obj['State']['Pid']>0,
+                 'actual child boot identity')
+-        require(boot['sourceSha'] == os.environ['GITHUB_SHA'] and boot['jarSha256'] == self.jar_hash
++        require(launch['sourceSha']==os.environ['GITHUB_SHA'] and launch['jarSha256']==self.jar_hash
+                 and self.jar.is_file() and not self.jar.is_symlink()
+-                and hashlib.sha256(self.jar.read_bytes()).hexdigest() == self.jar_hash, 'actual child boot identity')
+-        ready_path, config_path = self.root / 'ready.json', self.root / 'config.json'
+-        require(all(path.is_file() and not path.is_symlink() for path in (ready_path, config_path)),
++                and hashlib.sha256(self.jar.read_bytes()).hexdigest()==self.jar_hash,
++                'actual child boot identity')
++        config_path=self.root/'config.json'
++        require(config_path.is_file() and not config_path.is_symlink()
++                and hashlib.sha256(config_path.read_bytes()).hexdigest()==launch['configSha256'],
+                 'actual child boot identity')
+-        ready_raw, config_raw = ready_path.read_bytes(), config_path.read_bytes()
+-        ready, config = json.loads(ready_raw), json.loads(config_raw)
+-        require(all(ready.get(key) == boot.get(key) for key in
++        config=json.loads(config_path.read_bytes())
++        require(all(config.get(key)==launch.get(key) for key in
++                    ('sourceSha','jarSha256','restoreMode','schema','serverUuid'))
++                and config.get('classManifestSha256')==self.manifest_hash
++                and config.get('scope')==self.name[8:], 'actual child boot identity')
++        raw=self.auth.command(self.auth.DOCKER+['exec',self.cid,'cat','/proc/1/cmdline','/proc/1/stat'],timeout=10)
++        return {**pid1_jvm_proof(raw),'cid':self.cid,'hostPid':obj['State']['Pid'],
++                'sourceSha':launch['sourceSha'],'jarSha256':self.jar_hash,
++                'configSha256':launch['configSha256']}
++
++    def running_child_identity(self, boot, obj):
++        require(boot.get('appCid')==self.cid and type(boot.get('javaPid')) is int and boot['javaPid']==1,
++                'actual child boot identity')
++        proof=self.running_launch_identity(obj)
++        ready_path=self.root/'ready.json'
++        require(ready_path.is_file() and not ready_path.is_symlink(), 'actual child boot identity')
++        ready_raw=ready_path.read_bytes();ready=json.loads(ready_raw)
++        require(all(ready.get(key)==boot.get(key) for key in
+                     ('bootId','javaPid','sourceSha','jarSha256','schema','restoreMode','serverUuid'))
+-                and all(config.get(key) == boot.get(key) for key in
+-                        ('sourceSha','jarSha256','schema','restoreMode','serverUuid'))
+-                and config.get('classManifestSha256') == self.manifest_hash
+-                and config.get('scope') == self.name[8:], 'actual child boot identity')
+-        raw = self.auth.command(self.auth.DOCKER + ['exec', self.cid, 'cat', '/proc/1/cmdline', '/proc/1/stat'], timeout=10)
+-        return {**pid1_jvm_proof(raw), 'cid':self.cid, 'hostPid':obj['State']['Pid'],
+-                'bootId':boot['bootId'], 'sourceSha':boot['sourceSha'], 'jarSha256':self.jar_hash,
+-                'readySha256':hashlib.sha256(ready_raw).hexdigest(),
+-                'configSha256':hashlib.sha256(config_raw).hexdigest()}
++                and all(boot.get(key)==self.launch.get(key) for key in
++                        ('sourceSha','jarSha256','schema','restoreMode','serverUuid')),
++                'actual child boot identity')
++        return {**proof,'bootId':boot['bootId'],'readySha256':hashlib.sha256(ready_raw).hexdigest()}
++
++    def read_startup_observation(self):
++        path=self.root/'startup.json'
++        if not path.exists():return None
++        require(path.is_file() and not path.is_symlink() and path.stat().st_size<=4096,
++                'actual child boot identity')
++        with path.open('rb') as stream:raw=stream.read(4097)
++        require(len(raw)<=4096,'actual child boot identity')
++        value=json.loads(raw);launch=self.launch
++        keys={'sourceSha','jarSha256','classManifestSha256','scope','schema','restoreMode',
++              'bootId','javaPid','stage','status','reasonCode','failureType'}
++        require(isinstance(value,dict) and set(value)==keys and isinstance(launch,dict)
++                and all(value.get(key)==launch.get(key) for key in
++                        ('sourceSha','jarSha256','schema','restoreMode'))
++                and value['classManifestSha256']==self.manifest_hash and value['scope']==self.name[8:]
++                and isinstance(value['bootId'],str)
++                and re.fullmatch('[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}',value['bootId'])
++                and type(value['javaPid']) is int and value['javaPid']==1
++                and value['stage'] in STARTUP_STAGES and value['status'] in ('PROGRESS','FAILED','READY')
++                and value['reasonCode'] in STARTUP_REASONS and value['failureType'] in STARTUP_FAILURE_TYPES,
++                'actual child boot identity')
++        require((value['status']=='FAILED' and value['reasonCode']!='NONE' and value['failureType']!='NONE')
++                or (value['status']!='FAILED' and value['reasonCode']=='NONE' and value['failureType']=='NONE'),
++                'actual child boot identity')
++        require(value['status']!='READY' or value['stage']=='READY', 'actual child boot identity')
++        self.startup_observation=dict(value)
++        return dict(value)
++
++    def wait_for_ready(self):
++        until=time.monotonic()+180
++        while time.monotonic()<until:
++            self.budget()
++            obj=self.inspect(self.cid)
++            require(obj['State']['Running'],'complete Spring child exited before readiness')
++            if self.pending_process is None:
++                try:self.pending_process=self.running_launch_identity(obj)
++                except ValueError as failure:
++                    # strace PID1 has not necessarily exec'd Java yet. No proof means no safe stop.
++                    if getattr(failure,'restore_reason_code',None)!='APP_BOOT_IDENTITY_REJECTED':raise
++            observed=self.read_startup_observation()
++            if observed is not None and observed['status']=='FAILED':
++                require(False,'child startup rejected')
++            if (self.root/'ready.json').is_file() and observed is not None and observed['status']=='READY':return
++            time.sleep(1)
++        require(False,'bounded complete application startup timeout')
+ 
+     def stop(self,remove=True):
+         if self.cid is None:
+@@ -208,9 +278,14 @@ class ApplicationSlot:
+         failure = None
+         try:
+             if obj['State']['Running']:
+-                require(self.process is not None and self.boots
+-                        and self.running_child_identity(self.boots[-1], obj) == self.process,
+-                        'actual child boot identity')
++                if self.ready_for_current_launch:
++                    require(self.process is not None and self.boots
++                            and self.running_child_identity(self.boots[-1],obj)==self.process,
++                            'actual child boot identity')
++                else:
++                    require(self.pending_process is not None
++                            and self.running_launch_identity(obj)==self.pending_process,
++                            'actual child boot identity')
+                 # -D makes this verified JVM PID1. Keep the original 20-second TERM/KILL boundary.
+                 self.auth.command(self.auth.DOCKER+['stop','--time','20',self.cid],timeout=30)
+         except BaseException as error:
+@@ -227,9 +302,13 @@ class ApplicationSlot:
+         if failure is not None:raise failure
+         require(not stopped['Running'] and not stopped['OOMKilled'] and not stopped['Restarting']
+                 and stopped['Pid']==0 and stopped['ExitCode'] in (0,143),'app stop/process exit unknown')
++        require((self.ready_for_current_launch and self.process is not None)
++                or (not self.ready_for_current_launch and self.pending_process is not None),
++                'actual child boot identity')
++        self.stop_proof_kind='READY_JVM_EXIT_CONFIRMED' if self.ready_for_current_launch else 'PRE_READY_JVM_EXIT_CONFIRMED'
+         if not remove:return # Original outer cleanup must still collect this exact container's logs.
+         self.auth.command(self.auth.DOCKER+['rm',self.cid],timeout=15)
+-        self.absence();self.removed.append(self.cid);self.cid=None;self.process=None
++        self.absence();self.removed.append(self.cid);self.cid=None;self.process=None;self.pending_process=None
+ 
+     def diagnostic_summary(self):
+         """Observe the exact existing app only; outer owner still preserves/removes its raw log."""
+@@ -244,6 +323,9 @@ class ApplicationSlot:
+         state=obj['State']
+         result={'result':'EXACT_APP_OBSERVED','cid':self.cid,
+                 'state':{key:state[key] for key in ('Running','OOMKilled','Restarting','Pid','ExitCode')}}
++        if getattr(self,'launch',None) is not None:
++            observed=self.read_startup_observation()
++            if observed is not None:result['childStartup']=observed
+         log=subprocess.run(self.auth.DOCKER+['logs','--tail','160',self.cid],
+                            stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=10)
+         if log.returncode:
+@@ -256,7 +338,9 @@ class ApplicationSlot:
+         self.budget();require(side in ('source','target') and mode in ('true','invalid','','false'),'fixed boot matrix')
+         require(not seed or (side=='source' and mode=='false' and not self.boots),'one isolated source seed')
+         self.stop()
+-        self.process=None
++        self.process=None;self.pending_process=None;self.launch=None
++        self.ready_for_current_launch=False;self.startup_observation=None
++        if hasattr(self,'stop_proof_kind'):del self.stop_proof_kind
+         if hasattr(self,'stopped'):del self.stopped
+         endpoint=self.source if side=='source' else self.target
+         require(self.auth.mysql_endpoint(self.name,suffix='mysql' if side=='source' else 'restore-mysql')==endpoint,'DB identity changed')
+@@ -266,6 +350,7 @@ class ApplicationSlot:
+                 'redisHost':self.redis_ip,'tokenSecret':self.token_secret,'serverUuid':uuid,'restoreMode':mode,'seed':seed}
+         write_private(self.root/'config.json',config)
+         (self.root/'ready.json').unlink(missing_ok=True)
++        (self.root/'startup.json').unlink(missing_ok=True)
+         trace='network-'+str(len(self.boots))+'.trace';strace=shutil.which('strace')
+         require(strace and (self.out/'trace-libs').is_dir(),'reuse original tracing preparation')
+         # Original immutable app image/network/strace/memory/user/JAR/config. Only the test child and
+@@ -286,6 +371,8 @@ class ApplicationSlot:
+                 '-cp','/application.jar','org.springframework.boot.loader.launch.PropertiesLauncher'],timeout=120)
+         self.cid=raw.decode().strip();require(re.fullmatch('[0-9a-f]{64}',self.cid),'exact created app CID')
+         self.owned.append(self.cid)
++        self.launch={**{key:config[key] for key in ('sourceSha','jarSha256','schema','restoreMode','serverUuid')},
++                     'cid':self.cid,'configSha256':hashlib.sha256((self.root/'config.json').read_bytes()).hexdigest()}
+         obj=self.inspect(self.name+'-app')
+         require(obj['Id']==self.cid and obj['Config']['Image']==JDK
+                 and obj['Config']['Labels'].get('chengyin.auth-recovery')==self.name
+@@ -294,22 +381,17 @@ class ApplicationSlot:
+                 and obj['NetworkSettings']['Networks'][self.name]['NetworkID']==self.source['networkId']
+                 and not obj['HostConfig'].get('PortBindings'),'original app isolation/budget')
+         require('CHENGYIN_RESTORE_MODE='+mode in obj['Config']['Env'],'real env mode missing')
+-        until=time.monotonic()+180
+-        while time.monotonic()<until:
+-            self.budget()
+-            if (self.root/'ready.json').exists():break
+-            require(self.inspect(self.cid)['State']['Running'],'complete Spring child exited before readiness')
+-            time.sleep(1)
+-        require((self.root/'ready.json').is_file(),'bounded complete application startup timeout')
++        self.wait_for_ready()
+         boot=json.loads((self.root/'ready.json').read_text())
+         require(boot['sourceSha']==os.environ['GITHUB_SHA'] and boot['jarSha256']==self.jar_hash
+                 and boot['serverUuid']==uuid and boot['schema']==self.schema and boot['restoreMode']==mode
+                 and boot['guardHeld']==(mode!='false') and boot['schedulerStarted'] is True
+                 and all(boot['bootId']!=old['bootId'] for old in self.boots),'actual child boot identity')
+-        require(type(boot['javaPid']) is int and boot['javaPid']==1,'actual child boot identity')
++        require(type(boot['javaPid']) is int and boot['javaPid']==1
++                and self.startup_observation['bootId']==boot['bootId'],'actual child boot identity')
+         boot.update({'appCid':self.cid,'side':side,'trace':trace,'mysqlIp':endpoint['ip']})
+         self.process=self.running_child_identity(boot,self.inspect(self.cid))
+-        self.boots.append(boot);return boot
++        self.boots.append(boot);self.ready_for_current_launch=True;return boot
+ 
+     def verify_network(self):
+         boot=self.boots[-1]
+diff --git a/ci/restore_application_http_probe.py b/ci/restore_application_http_probe.py
+index c94713586601fbdc28f4301dcd318afcedcf71d6..a414b5056f9cc379e731fa86a16455f13937c1c7 100644
+--- a/ci/restore_application_http_probe.py
++++ b/ci/restore_application_http_probe.py
+@@ -35,7 +35,7 @@ SUBSTAGES={'APPLICATION_SLOT_START','APPLICATION_READY','READ_ORIGINAL_IDENTITIE
+ SAFE_REASON_CODES={'INVARIANT_REJECTED','UNCLASSIFIED_FAILURE','HTTP_OPERATION_REJECTED',
+         'CAPTCHA_CONTRACT_REJECTED','CAPTCHA_ORACLE_REJECTED','ADMIN_LOGIN_REJECTED',
+         'APP_STOP_EXIT_NOT_CONFIRMED','APP_EXITED_BEFORE_READY','APP_READINESS_TIMEOUT',
+-        'APP_BOOT_IDENTITY_REJECTED','HTTP_STATUS_MALFORMED','HTTP_RESPONSE_NOT_JSON','HTTP_RESPONSE_NOT_OBJECT'}
++        'APP_BOOT_IDENTITY_REJECTED','APP_CHILD_STARTUP_REJECTED','HTTP_STATUS_MALFORMED','HTTP_RESPONSE_NOT_JSON','HTTP_RESPONSE_NOT_OBJECT'}
+ FACT_REASON_CODES={
+     'original controlled withdrawal must be terminal SUCCESS':'WITHDRAW_TERMINAL_FACT_REJECTED',
+     'original wire IDs':'ORIGINAL_WIRE_ID_REJECTED',
+@@ -252,6 +252,7 @@ def start_application(slot,report,path,phase,side,mode,uuid,seed=False):
+ def source_quiescent_snapshot(slot, auth, port, schema, report, path):
+     """The original source backup cannot read its final SQL state until exact JVM stop succeeds."""
+     checkpoint(slot,report,path,'SOURCE_WORKLOAD','SOURCE_QUIESCENT_STOP')
++    require(getattr(slot,'ready_for_current_launch',False), 'source application must be ready before quiescent SQL snapshot')
+     slot.stop()
+     checkpoint(slot,report,path,'SOURCE_WORKLOAD','QUIESCENT_SQL_SNAPSHOT')
+     return snapshot(auth,port,schema)
+@@ -453,6 +454,7 @@ def run(name,schema,out,credentials):
+             slot.stop(remove=False)
+             report['applicationStop']='STOPPED_EXACT_APP_CID' if slot.cid else 'NO_ACTIVE_APP_SLOT'
+             if slot.cid:report['stoppedApp']=slot.stopped
++            if hasattr(slot,'stop_proof_kind'):report['applicationStopProofKind']=slot.stop_proof_kind
+         except BaseException as cleanup:
+             report['applicationStop']='UNKNOWN'
+             if hasattr(slot,'stopped'):report['stoppedApp']=slot.stopped
+diff --git a/ci/test_restore_application_http_probe.py b/ci/test_restore_application_http_probe.py
+index 6ce76e982afcdbf0b3b5d0fa1ad1f37b06835450..63aa3c2785d51bd72ab01666ae99a3b1c0da7e33 100644
+--- a/ci/test_restore_application_http_probe.py
++++ b/ci/test_restore_application_http_probe.py
+@@ -515,7 +515,11 @@ class RestoreHttpGracefulStopControls(unittest.TestCase):
+             raise AssertionError('unexpected command')
+         slot.auth=SimpleNamespace(DOCKER=['docker'],command=command);slot.inspect=lambda target:obj
+         slot.absence=lambda:calls.append(('absence',{}));slot.boots=[boot];slot.removed=[];slot.owned=[slot.cid]
++        slot.launch={**{key:boot[key] for key in ('sourceSha','jarSha256','schema','restoreMode','serverUuid')},
++                     'cid':slot.cid,'configSha256':R.hashlib.sha256((slot.root/'config.json').read_bytes()).hexdigest()}
++        slot.pending_process=None;slot.ready_for_current_launch=True;slot.startup_observation=None
+         with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}):
++            slot.pending_process=slot.running_launch_identity(obj)
+             slot.process=slot.running_child_identity(boot,obj)
+         calls.clear()
+         return slot,obj,calls,data
+@@ -609,7 +613,7 @@ class RestoreHttpGracefulStopControls(unittest.TestCase):
+     def test_source_stop_failure_prevents_quiescent_sql_snapshot_and_propagates_original_error(self):
+         report={'result':'NOT_COMPLETED'};saved=[];failure=ValueError('controlled stop failure')
+         def stop():raise failure
+-        slot=SimpleNamespace(stop=stop,runtime_report_write=lambda path,value:saved.append(copy.deepcopy(value)))
++        slot=SimpleNamespace(stop=stop,ready_for_current_launch=True,runtime_report_write=lambda path,value:saved.append(copy.deepcopy(value)))
+         with patch.object(P,'snapshot') as read:
+             with self.assertRaises(ValueError) as caught:P.source_quiescent_snapshot(slot,object(),3306,'owned',report,Path('unused'))
+         self.assertIs(caught.exception,failure);read.assert_not_called()
+@@ -618,7 +622,7 @@ class RestoreHttpGracefulStopControls(unittest.TestCase):
+ 
+     def test_source_snapshot_uses_original_database_arguments_only_after_stop(self):
+         events=[];report={'result':'NOT_COMPLETED'};auth=object();rows=object()
+-        slot=SimpleNamespace(stop=lambda:events.append('stop'),
++        slot=SimpleNamespace(stop=lambda:events.append('stop'),ready_for_current_launch=True,
+                 runtime_report_write=lambda path,value:events.append(value['substage']))
+         def read(*args):
+             self.assertEqual(events,['SOURCE_QUIESCENT_STOP','stop','QUIESCENT_SQL_SNAPSHOT'])
+@@ -628,4 +632,130 @@ class RestoreHttpGracefulStopControls(unittest.TestCase):
+         self.assertEqual(report['result'],'NOT_COMPLETED')
+ 
+ 
++
++class RestoreHttpStartupFailureControls(unittest.TestCase):
++    """SOURCE only: exact private typed observations and proc/stop simulations, no real app or DB."""
++
++    @staticmethod
++    def startup(slot, stage='QUARTZ_FACTORY', status='FAILED', reason='ASSERTION_REJECTED'):
++        value={key:slot.launch[key] for key in ('sourceSha','jarSha256','schema','restoreMode')}
++        value.update(classManifestSha256=slot.manifest_hash,scope=slot.name[8:],
++                     bootId='11111111-2222-3333-4444-555555555555',javaPid=1,stage=stage,status=status,
++                     reasonCode=reason,failureType='ILLEGAL_STATE' if status=='FAILED' else 'NONE')
++        (slot.root/'startup.json').write_text(json.dumps(value))
++        return value
++
++    def test_failed_startup_returns_only_fixed_stage_reason_and_original_identity(self):
++        with tempfile.TemporaryDirectory() as directory:
++            slot,_,_,_=RestoreHttpGracefulStopControls().running_slot(directory)
++            expected=self.startup(slot)
++            self.assertEqual(slot.read_startup_observation(),expected)
++            self.assertEqual(slot.startup_observation['stage'],'QUARTZ_FACTORY')
++            self.assertEqual(slot.startup_observation['sourceSha'],slot.launch['sourceSha'])
++            for secret in ('tokenSecret','jdbcUrl','message','cause','stack'):
++                self.assertNotIn(secret,slot.startup_observation)
++
++    def test_foreign_unbounded_or_unclassified_observation_is_not_public_evidence(self):
++        for mutation in ('source','jar','manifest','scope','pid','stage','reason','type','status','raw','size','misreported-size','symlink'):
++            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
++                slot,_,_,_=RestoreHttpGracefulStopControls().running_slot(directory);value=self.startup(slot)
++                if mutation=='source':value['sourceSha']='b'*40
++                elif mutation=='jar':value['jarSha256']='b'*64
++                elif mutation=='manifest':value['classManifestSha256']='c'*64
++                elif mutation=='scope':value['scope']='c'*32
++                elif mutation=='pid':value['javaPid']=True
++                elif mutation=='stage':value['stage']='private-config-or-SQL'
++                elif mutation=='reason':value['reasonCode']='private-message'
++                elif mutation=='type':value['failureType']='private-cause'
++                elif mutation=='status':value['status']='READY'
++                elif mutation=='raw':value['message']='private-token-stack-canary'
++                path=slot.root/'startup.json';path.write_text(json.dumps(value))
++                if mutation=='size':path.write_text('x'*4097)
++                elif mutation=='symlink':
++                    path.unlink();path.symlink_to(slot.root/'config.json')
++                if mutation=='misreported-size':
++                    path.write_text(json.dumps(value)+' '*5000)
++                    with patch.object(Path,'stat',return_value=SimpleNamespace(st_size=1,st_mode=0o100600)):
++                        with self.assertRaises(ValueError):slot.read_startup_observation()
++                else:
++                    with self.assertRaises(ValueError):slot.read_startup_observation()
++                self.assertIsNone(slot.startup_observation)
++
++    def test_child_failure_is_seen_before_timeout_without_inventing_a_ready_boot(self):
++        with tempfile.TemporaryDirectory() as directory:
++            slot,_,calls,_=RestoreHttpGracefulStopControls().running_slot(directory)
++            self.startup(slot);(slot.root/'ready.json').unlink()
++            slot.boots=[];slot.process=None;slot.ready_for_current_launch=False;slot.pending_process=None
++            slot.budget=lambda:None
++            with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}), patch.object(R.time,'sleep') as sleep:
++                with self.assertRaisesRegex(ValueError,'child startup rejected') as caught:slot.wait_for_ready()
++            self.assertEqual(caught.exception.restore_reason_code,'APP_CHILD_STARTUP_REJECTED')
++            sleep.assert_not_called();self.assertEqual(slot.boots,[])
++            self.assertIsNotNone(slot.pending_process);self.assertFalse(slot.ready_for_current_launch)
++            self.assertFalse(any(argv[1]=='stop' for argv,_ in calls))
++
++    def test_unready_owned_jvm_can_stop_with_original_pre_ready_proof_but_is_not_a_boot(self):
++        with tempfile.TemporaryDirectory() as directory:
++            slot,_,_,_=RestoreHttpGracefulStopControls().running_slot(directory,143)
++            slot.boots=[];slot.process=None;slot.ready_for_current_launch=False
++            (slot.root/'ready.json').unlink();self.startup(slot)
++            with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}):slot.stop(remove=False)
++            self.assertEqual(slot.stop_proof_kind,'PRE_READY_JVM_EXIT_CONFIRMED')
++            self.assertEqual(slot.stopped['exitCode'],143);self.assertEqual(slot.boots,[])
++            self.assertFalse(slot.ready_for_current_launch);self.assertEqual(slot.removed,[])
++
++    def test_pre_ready_changed_process_or_missing_capture_never_receives_stop(self):
++        for mutation in ('startticks','hostpid','config','jar','source','missing'):
++            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
++                slot,obj,calls,data=RestoreHttpGracefulStopControls().running_slot(directory)
++                slot.boots=[];slot.process=None;slot.ready_for_current_launch=False
++                if mutation=='startticks':data['proc']=RestoreHttpGracefulStopControls.proc_bytes(ticks=b'124')
++                elif mutation=='hostpid':obj['State']['Pid']=999
++                elif mutation=='config':(slot.root/'config.json').write_text('{}')
++                elif mutation=='jar':slot.jar.write_bytes(b'wrong original jar')
++                elif mutation=='source':slot.launch['sourceSha']='b'*40
++                else:slot.pending_process=None
++                with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}):
++                    with self.assertRaises(ValueError):slot.stop(remove=False)
++                self.assertFalse(any(argv[1]=='stop' for argv,_ in calls));self.assertEqual(slot.removed,[])
++
++    def test_pre_ready_137_and_no_captured_jvm_remain_unknown(self):
++        for captured,exit_code in ((True,137),(False,0)):
++            with self.subTest(captured=captured,exit_code=exit_code), tempfile.TemporaryDirectory() as directory:
++                slot,obj,calls,_=RestoreHttpGracefulStopControls().running_slot(directory,exit_code)
++                slot.boots=[];slot.process=None;slot.ready_for_current_launch=False
++                if not captured:
++                    slot.pending_process=None;obj['State'].update(Running=False,Pid=0,ExitCode=exit_code)
++                with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}):
++                    with self.assertRaises(ValueError):slot.stop()
++                self.assertEqual(slot.stopped['exitCode'],exit_code);self.assertEqual(slot.removed,[])
++                self.assertFalse(any(isinstance(argv,list) and argv[1]=='rm' for argv,_ in calls))
++
++    def test_startup_progress_or_missing_ready_stays_bounded_and_never_becomes_a_boot(self):
++        with tempfile.TemporaryDirectory() as directory:
++            slot,_,_,_=RestoreHttpGracefulStopControls().running_slot(directory)
++            self.startup(slot,'SCHEDULER_LEADERSHIP','PROGRESS','NONE')
++            (slot.root/'ready.json').unlink();slot.boots=[];slot.ready_for_current_launch=False
++            slot.budget=lambda:None
++            with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}), patch.object(R.time,'monotonic',side_effect=[0,0,181]), patch.object(R.time,'sleep') as sleep:
++                with self.assertRaises(ValueError) as caught:slot.wait_for_ready()
++            self.assertEqual(caught.exception.restore_reason_code,'APP_READINESS_TIMEOUT')
++            sleep.assert_called_once_with(1);self.assertEqual(slot.boots,[])
++            self.assertEqual(slot.startup_observation['stage'],'SCHEDULER_LEADERSHIP')
++
++    def test_ready_file_alone_is_not_an_admission_and_cannot_trigger_source_snapshot(self):
++        with tempfile.TemporaryDirectory() as directory:
++            slot,_,_,_=RestoreHttpGracefulStopControls().running_slot(directory)
++            self.startup(slot,'QUARTZ_FACTORY','PROGRESS','NONE')
++            slot.ready_for_current_launch=False;slot.budget=lambda:None
++            with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}), patch.object(R.time,'monotonic',side_effect=[0,0,181]), patch.object(R.time,'sleep'):
++                with self.assertRaises(ValueError):slot.wait_for_ready()
++            report={'result':'NOT_COMPLETED'}
++            slot.runtime_report_write=lambda *args:None
++            with patch.object(P,'snapshot') as read, patch.object(slot,'stop') as stop:
++                with self.assertRaisesRegex(ValueError,'must be ready'):P.source_quiescent_snapshot(slot,object(),3306,'owned',report,Path('unused'))
++            stop.assert_not_called();read.assert_not_called()
++            self.assertEqual(report['result'],'NOT_COMPLETED')
++
++
+ if __name__=='__main__':unittest.main()
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java
+index 9120087e14bf8484376d9396495a1f4b874881cc..e6872d8ffe394b2cd8d27a125e6bca22a62b2d4e 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java
+@@ -58,21 +58,49 @@ public final class RestoreHttpApplicationChild {
+     static JsonNode config;
+     static ConfigurableApplicationContext application;
+ 
++    enum StartupStage { ADMISSION, SOURCE_IDENTITY, JAR_IDENTITY, ENVIRONMENT_GUARD, SPRING_RUN,
++        MYBATIS_OBSERVERS, DATASOURCE_IDENTITY, QUARTZ_PROPERTIES, QUARTZ_FACTORY,
++        SCHEDULER_LEADERSHIP, ORIGINAL_IDENTITIES, READY_PUBLISH, READY }
++    enum StartupReason { NONE, ASSERTION_REJECTED, SCHEDULER_LEADERSHIP_TIMEOUT, UNCLASSIFIED_FAILURE }
++    static volatile StartupStage startupStage = StartupStage.ADMISSION;
++    static boolean diagnosticAdmitted;
++
++    static final class StartupRejected extends IllegalStateException {
++        final StartupReason reason;
++        StartupRejected(String message, StartupReason reason) { super(message); this.reason=reason; }
++    }
++
+     public static void main(String[] args) throws Exception {
++        try { runChild(args); }
++        catch (Exception | Error failure) {
++            try { startupObservation("FAILED", failure); }
++            catch (Exception diagnostic) { failure.addSuppressed(diagnostic); }
++            throw failure; // Preserve the original error; no message/cause/stack is projected publicly.
++        }
++    }
++
++    static void runChild(String[] args) throws Exception {
++        long readinessDeadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(180);
+         require(args.length == 0 && "true".equals(System.getenv("CHENGYIN_CI_RESTORE_HTTP_STARTUP")), "test admission");
+         require(Runtime.version().feature() == 21 && Files.isDirectory(PRIVATE) && !Files.isSymbolicLink(PRIVATE), "test mount/JDK");
++        startupStage = StartupStage.SOURCE_IDENTITY;
+         config = JSON.readTree(Files.readAllBytes(PRIVATE.resolve("config.json")));
+         require(config.path("schema").asText().matches("cy_e2e_auth_[0-9a-f]{32}"), "owned schema");
+         require(config.path("sourceSha").asText().matches("[0-9a-f]{40}")
+                 && config.path("sourceSha").asText().equals(System.getenv("GITHUB_SHA")), "full source");
+         require(RestoreHttpApplicationChild.class.getProtectionDomain().getCodeSource().getLocation().toString()
+                 .startsWith("file:/restore-http-testclasses"), "not a production entry");
+-        require(sha(Files.readAllBytes(Path.of("/application.jar"))).equals(config.path("jarSha256").asText()), "same original JAR");
++        startupStage = StartupStage.JAR_IDENTITY;
++        startupRequire(sha(Files.readAllBytes(Path.of("/application.jar"))).equals(config.path("jarSha256").asText()), "same original JAR");
++        diagnosticAdmitted = true;
++        startupCheckpoint(StartupStage.ENVIRONMENT_GUARD);
+         String mode = System.getenv("CHENGYIN_RESTORE_MODE");
+-        require(Objects.equals(mode, config.path("restoreMode").asText()), "real process environment differs");
+-        require(Set.of("true", "invalid", "", "false").contains(mode), "fixed four boot modes");
+-        require(RestoreDispatchGuard.isRestoreMode() == !"false".equals(mode), "real static guard state");
+-        SpringApplication app = new SpringApplication(RuoYiApplication.class, FixtureEndpoints.class, Observations.class);
++        startupRequire(Objects.equals(mode, config.path("restoreMode").asText()), "real process environment differs");
++        startupRequire(Set.of("true", "invalid", "", "false").contains(mode), "fixed four boot modes");
++        startupRequire(RestoreDispatchGuard.isRestoreMode() == !"false".equals(mode), "real static guard state");
++        startupCheckpoint(StartupStage.SPRING_RUN);
++        SpringApplication app = new SpringApplication(RuoYiApplication.class, FixtureEndpoints.class, Observations.class,
++                QuartzShutdownConfiguration.class);
+         app.setAdditionalProfiles(PROFILE);
+         application = app.run("--spring.config.location=file:/fixture/application.properties",
+                 "--server.address=127.0.0.1", "--server.port=8080", "--spring.messages.basename=i18n/messages",
+@@ -86,24 +114,31 @@ public final class RestoreHttpApplicationChild {
+                 "--spring.quartz.wait-for-jobs-to-complete-on-shutdown=true",
+                 "--withdrawal.fast-withdraw.enabled=true",
+                 "--wx.pay.appid=restore-http-app", "--wx.pay.merchant-id=restore-http-mch");
++        startupCheckpoint(StartupStage.MYBATIS_OBSERVERS);
+         var factories=application.getBeansOfType(org.apache.ibatis.session.SqlSessionFactory.class);
+-        require(!factories.isEmpty(),"real MyBatis factories required");
++        startupRequire(!factories.isEmpty(),"real MyBatis factories required");
+         factories.values().forEach(factory -> factory.getConfiguration().addInterceptor(new MapperObservations()));
++        startupCheckpoint(StartupStage.DATASOURCE_IDENTITY);
+         JdbcTemplate db = application.getBean(JdbcTemplate.class);
+-        require(config.path("serverUuid").asText().equals(db.queryForObject("SELECT @@server_uuid", String.class))
++        startupRequire(config.path("serverUuid").asText().equals(db.queryForObject("SELECT @@server_uuid", String.class))
+                 && config.path("schema").asText().equals(db.queryForObject("SELECT DATABASE()", String.class)), "actual restored datasource");
+-        require(application.getEnvironment().getProperty("chengyin.jobs.enabled", Boolean.class, false)
+-                && application.getEnvironment().getProperty("spring.quartz.wait-for-jobs-to-complete-on-shutdown", Boolean.class, false)
+-                && application.getBean(org.quartz.Scheduler.class).isStarted(), "real scheduler enabled and shutdown draining");
++        startupCheckpoint(StartupStage.QUARTZ_PROPERTIES);
++        startupRequire(application.getEnvironment().getProperty("chengyin.jobs.enabled", Boolean.class, false)
++                && application.getEnvironment().getProperty("spring.quartz.wait-for-jobs-to-complete-on-shutdown", Boolean.class, false),
++                "real scheduler enabled and shutdown draining");
++        startupCheckpoint(StartupStage.QUARTZ_FACTORY);
+         var realScheduler = application.getBean(org.quartz.Scheduler.class);
+-        var quartzFactories = application.getBeansOfType(org.springframework.scheduling.quartz.SchedulerFactoryBean.class);
+-        require(quartzFactories.values().stream().anyMatch(factory -> factory.getScheduler() == realScheduler
+-                && Boolean.TRUE.equals(new org.springframework.beans.DirectFieldAccessor(factory)
+-                        .getPropertyValue("waitForJobsToCompleteOnShutdown"))), "actual Quartz factory must wait on shutdown");
++        assertQuartzFactory(application, realScheduler);
++        startupCheckpoint(StartupStage.SCHEDULER_LEADERSHIP);
++        // The real coordinator acquires its session lock on an independent thread. Never force
++        // factory auto-start or call maintainLeadership here; the parent retains its original 180s cap.
++        awaitScheduler(realScheduler, readinessDeadline);
++        startupCheckpoint(StartupStage.ORIGINAL_IDENTITIES);
+         if (config.path("seed").asBoolean()) {
+             require("false".equals(mode) && !Files.exists(PRIVATE.resolve("identities.json")), "seed once in isolated source transport fixture");
+             seed(db);
+         } else require(Files.isRegularFile(PRIVATE.resolve("identities.json")), "original identities required; no reseed");
++        startupCheckpoint(StartupStage.READY_PUBLISH);
+         var ready = JSON.createObjectNode().put("sourceSha", config.path("sourceSha").asText())
+                 .put("jarSha256", config.path("jarSha256").asText()).put("bootId", BOOT)
+                 .put("javaPid", ProcessHandle.current().pid()).put("serverUuid", config.path("serverUuid").asText())
+@@ -112,6 +147,82 @@ public final class RestoreHttpApplicationChild {
+                 .put("port", ((ServletWebServerApplicationContext) application).getWebServer().getPort());
+         write(PRIVATE.resolve("ready.json"), ready);
+         application.registerShutdownHook();
++        startupStage = StartupStage.READY;
++        startupObservation("READY", null);
++    }
++
++    /** Test-classpath customization of the actual Boot factory; no new factory or leader bypass. */
++    @org.springframework.context.annotation.Configuration(proxyBeanMethods=false) @Profile(PROFILE)
++    public static class QuartzShutdownConfiguration {
++        @org.springframework.context.annotation.Bean
++        @Order(Ordered.LOWEST_PRECEDENCE)
++        public org.springframework.boot.quartz.autoconfigure.SchedulerFactoryBeanCustomizer restoreHttpQuartzShutdown() {
++            return factory -> factory.setWaitForJobsToCompleteOnShutdown(true);
++        }
++    }
++
++    static void assertQuartzFactory(ConfigurableApplicationContext context, org.quartz.Scheduler scheduler) {
++        var factories=context.getBeansOfType(org.springframework.scheduling.quartz.SchedulerFactoryBean.class);
++        startupRequire(factories.values().stream().anyMatch(factory -> factory.getScheduler() == scheduler
++                && Boolean.TRUE.equals(new org.springframework.beans.DirectFieldAccessor(factory)
++                        .getPropertyValue("waitForJobsToCompleteOnShutdown"))), "actual Quartz factory must wait on shutdown");
++    }
++
++    static void awaitScheduler(org.quartz.Scheduler scheduler, long deadlineNanos) throws Exception {
++        while (!scheduler.isStarted()) {
++            if (System.nanoTime() >= deadlineNanos)
++                throw new StartupRejected("real scheduler leadership did not start within original readiness window",
++                        StartupReason.SCHEDULER_LEADERSHIP_TIMEOUT);
++            Thread.sleep(100);
++        }
++    }
++
++    static void startupRequire(boolean value, String message) {
++        if (!value) throw new StartupRejected(message, StartupReason.ASSERTION_REJECTED);
++    }
++
++    static void startupCheckpoint(StartupStage stage) throws Exception {
++        startupStage=stage;startupObservation("PROGRESS", null);
++    }
++
++    static String startupFailureType(Throwable failure) {
++        if (failure == null) return "NONE";
++        if (failure instanceof StartupRejected || failure instanceof IllegalStateException) return "ILLEGAL_STATE";
++        if (failure instanceof org.springframework.beans.factory.UnsatisfiedDependencyException) return "UNSATISFIED_DEPENDENCY";
++        if (failure instanceof org.springframework.beans.factory.BeanCreationException) return "BEAN_CREATION";
++        if (failure instanceof java.sql.SQLException) return "SQL";
++        if (failure instanceof java.io.IOException) return "IO";
++        if (failure instanceof org.quartz.SchedulerException) return "SCHEDULER";
++        if (failure instanceof InterruptedException) return "INTERRUPTED";
++        return "OTHER";
++    }
++
++    static ObjectNode startupDocument(String status, Throwable failure) {
++        // Only fixed enums and already-bound identities. No message, cause, SQL, config or stack.
++        require(Set.of("PROGRESS","FAILED","READY").contains(status), "fixed startup observation status");
++        StartupReason reason=failure == null ? StartupReason.NONE
++                : failure instanceof StartupRejected rejected ? rejected.reason : StartupReason.UNCLASSIFIED_FAILURE;
++        return JSON.createObjectNode().put("sourceSha",config.path("sourceSha").asText())
++                .put("jarSha256",config.path("jarSha256").asText())
++                .put("classManifestSha256",config.path("classManifestSha256").asText())
++                .put("scope",config.path("scope").asText()).put("schema",config.path("schema").asText())
++                .put("restoreMode",config.path("restoreMode").asText())
++                .put("bootId",BOOT).put("javaPid",ProcessHandle.current().pid())
++                .put("stage",startupStage.name()).put("status",status).put("reasonCode",reason.name())
++                .put("failureType",startupFailureType(failure));
++    }
++
++    static void startupObservation(String status, Throwable failure) throws Exception {
++        if (!diagnosticAdmitted) return; // No evidence before source/JAR/test-classpath admission.
++        Path file=PRIVATE.resolve("startup.json"), next=PRIVATE.resolve("startup.next");
++        require(!Files.isSymbolicLink(file) && !Files.exists(next), "exclusive private startup observation");
++        byte[] bytes=JSON.writeValueAsBytes(startupDocument(status,failure));
++        require(bytes.length<=4096,"bounded startup observation");
++        try(FileChannel channel=FileChannel.open(next,StandardOpenOption.CREATE_NEW,StandardOpenOption.WRITE)) {
++            Files.setPosixFilePermissions(next,PosixFilePermissions.fromString("rw-------"));
++            ByteBuffer buffer=ByteBuffer.wrap(bytes);while(buffer.hasRemaining())channel.write(buffer);channel.force(true);
++        }
++        Files.move(next,file,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
+     }
+ 
+     static void seed(JdbcTemplate db) throws Exception {
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpStartupContractTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpStartupContractTest.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..09def1317f7a3932f71a4aee8dd038e56b3dce47
+--- /dev/null
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpStartupContractTest.java
+@@ -0,0 +1,155 @@
++package com.chengyinhub.business.it;
++
++import com.chengyinhub.quartz.config.LeaderJobsQuartzConfig;
++import com.fasterxml.jackson.databind.JsonNode;
++import org.junit.jupiter.api.AfterEach;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.Test;
++import org.quartz.Scheduler;
++import org.springframework.beans.DirectFieldAccessor;
++import org.springframework.boot.quartz.autoconfigure.QuartzAutoConfiguration;
++import org.springframework.context.annotation.AnnotationConfigApplicationContext;
++import org.springframework.core.env.MapPropertySource;
++import org.springframework.scheduling.quartz.SchedulerFactoryBean;
++
++import java.lang.reflect.InvocationTargetException;
++import java.lang.reflect.Proxy;
++import java.util.HashSet;
++import java.util.Map;
++import java.util.Set;
++import java.util.UUID;
++import java.util.concurrent.CountDownLatch;
++import java.util.concurrent.Executors;
++import java.util.concurrent.TimeUnit;
++import java.util.concurrent.atomic.AtomicInteger;
++
++import static org.junit.jupiter.api.Assertions.*;
++
++/** Direct SOURCE controls: real Boot/Quartz memory factory, no application/DB/provider boot.
++ * Explicit scheduler.start here models only the asynchronous leader callback, not MySQL leadership.
++ */
++class RestoreHttpStartupContractTest {
++    private JsonNode originalConfig;
++    private RestoreHttpApplicationChild.StartupStage originalStage;
++    private boolean originalAdmission;
++
++    @BeforeEach void retainChildStatics() {
++        originalConfig=RestoreHttpApplicationChild.config;
++        originalStage=RestoreHttpApplicationChild.startupStage;
++        originalAdmission=RestoreHttpApplicationChild.diagnosticAdmitted;
++    }
++    @AfterEach void restoreChildStatics() {
++        RestoreHttpApplicationChild.config=originalConfig;
++        RestoreHttpApplicationChild.startupStage=originalStage;
++        RestoreHttpApplicationChild.diagnosticAdmitted=originalAdmission;
++    }
++
++    private AnnotationConfigApplicationContext quartz() {
++        var context=new AnnotationConfigApplicationContext();
++        context.getEnvironment().setActiveProfiles(RestoreHttpApplicationChild.PROFILE);
++        context.getEnvironment().getPropertySources().addFirst(new MapPropertySource("owned-quartz-control",
++                Map.of("spring.quartz.scheduler-name","restore-http-control-"+UUID.randomUUID(),
++                        "spring.quartz.job-store-type","memory",
++                        "spring.quartz.auto-startup","true",
++                        "spring.quartz.wait-for-jobs-to-complete-on-shutdown","false",
++                        "spring.quartz.properties.org.quartz.threadPool.threadCount","1")));
++        context.register(QuartzAutoConfiguration.class,LeaderJobsQuartzConfig.class,
++                RestoreHttpApplicationChild.QuartzShutdownConfiguration.class);
++        try {context.refresh();return context;}
++        catch (RuntimeException | Error failure) {context.close();throw failure;}
++    }
++
++    @Test void actualBootFactoryWaitsOnShutdownWithoutBypassingTheOriginalLeaderCustomizer() throws Exception {
++        try(var context=quartz()) {
++            Scheduler scheduler=context.getBean(Scheduler.class);
++            var factories=context.getBeansOfType(SchedulerFactoryBean.class);
++            assertEquals(1,factories.size());
++            SchedulerFactoryBean factory=factories.values().iterator().next();
++            assertSame(scheduler,factory.getScheduler());
++            assertEquals(Boolean.TRUE,new DirectFieldAccessor(factory).getPropertyValue("waitForJobsToCompleteOnShutdown"));
++            // The test customizer changes actual wait even when a property alone says false.
++            assertFalse(context.getEnvironment().getProperty("spring.quartz.wait-for-jobs-to-complete-on-shutdown",Boolean.class,true));
++            assertFalse(factory.isAutoStartup()); // Production leader customizer remains authoritative.
++            assertFalse(scheduler.isStarted());
++            RestoreHttpApplicationChild.assertQuartzFactory(context,scheduler);
++        }
++    }
++
++    @Test void aDifferentRealSchedulerCannotStandInForTheSelectedFactory() throws Exception {
++        try(var first=quartz();var second=quartz()) {
++            Scheduler original=first.getBean(Scheduler.class),foreign=second.getBean(Scheduler.class);
++            assertNotSame(original,foreign);
++            var failure=assertThrows(RestoreHttpApplicationChild.StartupRejected.class,
++                    () -> RestoreHttpApplicationChild.assertQuartzFactory(first,foreign));
++            assertEquals(RestoreHttpApplicationChild.StartupReason.ASSERTION_REJECTED,failure.reason);
++            assertTrue(failure.getMessage().contains("actual Quartz factory must wait"));
++            assertFalse(original.isStarted());assertFalse(foreign.isStarted());
++        }
++    }
++
++    @Test void realSchedulerCanBecomeStartedAfterTheInitialObservationWithoutForcedAutostart() throws Exception {
++        try(var context=quartz();var worker=Executors.newSingleThreadExecutor()) {
++            Scheduler actual=context.getBean(Scheduler.class);
++            CountDownLatch firstObservation=new CountDownLatch(1),leaderCallback=new CountDownLatch(1);
++            AtomicInteger reads=new AtomicInteger();
++            Scheduler observed=(Scheduler)Proxy.newProxyInstance(Scheduler.class.getClassLoader(),
++                    new Class<?>[]{Scheduler.class},(proxy,method,args) -> {
++                        if(method.getName().equals("isStarted") && reads.getAndIncrement()==0) {
++                            firstObservation.countDown();
++                            assertTrue(leaderCallback.await(2,TimeUnit.SECONDS));
++                            return false;
++                        }
++                        try {return method.invoke(actual,args);}
++                        catch(InvocationTargetException failure) {throw failure.getCause();}
++                    });
++            var waiting=worker.submit(() -> {
++                RestoreHttpApplicationChild.awaitScheduler(observed,System.nanoTime()+TimeUnit.SECONDS.toNanos(5));
++                return null;
++            });
++            try {
++                assertTrue(firstObservation.await(2,TimeUnit.SECONDS));
++                assertFalse(actual.isStarted());
++                actual.start(); // Controlled stand-in for the existing leader refresh callback only.
++                leaderCallback.countDown();
++                waiting.get(2,TimeUnit.SECONDS);
++                assertTrue(actual.isStarted());assertTrue(reads.get()>=2);
++            } finally {
++                leaderCallback.countDown();waiting.cancel(true);
++            }
++        }
++    }
++
++    @Test void leadershipTimeoutPreservesTypedFailureAndNeverStartsTheScheduler() throws Exception {
++        try(var context=quartz()) {
++            Scheduler actual=context.getBean(Scheduler.class);
++            var failure=assertThrows(RestoreHttpApplicationChild.StartupRejected.class,
++                    () -> RestoreHttpApplicationChild.awaitScheduler(actual,System.nanoTime()-1));
++            assertEquals(RestoreHttpApplicationChild.StartupReason.SCHEDULER_LEADERSHIP_TIMEOUT,failure.reason);
++            assertFalse(actual.isStarted());
++        }
++    }
++
++    @Test void startupProjectionContainsOnlyFixedEnumsAndBoundIdentitiesNeverMessagesOrCauses() {
++        RestoreHttpApplicationChild.config=RestoreHttpApplicationChild.JSON.createObjectNode()
++                .put("sourceSha","a".repeat(40)).put("jarSha256","b".repeat(64))
++                .put("classManifestSha256","c".repeat(64)).put("scope","d".repeat(32))
++                .put("schema","cy_e2e_auth_"+"d".repeat(32)).put("restoreMode","invalid")
++                .put("tokenSecret","private-stack-canary").put("jdbcUrl","private-SQL-canary");
++        RestoreHttpApplicationChild.startupStage=RestoreHttpApplicationChild.StartupStage.QUARTZ_FACTORY;
++        var failure=new RestoreHttpApplicationChild.StartupRejected("private-provider-message",
++                RestoreHttpApplicationChild.StartupReason.ASSERTION_REJECTED);
++        failure.initCause(new IllegalStateException("private-cause-canary"));
++        JsonNode document=RestoreHttpApplicationChild.startupDocument("FAILED",failure);
++        Set<String> fields=new HashSet<>();document.fieldNames().forEachRemaining(fields::add);
++        assertEquals(Set.of("sourceSha","jarSha256","classManifestSha256","scope","schema","restoreMode",
++                "bootId","javaPid","stage","status","reasonCode","failureType"),fields);
++        assertEquals("QUARTZ_FACTORY",document.path("stage").asText());
++        assertEquals("ASSERTION_REJECTED",document.path("reasonCode").asText());
++        assertEquals("ILLEGAL_STATE",document.path("failureType").asText());
++        assertFalse(document.toString().contains("private"));
++        assertEquals("UNCLASSIFIED_FAILURE",RestoreHttpApplicationChild.startupDocument("FAILED",
++                new AssertionError("private-unknown-canary")).path("reasonCode").asText());
++        assertEquals("OTHER",RestoreHttpApplicationChild.startupDocument("FAILED",
++                new AssertionError("private-unknown-canary")).path("failureType").asText());
++    }
++}

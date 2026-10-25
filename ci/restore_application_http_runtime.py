@@ -39,7 +39,16 @@ REASON_CODES = {
     'complete Spring child exited before readiness': 'APP_EXITED_BEFORE_READY',
     'bounded complete application startup timeout': 'APP_READINESS_TIMEOUT',
     'actual child boot identity': 'APP_BOOT_IDENTITY_REJECTED',
+    'child startup rejected': 'APP_CHILD_STARTUP_REJECTED',
 }
+
+
+STARTUP_STAGES={'ADMISSION','SOURCE_IDENTITY','JAR_IDENTITY','ENVIRONMENT_GUARD','SPRING_RUN',
+                'MYBATIS_OBSERVERS','DATASOURCE_IDENTITY','QUARTZ_PROPERTIES','QUARTZ_FACTORY',
+                'SCHEDULER_LEADERSHIP','ORIGINAL_IDENTITIES','READY_PUBLISH','READY'}
+STARTUP_REASONS={'NONE','ASSERTION_REJECTED','SCHEDULER_LEADERSHIP_TIMEOUT','UNCLASSIFIED_FAILURE'}
+STARTUP_FAILURE_TYPES={'NONE','ILLEGAL_STATE','UNSATISFIED_DEPENDENCY','BEAN_CREATION','SQL','IO',
+                       'SCHEDULER','INTERRUPTED','OTHER'}
 
 
 def require(ok, reason):
@@ -126,6 +135,7 @@ class ApplicationSlot:
         self.token_secret=__import__('secrets').token_urlsafe(48)
         self.deadline=time.monotonic()+1500
         self.cid=None;self.boots=[];self.removed=[];self.owned=[];self.process=None
+        self.launch=None;self.pending_process=None;self.ready_for_current_launch=False;self.startup_observation=None
         self.source=self.auth.mysql_endpoint(name,suffix='mysql')
         self.target=self.auth.mysql_endpoint(name,suffix='restore-mysql')
         require(self.source['id']!=self.target['id'] and self.source['networkId']==self.target['networkId'], 'distinct same-network DBs')
@@ -164,37 +174,97 @@ class ApplicationSlot:
         result=subprocess.run(self.auth.DOCKER+['container','inspect',self.name+'-app'],capture_output=True,timeout=15)
         self.auth.require_absent('container',self.name+'-app',result.returncode,result.stderr.decode())
 
-    def running_child_identity(self, boot, obj):
-        """Bind this immutable CID/PID1 to its original boot, source, JAR and kernel start time."""
-        require(obj['Id'] == self.cid and boot.get('appCid') == self.cid
-                and type(boot.get('javaPid')) is int and boot['javaPid'] == 1
-                and obj['Config']['Image'] == JDK and obj['Config']['Entrypoint'] == ['/trace/strace']
-                and obj['Config']['Cmd'][:2] == ['-D', '-f']
-                and 'GITHUB_SHA=' + boot['sourceSha'] in obj['Config']['Env']
-                and 'CHENGYIN_RESTORE_MODE=' + boot['restoreMode'] in obj['Config']['Env']
-                and obj['NetworkSettings']['Networks'][self.name]['NetworkID'] == self.source['networkId']
+    def running_launch_identity(self, obj):
+        """Independent pre-ready proof. It never manufactures a boot or business quiescence."""
+        launch=self.launch
+        require(isinstance(launch,dict) and launch['cid']==self.cid and obj['Id']==self.cid
+                and obj['Name']=='/'+self.name+'-app'
+                and obj['Config']['Labels'].get('chengyin.auth-recovery')==self.name
+                and obj['Config']['Image']==JDK and obj['Config']['Entrypoint']==['/trace/strace']
+                and obj['Config']['Cmd'][:2]==['-D','-f']
+                and 'GITHUB_SHA='+launch['sourceSha'] in obj['Config']['Env']
+                and 'CHENGYIN_RESTORE_MODE='+launch['restoreMode'] in obj['Config']['Env']
+                and set(obj['NetworkSettings']['Networks'])=={self.name}
+                and obj['NetworkSettings']['Networks'][self.name]['NetworkID']==self.source['networkId']
                 and obj['State']['Running'] and not obj['State']['Restarting'] and not obj['State']['OOMKilled']
-                and type(obj['State']['Pid']) is int and obj['State']['Pid'] > 0,
+                and type(obj['State']['Pid']) is int and obj['State']['Pid']>0,
                 'actual child boot identity')
-        require(boot['sourceSha'] == os.environ['GITHUB_SHA'] and boot['jarSha256'] == self.jar_hash
+        require(launch['sourceSha']==os.environ['GITHUB_SHA'] and launch['jarSha256']==self.jar_hash
                 and self.jar.is_file() and not self.jar.is_symlink()
-                and hashlib.sha256(self.jar.read_bytes()).hexdigest() == self.jar_hash, 'actual child boot identity')
-        ready_path, config_path = self.root / 'ready.json', self.root / 'config.json'
-        require(all(path.is_file() and not path.is_symlink() for path in (ready_path, config_path)),
+                and hashlib.sha256(self.jar.read_bytes()).hexdigest()==self.jar_hash,
                 'actual child boot identity')
-        ready_raw, config_raw = ready_path.read_bytes(), config_path.read_bytes()
-        ready, config = json.loads(ready_raw), json.loads(config_raw)
-        require(all(ready.get(key) == boot.get(key) for key in
+        config_path=self.root/'config.json'
+        require(config_path.is_file() and not config_path.is_symlink()
+                and hashlib.sha256(config_path.read_bytes()).hexdigest()==launch['configSha256'],
+                'actual child boot identity')
+        config=json.loads(config_path.read_bytes())
+        require(all(config.get(key)==launch.get(key) for key in
+                    ('sourceSha','jarSha256','restoreMode','schema','serverUuid'))
+                and config.get('classManifestSha256')==self.manifest_hash
+                and config.get('scope')==self.name[8:], 'actual child boot identity')
+        raw=self.auth.command(self.auth.DOCKER+['exec',self.cid,'cat','/proc/1/cmdline','/proc/1/stat'],timeout=10)
+        return {**pid1_jvm_proof(raw),'cid':self.cid,'hostPid':obj['State']['Pid'],
+                'sourceSha':launch['sourceSha'],'jarSha256':self.jar_hash,
+                'configSha256':launch['configSha256']}
+
+    def running_child_identity(self, boot, obj):
+        require(boot.get('appCid')==self.cid and type(boot.get('javaPid')) is int and boot['javaPid']==1,
+                'actual child boot identity')
+        proof=self.running_launch_identity(obj)
+        ready_path=self.root/'ready.json'
+        require(ready_path.is_file() and not ready_path.is_symlink(), 'actual child boot identity')
+        ready_raw=ready_path.read_bytes();ready=json.loads(ready_raw)
+        require(all(ready.get(key)==boot.get(key) for key in
                     ('bootId','javaPid','sourceSha','jarSha256','schema','restoreMode','serverUuid'))
-                and all(config.get(key) == boot.get(key) for key in
-                        ('sourceSha','jarSha256','schema','restoreMode','serverUuid'))
-                and config.get('classManifestSha256') == self.manifest_hash
-                and config.get('scope') == self.name[8:], 'actual child boot identity')
-        raw = self.auth.command(self.auth.DOCKER + ['exec', self.cid, 'cat', '/proc/1/cmdline', '/proc/1/stat'], timeout=10)
-        return {**pid1_jvm_proof(raw), 'cid':self.cid, 'hostPid':obj['State']['Pid'],
-                'bootId':boot['bootId'], 'sourceSha':boot['sourceSha'], 'jarSha256':self.jar_hash,
-                'readySha256':hashlib.sha256(ready_raw).hexdigest(),
-                'configSha256':hashlib.sha256(config_raw).hexdigest()}
+                and all(boot.get(key)==self.launch.get(key) for key in
+                        ('sourceSha','jarSha256','schema','restoreMode','serverUuid')),
+                'actual child boot identity')
+        return {**proof,'bootId':boot['bootId'],'readySha256':hashlib.sha256(ready_raw).hexdigest()}
+
+    def read_startup_observation(self):
+        path=self.root/'startup.json'
+        if not path.exists():return None
+        require(path.is_file() and not path.is_symlink() and path.stat().st_size<=4096,
+                'actual child boot identity')
+        with path.open('rb') as stream:raw=stream.read(4097)
+        require(len(raw)<=4096,'actual child boot identity')
+        value=json.loads(raw);launch=self.launch
+        keys={'sourceSha','jarSha256','classManifestSha256','scope','schema','restoreMode',
+              'bootId','javaPid','stage','status','reasonCode','failureType'}
+        require(isinstance(value,dict) and set(value)==keys and isinstance(launch,dict)
+                and all(value.get(key)==launch.get(key) for key in
+                        ('sourceSha','jarSha256','schema','restoreMode'))
+                and value['classManifestSha256']==self.manifest_hash and value['scope']==self.name[8:]
+                and isinstance(value['bootId'],str)
+                and re.fullmatch('[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}',value['bootId'])
+                and type(value['javaPid']) is int and value['javaPid']==1
+                and value['stage'] in STARTUP_STAGES and value['status'] in ('PROGRESS','FAILED','READY')
+                and value['reasonCode'] in STARTUP_REASONS and value['failureType'] in STARTUP_FAILURE_TYPES,
+                'actual child boot identity')
+        require((value['status']=='FAILED' and value['reasonCode']!='NONE' and value['failureType']!='NONE')
+                or (value['status']!='FAILED' and value['reasonCode']=='NONE' and value['failureType']=='NONE'),
+                'actual child boot identity')
+        require(value['status']!='READY' or value['stage']=='READY', 'actual child boot identity')
+        self.startup_observation=dict(value)
+        return dict(value)
+
+    def wait_for_ready(self):
+        until=time.monotonic()+180
+        while time.monotonic()<until:
+            self.budget()
+            obj=self.inspect(self.cid)
+            require(obj['State']['Running'],'complete Spring child exited before readiness')
+            if self.pending_process is None:
+                try:self.pending_process=self.running_launch_identity(obj)
+                except ValueError as failure:
+                    # strace PID1 has not necessarily exec'd Java yet. No proof means no safe stop.
+                    if getattr(failure,'restore_reason_code',None)!='APP_BOOT_IDENTITY_REJECTED':raise
+            observed=self.read_startup_observation()
+            if observed is not None and observed['status']=='FAILED':
+                require(False,'child startup rejected')
+            if (self.root/'ready.json').is_file() and observed is not None and observed['status']=='READY':return
+            time.sleep(1)
+        require(False,'bounded complete application startup timeout')
 
     def stop(self,remove=True):
         if self.cid is None:
@@ -208,9 +278,14 @@ class ApplicationSlot:
         failure = None
         try:
             if obj['State']['Running']:
-                require(self.process is not None and self.boots
-                        and self.running_child_identity(self.boots[-1], obj) == self.process,
-                        'actual child boot identity')
+                if self.ready_for_current_launch:
+                    require(self.process is not None and self.boots
+                            and self.running_child_identity(self.boots[-1],obj)==self.process,
+                            'actual child boot identity')
+                else:
+                    require(self.pending_process is not None
+                            and self.running_launch_identity(obj)==self.pending_process,
+                            'actual child boot identity')
                 # -D makes this verified JVM PID1. Keep the original 20-second TERM/KILL boundary.
                 self.auth.command(self.auth.DOCKER+['stop','--time','20',self.cid],timeout=30)
         except BaseException as error:
@@ -227,9 +302,13 @@ class ApplicationSlot:
         if failure is not None:raise failure
         require(not stopped['Running'] and not stopped['OOMKilled'] and not stopped['Restarting']
                 and stopped['Pid']==0 and stopped['ExitCode'] in (0,143),'app stop/process exit unknown')
+        require((self.ready_for_current_launch and self.process is not None)
+                or (not self.ready_for_current_launch and self.pending_process is not None),
+                'actual child boot identity')
+        self.stop_proof_kind='READY_JVM_EXIT_CONFIRMED' if self.ready_for_current_launch else 'PRE_READY_JVM_EXIT_CONFIRMED'
         if not remove:return # Original outer cleanup must still collect this exact container's logs.
         self.auth.command(self.auth.DOCKER+['rm',self.cid],timeout=15)
-        self.absence();self.removed.append(self.cid);self.cid=None;self.process=None
+        self.absence();self.removed.append(self.cid);self.cid=None;self.process=None;self.pending_process=None
 
     def diagnostic_summary(self):
         """Observe the exact existing app only; outer owner still preserves/removes its raw log."""
@@ -244,6 +323,9 @@ class ApplicationSlot:
         state=obj['State']
         result={'result':'EXACT_APP_OBSERVED','cid':self.cid,
                 'state':{key:state[key] for key in ('Running','OOMKilled','Restarting','Pid','ExitCode')}}
+        if getattr(self,'launch',None) is not None:
+            observed=self.read_startup_observation()
+            if observed is not None:result['childStartup']=observed
         log=subprocess.run(self.auth.DOCKER+['logs','--tail','160',self.cid],
                            stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=10)
         if log.returncode:
@@ -256,7 +338,9 @@ class ApplicationSlot:
         self.budget();require(side in ('source','target') and mode in ('true','invalid','','false'),'fixed boot matrix')
         require(not seed or (side=='source' and mode=='false' and not self.boots),'one isolated source seed')
         self.stop()
-        self.process=None
+        self.process=None;self.pending_process=None;self.launch=None
+        self.ready_for_current_launch=False;self.startup_observation=None
+        if hasattr(self,'stop_proof_kind'):del self.stop_proof_kind
         if hasattr(self,'stopped'):del self.stopped
         endpoint=self.source if side=='source' else self.target
         require(self.auth.mysql_endpoint(self.name,suffix='mysql' if side=='source' else 'restore-mysql')==endpoint,'DB identity changed')
@@ -266,6 +350,7 @@ class ApplicationSlot:
                 'redisHost':self.redis_ip,'tokenSecret':self.token_secret,'serverUuid':uuid,'restoreMode':mode,'seed':seed}
         write_private(self.root/'config.json',config)
         (self.root/'ready.json').unlink(missing_ok=True)
+        (self.root/'startup.json').unlink(missing_ok=True)
         trace='network-'+str(len(self.boots))+'.trace';strace=shutil.which('strace')
         require(strace and (self.out/'trace-libs').is_dir(),'reuse original tracing preparation')
         # Original immutable app image/network/strace/memory/user/JAR/config. Only the test child and
@@ -286,6 +371,8 @@ class ApplicationSlot:
                 '-cp','/application.jar','org.springframework.boot.loader.launch.PropertiesLauncher'],timeout=120)
         self.cid=raw.decode().strip();require(re.fullmatch('[0-9a-f]{64}',self.cid),'exact created app CID')
         self.owned.append(self.cid)
+        self.launch={**{key:config[key] for key in ('sourceSha','jarSha256','schema','restoreMode','serverUuid')},
+                     'cid':self.cid,'configSha256':hashlib.sha256((self.root/'config.json').read_bytes()).hexdigest()}
         obj=self.inspect(self.name+'-app')
         require(obj['Id']==self.cid and obj['Config']['Image']==JDK
                 and obj['Config']['Labels'].get('chengyin.auth-recovery')==self.name
@@ -294,22 +381,17 @@ class ApplicationSlot:
                 and obj['NetworkSettings']['Networks'][self.name]['NetworkID']==self.source['networkId']
                 and not obj['HostConfig'].get('PortBindings'),'original app isolation/budget')
         require('CHENGYIN_RESTORE_MODE='+mode in obj['Config']['Env'],'real env mode missing')
-        until=time.monotonic()+180
-        while time.monotonic()<until:
-            self.budget()
-            if (self.root/'ready.json').exists():break
-            require(self.inspect(self.cid)['State']['Running'],'complete Spring child exited before readiness')
-            time.sleep(1)
-        require((self.root/'ready.json').is_file(),'bounded complete application startup timeout')
+        self.wait_for_ready()
         boot=json.loads((self.root/'ready.json').read_text())
         require(boot['sourceSha']==os.environ['GITHUB_SHA'] and boot['jarSha256']==self.jar_hash
                 and boot['serverUuid']==uuid and boot['schema']==self.schema and boot['restoreMode']==mode
                 and boot['guardHeld']==(mode!='false') and boot['schedulerStarted'] is True
                 and all(boot['bootId']!=old['bootId'] for old in self.boots),'actual child boot identity')
-        require(type(boot['javaPid']) is int and boot['javaPid']==1,'actual child boot identity')
+        require(type(boot['javaPid']) is int and boot['javaPid']==1
+                and self.startup_observation['bootId']==boot['bootId'],'actual child boot identity')
         boot.update({'appCid':self.cid,'side':side,'trace':trace,'mysqlIp':endpoint['ip']})
         self.process=self.running_child_identity(boot,self.inspect(self.cid))
-        self.boots.append(boot);return boot
+        self.boots.append(boot);self.ready_for_current_launch=True;return boot
 
     def verify_network(self):
         boot=self.boots[-1]

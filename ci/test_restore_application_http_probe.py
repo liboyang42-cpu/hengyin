@@ -515,7 +515,11 @@ class RestoreHttpGracefulStopControls(unittest.TestCase):
             raise AssertionError('unexpected command')
         slot.auth=SimpleNamespace(DOCKER=['docker'],command=command);slot.inspect=lambda target:obj
         slot.absence=lambda:calls.append(('absence',{}));slot.boots=[boot];slot.removed=[];slot.owned=[slot.cid]
+        slot.launch={**{key:boot[key] for key in ('sourceSha','jarSha256','schema','restoreMode','serverUuid')},
+                     'cid':slot.cid,'configSha256':R.hashlib.sha256((slot.root/'config.json').read_bytes()).hexdigest()}
+        slot.pending_process=None;slot.ready_for_current_launch=True;slot.startup_observation=None
         with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}):
+            slot.pending_process=slot.running_launch_identity(obj)
             slot.process=slot.running_child_identity(boot,obj)
         calls.clear()
         return slot,obj,calls,data
@@ -609,7 +613,7 @@ class RestoreHttpGracefulStopControls(unittest.TestCase):
     def test_source_stop_failure_prevents_quiescent_sql_snapshot_and_propagates_original_error(self):
         report={'result':'NOT_COMPLETED'};saved=[];failure=ValueError('controlled stop failure')
         def stop():raise failure
-        slot=SimpleNamespace(stop=stop,runtime_report_write=lambda path,value:saved.append(copy.deepcopy(value)))
+        slot=SimpleNamespace(stop=stop,ready_for_current_launch=True,runtime_report_write=lambda path,value:saved.append(copy.deepcopy(value)))
         with patch.object(P,'snapshot') as read:
             with self.assertRaises(ValueError) as caught:P.source_quiescent_snapshot(slot,object(),3306,'owned',report,Path('unused'))
         self.assertIs(caught.exception,failure);read.assert_not_called()
@@ -618,7 +622,7 @@ class RestoreHttpGracefulStopControls(unittest.TestCase):
 
     def test_source_snapshot_uses_original_database_arguments_only_after_stop(self):
         events=[];report={'result':'NOT_COMPLETED'};auth=object();rows=object()
-        slot=SimpleNamespace(stop=lambda:events.append('stop'),
+        slot=SimpleNamespace(stop=lambda:events.append('stop'),ready_for_current_launch=True,
                 runtime_report_write=lambda path,value:events.append(value['substage']))
         def read(*args):
             self.assertEqual(events,['SOURCE_QUIESCENT_STOP','stop','QUIESCENT_SQL_SNAPSHOT'])
@@ -626,6 +630,132 @@ class RestoreHttpGracefulStopControls(unittest.TestCase):
         with patch.object(P,'snapshot',side_effect=read):
             self.assertIs(P.source_quiescent_snapshot(slot,auth,3306,'original_schema',report,Path('unused')),rows)
         self.assertEqual(report['result'],'NOT_COMPLETED')
+
+
+
+class RestoreHttpStartupFailureControls(unittest.TestCase):
+    """SOURCE only: exact private typed observations and proc/stop simulations, no real app or DB."""
+
+    @staticmethod
+    def startup(slot, stage='QUARTZ_FACTORY', status='FAILED', reason='ASSERTION_REJECTED'):
+        value={key:slot.launch[key] for key in ('sourceSha','jarSha256','schema','restoreMode')}
+        value.update(classManifestSha256=slot.manifest_hash,scope=slot.name[8:],
+                     bootId='11111111-2222-3333-4444-555555555555',javaPid=1,stage=stage,status=status,
+                     reasonCode=reason,failureType='ILLEGAL_STATE' if status=='FAILED' else 'NONE')
+        (slot.root/'startup.json').write_text(json.dumps(value))
+        return value
+
+    def test_failed_startup_returns_only_fixed_stage_reason_and_original_identity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            slot,_,_,_=RestoreHttpGracefulStopControls().running_slot(directory)
+            expected=self.startup(slot)
+            self.assertEqual(slot.read_startup_observation(),expected)
+            self.assertEqual(slot.startup_observation['stage'],'QUARTZ_FACTORY')
+            self.assertEqual(slot.startup_observation['sourceSha'],slot.launch['sourceSha'])
+            for secret in ('tokenSecret','jdbcUrl','message','cause','stack'):
+                self.assertNotIn(secret,slot.startup_observation)
+
+    def test_foreign_unbounded_or_unclassified_observation_is_not_public_evidence(self):
+        for mutation in ('source','jar','manifest','scope','pid','stage','reason','type','status','raw','size','misreported-size','symlink'):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
+                slot,_,_,_=RestoreHttpGracefulStopControls().running_slot(directory);value=self.startup(slot)
+                if mutation=='source':value['sourceSha']='b'*40
+                elif mutation=='jar':value['jarSha256']='b'*64
+                elif mutation=='manifest':value['classManifestSha256']='c'*64
+                elif mutation=='scope':value['scope']='c'*32
+                elif mutation=='pid':value['javaPid']=True
+                elif mutation=='stage':value['stage']='private-config-or-SQL'
+                elif mutation=='reason':value['reasonCode']='private-message'
+                elif mutation=='type':value['failureType']='private-cause'
+                elif mutation=='status':value['status']='READY'
+                elif mutation=='raw':value['message']='private-token-stack-canary'
+                path=slot.root/'startup.json';path.write_text(json.dumps(value))
+                if mutation=='size':path.write_text('x'*4097)
+                elif mutation=='symlink':
+                    path.unlink();path.symlink_to(slot.root/'config.json')
+                if mutation=='misreported-size':
+                    path.write_text(json.dumps(value)+' '*5000)
+                    with patch.object(Path,'stat',return_value=SimpleNamespace(st_size=1,st_mode=0o100600)):
+                        with self.assertRaises(ValueError):slot.read_startup_observation()
+                else:
+                    with self.assertRaises(ValueError):slot.read_startup_observation()
+                self.assertIsNone(slot.startup_observation)
+
+    def test_child_failure_is_seen_before_timeout_without_inventing_a_ready_boot(self):
+        with tempfile.TemporaryDirectory() as directory:
+            slot,_,calls,_=RestoreHttpGracefulStopControls().running_slot(directory)
+            self.startup(slot);(slot.root/'ready.json').unlink()
+            slot.boots=[];slot.process=None;slot.ready_for_current_launch=False;slot.pending_process=None
+            slot.budget=lambda:None
+            with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}), patch.object(R.time,'sleep') as sleep:
+                with self.assertRaisesRegex(ValueError,'child startup rejected') as caught:slot.wait_for_ready()
+            self.assertEqual(caught.exception.restore_reason_code,'APP_CHILD_STARTUP_REJECTED')
+            sleep.assert_not_called();self.assertEqual(slot.boots,[])
+            self.assertIsNotNone(slot.pending_process);self.assertFalse(slot.ready_for_current_launch)
+            self.assertFalse(any(argv[1]=='stop' for argv,_ in calls))
+
+    def test_unready_owned_jvm_can_stop_with_original_pre_ready_proof_but_is_not_a_boot(self):
+        with tempfile.TemporaryDirectory() as directory:
+            slot,_,_,_=RestoreHttpGracefulStopControls().running_slot(directory,143)
+            slot.boots=[];slot.process=None;slot.ready_for_current_launch=False
+            (slot.root/'ready.json').unlink();self.startup(slot)
+            with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}):slot.stop(remove=False)
+            self.assertEqual(slot.stop_proof_kind,'PRE_READY_JVM_EXIT_CONFIRMED')
+            self.assertEqual(slot.stopped['exitCode'],143);self.assertEqual(slot.boots,[])
+            self.assertFalse(slot.ready_for_current_launch);self.assertEqual(slot.removed,[])
+
+    def test_pre_ready_changed_process_or_missing_capture_never_receives_stop(self):
+        for mutation in ('startticks','hostpid','config','jar','source','missing'):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
+                slot,obj,calls,data=RestoreHttpGracefulStopControls().running_slot(directory)
+                slot.boots=[];slot.process=None;slot.ready_for_current_launch=False
+                if mutation=='startticks':data['proc']=RestoreHttpGracefulStopControls.proc_bytes(ticks=b'124')
+                elif mutation=='hostpid':obj['State']['Pid']=999
+                elif mutation=='config':(slot.root/'config.json').write_text('{}')
+                elif mutation=='jar':slot.jar.write_bytes(b'wrong original jar')
+                elif mutation=='source':slot.launch['sourceSha']='b'*40
+                else:slot.pending_process=None
+                with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}):
+                    with self.assertRaises(ValueError):slot.stop(remove=False)
+                self.assertFalse(any(argv[1]=='stop' for argv,_ in calls));self.assertEqual(slot.removed,[])
+
+    def test_pre_ready_137_and_no_captured_jvm_remain_unknown(self):
+        for captured,exit_code in ((True,137),(False,0)):
+            with self.subTest(captured=captured,exit_code=exit_code), tempfile.TemporaryDirectory() as directory:
+                slot,obj,calls,_=RestoreHttpGracefulStopControls().running_slot(directory,exit_code)
+                slot.boots=[];slot.process=None;slot.ready_for_current_launch=False
+                if not captured:
+                    slot.pending_process=None;obj['State'].update(Running=False,Pid=0,ExitCode=exit_code)
+                with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}):
+                    with self.assertRaises(ValueError):slot.stop()
+                self.assertEqual(slot.stopped['exitCode'],exit_code);self.assertEqual(slot.removed,[])
+                self.assertFalse(any(isinstance(argv,list) and argv[1]=='rm' for argv,_ in calls))
+
+    def test_startup_progress_or_missing_ready_stays_bounded_and_never_becomes_a_boot(self):
+        with tempfile.TemporaryDirectory() as directory:
+            slot,_,_,_=RestoreHttpGracefulStopControls().running_slot(directory)
+            self.startup(slot,'SCHEDULER_LEADERSHIP','PROGRESS','NONE')
+            (slot.root/'ready.json').unlink();slot.boots=[];slot.ready_for_current_launch=False
+            slot.budget=lambda:None
+            with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}), patch.object(R.time,'monotonic',side_effect=[0,0,181]), patch.object(R.time,'sleep') as sleep:
+                with self.assertRaises(ValueError) as caught:slot.wait_for_ready()
+            self.assertEqual(caught.exception.restore_reason_code,'APP_READINESS_TIMEOUT')
+            sleep.assert_called_once_with(1);self.assertEqual(slot.boots,[])
+            self.assertEqual(slot.startup_observation['stage'],'SCHEDULER_LEADERSHIP')
+
+    def test_ready_file_alone_is_not_an_admission_and_cannot_trigger_source_snapshot(self):
+        with tempfile.TemporaryDirectory() as directory:
+            slot,_,_,_=RestoreHttpGracefulStopControls().running_slot(directory)
+            self.startup(slot,'QUARTZ_FACTORY','PROGRESS','NONE')
+            slot.ready_for_current_launch=False;slot.budget=lambda:None
+            with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}), patch.object(R.time,'monotonic',side_effect=[0,0,181]), patch.object(R.time,'sleep'):
+                with self.assertRaises(ValueError):slot.wait_for_ready()
+            report={'result':'NOT_COMPLETED'}
+            slot.runtime_report_write=lambda *args:None
+            with patch.object(P,'snapshot') as read, patch.object(slot,'stop') as stop:
+                with self.assertRaisesRegex(ValueError,'must be ready'):P.source_quiescent_snapshot(slot,object(),3306,'owned',report,Path('unused'))
+            stop.assert_not_called();read.assert_not_called()
+            self.assertEqual(report['result'],'NOT_COMPLETED')
 
 
 if __name__=='__main__':unittest.main()
