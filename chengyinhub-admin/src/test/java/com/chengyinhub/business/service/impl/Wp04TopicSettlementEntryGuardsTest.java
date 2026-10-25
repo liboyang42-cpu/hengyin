@@ -24,7 +24,7 @@ class Wp04TopicSettlementEntryGuardsTest {
     @Test void nullPlanCannotUseLiveShareRateOrTopicWideEvidence() {
         Fixture f = new Fixture();
         IllegalStateException failure = assertThrows(IllegalStateException.class, () -> f.service.settleCoopTopic(f.topic,new BigDecimal("10")));
-        assertTrue(failure.getMessage().contains("COOP_CLAIM_PLAN_REQUIRED"));
+        assertTrue(failure.getMessage().contains("COOP_CLAIM_PLAN_IDENTITY_CONFLICT"));
         verify(f.registrations,never()).selectVerifiedSalesByTopicAndMerchant(any(),any());
         verify(f.heads,never()).insertCoopSettlement(any()); verify(f.claims,never()).persist(any(),any());
     }
@@ -194,8 +194,14 @@ class Wp04TopicSettlementEntryGuardsTest {
         }
         CoopSettlementPlan plan() {
             CoopSettlementSnapshot s = new CoopSettlementSnapshot(); s.setOrderId(701L); s.setTopicId(11L); s.setInitiatorMemberId(77L);
+            s.setBeneficiaryRole("MERCHANT"); s.setBeneficiaryId(88L); s.setServiceUnit("MERCHANT_PARTICIPATION");
+            s.setCommercialContextType("TOPIC_EDITION"); s.setCommercialContextId(11L);
+            s.setScopeType("TOPIC"); s.setScopeId(11L);
             s.setCompensationMode("FIXED_PER_FULFILLMENT"); s.setFixedFee(new BigDecimal("2.00"));
             CoopSettlementOriginLine line = new CoopSettlementOriginLine(31L,new BigDecimal("2.00"));
+            line.setSettlementRoute("COOP_ORDER"); line.setSourceContractType("COOP_ORDER"); line.setSourceContractId(701L);
+            line.setCommercialContextType(s.getCommercialContextType()); line.setCommercialContextId(s.getCommercialContextId());
+            line.setBeneficiaryRole(s.getBeneficiaryRole()); line.setBeneficiaryId(s.getBeneficiaryId()); line.setServiceUnit(s.getServiceUnit());
             line.setEligibleSalesSnapshot(new BigDecimal("10.00")); return new CoopSettlementPlan(s,"COOP_ORDER",List.of(line));
         }
     }

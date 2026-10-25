@@ -44,6 +44,7 @@ class Wp04CoopOrderScopeMySqlIT {
                 "migration_coop_deposit_refund_state_20260913.sql",
                 "migration_20261024_registration_verified_seats.sql",
                 "migration_20261024_coop_negative_margin_manual.sql");
+        Wp04OriginalRefundMySqlIT.stationScopeSchema(storage.source);
         sql = P0AcceptanceSchema.sql(storage.source, "CmsRegistrationPaymentFactMapper", "CoopSettlementOriginalMapper",
                 "CoopSettlementCashEvidenceMapper", "CoopSettlementEvidenceMapper", "CoopSettlementMapper",
                 "CoopSettlementAdjustmentMapper", "SettlementClaimMapper", "CoopSettlementDetailMapper",

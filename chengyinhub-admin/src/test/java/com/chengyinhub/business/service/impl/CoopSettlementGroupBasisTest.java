@@ -129,6 +129,27 @@ class CoopSettlementGroupBasisTest {
                 .thenReturn(groupBasis(0, "0"));
     }
 
+    @Test
+    void compositionScopeKeepsClubIdentityWithoutEnablingItsCashPath() {
+        PreparedCoopPlanFixture.topic(TOPIC);
+        var claims = (com.chengyinhub.business.service.ICoopSettlementClaimService)
+                ReflectionTestUtils.getField(svc, "coopSettlementClaimService");
+        var plans = coopOrderMapper.selectEffectiveOrdersByTopicId(TOPIC).stream()
+                .map(order -> claims.prepare(order, new java.util.Date())).toList();
+        com.chengyinhub.business.service.support.CoopSettlementContract.requireIndependentOrderScopes(plans);
+        var club = plans.get(0).getSnapshot();
+        assertEquals("CLUB", club.getBeneficiaryRole()); assertEquals(CLUB, club.getBeneficiaryId());
+        assertEquals("ORGANIZER_LEAD", club.getServiceUnit());
+        assertEquals(TOPIC, club.getCommercialContextId());
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
+                () -> com.chengyinhub.business.service.support.CoopSettlementContract.requireSupportedCashPath(club));
+        assertEquals(0, plans.get(2).getVerifiedHeads());
+        assertEquals(0, BigDecimal.ZERO.compareTo(plans.get(2).getOriginAmount()));
+        for (var plan : plans) for (var line : plan.getOriginLines())
+            com.chengyinhub.business.service.support.CoopSettlementContract.requireHeaderEquality(plan.getSnapshot(), line);
+        verify(coopSettlementMapper, never()).insertCoopSettlement(any());
+    }
+
     /**
      * ★ 主路径:A 扫过团码(接待了这个团)⇒ 按团的核销数拿钱。
      * 注意 A 自己**一个玩家的票都没扫过**(有领队时那是俱乐部干的)——
