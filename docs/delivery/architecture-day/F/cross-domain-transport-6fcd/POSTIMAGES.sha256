@@ -1,0 +1,5 @@
+5637c218ae6da1cae26df3e7741539026ac0240964df36ced45daa2477a211d5  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainTransportStage.java
+e7cd89c5b3736220e6754dfb31cc4555f194df54c0f7113f945a9d4fac161610  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainTransportStageTest.java
+9f57422036a01c77c90fe4090ab518266027e7dd3d5e3607302879a7e042d5b8  docs/delivery/architecture-day/F/cross-domain-transport-6fcd/README.md
+e06ba8dcd29901cfc6ea52630b6846e3629e27550f24c50892b200a30215b254  docs/delivery/architecture-day/F/cross-domain-transport-6fcd/review.patch.b64
+05051852b569ddddb57e4a50743a3b2f0a25c0e328c68ec3502e01b8b4ba4e28  docs/delivery/architecture-day/F/cross-domain-transport-6fcd/PATCH.sha256
