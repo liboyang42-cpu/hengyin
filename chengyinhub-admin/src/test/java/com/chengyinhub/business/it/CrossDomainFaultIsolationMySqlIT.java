@@ -110,6 +110,8 @@ class CrossDomainFaultIsolationMySqlIT {
                 assertEquals(0, storage.db.queryForObject("SELECT COUNT(*) FROM topic_route_action", Integer.class));
                 var parentSql = storage.observeParentTransactions();
                 observations.add(parentSql.evidence());
+                assertEquals("CURRENT_PHYSICAL_WITNESS_IN_CACHE", parentSql.freshness().get("result"),
+                        "held-window zero requires a fresh cache sample, never a stale or missing observation");
                 assertEquals(0, parentSql.openTransactions(),
                         "held providers/notification may not keep a parent domain SQL transaction open: " + parentSql.evidence());
                 assertEquals(Boolean.FALSE, parentSql.subscriptionRead().get("springTransactionActive"),
@@ -189,6 +191,7 @@ class CrossDomainFaultIsolationMySqlIT {
                         + "Do not relax this assertion or replace the producer with parallel fixture dispatch.");
             } catch (Throwable failure) {
                 primary = failure;
+                observations.add(storage.transactionSamplingDiagnostic());
                 System.out.println("T19_PARTIAL_OBSERVATIONS " + com.alibaba.fastjson2.JSON.toJSONString(observations));
                 throw failure;
             } finally {

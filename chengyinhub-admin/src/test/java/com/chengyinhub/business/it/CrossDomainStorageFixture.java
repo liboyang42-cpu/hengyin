@@ -54,7 +54,7 @@ final class CrossDomainStorageFixture implements AutoCloseable {
     final String schema = "cy_wp14_" + UUID.randomUUID().toString().replace("-", "");
     final String original = UUID.randomUUID().toString().replace("-", "");
     String url, user, password;
-    String serverUuid;
+    String serverUuid, serverVersion;
     JdbcTemplate admin, db;
     DruidDataSource pool;
     DataSourceTransactionManager transactions;
@@ -80,6 +80,11 @@ final class CrossDomainStorageFixture implements AutoCloseable {
     long poisonId, healthyId;
     Reference payment;
     volatile Map<String, Object> subscriptionRead = Map.of();
+    // mysql-8.0.45 trx0i_s.cc: can_cache_be_updated requires STRICTLY >100ms since end_read.
+    static final long TRX_CACHE_MIN_IDLE_NANOS = TimeUnit.MILLISECONDS.toNanos(100);
+    private long lastTrxCacheReadEndedNanos = System.nanoTime();
+    private final Set<Long> freshnessWitnessIds = new HashSet<>();
+    private volatile Map<String, Object> lastTransactionSample = Map.of("phase", "NOT_SAMPLED");
 
     void open() throws Exception {
         assertEquals("github-hosted", required("RUNNER_ENVIRONMENT"));
@@ -90,7 +95,8 @@ final class CrossDomainStorageFixture implements AutoCloseable {
         String prefix = "jdbc:mysql://127.0.0.1:" + port + "/";
         String options = "?serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true";
         admin = new JdbcTemplate(new DriverManagerDataSource(prefix + "mysql" + options, user, password));
-        assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(admin.queryForObject("SELECT VERSION()", String.class)));
+        serverVersion = admin.queryForObject("SELECT VERSION()", String.class);
+        assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(serverVersion));
         serverUuid = admin.queryForObject("SELECT @@server_uuid", String.class);
         admin.execute("CREATE DATABASE `" + schema + "` CHARACTER SET utf8mb4"); created = true;
         url = prefix + schema + options;
@@ -283,43 +289,150 @@ final class CrossDomainStorageFixture implements AutoCloseable {
     }
 
     record ParentSqlObservation(long observerConnectionId, int activePoolConnections,
-                                List<Map<String, Object>> transactions, Map<String, Object> subscriptionRead) {
+                                List<Map<String, Object>> transactions, Map<String, Object> subscriptionRead,
+                                Map<String, Object> freshness) {
         int openTransactions() { return transactions.size(); }
         Map<String, Object> evidence() {
             return Map.of("stage", "parent-domain-sql-transactions", "observerConnectionId", observerConnectionId,
                     "activePoolConnections", activePoolConnections, "transactions", transactions,
-                    "notificationRead", subscriptionRead, "scope", "all-sessions-in-exact-owned-schema-no-excluded-ids");
+                    "notificationRead", subscriptionRead, "scope", "all-sessions-in-exact-owned-schema-no-excluded-ids",
+                    "freshness", freshness);
         }
     }
 
     ParentSqlObservation observeParentTransactions() throws Exception {
+        return observeParentTransactions(System.nanoTime() + TimeUnit.SECONDS.toNanos(1));
+    }
+
+    private synchronized ParentSqlObservation observeParentTransactions(long deadline) throws Exception {
+        Map<String, Object> diagnostic = new LinkedHashMap<>();
+        diagnostic.put("phase", "SAMPLING_STARTED"); lastTransactionSample = Map.copyOf(diagnostic);
+        requireSampleBudget(System.nanoTime(), deadline);
         int active = pool.getActiveCount();
-        // Original unpooled admin datasource: this oracle never borrows a parent business connection,
-        // never reads an InnoDB business row, and never starts a repeatable-read transaction itself.
-        try (Connection observer = Objects.requireNonNull(admin.getDataSource()).getConnection()) {
-            assertTrue(observer.getAutoCommit(), "transaction oracle must use auto-commit");
-            long observerId;
-            try (var statement = observer.createStatement()) {
-                statement.setQueryTimeout(3);
-                try (var row = statement.executeQuery("SELECT CONNECTION_ID(),DATABASE(),@@server_uuid,@@session.autocommit")) {
-                    assertTrue(row.next()); observerId = row.getLong(1);
-                    assertEquals("mysql", row.getString(2)); assertEquals(serverUuid, row.getString(3));
-                    assertEquals(1, row.getInt(4), "real oracle session must remain auto-commit");
-                }
-            }
+        // Both connections use the ORIGINAL unpooled admin datasource, never the business pool.
+        // The reader is auto-commit. A separate mysql-default-db witness locks only our existing
+        // wp14_probe row. Its NEW physical ID must appear in this cache generation; time alone
+        // cannot prove freshness when another reader may have renewed the global last_read.
+        try (Connection witness = Objects.requireNonNull(admin.getDataSource()).getConnection();
+             Connection observer = admin.getDataSource().getConnection()) {
+            long witnessId = independentAdminId(witness), observerId = independentAdminId(observer);
+            assertNotEquals(witnessId, observerId, "freshness witness and cache reader must be independent");
             assertNotEquals(subscriptionRead.get("mysqlConnectionId"), Long.valueOf(observerId), "independent oracle identity");
-            List<Map<String, Object>> transactions = new ArrayList<>();
-            try (var statement = observer.prepareStatement("SELECT t.trx_mysql_thread_id,t.trx_state,t.trx_rows_locked,t.trx_rows_modified "
-                    + "FROM information_schema.innodb_trx t JOIN information_schema.processlist p ON p.ID=t.trx_mysql_thread_id "
-                    + "WHERE p.DB=? ORDER BY t.trx_mysql_thread_id")) {
-                statement.setQueryTimeout(3); statement.setString(1, schema);
-                try (var rows = statement.executeQuery()) {
-                    while (rows.next()) transactions.add(Map.of("mysqlConnectionId", rows.getLong(1),
-                            "state", rows.getString(2), "rowsLocked", rows.getLong(3), "rowsModified", rows.getLong(4)));
+            assertNotEquals(subscriptionRead.get("mysqlConnectionId"), Long.valueOf(witnessId), "independent freshness witness identity");
+            assertTrue(freshnessWitnessIds.add(witnessId), "TRANSACTION_SAMPLE_UNKNOWN: freshness witness ID was reused");
+            diagnostic.put("observerConnectionId", observerId); diagnostic.put("witnessConnectionId", witnessId);
+            diagnostic.put("serverUuid", serverUuid); diagnostic.put("mysqlVersion", serverVersion);
+            witness.setAutoCommit(false);
+            Throwable primary = null;
+            try {
+                try (var statement = witness.prepareStatement("SELECT original_id FROM `" + schema + "`.wp14_probe WHERE original_id=? FOR UPDATE")) {
+                    statement.setQueryTimeout(3); statement.setString(1, original);
+                    try (var row = statement.executeQuery()) { assertTrue(row.next()); assertEquals(original, row.getString(1)); }
                 }
+                long witnessReadyNanos = System.nanoTime();
+                int attempts = 0;
+                try (var statement = observer.prepareStatement("SELECT t.trx_mysql_thread_id,t.trx_state,t.trx_rows_locked,t.trx_rows_modified,p.DB "
+                        + "FROM information_schema.innodb_trx t JOIN information_schema.processlist p ON p.ID=t.trx_mysql_thread_id "
+                        + "WHERE p.DB=? OR t.trx_mysql_thread_id=? ORDER BY t.trx_mysql_thread_id")) {
+                    statement.setQueryTimeout(3); statement.setString(1, schema); statement.setLong(2, witnessId);
+                    while (true) {
+                        long quietSince = Math.max(lastTrxCacheReadEndedNanos, witnessReadyNanos);
+                        diagnostic.put("phase", "AWAIT_CACHE_IDLE");
+                        diagnostic.put("remainingBudgetNanos", Math.max(0, deadline - System.nanoTime()));
+                        lastTransactionSample = Map.copyOf(diagnostic);
+                        awaitCacheIdle(quietSince, deadline);
+                        long readStarted = System.nanoTime(); requireSampleBudget(readStarted, deadline);
+                        List<Map<String, Object>> rows = new ArrayList<>();
+                        try (var result = statement.executeQuery()) {
+                            while (result.next()) rows.add(Map.of("mysqlConnectionId", result.getLong(1),
+                                    "state", result.getString(2), "rowsLocked", result.getLong(3),
+                                    "rowsModified", result.getLong(4), "database", result.getString(5)));
+                        } finally {
+                            // Even a stale/failed read renews the server's idle clock. Never poll at 20ms.
+                            lastTrxCacheReadEndedNanos = System.nanoTime();
+                        }
+                        attempts++;
+                        boolean currentWitnessSeen = rows.stream().anyMatch(row -> Long.valueOf(witnessId).equals(row.get("mysqlConnectionId")));
+                        diagnostic.put("phase", "CACHE_READ_COMPLETED");
+                        diagnostic.put("lastRead", Map.of("attempt", attempts, "quietNanos", readStarted - quietSince,
+                                "minimumIdleNanosExclusive", TRX_CACHE_MIN_IDLE_NANOS,
+                                "readNanos", lastTrxCacheReadEndedNanos - readStarted,
+                                "currentWitnessSeen", currentWitnessSeen, "rows", List.copyOf(rows)));
+                        lastTransactionSample = Map.copyOf(diagnostic);
+                        requireSampleBudget(lastTrxCacheReadEndedNanos, deadline);
+                        if (!currentWitnessSeen) continue;
+                        List<Map<String, Object>> transactions = freshDomainTransactions(rows, schema, witnessId, observerId);
+                        return new ParentSqlObservation(observerId, active, transactions, subscriptionRead,
+                                Map.of("result", "CURRENT_PHYSICAL_WITNESS_IN_CACHE", "witnessConnectionId", witnessId,
+                                        "witnessDatabase", "mysql", "readAttempts", attempts,
+                                        "quietNanos", readStarted - quietSince, "minimumIdleNanosExclusive", TRX_CACHE_MIN_IDLE_NANOS,
+                                        "witnessReadyToReadNanos", readStarted - witnessReadyNanos,
+                                        "readNanos", lastTrxCacheReadEndedNanos - readStarted,
+                                        "mysqlVersion", serverVersion,
+                                        "source", "mysql-8.0.45/trx0i_s.cc:can_cache_be_updated+trx_i_s_cache_end_read"));
+                    }
+                }
+            } catch (Exception | Error failure) { primary = failure; throw failure; }
+            finally {
+                try { witness.rollback(); }
+                catch (Exception | Error cleanup) { if (primary != null) primary.addSuppressed(cleanup); else throw cleanup; }
             }
-            return new ParentSqlObservation(observerId, active, List.copyOf(transactions), subscriptionRead);
         }
+    }
+
+    Map<String, Object> transactionSamplingDiagnostic() {
+        return Map.of("stage", "transaction-cache-freshness", "sample", lastTransactionSample,
+                "source", "mysql-8.0.45/trx0i_s.cc:can_cache_be_updated+trx_i_s_cache_end_read");
+    }
+
+    private long independentAdminId(Connection connection) throws Exception {
+        assertTrue(connection.getAutoCommit(), "transaction oracle must use auto-commit before witness admission");
+        try (var statement = connection.createStatement()) {
+            statement.setQueryTimeout(3);
+            try (var row = statement.executeQuery("SELECT CONNECTION_ID(),DATABASE(),@@server_uuid,@@session.autocommit")) {
+                assertTrue(row.next()); assertEquals("mysql", row.getString(2)); assertEquals(serverUuid, row.getString(3));
+                assertEquals(1, row.getInt(4), "real oracle session must remain auto-commit"); return row.getLong(1);
+            }
+        }
+    }
+
+    static long cacheIdleRemainingNanos(long now, long quietSince) {
+        assertTrue(now - quietSince >= 0, "TRANSACTION_SAMPLE_UNKNOWN: invalid monotonic sample order");
+        return Math.max(0, TRX_CACHE_MIN_IDLE_NANOS + 1 - (now - quietSince));
+    }
+
+    static void requireSampleBudget(long now, long deadline) {
+        assertTrue(deadline - now > 0, "TRANSACTION_SAMPLE_UNKNOWN: original bounded sampling deadline exhausted");
+    }
+
+    private static void awaitCacheIdle(long quietSince, long deadline) throws InterruptedException {
+        while (true) {
+            long now = System.nanoTime(); requireSampleBudget(now, deadline);
+            long wait = cacheIdleRemainingNanos(now, quietSince);
+            if (wait == 0) return;
+            assertTrue(wait < deadline - now, "TRANSACTION_SAMPLE_UNKNOWN: no cache-idle window inside original deadline");
+            TimeUnit.NANOSECONDS.sleep(wait);
+        }
+    }
+
+    static List<Map<String, Object>> freshDomainTransactions(List<Map<String, Object>> rows, String schema,
+                                                            long witnessId, long observerId) {
+        assertNotEquals(witnessId, observerId, "freshness witness cannot be the reader");
+        List<Map<String, Object>> witnesses = rows.stream()
+                .filter(row -> Long.valueOf(witnessId).equals(row.get("mysqlConnectionId"))).toList();
+        assertEquals(1, witnesses.size(), "TRANSACTION_SAMPLE_UNKNOWN: current physical witness absent/duplicated");
+        Map<String, Object> witness = witnesses.getFirst();
+        assertEquals("mysql", witness.get("database"), "freshness witness must not be a domain-pool transaction");
+        assertEquals("RUNNING", witness.get("state"));
+        assertEquals(Long.valueOf(0), witness.get("rowsModified"), "freshness witness must not modify rows");
+        assertTrue(((Number) witness.get("rowsLocked")).longValue() > 0, "freshness witness must own its actual fixture row lock");
+        List<Map<String, Object>> domain = new ArrayList<>();
+        for (Map<String, Object> row : rows) {
+            if (Long.valueOf(witnessId).equals(row.get("mysqlConnectionId"))) continue;
+            assertEquals(schema, row.get("database"), "unexpected transaction scope; never normalize unknown rows away");
+            domain.add(row); // Includes calibration/notification/readonly/unknown-role transactions without exception.
+        }
+        return List.copyOf(domain);
     }
 
     Map<String, Object> assertTransactionOracleDetectsParentTransaction() throws Exception {
@@ -328,6 +441,7 @@ final class CrossDomainStorageFixture implements AutoCloseable {
         ParentSqlObservation held;
         try (Connection connection = pool.getConnection()) {
             connection.setAutoCommit(false);
+            Throwable primary = null;
             try {
                 try (var statement = connection.createStatement()) {
                     statement.setQueryTimeout(3);
@@ -337,25 +451,24 @@ final class CrossDomainStorageFixture implements AutoCloseable {
                     statement.setQueryTimeout(3); statement.setLong(1, MEMBER);
                     try (var row = statement.executeQuery()) { assertTrue(row.next()); assertEquals(MEMBER, row.getLong(1)); }
                 }
-                // INNODB_TRX can cache a snapshot briefly. Poll only within this fixed calibration bound.
-                held = observeParentTransactions();
-                while (!containsTransaction(held, heldId) && System.nanoTime() < deadline) {
-                    Thread.sleep(20); held = observeParentTransactions();
-                }
+                held = observeParentTransactions(deadline);
                 assertTrue(containsTransaction(held, heldId), "real parent transaction must be visible: " + held.evidence());
                 assertNotEquals(heldId, held.observerConnectionId(), "calibration holder and observer must be different physical connections");
-            } finally { connection.rollback(); connection.setAutoCommit(true); }
+            } catch (Exception | Error failure) { primary = failure; throw failure; }
+            finally {
+                try { connection.rollback(); connection.setAutoCommit(true); }
+                catch (Exception | Error cleanup) { if (primary != null) primary.addSuppressed(cleanup); else throw cleanup; }
+            }
         }
-        ParentSqlObservation released = observeParentTransactions();
-        while (containsTransaction(released, heldId) && System.nanoTime() < deadline) {
-            Thread.sleep(20); released = observeParentTransactions();
-        }
+        ParentSqlObservation released = observeParentTransactions(deadline);
+        requireSampleBudget(System.nanoTime(), deadline);
         assertEquals(0, released.openTransactions(), "rolled-back calibration must leave no domain transaction: " + released.evidence());
         long originalConnection = heldId;
         Object rowsModified = held.transactions().stream()
                 .filter(row -> Long.valueOf(originalConnection).equals(row.get("mysqlConnectionId")))
                 .findFirst().orElseThrow().get("rowsModified");
         assertEquals(Long.valueOf(0), rowsModified, "calibration must not modify business rows");
+        requireSampleBudget(System.nanoTime(), deadline);
         return Map.of("stage", "transaction-oracle-calibration", "heldConnectionId", heldId,
                 "held", held.evidence(), "released", released.evidence(), "observedHeldRowsModified", rowsModified);
     }
