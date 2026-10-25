@@ -71,6 +71,7 @@
         </view>
       </view>
       <view class="inv-terms" wx:if="{{item.termsText}}">{{item.termsText}}</view>
+      <view class="inv-terms" wx:if="{{item.supplyStationText}}">核销据点 · {{item.supplyStationText}} · {{item.supplyStationNote}}</view>
       <view class="inv-contact" wx:if="{{item.partnerContact}}" catchtap="copyPartnerPhone" data-phone="{{item.partnerPhone}}" aria-role="button" aria-label="复制合作方电话" aria-disabled="{{!!actionPendingKey}}" hover-class="{{!!actionPendingKey ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
         {{item.partnerContact}}<text class="inv-contact-copy" wx:if="{{item.partnerPhone}}"> · 复制</text>
       </view>
@@ -207,6 +208,7 @@
         </view>
       </view>
       <view class="inv-terms" wx:if="{{item.termsText}}">{{item.termsText}}</view>
+      <view class="inv-terms" wx:if="{{item.supplyStationText}}">核销据点 · {{item.supplyStationText}} · {{item.supplyStationNote}}</view>
       <view class="inv-contact" wx:if="{{item.partnerContact}}" catchtap="copyPartnerPhone" data-phone="{{item.partnerPhone}}" aria-role="button" aria-label="复制合作方电话" aria-disabled="{{!!actionPendingKey}}" hover-class="{{!!actionPendingKey ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
         {{item.partnerContact}}<text class="inv-contact-copy" wx:if="{{item.partnerPhone}}"> · 复制</text>
       </view>

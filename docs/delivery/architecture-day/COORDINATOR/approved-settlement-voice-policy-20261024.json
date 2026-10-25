@@ -81,6 +81,57 @@
         "Replay/concurrency cannot deduct twice; unresolved payment preserves original reconciliation fence"
       ],
       "implementation_state": "IN_PROGRESS_NOT_RUN_NOT_ACCEPTED"
+    },
+    {
+      "id": "PER_ORIGINAL_ORDER_INDEPENDENT_SETTLEMENT_SCOPE",
+      "status": "APPROVED",
+      "authority": "DIRECT_HUMAN_REPLY",
+      "user_quote": "按每张原订单分别结算，但必须先明确各自独立的履约和销售额范围",
+      "owners": {
+        "production": "G",
+        "unit": "B"
+      },
+      "decision": "Settle each original frozen order only against demonstrably independent fulfillment and sales scope; overlapping or unprovable scope cannot be silently selected or counted twice",
+      "invariants": [
+        "Preserve original frozen compensation terms and original-order identities",
+        "No duplicate allocation of the same fulfillment/sale",
+        "No first-wins or live-config fallback",
+        "Preserve prior immutable deposit adjustment/refund/net payout guards",
+        "No partial economic commit on unresolved scope"
+      ]
+    },
+    {
+      "id": "SUPPLY_ORDER_STATION_SCOPE_CONFIRMATION",
+      "status": "APPROVED",
+      "authority": "DIRECT_HUMAN_REPLY",
+      "user_quote": "先一单一个据点，订单间不得重复（推荐）",
+      "decision": "Inviter explicitly selects one real station for a new supported SUPPLY invitation; merchant confirms the same station at acceptance and originalterms freeze it; effective originalorder station scope cannot repeat; no automatic historical attribution",
+      "shared_contract": {
+        "invite_field": "supplyStationId",
+        "invite_column": "coop_invite.supply_station_id",
+        "accept_confirmation": "same supplyStationId, cannot rebind ataccept; existing nodeId is distinct",
+        "terms": "supplyBillingScope {version:REGISTRATION_STATION_V1,stationId,topicId,merchantMemberId}",
+        "proof_entry": "ICoopSettlementClaimService java.util.Optional<Long> recordConfirmedStationFulfillment(Long verificationAuditEventId), MANDATORY sameTX",
+        "proof_optional_empty": "No applicable newlyconfirmed V1 original only; not a successful attribution/settlement receipt",
+        "new_canonical_source_sql": "chengyinhub-admin/sql/migration_20261025_coop_order_station_fulfillment.sql",
+        "DDL_runtime": "NOT_RUN_NOT_PRODUCTION_AUTHORIZATION"
+      },
+      "owners": {
+        "E": "Invite/domain/mapper/service/API creationacceptance producer and direct tests",
+        "A": "RegistrationRedemptionApplication real auditID sameTX caller and direct tests",
+        "G": "Narrow immutable proof entity/mapper/claim reader and direct tests/interface",
+        "D": "Existing MiniProgram invite station selection/display/accept confirmation and direct Node source controls",
+        "root": "Shared contract/canonicalSQL/DAG/registry/integration/CI"
+      },
+      "invariants": [
+        "No SUPPLY→ORGANIZER or historicalSCAN→GROUP reinterpretation",
+        "No nodeId/template/currentstation guessing as originalscope",
+        "Same topic/merchant/legal station/current owner checks and original topic→registration lock order",
+        "Original claims and permanent economic keys unchanged; no duplicate sale/fulfillment/payment",
+        "One originalorder one originalconfirmed station, no overlapping effective same merchant station assignments",
+        "No accepted/historical originalterms backfill or mutation",
+        "No extra fees/dependencies/permissions/production actions"
+      ]
     }
   ],
   "shared_contracts": {
@@ -90,5 +141,6 @@
   },
   "validation": "NOT_RUN; implement callers and test source first, then consolidated same-candidate review and regression",
   "all_complete": false,
-  "public_benchmark": "五项业务规则-公开方案对照-20261024.md"
+  "public_benchmark": "五项业务规则-公开方案对照-20261024.md",
+  "pending_business_inputs": []
 }

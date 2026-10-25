@@ -71,6 +71,7 @@ class CoopListReadOnlyMybatisIntegrationTest {
   try{
    String ddl=new String(Files.readAllBytes(Paths.get(ROOT,"sql/base_schema_20260818.sql")),StandardCharsets.UTF_8);
    Matcher m=Pattern.compile("CREATE TABLE `coop_invite` \\(.*?^\\).*?;",Pattern.DOTALL|Pattern.MULTILINE).matcher(ddl);if(!m.find())throw new AssertionError("DDL");sql(m.group());
+   sql("ALTER TABLE coop_invite ADD COLUMN supply_station_id BIGINT NULL"); // Scratch schema only; no historical backfill.
    String depositMigration=new String(Files.readAllBytes(Paths.get(ROOT,"chengyinhub-admin/sql/migration_coop_deposit_refund_state_20260913.sql")),StandardCharsets.UTF_8);
    sql(depositMigration.substring(depositMigration.indexOf("ALTER TABLE")));
    sql("insert into coop_invite(id,invite_type,from_type,from_id,to_type,to_id,status,create_time,expire_time,config_deadline) values "

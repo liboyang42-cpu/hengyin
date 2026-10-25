@@ -1,5 +1,27 @@
 # 当前施工状态（用户授权继续）
 
+**最新源码收齐与新批准范围：**原 E 邀约生产者及20个新unit／7个新MySQL源码已完整交付并精确装配；G真实凭证／读取、D选站与确认、F精确技术owner均已装配。当前登记70类879项、资金闭环258项仍为源码声明，Java／数据库／新CI未运行。台账在E到齐后完成最终生成，5125条；之前提前生成的中间轮保留，未伪称只有一次。用户另已批准四项主题游戏／模板复用合同，详见[主题游戏模块与模板复用施工](主题游戏模块与模板复用施工-20261025.md)。仅补已证实缺口，现成答题等机制必须复用；06／07参考报告的发布漂移等判断先核完整调用链，不照搬SPI、新引擎或表结构。完整目标仍未完成、未合并、未部署。
+
+## 最新：6fcd 最终集中验收回读与必要修补（覆盖下方历史状态）
+
+**06:13集成更新：**A新核销调用者40528字节完整补丁已按五份作者源码摘要精确装配；事务实际位于CmsRegistrationServiceImpl，应用入口和公开接口只同步原注释，未搬类。原24个unit保留、新增6个；9条新MySQL声明只验证真实调用者和审计/CAS事务边界，不冒充G凭证SQL已验证。当前登记68类860项仍仅source算术。尚待G真实凭证/读取、E邀约生产接口、D小程序源码完整交付，未重开CI。
+
+**05:49用户已答复并继续实施：**采用“一单一个据点，订单间不得重复”；发起人邀约选定、商家接受确认后冻结，历史订单不自动补归属，不再等待此问题。原 E/G/A/D 分别负责邀约原合同生产者、真实不可变归属凭证与结算读取、核销审计同事务调用者、小程序选点与确认。root负责共享签名、canonical新增SQL/DAG/登记与最终集成。G047dff通用范围守卫接缝也已精确装配；真实prepare现金准入未放宽。新增SQL只写源码（已按真实父键符号修正类型），未执行DDL/未重开CI；当前67类851项仅是现有源码登记算术，新接线收齐后再统一核对，不当通过数。
+
+**05:39精确更新：**B两份最终unit源码及说明已按34341字节补丁、两份作者摘要完整集成；原29场景保留，14条新声明不当运行通过。G的独立范围正向来源方案已具象为“邀约确认并冻结核销据点＋真实核销审计关联凭证”，仅三份提案文档，候选SQL未进入canonical或执行。现在只向用户确认一单单据点还是明确据点集合；该新来源路径冻结，G仍继续收口独立范围守卫与原cash支持性检查的技术分工，保留CLUB原组合断言及生产原不支持路径。其它已授权修补不暂停。
+
+**本次续接补充：**原 A 六文件提现补丁已按32554字节完整运输及六份作者源摘要精确装配；原 H 主片20个JS摘要与SessionManager共享代次补片已组合装配，71个直接Node控制只属于该组合。原 G 33fa为逐单先核验/交叠拒结的部分交付，同商家独立正向仍缺原订单→履约→原销售的生产归属合同，已要求继续接齐，不能以全部拒结冒充支持。原 B正按已收到G实际合同完成两个unit；原 D 的H后续基线锚点已精确装配，30个相交原锚点仅4个平移，root核对实际源上下文一致，原理由、数量和上限不变。新MySQL声明数仍非PASS，尚未重开CI。
+
+完整目标仍未完成、未合并、未部署。冻结公共候选 `6fcd5ac009cec1dd82c438528d24da30c1f302f4` 已完成首轮最终验收：同源 HTTP 三类实际 36/36 通过，零失败、错误、跳过、重复；root 核对三个脱敏 XML 的原源码身份、回执及独立清理。原始 XML 字节只有 runner 摘要，不冒充独立下载。该结论仅隔离 HTTP 夹具，非完整业务、数据库迁移或生产验收；见 `6fcd-http-36-readback.json`。
+
+标准 CI 实际失败：后台测试报告 15144、3 failure、11 error、647 环境 skip；14项集中两类提现测试，已给原 A 修实际接线/围栏及配套 unit。架构原产物仅一个新 mapper 未登记；迁移 checker 与既有 fresh forward AST 未同步；小程序 shard13 为原精确锚点平移。真实存储止于75个 Python 控制的5失败，数据库矩阵未执行，833仍是源码声明数。
+
+F 存储契约、F 精确技术 owner、G 迁移 checker、D 单行测试锚点已按完整供体源码装配，root 审核技术 owner 后更新精确 verifier pin；均为工作源，未冻结新 SHA，未重开 CI，旧6fcd绿色不转签。必要修补和集中审查结论未收齐前不重复整批。
+
+用户已直接确认新合同冲突口径：**按每张原订单分别结算，但必须先明确各自独立的履约和销售额范围**。原 G 负责生产及直接 MySQL 夹具，原 B 负责两个真实服务 unit 文件；原 A 提现、原 H 登录迟到续接分别并行。禁止直接取消去重重复全主题销售额、猜分摊或按遍历顺序丢弃订单。重叠/不可证明范围不能部分提交资金。原金额、不可变抵扣凭证、退款净额、UNKNOWN 和清理围栏均保留。
+
+新“平台内核＋主题包＋运行实例”方案仅讨论调研，不触发额外重构。以下内容保留为各自 SHA 的历史记录，不为当前修补源背书。
+
 **整体未完成。原截止时间不再停止本次继续施工，10分钟协调已恢复；所有剩余失败已分配给原8个会话，root唯一集成，最后统一验收。** 完整范围仍为WP00–WP17 / Q1–Q10 / A01–A15 / T01–T22 / G0–G5。未合并、未部署、未执行生产DDL或微信发布。
 
 ## 同一修补基线
@@ -302,3 +324,7 @@ E c372dda2058a2ac3fe7ff0607bb011d99eed05ee sourceQuery12newlines+newtest4cases e
 ## All necessary source and generated outputs ready for one final freeze
 
 Eclockc372/Dsinglebaselineb7f031 exactsourceapplied; rootsoleexistingNode--write exit0/5121controls (sourceledgernotUITestpasses). Allthree51f0conflictsresolved, allB/E/G/Afunds/policy/callers/tests retained. Preparingonesourcefreezeandparallel A/B/H finalindependentboundedreviews plus GitHubstandard/storage/HTTP; no newaudit orperpatchrepeats. Currententiretargetstillall_complete=false, verificationNOT_RUN until actualreceipts.
+
+## Finalcandidate6fcd frozen andparallelacceptanceactuallystarted
+
+Public6fcd5ac009cec1dd82c438528d24da30c1f302f4/tree208624fd71a08b94e0d9e752cdec2270257070a4 contains51f0ancestor; scan691888bytesclean. Standard40162302151,storage40162306092,HTTP40162310692actualAPIheadSHAmatch6fcd. A/B/Hfinalindependentreviews+Factualfailurefix dispatched. Storageplan75Python70PASS5FAIL, noMySQLbusinessclassstarted; Ffixes3exactmetadata/rootcallerseams, notrelaxgates. Standardactualfailedarchitecture/migration/mini13jobslogsretained; compilebackendstillrunning atreadback. HTTP2jobgreenonly(notartifactacceptance), thirdrunning. Hreportedonesource-reachableP2logincontinuationafterpageexit, runtimeNOT_RUN. Allscopefalse/noPRmerge/deploy. Latestthemedplatformproposalisonlydiscussion/research,nobrandnewenginerefactorsauthorized.

@@ -334,7 +334,7 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         }
 
         // A query that cannot establish the final detail result never authorizes a later local rejection refund.
-        recordChannelFact(id, CashWithdrawFundFact.UNKNOWN, q, query.intent().submissionIntentId());
+        if (!recordChannelFact(id, CashWithdrawFundFact.UNKNOWN, q, query.intent().submissionIntentId())) return;
         // PROCESSING / UNKNOWN:保持处理中,仅记录查询时间;超时兜底升级人工,避免永久卡死(阻断注销/静默冻结)
         MemberCashWithdraw upd = new MemberCashWithdraw();
         upd.setId(id);
@@ -393,7 +393,14 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
                     if (!onlyLocalFacts) {
                         try {
                             requireDebitEvidence(original, facts);
-                            return new ChannelQuery(original, requireOriginalIntent(original, facts), originalBatchId(original, facts));
+                            CashWithdrawTransferIntent intent = requireOriginalIntent(original, facts);
+                            if (originalAttemptNotSent(facts, intent)) {
+                                requireRefundEvidence(original);
+                                if (Integer.valueOf(MemberCashWithdraw.STATUS_PROCESSING).equals(original.getStatus()))
+                                    claimFailedRefund(id, DateUtils.getNowDate(), "原未发送证明完整，保留原号待双人复核", null, null);
+                                return null;
+                            }
+                            return new ChannelQuery(original, intent, originalBatchId(original, facts));
                         } catch (IllegalStateException unprovable) {
                             MemberCashWithdraw investigation = new MemberCashWithdraw();
                             investigation.setId(id); investigation.setStatus(MemberCashWithdraw.STATUS_FAILED_MANUAL);
@@ -525,16 +532,20 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
                 .findFirst().orElse(null);
         boolean neverSubmitted = submission == null && facts.size() == 1;
         CashWithdrawTransferIntent intent = submission == null ? null : requireOriginalIntent(w, facts);
-        boolean originalAttemptNotSent = intent != null && !hasFact(facts, CashWithdrawFundFact.UNKNOWN)
-                && !hasFact(facts, CashWithdrawFundFact.ACCEPTED)
-                && facts.stream().anyMatch(f -> CashWithdrawFundFact.NOT_ACCEPTED.equals(f.getKind())
-                    && boundToIntent(f, intent));
+        boolean originalAttemptNotSent = originalAttemptNotSent(facts, intent);
         boolean finalDetailFailure = intent != null && facts.stream().anyMatch(f -> CashWithdrawFundFact.FINAL_FAIL.equals(f.getKind())
                 && "FAIL".equals(f.getChannelDetailStatus()) && "FINISHED".equals(f.getChannelBatchStatus())
                 && emptyToNull(f.getChannelBatchId()) != null && emptyToNull(f.getChannelDetailId()) != null
                 && boundToIntent(f, intent));
         if (!neverSubmitted && !originalAttemptNotSent && !finalDetailFailure)
             throw new IllegalStateException("渠道结果未确定，禁止回补，保留原号调查");
+    }
+
+    private boolean originalAttemptNotSent(List<CashWithdrawFundFact> facts, CashWithdrawTransferIntent intent) {
+        return intent != null && !hasFact(facts, CashWithdrawFundFact.UNKNOWN)
+                && !hasFact(facts, CashWithdrawFundFact.ACCEPTED)
+                && facts.stream().anyMatch(f -> CashWithdrawFundFact.NOT_ACCEPTED.equals(f.getKind())
+                    && boundToIntent(f, intent));
     }
 
     private CashWithdrawTransferIntent recordSubmissionIntent(Long id, CashWithdrawTransferIntent request) {
@@ -568,6 +579,9 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
                     List<CashWithdrawFundFact> facts = checkedFacts(w);
                     CashWithdrawTransferIntent intent = requireOriginalIntent(w, facts);
                     if (expectedIntentId != null && !expectedIntentId.equals(intent.submissionIntentId())) return false;
+                    // An in-flight query may finish after the original no-send proof committed.
+                    // Its UNKNOWN observation cannot invalidate that proof; contradictory terminals retain the existing investigation path.
+                    if (CashWithdrawFundFact.UNKNOWN.equals(kind) && originalAttemptNotSent(facts, intent)) return false;
                     boolean terminal = CashWithdrawFundFact.SUCCESS.equals(kind) || CashWithdrawFundFact.FINAL_FAIL.equals(kind);
                     if (terminal && (expectedIntentId == null || !queryMatchesIntent(intent, observation)
                             || (CashWithdrawFundFact.SUCCESS.equals(kind) && !"SUCCESS".equals(observation.get("result")))
@@ -925,6 +939,8 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
                     if (original == null) throw new IllegalStateException("提现单不存在");
                     if (Integer.valueOf(1).equals(original.getFrozen()))
                         throw new IllegalStateException("该提现单已被冻结，请先解冻");
+                    if (Integer.valueOf(MemberCashWithdraw.STATUS_FAILED_NO_DEBIT).equals(original.getStatus()))
+                        throw new IllegalStateException("该提现单未实际扣款,无需人工回补");
                     if (expectedStatus != null && !expectedStatus.equals(original.getStatus())) return null;
                     if (!Integer.valueOf(MemberCashWithdraw.STATUS_FAILED_MANUAL).equals(original.getStatus())
                             && !Integer.valueOf(MemberCashWithdraw.STATUS_REFUND_PENDING_REVIEW).equals(original.getStatus()))

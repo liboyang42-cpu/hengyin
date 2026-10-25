@@ -10,6 +10,20 @@ import com.chengyinhub.business.domain.CoopInvite;
  * 协作邀请 Mapper 接口(P1.5)
  */
 public interface CoopInviteMapper {
+    List<com.chengyinhub.business.domain.CmsRegistrationMerchant> selectSupplyStations(
+            @Param("topicId") Long topicId, @Param("merchantMemberId") Long merchantMemberId);
+    com.chengyinhub.business.domain.CmsRegistrationMerchant selectSupplyStationForUpdate(
+            @Param("stationId") Long stationId, @Param("topicId") Long topicId,
+            @Param("merchantMemberId") Long merchantMemberId);
+    List<com.chengyinhub.business.domain.CoopOrder> selectEffectiveSupplyOrders(
+            @Param("topicId") Long topicId, @Param("merchantMemberId") Long merchantMemberId);
+    List<com.chengyinhub.business.domain.CoopOrder> selectEffectiveSupplyOrdersForUpdate(
+            @Param("topicId") Long topicId, @Param("merchantMemberId") Long merchantMemberId);
+    List<com.chengyinhub.business.domain.CoopOrder> selectOriginalCoopOrdersForUpdate(
+            @Param("inviteId") Long inviteId, @Param("regId") Long regId);
+    List<com.chengyinhub.business.domain.CmsRegistrationMerchant> selectSupplyStationNames(
+            @Param("invites") List<CoopInvite> invites);
+
 
     public CoopInvite selectCoopInviteById(Long id);
 

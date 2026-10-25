@@ -56,8 +56,9 @@ class WechatPayTransferIntentGatewayTest {
     @Test
     void aMissingRealClientBindingCannotFallBackToTheLegacySignature() {
         ReflectionTestUtils.setField(gateway, "transferBatchService", sdk);
-        assertSubmissionUnknown(gateway.transferToBalance(intent()));
-        assertEquals("UNKNOWN", gateway.queryTransferResult(intent()).get("result"));
+        CashWithdrawTransferIntent original = intent();
+        assertOriginalNotSent(gateway.transferToBalance(original), original);
+        assertEquals("UNKNOWN", gateway.queryTransferResult(original).get("result"));
         verifyNoInteractions(sdk);
     }
 
@@ -91,7 +92,7 @@ class WechatPayTransferIntentGatewayTest {
         WxPayConfig properties = mock(WxPayConfig.class);
         when(properties.getMerchantId()).thenReturn("other");
         ReflectionTestUtils.setField(gateway, "wxPayConfig", properties);
-        assertSubmissionUnknown(gateway.transferToBalance(intent));
+        assertOriginalNotSent(gateway.transferToBalance(intent), intent);
         assertEquals("UNKNOWN", gateway.queryTransferResult(intent).get("result"));
         verifyNoInteractions(sdk);
     }
@@ -231,7 +232,12 @@ class WechatPayTransferIntentGatewayTest {
         TransferBatchEntity entity = new TransferBatchEntity(); entity.setTransferBatch(batch(batchStatus));
         doReturn(entity).when(sdk).getTransferBatchByOutNo(any()); doReturn(detail(detailStatus)).when(sdk).getTransferDetailByOutNo(any());
     }
+    private void assertOriginalNotSent(Map<String, String> result, CashWithdrawTransferIntent original) {
+        assertEquals("false", result.get("ok")); assertEquals("false", result.get("ambiguous"));
+        assertEquals("true", result.get("notSent")); assertEquals(original.requestHash(), result.get("requestHash"));
+    }
     private void assertSubmissionUnknown(Map<String, String> result) {
         assertEquals("false", result.get("ok")); assertEquals("true", result.get("ambiguous"));
+        assertNotEquals("true", result.get("notSent"), "未验证原 DTO 或 SDK 后异常不得获得未发送凭证");
     }
 }

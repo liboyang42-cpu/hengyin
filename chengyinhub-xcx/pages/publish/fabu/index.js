@@ -3092,13 +3092,13 @@ Page({
   },
 
   // 页面销毁:让在途发布回调失效,避免 setData / redirect after unload
-  onHide() {
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._hidden = true;
     // 每次编辑已先落本机;离开前不承诺一定存上云,只取消过时调度,回来(onShow)再接力
     this._cancelCloudDraftAutosave();
   },
 
-  onUnload() {
+  onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._unloaded = true;
     this._cloudAutosaveEnabled = false;
     this._cancelCloudDraftAutosave();
@@ -6617,7 +6617,7 @@ Page({
 
   // 发布弹层「继续发布」:仅在无 blocking 时出现,置一次性放行标记后重走 submitForm
   confirmPublishCheck() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.confirmPublishCheck())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.confirmPublishCheck(), { owner: this, target: () => [this.data.editingTopicId, this.data.draftUuid, this.data.operationScope, this.data.formData.clubId, this.data.formData.productType] })) return; // 2026-10-24 游客写前登录
     if (this._identityRegistering) return;
     this.syncIdentityReady();
     if (this.data.legacyScopePending) return; // 旧草稿归属没确认:发出去也会被 sendData 静默拦下
@@ -7070,7 +7070,7 @@ Page({
 
   // 提交表单
   submitForm() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.submitForm())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.submitForm(), { owner: this, target: () => [this.data.editingTopicId, this.data.draftUuid, this.data.operationScope, this.data.formData.clubId, this.data.formData.productType] })) return; // 2026-10-24 游客写前登录
     // 一次性消费放行标记:必须在任何 early return 之前取走并清掉,
     // 否则「确认发布 → 下面某条校验拦下」会把 true 留到下一次点击,让那一版内容静默绕过预检。
     const precheckAcked = this._precheckAcked;

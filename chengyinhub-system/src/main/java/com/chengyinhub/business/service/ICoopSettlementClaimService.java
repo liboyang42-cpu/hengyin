@@ -17,6 +17,8 @@ public interface ICoopSettlementClaimService {
 
     /** 持原topic锁区分新原分项owner；原close缺分项是冲突，不能降级为旧追收。 */
     boolean hasFrozenOriginalRefundComponents(Long refundId);
+    /** Same original transaction; empty means no applicable confirmed V1 contract, never a receipt. */
+    java.util.Optional<Long> recordConfirmedStationFulfillment(Long verificationAuditEventId);
     CoopSettlementPlan prepare(CoopOrder order, Date settlementSnapshotAt);
     void persist(CoopSettlementPlan plan, CoopSettlement head);
     void appendExecutedAdjustment(Long claimId, String eventKey, java.math.BigDecimal signedAmount);

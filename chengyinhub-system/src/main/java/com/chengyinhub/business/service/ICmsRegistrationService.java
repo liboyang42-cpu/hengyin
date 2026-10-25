@@ -369,15 +369,11 @@ public interface ICmsRegistrationService
                                       String actorRoleCode);
 
     /**
-     * 唯一中标时的核销:据点由**服务端**按 memberId + topicId + audit_status=1 + del_flag=0
-     * 查出来,不是客户端传的,所以不需要再回读复核一遍归属 —— 行为与原 verifyAndSettle 一致,
-     * 只是额外把这一站的身份落进核销流水。
+     * 唯一中标时的核销:station 是服务端查出的候选快照。
+     * 核销事务按 topic→registration 锁序重新读取原报名和该据点当前归属/中标态，
+     * 将同一个实际 station 写入流水与核销审计；不从快照推断原合作单计酬归属。
      *
-     * ★ 与 verifyAndSettleForStation 的分界是**输入可信度**,不是站数:
-     *   客户端能指定的那条必须事务内复核,服务端自己筛出来的那条不必。
-     *   把单中标也塞进严格路径,只会给一条本来好好的链路平白加上新的拒绝理由。
-     *
-     * @param station 服务端查出的唯一中标记录,只用于流水归属
+     * @param station 服务端查出的唯一中标候选，使用其 ID 在原事务内重新核对
      */
     boolean verifyAndSettleForOwnStation(CmsRegistration registration, Long verifierId, Long payeeId,
                                          CmsRegistrationMerchant station);

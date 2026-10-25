@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-25T02:42:06.152141+00:00",
+  "updated_utc": "2026-10-25T07:05:39.775167+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -168,6 +168,57 @@
       "authority": "Direct user question reply call_e39e3991cd20426591608496cdca3733",
       "owner": "G",
       "no_longer_pending": true
+    },
+    {
+      "id": "PER_ORIGINAL_ORDER_INDEPENDENT_SETTLEMENT_SCOPE",
+      "status": "APPROVED",
+      "authority": "DIRECT_HUMAN_REPLY",
+      "user_quote": "按每张原订单分别结算，但必须先明确各自独立的履约和销售额范围",
+      "owners": {
+        "production": "G",
+        "unit": "B"
+      },
+      "decision": "Settle each original frozen order only against demonstrably independent fulfillment and sales scope; overlapping or unprovable scope cannot be silently selected or counted twice",
+      "invariants": [
+        "Preserve original frozen compensation terms and original-order identities",
+        "No duplicate allocation of the same fulfillment/sale",
+        "No first-wins or live-config fallback",
+        "Preserve prior immutable deposit adjustment/refund/net payout guards",
+        "No partial economic commit on unresolved scope"
+      ]
+    },
+    {
+      "id": "SUPPLY_ORDER_STATION_SCOPE_CONFIRMATION",
+      "status": "APPROVED",
+      "authority": "DIRECT_HUMAN_REPLY",
+      "user_quote": "先一单一个据点，订单间不得重复（推荐）",
+      "decision": "Inviter explicitly selects one real station for a new supported SUPPLY invitation; merchant confirms the same station at acceptance and originalterms freeze it; effective originalorder station scope cannot repeat; no automatic historical attribution",
+      "shared_contract": {
+        "invite_field": "supplyStationId",
+        "invite_column": "coop_invite.supply_station_id",
+        "accept_confirmation": "same supplyStationId, cannot rebind ataccept; existing nodeId is distinct",
+        "terms": "supplyBillingScope {version:REGISTRATION_STATION_V1,stationId,topicId,merchantMemberId}",
+        "proof_entry": "ICoopSettlementClaimService java.util.Optional<Long> recordConfirmedStationFulfillment(Long verificationAuditEventId), MANDATORY sameTX",
+        "proof_optional_empty": "No applicable newlyconfirmed V1 original only; not a successful attribution/settlement receipt",
+        "new_canonical_source_sql": "chengyinhub-admin/sql/migration_20261025_coop_order_station_fulfillment.sql",
+        "DDL_runtime": "NOT_RUN_NOT_PRODUCTION_AUTHORIZATION"
+      },
+      "owners": {
+        "E": "Invite/domain/mapper/service/API creationacceptance producer and direct tests",
+        "A": "RegistrationRedemptionApplication real auditID sameTX caller and direct tests",
+        "G": "Narrow immutable proof entity/mapper/claim reader and direct tests/interface",
+        "D": "Existing MiniProgram invite station selection/display/accept confirmation and direct Node source controls",
+        "root": "Shared contract/canonicalSQL/DAG/registry/integration/CI"
+      },
+      "invariants": [
+        "No SUPPLY→ORGANIZER or historicalSCAN→GROUP reinterpretation",
+        "No nodeId/template/currentstation guessing as originalscope",
+        "Same topic/merchant/legal station/current owner checks and original topic→registration lock order",
+        "Original claims and permanent economic keys unchanged; no duplicate sale/fulfillment/payment",
+        "One originalorder one originalconfirmed station, no overlapping effective same merchant station assignments",
+        "No accepted/historical originalterms backfill or mutation",
+        "No extra fees/dependencies/permissions/production actions"
+      ]
     }
   ],
   "pending_business_decisions": [],
@@ -1900,17 +1951,496 @@
     "no_longer_pending": true
   },
   "final_concentrated_acceptance_51f0": {
-    "state": "SOURCE_COMPLETE_SCAN_FREEZE_PENDING",
-    "base": "51f05499c1523648a328f57bcd7927f6d9546003",
-    "scope_complete": false,
-    "standard_ci": "NOT_RUN",
-    "real_storage": "NOT_RUN",
-    "http": "NOT_RUN",
-    "planned_reviews": {
-      "A": "Independent combinedwithdrawal/DTO/SDKadmissionevidence",
-      "B": "Independent combinedsettlement/deposit/originalrefundnetconsistency",
-      "H": "Independent clientguest/auth/requestaccountjournalintegration only touchedsource"
+    "state": "STATION_REPAIR_SOURCE_COMPLETE_NOT_RUN_THEME_REUSE_NEWLY_APPROVED",
+    "candidate": {
+      "state": "FROZEN_ISOLATED_PUBLIC_CANDIDATE_NOT_ACCEPTED",
+      "sha": "6fcd5ac009cec1dd82c438528d24da30c1f302f4",
+      "tree": "208624fd71a08b94e0d9e752cdec2270257070a4",
+      "parents": [
+        "89a669060ab2f871b2fec9fcd5b14ad813e99ea8",
+        "51f05499c1523648a328f57bcd7927f6d9546003"
+      ],
+      "branch": "codex/architecture-day-integrated-51f0-final",
+      "source_complete": true,
+      "public_master_input": "51f05499c1523648a328f57bcd7927f6d9546003",
+      "ledger_controls": 5121,
+      "storage_source_classes": 66,
+      "storage_source_declarations": 833,
+      "prepush_scans": "secret-file/diffcheck/gitleaks691888bytesPASS",
+      "tests": "NOT_RUN",
+      "PR_merge_deploy": "NOT_AUTHORIZED_NOT_EXECUTED",
+      "full_scope_complete": false
     },
-    "no_merge_deploy": true
+    "runs": {
+      "standard": {
+        "id": 40162302151,
+        "sha": "6fcd5ac009cec1dd82c438528d24da30c1f302f4",
+        "observed_status": "completed",
+        "known_failed_jobs": [
+          121076215707,
+          121076298259,
+          121076298461
+        ],
+        "backend_job": 121076298298,
+        "meaning": "Jobmetadataonly, noallPASSclaim",
+        "conclusion": "failure",
+        "backend_result": {
+          "tests_run_reported_admin_summary": 15144,
+          "failures": 3,
+          "errors": 11,
+          "skipped": 647,
+          "affected_classes": [
+            "CashWithdrawStateMachineTest",
+            "CashWithdrawFundEvidenceTest"
+          ],
+          "compiled_and_tests_executed": true,
+          "raw_XML_independent_readback": false
+        }
+      },
+      "storage": {
+        "id": 40162306092,
+        "sha": "6fcd5ac009cec1dd82c438528d24da30c1f302f4",
+        "status": "completed",
+        "conclusion": "failure",
+        "job": 121076227598,
+        "stage": "Real storage gate negative controls",
+        "python_executed": 75,
+        "python_pass": 70,
+        "python_fail": 5,
+        "business_classes_executed": 0,
+        "actual_storage": "NOT_RUN",
+        "F_owner": "01a16a23-5e0c-736b-9fc1-d4d070393009",
+        "scope": "Exactbatchorder + callbackapprovalgateexpected + Wp04new25caseexpectation; preserveallguards"
+      },
+      "http": {
+        "id": 40162310692,
+        "sha": "6fcd5ac009cec1dd82c438528d24da30c1f302f4",
+        "observed_status": "completed",
+        "job_success_not_artifact_readback": [
+          121076241159,
+          121076241250
+        ],
+        "actual_case_acceptance": "PASS_36_SAME_SOURCE_HTTP_FIXTURE_ONLY",
+        "conclusion": "success",
+        "readback": "6fcd-http-36-readback.json",
+        "cases": 36,
+        "failure": 0,
+        "error": 0,
+        "skip": 0,
+        "duplicate": 0,
+        "raw_original_XML": "RUNNER_DIGEST_ONLY",
+        "businessAccepted": false,
+        "migrationAccepted": false
+      }
+    },
+    "parallel_owners": {
+      "A": "Station transaction caller5files exact integrated; source24+6unit/9MySQL NOT_RUN; old提款闭合 preserved",
+      "B": "43declaration twofile finalapplied; frozen unless realnewfixtureinterface delta",
+      "H": "Complete e1f6main+sessionreviewpatch integrated; source-reproduced race and composed71 controls; frozen",
+      "F": "Storage and exacttechnicalowner delivered/applied; frozen",
+      "G": "New approved proof/claim/reader/interface production + direct fixtures; 047 genericguard closed",
+      "D": "Original metadata closed; new existinginvite UI field/selection/display/confirmation+Nodefixtures",
+      "E": "New approved originalstation invite producer/domain/mapper/API+directfixtures"
+    },
+    "reviews_are_final_only": true,
+    "no_automatic_rerun_before_all_required_fixes": true,
+    "full_scope_complete": false,
+    "PR_merge_deploy": false,
+    "other_failure_logs": {
+      "architecture": {
+        "job": 121076215707,
+        "private_log": "/private/tmp/hengyin-6fcd-architecture.log",
+        "sha256": "f8a5a7f245cf253377fd197cf2cf6108c8b0ea3e1f803bf57fd18087e7614d88"
+      },
+      "migration": {
+        "job": 121076298259,
+        "private_log": "/private/tmp/hengyin-6fcd-migration.log",
+        "sha256": "1ebe62940635b7c42abb61e868ce6f6724dbbbab0e10fa4edd1446d08a84bb15"
+      },
+      "mini13": {
+        "job": 121076298461,
+        "private_log": "/private/tmp/hengyin-6fcd-mini13.log",
+        "sha256": "81004977bdb2823a3e62f417ee324f4ce6f4592f6837f31f90ad66cd9326dc6c"
+      }
+    },
+    "H_source_finding": {
+      "severity": "P2_CODE_REACHABLE_RUNTIME_NOT_REPRODUCED",
+      "chain": [
+        "app.js:259-262",
+        "utils/auth/require-login.js:80-83",
+        "pages/team/join/index.js:100-108"
+      ],
+      "mechanism": "Deferredlogincompletionunconditionallyresumesoldpagejoin afterpageexit/targetchange",
+      "source_sha": "6fcd5ac009cec1dd82c438528d24da30c1f302f4",
+      "review_only": false,
+      "runtime": "NOT_RUN",
+      "next": "OriginalH assigned focused promise/lifecycle reproduction then minimal originalpage/target continuation guard; no newauthpolicy"
+    },
+    "architecture_actual_finding": {
+      "artifact": 12586813140,
+      "zip_sha256": "691a63ba9870fee7c98855a7c5d5895ee0a506e2f74b2b6d5b8fbdffcd9e8bab",
+      "findings": 1,
+      "rule": "NEW_UNOWNED_BOUNDARY",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CashWithdrawTransferIntentMapper.java",
+      "negative_control_FAIL_CLOSED_logs": "EXPECTED_NOT_FINDINGS"
+    },
+    "applied_repairs": {
+      "F_storage": {
+        "sha": "3d81c9bb68d001231bd0817acc8839a2ac56495f",
+        "postimages_exact": true,
+        "control": "75 first 74PASS1FAIL then original failed1PASS; NOT one75green"
+      },
+      "G_migration": {
+        "sha": "ed106789cfabefc101f8591830f1b6acc47606a3",
+        "postimages_exact": true,
+        "control": "7PASS and71subtestmutations rejected; not71cases"
+      },
+      "D_mini13": {
+        "sha": "27b662b258bf18eeb48bc81190d7f56396907088",
+        "only_change": "one exact test anchor4864to4870",
+        "control": "one node file1PASS0FAIL0skip"
+      },
+      "F_technical_owner": {
+        "sha": "9637bbcb21b822afec83464f8309bef92ab2bc68",
+        "control": "4PASS0skip",
+        "root_review": "exact mapper role/two realconsumers/three necessary directions; business policy scope baseline tools unchanged",
+        "root_pin_approved": true,
+        "pin_source_changes": [
+          "ci.yml two refs",
+          "compiled_controls.VERIFIER",
+          "oldSHA negative retained"
+        ]
+      },
+      "A_withdrawal": {
+        "transport": "complete chatdiff, no donorcommit",
+        "base": "6fcd5ac009cec1dd82c438528d24da30c1f302f4",
+        "bytes": 32554,
+        "patch_sha256": "48962ebc6a722649838a3e2e0c2795880acbd693469e2e527c041395260aaf5b",
+        "files": 6,
+        "preimage_and_six_author_postimage_hashes": "EXACT",
+        "new_MySQL_declarations": 7,
+        "JavaDBCI": "NOT_RUN",
+        "turn": "01a1716c-8def-7670-a38e-ef9fc8c2ee03",
+        "cursor": "1e9feea5-2ea9-4d63-a7a0-0e845f8692e0:10"
+      },
+      "G_order_scope_partial": {
+        "sha": "33fa0bafb39d5ba647bbcd866e7a5973d38dd053",
+        "base": "6fcd5ac009cec1dd82c438528d24da30c1f302f4",
+        "files": 6,
+        "four_code_donor_SHA256_and_all_postimage_blobs": "EXACT",
+        "root_patch_sha256": "cda0bb714d96626efc3c9fda0a69f6c551b8ba630b73892a6293da121d03149b",
+        "author_reported_patch_sha256": "b1298aee5bf34e2f191fff4b89c48963994d2329628c7503f69e30f3ac2b23c2",
+        "author_diff_digest_match": false,
+        "custody": "Used public commit blobs plus all published code SHA256 rather than claim patch-byte equality",
+        "new_MySQL_declarations": 7,
+        "state": "PARTIAL; proven overlap rejected before writes, independent production positive scope source remains unimplemented",
+        "JavaDBCI": "NOT_RUN"
+      },
+      "H_login_continuation": {
+        "sha": "e1f6b67d3a84e7105e9e6e7e1e48bf089b7e4178",
+        "base": "6fcd5ac009cec1dd82c438528d24da30c1f302f4",
+        "main20_JS_SHA256": "EXACT",
+        "main24_files": "EXACT",
+        "evidence_two_TAP_logs": "15 whitespace-only blank lines normalized for diffcheck, original bytes retained privately",
+        "session_manager_shared_patch": "ROOT_REVIEWED_AND_APPLIED same batch; session-store revision guards only, no permission policy change",
+        "author_control": "main+sharedpatch composed71PASS0FAIL0skip, old62retained; not mainSHAstandalone",
+        "source_reproduction": "before direct2PASS4FAIL; intermediate source-input65PASS3FAIL retained",
+        "JavaDBCI_Wechat": "NOT_RUN",
+        "ledger": "NOT_GENERATED_YET",
+        "receipt": "/private/tmp/hengyin-6fcd-h-composed-integration.json"
+      },
+      "D_H_baseline": {
+        "delivery": "40819b82c60be1d82256b25b2b50f94b1b137237",
+        "parent": "6fcd5ac009cec1dd82c438528d24da30c1f302f4",
+        "baseline_sha256": "63b6b62adec717d326c5c8c5f6c978baa2905ad109e1d80ce79e8ecc48b5205f",
+        "files": 2,
+        "owner_checked30_intersections_moved4": true,
+        "root_actual_current_H_three_line_context4_exact_unique": true,
+        "reasons_counts_caps": "UNCHANGED",
+        "control": "Owner pureNode metadataPASS; root not repeated",
+        "runtime": "NOT_RUN",
+        "receipt": "/private/tmp/hengyin-6fcd-d-H-baseline-integration.json"
+      },
+      "B_order_scope_unit": {
+        "parent": "6fcd5ac009cec1dd82c438528d24da30c1f302f4",
+        "patch_sha256": "828f821ebf2866b595e297896b63f461f2d020e5429447316ca30843693d7a64",
+        "bytes": 34341,
+        "two_author_postimage_hashes": "EXACT",
+        "transport": "four complete chatdiff blocks plus separate README",
+        "declarations": 43,
+        "original_unit29_bodies": "PRESERVED",
+        "new_unit14": "REAL_SERVICE_CALLS_WITH_EXPLICIT_UNIT_MAPPER_INPUTS",
+        "JavaDBCI": "NOT_RUN",
+        "scope_guard_CLUB_seam": "ROOT_APPROVED_SEPARATION_G_IMPLEMENTING; actualprepare unsupportedcash guard unchanged",
+        "independent_positive_production": "NOT_PROVEN_BY_CONTROLLED_UNIT"
+      },
+      "G_generic_scope_guard": {
+        "sha": "047dff9bd9f64762ce3b7c2f0839d10e803956f4",
+        "parent": "fac725d135e550ca23ca95eabfdb0317b872db1a",
+        "4postimage_files": "EXACT",
+        "scope_fixture_declarations": 11,
+        "productioncashadmission": "UNCHANGED",
+        "runtime": "NOT_RUN",
+        "receipt": "/private/tmp/hengyin-6fcd-G-scope-guard-integration.json"
+      }
+    },
+    "A_source_finding": {
+      "severity": "P2_SOURCE_REACHABLE_RUNTIME_NOT_REPRODUCED",
+      "mechanism": "validated FUND_FACT new dualintent beforeSDK unavailableclient path returns ambiguous rather than proven notSent, original balance remains held; preserve earlierUNKNOWN/SDKenteredtimeoutrules",
+      "owner": "A",
+      "scope": "CashWithdrawServiceImpl/WechatPaymentSdkGateway and direct fixtures"
+    },
+    "B_source_finding": {
+      "severity": "P1_SOURCE_REACHABLE_RUNTIME_NOT_REPRODUCED",
+      "mechanism": "samepayee firstNONE occupies dedupkey before prepare, laterpaid originalorder skipped withoutclaimdetail; topic may settle",
+      "human_decision": "PER_ORIGINAL_ORDER_WITH_PROVEN_INDEPENDENT_FULFILLMENT_AND_SALES_SCOPE",
+      "status": "APPROVED_IMPLEMENTATION_ASSIGNED_G_PRODUCTION_B_UNIT",
+      "not_allowed": "delete dedup and repeat whole-topic base; choose earliest/highest; invented allocation"
+    },
+    "integration_receipt": "/private/tmp/hengyin-6fcd-final-repairs-integration.json",
+    "source_current": "A_B_H_D_BASELINE_F_APPLIED_G_PROOF_E_INVITE_D_UI_SOURCE_PENDING_NOT_FINAL_CANDIDATE",
+    "all_complete": false,
+    "last_coordination": {
+      "trigger": "2026-10-25T06:23:08.523Z",
+      "state": "REQUIRED_SOURCE_NOT_YET_ALL_DELIVERED_NO_CI_REDISPATCH",
+      "A": {
+        "turn": "01a1716c-8def-7670-a38e-ef9fc8c2ee03",
+        "cursor": "1e9feea5-2ea9-4d63-a7a0-0e845f8692e0:10",
+        "actual_source_progress": "complete sixfile patch delivered and applied exactly",
+        "extra_direct_caller": "WechatPayTransferIntentGatewayTest.java",
+        "new_MySQL_case_declarations_reported": 7,
+        "runtime": "NOT_RUN",
+        "state": "DELIVERED_APPLIED_EXACT_NOT_RUN"
+      },
+      "B": {
+        "turn": "01a17181-27f1-7516-abca-35706d8f2551",
+        "cursor": "b03dff2c-10cc-4156-add7-1e422e41c5d1:15",
+        "draft": "fixture-preparation-NOT-FINAL.patch, do not apply over final source",
+        "false_ref_block_resolved": {
+          "explanation": "9ade861a is SHA256 file prefix, not Git ref; approved A source already in public6fcd",
+          "commit": "6fcd5ac009cec1dd82c438528d24da30c1f302f4",
+          "blob": "3fa5037dd0877576f775eca55ad9e8d4687b8b6c",
+          "bytes": 70633,
+          "file_sha256": "9ade861adeb6496738df7cf4d3328facd075833dad997ef7a8d43a8f52d8e913",
+          "root_git_show_independent_check": true,
+          "exact_correction_sent_to_original_B": true
+        },
+        "remaining": "no ownedpatch missing; generic scope guard producer is G",
+        "actual_draft": "three chatdiff blocks SHA346e9131..., not applied; final twofiles pending",
+        "state": "FINAL_APPLIED_EXACT_NOT_RUN"
+      },
+      "G": {
+        "turn": "01a17181-33e7-7291-b2e3-59964309a9c7",
+        "cursor": "4b361718-0fcf-48df-970f-92288ff9076c:18",
+        "actual_contract_delivery": "33fa README/code received and sent B",
+        "old_migration_delivery": "already applied ed106, do not substitute",
+        "remaining": "New approved single-station immutable source implementation, no businessanswer pending",
+        "contract_proposal": "fac725d135e550ca23ca95eabfdb0317b872db1a 3docs-only exactapplied",
+        "station_source_business_input": "AWAITING_SINGLE_OR_SET_SCOPE_SELECTION",
+        "regId_findings": "original merchant candidate signup not player cash/fulfillment; current confirmCandidate does not createCoopOrder; no backfill",
+        "independent_shared_guard_task": "Only identity/headerline/sales/overlap in requireIndependentOrderScopes, retain exact realprepare cash eligibility; do not fakeCLUB testidentity",
+        "genericguard": "completed047 applied"
+      },
+      "H": {
+        "turn": "01a17168-bc3a-7650-8e2e-9987cc469361",
+        "cursor": "14018e83-052e-4771-a1ef-d3708b18cc1b:8",
+        "state": "COMPLETED_APPLIED_COMPOSED",
+        "read_turn": "oversized even1/includeOutputsfalse; use compact snapshot/publiccommit delivery, no old source dumps",
+        "delivery": "e1f6b67d3a84e7105e9e6e7e1e48bf089b7e4178"
+      },
+      "no_runtime_claim": true,
+      "new_candidate_frozen": false,
+      "PR_merge_deploy": false,
+      "D": {
+        "turn": "01a17185-699b-7492-94ce-b58a6f49aa78",
+        "cursor": "392a0141-0cc8-4147-8a14-b181aa78db38:8",
+        "state": "DELIVERED_APPLIED_EXACT",
+        "sha": "40819b82c60be1d82256b25b2b50f94b1b137237"
+      }
+    },
+    "integration_receipt_A_G": "/private/tmp/hengyin-6fcd-a-g-source-integration.json",
+    "new_source_declarations_reported_not_runtime": {
+      "A_add7": 7,
+      "G_newclass7": 7,
+      "final_registry_not_yet_updated": true
+    },
+    "integration_receipt_B_Gproposal": "/private/tmp/hengyin-6fcd-B-final-G-proposal-integration.json",
+    "station_scope_pending": {
+      "id": "SUPPLY_ORDER_STATION_SCOPE_CONFIRMATION",
+      "status": "APPROVED",
+      "authority": "DIRECT_HUMAN_REPLY",
+      "user_quote": "先一单一个据点，订单间不得重复（推荐）",
+      "decision": "Inviter explicitly selects one real station for a new supported SUPPLY invitation; merchant confirms the same station at acceptance and originalterms freeze it; effective originalorder station scope cannot repeat; no automatic historical attribution",
+      "shared_contract": {
+        "invite_field": "supplyStationId",
+        "invite_column": "coop_invite.supply_station_id",
+        "accept_confirmation": "same supplyStationId, cannot rebind ataccept; existing nodeId is distinct",
+        "terms": "supplyBillingScope {version:REGISTRATION_STATION_V1,stationId,topicId,merchantMemberId}",
+        "proof_entry": "ICoopSettlementClaimService java.util.Optional<Long> recordConfirmedStationFulfillment(Long verificationAuditEventId), MANDATORY sameTX",
+        "proof_optional_empty": "No applicable newlyconfirmed V1 original only; not a successful attribution/settlement receipt",
+        "new_canonical_source_sql": "chengyinhub-admin/sql/migration_20261025_coop_order_station_fulfillment.sql",
+        "DDL_runtime": "NOT_RUN_NOT_PRODUCTION_AUTHORIZATION"
+      },
+      "owners": {
+        "E": "Invite/domain/mapper/service/API creationacceptance producer and direct tests",
+        "A": "RegistrationRedemptionApplication real auditID sameTX caller and direct tests",
+        "G": "Narrow immutable proof entity/mapper/claim reader and direct tests/interface",
+        "D": "Existing MiniProgram invite station selection/display/accept confirmation and direct Node source controls",
+        "root": "Shared contract/canonicalSQL/DAG/registry/integration/CI"
+      },
+      "invariants": [
+        "No SUPPLY→ORGANIZER or historicalSCAN→GROUP reinterpretation",
+        "No nodeId/template/currentstation guessing as originalscope",
+        "Same topic/merchant/legal station/current owner checks and original topic→registration lock order",
+        "Original claims and permanent economic keys unchanged; no duplicate sale/fulfillment/payment",
+        "One originalorder one originalconfirmed station, no overlapping effective same merchant station assignments",
+        "No accepted/historical originalterms backfill or mutation",
+        "No extra fees/dependencies/permissions/production actions"
+      ]
+    },
+    "shared_source_registration": {
+      "receipt": "/private/tmp/hengyin-current-storage-source-registration.json",
+      "source_only": "67 integrated classes/851 declarations, class11 newG and old57+7=64A; not execution PASS",
+      "inherited_gate": "Only exact new scopefixture added existingWP04 approval matrix condition; no gate removed",
+      "new_fixture_admission_control_source": "added, not executed yet",
+      "noCIredispatch": true,
+      "latest_A_source_registration": "/private/tmp/hengyin-A-station-caller-source-registration.json",
+      "current_registered_source_only": "68 integratedclasses/860 declarations; registrationwrite120/fundsclosure239",
+      "counts_are_runtime": "NO, still NOT_RUN; must recalc when G/E sourcecomplete",
+      "new_A_caller9": "registered mysql/architecture_a/no skip gate, hosted assertions retained; controlledGboundary not actualproofSQL"
+    },
+    "station_canonical_SQL_preparation": {
+      "path": "chengyinhub-admin/sql/migration_20261025_coop_order_station_fulfillment.sql",
+      "sha256": "73f6586a2f6c0616e3e0283abc0be8bc626d5923b0a776a6a3f01e4ebeec3ba3",
+      "state": "SOURCE_ONLY_NOT_FINAL_CANDIDATE_NOT_EXECUTED",
+      "newnullable_invite_column": true,
+      "no_history_backfill": true,
+      "parent_key_signedness": "Root actualbase: topic/member UNSIGNED; order/reg/station/audit SIGNED; proposal corrected no droppedFK",
+      "DAG": "one new entry only, oldedges preserved",
+      "fixture_registry_to_recompute_when_source_complete": true,
+      "proof_foreign_keys": 6,
+      "invite_foreign_keys": 1,
+      "total_new_foreign_keys": 7,
+      "source_check_receipt": "/private/tmp/hengyin-station-canonical-SQL-source-check.json",
+      "source_only_statement_count": 6,
+      "source_safety_problems": 0,
+      "first_mutation_preflight": "All new constraint names/trigger names/column/index names/table absence and parent key types/engines checked",
+      "DDL_runtime": "NOT_RUN"
+    },
+    "station_implementation_current_turns": {
+      "G": {
+        "id": "01a1719f-ff0d-716e-9b18-4397bc2ffcf3",
+        "cursor": "4b361718-0fcf-48df-970f-92288ff9076c:21",
+        "state": "COMPLETE_ROOT_EXACT_APPLIED",
+        "commit": "92829af2f738b0dbf10c14b05d6cb949032e3ba1",
+        "JavaDBCI": "NOT_RUN"
+      },
+      "E": {
+        "id": "01a171a0-19e2-7301-91e5-456b0f61d59c",
+        "cursor": "bf46e2e6-88ca-4fad-a205-efca84d15256:10",
+        "state": "COMPLETE_ROOT_EXACT_APPLIED",
+        "commit": "8b92522b8ed90c3a0be7d0f26f38a5809e2fe246",
+        "unit_source_new": 20,
+        "MySQL_source_new": 7,
+        "JavaDBCI": "NOT_RUN"
+      },
+      "A": {
+        "id": "01a171a0-287e-770d-8b35-c348e99f30b3",
+        "cursor": "1e9feea5-2ea9-4d63-a7a0-0e845f8692e0:12",
+        "state": "COMPLETE_ROOT_EXACT_APPLIED",
+        "patch_bytes": 40528,
+        "patch_sha256": "785cb0d1b11c22d970699321874fba8034222a356b94104db829fa05f42b7d6a",
+        "actual_production_owner": "CmsRegistrationServiceImpl original transactions; RegistrationRedemptionApplication/ICmsRegistrationService comments only",
+        "original_unit_cases": 24,
+        "new_unit_declarations": 6,
+        "new_MySQL_declarations": 9,
+        "JavaDBCI": "NOT_RUN",
+        "G_interface_dependency": "G new recordConfirmedStationFulfillment method must exist for composition/compile; A ICmsRegistrationService comment patch and G ICoopSettlementClaimService method are different files, no sharedfile overwrite",
+        "integration_receipt": "/private/tmp/hengyin-A-station-caller-integration.json",
+        "five_author_postimage_hashes": "EXACT",
+        "G_interface_note": "A changes ICmsRegistrationService comments; G writes different ICoopSettlementClaimService, no sharedfile overwrite"
+      },
+      "D": {
+        "id": "01a171a0-35e2-77ec-b078-e4a78045d018",
+        "cursor": "392a0141-0cc8-4147-8a14-b181aa78db38:12",
+        "actual_source_progress": "Creator chooser and invite detail/list confirmation authored; author checking actual expansion of directNodecontrols; no full delivery yet",
+        "control_count": "File-level1PASS is not taken as all new scenariosPASS",
+        "state": "COMPLETE_ROOT_EXACT_APPLIED",
+        "commit": "2bcea9ef750b627cd67b85881ba425caea614a63",
+        "directNode": "14PASS author source controls, not UI or runtime"
+      }
+    },
+    "station_actual_API_contract": {
+      "owner": "E",
+      "create": "POST /api/coop/invite supplyStationId",
+      "accept": "POST /api/coop/handle {id,status:1,supplyStationId}; original nodeId independent",
+      "entity_version": "No existing expectedVersion/termsHash field; do not invent UIversion",
+      "server": "lock originalinvite and topic; compare originalstation then freeze serverterms",
+      "root_forwarded_to_D": true,
+      "station_options": "GET /api/coop/supply-stations?topicId&merchantMemberId",
+      "station_options_response": "AjaxResult data {requiresSupplyStation:true,stations:[{supplyStationId,stationName}]}",
+      "station_options_scope": "Same existing invitation creation permission plus actual topic/merchant/eligible station softdelete checks, serverderiveTOPIC; no client scope",
+      "station_options_empty": "true+empty list, no autodetect station or bypass choice",
+      "persistent_edit": "NOT_ADDED; existing pre-send local draft only, no fake version or inviteid update through create",
+      "known_unsupported_reuse": "merchant/entries activity runtime list is not correct creator scope",
+      "root_forwarded_both_E_D": true,
+      "invite_station_display": {
+        "fields": [
+          "supplyStationId",
+          "supplyStationName"
+        ],
+        "meaning": "Existing authorized invite read/list response projects selected station name; read-only field, no newcolumn or trust in clientname",
+        "accept_page": "Use originalinvite ID/name, not creator-only supply-stations list",
+        "root_forwarded_both_E_D": true
+      },
+      "station_eligibility": "Same topic and merchant member, actualaudit_status=1, del_flag=0 as originalredemption; do not invent extra status/validation_method requirement"
+    },
+    "station_SQL_FK_count_note": "Original proposal has six proofFK plus one inviteFK. Root corrected textual count/postassert7→6 for proof; no FK removed.",
+    "latest_human_status_readback": {
+      "meaning": "Current exact remaining: E invite producer/read API, G proof/reader/source persistence, D existingMiniProgram station chooser/confirm, A received not yet integrated; then source freeze/unified CI+realDB and broader quality acceptance",
+      "all_complete": false,
+      "PR_merge_deploy": false
+    },
+    "coordination_result_0623": {
+      "new_completed_deliverables": [],
+      "real_progress": "D implemented UIcaller source, still validating minimalNode control execution; E and G source still in progress",
+      "CI_dispatch": "NONE_SOURCE_NOT_ALL_DELIVERED",
+      "new_policy_question": "NONE",
+      "no_reassigned_completed_tasks": true,
+      "next_required": "Collect G/E/D actual complete parent/fullSHA patches and testsources, then integrate exact calls and metadata",
+      "all_complete": false
+    },
+    "working_source_state": "A_B_G_E_D_H_F_ALL_REQUIRED_STATION_REPAIR_SOURCE_APPLIED_NOT_ACCEPTED",
+    "station_source_complete": {
+      "E": "8b92522b8ed90c3a0be7d0f26f38a5809e2fe246",
+      "G": "92829af2f738b0dbf10c14b05d6cb949032e3ba1",
+      "D": "2bcea9ef750b627cd67b85881ba425caea614a63",
+      "F": "2181ad835d2c7e6b5d5ca0f9692849c890c7d7d1",
+      "A": "40528byte author patch + root MEMBER station audit seam",
+      "root_policy_pin": "2181ad835d2c7e6b5d5ca0f9692849c890c7d7d1",
+      "new_policy_boundary": "3 exact technical roles/8 directions; class-only not method-level SQL write proof",
+      "integrated_source_classes": 70,
+      "integrated_source_declarations": 879,
+      "funds_closure_source_declarations": 258,
+      "ledger_controls": 5125,
+      "ledger_sha256": "ca00ec848262bba4f7a0ae12d74bb1360b3924c46fddbec8a1184495623b9291",
+      "ledger_attempts": "Preliminary before E retained as incomplete; final regeneration after E complete with same 5125/hash, no CI rerun",
+      "JavaDBCI": "NOT_RUN",
+      "all_complete": false
+    }
+  },
+  "latest_user_architecture_discussion": {
+    "mode": "FOUR_CONTRACTS_APPROVED_IMPLEMENT_REUSE_EXISTING_FIRST",
+    "user_quote": "那就把有用的你说的四个添加进去 用的云端agent一起做 游戏一定要复用",
+    "latest_reference_request": "核对Deepseek报告06/07及实际代码，用现有和可核实参考，不猜新设计",
+    "scope": [
+      "TG1完整主题内容单元",
+      "TG2审核发布运行绑定",
+      "TG3已有模板组件复用合同",
+      "TG4现有发布前组合校验与诊断"
+    ],
+    "not_authorized_by_this": "Per-theme Maven/service/DB, arbitrary scripts, broad framework/DDL/dependency/permission changes",
+    "construction_doc": "主题游戏模块与模板复用施工-20261025.md",
+    "all_complete": false
   }
 }

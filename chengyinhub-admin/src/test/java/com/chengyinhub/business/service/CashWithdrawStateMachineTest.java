@@ -12,14 +12,12 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -48,15 +46,61 @@ class CashWithdrawStateMachineTest {
 
     @Test
     void manualRefundKeepsClaimAndBalanceMutationInOneTransaction() throws Exception {
-        Method method = CashWithdrawServiceImpl.class.getMethod(
-                "manualRefund", Long.class, String.class, String.class);
-        Transactional transactional = method.getAnnotation(Transactional.class);
-        assertTrue(transactional != null, "CAS 与余额回补必须处于同一事务，进程异常时才不会留下假终态");
-        assertTrue(java.util.Arrays.asList(transactional.rollbackFor()).contains(Exception.class));
+        var source = mock(javax.sql.DataSource.class);
+        var connection = mock(java.sql.Connection.class);
+        when(source.getConnection()).thenReturn(connection);
+        var transactions = new org.springframework.jdbc.datasource.DataSourceTransactionManager(source);
+        ReflectionTestUtils.setField(svc, "transactionManager", transactions);
+        MemberCashWithdraw original = pendingRecord();
+        original.setStatus(MemberCashWithdraw.STATUS_FAILED_MANUAL);
+        when(mapper.selectById(1L)).thenReturn(original);
+        CashWithdrawTransferIntent snapshot = transferEvidence.seed(original, true);
+        var creditedBalance = new java.util.concurrent.atomic.AtomicReference<>(new BigDecimal("90.00"));
+        var claimResource = new java.util.concurrent.atomic.AtomicReference<Object>();
+        when(wechatPayService.queryTransferResult(any(CashWithdrawTransferIntent.class))).thenAnswer(call -> {
+            assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive(),
+                    "原渠道查询必须在持有资金行锁的事务之外");
+            assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.hasResource(source));
+            assertEquals(snapshot, call.getArgument(0), "查询只能携带原来源/hash/身份");
+            return CashWithdrawIntentTestSupport.facts(snapshot, "FAIL");
+        });
+        org.mockito.Mockito.doAnswer(call -> {
+            assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+            Object resource = org.springframework.transaction.support.TransactionSynchronizationManager.getResource(source);
+            assertTrue(resource != null, "退款 CAS 必须持有实际 Spring JDBC 事务资源");
+            claimResource.set(resource);
+            return evidence.review(call);
+        }).when(mapper).updateStatusIfRefundReview(any());
+        org.mockito.Mockito.doAnswer(call -> {
+            assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+            org.junit.jupiter.api.Assertions.assertSame(claimResource.get(),
+                    org.springframework.transaction.support.TransactionSynchronizationManager.getResource(source),
+                    "退款 CAS 与余额写必须使用同一事务资源");
+            assertEquals(MemberCashWithdraw.STATUS_FAILED_REFUNDED, original.getStatus());
+            assertEquals(9L, call.getArgument(0, Long.class));
+            assertEquals(0, TEN.compareTo(call.getArgument(1, BigDecimal.class)));
+            creditedBalance.updateAndGet(value -> value.add(call.getArgument(1, BigDecimal.class)));
+            return true;
+        }).when(umsMemberService).addBalance(anyLong(), any());
 
-        Method expectedStatusMethod = CashWithdrawServiceImpl.class.getMethod(
-                "manualRefund", Long.class, String.class, String.class, Integer.class);
-        assertTrue(expectedStatusMethod.isAnnotationPresent(Transactional.class), "确认状态守卫也必须在同一事务内执行");
+        assertTrue(svc.manualRefund(1L, "maker", "原失败证据"));
+        assertEquals(MemberCashWithdraw.STATUS_REFUND_PENDING_REVIEW, original.getStatus());
+        assertEquals(0, new BigDecimal("90.00").compareTo(creditedBalance.get()));
+        verify(umsMemberService, never()).addBalance(anyLong(), any());
+        assertTrue(svc.manualRefund(1L, "checker", "复核", MemberCashWithdraw.STATUS_REFUND_PENDING_REVIEW));
+
+        assertEquals(MemberCashWithdraw.STATUS_FAILED_REFUNDED, original.getStatus());
+        assertEquals(0, new BigDecimal("100.00").compareTo(creditedBalance.get()));
+        var order = org.mockito.Mockito.inOrder(mapper, umsMemberService);
+        order.verify(mapper).updateStatusIfRefundReview(any());
+        order.verify(umsMemberService).addBalance(9L, TEN);
+        verify(umsMemberService, times(1)).addBalance(9L, TEN);
+        verify(wechatPayService, times(2)).queryTransferResult(snapshot);
+        verify(wechatPayService, never()).transferToBalance(any(CashWithdrawTransferIntent.class));
+        verify(mapper, never()).insertFundFact(any());
+        assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+        assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.hasResource(source));
+        // Mock JDBC proves Spring resource/phase wiring; real SQL rollback remains owned by the MySQL IT.
     }
 
     private MemberCashWithdrawMapper mapper;

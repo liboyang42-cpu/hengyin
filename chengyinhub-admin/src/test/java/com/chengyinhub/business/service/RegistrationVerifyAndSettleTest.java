@@ -65,6 +65,9 @@ class RegistrationVerifyAndSettleTest {
     private CoopGroupMemberVerifyMapper groupMemberVerifyMapper;
     private ISettlementEntryService settlementSvc;
     private BusinessAuditEventMapper auditMapper;
+    private com.chengyinhub.business.mapper.CmsTopicMapper topicMapper;
+    private ICoopSettlementClaimService fulfillmentClaims;
+    private final java.util.concurrent.atomic.AtomicLong auditIds = new java.util.concurrent.atomic.AtomicLong(100);
     private CmsRegistrationServiceImpl service;
 
     @BeforeEach
@@ -76,11 +79,20 @@ class RegistrationVerifyAndSettleTest {
         groupMemberVerifyMapper = mock(CoopGroupMemberVerifyMapper.class);
         settlementSvc = mock(ISettlementEntryService.class);
         auditMapper = mock(BusinessAuditEventMapper.class);
+        topicMapper = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        fulfillmentClaims = mock(ICoopSettlementClaimService.class);
+        when(fulfillmentClaims.recordConfirmedStationFulfillment(anyLong())).thenReturn(java.util.Optional.empty());
+        com.chengyinhub.business.domain.CmsTopic topic = new com.chengyinhub.business.domain.CmsTopic();
+        topic.setId(300L);
+        when(topicMapper.selectCmsTopicByIdForUpdate(300L)).thenReturn(topic);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenAnswer(call -> reg());
 
         service = new CmsRegistrationServiceImpl();
         org.springframework.test.util.ReflectionTestUtils.setField(service, "growthService",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.IGrowthService.class));
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", regMapper);
+        ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
+        ReflectionTestUtils.setField(service, "coopSettlementClaimService", fulfillmentClaims);
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activityMapper);
         ReflectionTestUtils.setField(service, "cmsRegistrationMerchantMapper", registrationMerchantMapper);
         ReflectionTestUtils.setField(service, "cmsRegistrationScanMapper", scanMapper);
@@ -94,7 +106,11 @@ class RegistrationVerifyAndSettleTest {
 
         when(scanMapper.selectCmsRegistrationScanList(any()))
                 .thenReturn(Collections.<CmsRegistrationScan>emptyList());
-        when(auditMapper.insertBusinessAuditEvent(any())).thenReturn(1);
+        when(auditMapper.insertBusinessAuditEvent(any())).thenAnswer(call -> {
+            BusinessAuditEvent event = call.getArgument(0);
+            event.setId(auditIds.incrementAndGet());
+            return 1;
+        });
     }
 
     private CmsRegistration reg() {
@@ -297,7 +313,7 @@ class RegistrationVerifyAndSettleTest {
     @Test
     void auditWriteFailurePropagatesFromTransactionalVerification() {
         when(regMapper.verifyIfNotVerified(REG, MERCHANT)).thenReturn(1);
-        when(auditMapper.insertBusinessAuditEvent(any())).thenReturn(0);
+        org.mockito.Mockito.doReturn(0).when(auditMapper).insertBusinessAuditEvent(any());
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
                 () -> service.verifyAndSettle(reg(), MERCHANT, PAYEE, 1,
@@ -498,5 +514,109 @@ class RegistrationVerifyAndSettleTest {
                 m.getAnnotation(org.springframework.transaction.annotation.Transactional.class);
         assertNotNull(tx, "所选据点复核与核销收口必须同事务");
         assertTrue(tx.rollbackFor().length > 0 && tx.rollbackFor()[0] == Exception.class);
+    }
+
+    @Test
+    void selectedStationPassesOnlyGeneratedOriginalAuditIdAfterOrderedLocksAndCas() {
+        when(registrationMerchantMapper.selectCmsRegistrationMerchantByIdForUpdate(701L))
+                .thenReturn(station(MERCHANT, 300L, 3));
+        when(regMapper.verifyIfNotVerified(REG, MERCHANT)).thenReturn(1);
+
+        assertTrue(service.verifyAndSettleForStation(reg(), MERCHANT, 701L, 7002L, "MERCHANT_CHECKIN"));
+
+        ArgumentCaptor<BusinessAuditEvent> audit = ArgumentCaptor.forClass(BusinessAuditEvent.class);
+        InOrder order = inOrder(topicMapper, regMapper, registrationMerchantMapper, settlementSvc,
+                auditMapper, fulfillmentClaims);
+        order.verify(topicMapper).selectCmsTopicByIdForUpdate(300L);
+        order.verify(regMapper).selectCmsRegistrationByIdForUpdate(REG);
+        order.verify(registrationMerchantMapper).selectCmsRegistrationMerchantByIdForUpdate(701L);
+        order.verify(regMapper).verifyIfNotVerified(REG, MERCHANT);
+        order.verify(settlementSvc).recordPaidRegistration(any(), eq(MERCHANT));
+        order.verify(auditMapper).insertBusinessAuditEvent(audit.capture());
+        BusinessAuditEvent source = audit.getValue();
+        assertTrue(source.getId() > 0);
+        assertEquals("REGISTRATION_STATION_REDEEM", source.getAction());
+        assertEquals("REGISTRATION", source.getDomainType()); assertEquals(REG, source.getDomainId());
+        assertEquals("CMS_REGISTRATION", source.getTargetType()); assertEquals(REG, source.getTargetId());
+        assertEquals(MERCHANT, source.getOwnerMemberId()); assertEquals(Long.valueOf(7002L), source.getActorMemberId());
+        assertEquals(Long.valueOf(701L), source.getRelationId());
+        assertEquals("registration-redeem-" + REG, source.getRequestId());
+        order.verify(fulfillmentClaims).recordConfirmedStationFulfillment(source.getId());
+        // This explicit legacy/no-V1 fixture returns empty, never a fabricated proof ID.
+    }
+
+    @Test
+    void ownStationRechecksCurrentOwnershipBeforeCasRatherThanTrustingServerSnapshot() {
+        CmsRegistrationMerchant observed = station(MERCHANT, 300L, 3);
+        when(registrationMerchantMapper.selectCmsRegistrationMerchantByIdForUpdate(701L))
+                .thenReturn(station(999L, 300L, 3));
+
+        assertEquals("所选据点不属于当前商家或路线", assertThrows(IllegalStateException.class,
+                () -> service.verifyAndSettleForOwnStation(reg(), MERCHANT, MERCHANT, observed)).getMessage());
+
+        InOrder order = inOrder(topicMapper, regMapper, registrationMerchantMapper);
+        order.verify(topicMapper).selectCmsTopicByIdForUpdate(300L);
+        order.verify(regMapper).selectCmsRegistrationByIdForUpdate(REG);
+        order.verify(registrationMerchantMapper).selectCmsRegistrationMerchantByIdForUpdate(701L);
+        verify(regMapper, never()).verifyIfNotVerified(anyLong(), anyLong());
+        org.mockito.Mockito.verifyNoInteractions(settlementSvc, auditMapper, fulfillmentClaims);
+    }
+
+    @Test
+    void ownStationRecordsTheRecheckedStationAndItsGeneratedAudit() {
+        CmsRegistrationMerchant observed = station(MERCHANT, 300L, 1);
+        when(registrationMerchantMapper.selectCmsRegistrationMerchantByIdForUpdate(701L))
+                .thenReturn(station(MERCHANT, 300L, 3));
+        when(regMapper.verifyIfNotVerified(REG, MERCHANT)).thenReturn(1);
+
+        assertTrue(service.verifyAndSettleForOwnStation(reg(), MERCHANT, MERCHANT, observed));
+        ArgumentCaptor<CmsRegistrationScan> scan = ArgumentCaptor.forClass(CmsRegistrationScan.class);
+        verify(scanMapper).insertCmsRegistrationScan(scan.capture());
+        assertEquals(Integer.valueOf(3), scan.getValue().getValidationMethod());
+        ArgumentCaptor<BusinessAuditEvent> audit = ArgumentCaptor.forClass(BusinessAuditEvent.class);
+        verify(auditMapper).insertBusinessAuditEvent(audit.capture());
+        verify(fulfillmentClaims).recordConfirmedStationFulfillment(audit.getValue().getId());
+        assertEquals(Long.valueOf(701L), audit.getValue().getRelationId());
+        assertEquals(BusinessAuditEvent.ACTOR_TYPE_MEMBER, audit.getValue().getActorType());
+    }
+
+    @Test
+    void stationAuditMissingGeneratedIdCannotCallFulfillmentRecorder() {
+        when(registrationMerchantMapper.selectCmsRegistrationMerchantByIdForUpdate(701L))
+                .thenReturn(station(MERCHANT, 300L, 3));
+        when(regMapper.verifyIfNotVerified(REG, MERCHANT)).thenReturn(1);
+        org.mockito.Mockito.doAnswer(call -> 1).when(auditMapper).insertBusinessAuditEvent(any());
+
+        assertEquals("核销审计未返回有效原事件ID", assertThrows(IllegalStateException.class,
+                () -> service.verifyAndSettleForStation(reg(), MERCHANT, 701L)).getMessage());
+        org.mockito.Mockito.verifyNoInteractions(fulfillmentClaims);
+    }
+
+    @Test
+    void stationFulfillmentRejectionEscapesOriginalTransactionalBoundary() {
+        when(registrationMerchantMapper.selectCmsRegistrationMerchantByIdForUpdate(701L))
+                .thenReturn(station(MERCHANT, 300L, 3));
+        when(regMapper.verifyIfNotVerified(REG, MERCHANT)).thenReturn(1);
+        when(fulfillmentClaims.recordConfirmedStationFulfillment(anyLong()))
+                .thenThrow(new IllegalStateException("confirmed V1 source conflict"));
+
+        assertEquals("confirmed V1 source conflict", assertThrows(IllegalStateException.class,
+                () -> service.verifyAndSettleForStation(reg(), MERCHANT, 701L)).getMessage());
+        // Propagation only: actual SQL rollback is asserted in RegistrationStationFulfillmentMySqlIT.
+    }
+
+    @Test
+    void stationReplayDoesNotCreateAnotherAuditOrCallEconomicRecorderAgain() {
+        CmsRegistration verified = reg(); verified.setVerificationStatus(1);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(reg(), reg(), verified);
+        when(registrationMerchantMapper.selectCmsRegistrationMerchantByIdForUpdate(701L))
+                .thenReturn(station(MERCHANT, 300L, 3));
+        when(regMapper.verifyIfNotVerified(REG, MERCHANT)).thenReturn(1, 0);
+
+        assertTrue(service.verifyAndSettleForStation(reg(), MERCHANT, 701L));
+        assertFalse(service.verifyAndSettleForStation(reg(), MERCHANT, 701L));
+        verify(auditMapper, org.mockito.Mockito.times(1)).insertBusinessAuditEvent(any());
+        verify(fulfillmentClaims, org.mockito.Mockito.times(1)).recordConfirmedStationFulfillment(anyLong());
+        verify(settlementSvc, org.mockito.Mockito.times(1)).recordPaidRegistration(any(), eq(MERCHANT));
     }
 }

@@ -35,6 +35,10 @@ class CashWithdrawFundEvidenceTest {
         members = mock(IUmsMemberService.class);
         channel = mock(IWechatPayService.class);
         service = new CashWithdrawServiceImpl();
+        // These historical fund-fact scenarios explicitly have no master transfer-intent row.
+        // Do not synthesize snapshots, convert hashes or backfill a SUBMIT_INTENT.
+        var snapshots = new com.chengyinhub.business.service.CashWithdrawIntentTestSupport();
+        ReflectionTestUtils.setField(service, "transferIntents", snapshots.mapper);
         ReflectionTestUtils.setField(service, "mapper", mapper);
         ReflectionTestUtils.setField(service, "umsMemberService", members);
         ReflectionTestUtils.setField(service, "wechatPayService", channel);

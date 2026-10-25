@@ -465,7 +465,7 @@ class CashWithdrawFundEvidenceMySqlIT {
             Long id = sent.withdrawalId();
             when(channel.queryTransferResult(originalIntent(cash.selectById(id)))).thenReturn(Map.of("result", "UNKNOWN"));
             service.requery(id); // Prior ambiguous observation commits before the later local rejection.
-            return Map.of("ok", "false", "ambiguous", "false", "error", "local rejection");
+            return Map.of("ok", "false", "ambiguous", "false", "notSent", "true", "requestHash", sent.requestHash(), "error", "local rejection");
         });
         assertThrows(IllegalStateException.class, () -> service.withdraw(memberId, new BigDecimal("30.00")));
         MemberCashWithdraw w = cash.selectByMember(memberId).get(0); state(w.getId(), 3);
@@ -912,4 +912,178 @@ class CashWithdrawFundEvidenceMySqlIT {
         verify(channel, never()).queryTransferResult(any(CashWithdrawTransferIntent.class));
         verify(members, never()).addBalance(anyLong(), any());
     }
+    @Test void realGatewayMissingBindingNeverEntersSdkAndRefundsOriginalOnce() throws Exception {
+        realGatewayLocalBindingRejectionRefundsOnce(null, null);
+    }
+    @Test void realGatewayWrongMerchantBindingNeverEntersSdkAndRefundsOriginalOnce() throws Exception {
+        realGatewayLocalBindingRejectionRefundsOnce("other-merchant", "unit-channel-appid");
+    }
+    @Test void realGatewayWrongApplicationBindingNeverEntersSdkAndRefundsOriginalOnce() throws Exception {
+        realGatewayLocalBindingRejectionRefundsOnce("unit-merchant", "other-appid");
+    }
+
+    private WechatPayServiceImpl realTransferGateway(
+            com.wechat.pay.java.service.transferbatch.TransferBatchService sdk, String merchant, String appid) throws Exception {
+        WechatPayServiceImpl facade = WechatPayTestWiring.facade();
+        WechatPayTestWiring.setField(facade, "transferBatchService", sdk);
+        if (merchant != null) {
+            Class<?> binding = Class.forName(WechatPaymentSdkGateway.class.getName() + "$TransferClientBinding");
+            var constructor = binding.getDeclaredConstructor(com.wechat.pay.java.service.transferbatch.TransferBatchService.class,
+                    String.class, String.class, String.class);
+            constructor.setAccessible(true);
+            WechatPayTestWiring.setField(facade, "transferClientBinding", constructor.newInstance(sdk, merchant, appid, null));
+        }
+        ReflectionTestUtils.setField(target, "wechatPayService", facade);
+        return facade;
+    }
+
+    private void realGatewayLocalBindingRejectionRefundsOnce(String merchant, String appid) throws Exception {
+        var sdk = mock(com.wechat.pay.java.service.transferbatch.TransferBatchService.class);
+        realTransferGateway(sdk, merchant, appid);
+
+        assertThrows(IllegalStateException.class, () -> service.withdraw(memberId, new BigDecimal("30.00")));
+
+        MemberCashWithdraw original = cash.selectByMember(memberId).get(0);
+        assertEquals(2, original.getStatus()); assertNotNull(original.getBalanceRefundId());
+        assertEquals(1, count(original.getId(), "DEBIT")); assertEquals(1, count(original.getId(), "SUBMIT_INTENT"));
+        assertEquals(1, count(original.getId(), "NOT_ACCEPTED")); assertEquals(1, count(original.getId(), "REFUND"));
+        assertEquals(0, count(original.getId(), "UNKNOWN")); money("100");
+        CashWithdrawTransferIntent snapshot = transferIntents.selectByWithdrawId(original.getId());
+        snapshot.requireValid(); assertTrue(snapshot.submitted()); assertTrue(snapshot.locallyRejected());
+        CashWithdrawTransferIntent intent = originalIntent(original);
+        assertEquals(intent.requestHash(), cash.selectFundFacts(original.getId()).stream()
+                .filter(f -> "NOT_ACCEPTED".equals(f.getKind())).findFirst().orElseThrow().getRequestHash());
+        assertEquals(intent.submissionIntentId(), cash.selectFundFacts(original.getId()).stream()
+                .filter(f -> "NOT_ACCEPTED".equals(f.getKind())).findFirst().orElseThrow().getSubmissionIntentId());
+        service.requery(original.getId()); service.requery(original.getId());
+        assertFalse(service.manualRefund(original.getId(), "checker", "重复回补", 4));
+        assertEquals(1, count(original.getId(), "REFUND")); assertEquals(0, count(original.getId(), "UNKNOWN")); money("100");
+        verify(members, times(1)).addBalance(memberId, new BigDecimal("30.00"));
+        verifyNoInteractions(sdk); verifyNoInteractions(channel);
+    }
+
+    @Test void realGatewayTimeoutAfterSdkEntryRemainsUnknownAndCannotRefund() throws Exception {
+        var sdk = mock(com.wechat.pay.java.service.transferbatch.TransferBatchService.class);
+        realTransferGateway(sdk, "unit-merchant", "unit-channel-appid");
+        doAnswer(call -> {
+            assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+            throw new IllegalStateException("controlled SDK response loss");
+        }).when(sdk).initiateBatchTransfer(any());
+        doThrow(new IllegalStateException("controlled query timeout")).when(sdk).getTransferBatchByOutNo(any());
+
+        MemberCashWithdraw original = service.withdraw(memberId, new BigDecimal("30.00"));
+        service.requery(original.getId()); state(original.getId(), 3);
+
+        assertThrows(IllegalStateException.class, () -> service.manualRefund(original.getId(), "maker", "未知不可补", 3));
+        assertEquals(1, count(original.getId(), "DEBIT")); assertEquals(1, count(original.getId(), "SUBMIT_INTENT"));
+        assertEquals(1, count(original.getId(), "UNKNOWN")); assertEquals(0, count(original.getId(), "NOT_ACCEPTED"));
+        assertEquals(0, count(original.getId(), "REFUND")); money("70");
+        verify(sdk, times(1)).initiateBatchTransfer(any());
+        verify(sdk, never()).getTransferDetailByOutNo(any());
+        verify(members, never()).addBalance(anyLong(), any()); verifyNoInteractions(channel);
+    }
+
+    @Test void realGatewayLocalNoSendCannotEraseAnEarlierCommittedUnknown() throws Exception {
+        var sdk = mock(com.wechat.pay.java.service.transferbatch.TransferBatchService.class);
+        realTransferGateway(sdk, null, null);
+        var observed = new java.util.concurrent.atomic.AtomicBoolean();
+        ReflectionTestUtils.setField(target, "transactionManager", afterCashCommit(() -> {
+            if (observed.compareAndSet(false, true)) {
+                MemberCashWithdraw original = cash.selectByMember(memberId).get(0);
+                assertEquals(1, count(original.getId(), "SUBMIT_INTENT"));
+                service.requery(original.getId());
+                assertEquals(1, count(original.getId(), "UNKNOWN"));
+            }
+        }));
+
+        assertThrows(IllegalStateException.class, () -> service.withdraw(memberId, new BigDecimal("30.00")));
+
+        MemberCashWithdraw original = cash.selectByMember(memberId).get(0); state(original.getId(), 3);
+        assertThrows(IllegalStateException.class, () -> service.manualRefund(original.getId(), "maker", "原未知保留", 3));
+        assertEquals(1, count(original.getId(), "DEBIT")); assertEquals(1, count(original.getId(), "SUBMIT_INTENT"));
+        assertEquals(1, count(original.getId(), "UNKNOWN")); assertEquals(0, count(original.getId(), "NOT_ACCEPTED"));
+        assertEquals(0, count(original.getId(), "REFUND")); money("70");
+        verifyNoInteractions(sdk); verifyNoInteractions(channel); verify(members, never()).addBalance(anyLong(), any());
+    }
+
+    @Test void realGatewayInFlightUnknownCannotPoisonCommittedOriginalNoSendProof() throws Exception {
+        var sdk = mock(com.wechat.pay.java.service.transferbatch.TransferBatchService.class);
+        WechatPayServiceImpl facade = realTransferGateway(sdk, "unit-merchant", "unit-channel-appid");
+        var queryEntered = new CountDownLatch(1); var queryReturn = new CountDownLatch(1);
+        var started = new java.util.concurrent.atomic.AtomicBoolean(); var released = new java.util.concurrent.atomic.AtomicBoolean();
+        var query = new java.util.concurrent.atomic.AtomicReference<Future<?>>();
+        ExecutorService worker = Executors.newSingleThreadExecutor();
+        doAnswer(call -> {
+            assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+            queryEntered.countDown(); assertTrue(queryReturn.await(10, TimeUnit.SECONDS));
+            throw new IllegalStateException("controlled in-flight read returned UNKNOWN");
+        }).when(sdk).getTransferBatchByOutNo(any());
+        ReflectionTestUtils.setField(target, "transactionManager", afterCashCommit(() -> {
+            MemberCashWithdraw original = cash.selectByMember(memberId).get(0);
+            if (started.compareAndSet(false, true)) {
+                query.set(worker.submit(() -> service.requery(original.getId())));
+                try { assertTrue(queryEntered.await(10, TimeUnit.SECONDS)); }
+                catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); throw new AssertionError(interrupted); }
+                // Only the SDK/client boundary changes: the already captured query continues, first submit cannot enter SDK.
+                WechatPayTestWiring.setField(facade, "transferClientBinding", null);
+            } else if (count(original.getId(), "NOT_ACCEPTED") == 1 && released.compareAndSet(false, true)) {
+                assertEquals(0, count(original.getId(), "REFUND"));
+                queryReturn.countDown();
+                try { query.get().get(10, TimeUnit.SECONDS); }
+                catch (Exception failure) { throw new AssertionError(failure); }
+            }
+        }));
+        try {
+            assertThrows(IllegalStateException.class, () -> service.withdraw(memberId, new BigDecimal("30.00")));
+            assertTrue(released.get());
+            MemberCashWithdraw original = cash.selectByMember(memberId).get(0);
+            assertEquals(2, original.getStatus()); assertEquals(1, count(original.getId(), "DEBIT"));
+            assertEquals(1, count(original.getId(), "SUBMIT_INTENT")); assertEquals(1, count(original.getId(), "NOT_ACCEPTED"));
+            assertEquals(0, count(original.getId(), "UNKNOWN")); assertEquals(1, count(original.getId(), "REFUND")); money("100");
+            verify(sdk, never()).initiateBatchTransfer(any()); verify(sdk, times(1)).getTransferBatchByOutNo(any());
+            verify(members, times(1)).addBalance(memberId, new BigDecimal("30.00")); verifyNoInteractions(channel);
+        } finally {
+            queryReturn.countDown(); worker.shutdownNow();
+            assertTrue(worker.awaitTermination(10, TimeUnit.SECONDS));
+        }
+    }
+
+    @Test void realGatewayNoSendProofSurvivesRecoveryAndTwoPersonRefundAfterCreditFailure() throws Exception {
+        var sdk = mock(com.wechat.pay.java.service.transferbatch.TransferBatchService.class);
+        realTransferGateway(sdk, null, null);
+        doThrow(new IllegalStateException("controlled credit failure before SQL")).when(members).addBalance(anyLong(), any());
+        assertThrows(IllegalStateException.class, () -> service.withdraw(memberId, new BigDecimal("30.00")));
+        MemberCashWithdraw original = cash.selectByMember(memberId).get(0);
+        assertEquals(3, original.getStatus()); assertEquals(1, count(original.getId(), "NOT_ACCEPTED"));
+        assertEquals(0, count(original.getId(), "REFUND")); money("70");
+        service.requery(original.getId());
+        assertTrue(service.manualRefund(original.getId(), "maker", "原未发送待复核", 3));
+        service.requery(original.getId());
+        assertThrows(IllegalStateException.class, () -> service.manualRefund(original.getId(), "maker", "同人拒绝", 4));
+        UmsMemberServiceImpl writer = new UmsMemberServiceImpl();
+        ReflectionTestUtils.setField(writer, "umsMemberMapper", memberMapper);
+        doAnswer(call -> writer.addBalance(call.getArgument(0), call.getArgument(1)))
+                .when(members).addBalance(anyLong(), any());
+
+        assertTrue(service.manualRefund(original.getId(), "checker", "原未发送复核", 4));
+        service.requery(original.getId());
+        assertFalse(service.manualRefund(original.getId(), "other", "重复", 4));
+        assertEquals(2, cash.selectById(original.getId()).getStatus());
+        assertEquals(1, count(original.getId(), "REFUND")); assertEquals(0, count(original.getId(), "UNKNOWN")); money("100");
+        verifyNoInteractions(sdk); verifyNoInteractions(channel);
+    }
+
+    private PlatformTransactionManager afterCashCommit(Runnable committed) {
+        return new PlatformTransactionManager() {
+            @Override public org.springframework.transaction.TransactionStatus getTransaction(
+                    org.springframework.transaction.TransactionDefinition definition) { return manager.getTransaction(definition); }
+            @Override public void commit(org.springframework.transaction.TransactionStatus status) {
+                manager.commit(status);
+                assertFalse(TransactionSynchronizationManager.isActualTransactionActive(), "Barrier runs after physical commit and lock release");
+                committed.run();
+            }
+            @Override public void rollback(org.springframework.transaction.TransactionStatus status) { manager.rollback(status); }
+        };
+    }
+
 }

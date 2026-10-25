@@ -86,7 +86,7 @@ class RegistryContractTest(unittest.TestCase):
         self.assertEqual([fqcn], reg['batches']['architecture-day-payment-inbox']['classes'])
         self.assertEqual(14, reg['classes'][fqcn]['tests'])
         self.assertEqual(['mysql'], reg['classes'][fqcn]['storage'])
-        self.assertEqual({}, reg['classes'][fqcn]['gates'])
+        self.assertEqual({'B_PAYMENT_INTENT_DDL_APPROVED': '1'}, reg['classes'][fqcn]['gates'])
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
                     if line.strip().startswith('B_PAYMENT_INTENT_DDL_APPROVED:'))
         self.assertEqual("B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'CoopDepositSettlementAttemptMySqlIT' || matrix.simple == 'CashWithdrawFundEvidenceMySqlIT' || matrix.simple == 'RefundPayoutMybatisIntegrationTest') && '1' || '' }}", line)
@@ -111,7 +111,10 @@ class RegistryContractTest(unittest.TestCase):
                 entry = reg['classes'][fqcn]
                 self.assertEqual(count, entry['tests'])
                 self.assertEqual(['mysql'], entry['storage'])
-                self.assertEqual({'CHENGYIN_FUNDS_MYSQL_IT': '1'}, entry['gates'])
+                expected_gates = {'CHENGYIN_FUNDS_MYSQL_IT': '1'}
+                if fqcn == 'com.chengyinhub.business.service.RefundPayoutMybatisIntegrationTest':
+                    expected_gates['B_PAYMENT_INTENT_DDL_APPROVED'] = '1'
+                self.assertEqual(expected_gates, entry['gates'])
                 facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
                 self.assertEqual([], problems)
                 self.assertEqual(count, facts['declared_tests'])
@@ -173,15 +176,15 @@ class RegistryContractTest(unittest.TestCase):
         reg = registry()
         fqcn = 'com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT'
         self.assertEqual([fqcn], reg['batches']['architecture-day-original-refund']['classes'])
-        self.assertEqual({'tests': 15, 'storage': ['mysql'], 'gates': {}}, reg['classes'][fqcn])
+        self.assertEqual({'tests': 25, 'storage': ['mysql'], 'gates': {}}, reg['classes'][fqcn])
         flag = 'WP04_ORIGINAL_REFUND_DDL_APPROVED'
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
                     if line.strip().startswith(flag + ':'))
-        self.assertEqual("WP04_ORIGINAL_REFUND_DDL_APPROVED: ${{ (matrix.simple == 'Wp04OriginalRefundMySqlIT' || matrix.simple == 'Wp04OriginalProducerMySqlIT' || matrix.simple == 'CoopSettlementManualCaseReadMySqlIT') && '1' || '' }}", line)
+        self.assertEqual("WP04_ORIGINAL_REFUND_DDL_APPROVED: ${{ (matrix.simple == 'Wp04OriginalRefundMySqlIT' || matrix.simple == 'Wp04CoopOrderScopeMySqlIT' || matrix.simple == 'CoopOrderStationFulfillmentMySqlIT' || matrix.simple == 'Wp04OriginalProducerMySqlIT' || matrix.simple == 'CoopSettlementManualCaseReadMySqlIT') && '1' || '' }}", line)
         self.assertEqual({flag: '1'}, rs.child_env({flag: '1'}, {}))
         facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
         self.assertEqual([], problems)
-        self.assertEqual(15, facts['declared_tests'])
+        self.assertEqual(25, facts['declared_tests'])
 
     def test_original_producer_keeps_both_exact_scratch_admissions(self):
         reg = registry()
@@ -240,6 +243,75 @@ class RegistryContractTest(unittest.TestCase):
         self.assertNotIn("B_PAYMENT_INTENT_DDL_APPROVED", rs.child_env(inherited, {}))
         self.assertEqual([], rs.scan_java('// assertEquals("1", System.getenv("B_PAYMENT_INTENT_DDL_APPROVED"));')["gates"])
 
+    def test_order_scope_uses_original_isolated_fixture_without_broadening_admission(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.it.Wp04CoopOrderScopeMySqlIT'
+        self.assertEqual({'tests': 11, 'storage': ['mysql'], 'gates': {}}, reg['classes'][fqcn])
+        for batch in ('architecture-day-funds-closure', 'architecture-day-integrated-changes'):
+            self.assertEqual(1, reg['batches'][batch]['classes'].count(fqcn))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(11, facts['declared_tests'])
+        source = (_HERE.parent / facts['path']).read_text()
+        self.assertIn('new Wp04OriginalRefundMySqlIT()', source)
+        self.assertIn('storage.isolatedOriginalSchema()', source)
+        self.assertIn('storage.dropOnlyThisSuccessfullyCreatedDatabase()', source)
+        inherited = (_HERE.parent / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04OriginalRefundMySqlIT.java').read_text()
+        self.assertIn('assertEquals("1",System.getenv("WP04_ORIGINAL_REFUND_DDL_APPROVED"))', inherited)
+        self.assertIn('assertEquals("github-hosted",System.getenv("RUNNER_ENVIRONMENT"))', inherited)
+
+    def test_station_redemption_caller_uses_owned_hosted_database_and_keeps_g_boundary_explicit(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.it.RegistrationStationFulfillmentMySqlIT'
+        self.assertEqual({'tests': 9, 'storage': ['mysql'], 'gates': {}, 'database_base': 'architecture_a'}, reg['classes'][fqcn])
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(9, facts['declared_tests'])
+        for batch in ('architecture-day-registration-write', 'architecture-day-funds-closure', 'architecture-day-integrated-changes'):
+            self.assertEqual(1, reg['batches'][batch]['classes'].count(fqcn))
+        source = (_HERE.parent / facts['path']).read_text()
+        self.assertIn('assertEquals("github-hosted", System.getenv("RUNNER_ENVIRONMENT"))', source)
+        self.assertIn('assertNotNull(System.getenv("CHENGYIN_TEST_MYSQL_" + key))', source)
+        self.assertIn('if (created)', source)
+        self.assertIn('DROP DATABASE', source)
+        self.assertIn('WHERE schema_name=?', source)
+        self.assertIn('mock(ICoopSettlementClaimService.class)', source)
+
+    def test_confirmed_station_proof_uses_canonical_source_and_original_isolated_gate(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.it.CoopOrderStationFulfillmentMySqlIT'
+        self.assertEqual({'tests': 12, 'storage': ['mysql'], 'gates': {}}, reg['classes'][fqcn])
+        for batch in ('architecture-day-funds-closure', 'architecture-day-integrated-changes'):
+            self.assertEqual(1, reg['batches'][batch]['classes'].count(fqcn))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(12, facts['declared_tests'])
+        source = (_HERE.parent / facts['path']).read_text()
+        self.assertIn('new Wp04CoopOrderScopeMySqlIT()', source)
+        self.assertIn('flow.canonicalScopeAndCash()', source)
+        self.assertIn('flow.onlyOwnedCleanup()', source)
+        self.assertIn('migration_20261025_coop_order_station_fulfillment.sql', source)
+        inherited = (_HERE.parent / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04OriginalRefundMySqlIT.java').read_text()
+        self.assertIn('assertEquals("1",System.getenv("WP04_ORIGINAL_REFUND_DDL_APPROVED"))', inherited)
+
+    def test_supply_station_invite_source_requires_real_mysql_and_owned_cleanup(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.service.impl.CoopSupplyStationMySqlIT'
+        self.assertEqual({'tests': 7, 'storage': ['mysql'], 'gates': {}}, reg['classes'][fqcn])
+        for batch in ('architecture-day-funds-closure', 'architecture-day-integrated-changes'):
+            self.assertEqual(1, reg['batches'][batch]['classes'].count(fqcn))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(7, facts['declared_tests'])
+        source = (_HERE.parent / facts['path']).read_text()
+        self.assertIn('Explicit scratch connection required: ', source)
+        self.assertIn('CHENGYIN_MYBATIS_IT_', source)
+        self.assertIn('if(ownedSchema==null)return;', source)
+        self.assertIn('DROP DATABASE', source)
+        self.assertIn('WHERE schema_name=?', source)
+        self.assertIn('new CoopInviteServiceImpl()', source)
+        self.assertIn('new DataSourceTransactionManager(source)', source)
+
     def test_batch_totals_match_the_remaining_receipt(self):
         # 23 条真库 + OWN_C01_51 外层 4 条普通；AI 15+7；E04-07 5+5（原回执41/43新增回归）；E02-22 9 + E02-25 2 + 三夹具 3；B05 3；F3 12（含死锁重试负控）。
         # 类条数全局唯一，按 master 侧登记：冲回 3→4、券生命周期 12→16、分享快照并发 2→3（extra-storage 71→76）。
@@ -254,12 +326,12 @@ class RegistryContractTest(unittest.TestCase):
                     "port-core-funds": 27, "port-ai-quota": 24,
                     "port-f3-growth": 12, "port-f3-evidence": 4,
                     "funnel-max-date": 4, "port-prelaunch-69": 36,
-                    "p0-acceptance-ac1": 13, "architecture-day-batch1": 70,
-                    "architecture-day-wave2": 78, "architecture-day-photo": 15,
+                    "p0-acceptance-ac1": 13, "architecture-day-batch1": 77,
+                    "architecture-day-wave2": 85, "architecture-day-photo": 15,
                     "architecture-day-broadcast-migration": 10, "architecture-day-settlement": 7,
                     "architecture-day-state-recovery": 50,
                     "architecture-day-runtime-governance": 36,
-                    "architecture-day-registration-write": 111,
+                    "architecture-day-registration-write": 120,
                     "architecture-day-im-revocation": 2,
                     "architecture-day-w19-owner-notice": 29,
                     "architecture-day-play-scheduler": 16,
@@ -285,14 +357,14 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-topic-cash-fence": 5,
                     "architecture-day-scheduler-two-process": 3,
                     "architecture-day-cash-recovery": 10,
-                    "architecture-day-funds-closure": 219,
+                    "architecture-day-funds-closure": 258,
                     "architecture-day-npc-voice-asr": 14,
                     "architecture-day-clm-commerce-proof": 8,
                     "architecture-day-media-retry-budget": 8,
                     "architecture-day-before-start-notice": 12,
                     "architecture-day-commerce-generic-guard": 6,
                     "architecture-day-refund-lifecycle": 72,
-                    "architecture-day-integrated-changes": 833, "payment-intent-correctness": 30}
+                    "architecture-day-integrated-changes": 879, "payment-intent-correctness": 30}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}
@@ -327,6 +399,7 @@ class RegistryContractTest(unittest.TestCase):
         expected = {
             "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest": (96, {"CHENGYIN_FUNDS_MYSQL_IT": "1"}),
             "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT": (15, {}),
+            "com.chengyinhub.business.it.RegistrationStationFulfillmentMySqlIT": (9, {}),
         }
         self.assertEqual(list(expected), reg["batches"]["architecture-day-registration-write"]["classes"])
         revoked = "com.chengyinhub.business.service.impl.ImActivityTeamRevocationMySqlIT"
@@ -966,6 +1039,8 @@ class WorkflowContractTest(unittest.TestCase):
             "self-hosted": self.text.replace("runs-on: ubuntu-latest", "runs-on: [self-hosted, chengyin]", 1),
             "parallel cap": self.text.replace("max-parallel: 20", "max-parallel: 50", 1),
             "batch choice drift": self.text.replace("          - extra-storage\n", "", 1),
+            "batch choice order": self.text.replace("          - payment-intent-correctness\n          - core-funds\n",
+                                                    "          - core-funds\n          - payment-intent-correctness\n", 1),
             "secrets": self.text.replace("TIMEZONE: ${{ inputs.timezone }}",
                                          "TIMEZONE: ${{ secrets.DB_PASSWORD }}", 1),
             "write permission": self.text.replace("  contents: read\n", "  contents: write\n", 1),

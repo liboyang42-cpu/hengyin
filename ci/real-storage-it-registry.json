@@ -13,6 +13,17 @@
   },
   "default_database_base": "cyit",
   "batches": {
+    "payment-intent-correctness": {
+      "lineage": "Combined public PR598 payment contracts and preserved architecture cases; execution evidence is separate",
+      "registered_source": "ff2b0ea1cf0ca3f097de446b5eda85beb3fad1a0",
+      "note": "Source lineage: ff2b architecture plus public master892efe6f. Final source is dispatched candidate SHA; declarations are not PASS counts.",
+      "classes": [
+        "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT",
+        "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT",
+        "com.chengyinhub.business.service.CashWithdrawTransferIntentMySqlIT",
+        "com.chengyinhub.business.longrun.OWN_C04_21MySqlIT"
+      ]
+    },
     "core-funds": {
       "lineage": "CORE codex/mini-longrun-core-20261015",
       "registered_source": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
@@ -335,7 +346,8 @@
       "note": "109 ordinary@Test cases: original92+2 funds and original8+7 merchant cancellation. Actual dispatched source/zero-skip XML/cleanup govern acceptance. Historic43/8 runs retain their old-source counts.",
       "classes": [
         "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest",
-        "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT"
+        "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT",
+        "com.chengyinhub.business.it.RegistrationStationFulfillmentMySqlIT"
       ]
     },
     "architecture-day-im-revocation": {
@@ -574,13 +586,17 @@
         "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest",
         "com.chengyinhub.business.service.RefundNotificationMybatisIntegrationTest",
         "com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT",
+        "com.chengyinhub.business.it.Wp04CoopOrderScopeMySqlIT",
+        "com.chengyinhub.business.it.CoopOrderStationFulfillmentMySqlIT",
         "com.chengyinhub.business.it.Wp04PaidHalfStateMySqlIT",
         "com.chengyinhub.business.it.Wp04ApprovedRefundFenceMySqlIT",
         "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT",
         "com.chengyinhub.business.it.WechatVerifiedPaymentFactMySqlIT",
         "com.chengyinhub.business.it.Wp04OriginalProducerMySqlIT",
         "com.chengyinhub.business.it.CoopSettlementManualCaseReadMySqlIT",
-        "com.chengyinhub.business.service.CashWithdrawTransferIntentMySqlIT"
+        "com.chengyinhub.business.service.CashWithdrawTransferIntentMySqlIT",
+        "com.chengyinhub.business.it.RegistrationStationFulfillmentMySqlIT",
+        "com.chengyinhub.business.service.impl.CoopSupplyStationMySqlIT"
       ],
       "note": "One source-bound joint A/B/G batch, no duplicate class jobs: original funds, callback/refund, immutable consumption, components, late-success and approved-refund guard. Exact source SHA, declared zero-skip XML and independent CLEAN required. No production/provider/HTTP or unresolved allocation-policy acceptance."
     },
@@ -606,6 +622,8 @@
         "com.chengyinhub.business.service.impl.CommittedOfficialNoticeMySqlIT",
         "com.chengyinhub.business.service.impl.AuditTopicCurrentPublicationMySqlIT",
         "com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT",
+        "com.chengyinhub.business.it.Wp04CoopOrderScopeMySqlIT",
+        "com.chengyinhub.business.it.CoopOrderStationFulfillmentMySqlIT",
         "com.chengyinhub.business.it.RegistrationSeatMySqlIT",
         "com.chengyinhub.business.it.WechatVerifiedPaymentFactMySqlIT",
         "com.chengyinhub.business.service.impl.TopicContentBudgetMySqlIT",
@@ -662,20 +680,11 @@
         "com.chengyinhub.business.it.Wp04OriginalProducerMySqlIT",
         "com.chengyinhub.business.service.ai.AiQuotaRecoveryMySqlRedisIT",
         "com.chengyinhub.business.it.CoopSettlementManualCaseReadMySqlIT",
-        "com.chengyinhub.business.service.CashWithdrawTransferIntentMySqlIT"
+        "com.chengyinhub.business.service.CashWithdrawTransferIntentMySqlIT",
+        "com.chengyinhub.business.it.RegistrationStationFulfillmentMySqlIT",
+        "com.chengyinhub.business.service.impl.CoopSupplyStationMySqlIT"
       ],
       "note": "65 unique registered storage classes, 810 declared cases, including original producer/refund, manual-case read projection and ASR shared quota. One matrix max-parallel20, no duplicates. Source SHA, original XML, zero skip and independent CLEAN required. Static inventory is not execution, HTTP/provider/restart/load/deployment acceptance."
-    },
-    "payment-intent-correctness": {
-      "lineage": "Combined public PR598 payment contracts and preserved architecture cases; execution evidence is separate",
-      "registered_source": "ff2b0ea1cf0ca3f097de446b5eda85beb3fad1a0",
-      "note": "Source lineage: ff2b architecture plus public master892efe6f. Final source is dispatched candidate SHA; declarations are not PASS counts.",
-      "classes": [
-        "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT",
-        "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT",
-        "com.chengyinhub.business.service.CashWithdrawTransferIntentMySqlIT",
-        "com.chengyinhub.business.longrun.OWN_C04_21MySqlIT"
-      ]
     }
   },
   "classes": {
@@ -748,8 +757,14 @@
       "storage": [
         "mysql"
       ],
-      "gates": {},
-      "note": " G7e4ce69 approved original-order unpaiddeposit setoff adds10 ordinary methods; originalcaseidentitiesretained, runtimeNOT_RUN pending unifiedcandidate."
+      "gates": {}
+    },
+    "com.chengyinhub.business.it.Wp04CoopOrderScopeMySqlIT": {
+      "tests": 11,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {}
     },
     "com.chengyinhub.business.it.RegistrationSeatMySqlIT": {
       "tests": 7,
@@ -1367,7 +1382,7 @@
       "gates": {}
     },
     "com.chengyinhub.business.service.impl.CashWithdrawFundEvidenceMySqlIT": {
-      "tests": 57,
+      "tests": 64,
       "storage": [
         "mysql"
       ],
@@ -1375,7 +1390,7 @@
         "B_PAYMENT_INTENT_DDL_APPROVED": "1"
       },
       "database_base": "architecture_a",
-      "note": "B public-master compatibility delta 5a8800de source: original53 ordinary methods retained plus4 original-intent provenance/visibility/conflict cases =57 declarations. Original approval assertion retained and registered explicitly. Source inventory only, Java/MySQL/CI NOT_RUN; prior53 execution evidence is not transferred."
+      "note": "B public-master compatibility delta 5a8800de source: original53 ordinary methods retained plus4 original-intent provenance/visibility/conflict cases =57 declarations. Original approval assertion retained and registered explicitly. Source inventory only, Java/MySQL/CI NOT_RUN; prior53 execution evidence is not transferred. A 6fcd pre-SDK no-send repair retains all57 and adds7 declarations=64; Java/MySQL execution NOT_RUN, no oldgreen transfer."
     },
     "com.chengyinhub.business.service.impl.OfficialBroadcastDeliveryMySqlIT": {
       "tests": 10,
@@ -1693,7 +1708,8 @@
         "mysql"
       ],
       "gates": {
-        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+        "CHENGYIN_FUNDS_MYSQL_IT": "1",
+        "B_PAYMENT_INTENT_DDL_APPROVED": "1"
       },
       "note": "9b28: task-owned schema create/drop; exact B fact+B intent+A registration DDL admissions. Runner independently requires CLEAN after AfterAll DROP."
     },
@@ -1733,6 +1749,28 @@
         "CHENGYIN_FUNDS_MYSQL_IT": "1"
       },
       "database_base": "cyit"
+    },
+    "com.chengyinhub.business.it.RegistrationStationFulfillmentMySqlIT": {
+      "tests": 9,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "database_base": "architecture_a"
+    },
+    "com.chengyinhub.business.it.CoopOrderStationFulfillmentMySqlIT": {
+      "tests": 12,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {}
+    },
+    "com.chengyinhub.business.service.impl.CoopSupplyStationMySqlIT": {
+      "tests": 7,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {}
     }
   }
 }

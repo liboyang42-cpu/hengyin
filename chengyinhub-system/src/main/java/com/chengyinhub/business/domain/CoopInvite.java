@@ -50,6 +50,23 @@ public class CoopInvite extends BaseEntity {
     /** 历史类型2关联节点；仅用于存量数据读取兼容 */
     private Long nodeId;
 
+    /** New explicitly selected cms_registration_merchant.id; NULL preserves unbound history. */
+    private Long supplyStationId;
+    private transient String supplyStationName;
+    /** Read projection only. NULL means the original topic cannot establish applicability; never a false bypass. */
+    private transient Boolean requiresSupplyStation;
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
+    public Boolean getRequiresSupplyStation() { return requiresSupplyStation; }
+    public void setRequiresSupplyStation(Boolean value) { requiresSupplyStation = value; }
+
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
+    public Long getSupplyStationId() { return supplyStationId; }
+    public void setSupplyStationId(Long value) { this.supplyStationId = value; }
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
+    public String getSupplyStationName() { return supplyStationName; }
+    public void setSupplyStationName(String value) { this.supplyStationName = value; }
+
+
     /** 经典定向:目标游戏(游戏级邀约) */
     private Long gameId;
 

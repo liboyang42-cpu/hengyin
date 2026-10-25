@@ -893,8 +893,8 @@ public class RegistrationRedemptionApplication {
                         } else {
                             if (isWinner) {
                                 // 走到这里必然只有一个中标行(多个的在上面就返回候选让商家选了)。
-                                // 这一行是**服务端**按 memberId+topicId+audit_status+del_flag 查出来的,
-                                // 客户端指定不了 ⇒ 不必再回读复核,沿用原核销行为,只额外落据点归属。
+                                // 这一行只是服务端选出的候选快照；事务收口会按原 topic→registration
+                                // 锁序回读据点，并用实际核销审计 ID 记录新合同的独立履约归属。
                                 verified = merchantOwnerMemberId.equals(memberId)
                                         ? registrationService.verifyAndSettleForOwnStation(
                                         cmsRegistration, merchantOwnerMemberId,

@@ -105,7 +105,7 @@ public class CoopSettlementOriginalProducer {
         if(heads==null || heads.isEmpty()) throw repair("ORIGINAL_HEADS_REQUIRED");
         Map<String,CoopSettlement> accounting=new HashMap<>(); List<CoopSettlementOriginalComponent> components=new ArrayList<>();
         Map<Long,BigDecimal> used=new TreeMap<>(); weights.keySet().forEach(id->used.put(id,BigDecimal.ZERO.setScale(2)));
-        int merchants=0;
+        Set<Long> verifiedMerchants=new HashSet<>();
         for(CoopSettlement head:heads) {
             if(head==null || head.getId()==null || !topic.getId().equals(head.getTopicId()) || head.getAmount()==null || head.getLineType()==null) throw repair("ORIGINAL_HEAD_SCOPE_CONFLICT");
             if(head.getAmount().signum()<0) throw repair("NEGATIVE_ORIGINAL_HEAD");
@@ -123,7 +123,7 @@ public class CoopSettlementOriginalProducer {
                     used.merge(payer,money(detail.getOriginAmount()),BigDecimal::add);sum=sum.add(detail.getOriginAmount());
                 }
                 if(sum.compareTo(head.getAmount())!=0) throw repair("ORIGINAL_CLAIM_HEAD_CONSERVATION");
-                if("MERCHANT_VERIFY".equals(head.getLineType()) && sum.signum()>0) merchants++;
+                if("MERCHANT_VERIFY".equals(head.getLineType()) && sum.signum()>0) verifiedMerchants.add(head.getMerchantId());
             } else throw repair("ORIGINAL_HEAD_KIND_UNPROVEN:"+head.getLineType());
         }
         for(String kind:List.of("PLATFORM","INITIATOR_GUARANTEE")) {
@@ -167,7 +167,7 @@ public class CoopSettlementOriginalProducer {
         }
         CoopSettlementCashClose close=new CoopSettlementCashClose();close.setTopicId(topic.getId());close.setCommercialContextType("TOPIC_EDITION");close.setCommercialContextId(topic.getId());
         close.setCloseKind("POSITIVE_SALES");close.setInitiatorMemberId(topic.getMemberId());close.setOriginalSalesBasis(sales);
-        close.setOriginalContributionCount(contributions.size());close.setOriginalVerifiedMerchantCount(merchants);
+        close.setOriginalContributionCount(contributions.size());close.setOriginalVerifiedMerchantCount(verifiedMerchants.size());
         close.setPlatformRate(topic.getFeePlatformRate());close.setGuaranteeBaseRate(topic.getFeeGuaranteeBaseRate());
         close.setGuaranteeStepRate(topic.getFeeGuaranteeStepRate());close.setGuaranteeMaxMerchant(topic.getFeeGuaranteeMaxMerchant());close.setOriginCalculationVersion(VERSION);
         CoopSettlementCashClose prior=cash.selectCloseForUpdate(topic.getId());close.setClosedAt(prior==null?frozenAt:prior.getClosedAt());

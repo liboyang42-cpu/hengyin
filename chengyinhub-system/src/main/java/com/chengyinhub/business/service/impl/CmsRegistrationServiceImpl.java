@@ -3014,11 +3014,14 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     public boolean verifyAndSettleForOwnStation(CmsRegistration registration, Long verifierId, Long payeeId,
                                                 CmsRegistrationMerchant station, Long actorMemberId,
                                                 String actorRoleCode) {
-        // 唯一中标:station 由服务端按 memberId + topicId + audit_status=1 + del_flag=0 查出,
-        // 客户端指定不了它,所以不再回读复核 —— 行为与原 verifyAndSettle 逐字一致,
-        // 唯一的差别是把这一站的身份透传给流水。
-        return verifyAndSettleInternal(registration, verifierId, payeeId,
-                station == null ? null : station.getValidationMethod(), null, station,
+        if (station == null || station.getId() == null || verifierId == null) {
+            throw new IllegalStateException("所选据点不属于当前商家或路线");
+        }
+        // A server-selected snapshot is still rechecked under the original topic/order locks.
+        CmsRegistration current = lockStationRegistration(registration);
+        CmsRegistrationMerchant selected = requireCurrentStation(current, verifierId, station.getId());
+        return verifyAndSettleInternal(current, verifierId, payeeId,
+                selected.getValidationMethod(), null, selected,
                 actorMemberId, actorRoleCode, "REGISTRATION_STATION_REDEEM");
     }
 
@@ -3043,23 +3046,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 || verifierId == null || registrationMerchantId == null) {
             throw new IllegalStateException("所选据点不属于当前商家或路线");
         }
-        CmsRegistration current = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(registration.getId());
-        if (current == null || !Long.valueOf(1L).equals(current.getOwnerType())
-                || current.getOwnerId() == null) {
-            throw new IllegalStateException("订单数据异常,无法核销");
-        }
-        if (!Integer.valueOf(2).equals(current.getPaymentStatus())) {
-            throw new IllegalStateException("订单未完成支付或已退款,无法核销");
-        }
-        CmsRegistrationMerchant station =
-                cmsRegistrationMerchantMapper.selectCmsRegistrationMerchantByIdForUpdate(registrationMerchantId);
-        if (station == null
-                || !verifierId.equals(station.getMemberId())
-                || !current.getOwnerId().equals(station.getTopicId())
-                || !Long.valueOf(1L).equals(station.getAuditStatus())
-                || !Integer.valueOf(0).equals(station.getDelFlag())) {
-            throw new IllegalStateException("所选据点不属于当前商家或路线");
-        }
+        CmsRegistration current = lockStationRegistration(registration);
+        CmsRegistrationMerchant station = requireCurrentStation(current, verifierId, registrationMerchantId);
         // ⚠️ 不因 validation_method 为空就拒绝核销。
         // cms_registration_merchant.validation_method 可空,而生产代码里**没有任何路径**给它赋值
         // (只有模板侧 TemplatePublishServiceImpl 写自己的那个同名字段)—— 也就是说线上存量大概率为 NULL。
@@ -3069,6 +3057,31 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         return verifyAndSettleInternal(current, verifierId, verifierId,
                 station.getValidationMethod(), null, station, actorMemberId, actorRoleCode,
                 "REGISTRATION_STATION_REDEEM");
+    }
+
+    private CmsRegistration lockStationRegistration(CmsRegistration observed) {
+        CmsRegistration current = RegistrationTopicFence.lock(observed, cmsRegistrationMapper,
+                cmsActivityMapper, cmsTopicMapper).registration();
+        if (!Long.valueOf(1L).equals(current.getOwnerType()) || current.getOwnerId() == null) {
+            throw new IllegalStateException("订单数据异常,无法核销");
+        }
+        if (!Integer.valueOf(2).equals(current.getPaymentStatus())) {
+            throw new IllegalStateException("订单未完成支付或已退款,无法核销");
+        }
+        return current;
+    }
+
+    private CmsRegistrationMerchant requireCurrentStation(CmsRegistration current, Long verifierId, Long stationId) {
+        CmsRegistrationMerchant station =
+                cmsRegistrationMerchantMapper.selectCmsRegistrationMerchantByIdForUpdate(stationId);
+        if (station == null
+                || !verifierId.equals(station.getMemberId())
+                || !current.getOwnerId().equals(station.getTopicId())
+                || !Long.valueOf(1L).equals(station.getAuditStatus())
+                || !Integer.valueOf(0).equals(station.getDelFlag())) {
+            throw new IllegalStateException("所选据点不属于当前商家或路线");
+        }
+        return station;
     }
 
     @Override
@@ -3149,11 +3162,16 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 throw new IllegalStateException("带队场次核销事实写入失败");
             }
         }
-        writeVerificationAudit("REGISTRATION", registration.getId(), verifierId,
+        Long auditId = writeVerificationAudit("REGISTRATION", registration.getId(), verifierId,
                 actorMemberId, actorRoleCode, action, "CMS_REGISTRATION", registration.getId(),
                 activityId != null ? activityId : (station == null ? null : station.getId()),
                 verificationAuditRequestId(registration.getId()),
                 "{\"verificationStatus\":0}", "{\"verificationStatus\":1}");
+        if ("REGISTRATION_STATION_REDEEM".equals(action)) {
+            // The original CAS, audit and immutable station attribution share this transaction.
+            // Empty means no applicable new V1 contract; it is not an attribution/settlement receipt.
+            coopSettlementClaimService.recordConfirmedStationFulfillment(auditId);
+        }
         growthService.enqueueStoreVerification(registration.getId());
         return true;
     }
@@ -3506,7 +3524,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         return new ExploreChapterRedemptionResult(redemptionId, completionEarnedXp);
     }
 
-    private void writeVerificationAudit(String domainType, Long domainId, Long ownerMemberId,
+    private Long writeVerificationAudit(String domainType, Long domainId, Long ownerMemberId,
                                         Long actorMemberId, String actorRoleCode, String action,
                                         String targetType, Long targetId, Long relationId,
                                         String requestId, String beforeJson, String afterJson) {
@@ -3518,6 +3536,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         event.setDomainType(domainType);
         event.setDomainId(domainId);
         event.setOwnerMemberId(ownerMemberId);
+        if ("REGISTRATION_STATION_REDEEM".equals(action)) {
+            event.setActorType(BusinessAuditEvent.ACTOR_TYPE_MEMBER);
+        }
         event.setActorMemberId(actorMemberId);
         event.setActorRoleCode(actorRoleCode);
         event.setAction(action);
@@ -3532,6 +3553,10 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         if (businessAuditEventMapper.insertBusinessAuditEvent(event) != 1) {
             throw new IllegalStateException("核销审计写入失败");
         }
+        if ("REGISTRATION_STATION_REDEEM".equals(action) && (event.getId() == null || event.getId() <= 0)) {
+            throw new IllegalStateException("核销审计未返回有效原事件ID");
+        }
+        return event.getId();
     }
     /** Existing caller transaction owns topic/order locks and all local effects, including this immutable receipt. */
     private void recordPaymentConsumption(Long registrationId, WechatVerifiedPaymentFactService.Stored verified) {

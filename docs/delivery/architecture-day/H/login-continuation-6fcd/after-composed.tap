@@ -1,0 +1,438 @@
+TAP version 13
+# Subtest: A 冷启动无缓存会话:不调 wx.login、不请求 /api/login/code,保持游客,初始化照常完成
+ok 1 - A 冷启动无缓存会话:不调 wx.login、不请求 /api/login/code,保持游客,初始化照常完成
+  ---
+  duration_ms: 9.403798
+  type: 'test'
+  ...
+# Subtest: A 冷启动有缓存会话:老用户照旧保持登录,也不发多余的 wx.login
+ok 2 - A 冷启动有缓存会话:老用户照旧保持登录,也不发多余的 wx.login
+  ---
+  duration_ms: 2.465179
+  type: 'test'
+  ...
+# Subtest: A 未同意隐私:隐私闸仍在首个数据处理接口之前,启动不建号
+ok 3 - A 未同意隐私:隐私闸仍在首个数据处理接口之前,启动不建号
+  ---
+  duration_ms: 1.179599
+  type: 'test'
+  ...
+# Subtest: A 源码:onLaunch/appInitial 只在 hasCachedSession 时走 firstLogin(契约 \#18/\#19 的「不阻断初始化」保留)
+ok 4 - A 源码:onLaunch/appInitial 只在 hasCachedSession 时走 firstLogin(契约 \#18/\#19 的「不阻断初始化」保留)
+  ---
+  duration_ms: 0.39143
+  type: 'test'
+  ...
+# Subtest: C 已登录:requireLogin 直接 true,不弹窗、不登录
+ok 5 - C 已登录:requireLogin 直接 true,不弹窗、不登录
+  ---
+  duration_ms: 0.447064
+  type: 'test'
+  ...
+# Subtest: C 游客:弹窗文案复用 cy-modal 形状 —— 登录后继续 / 一句话动作 / 暂不登录 / 微信登录
+ok 6 - C 游客:弹窗文案复用 cy-modal 形状 —— 登录后继续 / 一句话动作 / 暂不登录 / 微信登录
+  ---
+  duration_ms: 0.303348
+  type: 'test'
+  ...
+# Subtest: C 游客点「微信登录」:走 app.firstLogin(此刻才建号),成功后 withLogin 恢复原动作恰好一次
+ok 7 - C 游客点「微信登录」:走 app.firstLogin(此刻才建号),成功后 withLogin 恢复原动作恰好一次
+  ---
+  duration_ms: 0.413204
+  type: 'test'
+  ...
+# Subtest: C 登录失败:不恢复原动作
+ok 8 - C 登录失败:不恢复原动作
+  ---
+  duration_ms: 0.268986
+  type: 'test'
+  ...
+# Subtest: C 并发写入口共享一个弹窗
+ok 9 - C 并发写入口共享一个弹窗
+  ---
+  duration_ms: 0.945406
+  type: 'test'
+  ...
+# Subtest: C app.ensureLoginFor:已登录同步放行;游客返回 false 并在登录后恢复一次
+ok 10 - C app.ensureLoginFor:已登录同步放行;游客返回 false 并在登录后恢复一次
+  ---
+  duration_ms: 4.2222
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/activity/baoming/baoming.js handlePayment
+ok 11 - C 写入口先过写前登录闸: pages/activity/baoming/baoming.js handlePayment
+  ---
+  duration_ms: 0.602028
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/activity/baoming/baoming.js joinWaitlist
+ok 12 - C 写入口先过写前登录闸: pages/activity/baoming/baoming.js joinWaitlist
+  ---
+  duration_ms: 0.394725
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/activity/official-detail/index.js doSignup
+ok 13 - C 写入口先过写前登录闸: pages/activity/official-detail/index.js doSignup
+  ---
+  duration_ms: 0.23875
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/topic/index/index.js bmClick
+ok 14 - C 写入口先过写前登录闸: pages/topic/index/index.js bmClick
+  ---
+  duration_ms: 0.408396
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/topic/index/index.js selfPlayBuy
+ok 15 - C 写入口先过写前登录闸: pages/topic/index/index.js selfPlayBuy
+  ---
+  duration_ms: 0.407996
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/topic/index/index.js onSelfPlayGoCheckout
+ok 16 - C 写入口先过写前登录闸: pages/topic/index/index.js onSelfPlayGoCheckout
+  ---
+  duration_ms: 0.652214
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/topic/index/index.js toggleFav
+ok 17 - C 写入口先过写前登录闸: pages/topic/index/index.js toggleFav
+  ---
+  duration_ms: 0.438061
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/topic/index/index.js submitComment
+ok 18 - C 写入口先过写前登录闸: pages/topic/index/index.js submitComment
+  ---
+  duration_ms: 0.393313
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/topic/index/index.js reportTopic
+ok 19 - C 写入口先过写前登录闸: pages/topic/index/index.js reportTopic
+  ---
+  duration_ms: 0.440325
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/club/detail/index.js onJoin
+ok 20 - C 写入口先过写前登录闸: pages/club/detail/index.js onJoin
+  ---
+  duration_ms: 0.784033
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/talent/list/index.js onClubJoin
+ok 21 - C 写入口先过写前登录闸: pages/talent/list/index.js onClubJoin
+  ---
+  duration_ms: 0.205119
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/club/detail/index.js onPostSubmit
+ok 22 - C 写入口先过写前登录闸: pages/club/detail/index.js onPostSubmit
+  ---
+  duration_ms: 0.731724
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/club/detail/index.js onCommentSubmit
+ok 23 - C 写入口先过写前登录闸: pages/club/detail/index.js onCommentSubmit
+  ---
+  duration_ms: 1.487434
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/club/detail/index.js onLikePost
+ok 24 - C 写入口先过写前登录闸: pages/club/detail/index.js onLikePost
+  ---
+  duration_ms: 0.803332
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/club/detail/index.js onReportPost
+ok 25 - C 写入口先过写前登录闸: pages/club/detail/index.js onReportPost
+  ---
+  duration_ms: 0.6896
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/club/detail/index.js onReportComment
+ok 26 - C 写入口先过写前登录闸: pages/club/detail/index.js onReportComment
+  ---
+  duration_ms: 0.770823
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/club/detail/index.js reportClubMember
+ok 27 - C 写入口先过写前登录闸: pages/club/detail/index.js reportClubMember
+  ---
+  duration_ms: 0.851154
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/club/detail/index.js reportClub
+ok 28 - C 写入口先过写前登录闸: pages/club/detail/index.js reportClub
+  ---
+  duration_ms: 0.809752
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/club/detail/index.js reportTopicActivity
+ok 29 - C 写入口先过写前登录闸: pages/club/detail/index.js reportTopicActivity
+  ---
+  duration_ms: 1.300191
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/square/list/index.js lickClick
+ok 30 - C 写入口先过写前登录闸: pages/square/list/index.js lickClick
+  ---
+  duration_ms: 0.24488
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/square/list/index.js favoriteClick
+ok 31 - C 写入口先过写前登录闸: pages/square/list/index.js favoriteClick
+  ---
+  duration_ms: 0.270238
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/square/list/index.js followClick
+ok 32 - C 写入口先过写前登录闸: pages/square/list/index.js followClick
+  ---
+  duration_ms: 0.232071
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/square/list/index.js reportSquare
+ok 33 - C 写入口先过写前登录闸: pages/square/list/index.js reportSquare
+  ---
+  duration_ms: 0.274715
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/square/list/index.js submitFormData
+ok 34 - C 写入口先过写前登录闸: pages/square/list/index.js submitFormData
+  ---
+  duration_ms: 0.448527
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/square/detail/index.js addComment
+ok 35 - C 写入口先过写前登录闸: pages/square/detail/index.js addComment
+  ---
+  duration_ms: 0.305581
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/square/detail/index.js addReplyComment
+ok 36 - C 写入口先过写前登录闸: pages/square/detail/index.js addReplyComment
+  ---
+  duration_ms: 0.266051
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/square/detail/index.js followClick
+ok 37 - C 写入口先过写前登录闸: pages/square/detail/index.js followClick
+  ---
+  duration_ms: 0.216747
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/square/detail/index.js lickClick
+ok 38 - C 写入口先过写前登录闸: pages/square/detail/index.js lickClick
+  ---
+  duration_ms: 0.222746
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/square/detail/index.js favoriteClick
+ok 39 - C 写入口先过写前登录闸: pages/square/detail/index.js favoriteClick
+  ---
+  duration_ms: 0.29166
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/square/detail/index.js commentFollowClick
+ok 40 - C 写入口先过写前登录闸: pages/square/detail/index.js commentFollowClick
+  ---
+  duration_ms: 0.228595
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/square/detail/index.js commentLikeClick
+ok 41 - C 写入口先过写前登录闸: pages/square/detail/index.js commentLikeClick
+  ---
+  duration_ms: 0.261254
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/square/detail/index.js reportSquare
+ok 42 - C 写入口先过写前登录闸: pages/square/detail/index.js reportSquare
+  ---
+  duration_ms: 0.191239
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/square/detail/index.js reportSquareFromActions
+ok 43 - C 写入口先过写前登录闸: pages/square/detail/index.js reportSquareFromActions
+  ---
+  duration_ms: 0.233292
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/square/detail/index.js reportComment
+ok 44 - C 写入口先过写前登录闸: pages/square/detail/index.js reportComment
+  ---
+  duration_ms: 0.23199
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/square/components/cy/post-compose/index.js onPublish
+ok 45 - C 写入口先过写前登录闸: pages/square/components/cy/post-compose/index.js onPublish
+  ---
+  duration_ms: 0.228475
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/team/join/index.js join
+ok 46 - C 写入口先过写前登录闸: pages/team/join/index.js join
+  ---
+  duration_ms: 0.125109
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/template/index.js goTopicConfig
+ok 47 - C 写入口先过写前登录闸: pages/template/index.js goTopicConfig
+  ---
+  duration_ms: 0.221975
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/template/index.js useTt
+ok 48 - C 写入口先过写前登录闸: pages/template/index.js useTt
+  ---
+  duration_ms: 0.227193
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/publish/fabu/index.js submitForm
+ok 49 - C 写入口先过写前登录闸: pages/publish/fabu/index.js submitForm
+  ---
+  duration_ms: 1.756801
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/publish/fabu/index.js confirmPublishCheck
+ok 50 - C 写入口先过写前登录闸: pages/publish/fabu/index.js confirmPublishCheck
+  ---
+  duration_ms: 1.714136
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/publish/activity/index.js submitForm
+ok 51 - C 写入口先过写前登录闸: pages/publish/activity/index.js submitForm
+  ---
+  duration_ms: 0.229086
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/publish/temp/index.js publishGame
+ok 52 - C 写入口先过写前登录闸: pages/publish/temp/index.js publishGame
+  ---
+  duration_ms: 0.819046
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: pages/publish/temp/index.js saveDraft
+ok 53 - C 写入口先过写前登录闸: pages/publish/temp/index.js saveDraft
+  ---
+  duration_ms: 0.748379
+  type: 'test'
+  ...
+# Subtest: C 写入口先过写前登录闸: subpackageMember/components/cy/report-sheet/index.js submit
+ok 54 - C 写入口先过写前登录闸: subpackageMember/components/cy/report-sheet/index.js submit
+  ---
+  duration_ms: 0.134123
+  type: 'test'
+  ...
+# Subtest: C 工具层写入口:举报 run() 与建队 createActivityTeam 也先过闸
+ok 55 - C 工具层写入口:举报 run() 与建队 createActivityTeam 也先过闸
+  ---
+  duration_ms: 0.160352
+  type: 'test'
+  ...
+# Subtest: C 漫游开局:游客走 app.requireLogin({ reason: roam }),不再静默 firstLogin;取消不报错
+ok 56 - C 漫游开局:游客走 app.requireLogin({ reason: roam }),不再静默 firstLogin;取消不报错
+  ---
+  duration_ms: 1.161372
+  type: 'test'
+  ...
+# Subtest: C 写入口在游客下的真实运行:俱乐部「加入」先弹窗,登录成功后恢复并只发一次 /api/club/join
+ok 57 - C 写入口在游客下的真实运行:俱乐部「加入」先弹窗,登录成功后恢复并只发一次 /api/club/join
+  ---
+  duration_ms: 3.481282
+  type: 'test'
+  ...
+# Subtest: B 游客读俱乐部 tab:只读公开目录 /api/club/list,不请求私有聚合
+ok 58 - B 游客读俱乐部 tab:只读公开目录 /api/club/list,不请求私有聚合
+  ---
+  duration_ms: 1.073861
+  type: 'test'
+  ...
+# Subtest: B 游客读请求被 401 拦下时页面拿到 fail(401),不弹窗、不建号(request-client 读写判定)
+ok 59 - B 游客读请求被 401 拦下时页面拿到 fail(401),不弹窗、不建号(request-client 读写判定)
+  ---
+  duration_ms: 0.743151
+  type: 'test'
+  ...
+# Subtest: B 游客读页的公开读接口均为后端匿名可读(@Anonymous 或既有白名单)
+ok 60 - B 游客读页的公开读接口均为后端匿名可读(@Anonymous 或既有白名单)
+  ---
+  duration_ms: 1.692944
+  type: 'test'
+  ...
+# Subtest: B 主题详情页游客渲染:info-to-user 成功即出页;本人收藏/角色等私有读在游客下不发
+ok 61 - B 主题详情页游客渲染:info-to-user 成功即出页;本人收藏/角色等私有读在游客下不发
+  ---
+  duration_ms: 0.430319
+  type: 'test'
+  ...
+# Subtest: C 扫门口码开始游玩:scan-entry 声明为写请求,游客 401 由请求层弹登录窗;取消不报「码无法打开」
+ok 62 - C 扫门口码开始游玩:scan-entry 声明为写请求,游客 401 由请求层弹登录窗;取消不报「码无法打开」
+  ---
+  duration_ms: 0.272111
+  type: 'test'
+  ...
+# Subtest: H continuation: login in flight then leaving the original Page must not join
+ok 63 - H continuation: login in flight then leaving the original Page must not join
+  ---
+  duration_ms: 2.633443
+  type: 'test'
+  ...
+# Subtest: H continuation: changing the original invite must not write the replacement target
+ok 64 - H continuation: changing the original invite must not write the replacement target
+  ---
+  duration_ms: 1.526894
+  type: 'test'
+  ...
+# Subtest: H continuation: same live Page and original invite continue exactly once
+ok 65 - H continuation: same live Page and original invite continue exactly once
+  ---
+  duration_ms: 1.750782
+  type: 'test'
+  ...
+# Subtest: H continuation: hide then return and a different instance of the same route cannot revive the old join
+ok 66 - H continuation: hide then return and a different instance of the same route cannot revive the old join
+  ---
+  duration_ms: 3.506681
+  type: 'test'
+  ...
+# Subtest: H continuation: account change or same-token A-B-A after login result cannot inherit the original join
+ok 67 - H continuation: account change or same-token A-B-A after login result cannot inherit the original join
+  ---
+  duration_ms: 3.10188
+  type: 'test'
+  ...
+# Subtest: H continuation: cancelling login preserves pending UNKNOWN storage without dispatch
+ok 68 - H continuation: cancelling login preserves pending UNKNOWN storage without dispatch
+  ---
+  duration_ms: 1.430177
+  type: 'test'
+  ...
+# Subtest: H continuation: guest revision ABA while the modal is open cannot start a stale login
+ok 69 - H continuation: guest revision ABA while the modal is open cannot start a stale login
+  ---
+  duration_ms: 1.565823
+  type: 'test'
+  ...
+# Subtest: H continuation: real login attempt rejects guest-account ABA before the exchange reply
+ok 70 - H continuation: real login attempt rejects guest-account ABA before the exchange reply
+  ---
+  duration_ms: 1.407023
+  type: 'test'
+  ...
+# Subtest: H continuation: a fresh explicit click after hiding can use its own live context
+ok 71 - H continuation: a fresh explicit click after hiding can use its own live context
+  ---
+  duration_ms: 1.894127
+  type: 'test'
+  ...
+Usage consent remains pending; retry after login
+Usage consent remains pending; retry after login
+1..71
+# tests 71
+# suites 0
+# pass 71
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 10035.580643

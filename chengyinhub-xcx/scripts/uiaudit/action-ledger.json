@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5121,
+  "controlCount": 5125,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -17393,6 +17393,142 @@
             {
               "selector": "cy-error",
               "index": 3
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
             },
             {
               "selector": "cy-result-sheet",
@@ -87057,6 +87193,40 @@
           "route": "pages/coop/invite/index",
           "segments": [
             {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
               "selector": "cy-result-sheet",
               "index": 0
             },
@@ -125516,6 +125686,24 @@
           ]
         },
         {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 2
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 3
+            }
+          ]
+        },
+        {
           "route": "pages/index/index",
           "segments": [
             {
@@ -128135,6 +128323,24 @@
           ]
         },
         {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 2
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 3
+            }
+          ]
+        },
+        {
           "route": "pages/index/index",
           "segments": [
             {
@@ -130749,6 +130955,24 @@
             {
               "selector": "cy-dropdown",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 2
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 3
             }
           ]
         },
@@ -133372,6 +133596,24 @@
           ]
         },
         {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 2
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 3
+            }
+          ]
+        },
+        {
           "route": "pages/index/index",
           "segments": [
             {
@@ -135990,6 +136232,24 @@
           ]
         },
         {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 2
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 3
+            }
+          ]
+        },
+        {
           "route": "pages/index/index",
           "segments": [
             {
@@ -138604,6 +138864,24 @@
             {
               "selector": "cy-dropdown",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 2
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 3
             }
           ]
         },
@@ -142000,6 +142278,15 @@
             {
               "selector": "cy-empty",
               "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-empty",
+              "index": 4
             }
           ]
         },
@@ -148536,6 +148823,24 @@
             {
               "selector": "cy-error",
               "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
             }
           ]
         },
@@ -155403,6 +155708,24 @@
           ]
         },
         {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            }
+          ]
+        },
+        {
           "route": "pages/coop/list/index",
           "segments": [
             {
@@ -162262,6 +162585,24 @@
             {
               "selector": "cy-error",
               "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
             }
           ]
         },
@@ -266239,6 +266580,32 @@
           "route": "pages/coop/invite/index",
           "segments": [
             {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
               "selector": "cy-result-sheet",
               "index": 0
             }
@@ -279092,6 +279459,32 @@
             {
               "selector": "cy-error",
               "index": 3
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
             },
             {
               "selector": "cy-result-sheet",
@@ -291967,6 +292360,32 @@
           "route": "pages/coop/invite/index",
           "segments": [
             {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
               "selector": "cy-result-sheet",
               "index": 0
             }
@@ -304831,6 +305250,32 @@
           "route": "pages/coop/invite/index",
           "segments": [
             {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
               "selector": "cy-result-sheet",
               "index": 0
             }
@@ -317684,6 +318129,32 @@
             {
               "selector": "cy-error",
               "index": 3
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
             },
             {
               "selector": "cy-result-sheet",
@@ -389413,6 +389884,74 @@
           "route": "pages/coop/invite/index",
           "segments": [
             {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
               "selector": "cy-result-sheet",
               "index": 0
             },
@@ -426739,6 +427278,74 @@
             {
               "selector": "cy-error",
               "index": 3
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
             },
             {
               "selector": "cy-result-sheet",
@@ -464094,6 +464701,74 @@
           "route": "pages/coop/invite/index",
           "segments": [
             {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
               "selector": "cy-result-sheet",
               "index": 0
             },
@@ -501419,6 +502094,74 @@
             {
               "selector": "cy-error",
               "index": 3
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
             },
             {
               "selector": "cy-result-sheet",
@@ -538774,6 +539517,74 @@
           "route": "pages/coop/invite/index",
           "segments": [
             {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
               "selector": "cy-result-sheet",
               "index": 0
             },
@@ -576099,6 +576910,74 @@
             {
               "selector": "cy-error",
               "index": 3
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
             },
             {
               "selector": "cy-result-sheet",
@@ -613455,6 +614334,74 @@
           "route": "pages/coop/invite/index",
           "segments": [
             {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
               "selector": "cy-result-sheet",
               "index": 0
             },
@@ -650781,6 +651728,74 @@
             {
               "selector": "cy-error",
               "index": 3
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
             },
             {
               "selector": "cy-result-sheet",
@@ -688137,6 +689152,74 @@
           "route": "pages/coop/invite/index",
           "segments": [
             {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
               "selector": "cy-result-sheet",
               "index": 0
             },
@@ -725478,6 +726561,74 @@
           "route": "pages/coop/invite/index",
           "segments": [
             {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
               "selector": "cy-result-sheet",
               "index": 0
             },
@@ -762804,6 +763955,74 @@
             {
               "selector": "cy-error",
               "index": 3
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 4
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 5
             },
             {
               "selector": "cy-result-sheet",
@@ -803277,7 +804496,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:789"
+        "staticSource": "pages/activity/baoming/baoming.js:790"
       }
     },
     {
@@ -803347,7 +804566,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:842"
+        "staticSource": "pages/activity/baoming/baoming.js:843"
       }
     },
     {
@@ -803457,7 +804676,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1066"
+        "staticSource": "pages/activity/baoming/baoming.js:1067"
       }
     },
     {
@@ -803545,7 +804764,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1009"
+        "staticSource": "pages/activity/baoming/baoming.js:1010"
       }
     },
     {
@@ -803662,7 +804881,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:935"
+        "staticSource": "pages/activity/baoming/baoming.js:936"
       }
     },
     {
@@ -803750,7 +804969,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1009"
+        "staticSource": "pages/activity/baoming/baoming.js:1010"
       }
     },
     {
@@ -803820,7 +805039,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1057"
+        "staticSource": "pages/activity/baoming/baoming.js:1058"
       }
     },
     {
@@ -803890,7 +805109,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1057"
+        "staticSource": "pages/activity/baoming/baoming.js:1058"
       }
     },
     {
@@ -804007,7 +805226,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:935"
+        "staticSource": "pages/activity/baoming/baoming.js:936"
       }
     },
     {
@@ -804095,7 +805314,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1009"
+        "staticSource": "pages/activity/baoming/baoming.js:1010"
       }
     },
     {
@@ -804199,7 +805418,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:974"
+        "staticSource": "pages/activity/baoming/baoming.js:975"
       }
     },
     {
@@ -804266,7 +805485,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:525"
+        "staticSource": "pages/activity/baoming/baoming.js:526"
       }
     },
     {
@@ -804333,7 +805552,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:534"
+        "staticSource": "pages/activity/baoming/baoming.js:535"
       }
     },
     {
@@ -804403,7 +805622,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:853"
+        "staticSource": "pages/activity/baoming/baoming.js:854"
       }
     },
     {
@@ -804506,7 +805725,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:596"
+        "staticSource": "pages/activity/baoming/baoming.js:597"
       }
     },
     {
@@ -804577,7 +805796,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:577"
+        "staticSource": "pages/activity/baoming/baoming.js:578"
       }
     },
     {
@@ -804644,7 +805863,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1270"
+        "staticSource": "pages/activity/baoming/baoming.js:1271"
       }
     },
     {
@@ -804730,7 +805949,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1448"
+        "staticSource": "pages/activity/baoming/baoming.js:1449"
       }
     },
     {
@@ -804924,7 +806143,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1448"
+        "staticSource": "pages/activity/baoming/baoming.js:1449"
       }
     },
     {
@@ -805076,7 +806295,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1448"
+        "staticSource": "pages/activity/baoming/baoming.js:1449"
       }
     },
     {
@@ -805493,7 +806712,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1448"
+        "staticSource": "pages/activity/baoming/baoming.js:1449"
       }
     },
     {
@@ -805820,7 +807039,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1448"
+        "staticSource": "pages/activity/baoming/baoming.js:1449"
       }
     },
     {
@@ -806159,7 +807378,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1448"
+        "staticSource": "pages/activity/baoming/baoming.js:1449"
       }
     },
     {
@@ -806420,7 +807639,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1448"
+        "staticSource": "pages/activity/baoming/baoming.js:1449"
       }
     },
     {
@@ -806508,7 +807727,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1205"
+        "staticSource": "pages/activity/baoming/baoming.js:1206"
       }
     },
     {
@@ -806596,7 +807815,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1217"
+        "staticSource": "pages/activity/baoming/baoming.js:1218"
       }
     },
     {
@@ -806667,7 +807886,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1241"
+        "staticSource": "pages/activity/baoming/baoming.js:1242"
       }
     },
     {
@@ -806734,7 +807953,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:808"
+        "staticSource": "pages/activity/baoming/baoming.js:809"
       }
     },
     {
@@ -806851,7 +808070,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:812"
+        "staticSource": "pages/activity/baoming/baoming.js:813"
       }
     },
     {
@@ -806922,7 +808141,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:483"
+        "staticSource": "pages/activity/baoming/baoming.js:484"
       }
     },
     {
@@ -807025,7 +808244,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:370"
+        "staticSource": "pages/activity/baoming/baoming.js:371"
       }
     },
     {
@@ -807128,7 +808347,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:370"
+        "staticSource": "pages/activity/baoming/baoming.js:371"
       }
     },
     {
@@ -807199,7 +808418,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:859"
+        "staticSource": "pages/activity/baoming/baoming.js:860"
       }
     },
     {
@@ -821411,7 +822630,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1606"
+        "staticSource": "pages/club/detail/index.js:1607"
       }
     },
     {
@@ -821482,7 +822701,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1613"
+        "staticSource": "pages/club/detail/index.js:1614"
       }
     },
     {
@@ -821549,7 +822768,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3183"
+        "staticSource": "pages/club/detail/index.js:3184"
       }
     },
     {
@@ -821653,7 +822872,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3111"
+        "staticSource": "pages/club/detail/index.js:3112"
       }
     },
     {
@@ -821720,7 +822939,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3039"
+        "staticSource": "pages/club/detail/index.js:3040"
       }
     },
     {
@@ -821791,7 +823010,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3043"
+        "staticSource": "pages/club/detail/index.js:3044"
       }
     },
     {
@@ -821858,7 +823077,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3020"
+        "staticSource": "pages/club/detail/index.js:3021"
       }
     },
     {
@@ -821925,7 +823144,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3030"
+        "staticSource": "pages/club/detail/index.js:3031"
       }
     },
     {
@@ -821992,7 +823211,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3183"
+        "staticSource": "pages/club/detail/index.js:3184"
       }
     },
     {
@@ -822104,7 +823323,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3178"
+        "staticSource": "pages/club/detail/index.js:3179"
       }
     },
     {
@@ -822232,7 +823451,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2557"
+        "staticSource": "pages/club/detail/index.js:2558"
       }
     },
     {
@@ -822299,7 +823518,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2658"
+        "staticSource": "pages/club/detail/index.js:2659"
       }
     },
     {
@@ -822409,7 +823628,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3448"
+        "staticSource": "pages/club/detail/index.js:3449"
       }
     },
     {
@@ -822476,7 +823695,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2658"
+        "staticSource": "pages/club/detail/index.js:2659"
       }
     },
     {
@@ -822543,7 +823762,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2659"
+        "staticSource": "pages/club/detail/index.js:2660"
       }
     },
     {
@@ -822610,7 +823829,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:731"
+        "staticSource": "pages/club/detail/index.js:732"
       }
     },
     {
@@ -822677,7 +823896,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1821"
+        "staticSource": "pages/club/detail/index.js:1822"
       }
     },
     {
@@ -822745,7 +823964,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:710"
+        "staticSource": "pages/club/detail/index.js:711"
       }
     },
     {
@@ -822812,7 +824031,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:714"
+        "staticSource": "pages/club/detail/index.js:715"
       }
     },
     {
@@ -822879,7 +824098,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:714"
+        "staticSource": "pages/club/detail/index.js:715"
       }
     },
     {
@@ -822946,7 +824165,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:711"
+        "staticSource": "pages/club/detail/index.js:712"
       }
     },
     {
@@ -823013,7 +824232,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:721"
+        "staticSource": "pages/club/detail/index.js:722"
       }
     },
     {
@@ -823084,7 +824303,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:745"
+        "staticSource": "pages/club/detail/index.js:746"
       }
     },
     {
@@ -823201,7 +824420,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:740"
+        "staticSource": "pages/club/detail/index.js:741"
       }
     },
     {
@@ -823272,7 +824491,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2701"
+        "staticSource": "pages/club/detail/index.js:2702"
       }
     },
     {
@@ -823339,7 +824558,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:727"
+        "staticSource": "pages/club/detail/index.js:728"
       }
     },
     {
@@ -823406,7 +824625,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:724"
+        "staticSource": "pages/club/detail/index.js:725"
       }
     },
     {
@@ -823473,7 +824692,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:875"
+        "staticSource": "pages/club/detail/index.js:876"
       }
     },
     {
@@ -823585,7 +824804,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3354"
+        "staticSource": "pages/club/detail/index.js:3355"
       }
     },
     {
@@ -823705,7 +824924,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3355"
+        "staticSource": "pages/club/detail/index.js:3356"
       }
     },
     {
@@ -823773,7 +824992,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3359"
+        "staticSource": "pages/club/detail/index.js:3360"
       }
     },
     {
@@ -823901,7 +825120,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3356"
+        "staticSource": "pages/club/detail/index.js:3357"
       }
     },
     {
@@ -823968,7 +825187,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1837"
+        "staticSource": "pages/club/detail/index.js:1838"
       }
     },
     {
@@ -824080,7 +825299,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1828"
+        "staticSource": "pages/club/detail/index.js:1829"
       }
     },
     {
@@ -824147,7 +825366,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1819"
+        "staticSource": "pages/club/detail/index.js:1820"
       }
     },
     {
@@ -824259,7 +825478,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1844"
+        "staticSource": "pages/club/detail/index.js:1845"
       }
     },
     {
@@ -824326,7 +825545,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1894"
+        "staticSource": "pages/club/detail/index.js:1895"
       }
     },
     {
@@ -824427,7 +825646,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1889"
+        "staticSource": "pages/club/detail/index.js:1890"
       }
     },
     {
@@ -824494,7 +825713,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1823"
+        "staticSource": "pages/club/detail/index.js:1824"
       }
     },
     {
@@ -824595,7 +825814,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2871"
+        "staticSource": "pages/club/detail/index.js:2872"
       }
     },
     {
@@ -824672,7 +825891,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2863"
+        "staticSource": "pages/club/detail/index.js:2864"
       }
     },
     {
@@ -824742,7 +825961,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2895"
+        "staticSource": "pages/club/detail/index.js:2896"
       }
     },
     {
@@ -824844,7 +826063,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3264"
+        "staticSource": "pages/club/detail/index.js:3265"
       }
     },
     {
@@ -824955,7 +826174,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3193"
+        "staticSource": "pages/club/detail/index.js:3194"
       }
     },
     {
@@ -825058,7 +826277,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2881"
+        "staticSource": "pages/club/detail/index.js:2882"
       }
     },
     {
@@ -825161,7 +826380,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2888"
+        "staticSource": "pages/club/detail/index.js:2889"
       }
     },
     {
@@ -825228,7 +826447,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1926"
+        "staticSource": "pages/club/detail/index.js:1927"
       }
     },
     {
@@ -825338,7 +826557,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2020"
+        "staticSource": "pages/club/detail/index.js:2021"
       }
     },
     {
@@ -825439,7 +826658,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2066"
+        "staticSource": "pages/club/detail/index.js:2067"
       }
     },
     {
@@ -825508,7 +826727,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1708"
+        "staticSource": "pages/club/detail/index.js:1709"
       }
     },
     {
@@ -825613,7 +826832,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1726"
+        "staticSource": "pages/club/detail/index.js:1727"
       }
     },
     {
@@ -825682,7 +826901,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2901"
+        "staticSource": "pages/club/detail/index.js:2902"
       }
     },
     {
@@ -825787,7 +827006,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2917"
+        "staticSource": "pages/club/detail/index.js:2918"
       }
     },
     {
@@ -825888,7 +827107,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3292"
+        "staticSource": "pages/club/detail/index.js:3293"
       }
     },
     {
@@ -826008,7 +827227,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3301"
+        "staticSource": "pages/club/detail/index.js:3302"
       }
     },
     {
@@ -826075,7 +827294,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3299"
+        "staticSource": "pages/club/detail/index.js:3300"
       }
     },
     {
@@ -826195,7 +827414,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3301"
+        "staticSource": "pages/club/detail/index.js:3302"
       }
     },
     {
@@ -826296,7 +827515,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2283"
+        "staticSource": "pages/club/detail/index.js:2284"
       }
     },
     {
@@ -826367,7 +827586,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2935"
+        "staticSource": "pages/club/detail/index.js:2936"
       }
     },
     {
@@ -826479,7 +827698,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3056"
+        "staticSource": "pages/club/detail/index.js:3057"
       }
     },
     {
@@ -826583,7 +827802,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2745"
+        "staticSource": "pages/club/detail/index.js:2746"
       }
     },
     {
@@ -826782,7 +828001,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:834"
+        "staticSource": "pages/club/detail/index.js:835"
       }
     },
     {
@@ -826853,7 +828072,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2806"
+        "staticSource": "pages/club/detail/index.js:2807"
       }
     },
     {
@@ -826924,7 +828143,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2806"
+        "staticSource": "pages/club/detail/index.js:2807"
       }
     },
     {
@@ -827025,7 +828244,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2293"
+        "staticSource": "pages/club/detail/index.js:2294"
       }
     },
     {
@@ -827126,7 +828345,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2293"
+        "staticSource": "pages/club/detail/index.js:2294"
       }
     },
     {
@@ -827227,7 +828446,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2302"
+        "staticSource": "pages/club/detail/index.js:2303"
       }
     },
     {
@@ -827298,7 +828517,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2935"
+        "staticSource": "pages/club/detail/index.js:2936"
       }
     },
     {
@@ -827368,7 +828587,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2678"
+        "staticSource": "pages/club/detail/index.js:2679"
       }
     },
     {
@@ -827435,7 +828654,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2516"
+        "staticSource": "pages/club/detail/index.js:2517"
       }
     },
     {
@@ -827507,7 +828726,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2529"
+        "staticSource": "pages/club/detail/index.js:2530"
       }
     },
     {
@@ -827579,7 +828798,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2529"
+        "staticSource": "pages/club/detail/index.js:2530"
       }
     },
     {
@@ -827651,7 +828870,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2529"
+        "staticSource": "pages/club/detail/index.js:2530"
       }
     },
     {
@@ -827721,7 +828940,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2717"
+        "staticSource": "pages/club/detail/index.js:2718"
       }
     },
     {
@@ -827822,7 +829041,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1691"
+        "staticSource": "pages/club/detail/index.js:1692"
       }
     },
     {
@@ -827894,7 +829113,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2529"
+        "staticSource": "pages/club/detail/index.js:2530"
       }
     },
     {
@@ -827964,7 +829183,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2799"
+        "staticSource": "pages/club/detail/index.js:2800"
       }
     },
     {
@@ -828034,7 +829253,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2733"
+        "staticSource": "pages/club/detail/index.js:2734"
       }
     },
     {
@@ -828208,7 +829427,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:968"
+        "staticSource": "pages/club/detail/index.js:969"
       }
     },
     {
@@ -828320,7 +829539,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1075"
+        "staticSource": "pages/club/detail/index.js:1076"
       }
     },
     {
@@ -828390,7 +829609,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1064"
+        "staticSource": "pages/club/detail/index.js:1065"
       }
     },
     {
@@ -828500,7 +829719,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3448"
+        "staticSource": "pages/club/detail/index.js:3449"
       }
     },
     {
@@ -828567,7 +829786,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1501"
+        "staticSource": "pages/club/detail/index.js:1502"
       }
     },
     {
@@ -828703,7 +829922,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1505"
+        "staticSource": "pages/club/detail/index.js:1506"
       }
     },
     {
@@ -828773,7 +829992,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2824"
+        "staticSource": "pages/club/detail/index.js:2825"
       }
     },
     {
@@ -828879,7 +830098,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2954"
+        "staticSource": "pages/club/detail/index.js:2955"
       }
     },
     {
@@ -828982,7 +830201,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2966"
+        "staticSource": "pages/club/detail/index.js:2967"
       }
     },
     {
@@ -829085,7 +830304,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2966"
+        "staticSource": "pages/club/detail/index.js:2967"
       }
     },
     {
@@ -829190,7 +830409,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1107"
+        "staticSource": "pages/club/detail/index.js:1108"
       }
     },
     {
@@ -829261,7 +830480,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2806"
+        "staticSource": "pages/club/detail/index.js:2807"
       }
     },
     {
@@ -829332,7 +830551,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2806"
+        "staticSource": "pages/club/detail/index.js:2807"
       }
     },
     {
@@ -829434,7 +830653,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3636"
+        "staticSource": "pages/club/detail/index.js:3637"
       }
     },
     {
@@ -829502,7 +830721,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3444"
+        "staticSource": "pages/club/detail/index.js:3445"
       }
     },
     {
@@ -829611,7 +830830,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1262"
+        "staticSource": "pages/club/detail/index.js:1263"
       }
     },
     {
@@ -829713,7 +830932,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3636"
+        "staticSource": "pages/club/detail/index.js:3637"
       }
     },
     {
@@ -829783,7 +831002,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:941"
+        "staticSource": "pages/club/detail/index.js:942"
       }
     },
     {
@@ -829850,7 +831069,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:927"
+        "staticSource": "pages/club/detail/index.js:928"
       }
     },
     {
@@ -829920,7 +831139,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1635"
+        "staticSource": "pages/club/detail/index.js:1636"
       }
     },
     {
@@ -830022,7 +831241,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3636"
+        "staticSource": "pages/club/detail/index.js:3637"
       }
     },
     {
@@ -830135,7 +831354,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3677"
+        "staticSource": "pages/club/detail/index.js:3678"
       }
     },
     {
@@ -830205,7 +831424,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3716"
+        "staticSource": "pages/club/detail/index.js:3717"
       }
     },
     {
@@ -830307,7 +831526,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3636"
+        "staticSource": "pages/club/detail/index.js:3637"
       }
     },
     {
@@ -830377,7 +831596,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:941"
+        "staticSource": "pages/club/detail/index.js:942"
       }
     },
     {
@@ -830479,7 +831698,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3636"
+        "staticSource": "pages/club/detail/index.js:3637"
       }
     },
     {
@@ -830549,7 +831768,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:942"
+        "staticSource": "pages/club/detail/index.js:943"
       }
     },
     {
@@ -830616,7 +831835,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1893"
+        "staticSource": "pages/club/detail/index.js:1894"
       }
     },
     {
@@ -830683,7 +831902,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1914"
+        "staticSource": "pages/club/detail/index.js:1915"
       }
     },
     {
@@ -830750,7 +831969,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3493"
+        "staticSource": "pages/club/detail/index.js:3494"
       }
     },
     {
@@ -830820,7 +832039,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:945"
+        "staticSource": "pages/club/detail/index.js:946"
       }
     },
     {
@@ -830890,7 +832109,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:951"
+        "staticSource": "pages/club/detail/index.js:952"
       }
     },
     {
@@ -830960,7 +832179,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:957"
+        "staticSource": "pages/club/detail/index.js:958"
       }
     },
     {
@@ -831027,7 +832246,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3624"
+        "staticSource": "pages/club/detail/index.js:3625"
       }
     },
     {
@@ -831098,7 +832317,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2806"
+        "staticSource": "pages/club/detail/index.js:2807"
       }
     },
     {
@@ -831168,7 +832387,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2824"
+        "staticSource": "pages/club/detail/index.js:2825"
       }
     },
     {
@@ -831235,7 +832454,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1533"
+        "staticSource": "pages/club/detail/index.js:1534"
       }
     },
     {
@@ -831354,7 +832573,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2664"
+        "staticSource": "pages/club/detail/index.js:2665"
       }
     },
     {
@@ -831424,7 +832643,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3363"
+        "staticSource": "pages/club/detail/index.js:3364"
       }
     },
     {
@@ -831491,7 +832710,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3624"
+        "staticSource": "pages/club/detail/index.js:3625"
       }
     },
     {
@@ -831563,7 +832782,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2529"
+        "staticSource": "pages/club/detail/index.js:2530"
       }
     },
     {
@@ -831635,7 +832854,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2529"
+        "staticSource": "pages/club/detail/index.js:2530"
       }
     },
     {
@@ -831705,7 +832924,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2692"
+        "staticSource": "pages/club/detail/index.js:2693"
       }
     },
     {
@@ -831775,7 +832994,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2708"
+        "staticSource": "pages/club/detail/index.js:2709"
       }
     },
     {
@@ -831901,7 +833120,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3326"
+        "staticSource": "pages/club/detail/index.js:3327"
       }
     },
     {
@@ -831971,7 +833190,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2686"
+        "staticSource": "pages/club/detail/index.js:2687"
       }
     },
     {
@@ -832040,7 +833259,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2834"
+        "staticSource": "pages/club/detail/index.js:2835"
       }
     },
     {
@@ -832111,7 +833330,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2701"
+        "staticSource": "pages/club/detail/index.js:2702"
       }
     },
     {
@@ -832181,7 +833400,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1100"
+        "staticSource": "pages/club/detail/index.js:1101"
       }
     },
     {
@@ -832251,7 +833470,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2678"
+        "staticSource": "pages/club/detail/index.js:2679"
       }
     },
     {
@@ -832353,7 +833572,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3502"
+        "staticSource": "pages/club/detail/index.js:3503"
       }
     },
     {
@@ -832455,7 +833674,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3502"
+        "staticSource": "pages/club/detail/index.js:3503"
       }
     },
     {
@@ -832557,7 +833776,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3598"
+        "staticSource": "pages/club/detail/index.js:3599"
       }
     },
     {
@@ -832659,7 +833878,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3598"
+        "staticSource": "pages/club/detail/index.js:3599"
       }
     },
     {
@@ -832761,7 +833980,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3529"
+        "staticSource": "pages/club/detail/index.js:3530"
       }
     },
     {
@@ -832828,7 +834047,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3390"
+        "staticSource": "pages/club/detail/index.js:3391"
       }
     },
     {
@@ -832930,7 +834149,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3529"
+        "staticSource": "pages/club/detail/index.js:3530"
       }
     },
     {
@@ -833033,7 +834252,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3557"
+        "staticSource": "pages/club/detail/index.js:3558"
       }
     },
     {
@@ -833135,7 +834354,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3557"
+        "staticSource": "pages/club/detail/index.js:3558"
       }
     },
     {
@@ -833205,7 +834424,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1064"
+        "staticSource": "pages/club/detail/index.js:1065"
       }
     },
     {
@@ -833311,7 +834530,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3629"
+        "staticSource": "pages/club/detail/index.js:3630"
       }
     },
     {
@@ -833382,7 +834601,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:851"
+        "staticSource": "pages/club/detail/index.js:852"
       }
     },
     {
@@ -833571,7 +834790,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:841"
+        "staticSource": "pages/club/detail/index.js:842"
       }
     },
     {
@@ -833638,7 +834857,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1950"
+        "staticSource": "pages/club/detail/index.js:1951"
       }
     },
     {
@@ -833705,7 +834924,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1961"
+        "staticSource": "pages/club/detail/index.js:1962"
       }
     },
     {
@@ -833772,7 +834991,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1944"
+        "staticSource": "pages/club/detail/index.js:1945"
       }
     },
     {
@@ -833884,7 +835103,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1970"
+        "staticSource": "pages/club/detail/index.js:1971"
       }
     },
     {
@@ -833951,7 +835170,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1968"
+        "staticSource": "pages/club/detail/index.js:1969"
       }
     },
     {
@@ -834018,7 +835237,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1967"
+        "staticSource": "pages/club/detail/index.js:1968"
       }
     },
     {
@@ -834085,7 +835304,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1802"
+        "staticSource": "pages/club/detail/index.js:1803"
       }
     },
     {
@@ -834152,7 +835371,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2092"
+        "staticSource": "pages/club/detail/index.js:2093"
       }
     },
     {
@@ -834219,7 +835438,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1538"
+        "staticSource": "pages/club/detail/index.js:1539"
       }
     },
     {
@@ -834286,7 +835505,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1545"
+        "staticSource": "pages/club/detail/index.js:1546"
       }
     },
     {
@@ -834353,7 +835572,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1542"
+        "staticSource": "pages/club/detail/index.js:1543"
       }
     },
     {
@@ -834420,7 +835639,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1543"
+        "staticSource": "pages/club/detail/index.js:1544"
       }
     },
     {
@@ -834487,7 +835706,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1544"
+        "staticSource": "pages/club/detail/index.js:1545"
       }
     },
     {
@@ -834554,7 +835773,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1811"
+        "staticSource": "pages/club/detail/index.js:1812"
       }
     },
     {
@@ -834621,7 +835840,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1601"
+        "staticSource": "pages/club/detail/index.js:1602"
       }
     },
     {
@@ -834725,7 +835944,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1547"
+        "staticSource": "pages/club/detail/index.js:1548"
       }
     },
     {
@@ -834829,7 +836048,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1547"
+        "staticSource": "pages/club/detail/index.js:1548"
       }
     },
     {
@@ -851621,7 +852840,7 @@
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:103:bindinput:onDraftInput:5",
+      "id": "pages/coop/invite-detail/index.wxml:104:bindinput:onDraftInput:5",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -851644,7 +852863,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onDraftInput",
-        "line": 103,
+        "line": 104,
         "selectorHint": ".field",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -851688,7 +852907,7 @@
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:116:bindtap:openAcceptedProject:6",
+      "id": "pages/coop/invite-detail/index.wxml:117:bindtap:openAcceptedProject:6",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -851711,7 +852930,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openAcceptedProject",
-        "line": 116,
+        "line": 117,
         "selectorHint": ".op",
         "visibleCondition": "{{projectActionVisible}}",
         "disabledCondition": null,
@@ -851754,11 +852973,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:373"
+        "staticSource": "pages/coop/invite-detail/index.js:389"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:122:bindtap:contactPartner:7",
+      "id": "pages/coop/invite-detail/index.wxml:123:bindtap:contactPartner:7",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -851781,7 +853000,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "contactPartner",
-        "line": 122,
+        "line": 123,
         "selectorHint": ".op",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -851857,11 +853076,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:390"
+        "staticSource": "pages/coop/invite-detail/index.js:406"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:128:bindtap:openPerkPick:8",
+      "id": "pages/coop/invite-detail/index.wxml:129:bindtap:openPerkPick:8",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -851884,7 +853103,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openPerkPick",
-        "line": 128,
+        "line": 129,
         "selectorHint": ".op",
         "visibleCondition": "{{box === 'received' && invite.toType === 'merchant'}}",
         "disabledCondition": null,
@@ -851966,11 +853185,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:450"
+        "staticSource": "pages/coop/invite-detail/index.js:466"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:137:bindtap:reviewCoop:9",
+      "id": "pages/coop/invite-detail/index.wxml:138:bindtap:reviewCoop:9",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -851993,7 +853212,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "reviewCoop",
-        "line": 137,
+        "line": 138,
         "selectorHint": ".op",
         "visibleCondition": "{{box === 'received' || invite.toType === 'merchant'}}",
         "disabledCondition": null,
@@ -852033,11 +853252,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:544"
+        "staticSource": "pages/coop/invite-detail/index.js:560"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:145:bindtap:cancelAccepted:10",
+      "id": "pages/coop/invite-detail/index.wxml:146:bindtap:cancelAccepted:10",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -852060,7 +853279,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "cancelAccepted",
-        "line": 145,
+        "line": 146,
         "selectorHint": ".op",
         "visibleCondition": "{{!invite.termsFrozen}}",
         "disabledCondition": null,
@@ -852160,11 +853379,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:421"
+        "staticSource": "pages/coop/invite-detail/index.js:437"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:149:bindtap:explainCancelLocked:11",
+      "id": "pages/coop/invite-detail/index.wxml:150:bindtap:explainCancelLocked:11",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -852187,7 +853406,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "explainCancelLocked",
-        "line": 149,
+        "line": 150,
         "selectorHint": ".op",
         "visibleCondition": "{{invite.termsFrozen}}",
         "disabledCondition": null,
@@ -852227,11 +853446,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:445"
+        "staticSource": "pages/coop/invite-detail/index.js:461"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:162:bindtap:reject:12",
+      "id": "pages/coop/invite-detail/index.wxml:163:bindtap:reject:12",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -852254,7 +853473,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "reject",
-        "line": 162,
+        "line": 163,
         "selectorHint": ".act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -852354,11 +853573,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:300"
+        "staticSource": "pages/coop/invite-detail/index.js:308"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:164:bindtap:accept:13",
+      "id": "pages/coop/invite-detail/index.wxml:165:bindtap:accept:13",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -852381,7 +853600,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "accept",
-        "line": 164,
+        "line": 165,
         "selectorHint": ".act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -852484,7 +853703,7 @@
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:168:bindtap:withdraw:14",
+      "id": "pages/coop/invite-detail/index.wxml:169:bindtap:withdraw:14",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -852507,7 +853726,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "withdraw",
-        "line": 168,
+        "line": 169,
         "selectorHint": ".act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -852607,11 +853826,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:310"
+        "staticSource": "pages/coop/invite-detail/index.js:318"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:172:bindtap:goDeposit:15",
+      "id": "pages/coop/invite-detail/index.wxml:173:bindtap:goDeposit:15",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -852634,7 +853853,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goDeposit",
-        "line": 172,
+        "line": 173,
         "selectorHint": ".act",
         "visibleCondition": "{{depositActionVisible}}",
         "disabledCondition": null,
@@ -852678,11 +853897,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:609"
+        "staticSource": "pages/coop/invite-detail/index.js:625"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:183:bind:close:closePerkPick:16",
+      "id": "pages/coop/invite-detail/index.wxml:184:bind:close:closePerkPick:16",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -852705,7 +853924,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closePerkPick",
-        "line": 183,
+        "line": 184,
         "selectorHint": ".theme-merchant",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -852745,11 +853964,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:500"
+        "staticSource": "pages/coop/invite-detail/index.js:516"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:188:catchtap:togglePerk:18",
+      "id": "pages/coop/invite-detail/index.wxml:189:catchtap:togglePerk:18",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -852772,7 +853991,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "togglePerk",
-        "line": 188,
+        "line": 189,
         "selectorHint": ".pk-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -852812,11 +854031,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:507"
+        "staticSource": "pages/coop/invite-detail/index.js:523"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:197:catchtap:submitPerks:19",
+      "id": "pages/coop/invite-detail/index.wxml:198:catchtap:submitPerks:19",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -852839,7 +854058,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "submitPerks",
-        "line": 197,
+        "line": 198,
         "selectorHint": ".pk-save",
         "visibleCondition": "{{perkState === 'ready'}}",
         "disabledCondition": null,
@@ -852914,11 +854133,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:512"
+        "staticSource": "pages/coop/invite-detail/index.js:528"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:200:bind:cancel:onReviewSheetCancel:21",
+      "id": "pages/coop/invite-detail/index.wxml:201:bind:cancel:onReviewSheetCancel:21",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -852941,7 +854160,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onReviewSheetCancel",
-        "line": 200,
+        "line": 201,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -852981,11 +854200,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:555"
+        "staticSource": "pages/coop/invite-detail/index.js:571"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:200:bind:select:onReviewSheetSelect:20",
+      "id": "pages/coop/invite-detail/index.wxml:201:bind:select:onReviewSheetSelect:20",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -853008,7 +854227,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onReviewSheetSelect",
-        "line": 200,
+        "line": 201,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -853093,7 +854312,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:559"
+        "staticSource": "pages/coop/invite-detail/index.js:575"
       }
     },
     {
@@ -853163,7 +854382,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:618"
+        "staticSource": "pages/coop/invite-detail/index.js:634"
       }
     },
     {
@@ -853244,7 +854463,7 @@
       }
     },
     {
-      "id": "pages/coop/invite/index.wxml:100:bindtap:goNearby:16",
+      "id": "pages/coop/invite/index.wxml:104:bind:retry:retrySupplyTopic:16",
       "route": "pages/coop/invite/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -853264,16 +854483,16 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "goNearby",
-        "line": 100,
-        "selectorHint": ".nearby-row",
-        "visibleCondition": "{{activeType !== 1 && !presetTarget}}",
+        "tag": "cy-error",
+        "event": "bind:retry",
+        "handler": "retrySupplyTopic",
+        "line": 104,
+        "selectorHint": "cy-error[bind:retry]",
+        "visibleCondition": "{{supplyTopicState === 'error'}}",
         "disabledCondition": null,
-        "ariaLabel": "查看附近商家，含未入驻商家可电话联系",
+        "ariaLabel": null,
         "ariaLabelExpression": null,
-        "ariaRole": "button",
+        "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -853282,113 +854501,73 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
       "effectClasses": [
-        "navigation"
+        "read",
+        "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/coop/nearby/index"
+          "pages/privacy/index"
         ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "apis": [
+          "/api/config/features",
+          "/api/coop/supply-stations",
+          "/api/login/code",
+          "/api/topic/list"
+        ],
+        "primaryApis": [
+          "/api/coop/supply-stations",
+          "/api/topic/list"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/supply-stations",
+            "method": "GET",
+            "auth": "authenticated"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/topic/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
-        "error"
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:496"
-      }
-    },
-    {
-      "id": "pages/coop/invite/index.wxml:107:bindtap:sendInvite:17",
-      "route": "pages/coop/invite/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/invite/index.wxml",
-        "js": "pages/coop/invite/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {
-        "cancelled": "requestSubscribeMessage"
-      },
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "sendInvite",
-        "line": 107,
-        "selectorHint": ".cta-btn",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "发送协作邀约",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": "{{submitting || !topicId || topicClosed || topicsState !== 'ready' || targetsState !== 'ready' || (shareMode === 2 && !fixedFee)}}",
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "external",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [
-        "requestSubscribeMessage"
-      ],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "cancelled"
-      ],
-      "requiredPlatforms": [
-        "ios",
-        "android"
-      ],
-      "externalGate": "real-device-required",
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:445"
+        "staticSource": "pages/coop/invite/index.js:483"
       }
     },
     {
@@ -853456,11 +854635,426 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:298"
+        "staticSource": "pages/coop/invite/index.js:319"
       }
     },
     {
-      "id": "pages/coop/invite/index.wxml:110:bind:close:closeInviteModal:18",
+      "id": "pages/coop/invite/index.wxml:110:bind:retry:retrySupplyStations:17",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-error",
+        "event": "bind:retry",
+        "handler": "retrySupplyStations",
+        "line": 110,
+        "selectorHint": "cy-error[bind:retry]",
+        "visibleCondition": "{{item.supplyState === 'error'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/coop/supply-stations",
+          "/api/login/code"
+        ],
+        "primaryApis": [
+          "/api/coop/supply-stations"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/supply-stations",
+            "method": "GET",
+            "auth": "authenticated"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:484"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:111:bind:cta:retrySupplyStations:18",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-empty",
+        "event": "bind:cta",
+        "handler": "retrySupplyStations",
+        "line": 111,
+        "selectorHint": "cy-empty[bind:cta]",
+        "visibleCondition": "{{item.supplyState === 'ready' && !item.supplyStations.length}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/coop/supply-stations",
+          "/api/login/code"
+        ],
+        "primaryApis": [
+          "/api/coop/supply-stations"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/supply-stations",
+            "method": "GET",
+            "auth": "authenticated"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:484"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:112:bind:change:onSupplyStationChange:19",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-dropdown",
+        "event": "bind:change",
+        "handler": "onSupplyStationChange",
+        "line": 112,
+        "selectorHint": "cy-dropdown[bind:change]",
+        "visibleCondition": "{{item.supplyState === 'ready'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "为{{item.name}}选择核销据点",
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:485"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:118:bindtap:goNearby:20",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goNearby",
+        "line": 118,
+        "selectorHint": ".nearby-row",
+        "visibleCondition": "{{activeType !== 1 && !presetTarget}}",
+        "disabledCondition": null,
+        "ariaLabel": "查看附近商家，含未入驻商家可电话联系",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/coop/nearby/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:647"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:125:bindtap:sendInvite:21",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {
+        "cancelled": "requestSubscribeMessage"
+      },
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "sendInvite",
+        "line": 125,
+        "selectorHint": ".cta-btn",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "发送协作邀约",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": "{{submitting || !topicId || topicClosed || topicsState !== 'ready' || targetsState !== 'ready' || (shareMode === 2 && !fixedFee)}}",
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [
+        "requestSubscribeMessage"
+      ],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "cancelled"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:594"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:128:bind:close:closeInviteModal:22",
       "route": "pages/coop/invite/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -853483,7 +855077,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeInviteModal",
-        "line": 110,
+        "line": 128,
         "selectorHint": "#inviteConfirmSheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -853523,11 +855117,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:494"
+        "staticSource": "pages/coop/invite/index.js:645"
       }
     },
     {
-      "id": "pages/coop/invite/index.wxml:121:bindinput:onMessageInput:19",
+      "id": "pages/coop/invite/index.wxml:140:bindinput:onMessageInput:23",
       "route": "pages/coop/invite/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -853550,7 +855144,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onMessageInput",
-        "line": 121,
+        "line": 140,
         "selectorHint": ".iv-message-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -853590,11 +855184,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:368"
+        "staticSource": "pages/coop/invite/index.js:517"
       }
     },
     {
-      "id": "pages/coop/invite/index.wxml:124:bindtap:goEditTopic:20",
+      "id": "pages/coop/invite/index.wxml:143:bindtap:goEditTopic:24",
       "route": "pages/coop/invite/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -853617,7 +855211,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goEditTopic",
-        "line": 124,
+        "line": 143,
         "selectorHint": ".iv-edit-exit",
         "visibleCondition": "{{sendResult && topicId && !sendRecruitClosed}}",
         "disabledCondition": null,
@@ -853661,11 +855255,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:507"
+        "staticSource": "pages/coop/invite/index.js:658"
       }
     },
     {
-      "id": "pages/coop/invite/index.wxml:125:bindtap:confirmInvite:21",
+      "id": "pages/coop/invite/index.wxml:144:bindtap:confirmInvite:25",
       "route": "pages/coop/invite/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -853688,7 +855282,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "confirmInvite",
-        "line": 125,
+        "line": 144,
         "selectorHint": ".iv-send",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -853720,10 +855314,12 @@
         "apis": [
           "/api/config/features",
           "/api/coop/invite",
+          "/api/coop/supply-stations",
           "/api/login/code"
         ],
         "primaryApis": [
-          "/api/coop/invite"
+          "/api/coop/invite",
+          "/api/coop/supply-stations"
         ],
         "auxiliaryApis": [
           "/api/config/features",
@@ -853741,6 +855337,11 @@
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/supply-stations",
+            "method": "GET",
+            "auth": "authenticated"
           },
           {
             "url": "/api/login/code",
@@ -853763,11 +855364,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:514"
+        "staticSource": "pages/coop/invite/index.js:665"
       }
     },
     {
-      "id": "pages/coop/invite/index.wxml:135:bind:close:onResultSheetClose:22",
+      "id": "pages/coop/invite/index.wxml:154:bind:close:onResultSheetClose:26",
       "route": "pages/coop/invite/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -853790,7 +855391,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:close",
         "handler": "onResultSheetClose",
-        "line": 135,
+        "line": 154,
         "selectorHint": "cy-result-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -853834,7 +855435,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:616"
+        "staticSource": "pages/coop/invite/index.js:772"
       }
     },
     {
@@ -853935,7 +855536,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:442"
+        "staticSource": "pages/coop/invite/index.js:591"
       }
     },
     {
@@ -854036,7 +855637,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:442"
+        "staticSource": "pages/coop/invite/index.js:591"
       }
     },
     {
@@ -854078,32 +855679,73 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "read",
       "interactionMode": "event-contract",
-      "baseActionClass": "state",
+      "baseActionClass": "read",
       "effectClasses": [
+        "read",
         "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/coop/supply-stations",
+          "/api/login/code",
+          "/api/topic/list"
+        ],
+        "primaryApis": [
+          "/api/coop/supply-stations",
+          "/api/topic/list"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/supply-stations",
+            "method": "GET",
+            "auth": "authenticated"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/topic/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:361"
+        "staticSource": "pages/coop/invite/index.js:382"
       }
     },
     {
@@ -854173,7 +855815,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:501"
+        "staticSource": "pages/coop/invite/index.js:652"
       }
     },
     {
@@ -854240,7 +855882,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:266"
+        "staticSource": "pages/coop/invite/index.js:285"
       }
     },
     {
@@ -854307,7 +855949,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:266"
+        "staticSource": "pages/coop/invite/index.js:285"
       }
     },
     {
@@ -854374,7 +856016,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:272"
+        "staticSource": "pages/coop/invite/index.js:292"
       }
     },
     {
@@ -854483,7 +856125,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:443"
+        "staticSource": "pages/coop/invite/index.js:592"
       }
     },
     {
@@ -854592,7 +856234,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:443"
+        "staticSource": "pages/coop/invite/index.js:592"
       }
     },
     {
@@ -854634,32 +856276,66 @@
         "ariaChecked": null,
         "ariaCheckedExpression": "{{!!selectedMap[item.id]}}"
       },
-      "actionClass": "state",
+      "actionClass": "write",
       "interactionMode": "tap",
-      "baseActionClass": "state",
+      "baseActionClass": "write",
       "effectClasses": [
+        "write",
         "state"
       ],
-      "accessBoundary": null,
+      "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/coop/supply-stations",
+          "/api/login/code"
+        ],
+        "primaryApis": [
+          "/api/coop/supply-stations"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/supply-stations",
+            "method": "GET",
+            "auth": "authenticated"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:251"
+        "staticSource": "pages/coop/invite/index.js:269"
       }
     },
     {
@@ -854768,7 +856444,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:443"
+        "staticSource": "pages/coop/invite/index.js:592"
       }
     },
     {
@@ -854810,32 +856486,66 @@
         "ariaChecked": null,
         "ariaCheckedExpression": "{{!!selectedMap[item.memberId]}}"
       },
-      "actionClass": "state",
+      "actionClass": "write",
       "interactionMode": "tap",
-      "baseActionClass": "state",
+      "baseActionClass": "write",
       "effectClasses": [
+        "write",
         "state"
       ],
-      "accessBoundary": null,
+      "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/coop/supply-stations",
+          "/api/login/code"
+        ],
+        "primaryApis": [
+          "/api/coop/supply-stations"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/supply-stations",
+            "method": "GET",
+            "auth": "authenticated"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:251"
+        "staticSource": "pages/coop/invite/index.js:269"
       }
     },
     {
@@ -854944,11 +856654,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:443"
+        "staticSource": "pages/coop/invite/index.js:592"
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:117:catchtap:declineApply:18",
+      "id": "pages/coop/list/index.wxml:118:catchtap:declineApply:18",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -854971,7 +856681,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "declineApply",
-        "line": 117,
+        "line": 118,
         "selectorHint": ".inv-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -855069,7 +856779,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:118:catchtap:replyApplyInvite:19",
+      "id": "pages/coop/list/index.wxml:119:catchtap:replyApplyInvite:19",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -855092,7 +856802,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "replyApplyInvite",
-        "line": 118,
+        "line": 119,
         "selectorHint": ".inv-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -855139,7 +856849,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:121:catchtap:goInviteDetail:20",
+      "id": "pages/coop/list/index.wxml:122:catchtap:goInviteDetail:20",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -855162,7 +856872,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goInviteDetail",
-        "line": 121,
+        "line": 122,
         "selectorHint": ".inv-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -855210,7 +856920,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:127:bindtap:loadReceivedRegs:21",
+      "id": "pages/coop/list/index.wxml:128:bindtap:loadReceivedRegs:21",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -855233,7 +856943,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "loadReceivedRegs",
-        "line": 127,
+        "line": 128,
         "selectorHint": ".inline-retry",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -855379,7 +857089,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:145:catchtap:confirmReg:22",
+      "id": "pages/coop/list/index.wxml:146:catchtap:confirmReg:22",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -855402,7 +857112,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "confirmReg",
-        "line": 145,
+        "line": 146,
         "selectorHint": ".inv-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -855561,7 +857271,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:164:catchtap:rejectOfficialInvite:23",
+      "id": "pages/coop/list/index.wxml:165:catchtap:rejectOfficialInvite:23",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -855584,7 +857294,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "rejectOfficialInvite",
-        "line": 164,
+        "line": 165,
         "selectorHint": ".inv-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -855672,7 +857382,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:165:catchtap:acceptOfficialInvite:24",
+      "id": "pages/coop/list/index.wxml:166:catchtap:acceptOfficialInvite:24",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -855695,7 +857405,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "acceptOfficialInvite",
-        "line": 165,
+        "line": 166,
         "selectorHint": ".inv-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -855782,7 +857492,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:169:bindtap:loadOfficialInvites:25",
+      "id": "pages/coop/list/index.wxml:170:bindtap:loadOfficialInvites:25",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -855805,7 +857515,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "loadOfficialInvites",
-        "line": 169,
+        "line": 170,
         "selectorHint": ".inline-retry",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -855883,7 +857593,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:173:bindtap:enableInviteAlerts:26",
+      "id": "pages/coop/list/index.wxml:174:bindtap:enableInviteAlerts:26",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -855908,7 +857618,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "enableInviteAlerts",
-        "line": 173,
+        "line": 174,
         "selectorHint": ".alert-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -855961,7 +857671,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:175:bindcta:goInvite:27",
+      "id": "pages/coop/list/index.wxml:176:bindcta:goInvite:27",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -855984,7 +857694,7 @@
         "tag": "cy-empty",
         "event": "bindcta",
         "handler": "goInvite",
-        "line": 175,
+        "line": 176,
         "selectorHint": "cy-empty[bindcta]",
         "visibleCondition": "{{chapterState === 'ready' && !chapterReceived.length && receivedApplyState === 'ready' && !receivedApplyErrorText && !receivedRegErrorText && !officialErrorText && !listErrorText && !received.length && !receivedApplies.length && !receivedRegs.length && !officialInvites.length}}",
         "disabledCondition": null,
@@ -856031,7 +857741,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:182:bind:retry:load:28",
+      "id": "pages/coop/list/index.wxml:183:bind:retry:load:28",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -856054,7 +857764,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "load",
-        "line": 182,
+        "line": 183,
         "selectorHint": ".retry-lg",
         "visibleCondition": "{{listState === 'permission'}}",
         "disabledCondition": null,
@@ -856180,7 +857890,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:188:bindtap:loadApplies:30",
+      "id": "pages/coop/list/index.wxml:189:bindtap:loadApplies:30",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -856203,7 +857913,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "loadApplies",
-        "line": 188,
+        "line": 189,
         "selectorHint": ".inline-retry",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -856438,7 +858148,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:191:bindtap:goInviteDetail:31",
+      "id": "pages/coop/list/index.wxml:192:bindtap:goInviteDetail:31",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -856461,7 +858171,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goInviteDetail",
-        "line": 191,
+        "line": 192,
         "selectorHint": ".inv",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -856509,7 +858219,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:194:bind:retry:load:32",
+      "id": "pages/coop/list/index.wxml:195:bind:retry:load:32",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -856532,7 +858242,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "load",
-        "line": 194,
+        "line": 195,
         "selectorHint": ".inv-identity-error",
         "visibleCondition": "{{item.identityError}}",
         "disabledCondition": null,
@@ -856658,7 +858368,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:210:catchtap:copyPartnerPhone:33",
+      "id": "pages/coop/list/index.wxml:212:catchtap:copyPartnerPhone:33",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -856681,7 +858391,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "copyPartnerPhone",
-        "line": 210,
+        "line": 212,
         "selectorHint": ".inv-contact",
         "visibleCondition": "{{item.partnerContact}}",
         "disabledCondition": null,
@@ -856735,7 +858445,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:219:catchtap:cancelSent:34",
+      "id": "pages/coop/list/index.wxml:221:catchtap:cancelSent:34",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -856758,7 +858468,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "cancelSent",
-        "line": 219,
+        "line": 221,
         "selectorHint": ".inv-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -856890,11 +858600,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/list/index.js:1101"
+        "staticSource": "pages/coop/list/index.js:1128"
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:222:catchtap:goInviteOthers:35",
+      "id": "pages/coop/list/index.wxml:224:catchtap:goInviteOthers:35",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -856917,7 +858627,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goInviteOthers",
-        "line": 222,
+        "line": 224,
         "selectorHint": ".inv-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -856964,7 +858674,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:227:catchtap:goInviteDetail:36",
+      "id": "pages/coop/list/index.wxml:229:catchtap:goInviteDetail:36",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -856987,7 +858697,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goInviteDetail",
-        "line": 227,
+        "line": 229,
         "selectorHint": ".inv-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -857035,7 +858745,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:228:catchtap:payDeposit:37",
+      "id": "pages/coop/list/index.wxml:230:catchtap:payDeposit:37",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -857058,7 +858768,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "payDeposit",
-        "line": 228,
+        "line": 230,
         "selectorHint": ".inv-btn",
         "visibleCondition": "{{item.depositOwed}}",
         "disabledCondition": null,
@@ -857185,7 +858895,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:232:catchtap:retryDepositRefund:38",
+      "id": "pages/coop/list/index.wxml:234:catchtap:retryDepositRefund:38",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -857208,7 +858918,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "retryDepositRefund",
-        "line": 232,
+        "line": 234,
         "selectorHint": ".inv-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -857341,11 +859051,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/list/index.js:1112"
+        "staticSource": "pages/coop/list/index.js:1139"
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:251:catchtap:withdrawApply:39",
+      "id": "pages/coop/list/index.wxml:253:catchtap:withdrawApply:39",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -857368,7 +859078,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "withdrawApply",
-        "line": 251,
+        "line": 253,
         "selectorHint": ".inv-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -857466,7 +859176,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:254:catchtap:switchToReceived:40",
+      "id": "pages/coop/list/index.wxml:256:catchtap:switchToReceived:40",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -857489,7 +859199,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "switchToReceived",
-        "line": 254,
+        "line": 256,
         "selectorHint": ".inv-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -857530,76 +859240,6 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/coop/list/index.js:776"
-      }
-    },
-    {
-      "id": "pages/coop/list/index.wxml:258:bindcta:goInvite:41",
-      "route": "pages/coop/list/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/list/index.wxml",
-        "js": "pages/coop/list/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-empty",
-        "event": "bindcta",
-        "handler": "goInvite",
-        "line": 258,
-        "selectorHint": "cy-empty[bindcta]",
-        "visibleCondition": "{{chapterState === 'ready' && !chapterSent.length && sentApplyState === 'ready' && !sentApplyErrorText && !listErrorText && !sent.length && !sentApplies.length}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "event-contract",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/coop/invite/index?type="
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/list/index.js:786"
       }
     },
     {
@@ -857749,6 +859389,76 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/coop/list/index.js:248"
+      }
+    },
+    {
+      "id": "pages/coop/list/index.wxml:260:bindcta:goInvite:41",
+      "route": "pages/coop/list/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/list/index.wxml",
+        "js": "pages/coop/list/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-empty",
+        "event": "bindcta",
+        "handler": "goInvite",
+        "line": 260,
+        "selectorHint": "cy-empty[bindcta]",
+        "visibleCondition": "{{chapterState === 'ready' && !chapterSent.length && sentApplyState === 'ready' && !sentApplyErrorText && !listErrorText && !sent.length && !sentApplies.length}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/coop/invite/index?type="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/list/index.js:786"
       }
     },
     {
@@ -858300,7 +860010,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:74:catchtap:copyPartnerPhone:11",
+      "id": "pages/coop/list/index.wxml:75:catchtap:copyPartnerPhone:11",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -858323,7 +860033,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "copyPartnerPhone",
-        "line": 74,
+        "line": 75,
         "selectorHint": ".inv-contact",
         "visibleCondition": "{{item.partnerContact}}",
         "disabledCondition": null,
@@ -858377,7 +860087,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:80:bind:retry:load:12",
+      "id": "pages/coop/list/index.wxml:81:bind:retry:load:12",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -858400,7 +860110,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "load",
-        "line": 80,
+        "line": 81,
         "selectorHint": ".inv-context-error",
         "visibleCondition": "{{item.status===0 && !item.decisionReady}}",
         "disabledCondition": null,
@@ -858526,7 +860236,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:84:catchtap:rejectReceived:13",
+      "id": "pages/coop/list/index.wxml:85:catchtap:rejectReceived:13",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -858549,7 +860259,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "rejectReceived",
-        "line": 84,
+        "line": 85,
         "selectorHint": ".inv-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -858681,11 +860391,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/list/index.js:1053"
+        "staticSource": "pages/coop/list/index.js:1080"
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:85:catchtap:acceptReceived:14",
+      "id": "pages/coop/list/index.wxml:86:catchtap:acceptReceived:14",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -858708,7 +860418,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "acceptReceived",
-        "line": 85,
+        "line": 86,
         "selectorHint": ".inv-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -858839,11 +860549,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/list/index.js:1052"
+        "staticSource": "pages/coop/list/index.js:1079"
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:92:catchtap:goInviteDetail:15",
+      "id": "pages/coop/list/index.wxml:93:catchtap:goInviteDetail:15",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -858866,7 +860576,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goInviteDetail",
-        "line": 92,
+        "line": 93,
         "selectorHint": ".inv-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -858914,7 +860624,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:93:catchtap:payDeposit:16",
+      "id": "pages/coop/list/index.wxml:94:catchtap:payDeposit:16",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -858937,7 +860647,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "payDeposit",
-        "line": 93,
+        "line": 94,
         "selectorHint": ".inv-btn",
         "visibleCondition": "{{item.depositOwed}}",
         "disabledCondition": null,
@@ -859064,7 +860774,7 @@
       }
     },
     {
-      "id": "pages/coop/list/index.wxml:97:catchtap:retryDepositRefund:17",
+      "id": "pages/coop/list/index.wxml:98:catchtap:retryDepositRefund:17",
       "route": "pages/coop/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -859087,7 +860797,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "retryDepositRefund",
-        "line": 97,
+        "line": 98,
         "selectorHint": ".inv-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -859220,7 +860930,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/list/index.js:1112"
+        "staticSource": "pages/coop/list/index.js:1139"
       }
     },
     {
@@ -1150811,7 +1152521,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:516"
+        "staticSource": "pages/square/detail/index.js:517"
       }
     },
     {
@@ -1150878,7 +1152588,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:402"
+        "staticSource": "pages/square/detail/index.js:403"
       }
     },
     {
@@ -1151043,7 +1152753,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:557"
+        "staticSource": "pages/square/detail/index.js:558"
       }
     },
     {
@@ -1151113,7 +1152823,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1086"
+        "staticSource": "pages/square/detail/index.js:1087"
       }
     },
     {
@@ -1151341,7 +1153051,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:593"
+        "staticSource": "pages/square/detail/index.js:594"
       }
     },
     {
@@ -1151506,7 +1153216,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:667"
+        "staticSource": "pages/square/detail/index.js:668"
       }
     },
     {
@@ -1151573,7 +1153283,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:329"
+        "staticSource": "pages/square/detail/index.js:330"
       }
     },
     {
@@ -1151768,7 +1153478,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:864"
+        "staticSource": "pages/square/detail/index.js:865"
       }
     },
     {
@@ -1151838,7 +1153548,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1086"
+        "staticSource": "pages/square/detail/index.js:1087"
       }
     },
     {
@@ -1152004,7 +1153714,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:916"
+        "staticSource": "pages/square/detail/index.js:917"
       }
     },
     {
@@ -1152167,7 +1153877,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:257"
+        "staticSource": "pages/square/detail/index.js:258"
       }
     },
     {
@@ -1152237,7 +1153947,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1086"
+        "staticSource": "pages/square/detail/index.js:1087"
       }
     },
     {
@@ -1152304,7 +1154014,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:111"
+        "staticSource": "pages/square/detail/index.js:112"
       }
     },
     {
@@ -1152467,7 +1154177,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:198"
+        "staticSource": "pages/square/detail/index.js:199"
       }
     },
     {
@@ -1152534,7 +1154244,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:339"
+        "staticSource": "pages/square/detail/index.js:340"
       }
     },
     {
@@ -1152697,7 +1154407,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:324"
+        "staticSource": "pages/square/detail/index.js:325"
       }
     },
     {
@@ -1152764,7 +1154474,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:121"
+        "staticSource": "pages/square/detail/index.js:122"
       }
     },
     {
@@ -1152834,7 +1154544,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1086"
+        "staticSource": "pages/square/detail/index.js:1087"
       }
     },
     {
@@ -1152997,7 +1154707,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:262"
+        "staticSource": "pages/square/detail/index.js:263"
       }
     },
     {
@@ -1153064,7 +1154774,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:765"
+        "staticSource": "pages/square/detail/index.js:766"
       }
     },
     {
@@ -1153217,7 +1154927,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:771"
+        "staticSource": "pages/square/detail/index.js:772"
       }
     },
     {
@@ -1153292,7 +1155002,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:771"
+        "staticSource": "pages/square/detail/index.js:772"
       }
     },
     {
@@ -1153498,7 +1155208,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:771"
+        "staticSource": "pages/square/detail/index.js:772"
       }
     },
     {
@@ -1153565,7 +1155275,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:834"
+        "staticSource": "pages/square/detail/index.js:835"
       }
     },
     {
@@ -1153707,7 +1155417,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:838"
+        "staticSource": "pages/square/detail/index.js:839"
       }
     },
     {
@@ -1153774,7 +1155484,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:157"
+        "staticSource": "pages/square/detail/index.js:158"
       }
     },
     {
@@ -1153879,7 +1155589,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:159"
+        "staticSource": "pages/square/detail/index.js:160"
       }
     },
     {
@@ -1153947,7 +1155657,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:719"
+        "staticSource": "pages/square/detail/index.js:720"
       }
     },
     {
@@ -1154015,7 +1155725,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:718"
+        "staticSource": "pages/square/detail/index.js:719"
       }
     },
     {
@@ -1154086,7 +1155796,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:140"
+        "staticSource": "pages/square/detail/index.js:141"
       }
     },
     {
@@ -1154189,7 +1155899,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:455"
+        "staticSource": "pages/square/detail/index.js:456"
       }
     },
     {
@@ -1154256,7 +1155966,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:760"
+        "staticSource": "pages/square/detail/index.js:761"
       }
     },
     {
@@ -1154326,7 +1156036,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1086"
+        "staticSource": "pages/square/detail/index.js:1087"
       }
     },
     {
@@ -1154396,7 +1156106,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:173"
+        "staticSource": "pages/square/detail/index.js:174"
       }
     },
     {
@@ -1154466,7 +1156176,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:173"
+        "staticSource": "pages/square/detail/index.js:174"
       }
     },
     {
@@ -1154550,7 +1156260,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:178"
+        "staticSource": "pages/square/detail/index.js:179"
       }
     },
     {
@@ -1154620,7 +1156330,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:188"
+        "staticSource": "pages/square/detail/index.js:189"
       }
     },
     {
@@ -1154697,7 +1156407,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:993"
+        "staticSource": "pages/square/detail/index.js:994"
       }
     },
     {
@@ -1164865,7 +1166575,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:92"
+        "staticSource": "pages/team/join/index.js:94"
       }
     },
     {
@@ -1164972,7 +1166682,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:100"
+        "staticSource": "pages/team/join/index.js:102"
       }
     },
     {
@@ -1165043,7 +1166753,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:121"
+        "staticSource": "pages/team/join/index.js:123"
       }
     },
     {
@@ -1165150,7 +1166860,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:100"
+        "staticSource": "pages/team/join/index.js:102"
       }
     },
     {
@@ -1221934,7 +1223644,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:73"
+        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:75"
       }
     },
     {
@@ -1222041,7 +1223751,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:78"
+        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:80"
       }
     },
     {
@@ -1222185,7 +1223895,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:79"
+        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:81"
       }
     },
     {
@@ -1222293,7 +1224003,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:113"
+        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:115"
       }
     },
     {
@@ -1222401,7 +1224111,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:113"
+        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:115"
       }
     },
     {
@@ -1222509,7 +1224219,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:113"
+        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:115"
       }
     },
     {
@@ -1222616,7 +1224326,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:112"
+        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:114"
       }
     },
     {
@@ -1222724,7 +1224434,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:113"
+        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:115"
       }
     },
     {
@@ -1222832,7 +1224542,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:113"
+        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:115"
       }
     },
     {
@@ -1222976,7 +1224686,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:79"
+        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:81"
       }
     },
     {
@@ -1223084,7 +1224794,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:113"
+        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:115"
       }
     },
     {
@@ -1223192,7 +1224902,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:113"
+        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:115"
       }
     },
     {
@@ -1223333,7 +1225043,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:40"
+        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:42"
       }
     },
     {
@@ -1223441,7 +1225151,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:113"
+        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:115"
       }
     },
     {
@@ -1223549,7 +1225259,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:113"
+        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:115"
       }
     },
     {
@@ -1223656,7 +1225366,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:65"
+        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:67"
       }
     },
     {
@@ -1223764,7 +1225474,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:113"
+        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:115"
       }
     },
     {
@@ -1223872,7 +1225582,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:113"
+        "staticSource": "subpackageMember/components/cy/report-sheet/index.js:115"
       }
     },
     {
@@ -1224560,7 +1226270,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:441"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:442"
       }
     },
     {
@@ -1224677,7 +1226387,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:469"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:470"
       }
     },
     {
@@ -1224811,7 +1226521,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:459"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:460"
       }
     },
     {
@@ -1224949,7 +1226659,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:405"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:406"
       }
     },
     {
@@ -1225087,7 +1226797,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:416"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:417"
       }
     },
     {
@@ -1225240,7 +1226950,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:728"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:730"
       }
     },
     {
@@ -1225394,7 +1227104,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:755"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:757"
       }
     },
     {
@@ -1225514,7 +1227224,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:785"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:787"
       }
     },
     {
@@ -1225708,7 +1227418,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:505"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:507"
       }
     },
     {
@@ -1225828,7 +1227538,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:452"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:453"
       }
     },
     {
@@ -1225955,7 +1227665,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:496"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:498"
       }
     },
     {
@@ -1226123,7 +1227833,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:630"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:632"
       }
     },
     {
@@ -1226243,7 +1227953,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:452"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:453"
       }
     },
     {
@@ -1226360,7 +1228070,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:485"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:487"
       }
     },
     {
@@ -1226497,7 +1228207,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:473"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:474"
       }
     },
     {
@@ -1226624,7 +1228334,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:489"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:491"
       }
     },
     {

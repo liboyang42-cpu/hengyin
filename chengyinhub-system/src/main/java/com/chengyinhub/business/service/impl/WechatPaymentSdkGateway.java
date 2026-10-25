@@ -472,12 +472,17 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
             }
         }
         final TransferClientBinding bound;
+        boolean originalValidated = false;
         try {
-            bound = originalTransferClient(intent);
+            requireOriginalTransferIntent(intent);
+            originalValidated = true;
+            bound = boundOriginalTransferClient(intent);
         } catch (RuntimeException invalidOriginal) {
             Map<String, String> result = new HashMap<>();
-            result.put("ok", "false"); result.put("ambiguous", debitSnapshot ? "false" : "true");
-            result.put("notSent", Boolean.toString(debitSnapshot));
+            // Only a fully validated original request may receive a pre-SDK rejection certificate.
+            boolean notSent = debitSnapshot || originalValidated;
+            result.put("ok", "false"); result.put("ambiguous", Boolean.toString(!notSent));
+            result.put("notSent", Boolean.toString(notSent));
             if (intent != null) result.put("requestHash", intent.requestHash());
             result.put("error", "原提现意图或client商户绑定无法核验，保留原号查证");
             return result;
@@ -524,6 +529,11 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
     }
 
     private TransferClientBinding originalTransferClient(CashWithdrawTransferIntent intent) {
+        requireOriginalTransferIntent(intent);
+        return boundOriginalTransferClient(intent);
+    }
+
+    private void requireOriginalTransferIntent(CashWithdrawTransferIntent intent) {
         if (intent == null) throw new IllegalArgumentException("原提现意图缺失");
         // The DTO is the ONLY requestVersion/requestHash canonicalization authority; no second hash here.
         intent.requireValid();
@@ -540,6 +550,9 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
                 || intent.effectiveRemark().length() > 32) {
             throw new IllegalArgumentException("原提现参数不能被重写或归一化");
         }
+    }
+
+    private TransferClientBinding boundOriginalTransferClient(CashWithdrawTransferIntent intent) {
         TransferClientBinding bound = transferClientBinding;
         if (bound == null || bound.client() == null || !intent.mchid().equals(bound.mchid())
                 || !(intent.appid().equals(bound.wxAppid()) || intent.appid().equals(bound.appAppid()))) {

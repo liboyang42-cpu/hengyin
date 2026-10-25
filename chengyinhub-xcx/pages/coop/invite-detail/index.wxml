@@ -73,6 +73,7 @@
       <text class="card-title">合作条款</text>
       <view class="kv"><text class="k">合作双方</text><text class="v">{{invite.typeText}}</text></view>
       <view class="kv"><text class="k">分润</text><text class="v">{{invite.termsText || '—'}}</text></view>
+      <view wx:if="{{invite.supplyStationText}}" class="kv"><text class="k">核销据点</text><text class="v">{{invite.supplyStationText}} · {{invite.supplyStationNote}}</text></view>
       <view wx:if="{{invite.slotText}}" class="kv"><text class="k">席位</text><text class="v">{{invite.slotText}}</text></view>
       <!-- 保证金单独给强调色:它是唯一一条要掏钱的 -->
       <view class="kv"><text class="k">保证金</text>

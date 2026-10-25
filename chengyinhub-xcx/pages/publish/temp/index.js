@@ -516,9 +516,9 @@ Page({
     });
   },
 
-  onHide: function () { this._hidden = true; },
+  onHide: function () { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; this._hidden = true; },
 
-  onUnload: function () {
+  onUnload: function () { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._unloaded = true;
     this._disposed = true;
     this._templateLoadToken = (this._templateLoadToken || 0) + 1;
@@ -3232,7 +3232,7 @@ Page({
   },
 
   publishGame: function () {
-    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.publishGame())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.publishGame(), { owner: this, target: () => [this._templateId, this._boundDraftId, this.data.from, this.data.operationScope, this.data.isMyScope] })) return; // 2026-10-24 游客写前登录
     if (this.data.from === 'citynode' && !this.data.merchantAccess.canManageProjects) {
       toast('当前岗位没有节点管理权限');
       return;
@@ -3301,7 +3301,7 @@ Page({
   },
 
   saveDraft: function () {
-    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.saveDraft())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.saveDraft(), { owner: this, target: () => [this._templateId, this._boundDraftId, this.data.from, this.data.operationScope, this.data.isMyScope] })) return; // 2026-10-24 游客写前登录
     if (this.data.from === 'fabu') return this.publishGame();
     if (this.data.from === 'citynode') {
       toast('节点玩法请配置完成后直接保存');

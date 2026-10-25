@@ -123,6 +123,7 @@ class CoopSettlementTest {
         ReflectionTestUtils.setField(svc, "coopOrderMapper", coopOrderMapper);
         ReflectionTestUtils.setField(svc, "coopSettlementMapper", coopSettlementMapper);
         PreparedCoopPlanFixture.install(svc, cmsRegistrationMapper, coopOrderMapper, null, coopSettlementMapper);
+        completeLegacyCompositionHeaders();
         ReflectionTestUtils.setField(svc, "pricingService", pricingService);
         ReflectionTestUtils.setField(svc, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(svc, "umsMemberMapper", umsMemberMapper);
@@ -147,6 +148,59 @@ class CoopSettlementTest {
                 ReflectionTestUtils.getField(svc, "coopSettlementOriginalMapper");
         when(noOriginalRefunds.selectApprovedRegistrationRefundIdsForOriginalCloseForUpdate(any())).thenReturn(List.of());
         when(noOriginalRefunds.selectAdjustmentsForSettlementForUpdate(any())).thenReturn(List.of());
+    }
+
+    /**
+     * Preserve the old amount/payee combination scenarios, but supply actual Plan/Line DTOs
+     * to the new cross-order validator. This is still an explicit composition fixture,
+     * not evidence that the runtime frozen reader admits CLUB or unassigned scan ranges.
+     */
+    private void completeLegacyCompositionHeaders() {
+        var delegate = (com.chengyinhub.business.service.ICoopSettlementClaimService)
+                ReflectionTestUtils.getField(svc, "coopSettlementClaimService");
+        var complete = mock(com.chengyinhub.business.service.ICoopSettlementClaimService.class,
+                org.mockito.AdditionalAnswers.delegatesTo(delegate));
+        org.mockito.Mockito.doAnswer(call -> {
+            CoopOrder order = call.getArgument(0);
+            Date observedAt = call.getArgument(1);
+            var legacy = delegate.prepare(order, observedAt);
+            var snapshot = new CoopSettlementSnapshot();
+            org.springframework.beans.BeanUtils.copyProperties(legacy.getSnapshot(), snapshot);
+            boolean club = "club".equals(order.getToType());
+            snapshot.setProductType(1); snapshot.setTermsVersion("v1");
+            snapshot.setCatalogFrozenAt(new Date(0)); snapshot.setSettlementSnapshotAt(observedAt);
+            snapshot.setFulfillmentStartInclusive(new Date(0)); snapshot.setFulfillmentEndExclusive(new Date(1000000));
+            snapshot.setCommercialContextType("TOPIC_EDITION"); snapshot.setCommercialContextId(snapshot.getTopicId());
+            snapshot.setBeneficiaryRole(club ? "CLUB" : "MERCHANT"); snapshot.setBeneficiaryId(order.getToId());
+            snapshot.setServiceUnit(club ? "ORGANIZER_LEAD" : "MERCHANT_PARTICIPATION");
+            snapshot.setScopeType("TOPIC"); snapshot.setScopeId(snapshot.getTopicId());
+            snapshot.setEligiblePurchaseKinds(List.of("GUIDED_TICKET"));
+            snapshot.setFulfillmentEvidenceRule(club ? "COOP_GROUP_VERIFY" : "REGISTRATION_SCAN");
+            snapshot.setCompensationMode(Integer.valueOf(0).equals(order.getShareMode()) ? "NONE"
+                    : Integer.valueOf(2).equals(order.getShareMode()) ? "FIXED_PER_FULFILLMENT" : "SALES_PERCENT");
+            snapshot.setShareRate(order.getShareRate()); snapshot.setFixedFee(order.getFixedFee());
+            List<Long> ids = cmsRegistrationMapper.selectVerifiedRegistrationIdsByTopicId(snapshot.getTopicId());
+            if (ids == null || ids.isEmpty()) {
+                ids = new ArrayList<>();
+                for (int i=0; i<legacy.getVerifiedHeads(); i++) ids.add(10000L+i);
+            }
+            List<CoopSettlementCandidate> candidates = new ArrayList<>();
+            for (int i=0; i<ids.size(); i++) {
+                var candidate = depositCandidate(snapshot.getTopicId(), ids.get(i));
+                candidate.setEligibleSalesSnapshot(i==0 ? legacy.getEligibleSales() : BigDecimal.ZERO);
+                // These old pure combination inputs explicitly include a simulated club plan.
+                if (club) { candidate.setOrganizerScopeCovered(true); candidate.setVerificationTime(new Date(900000));
+                    candidate.setGroupMemberVerifyTime(new Date(900000)); }
+                candidates.add(candidate);
+            }
+            var lines = com.chengyinhub.business.service.support.CoopSettlementContract.originLines(
+                    snapshot, candidates, snapshot.getFulfillmentEndExclusive());
+            var plan = new com.chengyinhub.business.domain.dto.CoopSettlementPlan(snapshot,
+                    "NONE".equals(snapshot.getCompensationMode()) ? "NONE" : "COOP_ORDER", lines);
+            assertEquals(0, legacy.getOriginAmount().compareTo(plan.getOriginAmount()), "Preserve the original combination amount");
+            return plan;
+        }).when(complete).prepare(any(), any());
+        ReflectionTestUtils.setField(svc, "coopSettlementClaimService", complete);
     }
 
     private CoopOrder order(Long id, Long toId, int shareMode, String rate, String fee) {
@@ -929,7 +983,7 @@ class CoopSettlementTest {
      * Unit storage boundary only: real prepare/claim/persist/append code runs above these maps.
      * This does not simulate MySQL rollback, provider verification or concurrent locking.
      */
-    private final class SetoffFixture {
+    final class SetoffFixture {
         final Map<Long, CoopSettlement> heads = new java.util.LinkedHashMap<>();
         final Map<String, SettlementClaim> claimsByKey = new java.util.LinkedHashMap<>();
         final Map<Long, CoopSettlementDetail> details = new java.util.LinkedHashMap<>();
@@ -940,6 +994,9 @@ class CoopSettlementTest {
         final CoopSettlementAdjustmentMapper adjustmentMapper =
                 mock(CoopSettlementAdjustmentMapper.class);
         final CoopSettlementClaimServiceImpl claimService;
+        final Map<Long, CoopSettlementSnapshot> frozen = new HashMap<>();
+        final Map<Long, CoopOrder> originalOrders = new java.util.LinkedHashMap<>();
+        final Map<Long, List<CoopSettlementCandidate>> fulfillment = new HashMap<>();
         final CmsTopic topic;
         final PlatformTransactionManager transactions;
         long nextId = 1000L;
@@ -1033,9 +1090,9 @@ class CoopSettlementTest {
 
             com.chengyinhub.business.service.ICoopOrderSettlementSnapshotReader snapshots =
                     mock(com.chengyinhub.business.service.ICoopOrderSettlementSnapshotReader.class);
-            Map<Long, CoopSettlementSnapshot> frozen = new HashMap<>();
             for (CoopOrder order : orders) {
                 order.setTopicId(topicId); order.setStatus(0); order.setDelFlag(0); order.setToType("merchant");
+                originalOrders.put(order.getId(), order);
                 var snapshot = new CoopSettlementSnapshot();
                 snapshot.setOrderId(order.getId()); snapshot.setTopicId(topicId); snapshot.setInitiatorMemberId(900001L);
                 snapshot.setProductType(1); snapshot.setTermsVersion("v1"); snapshot.setCatalogFrozenAt(new Date(0));
@@ -1044,21 +1101,118 @@ class CoopSettlementTest {
                 snapshot.setBeneficiaryRole("MERCHANT"); snapshot.setBeneficiaryId(order.getToId());
                 snapshot.setServiceUnit("MERCHANT_PARTICIPATION"); snapshot.setScopeType("TOPIC"); snapshot.setScopeId(topicId);
                 snapshot.setEligiblePurchaseKinds(List.of("GUIDED_TICKET")); snapshot.setFulfillmentEvidenceRule("REGISTRATION_SCAN");
-                snapshot.setCompensationMode("SALES_PERCENT"); snapshot.setShareRate(order.getShareRate());
+                snapshot.setCompensationMode(Integer.valueOf(0).equals(order.getShareMode()) ? "NONE"
+                        : Integer.valueOf(2).equals(order.getShareMode()) ? "FIXED_PER_FULFILLMENT" : "SALES_PERCENT");
+                snapshot.setShareRate(order.getShareRate()); snapshot.setFixedFee(order.getFixedFee());
                 frozen.put(order.getId(), snapshot);
+                fulfillment.put(order.getId(), List.of(depositCandidate(topicId, order.getId()*10),
+                        depositCandidate(topicId, order.getId()*10+1)));
             }
             when(snapshots.read(any())).thenAnswer(call -> frozen.get(((CoopOrder)call.getArgument(0)).getId()));
             TopicSettlementEvidenceService evidence = mock(TopicSettlementEvidenceService.class);
             when(evidence.lockCandidates(any(), any())).thenAnswer(call -> {
                 CoopSettlementSnapshot snapshot = call.getArgument(0);
-                var first = depositCandidate(topicId, snapshot.getOrderId()*10);
-                var second = depositCandidate(topicId, snapshot.getOrderId()*10+1);
-                return List.of(first, second);
+                return fulfillment.get(snapshot.getOrderId());
             });
             claimService = new CoopSettlementClaimServiceImpl(snapshots, new SnapshotFulfillmentWindowResolver(), evidence,
                     new SettlementClaimServiceImpl(claimMapper), coopSettlementMapper, detailMapper, adjustmentMapper);
             ReflectionTestUtils.setField(claimService, "topicMapper", cmsTopicMapper);
             ReflectionTestUtils.setField(svc, "coopSettlementClaimService", claimService);
+        }
+
+        /** Shared unit assembly only; the production service and real claim writer decide admission. */
+        int settle() { return svc.executeTopicSettlement(); }
+        void scope(long orderId, List<CoopSettlementCandidate> candidates) {
+            if (!frozen.containsKey(orderId)) throw new IllegalArgumentException("Unknown original order");
+            fulfillment.put(orderId, List.copyOf(candidates));
+        }
+
+        void cashScope(List<CoopSettlementCandidate> originals) {
+            List<com.chengyinhub.business.domain.CmsRegistration> current = new ArrayList<>();
+            for (var source : originals) {
+                var row = new com.chengyinhub.business.domain.CmsRegistration();
+                row.setId(source.getRegistrationId()); row.setOwnerType(1L); row.setOwnerId(topic.getId());
+                row.setMemberId(source.getRegistrationId()); row.setPaymentStatus(2); row.setRegistrationStatus(2);
+                row.setVerificationStatus(1); row.setPayableAmount(source.getEligibleSalesSnapshot());
+                current.add(row);
+            }
+            var mapper = (com.chengyinhub.business.mapper.CoopSettlementEvidenceMapper)
+                    ReflectionTestUtils.getField(svc, "coopSettlementEvidenceMapper");
+            when(mapper.selectTopicCashRowsForUpdate(topic.getId())).thenReturn(current);
+            when(mapper.selectTopicActivityCashRowsForUpdate(topic.getId())).thenReturn(List.of());
+        }
+        /** Real frozen lineup/reader and evidence service; only mapper responses are controlled, not SQL evidence. */
+        void currentFrozenScanSource(List<CoopSettlementCandidate> scanRows) {
+            topic.setDelFlag(0); topic.setLifecycle(3); topic.setSellingStartedAt(new Date(1));
+            topic.setFeePlatformRate(new BigDecimal("0.10")); topic.setFeeGuaranteeBaseRate(new BigDecimal("0.05"));
+            topic.setFeeGuaranteeStepRate(new BigDecimal("0.02")); topic.setFeeGuaranteeMaxMerchant(5);
+            when(cmsTopicMapper.selectCmsTopicById(topic.getId())).thenReturn(topic);
+            for (var order : originalOrders.values()) {
+                order.setFromId(topic.getMemberId()); order.setTermsVersion("v1"); order.setRoleSnapshot("SUPPLY");
+                order.setScopeTypeSnapshot("TOPIC"); order.setScopeIdSnapshot(topic.getId());
+                order.setEligiblePurchaseKindsSnapshot("GUIDED_TICKET"); order.setFulfillmentEvidenceRuleSnapshot("REGISTRATION_SCAN");
+                Map<String,Object> terms = new HashMap<>(); terms.put("shareMode", order.getShareMode());
+                terms.put("shareRate", order.getShareRate()); terms.put("fixedFee", order.getFixedFee());
+                terms.put("compensationMode", frozen.get(order.getId()).getCompensationMode());
+                order.setTermsSnapshot(com.alibaba.fastjson2.JSON.toJSONString(terms));
+            }
+            var tickets = mock(com.chengyinhub.business.mapper.OmsTicketMapper.class);
+            var ticket = new com.chengyinhub.business.domain.OmsTicket(); ticket.setId(88001L);
+            ticket.setOwnerType(1L); ticket.setOwnerId(topic.getId()); ticket.setDelFlag(0); ticket.setMode(1); ticket.setSubType("guided");
+            ticket.setStartTime(new Date(0)); ticket.setEndTime(new Date(1000000));
+            when(tickets.selectOmsTicketList(any())).thenReturn(List.of(ticket));
+            var reader = new FrozenCoopOrderSettlementSnapshotReader(
+                    new com.chengyinhub.business.service.support.FailClosedCoopOrderLineupSource(coopOrderMapper, coopInviteMapper),
+                    cmsTopicMapper, mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class), tickets);
+            var rows = (com.chengyinhub.business.mapper.CoopSettlementEvidenceMapper)
+                    ReflectionTestUtils.getField(svc, "coopSettlementEvidenceMapper");
+            when(rows.selectCashBasisBlockingRefundIdsForUpdate(topic.getId())).thenReturn(List.of());
+            when(rows.selectTopicEvidenceCandidatesForUpdate(any(), any(), any())).thenAnswer(call -> {
+                CoopSettlementSnapshot selected = call.getArgument(0);
+                assertEquals("REGISTRATION_SCAN", selected.getFulfillmentEvidenceRule());
+                assertEquals("TOPIC", selected.getScopeType()); assertEquals(topic.getId(), selected.getScopeId());
+                // Current SQL has no original order discriminator for this merchant's scans.
+                return List.copyOf(scanRows);
+            });
+            var evidence = new TopicSettlementEvidenceService(mock(com.chengyinhub.business.mapper.CmsActivityMapper.class),
+                    cmsRegistrationMapper, mock(com.chengyinhub.business.mapper.CoopGroupVerifyMapper.class), rows);
+            ReflectionTestUtils.setField(claimService, "snapshotReader", reader);
+            ReflectionTestUtils.setField(claimService, "evidenceService", evidence);
+            cashScope(scanRows);
+        }
+
+        /** Unit status double only. Real SQL rollback must be validated by G's storage suite. */
+        void originalTopicClaim() {
+            topic.setIsSettlement(0);
+            when(cmsTopicMapper.claimTopicForSettlement(topic.getId())).thenAnswer(call -> {
+                requireUnitTransaction();
+                if (Integer.valueOf(1).equals(topic.getIsSettlement())) return 0;
+                topic.setIsSettlement(1);
+                TransactionSynchronizationManager.registerSynchronization(
+                        new org.springframework.transaction.support.TransactionSynchronization() {
+                            @Override public void afterCompletion(int status) {
+                                if (status != STATUS_COMMITTED) topic.setIsSettlement(0);
+                            }
+                        });
+                return 1;
+            });
+        }
+        void assertRejectedWithoutEconomicWrites() {
+            assertEquals(Integer.valueOf(0), topic.getIsSettlement());
+            assertTrue(heads.isEmpty()); assertTrue(claimsByKey.isEmpty());
+            assertTrue(details.isEmpty()); assertTrue(adjustments.isEmpty());
+            verify(coopSettlementMapper, never()).insertCoopSettlement(any());
+            var producer = (CoopSettlementOriginalProducer)
+                    ReflectionTestUtils.getField(svc, "coopSettlementOriginalProducer");
+            verify(producer, never()).freezeOriginals(any(), any(), any());
+            verify(pointsAwardService, never()).awardPublisherSettlement(any(), any());
+            verify(umsMemberService, never()).addBalance(any(), any());
+        }
+        void assertOriginalCloseCount(int count) {
+            var producer = (CoopSettlementOriginalProducer)
+                    ReflectionTestUtils.getField(svc, "coopSettlementOriginalProducer");
+            verify(producer, times(count)).freezeOriginals(eq(topic), any(), any());
+            verify(pointsAwardService, times(count)).awardPublisherSettlement(topic.getMemberId(), topic.getId());
         }
 
         Object transactionResource() {
