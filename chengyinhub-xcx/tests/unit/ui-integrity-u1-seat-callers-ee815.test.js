@@ -93,7 +93,7 @@ function assertCallers(source, expected, scanKind) {
 }
 test('U1只登记三个真实请求锚点并删除两处旧锚，不依赖前缀或wrapper通配', () => {
   for (const [file, line, statement] of [
-    ['pages/play/index.js', 4864, '_leadVerificationWorkflow.run'],
+    ['pages/play/index.js', 4870, '_leadVerificationWorkflow.run'],
     [PROFILE, 676, 'app.sendRequest(Object.assign({}, options'],
     [DETAIL, 211, 'this._submitVerification(scan.url'],
   ]) {
