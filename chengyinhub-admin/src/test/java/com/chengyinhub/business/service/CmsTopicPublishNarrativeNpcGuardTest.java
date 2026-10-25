@@ -38,22 +38,6 @@ import static org.mockito.Mockito.when;
  */
 class CmsTopicPublishNarrativeNpcGuardTest {
 
-    // Unit call context only: mapper doubles are not MySQL/Spring rollback evidence.
-    private boolean publicationWasActive, publicationWasReadOnly;
-    @org.junit.jupiter.api.BeforeEach
-    void enterPublicationWriteContext() {
-        publicationWasActive = org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive();
-        publicationWasReadOnly = org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly();
-        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
-        org.springframework.transaction.support.TransactionSynchronizationManager.setCurrentTransactionReadOnly(false);
-    }
-    @org.junit.jupiter.api.AfterEach
-    void restorePublicationWriteContext() {
-        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(publicationWasActive);
-        org.springframework.transaction.support.TransactionSynchronizationManager.setCurrentTransactionReadOnly(publicationWasReadOnly);
-    }
-
-
     private static final Long TOPIC_ID = 10L;
     private static final Long NODE_ID = 1L;
     private static final Long TEMPLATE_ID = 101L;
@@ -118,6 +102,11 @@ class CmsTopicPublishNarrativeNpcGuardTest {
                 mock(com.chengyinhub.business.mapper.OmsTicketMapper.class));
         when(topicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
         when(topicMapper.publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class))).thenReturn(1);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "themeStateKeyService",
+                new com.chengyinhub.business.service.support.ThemeStateKeyService(
+                        mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+        service = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service);
     }
 
     /**

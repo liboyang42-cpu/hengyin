@@ -25,8 +25,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.chengyinhub.business.service.support.TopicStateKeyRefService;
 import com.chengyinhub.common.exception.ServiceException;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.AfterEach;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -60,14 +58,9 @@ class CmsTopicPublishStateKeyGuardTest {
     private CmsTopicServiceImpl service;
     // Unit persistence/current-read fixture only; no MySQL/Spring rollback claim.
     private final java.util.List<ThemeStateKey> currentDeclarations = new java.util.ArrayList<>();
-    private boolean previousActive, previousReadOnly;
 
     @BeforeEach
     void setUp() {
-        previousActive = TransactionSynchronizationManager.isActualTransactionActive();
-        previousReadOnly = TransactionSynchronizationManager.isCurrentTransactionReadOnly();
-        TransactionSynchronizationManager.setActualTransactionActive(true);
-        TransactionSynchronizationManager.setCurrentTransactionReadOnly(false);
         topicMapper = mock(CmsTopicMapper.class);
         when(topicMapper.selectCmsTopicByIdForUpdate(anyLong()))
                 .thenAnswer(inv -> topicMapper.selectCmsTopicById(inv.getArgument(0)));
@@ -131,12 +124,8 @@ class CmsTopicPublishStateKeyGuardTest {
                 mock(com.chengyinhub.business.mapper.OmsTicketMapper.class));
         when(topicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
         when(topicMapper.publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class))).thenReturn(1);
-    }
-
-    @AfterEach
-    void restoreTransactionContext() {
-        TransactionSynchronizationManager.setActualTransactionActive(previousActive);
-        TransactionSynchronizationManager.setCurrentTransactionReadOnly(previousReadOnly);
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+        service = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service);
     }
 
     private java.util.List<ThemeStateKey> currentRows(java.util.List<ThemeStateKey> rows) {
@@ -468,6 +457,8 @@ class CmsTopicPublishStateKeyGuardTest {
         topic.setJourneyRulesJson(thoughtRules("window"));
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
         CmsTopicChapter chapter = new CmsTopicChapter();
+        chapter.setId(88L);
+        chapter.setTopicId(TOPIC_ID);
         chapter.setBlocksJson("[{\"type\":\"text\",\"beat\":\"outcome\",\"content\":\"窗已打开\","
                 + "\"when\":{\"op\":\"HAS_TAG\",\"value\":\"thought.window.done\"}}]");
         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class))).thenReturn(Collections.singletonList(chapter));
@@ -485,6 +476,8 @@ class CmsTopicPublishStateKeyGuardTest {
         topic.setJourneyRulesJson(thoughtRules("window"));
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
         CmsTopicChapter chapter = new CmsTopicChapter();
+        chapter.setId(88L);
+        chapter.setTopicId(TOPIC_ID);
         chapter.setBlocksJson("[{\"type\":\"text\",\"beat\":\"outcome\",\"when\":{\"op\":\"HAS_TAG\","
                 + "\"value\":\"thought.other.done\"}}]");
         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class))).thenReturn(Collections.singletonList(chapter));
@@ -503,6 +496,8 @@ class CmsTopicPublishStateKeyGuardTest {
         topic.setJourneyRulesJson(thoughtRules("window"));
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
         CmsTopicChapter chapter = new CmsTopicChapter();
+        chapter.setId(88L);
+        chapter.setTopicId(TOPIC_ID);
         chapter.setBlocksJson("[{\"type\":\"text\",\"beat\":\"outcome\",\"when\":{\"op\":\"EQ\","
                 + "\"var\":\"thought.window.done\",\"value\":1}}]");
         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class))).thenReturn(Collections.singletonList(chapter));

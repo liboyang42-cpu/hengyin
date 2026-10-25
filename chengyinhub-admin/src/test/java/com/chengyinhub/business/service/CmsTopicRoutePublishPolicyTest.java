@@ -30,21 +30,15 @@ import static org.mockito.Mockito.when;
 
 class CmsTopicRoutePublishPolicyTest {
 
-    // Unit call context only: mapper doubles are not MySQL/Spring rollback evidence.
-    private boolean publicationWasActive, publicationWasReadOnly;
-    @org.junit.jupiter.api.BeforeEach
-    void enterPublicationWriteContext() {
-        publicationWasActive = org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive();
-        publicationWasReadOnly = org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly();
-        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
-        org.springframework.transaction.support.TransactionSynchronizationManager.setCurrentTransactionReadOnly(false);
+    private static CmsTopicServiceImpl publication(CmsTopicServiceImpl service) {
+        // Complete the original fixture ports before the real publication owner is invoked.
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "themeStateKeyService",
+                new com.chengyinhub.business.service.support.ThemeStateKeyService(
+                        mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service);
+        return com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service);
     }
-    @org.junit.jupiter.api.AfterEach
-    void restorePublicationWriteContext() {
-        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(publicationWasActive);
-        org.springframework.transaction.support.TransactionSynchronizationManager.setCurrentTransactionReadOnly(publicationWasReadOnly);
-    }
-
 
     private static void stubLockedTopicRead(CmsTopicMapper topicMapper) {
         when(topicMapper.selectCmsTopicByIdForUpdate(anyLong()))
@@ -73,7 +67,7 @@ class CmsTopicRoutePublishPolicyTest {
         when(topicMapper.selectCmsTopicById(10L)).thenReturn(topic);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertThrows(IllegalArgumentException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(10L));
+        assertThrows(IllegalArgumentException.class, () -> publication(service).publishDraft(10L));
     }
 
     @Test
@@ -109,7 +103,7 @@ class CmsTopicRoutePublishPolicyTest {
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(10L));
+                () -> publication(service).publishDraft(10L));
 
         assertEquals("路线 edge impossible 没有确定性可达状态夹具 [path=routeGraphJson.edges[0], fromNodeId=1, toNodeId=2]",
                 error.getCause().getMessage());
@@ -157,7 +151,7 @@ class CmsTopicRoutePublishPolicyTest {
                 .thenReturn(Arrays.asList(node(1L, null), node(2L, null)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertEquals(true, com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(10L));
+        assertEquals(true, publication(service).publishDraft(10L));
 
         org.mockito.ArgumentCaptor<String> snapshot = org.mockito.ArgumentCaptor.forClass(String.class);
         verify(topicMapper).publishRouteSnapshot(eq(10L), snapshot.capture(), any(java.util.Date.class));
@@ -209,7 +203,7 @@ class CmsTopicRoutePublishPolicyTest {
         when(topicMapper.selectCmsTopicById(10L)).thenReturn(topic);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertThrows(IllegalArgumentException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(10L));
+        assertThrows(IllegalArgumentException.class, () -> publication(service).publishDraft(10L));
 
         verify(topicMapper, never()).publishRouteSnapshot(
                 any(Long.class), any(), any(java.util.Date.class));
@@ -240,7 +234,7 @@ class CmsTopicRoutePublishPolicyTest {
                 .thenReturn(Arrays.asList(node(1L, null), node(2L, null)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(10L);
+        publication(service).publishApprovedRouteSnapshot(10L);
 
         org.mockito.ArgumentCaptor<String> snapshot = org.mockito.ArgumentCaptor.forClass(String.class);
         verify(topicMapper).publishRouteSnapshot(eq(10L), snapshot.capture(), any(java.util.Date.class));
@@ -261,7 +255,7 @@ class CmsTopicRoutePublishPolicyTest {
         when(topicMapper.selectCmsTopicById(10L)).thenReturn(topic);
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(10L));
+                () -> publication(service).publishApprovedRouteSnapshot(10L));
 
         assertEquals("主题尚未成功通过审核，拒绝推进路线发布快照", error.getMessage());
         verify(topicMapper, never()).publishRouteSnapshot(
@@ -287,7 +281,7 @@ class CmsTopicRoutePublishPolicyTest {
         when(topicMapper.publishRouteSnapshot(eq(10L), any(String.class), any(java.util.Date.class))).thenReturn(1);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(10L);
+        publication(service).publishApprovedRouteSnapshot(10L);
 
         org.mockito.ArgumentCaptor<String> snapshot = org.mockito.ArgumentCaptor.forClass(String.class);
         verify(topicMapper).publishRouteSnapshot(eq(10L), snapshot.capture(), any(java.util.Date.class));
