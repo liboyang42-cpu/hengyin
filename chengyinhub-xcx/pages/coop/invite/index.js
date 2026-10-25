@@ -11,6 +11,8 @@ const subscribe = require('../../../utils/subscribe.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const { toTimestamp, chinaParts } = require('../../../utils/datetime.js');
+const { parseInviteId } = require('../../../utils/coop-invite-view.js');
+const { createVerificationWorkflow } = require('../../../utils/verification-readback.js');
 const RECRUIT_CLOSED_TEXT = '主题不在招商期，暂不能发起邀约';
 
 // 主题日期的短标签:后端下发不带时区的中国时间串,统一锚上海日历再取月日。
@@ -148,6 +150,7 @@ Page({
     inviteModal: { show: false, targetText: '', targetLogo: '', targetMeta: '', termsText: '' },
     sendResult: '',
     sendReceipt: '',
+    unknownTargets: [],
     // 创作者侧不提供分成选择；普通 /invite 服务端也会重建为非官方路径。
     shareMode: 0,
     shareRate: null,
@@ -156,6 +159,10 @@ Page({
 
   onLoad(options) {
     options = options || {};
+    this._unloaded = false;
+    this._hidden = false;
+    this._stopInviteWrites();
+    this.setData({ unknownTargets: [], sendResult: '', sendReceipt: '' });
     this._topicFromRoute = !!options.topicId;
     const t = options.type != null ? Number(options.type) : 1;
     const invalidLegacyType = t === 2;
@@ -203,14 +210,14 @@ Page({
         myTopics: [], clubs: [], merchants: [], topicIndex: -1,
         topicsState: this._topicFromRoute ? 'ready' : 'loading',
         targetsState: preset ? 'ready' : 'loading',
-        topicsErrorText: '', targetsErrorText: '', sendResult: '', sendReceipt: '',
+        topicsErrorText: '', targetsErrorText: '', sendResult: '', sendReceipt: '', unknownTargets: [],
       });
       this._setSelected(preset ? [preset] : []);
       if (!this._topicFromRoute) this.loadMyTopics();
       this.loadTargets();
     }
   },
-  onHide() { this._hidden = true; merchantTheme.merchantPageRestore(); },
+  onHide() { this._hidden = true; this._stopInviteWrites(); merchantTheme.merchantPageRestore(); },
   onUnload() {
     this._unloaded = true;
     this._invalidateRequests();
@@ -229,14 +236,49 @@ Page({
   _invalidateRequests() {
     this._topicsEpoch = (this._topicsEpoch || 0) + 1;
     this._targetsEpoch = (this._targetsEpoch || 0) + 1;
-    this._submitEpoch = (this._submitEpoch || 0) + 1;
+    this._stopInviteWrites();
     this._topicsLoading = false;
     this._targetsLoading = false;
   },
 
+  _stopInviteWrites() {
+    this._submitEpoch = (this._submitEpoch || 0) + 1;
+    this._submitting = false;
+    if (this._inviteWriteWorkflow) this._inviteWriteWorkflow.destroy();
+    this._inviteWriteWorkflow = null;
+    if (!this._unloaded) {
+      const unknownTargets = this.data.unknownTargets.slice();
+      if (this._inviteWritingTarget && !unknownTargets.some(t => parseInviteId(t.toId) === parseInviteId(this._inviteWritingTarget.toId))) {
+        unknownTargets.push(this._inviteWritingTarget);
+      }
+      if (this._inviteWritingTarget) this._setSelected(this.data.selected.filter(t =>
+        parseInviteId(t.toId) !== parseInviteId(this._inviteWritingTarget.toId)));
+      this.setData({ submitting: false, unknownTargets, 'inviteModal.show': false, 'resultSheet.show': false });
+    }
+    this._inviteWritingTarget = null;
+  },
+  _inviteWorkflow() {
+    if (!this._inviteWriteWorkflow) this._inviteWriteWorkflow = createVerificationWorkflow({
+      storage: wx, getOwner: () => memberId(app),
+    });
+    return this._inviteWriteWorkflow;
+  },
+  _inviteWriteKey(target) {
+    // No message, fee or other terms enter the persistent recovery record.
+    return memberId(app) + ':coop-invite:' + JSON.stringify([
+      this.data.activeType, this.data.activeType === 0 ? this.data.operationScope : '',
+      parseInviteId(this.data.topicId), parseInviteId(target.toId),
+    ]);
+  },
+  checkUnknownInvites() {
+    if (this._unloaded || this._hidden || this._dataIdentity !== identityKey()) return;
+    // The list has no client request correlation. Opening it never clears UNKNOWN.
+    this._navigateTo('/pages/coop/list/index?tab=sent');
+  },
+
   _topicsScope() { return 'topics|' + identityKey(); },
   _targetsScope() { return 'targets|' + this.data.activeType + '|' + identityKey(); },
-  _submitScope() { return [this.data.activeType, this.data.topicId, identityKey()].join('|'); },
+  _submitScope() { return [this.data.activeType, this.data.operationScope, this.data.topicId, identityKey()].join('|'); },
 
   _stopRefreshWhenSettled() {
     if (!this._topicsLoading && !this._targetsLoading) stopPullDownRefresh();
@@ -362,7 +404,8 @@ Page({
     const idx = Number(e.detail.value);
     const t = this.data.myTopics[idx];
     if (!t) return;
-    this.setData({ topicIndex: idx, topicId: t.id, topicName: t.name, topicPick: t.short || t.name, topicClosed: !!t.closed });
+    this._stopInviteWrites();
+    this.setData({ unknownTargets: [], topicIndex: idx, topicId: t.id, topicName: t.name, topicPick: t.short || t.name, topicClosed: !!t.closed });
   },
 
   onMessageInput(e) { this.setData({ message: e.detail.value }); },
@@ -512,19 +555,38 @@ Page({
   },
 
   confirmInvite() {
-    if (this._submitting) return;
+    if (this._submitting || this._hidden || this._unloaded) return;
+    if (!memberId(app) || this._dataIdentity !== identityKey()) return;
     if (Number(this.data.shareMode) === 2
         && !(Number.isFinite(Number(this.data.fixedFee)) && Number(this.data.fixedFee) > 0)) {
       this.setData({ 'inviteModal.show': false });
       toast('固定合作费用必须大于 0');
       return;
     }
-    const targets = this.data.selected.slice();
+    if (!parseInviteId(this.data.topicId) || this.data.selected.some(t => !parseInviteId(t.toId))) {
+      toast('请重新选择主题和对象'); return;
+    }
+    const seen = {};
+    const targets = this.data.selected.filter(target => {
+      const id = parseInviteId(target.toId);
+      if (seen[id]) return false;
+      seen[id] = true; return true;
+    }).map(target => Object.assign({}, target, {
+      payload: JSON.stringify(this._invitePayload(target.toId)), key: this._inviteWriteKey(target),
+    }));
     if (!targets.length) return;
     const that = this;
     const okNames = [];
     const failed = [];
     const failedTargets = [];
+    const blockedTargets = [];
+    const unknownTargets = this.data.unknownTargets.slice();
+    const addUnknown = target => {
+      if (!unknownTargets.some(t => parseInviteId(t.toId) === parseInviteId(target.toId))) {
+        unknownTargets.push({ toId: target.toId, name: target.name });
+      }
+    };
+    const workflow = this._inviteWorkflow();
     const submitScope = this._submitScope();
     const submitEpoch = (this._submitEpoch || 0) + 1;
     this._submitEpoch = submitEpoch;
@@ -533,42 +595,101 @@ Page({
     that.setData({ submitting: true, sendResult: '', sendReceipt: '', sendRecruitClosed: false });
 
     function isCurrent() {
-      return submitEpoch === that._submitEpoch && submitScope === that._submitScope();
+      return !that._unloaded && !that._hidden && submitEpoch === that._submitEpoch && submitScope === that._submitScope();
     }
 
     function step(i) {
       if (!isCurrent()) return;
       if (i >= targets.length) return finish();
       const target = targets[i];
-      app.sendRequest({
-        url: '/api/coop/invite', method: 'POST',
-        data: JSON.stringify(that._invitePayload(target.toId)),
-        header: { 'Content-Type': 'application/json' },
-        success(res) {
-          if (!isCurrent()) return;
-          if (res && res.code == '200') okNames.push(target.name);
-          else {
-            const msg = (res && res.msg) || '发起失败';
-            // RecruitmentWindowPolicy 的拒绝原文带内部字段(lifecycle/recruitDeadline),且改票价救不回来。
-            const closed = /^招商写入已关闭/.test(msg);
-            if (closed) recruitClosed = true;
-            failed.push(target.name + ':' + (closed ? RECRUIT_CLOSED_TEXT : msg));
-            failedTargets.push(target);
+      const accepted = workflow.run(target.key, function (done) {
+        that._inviteWritingTarget = { toId: target.toId, name: target.name };
+        function classify(res, httpStatus) {
+          const status = Number(httpStatus), code = Number(res && res.code);
+          const unknown = { status: 'unknown' };
+          if (res && res.reason === 'sessionChanged') return unknown;
+          if (status && status !== 200) return status >= 400 && status < 500 && status !== 408
+            ? { status: 'failed', response: res } : unknown;
+          if (code === 200 && res.data && /^[1-9]\d*$/.test(String(res.data.inviteId))) {
+            return { status: 'success', response: res };
           }
-        },
-        fail(value) {
-          if (!isCurrent()) return;
-          failed.push(target.name + ':' + failureText(value, '发起失败'));
-          failedTargets.push(target);
-        },
-        complete() { step(i + 1); }
+          // Generic business 500 does not prove rollback. This rejection is emitted before INSERT.
+          if (code >= 400 && code < 500 && code !== 408
+              || code === 500 && /^招商写入已关闭/.test(String(res && res.msg || ''))) {
+            return { status: 'failed', response: res };
+          }
+          return unknown;
+        }
+        return app.sendRequest({
+          url: '/api/coop/invite', method: 'POST', data: target.payload, autoErrorToast: false,
+          header: { 'Content-Type': 'application/json' },
+          success(res) { done(classify(res, 200)); },
+          fail(res, status) { done(status ? classify(res, status) : { status: 'unknown' }); },
+          successStatusAbnormal(res, status) { done(classify(res, status)); },
+        });
+      }, function (result) {
+        if (!isCurrent()) return;
+        that._inviteWritingTarget = null;
+        if (result.status === 'success') okNames.push(target.name);
+        else if (result.status === 'failed') {
+          const res = result.response;
+          const msg = res && res.msg || '发起失败';
+          const closed = /^招商写入已关闭/.test(msg);
+          if (closed) recruitClosed = true;
+          failed.push(target.name + ':' + (closed ? RECRUIT_CLOSED_TEXT : msg));
+          const retryTarget = Object.assign({}, target);
+          delete retryTarget.payload; delete retryTarget.key;
+          failedTargets.push(retryTarget);
+        } else if (result.status === 'blocked') {
+          // Helper guarantees start was not called. Preserve selection; never clear its stored pending.
+          const retryTarget = Object.assign({}, target);
+          delete retryTarget.payload; delete retryTarget.key;
+          blockedTargets.push(retryTarget);
+        } else { addUnknown(target); that.setData({ unknownTargets }); }
+        if (result.status !== 'failed' && result.status !== 'blocked') that._setSelected(that.data.selected.filter(t =>
+          parseInviteId(t.toId) !== parseInviteId(target.toId)));
+        step(i + 1);
       });
+      if (!accepted && isCurrent()) {
+        addUnknown(target);
+        that.setData({ unknownTargets });
+        that._setSelected(that.data.selected.filter(t => parseInviteId(t.toId) !== parseInviteId(target.toId)));
+        step(i + 1);
+      }
     }
 
     function finish() {
       if (!isCurrent()) return;
       that._submitting = false;
-      that.setData({ submitting: false });
+      that._resultScope = submitScope;
+      that.setData({ submitting: false, unknownTargets });
+      if (blockedTargets.length) {
+        that._setSelected(failedTargets.concat(blockedTargets));
+        const message = (okNames.length ? '已发起 ' + okNames.length + ' 条；' : '')
+          + (failed.length ? '明确失败 ' + failed.length + ' 条；' : '')
+          + '本次未提交 ' + blockedTargets.length + ' 个对象，请检查本机待办、存储和登录后主动再试。'
+          + (unknownTargets.length ? '另有 ' + unknownTargets.length + ' 条原邀请结果待确认，请勿重复邀请。' : '');
+        that.setData({
+          'inviteModal.show': false,
+          sendResult: message,
+          resultSheet: { show: true, kind: 'fail', title: '部分对象本次未提交',
+            sub: message, primaryText: '', secondaryText: '', duration: RESULT_SHEET_MS },
+        });
+        return;
+      }
+      if (unknownTargets.length) {
+        that._setSelected(failedTargets);
+        that.setData({
+          'inviteModal.show': false,
+          sendResult: (okNames.length ? '已发起 ' + okNames.length + ' 条；' : '')
+            + (failed.length ? '明确失败 ' + failed.length + ' 条；' : '')
+            + '结果待确认 ' + unknownTargets.length + ' 条，请查看已发出邀请；记录未出现也不能证明未发送，请勿重复邀请。',
+          resultSheet: { show: true, kind: 'fail', title: '部分邀请结果待确认',
+            sub: '已发起 ' + okNames.length + ' 条，明确失败 ' + failed.length + ' 条，待确认 ' + unknownTargets.length + ' 条。',
+            primaryText: '', secondaryText: '', duration: RESULT_SHEET_MS },
+        });
+        return;
+      }
       if (!failed.length) {
         const receipt = '已发起 ' + okNames.length + ' 条，等待对方确认';
         const one = okNames.length === 1 ? okNames[0] : (okNames.length + ' 个对象');
@@ -616,6 +737,7 @@ Page({
 
   /* 面板收掉才跳走(成功态)。失败态收掉只是露出仍开着的邀约弹层,不跳。 */
   onResultSheetClose() {
+    if (this._unloaded || this._hidden || this._resultScope !== this._submitScope()) return;
     const wasSuccess = this.data.resultSheet.kind === 'success';
     this.setData({ 'resultSheet.show': false });
     // CU-C-85:刚发出的邀约在「我发出的」;原来落到默认的「收到的」,看不到新卡就以为没发出去、再发一遍。
