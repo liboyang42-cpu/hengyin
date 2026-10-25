@@ -861,7 +861,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select id from cms_topic where id = #{id} for update
     </select>
 
-    <select id="selectCmsTopicByIdForUpdate" parameterType="Long" resultMap="CmsTopicResult">
+    <select id="selectCmsTopicByIdForUpdate" parameterType="Long" resultMap="CmsTopicResult" useCache="false" flushCache="true">
         <include refid="selectCmsTopicVo"/>
         where id = #{id} for update
     </select>

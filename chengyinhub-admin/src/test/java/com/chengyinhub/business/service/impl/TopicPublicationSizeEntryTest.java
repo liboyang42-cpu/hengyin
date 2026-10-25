@@ -61,7 +61,7 @@ class TopicPublicationSizeEntryTest {
     void approvedFirstPublicationRejectsOverBudgetBeforeAdvancingSnapshot() {
         Fixture f = new Fixture(31, 300);
         assertThrows(IllegalStateException.class, () -> f.service.publishApprovedRouteSnapshot(TOPIC));
-        verify(f.topics).selectCmsTopicById(TOPIC);
+        verify(f.topics, atLeastOnce()).selectCmsTopicByIdForUpdate(TOPIC);
         f.assertNoPublicationEffects();
     }
 
@@ -124,6 +124,7 @@ class TopicPublicationSizeEntryTest {
             topic.setStatus(1);
             topic.setUserStatus(1);
             when(topics.selectCmsTopicById(TOPIC)).thenReturn(topic);
+            when(topics.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
             when(topics.lockTopicContentBudget(TOPIC)).thenReturn(TOPIC);
             when(topics.publishRouteSnapshot(eq(TOPIC), any(), any())).thenReturn(1);
             when(topics.updateCmsTopic(any())).thenReturn(1);

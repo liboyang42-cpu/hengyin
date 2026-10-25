@@ -1111,7 +1111,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     /** A publication operation owns its compiler inputs; it never captures this runtime or changes transactions. */
     private TopicRoutePublicationCompiler publicationCompiler() {
         return new TopicRoutePublicationCompiler(nodeMapper, templateMapper, cmsTopicChapterMapper,
-                themeStateKeyMapper, clock, JSON, validator);
+                themeStateKeyMapper, clock, JSON, validator, topicMapper);
     }
 
     @Override

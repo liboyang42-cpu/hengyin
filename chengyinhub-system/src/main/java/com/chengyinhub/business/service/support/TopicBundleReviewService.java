@@ -85,7 +85,11 @@ public class TopicBundleReviewService {
     }
 
     public Submission freezeForSubmission(Long topicId, Long ownerId) {
-        CmsTopic topic = topicMapper.selectCmsTopicById(topicId);
+        boolean currentRead = org.springframework.transaction.support.TransactionSynchronizationManager
+                .isActualTransactionActive()
+                && !org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly();
+        CmsTopic topic = currentRead ? topicMapper.selectCmsTopicByIdForUpdate(topicId)
+                : topicMapper.selectCmsTopicById(topicId);
         if (topic == null || Integer.valueOf(2).equals(topic.getDelFlag())) {
             throw new IllegalStateException("主题不存在或已删除");
         }
@@ -96,14 +100,15 @@ public class TopicBundleReviewService {
         CmsTopicChapter chapterQuery = new CmsTopicChapter();
         chapterQuery.setTopicId(topicId);
         List<CmsTopicChapter> chapters = new ArrayList<CmsTopicChapter>(
-                safe(chapterMapper.selectCmsTopicChapterList(chapterQuery)));
+                safe(currentRead ? chapterMapper.selectByTopicForUpdate(topicId)
+                        : chapterMapper.selectCmsTopicChapterList(chapterQuery)));
         sortChapters(chapters);
         CmsTopicNode nodeQuery = new CmsTopicNode();
         nodeQuery.setTopicId(topicId);
         List<CmsTopicNode> nodes = new ArrayList<CmsTopicNode>(safe(nodeMapper.selectCmsTopicNodeList(nodeQuery)));
         sortNodes(nodes);
         Map<Long, Long> merchantOwners = Collections.emptyMap();
-        if (nodes.stream().anyMatch(node -> node.getMerchantMemberId() != null && !ownerId.equals(node.getMerchantMemberId()))) {
+        if (currentRead || nodes.stream().anyMatch(node -> node.getMerchantMemberId() != null && !ownerId.equals(node.getMerchantMemberId()))) {
             CmsTopic locked = topicMapper.selectCmsTopicByIdForUpdate(topicId);
             if (locked == null || !ownerId.equals(locked.getMemberId()) || Integer.valueOf(2).equals(locked.getDelFlag())) throw stale();
             topic = locked;
@@ -132,9 +137,19 @@ public class TopicBundleReviewService {
 
         List<Long> templateIds = new ArrayList<Long>(referencedTemplateIds);
         Collections.sort(templateIds);
+        Map<Long, CmsMemberTemplate> currentTemplates = new LinkedHashMap<Long, CmsMemberTemplate>();
+        if (currentRead && !templateIds.isEmpty()) {
+            List<CmsMemberTemplate> locked = safe(templateMapper.selectCmsMemberTemplateByIdsForUpdate(templateIds));
+            if (locked.size() != templateIds.size()) throw stale();
+            for (CmsMemberTemplate template : locked) {
+                if (template == null || !referencedTemplateIds.contains(template.getId())
+                        || currentTemplates.put(template.getId(), template) != null) throw stale();
+            }
+        }
         List<CmsMemberTemplate> templates = new ArrayList<CmsMemberTemplate>();
         for (Long templateId : templateIds) {
-            CmsMemberTemplate template = templateMapper.selectCmsMemberTemplateById(templateId);
+            CmsMemberTemplate template = currentRead ? currentTemplates.get(templateId)
+                    : templateMapper.selectCmsMemberTemplateById(templateId);
             validateTemplate(template, templateId, ownerId, merchantOwners.get(templateId));
             validateTemplateReferences(nodes, template, ownerId);
             templates.add(template);
@@ -302,6 +317,11 @@ public class TopicBundleReviewService {
         topicJson.remove("lifecycle");
         topicJson.remove("publishedRouteGraphJson"); topicJson.remove("publishedConfigVersion");
         topicJson.remove("routePublishedAt");
+        // This authored field is @JsonIgnore on the API entity. Bind it explicitly to review,
+        // while leaving the derived publishedThemeRuntimeConfigJson outside the content hash.
+        if (StringUtils.isNotBlank(topic.getThemeRuntimeConfigJson())) {
+            topicJson.set("themeRuntimeConfig", parseJson(topic.getThemeRuntimeConfigJson(), "主题运行配置 JSON 非法"));
+        }
         content.set("topic", topicJson);
 
         Map<Long, List<CmsTopicNode>> nodesByChapter = new LinkedHashMap<Long, List<CmsTopicNode>>();

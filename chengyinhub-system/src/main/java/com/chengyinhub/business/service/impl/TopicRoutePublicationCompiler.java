@@ -50,10 +50,74 @@ final class TopicRoutePublicationCompiler {
     // Reuse the caller's existing serializer/validator; snapshot bytes and exception contracts stay the same.
     private final ObjectMapper JSON;
     private final TopicRouteConfigValidator validator;
+    /** One publication/authoring transaction uses one current, locked child projection.
+     * Preview calls outside a writable transaction retain their existing read-only behavior. */
+    private CurrentContent currentContent;
+    private final com.chengyinhub.business.mapper.CmsTopicMapper topicMapper;
+    private static final class CurrentContent {
+        final Long topicId;
+        final CmsTopic topic;
+        final List<CmsTopicChapter> chapters;
+        final List<CmsTopicNode> nodes;
+        final Map<Long, CmsMemberTemplate> templates;
+        CurrentContent(CmsTopic topic, List<CmsTopicChapter> chapters, List<CmsTopicNode> nodes,
+                Map<Long, CmsMemberTemplate> templates) {
+            this.topic = topic;
+            this.topicId = topic.getId();
+            this.chapters = chapters;
+            this.nodes = nodes;
+            this.templates = templates;
+        }
+    }
+
+    private <T> T withCurrentContent(Long topicId, java.util.function.Supplier<T> operation) {
+        if (currentContent != null) {
+            if (!currentContent.topicId.equals(topicId)) throw new IllegalStateException("发布内容主题不一致");
+            return operation.get();
+        }
+        if (!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()
+                || org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly())
+            return operation.get();
+        if (topicId == null || cmsTopicChapterMapper == null || nodeMapper == null)
+            throw new IllegalStateException("发布内容当前读依赖缺失");
+        // Authoring also calls compileTemplateRules directly. Always acquire topic first,
+        // rather than relying on one publication caller already holding the parent lock.
+        if (topicMapper == null) throw new IllegalStateException("发布主题当前读依赖缺失");
+        CmsTopic currentTopic = topicMapper.selectCmsTopicByIdForUpdate(topicId);
+        if (currentTopic == null || !topicId.equals(currentTopic.getId()))
+            throw new IllegalStateException("发布主题当前版本缺失");
+        List<CmsTopicChapter> chapters = cmsTopicChapterMapper.selectByTopicForUpdate(topicId);
+        List<CmsTopicNode> nodes = nodeMapper.selectByTopicForUpdate(topicId);
+        if (chapters == null || nodes == null) throw new IllegalStateException("发布内容当前读失败");
+        Set<Long> referencedIds = new java.util.TreeSet<>();
+        for (CmsTopicNode node : nodes) {
+            if (node.getTemplateId() != null && node.getTemplateId() > 0) referencedIds.add(node.getTemplateId());
+        }
+        List<Long> ids = new ArrayList<>(referencedIds);
+        Map<Long, CmsMemberTemplate> templates = new LinkedHashMap<>();
+        if (!ids.isEmpty()) {
+            if (templateMapper == null) throw new IllegalStateException("发布玩法当前读依赖缺失");
+            List<CmsMemberTemplate> rows = templateMapper.selectCmsMemberTemplateByIdsForUpdate(ids);
+            if (rows == null || rows.size() != ids.size()) throw new IllegalStateException("发布玩法当前版本缺失");
+            for (CmsMemberTemplate row : rows) {
+                if (row == null || !referencedIds.contains(row.getId()) || templates.put(row.getId(), row) != null)
+                    throw new IllegalStateException("发布玩法当前身份不一致");
+            }
+        }
+        currentContent = new CurrentContent(currentTopic, new ArrayList<>(chapters), new ArrayList<>(nodes), templates);
+        try {
+            return operation.get();
+        } finally {
+            currentContent = null;
+        }
+    }
+
 
     TopicRoutePublicationCompiler(CmsTopicNodeMapper nodeMapper, CmsMemberTemplateMapper templateMapper,
             CmsTopicChapterMapper cmsTopicChapterMapper, ThemeStateKeyMapper themeStateKeyMapper,
-            Clock clock, ObjectMapper json, TopicRouteConfigValidator validator) {
+            Clock clock, ObjectMapper json, TopicRouteConfigValidator validator,
+            com.chengyinhub.business.mapper.CmsTopicMapper topicMapper) {
+        this.topicMapper=topicMapper;
         this.nodeMapper=nodeMapper; this.templateMapper=templateMapper;
         this.cmsTopicChapterMapper=cmsTopicChapterMapper; this.themeStateKeyMapper=themeStateKeyMapper;
         this.clock=clock; this.JSON=json; this.validator=validator;
@@ -106,6 +170,14 @@ final class TopicRoutePublicationCompiler {
 
     /** 节点绑定模板的实体(按模板 id);templateMapper 缺失 / 无绑定返回空表。 */
     private Map<Long, CmsMemberTemplate> templateEntities(List<CmsTopicNode> liveNodes) {
+        if (currentContent != null) {
+            Map<Long, CmsMemberTemplate> selected = new LinkedHashMap<>();
+            for (CmsTopicNode node : liveNodes) {
+                if (currentContent.templates.containsKey(node.getTemplateId()))
+                    selected.put(node.getTemplateId(), currentContent.templates.get(node.getTemplateId()));
+            }
+            return selected;
+        }
         Map<Long, CmsMemberTemplate> byId = new LinkedHashMap<Long, CmsMemberTemplate>();
         if (templateMapper == null) return byId;
         Set<Long> templateIds = new LinkedHashSet<Long>();
@@ -123,8 +195,12 @@ final class TopicRoutePublicationCompiler {
     }
 
     public String compileTemplateRules(CmsTopic topic) {
+        return withCurrentContent(topic.getId(), () -> compileCurrentTemplateRules(currentContent == null ? topic : currentContent.topic));
+    }
+
+    private String compileCurrentTemplateRules(CmsTopic topic) {
         CmsTopicNode query = new CmsTopicNode(); query.setTopicId(topic.getId());
-        List<CmsTopicNode> actual = nodeMapper.selectCmsTopicNodeList(query);
+        List<CmsTopicNode> actual = currentContent == null ? nodeMapper.selectCmsTopicNodeList(query) : currentContent.nodes;
         if (actual == null) actual = Collections.emptyList();
         actual = new ArrayList<>(actual);
         actual.sort(Comparator.comparing(CmsTopicNode::getSortId, Comparator.nullsLast(Long::compareTo)).thenComparing(CmsTopicNode::getId, Comparator.nullsLast(Long::compareTo)));
@@ -279,7 +355,8 @@ final class TopicRoutePublicationCompiler {
 
     private List<CmsTopicChapter> runtimeChapters(Long topicId) {
         CmsTopicChapter query = new CmsTopicChapter(); query.setTopicId(topicId);
-        List<CmsTopicChapter> rows = cmsTopicChapterMapper == null ? null : cmsTopicChapterMapper.selectCmsTopicChapterList(query);
+        List<CmsTopicChapter> rows = currentContent != null && currentContent.topicId.equals(topicId)
+                ? currentContent.chapters : cmsTopicChapterMapper == null ? null : cmsTopicChapterMapper.selectCmsTopicChapterList(query);
         List<CmsTopicChapter> chapters = rows == null ? new ArrayList<>() : new ArrayList<>(rows);
         chapters.sort(Comparator.comparing(CmsTopicChapter::getSortId,Comparator.nullsLast(Long::compareTo)).thenComparing(CmsTopicChapter::getId,Comparator.nullsLast(Long::compareTo)));
         return chapters;
@@ -393,6 +470,10 @@ final class TopicRoutePublicationCompiler {
     }
 
     public String freezePublication(CmsTopic topic, String routeSnapshot) {
+        return withCurrentContent(topic.getId(), () -> freezeCurrentPublication(currentContent == null ? topic : currentContent.topic, routeSnapshot));
+    }
+
+    private String freezeCurrentPublication(CmsTopic topic, String routeSnapshot) {
         List<CmsTopicNode> liveNodes = nodes(topic.getId());
         if (liveNodes.isEmpty()) throw new IllegalArgumentException("主题没有可运行节点");
         JourneyTemplateProbe publicationProbe=new JourneyTemplateProbe(liveNodes);
@@ -549,10 +630,7 @@ final class TopicRoutePublicationCompiler {
     private Map<Long, ObjectNode> storyNarrativeByNode(CmsTopic topic) {
         Map<Long, ObjectNode> byNode = new LinkedHashMap<Long, ObjectNode>();
         if (cmsTopicChapterMapper == null || topic == null || topic.getId() == null) return byNode;
-        CmsTopicChapter probe = new CmsTopicChapter();
-        probe.setTopicId(topic.getId());
-        List<CmsTopicChapter> chapters = cmsTopicChapterMapper.selectCmsTopicChapterList(probe);
-        if (chapters == null) return byNode;
+        List<CmsTopicChapter> chapters = runtimeChapters(topic.getId());
         for (CmsTopicChapter chapter : chapters) {
             if (chapter == null || chapter.getBlocksJson() == null || chapter.getBlocksJson().trim().isEmpty()) {
                 continue;
@@ -599,7 +677,7 @@ final class TopicRoutePublicationCompiler {
                 config.set("legacyMedals", root.path("themeConfig").path("legacyMedals").deepCopy());
                 root.set("themeConfig", config);
                 applySceneNodes(root, config);
-                root.set("themeConfig",mergeFrozenTemplateRules(root,config,templateIds,finalChapter(topic,runtimeChapters(topic.getId()))));
+                root.set("themeConfig",mergeFrozenTemplateRules(root,config,templateIds,null));
                 freezeClueContent(root,liveNodes,templatesById);
             }
             return write(root);
@@ -641,9 +719,7 @@ final class TopicRoutePublicationCompiler {
         Long openingId = JourneyStory.openingChapterId(story);
         freezeThoughtChapters(root, topic, liveNodes, openingId, story);
         if (openingId != null) {
-            CmsTopicChapter chapterProbe = new CmsTopicChapter(); chapterProbe.setTopicId(topic.getId());
-            List<CmsTopicChapter> chapters = cmsTopicChapterMapper == null ? null
-                    : cmsTopicChapterMapper.selectCmsTopicChapterList(chapterProbe);
+            List<CmsTopicChapter> chapters = runtimeChapters(topic.getId());
             CmsTopicChapter opening = null;
             if (chapters != null) for (CmsTopicChapter chapter : chapters) {
                 if (openingId.equals(chapter.getId())) { opening = chapter; break; }
@@ -731,9 +807,7 @@ final class TopicRoutePublicationCompiler {
         // 独立保留结局正文；不加入玩家推进章节列表，读侧仅投影已选结局。
         ObjectNode endingChapters = root.putObject("endingChapters");
         if (cmsTopicChapterMapper == null) return;
-        CmsTopicChapter probe = new CmsTopicChapter(); probe.setTopicId(topic.getId());
-        List<CmsTopicChapter> rows = cmsTopicChapterMapper.selectCmsTopicChapterList(probe);
-        if (rows == null) return;
+        List<CmsTopicChapter> rows = runtimeChapters(topic.getId());
         List<CmsTopicChapter> chapters = new ArrayList<CmsTopicChapter>(rows);
         chapters.sort(Comparator.comparing(CmsTopicChapter::getSortId, Comparator.nullsLast(Long::compareTo))
                 .thenComparing(CmsTopicChapter::getId, Comparator.nullsLast(Long::compareTo)));
@@ -837,7 +911,13 @@ final class TopicRoutePublicationCompiler {
 
     List<CmsTopicNode> nodes(Long topicId) {
         CmsTopicNode probe = new CmsTopicNode(); probe.setTopicId(topicId); probe.setStatus(1L);
-        List<CmsTopicNode> result = nodeMapper.selectCmsTopicNodeList(probe);
+        List<CmsTopicNode> result;
+        if (currentContent != null && currentContent.topicId.equals(topicId)) {
+            result = new ArrayList<>();
+            for (CmsTopicNode node : currentContent.nodes) {
+                if (Long.valueOf(1L).equals(node.getStatus())) result.add(node);
+            }
+        } else result = nodeMapper.selectCmsTopicNodeList(probe);
         if (result == null) return Collections.emptyList();
         result = new ArrayList<CmsTopicNode>(result);
         result.sort(Comparator.comparingLong(n -> n.getSortId() == null ? 0L : n.getSortId())); return result;

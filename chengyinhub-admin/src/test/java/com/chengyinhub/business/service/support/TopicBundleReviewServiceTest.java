@@ -342,6 +342,42 @@ class TopicBundleReviewServiceTest {
         verify(templateMapper).approveBundledDraft(100L, 7L);
     }
 
+    @Test
+    void authoredRuntimeDefinitionIsBoundEvenThoughTheApiEntityHidesIt() throws Exception {
+        topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"capacity\":3}");
+        TopicBundleReviewService.Submission submission = service.freezeForSubmission(10L, 7L);
+        JsonNode frozen = new ObjectMapper().readTree(submission.getSnapshotJson());
+        assertEquals(3, frozen.path("topic").path("content").path("themeRuntimeConfig").path("capacity").asInt());
+        stubLockedRows();
+        topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"capacity\":4}");
+        assertThrows(IllegalStateException.class,
+                () -> service.applyDecision(10L, 7L, submission.getSnapshotJson(), true));
+        verify(templateMapper, never()).approveBundledDraft(anyLong(), anyLong());
+    }
+
+    @Test
+    void derivedPublicationChangesDoNotInvalidateTheReviewedAuthorDefinition() {
+        topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"capacity\":3}");
+        TopicBundleReviewService.Submission submission = service.freezeForSubmission(10L, 7L);
+        stubLockedRows();
+        topic.setPublishedThemeRuntimeConfigJson("{\"schemaVersion\":1,\"capacity\":9}");
+        topic.setPublishedConfigVersion(99L);
+        topic.setPublishedRouteGraphJson("{\"runtimeSnapshotVersion\":1}");
+        when(templateMapper.approveBundledDraft(100L, 7L)).thenReturn(1);
+        service.applyDecision(10L, 7L, submission.getSnapshotJson(), true);
+        verify(templateMapper).approveBundledDraft(100L, 7L);
+    }
+
+    @Test
+    void preBindingSubmissionWithAuthoredRuntimeMustBeResubmittedRatherThanSilentlyApproved() {
+        TopicBundleReviewService.Submission old = service.freezeForSubmission(10L, 7L);
+        stubLockedRows();
+        topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"capacity\":3}");
+        assertThrows(IllegalStateException.class,
+                () -> service.applyDecision(10L, 7L, old.getSnapshotJson(), true));
+        verify(templateMapper, never()).approveBundledDraft(anyLong(), anyLong());
+    }
+
     private void stubLockedRows() {
         when(topicMapper.selectCmsTopicByIdForUpdate(10L)).thenReturn(topic);
         CmsTopicChapter chapter = chapterMapper.selectCmsTopicChapterList(new CmsTopicChapter()).get(0);

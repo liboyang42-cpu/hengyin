@@ -319,7 +319,7 @@ public class TopicPublicationService {
 
 
     public void publishApprovedRouteSnapshot(Long topicId) {
-        CmsTopic topic = cmsTopicMapper.selectCmsTopicById(topicId);
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
         if (topic == null || !Integer.valueOf(1).equals(topic.getStatus())) {
             throw new IllegalStateException("主题尚未成功通过审核，拒绝推进路线发布快照");
         }
@@ -330,6 +330,9 @@ public class TopicPublicationService {
     private void publishValidatedRouteSnapshot(CmsTopic topic) {
         if (topic == null) throw new IllegalStateException("主题不存在");
         Long topicId = topic.getId();
+        CmsTopic current = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
+        if (current == null || !topicId.equals(current.getId())) throw new IllegalStateException("发布主题当前版本不存在");
+        topic = current;
         publicationContentGuard.assertStateKeysRegistered(topic);
         publicationContentGuard.assertThoughtRefsResolvable(topic);
         // R8-STORY:剧情配置的章节 / NPC 引用同上

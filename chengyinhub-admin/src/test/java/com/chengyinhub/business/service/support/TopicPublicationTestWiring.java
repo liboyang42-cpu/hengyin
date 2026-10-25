@@ -64,6 +64,15 @@ public final class TopicPublicationTestWiring {
             Mockito.when(topicMapper.lockTopicContentBudget(org.mockito.ArgumentMatchers.anyLong()))
                     .thenAnswer(call -> call.getArgument(0));
         }
+        // Unit-only current-read port: retain the fixture's original topic/owner/status rows.
+        // Real MySQL mappers and spies always execute their real FOR UPDATE statement.
+        if (topicMapper != null && Mockito.mockingDetails(topicMapper).isMock()
+                && !Mockito.mockingDetails(topicMapper).isSpy()
+                && Mockito.mockingDetails(topicMapper).getStubbings().stream().noneMatch(stub ->
+                "selectCmsTopicByIdForUpdate".equals(stub.getInvocation().getMethod().getName()))) {
+            Mockito.when(topicMapper.selectCmsTopicByIdForUpdate(org.mockito.ArgumentMatchers.anyLong()))
+                    .thenAnswer(call -> topicMapper.selectCmsTopicById(call.getArgument(0)));
+        }
         TopicContentWriteGuard guard = (TopicContentWriteGuard) ReflectionTestUtils.getField(facade, "contentWriteGuard");
         if (guard == null) {
             guard = new TopicContentWriteGuard(topicMapper,
