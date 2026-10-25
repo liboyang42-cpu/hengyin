@@ -1,0 +1,78 @@
+{
+  "repository": "liboyang42-cpu/hengyin",
+  "parent": "ecff37372bfae059faa38e9eb420894cde1bcee9",
+  "parent_tree": "17ef62c85313de126c56878fb336327ae05131f0",
+  "code_files": 3,
+  "delivery_files": 3,
+  "files": [
+    {
+      "path": "ci/restore_application_http_runtime.py",
+      "preimage_git_blob_sha1": "fff96bb2311479b2630fc54ea7bb079460ac9a38",
+      "postimage_git_blob_sha1": "cdbd2458f87e83c4c905c574c3b1965fa9803393",
+      "preimage_sha256": "bd0932b6c5f58bbe6749be80f42b3b223bede93e948c9be874e9a94c7c91b2bd",
+      "postimage_sha256": "710b0fb3560f9bdbe391b66670485b11f375cd4ddc785bea67955784893a4fc5",
+      "postimage_bytes": 33559
+    },
+    {
+      "path": "ci/restore_application_http_probe.py",
+      "preimage_git_blob_sha1": "a414b5056f9cc379e731fa86a16455f13937c1c7",
+      "postimage_git_blob_sha1": "6a280a2c9500ee9df1f57ea560331d0e0737d125",
+      "preimage_sha256": "b69115820e18c703487509477214b44cdf7fe2b0f427389e2ab1d8abce13716b",
+      "postimage_sha256": "b7a056f2772a4c09b047485be2e508e764e2b33a9c5ca84afcc639e9dccefa08",
+      "postimage_bytes": 58643
+    },
+    {
+      "path": "ci/test_restore_application_http_probe.py",
+      "preimage_git_blob_sha1": "63aa3c2785d51bd72ab01666ae99a3b1c0da7e33",
+      "postimage_git_blob_sha1": "018924eeb316172a503dd9c90aa80cd25f7820ab",
+      "preimage_sha256": "7bd72ec3a91f745416db4e90dd8f5ad3b20d4042f1236817c6b275df10245383",
+      "postimage_sha256": "a8daf4c235b675c9ee2320a46a0f2bf4839d58785aeca8bd44853fbaa7d3d861",
+      "postimage_bytes": 75276
+    }
+  ],
+  "code_patch_bytes": 60943,
+  "code_patch_sha256": "5b9cd8e3bb7b654d44a23df7c1d554e94e0780e855ec452f4304a152d6b77f90",
+  "readme_sha256": "bd57e47cbcd448201a18c64dc952d4b453b2ee9478e9115eae4face5f2f80867",
+  "canonical_tool_sha256": "fead7bfce99af5aadeb15b696190fade40109f37d25233aa401116d10ea1279c",
+  "canonical_tool_modified": false,
+  "java_modified": false,
+  "new_python_control_methods": 18,
+  "original_cases_and_assertions": "retained; internal snapshot signature now requires exact expected UUID; old three source arguments still asserted plus fourth UUID; source stop explicitly remove=False; fixtures add real launch/history/log prerequisites",
+  "historical_target_difference_cause": "UNKNOWN; original artifact did not contain target rows/high-water differences",
+  "confirmed_source_gaps": [
+    "I_S AUTO_INCREMENT freshness unproven without same-session effective expiry0 and identity readback",
+    "Removing source stopped CID before canonical compare loses original outer-owner log capture opportunity"
+  ],
+  "source_changes": [
+    "Same-connection SET SESSION / effective integer0 / expected UUID and DATABASE / complete table metadata",
+    "Complete typed snapshot and high-water equality retained; canonical-byte type strictness added",
+    "Bounded safe source-roster mismatch diagnosis with complete snapshot hashes and original identities/receipts/stop",
+    "Every stopped original CID privately captures and readback-verifies complete log before removal; repeated stops verify immutable history",
+    "Safe history is persisted before verified private erasure; final stopped CID retained for unchanged outer logs"
+  ],
+  "checks": {
+    "preimage_blob_identity": "MATCH",
+    "code_patch_apply_check": "CLEAN",
+    "diff_whitespace": "NO_DIAGNOSTICS",
+    "finite_secret_pattern_scan": "NO_MATCHES",
+    "full_gitleaks_scan": "NOT_RUN"
+  },
+  "tests": "NOT_RUN",
+  "parse_import_checks": "NOT_RUN",
+  "compile": "NOT_RUN",
+  "java_db_http_docker_fault_ci": "NOT_RUN",
+  "limits": [
+    "No current target repair, no dropped tables, no ignored AUTO_INCREMENT, no canonical-tool edits",
+    "Diagnostic32-table/64KiB cap limits evidence only, never comparison",
+    "Original180s readiness/20s stop/30s command/137 rejection/five boots and original money/UUID/UNKNOWN/gap/cleanup retained",
+    "Private complete log maximum8MiB; original capture command20s; no claim of new streaming transport hard deadline",
+    "No production release or RPO/RTO/UAT claim"
+  ],
+  "limitations": [
+    "No new actual current allocator/restore/log lifecycle execution proof",
+    "Original target mismatch cannot be assigned to cache without evidence",
+    "Per-boot raw logs remain private and are erased only after complete safe proof persistence; no new public raw log channel",
+    "Outer UNAVAILABLE still rejects; absence does not mean business acceptance",
+    "Root must perform full secret scan and unified approved verification"
+  ]
+}

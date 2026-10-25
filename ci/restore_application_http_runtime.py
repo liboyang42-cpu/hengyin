@@ -136,6 +136,7 @@ class ApplicationSlot:
         self.deadline=time.monotonic()+1500
         self.cid=None;self.boots=[];self.removed=[];self.owned=[];self.process=None
         self.launch=None;self.pending_process=None;self.ready_for_current_launch=False;self.startup_observation=None
+        self.stop_history=[]
         self.source=self.auth.mysql_endpoint(name,suffix='mysql')
         self.target=self.auth.mysql_endpoint(name,suffix='restore-mysql')
         require(self.source['id']!=self.target['id'] and self.source['networkId']==self.target['networkId'], 'distinct same-network DBs')
@@ -306,14 +307,89 @@ class ApplicationSlot:
                 or (not self.ready_for_current_launch and self.pending_process is not None),
                 'actual child boot identity')
         self.stop_proof_kind='READY_JVM_EXIT_CONFIRMED' if self.ready_for_current_launch else 'PRE_READY_JVM_EXIT_CONFIRMED'
+        self.preserve_stopped_log()
         if not remove:return # Original outer cleanup must still collect this exact container's logs.
         self.auth.command(self.auth.DOCKER+['rm',self.cid],timeout=15)
         self.absence();self.removed.append(self.cid);self.cid=None;self.process=None;self.pending_process=None
 
+    def read_complete_application_log(self):
+        # Same exact-CID Docker log boundary as the original owner; never publish its raw contents.
+        value=subprocess.run(self.auth.DOCKER+['logs',self.cid],capture_output=True,timeout=20)
+        require(value.returncode==0,'complete application logs unavailable')
+        raw=value.stdout+value.stderr
+        require(len(raw)<=8*1024*1024,'complete application logs exceed private evidence bound')
+        return raw
+
+    def private_log_path(self, cid):
+        require(cid in self.owned and len(self.owned)<=5,'exact original log CID')
+        return self.root/('boot-log-'+str(self.owned.index(cid))+'.private')
+
+    def verify_private_log(self, record):
+        path=self.private_log_path(record['cid'])
+        require(path.is_file() and not path.is_symlink() and path.stat().st_mode & 0o777==0o600,
+                'original private application log changed')
+        with path.open('rb') as stream:raw=stream.read(8*1024*1024+1)
+        require(len(raw)<=8*1024*1024 and len(raw)==record['log']['bytes']
+                and hashlib.sha256(raw).hexdigest()==record['log']['sha256'],
+                'original private application log changed')
+
+    def preserve_stopped_log(self):
+        # Repeated source/final stops are read-only verification, not a second capture or removal.
+        proof=self.process if self.ready_for_current_launch else self.pending_process
+        obj=self.inspect(self.cid)
+        require(proof is not None and proof['cid']==self.cid and obj['Id']==self.cid
+                and obj['Name']=='/'+self.name+'-app' and obj['Config']['Image']==JDK
+                and obj['Config']['Labels'].get('chengyin.auth-recovery')==self.name
+                and 'GITHUB_SHA='+proof['sourceSha'] in obj['Config']['Env']
+                and 'CHENGYIN_RESTORE_MODE='+self.launch['restoreMode'] in obj['Config']['Env']
+                and not obj['State']['Running'] and not obj['State']['Restarting'] and not obj['State']['OOMKilled']
+                and obj['State']['Pid']==0 and obj['State']['ExitCode']==self.stopped['exitCode'],
+                'actual child boot identity')
+        config_path=self.root/'config.json'
+        require(self.jar.is_file() and not self.jar.is_symlink()
+                and hashlib.sha256(self.jar.read_bytes()).hexdigest()==proof['jarSha256']
+                and config_path.is_file() and not config_path.is_symlink()
+                and hashlib.sha256(config_path.read_bytes()).hexdigest()==proof['configSha256'],
+                'actual child boot identity')
+        if self.ready_for_current_launch:
+            ready_path=self.root/'ready.json'
+            require(ready_path.is_file() and not ready_path.is_symlink()
+                    and hashlib.sha256(ready_path.read_bytes()).hexdigest()==proof['readySha256'],
+                    'actual child boot identity')
+        previous=next((row for row in self.stop_history if row['cid']==self.cid),None)
+        if previous is not None:
+            require(previous['stopped']==self.stopped and previous['proofKind']==self.stop_proof_kind
+                    and previous['identity']==proof,
+                    'original stopped application evidence changed')
+            self.verify_private_log(previous)
+            return previous
+        require(self.cid in self.owned and len(self.stop_history)<5,'exact original stopped CID')
+        proof=self.process if self.ready_for_current_launch else self.pending_process
+        require(proof is not None and proof['cid']==self.cid,'actual child boot identity')
+        raw=self.read_complete_application_log()
+        path=self.private_log_path(self.cid)
+        require(not path.exists() and not path.is_symlink(),'exclusive private application log')
+        with path.open('xb') as stream:
+            path.chmod(0o600);stream.write(raw);stream.flush();os.fsync(stream.fileno())
+        record={'cid':self.cid,'bootId':proof.get('bootId'),'sourceSha':proof['sourceSha'],
+                'jarSha256':proof['jarSha256'],'identity':dict(proof),'proofKind':self.stop_proof_kind,
+                'stopped':dict(self.stopped),'log':{'result':'COMPLETE_PRIVATE_CAPTURE_VERIFIED',
+                'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest(),
+                'summary':summarize_application_log(raw)}}
+        self.verify_private_log(record)
+        self.stop_history.append(record)
+        return record
+
+    def verify_all_stopped_logs(self):
+        require([row['cid'] for row in self.stop_history]==self.owned,'every original app log required before private erasure')
+        for row in self.stop_history:self.verify_private_log(row)
+
     def diagnostic_summary(self):
         """Observe the exact existing app only; outer owner still preserves/removes its raw log."""
         if self.cid is None:
-            return {'result':'NO_CURRENT_CID_OBSERVATION','startAbsenceProven':False}
+            result={'result':'NO_CURRENT_CID_OBSERVATION','startAbsenceProven':False}
+            if self.stop_history:result['lastStoppedEvidence']=self.stop_history[-1]
+            return result
         obj=self.inspect(self.cid)
         require(obj['Id']==self.cid and obj['Name']=='/'+self.name+'-app'
                 and obj['Config']['Labels'].get('chengyin.auth-recovery')==self.name
@@ -323,6 +399,7 @@ class ApplicationSlot:
         state=obj['State']
         result={'result':'EXACT_APP_OBSERVED','cid':self.cid,
                 'state':{key:state[key] for key in ('Running','OOMKilled','Restarting','Pid','ExitCode')}}
+        if self.stop_history:result['lastStoppedEvidence']=self.stop_history[-1]
         if getattr(self,'launch',None) is not None:
             observed=self.read_startup_observation()
             if observed is not None:result['childStartup']=observed

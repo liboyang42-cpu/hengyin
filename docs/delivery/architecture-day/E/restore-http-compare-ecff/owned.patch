@@ -1,0 +1,822 @@
+diff --git a/ci/restore_application_http_runtime.py b/ci/restore_application_http_runtime.py
+index fff96bb2311479b2630fc54ea7bb079460ac9a38..cdbd2458f87e83c4c905c574c3b1965fa9803393 100644
+--- a/ci/restore_application_http_runtime.py
++++ b/ci/restore_application_http_runtime.py
+@@ -136,6 +136,7 @@ class ApplicationSlot:
+         self.deadline=time.monotonic()+1500
+         self.cid=None;self.boots=[];self.removed=[];self.owned=[];self.process=None
+         self.launch=None;self.pending_process=None;self.ready_for_current_launch=False;self.startup_observation=None
++        self.stop_history=[]
+         self.source=self.auth.mysql_endpoint(name,suffix='mysql')
+         self.target=self.auth.mysql_endpoint(name,suffix='restore-mysql')
+         require(self.source['id']!=self.target['id'] and self.source['networkId']==self.target['networkId'], 'distinct same-network DBs')
+@@ -306,14 +307,89 @@ class ApplicationSlot:
+                 or (not self.ready_for_current_launch and self.pending_process is not None),
+                 'actual child boot identity')
+         self.stop_proof_kind='READY_JVM_EXIT_CONFIRMED' if self.ready_for_current_launch else 'PRE_READY_JVM_EXIT_CONFIRMED'
++        self.preserve_stopped_log()
+         if not remove:return # Original outer cleanup must still collect this exact container's logs.
+         self.auth.command(self.auth.DOCKER+['rm',self.cid],timeout=15)
+         self.absence();self.removed.append(self.cid);self.cid=None;self.process=None;self.pending_process=None
+ 
++    def read_complete_application_log(self):
++        # Same exact-CID Docker log boundary as the original owner; never publish its raw contents.
++        value=subprocess.run(self.auth.DOCKER+['logs',self.cid],capture_output=True,timeout=20)
++        require(value.returncode==0,'complete application logs unavailable')
++        raw=value.stdout+value.stderr
++        require(len(raw)<=8*1024*1024,'complete application logs exceed private evidence bound')
++        return raw
++
++    def private_log_path(self, cid):
++        require(cid in self.owned and len(self.owned)<=5,'exact original log CID')
++        return self.root/('boot-log-'+str(self.owned.index(cid))+'.private')
++
++    def verify_private_log(self, record):
++        path=self.private_log_path(record['cid'])
++        require(path.is_file() and not path.is_symlink() and path.stat().st_mode & 0o777==0o600,
++                'original private application log changed')
++        with path.open('rb') as stream:raw=stream.read(8*1024*1024+1)
++        require(len(raw)<=8*1024*1024 and len(raw)==record['log']['bytes']
++                and hashlib.sha256(raw).hexdigest()==record['log']['sha256'],
++                'original private application log changed')
++
++    def preserve_stopped_log(self):
++        # Repeated source/final stops are read-only verification, not a second capture or removal.
++        proof=self.process if self.ready_for_current_launch else self.pending_process
++        obj=self.inspect(self.cid)
++        require(proof is not None and proof['cid']==self.cid and obj['Id']==self.cid
++                and obj['Name']=='/'+self.name+'-app' and obj['Config']['Image']==JDK
++                and obj['Config']['Labels'].get('chengyin.auth-recovery')==self.name
++                and 'GITHUB_SHA='+proof['sourceSha'] in obj['Config']['Env']
++                and 'CHENGYIN_RESTORE_MODE='+self.launch['restoreMode'] in obj['Config']['Env']
++                and not obj['State']['Running'] and not obj['State']['Restarting'] and not obj['State']['OOMKilled']
++                and obj['State']['Pid']==0 and obj['State']['ExitCode']==self.stopped['exitCode'],
++                'actual child boot identity')
++        config_path=self.root/'config.json'
++        require(self.jar.is_file() and not self.jar.is_symlink()
++                and hashlib.sha256(self.jar.read_bytes()).hexdigest()==proof['jarSha256']
++                and config_path.is_file() and not config_path.is_symlink()
++                and hashlib.sha256(config_path.read_bytes()).hexdigest()==proof['configSha256'],
++                'actual child boot identity')
++        if self.ready_for_current_launch:
++            ready_path=self.root/'ready.json'
++            require(ready_path.is_file() and not ready_path.is_symlink()
++                    and hashlib.sha256(ready_path.read_bytes()).hexdigest()==proof['readySha256'],
++                    'actual child boot identity')
++        previous=next((row for row in self.stop_history if row['cid']==self.cid),None)
++        if previous is not None:
++            require(previous['stopped']==self.stopped and previous['proofKind']==self.stop_proof_kind
++                    and previous['identity']==proof,
++                    'original stopped application evidence changed')
++            self.verify_private_log(previous)
++            return previous
++        require(self.cid in self.owned and len(self.stop_history)<5,'exact original stopped CID')
++        proof=self.process if self.ready_for_current_launch else self.pending_process
++        require(proof is not None and proof['cid']==self.cid,'actual child boot identity')
++        raw=self.read_complete_application_log()
++        path=self.private_log_path(self.cid)
++        require(not path.exists() and not path.is_symlink(),'exclusive private application log')
++        with path.open('xb') as stream:
++            path.chmod(0o600);stream.write(raw);stream.flush();os.fsync(stream.fileno())
++        record={'cid':self.cid,'bootId':proof.get('bootId'),'sourceSha':proof['sourceSha'],
++                'jarSha256':proof['jarSha256'],'identity':dict(proof),'proofKind':self.stop_proof_kind,
++                'stopped':dict(self.stopped),'log':{'result':'COMPLETE_PRIVATE_CAPTURE_VERIFIED',
++                'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest(),
++                'summary':summarize_application_log(raw)}}
++        self.verify_private_log(record)
++        self.stop_history.append(record)
++        return record
++
++    def verify_all_stopped_logs(self):
++        require([row['cid'] for row in self.stop_history]==self.owned,'every original app log required before private erasure')
++        for row in self.stop_history:self.verify_private_log(row)
++
+     def diagnostic_summary(self):
+         """Observe the exact existing app only; outer owner still preserves/removes its raw log."""
+         if self.cid is None:
+-            return {'result':'NO_CURRENT_CID_OBSERVATION','startAbsenceProven':False}
++            result={'result':'NO_CURRENT_CID_OBSERVATION','startAbsenceProven':False}
++            if self.stop_history:result['lastStoppedEvidence']=self.stop_history[-1]
++            return result
+         obj=self.inspect(self.cid)
+         require(obj['Id']==self.cid and obj['Name']=='/'+self.name+'-app'
+                 and obj['Config']['Labels'].get('chengyin.auth-recovery')==self.name
+@@ -323,6 +399,7 @@ class ApplicationSlot:
+         state=obj['State']
+         result={'result':'EXACT_APP_OBSERVED','cid':self.cid,
+                 'state':{key:state[key] for key in ('Running','OOMKilled','Restarting','Pid','ExitCode')}}
++        if self.stop_history:result['lastStoppedEvidence']=self.stop_history[-1]
+         if getattr(self,'launch',None) is not None:
+             observed=self.read_startup_observation()
+             if observed is not None:result['childStartup']=observed
+diff --git a/ci/restore_application_http_probe.py b/ci/restore_application_http_probe.py
+index a414b5056f9cc379e731fa86a16455f13937c1c7..6a280a2c9500ee9df1f57ea560331d0e0737d125 100644
+--- a/ci/restore_application_http_probe.py
++++ b/ci/restore_application_http_probe.py
+@@ -48,6 +48,8 @@ FACT_REASON_CODES={
+     'wire V1 and terminal original submission linkage':'ORIGINAL_SUBMIT_LINK_REJECTED',
+ }
+ SAFE_REASON_CODES.update(FACT_REASON_CODES.values())
++CANONICAL_TOOL_SHA256='fead7bfce99af5aadeb15b696190fade40109f37d25233aa401116d10ea1279c'
++COMPARE_TABLE_LIMIT=32
+ ALLOWED_MUTABLE={'sys_oper_log','sys_job_log','sys_logininfor'}
+ LATE_TABLES={'wx_verified_payment_fact','wx_payment_callback_inbox','wx_payment_callback_fact_link'}
+ REQUIRED_TABLES={'ums_member','member_cash_withdraw','member_cash_withdraw_fund_fact','member_cash_withdraw_transfer_intent',
+@@ -116,8 +118,21 @@ def query(auth,port,schema,sql,args=None):
+         return [dict(zip(columns,map(typed,row))) for row in cur.fetchall()]
+ 
+ 
+-def snapshot(auth,port,schema):
+-    tables=query(auth,port,None,'SELECT TABLE_NAME,AUTO_INCREMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA=%s AND TABLE_TYPE=\'BASE TABLE\' ORDER BY TABLE_NAME',(schema,))
++def snapshot(auth,port,schema,expected_uuid):
++    require(isinstance(expected_uuid,str) and re.fullmatch('[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}',expected_uuid),
++            'original snapshot UUID required')
++    # TABLES.AUTO_INCREMENT is cached dynamic metadata by default (86400s). All four operations
++    # share this exact connection; a SET on query()'s separate session cannot prove current values.
++    with auth.database(port,schema) as db,db.cursor() as cur:
++        cur.execute('SET SESSION information_schema_stats_expiry=0')
++        cur.execute('SELECT @@SESSION.information_schema_stats_expiry,@@server_uuid,DATABASE()')
++        identity=cur.fetchone()
++        require(isinstance(identity,tuple) and len(identity)==3 and type(identity[0]) is int and identity[0]==0
++                and identity[1]==expected_uuid and identity[2]==schema,
++                'same-session current allocator metadata identity')
++        cur.execute("SELECT TABLE_NAME,AUTO_INCREMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA=%s AND TABLE_TYPE='BASE TABLE' ORDER BY TABLE_NAME",(schema,))
++        columns=[column[0] for column in cur.description]
++        tables=[dict(zip(columns,map(typed,row))) for row in cur.fetchall()]
+     names={row['TABLE_NAME'] for row in tables}
+     require(REQUIRED_TABLES<=names,'full canonical schema/financial evidence tables required')
+     result={}
+@@ -171,6 +186,86 @@ def public_snapshot(value):
+             for table,data in value.items()}
+ 
+ 
++def next_id_observation(value):
++    # No unexpected string/object becomes a public allocator value.
++    if value is None:return {'kind':'NULL','value':None}
++    if type(value) is int and value>=0:return {'kind':'INTEGER','value':value}
++    kinds={bool:'BOOLEAN',float:'FLOAT',str:'STRING',dict:'ENCODED',list:'ARRAY'}
++    return {'kind':kinds.get(type(value),'OTHER'),'sha256':sha(canonical(value))}
++
++
++def restore_difference_summary(before,after):
++    """Fixed source roster only; neither an SQL selector nor a public row/body projection."""
++    changes=[]
++    for name in sorted(set(before)|set(after)):
++        source=before.get(name);target=after.get(name);categories=[]
++        if name not in before:categories.append('UNEXPECTED_TARGET_TABLE')
++        elif name not in after:categories.append('MISSING_TARGET_TABLE')
++        else:
++            if len(source['rows'])!=len(target['rows']):categories.append('ROW_COUNT_DIFFER')
++            if canonical(source['rows'])!=canonical(target['rows']):categories.append('TYPED_ROWS_DIFFER')
++            if canonical(source['nextId'])!=canonical(target['nextId']):categories.append('NEXT_ID_DIFFER')
++        if not categories:continue
++        row={'categories':categories}
++        if name in before and re.fullmatch('[A-Za-z0-9_]{1,64}',name):row['table']=name
++        else:row['tableNameSha256']=sha(name.encode())
++        for label,data in (('source',source),('target',target)):
++            row[label]=None if data is None else {
++                    'rowCount':len(data['rows']),'rowSha256':sha(canonical(data['rows'])),
++                    'nextId':next_id_observation(data['nextId'])}
++        changes.append(row)
++    # Hashes cover the complete comparison, even when the fixed public detail budget is exhausted.
++    return {'result':'MISMATCH','differenceCause':'UNKNOWN',
++            'sourceTableCount':len(before),'targetTableCount':len(after),
++            'sourceSnapshotSha256':sha(canonical(before)),'targetSnapshotSha256':sha(canonical(after)),
++            'changedTableCount':len(changes),'detailLimit':COMPARE_TABLE_LIMIT,
++            'detailsTruncated':len(changes)>COMPARE_TABLE_LIMIT,'tables':changes[:COMPARE_TABLE_LIMIT]}
++
++
++def verify_restored_snapshot(before,after,slot,auth,source_port,target_port,schema,report,path):
++    # Retain whole dictionaries and every original typed row/allocator; canonical bytes also forbid
++    # Python's bool==int coercion from silently accepting a type-only change.
++    if after==before and canonical(after)==canonical(before):return
++    original=ValueError('canonical restore and independent complete rows/high waters')
++    original.restore_reason_code='INVARIANT_REJECTED'
++    try:
++        diagnostic=restore_difference_summary(before,after)
++        last=slot.stop_history[-1] if slot.stop_history else None
++        binding={'sourceSha':report['sourceSha'],'runId':report['runId'],'runAttempt':report['runAttempt'],
++                 'jarSha256':report['jarSha256'],'schema':schema,
++                 'sourceServerUuid':report['sourceServerUuid'],'targetServerUuid':report['targetServerUuid'],
++                 'canonicalToolSha256':sha((ROOT/'scripts/db-backup-restore.py').read_bytes()),
++                 'canonicalBackup':report.get('canonicalBackupEvidence'),
++                 'backupReturned':report.get('backupToolReturned') is True,
++                 'restoreReturned':report.get('restoreToolReturned') is True,
++                 'sourceStop':last}
++        diagnostic['binding']=binding
++        report['canonicalRestoreComparison']=diagnostic
++        # Independent current UUID/database readback is evidence only; errors never replace mismatch.
++        try:
++            observed={}
++            for side,port in (('source',source_port),('target',target_port)):
++                rows=query(auth,port,schema,'SELECT @@server_uuid AS uuid,DATABASE() AS db')
++                require(len(rows)==1 and isinstance(rows[0]['uuid'],str)
++                        and re.fullmatch('[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}',rows[0]['uuid'])
++                        and rows[0]['db']==schema,'original independent comparison identity')
++                observed[side]={'serverUuid':rows[0]['uuid'],'schema':schema}
++            binding['observed']=observed
++            binding['identityResult']='MATCH' if (observed['source']['serverUuid']==report['sourceServerUuid']
++                    and observed['target']['serverUuid']==report['targetServerUuid']
++                    and binding['canonicalToolSha256']==CANONICAL_TOOL_SHA256) else 'MISMATCH'
++        except BaseException as observation:
++            binding['identityResult']='UNKNOWN'
++            binding['identityFailure']=failure_diagnostic(observation,report['phase'],report.get('substage'))
++        require(len(canonical(diagnostic))<=64*1024,'bounded canonical difference diagnostic')
++        slot.runtime_report_write(path,report)
++    except BaseException as diagnostic_failure:
++        # Same original ValueError/reason/type even if hashing, identity readback or persistence fails.
++        report['canonicalComparisonDiagnosticFailure']=failure_diagnostic(
++                diagnostic_failure,report['phase'],report.get('substage'))
++    raise original
++
++
+ def assert_late_callback(before,after,callback,registration):
+     require(callback.get('code')==200 and callback.get('data',{}).get('originalOutcome')=='FAIL','original callback must remain paused, never fake ACK')
+     # Only independent verified fact + its original WAIT inbox + immutable link can be appended.
+@@ -253,9 +348,9 @@ def source_quiescent_snapshot(slot, auth, port, schema, report, path):
+     """The original source backup cannot read its final SQL state until exact JVM stop succeeds."""
+     checkpoint(slot,report,path,'SOURCE_WORKLOAD','SOURCE_QUIESCENT_STOP')
+     require(getattr(slot,'ready_for_current_launch',False), 'source application must be ready before quiescent SQL snapshot')
+-    slot.stop()
++    slot.stop(remove=False)
+     checkpoint(slot,report,path,'SOURCE_WORKLOAD','QUIESCENT_SQL_SNAPSHOT')
+-    return snapshot(auth,port,schema)
++    return snapshot(auth,port,schema,slot.boots[-1]['serverUuid'])
+ 
+ 
+ def run(name,schema,out,credentials):
+@@ -318,7 +413,7 @@ def run(name,schema,out,credentials):
+             checkpoint(slot,report,report_path,'SOURCE_WORKLOAD','READ_ORIGINAL_PROVIDER')
+             original_provider=json.loads((slot.root/'withdrawal-provider.json').read_text())
+             checkpoint(slot,report,report_path,'SOURCE_WORKLOAD','COMPLETE_FACTS_SQL')
+-            before=snapshot(auth,sp,schema);assert_complete(before,actor,original_provider)
++            before=snapshot(auth,sp,schema,identities['source']['uuid']);assert_complete(before,actor,original_provider)
+             original_provider_bytes=(slot.root/'withdrawal-provider.json').read_bytes()
+             receipt_path='/api/club/lead/unlock-chapter-receipt?'+urllib.parse.urlencode({k:ids['chapter'][k] for k in ('activityId','commandId')})
+             checkpoint(slot,report,report_path,'SOURCE_WORKLOAD','ORIGINAL_CHAPTER_RECEIPT')
+@@ -338,7 +433,10 @@ def run(name,schema,out,credentials):
+                   for side in ('source','target')}
+             args['source'].output=slot.root/'backup.sql';report['backupStarted']=now()
+             with contextlib.redirect_stdout(io.StringIO()):tool.backup(args['source'])
+-            report['backupCompleted']=now()
++            report['backupCompleted']=now();report['backupToolReturned']=True
++            report['canonicalBackupEvidence']={'canonicalToolSha256':sha((ROOT/'scripts/db-backup-restore.py').read_bytes()),
++                    'dumpSha256':tool.digest(args['source'].output),
++                    'receiptSha256':tool.digest(Path(str(args['source'].output)+'.json'))}
+             checkpoint(slot,report,report_path,'CANONICAL_BACKUP_RESTORE','EMPTY_TARGET_CREATE')
+             with auth.database(tp) as db,db.cursor() as cur:
+                 cur.execute('SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=%s',(schema,));require(cur.fetchone()==(0,),'never adopt a target schema')
+@@ -349,9 +447,10 @@ def run(name,schema,out,credentials):
+             args['target'].backup=args['source'].output;report['restoreStarted']=now();tick=time.monotonic()
+             checkpoint(slot,report,report_path,'CANONICAL_BACKUP_RESTORE','CANONICAL_RESTORE')
+             with contextlib.redirect_stdout(io.StringIO()):tool.restore(args['target'])
+-            report['restoreCompleted']=now();report['restoreSeconds']=time.monotonic()-tick
++            report['restoreCompleted']=now();report['restoreSeconds']=time.monotonic()-tick;report['restoreToolReturned']=True
+             checkpoint(slot,report,report_path,'CANONICAL_BACKUP_RESTORE','RESTORED_SQL_COMPARE')
+-            require(snapshot(auth,tp,schema)==before,'canonical restore and independent complete rows/high waters')
++            restored=snapshot(auth,tp,schema,identities['target']['uuid'])
++            verify_restored_snapshot(before,restored,slot,auth,sp,tp,schema,report,report_path)
+             # mysql.user is outside the dump. Only the existing resource owner can install this runtime
+             # account, with this exact schema DML grant. No root application datasource is accepted.
+             checkpoint(slot,report,report_path,'CANONICAL_BACKUP_RESTORE','TARGET_RUNTIME_USER')
+@@ -375,28 +474,28 @@ def run(name,schema,out,credentials):
+             checkpoint(slot,report,report_path,'RESTORED_NORMAL_READBACK','NORMAL_ORIGINAL_READBACK')
+             require(good(slot.http(receipt_path,a))==original_receipt,'normal test-owned original receipt readback')
+             good(slot.http('/api/wallet/withdraws',a,{}));good(slot.http('/business/cashwithdraw/requery/'+str(wid),admin,{}))
+-            require(snapshot(auth,tp,schema)==before,'normal original-ID readback created an effect/high-water change')
++            require(snapshot(auth,tp,schema,identities['target']['uuid'])==before,'normal original-ID readback created an effect/high-water change')
+             require((slot.root/'withdrawal-provider.json').read_bytes()==original_provider_bytes,'normal boot repeated provider submit/query')
+-            report['normalReadbackRows']=public_snapshot(snapshot(auth,tp,schema))
++            report['normalReadbackRows']=public_snapshot(snapshot(auth,tp,schema,identities['target']['uuid']))
+             slot.verify_network();slot.stop();report['normalReadbackCompleted']=now()
+             # No normal boot occurs below: introducing the independent late SUCCESS intentionally creates
+             # a difference that remains held. It is never auto-repaired/reissued or marked READY.
+             for mode in HELD_MODES:
+                 boot=start_application(slot,report,report_path,'RESTORED_HELD_APPLICATION_START','target',mode,identities['target']['uuid'])
+                 checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_OWNER_WORKLOAD')
+-                mark=snapshot(auth,tp,schema)
++                mark=snapshot(auth,tp,schema,identities['target']['uuid'])
+                 require(good(slot.http(receipt_path,a))==original_receipt,'held original receipt unreadable')
+                 denied=slot.http(receipt_path,b);refused(denied);require(not denied[1].get('data'),'other actor received original receipt')
+                 refused(slot.http('/__restore_http/evidence',b))
+-                assert_equal(mark,snapshot(auth,tp,schema))
++                assert_equal(mark,snapshot(auth,tp,schema,identities['target']['uuid']))
+                 changed=dict(ids['chapter'],targetChapterId=ids['chapter']['targetChapterId']+1)
+-                refused(slot.http('/api/club/lead/unlock-chapter',a,changed,form=True));assert_equal(mark,snapshot(auth,tp,schema))
++                refused(slot.http('/api/club/lead/unlock-chapter',a,changed,form=True));assert_equal(mark,snapshot(auth,tp,schema,identities['target']['uuid']))
+                 refused(slot.http('/api/wallet/withdraw',a,{'amount':'30.00'}))
+                 refused(slot.http('/business/refund',admin,{'registrationId':ids['registrationId'],'refundAmount':'1.00'}))
+-                assert_equal(mark,snapshot(auth,tp,schema))
++                assert_equal(mark,snapshot(auth,tp,schema,identities['target']['uuid']))
+                 # Actual durable notice intent is committed before attempting the original blocked wake.
+                 refused(slot.http('/__restore_http/notice',admin,{}))
+-                pending=snapshot(auth,tp,schema)
++                pending=snapshot(auth,tp,schema,identities['target']['uuid'])
+                 notice=pending['committed_official_notice_wx']['rows']
+                 require(len(notice)==1 and notice[0]['wx_state']=='PENDING','real eligible original pending notice required')
+                 with auth.database(tp,schema) as db,db.cursor() as cur:
+@@ -411,28 +510,28 @@ def run(name,schema,out,credentials):
+                             and len(observed_logs)>=logs+2 and all(any(r['invoke_target']==target and r['status']=='0' for r in observed_logs[logs:]) for target in ids['jobs'])):break
+                     time.sleep(.2)
+                 actual=assert_owner_events(evidence['events'],boot['bootId'])
+-                assert_equal(pending,snapshot(auth,tp,schema))
++                assert_equal(pending,snapshot(auth,tp,schema,identities['target']['uuid']))
+                 observed_logs=query(auth,tp,schema,'SELECT invoke_target,status FROM sys_job_log ORDER BY job_log_id')
+                 require(len(observed_logs)>=logs+2 and all(any(r['invoke_target']==target and r['status']=='0' for r in observed_logs[logs:])
+                         for target in ids['jobs']),'real persisted Quartz task completion proof')
+-                prior=snapshot(auth,tp,schema)
++                prior=snapshot(auth,tp,schema,identities['target']['uuid'])
+                 callback=good(slot.http('/__restore_http/verified-callback',admin,{}))
+-                assert_late_callback(prior,snapshot(auth,tp,schema),callback,ids['registrationId'])
++                assert_late_callback(prior,snapshot(auth,tp,schema,identities['target']['uuid']),callback,ids['registrationId'])
+                 readback=good(slot.http('/__restore_http/evidence',admin))['data']
+                 require(readback['verifiedFacts']==[{'id':callback['data']['factId'],'fact_hash':callback['data']['factHash']}]
+                         and len(readback['inbox'])==1 and readback['inbox'][0]['biz_id']==ids['registrationId']
+                         and readback['inbox'][0]['state']==0,'HTTP authenticated original fact and WAIT inbox readback')
+-                stable=snapshot(auth,tp,schema)
++                stable=snapshot(auth,tp,schema,identities['target']['uuid'])
+                 callback_replay=good(slot.http('/__restore_http/verified-callback',admin,{}))
+                 require(callback_replay==callback,'same original verified callback identity')
+-                assert_callback_replay(stable,snapshot(auth,tp,schema))
++                assert_callback_replay(stable,snapshot(auth,tp,schema,identities['target']['uuid']))
+                 require((slot.root/'withdrawal-provider.json').read_bytes()==original_provider_bytes,'provider original record changed')
+                 require(not (slot.root/'provider-attempts.jsonl').exists(),'controlled transport fence was entered; not a production guard proof')
+                 slot.verify_network();slot.stop(remove=False)
+                 report['boots'].append({k:boot[k] for k in ('bootId','javaPid','sourceSha','jarSha256','serverUuid','schema','restoreMode','guardHeld','schedulerStarted','appCid','side')})
+-                report['checks'].append({'protectedRowsBefore':public_snapshot(mark),'protectedRowsAfter':public_snapshot(snapshot(auth,tp,schema)),
++                report['checks'].append({'protectedRowsBefore':public_snapshot(mark),'protectedRowsAfter':public_snapshot(snapshot(auth,tp,schema,identities['target']['uuid'])),
+                                          'providerJournalSha256':sha(original_provider_bytes),
+-                                         'callbackReplayHighWaters':{table:{'before':stable[table]['nextId'],'after':snapshot(auth,tp,schema)[table]['nextId']} for table in LATE_TABLES},
++                                         'callbackReplayHighWaters':{table:{'before':stable[table]['nextId'],'after':snapshot(auth,tp,schema,identities['target']['uuid'])[table]['nextId']} for table in LATE_TABLES},
+                                          'case':'held-full-http-and-actual-wake','mode':mode,'owners':actual,
+                                          'lateCallback':'FACT_AND_WAIT_INBOX_PRESERVED_NO_ECONOMIC_CONSUME','newDispatches':0})
+             require(len({b['bootId'] for b in slot.boots})==5,'five distinct real application processes')
+@@ -469,18 +568,23 @@ def run(name,schema,out,credentials):
+                     'failure':failure_diagnostic(diagnostic,report['phase'],report.get('substage'))}
+         if hasattr(slot,'last_http'):report['lastHttpObservation']=slot.last_http
+         report['ownedAppCids']=slot.owned;report['removedAppCids']=slot.removed
++        report['applicationStopHistory']=slot.stop_history
+         report['productionDispatchRelease']=False
+         report['allDispatchDomainsFenced']='NOT_CLAIMED_SPECIFIC_REAL_OWNERS_ONLY'
+         if report.get('applicationStop')!='UNKNOWN':
+             try:
+-                # Raw dumps, tokens, original provider store and traces never enter artifacts.
+-                # Stop precedes erasure; keep the final stopped container for original log cleanup.
++                # Persist complete safe stop/log evidence before erasing any private raw archive.
++                # The last original stopped container remains for the unchanged outer owner's logs.
++                slot.verify_all_stopped_logs()
++                slot.runtime_report_write(report_path,report)
++                # Raw dumps, tokens, original provider store, per-boot logs and traces stay private.
+                 for path in sorted(slot.root.rglob('*'),key=lambda p:len(p.parts),reverse=True):
+                     require(not path.is_symlink(),'unexpected private symlink; retain failure')
+                     if path.is_file():path.unlink()
+                     elif path.is_dir():path.rmdir()
+                     else:raise ValueError('unknown private resource; retain failure')
+                 slot.root.rmdir();report['privateCleanup']='EXACT_OWN_SUBTREE_REMOVED'
++                report['applicationLogPrivateErasure']='VERIFIED_PRIVATE_CAPTURES_ERASED_AFTER_REPORT'
+             except BaseException as cleanup:
+                 report['privateCleanup']='UNKNOWN'
+                 if failure is None:
+@@ -551,6 +655,26 @@ def assert_successful_lifecycle(report):
+                 and boot['sourceSha']==report['sourceSha'] and boot['schema']==report['schema']
+                 and boot['serverUuid']==uuid and boot['jarSha256']==report['jarSha256']
+                 and type(boot['javaPid']) is int and boot['javaPid']==1,'actual original boot identity differs')
++    history=report.get('applicationStopHistory')
++    require(isinstance(history,list) and [row['cid'] for row in history]==owned
++            and report.get('applicationLogPrivateErasure')=='VERIFIED_PRIVATE_CAPTURES_ERASED_AFTER_REPORT',
++            'all original stopped log captures required')
++    for boot,row in zip(boots,history):
++        identity=row['identity'];state=row['stopped'];log=row['log']
++        require(row['proofKind']=='READY_JVM_EXIT_CONFIRMED' and row['bootId']==boot['bootId']
++                and row['sourceSha']==report['sourceSha'] and row['jarSha256']==report['jarSha256']
++                and identity['cid']==row['cid'] and identity['bootId']==boot['bootId']
++                and identity['sourceSha']==report['sourceSha'] and identity['jarSha256']==report['jarSha256']
++                and type(identity['hostPid']) is int and identity['hostPid']>0
++                and re.fullmatch('[1-9][0-9]*',identity['startTicks'])
++                and all(re.fullmatch('[0-9a-f]{64}',identity[key]) for key in
++                        ('cmdlineSha256','configSha256','readySha256'))
++                and state['cid']==row['cid'] and state['running'] is False and state['oomKilled'] is False
++                and state['restarting'] is False and type(state['hostPid']) is int and state['hostPid']==0
++                and type(state['exitCode']) is int and state['exitCode'] in (0,143)
++                and log['result']=='COMPLETE_PRIVATE_CAPTURE_VERIFIED' and type(log['bytes']) is int
++                and 0<=log['bytes']<=8*1024*1024 and re.fullmatch('[0-9a-f]{64}',log['sha256']),
++                'original app stop/log proof differs')
+     require(len(report['checks'])==4 and report['checks'][0]['case']=='original_complete_cohort'
+             and report['checks'][0]['providerSubmits']==1
+             and [row['mode'] for row in report['checks'][1:]]==list(HELD_MODES)
+diff --git a/ci/test_restore_application_http_probe.py b/ci/test_restore_application_http_probe.py
+index 63aa3c2785d51bd72ab01666ae99a3b1c0da7e33..018924eeb316172a503dd9c90aa80cd25f7820ab 100644
+--- a/ci/test_restore_application_http_probe.py
++++ b/ci/test_restore_application_http_probe.py
+@@ -271,6 +271,18 @@ class RestoreHttpFailureLifecycleControls(unittest.TestCase):
+         report['completeBoots']=boots[:2];report['boots']=boots[2:]
+         report['checks']=[{'case':'original_complete_cohort','providerSubmits':1}]+[
+             {'case':'held-full-http-and-actual-wake','mode':mode,'newDispatches':0} for mode in P.HELD_MODES]
++        report['applicationStopHistory']=[]
++        for boot in boots:
++            cid=boot['appCid']
++            identity=dict(cid=cid,bootId=boot['bootId'],sourceSha=report['sourceSha'],
++                    jarSha256=report['jarSha256'],hostPid=100,startTicks='123',
++                    cmdlineSha256='a'*64,configSha256='b'*64,readySha256='c'*64)
++            report['applicationStopHistory'].append(dict(cid=cid,bootId=boot['bootId'],
++                    sourceSha=report['sourceSha'],jarSha256=report['jarSha256'],identity=identity,
++                    proofKind='READY_JVM_EXIT_CONFIRMED',
++                    stopped=dict(cid=cid,running=False,hostPid=0,oomKilled=False,exitCode=143,restarting=False),
++                    log=dict(result='COMPLETE_PRIVATE_CAPTURE_VERIFIED',bytes=12,sha256='d'*64)))
++        report['applicationLogPrivateErasure']='VERIFIED_PRIVATE_CAPTURES_ERASED_AFTER_REPORT'
+         return report
+ 
+     def test_zero_boot_failure_preserves_original_cause_and_resource_proof_without_acceptance(self):
+@@ -442,7 +454,7 @@ class RestoreHttpDiagnosticControls(unittest.TestCase):
+ 
+     @staticmethod
+     def diagnostic_slot():
+-        slot=object.__new__(R.ApplicationSlot);slot.name='cy-auth-'+'a'*32;slot.cid='4'*64
++        slot=object.__new__(R.ApplicationSlot);slot.name='cy-auth-'+'a'*32;slot.cid='4'*64;slot.stop_history=[]
+         slot.source={'networkId':'5'*64};slot.auth=SimpleNamespace(DOCKER=['docker'])
+         obj={'Id':slot.cid,'Name':'/'+slot.name+'-app','Config':{'Labels':{'chengyin.auth-recovery':slot.name}},
+              'NetworkSettings':{'Networks':{slot.name:{'NetworkID':'5'*64}}},
+@@ -489,12 +501,12 @@ class RestoreHttpGracefulStopControls(unittest.TestCase):
+         return b'\x00'.join(argv)+b'\x00'+b'1 (java) '+b' '.join(fields)+b'\n'
+ 
+     def running_slot(self, directory, exit_code=143):
+-        slot=object.__new__(R.ApplicationSlot);slot.name='cy-auth-'+'a'*32;slot.cid='4'*64
++        slot=object.__new__(R.ApplicationSlot);slot.name='cy-auth-'+'a'*32;slot.cid='4'*64;slot.stop_history=[]
+         slot.source={'networkId':'5'*64};slot.root=Path(directory);slot.schema='cy_e2e_auth_'+'a'*32
+         slot.jar=slot.root/'application.jar';slot.jar.write_bytes(b'controlled original jar bytes')
+         slot.jar_hash=R.hashlib.sha256(slot.jar.read_bytes()).hexdigest();slot.manifest_hash='b'*64
+         boot=dict(appCid=slot.cid,javaPid=1,bootId='original-boot',sourceSha='a'*40,
+-                  jarSha256=slot.jar_hash,schema=slot.schema,restoreMode='false',serverUuid='original-uuid')
++                  jarSha256=slot.jar_hash,schema=slot.schema,restoreMode='false',serverUuid='11111111-1111-1111-1111-111111111111')
+         config={key:boot[key] for key in ('sourceSha','jarSha256','schema','restoreMode','serverUuid')}
+         config.update(classManifestSha256=slot.manifest_hash,scope=slot.name[8:])
+         (slot.root/'ready.json').write_text(json.dumps(boot));(slot.root/'config.json').write_text(json.dumps(config))
+@@ -518,6 +530,7 @@ class RestoreHttpGracefulStopControls(unittest.TestCase):
+         slot.launch={**{key:boot[key] for key in ('sourceSha','jarSha256','schema','restoreMode','serverUuid')},
+                      'cid':slot.cid,'configSha256':R.hashlib.sha256((slot.root/'config.json').read_bytes()).hexdigest()}
+         slot.pending_process=None;slot.ready_for_current_launch=True;slot.startup_observation=None
++        slot.read_complete_application_log=lambda:b'Application run failed private-log-canary\n'
+         with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}):
+             slot.pending_process=slot.running_launch_identity(obj)
+             slot.process=slot.running_child_identity(boot,obj)
+@@ -612,8 +625,9 @@ class RestoreHttpGracefulStopControls(unittest.TestCase):
+ 
+     def test_source_stop_failure_prevents_quiescent_sql_snapshot_and_propagates_original_error(self):
+         report={'result':'NOT_COMPLETED'};saved=[];failure=ValueError('controlled stop failure')
+-        def stop():raise failure
+-        slot=SimpleNamespace(stop=stop,ready_for_current_launch=True,runtime_report_write=lambda path,value:saved.append(copy.deepcopy(value)))
++        def stop(**kwargs):
++            self.assertEqual(kwargs,{'remove':False});raise failure
++        slot=SimpleNamespace(stop=stop,ready_for_current_launch=True,boots=[{'serverUuid':'11111111-1111-1111-1111-111111111111'}],runtime_report_write=lambda path,value:saved.append(copy.deepcopy(value)))
+         with patch.object(P,'snapshot') as read:
+             with self.assertRaises(ValueError) as caught:P.source_quiescent_snapshot(slot,object(),3306,'owned',report,Path('unused'))
+         self.assertIs(caught.exception,failure);read.assert_not_called()
+@@ -622,11 +636,11 @@ class RestoreHttpGracefulStopControls(unittest.TestCase):
+ 
+     def test_source_snapshot_uses_original_database_arguments_only_after_stop(self):
+         events=[];report={'result':'NOT_COMPLETED'};auth=object();rows=object()
+-        slot=SimpleNamespace(stop=lambda:events.append('stop'),ready_for_current_launch=True,
++        slot=SimpleNamespace(stop=lambda **kwargs:events.append('stop') if kwargs=={'remove':False} else self.fail('original source must retain CID'),ready_for_current_launch=True,boots=[{'serverUuid':'11111111-1111-1111-1111-111111111111'}],
+                 runtime_report_write=lambda path,value:events.append(value['substage']))
+         def read(*args):
+             self.assertEqual(events,['SOURCE_QUIESCENT_STOP','stop','QUIESCENT_SQL_SNAPSHOT'])
+-            self.assertEqual(args,(auth,3306,'original_schema'));events.append('snapshot');return rows
++            self.assertEqual(args[:3],(auth,3306,'original_schema'));self.assertEqual(args[3],'11111111-1111-1111-1111-111111111111');events.append('snapshot');return rows
+         with patch.object(P,'snapshot',side_effect=read):
+             self.assertIs(P.source_quiescent_snapshot(slot,auth,3306,'original_schema',report,Path('unused')),rows)
+         self.assertEqual(report['result'],'NOT_COMPLETED')
+@@ -758,4 +772,334 @@ class RestoreHttpStartupFailureControls(unittest.TestCase):
+             self.assertEqual(report['result'],'NOT_COMPLETED')
+ 
+ 
++
++class RestoreHttpCanonicalComparisonControls(unittest.TestCase):
++    """Controlled complete typed rows/allocators and fixed UUID readbacks, never MySQL acceptance."""
++    schema='cy_e2e_auth_'+'a'*32
++    source_uuid='11111111-1111-1111-1111-111111111111'
++    target_uuid='22222222-2222-2222-2222-222222222222'
++
++    def fixture(self):
++        before={'member_cash_withdraw':{'rows':[{'id':1,'amount':{'decimal':'30.00'},
++                        'wire':'private-original-wire-canary','status':1}],'nextId':2}}
++        report=dict(sourceSha='a'*40,runId='31',runAttempt='1',jarSha256='b'*64,
++                schema=self.schema,sourceServerUuid=self.source_uuid,targetServerUuid=self.target_uuid,
++                phase='CANONICAL_BACKUP_RESTORE',substage='RESTORED_SQL_COMPARE',
++                result='NOT_COMPLETED',productionDispatchRelease=False,backupToolReturned=True,restoreToolReturned=True,
++                canonicalBackupEvidence=dict(canonicalToolSha256=P.CANONICAL_TOOL_SHA256,
++                        dumpSha256='c'*64,receiptSha256='d'*64))
++        saved=[]
++        slot=SimpleNamespace(stop_history=[dict(cid='4'*64,proofKind='READY_JVM_EXIT_CONFIRMED',
++                bootId='original-source-boot',sourceSha='a'*40,jarSha256='b'*64,
++                stopped=dict(cid='4'*64,running=False,hostPid=0,oomKilled=False,exitCode=143,restarting=False))],
++                runtime_report_write=lambda path,value:saved.append(copy.deepcopy(value)))
++        return before,report,slot,saved
++
++    def readback(self,auth,port,schema,sql,args=None):
++        self.assertEqual(schema,self.schema);self.assertEqual(sql,'SELECT @@server_uuid AS uuid,DATABASE() AS db')
++        self.assertIsNone(args)
++        return [dict(uuid=self.source_uuid if port==3306 else self.target_uuid,db=self.schema)]
++
++    def rejected(self,before,after,report,slot,readback=None):
++        with patch.object(P,'query',side_effect=readback or self.readback):
++            with self.assertRaisesRegex(ValueError,'canonical restore and independent complete rows/high waters') as caught:
++                P.verify_restored_snapshot(before,after,slot,object(),3306,3307,self.schema,report,Path('unused'))
++        self.assertEqual(caught.exception.restore_reason_code,'INVARIANT_REJECTED')
++        self.assertEqual(report['result'],'NOT_COMPLETED');self.assertFalse(report['productionDispatchRelease'])
++        return caught.exception
++
++    def test_full_equal_rows_types_and_high_waters_do_not_trigger_diagnostic_reads_or_writes(self):
++        before,report,slot,saved=self.fixture();after=copy.deepcopy(before)
++        with patch.object(P,'query') as read:
++            P.verify_restored_snapshot(before,after,slot,object(),3306,3307,self.schema,report,Path('unused'))
++        read.assert_not_called();self.assertEqual(saved,[])
++        self.assertEqual(before,after);self.assertNotIn('canonicalRestoreComparison',report)
++
++    def test_actual_row_drift_is_rejected_without_repair_and_only_safe_hashes_are_published(self):
++        before,report,slot,saved=self.fixture();after=copy.deepcopy(before)
++        after['member_cash_withdraw']['rows'][0]['amount']={'decimal':'31.00'}
++        original_before=copy.deepcopy(before);original_after=copy.deepcopy(after)
++        self.rejected(before,after,report,slot)
++        result=report['canonicalRestoreComparison'];row=result['tables'][0]
++        self.assertEqual(row['table'],'member_cash_withdraw');self.assertEqual(row['categories'],['TYPED_ROWS_DIFFER'])
++        self.assertEqual(row['source']['rowCount'],1);self.assertEqual(row['target']['rowCount'],1)
++        self.assertNotEqual(row['source']['rowSha256'],row['target']['rowSha256'])
++        self.assertEqual(result['binding']['identityResult'],'MATCH')
++        self.assertEqual(result['binding']['sourceStop']['stopped']['exitCode'],143)
++        self.assertEqual(result['binding']['canonicalToolSha256'],P.CANONICAL_TOOL_SHA256)
++        self.assertTrue(result['binding']['backupReturned']);self.assertTrue(result['binding']['restoreReturned'])
++        self.assertEqual(result['differenceCause'],'UNKNOWN')
++        self.assertNotIn('private-original-wire-canary',json.dumps(saved))
++        self.assertNotIn('SELECT ',json.dumps(saved));self.assertNotIn('"rows"',json.dumps(saved))
++        self.assertEqual(before,original_before);self.assertEqual(after,original_after)
++
++    def test_allocator_regression_advance_null_and_type_coercion_are_all_rejected(self):
++        for value in (1,3,None,False):
++            with self.subTest(nextId=value):
++                before,report,slot,_=self.fixture();after=copy.deepcopy(before)
++                after['member_cash_withdraw']['nextId']=value
++                self.rejected(before,after,report,slot)
++                row=report['canonicalRestoreComparison']['tables'][0]
++                self.assertEqual(row['categories'],['NEXT_ID_DIFFER'])
++                self.assertEqual(row['source']['rowSha256'],row['target']['rowSha256'])
++        before,report,slot,_=self.fixture();before['member_cash_withdraw']['nextId']=0
++        after=copy.deepcopy(before);after['member_cash_withdraw']['nextId']=False
++        self.assertEqual(before,after) # Python == alone is weaker than the original typed encoding contract.
++        self.rejected(before,after,report,slot)
++        self.assertEqual(report['canonicalRestoreComparison']['tables'][0]['target']['nextId']['kind'],'BOOLEAN')
++
++    def test_exact_row_types_and_binary_decimal_float_temporal_encodings_are_not_normalized_away(self):
++        changes=[(0,False),({'decimal':'30.00'},{'decimal':'30.0'}),
++                 ({'binary':'0001'},{'binary':'0002'}),
++                 ({'floatHex':'-0x0.0p+0'},{'floatHex':'0x0.0p+0'}),
++                 ({'temporal':'2026-10-25T00:00:00'},{'temporal':'2026-10-25T00:00:01'})]
++        for old,new in changes:
++            with self.subTest(old=old,new=new):
++                before,report,slot,_=self.fixture();before['member_cash_withdraw']['rows'][0]['typed']=old
++                after=copy.deepcopy(before);after['member_cash_withdraw']['rows'][0]['typed']=new
++                self.rejected(before,after,report,slot)
++                self.assertIn('TYPED_ROWS_DIFFER',report['canonicalRestoreComparison']['tables'][0]['categories'])
++
++    def test_missing_or_extra_table_is_rejected_and_unknown_target_name_is_hash_only(self):
++        before,report,slot,_=self.fixture();after={}
++        self.rejected(before,after,report,slot)
++        self.assertEqual(report['canonicalRestoreComparison']['tables'][0]['categories'],['MISSING_TARGET_TABLE'])
++        before,report,slot,_=self.fixture();after=copy.deepcopy(before)
++        after['private_unapproved_target_canary']={'rows':[],'nextId':None}
++        self.rejected(before,after,report,slot)
++        row=report['canonicalRestoreComparison']['tables'][0]
++        self.assertEqual(row['categories'],['UNEXPECTED_TARGET_TABLE']);self.assertNotIn('table',row)
++        self.assertNotIn('private_unapproved_target_canary',json.dumps(report))
++
++    def test_detail_cap_never_truncates_comparison_or_accepts_late_table_drift(self):
++        before,report,slot,_=self.fixture()
++        before={('fixed_'+str(i).zfill(3)):{'rows':[],'nextId':1} for i in range(40)}
++        after=copy.deepcopy(before)
++        for row in after.values():row['nextId']=2
++        self.rejected(before,after,report,slot)
++        result=report['canonicalRestoreComparison']
++        self.assertEqual(result['changedTableCount'],40);self.assertEqual(len(result['tables']),32)
++        self.assertTrue(result['detailsTruncated'])
++        after=copy.deepcopy(before);after['fixed_039']['nextId']=2
++        before_hash=P.sha(P.canonical(before));self.rejected(before,after,report,slot)
++        self.assertEqual(report['canonicalRestoreComparison']['sourceSnapshotSha256'],before_hash)
++        self.assertEqual(report['canonicalRestoreComparison']['tables'][0]['table'],'fixed_039')
++
++    def test_uuid_or_readback_failure_does_not_replace_the_original_compare_failure(self):
++        for kind in ('wrong-uuid','database-error'):
++            with self.subTest(kind=kind):
++                before,report,slot,_=self.fixture();after=copy.deepcopy(before);after['member_cash_withdraw']['nextId']=3
++                def observe(auth,port,schema,sql,args=None):
++                    if kind=='database-error':raise OSError('private-SQL-password-canary')
++                    return [dict(uuid='33333333-3333-3333-3333-333333333333',db=schema)]
++                self.rejected(before,after,report,slot,observe)
++                binding=report['canonicalRestoreComparison']['binding']
++                self.assertEqual(binding['identityResult'],'MISMATCH' if kind=='wrong-uuid' else 'UNKNOWN')
++                self.assertNotIn('private-SQL-password-canary',json.dumps(report))
++
++    def test_diagnostic_write_failure_keeps_primary_valueerror_and_does_not_claim_pass(self):
++        before,report,slot,_=self.fixture();after=copy.deepcopy(before);after['member_cash_withdraw']['nextId']=3
++        def fail_write(*args):raise OSError('private-report-path-token-canary')
++        slot.runtime_report_write=fail_write
++        self.rejected(before,after,report,slot)
++        self.assertEqual(report['canonicalComparisonDiagnosticFailure']['type'],'OSError')
++        self.assertNotIn('private-report-path-token-canary',json.dumps(report))
++
++
++class RestoreHttpStoppedLogControls(unittest.TestCase):
++    """Real slot methods with owned transport bytes/files only; no Docker/Java/DB is executed."""
++
++    def test_source_snapshot_retains_stopped_original_cid_and_exact_complete_log_until_next_boot(self):
++        with tempfile.TemporaryDirectory() as directory:
++            slot,_,calls,_=RestoreHttpGracefulStopControls().running_slot(directory)
++            report={'result':'NOT_COMPLETED'};slot.runtime_report_write=lambda *args:None
++            rows=object()
++            def read(*args):
++                self.assertEqual(slot.cid,'4'*64);self.assertEqual(len(slot.stop_history),1)
++                self.assertTrue(slot.private_log_path(slot.cid).is_file())
++                self.assertFalse(any(isinstance(argv,list) and argv[1]=='rm' for argv,_ in calls))
++                return rows
++            with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}),patch.object(P,'snapshot',side_effect=read):
++                self.assertIs(P.source_quiescent_snapshot(slot,object(),3306,'owned',report,Path('unused')),rows)
++            self.assertEqual(slot.stop_history[0]['proofKind'],'READY_JVM_EXIT_CONFIRMED')
++            self.assertEqual(slot.stop_history[0]['stopped']['exitCode'],143)
++            self.assertNotIn('private-log-canary',json.dumps(slot.stop_history))
++
++    def test_repeated_stop_captures_once_then_verifies_before_exact_removal_and_keeps_history(self):
++        with tempfile.TemporaryDirectory() as directory:
++            slot,_,calls,_=RestoreHttpGracefulStopControls().running_slot(directory)
++            captures=[];slot.read_complete_application_log=lambda:captures.append('read') or b'private-log-canary'
++            with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}):
++                slot.stop(remove=False);slot.stop(remove=False)
++                original_identity=dict(slot.process);slot.process={**slot.process,'startTicks':'124'}
++                with self.assertRaises(ValueError):slot.stop(remove=False)
++                slot.process=original_identity;slot.stop()
++            self.assertEqual(captures,['read']);self.assertEqual(len(slot.stop_history),1)
++            self.assertEqual(sum(isinstance(argv,list) and argv[1]=='stop' for argv,_ in calls),1)
++            self.assertEqual(sum(isinstance(argv,list) and argv[1]=='rm' for argv,_ in calls),1)
++            self.assertEqual(slot.removed,['4'*64]);self.assertIsNone(slot.cid)
++            diagnostic=slot.diagnostic_summary()
++            self.assertEqual(diagnostic['lastStoppedEvidence']['cid'],'4'*64)
++            self.assertFalse(diagnostic['startAbsenceProven'])
++            self.assertNotIn('private-log-canary',json.dumps(diagnostic))
++            slot.verify_all_stopped_logs()
++
++    def test_capture_failure_or_changed_private_archive_prevents_removal_and_erasure_proof(self):
++        for kind in ('capture-failure','archive-drift','missing-archive'):
++            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as directory:
++                slot,_,calls,_=RestoreHttpGracefulStopControls().running_slot(directory)
++                with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}):
++                    if kind=='capture-failure':
++                        def unavailable():raise ValueError('controlled original log unavailable')
++                        slot.read_complete_application_log=unavailable
++                    else:
++                        slot.stop(remove=False)
++                        path=slot.private_log_path(slot.cid)
++                        if kind=='archive-drift':path.write_bytes(b'wrong retained bytes')
++                        else:path.unlink()
++                    with self.assertRaises(ValueError):slot.stop()
++                self.assertFalse(any(isinstance(argv,list) and argv[1]=='rm' for argv,_ in calls))
++                self.assertEqual(slot.removed,[]);self.assertEqual(slot.stopped['exitCode'],143)
++                with self.assertRaises(ValueError):slot.verify_all_stopped_logs()
++
++    def test_complete_log_capture_keeps_stdout_and_stderr_private_and_rejects_exit_or_size_failure(self):
++        with tempfile.TemporaryDirectory() as directory:
++            slot,_,_,_=RestoreHttpGracefulStopControls().running_slot(directory)
++            with patch.object(R.subprocess,'run',return_value=SimpleNamespace(returncode=0,stdout=b'out',stderr=b'error')) as read:
++                self.assertEqual(R.ApplicationSlot.read_complete_application_log(slot),b'outerror')
++            self.assertEqual(read.call_args.args[0],['docker','logs','4'*64]);self.assertEqual(read.call_args.kwargs['timeout'],20)
++            for value in (SimpleNamespace(returncode=1,stdout=b'',stderr=b'private-error'),
++                          SimpleNamespace(returncode=0,stdout=b'x'*(8*1024*1024+1),stderr=b'')):
++                with patch.object(R.subprocess,'run',return_value=value):
++                    with self.assertRaises(ValueError):R.ApplicationSlot.read_complete_application_log(slot)
++
++    def test_lifecycle_rejects_missing_foreign_unavailable_or_preready_log_proof(self):
++        fixture=RestoreHttpFailureLifecycleControls()
++        for kind in ('missing','foreign','unavailable','preready','137','private-erasure'):
++            with self.subTest(kind=kind):
++                report=fixture.success_report()
++                if kind=='missing':report['applicationStopHistory'].pop()
++                elif kind=='foreign':report['applicationStopHistory'][0]['cid']='9'*64
++                elif kind=='unavailable':report['applicationStopHistory'][0]['log']['result']='UNAVAILABLE'
++                elif kind=='preready':report['applicationStopHistory'][0]['proofKind']='PRE_READY_JVM_EXIT_CONFIRMED'
++                elif kind=='137':report['applicationStopHistory'][0]['stopped']['exitCode']=137
++                else:report['applicationLogPrivateErasure']='UNKNOWN'
++                with self.assertRaises(ValueError):P.assert_successful_lifecycle(report)
++
++    def test_original_failure_with_complete_resource_absence_and_unavailable_owner_log_stays_rejected(self):
++        fixture=RestoreHttpFailureLifecycleControls()
++        report=fixture.success_report();report['result']='NOT_COMPLETED'
++        report['firstFailureType']='ValueError';report['firstFailurePhase']='CANONICAL_BACKUP_RESTORE'
++        report['phase']='CANONICAL_BACKUP_RESTORE'
++        proof,failure,_=fixture.finalization(report,fixture.owner('8'*64,'UNAVAILABLE'),original_exit=1)
++        self.assertIsNotNone(failure);self.assertEqual(proof['result'],'NOT_ACCEPTED')
++        self.assertEqual(proof['resourceCleanup'],'CONFIRMED_EXACT_OWNED_REMOVAL')
++        self.assertIn({'phase':'APPLICATION_LOG_UNAVAILABLE','type':'ValueError'},proof['finalizationFailures'])
++
++
++
++class RestoreHttpCurrentAllocatorControls(unittest.TestCase):
++    """Per-connection driver double: cached metadata is not current-MySQL runtime evidence."""
++    schema='cy_e2e_auth_'+'a'*32
++    uuid='11111111-1111-1111-1111-111111111111'
++
++    def driver(self):
++        owner=self
++        class Auth:
++            sessions=[];ignore_set=False;actual_uuid=owner.uuid;actual_schema=owner.schema
++            expiry_override=None;current=211;cached=2
++            @classmethod
++            def database(cls,port,schema):
++                session=SimpleNamespace(id=len(cls.sessions),expiry=86400,schema=schema,events=[])
++                class Cursor:
++                    description=(('id',),)
++                    def execute(self,sql,args=None):
++                        session.events.append((sql,args))
++                        if sql=='SET SESSION information_schema_stats_expiry=0':
++                            if not cls.ignore_set:session.expiry=0
++                        elif sql=='SELECT @@SESSION.information_schema_stats_expiry,@@server_uuid,DATABASE()':
++                            self.identity=(session.expiry if cls.expiry_override is None else cls.expiry_override,
++                                           cls.actual_uuid,cls.actual_schema)
++                        elif sql.startswith('SELECT TABLE_NAME,AUTO_INCREMENT FROM information_schema.TABLES'):
++                            owner.assertEqual(args,(owner.schema,))
++                            self.description=(('TABLE_NAME',),('AUTO_INCREMENT',))
++                            self.metadata=True
++                        else:
++                            owner.assertTrue(sql.startswith('SELECT * FROM '));owner.assertIsNone(args)
++                            self.description=(('id',),);self.metadata=False
++                    def fetchone(self):return self.identity
++                    def fetchall(self):
++                        if getattr(self,'metadata',False):
++                            return tuple((name,(cls.current if session.expiry==0 else cls.cached)
++                                    if name=='member_cash_withdraw' else None) for name in sorted(P.REQUIRED_TABLES))
++                        return ()
++                session.cursor=lambda:nullcontext(Cursor())
++                cls.sessions.append(session)
++                return nullcontext(session)
++        return Auth
++
++    def test_set_effective_zero_identity_and_metadata_use_one_exact_connection(self):
++        auth=self.driver()
++        value=P.snapshot(auth,3306,self.schema,self.uuid)
++        self.assertEqual(value['member_cash_withdraw']['nextId'],211)
++        self.assertEqual(set(value),P.REQUIRED_TABLES)
++        metadata_sessions=[session for session in auth.sessions if any(
++                sql.startswith('SELECT TABLE_NAME,AUTO_INCREMENT') for sql,_ in session.events)]
++        self.assertEqual(len(metadata_sessions),1)
++        first=metadata_sessions[0]
++        self.assertEqual([sql for sql,_ in first.events[:2]],
++                ['SET SESSION information_schema_stats_expiry=0',
++                 'SELECT @@SESSION.information_schema_stats_expiry,@@server_uuid,DATABASE()'])
++        self.assertTrue(first.events[2][0].startswith('SELECT TABLE_NAME,AUTO_INCREMENT'))
++        self.assertEqual(first.expiry,0)
++        self.assertTrue(all(not sql.startswith(('SET GLOBAL','ANALYZE','UPDATE','INSERT','ALTER'))
++                for session in auth.sessions for sql,_ in session.events))
++
++    def test_set_on_another_session_is_not_accepted_as_effective_zero(self):
++        auth=self.driver()
++        with auth.database(3306,self.schema) as other,other.cursor() as cur:
++            cur.execute('SET SESSION information_schema_stats_expiry=0')
++        self.assertEqual(auth.sessions[0].expiry,0)
++        auth.ignore_set=True
++        with self.assertRaisesRegex(ValueError,'same-session current allocator metadata identity'):
++            P.snapshot(auth,3306,self.schema,self.uuid)
++        self.assertEqual(auth.sessions[1].expiry,86400)
++        self.assertFalse(any(sql.startswith('SELECT TABLE_NAME,AUTO_INCREMENT')
++                for sql,_ in auth.sessions[1].events))
++        # A later legitimate sampler must set and verify its own fresh connection too.
++        auth.ignore_set=False
++        self.assertEqual(P.snapshot(auth,3306,self.schema,self.uuid)['member_cash_withdraw']['nextId'],211)
++
++    def test_cached_or_wrong_identity_or_noninteger_zero_cannot_read_allocator_metadata(self):
++        for kind in ('wrong-uuid','wrong-schema','cached','boolean-zero','string-zero'):
++            with self.subTest(kind=kind):
++                auth=self.driver()
++                if kind=='wrong-uuid':auth.actual_uuid='22222222-2222-2222-2222-222222222222'
++                elif kind=='wrong-schema':auth.actual_schema='foreign-schema'
++                elif kind=='cached':auth.ignore_set=True
++                elif kind=='boolean-zero':auth.expiry_override=False
++                else:auth.expiry_override='0'
++                with self.assertRaisesRegex(ValueError,'same-session current allocator metadata identity'):
++                    P.snapshot(auth,3306,self.schema,self.uuid)
++                self.assertFalse(any(sql.startswith('SELECT TABLE_NAME,AUTO_INCREMENT')
++                        for session in auth.sessions for sql,_ in session.events))
++
++    def test_fresh_null_zero_or_changed_allocator_is_preserved_and_strict_compare_still_rejects_drift(self):
++        for current in (None,0,212):
++            with self.subTest(current=current):
++                auth=self.driver();auth.current=current
++                rows=P.snapshot(auth,3306,self.schema,self.uuid)
++                if current is None:self.assertIsNone(rows['member_cash_withdraw']['nextId'])
++                else:self.assertEqual(rows['member_cash_withdraw']['nextId'],current)
++                before=copy.deepcopy(rows);before['member_cash_withdraw']['nextId']=211
++                difference=P.restore_difference_summary(before,rows)
++                self.assertEqual(difference['tables'][0]['categories'],['NEXT_ID_DIFFER'])
++                controls=RestoreHttpCanonicalComparisonControls()
++                _,report,slot,_=controls.fixture()
++                controls.rejected(before,rows,report,slot)
++                changed=copy.deepcopy(rows);changed['member_cash_withdraw']['rows']=[{'id':1,'status':1}]
++                controls.rejected(rows,changed,report,slot)
++                self.assertIn('TYPED_ROWS_DIFFER',report['canonicalRestoreComparison']['tables'][0]['categories'])
++
++
+ if __name__=='__main__':unittest.main()
