@@ -409,6 +409,7 @@ Page({
     recoveryAvailable: false,
     roamSessionReady: false,
     locErr: false,
+    locationForegroundOnly: false,
     gpsWeak: '',
     nearestM: 0,
     poiErr: false,
@@ -3786,25 +3787,27 @@ Page({
     });
   },
   _startReal(consentAlreadyRecorded) {
-    if (this._realOn || this._realStarting) return;
+    if (this._unloaded || this._realOn || this._realStarting) return;
     const that = this;
     const epoch = this._realStartEpoch = (this._realStartEpoch || 0) + 1;
     const locationRevision = bgTracker.revision('roam');
     const owner = String(getApp().getUserID() || '');
-    const live = () => epoch === that._realStartEpoch && locationRevision === bgTracker.revision('roam') && owner === String(getApp().getUserID() || '');
+    const live = () => !that._unloaded && epoch === that._realStartEpoch && locationRevision === bgTracker.revision('roam') && owner === String(getApp().getUserID() || '');
     this._realStarting = true;
+    this.setData({ locationForegroundOnly: false });
     this._observeLocationRevocation();
     const abandon = () => {
       if (!live()) return;
       that._realStarting = false;
+      that.setData({ locationForegroundOnly: false });
       if (that._realRevokeOff) { that._realRevokeOff(); that._realRevokeOff = null; }
     };
-    const onOk = () => {
+    const onOk = (usingBackground) => {
       if (!live()) return;
       that._realStarting = false; that._realAnchor = null;
       that._realOn = true;
       wx.onLocationChange(that._onRealLoc = (loc) => { if (live() && that._realOn) that._realTick(loc); });
-      that.setData({ locErr: false });
+      that.setData({ locErr: false, locationForegroundOnly: usingBackground === false });
       that._syncGoal();
       wx.setKeepScreenOn && wx.setKeepScreenOn({ keepScreenOn: true });
       // 不再弹「真实定位已开启」:计时与定位点已说明,toast 会压住暂停键。
@@ -3847,6 +3850,7 @@ Page({
     bgTracker.release('roam');
     this._realStartEpoch = (this._realStartEpoch || 0) + 1;
     this._realStarting = false;
+    this.setData({ locationForegroundOnly: false });
     if (this._realRevokeOff) { this._realRevokeOff(); this._realRevokeOff = null; }
     const onLocationChange = this._onRealLoc;
     this._realOn = false;

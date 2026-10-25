@@ -234,6 +234,7 @@ page{ background:var(--cy-color-bg-page); }
 /* 离线变体:状态靠「图标形状 + 文字」承载,颜色只是辅助(DS §8:状态不得只靠颜色)。
    实测 text-primary 压 bg-elevated 16.81:1、warning 图标 5.33:1(图形阈值 3)。 */
 .maptip--offline{ display:flex; align-items:center; gap:var(--cy-space-1); max-width:86vw; }
+.maptip--foreground{ white-space:normal; }
 .maptip--offline .cyi{ color:var(--cy-color-play-accent); flex:none; }
 /* 恢复条:外层 alert 承载错误原因,点击落在内层整行(U6 要求告警区内有可点恢复动作) */
 /* 命中区保持整颗药丸:内边距从外层挪到可点的内层,不因拆出 alert 而缩小 */
