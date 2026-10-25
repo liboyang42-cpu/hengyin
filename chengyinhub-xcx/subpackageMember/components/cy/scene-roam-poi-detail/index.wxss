@@ -31,6 +31,7 @@
 .poi-node__title { margin-top: var(--cy-space-2); margin-bottom: var(--cy-space-1); font-size: var(--cy-type-card-title); }
 .poi-node__meta { display: block; color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); }
 .poi-recovery { margin-top: var(--cy-space-3); }
+.poi-interaction-recovery { position: fixed; left: var(--cy-space-3); right: var(--cy-space-3); bottom: calc(var(--cy-btn-h) + var(--cy-space-3) + var(--cy-space-3) + var(--cy-space-2) + env(safe-area-inset-bottom)); z-index: 11; border-radius: var(--cy-radius-md); background: var(--cy-color-bg-surface); }
 .poi-node__actions { display: flex; gap: var(--cy-space-2); margin-top: var(--cy-space-3); }
 .poi-action { flex: 1; min-height: var(--cy-btn-h); display: flex; align-items: center; justify-content: center; border: 2rpx solid var(--cy-color-border-strong); border-radius: var(--cy-radius-md); color: var(--cy-color-text-primary); font-size: var(--cy-type-label); }
 .poi-action--primary { border-color: var(--cy-color-action-primary-bg); background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }

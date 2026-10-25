@@ -83,7 +83,7 @@
   </view>
   <view wx:if="{{node}}" class="poi-footer">
     <cy-btn class="poi-footer__button" variant="secondary" bind:tap="openLocation" disabled="{{!hasLocation}}">导航</cy-btn>
-    <cy-btn class="poi-footer__button poi-action--primary" aria-disabled="{{checkinPending || node.completed || completing || (!node.needRedeem && !node.canInteract)}}" bind:tap="startInteract" disabled="{{checkinPending || node.completed || completing || (!node.needRedeem && !node.canInteract)}}">
+    <cy-btn class="poi-footer__button" aria-disabled="{{checkinPending || node.completed || completing || (!node.needRedeem && !node.canInteract)}}" bind:tap="startInteract" disabled="{{checkinPending || node.completed || completing || (!node.needRedeem && !node.canInteract)}}">
       {{checkinPending ? '结果待确认' : node.completed ? '挑战已完成' : completing ? '正在确认' : node.needRedeem ? '出示核销码' : challengePhoto ? '继续答题' : '开始挑战'}}
     </cy-btn>
   </view>
@@ -96,4 +96,4 @@
     bind:afterleave="onChoiceSheetCancel" />
 </view>
 <cy-error load-failure wx:else fill title="页面暂时无法显示" retry="重试" bind:retry="retry" />
-    <view wx:if="{{interactionState !== 'idle'}}" class="poi-recovery"><cy-error title="{{interactionTitle}}" sub="{{interactionText}}" retry="{{interactionActionText}}" bind:retry="recoverInteraction" /></view>
+    <view wx:if="{{interactionState !== 'idle'}}" class="poi-recovery poi-interaction-recovery"><cy-error title="{{interactionTitle}}" sub="{{interactionText}}" retry="{{interactionActionText}}" bind:retry="recoverInteraction" /></view>

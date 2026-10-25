@@ -4,5 +4,5 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-  <cy-scene-deep-link wx:if="{{ready}}" scene-id="roam-poi-detail" params="{{sceneParams}}" />
+  <cy-scene-deep-link id="roamDeepLink" wx:if="{{ready}}" scene-id="roam-poi-detail" params="{{sceneParams}}" />
 </view>

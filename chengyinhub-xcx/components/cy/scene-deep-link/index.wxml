@@ -19,7 +19,7 @@
       <cy-scene-roam-task-list bind:open="openChildScene" bind:close="closeChildScene" bind:official="openOfficialEvent" />
     </block>
     <block wx:elif="{{sceneCurrent.id === 'roam-poi-detail'}}">
-      <cy-scene-roam-poi-detail poi-id="{{sceneCurrent.params.poiId}}" merchant-id="{{sceneCurrent.params.merchantId}}" bind:open="openChildScene" bind:close="closeChildScene" bind:citystamp="openCityStamp" />
+      <cy-scene-roam-poi-detail id="roamPoiDetail" poi-id="{{sceneCurrent.params.poiId}}" merchant-id="{{sceneCurrent.params.merchantId}}" bind:open="openChildScene" bind:close="closeChildScene" bind:citystamp="openCityStamp" />
     </block>
     <block wx:elif="{{sceneCurrent.id === 'roam-discover'}}">
       <cy-scene-roam-discover bind:open="openChildScene" bind:close="closeChildScene" />
