@@ -808,7 +808,18 @@ class GenericGameplayHttpE2eIT {
         httpSourceStage = HttpSourceStage.PLAYER_INITIAL_STATE;
         JsonNode view=theme(s);s.routeId=view.path("sessionId").asLong();assertTrue(s.routeId>0,view.toString());
         httpSourceStage = HttpSourceStage.PLAYER_ARRIVAL;
-        success(formFields("/api/play/checkin",json.createObjectNode().put("topicId",s.topicId).put("code","lc-"+s.nodeId).put("routeActionId","arrive"),s.headers));
+        JsonNode arrivalContext=success(get("/api/play/action-context?topicId="+s.topicId+"&nodeId="+s.nodeId,s.headers));
+        assertTrue(arrivalContext.path("routeSessionId").isIntegralNumber()
+                && arrivalContext.path("routeSessionId").canConvertToLong());
+        assertEquals(s.routeId,arrivalContext.path("routeSessionId").longValue());
+        assertTrue(arrivalContext.path("expectedRouteVersion").isIntegralNumber()
+                && arrivalContext.path("expectedRouteVersion").canConvertToInt()
+                && arrivalContext.path("expectedRouteVersion").intValue()>=0);
+        ObjectNode arrival=json.createObjectNode().put("topicId",s.topicId).put("nodeId",s.nodeId)
+                .put("code","lc-"+s.nodeId).put("routeActionId","arrive")
+                .put("routeSessionId",arrivalContext.path("routeSessionId").longValue())
+                .put("expectedRouteVersion",arrivalContext.path("expectedRouteVersion").intValue());
+        success(formFields("/api/play/checkin",arrival,s.headers));
         httpSourceStage = HttpSourceStage.PLAYER_SCAN_READBACK;
         if(config.has("outcomeRules"))assertScanHasNotCompleted(s);
         httpSourceStage = HttpSourceStage.PLAYER_QUEST_START;

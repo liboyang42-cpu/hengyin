@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-25T01:40:21.563094+00:00",
+  "updated_utc": "2026-10-25T01:50:27.135415+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -9,8 +9,8 @@
   "mode": "Both actual authprepare failure repairs collected: G37 exactWP08 prerequisites and B8f545 full diagnostics guard applied; scan/freeze one operational candidate then targetauth workflow only",
   "current_worker_assignments": {
     "A": {
-      "state": "DELIVERED_SAFE_CONTEXT_ONLY_FROZEN_PENDING_DIAGNOSTIC",
-      "task": "Trace originalGeneric26cases16R5HTTP500failures sharedrealcallchain, preserveallcases/assertions, evidencebeforefix/noinventedUNKNOWNreason",
+      "state": "DELIVERED_MINIMAL_CHECKIN_FIXTURE_FROZEN_PENDING_RUNTIME",
+      "task": "Actual16contextsPLAYER_ARRIVAL/CHECKIN; tracecheckinpermissions/entitlement/actionidentity/persistence, preserve26cases325assertions",
       "thread_id": "01a16a22-3076-7196-88f5-86d5b2c83036",
       "host_id": "durable",
       "exclusive_files": [
@@ -1018,41 +1018,30 @@
     "full_scope_complete": false
   },
   "next_runtime_validation": {
-    "id": "GAMEPLAY_MULTI_IDENTITY_HTTP_F194_03",
+    "id": "GENERIC_HTTP_SAFE_SOURCE_CONTEXT_A6E8_01",
     "workflow": "gameplay-http-e2e.yml",
-    "source_sha": "f194799f35811c8153a750dee2958f48ee5b5ab6",
-    "tree": "c7ed0eb5fb462e4b04de70e049302789d1674cc4",
-    "branch": "codex/architecture-day-http-plan-f194-20261025",
-    "run": 40149600486,
-    "status": "PARTIAL_TWO_HTTP_CLASSES_PASS_GENERIC16FAIL",
+    "http_scope": "generic-only",
+    "source_sha": "a6e8163e6983157d2e67a1e32ca2e7ced0b9593f",
+    "tree": "da2941cb0777161c743a8293353c48fca6f7e1e0",
+    "branch": "codex/architecture-day-generic-context-a6e8-20261025",
+    "run": 40151582031,
+    "status": "FAIL_SHARED_PLAYER_ARRIVAL_CHECKIN_CONFIRMED",
     "owner": "root",
     "pending_owners": [],
-    "prior_core_ci_repeated": false,
-    "declared_cases_not_pass_count": 36,
     "jobs": [
       {
-        "databaseId": 121038129084,
-        "name": "http (FreezeGameHttpE2eIT)",
-        "status": "completed",
-        "conclusion": "success"
-      },
-      {
-        "databaseId": 121038129212,
+        "databaseId": 121044044143,
         "name": "http (GenericGameplayHttpE2eIT)",
         "status": "completed",
         "conclusion": "failure"
-      },
-      {
-        "databaseId": 121038129280,
-        "name": "http (FreezeReuseThemeHttpE2eIT)",
-        "status": "completed",
-        "conclusion": "success"
       }
     ],
-    "verification": "API headSha independently verifiedf194; originalXML/source/cleanup/summary pending",
-    "scope": "OriginalthreeisolatedHTTPclasses after both necessary schema-caller and failure-receipt fixes; no realprovider/cash/UI",
+    "declared_cases_not_pass_count": 26,
+    "verification": "API headSha independentlyverifieda6e8 and exactlyoneGenericjob; transientreadEOF retriedonce, no duplicateworkflowdispatch",
+    "scope": "PARTIAL_DIAGNOSTIC_SCOPE fixedstage/endpoint only, businesscauseUNKNOWN; no productionfix, no inheritedFreeze10 PASS",
+    "prior_core_ci_repeated": false,
     "conclusion": "failure",
-    "readback": "f194-http-partial-and-generic-failure.json"
+    "readback": "a6e8-generic-checkin-failure-readback.json"
   },
   "runtime_evidence_implementation": {
     "owner": "F",
@@ -1281,6 +1270,43 @@
       "scope": "OriginalthreeisolatedHTTPclasses after exact41diagnosticmaprepair, no realprovider/cash/UI",
       "conclusion": "failure",
       "failure_readback": "ae0f-http-schema-and-receipt-failure.json"
+    },
+    {
+      "id": "GAMEPLAY_MULTI_IDENTITY_HTTP_F194_03",
+      "workflow": "gameplay-http-e2e.yml",
+      "source_sha": "f194799f35811c8153a750dee2958f48ee5b5ab6",
+      "tree": "c7ed0eb5fb462e4b04de70e049302789d1674cc4",
+      "branch": "codex/architecture-day-http-plan-f194-20261025",
+      "run": 40149600486,
+      "status": "PARTIAL_TWO_HTTP_CLASSES_PASS_GENERIC16FAIL",
+      "owner": "root",
+      "pending_owners": [],
+      "prior_core_ci_repeated": false,
+      "declared_cases_not_pass_count": 36,
+      "jobs": [
+        {
+          "databaseId": 121038129084,
+          "name": "http (FreezeGameHttpE2eIT)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "databaseId": 121038129212,
+          "name": "http (GenericGameplayHttpE2eIT)",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "databaseId": 121038129280,
+          "name": "http (FreezeReuseThemeHttpE2eIT)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "verification": "API headSha independently verifiedf194; originalXML/source/cleanup/summary pending",
+      "scope": "OriginalthreeisolatedHTTPclasses after both necessary schema-caller and failure-receipt fixes; no realprovider/cash/UI",
+      "conclusion": "failure",
+      "readback": "f194-http-partial-and-generic-failure.json"
     }
   ],
   "worker_progress_cursors": {
@@ -1401,7 +1427,7 @@
     "cause": "UNKNOWN;16allpersonal_lifecycle,stage_not_yet_observed",
     "scope": "FixedJavaenumstage/endpoint suppressedassertion on originalfailure; originalfailure/rethrow preserved",
     "java_db_ci": "NOT_RUN",
-    "remaining": "NONE_SOURCE_COLLECTED; actualdiagnosticpending"
+    "remaining": "Runtimefixedstage/endpointactualreadbackpending"
   },
   "http_mixed_summary_case_frame_delivery": {
     "owner": "F",
@@ -1416,11 +1442,38 @@
     "owner": "F",
     "sha": "282528ebfd82c9083f42e12134777d1b439a14c1",
     "parent": "d20412c1b223741600ada12435697d9505f6a8ed",
-    "state": "APPLIED_ALL_NECESSARY_SOURCE_COLLECTED_PENDING_FREEZE",
+    "state": "FROZEN_PUSHED_SINGLE_GENERIC_DIAGNOSTIC_IN_PROGRESS",
     "owner_controls": "36/36PASS0skip; noJavaDBHTTP",
     "integration_checks": "Fexecutionfilesbyteexact; AJavaenum8stages16endpoints exactly equalFsafeparseracceptedsets",
     "workflow": "Originaldefaultall-three; exactgeneric-onlychoice partial diagnostic26 neverfull36/wholebusiness",
     "business_fix": false,
-    "runtime": "NOT_RUN"
+    "runtime": "NOT_RUN",
+    "integrated_source": "a6e8163e6983157d2e67a1e32ca2e7ced0b9593f"
+  },
+  "public_master_readback": {
+    "sha": "892efe6f765a5748065569fd886ee9b00ef71d4b",
+    "latest_merge_pr": 598,
+    "latest_merge_scope": "Payment correctness only, not full architecture candidate",
+    "candidate": "a6e8163e6983157d2e67a1e32ca2e7ced0b9593f",
+    "candidate_prs": [],
+    "compare_status": "diverged",
+    "candidate_ahead": 170,
+    "candidate_behind": 10,
+    "full_architecture_merged": false,
+    "note": "Final publicmaster reconciliation still required; preserve parallel changes, no privatehistory"
+  },
+  "generic_checkin_contract_repair": {
+    "owner": "A",
+    "parent": "a6e8163e6983157d2e67a1e32ca2e7ced0b9593f",
+    "type": "COMPLETE_CHAT_DIFF_NO_DONOR_COMMIT",
+    "patch_sha256": "4a7a6954a7d452a543455c10284892df24acd75c82645294f968802f72780b53",
+    "state": "APPLIED_CHECK_PASS_PENDING_TARGET",
+    "root_cause": "Shared lifecycle checkin fixture omitted nodeId,expectedRouteVersion,routeSessionId; actualexecuteBasicIntent rejects missingversion/runtimebeforearrival",
+    "production_unchanged": true,
+    "fix": "RealHTTPaction-context reads and verifies same routeSession/current version before checkin, sends all required originalidentityfields",
+    "assertions_before": 325,
+    "assertions_after": 328,
+    "original_cases": 26,
+    "java_db_ci": "NOT_RUN"
   }
 }

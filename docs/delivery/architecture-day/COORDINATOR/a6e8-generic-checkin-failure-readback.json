@@ -1,0 +1,43 @@
+{
+  "source_sha": "a6e8163e6983157d2e67a1e32ca2e7ced0b9593f",
+  "run": 40151582031,
+  "job": 121044044143,
+  "artifact": 12582731961,
+  "zip_sha256": "543ebaa23679444d180ddbeb9dd324b2e8e3868dbfea6c3c2b7a2203de37cc16",
+  "crc": "PASS",
+  "files": 3,
+  "scope": "PARTIAL_DIAGNOSTIC_SCOPE_GENERIC_ONLY",
+  "result": "FAIL_26CASES16FAILURE0ERROR0SKIP",
+  "actual_shared_source_context": {
+    "endpoint": "CHECKIN",
+    "stage": "PLAYER_ARRIVAL"
+  },
+  "all16_contexts_equal": true,
+  "caseCallFrames": {
+    "legacyHttpFrozenScanSessionIgnoresLaterR5TemplateEdit": "GenericGameplayHttpE2eIT.java:1057",
+    "personalR5ScanOnlyDoesNotCompleteTheGameplay": "GenericGameplayHttpE2eIT.java:897",
+    "r5HttpAlbumAcceptsOwnedEvidenceAndRefusesForeignEvidence": "GenericGameplayHttpE2eIT.java:977",
+    "r5HttpCheckRollRerollSubmitHasAuthoritativeActions(String)[1]": "GenericGameplayHttpE2eIT.java:964",
+    "r5HttpCheckRollRerollSubmitHasAuthoritativeActions(String)[2]": "GenericGameplayHttpE2eIT.java:964",
+    "r5HttpCheckRollRerollSubmitHasAuthoritativeActions(String)[3]": "GenericGameplayHttpE2eIT.java:964",
+    "r5HttpFailClampsAndFreezesFailureCard": "GenericGameplayHttpE2eIT.java:957",
+    "r5HttpFeedbackRunsAfterOutcomeOnceAndClosedSessionRefusesChoice": "GenericGameplayHttpE2eIT.java:1023",
+    "r5HttpPassInsufficientCostKeepsProofAndDoesNotConsumeSuccessfulUse": "GenericGameplayHttpE2eIT.java:948",
+    "r5HttpSettledFeedbackCanReopenThroughTheComponentStartPath(String)[1]": "GenericGameplayHttpE2eIT.java:997",
+    "r5HttpSettledFeedbackCanReopenThroughTheComponentStartPath(String)[2]": "GenericGameplayHttpE2eIT.java:997",
+    "r5HttpSettledFeedbackCanReopenThroughTheComponentStartPath(String)[3]": "GenericGameplayHttpE2eIT.java:997",
+    "r5HttpStepsRecoveryEpisodeUsesVerifiedFixtureAndRestoresExactlyOnce": "GenericGameplayHttpE2eIT.java:1034",
+    "r5HttpTypeInUnlimitedAndTimerDeadlineSurviveReentry(boolean)[1]": "GenericGameplayHttpE2eIT.java:934",
+    "r5HttpTypeInUnlimitedAndTimerDeadlineSurviveReentry(boolean)[2]": "GenericGameplayHttpE2eIT.java:934",
+    "r5HttpWaitReentryKeepsServerDeadlineAndRestoreIsOnce": "GenericGameplayHttpE2eIT.java:1042"
+  },
+  "response_reason": "UNKNOWN_NOT_EXPOSED",
+  "cleanup": {
+    "mysqlAbsent": true,
+    "redisStoppedAndPortFree": true
+  },
+  "fixtureReportVerified": true,
+  "business_fix": false,
+  "owner_next": "Original A exact checkin arrival shared rootcause",
+  "full_governance_complete": false
+}
