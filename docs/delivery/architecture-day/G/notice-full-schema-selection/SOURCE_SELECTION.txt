@@ -1,0 +1,16 @@
+Executed pure Python against source c86d212f66b92ed1af2c0c661d68169ddc9c48a5:
+  build_schema.build_manifest(REPO, target_commit=source, dependency_path=ci/migration-dependencies.json)
+  build_schema.migrations_after_baseline(manifest['migrations'])
+No database, Java, Redis, provider or CI calls.
+
+allCount=547
+selectedCount=260
+selectedRankIsZeroBased=true
+20261024_d_committed_official_notice_wx: order=55 selectedRank=46 dependsOn=[20261013_b_im_notification_intent]
+20261024_c_before_start_notice_typed: order=56 selectedRank=47 dependsOn=[20261024_d_committed_official_notice_wx]
+20261024_g_before_start_notice_metadata_v2: order=59 selectedRank=50 dependsOn=[20261024_d_committed_official_notice_wx]
+
+PASS: existing selector retains D then old C then v2; no replacement selection exists.
+PASS: strict v2 executable source retains old gates/DDL/readback with only four metadata quote normalizers.
+Old C SHA256=615c8c7883a97ca70e1cc14ff4ac965a895db9ccfea91f6f08e269dbf99e889a
+v2 SHA256=a36889f13d1de308edfcba06409ef153438521268f355881006864ae842bc02c

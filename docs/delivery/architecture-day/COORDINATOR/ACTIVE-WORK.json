@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T23:47:18.795315+00:00",
+  "updated_utc": "2026-10-25T00:00:33.665458+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -23,7 +23,7 @@
       "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280"
     },
     "B": {
-      "state": "DELIVERED_DIAGNOSTIC_PATCH_PENDING_TARGETED_AUTH_RUNTIME",
+      "state": "DELIVERED_RUNTIME_DIAGNOSTICS_SCOPED_VERIFIED_NO_OPEN_CODE_TASK",
       "task": "Preserve first failure and cleanup despite malformed/unreadable report; never infer pre-app from bad metadata; two report readers plus one direct control, full fourfile patch including earlier docs",
       "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
       "host_id": "durable",
@@ -83,8 +83,8 @@
       "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280"
     },
     "G": {
-      "state": "DELIVERED_APPLIED_PENDING_AUTH_SCHEMA_TARGETED_RUNTIME",
-      "task": "Only20261023_g_wp08_delivery_jobs_paused assertion3 canonical prerequisites/topology and minimal direct controls; old SQL/guard bytes immutable; if notDAG give root exact cause",
+      "state": "DELIVERED_EXACT_FRESH_PAIR_WIRING_FROZEN_PENDING_RUNTIME",
+      "task": "Implement approved exact oldC->strictv2 fresh scratch selector, fixed D/oldC/v2 identities/hashes, fail before any mutation on existing schema or unknown pair; original runner gates unchanged",
       "thread_id": "01a16a23-8904-73e8-a024-378a96f0800c",
       "host_id": "durable",
       "delivery_sha": "af0ed9086625f87e6ccdc1282d870358dc322ee0",
@@ -96,7 +96,12 @@
         "CmsTopic settlement/verified-seat fee consumption and durable manual path"
       ],
       "residual_delivery": "4e5ee6e1acafa5cd4efbf366c29445d5d5c1249e",
-      "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280"
+      "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280",
+      "exclusive_files": [
+        "scripts/e2e/build_schema.py",
+        "scripts/e2e/test_build_schema.py",
+        "docs/delivery/architecture-day/G/notice-full-schema-selection/"
+      ]
     },
     "H": {
       "state": "DELIVERED_NO_OPEN_IDENTIFIED_FAILURE_CODE_TASK",
@@ -1009,30 +1014,29 @@
     "full_scope_complete": false
   },
   "next_runtime_validation": {
-    "id": "AUTHENTICATED_REDIS_RECOVERY_CCD5_01",
+    "id": "AUTHENTICATED_REDIS_RECOVERY_C86D_02",
     "workflow": "isolated-authenticated-redis-recovery.yml",
-    "source_sha": "ccd55005c75d105f8245b0591e63adcd0dd15280",
-    "branch": "codex/architecture-day-final-ccd5-20261024",
-    "run": 40142606869,
-    "status": "FAIL_PRE_APP_SCHEMA_PREPARE_NOT_BUSINESS_EXERCISED",
-    "conclusion": "failure",
-    "owner": "B",
-    "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
-    "host_id": "durable",
-    "scope": "Existing isolated fixture-admin HTTP/refund-lease Redis fault/recovery; not userUI/cash/channel/full business walkthrough",
-    "java_db_location": "GitHub-hosted ubuntu24.04 only",
-    "evidence_dir": "docs/delivery/architecture-day/B/ccd5-authenticated-redis-recovery/",
+    "source_sha": "c86d212f66b92ed1af2c0c661d68169ddc9c48a5",
+    "tree": "a511e92808919a3ac19a624ff1fbd977ecf5efe7",
+    "branch": "codex/architecture-day-auth-prepare-c86d-20261024",
+    "run": 40144172218,
+    "status": "FAIL_PRE_APP_NEXT_STRICT_SCHEMA_PREFLIGHT",
     "jobs": [
       {
-        "databaseId": 121017302795,
+        "databaseId": 121021893563,
         "name": "isolated-authenticated-redis-recovery",
         "status": "completed",
         "conclusion": "failure"
       }
     ],
+    "owner": "root",
+    "scope": "Existing isolated fixture-admin HTTP/refund lease Redis fault/recovery; fresh canonical schema from this source; not UI/cash/channel/full business walkthrough",
+    "java_db_location": "GitHub-hosted ubuntu24.04 only",
+    "pending_owners": [],
     "prior_core_ci_repeated": false,
-    "failure_readback": "ccd5-authenticated-redis-prepare-failure.json",
-    "pending_owners": []
+    "verification": "headSha independently read back; actual HTTP/schema/recovery NOT_RUN_OR_PENDING, no inherited green",
+    "conclusion": "failure",
+    "failure_readback": "c86d-authenticated-redis-prepare-failure.json"
   },
   "runtime_evidence_implementation": {
     "owner": "F",
@@ -1108,11 +1112,37 @@
       ],
       "core_standard_storage_repeated": false,
       "readback": "4cda-pool-provenance-cleanup-readback.json"
+    },
+    {
+      "id": "AUTHENTICATED_REDIS_RECOVERY_CCD5_01",
+      "workflow": "isolated-authenticated-redis-recovery.yml",
+      "source_sha": "ccd55005c75d105f8245b0591e63adcd0dd15280",
+      "branch": "codex/architecture-day-final-ccd5-20261024",
+      "run": 40142606869,
+      "status": "FAIL_PRE_APP_SCHEMA_PREPARE_NOT_BUSINESS_EXERCISED",
+      "conclusion": "failure",
+      "owner": "B",
+      "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
+      "host_id": "durable",
+      "scope": "Existing isolated fixture-admin HTTP/refund-lease Redis fault/recovery; not userUI/cash/channel/full business walkthrough",
+      "java_db_location": "GitHub-hosted ubuntu24.04 only",
+      "evidence_dir": "docs/delivery/architecture-day/B/ccd5-authenticated-redis-recovery/",
+      "jobs": [
+        {
+          "databaseId": 121017302795,
+          "name": "isolated-authenticated-redis-recovery",
+          "status": "completed",
+          "conclusion": "failure"
+        }
+      ],
+      "prior_core_ci_repeated": false,
+      "failure_readback": "ccd5-authenticated-redis-prepare-failure.json",
+      "pending_owners": []
     }
   ],
   "worker_progress_cursors": {
     "B": "b03dff2c-10cc-4156-add7-1e422e41c5d1:6",
-    "G": "4b361718-0fcf-48df-970f-92288ff9076c:8"
+    "G": "01a17052-9826-77cd-a338-98a13d07f36e:completed"
   },
   "auth_schema_assertion_precision": {
     "required_conditions": [
@@ -1133,7 +1163,8 @@
     "integrity": "FOUR_COMPLETE_FENCES_RECONSTRUCTED_HASH_MATCH_APPLY_CHECK_PASS_APPLIED",
     "source_check": "B17/17 Python controlsPASS, source-only; old controls retained, unreadable/corrupt/type-invalid report cannot infer NOT_STARTED or prevent resource cleanup",
     "state": "DELIVERED_APPLIED_PENDING_TARGETED_AUTH_RUNTIME",
-    "business_or_schema_changes": false
+    "business_or_schema_changes": false,
+    "runtime_verdict": "PASS_SCOPED_FIRST_PREPARE_FAILURE_RETAINED_AND_PREAPP_LOG_SEPARATED_FROM_CONFIRMED_EXACT_RESOURCE_CLEANUP; NOT_BUSINESS_PASS"
   },
   "auth_schema_dependency_delivery": {
     "sha": "37e964b6d292fd08bb4d12e7ff0ca26387d578ae",
@@ -1143,7 +1174,7 @@
     "old_sql_or_other_manifest_items_changed": false,
     "checks": "Full-manifest sort positivePASS; first negative wrongassumption failed retained; corrected direct guard1method3subtestsPASS; JavaDB/actualfullschemaNOT_RUN",
     "integrity": "Full CCD5 diff applied; manifest/test bytes exact donor",
-    "runtime_verdict": "NOT_RUN",
+    "runtime_verdict": "Original WP08 not failed in c86d report; next strict preflight blocks full schema, not overall PASS",
     "document_normalization": {
       "file": "G/wp08-schema-dependency/wp08-manifest-and-tests.review.patch",
       "original_donor_sha256": "5053f6670bc08fe32c9c7c61a11dbc26a38d53cdf638fdb5e5c8918fc4ef65a7",
@@ -1151,7 +1182,7 @@
     }
   },
   "auth_repairs_integration": {
-    "status": "B_AND_G_APPLIED_SOURCE_FREEZE_PENDING",
+    "status": "FROZEN_PUSHED_ONE_TARGETED_RUNTIME_IN_PROGRESS",
     "execution_files": [
       "ci/authenticated_redis_recovery_probe.py",
       "ci/test_authenticated_redis_recovery_probe.py",
@@ -1159,6 +1190,24 @@
       "ci/test_migration_ledger.py"
     ],
     "next": "One targeted existing authenticated Redis hosted workflow; no repeated core suites",
+    "runtime": "NOT_RUN",
+    "source_sha": "c86d212f66b92ed1af2c0c661d68169ddc9c48a5",
+    "source_scan": "secret-file-gate PASS, staged gitleaks50170bytes no leaks, diffcheck PASS",
+    "run": 40144172218
+  },
+  "notice_schema_selection_delivery": {
+    "owner": "G",
+    "sha": "498b535da27568845950b1654aa4985c2c0905db",
+    "parent": "c86d212f66b92ed1af2c0c661d68169ddc9c48a5",
+    "type": "DOCS_AND_PURE_SOURCE_SELECTION_ONLY",
+    "integrated": true,
+    "source_observation": "Canonical selector retains D55/oldC56/v2 59 simultaneously; pair replacements not handled",
+    "old_run_predicate_values": "UNKNOWN",
+    "root_authorized_next": "Exact fresh-scratch replacement in existing builder and direct tests; no oldSQL/DAG/production runner changes",
+    "implementation": "APPLIED_PENDING_NEW_TARGET_RUNTIME",
+    "implementation_sha": "02a0115c10f25039a3f7c3f4152502768a3c227e",
+    "implementation_parent": "498b535da27568845950b1654aa4985c2c0905db",
+    "pure_python": "14/14PASS1.856s,9new5existing; noJavaDB",
     "runtime": "NOT_RUN"
   }
 }
