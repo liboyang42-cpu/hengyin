@@ -1,0 +1,5 @@
+b57745774c66d2d1b0d84e30ea523589e43f9a5eb15a99c8ac29308a8ba18cec  chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java
+8565fae6be6c0815fabfb37130bff6f9651c411c4e78121a3a44efa74458f2aa  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositPaymentSettlementTest.java
+4329e953106ace2aea720dd2c4fe52424289eec7cbe8ac94aad6548c87168764  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java
+0d292144938e141211505fc14c3ed4ab43e7b87952cfd631c66c0ee395b6eb30  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptMySqlIT.java
+ac32aeedd3e449e60a9ed0f226d0a1a798d54051f9ac2eb9e20cc4c7651810a6  docs/delivery/architecture-day/G/e822-deposit-proof/README.md

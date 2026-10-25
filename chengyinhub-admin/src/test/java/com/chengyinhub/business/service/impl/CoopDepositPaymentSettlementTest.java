@@ -155,6 +155,25 @@ class CoopDepositPaymentSettlementTest {
         verify(pay, never()).lockClosablePaymentAttemptForUpdate(BUSINESS, successor);
     }
 
+    @Test
+    void lateSuccessWithoutCompleteTypedReferenceCannotReachPaidOrUnpaidMutation() {
+        when(pay.queryOrderStatus(BUSINESS)).thenReturn(facts("PAYERROR", ATTEMPT));
+        when(pay.closePaymentAttempt(BUSINESS, ATTEMPT)).thenReturn(true);
+        for (String missing : new String[]{"verified_fact_id", "verified_fact_hash", "malformed_hash"}) {
+            Map<String, String> readback = paid(ATTEMPT);
+            if ("malformed_hash".equals(missing)) readback.put("verified_fact_hash", "not-a-fact-hash");
+            else readback.remove(missing);
+            when(pay.queryOrderStatus(ATTEMPT)).thenReturn(readback);
+            IllegalStateException rejected = assertThrows(IllegalStateException.class, this::resolve);
+            assertTrue(rejected.getMessage().contains("保证金原支付事实引用缺失"));
+            assertPendingWithoutSetoff();
+            assertEquals(AMOUNT, invite.getDepositAmount());
+        }
+        verify(invites, never()).markDepositPaid(anyString(), any(), any(), any(Reference.class));
+        verify(pay, never()).lockPaymentAttemptForUpdate(anyString(), anyString());
+        verify(pay, never()).lockClosablePaymentAttemptForUpdate(anyString(), anyString());
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"business", "attempt", "missing"})
     void mismatchedOrMissingOriginalReadbackCannotDeductOrApplyPaidFact(String mismatch) {
