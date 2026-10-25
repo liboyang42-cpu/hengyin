@@ -249,6 +249,14 @@ def start_application(slot,report,path,phase,side,mode,uuid,seed=False):
     return boot
 
 
+def source_quiescent_snapshot(slot, auth, port, schema, report, path):
+    """The original source backup cannot read its final SQL state until exact JVM stop succeeds."""
+    checkpoint(slot,report,path,'SOURCE_WORKLOAD','SOURCE_QUIESCENT_STOP')
+    slot.stop()
+    checkpoint(slot,report,path,'SOURCE_WORKLOAD','QUIESCENT_SQL_SNAPSHOT')
+    return snapshot(auth,port,schema)
+
+
 def run(name,schema,out,credentials):
     runtime=load('restore_http_application_slot','ci/restore_application_http_runtime.py');runtime.gate(os.environ)
     out=Path(out).resolve();slot=runtime.ApplicationSlot(name,schema,out,credentials);auth=slot.auth
@@ -316,10 +324,7 @@ def run(name,schema,out,credentials):
             original_receipt=good(slot.http(receipt_path,a))
             checkpoint(slot,report,report_path,'SOURCE_WORKLOAD','NETWORK_PROOF')
             slot.verify_network()
-            checkpoint(slot,report,report_path,'SOURCE_WORKLOAD','SOURCE_QUIESCENT_STOP')
-            slot.stop()
-            checkpoint(slot,report,report_path,'SOURCE_WORKLOAD','QUIESCENT_SQL_SNAPSHOT')
-            before=snapshot(auth,sp,schema) # Quiescent snapshot after real Quartz graceful shutdown.
+            before=source_quiescent_snapshot(slot,auth,sp,schema,report,report_path)
             report['backupRows']=public_snapshot(before)
             report['providerJournalSha256']=sha(original_provider_bytes)
             report['checks'].append({'amountFen':3000,'openingBalance':'100.00','finalBalance':'70.00',
@@ -543,7 +548,7 @@ def assert_successful_lifecycle(report):
                 and boot['guardHeld'] is (mode!='false') and boot['schedulerStarted'] is True
                 and boot['sourceSha']==report['sourceSha'] and boot['schema']==report['schema']
                 and boot['serverUuid']==uuid and boot['jarSha256']==report['jarSha256']
-                and type(boot['javaPid']) is int and boot['javaPid']>0,'actual original boot identity differs')
+                and type(boot['javaPid']) is int and boot['javaPid']==1,'actual original boot identity differs')
     require(len(report['checks'])==4 and report['checks'][0]['case']=='original_complete_cohort'
             and report['checks'][0]['providerSubmits']==1
             and [row['mode'] for row in report['checks'][1:]]==list(HELD_MODES)

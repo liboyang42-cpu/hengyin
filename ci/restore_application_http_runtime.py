@@ -58,6 +58,27 @@ def summarize_application_log(raw):
             'exceptionTypes':[kind for kind in LOG_EXCEPTION_TYPES if kind in text]}
 
 
+
+def pid1_jvm_proof(raw):
+    """Fixed restore JVM only; no process discovery, PID selection or signal forwarding."""
+    require(type(raw) is bytes and b'\x00' in raw, 'actual child boot identity')
+    command, stat = raw.rsplit(b'\x00', 1)
+    argv = command.split(b'\x00')
+    require(argv[0].rsplit(b'/', 1)[-1] == b'java'
+            and ('-Dloader.main=' + MAIN).encode() in argv
+            and b'-Dloader.path=/restore-http-testclasses' in argv
+            and b'/application.jar' in argv
+            and b'org.springframework.boot.loader.launch.PropertiesLauncher' in argv,
+            'actual child boot identity')
+    end = stat.rfind(b') ')
+    require(stat.startswith(b'1 (') and end > 3, 'actual child boot identity')
+    fields = stat[end + 2:].split()
+    require(len(fields) >= 20 and fields[1] == b'0'
+            and fields[19].isdigit() and int(fields[19]) > 0, 'actual child boot identity')
+    return {'cmdlineSha256': hashlib.sha256(command + b'\x00').hexdigest(),
+            'startTicks': fields[19].decode('ascii')}
+
+
 def load(name, relative):
     spec = importlib.util.spec_from_file_location(name, ROOT / relative)
     value = importlib.util.module_from_spec(spec); spec.loader.exec_module(value)
@@ -104,7 +125,7 @@ class ApplicationSlot:
         self.jar_hash=hashlib.sha256(self.jar.read_bytes()).hexdigest()
         self.token_secret=__import__('secrets').token_urlsafe(48)
         self.deadline=time.monotonic()+1500
-        self.cid=None;self.boots=[];self.removed=[];self.owned=[]
+        self.cid=None;self.boots=[];self.removed=[];self.owned=[];self.process=None
         self.source=self.auth.mysql_endpoint(name,suffix='mysql')
         self.target=self.auth.mysql_endpoint(name,suffix='restore-mysql')
         require(self.source['id']!=self.target['id'] and self.source['networkId']==self.target['networkId'], 'distinct same-network DBs')
@@ -143,24 +164,72 @@ class ApplicationSlot:
         result=subprocess.run(self.auth.DOCKER+['container','inspect',self.name+'-app'],capture_output=True,timeout=15)
         self.auth.require_absent('container',self.name+'-app',result.returncode,result.stderr.decode())
 
+    def running_child_identity(self, boot, obj):
+        """Bind this immutable CID/PID1 to its original boot, source, JAR and kernel start time."""
+        require(obj['Id'] == self.cid and boot.get('appCid') == self.cid
+                and type(boot.get('javaPid')) is int and boot['javaPid'] == 1
+                and obj['Config']['Image'] == JDK and obj['Config']['Entrypoint'] == ['/trace/strace']
+                and obj['Config']['Cmd'][:2] == ['-D', '-f']
+                and 'GITHUB_SHA=' + boot['sourceSha'] in obj['Config']['Env']
+                and 'CHENGYIN_RESTORE_MODE=' + boot['restoreMode'] in obj['Config']['Env']
+                and obj['NetworkSettings']['Networks'][self.name]['NetworkID'] == self.source['networkId']
+                and obj['State']['Running'] and not obj['State']['Restarting'] and not obj['State']['OOMKilled']
+                and type(obj['State']['Pid']) is int and obj['State']['Pid'] > 0,
+                'actual child boot identity')
+        require(boot['sourceSha'] == os.environ['GITHUB_SHA'] and boot['jarSha256'] == self.jar_hash
+                and self.jar.is_file() and not self.jar.is_symlink()
+                and hashlib.sha256(self.jar.read_bytes()).hexdigest() == self.jar_hash, 'actual child boot identity')
+        ready_path, config_path = self.root / 'ready.json', self.root / 'config.json'
+        require(all(path.is_file() and not path.is_symlink() for path in (ready_path, config_path)),
+                'actual child boot identity')
+        ready_raw, config_raw = ready_path.read_bytes(), config_path.read_bytes()
+        ready, config = json.loads(ready_raw), json.loads(config_raw)
+        require(all(ready.get(key) == boot.get(key) for key in
+                    ('bootId','javaPid','sourceSha','jarSha256','schema','restoreMode','serverUuid'))
+                and all(config.get(key) == boot.get(key) for key in
+                        ('sourceSha','jarSha256','schema','restoreMode','serverUuid'))
+                and config.get('classManifestSha256') == self.manifest_hash
+                and config.get('scope') == self.name[8:], 'actual child boot identity')
+        raw = self.auth.command(self.auth.DOCKER + ['exec', self.cid, 'cat', '/proc/1/cmdline', '/proc/1/stat'], timeout=10)
+        return {**pid1_jvm_proof(raw), 'cid':self.cid, 'hostPid':obj['State']['Pid'],
+                'bootId':boot['bootId'], 'sourceSha':boot['sourceSha'], 'jarSha256':self.jar_hash,
+                'readySha256':hashlib.sha256(ready_raw).hexdigest(),
+                'configSha256':hashlib.sha256(config_raw).hexdigest()}
+
     def stop(self,remove=True):
         if self.cid is None:
             self.absence();return
         obj=self.inspect(self.cid)
-        require(obj['Name']=='/'+self.name+'-app' and obj['Config']['Labels'].get('chengyin.auth-recovery')==self.name
-                and set(obj['NetworkSettings']['Networks'])=={self.name},'exact current app owner changed')
-        if obj['State']['Running']:
-            self.auth.command(self.auth.DOCKER+['stop','--time','20',self.cid],timeout=30)
-        stopped=self.inspect(self.cid)['State']
-        # Preserve the actual exit observation even when the strict success predicate rejects it.
-        self.stopped={'cid':self.cid,'running':stopped['Running'],'hostPid':stopped['Pid'],
-                      'oomKilled':stopped['OOMKilled'],'exitCode':stopped['ExitCode'],
-                      'restarting':stopped['Restarting']}
+        require(obj['Id']==self.cid and obj['Name']=='/'+self.name+'-app'
+                and obj['Config']['Labels'].get('chengyin.auth-recovery')==self.name
+                and set(obj['NetworkSettings']['Networks'])=={self.name}
+                and obj['NetworkSettings']['Networks'][self.name]['NetworkID']==self.source['networkId'],
+                'exact current app owner changed')
+        failure = None
+        try:
+            if obj['State']['Running']:
+                require(self.process is not None and self.boots
+                        and self.running_child_identity(self.boots[-1], obj) == self.process,
+                        'actual child boot identity')
+                # -D makes this verified JVM PID1. Keep the original 20-second TERM/KILL boundary.
+                self.auth.command(self.auth.DOCKER+['stop','--time','20',self.cid],timeout=30)
+        except BaseException as error:
+            failure = error
+        try:
+            stopped=self.inspect(self.cid)['State']
+            # Record current exit state on command/identity failure too; never substitute another boot.
+            self.stopped={'cid':self.cid,'running':stopped['Running'],'hostPid':stopped['Pid'],
+                          'oomKilled':stopped['OOMKilled'],'exitCode':stopped['ExitCode'],
+                          'restarting':stopped['Restarting']}
+        except BaseException:
+            if failure is not None:raise failure
+            raise
+        if failure is not None:raise failure
         require(not stopped['Running'] and not stopped['OOMKilled'] and not stopped['Restarting']
                 and stopped['Pid']==0 and stopped['ExitCode'] in (0,143),'app stop/process exit unknown')
         if not remove:return # Original outer cleanup must still collect this exact container's logs.
         self.auth.command(self.auth.DOCKER+['rm',self.cid],timeout=15)
-        self.absence();self.removed.append(self.cid);self.cid=None
+        self.absence();self.removed.append(self.cid);self.cid=None;self.process=None
 
     def diagnostic_summary(self):
         """Observe the exact existing app only; outer owner still preserves/removes its raw log."""
@@ -187,6 +256,8 @@ class ApplicationSlot:
         self.budget();require(side in ('source','target') and mode in ('true','invalid','','false'),'fixed boot matrix')
         require(not seed or (side=='source' and mode=='false' and not self.boots),'one isolated source seed')
         self.stop()
+        self.process=None
+        if hasattr(self,'stopped'):del self.stopped
         endpoint=self.source if side=='source' else self.target
         require(self.auth.mysql_endpoint(self.name,suffix='mysql' if side=='source' else 'restore-mysql')==endpoint,'DB identity changed')
         config={'sourceSha':os.environ['GITHUB_SHA'],'schema':self.schema,'scope':self.name[8:],
@@ -198,7 +269,7 @@ class ApplicationSlot:
         trace='network-'+str(len(self.boots))+'.trace';strace=shutil.which('strace')
         require(strace and (self.out/'trace-libs').is_dir(),'reuse original tracing preparation')
         # Original immutable app image/network/strace/memory/user/JAR/config. Only the test child and
-        # per-process real environment differ. No -D substitute for System.getenv and no external port.
+        # per-process real environment differ. JVM -D properties do not replace System.getenv; no external port.
         raw=self.auth.command(self.auth.DOCKER+['run','-d','--name',self.name+'-app','--label','chengyin.auth-recovery='+self.name,
                 '--network',self.name,'--dns','127.0.0.1','--memory=1g','--memory-swap=1g','--cpus=1',
                 '--read-only','--tmpfs','/tmp:rw,size=256m','--cap-drop','ALL','--cap-add','SYS_PTRACE',
@@ -208,7 +279,7 @@ class ApplicationSlot:
                 '-v',strace+':/trace/strace:ro','-v',str(self.out/'trace-libs')+':/trace-libs:ro',
                 '-v',str(self.jar)+':/application.jar:ro','-v',str(self.classes)+':/restore-http-testclasses:ro',
                 '-v',str(ROOT/'ci/upgrade-startup')+':/fixture:ro','-v',str(self.root)+':/restore-http-private',
-                '--entrypoint','/trace/strace',JDK,'-f','-s','0','-e','trace=connect,sendto,sendmsg',
+                '--entrypoint','/trace/strace',JDK,'-D','-f','-s','0','-e','trace=connect,sendto,sendmsg',
                 '-o','/restore-http-private/'+trace,'java','-Xmx512m',
                 '-Dlogging.config=/fixture/logback.xml','-Dlogback.configurationFile=/fixture/logback.xml',
                 '-Dloader.path=/restore-http-testclasses','-Dloader.main='+MAIN,
@@ -235,10 +306,9 @@ class ApplicationSlot:
                 and boot['serverUuid']==uuid and boot['schema']==self.schema and boot['restoreMode']==mode
                 and boot['guardHeld']==(mode!='false') and boot['schedulerStarted'] is True
                 and all(boot['bootId']!=old['bootId'] for old in self.boots),'actual child boot identity')
-        require(isinstance(boot['javaPid'],int) and boot['javaPid']>0,'child JVM PID')
-        cmdline=self.auth.command(self.auth.DOCKER+['exec',self.cid,'cat','/proc/'+str(boot['javaPid'])+'/cmdline'])
-        require(MAIN.encode() in cmdline and b'org.springframework.boot.loader.launch.PropertiesLauncher' in cmdline,'actual JVM entry identity')
+        require(type(boot['javaPid']) is int and boot['javaPid']==1,'actual child boot identity')
         boot.update({'appCid':self.cid,'side':side,'trace':trace,'mysqlIp':endpoint['ip']})
+        self.process=self.running_child_identity(boot,self.inspect(self.cid))
         self.boots.append(boot);return boot
 
     def verify_network(self):

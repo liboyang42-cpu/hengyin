@@ -1,0 +1,433 @@
+diff --git a/ci/restore_application_http_runtime.py b/ci/restore_application_http_runtime.py
+index 5ef9d26f581e1b87502727b9981cd27c0f329bae..51799e4ee52d558e27f235bd7a6015f5190efeee 100644
+--- a/ci/restore_application_http_runtime.py
++++ b/ci/restore_application_http_runtime.py
+@@ -58,6 +58,27 @@ def summarize_application_log(raw):
+             'exceptionTypes':[kind for kind in LOG_EXCEPTION_TYPES if kind in text]}
+ 
+ 
++
++def pid1_jvm_proof(raw):
++    """Fixed restore JVM only; no process discovery, PID selection or signal forwarding."""
++    require(type(raw) is bytes and b'\x00' in raw, 'actual child boot identity')
++    command, stat = raw.rsplit(b'\x00', 1)
++    argv = command.split(b'\x00')
++    require(argv[0].rsplit(b'/', 1)[-1] == b'java'
++            and ('-Dloader.main=' + MAIN).encode() in argv
++            and b'-Dloader.path=/restore-http-testclasses' in argv
++            and b'/application.jar' in argv
++            and b'org.springframework.boot.loader.launch.PropertiesLauncher' in argv,
++            'actual child boot identity')
++    end = stat.rfind(b') ')
++    require(stat.startswith(b'1 (') and end > 3, 'actual child boot identity')
++    fields = stat[end + 2:].split()
++    require(len(fields) >= 20 and fields[1] == b'0'
++            and fields[19].isdigit() and int(fields[19]) > 0, 'actual child boot identity')
++    return {'cmdlineSha256': hashlib.sha256(command + b'\x00').hexdigest(),
++            'startTicks': fields[19].decode('ascii')}
++
++
+ def load(name, relative):
+     spec = importlib.util.spec_from_file_location(name, ROOT / relative)
+     value = importlib.util.module_from_spec(spec); spec.loader.exec_module(value)
+@@ -104,7 +125,7 @@ class ApplicationSlot:
+         self.jar_hash=hashlib.sha256(self.jar.read_bytes()).hexdigest()
+         self.token_secret=__import__('secrets').token_urlsafe(48)
+         self.deadline=time.monotonic()+1500
+-        self.cid=None;self.boots=[];self.removed=[];self.owned=[]
++        self.cid=None;self.boots=[];self.removed=[];self.owned=[];self.process=None
+         self.source=self.auth.mysql_endpoint(name,suffix='mysql')
+         self.target=self.auth.mysql_endpoint(name,suffix='restore-mysql')
+         require(self.source['id']!=self.target['id'] and self.source['networkId']==self.target['networkId'], 'distinct same-network DBs')
+@@ -143,24 +164,72 @@ class ApplicationSlot:
+         result=subprocess.run(self.auth.DOCKER+['container','inspect',self.name+'-app'],capture_output=True,timeout=15)
+         self.auth.require_absent('container',self.name+'-app',result.returncode,result.stderr.decode())
+ 
++    def running_child_identity(self, boot, obj):
++        """Bind this immutable CID/PID1 to its original boot, source, JAR and kernel start time."""
++        require(obj['Id'] == self.cid and boot.get('appCid') == self.cid
++                and type(boot.get('javaPid')) is int and boot['javaPid'] == 1
++                and obj['Config']['Image'] == JDK and obj['Config']['Entrypoint'] == ['/trace/strace']
++                and obj['Config']['Cmd'][:2] == ['-D', '-f']
++                and 'GITHUB_SHA=' + boot['sourceSha'] in obj['Config']['Env']
++                and 'CHENGYIN_RESTORE_MODE=' + boot['restoreMode'] in obj['Config']['Env']
++                and obj['NetworkSettings']['Networks'][self.name]['NetworkID'] == self.source['networkId']
++                and obj['State']['Running'] and not obj['State']['Restarting'] and not obj['State']['OOMKilled']
++                and type(obj['State']['Pid']) is int and obj['State']['Pid'] > 0,
++                'actual child boot identity')
++        require(boot['sourceSha'] == os.environ['GITHUB_SHA'] and boot['jarSha256'] == self.jar_hash
++                and self.jar.is_file() and not self.jar.is_symlink()
++                and hashlib.sha256(self.jar.read_bytes()).hexdigest() == self.jar_hash, 'actual child boot identity')
++        ready_path, config_path = self.root / 'ready.json', self.root / 'config.json'
++        require(all(path.is_file() and not path.is_symlink() for path in (ready_path, config_path)),
++                'actual child boot identity')
++        ready_raw, config_raw = ready_path.read_bytes(), config_path.read_bytes()
++        ready, config = json.loads(ready_raw), json.loads(config_raw)
++        require(all(ready.get(key) == boot.get(key) for key in
++                    ('bootId','javaPid','sourceSha','jarSha256','schema','restoreMode','serverUuid'))
++                and all(config.get(key) == boot.get(key) for key in
++                        ('sourceSha','jarSha256','schema','restoreMode','serverUuid'))
++                and config.get('classManifestSha256') == self.manifest_hash
++                and config.get('scope') == self.name[8:], 'actual child boot identity')
++        raw = self.auth.command(self.auth.DOCKER + ['exec', self.cid, 'cat', '/proc/1/cmdline', '/proc/1/stat'], timeout=10)
++        return {**pid1_jvm_proof(raw), 'cid':self.cid, 'hostPid':obj['State']['Pid'],
++                'bootId':boot['bootId'], 'sourceSha':boot['sourceSha'], 'jarSha256':self.jar_hash,
++                'readySha256':hashlib.sha256(ready_raw).hexdigest(),
++                'configSha256':hashlib.sha256(config_raw).hexdigest()}
++
+     def stop(self,remove=True):
+         if self.cid is None:
+             self.absence();return
+         obj=self.inspect(self.cid)
+-        require(obj['Name']=='/'+self.name+'-app' and obj['Config']['Labels'].get('chengyin.auth-recovery')==self.name
+-                and set(obj['NetworkSettings']['Networks'])=={self.name},'exact current app owner changed')
+-        if obj['State']['Running']:
+-            self.auth.command(self.auth.DOCKER+['stop','--time','20',self.cid],timeout=30)
+-        stopped=self.inspect(self.cid)['State']
+-        # Preserve the actual exit observation even when the strict success predicate rejects it.
+-        self.stopped={'cid':self.cid,'running':stopped['Running'],'hostPid':stopped['Pid'],
+-                      'oomKilled':stopped['OOMKilled'],'exitCode':stopped['ExitCode'],
+-                      'restarting':stopped['Restarting']}
++        require(obj['Id']==self.cid and obj['Name']=='/'+self.name+'-app'
++                and obj['Config']['Labels'].get('chengyin.auth-recovery')==self.name
++                and set(obj['NetworkSettings']['Networks'])=={self.name}
++                and obj['NetworkSettings']['Networks'][self.name]['NetworkID']==self.source['networkId'],
++                'exact current app owner changed')
++        failure = None
++        try:
++            if obj['State']['Running']:
++                require(self.process is not None and self.boots
++                        and self.running_child_identity(self.boots[-1], obj) == self.process,
++                        'actual child boot identity')
++                # -D makes this verified JVM PID1. Keep the original 20-second TERM/KILL boundary.
++                self.auth.command(self.auth.DOCKER+['stop','--time','20',self.cid],timeout=30)
++        except BaseException as error:
++            failure = error
++        try:
++            stopped=self.inspect(self.cid)['State']
++            # Record current exit state on command/identity failure too; never substitute another boot.
++            self.stopped={'cid':self.cid,'running':stopped['Running'],'hostPid':stopped['Pid'],
++                          'oomKilled':stopped['OOMKilled'],'exitCode':stopped['ExitCode'],
++                          'restarting':stopped['Restarting']}
++        except BaseException:
++            if failure is not None:raise failure
++            raise
++        if failure is not None:raise failure
+         require(not stopped['Running'] and not stopped['OOMKilled'] and not stopped['Restarting']
+                 and stopped['Pid']==0 and stopped['ExitCode'] in (0,143),'app stop/process exit unknown')
+         if not remove:return # Original outer cleanup must still collect this exact container's logs.
+         self.auth.command(self.auth.DOCKER+['rm',self.cid],timeout=15)
+-        self.absence();self.removed.append(self.cid);self.cid=None
++        self.absence();self.removed.append(self.cid);self.cid=None;self.process=None
+ 
+     def diagnostic_summary(self):
+         """Observe the exact existing app only; outer owner still preserves/removes its raw log."""
+@@ -187,6 +256,8 @@ class ApplicationSlot:
+         self.budget();require(side in ('source','target') and mode in ('true','invalid','','false'),'fixed boot matrix')
+         require(not seed or (side=='source' and mode=='false' and not self.boots),'one isolated source seed')
+         self.stop()
++        self.process=None
++        if hasattr(self,'stopped'):del self.stopped
+         endpoint=self.source if side=='source' else self.target
+         require(self.auth.mysql_endpoint(self.name,suffix='mysql' if side=='source' else 'restore-mysql')==endpoint,'DB identity changed')
+         config={'sourceSha':os.environ['GITHUB_SHA'],'schema':self.schema,'scope':self.name[8:],
+@@ -198,7 +269,7 @@ class ApplicationSlot:
+         trace='network-'+str(len(self.boots))+'.trace';strace=shutil.which('strace')
+         require(strace and (self.out/'trace-libs').is_dir(),'reuse original tracing preparation')
+         # Original immutable app image/network/strace/memory/user/JAR/config. Only the test child and
+-        # per-process real environment differ. No -D substitute for System.getenv and no external port.
++        # per-process real environment differ. JVM -D properties do not replace System.getenv; no external port.
+         raw=self.auth.command(self.auth.DOCKER+['run','-d','--name',self.name+'-app','--label','chengyin.auth-recovery='+self.name,
+                 '--network',self.name,'--dns','127.0.0.1','--memory=1g','--memory-swap=1g','--cpus=1',
+                 '--read-only','--tmpfs','/tmp:rw,size=256m','--cap-drop','ALL','--cap-add','SYS_PTRACE',
+@@ -208,7 +279,7 @@ class ApplicationSlot:
+                 '-v',strace+':/trace/strace:ro','-v',str(self.out/'trace-libs')+':/trace-libs:ro',
+                 '-v',str(self.jar)+':/application.jar:ro','-v',str(self.classes)+':/restore-http-testclasses:ro',
+                 '-v',str(ROOT/'ci/upgrade-startup')+':/fixture:ro','-v',str(self.root)+':/restore-http-private',
+-                '--entrypoint','/trace/strace',JDK,'-f','-s','0','-e','trace=connect,sendto,sendmsg',
++                '--entrypoint','/trace/strace',JDK,'-D','-f','-s','0','-e','trace=connect,sendto,sendmsg',
+                 '-o','/restore-http-private/'+trace,'java','-Xmx512m',
+                 '-Dlogging.config=/fixture/logback.xml','-Dlogback.configurationFile=/fixture/logback.xml',
+                 '-Dloader.path=/restore-http-testclasses','-Dloader.main='+MAIN,
+@@ -235,10 +306,9 @@ class ApplicationSlot:
+                 and boot['serverUuid']==uuid and boot['schema']==self.schema and boot['restoreMode']==mode
+                 and boot['guardHeld']==(mode!='false') and boot['schedulerStarted'] is True
+                 and all(boot['bootId']!=old['bootId'] for old in self.boots),'actual child boot identity')
+-        require(isinstance(boot['javaPid'],int) and boot['javaPid']>0,'child JVM PID')
+-        cmdline=self.auth.command(self.auth.DOCKER+['exec',self.cid,'cat','/proc/'+str(boot['javaPid'])+'/cmdline'])
+-        require(MAIN.encode() in cmdline and b'org.springframework.boot.loader.launch.PropertiesLauncher' in cmdline,'actual JVM entry identity')
++        require(type(boot['javaPid']) is int and boot['javaPid']==1,'actual child boot identity')
+         boot.update({'appCid':self.cid,'side':side,'trace':trace,'mysqlIp':endpoint['ip']})
++        self.process=self.running_child_identity(boot,self.inspect(self.cid))
+         self.boots.append(boot);return boot
+ 
+     def verify_network(self):
+diff --git a/ci/restore_application_http_probe.py b/ci/restore_application_http_probe.py
+index fac9fb74acf850fc816fe8848f396a8c56865877..c94713586601fbdc28f4301dcd318afcedcf71d6 100644
+--- a/ci/restore_application_http_probe.py
++++ b/ci/restore_application_http_probe.py
+@@ -249,6 +249,14 @@ def start_application(slot,report,path,phase,side,mode,uuid,seed=False):
+     return boot
+ 
+ 
++def source_quiescent_snapshot(slot, auth, port, schema, report, path):
++    """The original source backup cannot read its final SQL state until exact JVM stop succeeds."""
++    checkpoint(slot,report,path,'SOURCE_WORKLOAD','SOURCE_QUIESCENT_STOP')
++    slot.stop()
++    checkpoint(slot,report,path,'SOURCE_WORKLOAD','QUIESCENT_SQL_SNAPSHOT')
++    return snapshot(auth,port,schema)
++
++
+ def run(name,schema,out,credentials):
+     runtime=load('restore_http_application_slot','ci/restore_application_http_runtime.py');runtime.gate(os.environ)
+     out=Path(out).resolve();slot=runtime.ApplicationSlot(name,schema,out,credentials);auth=slot.auth
+@@ -316,10 +324,7 @@ def run(name,schema,out,credentials):
+             original_receipt=good(slot.http(receipt_path,a))
+             checkpoint(slot,report,report_path,'SOURCE_WORKLOAD','NETWORK_PROOF')
+             slot.verify_network()
+-            checkpoint(slot,report,report_path,'SOURCE_WORKLOAD','SOURCE_QUIESCENT_STOP')
+-            slot.stop()
+-            checkpoint(slot,report,report_path,'SOURCE_WORKLOAD','QUIESCENT_SQL_SNAPSHOT')
+-            before=snapshot(auth,sp,schema) # Quiescent snapshot after real Quartz graceful shutdown.
++            before=source_quiescent_snapshot(slot,auth,sp,schema,report,report_path)
+             report['backupRows']=public_snapshot(before)
+             report['providerJournalSha256']=sha(original_provider_bytes)
+             report['checks'].append({'amountFen':3000,'openingBalance':'100.00','finalBalance':'70.00',
+@@ -543,7 +548,7 @@ def assert_successful_lifecycle(report):
+                 and boot['guardHeld'] is (mode!='false') and boot['schedulerStarted'] is True
+                 and boot['sourceSha']==report['sourceSha'] and boot['schema']==report['schema']
+                 and boot['serverUuid']==uuid and boot['jarSha256']==report['jarSha256']
+-                and type(boot['javaPid']) is int and boot['javaPid']>0,'actual original boot identity differs')
++                and type(boot['javaPid']) is int and boot['javaPid']==1,'actual original boot identity differs')
+     require(len(report['checks'])==4 and report['checks'][0]['case']=='original_complete_cohort'
+             and report['checks'][0]['providerSubmits']==1
+             and [row['mode'] for row in report['checks'][1:]]==list(HELD_MODES)
+diff --git a/ci/test_restore_application_http_probe.py b/ci/test_restore_application_http_probe.py
+index b82ce2c718d326df24cfb2decf6f9aa94aec9405..6ce76e982afcdbf0b3b5d0fa1ad1f37b06835450 100644
+--- a/ci/test_restore_application_http_probe.py
++++ b/ci/test_restore_application_http_probe.py
+@@ -180,6 +180,7 @@ class RestoreHttpDirectControls(unittest.TestCase):
+         for literal in ('RuoYiApplication.class','loginByMember','registrations.handleWechatPayCallback(result)',
+                         'facts.recordVerified(fact)','notices.enqueueOfficial','wake.dispatchInNewTransaction',
+                         '--chengyin.jobs.enabled=true','--spring.quartz.auto-startup=true',
++                        '--spring.quartz.wait-for-jobs-to-complete-on-shutdown=true',
+                         'factory.getConfiguration().addInterceptor(new MapperObservations())','file.force(true)'):
+             self.assertIn(literal,source)
+         self.assertNotIn('Mockito',source)
+@@ -263,7 +264,7 @@ class RestoreHttpFailureLifecycleControls(unittest.TestCase):
+         owned=[str(i)*64 for i in (4,5,6,7,8)];report['ownedAppCids']=owned;report['removedAppCids']=owned[:-1]
+         boots=[]
+         for i,mode in enumerate(('false','false','true','invalid','')):
+-            boots.append(dict(bootId='boot-'+str(i),appCid=owned[i],javaPid=17,side='source' if i==0 else 'target',
++            boots.append(dict(bootId='boot-'+str(i),appCid=owned[i],javaPid=1,side='source' if i==0 else 'target',
+                               serverUuid=report['sourceServerUuid'] if i==0 else report['targetServerUuid'],
+                               restoreMode=mode,guardHeld=mode!='false',schedulerStarted=True,
+                               sourceSha=report['sourceSha'],schema=report['schema'],jarSha256=report['jarSha256']))
+@@ -353,11 +354,12 @@ class RestoreHttpFailureLifecycleControls(unittest.TestCase):
+         self.assertIsInstance(failure,ValueError);self.assertEqual(proof['result'],'NOT_ACCEPTED')
+ 
+     def test_success_cannot_drop_a_boot_change_original_jar_or_backing_cid(self):
+-        for change in ('boot','jar','cid'):
++        for change in ('boot','jar','cid','pid'):
+             with self.subTest(change=change):
+                 report=self.success_report();owner=self.owner(app=report['ownedAppCids'][-1],log='PRESERVED')
+                 if change=='boot':report['boots'].pop()
+                 elif change=='jar':report['boots'][0]['jarSha256']='f'*64
++                elif change=='pid':report['boots'][0]['javaPid']=9
+                 else:owner['resourceCleanup']['ownedRemoved'][0]['id']='9'*64
+                 proof,failure,_=self.finalization(report,owner,original_exit=0)
+                 self.assertIsInstance(failure,ValueError);self.assertEqual(proof['result'],'NOT_ACCEPTED')
+@@ -391,7 +393,7 @@ class RestoreHttpDiagnosticControls(unittest.TestCase):
+     def test_ready_return_is_separate_from_workload_and_original_boot_acceptance(self):
+         snapshots=[]
+         boot=dict(bootId='actual-ready',side='source',restoreMode='false',guardHeld=False,jarSha256='b'*64,
+-                  appCid='4'*64,javaPid=17,sourceSha='a'*40,serverUuid='original-uuid',schema='original-schema',schedulerStarted=True)
++                  appCid='4'*64,javaPid=1,sourceSha='a'*40,serverUuid='original-uuid',schema='original-schema',schedulerStarted=True)
+         report={'result':'NOT_COMPLETED','boots':[],'completeBoots':[],'checks':[],'ownedAppCids':['4'*64]}
+         slot=SimpleNamespace(runtime_report_write=lambda path,value:snapshots.append(copy.deepcopy(value)),
+                              start=lambda *args,**kwargs:boot)
+@@ -473,4 +475,157 @@ class RestoreHttpDiagnosticControls(unittest.TestCase):
+         self.assertEqual(slot.diagnostic_summary(),{'result':'NO_CURRENT_CID_OBSERVATION','startAbsenceProven':False})
+ 
+ 
++
++class RestoreHttpGracefulStopControls(unittest.TestCase):
++    """Controlled proc/Docker results only. No Java, Docker, signals, SQL or backup is executed."""
++
++    @staticmethod
++    def proc_bytes(ticks=b'123'):
++        argv=[b'java', b'-Xmx512m', ('-Dloader.main='+R.MAIN).encode(),
++              b'-Dloader.path=/restore-http-testclasses', b'-cp', b'/application.jar',
++              b'org.springframework.boot.loader.launch.PropertiesLauncher']
++        # stat field 3 starts at index0 after ') '; kernel starttime (22) is index19.
++        fields=[b'S', b'0']+[b'0']*17+[ticks]
++        return b'\x00'.join(argv)+b'\x00'+b'1 (java) '+b' '.join(fields)+b'\n'
++
++    def running_slot(self, directory, exit_code=143):
++        slot=object.__new__(R.ApplicationSlot);slot.name='cy-auth-'+'a'*32;slot.cid='4'*64
++        slot.source={'networkId':'5'*64};slot.root=Path(directory);slot.schema='cy_e2e_auth_'+'a'*32
++        slot.jar=slot.root/'application.jar';slot.jar.write_bytes(b'controlled original jar bytes')
++        slot.jar_hash=R.hashlib.sha256(slot.jar.read_bytes()).hexdigest();slot.manifest_hash='b'*64
++        boot=dict(appCid=slot.cid,javaPid=1,bootId='original-boot',sourceSha='a'*40,
++                  jarSha256=slot.jar_hash,schema=slot.schema,restoreMode='false',serverUuid='original-uuid')
++        config={key:boot[key] for key in ('sourceSha','jarSha256','schema','restoreMode','serverUuid')}
++        config.update(classManifestSha256=slot.manifest_hash,scope=slot.name[8:])
++        (slot.root/'ready.json').write_text(json.dumps(boot));(slot.root/'config.json').write_text(json.dumps(config))
++        obj={'Id':slot.cid,'Name':'/'+slot.name+'-app',
++             'Config':{'Image':R.JDK,'Entrypoint':['/trace/strace'],'Cmd':['-D','-f'],
++                       'Labels':{'chengyin.auth-recovery':slot.name},
++                       'Env':['GITHUB_SHA='+'a'*40,'CHENGYIN_RESTORE_MODE=false']},
++             'NetworkSettings':{'Networks':{slot.name:{'NetworkID':'5'*64}}},
++             'State':{'Running':True,'OOMKilled':False,'Restarting':False,'Pid':1234,'ExitCode':0}}
++        calls=[];data={'proc':self.proc_bytes(),'exit':exit_code,'error':None}
++        def command(argv, *args, **kwargs):
++            calls.append((argv,kwargs))
++            if argv==['docker','exec',slot.cid,'cat','/proc/1/cmdline','/proc/1/stat']:return data['proc']
++            if argv==['docker','stop','--time','20',slot.cid]:
++                if data['error'] is not None:raise data['error']
++                obj['State'].update(Running=False,Pid=0,ExitCode=data['exit']);return b'controlled-stop'
++            if argv==['docker','rm',slot.cid]:return b'controlled-remove'
++            raise AssertionError('unexpected command')
++        slot.auth=SimpleNamespace(DOCKER=['docker'],command=command);slot.inspect=lambda target:obj
++        slot.absence=lambda:calls.append(('absence',{}));slot.boots=[boot];slot.removed=[];slot.owned=[slot.cid]
++        with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}):
++            slot.process=slot.running_child_identity(boot,obj)
++        calls.clear()
++        return slot,obj,calls,data
++
++    def test_daemonized_tracer_keeps_original_budget_and_real_shutdown_contract(self):
++        source=(ROOT/'ci/restore_application_http_runtime.py').read_text()
++        self.assertIn("'--entrypoint','/trace/strace',JDK,'-D','-f'",source)
++        self.assertIn("['stop','--time','20',self.cid],timeout=30",source)
++        self.assertIn("stopped['ExitCode'] in (0,143)",source)
++        self.assertNotIn("stopped['ExitCode'] in (0,137,143)",source)
++        child=(ROOT/'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java').read_text()
++        self.assertIn('--spring.quartz.wait-for-jobs-to-complete-on-shutdown=true',child)
++        self.assertIn('application.registerShutdownHook()',child)
++        self.assertIn('org.springframework.beans.DirectFieldAccessor(factory)',child)
++        self.assertIn('.getPropertyValue("waitForJobsToCompleteOnShutdown")',child)
++
++    def test_proc_proof_is_fixed_to_original_java_pid1_not_a_pid_selector(self):
++        proof=R.pid1_jvm_proof(self.proc_bytes())
++        self.assertEqual(proof['startTicks'],'123')
++        for value in (b'', self.proc_bytes().replace(b'1 (java)',b'9 (java)'),
++                      self.proc_bytes().replace(b'PropertiesLauncher',b'WrongLauncher'),
++                      self.proc_bytes().replace(b'loader.main=',b'loader.wrong='),
++                      self.proc_bytes(ticks=b'not-a-tick')):
++            with self.subTest(raw_length=len(value)):
++                with self.assertRaises(ValueError):R.pid1_jvm_proof(value)
++
++    def test_exact_original_stop_accepts_only_graceful_exit_and_preserves_log_slot(self):
++        for exit_code in (0,143):
++            with self.subTest(exit_code=exit_code), tempfile.TemporaryDirectory() as directory:
++                slot,obj,calls,_=self.running_slot(directory,exit_code)
++                with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}):slot.stop(remove=False)
++                self.assertEqual([argv for argv,_ in calls],
++                        [['docker','exec','4'*64,'cat','/proc/1/cmdline','/proc/1/stat'],
++                         ['docker','stop','--time','20','4'*64]])
++                self.assertEqual(slot.stopped['exitCode'],exit_code);self.assertEqual(slot.stopped['hostPid'],0)
++                self.assertEqual(slot.cid,'4'*64);self.assertEqual(slot.removed,[])
++                self.assertFalse(obj['State']['Running'])
++
++    def test_exact_stop_removes_only_its_original_cid_after_graceful_exit(self):
++        with tempfile.TemporaryDirectory() as directory:
++            slot,_,calls,_=self.running_slot(directory,0)
++            with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}):slot.stop()
++            self.assertEqual([argv for argv,_ in calls],
++                    [['docker','exec','4'*64,'cat','/proc/1/cmdline','/proc/1/stat'],
++                     ['docker','stop','--time','20','4'*64],['docker','rm','4'*64],'absence'])
++            self.assertEqual(slot.removed,['4'*64]);self.assertIsNone(slot.cid);self.assertIsNone(slot.process)
++
++    def test_changed_cid_owner_boot_source_jar_or_proc_never_receives_stop(self):
++        mutations=[
++            lambda s,o,d:o.update(Id='6'*64),
++            lambda s,o,d:o['Config']['Labels'].update({'chengyin.auth-recovery':'another-owner'}),
++            lambda s,o,d:o['NetworkSettings']['Networks'][s.name].update(NetworkID='6'*64),
++            lambda s,o,d:s.boots[-1].update(bootId='different-boot'),
++            lambda s,o,d:s.boots[-1].update(sourceSha='b'*40),
++            lambda s,o,d:s.boots[-1].update(javaPid=9),
++            lambda s,o,d:s.jar.write_bytes(b'changed jar'),
++            lambda s,o,d:d.update(proc=self.proc_bytes(ticks=b'124')),
++            lambda s,o,d:o['State'].update(Pid=1235),
++            lambda s,o,d:o['State'].update(Restarting=True),
++            lambda s,o,d:o['State'].update(OOMKilled=True),
++            lambda s,o,d:s.boots[-1].update(javaPid=True),
++            lambda s,o,d:o['Config'].update(Cmd=['-f']),
++            lambda s,o,d:(s.root/'ready.json').write_text((s.root/'ready.json').read_text()+' '),
++            lambda s,o,d:(s.root/'config.json').write_text((s.root/'config.json').read_text()+' '),
++        ]
++        for change in mutations:
++            with self.subTest(change=mutations.index(change)), tempfile.TemporaryDirectory() as directory:
++                slot,obj,calls,data=self.running_slot(directory);change(slot,obj,data)
++                with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}):
++                    with self.assertRaises(ValueError):slot.stop(remove=False)
++                self.assertFalse(any(isinstance(argv,list) and argv[1]=='stop' for argv,_ in calls))
++                self.assertEqual(slot.removed,[]);self.assertEqual(slot.cid,'4'*64)
++
++    def test_forced_exit_or_timeout_remains_unknown_without_removal(self):
++        for result in (137,'timeout'):
++            with self.subTest(result=result), tempfile.TemporaryDirectory() as directory:
++                slot,_,calls,data=self.running_slot(directory,137)
++                error=R.subprocess.TimeoutExpired('controlled-stop',30)
++                if result=='timeout':data['error']=error
++                with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}):
++                    if result=='timeout':
++                        with self.assertRaises(R.subprocess.TimeoutExpired) as caught:slot.stop()
++                        self.assertIs(caught.exception,error);self.assertTrue(slot.stopped['running'])
++                    else:
++                        with self.assertRaisesRegex(ValueError,'app stop/process exit unknown') as caught:slot.stop()
++                        self.assertEqual(caught.exception.restore_reason_code,'APP_STOP_EXIT_NOT_CONFIRMED')
++                        self.assertEqual(slot.stopped['exitCode'],137)
++                self.assertFalse(any(isinstance(argv,list) and argv[1]=='rm' for argv,_ in calls))
++                self.assertEqual(slot.removed,[])
++
++    def test_source_stop_failure_prevents_quiescent_sql_snapshot_and_propagates_original_error(self):
++        report={'result':'NOT_COMPLETED'};saved=[];failure=ValueError('controlled stop failure')
++        def stop():raise failure
++        slot=SimpleNamespace(stop=stop,runtime_report_write=lambda path,value:saved.append(copy.deepcopy(value)))
++        with patch.object(P,'snapshot') as read:
++            with self.assertRaises(ValueError) as caught:P.source_quiescent_snapshot(slot,object(),3306,'owned',report,Path('unused'))
++        self.assertIs(caught.exception,failure);read.assert_not_called()
++        self.assertEqual(report['substage'],'SOURCE_QUIESCENT_STOP');self.assertEqual(report['result'],'NOT_COMPLETED')
++        self.assertEqual(len(saved),1)
++
++    def test_source_snapshot_uses_original_database_arguments_only_after_stop(self):
++        events=[];report={'result':'NOT_COMPLETED'};auth=object();rows=object()
++        slot=SimpleNamespace(stop=lambda:events.append('stop'),
++                runtime_report_write=lambda path,value:events.append(value['substage']))
++        def read(*args):
++            self.assertEqual(events,['SOURCE_QUIESCENT_STOP','stop','QUIESCENT_SQL_SNAPSHOT'])
++            self.assertEqual(args,(auth,3306,'original_schema'));events.append('snapshot');return rows
++        with patch.object(P,'snapshot',side_effect=read):
++            self.assertIs(P.source_quiescent_snapshot(slot,auth,3306,'original_schema',report,Path('unused')),rows)
++        self.assertEqual(report['result'],'NOT_COMPLETED')
++
++
+ if __name__=='__main__':unittest.main()
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java
+index 93ae4a8a48eff1e883d87fff8170a921c8183db1..9120087e14bf8484376d9396495a1f4b874881cc 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java
+@@ -83,6 +83,7 @@ public final class RestoreHttpApplicationChild {
+                 "--token.secret=" + config.path("tokenSecret").asText(),
+                 "--coupon.qr-secret=" + config.path("tokenSecret").asText(),
+                 "--chengyin.jobs.enabled=true", "--spring.quartz.auto-startup=true",
++                "--spring.quartz.wait-for-jobs-to-complete-on-shutdown=true",
+                 "--withdrawal.fast-withdraw.enabled=true",
+                 "--wx.pay.appid=restore-http-app", "--wx.pay.merchant-id=restore-http-mch");
+         var factories=application.getBeansOfType(org.apache.ibatis.session.SqlSessionFactory.class);
+@@ -92,7 +93,13 @@ public final class RestoreHttpApplicationChild {
+         require(config.path("serverUuid").asText().equals(db.queryForObject("SELECT @@server_uuid", String.class))
+                 && config.path("schema").asText().equals(db.queryForObject("SELECT DATABASE()", String.class)), "actual restored datasource");
+         require(application.getEnvironment().getProperty("chengyin.jobs.enabled", Boolean.class, false)
+-                && application.getBean(org.quartz.Scheduler.class).isStarted(), "real scheduler enabled");
++                && application.getEnvironment().getProperty("spring.quartz.wait-for-jobs-to-complete-on-shutdown", Boolean.class, false)
++                && application.getBean(org.quartz.Scheduler.class).isStarted(), "real scheduler enabled and shutdown draining");
++        var realScheduler = application.getBean(org.quartz.Scheduler.class);
++        var quartzFactories = application.getBeansOfType(org.springframework.scheduling.quartz.SchedulerFactoryBean.class);
++        require(quartzFactories.values().stream().anyMatch(factory -> factory.getScheduler() == realScheduler
++                && Boolean.TRUE.equals(new org.springframework.beans.DirectFieldAccessor(factory)
++                        .getPropertyValue("waitForJobsToCompleteOnShutdown"))), "actual Quartz factory must wait on shutdown");
+         if (config.path("seed").asBoolean()) {
+             require("false".equals(mode) && !Files.exists(PRIVATE.resolve("identities.json")), "seed once in isolated source transport fixture");
+             seed(db);
