@@ -257,7 +257,14 @@ public class TopicPublicationContentGuard {
         } else {
             TopicStateKeyRefService.RefCollection refs = topicStateKeyRefService.collect(topic);
             if (!refs.getParseErrors().isEmpty()) {
-                throw new ServiceException(TopicStateKeyRefService.parseErrorMessage(refs.getParseErrors().get(0)));
+                TopicStateKeyRefService.ParseError error = refs.getParseErrors().get(0);
+                String path = error.getNodeId() != null
+                        ? "nodes[nodeId=" + error.getNodeId() + "].template.advancedConfigJson"
+                        : TopicStateKeyRefService.KIND_JOURNEY_RULES.equals(error.getKind()) ? "journeyRulesJson"
+                        : TopicStateKeyRefService.KIND_JOURNEY_STORY.equals(error.getKind()) ? "journeyStoryJson"
+                        : "chapters.blocksJson";
+                throw new ServiceException(TopicStateKeyRefService.parseErrorMessage(error)
+                        + publicationLocation(topic, path));
             }
             for (Map.Entry<Long, Set<String>> entry : refs.getRefsByNode().entrySet()) {
                 String label = refs.getNodeLabels().get(entry.getKey());
@@ -492,14 +499,18 @@ public class TopicPublicationContentGuard {
             }
             for (Long referenced : com.chengyinhub.business.util.StateKeyRefs.collectSysNodeIds(raw)) {
                 if (!nodeIds.contains(referenced)) {
-                    missing.add("nodeId=" + referenced + "(节点:" + node.getName() + ")");
+                    missing.add("nodeId=" + referenced + "(节点:" + node.getName() + ")"
+                            + publicationLocation(topic, "nodes[nodeId=" + node.getId()
+                                + "].template[templateId=" + node.getTemplateId() + "].advancedConfigJson"));
                 }
             }
             // R22-SEC S16:NODE_COMPLETED 也是节点引用 —— nodeId 写错的条件永远不成立,发布期必须拦。
             try {
                 advancedGameConfigValidator.assertCompletedNodeIdsOwned(raw, nodeIds);
             } catch (RuntimeException e) {
-                foreignCompleted.add("节点:" + node.getName() + " — " + e.getMessage());
+                foreignCompleted.add("节点:" + node.getName() + " — " + e.getMessage()
+                        + publicationLocation(topic, "nodes[nodeId=" + node.getId()
+                            + "].template[templateId=" + node.getTemplateId() + "].advancedConfigJson"));
             }
         }
         if (!missing.isEmpty() || !foreignCompleted.isEmpty()) {
@@ -543,40 +554,86 @@ public class TopicPublicationContentGuard {
     }
 
     public void assertThemeRuntimeReferences(CmsTopic topic) {
-        com.fasterxml.jackson.databind.node.ObjectNode config = com.chengyinhub.business.service.support.ThemeRuntimeConfig.parse(topic.getThemeRuntimeConfigJson());
-        try {
-            com.chengyinhub.business.service.support.ThemeRuntimeConfig.assertItemReferences(ROUTE_JSON.readTree(topic.getJourneyStoryJson()==null?"{}":topic.getJourneyStoryJson()),config);
-            com.chengyinhub.business.service.support.ThemeRuntimeConfig.assertItemReferences(ROUTE_JSON.readTree(topic.getRouteGraphJson()==null?"{}":topic.getRouteGraphJson()),config);
-        } catch(java.io.IOException invalid){throw new IllegalArgumentException("主题条件无法读取",invalid);}
+        com.fasterxml.jackson.databind.node.ObjectNode config;
+        try { config = ThemeRuntimeConfig.parse(topic.getThemeRuntimeConfigJson()); }
+        catch (IllegalArgumentException invalid) { throw located(topic, "themeRuntimeConfigJson", invalid); }
+        assertItemReferencesAt(topic, topic.getJourneyStoryJson(), config, "journeyStoryJson");
+        assertItemReferencesAt(topic, topic.getRouteGraphJson(), config, "routeGraphJson");
         CmsTopicNode probe = new CmsTopicNode(); probe.setTopicId(topic.getId());
         Set<Long> nodeIds = new LinkedHashSet<Long>();
         for (CmsTopicNode node : nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(probe))) {
             nodeIds.add(node.getId());
-            if(cmsMemberTemplateMapper!=null && node.getTemplateId()!=null) {CmsMemberTemplate template=cmsMemberTemplateMapper.selectCmsMemberTemplateById(node.getTemplateId());if(template!=null && StringUtils.isNotEmpty(template.getAdvancedConfigJson()))try {com.chengyinhub.business.service.support.ThemeRuntimeConfig.assertItemReferences(ROUTE_JSON.readTree(template.getAdvancedConfigJson()),config);}catch(java.io.IOException invalid){throw new IllegalArgumentException("节点条件无法读取",invalid);}}
-        }
-        if(config==null)return;
-        Set<String> keys = new LinkedHashSet<String>();
-        for (ThemeStateKey key : nullToEmpty(themeStateKeyService.listByTopic(topic.getId()))) keys.add(key.getStateKey());
-        com.chengyinhub.business.domain.JourneyRules rules=com.chengyinhub.business.domain.JourneyRules.parse(topic.getJourneyRulesJson());
-        boolean valuesEnabled=config.has("gameplayRuntime") ? rules.hasRuntimeState() : rules.isCheckEnabled();
-        com.chengyinhub.business.service.support.ThemeRuntimeConfig.assertReferences(config, nodeIds, keys, rules);
-        for(JsonNode scene:config.path("scenes")) if(scene.has("journeyStory")) {
-            CmsTopic sceneTopic=new CmsTopic();sceneTopic.setId(topic.getId());sceneTopic.setJourneyStoryJson(scene.path("journeyStory").toString());assertJourneyStoryReferences(sceneTopic);
-        }
-        if(config.path("chapters").size()>0) {
-            CmsTopicChapter chapterProbe=new CmsTopicChapter();chapterProbe.setTopicId(topic.getId());
-            List<CmsTopicChapter> chapterRows=nullToEmpty(cmsTopicChapterMapper.selectCmsTopicChapterList(chapterProbe));
-            for(JsonNode ch:config.path("chapters")) {
-                if(ch.path("index").asInt()>=chapterRows.size())throw new IllegalArgumentException("背包配置引用未知章节");
-                if(ch.path("hpCost").asInt()>0 && (!valuesEnabled || !rules.getHp().isEnabled()))throw new IllegalArgumentException("请先开启生命值");
-                if(ch.path("luckCost").asInt()>0 && (!valuesEnabled || !rules.getLuck().isEnabled()))throw new IllegalArgumentException("请先开启幸运值");
+            if (cmsMemberTemplateMapper != null && node.getTemplateId() != null) {
+                CmsMemberTemplate template = cmsMemberTemplateMapper.selectCmsMemberTemplateById(node.getTemplateId());
+                if (template != null && StringUtils.isNotEmpty(template.getAdvancedConfigJson())) {
+                    assertItemReferencesAt(topic, template.getAdvancedConfigJson(), config,
+                            "nodes[nodeId=" + node.getId() + "].template[templateId=" + template.getId() + "].advancedConfigJson");
+                }
             }
         }
-        for(JsonNode item:config.path("items")) if("ITEM".equals(item.path("kind").asText()) && item.has("stat") && (!valuesEnabled || ("HP".equals(item.path("stat").asText()) ? !rules.getHp().isEnabled() : !rules.getLuck().isEnabled())))
-            throw new IllegalArgumentException("物品对应的生命值或幸运值尚未开启");
+        if (config == null) return;
+        Set<String> keys = new LinkedHashSet<String>();
+        for (ThemeStateKey key : nullToEmpty(themeStateKeyService.listByTopic(topic.getId()))) keys.add(key.getStateKey());
+        com.chengyinhub.business.domain.JourneyRules rules;
+        try { rules = com.chengyinhub.business.domain.JourneyRules.parse(topic.getJourneyRulesJson()); }
+        catch (IllegalArgumentException invalid) { throw located(topic, "journeyRulesJson", invalid); }
+        boolean valuesEnabled = config.has("gameplayRuntime") ? rules.hasRuntimeState() : rules.isCheckEnabled();
+        try { ThemeRuntimeConfig.assertReferences(config, nodeIds, keys, rules); }
+        catch (IllegalArgumentException invalid) { throw located(topic, "themeRuntimeConfigJson", invalid); }
+        JsonNode scenes = config.path("scenes");
+        for (int index = 0; index < scenes.size(); index++) {
+            JsonNode scene = scenes.get(index);
+            if (scene.has("journeyStory")) {
+                CmsTopic sceneTopic = new CmsTopic(); sceneTopic.setId(topic.getId());
+                sceneTopic.setJourneyStoryJson(scene.path("journeyStory").toString());
+                assertJourneyStoryReferences(sceneTopic, "themeRuntimeConfigJson.scenes[" + index + "].journeyStory");
+            }
+        }
+        if (config.path("chapters").size() > 0) {
+            CmsTopicChapter chapterProbe = new CmsTopicChapter(); chapterProbe.setTopicId(topic.getId());
+            List<CmsTopicChapter> chapterRows = nullToEmpty(cmsTopicChapterMapper.selectCmsTopicChapterList(chapterProbe));
+            for (int index = 0; index < config.path("chapters").size(); index++) {
+                JsonNode chapter = config.path("chapters").get(index);
+                String path = "themeRuntimeConfigJson.chapters[" + index + "]";
+                if (chapter.path("index").asInt() >= chapterRows.size())
+                    throw new IllegalArgumentException("背包配置引用未知章节" + publicationLocation(topic, path + ".index"));
+                if (chapter.path("hpCost").asInt() > 0 && (!valuesEnabled || !rules.getHp().isEnabled()))
+                    throw new IllegalArgumentException("请先开启生命值" + publicationLocation(topic, path + ".hpCost"));
+                if (chapter.path("luckCost").asInt() > 0 && (!valuesEnabled || !rules.getLuck().isEnabled()))
+                    throw new IllegalArgumentException("请先开启幸运值" + publicationLocation(topic, path + ".luckCost"));
+            }
+        }
+        for (int index = 0; index < config.path("items").size(); index++) {
+            JsonNode item = config.path("items").get(index);
+            if ("ITEM".equals(item.path("kind").asText()) && item.has("stat")
+                    && (!valuesEnabled || ("HP".equals(item.path("stat").asText()) ? !rules.getHp().isEnabled() : !rules.getLuck().isEnabled())))
+                throw new IllegalArgumentException("物品对应的生命值或幸运值尚未开启"
+                        + publicationLocation(topic, "themeRuntimeConfigJson.items[" + index + "].stat"));
+        }
+    }
+
+    private void assertItemReferencesAt(CmsTopic topic, String raw,
+            com.fasterxml.jackson.databind.node.ObjectNode config, String path) {
+        try { ThemeRuntimeConfig.assertItemReferences(ROUTE_JSON.readTree(raw == null ? "{}" : raw), config); }
+        catch (java.io.IOException invalid) {
+            throw new IllegalArgumentException((path.startsWith("nodes[") ? "节点条件无法读取" : "主题条件无法读取")
+                    + publicationLocation(topic, path), invalid);
+        } catch (IllegalArgumentException invalid) { throw located(topic, path, invalid); }
+    }
+
+    private IllegalArgumentException located(CmsTopic topic, String path, IllegalArgumentException invalid) {
+        return new IllegalArgumentException(invalid.getMessage() + publicationLocation(topic, path), invalid);
+    }
+
+    private String publicationLocation(CmsTopic topic, String path) {
+        return " [topicId=" + topic.getId() + ", path=" + path + "]";
     }
 
     public void assertJourneyStoryReferences(CmsTopic topic) {
+        assertJourneyStoryReferences(topic, "journeyStoryJson");
+    }
+
+    private void assertJourneyStoryReferences(CmsTopic topic, String fieldPath) {
         String raw = topic == null ? null : topic.getJourneyStoryJson();
         if (StringUtils.isEmpty(raw)) {
             return;
@@ -628,7 +685,8 @@ public class TopicPublicationContentGuard {
             journeyStoryValidator.validate(raw, com.chengyinhub.business.service.support.JourneyStoryValidator.Context.of(
                     chapterIds, journeyStoryAvailableNpcIds(topic.getId()), nodeIds, branchNodeRefs, outcomeNodeRefs));
         } catch (RuntimeException e) {
-            throw new ServiceException("主题的剧情配置引用无效,主题发布失败:" + e.getMessage());
+            throw new ServiceException("主题的剧情配置引用无效,主题发布失败:" + e.getMessage()
+                    + publicationLocation(topic, fieldPath));
         }
     }
 
@@ -715,9 +773,12 @@ public class TopicPublicationContentGuard {
         for (CmsTopicNode node : nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(probe))) {
             nodeIds.add(node.getId());
         }
-        String normalized = topicRouteConfigValidator.validateAndNormalize(
-                topic.getRouteGraphJson(), nodeIds, declaredRouteOutcomes(topic.getId()));
-        topicRoutePublishGate.assertPublishable(normalized);
+        String normalized;
+        try {
+            normalized = topicRouteConfigValidator.validateAndNormalize(
+                    topic.getRouteGraphJson(), nodeIds, declaredRouteOutcomes(topic.getId()));
+            topicRoutePublishGate.assertPublishable(normalized);
+        } catch (IllegalArgumentException invalid) { throw located(topic, "routeGraphJson", invalid); }
         return fullSnapshot ? topicRouteRuntimeService.freezePublication(topic, normalized) : normalized;
     }
 
