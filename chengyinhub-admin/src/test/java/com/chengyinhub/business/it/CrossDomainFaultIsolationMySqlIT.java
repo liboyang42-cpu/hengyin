@@ -50,6 +50,7 @@ class CrossDomainFaultIsolationMySqlIT {
                 TopicRouteState initial = bounded(foreground, "normal-state", () -> storage.route.queryState(CrossDomainStorageFixture.MEMBER, 80L, null));
                 assertEquals("ACTIVE", initial.getStatus()); assertEquals(7, initial.getVersion());
                 String originalState = storage.db.queryForObject("SELECT state_json FROM topic_route_session", String.class);
+                observations.add(storage.assertTransactionOracleDetectsParentTransaction());
 
                 transport.beginFault();
                 storage.poisonId = storage.broadcast("subscribe"); storage.healthyId = storage.broadcast("inapp");
@@ -107,7 +108,18 @@ class CrossDomainFaultIsolationMySqlIT {
                 assertEquals(originalState, storage.db.queryForObject("SELECT state_json FROM topic_route_session", String.class));
                 assertEquals(1, storage.db.queryForObject("SELECT COUNT(*) FROM topic_route_session", Integer.class));
                 assertEquals(0, storage.db.queryForObject("SELECT COUNT(*) FROM topic_route_action", Integer.class));
-                assertEquals(0, storage.pool.getActiveCount(), "held providers/notification may not keep a parent domain SQL transaction open");
+                var parentSql = storage.observeParentTransactions();
+                observations.add(parentSql.evidence());
+                assertEquals(0, parentSql.openTransactions(),
+                        "held providers/notification may not keep a parent domain SQL transaction open: " + parentSql.evidence());
+                assertEquals(Boolean.FALSE, parentSql.subscriptionRead().get("springTransactionActive"),
+                        "the real notification member lookup must not inherit a parent transaction");
+                if (Boolean.TRUE.equals(parentSql.subscriptionRead().get("parentPoolResourceBound"))) {
+                    assertEquals(Boolean.TRUE, parentSql.subscriptionRead().get("jdbcAutoCommit"),
+                            "a synchronization-bound notification read must remain auto-commit, never an open domain transaction");
+                    assertEquals(Boolean.TRUE, parentSql.subscriptionRead().get("mysqlAutoCommit"),
+                            "the actual notification MySQL session must agree with its JDBC auto-commit observation");
+                }
 
                 // The old leader is late while the original physical work is still in flight.
                 scheduler.holdOriginalWorkAndLoseLeadership();
