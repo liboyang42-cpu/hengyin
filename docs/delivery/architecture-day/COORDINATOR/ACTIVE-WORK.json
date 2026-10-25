@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-25T00:00:33.665458+00:00",
+  "updated_utc": "2026-10-25T00:22:10.463999+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -1014,29 +1014,43 @@
     "full_scope_complete": false
   },
   "next_runtime_validation": {
-    "id": "AUTHENTICATED_REDIS_RECOVERY_C86D_02",
-    "workflow": "isolated-authenticated-redis-recovery.yml",
-    "source_sha": "c86d212f66b92ed1af2c0c661d68169ddc9c48a5",
-    "tree": "a511e92808919a3ac19a624ff1fbd977ecf5efe7",
-    "branch": "codex/architecture-day-auth-prepare-c86d-20261024",
-    "run": 40144172218,
-    "status": "FAIL_PRE_APP_NEXT_STRICT_SCHEMA_PREFLIGHT",
-    "jobs": [
-      {
-        "databaseId": 121021893563,
-        "name": "isolated-authenticated-redis-recovery",
-        "status": "completed",
-        "conclusion": "failure"
-      }
-    ],
+    "id": "GAMEPLAY_MULTI_IDENTITY_HTTP_4DA9_01",
+    "workflow": "gameplay-http-e2e.yml",
+    "source_sha": "4da950c59809c4367b2b136b519dbda5e5952ece",
+    "branch": "codex/architecture-day-auth-forward-4da9-20261025",
+    "run": 40146372148,
+    "status": "IN_PROGRESS",
     "owner": "root",
-    "scope": "Existing isolated fixture-admin HTTP/refund lease Redis fault/recovery; fresh canonical schema from this source; not UI/cash/channel/full business walkthrough",
-    "java_db_location": "GitHub-hosted ubuntu24.04 only",
     "pending_owners": [],
     "prior_core_ci_repeated": false,
-    "verification": "headSha independently read back; actual HTTP/schema/recovery NOT_RUN_OR_PENDING, no inherited green",
-    "conclusion": "failure",
-    "failure_readback": "c86d-authenticated-redis-prepare-failure.json"
+    "scope": "First existing three isolated real HTTP classes for this candidate; fixture identities and no non-loopback outbound, no UI/payment/provider acceptance",
+    "declared_test_classes": [
+      "GenericGameplayHttpE2eIT",
+      "FreezeGameHttpE2eIT",
+      "FreezeReuseThemeHttpE2eIT"
+    ],
+    "declared_cases_not_pass_count": 36,
+    "jobs": [
+      {
+        "databaseId": 121028477773,
+        "name": "http (FreezeReuseThemeHttpE2eIT)",
+        "status": "in_progress",
+        "conclusion": ""
+      },
+      {
+        "databaseId": 121028477915,
+        "name": "http (FreezeGameHttpE2eIT)",
+        "status": "in_progress",
+        "conclusion": ""
+      },
+      {
+        "databaseId": 121028477958,
+        "name": "http (GenericGameplayHttpE2eIT)",
+        "status": "in_progress",
+        "conclusion": ""
+      }
+    ],
+    "verification": "APIheadSha4da9 verified; XML and cleanup pending, no PASS inherited"
   },
   "runtime_evidence_implementation": {
     "owner": "F",
@@ -1138,6 +1152,55 @@
       "prior_core_ci_repeated": false,
       "failure_readback": "ccd5-authenticated-redis-prepare-failure.json",
       "pending_owners": []
+    },
+    {
+      "id": "AUTHENTICATED_REDIS_RECOVERY_C86D_02",
+      "workflow": "isolated-authenticated-redis-recovery.yml",
+      "source_sha": "c86d212f66b92ed1af2c0c661d68169ddc9c48a5",
+      "tree": "a511e92808919a3ac19a624ff1fbd977ecf5efe7",
+      "branch": "codex/architecture-day-auth-prepare-c86d-20261024",
+      "run": 40144172218,
+      "status": "FAIL_PRE_APP_NEXT_STRICT_SCHEMA_PREFLIGHT",
+      "jobs": [
+        {
+          "databaseId": 121021893563,
+          "name": "isolated-authenticated-redis-recovery",
+          "status": "completed",
+          "conclusion": "failure"
+        }
+      ],
+      "owner": "root",
+      "scope": "Existing isolated fixture-admin HTTP/refund lease Redis fault/recovery; fresh canonical schema from this source; not UI/cash/channel/full business walkthrough",
+      "java_db_location": "GitHub-hosted ubuntu24.04 only",
+      "pending_owners": [],
+      "prior_core_ci_repeated": false,
+      "verification": "headSha independently read back; actual HTTP/schema/recovery NOT_RUN_OR_PENDING, no inherited green",
+      "conclusion": "failure",
+      "failure_readback": "c86d-authenticated-redis-prepare-failure.json"
+    },
+    {
+      "id": "AUTHENTICATED_REDIS_RECOVERY_4DA9_03",
+      "workflow": "isolated-authenticated-redis-recovery.yml",
+      "source_sha": "4da950c59809c4367b2b136b519dbda5e5952ece",
+      "tree": "934c9eb1330229430b2b83c635f65e71b99d4c76",
+      "branch": "codex/architecture-day-auth-forward-4da9-20261025",
+      "run": 40145649954,
+      "jobs": [
+        {
+          "databaseId": 121026298730,
+          "name": "isolated-authenticated-redis-recovery",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "status": "PASS_SCOPED_AUTHENTICATED_REFUND_LEASE_REDIS_RECOVERY",
+      "owner": "root",
+      "pending_owners": [],
+      "prior_core_ci_repeated": false,
+      "scope": "Exact fresh scratch forward selection then original authenticated Redis HTTP/lease recovery, not UI/cash/channel/full business acceptance",
+      "verification": "API headSha independently verified4da9; actual runtime pending",
+      "conclusion": "success",
+      "readback": "4da9-authenticated-redis-recovery-readback.json"
     }
   ],
   "worker_progress_cursors": {
@@ -1204,10 +1267,12 @@
     "source_observation": "Canonical selector retains D55/oldC56/v2 59 simultaneously; pair replacements not handled",
     "old_run_predicate_values": "UNKNOWN",
     "root_authorized_next": "Exact fresh-scratch replacement in existing builder and direct tests; no oldSQL/DAG/production runner changes",
-    "implementation": "APPLIED_PENDING_NEW_TARGET_RUNTIME",
+    "implementation": "FROZEN_PUSHED_TARGET_RUNTIME_IN_PROGRESS",
     "implementation_sha": "02a0115c10f25039a3f7c3f4152502768a3c227e",
     "implementation_parent": "498b535da27568845950b1654aa4985c2c0905db",
     "pure_python": "14/14PASS1.856s,9new5existing; noJavaDB",
-    "runtime": "NOT_RUN"
+    "runtime": "PASS_SCOPED_FRESH_SCHEMA_AND_AUTH_REDIS_TARGET_4DA9",
+    "integrated_source": "4da950c59809c4367b2b136b519dbda5e5952ece",
+    "source_scan": "secret-file/diff PASS; staged gitleaks39498bytes no leaks"
   }
 }
