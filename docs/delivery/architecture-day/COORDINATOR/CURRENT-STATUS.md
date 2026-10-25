@@ -194,3 +194,19 @@ Run40146372148 failed in all3 pureentry jobs beforeJava/DB/HTTP. Rootoriginal3jo
 ## F exact source-owner mapping repair collected
 
 F d2e74f1b5fdaed2d008099ddc2c37410241d8e6b(parent4da9) complete4file patch applied. Onlyci/test_http_e2e_entry.py execution delta7lines, production/workflowunchanged; sourcebyteexactdonor, ASToriginal41literal/categorypairsunchanged and everyquotedliteralpresent in preciseowner. Onlypausedliteralowner movedtoGameSharedRunControl; booleanfailureassert avoidsdumpinglargeJava withoutweakenedcondition. Owner41controlbatch40PASS1environmentERROR missinglocalmaster; workflowexistingmasterprerequisite restored then onlyerroredcase1PASS0skip, initialerror retained. Notmisreported as single41green. Freeze/scanthenone existingHTTP3classes target; no oldpassedcore/pool/authrepeat.
+
+## Frozen HTTP entry candidateae0f
+
+ExactFdiagnosticmaprepair frozenae0f1dbd4df2d65befd9214ffdeb20d7042b9d1e/tree6314555ede621cd77765e035521e9a14df725fe3, publiccodex/architecture-day-http-entry-ae0f-20261025. Onlyoneexecutionfile7linedelta+scopeddocs; production/workflowunchangedfrom4da9. Secret-file/diffPASS, stagedgitleaks29948bytesnoleaks. ExistingHTTPworkflow run40147612418 jobs121032222026/121032222161/121032222201 started; APIheadShaae0fverified. Original36HTTPdeclarationsnotpasscount, XML/source/cleanup pending. Core/storage/pool/authnotrepeated; Fandothers frozenpendingactualfailure. all_complete=false.
+
+## ae0f HTTP target: exact next schema caller and failure-receipt gaps
+
+Run40147612418 completeFAIL. All3pureentry41controlsPASS, previousliteralownerfixed. Original3ZIPartifacts12580804529/12580609002/12580324493 hashes/CRC2files each independentlyverified; sameprimaryschemaapply v2sql fileIndex56 MySQL3821line2, exactconstraintnameUNKNOWN. HTTPDDL-only builder separatelyplansoldC+v2 mutuallyexclusiveDDL; originalGowns onlythiscallingplan/directcontrols viaexistingpreciseforwardcontract, oldSQL/authstrictbuilderpreserved. EachFAILreceiptjavaExit98 sentinel/xmlVerifiedfalse and bothcleanuptrue; noJavaHTTPcasesexecuted. Secondaryfinalize emptyclasses ValueError afterschemafailure; originalFowns preverifyfailureidentity/primarydiagnosticpreservation withstrictPASSgatesuntouched. RawsourcebindingonlyrunAPI/checkoutlogs, receiptslackidentity; notfakeindependentreceiptbinding. No newCI untilbothnecessarydeliveriescollected; no oldpassedcore/pool/authrepeat. Readbackae0f-http-schema-and-receipt-failure.json.
+
+## F preverify failure receipt source collected
+
+OriginalF e7f17958f17d077d39dc8cc6d12f7216b37cf029(parentae0f) complete3file patch applied, executionfilebyteexactdonor. Onlyci/test_http_e2e_entry.py+scopedFdocs; no shell/G changes. Validatedexecutionidentity retainedonbeforeverifyFAIL, originalstage/exit/safediagnostic/cleanup persisted, FAILsummary safe/nonzero. OriginalPASSXML/fixture/source/cleanupgatesretained andoriginal41literalcodeunchanged. OwnernecessaryPython27/27PASS0skip(21old6new), rootdidnotrepeat. NewsourceactualHTTPNOT_RUN; waitoriginalG exactschema-caller delivery beforefreeze/onetarget.
+
+## Both necessary HTTP source deliveries collected
+
+G e4c0efdccdd110e46aafaafd7ab3726494688e8f(parentae0f) complete5file delta applied alongsideF e7f1795; all3executionfilesbyteexactdonors/allGhashesmatch. G reusesproductionbuild_manifest/sourcecustody/existingnotice_forward_plan, preservesDDL-onlyskipreport/dataonlyrecords/relativeorder, oldCnotfiles/completed, exactplanrebuildbeforeMySQL andnoadoptexisting/concurrentCREATE; onlyfreshCREATESUCCESS marksREPLACED_UNAPPLIED. No oldSQL/authstrictbuilder/Ffilechange. G necessarynew9PASS+old12PASS=21actualcontrols, original17retained/other5notrepeated, rootdidnotduplicate. InitialcloudNoUsableexecution recoveredwithoutworkspace reset; JavaDBHTTPNOT_RUN. BothG/F nowfrozenpendingonesamecombinedtarget, no extraoldcore/pool/authsuite.

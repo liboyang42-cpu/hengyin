@@ -1,0 +1,111 @@
+{
+  "source_sha_from_run_api": "ae0f1dbd4df2d65befd9214ffdeb20d7042b9d1e",
+  "run": 40147612418,
+  "jobs": [
+    121032222026,
+    121032222161,
+    121032222201
+  ],
+  "status": "FAIL_SCHEMA_BEFORE_HTTP",
+  "unique_primary_failures": 1,
+  "primary": "generic-gameplay-fresh-schema.py plans mutually exclusive oldC/v2 together; v2 schemaapply MySQL3821",
+  "specific_mysql_constraint_name": "UNKNOWN_NOT_EXPOSED_IN_SAFE_DIAGNOSTIC",
+  "secondary": "finalize receipt before verify lacks classes/source/profile/database; empty selection causes secondary ValueError",
+  "pure_entry_controls": "41/41 passed in each hosted job; previous fixedliteralowner repair verified",
+  "actual_http_cases": "NOT_RUN",
+  "java_exit_98": "Before-execution sentinel, not actual Java failure",
+  "artifacts": [
+    {
+      "id": 12580804529,
+      "zip_sha256": "0a8dc56a6ea5bc3b55bd8b44494ba2b2e5833c7dc4b1c36e37a16e976e6a7ba9",
+      "crc": "PASS",
+      "files": 2,
+      "diagnostic": {
+        "exceptionType": "CalledProcessError",
+        "exitCode": 1,
+        "file": "chengyinhub-admin/sql/migration_20261024_g_before_start_notice_metadata_v2.sql",
+        "fileIndex": 56,
+        "javaExit": 98,
+        "mysqlErrorCode": 3821,
+        "mysqlLine": 2,
+        "phase": "schema-apply",
+        "reportState": "FAILED",
+        "stage": "schema"
+      },
+      "receipt": {
+        "state": "FAIL",
+        "xmlVerified": false,
+        "javaExit": 98,
+        "cleanup": {
+          "mysqlAbsent": true,
+          "redisStoppedAndPortFree": true
+        }
+      }
+    },
+    {
+      "id": 12580609002,
+      "zip_sha256": "74da854c3b8a2ba02324f39209e0c3f6a8eb585bb61d4257347f8a64315cf42a",
+      "crc": "PASS",
+      "files": 2,
+      "diagnostic": {
+        "exceptionType": "CalledProcessError",
+        "exitCode": 1,
+        "file": "chengyinhub-admin/sql/migration_20261024_g_before_start_notice_metadata_v2.sql",
+        "fileIndex": 56,
+        "javaExit": 98,
+        "mysqlErrorCode": 3821,
+        "mysqlLine": 2,
+        "phase": "schema-apply",
+        "reportState": "FAILED",
+        "stage": "schema"
+      },
+      "receipt": {
+        "state": "FAIL",
+        "xmlVerified": false,
+        "javaExit": 98,
+        "cleanup": {
+          "mysqlAbsent": true,
+          "redisStoppedAndPortFree": true
+        }
+      }
+    },
+    {
+      "id": 12580324493,
+      "zip_sha256": "34983d4061741c655551798996ad95504557005d28769248d646c43eca1a5422",
+      "crc": "PASS",
+      "files": 2,
+      "diagnostic": {
+        "exceptionType": "CalledProcessError",
+        "exitCode": 1,
+        "file": "chengyinhub-admin/sql/migration_20261024_g_before_start_notice_metadata_v2.sql",
+        "fileIndex": 56,
+        "javaExit": 98,
+        "mysqlErrorCode": 3821,
+        "mysqlLine": 2,
+        "phase": "schema-apply",
+        "reportState": "FAILED",
+        "stage": "schema"
+      },
+      "receipt": {
+        "state": "FAIL",
+        "xmlVerified": false,
+        "javaExit": 98,
+        "cleanup": {
+          "mysqlAbsent": true,
+          "redisStoppedAndPortFree": true
+        }
+      }
+    }
+  ],
+  "source_identity_limit": "API headSha and checkout logs bind run; failed receipt itself has no source identity",
+  "owners": {
+    "G": "Exact HTTPfreshschema caller selection and direct tests",
+    "F": "Beforeverify failure receipt identity/diagnostic preservation and direct tests"
+  },
+  "raw_log_sha256": {
+    "121032222026": "f47fa202e92fce3f7d60f3c82796abed2279943bdaf62305af19ee9fd9d3dc89",
+    "121032222161": "9ac9ade4bd8891810f1de065530078f5743f9ed9d3b8de4cac49f93ab148cd32",
+    "121032222201": "4e0b1aad711f3f3dcbff516fc7191dab9e4c8e7a840ce8543154a353969d4a25"
+  },
+  "full_governance_complete": false
+}

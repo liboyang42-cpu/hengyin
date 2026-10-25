@@ -1,0 +1,5 @@
+b6a88241b58d861e736bd0adefc94083efbe1fcb3b94a92799a4caf88bd14038  chengyinhub-admin/src/test/tools/generic-gameplay-fresh-schema.py
+18be2650dc78c64d351696c646eed63c0deeca6032bbed3e848f39e3008fdfe3  chengyinhub-admin/src/test/tools/test_generic_gameplay_fresh_schema.py
+f7852a8d2caa6c2d2a34ff43fdaa68013d2ca5a2e7e953ce022f7b40f01a61a0  scripts/e2e/build_schema.py
+56016724f909465c9955b25ecfc3ca04654239ed05400996362456289e54f83b  docs/delivery/architecture-day/G/ae0f-http-fresh-schema-repair/README.md
+b22d1ff3e4c9a77f45f2d97af47096f326e0823da1a95ca056049fb052ed8dc3  docs/delivery/architecture-day/G/ae0f-http-fresh-schema-repair/PYTHON_CONTROLS.txt

@@ -1,0 +1,28 @@
+Actual necessary pure Python controls after the original workspace recovered.
+No Java/MySQL/Redis/HTTP/provider/CI execution.
+
+1) Command:
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:chengyinhub-admin/src/test/tools python3 -m unittest -v test_generic_gameplay_fresh_schema.NoticeForwardCallerTest
+Observed:
+Ran 9 tests in 12.966s
+OK
+
+New methods:
+test_any_pair_file_byte_drift_rejected_by_shared_contract
+test_apply_failure_preserves_skips_and_does_not_complete_old_or_failed_file
+test_canonical_custody_checks_baseline_and_data_only_bytes
+test_concurrent_create_failure_is_never_adopted_or_marked_completed
+test_exact_pair_preserves_all_other_files_fingerprints_and_skip_records
+test_execution_plan_drift_cannot_reinsert_old_or_edit_apply_skip_receipts
+test_existing_schema_refused_without_create_import_or_replacement_receipt
+test_partial_pair_manifest_hash_and_order_drift_rejected_before_mysql
+test_successful_transport_completes_only_selected_files_without_claiming_strict_migration
+
+2) Command:
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:chengyinhub-admin/src/test/tools python3 -m unittest -v test_generic_gameplay_fresh_schema.FreshSchemaTest
+Observed:
+Ran 12 tests in 2.993s
+OK
+
+Original direct caller/DDL-only/baseline assertion/transaction delimiter/host-schema boundary controls retained.
+The 5 unchanged MigrationGuardTest methods were not rerun. All 17 original method bodies remain intact.
