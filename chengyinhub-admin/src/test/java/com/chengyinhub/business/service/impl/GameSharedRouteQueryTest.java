@@ -231,8 +231,9 @@ class GameSharedRouteQueryTest {
         ObjectNode config = (ObjectNode) json.readTree(session.getModuleConfigSnapshotJson());
         com.chengyinhub.business.domain.ThemeStateKey clue = new com.chengyinhub.business.domain.ThemeStateKey();
         clue.setStateKey("clue.original"); clue.setKeyType("flag"); clue.setScope("run"); clue.setLabel("原线索");
+        clue.setTopicId(80L);
         com.chengyinhub.business.service.support.JourneyInitialState.freezeKeys(config, java.util.List.of(clue),
-                com.chengyinhub.business.domain.JourneyRules.parse(config.path("journeyRules").toString()));
+                com.chengyinhub.business.domain.JourneyRules.parse(config.path("journeyRules").toString()),80L);
         assertEquals(1, config.path("stateKeySnapshotVersion").asInt());
         session.setModuleConfigSnapshotJson(config.toString());
         com.chengyinhub.business.mapper.ThemeStateKeyMapper live = mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class);

@@ -765,7 +765,7 @@ class AdvancedGameRuntimeServiceImplTest {
         assertEquals(51L, service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null).get("sessionId"));
         assertEquals(Long.valueOf(TEMPLATE_ID), inserted.get().getTemplateId());
         assertEquals("original-route", inserted.get().getPlayInstanceId());
-        assertEquals(originalContent(), new com.fasterxml.jackson.databind.ObjectMapper()
+        assertEquals(new com.fasterxml.jackson.databind.ObjectMapper().readTree(originalContent().toString()), new com.fasterxml.jackson.databind.ObjectMapper()
                 .readTree(inserted.get().getStateJson()).path("originalNodeContent"));
         assertTrue(new com.fasterxml.jackson.databind.ObjectMapper().readTree(inserted.get().getConfigSnapshotJson()).path("random").path("enabled").asBoolean());
         verify(nodeMapper).selectCmsTopicNodeById(NODE_ID);
@@ -858,7 +858,7 @@ class AdvancedGameRuntimeServiceImplTest {
         original.setStateJson(state.toString());
         when(sessionMapper.restartTerminalCas(any())).thenReturn(1);
         ReflectionTestUtils.invokeMethod(service,"restart",original,null,Collections.emptyList(),MEMBER_ID);
-        assertEquals(originalContent(),json.readTree(original.getStateJson()).path("originalNodeContent"));
+        assertEquals(json.readTree(originalContent().toString()),json.readTree(original.getStateJson()).path("originalNodeContent"));
 
         var authored=(com.fasterxml.jackson.databind.node.ObjectNode)json.readTree(randomOnlyConfig());
         authored.set("originalNodeContent",originalContent());

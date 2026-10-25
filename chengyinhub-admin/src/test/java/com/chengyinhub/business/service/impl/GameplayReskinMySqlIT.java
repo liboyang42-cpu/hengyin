@@ -64,6 +64,14 @@ class GameplayReskinMySqlIT {
     }
     @Test void threeThemesPublishWithTrustedBindingsAndPersistRenamedResources() throws Exception {
         GameplayReskinFixture fixture=new GameplayReskinFixture();fixture.useSql(sql);
+        var references = new com.chengyinhub.business.service.support.TopicStateKeyRefService(
+                sql.getMapper(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class),
+                sql.getMapper(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class),
+                sql.getMapper(com.chengyinhub.business.mapper.CmsTopicChapterMapper.class));
+        org.springframework.test.util.ReflectionTestUtils.setField(references, "cmsTopicMapper",
+                sql.getMapper(com.chengyinhub.business.mapper.CmsTopicMapper.class));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(
+                fixture.publisher, "topicStateKeyRefService", references);
         com.chengyinhub.business.mapper.AppMediaAssetMapper mediaMapper =
                 sql.getMapper(com.chengyinhub.business.mapper.AppMediaAssetMapper.class);
         com.chengyinhub.business.service.impl.AppMediaAssetService mediaAssets =

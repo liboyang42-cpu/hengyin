@@ -228,11 +228,11 @@ class ApiPlayPuzzleHintTest
         CmsTopic topic=topics.selectCmsTopicById(TOPIC); topic.setPublishedConfigVersion(1L);
         when(topics.selectCmsTopicDetailById(TOPIC,MEMBER)).thenReturn(topic);
         when(registrations.selectCmsRegistrationList(any())).thenReturn(Collections.emptyList());
-        CmsTopicNode current=nodes.selectCmsTopicNodeById(NODE);current.setTemplateId(null);current.setName("later author name");
+        CmsTopicNode current=nodes.selectCmsTopicNodeById(NODE);current.setTemplateId(null);current.setName("later author name");current.setStatus(1L);
         CmsTopicNode noTemplate=new CmsTopicNode();noTemplate.setId(402L);noTemplate.setTopicId(TOPIC);noTemplate.setStatus(1L);
         CmsTopicNode notPublished=new CmsTopicNode();notPublished.setId(403L);notPublished.setTopicId(TOPIC);notPublished.setTemplateId(TEMPLATE);
         when(nodes.selectCmsTopicNodeList(any())).thenReturn(java.util.List.of(current,noTemplate,notPublished));
-        var json=new com.fasterxml.jackson.databind.ObjectMapper();var publication=json.createObjectNode().put("runtimeSnapshotVersion",1);
+        var json=new com.fasterxml.jackson.databind.ObjectMapper();var publication=json.createObjectNode().put("runtimeSnapshotVersion",1).put("routeMode","LINEAR");
         publication.putObject("journeyRules").put("schemaVersion",1);
         publication.put("journeyStory","");
         var frozen=publication.putObject("nodeAnswers").putObject(String.valueOf(NODE));
@@ -243,7 +243,8 @@ class ApiPlayPuzzleHintTest
         frozen.putObject("templatePresentation").put("title","original game").put("questionName","original question");
         frozen.put("hint1","secret-unused-hint");
         var plain=publication.with("nodeAnswers").putObject("402").put("contentSnapshotVersion",1);
-        plain.putObject("nodePresentation").put("id",402L).put("topicId",TOPIC).put("name","original non-template node");
+        plain.putNull("templateId");plain.putObject("templatePresentation");
+        plain.putObject("nodePresentation").put("id",402L).put("topicId",TOPIC).putNull("templateId").put("name","original non-template node");
         publication.putObject("nodeConfigs").putObject(String.valueOf(NODE)).put("schemaVersion",1);
         topic.setPublishedRouteGraphJson(publication.toString());
         topic.setJourneyRulesJson("{\"schemaVersion\":1,\"stateEnabled\":true,\"attributes\":[{\"key\":\"counter.later\",\"label\":\"later\"}]}");

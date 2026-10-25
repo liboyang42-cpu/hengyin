@@ -1,0 +1,38 @@
+[
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImplTest.java",
+    "parent_blob": "97a513fb7dcb427804003b0a9926c5e5b8456aca"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSharedRouteQueryTest.java",
+    "parent_blob": "41fa189e6389d69b464dc1bfcf837840bab41ed5"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayDraftCopyTest.java",
+    "parent_blob": "6d479f0de562e5ad9507395b5a889c67adc81667"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayQaPickTemplateReuseTest.java",
+    "parent_blob": "3b3bf56c787386ffdaa21451b09007131724e000"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinRuntimeServiceTest.java",
+    "parent_blob": "08fbd0a8e757b68e84fecc8eda80a45ad1a0931f"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplaySupportMatrixRuntimeTest.java",
+    "parent_blob": "6a4c524ef41aceb8778ba5329a10d058b75a87af"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPuzzleHintTest.java",
+    "parent_blob": "b4bbc095a3865286e48b8323fd5d6e68233d27fe"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinMySqlIT.java",
+    "parent_blob": "c41d51c49651c6c73f76e97663ece4327e9c5dd4"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFixture.java",
+    "parent_blob": "f11d79ab9100ffaf9c60004218c6b86161c074eb"
+  }
+]
