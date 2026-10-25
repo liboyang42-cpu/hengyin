@@ -19,17 +19,21 @@ import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
 import com.chengyinhub.business.mapper.OmsTicketMapper;
 import com.chengyinhub.business.service.impl.CmsTopicServiceImpl;
+import com.chengyinhub.business.service.support.TopicPublicationTestWiring;
 import com.chengyinhub.common.constant.ProductType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -136,7 +140,6 @@ class TopicUpdateByOwnerTest {
                         ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(svc, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "quotaService", mock(IQuotaService.class));
-        when(topicMapper.publishRouteSnapshot(any(), any(), any())).thenReturn(1);
         org.springframework.test.util.ReflectionTestUtils.setField(svc, "settlementDebtLedger", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
         commercialTopicPolicy = new com.chengyinhub.business.service.support.CommercialTopicPolicy(
                 ticketMapper, chapterMapper, mock(com.chengyinhub.business.mapper.MerchantChapterOfferMapper.class), topicMapper);
@@ -161,7 +164,28 @@ class TopicUpdateByOwnerTest {
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
         ReflectionTestUtils.setField(svc, "themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
                 mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
+        wirePublicationInputs(writtenChapters, writtenNodes);
         svc = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(svc);
+    }
+
+    private void wirePublicationInputs(List<CmsTopicChapter> writtenChapters, List<CmsTopicNode> writtenNodes) {
+        // Keep D's insert/current-read capture; ordinary readers consume those same actual written rows.
+        when(chapterMapper.selectCmsTopicChapterList(any())).thenAnswer(call -> new ArrayList<>(writtenChapters));
+        when(nodeMapper.selectCmsTopicNodeList(any())).thenAnswer(call -> new ArrayList<>(writtenNodes));
+        org.mockito.Mockito.doAnswer(call -> writtenChapters.removeIf(row -> row.getId().equals(call.getArgument(0))) ? 1 : 0)
+                .when(chapterMapper).deleteCmsTopicChapterById(anyLong());
+        org.mockito.Mockito.doAnswer(call -> writtenNodes.removeIf(row -> row.getId().equals(call.getArgument(0))) ? 1 : 0)
+                .when(nodeMapper).deleteCmsTopicNodeById(anyLong());
+        org.mockito.Mockito.doAnswer(call -> {
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+            DataSourceTransactionManager manager = (DataSourceTransactionManager) ReflectionTestUtils.getField(svc, "transactionManager");
+            assertTrue(TransactionSynchronizationManager.hasResource(manager.getDataSource()));
+            var frozen = new com.fasterxml.jackson.databind.ObjectMapper().readTree((String) call.getArgument(1));
+            assertEquals(1, frozen.path("runtimeSnapshotVersion").asInt());
+            assertEquals(writtenNodes.size(), frozen.path("routeStations").size());
+            assertEquals(writtenNodes.get(0).getId().longValue(), frozen.path("routeStations").get(0).path("nodeId").asLong());
+            return 1;
+        }).when(topicMapper).publishRouteSnapshot(any(), any(), any());
     }
 
     // ---------- 夹具 ----------
@@ -221,8 +245,15 @@ class TopicUpdateByOwnerTest {
         when(topicMapper.selectTopicIsDraft(TOPIC)).thenReturn(isDraft);
         org.mockito.Mockito.doAnswer(invocation -> {
             CmsTopic patch = invocation.getArgument(0);
-            if (patch.getStatus() != null) t.setStatus(patch.getStatus());
-            if (patch.getUserStatus() != null) t.setUserStatus(patch.getUserStatus());
+            // Match the original dynamic mapper: omitted/null fields retain their current values.
+            var values = new org.springframework.beans.BeanWrapperImpl(patch);
+            var current = new org.springframework.beans.BeanWrapperImpl(t);
+            for (var property : values.getPropertyDescriptors()) {
+                String name = property.getName();
+                if (current.isWritableProperty(name) && values.isReadableProperty(name)
+                        && values.getPropertyValue(name) != null)
+                    current.setPropertyValue(name, values.getPropertyValue(name));
+            }
             return 1;
         }).when(topicMapper).updateCmsTopic(any());
     }
