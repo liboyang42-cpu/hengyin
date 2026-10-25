@@ -84,7 +84,7 @@ class CmsTopicPublishDraftTest {
         themeStateKeyMapper = mock(ThemeStateKeyMapper.class);
         cmsActivityMapper = mock(CmsActivityMapper.class);
         CmsMemberTemplate question = new CmsMemberTemplate();
-        question.setId(101L); question.setMemberId(100L); question.setStatus(1);
+        question.setId(101L); question.setMemberId(100L); question.setStatus(1L);
         question.setValidationMethod(1); question.setTitle("原发布题");
         question.setQuestionName("原输入题"); question.setQuestionAnswer("fixture-answer");
         authoredTemplates.put(101L, question);
@@ -454,7 +454,7 @@ class CmsTopicPublishDraftTest {
         when(cmsTopicNodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
                 .thenReturn(Collections.singletonList(node));
         CmsMemberTemplate template = new CmsMemberTemplate();
-        template.setId(101L); template.setMemberId(100L); template.setStatus(1);
+        template.setId(101L); template.setMemberId(100L); template.setStatus(1L);
         authoredTemplates.put(101L, template);
         template.setAdvancedConfigJson("{\"requires\":[{\"var\":\"clue.ledger_page\",\"op\":\"EQ\",\"value\":1}]}");
         when(cmsMemberTemplateMapper.selectCmsMemberTemplateById(101L)).thenReturn(template);

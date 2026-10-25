@@ -1,4 +1,8 @@
 <!-- 347b-current-runtime-and-source-status -->
+a66首轮实际后台验收在testCompile失败：4份测试源码7条精确类型／导入诊断，admin业务用例未执行，非7个业务BUG。root已一次修齐两处Long字面量及三项缺失导入，未改生产、原case或断言，修后尚未复验。原标准40226989357与单类准入40227001786保留原SHA／attempt；其余19类／mixed／完整restore／单cohort尚未派发，避免重复同一编译首因。下一步冻结这组极小完整修补，再定点准入。all_complete=false。
+
+最新统一候选已冻结推送：a66cfe6ed86306026fc4409f38938202611b0aa9（tree478af1f04a82daf712102b51d6e5215a1fa29fe8，parent347b），118文件／874529bytes差分经白名单、whitespace与gitleaks无泄漏。当前已启动两次同SHA/attempt1定点验收：standard40226989357只backend，storage40227001786只原失败Station13作为共同编译／门禁准入；尚无新实际用例结果。之后按影响计划继续其余19类及混合／完整恢复／固定单组诊断。未受影响已通过项目不重复。新源码不是旧347b绿色，全目标all_complete=false。
+
 本批实际运行失败修补源码已全部收齐并root统一集成，当前完成一次源码核对，正在秘密扫描与新公共隔离候选冻结；Java／JUnit／DB／故障／CI尚未复验，all_complete=false。
 
 原A–H完整包、调用者、共享装配和测试SOURCE均已交付，原A/E/H七类发布测试在D真实供体上收口，未从零覆盖。root仅补同源Controller三态回归与严格实际登记。76类／920条普通@Test只是源登记；46份变化Java测试中的721个原测试方法身份保留，当前728个方法声明，不当参数化执行数或通过数。11个变化Python源语法及全76类source precheck无问题，不是Java/DB验收。原client／ledger／旧SQL／POM依赖与权限政策未改。

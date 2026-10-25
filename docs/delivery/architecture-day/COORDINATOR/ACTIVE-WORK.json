@@ -4499,5 +4499,43 @@
       "state": "COMPLETE_EXACT_SOURCE_APPLIED_FROZEN_NOT_RUN"
     },
     "unified_source_manifest": "docs/delivery/architecture-day/COORDINATOR/347b-runtime-repair-unified-source.json"
+  },
+  "final_concentrated_acceptance_a66": {
+    "state": "ACTUAL_BACKEND_TEST_COMPILE_FAILED_7_DIAGNOSTICS_4_FILES_FIXED_SOURCE_NOT_RETESTED",
+    "source": "a66cfe6ed86306026fc4409f38938202611b0aa9",
+    "tree": "478af1f04a82daf712102b51d6e5215a1fa29fe8",
+    "ref": "codex/architecture-day-runtime-repairs-347b-20261025",
+    "runs": {
+      "standard_backend_selected": 40226989357,
+      "storage_admission_station13": 40227001786
+    },
+    "attempt": 1,
+    "not_dispatched_yet": [
+      "remaining19storage",
+      "gameplay-capacity-mixed",
+      "restore-application-startup",
+      "payment-gap-diagnostic"
+    ],
+    "gate_before_remaining_dispatch": "Actual same-source test compilation and strict source/storage controls confirmed; no passed/unaffected repeated projects",
+    "all_complete": false,
+    "backend_job": 121270474287,
+    "backend_log_sha256": "10546880341c35cc8e5f926fb7e5e851a603391bf280e1a1dd91e6faa21951ea",
+    "remaining19_and_fault_restore_dispatched": false,
+    "backend_admin_business_tests": "NOT_RUN_BLOCKED_BY_TEST_COMPILATION",
+    "source_fix": "Four existing test files: two exact Long literals, missing CmsMemberTemplate import, missing Mockito.never import, missing Assertions.assertNull import. No case/assertion/production behavior change.",
+    "storage_admission": {
+      "run": 40227001786,
+      "job": 121270502946,
+      "artifact": 12612235053,
+      "zip_sha256": "2db9d94edcf1b1fd0a30140ca0ef21a1c71471e8a6d77b389996eb0b49352c79",
+      "original_zip_crc": "PASS",
+      "same_seven_testCompile_diagnostics": true,
+      "actual_business_cases": 0,
+      "registered_source_cases": 13,
+      "source": "a66cfe6ed86306026fc4409f38938202611b0aa9",
+      "attempt": 1,
+      "cleanup": "CLEAN_NO_RESIDUAL_SCHEMAS_EXACT_CONTAINER_REMOVED",
+      "business_accepted": false
+    }
   }
 }

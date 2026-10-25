@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service;
 
+import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CmsTopicChapter;
 import com.chengyinhub.business.domain.CmsTopicNode;
