@@ -1,0 +1,279 @@
+{
+  "source": "ecff37372bfae059faa38e9eb420894cde1bcee9",
+  "run": 40243426205,
+  "attempt": 1,
+  "verdict": "PASS_PARTIAL_REAL_STORAGE_SCOPE",
+  "artifacts": [
+    {
+      "id": 12618170979,
+      "bytes": 3378,
+      "sha256": "8280aeb9f9e107df3c75e9f392d51850955795b2a5e5ac682dfdc5216ebe8163",
+      "CRC": "PASS",
+      "entries": [
+        {
+          "name": "receipts/CrossDomainFaultIsolationMySqlIT.json",
+          "bytes": 5062
+        },
+        {
+          "name": "summary.json",
+          "bytes": 1215
+        },
+        {
+          "name": "summary.md",
+          "bytes": 450
+        }
+      ]
+    },
+    {
+      "id": 12617657827,
+      "bytes": 35286,
+      "sha256": "3fa8057925c001a2bff3c80a296dbe9de415d28c7a0ec6aa9ccb48acca64c9ae",
+      "CRC": "PASS",
+      "entries": [
+        {
+          "name": "maven.log",
+          "bytes": 790709
+        },
+        {
+          "name": "receipt.json",
+          "bytes": 5063
+        },
+        {
+          "name": "surefire-reports/TEST-com.chengyinhub.business.it.CrossDomainFaultIsolationMySqlIT.xml",
+          "bytes": 62705
+        },
+        {
+          "name": "surefire-reports/com.chengyinhub.business.it.CrossDomainFaultIsolationMySqlIT.txt",
+          "bytes": 370
+        }
+      ]
+    }
+  ],
+  "original_XML_hash_and_source_case_verified": true,
+  "cases": [
+    {
+      "classname": "com.chengyinhub.business.it.CrossDomainFaultIsolationMySqlIT",
+      "name": "sameWindowRetainsOriginalEconomicIdentitiesAndRequiresUnpoisonedNotificationProgress",
+      "status": "passed"
+    }
+  ],
+  "observations": [
+    {
+      "outcome": "RECEIVED",
+      "intentId": 1,
+      "stage": "normal-photo"
+    },
+    {
+      "fixtureElapsedNanos": 44171137,
+      "outcome": "RETURNED",
+      "stage": "normal-state"
+    },
+    {
+      "stage": "transaction-oracle-calibration",
+      "held": {
+        "freshness": {
+          "witnessDatabase": "mysql",
+          "result": "CURRENT_PHYSICAL_WITNESS_IN_CACHE",
+          "quietNanos": 100119893,
+          "witnessReadyToReadNanos": 100119893,
+          "minimumIdleNanosExclusive": 100000000,
+          "source": "mysql-8.0.45/trx0i_s.cc:can_cache_be_updated+trx_i_s_cache_end_read",
+          "witnessConnectionId": 37,
+          "readAttempts": 1,
+          "readNanos": 1889398,
+          "mysqlVersion": "8.0.45"
+        },
+        "notificationRead": {},
+        "activePoolConnections": 1,
+        "stage": "parent-domain-sql-transactions",
+        "observerConnectionId": 38,
+        "transactions": [
+          {
+            "state": "RUNNING",
+            "rowsLocked": 1,
+            "mysqlConnectionId": 35,
+            "rowsModified": 0,
+            "database": "cy_wp14_e1d5e68f73b647f88091aeb7f08ada64"
+          }
+        ],
+        "scope": "all-sessions-in-exact-owned-schema-no-excluded-ids"
+      },
+      "heldConnectionId": 35,
+      "released": {
+        "freshness": {
+          "witnessDatabase": "mysql",
+          "result": "CURRENT_PHYSICAL_WITNESS_IN_CACHE",
+          "quietNanos": 100106714,
+          "witnessReadyToReadNanos": 100106714,
+          "minimumIdleNanosExclusive": 100000000,
+          "source": "mysql-8.0.45/trx0i_s.cc:can_cache_be_updated+trx_i_s_cache_end_read",
+          "witnessConnectionId": 39,
+          "readAttempts": 1,
+          "readNanos": 1550410,
+          "mysqlVersion": "8.0.45"
+        },
+        "notificationRead": {},
+        "activePoolConnections": 0,
+        "stage": "parent-domain-sql-transactions",
+        "observerConnectionId": 40,
+        "transactions": [],
+        "scope": "all-sessions-in-exact-owned-schema-no-excluded-ids"
+      },
+      "observedHeldRowsModified": 0
+    },
+    {
+      "outcome": "UNKNOWN",
+      "providerStillHeld": true,
+      "stage": "held-photo",
+      "intentId": 2
+    },
+    {
+      "outcome": "UNKNOWN",
+      "providerStillHeld": true,
+      "stage": "held-photo",
+      "intentId": 3
+    },
+    {
+      "outcome": "UNKNOWN",
+      "providerStillHeld": true,
+      "stage": "held-photo",
+      "intentId": 4
+    },
+    {
+      "outcome": "UNKNOWN",
+      "providerStillHeld": true,
+      "stage": "held-photo",
+      "intentId": 5
+    },
+    {
+      "originalUnknownCount": 4,
+      "outcome": "NOT_SENT",
+      "stage": "busy-photo",
+      "intentId": 6
+    },
+    {
+      "fixtureElapsedNanos": 44248686,
+      "outcome": "RETURNED",
+      "stage": "payment-callback"
+    },
+    {
+      "fixtureElapsedNanos": 7714338,
+      "outcome": "RETURNED",
+      "stage": "payment-readback"
+    },
+    {
+      "grantCount": 1,
+      "outcome": "REJECTED",
+      "stage": "wrong-amount-callback"
+    },
+    {
+      "fixtureElapsedNanos": 7263883,
+      "outcome": "RETURNED",
+      "stage": "loaded-state-0"
+    },
+    {
+      "fixtureElapsedNanos": 7646268,
+      "outcome": "RETURNED",
+      "stage": "loaded-state-1"
+    },
+    {
+      "fixtureElapsedNanos": 6552735,
+      "outcome": "RETURNED",
+      "stage": "loaded-state-2"
+    },
+    {
+      "fixtureElapsedNanos": 4701393,
+      "outcome": "RETURNED",
+      "stage": "other-actor-refusal"
+    },
+    {
+      "freshness": {
+        "witnessDatabase": "mysql",
+        "result": "CURRENT_PHYSICAL_WITNESS_IN_CACHE",
+        "quietNanos": 100105860,
+        "witnessReadyToReadNanos": 100105860,
+        "minimumIdleNanosExclusive": 100000000,
+        "source": "mysql-8.0.45/trx0i_s.cc:can_cache_be_updated+trx_i_s_cache_end_read",
+        "witnessConnectionId": 47,
+        "readAttempts": 1,
+        "readNanos": 1588375,
+        "mysqlVersion": "8.0.45"
+      },
+      "notificationRead": {
+        "jdbcAutoCommit": true,
+        "jdbcIsolation": 4,
+        "role": "notification-member-read",
+        "springTransactionActive": false,
+        "mysqlAutoCommit": true,
+        "springSynchronizationActive": true,
+        "parentPoolResourceBound": true,
+        "mysqlConnectionId": 35
+      },
+      "activePoolConnections": 1,
+      "stage": "parent-domain-sql-transactions",
+      "observerConnectionId": 48,
+      "transactions": [],
+      "scope": "all-sessions-in-exact-owned-schema-no-excluded-ids"
+    },
+    {
+      "fixtureElapsedNanos": 32911118,
+      "outcome": "RETURNED",
+      "stage": "handoff-callback-replay"
+    },
+    {
+      "poisonState": "UNKNOWN",
+      "subscriptionAttempts": 1,
+      "stage": "notification-held",
+      "healthyCommitted": true
+    },
+    {
+      "explicitReadOutcome": "SUCCESS",
+      "expiredOriginalOutcome": "UNAVAILABLE",
+      "stage": "map-recovery",
+      "physicalPeak": 4
+    },
+    {
+      "busyRefunded": 1,
+      "chargedCounter": 5,
+      "stage": "quota-recovery",
+      "unknownRetained": 4
+    },
+    {
+      "fixtureElapsedNanos": 17809862,
+      "outcome": "RETURNED",
+      "stage": "recovered-callback-replay"
+    },
+    {
+      "stage": "recovered",
+      "schedulerEntries": 3,
+      "notificationUnknown": 2,
+      "schedulerEffects": 1,
+      "providerPosts": 6
+    }
+  ],
+  "cleanup": {
+    "mysql_leftover_schemas": [],
+    "mysql_schemas_after": [
+      "information_schema",
+      "mysql",
+      "performance_schema",
+      "sys"
+    ],
+    "redis_dbsize_after": 0,
+    "status": "CLEAN"
+  },
+  "teardown": {
+    "mysql": {
+      "container": "cy-rs-40243426205-1-crossdomainfaultisolationmysqlit-mysql",
+      "removed": true
+    },
+    "redis": {
+      "container": "cy-rs-40243426205-1-crossdomainfaultisolationmysqlit-redis",
+      "removed": true
+    }
+  },
+  "registered_source": "a02d69e232b8cb77e26bf5d77114a4ac99e4dd47",
+  "registered_source_match": false,
+  "scope_limit": "One exact selected class, controlled provider boundaries; not all921 cases, live providers, production or full business acceptance. Registry origin metadata does not sign the candidate.",
+  "all_complete": false
+}

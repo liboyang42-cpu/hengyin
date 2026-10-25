@@ -1,0 +1,122 @@
+{
+  "source": "ecff37372bfae059faa38e9eb420894cde1bcee9",
+  "tree": "17ef62c85313de126c56878fb336327ae05131f0",
+  "parent": "f1fe75d646f8ae57864ee5603c68e70e7fabc854",
+  "branch": "codex/architecture-day-runtime-repairs-f1fe-20261025",
+  "state": "ALL5_TERMINAL_BACKEND_CROSSDOMAIN_SCOPEDMIXED_PASS_PAYMENT_RESTORE_FAIL_NEW_B_E_F_SOURCE",
+  "all4_source_complete": true,
+  "source_delivery_record": "f1fe75d64-composed-runtime-source-integration.json",
+  "source_precheck": "f1fe75d64-composed-source-precheck.json",
+  "impact_plan": "f1fe75d64-next-impacted-validation-plan.json",
+  "diff_paths": 52,
+  "diff_bytes": 535991,
+  "diff_sha256": "a1c70770ec5de1011c3009c372e53ac1c9c31ef2b2d827a96243afe3c2028bdc",
+  "scan": {
+    "diff_check": "PASS",
+    "gitleaks": "PASS",
+    "whitelist_exact": true,
+    "remote_api_SHA_exact": true
+  },
+  "new_required_ordinary_Java_cases": {
+    "com.chengyinhub.business.it.CrossDomainTransactionSamplingTest": [
+      "cacheIdleUsesStrictlyGreaterThanThePinnedHundredMilliseconds",
+      "twentyMillisecondReadsCannotRenewThemselvesIntoAnEligibleSample",
+      "newWitnessBoundaryRequiresItsOwnQuietWindowEvenAfterAnOlderReadWasIdle",
+      "exhaustedOrInvalidMonotonicEvidenceIsUnknownRatherThanZero",
+      "emptyCacheCannotBecomeAZeroTransactionSuccessWithoutTheCurrentWitness",
+      "anOldPhysicalWitnessIsNotTheCurrentCacheGeneration",
+      "aValidatedCurrentWitnessMayAccompanyZeroDomainTransactions",
+      "calibrationAndOtherDomainTransactionsAreNeverExcludedByIdStateOrZeroWrites",
+      "witnessMustBeIndependentUnmodifiedAndActuallyOwnItsFixtureLock",
+      "duplicatedWitnessOrUnexpectedMysqlRoleCannotBeSilentlyNormalizedAway"
+    ],
+    "com.chengyinhub.business.it.RestoreHttpStartupContractTest": [
+      "actualBootFactoryWaitsOnShutdownWithoutBypassingTheOriginalLeaderCustomizer",
+      "aDifferentRealSchedulerCannotStandInForTheSelectedFactory",
+      "realSchedulerCanBecomeStartedAfterTheInitialObservationWithoutForcedAutostart",
+      "leadershipTimeoutPreservesTypedFailureAndNeverStartsTheScheduler",
+      "startupProjectionContainsOnlyFixedEnumsAndBoundIdentitiesNeverMessagesOrCauses"
+    ],
+    "com.chengyinhub.business.service.RestoreChildDiagnosticsTest": [
+      "sqlCauseIsTypedWithoutMessagesQueriesCredentialsOrPrivatePaths",
+      "unreviewedTypesStatesAndInvalidIdentityAreNotEchoed",
+      "fixedStageAndCauseBudgetNeverSerializeArbitraryThrowablePayload"
+    ]
+  },
+  "new_required_ordinary_Java_count": 18,
+  "python_controls": {
+    "modules": 5,
+    "initial_tests": 172,
+    "initial_passed": 171,
+    "initial_errors": 1,
+    "initial_failures": 0,
+    "initial_log_sha256": "569997e00deab31296536f5430b059b101335b31c041e196b3b294395e840cec",
+    "focused_failed_test_recheck": 1,
+    "focused_failed_test_passed": 1,
+    "focused_log_sha256": "2299339565fdc7c4fedeb54e99b181ba53b821f77194926422cc7df3301ba0ee",
+    "not_single172_green_run": true,
+    "no_repeat_passed171": true
+  },
+  "runs": {
+    "standard_backend_selected": 40242248743,
+    "cross_domain": 40243426205,
+    "mixed": 40243429794,
+    "restore_application": 40243433436,
+    "payment_gap_diagnostic": 40243436961
+  },
+  "next_dispatch_prepared": "/private/tmp/hengyin-ecff37372-next-dispatch.json",
+  "runtime_not_dispatched_until_actual_common_admission": [
+    "CrossDomainFaultIsolationMySqlIT1",
+    "gameplay-capacity-mixed",
+    "restore-application-startup",
+    "payment-gap-diagnostic"
+  ],
+  "Java_DB_new_source": "NOT_RUN",
+  "all_complete": false,
+  "backend_job": 121316459342,
+  "read_only_backend_watch": {
+    "session_id": 93625,
+    "script": "/private/tmp/hengyin-ecff37372-ci-watch.py",
+    "snapshot": "/private/tmp/hengyin-ecff37372-ci-watch.json",
+    "interval_seconds": 30,
+    "atomic_snapshot": true
+  },
+  "conditional_dispatch": {
+    "session_id": 96379,
+    "script": "/private/tmp/hengyin-ecff37372-conditional-dispatch.py",
+    "receipt": "/private/tmp/hengyin-ecff37372-conditional-dispatch.json",
+    "lock": "/private/tmp/hengyin-ecff37372-conditional-dispatch.lock",
+    "state": "WAITING_ACTUAL_BACKEND_JOB_SUCCESS_NO_RUNTIME_DISPATCH_YET",
+    "original_same_source_api_and_job_build_success_and_no_prior_extra_runs_required": true,
+    "atomic_lock_and_attempted_before_command_no_retry": true
+  },
+  "backend_build_test_actual": {
+    "job": 121316459342,
+    "build_test_conclusion": "success",
+    "build_test_completed_at": "2026-10-25T23:03:35Z",
+    "whole_backend_job_pending": true,
+    "artifact": 12617317452,
+    "ZIP_bytes": 12724246,
+    "ZIP_sha256": "36c3b464440a9a7ac307826ab91951a355613ecf46b344b3c433a8e38f049114",
+    "CRC": "PASS",
+    "original_XML_hashes_verified": 1964,
+    "module": "chengyinhub-admin",
+    "tests": 15797,
+    "passed": 15164,
+    "skipped": 633,
+    "failure_error_duplicate": 0,
+    "old15779_actual_identities_and_statuses_preserved": true,
+    "new18_actual_passed": 18,
+    "new18_failure_error_skip": 0,
+    "readback": "ecff37372-backend-original-XML-readback.json",
+    "not_full_business_acceptance": true
+  },
+  "frozen_initial_state": "BACKEND_SELECTED_UNIQUE_DISPATCHED_ACTUAL_JOB_RUNNING_STRICT_CONDITIONAL4_PREPARED",
+  "actual_evidence": {
+    "backend": "ecff37372-backend-original-XML-readback.json",
+    "cross_domain": "ecff37372-cross-domain-pass-readback.json",
+    "mixed": "ecff37372-mixed-scoped-pass-readback.json",
+    "payment_gap": "ecff37372-payment-gap-failure-readback.json",
+    "restore_application": "ecff37372-restore-http-failure-readback.json"
+  }
+}

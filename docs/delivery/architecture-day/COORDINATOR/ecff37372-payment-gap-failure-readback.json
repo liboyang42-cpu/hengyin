@@ -1,0 +1,148 @@
+{
+  "source": "ecff37372bfae059faa38e9eb420894cde1bcee9",
+  "run": 40243436961,
+  "attempt": 1,
+  "verdict": "FAIL_DIAGNOSTIC_NOT_FULL7_ACCEPTANCE",
+  "artifact": {
+    "id": 12617558076,
+    "bytes": 2355,
+    "sha256": "da7f7655b18bf2b906c122b8fafdd93731af2ca5aec5fbfb62f5c5b156745a0b",
+    "CRC": "PASS",
+    "entries": [
+      {
+        "name": "host.json",
+        "bytes": 1165
+      },
+      {
+        "name": "reconciliation.json",
+        "bytes": 2302
+      },
+      {
+        "name": "finalized.json",
+        "bytes": 492
+      }
+    ]
+  },
+  "host": {
+    "acceptance": "NOT_FULL_T20_OR_PRODUCTION_ACCEPTANCE",
+    "cleanupFailures": [],
+    "cohort": "payment-gap",
+    "exitCode": 1,
+    "firstFailure": {
+      "errorType": null,
+      "failureType": "PROBE_RUN_EXIT",
+      "guardCode": null,
+      "operation": "PROBE_RUN",
+      "primaryFailureType": "ChildBoundaryFailure",
+      "primaryReasonCode": "CHILD_EOF_BEFORE_BOUNDARY",
+      "probeReceipt": "MATCHED",
+      "reasonCode": "UNKNOWN",
+      "reconciliationSha256": "e06df745359e30153865844733f3e5ba7fb16e129626dc1612100705704902be",
+      "returnCode": 1,
+      "safeReasonExcerpt": "No reviewed safe reason matched; do not infer the Docker rejection cause",
+      "stage": "probe",
+      "stderrBytes": null,
+      "stderrCaptured": false,
+      "stderrSha256": null,
+      "substage": "fixed-probe-exit"
+    },
+    "lastStage": "finalize",
+    "mysqlTransports": {
+      "source": "OWNED_MYSQL_LOOPBACK_RELAY",
+      "target": "OWNED_MYSQL_LOOPBACK_RELAY"
+    },
+    "originalExit": 1,
+    "probeFinalized": true,
+    "resourceCleanup": "EXACT_ABSENCE",
+    "runAttempt": "1",
+    "runId": "40243436961",
+    "scope": "9b11e243b2134de0aa52c8c6d11dfba0",
+    "sourceSha": "ecff37372bfae059faa38e9eb420894cde1bcee9"
+  },
+  "reconciliation": {
+    "businessResult": "FAIL",
+    "candidateState": "BLOCKED",
+    "childExits": [
+      {
+        "boot": "929b2f72611b48d1aac1ed374dcfabe4",
+        "childClass": "com.chengyinhub.business.service.RestoreBusinessReconciliationFixture",
+        "classpathFileSha256": "21bec1b9befe8aaacaff8c854816f65674dbc8b860dd63e63d5f94b2b1854333",
+        "cohort": "payment-gap",
+        "diagnosticClassSha256": "f7fa33bba57a7f1bbfcda3d6ec0943065b8a163b28f06373fa4e18071bf25bd1",
+        "diagnosticState": "TYPED_FAILURE",
+        "jarSha256": "f87bc0dade2d1f380f7d0f059c5eeb25baa61f9e61c8017c66dde0eef9e4fe81",
+        "javaFailure": {
+          "boot": "929b2f72611b48d1aac1ed374dcfabe4",
+          "causeTypes": [
+            "java.lang.NullPointerException"
+          ],
+          "cohort": "payment-gap",
+          "origin": {
+            "class": "com.chengyinhub.business.service.RestoreBusinessReconciliationFixture",
+            "line": 167
+          },
+          "protocol": "RESTORE_CHILD_FAILURE_V1",
+          "scope": "9b11e243b2134de0aa52c8c6d11dfba0",
+          "sourceSha": "ecff37372bfae059faa38e9eb420894cde1bcee9",
+          "sqlErrorCode": null,
+          "sqlState": null,
+          "stage": "SOURCE_TIMELINE"
+        },
+        "phase": "SOURCE",
+        "pid": 4033,
+        "returnCode": 1,
+        "runAttempt": "1",
+        "runId": "40243436961",
+        "scope": "9b11e243b2134de0aa52c8c6d11dfba0",
+        "sourceSha": "ecff37372bfae059faa38e9eb420894cde1bcee9",
+        "stderrBytes": 1472,
+        "stderrSha256": "c9809daa6830d1b2667b665ae3dc2c42b50491368d49ee3ae8a164da6f9432be",
+        "testChildSha256": "0c98a78b9ca468ebfac8233a6224ee3714f4431dc6888346a9cd4306817e98fd"
+      }
+    ],
+    "cleanup": "PENDING_OUTER_EXACT_RESOURCE_CLEANUP",
+    "cleanupFailures": [
+      "source-create-unconfirmed"
+    ],
+    "cohort": "payment-gap",
+    "dispatchRelease": false,
+    "primaryFailureType": "ChildBoundaryFailure",
+    "primaryReason": "fixture child exited before fixed boundary",
+    "primaryReasonCode": "CHILD_EOF_BEFORE_BOUNDARY",
+    "processExit": 1,
+    "resourcesSha256": "03e3805bcb3f4216d8e017921046aa98e107ee9886160433f151dbc1e453a5ce",
+    "rpo": "UNKNOWN",
+    "rto": "UNKNOWN",
+    "runAttempt": "1",
+    "runId": "40243436961",
+    "schemaCleanup": "UNKNOWN",
+    "scope": "9b11e243b2134de0aa52c8c6d11dfba0",
+    "sourceSha": "ecff37372bfae059faa38e9eb420894cde1bcee9"
+  },
+  "finalized": {
+    "absenceFailures": [],
+    "businessResult": "FAIL",
+    "candidateState": "BLOCKED",
+    "cohort": "payment-gap",
+    "dispatchRelease": false,
+    "finalization": "RECORDED",
+    "originalExit": 1,
+    "resourceCleanup": "EXACT_ABSENCE",
+    "resourcesSha256": "03e3805bcb3f4216d8e017921046aa98e107ee9886160433f151dbc1e453a5ce",
+    "result": "FAIL",
+    "runAttempt": "1",
+    "runId": "40243436961",
+    "scope": "9b11e243b2134de0aa52c8c6d11dfba0",
+    "sourceSha": "ecff37372bfae059faa38e9eb420894cde1bcee9"
+  },
+  "source_cause_confirmed": {
+    "class": "RestoreBusinessReconciliationFixture",
+    "line": 167,
+    "invalid_assumption": "wx_pay_order_intent.id absent; original PK is mchid,out_trade_no",
+    "schema_source": "chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql",
+    "typed_failure": "SOURCE_TIMELINE NullPointerException",
+    "historical_f1fe_original_cause": "UNKNOWN; do not back-sign current cause onto old source"
+  },
+  "new_B_complete_source_task_dispatched": true,
+  "all_complete": false
+}

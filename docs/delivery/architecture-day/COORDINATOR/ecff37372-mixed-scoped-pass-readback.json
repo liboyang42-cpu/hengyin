@@ -1,0 +1,547 @@
+{
+  "source": "ecff37372bfae059faa38e9eb420894cde1bcee9",
+  "tree": "17ef62c85313de126c56878fb336327ae05131f0",
+  "run": 40243429794,
+  "attempt": 1,
+  "artifact": {
+    "id": 12617648701,
+    "bytes": 39847,
+    "sha256": "f2bf28142364a2ff0647d53f86a901e482336ad4c41e0befb96fefdb6a26967f",
+    "CRC": "PASS",
+    "entries": [
+      {
+        "name": "cy-auth.6Z63A8Yv/authenticated-redis-recovery.json",
+        "bytes": 817
+      },
+      {
+        "name": "cy-auth.6Z63A8Yv/capacity-mixed.json",
+        "bytes": 150365
+      },
+      {
+        "name": "cy-auth.6Z63A8Yv/application.log",
+        "bytes": 205605
+      },
+      {
+        "name": "cy-auth.6Z63A8Yv/gameplay-network.trace",
+        "bytes": 15507
+      },
+      {
+        "name": "cy-auth.6Z63A8Yv/gameplay-process-recovery.json",
+        "bytes": 52077
+      },
+      {
+        "name": "cy-auth.6Z63A8Yv/schema-summary.json",
+        "bytes": 6863
+      },
+      {
+        "name": "entry.log",
+        "bytes": 5514
+      }
+    ]
+  },
+  "jarSha256": "f87bc0dade2d1f380f7d0f059c5eeb25baa61f9e61c8017c66dde0eef9e4fe81",
+  "JAR_limit": "host/mounted byte digests; no independently downloaded JAR",
+  "schema": "cy_e2e_auth_0a8764c0146446148312d18b220f86b2",
+  "serverUuid": "4f910d42-d0c9-11f1-8a4f-82b3a7da0a14",
+  "result": "PASS_SCOPED_GAMEPLAY_RESTART_AND_CAPACITY_MIXED",
+  "cases": [
+    {
+      "boundary": "BEFORE_TX",
+      "commandId": "process-9595d738-3dba-4cf5-9d93-ad58dc881301",
+      "activityId": 9,
+      "requestSha256": "ad6ec632c2ab4a638dc2838497249a6f8a7e7c293f908cb6bb4cc39140f892d0",
+      "beforeSha256": "ae035fc9a0a21cbde3f0cdba40b70e3c94734ec45c3078609db7311d1d5ae049",
+      "firstResponseReceived": false,
+      "originalProcessCommandSha256": "9aecdacd33a305b54d03e4aa22ae3579842c30b491eff6a7f9a0712d8308cc90",
+      "physicalExit": {
+        "code": 137,
+        "oomKilled": false,
+        "oldJavaPid": 9,
+        "oldHostPid": 4341,
+        "oldBootId": "6699175f-4260-4fbd-baf3-4d3d1bc7ff5d",
+        "originalStartedAt": "2026-10-25T23:11:08.51979817Z",
+        "finishedAt": "2026-10-25T23:12:36.426136027Z"
+      },
+      "newBootId": "fbb5426e-b5a0-4a91-9d05-6935c9e74887",
+      "recoverySeconds": 81.944,
+      "result": "ASSERTIONS_PASSED",
+      "afterSha256": "90460985b77a0b00f574101e4d0b8d09374e24bee637dc8a9af1a234f9b55cd2",
+      "originalReceiptId": 1,
+      "receiptSha256": "fc0b9f553699da0bbdaa30b1af73ee4ec8e19dce4eb717f0191561f3e1b71b12",
+      "runtimeEpoch": "NOT_APPLICABLE_NO_SUCH_INPUT_ON_THIS_COMMAND",
+      "originalExpectedAndTargetConflictsRejected": true
+    },
+    {
+      "boundary": "COMMITTED_NO_REPLY",
+      "commandId": "process-cc860680-a76c-4bbb-8855-2c54b6a0bace",
+      "activityId": 10,
+      "requestSha256": "8a2899a34842c1a7bdff851239837859feccdd38119b5afd96f31b92dafbcf3b",
+      "beforeSha256": "8020d29853d92858df3f0c74506d4cf10497b8cf5bc1bb1f2db7f9bfd73f1f4b",
+      "firstResponseReceived": false,
+      "originalProcessCommandSha256": "9aecdacd33a305b54d03e4aa22ae3579842c30b491eff6a7f9a0712d8308cc90",
+      "physicalExit": {
+        "code": 137,
+        "oomKilled": false,
+        "oldJavaPid": 9,
+        "oldHostPid": 6882,
+        "oldBootId": "fbb5426e-b5a0-4a91-9d05-6935c9e74887",
+        "originalStartedAt": "2026-10-25T23:12:36.518776668Z",
+        "finishedAt": "2026-10-25T23:14:01.932083809Z"
+      },
+      "newBootId": "2923934e-6259-4520-a2e2-aae6934cf9a8",
+      "recoverySeconds": 87.232,
+      "result": "ASSERTIONS_PASSED",
+      "afterSha256": "834b518c8f201a79a1698d6799ae9e2e6bab6aced19ec690e2922c5ea4fbd13d",
+      "originalReceiptId": 3,
+      "receiptSha256": "56a30fb360f1cc0d8e6b4b952fa3ea837f15d9395e0d2cc9aa6a78dd57d02167",
+      "runtimeEpoch": "NOT_APPLICABLE_NO_SUCH_INPUT_ON_THIS_COMMAND",
+      "originalExpectedAndTargetConflictsRejected": true
+    },
+    {
+      "boundary": "ACKED",
+      "commandId": "process-793ff5ee-c6e9-435a-bfcd-0df72e04d332",
+      "activityId": 11,
+      "requestSha256": "562cdb81a0f83820573c91ec4bfae9be1765dab16f0fe2cd6f386064c19c59b7",
+      "beforeSha256": "267877dcf1f504975529642536b1d902a2544ad6c77f42eec766172b298b3ff0",
+      "firstResponseReceived": true,
+      "originalProcessCommandSha256": "9aecdacd33a305b54d03e4aa22ae3579842c30b491eff6a7f9a0712d8308cc90",
+      "physicalExit": {
+        "code": 137,
+        "oomKilled": false,
+        "oldJavaPid": 9,
+        "oldHostPid": 9745,
+        "oldBootId": "2923934e-6259-4520-a2e2-aae6934cf9a8",
+        "originalStartedAt": "2026-10-25T23:14:02.026527848Z",
+        "finishedAt": "2026-10-25T23:15:33.194528206Z"
+      },
+      "newBootId": "5cca7c2f-d5d2-4538-84c3-f8b043eac45b",
+      "recoverySeconds": 87.329,
+      "result": "ASSERTIONS_PASSED",
+      "afterSha256": "51c39d42bf270ca1f80d3a13066ba69eda30c86f94abbfa8e71354d314f57bd5",
+      "originalReceiptId": 5,
+      "receiptSha256": "8377b5327ab6e1bec1e39966298207da4a057cf03ea299fe53d3d432178abec0",
+      "runtimeEpoch": "NOT_APPLICABLE_NO_SUCH_INPUT_ON_THIS_COMMAND",
+      "originalExpectedAndTargetConflictsRejected": true
+    }
+  ],
+  "actual_original_actors": {
+    "a": 990005,
+    "b": 990006
+  },
+  "actor_proof_original_identity_and_40_column_hash_bound": true,
+  "actor_semantics_checked_by_executed_source_not_raw_rows_in_public_artifact": true,
+  "authority_and_credential_projection_unchanged": true,
+  "protected_before_after_exact": true,
+  "financial_and_entitlement_tables_except_original_two_actors_zero": true,
+  "core_business_HTTP": {
+    "waves": [
+      {
+        "concurrency": 1,
+        "newCommands": 24,
+        "readReplayForeign": 24,
+        "status": "ASSERTIONS_PASSED"
+      },
+      {
+        "concurrency": 3,
+        "newCommands": 24,
+        "readReplayForeign": 24,
+        "status": "ASSERTIONS_PASSED"
+      },
+      {
+        "concurrency": 6,
+        "newCommands": 24,
+        "readReplayForeign": 24,
+        "status": "ASSERTIONS_PASSED"
+      }
+    ],
+    "actual_requests": 144,
+    "status": "BUSINESS_ASSERTIONS_PASSED"
+  },
+  "no_cash_read_curves": [
+    {
+      "configuredConcurrency": 1,
+      "rowsPerDictionary": 1,
+      "actualOwnedDatasetRows": 12,
+      "requestsRecorded": 24,
+      "counts": {
+        "SUCCESS": 24,
+        "LEGAL_AUTH_REJECTION": 0,
+        "SYSTEM_FAILURE": 0,
+        "UNKNOWN": 0,
+        "TRANSPORT_TIMEOUT": 0,
+        "TRANSPORT_ERROR": 0,
+        "CONTRACT_MISMATCH": 0,
+        "NOT_SENT": 0
+      },
+      "durationSeconds": 1.5228917999999112,
+      "successfulRequestsPerSecond": 15.759491252104318,
+      "p50Seconds": 0.06326853899997786,
+      "p95Seconds": 0.06755048100001204,
+      "p99Seconds": 0.07083913299993583,
+      "serverConcurrentRequests": "UNKNOWN_NOT_MEASURED",
+      "slo": "NOT_DEFINED_BY_THIS_PROBE"
+    },
+    {
+      "configuredConcurrency": 3,
+      "rowsPerDictionary": 1,
+      "actualOwnedDatasetRows": 12,
+      "requestsRecorded": 24,
+      "counts": {
+        "SUCCESS": 24,
+        "LEGAL_AUTH_REJECTION": 0,
+        "SYSTEM_FAILURE": 0,
+        "UNKNOWN": 0,
+        "TRANSPORT_TIMEOUT": 0,
+        "TRANSPORT_ERROR": 0,
+        "CONTRACT_MISMATCH": 0,
+        "NOT_SENT": 0
+      },
+      "durationSeconds": 1.3966472810000141,
+      "successfulRequestsPerSecond": 17.1840093962849,
+      "p50Seconds": 0.18001819000005526,
+      "p95Seconds": 0.22192769000002954,
+      "p99Seconds": 0.2710355450000179,
+      "serverConcurrentRequests": "UNKNOWN_NOT_MEASURED",
+      "slo": "NOT_DEFINED_BY_THIS_PROBE"
+    },
+    {
+      "configuredConcurrency": 6,
+      "rowsPerDictionary": 1,
+      "actualOwnedDatasetRows": 12,
+      "requestsRecorded": 24,
+      "counts": {
+        "SUCCESS": 24,
+        "LEGAL_AUTH_REJECTION": 0,
+        "SYSTEM_FAILURE": 0,
+        "UNKNOWN": 0,
+        "TRANSPORT_TIMEOUT": 0,
+        "TRANSPORT_ERROR": 0,
+        "CONTRACT_MISMATCH": 0,
+        "NOT_SENT": 0
+      },
+      "durationSeconds": 1.325307146,
+      "successfulRequestsPerSecond": 18.109009728375824,
+      "p50Seconds": 0.32218202000001384,
+      "p95Seconds": 0.40021736500000316,
+      "p99Seconds": 0.42985572499992486,
+      "serverConcurrentRequests": "UNKNOWN_NOT_MEASURED",
+      "slo": "NOT_DEFINED_BY_THIS_PROBE"
+    },
+    {
+      "configuredConcurrency": 1,
+      "rowsPerDictionary": 16,
+      "actualOwnedDatasetRows": 204,
+      "requestsRecorded": 24,
+      "counts": {
+        "SUCCESS": 24,
+        "LEGAL_AUTH_REJECTION": 0,
+        "SYSTEM_FAILURE": 0,
+        "UNKNOWN": 0,
+        "TRANSPORT_TIMEOUT": 0,
+        "TRANSPORT_ERROR": 0,
+        "CONTRACT_MISMATCH": 0,
+        "NOT_SENT": 0
+      },
+      "durationSeconds": 1.540506872999913,
+      "successfulRequestsPerSecond": 15.57928784391821,
+      "p50Seconds": 0.06306848099995932,
+      "p95Seconds": 0.07104616599997371,
+      "p99Seconds": 0.08303701699992416,
+      "serverConcurrentRequests": "UNKNOWN_NOT_MEASURED",
+      "slo": "NOT_DEFINED_BY_THIS_PROBE"
+    },
+    {
+      "configuredConcurrency": 3,
+      "rowsPerDictionary": 16,
+      "actualOwnedDatasetRows": 204,
+      "requestsRecorded": 24,
+      "counts": {
+        "SUCCESS": 24,
+        "LEGAL_AUTH_REJECTION": 0,
+        "SYSTEM_FAILURE": 0,
+        "UNKNOWN": 0,
+        "TRANSPORT_TIMEOUT": 0,
+        "TRANSPORT_ERROR": 0,
+        "CONTRACT_MISMATCH": 0,
+        "NOT_SENT": 0
+      },
+      "durationSeconds": 1.4195718729999953,
+      "successfulRequestsPerSecond": 16.90650572646284,
+      "p50Seconds": 0.17950150299998313,
+      "p95Seconds": 0.21062061099996754,
+      "p99Seconds": 0.21862363200000345,
+      "serverConcurrentRequests": "UNKNOWN_NOT_MEASURED",
+      "slo": "NOT_DEFINED_BY_THIS_PROBE"
+    },
+    {
+      "configuredConcurrency": 6,
+      "rowsPerDictionary": 16,
+      "actualOwnedDatasetRows": 204,
+      "requestsRecorded": 24,
+      "counts": {
+        "SUCCESS": 24,
+        "LEGAL_AUTH_REJECTION": 0,
+        "SYSTEM_FAILURE": 0,
+        "UNKNOWN": 0,
+        "TRANSPORT_TIMEOUT": 0,
+        "TRANSPORT_ERROR": 0,
+        "CONTRACT_MISMATCH": 0,
+        "NOT_SENT": 0
+      },
+      "durationSeconds": 1.4063360149999653,
+      "successfulRequestsPerSecond": 17.065622826988893,
+      "p50Seconds": 0.32044307299997854,
+      "p95Seconds": 0.478284502000065,
+      "p99Seconds": 0.48073807100001886,
+      "serverConcurrentRequests": "UNKNOWN_NOT_MEASURED",
+      "slo": "NOT_DEFINED_BY_THIS_PROBE"
+    },
+    {
+      "configuredConcurrency": 1,
+      "rowsPerDictionary": 64,
+      "actualOwnedDatasetRows": 972,
+      "requestsRecorded": 24,
+      "counts": {
+        "SUCCESS": 24,
+        "LEGAL_AUTH_REJECTION": 0,
+        "SYSTEM_FAILURE": 0,
+        "UNKNOWN": 0,
+        "TRANSPORT_TIMEOUT": 0,
+        "TRANSPORT_ERROR": 0,
+        "CONTRACT_MISMATCH": 0,
+        "NOT_SENT": 0
+      },
+      "durationSeconds": 1.5804287030000523,
+      "successfulRequestsPerSecond": 15.185753051967447,
+      "p50Seconds": 0.06258225099998072,
+      "p95Seconds": 0.08206152100001418,
+      "p99Seconds": 0.09771353100006763,
+      "serverConcurrentRequests": "UNKNOWN_NOT_MEASURED",
+      "slo": "NOT_DEFINED_BY_THIS_PROBE"
+    },
+    {
+      "configuredConcurrency": 3,
+      "rowsPerDictionary": 64,
+      "actualOwnedDatasetRows": 972,
+      "requestsRecorded": 24,
+      "counts": {
+        "SUCCESS": 24,
+        "LEGAL_AUTH_REJECTION": 0,
+        "SYSTEM_FAILURE": 0,
+        "UNKNOWN": 0,
+        "TRANSPORT_TIMEOUT": 0,
+        "TRANSPORT_ERROR": 0,
+        "CONTRACT_MISMATCH": 0,
+        "NOT_SENT": 0
+      },
+      "durationSeconds": 1.246441349999941,
+      "successfulRequestsPerSecond": 19.254816923396465,
+      "p50Seconds": 0.15735506700002588,
+      "p95Seconds": 0.19313419899992823,
+      "p99Seconds": 0.19738413300001412,
+      "serverConcurrentRequests": "UNKNOWN_NOT_MEASURED",
+      "slo": "NOT_DEFINED_BY_THIS_PROBE"
+    },
+    {
+      "configuredConcurrency": 6,
+      "rowsPerDictionary": 64,
+      "actualOwnedDatasetRows": 972,
+      "requestsRecorded": 24,
+      "counts": {
+        "SUCCESS": 24,
+        "LEGAL_AUTH_REJECTION": 0,
+        "SYSTEM_FAILURE": 0,
+        "UNKNOWN": 0,
+        "TRANSPORT_TIMEOUT": 0,
+        "TRANSPORT_ERROR": 0,
+        "CONTRACT_MISMATCH": 0,
+        "NOT_SENT": 0
+      },
+      "durationSeconds": 1.4165027839999311,
+      "successfulRequestsPerSecond": 16.94313648451055,
+      "p50Seconds": 0.3291065160000244,
+      "p95Seconds": 0.5064044229999354,
+      "p99Seconds": 0.5900936880000245,
+      "serverConcurrentRequests": "UNKNOWN_NOT_MEASURED",
+      "slo": "NOT_DEFINED_BY_THIS_PROBE"
+    }
+  ],
+  "no_cash_read_requests": 216,
+  "mixed": {
+    "claimDurablyVerified": true,
+    "ownedRedisPausedAtDispatch": true,
+    "faultRowUnchanged": true,
+    "holderReleaseAndAbsenceVerified": true,
+    "originalReleaseDurablyVerified": true,
+    "releaseReplayRejectedAndFullRowUnchanged": true,
+    "sameProcessRecoveryVerified": true,
+    "holderConnectionId": 31,
+    "physicalBlockedSqlCounts": [
+      0,
+      0,
+      3
+    ],
+    "blockedAtFaultDispatch": 3,
+    "rejectedRelease": {
+      "request": 223,
+      "kind": "RELEASE",
+      "startedMonotonic": 599.681575112,
+      "http": 200,
+      "businessCode": 401,
+      "category": "LEGAL_AUTH_REJECTION",
+      "finishedMonotonic": 604.792046039,
+      "elapsedSeconds": 5.1104709269999375
+    },
+    "readAttempts": [
+      {
+        "request": 220,
+        "kind": "DICT",
+        "startedMonotonic": 599.534452408,
+        "http": 200,
+        "businessCode": 500,
+        "category": "SYSTEM_FAILURE",
+        "finishedMonotonic": 610.022728414,
+        "elapsedSeconds": 10.488276005999978
+      },
+      {
+        "request": 221,
+        "kind": "DICT",
+        "startedMonotonic": 599.534602648,
+        "http": 200,
+        "businessCode": 500,
+        "category": "SYSTEM_FAILURE",
+        "finishedMonotonic": 610.022403135,
+        "elapsedSeconds": 10.487800486999959
+      },
+      {
+        "request": 222,
+        "kind": "DICT",
+        "startedMonotonic": 599.534747717,
+        "http": 200,
+        "businessCode": 500,
+        "category": "SYSTEM_FAILURE",
+        "finishedMonotonic": 610.022528621,
+        "elapsedSeconds": 10.487780904000033
+      },
+      {
+        "request": 224,
+        "kind": "ACTOR",
+        "startedMonotonic": 599.681704313,
+        "http": 200,
+        "businessCode": 401,
+        "category": "LEGAL_AUTH_REJECTION",
+        "finishedMonotonic": 604.797267737,
+        "elapsedSeconds": 5.115563424000015
+      },
+      {
+        "request": 225,
+        "kind": "DICT",
+        "startedMonotonic": 599.681952915,
+        "http": 200,
+        "businessCode": 500,
+        "category": "SYSTEM_FAILURE",
+        "finishedMonotonic": 604.810012703,
+        "elapsedSeconds": 5.128059787999973
+      }
+    ],
+    "recoveryReads": [
+      {
+        "request": 226,
+        "kind": "ACTOR",
+        "startedMonotonic": 610.093319889,
+        "http": 200,
+        "businessCode": 200,
+        "category": "SUCCESS",
+        "finishedMonotonic": 610.163539411,
+        "elapsedSeconds": 0.07021952200000214
+      },
+      {
+        "request": 227,
+        "kind": "DICT",
+        "startedMonotonic": 610.163552085,
+        "http": 200,
+        "businessCode": 200,
+        "category": "SUCCESS",
+        "finishedMonotonic": 610.231575029,
+        "elapsedSeconds": 0.06802294400006303
+      }
+    ],
+    "originalRelease": {
+      "request": 228,
+      "kind": "RELEASE",
+      "startedMonotonic": 610.231612579,
+      "http": 200,
+      "businessCode": 200,
+      "category": "SUCCESS",
+      "finishedMonotonic": 610.309965966,
+      "elapsedSeconds": 0.07835338700010652
+    },
+    "releaseReplay": {
+      "request": 229,
+      "kind": "RELEASE",
+      "startedMonotonic": 610.310828637,
+      "http": 200,
+      "businessCode": 500,
+      "category": "SYSTEM_FAILURE",
+      "finishedMonotonic": 610.382919693,
+      "elapsedSeconds": 0.07209105599997656
+    }
+  },
+  "outerCleanup": {
+    "result": "EXACT_IDS_AND_NAMES_ABSENT",
+    "checks": [
+      {
+        "kind": "container",
+        "identifier": "cy-auth-0a8764c0146446148312d18b220f86b2-app",
+        "absent": true
+      },
+      {
+        "kind": "container",
+        "identifier": "cy-auth-0a8764c0146446148312d18b220f86b2-mysql",
+        "absent": true
+      },
+      {
+        "kind": "container",
+        "identifier": "cy-auth-0a8764c0146446148312d18b220f86b2-redis",
+        "absent": true
+      },
+      {
+        "kind": "container",
+        "identifier": "4e53dc6981eb816b49292d80648ae15910055dd93d11b35e864d41853d4504d2",
+        "absent": true
+      },
+      {
+        "kind": "container",
+        "identifier": "08bb6445f580e713dabb52f982d796bcdcce52fd225dda2921dc0e8ce93f3fe2",
+        "absent": true
+      },
+      {
+        "kind": "container",
+        "identifier": "b77573aff5ff253d709e22c01bd9b02062a5f758476913d3504cae0381015132",
+        "absent": true
+      },
+      {
+        "kind": "network",
+        "identifier": "cy-auth-0a8764c0146446148312d18b220f86b2",
+        "absent": true
+      },
+      {
+        "kind": "network",
+        "identifier": "609d20906c377413191b6379f28dc7fa8bc66244f22f9722d47049221dfcd959",
+        "absent": true
+      }
+    ]
+  },
+  "outerCleanupReceiptSha256": "de7046953bbed76f8f6618d96f272d2b896268617297e45a745fb31274f83bb3",
+  "auxiliary_auth_report_result": "FAIL_BEFORE_BUSINESS_PROBE",
+  "auxiliary_result_scope": "Existing cleanup() creates this default when generic-auth business receipt absent. Gameplay and capacity own separate original reports/finalizers; this is not a generic-auth PASS and is retained unchanged. Only its exact owned-removal evidence is consumed.",
+  "wholeSystemCapacityAccepted": false,
+  "q4q8Complete": false,
+  "not_covered": {
+    "providers": "NOT_COVERED_NO_APPROVED_SAFE_PROVIDER_FAULT_POINT",
+    "paymentCallbacks": "NOT_COVERED",
+    "routeCacheEvictionAndLongProvider": "NOT_COVERED",
+    "instanceTakeover": "NOT_COVERED"
+  },
+  "all_complete": false
+}

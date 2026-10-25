@@ -599,7 +599,7 @@
     "A": "f079 checkout/claim locked-current fence and NEVER+OrderClose outerTx refusal;84d7 exact local consumption completeRecovery and closed-order original ticket guard nowAPPLIED. TeamGroup/ClubEventOps still separate active work. New2dedicated test files present; recovery scenarios queued, not Java verified.",
     "root_guard_factory": "WechatVerifiedFactTestSupport.realPaymentGuards: real same-source JdbcOrderOwner+IntentStore+SdkGateway local guard, outbound doubles kept separate. No SDK init/network. B factory callers pending."
   },
-  "current_source_head": "f1fe75d646f8ae57864ee5603c68e70e7fabc854",
+  "current_source_head": "ecff37372bfae059faa38e9eb420894cde1bcee9",
   "current_source_manifest_counts": {
     "registered_sql_classes": 120,
     "combined_unique_classes": 65,
@@ -643,10 +643,10 @@
   "previous_goal_turn_classification": {
     "classification": "progress",
     "evidence": [
-      "f1fe15779 originalXML independently verified/new7 actualPASS",
-      "four runtime terminal first causes retained/4 purpose packages dispatched",
-      "C2091 complete5 exact source applied/rootfocusedreview no tests",
-      "evidence-only public192a scanned/pushed; activecodeHEAD unchanged"
+      "B/E/H complete source recovered;B8blocks77481 andC/E/H public donors exact;all4 source22codefiles focused reviewed",
+      "172 controls first171PASS1ERROR;rootcanonical syntheticfixture overlay failed1PASS only;no repeat171",
+      "52paths/535991byte source+evidence scanned/frozen/pushed ecff37372 APIexact",
+      "selectedbackend40242248743/job121316459342 sourceecff running;watch93625 andone-shot96379 strict no-repeat4prepared"
     ],
     "all_complete": false
   },
@@ -5637,5 +5637,202 @@
     },
     "composed_source_precheck": "f1fe75d64-composed-source-precheck.json",
     "next_impacted_plan": "f1fe75d64-next-impacted-validation-plan.json"
+  },
+  "final_concentrated_acceptance_ecff37372": {
+    "source": "ecff37372bfae059faa38e9eb420894cde1bcee9",
+    "tree": "17ef62c85313de126c56878fb336327ae05131f0",
+    "parent": "f1fe75d646f8ae57864ee5603c68e70e7fabc854",
+    "branch": "codex/architecture-day-runtime-repairs-f1fe-20261025",
+    "state": "ALL5_TERMINAL_BACKEND_CROSSDOMAIN_SCOPEDMIXED_PASS_PAYMENT_RESTORE_FAIL_NEW_B_E_F_SOURCE",
+    "all4_source_complete": true,
+    "source_delivery_record": "f1fe75d64-composed-runtime-source-integration.json",
+    "source_precheck": "f1fe75d64-composed-source-precheck.json",
+    "impact_plan": "f1fe75d64-next-impacted-validation-plan.json",
+    "diff_paths": 52,
+    "diff_bytes": 535991,
+    "diff_sha256": "a1c70770ec5de1011c3009c372e53ac1c9c31ef2b2d827a96243afe3c2028bdc",
+    "scan": {
+      "diff_check": "PASS",
+      "gitleaks": "PASS",
+      "whitelist_exact": true,
+      "remote_api_SHA_exact": true
+    },
+    "new_required_ordinary_Java_cases": {
+      "com.chengyinhub.business.it.CrossDomainTransactionSamplingTest": [
+        "cacheIdleUsesStrictlyGreaterThanThePinnedHundredMilliseconds",
+        "twentyMillisecondReadsCannotRenewThemselvesIntoAnEligibleSample",
+        "newWitnessBoundaryRequiresItsOwnQuietWindowEvenAfterAnOlderReadWasIdle",
+        "exhaustedOrInvalidMonotonicEvidenceIsUnknownRatherThanZero",
+        "emptyCacheCannotBecomeAZeroTransactionSuccessWithoutTheCurrentWitness",
+        "anOldPhysicalWitnessIsNotTheCurrentCacheGeneration",
+        "aValidatedCurrentWitnessMayAccompanyZeroDomainTransactions",
+        "calibrationAndOtherDomainTransactionsAreNeverExcludedByIdStateOrZeroWrites",
+        "witnessMustBeIndependentUnmodifiedAndActuallyOwnItsFixtureLock",
+        "duplicatedWitnessOrUnexpectedMysqlRoleCannotBeSilentlyNormalizedAway"
+      ],
+      "com.chengyinhub.business.it.RestoreHttpStartupContractTest": [
+        "actualBootFactoryWaitsOnShutdownWithoutBypassingTheOriginalLeaderCustomizer",
+        "aDifferentRealSchedulerCannotStandInForTheSelectedFactory",
+        "realSchedulerCanBecomeStartedAfterTheInitialObservationWithoutForcedAutostart",
+        "leadershipTimeoutPreservesTypedFailureAndNeverStartsTheScheduler",
+        "startupProjectionContainsOnlyFixedEnumsAndBoundIdentitiesNeverMessagesOrCauses"
+      ],
+      "com.chengyinhub.business.service.RestoreChildDiagnosticsTest": [
+        "sqlCauseIsTypedWithoutMessagesQueriesCredentialsOrPrivatePaths",
+        "unreviewedTypesStatesAndInvalidIdentityAreNotEchoed",
+        "fixedStageAndCauseBudgetNeverSerializeArbitraryThrowablePayload"
+      ]
+    },
+    "new_required_ordinary_Java_count": 18,
+    "python_controls": {
+      "modules": 5,
+      "initial_tests": 172,
+      "initial_passed": 171,
+      "initial_errors": 1,
+      "initial_failures": 0,
+      "initial_log_sha256": "569997e00deab31296536f5430b059b101335b31c041e196b3b294395e840cec",
+      "focused_failed_test_recheck": 1,
+      "focused_failed_test_passed": 1,
+      "focused_log_sha256": "2299339565fdc7c4fedeb54e99b181ba53b821f77194926422cc7df3301ba0ee",
+      "not_single172_green_run": true,
+      "no_repeat_passed171": true
+    },
+    "runs": {
+      "standard_backend_selected": 40242248743,
+      "cross_domain": 40243426205,
+      "mixed": 40243429794,
+      "restore_application": 40243433436,
+      "payment_gap_diagnostic": 40243436961
+    },
+    "next_dispatch_prepared": "/private/tmp/hengyin-ecff37372-next-dispatch.json",
+    "runtime_not_dispatched_until_actual_common_admission": [],
+    "Java_DB_new_source": "BACKEND_AND_SELECTED_CROSS_DOMAIN_ACTUALLY_EXECUTED_OTHER_RUNTIME_PENDING_OR_FAIL",
+    "all_complete": false,
+    "backend_job": 121316459342,
+    "read_only_backend_watch": {
+      "session_id": 93625,
+      "script": "/private/tmp/hengyin-ecff37372-ci-watch.py",
+      "snapshot": "/private/tmp/hengyin-ecff37372-ci-watch.json",
+      "interval_seconds": 30,
+      "atomic_snapshot": true,
+      "state": "TERMINAL_SUCCESS_CLOSED"
+    },
+    "conditional_dispatch": {
+      "session_id": 96379,
+      "script": "/private/tmp/hengyin-ecff37372-conditional-dispatch.py",
+      "receipt": "/private/tmp/hengyin-ecff37372-conditional-dispatch.json",
+      "lock": "/private/tmp/hengyin-ecff37372-conditional-dispatch.lock",
+      "state": "ALL_FOUR_DISPATCHED_API_SOURCE_ATTEMPT_EXACT",
+      "original_same_source_api_and_job_build_success_and_no_prior_extra_runs_required": true,
+      "atomic_lock_and_attempted_before_command_no_retry": true,
+      "session_state": "TERMINAL_CLOSED"
+    },
+    "backend_build_test_actual": {
+      "job": 121316459342,
+      "build_test_conclusion": "success",
+      "build_test_completed_at": "2026-10-25T23:03:35Z",
+      "whole_backend_job_pending": false,
+      "artifact": 12617317452,
+      "ZIP_bytes": 12724246,
+      "ZIP_sha256": "36c3b464440a9a7ac307826ab91951a355613ecf46b344b3c433a8e38f049114",
+      "CRC": "PASS",
+      "original_XML_hashes_verified": 1964,
+      "module": "chengyinhub-admin",
+      "tests": 15797,
+      "passed": 15164,
+      "skipped": 633,
+      "failure_error_duplicate": 0,
+      "old15779_actual_identities_and_statuses_preserved": true,
+      "new18_actual_passed": 18,
+      "new18_failure_error_skip": 0,
+      "readback": "ecff37372-backend-original-XML-readback.json",
+      "not_full_business_acceptance": true
+    },
+    "backend_job_conclusion": "success",
+    "cross_domain_actual": {
+      "verdict": "PASS_PARTIAL_REAL_STORAGE_SCOPE",
+      "tests": 1,
+      "failure_error_skip_duplicate": 0,
+      "cleanup": "CLEAN",
+      "readback": "ecff37372-cross-domain-pass-readback.json"
+    },
+    "payment_gap_actual": {
+      "verdict": "FAIL",
+      "readback": "ecff37372-payment-gap-failure-readback.json",
+      "typed_cause": "SOURCE_TIMELINE NullPointerException RestoreBusinessReconciliationFixture:167",
+      "new_B_source_dispatched": true
+    },
+    "pending_source_owner": {
+      "owner": "B",
+      "thread": "01a16a22-956c-723f-b51b-afcbee69802b",
+      "host": "durable",
+      "turn": "01a17557-a5d8-72c7-ad79-298fc3fd4f33",
+      "cursor": "b03dff2c-10cc-4156-add7-1e422e41c5d1:42",
+      "state": "IN_PROGRESS_COMPLETE_CONNECTED_FIXTURE_SOURCE_PACKAGE",
+      "parent": "ecff37372bfae059faa38e9eb420894cde1bcee9",
+      "required": "Original composite intent identity through commands/journals/readers/all fixed cohorts, source controls and caller wiring; no fabricated id/schema changes/no interim JavaDBCI"
+    },
+    "read_only_two_runtime_watch": {
+      "session_id": 32743,
+      "script": "/private/tmp/hengyin-ecff37372-two-runtime-watch.py",
+      "snapshot": "/private/tmp/hengyin-ecff37372-two-runtime-watch.json",
+      "runs": [
+        40243429794,
+        40243433436
+      ],
+      "interval_seconds": 30,
+      "finite_iterations": 80,
+      "mutations": false,
+      "state": "BOTH_TERMINAL_EXIT0_SESSION_CLOSED"
+    },
+    "mixed_actual": {
+      "verdict": "PASS_SCOPED_GAMEPLAY_RESTART_AND_CAPACITY_MIXED",
+      "physical_restart_cases": 3,
+      "core_HTTP_requests": 144,
+      "read_curves": 9,
+      "read_requests": 216,
+      "same_process_mixed_recovery": true,
+      "independent_exact_cleanup": true,
+      "wholeSystemCapacityAccepted": false,
+      "q4q8Complete": false,
+      "readback": "ecff37372-mixed-scoped-pass-readback.json"
+    },
+    "remaining_Q4_Q8_new_source": {
+      "owner": "F",
+      "thread": "01a16a23-5e0c-736b-9fc1-d4d070393009",
+      "host": "durable",
+      "parent": "ecff37372bfae059faa38e9eb420894cde1bcee9",
+      "state": "DISPATCHED_COMPLETE_CONNECTED_SOURCE_PACKAGE_NOT_OLD_SCOPED_RERUN",
+      "basis": "Current actual mixed pass explicitly q4q8Complete=false/wholeSystemCapacityAccepted=false; remaining original Q4/Q8/T19 representative core HTTP + controlled providers/payment callback/cache/scheduler same-window evidence",
+      "owned": "New test-only controlled mixed business workload and direct controls/docs; necessary existing capacity probe extension; shared C/H/E child/entry/workflow hunks review.patch only root",
+      "constraints": "Reuse existing CrossDomain stages and real original-intent owner/immutable facts; no generic dirty baseline, no new runner/framework/dependency/policy/resources, no JavaDBCI or real provider calls",
+      "tests": "NOT_RUN",
+      "turn": "01a1755f-8d79-7482-a900-9c95b33ebd5c",
+      "cursor": "446d298a-e8e5-46b0-bbe8-4c4beccfc008:48"
+    },
+    "restore_application_actual": {
+      "verdict": "FAIL",
+      "readback": "ecff37372-restore-http-failure-readback.json",
+      "source_ready_boots": 1,
+      "original_complete_withdrawal_and_chapter_passed": true,
+      "first_failure": "CANONICAL_BACKUP_RESTORE/RESTORED_SQL_COMPARE",
+      "exact_difference_cause": "UNKNOWN",
+      "secondary_log_evidence": "UNAVAILABLE",
+      "independent_resource_absence": true,
+      "not_accepted": true,
+      "new_E_source_dispatched": true
+    },
+    "new_E_source": {
+      "owner": "E",
+      "thread": "01a16a23-2723-72e4-813f-03d7f1aa6017",
+      "host": "durable",
+      "parent": "ecff37372bfae059faa38e9eb420894cde1bcee9",
+      "state": "DISPATCHED_COMPLETE_CONNECTED_SOURCE_PACKAGE",
+      "owned": "restore_application_http_runtime/probe plus direct controls/fixture/docs; canonical backup tool only separate review.patch if genuinely necessary",
+      "required": "Full source/target typed rows+highwater equality retained with bounded safe mismatch projection; per-boot original logs and ready-stop evidence lifetime across stop/removal/failed canonical compare; preserve5boots/20sec/137refusal/UNKNOWN/dispatch/cleanup",
+      "tests": "NOT_RUN",
+      "turn": "01a17564-9c3c-762b-b835-d88a42367275",
+      "cursor": "bf46e2e6-88ca-4fad-a205-efca84d15256:48"
+    }
   }
 }

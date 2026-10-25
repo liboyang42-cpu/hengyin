@@ -1,0 +1,135 @@
+{
+  "source": "ecff37372bfae059faa38e9eb420894cde1bcee9",
+  "run": 40242248743,
+  "attempt": 1,
+  "artifact": 12617317452,
+  "ZIP_bytes": 12724246,
+  "ZIP_sha256": "36c3b464440a9a7ac307826ab91951a355613ecf46b344b3c433a8e38f049114",
+  "CRC": "PASS",
+  "original_XML_hashes_verified": 1964,
+  "modules": {
+    "chengyinhub-admin": {
+      "tests": 15797,
+      "passed": 15164,
+      "skipped": 633
+    }
+  },
+  "duplicate_case_ids": 0,
+  "old15779_case_identities_preserved": true,
+  "old_case_status_changes": [],
+  "new18_actual_source_identity_cases": [
+    {
+      "class": "com.chengyinhub.business.it.CrossDomainTransactionSamplingTest",
+      "name": "duplicatedWitnessOrUnexpectedMysqlRoleCannotBeSilentlyNormalizedAway",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.CrossDomainTransactionSamplingTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.it.CrossDomainTransactionSamplingTest",
+      "name": "newWitnessBoundaryRequiresItsOwnQuietWindowEvenAfterAnOlderReadWasIdle",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.CrossDomainTransactionSamplingTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.it.CrossDomainTransactionSamplingTest",
+      "name": "twentyMillisecondReadsCannotRenewThemselvesIntoAnEligibleSample",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.CrossDomainTransactionSamplingTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.it.CrossDomainTransactionSamplingTest",
+      "name": "aValidatedCurrentWitnessMayAccompanyZeroDomainTransactions",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.CrossDomainTransactionSamplingTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.it.CrossDomainTransactionSamplingTest",
+      "name": "exhaustedOrInvalidMonotonicEvidenceIsUnknownRatherThanZero",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.CrossDomainTransactionSamplingTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.it.CrossDomainTransactionSamplingTest",
+      "name": "anOldPhysicalWitnessIsNotTheCurrentCacheGeneration",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.CrossDomainTransactionSamplingTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.it.CrossDomainTransactionSamplingTest",
+      "name": "cacheIdleUsesStrictlyGreaterThanThePinnedHundredMilliseconds",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.CrossDomainTransactionSamplingTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.it.CrossDomainTransactionSamplingTest",
+      "name": "calibrationAndOtherDomainTransactionsAreNeverExcludedByIdStateOrZeroWrites",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.CrossDomainTransactionSamplingTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.it.CrossDomainTransactionSamplingTest",
+      "name": "emptyCacheCannotBecomeAZeroTransactionSuccessWithoutTheCurrentWitness",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.CrossDomainTransactionSamplingTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.it.CrossDomainTransactionSamplingTest",
+      "name": "witnessMustBeIndependentUnmodifiedAndActuallyOwnItsFixtureLock",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.CrossDomainTransactionSamplingTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.it.RestoreHttpStartupContractTest",
+      "name": "actualBootFactoryWaitsOnShutdownWithoutBypassingTheOriginalLeaderCustomizer",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.RestoreHttpStartupContractTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.it.RestoreHttpStartupContractTest",
+      "name": "startupProjectionContainsOnlyFixedEnumsAndBoundIdentitiesNeverMessagesOrCauses",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.RestoreHttpStartupContractTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.it.RestoreHttpStartupContractTest",
+      "name": "realSchedulerCanBecomeStartedAfterTheInitialObservationWithoutForcedAutostart",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.RestoreHttpStartupContractTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.it.RestoreHttpStartupContractTest",
+      "name": "aDifferentRealSchedulerCannotStandInForTheSelectedFactory",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.RestoreHttpStartupContractTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.it.RestoreHttpStartupContractTest",
+      "name": "leadershipTimeoutPreservesTypedFailureAndNeverStartsTheScheduler",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.RestoreHttpStartupContractTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.service.RestoreChildDiagnosticsTest",
+      "name": "unreviewedTypesStatesAndInvalidIdentityAreNotEchoed",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.RestoreChildDiagnosticsTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.service.RestoreChildDiagnosticsTest",
+      "name": "sqlCauseIsTypedWithoutMessagesQueriesCredentialsOrPrivatePaths",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.RestoreChildDiagnosticsTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.service.RestoreChildDiagnosticsTest",
+      "name": "fixedStageAndCauseBudgetNeverSerializeArbitraryThrowablePayload",
+      "status": "passed",
+      "report": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.RestoreChildDiagnosticsTest.xml"
+    }
+  ],
+  "new18_passed": 18,
+  "new18_failure_error_skip": 0,
+  "not_full_business_acceptance": true,
+  "skips_not_passed": true,
+  "all_complete": false
+}

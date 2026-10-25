@@ -1,0 +1,212 @@
+{
+  "source": "ecff37372bfae059faa38e9eb420894cde1bcee9",
+  "run": 40243433436,
+  "attempt": 1,
+  "verdict": "FAIL_CANONICAL_RESTORED_SQL_COMPARE_NOT_FULL_HTTP_RESTORE_ACCEPTED",
+  "artifact": {
+    "id": 12617924102,
+    "bytes": 8750,
+    "sha256": "3710c5e5d6b4c0276b7a88ceecc387114814afa19cbf8cbe9d6f9c9c5a52d998",
+    "CRC": "PASS",
+    "entries": [
+      {
+        "name": "cy-auth.r1SbWGq8/restore-http-application.json",
+        "bytes": 60465
+      },
+      {
+        "name": "cy-auth.r1SbWGq8/restore-http-cleanup.json",
+        "bytes": 2538
+      },
+      {
+        "name": "cy-auth.r1SbWGq8/restore-http-provenance.json",
+        "bytes": 1674
+      }
+    ]
+  },
+  "original_files_sha256": {
+    "restore-http-provenance.json": "147bf9d2e268f7e40599dbead47c7c10d13ca97ccf7b23896e7fc8be8b4492ef",
+    "restore-http-application.json": "bd5a40e4600d7a96dd226101aa35dddeb4704a27fc464f479d6458e7dc00b13c",
+    "restore-http-cleanup.json": "0172ac42b21cddef7e5c65e01685146f157d789e1fbe45541827d4feda618de6"
+  },
+  "original_application_projection": {
+    "sourceSha": "ecff37372bfae059faa38e9eb420894cde1bcee9",
+    "runId": "40243433436",
+    "runAttempt": "1",
+    "jarSha256": "f87bc0dade2d1f380f7d0f059c5eeb25baa61f9e61c8017c66dde0eef9e4fe81",
+    "schema": "cy_e2e_auth_6c3f35be5eb64783b20624eaae47f9eb",
+    "scope": "test-owned full Spring HTTP restore startup; controlled original withdrawal-complete and late payment gap only",
+    "result": "NOT_COMPLETED",
+    "phase": "CANONICAL_BACKUP_RESTORE",
+    "substage": "RESTORED_SQL_COMPARE",
+    "firstFailurePhase": "CANONICAL_BACKUP_RESTORE",
+    "firstFailureType": "ValueError",
+    "firstFailureDiagnostic": {
+      "phase": "CANONICAL_BACKUP_RESTORE",
+      "reasonCode": "INVARIANT_REJECTED",
+      "substage": "RESTORED_SQL_COMPARE",
+      "type": "ValueError"
+    },
+    "readyBootObservations": [
+      {
+        "appCid": "322f3a4f7a945a83d0b51468975f4ff66550ef750e92b6796d648f70d1c900f9",
+        "bootId": "822ea55a-a69e-46fd-b779-dd6f08d26434",
+        "guardHeld": false,
+        "jarSha256": "f87bc0dade2d1f380f7d0f059c5eeb25baa61f9e61c8017c66dde0eef9e4fe81",
+        "javaPid": 1,
+        "restoreMode": "false",
+        "schedulerStarted": true,
+        "schema": "cy_e2e_auth_6c3f35be5eb64783b20624eaae47f9eb",
+        "serverUuid": "536e9694-d0c9-11f1-a11d-06df1f84500c",
+        "side": "source",
+        "sourceSha": "ecff37372bfae059faa38e9eb420894cde1bcee9"
+      }
+    ],
+    "checks": [
+      {
+        "actorId": 990005,
+        "amountFen": 3000,
+        "case": "original_complete_cohort",
+        "commandIdentityHash": "333dbb09151ad4dddf2a2ef23118aea99982f6a4074ab857a10a0bcda3ba1480",
+        "finalBalance": "70.00",
+        "openingBalance": "100.00",
+        "providerSubmits": 1,
+        "withdrawalId": 1
+      }
+    ],
+    "boots": [],
+    "completeBoots": [],
+    "backupStarted": "2026-10-25T23:13:45.981814+00:00",
+    "backupCompleted": "2026-10-25T23:21:03.093989+00:00",
+    "restoreStarted": "2026-10-25T23:21:03.238605+00:00",
+    "restoreCompleted": "2026-10-25T23:24:40.387273+00:00",
+    "restoreSeconds": 217.14866444300003,
+    "applicationStartAttempted": true,
+    "applicationStop": "NO_ACTIVE_APP_SLOT",
+    "applicationStopProofKind": "READY_JVM_EXIT_CONFIRMED",
+    "applicationDiagnostic": {
+      "result": "NO_CURRENT_CID_OBSERVATION",
+      "startAbsenceProven": false
+    },
+    "ownedAppCids": [
+      "322f3a4f7a945a83d0b51468975f4ff66550ef750e92b6796d648f70d1c900f9"
+    ],
+    "removedAppCids": [
+      "322f3a4f7a945a83d0b51468975f4ff66550ef750e92b6796d648f70d1c900f9"
+    ],
+    "productionDispatchRelease": false,
+    "allDispatchDomainsFenced": "NOT_CLAIMED_SPECIFIC_REAL_OWNERS_ONLY",
+    "sourceMysqlCid": "422e40b60a990a6350ed69fb5c9c142aef7ca60d37c0e23a1664eb731c27079b",
+    "targetMysqlCid": "ce8c5a662a93ab118ead99675d6bf1a512887b292b25f555aba9619c1107d8de",
+    "sourceServerUuid": "536e9694-d0c9-11f1-a11d-06df1f84500c",
+    "targetServerUuid": "60516163-d0c9-11f1-90d8-0ef27ef5f673",
+    "privateCleanup": "EXACT_OWN_SUBTREE_REMOVED"
+  },
+  "backup_snapshot_tables": 418,
+  "target_snapshot_independently_available": false,
+  "original_comparison_difference_cause": "UNKNOWN; original artifact has only source public snapshot, no target snapshot or differing-table evidence. Do not infer lost business data or relax complete rows/high-water equality.",
+  "canonicalToolSha256": "fead7bfce99af5aadeb15b696190fade40109f37d25233aa401116d10ea1279c",
+  "classPostimages": {
+    "RestoreHttpApplicationChild$FixtureEndpoints.class": "05408ead53e677dde396a52f48e1826c8b75a02e8b110d14e2e051e0d63c52eb",
+    "RestoreHttpApplicationChild$MapperObservations.class": "74d3c41fe23170ec73f819535031be52be27b84f162b80a448721f9b7075c533",
+    "RestoreHttpApplicationChild$Observations.class": "639e6ea42d016d07ea9bdcffc1f16b87cc6ade09f974d674dc5c23c2dcf2ac09",
+    "RestoreHttpApplicationChild$QuartzShutdownConfiguration.class": "2efa268035969b43d59aa1cfacf68cfdd71af4d564a1c4783f78204e21de5e5b",
+    "RestoreHttpApplicationChild$StartupReason.class": "cb3edfd148dd3b094abcf9ab2a71a76b5cb6d56ade5b15bd04a2262537049598",
+    "RestoreHttpApplicationChild$StartupRejected.class": "9395ac2e45b6f4af24e7d2d70d932090d7016a9af274a5a1bdd59cb20d0812ac",
+    "RestoreHttpApplicationChild$StartupStage.class": "aa5977b2bcd1585db415779d84a14282eb78a855c197f7b014f117c815fda3e5",
+    "RestoreHttpApplicationChild.class": "ea51f33fc4bb03a21204402a4c04c9074bdb9fd7118fcab722baa22c00f8b450"
+  },
+  "fullHttpBoundary": "TEST_CLASSPATH_CHILD_PLUS_UNCHANGED_PRODUCTION_JAR",
+  "providerBoundary": "CONTROLLED_WITHDRAWAL_WIRE_AND_HISTORICAL_PAYMENT_FACT_NOT_WECHAT_SDK_OR_SIGNATURE_ACCEPTANCE",
+  "cleanup_original": {
+    "absence": [
+      {
+        "absent": true,
+        "id": "cy-auth-6c3f35be5eb64783b20624eaae47f9eb-app",
+        "kind": "container"
+      },
+      {
+        "absent": true,
+        "id": "cy-auth-6c3f35be5eb64783b20624eaae47f9eb-restore-mysql",
+        "kind": "container"
+      },
+      {
+        "absent": true,
+        "id": "cy-auth-6c3f35be5eb64783b20624eaae47f9eb-mysql",
+        "kind": "container"
+      },
+      {
+        "absent": true,
+        "id": "cy-auth-6c3f35be5eb64783b20624eaae47f9eb-redis",
+        "kind": "container"
+      },
+      {
+        "absent": true,
+        "id": "cy-auth-6c3f35be5eb64783b20624eaae47f9eb",
+        "kind": "network"
+      },
+      {
+        "absent": true,
+        "id": "322f3a4f7a945a83d0b51468975f4ff66550ef750e92b6796d648f70d1c900f9",
+        "kind": "container"
+      },
+      {
+        "absent": true,
+        "id": "ce8c5a662a93ab118ead99675d6bf1a512887b292b25f555aba9619c1107d8de",
+        "kind": "container"
+      },
+      {
+        "absent": true,
+        "id": "422e40b60a990a6350ed69fb5c9c142aef7ca60d37c0e23a1664eb731c27079b",
+        "kind": "container"
+      },
+      {
+        "absent": true,
+        "id": "6ec9b83ba64c55aa82fe92503b9d1e7cb34995939ff3a0d39c05a304235aa6f6",
+        "kind": "container"
+      }
+    ],
+    "applicationLogStatus": "UNAVAILABLE",
+    "applicationStartAttempted": true,
+    "confirmedPreStartFailure": false,
+    "finalizationFailures": [
+      {
+        "phase": "APPLICATION_LOG_UNAVAILABLE",
+        "type": "ValueError"
+      }
+    ],
+    "firstFailurePhase": "CANONICAL_BACKUP_RESTORE",
+    "firstFailureType": "ValueError",
+    "originalExit": 1,
+    "originalOwnerCleanup": {
+      "cleanup": "CONFIRMED_EXACT_OWNED_REMOVAL",
+      "ownedRemoved": [
+        {
+          "id": "ce8c5a662a93ab118ead99675d6bf1a512887b292b25f555aba9619c1107d8de",
+          "independentNoSuch": true,
+          "name": "cy-auth-6c3f35be5eb64783b20624eaae47f9eb-restore-mysql"
+        },
+        {
+          "id": "422e40b60a990a6350ed69fb5c9c142aef7ca60d37c0e23a1664eb731c27079b",
+          "independentNoSuch": true,
+          "name": "cy-auth-6c3f35be5eb64783b20624eaae47f9eb-mysql"
+        },
+        {
+          "id": "6ec9b83ba64c55aa82fe92503b9d1e7cb34995939ff3a0d39c05a304235aa6f6",
+          "independentNoSuch": true,
+          "name": "cy-auth-6c3f35be5eb64783b20624eaae47f9eb-redis"
+        }
+      ]
+    },
+    "productionDispatchRelease": false,
+    "resourceCleanup": "CONFIRMED_EXACT_OWNED_REMOVAL",
+    "result": "NOT_ACCEPTED",
+    "runAttempt": "1",
+    "runId": "40243433436",
+    "schema": "cy_e2e_auth_6c3f35be5eb64783b20624eaae47f9eb",
+    "sourceSha": "ecff37372bfae059faa38e9eb420894cde1bcee9"
+  },
+  "source_confirmed_secondary_seam": "source_quiescent_snapshot calls slot.stop() with remove=True; source app removed before failed restore compare, finalizer no longer has current CID to collect original app log. Keep primary compare failure and mandatory log guard, repair lifetime/observability.",
+  "new_E_complete_source_dispatched": true,
+  "no_retest_original_startup_or_change_money_policy": true,
+  "all_complete": false
+}

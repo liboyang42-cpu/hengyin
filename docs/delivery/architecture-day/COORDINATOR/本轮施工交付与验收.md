@@ -1,3 +1,33 @@
+<!-- ecff37372-all-five-terminal-B-E-F-source -->
+当前ecff五run全终态：后台40242248743、跨域40243426205、局部mixed40243429794已独立原证据签收各自范围；payment40243436961与restore-app40243433436真实FAIL，未重跑。完整restore已实际sourcefalse启动/schedulerStarted/PID1和原提现100→70/provider1次及章回执通过，旧startup路径本轮闭合。新首因CANONICAL_BACKUP_RESTORE/RESTORED_SQL_COMPARE全表行/高水位不相等，原制品只有source快照无target差异，具体原因UNKNOWN；source-stop默认删除容器导致失败后原日志UNAVAILABLE是独立取证生命周期接缝。资源4CID+network独立absence不等于业务通过，full5boot未完成。原E已获完整来源比对/生命周期/配套控制SOURCE包，保全部原行/nextId/金额/stop/日志断言；不修改数据或放宽比较拿绿。
+
+当前原B修支付复合身份，原E修完整恢复真实接缝，原F做尚未覆盖的Q4/Q8同预算受控代表组合，三路并行且责任不重叠；root唯一共享集成/CI。SOURCE齐后统一核源扫描冻结必要受影响验；其他已过范围不重派/重跑。旧只读watch32743已两run终态正常关闭，不再当live或重启。all_complete=false；生产/微信/真钱/UAT未验。
+
+<!-- ecff37372-current-remaining-work-authoritative -->
+当前剩余工作（以本段为准；下面旧阶段记录只作历史证据）：
+
+| 项目 | 当前事实 | 下一动作与负责人 |
+|---|---|---|
+| 选定后端与新增18控制 | 同ecff源码实际通过；15797中15164PASS、633SKIP，非全业务验收 | 已收口，不重复运行无影响项 |
+| 跨域真库混合故障 | 同ecff原XML唯一case、真实cache-witness/零domain TX/通知进度/原UNKNOWN守恒全部通过，独立清理CLEAN | 原C已收口，不重派 |
+| 真实玩法进程恢复及局部容量 | 三故障点、144业务HTTP、216无现金读请求与Redis/SQL同进程恢复通过，原身份/保护集不变、资源精确清理 | 该局部范围收口，不能签全Q4/Q8 |
+| 支付恢复与七组业务恢复 | 诊断发现真实fixture167读取不存在的intent id，原business FAIL/schema UNKNOWN；尚无full7通过 | 原B按真实复合PK补齐所有相关身份读取/caller/测试SOURCE；root收齐后同源诊断，再原full7 |
+| 完整应用恢复/回退 | 原run40243433436仍执行 | 保持原运行，root读原boot/JAR/业务/stop与清理证据；有真新失败才派原E |
+| 固定预算完整代表负载/外部受控故障组合 | 已过的是局部曲线，provider/付款回调/routecache/接管组合尚不全，q4q8Complete仍false | 原F新完整SOURCE包并行：复用现有CrossDomain/HTTP/启动/清理，补同窗口真实代表业务、受控provider和配套控制；不放宽原no-cash或资金UNKNOWN围栏 |
+| 其他完整目标 | remaining_acceptance_groups及Q1-Q10完整范围不缩；真实多身份/全业务终止恢复回退/固定预算联合证据仍按原合同逐项闭合 | root按已执行证据映射；缺证不当BUG，不以本表局部完成作全部 |
+| 生产/设备/真钱渠道 | 当前阶段未验，且未授权执行生产DDL部署/微信/真实付费 | 不宣称上线/UAT/全产品通过 |
+
+原B与原F并行写必要完整包，root唯一共享集成/CI。其余已交付者不派待命或无收益审计。源码/调用者/装配/配套测试齐后统一核源与受影响验证，不逐补丁编译。当前代码HEAD仍ecff，工作树只有回读证据文档修改，不是新代码候选。`all_complete=false`。
+
+<!-- ecff37372-mixed-scoped-original-readback -->
+ecff混合40243429794原artifact12617648701 ZIPf2bf28142364a2ff0647d53f86a901e482336ad4c41e0befb96fefdb6a26967f/39847bytes CRC+原gameplay/capacity/schema/cleanup报告独立核：3真实SIGKILL故障边界原命令/回执/新boot恢复通过；并发1/3/6真实新写与读回重放跨人拒绝合144HTTP断言；9无现金字典/actor读曲线216请求全成功，原两玩家与保护集/凭据投影不变，3个真实SQL阻塞+Redis暂停中原lease释放401且原行不变，恢复同进程释放200/replay500拒绝原行不变，精确3CID与network独立absence。仅SCOPED通过；wholeSystemCapacityAccepted=false/q4q8Complete=false，provider/真实付款回调/routeprovider/takeover仍未覆盖。原辅助auth报告保留FAIL_BEFORE_BUSINESS_PROBE默认占位，不将其称auth业务PASS；使用的是两个独立原业务报告及其cleanup-finalizer。支付恢复新B源仍施工/完整restore仍原run，all_complete=false。
+
+<!-- ecff37372-actual-cross-domain-pass-new-payment-source -->
+ecff后台选定40242248743全SUCCESS，1964原XML已核15797=15164PASS+633SKIP，新增18实际PASS，原15779身份状态保留。四runtime各唯一启动且API SHA/attempt1核实。跨域真库40243426205原artifact12617657827/12618170979 CRC/hash/XML精确1case全PASS零skip，新cache-witness校准持锁/释放归零/held-window零domain TX及原资金UNKNOWN/通知恢复断言通过，MySQLRedis独立CLEAN与两容器精确删除。支付诊断40243436961 FAIL读原3JSON，SOURCE_TIMELINE真实NPE fixture167，canonical wx_pay_order_intent无id/复合PK，原B已获完整caller/fixture/身份SOURCE收口任务，不造假id。typed诊断/primary/finalization已生效，businessFAIL/schemaUNKNOWN/dispatchhold保留、outer资源EXACT_ABSENCE，非full7。mixed40243429794/restore-app40243433436继续原run，不重复启动。all_complete=false。
+
+<!-- ecff37372-frozen-and-selected-backend-issued -->
+当前新冻结公开源ecff37372bfae059faa38e9eb420894cde1bcee9/tree17ef62c85313de126c56878fb336327ae05131f0/parentf1fe。原B/C/E/H四个完整目的包全已收齐集成定点评阅；52白名单paths/535991bytes/秘密扫描PASS已推/API SHAexact，未mergePR/部署。5模块172Python先171PASS1ERROR，仅B临时fixture规范路径后原失败1PASS，不称单次172全绿；新18Java控制尚待实跑。既有后端选定CI已唯一发起，四项受影响runtime待真实公共backend准入后并行，不继承f1fe旧绿、不重跑无影响项目，all_complete=false。
+
 <!-- f1fe75d64-all-four-source-ready-final-controls -->
 本轮B/C/E/H必要源码、调用者、装配与配套测试已全部收齐并root定点核源，22codefiles/11Python AST/11Java LSP0error只是源检查；76类921存储声明源预检0问题，不是实跑。新增18普通Java控制尚待真正执行。五模块Python统一172条先171PASS/1ERROR，仅一个macOS临时路径fixture改Path(temp).resolve后原失败1PASS；不写单次172全绿、不重复171。所有production guard/预算/原case/断言保留。现在统一扫描冻结新公开隔离候选，再必要同源选定backend及四项runtime；原f1fe绿与4失败各保持原SHA，不转签新源，all_complete=false。
 
