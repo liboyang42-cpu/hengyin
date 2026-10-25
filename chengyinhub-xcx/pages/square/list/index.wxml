@@ -140,7 +140,7 @@
          A07 拍到的「广场加载态」就是那一屏什么都没有的黑。-->
     <cy-skeleton class="fill-slot" wx:if="{{listLoading && !list.length}}" type="post-card" count="{{3}}" />
     <cy-error load-failure class="fill-slot" wx:if="{{loadError && !list.length}}" fill="{{true}}" size="lg" title="加载失败" bindretry="onLoadRetry" auto-back />
-    <cy-empty class="fill-slot" wx:if="{{communityPostRead && nodata && !list.length && !loadError}}" fill="{{true}}" size="lg" icon="/images/no_data.svg" title="广场还很安静" />
+    <cy-empty class="fill-slot" wx:if="{{communityPostRead && nodata && !list.length && !loadError}}" fill="{{true}}" size="lg" kind="empty" title="广场还很安静" />
   </scroll-view>
 
   <activity-picker show="{{activityPickerShow}}" bind:select="onActivitySelect" bind:close="onActivityPickerClose" />

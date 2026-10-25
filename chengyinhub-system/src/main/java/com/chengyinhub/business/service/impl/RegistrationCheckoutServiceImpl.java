@@ -58,6 +58,7 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public RegistrationCheckoutResult createOrReplay(Long memberId, RegistrationRequest request) {
         if (request == null) {
             throw new RegistrationCheckoutException(400, "报名参数不能为空");
@@ -73,11 +74,13 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public RegistrationCheckoutResult retryPayment(Long memberId, Long registrationId) {
         return retryPayment(memberId, registrationId, false);
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public RegistrationCheckoutResult retryPayment(Long memberId, Long registrationId, boolean appChannel) {
         if (!wechatPayService.isReady()) {
             throw new RegistrationCheckoutException(503, "支付服务暂不可用，请稍后再试");
@@ -146,9 +149,7 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
                     ? wechatPayService.createAppOrder(registration)
                     : wechatPayService.createOrder(registration);
         } catch (PaymentPreorderException failure) {
-            if (!failure.isResultUncertain()) {
-                registrationService.releasePaymentAttempt(registration.getId());
-            }
+            // 本次发送前拒绝也不能证明这个原号之前未被受理；保留 PAYING，交原号查单/关单恢复。
             throw failure;
         } catch (RuntimeException unknown) {
             throw PaymentPreorderException.resultUncertain(

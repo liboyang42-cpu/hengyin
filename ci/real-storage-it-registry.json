@@ -13,6 +13,17 @@
   },
   "default_database_base": "cyit",
   "batches": {
+    "payment-intent-correctness": {
+      "lineage": "Reviewed payment correctness PR598 only; no architecture extraction",
+      "registered_source": "bf4e45de05d80ce032b983b4f15b924794bf9c73",
+      "note": "Original payment intent/callback fences plus original cash debit, immutable submit identity and exact-once refund evidence. Real MySQL with provider doubles; not external-channel acceptance.",
+      "classes": [
+        "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT",
+        "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT",
+        "com.chengyinhub.business.service.CashWithdrawTransferIntentMySqlIT",
+        "com.chengyinhub.business.longrun.OWN_C04_21MySqlIT"
+      ]
+    },
     "core-funds": {
       "lineage": "CORE codex/mini-longrun-core-20261015",
       "registered_source": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
@@ -259,6 +270,27 @@
     }
   },
   "classes": {
+    "com.chengyinhub.business.service.CashWithdrawTransferIntentMySqlIT": {"tests": 9, "storage": ["mysql"], "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}, "database_base": "cyit"},
+    "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT": {
+      "tests": 4,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "B_PAYMENT_INTENT_DDL_APPROVED": "1"
+      },
+      "database_base": "cyit"
+    },
+    "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT": {
+      "tests": 3,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "B_PAYMENT_INTENT_DDL_APPROVED": "1"
+      },
+      "database_base": "cyit"
+    },
     "com.chengyinhub.business.longrun.E04_13Test": {
       "tests": 2,
       "storage": ["mysql"],

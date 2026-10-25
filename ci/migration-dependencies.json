@@ -1,6 +1,8 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "20261024_cash_withdraw_transfer_intent": [],
+    "20261023_wx_pay_order_intent": [],
     "merchant_wechat_qrcode_20261022": [],
     "merchant_category_ids_20261022": [],
     "orient_session_lifecycle_20261022": ["20260823_topic_route_graph"],

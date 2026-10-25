@@ -33,7 +33,33 @@
   margin-bottom: var(--cy-space-3);
 }
 
+/* 两层空态插画,几何与 cy-empty-art 逐项一致(画框 260.16×250,见 cy-empty/index.wxss)。 */
+.cy-error-art {
+  position: relative;
+  width: 360rpx;
+  height: 345.94rpx;
+  margin-bottom: var(--cy-space-3);
+}
+.cy-error-art__bg {
+  position: absolute;
+  left: 0.03%;
+  top: 0;
+  width: 99.94%;
+  height: 99.94%;
+}
+.cy-error-art__figure {
+  position: absolute;
+  left: 21.17%;
+  top: 14%;
+  width: 57.80%;
+  height: 72%;
+}
+
 /* aaa 标准(2026-07-31):插画/文字放大,opt-in,同构 cy-empty--lg */
+.cy-error--lg .cy-error-art {
+  width: 520rpx;
+  height: 499.69rpx;
+}
 .cy-error--lg .cy-error-ic {
   width: 240rpx;
 }

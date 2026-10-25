@@ -400,18 +400,29 @@ class CoopSettlementTest {
         Map<String, String> notPaid = new HashMap<>();
         notPaid.put("trade_state", "NOTPAY");
         notPaid.put("out_trade_no", "DEP89T100"); // 查单回包必须回显原支付单号,否则按归属不匹配拒绝
+        notPaid.put("wx_out_trade_no", "WXP-deposit-89");
+        Map<String, String> closed = new HashMap<>(notPaid);
+        closed.put("trade_state", "CLOSED");
         when(coopInviteMapper.updateDepositIfCurrent(89L, 1, new BigDecimal("50.00"), 5, new BigDecimal("50.00")))
                 .thenReturn(1);
         when(coopInviteMapper.updateDepositIfCurrent(89L, 5, new BigDecimal("50.00"), 3, new BigDecimal("50.00")))
                 .thenReturn(1);
         when(wechatPayService.queryOrderStatus("DEP89T100")).thenReturn(notPaid);
-        when(wechatPayService.closeOrder("DEP89T100")).thenReturn(true);
+        when(wechatPayService.closePaymentAttempt("DEP89T100", "WXP-deposit-89")).thenReturn(true);
+        when(wechatPayService.queryOrderStatus("WXP-deposit-89")).thenReturn(closed);
+        when(wechatPayService.lockPaymentAttemptForUpdate("DEP89T100", "WXP-deposit-89")).thenReturn(true);
 
         svc.settleCoopTopic(topic, new BigDecimal("100"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertAmount("50.00", lines.get("DEPOSIT_DEDUCTION").get(0), "未支付订单关闭后才抵扣");
-        verify(wechatPayService).closeOrder("DEP89T100");
+        InOrder paymentOrder = inOrder(wechatPayService, coopInviteMapper);
+        paymentOrder.verify(wechatPayService).queryOrderStatus("DEP89T100");
+        paymentOrder.verify(wechatPayService).closePaymentAttempt("DEP89T100", "WXP-deposit-89");
+        paymentOrder.verify(wechatPayService).queryOrderStatus("WXP-deposit-89");
+        paymentOrder.verify(wechatPayService).lockPaymentAttemptForUpdate("DEP89T100", "WXP-deposit-89");
+        paymentOrder.verify(coopInviteMapper).updateDepositIfCurrent(eq(89L), eq(1), any(), eq(5), any());
+        verify(wechatPayService, never()).closeOrder(any());
         verify(coopInviteMapper).updateDepositIfCurrent(eq(89L), eq(1), any(), eq(5), any());
         verify(coopInviteMapper).updateDepositIfCurrent(eq(89L), eq(5), any(), eq(3), any());
     }

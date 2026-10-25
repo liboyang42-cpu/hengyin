@@ -26,6 +26,15 @@ import com.chengyinhub.business.mapper.ClubMembershipMapper;
 import com.chengyinhub.business.service.impl.ClubMembershipFeatureGate;
 import com.chengyinhub.business.service.impl.ClubMembershipServiceImpl;
 import com.chengyinhub.business.service.impl.ClubMembershipSnapshotCodec;
+import com.chengyinhub.business.service.impl.WechatPayServiceImpl;
+import com.chengyinhub.common.config.WxPayConfig;
+import com.wechat.pay.java.service.payments.jsapi.JsapiService;
+import com.wechat.pay.java.service.payments.jsapi.model.QueryOrderByOutTradeNoRequest;
+import com.wechat.pay.java.service.payments.model.Transaction;
+import com.wechat.pay.java.service.payments.model.TransactionAmount;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.support.AbstractPlatformTransactionManager;
+import org.springframework.transaction.support.DefaultTransactionStatus;
 import com.chengyinhub.business.service.support.CanonicalDigest;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.exception.ServiceException;
@@ -52,6 +61,9 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -64,6 +76,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -99,6 +112,7 @@ class ClubMembershipServiceImplTest {
         clubMembers = mock(ClubMemberMapper.class);
         members = mock(IUmsMemberService.class);
         pay = mock(IWechatPayService.class);
+        when(pay.lockPaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
         audits = mock(BusinessAuditEventMapper.class);
         transactions = mock(PlatformTransactionManager.class);
         transactionStatus = mock(TransactionStatus.class);
@@ -181,6 +195,38 @@ class ClubMembershipServiceImplTest {
     }
 
     @Test
+    void oldClosedObservationCannotCloseNewCurrentInvoiceAttempt() {
+        ClubMembershipInvoice invoice = validPayingInvoice();
+        invoice.setVersion(1);
+        when(mapper.selectInvoiceById(invoice.getId())).thenReturn(invoice);
+        Map<String, String> observed = wxOrder(invoice, "CLOSED");
+        observed.put("wx_out_trade_no", "old-wx-attempt");
+        when(pay.queryOrderStatus(invoice.getOutTradeNo())).thenReturn(observed);
+        when(pay.lockPaymentAttemptForUpdate(invoice.getOutTradeNo(), "old-wx-attempt")).thenReturn(false);
+        assertThrows(ServiceException.class, () -> service.resumeInvoice(
+                MEMBER, action(invoice.getId(), "resume-stale-attempt")));
+        verify(mapper, never()).markInvoiceClosedCas(any(), anyInt(), any());
+        verify(pay, never()).createGenericOrder(any(), any(), any(), any());
+    }
+
+    @Test
+    void payErrorOrRevokedCannotReleaseOriginalInvoiceWithoutClosedProof() {
+        for (String state : new String[]{"PAYERROR", "REVOKED"}) {
+            ClubMembershipInvoice invoice = validPayingInvoice();
+            invoice.setVersion(1);
+            when(mapper.selectInvoiceById(invoice.getId())).thenReturn(invoice);
+            when(pay.queryOrderStatus(invoice.getOutTradeNo())).thenReturn(wxOrder(invoice, state));
+            org.mockito.Mockito.doThrow(new RuntimeException("close unknown")).when(pay).closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo());
+            assertThrows(ServiceException.class,
+                    () -> service.closeInvoice(MEMBER, action(invoice.getId(), "close-" + state)));
+            verify(mapper, never()).markInvoiceClosedCas(any(), anyInt(), any());
+            verify(pay).queryOrderStatus(invoice.getOutTradeNo());
+            verify(pay).closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo());
+            org.mockito.Mockito.clearInvocations(pay, mapper);
+        }
+    }
+
+    @Test
     void flagOnResumeChecksGateAfterReconcileThenCreatesPrepay() {
         ClubMembershipInvoice invoice = resumableInvoiceWithoutParams();
         when(pay.queryOrderStatus(invoice.getOutTradeNo())).thenReturn(wxOrder(invoice, "NOTPAY"));
@@ -206,14 +252,14 @@ class ClubMembershipServiceImplTest {
         when(mapper.selectInvoiceById(invoice.getId())).thenReturn(invoice);
         when(pay.queryOrderStatus(invoice.getOutTradeNo()))
                 .thenReturn(wxOrder(invoice, "NOTPAY"), wxOrder(invoice, "CLOSED"));
-        when(pay.closeOrder(invoice.getOutTradeNo())).thenReturn(true);
+        when(pay.closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo())).thenReturn(true);
         when(mapper.markInvoiceClosedCas(eq(invoice.getId()), eq(2), any())).thenReturn(1);
 
         ClubMembershipRenewalVO result = service.closeInvoice(
                 MEMBER, action(invoice.getId(), "close-flag-off"));
 
         assertEquals(ClubMembershipInvoice.STATUS_CLOSED, result.getPaymentState());
-        verify(pay).closeOrder(invoice.getOutTradeNo());
+        verify(pay).closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo());
         verify(pay, never()).createGenericOrder(any(), any(), any(), any());
     }
 
@@ -230,7 +276,7 @@ class ClubMembershipServiceImplTest {
 
         assertEquals(HttpStatus.FORBIDDEN, error.getCode());
         verify(pay, never()).queryOrderStatus(any());
-        verify(pay, never()).closeOrder(any());
+        verify(pay, never()).closePaymentAttempt(any(), any());
     }
 
     @Test
@@ -1413,7 +1459,7 @@ class ClubMembershipServiceImplTest {
         when(mapper.selectInvoiceById(invoice.getId())).thenReturn(invoice);
         when(pay.queryOrderStatus(invoice.getOutTradeNo()))
                 .thenReturn(wxOrder(invoice, "NOTPAY"), wxOrder(invoice, "CLOSED"));
-        when(pay.closeOrder(invoice.getOutTradeNo())).thenReturn(true);
+        when(pay.closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo())).thenReturn(true);
         when(mapper.markInvoiceClosedCas(eq(invoice.getId()), eq(2), any())).thenReturn(1);
 
         ClubMembershipRenewalVO result = service.closeInvoice(
@@ -1423,9 +1469,101 @@ class ClubMembershipServiceImplTest {
         assertFalse(result.isRecoverable());
         InOrder order = inOrder(pay, mapper);
         order.verify(pay).queryOrderStatus(invoice.getOutTradeNo());
-        order.verify(pay).closeOrder(invoice.getOutTradeNo());
+        order.verify(pay).closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo());
         order.verify(pay).queryOrderStatus(invoice.getOutTradeNo());
         order.verify(mapper).markInvoiceClosedCas(eq(invoice.getId()), eq(2), any());
+    }
+
+    @Test
+    void explicitCancelOfW1CannotCloseOrGrantForNewNotpayW2() {
+        CloseAttemptReadbackFixture f = new CloseAttemptReadbackFixture(Transaction.TradeStateEnum.NOTPAY);
+        String originalParams = f.invoice.getPayParamsJson();
+        String originalSnapshot = f.invoice.getSnapshotHash();
+
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> service.closeInvoice(MEMBER, action(f.invoice.getId(), "close-w1-read-w2-notpay")));
+
+        assertEquals(HttpStatus.CONFLICT, error.getCode());
+        assertEquals(ClubMembershipInvoice.STATUS_PAYING, f.invoice.getStatus());
+        assertEquals(2, f.invoice.getVersion());
+        assertEquals(originalParams, f.invoice.getPayParamsJson());
+        assertEquals(originalSnapshot, f.invoice.getSnapshotHash());
+        verify(mapper, never()).markInvoiceClosedCas(any(), anyInt(), any());
+        verify(mapper, never()).markInvoicePaidCas(any(), anyInt(), any(), any());
+        verify(mapper, never()).insertTerm(any());
+        verify(mapper, never()).insertRefundReview(any());
+        verify(f.gateway, never()).lockPaymentAttemptForUpdate(anyString(), anyString());
+        f.verifyOriginalCloseAndSuccessorQuery();
+    }
+
+    @Test
+    void explicitCancelOfW1RecordsOnlyVerifiedSuccessfulW2WithOriginalInvoiceOwnerAndAmount() {
+        CloseAttemptReadbackFixture f = new CloseAttemptReadbackFixture(Transaction.TradeStateEnum.SUCCESS);
+        ClubMembershipInvoice paid = validPayingInvoice();
+        paid.setStatus(ClubMembershipInvoice.STATUS_PAID);
+        paid.setTransactionId("wx-w2-success");
+        paid.setVersion(3);
+        stubActiveCallback(f.invoice);
+        AtomicReference<ClubMembershipInvoice> stored = new AtomicReference<>(f.invoice);
+        // Every read observes storage state; only the exact successful CAS advances it to PAID.
+        // Avoid ordered returns: preparation and locking can legitimately read the same row again.
+        org.mockito.Mockito.doAnswer(call -> stored.get()).when(mapper).selectInvoiceById(f.invoice.getId());
+        org.mockito.Mockito.doAnswer(call -> stored.get()).when(mapper).selectInvoiceByIdForUpdate(f.invoice.getId());
+        org.mockito.Mockito.doAnswer(call -> stored.get()).when(mapper).selectInvoiceByOutTradeNo(f.invoice.getOutTradeNo());
+        org.mockito.Mockito.doAnswer(call -> stored.get()).when(mapper).selectInvoiceByOutTradeNoForUpdate(f.invoice.getOutTradeNo());
+        when(mapper.markInvoicePaidCas(eq(f.invoice.getId()), eq(2), eq("wx-w2-success"), any())).thenAnswer(call -> {
+            org.junit.jupiter.api.Assertions.assertSame(f.invoice, stored.get());
+            assertEquals(ClubMembershipInvoice.STATUS_PAYING, stored.get().getStatus());
+            stored.set(paid);
+            return 1;
+        });
+        when(mapper.insertTerm(any(ClubMembershipTerm.class))).thenReturn(1);
+
+        ClubMembershipRenewalVO result = service.closeInvoice(
+                MEMBER, action(f.invoice.getId(), "close-w1-read-w2-success"));
+
+        assertEquals(ClubMembershipInvoice.STATUS_PAID, result.getPaymentState());
+        assertEquals("wx-w2-success", result.getInvoice().getTransactionId());
+        assertEquals(f.invoice.getSnapshotHash(), result.getInvoice().getSnapshotHash());
+        assertEquals(3, result.getInvoice().getVersion());
+        org.junit.jupiter.api.Assertions.assertSame(paid, stored.get());
+        org.junit.jupiter.api.Assertions.assertSame(paid, result.getInvoice());
+        InOrder persistedReadback = inOrder(mapper);
+        persistedReadback.verify(mapper).markInvoicePaidCas(eq(f.invoice.getId()), eq(2), eq("wx-w2-success"), any());
+        persistedReadback.verify(mapper).selectInvoiceById(f.invoice.getId());
+        verify(mapper).markInvoicePaidCas(eq(f.invoice.getId()), eq(2), eq("wx-w2-success"), any());
+        ArgumentCaptor<ClubMembershipTerm> term = ArgumentCaptor.forClass(ClubMembershipTerm.class);
+        verify(mapper).insertTerm(term.capture());
+        assertEquals(f.invoice.getId(), term.getValue().getSourceInvoiceId());
+        assertEquals(Long.valueOf(MEMBER), term.getValue().getMemberId());
+        assertEquals(Long.valueOf(CLUB), term.getValue().getClubId());
+        assertEquals(ClubMembershipTerm.STATUS_ACTIVE, term.getValue().getStatus());
+        verify(mapper, never()).markInvoiceClosedCas(any(), anyInt(), any());
+        verify(mapper, never()).insertRefundReview(any());
+        verify(f.gateway, never()).lockPaymentAttemptForUpdate(anyString(), anyString());
+        f.verifyOriginalCloseAndSuccessorQuery();
+    }
+
+    @Test
+    void explicitCancelOfW1ClosesLocalInvoiceOnlyAfterCurrentClosedW2Fence() {
+        CloseAttemptReadbackFixture f = new CloseAttemptReadbackFixture(Transaction.TradeStateEnum.CLOSED);
+        when(mapper.markInvoiceClosedCas(eq(f.invoice.getId()), eq(2), any())).thenReturn(1);
+
+        ClubMembershipRenewalVO result = service.closeInvoice(
+                MEMBER, action(f.invoice.getId(), "close-w1-read-w2-closed"));
+
+        assertEquals(ClubMembershipInvoice.STATUS_CLOSED, result.getPaymentState());
+        assertEquals(3, result.getInvoice().getVersion());
+        assertFalse(result.isRecoverable());
+        InOrder order = inOrder(f.gateway, mapper);
+        order.verify(f.gateway).lockPaymentAttemptForUpdate(f.invoice.getOutTradeNo(), f.w2);
+        order.verify(mapper).markInvoiceClosedCas(eq(f.invoice.getId()), eq(2), any());
+        verify(f.gateway, never()).lockPaymentAttemptForUpdate(anyString(), eq(f.w1));
+        verify(mapper, never()).markInvoicePaidCas(any(), anyInt(), any(), any());
+        verify(mapper, never()).insertTerm(any());
+        verify(mapper, never()).insertRefundReview(any());
+        assertTrue(f.closedAttempts.contains(f.w2));
+        f.verifyOriginalCloseAndSuccessorQuery();
     }
 
     @Test
@@ -1438,7 +1576,7 @@ class ClubMembershipServiceImplTest {
         when(mapper.selectInvoiceByIdForUpdate(invoice.getId())).thenReturn(invoice);
         when(pay.queryOrderStatus(invoice.getOutTradeNo()))
                 .thenReturn(wxOrder(invoice, "NOTPAY"), wxOrder(invoice, "CLOSED"));
-        when(pay.closeOrder(invoice.getOutTradeNo())).thenReturn(true);
+        when(pay.closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo())).thenReturn(true);
         when(mapper.markInvoiceClosedCas(eq(invoice.getId()), eq(2), any())).thenReturn(1);
 
         ClubMembershipRenewalVO result = service.closeInvoice(
@@ -1460,7 +1598,7 @@ class ClubMembershipServiceImplTest {
                         localTransactionActive, wxOrder(invoice, "NOTPAY")))
                 .thenAnswer(call -> recordExternalState(externalCallInsideLocalTransaction,
                         localTransactionActive, wxOrder(invoice, "CLOSED")));
-        when(pay.closeOrder(invoice.getOutTradeNo())).thenAnswer(call ->
+        when(pay.closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo())).thenAnswer(call ->
                 recordExternalState(externalCallInsideLocalTransaction, localTransactionActive, true));
         AtomicBoolean closeAppliedInsideLocalTransaction = new AtomicBoolean(false);
         when(mapper.markInvoiceClosedCas(eq(invoice.getId()), eq(2), any())).thenAnswer(call -> {
@@ -1497,7 +1635,7 @@ class ClubMembershipServiceImplTest {
             if (tracker.isTransactionActive()) externalCallInsideLocalTransaction.set(true);
             return wxOrder(invoice, "CLOSED");
         });
-        when(pay.closeOrder(invoice.getOutTradeNo())).thenAnswer(call -> {
+        when(pay.closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo())).thenAnswer(call -> {
             if (tracker.isTransactionActive()) externalCallInsideLocalTransaction.set(true);
             return true;
         });
@@ -1530,7 +1668,7 @@ class ClubMembershipServiceImplTest {
         when(mapper.selectInvoiceById(invoice.getId())).thenReturn(invoice);
         when(pay.queryOrderStatus(invoice.getOutTradeNo()))
                 .thenReturn(wxOrder(invoice, "NOTPAY"), wxOrder(invoice, "USERPAYING"));
-        when(pay.closeOrder(invoice.getOutTradeNo())).thenReturn(true);
+        when(pay.closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo())).thenReturn(true);
 
         ServiceException error = assertThrows(ServiceException.class,
                 () -> service.closeInvoice(MEMBER, action(invoice.getId(), "cancel-unknown-100")));
@@ -1549,7 +1687,7 @@ class ClubMembershipServiceImplTest {
                 () -> service.closeInvoice(MEMBER, action(invoice.getId(), "cancel-refund-100")));
 
         assertEquals(HttpStatus.CONFLICT, error.getCode());
-        verify(pay, never()).closeOrder(any());
+        verify(pay, never()).closePaymentAttempt(any(), any());
         verify(mapper, never()).markInvoiceClosedCas(any(), anyInt(), any());
     }
 
@@ -1773,6 +1911,129 @@ class ClubMembershipServiceImplTest {
         assertTrue(audit.getValue().getAfterJson().contains("PAID_NO_ENTITLEMENT"));
     }
 
+    /** No database claim: real CLM/gateway flow with official SDK and intention-read doubles. */
+    private final class CloseAttemptReadbackFixture {
+        final ClubMembershipInvoice invoice = validPayingInvoice();
+        final String w1 = invoice.getOutTradeNo();
+        final String w2 = "WXP0123456789abcdef0123456789abc";
+        final AtomicReference<String> current = new AtomicReference<>(w1);
+        final Set<String> closedAttempts = new HashSet<>();
+        final AtomicBoolean w1Closed = new AtomicBoolean();
+        final JsapiService sdk = mock(JsapiService.class);
+        final WechatPayServiceImpl gateway = org.mockito.Mockito.spy(new WechatPayServiceImpl());
+
+        CloseAttemptReadbackFixture(Transaction.TradeStateEnum w2State) {
+            // Spring's resource-free transaction boundary exercises the gateway's actual-transaction guard;
+            // it is not an InnoDB isolation or durability proof (the separate four-case MySQL suite is).
+            PlatformTransactionManager manager = new AbstractPlatformTransactionManager() {
+                @Override protected Object doGetTransaction() { return new Object(); }
+                @Override protected void doBegin(Object transaction, TransactionDefinition definition) { }
+                @Override protected void doCommit(DefaultTransactionStatus status) { }
+                @Override protected void doRollback(DefaultTransactionStatus status) { }
+            };
+            ReflectionTestUtils.setField(service, "transactionManager", manager);
+            ReflectionTestUtils.setField(service, "wechatPayService", gateway);
+            ReflectionTestUtils.setField(gateway, "paymentIntentTransactions", manager);
+            ReflectionTestUtils.setField(gateway, "jsapiService", sdk);
+            WxPayConfig config = mock(WxPayConfig.class);
+            when(config.getMerchantId()).thenReturn("merchant-clm");
+            ReflectionTestUtils.setField(gateway, "wxPayConfig", config);
+            ReflectionTestUtils.setField(gateway, "paymentIntentJdbc", new JdbcTemplate() {
+                @Override public List<Map<String, Object>> queryForList(String sql, Object... args) {
+                    if (sql.contains("FROM club_membership_invoice")) {
+                        assertEquals(w1, args[0]);
+                        return List.of(Map.of("id", invoice.getId(), "amount", invoice.getAmountFen(),
+                                "payable", ClubMembershipInvoice.STATUS_PAYING.equals(invoice.getStatus()) ? 1 : 0));
+                    }
+                    if (sql.contains("WHERE biz_type=? AND biz_id=?")) {
+                        assertEquals("CLM", args[0]); assertEquals(invoice.getId(), args[1]);
+                        assertTrue(sql.endsWith("FOR UPDATE"));
+                        return List.of(intent(current.get()));
+                    }
+                    if (sql.contains("WHERE mchid=? AND business_out_trade_no=?")) {
+                        assertEquals("merchant-clm", args[0]); assertEquals(w1, args[1]);
+                        return List.of(intent(current.get()));
+                    }
+                    if (sql.contains("WHERE mchid=? AND out_trade_no=?")) {
+                        assertEquals("merchant-clm", args[0]);
+                        assertTrue(w1.equals(args[1]) || w2.equals(args[1]));
+                        return List.of(intent((String)args[1]));
+                    }
+                    throw new AssertionError("Unexpected payment intent query: " + sql);
+                }
+                @Override public int update(String sql, Object... args) {
+                    assertTrue(sql.startsWith("UPDATE wx_pay_order_intent SET closed_confirmed_at="));
+                    assertEquals("merchant-clm", args[0]);
+                    assertTrue(w1.equals(args[1]) || w2.equals(args[1]));
+                    closedAttempts.add((String)args[1]);
+                    return 1;
+                }
+            });
+            when(mapper.selectInvoiceById(invoice.getId())).thenReturn(invoice);
+            when(mapper.selectInvoiceByIdForUpdate(invoice.getId())).thenReturn(invoice);
+            when(sdk.queryOrderByOutTradeNo(any())).thenAnswer(call -> {
+                assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+                QueryOrderByOutTradeNoRequest request = call.getArgument(0);
+                assertEquals("merchant-clm", request.getMchid());
+                String no = request.getOutTradeNo();
+                assertTrue(w1.equals(no) || w2.equals(no));
+                return facts(no, w1.equals(no) ? (w1Closed.get()
+                        ? Transaction.TradeStateEnum.CLOSED : Transaction.TradeStateEnum.NOTPAY) : w2State);
+            });
+            org.mockito.Mockito.doAnswer(call -> {
+                assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+                com.wechat.pay.java.service.payments.jsapi.model.CloseOrderRequest request = call.getArgument(0);
+                assertEquals("merchant-clm", request.getMchid()); assertEquals(w1, request.getOutTradeNo());
+                w1Closed.set(true);
+                return null;
+            }).when(sdk).closeOrder(any());
+            org.mockito.Mockito.doAnswer(call -> {
+                boolean accepted = (Boolean)call.callRealMethod();
+                assertTrue(accepted); assertTrue(closedAttempts.contains(w1));
+                assertEquals(w1, current.get());
+                current.set(w2); // Another checkout wins after W1 CLOSED is committed, before CLM readback.
+                return accepted;
+            }).when(gateway).closePaymentAttempt(w1, w1);
+        }
+
+        Map<String, Object> intent(String no) {
+            return Map.of("out_trade_no", no, "business_out_trade_no", w1, "mchid", "merchant-clm",
+                    "appid", w1.equals(no) ? "wx-clm-mini" : "wx-clm-app",
+                    "trade_type", w1.equals(no) ? "JSAPI" : "APP", "currency", "CNY",
+                    "total_fen", invoice.getAmountFen());
+        }
+
+        Transaction facts(String no, Transaction.TradeStateEnum state) {
+            Transaction tx = new Transaction();
+            tx.setOutTradeNo(no); tx.setMchid("merchant-clm");
+            tx.setAppid(w1.equals(no) ? "wx-clm-mini" : "wx-clm-app");
+            tx.setTradeType(w1.equals(no) ? Transaction.TradeTypeEnum.JSAPI : Transaction.TradeTypeEnum.APP);
+            tx.setTradeState(state);
+            if (state == Transaction.TradeStateEnum.SUCCESS) tx.setTransactionId("wx-w2-success");
+            TransactionAmount amount = new TransactionAmount();
+            amount.setTotal(invoice.getAmountFen().intValue()); amount.setCurrency("CNY"); tx.setAmount(amount);
+            return tx;
+        }
+
+        void verifyOriginalCloseAndSuccessorQuery() {
+            assertEquals(w2, current.get());
+            assertEquals(Long.valueOf(OWNER), invoice.getOwnerMemberIdSnapshot());
+            assertEquals(Long.valueOf(MEMBER), invoice.getMemberId());
+            assertEquals(Long.valueOf(CLUB), invoice.getClubId());
+            assertEquals(Long.valueOf(9900), invoice.getAmountFen());
+            verify(gateway).closePaymentAttempt(w1, w1);
+            verify(gateway, never()).closePaymentAttempt(anyString(), eq(w2));
+            verify(gateway, never()).closeOrder(anyString());
+            ArgumentCaptor<QueryOrderByOutTradeNoRequest> requests = ArgumentCaptor.forClass(QueryOrderByOutTradeNoRequest.class);
+            verify(sdk, times(3)).queryOrderByOutTradeNo(requests.capture());
+            assertEquals(List.of(w1, w1, w2), requests.getAllValues().stream()
+                    .map(QueryOrderByOutTradeNoRequest::getOutTradeNo).toList());
+            verify(sdk).closeOrder(org.mockito.ArgumentMatchers.argThat(request -> w1.equals(request.getOutTradeNo())
+                    && "merchant-clm".equals(request.getMchid())));
+            org.mockito.Mockito.verifyNoMoreInteractions(sdk);
+        }
+    }
+
     private void stubActiveCallback(ClubMembershipInvoice invoice) {
         when(mapper.selectInvoiceByOutTradeNo(invoice.getOutTradeNo())).thenReturn(invoice);
         when(mapper.selectInvoiceByOutTradeNoForUpdate(invoice.getOutTradeNo())).thenReturn(invoice);
@@ -1984,6 +2245,7 @@ class ClubMembershipServiceImplTest {
         Map<String, String> order = new HashMap<>();
         order.put("trade_state", state);
         order.put("out_trade_no", invoice.getOutTradeNo());
+        order.put("wx_out_trade_no", invoice.getOutTradeNo());
         order.put("total", String.valueOf(invoice.getAmountFen()));
         return order;
     }

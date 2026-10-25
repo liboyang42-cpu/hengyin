@@ -13,10 +13,11 @@ public class WithdrawalBalanceAdmissionService {
     private final com.chengyinhub.business.mapper.MemberCashWithdrawMapper cash;
     private final WithdrawalFrozenAmountResolver frozen;
 
+    private final com.chengyinhub.business.mapper.CashWithdrawTransferIntentMapper transferIntents;
     public WithdrawalBalanceAdmissionService(UmsMemberMapper members, WithdrawalFrozenAmountResolver frozen,
-            com.chengyinhub.business.mapper.MemberCashWithdrawMapper cash) {
-        this.members = members; this.cash = cash;
-        this.frozen = frozen;
+            com.chengyinhub.business.mapper.MemberCashWithdrawMapper cash,
+            com.chengyinhub.business.mapper.CashWithdrawTransferIntentMapper transferIntents) {
+        this.members = members; this.cash = cash; this.frozen = frozen; this.transferIntents = transferIntents;
     }
 
     /** Bank intent is already claimed by the caller's transaction. */
@@ -25,15 +26,25 @@ public class WithdrawalBalanceAdmissionService {
 
     /** Original cash identity is already committed; finish this transaction before calling the channel. */
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
-    public Admission debitCash(Long id, Long memberId, BigDecimal amount) {
+    public Admission debitCash(Long id, Long memberId, BigDecimal amount, String mchid, String appid, String remark) {
         com.chengyinhub.business.domain.MemberCashWithdraw original = cash.selectByIdForUpdate(id);
         if (original == null || memberId == null || !memberId.equals(original.getMemberId())
                 || amount == null || original.getAmount() == null || amount.compareTo(original.getAmount()) != 0
                 || !Integer.valueOf(com.chengyinhub.business.domain.MemberCashWithdraw.STATUS_PROCESSING).equals(original.getStatus())
                 || Integer.valueOf(1).equals(original.getFrozen()))
             return new Admission(null, null, null, false, false);
+        var existing = transferIntents.selectByWithdrawId(id);
+        if (existing != null) {
+            existing.requireMatches(original);
+            return new Admission(existing.balanceBefore(), existing.balanceAfter(), null, true);
+        }
         Admission result = debit(memberId, amount, true);
-        if (!result.deducted) {
+        if (result.deducted) {
+            var intent = com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent.create(
+                    original, mchid, appid, remark, result.before, result.after);
+            if (transferIntents.insert(intent) != 1)
+                throw new IllegalStateException("提现原始扣款证据写入失败");
+        } else {
             com.chengyinhub.business.domain.MemberCashWithdraw failed = new com.chengyinhub.business.domain.MemberCashWithdraw();
             failed.setId(id);
             failed.setStatus(com.chengyinhub.business.domain.MemberCashWithdraw.STATUS_FAILED_NO_DEBIT);
