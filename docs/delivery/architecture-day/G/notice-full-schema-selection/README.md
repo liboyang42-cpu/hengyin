@@ -1,4 +1,4 @@
-# 本轮旧 C 首条失败：先交非 DAG 证据与最小替代接线方案
+# 本轮旧 C 首条失败：strict fresh scratch 替代接线
 
 Parent/source：`c86d212f66b92ed1af2c0c661d68169ddc9c48a5`。独立公共工作树 `/workspace/hengyin-g-notice-canonical-preflight` / 分支 `codex/architecture-day-g-notice-canonical-preflight`。没有修改旧 SQL、DAG、B 的 probe/cleanup 或其他 owner。
 
@@ -22,7 +22,7 @@ Parent/source：`c86d212f66b92ed1af2c0c661d68169ddc9c48a5`。独立公共工作�
 
 先前 run40127844664/job120973091452 对同一旧 C/D 字节的 MySQL8.0.45 实测，曾确认只有 CHECK 文本匹配=0，owner/state metadata 存在 ASCII92,39 转义；原证据保留在 `docs/delivery/architecture-day/G/notice-metadata-v2/DIAGNOSTIC_EVIDENCE.txt`。这解释已存在 v2 的修复目标，不冒充本轮分项读回。
 
-## 最小方案（待 root 归属确认后实施，不在此越权改共享 builder）
+## 原最小方案（498b 先交证据；随后 root 已明确授权以下实现）
 
 仅在 `scripts/e2e/build_schema.py` 的 fresh scratch 选择入口处理这一对精确替代：
 
@@ -40,4 +40,24 @@ Parent/source：`c86d212f66b92ed1af2c0c661d68169ddc9c48a5`。独立公共工作�
 
 一次必要纯 Python 控制已实际 PASS：真实完整 manifest/selector 同时选择 D/旧 C/v2且旧 C先执行；v2 严格源码等价性比对PASS。完整输出见 SOURCE_SELECTION.txt。
 
-这是一份已确认选择缺口及共享入口最小方案，**尚未实施 builder 修复**。Java/MySQL/Redis/CI 均未运行；本轮 schema/鉴权恢复未通过，不当业务验证完成。root 确认该精确 builder 触点后再写实现与直接控制。
+以上为498b证据阶段的静态定位；随后 root 授权的实现与定点结果见下节。Java/MySQL/Redis/CI 仍未运行，本轮 schema/鉴权恢复尚未验证，不当业务验证完成。
+
+
+## 已授权实现与本次交付
+
+实现 parent：`498b535da27568845950b1654aa4985c2c0905db`（仅 docs 的 c86d 子提交）。沿同一独立分支继续，没有 reset/rebase/回退他人修改。
+
+仅编辑 `scripts/e2e/build_schema.py`、`scripts/e2e/test_build_schema.py` 和本目录。未改 B/DAG/旧 SQL/通用生产 runner、baseline/data-only/source-custody 文件。
+
+- `notice_forward_plan(migrations, selected)` 在连接 DB 前核验固定 old C/v2/D 的 ID/path/SHA256、唯一性、manifest 与 pending 同一完整条目、原依赖、原 manifest order 及相对顺序、三者均 pending。D 的原 IM 前置也须存在并排在它之前。缺项、重复、文件/manifest 漂移、POST_DEPLOY 误分类、顺序/依赖变化都失败；不含 old/v2 的原入口直接不启用此特例。
+- 本 pair 必须先只读得到当前目标 schema 的严格 count=0，NULL/畸形读回也拒绝。存在的任意 schema（包括已 typed）即使指定 --drop 也在 DROP/CREATE/import 前拒绝。
+- 使用精确 `CREATE DATABASE`，不用 IF NOT EXISTS；并发创建造成失败时不接管、不导入。只有 CREATE 明确成功后才采用去掉 old C 的执行计划，打印 `REPLACED_UNAPPLIED old→v2` 和三文件 fingerprint；不伪记 baseline/applied/data-only。保留完整547 inventory、其余顺序和3个 POST_DEPLOY 延后项。
+- v2 仍由未修改的 `run_file` 解析并执行原 preflight/DDL/后检；本 pair 的 v2 强制 keep_going=False，失败立即停，不能借 --keep-going 越过前检执行 ALTER。无 pair 时原 --drop/--keep-going/失败传播/关闭连接语义保持。
+
+### 直接 Python 控制已实际执行
+
+命令与结果保存在 PYTHON_CONTROLS.txt：9 个新方法 + 5 个直接相关既有控制，共 **14 tests，1.856s，OK**。没有失败测试被改门槛或删断言，没有运行完整无关套件。
+
+新控制涵盖：精确真实 canonical pair/其余条目与 phase 相对序不变；无 pair 保持原入口；缺 old/v2/D、重复或 pending 漂移；每个文件的字节漂移及每个 manifest ID/path/hash/phase 漂移；D/old/v2 依赖或全局/pending 顺序错误；非 fresh/NULL/畸形读回含 --drop；并发 CREATE；fresh 入口经过**真实 run_file 的 v2 原首条 SQL**注入受控 cursor 失败，确认无 ALTER、保留原失败且 --keep-going 也不继续。其他文件只用于路由 double，绝不把这些 Python mock 当作 MySQL gate 成功。
+
+在旧源码已确认的 selector 260 项基础上，本 pair 的 fresh 候选仅去掉未执行 old C 一项，其他 phase 不变。实际完整 schema 重放、MySQL/Redis/应用启动/鉴权恢复均 **NOT_RUN**，只有 root 收齐后执行新目标。此次没有读取或编造本轮旧库九谓词实值。
