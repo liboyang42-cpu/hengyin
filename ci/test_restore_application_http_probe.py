@@ -180,6 +180,7 @@ class RestoreHttpDirectControls(unittest.TestCase):
         for literal in ('RuoYiApplication.class','loginByMember','registrations.handleWechatPayCallback(result)',
                         'facts.recordVerified(fact)','notices.enqueueOfficial','wake.dispatchInNewTransaction',
                         '--chengyin.jobs.enabled=true','--spring.quartz.auto-startup=true',
+                        '--spring.quartz.wait-for-jobs-to-complete-on-shutdown=true',
                         'factory.getConfiguration().addInterceptor(new MapperObservations())','file.force(true)'):
             self.assertIn(literal,source)
         self.assertNotIn('Mockito',source)
@@ -263,7 +264,7 @@ class RestoreHttpFailureLifecycleControls(unittest.TestCase):
         owned=[str(i)*64 for i in (4,5,6,7,8)];report['ownedAppCids']=owned;report['removedAppCids']=owned[:-1]
         boots=[]
         for i,mode in enumerate(('false','false','true','invalid','')):
-            boots.append(dict(bootId='boot-'+str(i),appCid=owned[i],javaPid=17,side='source' if i==0 else 'target',
+            boots.append(dict(bootId='boot-'+str(i),appCid=owned[i],javaPid=1,side='source' if i==0 else 'target',
                               serverUuid=report['sourceServerUuid'] if i==0 else report['targetServerUuid'],
                               restoreMode=mode,guardHeld=mode!='false',schedulerStarted=True,
                               sourceSha=report['sourceSha'],schema=report['schema'],jarSha256=report['jarSha256']))
@@ -353,11 +354,12 @@ class RestoreHttpFailureLifecycleControls(unittest.TestCase):
         self.assertIsInstance(failure,ValueError);self.assertEqual(proof['result'],'NOT_ACCEPTED')
 
     def test_success_cannot_drop_a_boot_change_original_jar_or_backing_cid(self):
-        for change in ('boot','jar','cid'):
+        for change in ('boot','jar','cid','pid'):
             with self.subTest(change=change):
                 report=self.success_report();owner=self.owner(app=report['ownedAppCids'][-1],log='PRESERVED')
                 if change=='boot':report['boots'].pop()
                 elif change=='jar':report['boots'][0]['jarSha256']='f'*64
+                elif change=='pid':report['boots'][0]['javaPid']=9
                 else:owner['resourceCleanup']['ownedRemoved'][0]['id']='9'*64
                 proof,failure,_=self.finalization(report,owner,original_exit=0)
                 self.assertIsInstance(failure,ValueError);self.assertEqual(proof['result'],'NOT_ACCEPTED')
@@ -391,7 +393,7 @@ class RestoreHttpDiagnosticControls(unittest.TestCase):
     def test_ready_return_is_separate_from_workload_and_original_boot_acceptance(self):
         snapshots=[]
         boot=dict(bootId='actual-ready',side='source',restoreMode='false',guardHeld=False,jarSha256='b'*64,
-                  appCid='4'*64,javaPid=17,sourceSha='a'*40,serverUuid='original-uuid',schema='original-schema',schedulerStarted=True)
+                  appCid='4'*64,javaPid=1,sourceSha='a'*40,serverUuid='original-uuid',schema='original-schema',schedulerStarted=True)
         report={'result':'NOT_COMPLETED','boots':[],'completeBoots':[],'checks':[],'ownedAppCids':['4'*64]}
         slot=SimpleNamespace(runtime_report_write=lambda path,value:snapshots.append(copy.deepcopy(value)),
                              start=lambda *args,**kwargs:boot)
@@ -471,6 +473,159 @@ class RestoreHttpDiagnosticControls(unittest.TestCase):
         self.assertNotIn('private-token',json.dumps(result))
         slot.cid=None
         self.assertEqual(slot.diagnostic_summary(),{'result':'NO_CURRENT_CID_OBSERVATION','startAbsenceProven':False})
+
+
+
+class RestoreHttpGracefulStopControls(unittest.TestCase):
+    """Controlled proc/Docker results only. No Java, Docker, signals, SQL or backup is executed."""
+
+    @staticmethod
+    def proc_bytes(ticks=b'123'):
+        argv=[b'java', b'-Xmx512m', ('-Dloader.main='+R.MAIN).encode(),
+              b'-Dloader.path=/restore-http-testclasses', b'-cp', b'/application.jar',
+              b'org.springframework.boot.loader.launch.PropertiesLauncher']
+        # stat field 3 starts at index0 after ') '; kernel starttime (22) is index19.
+        fields=[b'S', b'0']+[b'0']*17+[ticks]
+        return b'\x00'.join(argv)+b'\x00'+b'1 (java) '+b' '.join(fields)+b'\n'
+
+    def running_slot(self, directory, exit_code=143):
+        slot=object.__new__(R.ApplicationSlot);slot.name='cy-auth-'+'a'*32;slot.cid='4'*64
+        slot.source={'networkId':'5'*64};slot.root=Path(directory);slot.schema='cy_e2e_auth_'+'a'*32
+        slot.jar=slot.root/'application.jar';slot.jar.write_bytes(b'controlled original jar bytes')
+        slot.jar_hash=R.hashlib.sha256(slot.jar.read_bytes()).hexdigest();slot.manifest_hash='b'*64
+        boot=dict(appCid=slot.cid,javaPid=1,bootId='original-boot',sourceSha='a'*40,
+                  jarSha256=slot.jar_hash,schema=slot.schema,restoreMode='false',serverUuid='original-uuid')
+        config={key:boot[key] for key in ('sourceSha','jarSha256','schema','restoreMode','serverUuid')}
+        config.update(classManifestSha256=slot.manifest_hash,scope=slot.name[8:])
+        (slot.root/'ready.json').write_text(json.dumps(boot));(slot.root/'config.json').write_text(json.dumps(config))
+        obj={'Id':slot.cid,'Name':'/'+slot.name+'-app',
+             'Config':{'Image':R.JDK,'Entrypoint':['/trace/strace'],'Cmd':['-D','-f'],
+                       'Labels':{'chengyin.auth-recovery':slot.name},
+                       'Env':['GITHUB_SHA='+'a'*40,'CHENGYIN_RESTORE_MODE=false']},
+             'NetworkSettings':{'Networks':{slot.name:{'NetworkID':'5'*64}}},
+             'State':{'Running':True,'OOMKilled':False,'Restarting':False,'Pid':1234,'ExitCode':0}}
+        calls=[];data={'proc':self.proc_bytes(),'exit':exit_code,'error':None}
+        def command(argv, *args, **kwargs):
+            calls.append((argv,kwargs))
+            if argv==['docker','exec',slot.cid,'cat','/proc/1/cmdline','/proc/1/stat']:return data['proc']
+            if argv==['docker','stop','--time','20',slot.cid]:
+                if data['error'] is not None:raise data['error']
+                obj['State'].update(Running=False,Pid=0,ExitCode=data['exit']);return b'controlled-stop'
+            if argv==['docker','rm',slot.cid]:return b'controlled-remove'
+            raise AssertionError('unexpected command')
+        slot.auth=SimpleNamespace(DOCKER=['docker'],command=command);slot.inspect=lambda target:obj
+        slot.absence=lambda:calls.append(('absence',{}));slot.boots=[boot];slot.removed=[];slot.owned=[slot.cid]
+        with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}):
+            slot.process=slot.running_child_identity(boot,obj)
+        calls.clear()
+        return slot,obj,calls,data
+
+    def test_daemonized_tracer_keeps_original_budget_and_real_shutdown_contract(self):
+        source=(ROOT/'ci/restore_application_http_runtime.py').read_text()
+        self.assertIn("'--entrypoint','/trace/strace',JDK,'-D','-f'",source)
+        self.assertIn("['stop','--time','20',self.cid],timeout=30",source)
+        self.assertIn("stopped['ExitCode'] in (0,143)",source)
+        self.assertNotIn("stopped['ExitCode'] in (0,137,143)",source)
+        child=(ROOT/'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java').read_text()
+        self.assertIn('--spring.quartz.wait-for-jobs-to-complete-on-shutdown=true',child)
+        self.assertIn('application.registerShutdownHook()',child)
+        self.assertIn('org.springframework.beans.DirectFieldAccessor(factory)',child)
+        self.assertIn('.getPropertyValue("waitForJobsToCompleteOnShutdown")',child)
+
+    def test_proc_proof_is_fixed_to_original_java_pid1_not_a_pid_selector(self):
+        proof=R.pid1_jvm_proof(self.proc_bytes())
+        self.assertEqual(proof['startTicks'],'123')
+        for value in (b'', self.proc_bytes().replace(b'1 (java)',b'9 (java)'),
+                      self.proc_bytes().replace(b'PropertiesLauncher',b'WrongLauncher'),
+                      self.proc_bytes().replace(b'loader.main=',b'loader.wrong='),
+                      self.proc_bytes(ticks=b'not-a-tick')):
+            with self.subTest(raw_length=len(value)):
+                with self.assertRaises(ValueError):R.pid1_jvm_proof(value)
+
+    def test_exact_original_stop_accepts_only_graceful_exit_and_preserves_log_slot(self):
+        for exit_code in (0,143):
+            with self.subTest(exit_code=exit_code), tempfile.TemporaryDirectory() as directory:
+                slot,obj,calls,_=self.running_slot(directory,exit_code)
+                with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}):slot.stop(remove=False)
+                self.assertEqual([argv for argv,_ in calls],
+                        [['docker','exec','4'*64,'cat','/proc/1/cmdline','/proc/1/stat'],
+                         ['docker','stop','--time','20','4'*64]])
+                self.assertEqual(slot.stopped['exitCode'],exit_code);self.assertEqual(slot.stopped['hostPid'],0)
+                self.assertEqual(slot.cid,'4'*64);self.assertEqual(slot.removed,[])
+                self.assertFalse(obj['State']['Running'])
+
+    def test_exact_stop_removes_only_its_original_cid_after_graceful_exit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            slot,_,calls,_=self.running_slot(directory,0)
+            with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}):slot.stop()
+            self.assertEqual([argv for argv,_ in calls],
+                    [['docker','exec','4'*64,'cat','/proc/1/cmdline','/proc/1/stat'],
+                     ['docker','stop','--time','20','4'*64],['docker','rm','4'*64],'absence'])
+            self.assertEqual(slot.removed,['4'*64]);self.assertIsNone(slot.cid);self.assertIsNone(slot.process)
+
+    def test_changed_cid_owner_boot_source_jar_or_proc_never_receives_stop(self):
+        mutations=[
+            lambda s,o,d:o.update(Id='6'*64),
+            lambda s,o,d:o['Config']['Labels'].update({'chengyin.auth-recovery':'another-owner'}),
+            lambda s,o,d:o['NetworkSettings']['Networks'][s.name].update(NetworkID='6'*64),
+            lambda s,o,d:s.boots[-1].update(bootId='different-boot'),
+            lambda s,o,d:s.boots[-1].update(sourceSha='b'*40),
+            lambda s,o,d:s.boots[-1].update(javaPid=9),
+            lambda s,o,d:s.jar.write_bytes(b'changed jar'),
+            lambda s,o,d:d.update(proc=self.proc_bytes(ticks=b'124')),
+            lambda s,o,d:o['State'].update(Pid=1235),
+            lambda s,o,d:o['State'].update(Restarting=True),
+            lambda s,o,d:o['State'].update(OOMKilled=True),
+            lambda s,o,d:s.boots[-1].update(javaPid=True),
+            lambda s,o,d:o['Config'].update(Cmd=['-f']),
+            lambda s,o,d:(s.root/'ready.json').write_text((s.root/'ready.json').read_text()+' '),
+            lambda s,o,d:(s.root/'config.json').write_text((s.root/'config.json').read_text()+' '),
+        ]
+        for change in mutations:
+            with self.subTest(change=mutations.index(change)), tempfile.TemporaryDirectory() as directory:
+                slot,obj,calls,data=self.running_slot(directory);change(slot,obj,data)
+                with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}):
+                    with self.assertRaises(ValueError):slot.stop(remove=False)
+                self.assertFalse(any(isinstance(argv,list) and argv[1]=='stop' for argv,_ in calls))
+                self.assertEqual(slot.removed,[]);self.assertEqual(slot.cid,'4'*64)
+
+    def test_forced_exit_or_timeout_remains_unknown_without_removal(self):
+        for result in (137,'timeout'):
+            with self.subTest(result=result), tempfile.TemporaryDirectory() as directory:
+                slot,_,calls,data=self.running_slot(directory,137)
+                error=R.subprocess.TimeoutExpired('controlled-stop',30)
+                if result=='timeout':data['error']=error
+                with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}):
+                    if result=='timeout':
+                        with self.assertRaises(R.subprocess.TimeoutExpired) as caught:slot.stop()
+                        self.assertIs(caught.exception,error);self.assertTrue(slot.stopped['running'])
+                    else:
+                        with self.assertRaisesRegex(ValueError,'app stop/process exit unknown') as caught:slot.stop()
+                        self.assertEqual(caught.exception.restore_reason_code,'APP_STOP_EXIT_NOT_CONFIRMED')
+                        self.assertEqual(slot.stopped['exitCode'],137)
+                self.assertFalse(any(isinstance(argv,list) and argv[1]=='rm' for argv,_ in calls))
+                self.assertEqual(slot.removed,[])
+
+    def test_source_stop_failure_prevents_quiescent_sql_snapshot_and_propagates_original_error(self):
+        report={'result':'NOT_COMPLETED'};saved=[];failure=ValueError('controlled stop failure')
+        def stop():raise failure
+        slot=SimpleNamespace(stop=stop,runtime_report_write=lambda path,value:saved.append(copy.deepcopy(value)))
+        with patch.object(P,'snapshot') as read:
+            with self.assertRaises(ValueError) as caught:P.source_quiescent_snapshot(slot,object(),3306,'owned',report,Path('unused'))
+        self.assertIs(caught.exception,failure);read.assert_not_called()
+        self.assertEqual(report['substage'],'SOURCE_QUIESCENT_STOP');self.assertEqual(report['result'],'NOT_COMPLETED')
+        self.assertEqual(len(saved),1)
+
+    def test_source_snapshot_uses_original_database_arguments_only_after_stop(self):
+        events=[];report={'result':'NOT_COMPLETED'};auth=object();rows=object()
+        slot=SimpleNamespace(stop=lambda:events.append('stop'),
+                runtime_report_write=lambda path,value:events.append(value['substage']))
+        def read(*args):
+            self.assertEqual(events,['SOURCE_QUIESCENT_STOP','stop','QUIESCENT_SQL_SNAPSHOT'])
+            self.assertEqual(args,(auth,3306,'original_schema'));events.append('snapshot');return rows
+        with patch.object(P,'snapshot',side_effect=read):
+            self.assertIs(P.source_quiescent_snapshot(slot,auth,3306,'original_schema',report,Path('unused')),rows)
+        self.assertEqual(report['result'],'NOT_COMPLETED')
 
 
 if __name__=='__main__':unittest.main()

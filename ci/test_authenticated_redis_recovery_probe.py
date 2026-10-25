@@ -138,6 +138,28 @@ class AuthenticatedRedisSafetyTest(unittest.TestCase):
         self.assertIn('q' * 6000, clean)
         self.assertTrue(clean.endswith('END_DIAGNOSTICS\n'))
 
+    def test_existing_mysql_relay_adapter_keeps_public_integer_port_and_original_endpoint_reader(self):
+        name = 'cy-auth-' + 'a' * 32
+        endpoint = {'id': 'b' * 64, 'networkId': 'c' * 64, 'ip': '172.19.0.2', 'pid': 123}
+        # This source control replaces only the transport core; the original handler/negative tests remain below.
+        from contextlib import contextmanager
+        server = mock.Mock(); server.server_address = ('127.0.0.1', 35000)
+        events = []
+        @contextmanager
+        def core(expected, current):
+            self.assertEqual(endpoint, expected); self.assertEqual(endpoint, current())
+            events.append('bind')
+            try: yield server
+            finally: events.append('close')
+        with mock.patch.object(probe, 'mysql_endpoint', return_value=endpoint) as reader, \
+             mock.patch.object(probe, '_owned_mysql_relay', side_effect=core):
+            with probe.mysql_relay(name, {'endpoint': endpoint}, suffix='restore-mysql') as port:
+                self.assertEqual(35000, port)
+                self.assertIs(type(port), int)
+                self.assertEqual(['bind'], events)
+            reader.assert_called_once_with(name, 'restore-mysql')
+        self.assertEqual(['bind', 'close'], events)
+
     def test_mysql_relay_binds_loopback_owned_target_and_closes_on_failure(self):
         name = 'cy-auth-' + 'a' * 32
         expected = {'id': 'b' * 64, 'networkId': 'c' * 64, 'ip': '172.19.0.2', 'pid': 123}

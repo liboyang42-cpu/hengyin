@@ -198,7 +198,14 @@ def mysql_endpoint(name, suffix='mysql'):
 def mysql_relay(name, baseline, suffix='mysql'):
     """Host-only transport for the original loopback-only builder/bootstrap."""
     expected = baseline['endpoint']
-    require(mysql_endpoint(name, suffix) == expected, 'MySQL relay identity changed before bind')
+    with _owned_mysql_relay(expected, lambda: mysql_endpoint(name, suffix)) as server:
+        yield server.server_address[1]
+
+
+@contextlib.contextmanager
+def _owned_mysql_relay(expected, current_endpoint):
+    """Internal reuse seam: caller proves one original MySQL endpoint, never a CLI target/port option."""
+    require(current_endpoint() == expected, 'MySQL relay identity changed before bind')
     closing = threading.Event()
     sockets = set()
     guard = threading.Lock()
@@ -208,7 +215,7 @@ def mysql_relay(name, baseline, suffix='mysql'):
         def handle(self):
             upstream = None
             try:
-                require(mysql_endpoint(name, suffix) == expected, 'MySQL relay identity changed before connect')
+                require(current_endpoint() == expected, 'MySQL relay identity changed before connect')
                 upstream = socket.create_connection((expected['ip'], 3306), timeout=5)
                 with guard:
                     sockets.update((self.request, upstream))
@@ -243,8 +250,8 @@ def mysql_relay(name, baseline, suffix='mysql'):
     thread.start()
     phase_error = None
     try:
-        yield server.server_address[1]
-        require(mysql_endpoint(name, suffix) == expected, 'MySQL relay identity changed after phase')
+        yield server
+        require(current_endpoint() == expected, 'MySQL relay identity changed after phase')
     except BaseException as exc:
         phase_error = exc
         raise

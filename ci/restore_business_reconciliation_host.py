@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import importlib.util
+import contextlib
 import hashlib
+import ipaddress
 import json
 import os
 from pathlib import Path
@@ -132,6 +134,52 @@ def owned_object(kind, row, scope, side=None):
                 'foreign network label', 'OWNER_NETWORK_LABEL')
 
 
+def relay_endpoint(scope, side, cid, network_id):
+    require(side in ('source', 'target'), 'fixed MySQL side required')
+    name = 'cy-restore-' + scope
+    obj, network = inspect('container', cid), inspect('network', network_id)
+    require(obj is not None and network is not None, 'original relay resources missing', 'RELAY_RESOURCE_MISSING')
+    owned_object('container', obj, scope, side); owned_object('network', network, scope)
+    require(obj['Id'] == cid and network['Id'] == network_id, 'original relay identities changed', 'RELAY_IDENTITY_CHANGED')
+    require(set(obj['NetworkSettings']['Networks']) == {name}, 'relay has another network', 'RELAY_NETWORK_CHANGED')
+    attachment = obj['NetworkSettings']['Networks'][name]
+    address = ipaddress.ip_address(attachment['IPAddress'])
+    require(attachment['NetworkID'] == network_id and address.version == 4 and address.is_private
+            and not address.is_loopback and not address.is_unspecified
+            and any(address in ipaddress.ip_network(c['Subnet']) for c in network['IPAM']['Config'] if ':' not in c['Subnet']),
+            'relay address not in original network', 'RELAY_ADDRESS_INVALID')
+    state = obj['State']
+    require(state['Running'] and not state['Paused'] and not state['OOMKilled'] and not state['Restarting']
+            and state['Pid'] > 0, 'relay target not running', 'RELAY_TARGET_NOT_RUNNING')
+    require(all(value is None for value in obj['NetworkSettings']['Ports'].values()),
+            'relay mode must not expose any published port', 'RELAY_PUBLISHED_PORT')
+    return {'id': cid, 'networkId': network_id, 'ip': str(address), 'pid': state['Pid']}
+
+
+def process_start_ticks(pid):
+    # Linux proc field22; comm may contain spaces/parentheses, so split after its final closing parenthesis.
+    return Path('/proc', str(pid), 'stat').read_text().rsplit(')', 1)[1].split()[19]
+
+
+def validate_relay_descriptor(scope, side, target, network, obj):
+    relay = target['relay']; endpoint = relay['endpoint']
+    require(target['transport'] == 'OWNED_MYSQL_LOOPBACK_RELAY' and relay['host'] == '127.0.0.1'
+            and type(target['port']) is int and 1024 < target['port'] < 65536,
+            'fixed loopback relay required', 'RELAY_BIND_INVALID')
+    require(endpoint == relay_endpoint(scope, side, target['cid'], network['Id'])
+            and endpoint['id'] == obj['Id'], 'relay original endpoint changed', 'RELAY_IDENTITY_CHANGED')
+    pid, fd, inode = relay['ownerPid'], relay['fd'], relay['inode']
+    require(all(type(v) is int and v > 0 for v in (pid, fd, inode))
+            and process_start_ticks(pid) == relay['ownerStartTicks']
+            and os.readlink(Path('/proc', str(pid), 'fd', str(fd))) == 'socket:[' + str(inode) + ']',
+            'original relay listener owner changed', 'RELAY_LISTENER_OWNER')
+    local = '0100007F:' + format(target['port'], '04X')
+    matches = [line.split() for line in Path('/proc/net/tcp').read_text().splitlines()[1:]
+               if len(line.split()) > 9 and line.split()[9] == str(inode)]
+    require(len(matches) == 1 and matches[0][1] == local and matches[0][3] == '0A',
+            'relay must be the original live IPv4 loopback listener', 'RELAY_LISTENER_BINDING')
+
+
 def command_operation(args):
     # Fixed labels only: never publish argv, paths, SQL, environment values or arbitrary commands.
     if args[:len(DOCKER)] == DOCKER:
@@ -178,6 +226,42 @@ class Host:
         self.stage = 'preparation'
         self.substage = None
         self.first_failure = None
+        self.relays = contextlib.ExitStack()
+        self.mysql_transports = {}
+
+    def native_mysql_ready(self, cid, side, deadline):
+        self.substage = 'native-mysql-readiness'
+        while time.monotonic() < deadline:
+            relay_endpoint(self.scope, side, cid, self.created['network'])
+            try:
+                result = subprocess.run(DOCKER + ['exec', cid, 'sh', '-c',
+                    'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql --protocol=TCP -h127.0.0.1 '
+                    '--connect-timeout=2 -uroot -N -e "SELECT @@server_uuid,VERSION(),@@global.event_scheduler"'],
+                    capture_output=True, timeout=5)
+                if result.returncode == 0:
+                    identity = result.stdout.decode().strip().split('\t')
+                    require(len(identity) == 3 and identity[1:] == ['8.0.45', 'OFF']
+                            and re.fullmatch('[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}', identity[0]),
+                            'native MySQL identity differs', 'RELAY_NATIVE_IDENTITY')
+                    return identity
+            except subprocess.TimeoutExpired:
+                pass
+            time.sleep(1)
+        require(False, 'original MySQL native TCP readiness deadline', 'RELAY_NATIVE_NOT_READY')
+
+    def start_mysql_relay(self, side, cid):
+        deadline = time.monotonic() + 65
+        native = self.native_mysql_ready(cid, side, deadline)
+        self.substage = 'owned-mysql-relay'
+        endpoint = relay_endpoint(self.scope, side, cid, self.created['network'])
+        helper = original_helpers()
+        server = self.relays.enter_context(helper._owned_mysql_relay(endpoint,
+            lambda: relay_endpoint(self.scope, side, cid, self.created['network'])))
+        address, port = server.socket.getsockname()
+        require(address == '127.0.0.1' and 1024 < port < 65536, 'owned relay not loopback', 'RELAY_BIND_INVALID')
+        descriptor = {'host': address, 'ownerPid': os.getpid(), 'ownerStartTicks': process_start_ticks(os.getpid()),
+                      'fd': server.socket.fileno(), 'inode': os.fstat(server.socket.fileno()).st_ino, 'endpoint': endpoint}
+        return port, descriptor, native, deadline
 
     def remember_failure(self, failure_type, operation='OWNER', returncode=None, stderr=None, error=None):
         if self.first_failure is not None:
@@ -225,6 +309,7 @@ class Host:
                      'schema': 'cy_restore_' + self.scope + '_funds_core_it',
                      'testClasspathFile': str(self.private / 'test-classpath.txt')}
         for side in ('source', 'target'):
+            relay, native, readiness_deadline = None, None, None
             self.stage = side + '-create'
             name = self.name + '-' + side
             self.substage = 'container-absence'
@@ -252,11 +337,18 @@ class Host:
             owned_object('container', row, self.scope, side)
             self.substage = 'loopback-binding'
             binding = row['NetworkSettings']['Ports'].get('3306/tcp')
-            require(binding, 'loopback port required', 'BINDING_MISSING')
-            require(len(binding) == 1, 'one loopback binding required', 'BINDING_COUNT')
-            require(binding[0]['HostIp'] == '127.0.0.1', 'loopback port required', 'BINDING_NOT_LOOPBACK')
-            self.substage = 'loopback-port-parse'
-            port = int(binding[0]['HostPort'])
+            if binding:
+                self.mysql_transports[side] = 'DOCKER_LOOPBACK_PUBLISH'
+                require(binding, 'loopback port required', 'BINDING_MISSING')
+                require(len(binding) == 1, 'one loopback binding required', 'BINDING_COUNT')
+                require(binding[0]['HostIp'] == '127.0.0.1', 'loopback port required', 'BINDING_NOT_LOOPBACK')
+                self.substage = 'loopback-port-parse'
+                port = int(binding[0]['HostPort'])
+            else:
+                self.mysql_transports[side] = 'OWNED_MYSQL_LOOPBACK_RELAY'
+                # Docker28 internal-only endpoints do not program external port mappings.
+                # Absence is not readiness: use the existing owned transport, then prove native/relay UUID equality.
+                port, relay, native, readiness_deadline = self.start_mysql_relay(side, cid)
             self.substage = 'loopback-port-range'
             require(1024 < port < 65536, 'invalid owned port', 'BINDING_PORT_RANGE')
             self.substage = 'client-config-write'
@@ -264,7 +356,7 @@ class Host:
             write_private(defaults, '[client]\nhost=127.0.0.1\nport=%d\nuser=root\npassword=%s\nprotocol=tcp\n' % (port, password))
             self.stage = side + '-ready'
             self.substage = 'mysql-readiness'
-            deadline = time.monotonic() + 65
+            deadline = readiness_deadline if readiness_deadline is not None else time.monotonic() + 65
             identity = None
             while time.monotonic() < deadline:
                 ready = subprocess.run(['mysql', '--defaults-extra-file=' + str(defaults),
@@ -276,7 +368,12 @@ class Host:
                 time.sleep(1)
             require(identity and len(identity) == 3 and identity[1:] == ['8.0.45', 'OFF'], 'wrong server identity')
             require(re.fullmatch('[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}', identity[0]), 'invalid server UUID')
+            if relay is not None:
+                require(identity == native, 'relay/native MySQL identities differ', 'RELAY_NATIVE_IDENTITY')
             resources[side] = {'cid': cid, 'uuid': identity[0], 'port': port, 'defaultsFile': str(defaults)}
+            if relay is not None:
+                resources[side].update(transport='OWNED_MYSQL_LOOPBACK_RELAY', relay=relay)
+                validate_relay_descriptor(self.scope, side, resources[side], inspect('network', self.created['network']), row)
         require(resources['source']['uuid'] != resources['target']['uuid'], 'source and target UUID must differ')
         require(resources['source']['port'] != resources['target']['port'], 'source and target ports must differ')
         write_private(self.resources, json.dumps(resources, sort_keys=True))
@@ -304,7 +401,15 @@ class Host:
         return failures
 
     def finish(self, original_exit):
+        relay_failures = []
+        self.substage = 'relay-close'
+        try:
+            self.relays.close()  # Drain/join original relay workers while their exact containers still exist.
+        except BaseException as failure:
+            self.remember_failure('HOST_EXCEPTION_UNKNOWN', error=failure)
+            relay_failures.append('relay')
         failures = self.cleanup()
+        failures.extend(relay_failures)
         result = original_exit or (1 if failures or self.first_failure is not None else 0)
         finalized = False
         if self.resources.exists() and (self.output / 'reconciliation.json').is_file():
@@ -329,6 +434,7 @@ class Host:
                    'originalExit': original_exit, 'exitCode': result, 'cleanupFailures': failures,
                    'resourceCleanup': 'EXACT_ABSENCE' if not failures else 'UNKNOWN',
                    'probeFinalized': finalized, 'lastStage': self.stage,
+                   'mysqlTransports': self.mysql_transports,
                    'firstFailure': self.first_failure,
                    'acceptance': 'NOT_FULL_T20_OR_PRODUCTION_ACCEPTANCE'}
         write_private(self.output / 'host.json', json.dumps(receipt, sort_keys=True, indent=2))

@@ -1,0 +1,121 @@
+{
+  "source": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+  "run": 40232922574,
+  "attempt": 1,
+  "artifact": 12613053916,
+  "ZIP_bytes": 17107,
+  "ZIP_sha256": "622a83d1e392a4c21e432c4e62c015d0a0d89a40f93380248c3d7ce17bfce91a",
+  "CRC": "PASS",
+  "result": "FAIL_OR_UNKNOWN_CLEANUP_OR_SCOPE",
+  "failureType": "RuntimeError",
+  "reason": "wrong application fixture",
+  "partial_process_cases": [
+    {
+      "boundary": "BEFORE_TX",
+      "result": "ASSERTIONS_PASSED",
+      "originalProcessCommandSha256": "9aecdacd33a305b54d03e4aa22ae3579842c30b491eff6a7f9a0712d8308cc90",
+      "physicalExit": {
+        "code": 137,
+        "oomKilled": false,
+        "oldJavaPid": 9,
+        "oldHostPid": 4286,
+        "oldBootId": "051fd472-dcc9-48bd-9421-eb5f238b8699",
+        "originalStartedAt": "2026-10-25T20:55:53.029059536Z",
+        "finishedAt": "2026-10-25T20:57:16.410823841Z"
+      },
+      "newBootId": "c78b14b3-3398-46a6-ab99-91aa32ce492d",
+      "requestSha256": "fca3c92a01b9b37c11cdd2c36b16e39a9db1bd0620a9edd3c7347925561d03b0",
+      "originalReceiptId": 1,
+      "receiptSha256": "96746beb72b76d409f9df3131cdc70f326fccac56dd925cfa30211692220d87a",
+      "conflictsRejected": true
+    },
+    {
+      "boundary": "COMMITTED_NO_REPLY",
+      "result": "ASSERTIONS_PASSED",
+      "originalProcessCommandSha256": "9aecdacd33a305b54d03e4aa22ae3579842c30b491eff6a7f9a0712d8308cc90",
+      "physicalExit": {
+        "code": 137,
+        "oomKilled": false,
+        "oldJavaPid": 9,
+        "oldHostPid": 6732,
+        "oldBootId": "c78b14b3-3398-46a6-ab99-91aa32ce492d",
+        "originalStartedAt": "2026-10-25T20:57:16.526251851Z",
+        "finishedAt": "2026-10-25T20:58:41.220858646Z"
+      },
+      "newBootId": "22564453-af0a-4184-9cb2-433773c434ae",
+      "requestSha256": "ddd4a69563983bf5d164ae3251adb2aeb3ff73d626c6e772237006c002b7f221",
+      "originalReceiptId": 3,
+      "receiptSha256": "d297680cb8b5d71e265beec1f04603b0029da849e3524ca0636d9a3c3cf0122f",
+      "conflictsRejected": true
+    },
+    {
+      "boundary": "ACKED",
+      "result": "ASSERTIONS_PASSED",
+      "originalProcessCommandSha256": "9aecdacd33a305b54d03e4aa22ae3579842c30b491eff6a7f9a0712d8308cc90",
+      "physicalExit": {
+        "code": 137,
+        "oomKilled": false,
+        "oldJavaPid": 9,
+        "oldHostPid": 9541,
+        "oldBootId": "22564453-af0a-4184-9cb2-433773c434ae",
+        "originalStartedAt": "2026-10-25T20:58:41.316114616Z",
+        "finishedAt": "2026-10-25T21:00:00.859422495Z"
+      },
+      "newBootId": "3be2e3ee-dfa4-4990-b2a7-72a4a3e681d3",
+      "requestSha256": "d825a363849ee420dd8fa2a12251f07ec417ccc0ddaec23224ff6c8a9944a5c6",
+      "originalReceiptId": 5,
+      "receiptSha256": "dc105a88a8629ede5de44e39b7935c3eabd9d2e7c48195f5a38fe22348d97beb",
+      "conflictsRejected": true
+    }
+  ],
+  "businessResultBeforeCleanup": "FAIL_OR_UNKNOWN_NO_RETRY",
+  "not_full_T13_or_capacity_acceptance": true,
+  "resourceCleanup": {
+    "cleanup": "CONFIRMED_EXACT_OWNED_REMOVAL",
+    "ownedRemoved": [
+      {
+        "name": "cy-auth-7481648b640740b5beb38adf840f24ab-app",
+        "id": "45b51d9285ba17b337c87e1f87de1873c996d881eccc6d661c674fabad936bdd",
+        "independentNoSuch": true
+      },
+      {
+        "name": "cy-auth-7481648b640740b5beb38adf840f24ab-mysql",
+        "id": "c9563713e9253e72bcd426f4b9938015c41519459167704e352949089414053b",
+        "independentNoSuch": true
+      },
+      {
+        "name": "cy-auth-7481648b640740b5beb38adf840f24ab-redis",
+        "id": "7d51a3b645ba710b35cd7b27ed50f4b6d8e18086ab2ff0826b53c4b7d6a2b636",
+        "independentNoSuch": true
+      }
+    ]
+  },
+  "coreBusinessCurveSummary": {
+    "status": "BUSINESS_ASSERTIONS_PASSED",
+    "expectedHttpRequests": 144,
+    "newIntents": 72,
+    "latencyScope": "Owned Docker-exec transport plus ownership guards, not server-only service latency",
+    "realHttpRequests": 144,
+    "scope": "Chapter command/receipt/replay/foreign refusal only; no cash/provider/all-Q8 claim"
+  },
+  "coreWavesSummary": [
+    {
+      "concurrency": 1,
+      "status": "ASSERTIONS_PASSED",
+      "newCommands": 24,
+      "readReplayForeign": 24
+    },
+    {
+      "concurrency": 3,
+      "status": "ASSERTIONS_PASSED",
+      "newCommands": 24,
+      "readReplayForeign": 24
+    },
+    {
+      "concurrency": 6,
+      "status": "ASSERTIONS_PASSED",
+      "newCommands": 24,
+      "readReplayForeign": 24
+    }
+  ]
+}

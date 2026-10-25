@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """SOURCE controls for the resource wrapper; no Docker, DB or Java is launched here."""
 import importlib.util
+import contextlib
 import json
 import os
 from pathlib import Path
@@ -470,7 +471,7 @@ class RestoreHostControls(unittest.TestCase):
         cases = [('cid', 'container-cid', 'CREATED_CID_INVALID'),
                  ('label', 'container-ownership', 'OWNER_CONTAINER_LABEL'),
                  ('image', 'container-ownership', 'OWNER_CONTAINER_IMAGE'),
-                 ('missing', 'loopback-binding', 'BINDING_MISSING'),
+                 ('missing', 'native-mysql-readiness', 'RELAY_RESOURCE_MISSING'),
                  ('multiple', 'loopback-binding', 'BINDING_COUNT'),
                  ('address', 'loopback-binding', 'BINDING_NOT_LOOPBACK'),
                  ('parse', 'loopback-port-parse', None),
@@ -494,7 +495,7 @@ class RestoreHostControls(unittest.TestCase):
                            subprocess.CompletedProcess([], 0, b'PRIVATE_CID' if case == 'cid' else ('c' * 64).encode(), b''),
                            subprocess.CompletedProcess([], 0, b'started', b'')]
                 with mock.patch.dict(os.environ, {'GITHUB_SHA': SHA}), \
-                     mock.patch.object(host, 'inspect', side_effect=[None, None, row]), \
+                     mock.patch.object(host, 'inspect', side_effect=[None, None, row, None, None]), \
                      mock.patch.object(host.subprocess, 'run', side_effect=replies) as run, \
                      mock.patch.object(host, 'write_private', side_effect=ValueError('PRIVATE_CONFIG')) as write:
                     with self.assertRaises(ValueError) as caught:
@@ -519,6 +520,168 @@ class RestoreHostControls(unittest.TestCase):
                         self.assertEqual(['source'], worker.cleanup())
                     self.assertEqual([mock.call(host.DOCKER + ['network', 'rm', 'e' * 64], timeout=30)], remove.call_args_list)
                     self.assertEqual(before, worker.first_failure)
+
+    def relay_rows(self, side='source'):
+        name = 'cy-restore-' + SCOPE
+        cid = ('c' if side == 'source' else 'd') * 64
+        network = {'Id': 'e' * 64, 'Name': name, 'Internal': True,
+                   'Labels': {'chengyin.restore-business': SCOPE},
+                   'IPAM': {'Config': [{'Subnet': '172.28.0.0/16'}]}}
+        row = {'Id': cid, 'Name': '/' + name + '-' + side,
+               'Config': {'Image': host.IMAGE, 'Labels': {'chengyin.restore-business': SCOPE}},
+               'State': {'Running': True, 'Paused': False, 'OOMKilled': False,
+                         'Restarting': False, 'Pid': 101 if side == 'source' else 102},
+               'NetworkSettings': {'Ports': {'3306/tcp': None, '33060/tcp': None},
+                   'Networks': {name: {'NetworkID': network['Id'],
+                       'IPAddress': '172.28.0.2' if side == 'source' else '172.28.0.3'}}}}
+        return row, network
+
+    def test_internal_relay_requires_original_cid_network_ipam_process_and_no_public_port(self):
+        row, network = self.relay_rows()
+        def check(obj, net):
+            with mock.patch.object(host, 'inspect', side_effect=[obj, net]):
+                return host.relay_endpoint(SCOPE, 'source', row['Id'], network['Id'])
+        expected = {'id': row['Id'], 'networkId': network['Id'], 'ip': '172.28.0.2', 'pid': 101}
+        self.assertEqual(expected, check(row, network))
+        for keys, value in [(['Id'], 'f' * 64), (['Config', 'Image'], 'foreign'),
+                (['Config', 'Labels', 'chengyin.restore-business'], 'foreign'),
+                (['NetworkSettings', 'Networks', network['Name'], 'NetworkID'], 'f' * 64),
+                (['NetworkSettings', 'Networks', network['Name'], 'IPAddress'], '172.29.0.2'),
+                (['State', 'Pid'], 0), (['State', 'Running'], False),
+                (['NetworkSettings', 'Ports', '33060/tcp'], [{'HostIp': '0.0.0.0', 'HostPort': '33060'}])]:
+            changed = json.loads(json.dumps(row)); target = changed
+            for key in keys[:-1]: target = target[key]
+            target[keys[-1]] = value
+            with self.subTest(keys=keys), self.assertRaises(ValueError): check(changed, network)
+        for changed in [dict(network, Id='f' * 64), dict(network, Internal=False)]:
+            with self.assertRaises(ValueError): check(row, changed)
+        with self.assertRaises(host.OwnerGuardFailure): check(None, network)
+
+    def test_relay_receipt_proves_live_loopback_listener_original_owner_and_endpoint(self):
+        row, network = self.relay_rows()
+        endpoint = {'id': row['Id'], 'networkId': network['Id'], 'ip': '172.28.0.2', 'pid': 101}
+        target = {'cid': row['Id'], 'port': 33080, 'transport': 'OWNED_MYSQL_LOOPBACK_RELAY',
+                  'relay': {'host': '127.0.0.1', 'ownerPid': 200, 'ownerStartTicks': '77',
+                            'fd': 8, 'inode': 901, 'endpoint': endpoint}}
+        tcp = 'header\n0: 0100007F:8138 00000000:0000 0A 0 0 0 0 0 901\n'
+        with mock.patch.object(host, 'relay_endpoint', return_value=endpoint), \
+             mock.patch.object(host, 'process_start_ticks', return_value='77'), \
+             mock.patch.object(host.os, 'readlink', return_value='socket:[901]'), \
+             mock.patch.object(host.Path, 'read_text', return_value=tcp):
+            host.validate_relay_descriptor(SCOPE, 'source', target, network, row)
+            for changed in [dict(target, port='33080'), dict(target, transport='arbitrary'),
+                            dict(target, relay=dict(target['relay'], host='0.0.0.0'))]:
+                with self.assertRaises(ValueError):
+                    host.validate_relay_descriptor(SCOPE, 'source', changed, network, row)
+            for function, value in [('process_start_ticks', '78'), ('relay_endpoint', dict(endpoint, pid=103))]:
+                with mock.patch.object(host, function, return_value=value), self.assertRaises(ValueError):
+                    host.validate_relay_descriptor(SCOPE, 'source', target, network, row)
+            with mock.patch.object(host.os, 'readlink', return_value='socket:[902]'), self.assertRaises(ValueError):
+                host.validate_relay_descriptor(SCOPE, 'source', target, network, row)
+            for invalid in ['', tcp.replace('0100007F', '00000000'), tcp.replace(' 0A ', ' 01 '), tcp + tcp.splitlines()[1]]:
+                with mock.patch.object(host.Path, 'read_text', return_value=invalid), self.assertRaises(ValueError):
+                    host.validate_relay_descriptor(SCOPE, 'source', target, network, row)
+
+    def test_absent_docker_mapping_uses_native_tcp_then_existing_relay_and_matches_original_uuid(self):
+        # Controlled transport boundary only; this control does not claim a real Docker/MySQL execution.
+        for mismatch in (False, True):
+            with self.subTest(mismatch=mismatch), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp); worker = host.Host(root, root, root, SCOPE, 'payment-gap')
+                source, network = self.relay_rows(); target, _ = self.relay_rows('target')
+                rows = {source['Id']: source, target['Id']: target, network['Id']: network}
+                events, opened = [], []
+                uuids = {'source': '11111111-1111-1111-1111-111111111111',
+                         'target': '22222222-2222-2222-2222-222222222222'}
+                def inspect(kind, identity): return rows.get(identity)
+                def command(args, **kwargs):
+                    if 'create' in args:
+                        return network['Id'] if 'network' in args else (source if args[args.index('--name') + 1].endswith('-source') else target)['Id']
+                    return 'ok'
+                def sql(args, **kwargs):
+                    native = args[:len(host.DOCKER)] == host.DOCKER
+                    side = 'source' if (source['Id'] in args or (not native and 'source.cnf' in args[1])) else 'target'
+                    events.append(('native' if native else 'loopback', side))
+                    if native:
+                        self.assertIn('exec', args); self.assertIn('--protocol=TCP', args[-1])
+                        self.assertIn('MYSQL_PWD="$MYSQL_ROOT_PASSWORD"', args[-1])
+                    identity = uuids['target'] if mismatch and side == 'source' and not native else uuids[side]
+                    return subprocess.CompletedProcess(args, 0, (identity + '\t8.0.45\tOFF\n').encode(), b'')
+                @contextlib.contextmanager
+                def relay(endpoint, current):
+                    side = 'source' if endpoint['id'] == source['Id'] else 'target'
+                    self.assertEqual(('native', side), events[-1])
+                    self.assertEqual(endpoint, current()); events.append(('relay-open', side))
+                    port = 33080 if side == 'source' else 33081
+                    server = mock.Mock(); server.socket.getsockname.return_value = ('127.0.0.1', port)
+                    server.socket.fileno.return_value = 8 if side == 'source' else 9
+                    opened.append(side)
+                    try: yield server
+                    finally:
+                        self.assertEqual(endpoint, current()); events.append(('relay-close', side))
+                helper = mock.Mock(); helper._owned_mysql_relay.side_effect = relay
+                proc = 'header\n0: 0100007F:8138 00000000:0000 0A 0 0 0 0 0 901\n1: 0100007F:8139 00000000:0000 0A 0 0 0 0 0 902\n'
+                with mock.patch.dict(os.environ, {'GITHUB_SHA': SHA}), \
+                     mock.patch.object(host, 'inspect', side_effect=inspect), \
+                     mock.patch.object(worker, 'command', side_effect=command), \
+                     mock.patch.object(host.subprocess, 'run', side_effect=sql), \
+                     mock.patch.object(host, 'original_helpers', return_value=helper), \
+                     mock.patch.object(host, 'process_start_ticks', return_value='77'), \
+                     mock.patch.object(host.os, 'fstat', side_effect=lambda fd: mock.Mock(st_ino=893 + fd)), \
+                     mock.patch.object(host.os, 'readlink', side_effect=lambda path: 'socket:[' + str(893 + int(path.name)) + ']'), \
+                     mock.patch.object(host.Path, 'read_text', return_value=proc):
+                    if mismatch:
+                        with self.assertRaises(host.OwnerGuardFailure) as caught: worker.provision()
+                        self.assertEqual('RELAY_NATIVE_IDENTITY', caught.exception.guard_code)
+                        self.assertFalse(worker.resources.exists())
+                    else:
+                        worker.provision()
+                    worker.relays.close()
+                self.assertEqual(['source'] if mismatch else ['source', 'target'], opened)
+                self.assertEqual(('relay-close', 'source'), events[-1])
+                if not mismatch:
+                    manifest = json.loads(worker.resources.read_text())
+                    self.assertEqual(uuids['source'], manifest['source']['uuid'])
+                    self.assertEqual(uuids['target'], manifest['target']['uuid'])
+                    for side in ('source', 'target'):
+                        self.assertEqual('OWNED_MYSQL_LOOPBACK_RELAY', manifest[side]['transport'])
+                        self.assertEqual('127.0.0.1', manifest[side]['relay']['host'])
+
+    def test_native_readiness_shares_original_deadline_and_never_opens_relay_for_socket_only_server(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); worker = host.Host(root, root, root, SCOPE, 'payment-gap')
+            worker.created['network'] = 'e' * 64
+            with mock.patch.object(host, 'relay_endpoint'), \
+                 mock.patch.object(host.time, 'monotonic', side_effect=[0, 0, 66]), \
+                 mock.patch.object(host.time, 'sleep'), \
+                 mock.patch.object(host.subprocess, 'run', return_value=subprocess.CompletedProcess([], 1, b'', b'PRIVATE')), \
+                 mock.patch.object(host, 'original_helpers') as helpers:
+                with self.assertRaises(host.OwnerGuardFailure) as caught:
+                    worker.start_mysql_relay('source', 'c' * 64)
+                self.assertEqual('RELAY_NATIVE_NOT_READY', caught.exception.guard_code)
+                helpers.assert_not_called()
+
+    def test_relay_close_precedes_exact_cleanup_and_cannot_erase_original_first_failure(self):
+        for broken in (False, True):
+            with self.subTest(broken=broken), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp); private = root / 'private'; private.mkdir(); output = root / 'out'; output.mkdir()
+                worker = host.Host(root, private, output, SCOPE, 'payment-gap')
+                worker.stage = 'source-create'; worker.substage = 'container-create'
+                worker.remember_failure('COMMAND_EXIT', 'DOCKER_CONTAINER_CREATE', 7, b'PRIVATE')
+                first = dict(worker.first_failure); events = []
+                def close():
+                    events.append('relay-close')
+                    if broken: raise ValueError('PRIVATE')
+                def cleanup(): events.append('exact-cleanup'); return []
+                with mock.patch.object(worker.relays, 'close', side_effect=close), \
+                     mock.patch.object(worker, 'cleanup', side_effect=cleanup), \
+                     mock.patch.dict(os.environ, {'GITHUB_SHA': SHA}):
+                    self.assertEqual(7, worker.finish(7))
+                receipt = json.loads((output / 'host.json').read_text())
+                self.assertEqual(['relay-close', 'exact-cleanup'], events)
+                self.assertEqual(first, receipt['firstFailure'])
+                self.assertEqual(['relay'] if broken else [], receipt['cleanupFailures'])
+                self.assertEqual('UNKNOWN' if broken else 'EXACT_ABSENCE', receipt['resourceCleanup'])
+                self.assertNotIn('PRIVATE', json.dumps(receipt))
 
     def test_inspect_guard_codes_keep_original_absence_proof_and_never_accept_daemon_failure(self):
         for raw, code in [(b'not json PRIVATE', 'INSPECT_JSON_INVALID'), (b'[]', 'INSPECT_IDENTITY_COUNT'),

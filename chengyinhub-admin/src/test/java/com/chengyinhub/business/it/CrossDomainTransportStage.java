@@ -5,6 +5,11 @@ import com.chengyinhub.business.service.ai.*;
 import com.chengyinhub.business.service.impl.MapGeocodeServiceImpl;
 import com.chengyinhub.common.utils.http.HttpUtils;
 import com.sun.net.httpserver.HttpServer;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.StreamReadConstraints;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
@@ -18,6 +23,11 @@ import static org.junit.jupiter.api.Assertions.*;
 final class CrossDomainTransportStage implements AutoCloseable {
     static final String SMALL_IMAGE = "data:image/jpeg;base64,AA==";
     static final String LARGE_IMAGE = "data:image/jpeg;base64," + "A".repeat(16 * 1024 * 1024);
+    // Keep the original 16 MiB physical-write witness, with bounded metadata headroom.
+    static final int REQUEST_LIMIT = 17 * 1024 * 1024;
+    private static final JsonFactory REQUEST_JSON = JsonFactory.builder().streamReadConstraints(
+            StreamReadConstraints.builder().maxNestingDepth(16).maxNameLength(64)
+                    .maxStringLength(1024).build()).build();
     final CountDownLatch aiEntered = new CountDownLatch(4), mapEntered = new CountDownLatch(4);
     final CountDownLatch aiServerExited = new CountDownLatch(4);
     final CountDownLatch releaseAi = new CountDownLatch(1), releaseCleanup = new CountDownLatch(1);
@@ -27,8 +37,8 @@ final class CrossDomainTransportStage implements AutoCloseable {
     final AtomicInteger mapPeak = new AtomicInteger(), mapInterrupts = new AtomicInteger();
     final AtomicLong mapClock = new AtomicLong();
     final List<Throwable> providerFailures = new CopyOnWriteArrayList<>();
-    final ExecutorService callers = Executors.newFixedThreadPool(8);
-    final ExecutorService providers = Executors.newFixedThreadPool(4);
+    final ExecutorService callers = boundedExecutor(8, 8);
+    final ExecutorService providers = boundedExecutor(4, 4);
     final List<HttpServer> servers = new ArrayList<>();
     final List<Future<?>> ownedCleanup = new ArrayList<>();
     final List<Future<String>> maps = new ArrayList<>();
@@ -48,7 +58,7 @@ final class CrossDomainTransportStage implements AutoCloseable {
         assertEquals(0, http.getActiveCount(), "run this process-global witness alone"); assertTrue(http.getQueue().isEmpty());
         assertEquals(0, cleanup.getActiveCount()); assertTrue(cleanup.getQueue().isEmpty());
         for (int i = 0; i < 2; i++) {
-            HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+            HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 8);
             server.setExecutor(providers); server.createContext("/chat/completions", exchange -> {
                 boolean blocked = fault;
                 try {
@@ -57,14 +67,15 @@ final class CrossDomainTransportStage implements AutoCloseable {
                     assertTrue(exchange.getRequestHeaders().getFirst("Content-Type").contains("application/json"));
                     aiRequests.incrementAndGet();
                     if (blocked) { aiEntered.countDown(); assertTrue(releaseAi.await(60, TimeUnit.SECONDS)); }
-                    byte[] body = exchange.getRequestBody().readAllBytes();
-                    var json = com.alibaba.fastjson2.JSONObject.parseObject(new String(body, StandardCharsets.UTF_8));
-                    assertEquals("fixture-model", json.getString("model")); assertEquals(2, json.getJSONArray("messages").size());
+                    validateRequest(exchange.getRequestBody());
                     String content = "{\"pass\":true,\"confidence\":91,\"reason\":\"controlled received result\"}";
                     var message = new com.alibaba.fastjson2.JSONObject(); message.put("content", content);
                     var choice = new com.alibaba.fastjson2.JSONObject(); choice.put("message", message);
                     byte[] response = ("{\"choices\":[" + choice.toJSONString() + "]}").getBytes(StandardCharsets.UTF_8);
                     exchange.sendResponseHeaders(200, response.length); exchange.getResponseBody().write(response);
+                } catch (RequestProtocolException invalid) {
+                    // Malformed/oversized input is never a permitted fault-phase disconnect.
+                    providerFailures.add(invalid);
                 } catch (IOException disconnected) {
                     // Only fault-phase caller cancellation may disconnect the local post-dispatch fixture.
                     if (!blocked) providerFailures.add(disconnected);
@@ -77,6 +88,72 @@ final class CrossDomainTransportStage implements AutoCloseable {
         ReflectionTestUtils.setField(map, "enabled", true); ReflectionTestUtils.setField(map, "mapKey", "fixture-map");
         ReflectionTestUtils.setField(cities, "tencentMapClient", map);
         ReflectionTestUtils.setField(otherCities, "tencentMapClient", map);
+    }
+
+    private static ExecutorService boundedExecutor(int workers, int queued) {
+        return new ThreadPoolExecutor(workers, workers, 0L, TimeUnit.MILLISECONDS,
+                new ArrayBlockingQueue<>(queued), new ThreadPoolExecutor.AbortPolicy());
+    }
+
+    /** Consume the real JSON envelope without retaining the image string or an object tree. */
+    static void validateRequest(InputStream input) throws IOException {
+        try (JsonParser json = REQUEST_JSON.createParser(new RequestInput(input))) {
+            requireProtocol(json.nextToken() == JsonToken.START_OBJECT);
+            boolean model = false, messages = false;
+            while (json.nextToken() != JsonToken.END_OBJECT) {
+                requireProtocol(json.currentToken() == JsonToken.FIELD_NAME);
+                String field = json.currentName();
+                JsonToken value = json.nextToken();
+                if ("model".equals(field)) {
+                    requireProtocol(!model && value == JsonToken.VALUE_STRING);
+                    requireProtocol("fixture-model".equals(json.getText())); model = true;
+                } else if ("messages".equals(field)) {
+                    requireProtocol(!messages && value == JsonToken.START_ARRAY);
+                    for (int i = 0; i < 2; i++) {
+                        requireProtocol(json.nextToken() == JsonToken.START_OBJECT);
+                        // nextToken/skipChildren validate syntax/depth without getText on image content.
+                        json.skipChildren();
+                    }
+                    requireProtocol(json.nextToken() == JsonToken.END_ARRAY); messages = true;
+                } else {
+                    throw new RequestProtocolException();
+                }
+            }
+            requireProtocol(model && messages && json.nextToken() == null);
+        } catch (JsonProcessingException malformed) {
+            // Parser exceptions may quote request content; retain only a fixed safe failure.
+            throw new RequestProtocolException();
+        }
+    }
+
+    private static void requireProtocol(boolean valid) throws RequestProtocolException {
+        if (!valid) throw new RequestProtocolException();
+    }
+
+    static final class RequestProtocolException extends IOException {
+        RequestProtocolException() { super("CONTROLLED_PROVIDER_REQUEST_INVALID_OR_OVER_BUDGET"); }
+    }
+
+    private static final class RequestInput extends FilterInputStream {
+        private int remaining = REQUEST_LIMIT;
+        RequestInput(InputStream input) { super(input); }
+        @Override public int read() throws IOException {
+            int value = in.read();
+            if (value != -1 && --remaining < 0) throw new RequestProtocolException();
+            return value;
+        }
+        @Override public int read(byte[] bytes, int offset, int length) throws IOException {
+            int count = in.read(bytes, offset, Math.min(length, remaining + 1));
+            if (count > 0 && (remaining -= count) < 0) throw new RequestProtocolException();
+            return count;
+        }
+        @Override public long skip(long count) throws IOException {
+            // Do not allow a parser/stream consumer to bypass the byte budget via skip().
+            long skipped = in.skip(Math.min(Math.max(0L, count), (long) remaining + 1));
+            remaining -= (int) skipped;
+            if (remaining < 0) throw new RequestProtocolException();
+            return skipped;
+        }
     }
     OpenAiCompatibleLlmClient client(int origin) {
         return new OpenAiCompatibleLlmClient("t19-controlled", origins.get(origin), "fixture-token", "fixture-model", true, 2000, admission);

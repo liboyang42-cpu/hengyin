@@ -1,3 +1,32 @@
+<!-- 6fcdf747-all-runtime-source-ready -->
+本批真实失败五方完整SOURCE全部收齐并root精确集成（B42758bytes owned+shared、C56763bc5、F93e3aa9e、H5189f272、Ed8ac1f0a），无待写owner，不重复派审计/待命。E采用strace-D确保实际JVM PID1，stop前重核原CID/boot/JAR/config/内核startticks，测试child核验真实Quartz等待退出；原20秒、137强拒、五boot、stop失败禁止静止快照不变。H显式绑定原recovered GamePlay source/JAR/config/child/mount/proc并保持默认旧入口，未改Javachild/预算/UNKNOWN/cleanup。所有源码交付不是运行通过。
+
+集中控制：13个变化Python语法和76类921源码precheck无问题；5个现有Java源LSP错误0（不是编译证明）。6模块181纯Python控制首次180PASS/1临时目录夹具ERROR：macOS /var→/private/var别名未canonical；root仅将该测试root改Path(directory).resolve，保实际profile全部严格guard，只重查该1项PASS，不重复180已过，也不称一次181全绿。H/E供审patch仅literal空context无损base64包装，作者4Python/4stopcode后像各已exact验证，root单行testoverlay独立留痕。
+
+当前一次白名单/秘密扫描/新隔离候选冻结准备；新Java/DB/CI未验。下一影响仅原backend入口覆盖F新增7Java unit及共同编译；其后并行原CrossDomain1、mixed、完整restore、固定paymentgap诊断，其他17旧库类/新已过12/1/client/HTTP等未影响不重复。整体all_complete=false。
+
+<!-- 6fcdf747-source-progress-B-C-F -->
+6fcdf实际失败的B/C/F完整SOURCE已精确装配：B42,758bytes owned+shared聊天patch/7作者后像全exact（3f2e92c8...），保internal并复用原mysql_relay原转发/关闭核心，新增固定已验端点/nativeUUID/host进程startticks/FD-inode/loopback监听证明；不是删binding守卫或对外开放。C56763bc5两测试/fixture原0事务断言不变，改真实owned-schema InnoDB全连接事务观测，原borrowed连接数仅作独立证据及清理归零，补真实持锁/回滚校准与通知同线程autoCommit见证，不证明旧run已经没长事务。F93e3aa9e仅既有TransportStage和七条新控制，原16MiB/四并发负载保留，使用现有Jackson流式skip及固定17MiB上界、队列有界化，保错误清理汇总；原接口/C两文件未改。
+
+本轮真实失败源包现在仅待E受控stop与H mixed-profile完整交付；全部NOT_RUN，不中途Java编译/CI。F实际新增7个Java unit方法，后台unit源码本批有直接变更，需要现有后台入口最终同源覆盖这些新逻辑，不能把旧15772旧SHA当新七控制已过；不新增通用selector/workflow/放宽gate。新source齐后按真实影响只验backend新unit、失败CrossDomain及mixed/fullrestore/固定paymentgap，已过12/1真库及其它未影响不重跑。all_complete=false。
+
+<!-- 6fcdf747-current-runtime-failures -->
+6fcdf747后台选定CI已SUCCESS，原1960XML15772/0failure/error/633skip、原40失败全保留通过已独立核；不是完整所有CI／业务验收。真库原3类本轮2类13项（DepositAttempt12＋GameplayReskin1）精确source/XML/Hash/独立CLEAN通过，CrossDomain唯一case失败，batchsummary保持FAIL，不能把清理CLEAN当业务过。
+
+新实际首因已精确派原owner并行完整SOURCE目的包：B单组恢复原BINDING_MISSING/loopback-binding（不是泛Docker拒绝）；C跨域原110行parent事务计数0→1失败；F该同case transport suppressed heap OOM/JSON handler61及清理；E完整恢复SOURCE_QUIESCENT_STOP退出137/OOMKilledfalse。恢复已有1个真实source readyboot，原money/章回执及network前置已越过，不能再说没启动；但0完整restoreboots，不验收／不接受137为正常。四包均NOT_RUN，不削internal/loopback/原0断言/150秒预算/真实Quartz/stop/UNKNOWN／金额/清理。原mixed40232922574仍在同源执行，未取消或重复派发。
+
+已通过未受影响后台、17类e822真库及新12/1不无收益重跑；原8只复用B/C/E/F做实际必要新片，A/D/G/H已闭合无待命审计。源码全部齐后root统一验。整体all_complete=false。
+
+<!-- 6fcdf747-actual-backend-readback -->
+6fcdf747新同源后台原制品12612999471（12691493bytes／ZIP SHA3dee86f0f3fa7062f48e8f48f16df78154b4deea7ba20cc3bc739065ce93dd77）已root独立CRC、source/run40231848588/attempt1及1960原XML摘要全部核对。实际admin汇总15772：15139passed、633skip、0failure/error，duplicatecase0；原e822的40失败身份全部原样存在并通过，13对应类当前279例全PASS零skip。不把633skip算实际通过，也不把源码普通声明数当参数化执行数；此为JUnit层，不等于完整标准CI／真业务／生产验收。
+
+共同Build and test backend步骤已SUCCESS（20:50:40UTC）；已各启动一次同source/attempt1并行影响组：真库40232916855只3类14源码声明；mixed40232922574；完整恢复应用40232928297；固定payment-gap诊断40232934720。API五run head均6fcdf747。其余17已过e822真库类／client／旧HTTP及未受影响门禁未重跑；当前四组尚无验收通过结论，all_complete=false。
+
+<!-- 6fcdf747-current-candidate -->
+最新公共候选为6fcdf747e17cb5094121f609ae33f7734fda2ae7，tree02e30bd0778ad2eff63b091429b89e7f17895f8f，parente822；8方完整SOURCE共同合成60文件/363098bytes，白名单、whitespace、gitleaks0泄漏核对后隔离push。后台唯一dispatch40231848588/attempt1，API source已独立核为6fcdf747，当前queued无新通过结论。首次shell命令仅zsh方括号展开拒绝、未dispatch；引号修正后只真正dispatch一次。
+
+先等同源backend实际编译准入，再并行3个真库影响类14源码声明、原mixed/fullrestore/固定单cohort；其余17已过e822真库类、旧client/HTTP及未受影响门禁不重复。候选里“NOT_RUN”是冻结前事实，当前只有后台准入在排队；不是整体测试完成，也不转签旧绿。all_complete=false。
+
 <!-- e822-complete-source-before-freeze -->
 本轮8个原owner必要源码／调用者／装配／配套控制全部交齐并root精确集成，进入单一新候选冻结。C0e159c69最后补真实member读取所需原app_open_id迁移和安全恢复诊断；原150秒预算／poison／正向通知／真实provider隔离不减。B仅固定OWNER guard/substage诊断，原失败predicate仍UNKNOWN；完整恢复ValueError也仍需真实运行定位，不能把诊断源码当已修通过。
 

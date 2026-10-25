@@ -83,6 +83,7 @@ public final class RestoreHttpApplicationChild {
                 "--token.secret=" + config.path("tokenSecret").asText(),
                 "--coupon.qr-secret=" + config.path("tokenSecret").asText(),
                 "--chengyin.jobs.enabled=true", "--spring.quartz.auto-startup=true",
+                "--spring.quartz.wait-for-jobs-to-complete-on-shutdown=true",
                 "--withdrawal.fast-withdraw.enabled=true",
                 "--wx.pay.appid=restore-http-app", "--wx.pay.merchant-id=restore-http-mch");
         var factories=application.getBeansOfType(org.apache.ibatis.session.SqlSessionFactory.class);
@@ -92,7 +93,13 @@ public final class RestoreHttpApplicationChild {
         require(config.path("serverUuid").asText().equals(db.queryForObject("SELECT @@server_uuid", String.class))
                 && config.path("schema").asText().equals(db.queryForObject("SELECT DATABASE()", String.class)), "actual restored datasource");
         require(application.getEnvironment().getProperty("chengyin.jobs.enabled", Boolean.class, false)
-                && application.getBean(org.quartz.Scheduler.class).isStarted(), "real scheduler enabled");
+                && application.getEnvironment().getProperty("spring.quartz.wait-for-jobs-to-complete-on-shutdown", Boolean.class, false)
+                && application.getBean(org.quartz.Scheduler.class).isStarted(), "real scheduler enabled and shutdown draining");
+        var realScheduler = application.getBean(org.quartz.Scheduler.class);
+        var quartzFactories = application.getBeansOfType(org.springframework.scheduling.quartz.SchedulerFactoryBean.class);
+        require(quartzFactories.values().stream().anyMatch(factory -> factory.getScheduler() == realScheduler
+                && Boolean.TRUE.equals(new org.springframework.beans.DirectFieldAccessor(factory)
+                        .getPropertyValue("waitForJobsToCompleteOnShutdown"))), "actual Quartz factory must wait on shutdown");
         if (config.path("seed").asBoolean()) {
             require("false".equals(mode) && !Files.exists(PRIVATE.resolve("identities.json")), "seed once in isolated source transport fixture");
             seed(db);

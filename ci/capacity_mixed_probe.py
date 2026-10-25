@@ -45,6 +45,15 @@ PROFILE_PROPERTIES = {
 }
 PASS_OBSERVATION = "OBSERVED_SCOPED_CURVE_AND_MIXED_RECOVERY"
 PASS_FINAL = "PASS_SCOPED_CAPACITY_MIXED_OBSERVATION"
+GAMEPLAY_CHILD = "com.chengyinhub.business.it.GameplayProcessRecoveryChild"
+GAMEPLAY_CHILD_PATH = GAMEPLAY_CHILD.replace(".", "/")
+GAMEPLAY_COMMAND = [
+    "-A", "-f", "-s", "0", "-e", "trace=connect,sendto,sendmsg",
+    "-o", "/evidence/gameplay-network.trace", "java", "-Xmx512m",
+    "-Dlogging.config=/fixture/logback.xml", "-Dlogback.configurationFile=/fixture/logback.xml",
+    "-Dloader.path=/recovery-testclasses", "-Dloader.main=" + GAMEPLAY_CHILD,
+    "-cp", "/application.jar", "org.springframework.boot.loader.launch.PropertiesLauncher",
+]
 
 
 class NotRun(RuntimeError):
@@ -96,7 +105,7 @@ def source_identity():
     }
 
 
-def validate_profile(objects, properties):
+def validate_profile(objects, properties, gameplay_binding=None):
     for key, value in PROFILE_PROPERTIES.items():
         require(properties.get(key) == value, "unapproved fixture profile: " + key)
     limits = []
@@ -113,13 +122,66 @@ def validate_profile(objects, properties):
         limits.append({"id": obj["Id"], "memoryBytes": memory,
                        "memorySwapBytes": memory, "nanoCpus": cpu})
     cmd = objects[0]["Config"]["Cmd"]
-    require("--spring.config.location=file:/fixture/application.properties" in cmd,
-            "wrong application fixture")
+    if gameplay_binding is None:
+        # Default remains the original fixture, never infer a different entry from argv.
+        require("--spring.config.location=file:/fixture/application.properties" in cmd,
+                "wrong application fixture")
+    else:
+        validate_gameplay_binding(objects, gameplay_binding)
     require(not any(arg.startswith("--spring.datasource.druid.")
                     and not arg.startswith("--spring.datasource.druid.master.url=")
                     for arg in cmd),
             "pool overrides would change this profile")
     return limits
+
+
+def validate_gameplay_binding(objects, binding):
+    """Only the existing gameplay caller can supply this exact recovered-boot binding."""
+    require(os.environ.get("CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY") == "true"
+            and os.environ.get("CHENGYIN_CI_GAMEPLAY_CAPACITY") == "true", "gameplay profile not explicitly admitted")
+    hashes = ("jarSha256", "childSourceSha256", "childClassSha256",
+              "testClassTreeSha256", "configSha256", "fixturePropertiesSha256")
+    require(isinstance(binding, dict) and set(binding) == set(hashes) | {
+        "sourceSha", "boot", "appCid", "appPid", "appStartedAt", "networkId", "storeProcessIdentity",
+    }, "exact gameplay profile binding required")
+    require(isinstance(binding["sourceSha"], str) and binding["sourceSha"] == os.environ.get("GITHUB_SHA")
+            and re.fullmatch(r"[0-9a-f]{40}", binding["sourceSha"]) is not None,
+            "gameplay binding source mismatch")
+    require(all(isinstance(binding[key], str)
+                and re.fullmatch(r"[0-9a-f]{64}", binding[key]) for key in hashes),
+            "complete gameplay artifact binding required")
+    boot = binding["boot"]
+    require(isinstance(boot, dict) and set(boot) == {
+        "bootId", "javaPid", "sourceSha", "jarSha256", "childClassSha256", "configSha256", "port",
+    }, "exact recovered boot required")
+    require(type(boot["javaPid"]) is int and boot["javaPid"] > 0
+            and type(boot["port"]) is int and boot["port"] == 8080
+            and isinstance(boot["bootId"], str)
+            and re.fullmatch(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}", boot["bootId"]) is not None
+            and all(boot[key] == binding[key] for key in ("sourceSha", "jarSha256", "childClassSha256", "configSha256")),
+            "recovered boot provenance/port mismatch")
+    app = objects[0]
+    require(app["Id"] == binding["appCid"] and type(binding["appPid"]) is int
+            and binding["appPid"] > 0 and app["State"]["Pid"] == binding["appPid"]
+            and app["State"]["StartedAt"] == binding["appStartedAt"], "recovered app process changed")
+    require(app["Config"].get("Entrypoint") == ["/trace/strace"]
+            and app["Config"]["Cmd"] == GAMEPLAY_COMMAND, "wrong gameplay application fixture")
+    env = app["Config"].get("Env", [])
+    require("GITHUB_SHA=" + binding["sourceSha"] in env
+            and "CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY=true" in env
+            and not any(item.split("=", 1)[0].startswith(("SPRING_", "LOADER_"))
+                        or item.split("=", 1)[0] in ("JAVA_TOOL_OPTIONS", "JDK_JAVA_OPTIONS", "_JAVA_OPTIONS")
+                        for item in env), "gameplay environment overrides forbidden")
+    stores = binding["storeProcessIdentity"]
+    require(isinstance(stores, dict) and set(stores) == {"mysql", "redis"}, "original store binding required")
+    for name, obj in zip(("app", "mysql", "redis"), objects):
+        networks = list(obj["NetworkSettings"]["Networks"].values())
+        require(len(networks) == 1 and networks[0]["NetworkID"] == binding["networkId"], "gameplay network changed")
+        if name != "app":
+            require(stores[name] == {
+                "id": obj["Id"], "Pid": obj["State"]["Pid"], "StartedAt": obj["State"]["StartedAt"],
+                "networkId": binding["networkId"],
+            }, "original gameplay store process changed")
 
 
 def admit(limits, available_memory, free_disk, cpus, jar_size):
@@ -235,7 +297,7 @@ def run_curve(items, request, concurrency, stop, seconds=45):
 
 
 class Probe:
-    def __init__(self, name, schema, out, private, port, report):
+    def __init__(self, name, schema, out, private, port, report, gameplay_binding=None):
         self.name, self.schema, self.out, self.private = name, schema, out, private
         self.report, self.port = report, port
         self.token = None
@@ -246,6 +308,8 @@ class Probe:
         self.stopped = False
         self.nonce = "qa_capacity_" + name[8:] + "_"
         self.jar = ROOT / "chengyinhub-admin/target/chengyinhub-admin.jar"
+        self.gameplay_binding = (json.loads(json.dumps(gameplay_binding))
+                                 if gameplay_binding is not None else None)
         require(not private.is_symlink() and private.stat().st_mode & 0o777 == 0o600,
                 "private fixture file changed")
         self.saved = json.loads(private.read_text())
@@ -258,12 +322,16 @@ class Probe:
         self.ids = [obj["Id"] for obj in self.objects]
         self.app, self.mysql, self.redis = self.ids
         properties = {}
-        for line in (ROOT / "ci/upgrade-startup/application.properties").read_text().splitlines():
+        properties_file = ROOT / "ci/upgrade-startup/application.properties"
+        require(not properties_file.is_symlink() and properties_file.resolve() == properties_file.absolute(),
+                "fixture properties path changed")
+        self.properties_sha256 = file_digest(properties_file)["sha256"]
+        for line in properties_file.read_text().splitlines():
             if line.strip() and not line.startswith("#") and "=" in line:
                 key, value = line.split("=", 1)
                 require(key not in properties, "duplicate fixture property")
                 properties[key] = value
-        limits = validate_profile(self.objects, properties)
+        limits = validate_profile(self.objects, properties, self.gameplay_binding)
         memory = dict(line.split(":", 1) for line in Path("/proc/meminfo").read_text().splitlines())
         available = int(memory["MemAvailable"].split()[0]) * 1024
         disk = os.statvfs(out)
@@ -290,6 +358,7 @@ class Probe:
         self.db = auth.database(port, schema)
         self.initial = self.stamp()
         report["initial"] = self.initial
+        report["resourceProfile"]["applicationEntry"] = self.initial["applicationProfile"]
 
     def save(self):
         auth.write_report(self.out, "capacity-mixed.json", self.report)
@@ -332,6 +401,7 @@ done
 """]).decode().strip()
         require(re.fullmatch(r"[1-9][0-9]*", java_pid) is not None,
                 "one actual application Java PID required")
+        application_profile = self.application_profile(objects, int(java_pid))
         uuid, database = self.rows("SELECT @@server_uuid,DATABASE()")[0]
         require((uuid, database) == (self.saved["serverUuid"], self.schema),
                 "database identity changed")
@@ -342,7 +412,106 @@ done
                         for key in ("Pid", "Running", "Paused", "OOMKilled")}
                        for obj in objects],
             "applicationJavaPid": int(java_pid), "databaseUuid": uuid,
+            "applicationProfile": application_profile,
         }
+
+    def application_profile(self, objects, java_pid):
+        """Recheck immutable inputs and the actual process at each existing curve/fault stamp."""
+        app = objects[0]
+        cmd = app["Config"]["Cmd"]
+        require("java" in cmd, "fixed Java process missing")
+        expected_argv = cmd[cmd.index("java"):]
+        if self.gameplay_binding is None:
+            mysql_ip = objects[1]["NetworkSettings"]["Networks"][self.name]["IPAddress"]
+            redis_ip = objects[2]["NetworkSettings"]["Networks"][self.name]["IPAddress"]
+            original_argv = ["java", "-Xmx512m", "-Dlogging.config=/fixture/logback.xml",
+                "-Dlogback.configurationFile=/fixture/logback.xml", "-jar", "/application.jar",
+                "--spring.config.location=file:/fixture/application.properties", "--spring.messages.basename=i18n/messages",
+                "--spring.datasource.druid.master.url=jdbc:mysql://" + mysql_ip + ":3306/" + self.schema
+                    + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC",
+                "--spring.data.redis.host=" + redis_ip]
+            require(app["Config"].get("Entrypoint") == ["/trace/strace"]
+                    and cmd == ["-f", "-s", "0", "-e", "trace=connect,sendto,sendmsg",
+                                "-o", "/evidence/network.trace"] + original_argv,
+                    "wrong original application entry")
+        argv = auth.command(D + ["exec", self.app, "cat", "/proc/" + str(java_pid) + "/cmdline"])
+        require(argv == b"\0".join(item.encode() for item in expected_argv) + b"\0",
+                "actual application command differs from inspected fixture")
+        properties = ROOT / "ci/upgrade-startup/application.properties"
+        require(not properties.is_symlink() and properties.resolve() == properties.absolute(), "fixture properties path changed")
+        require(file_digest(properties)["sha256"] == self.properties_sha256, "fixture properties changed")
+        files = [(properties, "/fixture/application.properties")]
+        result = {"entry": "ORIGINAL_AUTHENTICATED_FIXTURE",
+                  "propertiesSha256": file_digest(properties)["sha256"],
+                  "javaArgvSha256": hashlib.sha256(argv).hexdigest()}
+        if self.gameplay_binding is not None:
+            binding = self.gameplay_binding
+            validate_gameplay_binding(objects, binding)
+            require(java_pid == binding["boot"]["javaPid"]
+                    and self.identity["sourceSha"] == binding["sourceSha"]
+                    and self.properties_sha256 == binding["fixturePropertiesSha256"]
+                    and not self.jar.is_symlink() and self.jar.resolve() == self.jar.absolute()
+                    and file_digest(self.jar)["sha256"] == binding["jarSha256"], "gameplay source/JAR/PID changed")
+            private = self.private.parent / "gameplay"
+            config_file, ready_file = private / "config.json", private / "ready.json"
+            for path in (private, config_file, ready_file):
+                require(not path.is_symlink() and path.resolve() == path.absolute(), "gameplay private path changed")
+            require(config_file.stat().st_mode & 0o777 == 0o600
+                    and ready_file.stat().st_mode & 0o777 == 0o600, "gameplay private file mode changed")
+            require(file_digest(config_file)["sha256"] == binding["configSha256"]
+                    and json.loads(ready_file.read_text()) == binding["boot"], "original config/recovered boot changed")
+            config = json.loads(config_file.read_text())
+            require(set(config) == {"sourceSha", "jarSha256", "childClassSha256", "schema", "serverUuid",
+                                    "jdbcUrl", "redisHost", "tokenSecret", "capacityItems"}, "unknown gameplay config")
+            mysql_ip = objects[1]["NetworkSettings"]["Networks"][self.name]["IPAddress"]
+            redis_ip = objects[2]["NetworkSettings"]["Networks"][self.name]["IPAddress"]
+            require(all(config[key] == binding[key] for key in ("sourceSha", "jarSha256", "childClassSha256"))
+                    and config["schema"] == self.schema and config["serverUuid"] == self.saved["serverUuid"]
+                    and config["jdbcUrl"] == "jdbc:mysql://" + mysql_ip + ":3306/" + self.schema
+                        + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+                    and config["redisHost"] == redis_ip and type(config["capacityItems"]) is int
+                    and config["capacityItems"] == 72, "gameplay config scope/store mismatch")
+            child_root = self.out / "gameplay-child-classes"
+            tests = ROOT / "chengyinhub-admin/target/test-classes"
+            source = ROOT / ("chengyinhub-admin/src/test/java/" + GAMEPLAY_CHILD_PATH + ".java")
+            require(not source.is_symlink() and source.resolve() == source.absolute()
+                    and file_digest(source)["sha256"] == binding["childSourceSha256"], "gameplay child source changed")
+            require(not child_root.is_symlink() and child_root.resolve() == child_root.absolute(), "child class root changed")
+            manifest = {}
+            for path in sorted(child_root.rglob("*")):
+                require(not path.is_symlink(), "child class path is a symlink")
+                if path.is_dir():
+                    continue
+                relative = path.relative_to(child_root).as_posix()
+                require(path.is_file() and (relative == GAMEPLAY_CHILD_PATH + ".class"
+                        or relative.startswith(GAMEPLAY_CHILD_PATH + "$") and relative.endswith(".class")),
+                        "unexpected mounted child class")
+                original = tests / relative
+                require(original.is_file() and not original.is_symlink()
+                        and original.resolve() == original.absolute(), "original compiled child missing")
+                sha = file_digest(path)["sha256"]
+                require(sha == file_digest(original)["sha256"], "mounted child differs from original build")
+                manifest[relative] = sha
+                files.append((path, "/recovery-testclasses/" + relative))
+            require(manifest.get(GAMEPLAY_CHILD_PATH + ".class") == binding["childClassSha256"]
+                    and digest(manifest) == binding["testClassTreeSha256"], "child class manifest changed")
+            mounts = {"/application.jar": (self.jar, False), "/fixture": (properties.parent, False),
+                      "/recovery-testclasses": (child_root, False), "/recovery-private": (private, True)}
+            for target, (source_path, writable) in mounts.items():
+                actual = [mount for mount in app["Mounts"] if mount["Destination"] == target]
+                require(len(actual) == 1 and actual[0]["Type"] == "bind"
+                        and actual[0]["Source"] == str(source_path) and actual[0]["RW"] is writable,
+                        "fixed gameplay mount changed")
+            files.extend(((config_file, "/recovery-private/config.json"),
+                          (ready_file, "/recovery-private/ready.json")))
+            result.update(entry="GAMEPLAY_PROCESS_RECOVERY", bindingSha256=digest(binding),
+                          childSourceSha256=binding["childSourceSha256"],
+                          testClassTreeSha256=binding["testClassTreeSha256"],
+                          configSha256=binding["configSha256"], bootId=binding["boot"]["bootId"])
+        mounted = auth.command(D + ["exec", self.app, "sha256sum"] + [target for _, target in files]).decode().splitlines()
+        require(mounted == [file_digest(path)["sha256"] + "  " + target for path, target in files],
+                "mounted fixture/config/class bytes changed")
+        return result
 
     def remember(self, value):
         auth.SECRET_VALUES.append(value)
@@ -681,7 +850,7 @@ done
             pool.shutdown(wait=True, cancel_futures=True)
 
 
-def observe(name, schema, out, private, relay_port):
+def observe(name, schema, out, private, relay_port, *, gameplay_binding=None):
     """Root/C calls this only inside the existing verified mysql_relay context."""
     report = {
         "result": "NOT_COMPLETED", "curves": [],
@@ -696,7 +865,7 @@ def observe(name, schema, out, private, relay_port):
     probe = None
     first_error = None
     try:
-        probe = Probe(name, schema, out, private, relay_port, report)
+        probe = Probe(name, schema, out, private, relay_port, report, gameplay_binding)
         probe.save()
         probe.login()
         protected = probe.protected()

@@ -1,0 +1,19 @@
+{
+  "source": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+  "run": 40232916855,
+  "attempt": 1,
+  "artifact": 12613614376,
+  "class": "com.chengyinhub.business.service.impl.GameplayReskinMySqlIT",
+  "source_file_sha256": "b7b7da1fd537fcad552ef8515949d48054f7430a00e2753db2c902e39ab5647b",
+  "zip_sha256": "e79eb140b29e989ac84f015127abe9450609ffb9ac5b951a3fefa461491c569b",
+  "CRC": "PASS",
+  "exact_original_source_methods": 1,
+  "actual_tests": 1,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "duplicates": 0,
+  "cleanup": "INDEPENDENT_EXACT_CLEAN",
+  "accepted": true,
+  "not_42_complete_games_or_full_UI_acceptance": true
+}

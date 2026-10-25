@@ -143,6 +143,63 @@ class ReconciliationControls(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'five'): p.reconcile(*values)
 
 
+class ResourceTransportControls(unittest.TestCase):
+    def resources(self, relay=False):
+        scope = 'a' * 32; name = 'cy-restore-' + scope
+        network = {'Id': 'e' * 64, 'Name': name, 'Internal': True,
+                   'Labels': {'chengyin.restore-business': scope}}
+        resources = {'scope': scope, 'schema': 'cy_restore_' + scope + '_funds_core_it'}
+        rows = []
+        for i, side in enumerate(('source', 'target')):
+            port = 33080 + i; cid = ('c' if i == 0 else 'd') * 64
+            resources[side] = {'cid': cid, 'port': port,
+                'uuid': ('1' if i == 0 else '2') * 8 + '-1111-1111-1111-111111111111'}
+            if relay:
+                resources[side].update(transport='OWNED_MYSQL_LOOPBACK_RELAY', relay={'controlledDescriptor': side})
+            rows.append({'Id': cid, 'Name': '/' + name + '-' + side,
+                'Config': {'Image': p.MYSQL_IMAGE, 'Labels': {'chengyin.restore-business': scope}},
+                'State': {'Running': True, 'Paused': False, 'OOMKilled': False},
+                'HostConfig': {'Memory': 1073741824, 'NanoCpus': 1000000000},
+                'NetworkSettings': {'Networks': {name: {'NetworkID': network['Id']}},
+                    'Ports': {'3306/tcp': None if relay else [{'HostIp': '127.0.0.1', 'HostPort': str(port)}]}}})
+        return resources, rows, network
+
+    def test_original_published_binding_contract_is_preserved_without_transport_descriptor(self):
+        resources, rows, network = self.resources()
+        with patch.object(p, 'module') as loader:
+            p.validate_resources(resources, rows, network)
+            loader.assert_not_called()
+            for value in (None, [], [{'HostIp': '0.0.0.0', 'HostPort': '33080'}],
+                          [{'HostIp': '127.0.0.1', 'HostPort': '33081'}]):
+                changed = copy.deepcopy(rows); changed[0]['NetworkSettings']['Ports']['3306/tcp'] = value
+                with self.assertRaises(ValueError): p.validate_resources(resources, changed, network)
+
+    def test_relay_branch_requires_host_proof_for_both_original_endpoints_and_never_bypasses_other_guards(self):
+        resources, rows, network = self.resources(relay=True)
+        with patch.object(p, 'module') as loader:
+            proof = loader.return_value.validate_relay_descriptor
+            p.validate_resources(resources, rows, network)
+            self.assertEqual(2, proof.call_count)
+            for i, side in enumerate(('source', 'target')):
+                self.assertEqual((resources['scope'], side, resources[side], network, rows[i]), proof.call_args_list[i].args)
+                self.assertEqual(('restore_owned_mysql_host', 'ci/restore_business_reconciliation_host.py'),
+                                 loader.call_args_list[i].args)
+            proof.side_effect = ValueError('unproved original listener')
+            with self.assertRaisesRegex(ValueError, 'unproved original listener'):
+                p.validate_resources(resources, rows, network)
+            proof.side_effect = None
+            for keys, value in [(['source', 'transport'], 'arbitrary'), (['target', 'cid'], resources['source']['cid']),
+                                (['target', 'port'], resources['source']['port'])]:
+                changed = copy.deepcopy(resources); changed[keys[0]][keys[1]] = value
+                with self.assertRaises(ValueError): p.validate_resources(changed, rows, network)
+            for keys, value in [(['HostConfig', 'Memory'], 1), (['Config', 'Image'], 'foreign'),
+                               (['NetworkSettings', 'Ports', '33060/tcp'], [{'HostIp': '0.0.0.0', 'HostPort': '33060'}])]:
+                changed = copy.deepcopy(rows); target = changed[0]
+                for key in keys[:-1]: target = target[key]
+                target[keys[-1]] = value
+                with self.assertRaises(ValueError): p.validate_resources(resources, changed, network)
+
+
 class JournalControls(unittest.TestCase):
     def write(self, path, rows):
         previous = '0' * 64

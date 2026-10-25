@@ -1,0 +1,223 @@
+{
+  "source": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+  "run": 40231848588,
+  "attempt": 1,
+  "artifact": 12612999471,
+  "ZIP_bytes": 12691493,
+  "ZIP_sha256": "3dee86f0f3fa7062f48e8f48f16df78154b4deea7ba20cc3bc739065ce93dd77",
+  "CRC": "PASS",
+  "original_XML_hashes_verified": 1960,
+  "modules": {
+    "chengyinhub-admin": {
+      "tests": 15772,
+      "passed": 15139,
+      "skipped": 633
+    }
+  },
+  "original40_all_preserved_and_passed": true,
+  "original40_failure_identity_readback": [
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicPublishNarrativeNpcGuardTest",
+      "case": "availableBlockNarrativeNpcPublishes",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicPublishNarrativeNpcGuardTest",
+      "case": "legacyBlockWithoutNarrativeNpcDoesNotTouchNpcProfiles",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicPublishNarrativeNpcGuardTest",
+      "case": "availableStoryFlowNarrativeNpcPublishes",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicPublishNarrativeNpcGuardTest",
+      "case": "foreignBlockNarrativeNpcBlocksPublish",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicPublishNarrativeNpcGuardTest",
+      "case": "foreignStoryFlowNarrativeNpcBlocksPublish",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicPublishStateKeyGuardTest",
+      "case": "legacyChapterCannotTreatDeclaredThoughtTagAsANumericVariable",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicPublishStateKeyGuardTest",
+      "case": "undeclaredThoughtDoneInChapterConditionStillBlocksPublish",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicPublishStateKeyGuardTest",
+      "case": "declaredThoughtDoneCanBeReadByChapterConditions",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicRoutePublishPolicyTest",
+      "case": "approvedBranchGraphPublishesLatestNormalizedSnapshot",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicRoutePublishPolicyTest",
+      "case": "publishDraftRejectsAnEdgeWithoutADeterministicReachabilityFixture",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicRoutePublishPolicyTest",
+      "case": "successfulPublishCopiesTheNormalizedDraftIntoThePublishedSnapshot",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicRoutePublishPolicyTest",
+      "case": "professionalSubmissionRejectsInvalidRouteBeforeGoingOnline",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicRoutePublishPolicyTest",
+      "case": "approvedLinearTopicPublishesNullGraphAndAdvancesPublishedVersion",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicDraftSubmittedOrderTest",
+      "case": "createDraftAssignsChapterAndPerChapterNodeOrderFromSubmittedArrays",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicSaleReviewDecouplingTest",
+      "case": "storyAndNameEdit_keepsSaleReview_andRefreshesThePendingTask",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.CoopDepositPaymentSettlementTest",
+      "case": "lateSuccessAfterCloseAcceptanceOrExceptionFreezesInsteadOfDeducting(boolean)[1]",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.CoopDepositPaymentSettlementTest",
+      "case": "lateSuccessAfterCloseAcceptanceOrExceptionFreezesInsteadOfDeducting(boolean)[2]",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.CoopSettlementTest",
+      "case": "settleCoopTopic_closeReadbackSuccessConsumesExactTypedReferenceAndNeverSetsOff",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplayDraftCopyTest",
+      "case": "nativeThreeThemeCopiesSaveWithRealNodeMappingsAndRequireChallengeReselectionForPublish",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplayReskinRuntimeServiceTest",
+      "case": "templateFeesAndRationsUseTheBoundResourceAndBusinessReplayIsFree",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplayReskinRuntimeServiceTest",
+      "case": "configuredActionCeilingRejectsTheNextPaidTaskWithoutChangingResources",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplayReskinRuntimeServiceTest",
+      "case": "zeroHpUsesTheSameTeamChallengeOrQuestionAlternativeAfterReskin",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplayReskinRuntimeServiceTest",
+      "case": "aFrozenWorldEndingDisablesAnOutstandingChallengeAndRejectsEveryNewProof",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplayReskinRuntimeServiceTest",
+      "case": "allThreeConfigurationsSavePublishAndFreezeThroughTheSameServices",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplayReskinRuntimeServiceTest",
+      "case": "allThreeThemesFollowTheSameScriptToAnExecutedWorldEnding",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplayReskinRuntimeServiceTest",
+      "case": "allThreePublishedThemesCanExplicitlyCloseToTheirConfiguredFallbackWithoutSpending",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplaySupportMatrixRuntimeTest",
+      "case": "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[1]",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplaySupportMatrixRuntimeTest",
+      "case": "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[2]",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplaySupportMatrixRuntimeTest",
+      "case": "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[3]",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplaySupportMatrixRuntimeTest",
+      "case": "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[4]",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplaySupportMatrixRuntimeTest",
+      "case": "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[5]",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplaySupportMatrixRuntimeTest",
+      "case": "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[6]",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplaySupportMatrixRuntimeTest",
+      "case": "legacyChallengeAnswerWithoutAdvancedProofCannotPublishAndFixedReferenceCanBeJudged",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplaySupportMatrixRuntimeTest",
+      "case": "publishRejectsUnsupportedOrdinarySensorWithNodeTypeAndTool",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.support.TopicPublicationDeclarationsTest",
+      "case": "nestedJourneyStillRejectsInactiveDispositionNodeWithOriginalSceneDiagnostic",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.support.TopicPublicationDeclarationsTest",
+      "case": "formalBranchReusesTheExistingDiagnosticBeforeCallingCompleteFreeze",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.support.TopicPublicationDiagnosticsTest",
+      "case": "nestedSceneReferenceKeepsTheActualSceneIndexInsteadOfPretendingTopLevelStory",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.support.TopicPublicationDiagnosticsTest",
+      "case": "foreignJourneyChapterKeepsServiceExceptionAndExistingReferenceExplanation",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.business.service.support.TopicPublicationDiagnosticsTest",
+      "case": "foreignCompletedNodeReportsTheOriginalTemplateAndRetainsScopeRejection",
+      "current_status": "passed"
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiCoopControllerInviteAuthzTest",
+      "case": "listPreservesSupplyStationUnknownConfirmedAndNotApplicableStates",
+      "current_status": "passed"
+    }
+  ],
+  "duplicate_case_ids": 0,
+  "not_full_business_acceptance": true,
+  "standard_workflow_remaining_steps_not_yet_accepted": true
+}

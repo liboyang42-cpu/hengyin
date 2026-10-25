@@ -137,7 +137,12 @@ def validate_resources(resources, inspect, network):
         require(set(obj['NetworkSettings']['Networks']) == {name}
                 and obj['NetworkSettings']['Networks'][name]['NetworkID'] == network['Id'], 'foreign network attachment')
         binding = obj['NetworkSettings']['Ports'].get('3306/tcp')
-        require(binding == [{'HostIp': '127.0.0.1', 'HostPort': str(target['port'])}], 'loopback owned port only')
+        if 'transport' in target:
+            require(target['transport'] == 'OWNED_MYSQL_LOOPBACK_RELAY', 'unknown MySQL transport')
+            module('restore_owned_mysql_host', 'ci/restore_business_reconciliation_host.py').validate_relay_descriptor(
+                scope, side, target, network, obj)
+        else:
+            require(binding == [{'HostIp': '127.0.0.1', 'HostPort': str(target['port'])}], 'loopback owned port only')
         require(all(key == '3306/tcp' or value is None for key, value in obj['NetworkSettings']['Ports'].items()),
                 'no other published container ports')
         require(1024 < int(target['port']) < 65536, 'invalid fixture port')

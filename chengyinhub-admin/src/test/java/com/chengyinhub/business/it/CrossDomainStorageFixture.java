@@ -23,13 +23,16 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.jdbc.datasource.ConnectionHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
 import org.springframework.transaction.interceptor.TransactionInterceptor;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.sql.Connection;
 import java.net.InetSocketAddress;
 import java.time.Clock;
 import java.time.Instant;
@@ -51,6 +54,7 @@ final class CrossDomainStorageFixture implements AutoCloseable {
     final String schema = "cy_wp14_" + UUID.randomUUID().toString().replace("-", "");
     final String original = UUID.randomUUID().toString().replace("-", "");
     String url, user, password;
+    String serverUuid;
     JdbcTemplate admin, db;
     DruidDataSource pool;
     DataSourceTransactionManager transactions;
@@ -75,6 +79,7 @@ final class CrossDomainStorageFixture implements AutoCloseable {
     ExecutorService subscriptionWorkers;
     long poisonId, healthyId;
     Reference payment;
+    volatile Map<String, Object> subscriptionRead = Map.of();
 
     void open() throws Exception {
         assertEquals("github-hosted", required("RUNNER_ENVIRONMENT"));
@@ -86,6 +91,7 @@ final class CrossDomainStorageFixture implements AutoCloseable {
         String options = "?serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true";
         admin = new JdbcTemplate(new DriverManagerDataSource(prefix + "mysql" + options, user, password));
         assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(admin.queryForObject("SELECT VERSION()", String.class)));
+        serverUuid = admin.queryForObject("SELECT @@server_uuid", String.class);
         admin.execute("CREATE DATABASE `" + schema + "` CHARACTER SET utf8mb4"); created = true;
         url = prefix + schema + options;
         DriverManagerDataSource ddl = new DriverManagerDataSource(url, user, password);
@@ -238,11 +244,124 @@ final class CrossDomainStorageFixture implements AutoCloseable {
         assertEquals(Long.valueOf(MEMBER), recipient.getId());
         assertEquals("fixture-openid", recipient.getWxOpenId());
         assertNull(recipient.getAppOpenId(), "no guessed App identity or migration backfill");
-        set(provider, "umsMemberService", memberService);
+        // Observe the REAL lookup on its calling thread without changing its propagation or result.
+        // NOT_SUPPORTED can still have synchronization-bound, auto-commit MyBatis resources.
+        ProxyFactory memberLookup = new ProxyFactory(memberService); memberLookup.setProxyTargetClass(true);
+        memberLookup.addAdvice((org.aopalliance.intercept.MethodInterceptor) invocation -> {
+            Object result = invocation.proceed();
+            if ("selectUmsMemberById".equals(invocation.getMethod().getName())) observeSubscriptionRead();
+            return result;
+        });
+        set(provider, "umsMemberService", memberLookup.getProxy());
         IWxContentSecurityService token = mock(IWxContentSecurityService.class); when(token.getAccessToken()).thenReturn("fixture-access");
         set(provider, "wxSec", token); set(provider, "tplOfficialEvent", "fixture-official-template");
         set(provider, "defaultPage", "pages/index/index");
         set(notifications, "wxSubscribeMsgService", provider);
+    }
+
+    private void observeSubscriptionRead() throws Exception {
+        Map<String, Object> witness = new LinkedHashMap<>();
+        witness.put("role", "notification-member-read");
+        witness.put("springTransactionActive", TransactionSynchronizationManager.isActualTransactionActive());
+        witness.put("springSynchronizationActive", TransactionSynchronizationManager.isSynchronizationActive());
+        Object bound = TransactionSynchronizationManager.getResource(pool);
+        witness.put("parentPoolResourceBound", bound instanceof ConnectionHolder);
+        if (bound instanceof ConnectionHolder holder) {
+            Connection connection = holder.getConnection();
+            witness.put("jdbcAutoCommit", connection.getAutoCommit());
+            witness.put("jdbcIsolation", connection.getTransactionIsolation());
+            try (var statement = connection.createStatement()) {
+                statement.setQueryTimeout(3);
+                try (var row = statement.executeQuery("SELECT CONNECTION_ID(),DATABASE(),@@server_uuid,@@session.autocommit")) {
+                    assertTrue(row.next()); assertEquals(schema, row.getString(2)); assertEquals(serverUuid, row.getString(3));
+                    witness.put("mysqlConnectionId", row.getLong(1));
+                    witness.put("mysqlAutoCommit", row.getInt(4) == 1);
+                }
+            }
+        }
+        subscriptionRead = Map.copyOf(witness);
+    }
+
+    record ParentSqlObservation(long observerConnectionId, int activePoolConnections,
+                                List<Map<String, Object>> transactions, Map<String, Object> subscriptionRead) {
+        int openTransactions() { return transactions.size(); }
+        Map<String, Object> evidence() {
+            return Map.of("stage", "parent-domain-sql-transactions", "observerConnectionId", observerConnectionId,
+                    "activePoolConnections", activePoolConnections, "transactions", transactions,
+                    "notificationRead", subscriptionRead, "scope", "all-sessions-in-exact-owned-schema-no-excluded-ids");
+        }
+    }
+
+    ParentSqlObservation observeParentTransactions() throws Exception {
+        int active = pool.getActiveCount();
+        // Original unpooled admin datasource: this oracle never borrows a parent business connection,
+        // never reads an InnoDB business row, and never starts a repeatable-read transaction itself.
+        try (Connection observer = Objects.requireNonNull(admin.getDataSource()).getConnection()) {
+            assertTrue(observer.getAutoCommit(), "transaction oracle must use auto-commit");
+            long observerId;
+            try (var statement = observer.createStatement()) {
+                statement.setQueryTimeout(3);
+                try (var row = statement.executeQuery("SELECT CONNECTION_ID(),DATABASE(),@@server_uuid,@@session.autocommit")) {
+                    assertTrue(row.next()); observerId = row.getLong(1);
+                    assertEquals("mysql", row.getString(2)); assertEquals(serverUuid, row.getString(3));
+                    assertEquals(1, row.getInt(4), "real oracle session must remain auto-commit");
+                }
+            }
+            assertNotEquals(subscriptionRead.get("mysqlConnectionId"), Long.valueOf(observerId), "independent oracle identity");
+            List<Map<String, Object>> transactions = new ArrayList<>();
+            try (var statement = observer.prepareStatement("SELECT t.trx_mysql_thread_id,t.trx_state,t.trx_rows_locked,t.trx_rows_modified "
+                    + "FROM information_schema.innodb_trx t JOIN information_schema.processlist p ON p.ID=t.trx_mysql_thread_id "
+                    + "WHERE p.DB=? ORDER BY t.trx_mysql_thread_id")) {
+                statement.setQueryTimeout(3); statement.setString(1, schema);
+                try (var rows = statement.executeQuery()) {
+                    while (rows.next()) transactions.add(Map.of("mysqlConnectionId", rows.getLong(1),
+                            "state", rows.getString(2), "rowsLocked", rows.getLong(3), "rowsModified", rows.getLong(4)));
+                }
+            }
+            return new ParentSqlObservation(observerId, active, List.copyOf(transactions), subscriptionRead);
+        }
+    }
+
+    Map<String, Object> assertTransactionOracleDetectsParentTransaction() throws Exception {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(1); // Inside the unchanged 150-second case budget.
+        long heldId;
+        ParentSqlObservation held;
+        try (Connection connection = pool.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                try (var statement = connection.createStatement()) {
+                    statement.setQueryTimeout(3);
+                    try (var row = statement.executeQuery("SELECT CONNECTION_ID()")) { assertTrue(row.next()); heldId = row.getLong(1); }
+                }
+                try (var statement = connection.prepareStatement("SELECT id FROM ums_member WHERE id=? FOR UPDATE")) {
+                    statement.setQueryTimeout(3); statement.setLong(1, MEMBER);
+                    try (var row = statement.executeQuery()) { assertTrue(row.next()); assertEquals(MEMBER, row.getLong(1)); }
+                }
+                // INNODB_TRX can cache a snapshot briefly. Poll only within this fixed calibration bound.
+                held = observeParentTransactions();
+                while (!containsTransaction(held, heldId) && System.nanoTime() < deadline) {
+                    Thread.sleep(20); held = observeParentTransactions();
+                }
+                assertTrue(containsTransaction(held, heldId), "real parent transaction must be visible: " + held.evidence());
+                assertNotEquals(heldId, held.observerConnectionId(), "calibration holder and observer must be different physical connections");
+            } finally { connection.rollback(); connection.setAutoCommit(true); }
+        }
+        ParentSqlObservation released = observeParentTransactions();
+        while (containsTransaction(released, heldId) && System.nanoTime() < deadline) {
+            Thread.sleep(20); released = observeParentTransactions();
+        }
+        assertEquals(0, released.openTransactions(), "rolled-back calibration must leave no domain transaction: " + released.evidence());
+        long originalConnection = heldId;
+        Object rowsModified = held.transactions().stream()
+                .filter(row -> Long.valueOf(originalConnection).equals(row.get("mysqlConnectionId")))
+                .findFirst().orElseThrow().get("rowsModified");
+        assertEquals(Long.valueOf(0), rowsModified, "calibration must not modify business rows");
+        return Map.of("stage", "transaction-oracle-calibration", "heldConnectionId", heldId,
+                "held", held.evidence(), "released", released.evidence(), "observedHeldRowsModified", rowsModified);
+    }
+
+    private static boolean containsTransaction(ParentSqlObservation observation, long connectionId) {
+        return observation.transactions().stream().anyMatch(row -> Long.valueOf(connectionId).equals(row.get("mysqlConnectionId")));
     }
 
     String notificationProgressDiagnostic(java.util.concurrent.Future<?> dispatch) {

@@ -50,6 +50,37 @@ class GameplayProcessRecoveryControls(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             probe.require_physical_exit(cid, {'Id': cid, 'State': {'Running': False, 'Pid': 0}}, after, 137)
 
+    def test_capacity_binding_freezes_the_verified_original_recovered_boot_and_artifacts(self):
+        report = {key: 'b' * 64 for key in ('jarSha256', 'childSourceSha256', 'childClassSha256',
+                    'testClassTreeSha256', 'configSha256', 'fixturePropertiesSha256')}
+        report.update(sourceSha='a' * 40, storeProcessIdentity={
+            'mysql': {'id': 'm', 'Pid': 1, 'StartedAt': 'original-m', 'networkId': 'n'},
+            'redis': {'id': 'r', 'Pid': 2, 'StartedAt': 'original-r', 'networkId': 'n'}})
+        boot = {key: report[key] for key in ('sourceSha', 'jarSha256', 'childClassSha256', 'configSha256')}
+        boot.update(bootId='original-boot', javaPid=21, port=8080)
+        app = {'Id': 'c' * 64, 'State': {'Running': True, 'Paused': False, 'OOMKilled': False,
+                                       'Pid': 100, 'StartedAt': 'original-app'}}
+        binding = probe.capacity_profile_binding(report, boot, app, 'n')
+        self.assertEqual(report['fixturePropertiesSha256'], binding['fixturePropertiesSha256'])
+        self.assertEqual('original-boot', binding['boot']['bootId'])
+        self.assertEqual('c' * 64, binding['appCid'])
+        self.assertEqual(100, binding['appPid'])
+        self.assertEqual('original-app', binding['appStartedAt'])
+        self.assertEqual(report['storeProcessIdentity'], binding['storeProcessIdentity'])
+        boot['bootId'] = 'next-boot'; app['State']['Pid'] = 101
+        report['storeProcessIdentity']['mysql']['Pid'] = 99
+        self.assertEqual('original-boot', binding['boot']['bootId'])
+        self.assertEqual(100, binding['appPid'])
+        self.assertEqual(1, binding['storeProcessIdentity']['mysql']['Pid'])
+        for key, value in (('sourceSha', 'c' * 40), ('jarSha256', 'c' * 64),
+                           ('configSha256', 'c' * 64), ('port', 8081), ('javaPid', 0)):
+            with self.subTest(key=key), self.assertRaises(RuntimeError):
+                probe.capacity_profile_binding(report, dict(boot, **{key: value}), app, 'n')
+        for key in ('Running', 'Paused', 'OOMKilled'):
+            changed = copy.deepcopy(app); changed['State'][key] = key != 'Running'
+            with self.subTest(state=key), self.assertRaises(RuntimeError):
+                probe.capacity_profile_binding(report, boot, changed, 'n')
+
     def test_neither_store_may_restart_or_change_while_only_the_child_is_killed(self):
         original = {'mysql': {'id': 'm', 'Pid': 1, 'StartedAt': 'original-m'},
                     'redis': {'id': 'r', 'Pid': 2, 'StartedAt': 'original-r'}}
@@ -334,6 +365,7 @@ class GameplayProcessRecoveryControls(unittest.TestCase):
         self.assertIn("'rejectedAllGameFactsSha256': digest(all_before)", source)
         self.assertIn("'NOT_APPLICABLE_NO_SUCH_INPUT_ON_THIS_COMMAND'", source)
         self.assertIn('request, concurrency, stage_stop, seconds=45)', source)
+        self.assertIn("gameplay_binding=capacity_profile_binding(report, boot, mixed_before, network['Id'])", source)
         self.assertNotIn('sample_callback', source)
         self.assertIn('UNKNOWN_PRESERVE_ORIGINAL', source)
 

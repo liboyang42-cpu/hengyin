@@ -2,6 +2,7 @@
 import copy
 import importlib.util
 import json
+import tempfile
 from pathlib import Path
 import unittest
 from unittest import mock
@@ -198,6 +199,206 @@ class CapacityMixedControls(unittest.TestCase):
         self.assertEqual(98, written[0]["originalExitCode"])
         self.assertEqual({"type": "OriginalSchemaFailure"}, written[0]["firstFailure"])
         self.assertEqual("FAIL_PARTIAL", written[0]["result"])
+
+
+class GameplayProfileControls(unittest.TestCase):
+    """Synthetic protocol controls only: no compiled child, Docker, Java or stores run here."""
+    def profile(self):
+        objects = []
+        for index, suffix in enumerate(("app", "mysql", "redis")):
+            memory = (1024 ** 3, 1024 ** 3, 64 * 1024 ** 2)[index]
+            objects.append({
+                "Id": str(index + 1) * 64,
+                "HostConfig": {"Memory": memory, "MemorySwap": memory,
+                               "NanoCpus": (10 ** 9, 10 ** 9, 0)[index],
+                               "Privileged": False, "PortBindings": {}},
+                "State": {"Pid": 100 + index, "StartedAt": "original-" + suffix},
+                "Config": {},
+                "NetworkSettings": {"Networks": {"owned": {"NetworkID": "4" * 64,
+                                                          "IPAddress": "172.19.0." + str(index + 2)}}},
+            })
+        objects[0]["Config"] = {
+            "Entrypoint": ["/trace/strace"],
+            "Env": ["GITHUB_SHA=" + "a" * 40, "CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY=true"],
+            "Cmd": ["-A", "-f", "-s", "0", "-e", "trace=connect,sendto,sendmsg",
+                    "-o", "/evidence/gameplay-network.trace", "java", "-Xmx512m",
+                    "-Dlogging.config=/fixture/logback.xml", "-Dlogback.configurationFile=/fixture/logback.xml",
+                    "-Dloader.path=/recovery-testclasses",
+                    "-Dloader.main=com.chengyinhub.business.it.GameplayProcessRecoveryChild",
+                    "-cp", "/application.jar", "org.springframework.boot.loader.launch.PropertiesLauncher"],
+        }
+        binding = {key: "b" * 64 for key in ("jarSha256", "childSourceSha256", "childClassSha256",
+                                            "testClassTreeSha256", "configSha256", "fixturePropertiesSha256")}
+        binding.update(sourceSha="a" * 40, appCid=objects[0]["Id"], appPid=100,
+                       appStartedAt="original-app", networkId="4" * 64,
+                       storeProcessIdentity={suffix: {"id": obj["Id"], "Pid": obj["State"]["Pid"],
+                           "StartedAt": obj["State"]["StartedAt"], "networkId": "4" * 64}
+                           for suffix, obj in zip(("mysql", "redis"), objects[1:])})
+        binding["boot"] = {key: binding[key] for key in ("sourceSha", "jarSha256", "childClassSha256", "configSha256")}
+        binding["boot"].update(bootId="12345678-1234-1234-1234-123456789abc", javaPid=21, port=8080)
+        return objects, binding
+
+    def admission(self):
+        return mock.patch.dict(probe.os.environ, {"GITHUB_SHA": "a" * 40,
+            "CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY": "true", "CHENGYIN_CI_GAMEPLAY_CAPACITY": "true"})
+
+    def test_recovered_gameplay_is_explicit_and_never_guessed_by_default_profile(self):
+        objects, binding = self.profile()
+        with self.admission():
+            self.assertEqual(3, len(probe.validate_profile(objects, probe.PROFILE_PROPERTIES, binding)))
+            with self.assertRaisesRegex(RuntimeError, "wrong application fixture"):
+                probe.validate_profile(objects, probe.PROFILE_PROPERTIES)
+            for invalid in ({}, dict(binding, arbitraryProfile="other")):
+                with self.subTest(invalid=list(invalid)), self.assertRaises(RuntimeError):
+                    probe.validate_profile(objects, probe.PROFILE_PROPERTIES, invalid)
+            for key in ("CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY", "CHENGYIN_CI_GAMEPLAY_CAPACITY"):
+                with mock.patch.dict(probe.os.environ, {key: "false"}), self.assertRaises(RuntimeError):
+                    probe.validate_profile(objects, probe.PROFILE_PROPERTIES, binding)
+
+    def test_gameplay_cannot_override_command_source_boot_stores_or_existing_budget(self):
+        objects, binding = self.profile()
+        with self.admission():
+            for field, value in (("Memory", 2 * 1024 ** 3), ("MemorySwap", 2 * 1024 ** 3),
+                                 ("NanoCpus", 2 * 10 ** 9), ("Privileged", True),
+                                 ("PortBindings", {"8080/tcp": [{"HostPort": "8080"}]})):
+                changed = copy.deepcopy(objects); changed[0]["HostConfig"][field] = value
+                with self.subTest(field=field), self.assertRaises(RuntimeError):
+                    probe.validate_profile(changed, probe.PROFILE_PROPERTIES, binding)
+            for addition in ("--spring.config.location=file:/other.properties", "--spring.datasource.druid.maxActive=20",
+                             "-Dloader.main=Other", "--server.port=8081"):
+                changed = copy.deepcopy(objects); changed[0]["Config"]["Cmd"].append(addition)
+                with self.subTest(addition=addition), self.assertRaises(RuntimeError):
+                    probe.validate_profile(changed, probe.PROFILE_PROPERTIES, binding)
+            for key, value in (("sourceSha", "c" * 40), ("jarSha256", "c" * 64),
+                               ("appCid", "c" * 64), ("appPid", 101), ("networkId", "c" * 64)):
+                with self.subTest(key=key), self.assertRaises(RuntimeError):
+                    probe.validate_profile(objects, probe.PROFILE_PROPERTIES, dict(binding, **{key: value}))
+            for key, value in (("port", 8081), ("javaPid", 0), ("bootId", "not-a-boot")):
+                changed = copy.deepcopy(binding); changed["boot"][key] = value
+                with self.subTest(boot=key), self.assertRaises(RuntimeError):
+                    probe.validate_profile(objects, probe.PROFILE_PROPERTIES, changed)
+            changed = copy.deepcopy(objects); changed[1]["State"]["StartedAt"] = "restarted"
+            with self.assertRaises(RuntimeError):
+                probe.validate_profile(changed, probe.PROFILE_PROPERTIES, binding)
+            for variable in ("SPRING_APPLICATION_JSON={}", "JAVA_TOOL_OPTIONS=-Xmx1g", "LOADER_MAIN=Other"):
+                changed = copy.deepcopy(objects); changed[0]["Config"]["Env"].append(variable)
+                with self.subTest(variable=variable), self.assertRaises(RuntimeError):
+                    probe.validate_profile(changed, probe.PROFILE_PROPERTIES, binding)
+
+    def test_actual_profile_rechecks_fixed_mounted_inputs_and_original_proc(self):
+        objects, binding = self.profile()
+        with tempfile.TemporaryDirectory() as directory, self.admission():
+            root = Path(directory).resolve()
+            private = root / "private/gameplay"; private.mkdir(parents=True)
+            out = root / "evidence"; out.mkdir()
+            files = {}
+            def put(relative, content, mounted=None):
+                path = root / relative; path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(content); path.chmod(0o600)
+                if mounted:
+                    files[mounted] = path
+                return path
+            jar = put("chengyinhub-admin/target/chengyinhub-admin.jar", b"synthetic jar control")
+            properties = put("ci/upgrade-startup/application.properties", b"synthetic fixed properties control",
+                             "/fixture/application.properties")
+            source = put("chengyinhub-admin/src/test/java/" + probe.GAMEPLAY_CHILD_PATH + ".java", b"synthetic source control")
+            manifest = {}
+            for name, content in ((probe.GAMEPLAY_CHILD_PATH + ".class", b"synthetic main bytecode control"),
+                                  (probe.GAMEPLAY_CHILD_PATH + "$Nested.class", b"synthetic nested bytecode control")):
+                put("chengyinhub-admin/target/test-classes/" + name, content)
+                path = put("evidence/gameplay-child-classes/" + name, content, "/recovery-testclasses/" + name)
+                manifest[name] = probe.file_digest(path)["sha256"]
+            binding.update(jarSha256=probe.file_digest(jar)["sha256"],
+                           fixturePropertiesSha256=probe.file_digest(properties)["sha256"],
+                           childSourceSha256=probe.file_digest(source)["sha256"],
+                           childClassSha256=manifest[probe.GAMEPLAY_CHILD_PATH + ".class"],
+                           testClassTreeSha256=probe.digest(manifest))
+            config = {key: binding[key] for key in ("sourceSha", "jarSha256", "childClassSha256")}
+            config.update(schema="owned-schema", serverUuid="owned-uuid",
+                          jdbcUrl="jdbc:mysql://172.19.0.3:3306/owned-schema?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC",
+                          redisHost="172.19.0.4", tokenSecret="private-config-canary", capacityItems=72)
+            config_file = put("private/gameplay/config.json", json.dumps(config).encode(), "/recovery-private/config.json")
+            binding["configSha256"] = probe.file_digest(config_file)["sha256"]
+            binding["boot"].update({key: binding[key] for key in ("jarSha256", "childClassSha256", "configSha256")})
+            put("private/gameplay/ready.json", json.dumps(binding["boot"]).encode(), "/recovery-private/ready.json")
+            objects[0]["Mounts"] = [{"Type": "bind", "Destination": target, "Source": str(path), "RW": writable}
+                for target, path, writable in (("/application.jar", jar, False), ("/fixture", properties.parent, False),
+                    ("/recovery-testclasses", out / "gameplay-child-classes", False), ("/recovery-private", private, True))]
+            subject = object.__new__(probe.Probe)
+            subject.name, subject.app, subject.jar, subject.out = "owned", objects[0]["Id"], jar, out
+            subject.private, subject.schema, subject.saved = private.parent / "credentials.json", "owned-schema", {"serverUuid": "owned-uuid"}
+            subject.identity = {"sourceSha": binding["sourceSha"]}
+            subject.gameplay_binding = binding; subject.properties_sha256 = binding["fixturePropertiesSha256"]
+            command = objects[0]["Config"]["Cmd"]
+            argv = b"\0".join(item.encode() for item in command[command.index("java"):]) + b"\0"
+            changed_mounts = {}
+            def observed(args):
+                if args == probe.D + ["exec", subject.app, "cat", "/proc/21/cmdline"]:
+                    return argv
+                self.assertEqual(probe.D + ["exec", subject.app, "sha256sum"], args[:len(probe.D) + 3])
+                return "\n".join(changed_mounts.get(target, probe.file_digest(files[target])["sha256"])
+                                  + "  " + target for target in args[len(probe.D) + 3:]).encode()
+            with mock.patch.object(probe, "ROOT", root), mock.patch.object(probe.auth, "command", side_effect=observed):
+                evidence = subject.application_profile(objects, 21)
+                self.assertEqual("GAMEPLAY_PROCESS_RECOVERY", evidence["entry"])
+                self.assertEqual(binding["configSha256"], evidence["configSha256"])
+                self.assertNotIn("private-config-canary", json.dumps(evidence))
+                for path in (jar, properties, source, config_file,
+                             root / ("chengyinhub-admin/target/test-classes/" + probe.GAMEPLAY_CHILD_PATH + ".class")):
+                    original = path.read_bytes(); path.write_bytes(original + b" changed")
+                    try:
+                        with self.subTest(path=path.name), self.assertRaises(RuntimeError):
+                            subject.application_profile(objects, 21)
+                    finally:
+                        path.write_bytes(original)
+                for target in files:
+                    changed_mounts[target] = "f" * 64
+                    try:
+                        with self.subTest(mount=target), self.assertRaises(RuntimeError):
+                            subject.application_profile(objects, 21)
+                    finally:
+                        changed_mounts.clear()
+                ready_file = files["/recovery-private/ready.json"]
+                original_config, original_ready = config_file.read_bytes(), ready_file.read_bytes()
+                original_config_sha = binding["configSha256"]
+                for key, value in (("schema", "another-schema"), ("redisHost", "192.0.2.1"),
+                                   ("jdbcUrl", "jdbc:mysql://192.0.2.1/foreign"), ("capacityItems", 0)):
+                    altered = dict(config, **{key: value}); config_file.write_text(json.dumps(altered))
+                    binding["configSha256"] = binding["boot"]["configSha256"] = probe.file_digest(config_file)["sha256"]
+                    ready_file.write_text(json.dumps(binding["boot"]))
+                    try:
+                        with self.subTest(config=key), self.assertRaises(RuntimeError):
+                            subject.application_profile(objects, 21)
+                    finally:
+                        config_file.write_bytes(original_config); ready_file.write_bytes(original_ready)
+                        binding["configSha256"] = binding["boot"]["configSha256"] = original_config_sha
+                extra = root / ("evidence/gameplay-child-classes/" + probe.GAMEPLAY_CHILD_PATH + "$Extra.class")
+                extra.write_bytes(b"unbound synthetic class")
+                try:
+                    with self.assertRaises(RuntimeError):
+                        subject.application_profile(objects, 21)
+                finally:
+                    extra.unlink()
+                with mock.patch.object(probe.auth, "command", return_value=argv.replace(b"-Xmx512m", b"-Xmx1g")), self.assertRaises(RuntimeError):
+                    subject.application_profile(objects, 21)
+                objects[0]["Mounts"][2]["RW"] = True
+                with self.assertRaises(RuntimeError):
+                    subject.application_profile(objects, 21)
+                objects[0]["Mounts"][2]["RW"] = False
+                subject.gameplay_binding = None
+                original_argv = ["java", "-Xmx512m", "-Dlogging.config=/fixture/logback.xml",
+                    "-Dlogback.configurationFile=/fixture/logback.xml", "-jar", "/application.jar",
+                    "--spring.config.location=file:/fixture/application.properties", "--spring.messages.basename=i18n/messages",
+                    "--spring.datasource.druid.master.url=jdbc:mysql://172.19.0.3:3306/owned-schema?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC",
+                    "--spring.data.redis.host=172.19.0.4"]
+                objects[0]["Config"]["Cmd"] = ["-f", "-s", "0", "-e", "trace=connect,sendto,sendmsg",
+                    "-o", "/evidence/network.trace"] + original_argv
+                argv = b"\0".join(item.encode() for item in original_argv) + b"\0"
+                self.assertEqual("ORIGINAL_AUTHENTICATED_FIXTURE", subject.application_profile(objects, 21)["entry"])
+                objects[0]["Config"]["Cmd"] = list(probe.GAMEPLAY_COMMAND) + [
+                    "--spring.config.location=file:/fixture/application.properties"]
+                with self.assertRaisesRegex(RuntimeError, "wrong original application entry"):
+                    subject.application_profile(objects, 21)
 
 
 class CapacityEntryCleanupControls(unittest.TestCase):

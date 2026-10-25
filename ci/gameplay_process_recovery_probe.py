@@ -96,6 +96,23 @@ def store_identity(name):
     return result
 
 
+def capacity_profile_binding(report, boot, app, network_id):
+    """Bind F's fixed second entry to this already verified, recovered physical boot."""
+    require(app['State']['Running'] and not app['State']['Paused'] and not app['State']['OOMKilled'],
+            'capacity requires the original live recovered app')
+    for key in ('sourceSha', 'jarSha256', 'childClassSha256', 'configSha256'):
+        require(boot[key] == report[key], 'capacity boot differs from original recovery evidence')
+    require(boot['port'] == 8080 and type(boot['javaPid']) is int and boot['javaPid'] > 0,
+            'capacity requires the original Java PID and port')
+    return {
+        **{key: report[key] for key in ('sourceSha', 'jarSha256', 'childSourceSha256',
+                                      'childClassSha256', 'testClassTreeSha256', 'configSha256', 'fixturePropertiesSha256')},
+        'boot': dict(boot), 'appCid': app['Id'], 'appPid': app['State']['Pid'],
+        'appStartedAt': app['State']['StartedAt'], 'networkId': network_id,
+        'storeProcessIdentity': {key: dict(value) for key, value in report['storeProcessIdentity'].items()},
+    }
+
+
 def require_physical_exit(cid, before, after, exit_code):
     require(before['Id'] == cid == after['Id'] and re.fullmatch(r'[0-9a-f]{64}', cid) is not None,
             'process container identity changed')
@@ -355,6 +372,7 @@ def run(name, schema, out, credentials):
     deadline = started + 900
     report = {'result': 'NOT_COMPLETED', 'sourceSha': os.environ['GITHUB_SHA'], 'jarSha256': digest(jar.read_bytes()),
               'schema': schema, 'serverUuid': saved['serverUuid'], 'storeProcessIdentity': stores,
+              'fixturePropertiesSha256': digest((ROOT / 'ci/upgrade-startup/application.properties').read_bytes()),
               'childSourceSha256': digest((ROOT / ('chengyinhub-admin/src/test/java/' + CHILD_PATH + '.java')).read_bytes()),
               'childClassSha256': digest(main_class.read_bytes()), 'testClassTreeSha256': digest({
                   str(p.relative_to(child_classes)): digest(p.read_bytes()) for p in sorted(child_classes.rglob('*.class'))}),
@@ -609,7 +627,8 @@ def run(name, schema, out, credentials):
                 mixed_health = http(RECEIPT + '?' + urllib.parse.urlencode({field: identities['ACKED'][field]
                                     for field in ('activityId', 'commandId')}), a['token'])
                 require(mixed_health.get('code') == 200, 'actual protected receipt unhealthy before F observe')
-                capacity_module.observe(name, schema, out, credentials, port)
+                capacity_module.observe(name, schema, out, credentials, port,
+                    gameplay_binding=capacity_profile_binding(report, boot, mixed_before, network['Id']))
                 mixed_after = inspect(app)
                 require(mixed_after['Id'] == mixed_before['Id'] and mixed_after['State']['Running']
                         and {key: mixed_after['State'][key] for key in ('Pid', 'StartedAt')}

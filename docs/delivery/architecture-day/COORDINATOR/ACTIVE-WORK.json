@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-25T20:38:46.141811+00:00",
+  "updated_utc": "2026-10-25T21:38:27.935594+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -599,7 +599,7 @@
     "A": "f079 checkout/claim locked-current fence and NEVER+OrderClose outerTx refusal;84d7 exact local consumption completeRecovery and closed-order original ticket guard nowAPPLIED. TeamGroup/ClubEventOps still separate active work. New2dedicated test files present; recovery scenarios queued, not Java verified.",
     "root_guard_factory": "WechatVerifiedFactTestSupport.realPaymentGuards: real same-source JdbcOrderOwner+IntentStore+SdkGateway local guard, outbound doubles kept separate. No SDK init/network. B factory callers pending."
   },
-  "current_source_head": "d19276f56b3eb2a34ed8fab06e41ea8ea654a0d0",
+  "current_source_head": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
   "current_source_manifest_counts": {
     "registered_sql_classes": 120,
     "combined_unique_classes": 65,
@@ -640,7 +640,7 @@
     "preserve_guards_and_test_assertions": true,
     "final_gate": "Collect required code, callers and fixtures; freeze one complete candidate; then conduct consolidated review and regression"
   },
-  "previous_goal_turn_classification": "PROGRESS: applied5of8 complete owner deliveries (not overall completion), repaired knownHigh source dependency with fixed official chain and regression source; C/E/G pending.",
+  "previous_goal_turn_classification": "PROGRESS: E/H complete delivery exact assembled, all5source ready, six-module181 control batch180PASS/onefixtureerror then onlyfailed1PASS, JavaLSP5errors0; preparing one isolatedfreeze",
   "latest_fixture_integration": {
     "base": "8490765f0572dae8ec3468f4e75d0ff6f4760b12",
     "A": "Three cancellation/publish fixtures: current club owner and capture/observe/apply caller wiring",
@@ -4889,6 +4889,258 @@
       },
       "not_claimed_single_run187_green": true,
       "Java_DB_CI_recheck": "NOT_RUN"
+    }
+  },
+  "final_concentrated_acceptance_6fcdf747": {
+    "source": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+    "tree": "02e30bd0778ad2eff63b091429b89e7f17895f8f",
+    "parent": "e82229ef85e58159078a42956560356074192541",
+    "branch": "codex/architecture-day-runtime-repairs-e822-20261025",
+    "state": "ALL5_NEW_RUNTIME_SOURCE_PACKAGES_ASSEMBLED_REVIEWED_UNIFIED_CONTROLS_DONE_PREPARING_FREEZE",
+    "all8_source_ready": true,
+    "whitelist_files": 60,
+    "diff_bytes": 363098,
+    "diff_sha256": "56532ab765b13d5626adbb4a5d94ae0740b5b58559ac2570f9bd10afc6404075",
+    "gitleaks": "PASS_363098_BYTES_ZERO_FINDINGS",
+    "runs": {
+      "standard_backend_selected": 40231848588,
+      "storage_impacted3": 40232916855,
+      "mixed": 40232922574,
+      "restore_http": 40232928297,
+      "cohort_payment_gap_diagnostic": 40232934720
+    },
+    "attempt": 1,
+    "headSha_independently_verified": true,
+    "backend_state": "SUCCESS",
+    "other_runtime_groups_not_dispatched_yet": [],
+    "next": "Whitelist/secret scan/freeze new isolated public SHA; backend existing entry for F7 new Java unit and compile admission, then actual failed CrossDomain1/mixed/fullrestore/fixed paymentgap. No repeat old acceptedDeposit12/Gameplay1/17oldstorage or unaffectedclient/HTTP.",
+    "all_complete": false,
+    "backend_job": {
+      "id": 121285186051,
+      "active_step": "Run localhost atomic migration MySQL IT by exact class",
+      "actual_test_compile_admission_not_yet_confirmed": false,
+      "Build_and_test_backend": {
+        "conclusion": "success",
+        "completed_at": "2026-10-25T20:50:40Z"
+      },
+      "original_XML_independent_readback": "NEXT_NOT_YET_ACCEPTED"
+    },
+    "admission_job": {
+      "id": 121285064554,
+      "result": "success"
+    },
+    "secret_job": {
+      "id": 121285064261,
+      "result": "success"
+    },
+    "unaffected_client_frontend_migration_dependency_jobs": "SKIPPED_BY_EXPLICIT_SELECTED_SCOPE_NOT_RETESTED",
+    "live_watch": {
+      "session_id": 95411,
+      "run": 40231848588,
+      "log": "/private/tmp/hengyin-6fcdf747-backend-watch.log",
+      "last_poll": "session live after60s observation; do not restart or launch another watch because no stdout",
+      "inprogress_job_log_endpoint": "404 while active, not terminal or proof compile failure"
+    },
+    "next_dispatch_input_file": "/private/tmp/hengyin-6fcdf747-next-dispatch.json",
+    "all_five_current_run_sources_verified": {
+      "source": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+      "attempt": 1,
+      "all": true
+    },
+    "backend_original_XML_readback": {
+      "source": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+      "run": 40231848588,
+      "attempt": 1,
+      "artifact": 12612999471,
+      "ZIP_bytes": 12691493,
+      "ZIP_sha256": "3dee86f0f3fa7062f48e8f48f16df78154b4deea7ba20cc3bc739065ce93dd77",
+      "CRC": "PASS",
+      "original_XML_hashes_verified": 1960,
+      "modules": {
+        "chengyinhub-admin": {
+          "tests": 15772,
+          "passed": 15139,
+          "skipped": 633
+        }
+      },
+      "original40_all_preserved_and_passed": true,
+      "duplicate_case_ids": 0,
+      "not_full_business_acceptance": true,
+      "standard_workflow_remaining_steps_not_yet_accepted": true
+    },
+    "storage_impacted3_original_readback": {
+      "verdict": "FAIL",
+      "accepted_classes": 2,
+      "accepted_tests": 13,
+      "source_case_XML_hash_cleanup_verified": true,
+      "failed_class": "CrossDomainFaultIsolationMySqlIT",
+      "case_failure_line": 110,
+      "all3_outer_resource_cleanup": "CLEAN"
+    },
+    "actual_new_runtime_failure_packages": "6fcdf747-runtime-failure-purpose-packages.json",
+    "current_source_repair_owners": {
+      "B": "host missing loopback-binding",
+      "C": "CrossDomain actual transaction/connection predicate and necessary actual TXowner",
+      "F": "CrossDomainTransportStage bounded RPC/decoder and cleanup OOM",
+      "E": "restore ApplicationSlot stop/entrypoint/actual Java quiescence",
+      "H": "Mixed shared capacity-profile vs real GamePlay child command/config strict binding; direct caller/control whole package"
+    },
+    "mixed_state": "FAIL_ACTUAL_PROFILE_VALIDATION_WRONG_APPLICATION_FIXTURE",
+    "mixed_partial_evidence": {
+      "run": 40232922574,
+      "artifact": 12613053916,
+      "physical_crash_boundaries": [
+        "BEFORE_TX",
+        "COMMITTED_NO_REPLY",
+        "ACKED"
+      ],
+      "boundaryAssertions": "3 ASSERTIONS_PASSED only, not fullT13 acceptance",
+      "core_business_requests": 144,
+      "coreBusinessCurveStatus": "BUSINESS_ASSERTIONS_PASSED",
+      "not_server_only_latency_or_whole_Q8": true,
+      "actual_failure": "capacity validate_profile116 hardcoded original application config Cmd vs actual gameplay fixture",
+      "resource_cleanup": "INDEPENDENT_EXACT3_REMOVAL",
+      "scope_result": "FAIL_OR_UNKNOWN_CLEANUP_OR_SCOPE"
+    },
+    "all_five_6fcdf_runs_terminal": true,
+    "runtime_SOURCE_deliveries_applied": [
+      {
+        "owner": "B",
+        "parent": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+        "commit": null,
+        "complete_chat_patch_bytes": 42758,
+        "complete_chat_patch_sha256": "3f2e92c8abf90409640f238c7f43e9b25c32dd817637d296348492646731a75f",
+        "owned_patch_sha256": "c662711e53cc3f7ba50f8b6a616b3eab0d41019e0fec6eccb0394f9a7a3b8521",
+        "shared_review_patch_sha256": "5745d01defc385199e2b87dcce9edd2786856ab7a66bfcbfbd2de6f06109754b",
+        "root_shared_review_applied": true,
+        "postimages_exact": {
+          "ci/restore_business_reconciliation_host.py": "569ebf9e17b7a99baf234d71de5bcba1b96a89e6475bad0b3494c50f4b0a334a",
+          "ci/test_restore_business_reconciliation_host.py": "66f6618f8f7409b309016e10ed2d3110b43e35d482260e65d3698247e590a5d4",
+          "docs/delivery/architecture-day/B/6fcd-internal-mysql-binding/README.md": "b0f8f97a991d5247bc4bf85d9bab756df6b3d2b50fd79f8faee08119cf14c492",
+          "ci/authenticated_redis_recovery_probe.py": "d62fbeb4b3280356c019f92d24435da352e639f7af3543dde2305e83f73279d8",
+          "ci/restore_business_reconciliation_probe.py": "5711d9af34b92b1ec0dd36e0fbc478f5b7bc124f72b586ce57e85793d1aab7a6",
+          "ci/test_authenticated_redis_recovery_probe.py": "df6b94fe5d4158261131c4b5a51149cac3f0470862d030527dd8480bef43a95c",
+          "ci/test_restore_business_reconciliation_probe.py": "ecaf4a6c2029b4313d37e49ce92c3917782127b6301af3633b53bd1c84a067fc"
+        },
+        "applied": true,
+        "verification": "NOT_RUN",
+        "internal_loopback_owner_UUID_cleanup_guards_preserved": true
+      },
+      {
+        "owner": "C",
+        "parent": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+        "commit": "56763bc5c51ab1f1c59a0f4da39043e0e8058123",
+        "patch_sha256": "6197e58370d29b18b8ef2e455d4a691d70b98723cd50e7a9b8dd0d913daeebf3",
+        "postimages_exact": true,
+        "files": [
+          "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainFaultIsolationMySqlIT.java",
+          "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainStorageFixture.java",
+          "docs/delivery/architecture-day/C/6fcdf-cross-domain-transactions/README.md",
+          "docs/delivery/architecture-day/C/6fcdf-cross-domain-transactions/postimages.sha256"
+        ],
+        "applied": true,
+        "verification": "NOT_RUN",
+        "original_run_no_long_transaction_not_yet_proven": true
+      },
+      {
+        "owner": "F",
+        "parent": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+        "commit": "93e3aa9eb585501c5a1c5b9bee7decd9763f469a",
+        "patch_sha256": "636dc31a5b949c0fc67ff2626e9462bfd362d832ff6f836ec6c6a9314ad8306c",
+        "postimages_exact": true,
+        "files": [
+          "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainTransportStage.java",
+          "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainTransportStageTest.java",
+          "docs/delivery/architecture-day/F/cross-domain-transport-6fcd/PATCH.sha256",
+          "docs/delivery/architecture-day/F/cross-domain-transport-6fcd/POSTIMAGES.sha256",
+          "docs/delivery/architecture-day/F/cross-domain-transport-6fcd/README.md",
+          "docs/delivery/architecture-day/F/cross-domain-transport-6fcd/review.patch.b64"
+        ],
+        "applied": true,
+        "verification": "NOT_RUN",
+        "new_java_unit_source_methods": 7,
+        "requires_actual_new_unit_execution": true,
+        "installed_jackson2_dependency": "2.21.7 existing BOM unchanged",
+        "actual_provider_paths_checked": "chatVision model+messages only; notSent chat no transport dispatch"
+      },
+      {
+        "owner": "H",
+        "parent": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+        "commit": "5189f2720e409a7555c38826857362055577288a",
+        "patch_sha256": "47092d209e8386c2b67be51d4d0d0ea0638b94241036dc728d6c4dd1f06c813d",
+        "postimages_exact": true,
+        "files": [
+          "ci/capacity_mixed_probe.py",
+          "ci/gameplay_process_recovery_probe.py",
+          "ci/test_capacity_mixed_probe.py",
+          "ci/test_gameplay_process_recovery_probe.py",
+          "docs/delivery/architecture-day/H/mixed-profile-6fcdf/POSTIMAGE.sha256",
+          "docs/delivery/architecture-day/H/mixed-profile-6fcdf/PREIMAGE.md",
+          "docs/delivery/architecture-day/H/mixed-profile-6fcdf/README.md",
+          "docs/delivery/architecture-day/H/mixed-profile-6fcdf/owned.review.patch"
+        ],
+        "applied": true,
+        "verification": "NOT_RUN",
+        "transport_only_normalization": {
+          "literal_context_whitespace_lines": 18,
+          "decoded_sha256": "46623c1ddb45dc116c0bb3415d62228e3fd2debfcea27c81bfb2eaf9e54b6b55",
+          "encoding": "lossless base64",
+          "code_postimages_unchanged": true
+        },
+        "actual_child_ready_mode_and_fullSpring_main_source_checked": true,
+        "doc_only_whitespace_normalization": []
+      },
+      {
+        "owner": "E",
+        "parent": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+        "commit": "d8ac1f0abf2b4c09f1ad1146d6191262a3ac4ef8",
+        "patch_sha256": "5ece812d2f363097adcce493926b8368081d93fefeac9ca751808908ed82ed73",
+        "original_code_patch_sha256": "c2996e6a95587555431fe7cef7959ba9be3aa2133148264a503cc650b19cf35b",
+        "postimages_exact": true,
+        "files": [
+          "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java",
+          "ci/restore_application_http_probe.py",
+          "ci/restore_application_http_runtime.py",
+          "ci/test_restore_application_http_probe.py",
+          "docs/delivery/architecture-day/E/restore-http-graceful-stop-6fcdf/README.md",
+          "docs/delivery/architecture-day/E/restore-http-graceful-stop-6fcdf/manifest.json",
+          "docs/delivery/architecture-day/E/restore-http-graceful-stop-6fcdf/owned.patch"
+        ],
+        "applied": true,
+        "verification": "NOT_RUN",
+        "transport_only_normalization": {
+          "literal_context_whitespace_lines": 10,
+          "decoded_sha256": "c2996e6a95587555431fe7cef7959ba9be3aa2133148264a503cc650b19cf35b",
+          "encoding": "lossless base64",
+          "code_postimages_unchanged": true
+        },
+        "new_direct_controls_source": 8,
+        "no_B_relay_file_overlap": true
+      }
+    ],
+    "runtime_SOURCE_remaining_owners": [],
+    "new_test_source_impact_note": "F actual adds7 Java unit methods for bounded real transport decoder; unlike prior purePython-only repairs, unit source is directly affected. Use existing backend entry once after all source ready; no new generic selector/workflow, no unimpacted frontend/fullstorage repeat.",
+    "runtime_SOURCE_controls": {
+      "modules": 6,
+      "first_tests": 181,
+      "first_passed": 180,
+      "first_errors": 1,
+      "first_failures": 0,
+      "only_failed_recheck_tests": 1,
+      "only_failed_recheck_passed": 1,
+      "first_log_sha256": "8a0554f9ddb70baf2c8536e30f1036ec789857ca4e9165f5a7f62dc936cdfe67",
+      "focused_log_sha256": "1f595a73b2ed09c1daaeb8becdd5972805c2e54d319d1d1379fd724d863b04e4",
+      "no_repeated180_controls": true,
+      "not_single181_green_run": true
+    },
+    "runtime_SOURCE_root_overlay": {
+      "path": "ci/test_capacity_mixed_probe.py",
+      "change": "Only the failing temporary fixture root is canonicalized with Path(directory).resolve(); actual production profile guards unchanged",
+      "reason": "macOS TemporaryDirectory /var prefix resolves to /private/var and violated the synthetic absolute-mount fixture; not runtime application failure",
+      "current_sha256": "a756ce25ff5dce3bf41b72de6735b5a18e05370be15f9d892fa03febe67399ea",
+      "original_first_batch_result": "181 tests:180PASS/1ERROR",
+      "only_failed_control_recheck": "1PASS",
+      "not_single_181_green_run": true
     }
   }
 }
