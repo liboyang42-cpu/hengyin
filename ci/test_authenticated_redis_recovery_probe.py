@@ -540,29 +540,39 @@ class AuthenticatedRedisSafetyTest(unittest.TestCase):
     @staticmethod
     def restore_prestart_report():
         return {'sourceSha': 'b' * 40, 'schema': 'cy_e2e_auth_' + 'a' * 32,
+                'jarSha256': 'c' * 64,
                 'runId': '123', 'runAttempt': '1', 'applicationStartAttempted': False,
-                'boots': [], 'ownedAppCids': [], 'removedAppCids': [],
+                'boots': [], 'completeBoots': [], 'checks': [], 'ownedAppCids': [], 'removedAppCids': [],
                 'applicationStop': 'NO_ACTIVE_APP_SLOT', 'result': 'NOT_COMPLETED',
+                'privateCleanup': 'EXACT_OWN_SUBTREE_REMOVED',
+                'phase': 'SOURCE_DATABASE_PREPARATION', 'firstFailurePhase': 'SOURCE_DATABASE_PREPARATION',
                 'firstFailureType': 'ModuleNotFoundError', 'productionDispatchRelease': False,
                 'sourceMysqlCid': '2' * 64, 'targetMysqlCid': '4' * 64, 'redisCid': '3' * 64}
 
     def test_same_run_restore_before_first_start_has_no_log_but_stays_failed_after_exact_cleanup(self):
-        with tempfile.TemporaryDirectory() as directory, mock.patch.dict(probe.os.environ, self.restore_prestart_env(), clear=True):
-            out = Path(directory)
-            probe.write_report(out, 'restore-http-application.json', self.restore_prestart_report())
-            report, removed, network = self.cleanup_fixture(out, None, restore=True)
-            self.assertEqual(report['applicationLogStatus'], 'NOT_STARTED')
-            self.assertFalse(report['applicationLogPreserved'])
-            self.assertEqual(report['result'], 'FAIL_BEFORE_BUSINESS_PROBE')
-            self.assertNotIn('cleanupFailure', report)
-            self.assertEqual(report['resourceCleanup']['cleanup'], 'CONFIRMED_EXACT_OWNED_REMOVAL')
-            self.assertEqual(len(removed), 3)
-            self.assertFalse(network)
+        for phase in ('PRE_APPLICATION_PREPARATION', 'SOURCE_DATABASE_PREPARATION'):
+            with self.subTest(phase=phase), tempfile.TemporaryDirectory() as directory, \
+                    mock.patch.dict(probe.os.environ, self.restore_prestart_env(), clear=True):
+                out = Path(directory); original = self.restore_prestart_report()
+                original.update(phase=phase, firstFailurePhase=phase, firstFailureType='_ControlledFailure')
+                probe.write_report(out, 'restore-http-application.json', original)
+                report, removed, network = self.cleanup_fixture(out, None, restore=True)
+                self.assertEqual(report['applicationLogStatus'], 'NOT_STARTED')
+                self.assertFalse(report['applicationLogPreserved'])
+                self.assertEqual(report['result'], 'FAIL_BEFORE_BUSINESS_PROBE')
+                self.assertNotIn('cleanupFailure', report)
+                self.assertEqual(report['resourceCleanup']['cleanup'], 'CONFIRMED_EXACT_OWNED_REMOVAL')
+                self.assertEqual(len(removed), 3)
+                self.assertFalse(network)
 
     def test_restore_prestart_marker_never_accepts_started_unknown_or_foreign_evidence(self):
         changes = [('applicationStartAttempted', True), ('applicationStartAttempted', None),
                    ('applicationStartAttempted', 0), ('applicationStartAttempted', 'false'),
                    ('boots', [{'appCid': '1' * 64}]), ('ownedAppCids', ['1' * 64]),
+                   ('completeBoots', [{}]), ('completeBoots', {}), ('checks', [{}]),
+                   ('jarSha256', ''), ('jarSha256', None), ('jarSha256', 'G' * 64),
+                   ('privateCleanup', 'UNKNOWN'), ('firstFailurePhase', None),
+                   ('firstFailurePhase', 'SOURCE_APPLICATION_START'),
                    ('removedAppCids', ['1' * 64]), ('applicationStop', 'UNKNOWN'),
                    ('sourceSha', 'c' * 40), ('schema', 'foreign'), ('runId', 'old'), ('runAttempt', '2'),
                    ('sourceMysqlCid', '9' * 64), ('targetMysqlCid', '2' * 64),
@@ -577,6 +587,18 @@ class AuthenticatedRedisSafetyTest(unittest.TestCase):
                 self.assertEqual(report['applicationLogStatus'], 'UNAVAILABLE')
                 self.assertIn('cleanupFailure', report)
                 self.assertEqual(report['resourceCleanup']['cleanup'], 'CONFIRMED_EXACT_OWNED_REMOVAL')
+                self.assertEqual(len(removed), 3)
+                self.assertFalse(network)
+        for key in ('sourceSha', 'schema', 'runId', 'runAttempt', 'jarSha256', 'applicationStartAttempted',
+                    'boots', 'completeBoots', 'checks', 'ownedAppCids', 'removedAppCids', 'applicationStop',
+                    'result', 'privateCleanup', 'firstFailurePhase', 'firstFailureType', 'productionDispatchRelease'):
+            with self.subTest(missing=key), tempfile.TemporaryDirectory() as directory, \
+                    mock.patch.dict(probe.os.environ, self.restore_prestart_env(), clear=True):
+                out = Path(directory); original = self.restore_prestart_report(); original.pop(key)
+                probe.write_report(out, 'restore-http-application.json', original)
+                report, removed, network = self.cleanup_fixture(out, None, restore=True)
+                self.assertEqual(report['applicationLogStatus'], 'UNAVAILABLE')
+                self.assertIn('cleanupFailure', report)
                 self.assertEqual(len(removed), 3)
                 self.assertFalse(network)
 

@@ -484,11 +484,16 @@ def restore_http_not_started(name, schema, out, summary):
             return False
         if (report.get('sourceSha') != env['GITHUB_SHA'] or report.get('schema') != schema
                 or report.get('runId') != env['GITHUB_RUN_ID'] or report.get('runAttempt') != env['GITHUB_RUN_ATTEMPT']
+                or not isinstance(report.get('jarSha256'), str)
+                or not re.fullmatch('[a-f0-9]{64}', report['jarSha256'])
                 or report.get('applicationStartAttempted') is not False or report.get('boots') != []
+                or report.get('completeBoots') != [] or report.get('checks') != []
                 or report.get('ownedAppCids') != [] or report.get('removedAppCids') != []
                 or report.get('applicationStop') != 'NO_ACTIVE_APP_SLOT' or report.get('result') != 'NOT_COMPLETED'
+                or report.get('privateCleanup') != 'EXACT_OWN_SUBTREE_REMOVED'
+                or report.get('firstFailurePhase') not in ('PRE_APPLICATION_PREPARATION', 'SOURCE_DATABASE_PREPARATION')
                 or not isinstance(report.get('firstFailureType'), str)
-                or not re.fullmatch('[A-Za-z][A-Za-z0-9_]{0,79}', report['firstFailureType'])
+                or not re.fullmatch('[A-Za-z_][A-Za-z0-9_]{0,95}', report['firstFailureType'])
                 or report.get('productionDispatchRelease') is not False):
             return False
         expected = {name + '-' + suffix: report.get(key) for suffix, key in

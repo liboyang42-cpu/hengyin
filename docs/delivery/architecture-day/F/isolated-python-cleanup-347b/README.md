@@ -25,13 +25,13 @@ venv只用本job当前python3的标准库创建，不换Ubuntu24/crypt/base Pyth
 
 ## NOT_STARTED精确合同与C接点
 
-C独占report字段：`applicationStartAttempted=false`初值，在第一次`slot.start`调用前变true；F不改C文件。新增识别只在以下全部满足后成立：manual restore flag、公共repo、完整source SHA/run/attempt、原NAME/schema、C有界普通JSON非symlink；同source/schema/run/attempt；marker严格布尔false（0/字符串/缺失均拒绝）；boots/ownedAppCids/removedAppCids全空；NO_ACTIVE_APP_SLOT、NOT_COMPLETED、固定类型的firstFailureType、productionDispatchRelease=false。
+C真实合同已逐字回读公共 `62ca0e7d26a827d0cf78c5aeb3c0eabf5c29c625` 的 `C/restore-http-failure-347b/README.md` 及实际producer/read_final_report/confirmed_pre_start_failure；不import C以免循环。C原子持久report的`applicationStartAttempted=false`初值，在第一次任何`slot.start`之前写true且不回false；F不改C文件。本次contract增量严格补齐F消费端：manual restore flag、公共repo、完整source SHA/run/attempt、原NAME/schema、C有界普通JSON非symlink；同source/schema/run/attempt，jarSha256为64位小写hex；marker严格布尔false（0/字符串/缺失均拒绝）；boots/completeBoots/checks/ownedAppCids/removedAppCids五数组全明确空；NO_ACTIVE_APP_SLOT、NOT_COMPLETED、privateCleanup=EXACT_OWN_SUBTREE_REMOVED；firstFailurePhase仅PRE_APPLICATION_PREPARATION或SOURCE_DATABASE_PREPARATION，firstFailureType沿C相同稳定标识符格式，不按异常名字白名单；productionDispatchRelease=false。缺字段/错类型/错phase不套NOT_STARTED。
 
 实际外层先移除资源，独立确认app原本缺席、其余mysql/restore-mysql/redis精确3CID/name/independentNoSuch及network不存在；新报告中的3CID须全部匹配且互不相同。原auth报告只能是尚无业务probe的FAIL_BEFORE_BUSINESS_PROBE，损坏或原PASS矛盾不接受。此时只把日志状态记NOT_STARTED，保留原FAIL_BEFORE_BUSINESS_PROBE；资源清理确认不等于业务成功。
 
 已尝试启动、任何历史boot/CID、错源/错run/损坏/缺报告、app实际存在、daemon/absence未知皆继续原失败路径。成功原四CID清理、实际app log采集/失败守卫、原pre-app readiness失败合同逐字逻辑保留。原EXIT trap首个非零不变，新的venv清理不能改变C原失败。
 
-C还拥有同次原finalize IndexError接缝：其旧代码读取ownedAppCids[-1]，未启动时数组为空。请root/C在C-owned片按新marker处理失败收据，不能填假appCID/强求成功四CID或把业务失败签绿；F未动该文件，本片单独不能宣称整个失败收据闭环已运行通过。
+C同次原finalize IndexError接缝现已在上述62ca供体中交出失败分支：零boot合法失败仅三个实际backing CID移除+app独立缺席，终态NOT_ACCEPTED、资源标记CONFIRMED_EXACT_OWNED_REMOVAL；成功仍原五boot/四实际CID/PRESERVED/CLEAN及origexit0。F不复制覆盖C片，也不拿其SOURCE当实际运行通过。旧IndexError或旧run缺cleanupJSON不被本片追补成通过。
 
 ## Mixed共享finalize最小review hunk（未应用）
 
@@ -45,4 +45,4 @@ C还拥有同次原finalize IndexError接缝：其旧代码读取ownedAppCids[-1
 
 原全部owner与entry4控制保留，新5个直接控制SOURCE：同源pre-start清理正控且终态仍FAIL；started/unknown/foreign/CID负控；缺失/损坏/symlink/原报告矛盾负控；真实app日志失败/daemon/PR/default不豁免；精确三模式venv/同pin/-I/PATH/owner cleanup接线。全部未执行；workflow内原隔离解释器import检查也是未来运行断言，不是当前结果。
 
-`review.patch.b64`是3个执行/控制文件完整diff，decoded hash见PATCH.sha256；全作者后像见POSTIMAGES.sha256。root唯一应用/合成/验证；只需本包实际受影响模式的同源验证，不重复CLM8、client10767或未受影响旧项目。实际仅Git diff/apply检查、摘要和有限秘密模式检查；所有parse/测试/编译/资源/CI **NOT_RUN**。
+`review.patch.b64`/PATCH.sha256保留原f2ebc9的3文件diff；与C62ca对齐的追加2文件增量在`contract-review.patch.b64`/CONTRACT.sha256（parent71ce91源码等同f2ebc9）。root已取f2后只串此contract增量，不重复apply旧完整patch；全作者当前后像见POSTIMAGES.sha256。正控补两个合法phase，负控补JAR/completeBoots/checks/privateCleanup/firstFailurePhase/全部必需字段，原5个控制与旧断言保留。root唯一应用/合成/验证；只需实际受影响模式的同源验证，不重复CLM8、client10767或未受影响旧项目。实际仅Git diff/apply检查、摘要和有限秘密模式检查；所有parse/测试/编译/资源/CI **NOT_RUN**。
