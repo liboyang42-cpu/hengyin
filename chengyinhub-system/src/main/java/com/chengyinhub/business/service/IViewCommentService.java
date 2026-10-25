@@ -28,6 +28,9 @@ public interface IViewCommentService
      */
     public List<ViewComment> selectViewCommentList(ViewComment viewComment);
 
+    /** 同一对象下，本页评论的可见直接回复数。 */
+    List<ViewComment> selectVisibleReplyCountsByParents(Long ownerType, Long ownerId, List<Long> parentIds);
+
     /** 将公开评论汇总为 1-5 星数量分布。 */
     Map<Integer, Integer> summarizeRatingDistribution(List<ViewComment> comments);
 
