@@ -1,0 +1,22 @@
+test_actual_schema_runner_uses_ledger_order_and_mutations_are_rejected (__main__.SharedLedgerExecutionOrder.test_actual_schema_runner_uses_ledger_order_and_mutations_are_rejected) ... FAIL
+
+======================================================================
+FAIL: test_actual_schema_runner_uses_ledger_order_and_mutations_are_rejected (__main__.SharedLedgerExecutionOrder.test_actual_schema_runner_uses_ledger_order_and_mutations_are_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-g-forward-plan-gate/ci/test_migration_gates.py", line 1180, in test_actual_schema_runner_uses_ledger_order_and_mutations_are_rejected
+    self.assertEqual(check_schema_manifest_order_source(source), [])
+AssertionError: Lists differ: ['schema runner must preserve ledger selec[83 chars]der'] != []
+
+First list contains 2 additional elements.
+First extra element 0:
+'schema runner must preserve ledger selection: ordered'
+
++ []
+- ['schema runner must preserve ledger selection: ordered',
+-  'schema runner must execute the ledger selection in its original order']
+
+----------------------------------------------------------------------
+Ran 1 test in 0.018s
+
+FAILED (failures=1)

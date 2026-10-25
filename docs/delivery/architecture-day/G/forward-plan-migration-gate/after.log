@@ -1,0 +1,12 @@
+test_actual_schema_runner_uses_ledger_order_and_mutations_are_rejected (__main__.SharedLedgerExecutionOrder.test_actual_schema_runner_uses_ledger_order_and_mutations_are_rejected) ... ok
+test_missing_edge_reversed_order_and_missing_batch_path_are_rejected (__main__.SharedLedgerExecutionOrder.test_missing_edge_reversed_order_and_missing_batch_path_are_rejected) ... ok
+test_notice_forward_fresh_preparation_and_strict_execution_mutations_are_rejected (__main__.SharedLedgerExecutionOrder.test_notice_forward_fresh_preparation_and_strict_execution_mutations_are_rejected) ... ok
+test_notice_forward_identity_dependency_and_replacement_mutations_are_rejected (__main__.SharedLedgerExecutionOrder.test_notice_forward_identity_dependency_and_replacement_mutations_are_rejected) ... ok
+test_real_ledger_rejects_missing_dependency_and_cycle (__main__.SharedLedgerExecutionOrder.test_real_ledger_rejects_missing_dependency_and_cycle) ... ok
+test_real_ledger_resolves_filename_conflict_and_covers_all_edges (__main__.SharedLedgerExecutionOrder.test_real_ledger_resolves_filename_conflict_and_covers_all_edges) ... ok
+test_schema_contract_accepts_only_nonsemantic_layout_changes (__main__.SharedLedgerExecutionOrder.test_schema_contract_accepts_only_nonsemantic_layout_changes) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 4.362s
+
+OK

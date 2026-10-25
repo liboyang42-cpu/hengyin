@@ -1174,43 +1174,130 @@ class SharedLedgerExecutionOrder(unittest.TestCase):
             with self.subTest(dependencies=dependencies), self.assertRaises(LedgerError):
                 self.manifest(dependencies)
 
-    def test_actual_schema_runner_uses_ledger_order_and_mutations_are_rejected(self):
+    def _schema_source(self):
         with open(os.path.join(REPO_ROOT, "scripts/e2e/build_schema.py"), encoding="utf-8") as handle:
-            source = handle.read()
+            return handle.read()
+
+    def _assert_schema_mutations_rejected(self, source, mutations):
+        import ast
+        for name, needle, replacement in mutations:
+            with self.subTest(mutation=name):
+                self.assertIn(needle, source, "mutation must target the actual approved runner")
+                mutated = source.replace(needle, replacement)
+                self.assertNotEqual(source, mutated, "a no-op is not a negative control")
+                ast.parse(mutated)  # Rejection must prove the contract, not broken Python indentation.
+                self.assertTrue(check_schema_manifest_order_source(mutated))
+
+    def test_actual_schema_runner_uses_ledger_order_and_mutations_are_rejected(self):
+        source = self._schema_source()
         self.assertEqual(check_schema_manifest_order_source(source), [])
-        mutations = [
-            source.replace("from ci.migration_ledger import build_manifest,", "from unrelated import build_manifest,"),
-            source.replace('all_migrations = manifest["migrations"]', 'all_migrations = sorted(manifest["migrations"])'),
-            source.replace("selected = migrations_after_baseline(all_migrations)", "selected = []"),
-            source.replace("for m in ordered:", "for m in reversed(ordered):"),
-            source.replace("for m in ordered:", "ordered.reverse()\n    for m in ordered:"),
-            source.replace("REPO / m[\"path\"], m[\"migrationId\"]", "REPO / \"other.sql\", m[\"migrationId\"]"),
-            source.replace("if not ok and not a.keep_going:", "if False:"),
-            source.replace("if not ok and not a.keep_going:", "if not ok and a.keep_going:"),
-            source.replace("keep_going=a.keep_going, schema_only=True", "keep_going=True, schema_only=True"),
-            source.replace("            ok = run_file(cur, REPO / m", "            run_file(cur, REPO / m"),
-            source.replace("        c.close()", "        c.commit()"),
-            source.replace('    all_migrations = manifest["migrations"]\n'
-                           '    selected = migrations_after_baseline(all_migrations)',
-                           '    selected = migrations_after_baseline(all_migrations)\n'
-                           '    all_migrations = manifest["migrations"]'),
-        ]
+        stop = "if not ok and (strict_notice or not a.keep_going):"
+        keep = "keep_going=False if strict_notice else a.keep_going,"
         loop = ('        for m in ordered:\n'
+                '            strict_notice = bool(notice_forward) and m["migrationId"] == NOTICE_V2\n'
                 '            ok = run_file(cur, REPO / m["path"], m["migrationId"], results,\n'
-                '                          keep_going=a.keep_going, schema_only=True, observations=observations)\n'
-                '            if not ok and not a.keep_going:\n'
+                '                          keep_going=False if strict_notice else a.keep_going,\n'
+                '                          schema_only=True, observations=observations)\n'
+                '            if not ok and (strict_notice or not a.keep_going):\n'
                 '                break\n')
         self.assertIn(loop, source)
         nested = '        if a.keep_going:\n' + ''.join('    ' + line for line in loop.splitlines(True))
-        mutations.extend([source.replace(loop, nested), source.replace(loop, loop + loop),
-                          source.replace(loop, loop + loop.replace("for m in ordered:",
-                                                                  "for m in reversed(ordered):")),
-                          source.replace(loop, loop.replace("break", "continue"))])
-        for mutated in mutations:
-            with self.subTest(mutation=mutations.index(mutated)):
-                self.assertNotEqual(source, mutated)
-                self.assertTrue(check_schema_manifest_order_source(mutated))
+        mutations = [
+            ("foreign manifest import", "from ci.migration_ledger import build_manifest,", "from unrelated import build_manifest,"),
+            ("sort manifest", 'all_migrations = manifest["migrations"]', 'all_migrations = sorted(manifest["migrations"])'),
+            ("delete selection", "selected = migrations_after_baseline(all_migrations)", "selected = []"),
+            ("reverse iteration", "for m in ordered:", "for m in reversed(ordered):"),
+            ("mutate ordered", "        for m in ordered:", "        ordered.reverse()\n        for m in ordered:"),
+            ("foreign path", 'REPO / m["path"], m["migrationId"]', 'REPO / "other.sql", m["migrationId"]'),
+            ("remove failure stop", stop, "if False:"),
+            ("invert keep-going", stop, "if not ok and (strict_notice or a.keep_going):"),
+            ("force keep-going", keep, "keep_going=True,"),
+            ("lose result", "            ok = run_file(cur, REPO / m", "            run_file(cur, REPO / m"),
+            ("wrong finally", "        c.close()", "        c.commit()"),
+            ("reorder selection", '    all_migrations = manifest["migrations"]\n    selected = migrations_after_baseline(all_migrations)',
+             '    selected = migrations_after_baseline(all_migrations)\n    all_migrations = manifest["migrations"]'),
+            ("nested loop", loop, nested),
+            ("duplicate loop", loop, loop + loop),
+            ("additional reversed loop", loop, loop + loop.replace("for m in ordered:", "for m in reversed(ordered):")),
+            ("continue after failure", loop, loop.replace("break", "continue")),
+        ]
+        self._assert_schema_mutations_rejected(source, mutations)
 
+    def test_notice_forward_identity_dependency_and_replacement_mutations_are_rejected(self):
+        source = self._schema_source()
+        self._assert_schema_mutations_rejected(source, [
+            ("drop pending pair count", 'if len(rows) != 1 or len(pending) != 1:', 'if False:'),
+            ("ignore pending identity", 'or pending_entry != entry', 'or False'),
+            ("ignore manifest fingerprint", 'entry.get("sha256") != expected_sha', 'False'),
+            ("ignore file fingerprint", 'hashlib.sha256(target.read_bytes()).hexdigest() != expected_sha', 'False'),
+            ("allow symlink", 'target.is_symlink() or not target.is_file()', 'not target.is_file()'),
+            ("ignore declared order", 'entry.get("order") != index + 1', 'False'),
+            ("allow postdeploy pair", 'entry.get("executionPhase") is not None', 'False'),
+            ("drop dependency check", 'if entry.get("dependsOn") != expected_deps:', 'if False:'),
+            ("invent dependency", '["20261013_b_im_notification_intent"] if migration_id == NOTICE_PRODUCER', '["another_parent"] if migration_id == NOTICE_PRODUCER'),
+            ("drop upstream guard", 'if len(upstream) != 1 or upstream[0] >= positions[NOTICE_PRODUCER]:', 'if False:'),
+            ("reverse pair order", 'positions[NOTICE_PRODUCER] < positions[NOTICE_OLD] < positions[NOTICE_V2]', 'positions[NOTICE_PRODUCER] < positions[NOTICE_V2] < positions[NOTICE_OLD]'),
+            ("reverse pending order", 'pending_positions[NOTICE_PRODUCER] < pending_positions[NOTICE_OLD] < pending_positions[NOTICE_V2]', 'pending_positions[NOTICE_PRODUCER] < pending_positions[NOTICE_V2] < pending_positions[NOTICE_OLD]'),
+            ("fake old identity", 'NOTICE_OLD = "20261024_c_before_start_notice_typed"', 'NOTICE_OLD = "other"'),
+            ("fake v2 identity", 'NOTICE_V2 = "20261024_g_before_start_notice_metadata_v2"', 'NOTICE_V2 = "other"'),
+            ("fake producer identity", 'NOTICE_PRODUCER = "20261024_d_committed_official_notice_wx"', 'NOTICE_PRODUCER = "other"'),
+            ("fake path", '"chengyinhub-admin/sql/migration_20261024_g_before_start_notice_metadata_v2.sql",', '"chengyinhub-admin/sql/other.sql",'),
+            ("fake approved file digest", 'a36889f13d1de308edfcba06409ef153438521268f355881006864ae842bc02c', '0' * 64),
+            ("replace v2 instead of old", '"selected": [row for row in selected if row["migrationId"] != NOTICE_OLD]', '"selected": [row for row in selected if row["migrationId"] != NOTICE_V2]'),
+            ("silently retain both", '"selected": [row for row in selected if row["migrationId"] != NOTICE_OLD]', '"selected": selected'),
+            ("foreign host allowed", 'ALLOWED_HOSTS = {"127.0.0.1", "localhost", "::1"}', 'ALLOWED_HOSTS = {"127.0.0.1", "localhost", "::1", "foreign"}'),
+            ("foreign schema allowed", 'SCRATCH_SCHEMA = re.compile(r"cy_e2e_[A-Za-z0-9_]+\\Z")', 'SCRATCH_SCHEMA = re.compile(r".*")'),
+            ("connect foreign database", 'database=db, autocommit=True', 'database="foreign", autocommit=True'),
+            ("skip loopback check", 'if a.host not in ALLOWED_HOSTS:', 'if False:'),
+            ("skip scratch check", 'if not SCRATCH_SCHEMA.fullmatch(a.schema):', 'if False:'),
+            ("shadow selector", '    notice_forward = notice_forward_plan(all_migrations, selected)',
+             '    notice_forward_plan = lambda *args: {}\n    notice_forward = notice_forward_plan(all_migrations, selected)'),
+            ("mutate pinned identities", '    notice_forward = notice_forward_plan(all_migrations, selected)',
+             '    NOTICE_FORWARD_FILES[NOTICE_OLD] = ("fake.sql", "0" * 64)\n    notice_forward = notice_forward_plan(all_migrations, selected)'),
+        ])
+
+    def test_notice_forward_fresh_preparation_and_strict_execution_mutations_are_rejected(self):
+        source = self._schema_source()
+        self._assert_schema_mutations_rejected(source, [
+            ("skip selector", 'notice_forward = notice_forward_plan(all_migrations, selected)', 'notice_forward = None'),
+            ("swap selector inputs", 'notice_forward_plan(all_migrations, selected)', 'notice_forward_plan(selected, all_migrations)'),
+            ("drop bypass", '        if notice_forward:\n', '        if notice_forward and not a.drop:\n'),
+            ("invert fresh readback", 'fresh[0] != 0', 'fresh[0] < 0'),
+            ("allow noninteger readback", 'type(fresh[0]) is not int', 'False'),
+            ("probe foreign schema", 'schema_name=%s", (a.schema,)', 'schema_name=%s", ("foreign",)'),
+            ("adopt concurrent schema", '"CREATE DATABASE `%s` DEFAULT CHARACTER SET utf8mb4"', '"CREATE DATABASE IF NOT EXISTS `%s` DEFAULT CHARACTER SET utf8mb4"'),
+            ("delete existing before probe", '        if notice_forward:\n', '        if notice_forward:\n            cur.execute("DROP DATABASE IF EXISTS `%s`" % a.schema)\n'),
+            ("drop exact replacement selection", 'ordered = [m for m in notice_forward["selected"] if m.get("executionPhase") != "POST_DEPLOY"]', 'ordered = [m for m in selected if m.get("executionPhase") != "POST_DEPLOY"]'),
+            ("reverse replacement selection", 'ordered = [m for m in notice_forward["selected"] if m.get("executionPhase") != "POST_DEPLOY"]', 'ordered = list(reversed(notice_forward["selected"]))'),
+            ("hide replacement receipt", 'REPLACED_UNAPPLIED %s -> %s fingerprints=%s', 'APPLIED %s -> %s fingerprints=%s'),
+            ("delete initial ordered", '    ordered = [m for m in selected if m.get("executionPhase") != "POST_DEPLOY"]\n', ''),
+            ("add initial skip", 'ordered = [m for m in selected if m.get("executionPhase") != "POST_DEPLOY"]', 'ordered = [m for m in selected if m.get("executionPhase") != "POST_DEPLOY" and m["migrationId"] != "other"]'),
+            ("wrong deferred phase", 'deferred = [m for m in selected if m.get("executionPhase") == "POST_DEPLOY"]', 'deferred = []'),
+            ("missing validation", '    validate_target(a)\n    if a.policy_source_custody:', '    if a.policy_source_custody:'),
+            ("change validated schema", '    notice_forward = notice_forward_plan(all_migrations, selected)', '    a.schema = "foreign"\n    notice_forward = notice_forward_plan(all_migrations, selected)'),
+            ("foreign reconnect", '    c = connect(a, a.schema)', '    c = connect(a, "foreign")'),
+            ("additional connection", '    c = connect(a, a.schema)', '    c = connect(a, a.schema)\n    c = connect(a, "foreign")'),
+            ("modify selected item", '    notice_forward = notice_forward_plan(all_migrations, selected)', '    selected[0] = {}\n    notice_forward = notice_forward_plan(all_migrations, selected)'),
+            ("modify replacement result", '    if deferred:\n', '    notice_forward["selected"] = selected\n    if deferred:\n'),
+            ("disable strict v2", 'strict_notice = bool(notice_forward) and m["migrationId"] == NOTICE_V2', 'strict_notice = False'),
+            ("strict wrong migration", 'strict_notice = bool(notice_forward) and m["migrationId"] == NOTICE_V2', 'strict_notice = bool(notice_forward) and m["migrationId"] == NOTICE_OLD'),
+            ("v2 keep-going", 'keep_going=False if strict_notice else a.keep_going,', 'keep_going=a.keep_going,'),
+            ("v2 ignores failure", 'if not ok and (strict_notice or not a.keep_going):', 'if not ok and not a.keep_going:'),
+            ("wrong label", 'REPO / m["path"], m["migrationId"]', 'REPO / m["path"], "other"'),
+            ("wrong schema_only", 'schema_only=True, observations=observations)', 'schema_only=False, observations=observations)'),
+            ("added loop skip", '            strict_notice = bool(notice_forward)', '            if m["migrationId"] == "other":\n                continue\n            strict_notice = bool(notice_forward)'),
+            ("extra run_file", '        for m in ordered:', '        run_file(cur, REPO / "other.sql", "other", results, keep_going=True)\n        for m in ordered:'),
+            ("extra nonledger loop", '        for m in ordered:', '        for row in selected:\n            print(row)\n        for m in ordered:'),
+        ])
+
+    def test_schema_contract_accepts_only_nonsemantic_layout_changes(self):
+        source = self._schema_source()
+        layout = source.replace('    notice_forward = notice_forward_plan(all_migrations, selected)',
+                                '    # formatting and comments are not contract changes\n'
+                                '    notice_forward = notice_forward_plan(\n'
+                                '        all_migrations, selected\n    )')
+        self.assertNotEqual(source, layout)
+        self.assertEqual([], check_schema_manifest_order_source(layout))
 
 class 依赖顺序门禁_选批口径(unittest.TestCase):
     """★ 这一组钉的是【批怎么选】,不是【选出来之后怎么判】。
