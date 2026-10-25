@@ -74,6 +74,9 @@ class CmsTopicPublishStateKeyGuardTest {
         nodeMapper = mock(CmsTopicNodeMapper.class);
         templateMapper = mock(CmsMemberTemplateMapper.class);
         chapterMapper = mock(CmsTopicChapterMapper.class);
+        // A publication freezes actual runnable content even when this case has no template references.
+        when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
+                .thenReturn(Collections.singletonList(topicNode(1L, "原路线地点", null)));
         keyMapper = mock(ThemeStateKeyMapper.class);
         when(keyMapper.lockTopicForStateKeyWrite(TOPIC_ID)).thenAnswer(call -> {
             CmsTopic parent = topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID);
@@ -358,8 +361,9 @@ class CmsTopicPublishStateKeyGuardTest {
     void chapterStoryFlowBeatWhenRegisteredPublishes() {
         when(topicMapper.clearDraftIfDraft(TOPIC_ID)).thenReturn(1);
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(simpleDraft());
+        CmsTopicNode storyNode = topicNode(501L, "章节叙事地点", null); storyNode.setChapterId(88L);
         when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
-                .thenReturn(Collections.<CmsTopicNode>emptyList());
+                .thenReturn(Collections.singletonList(storyNode));
         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
                 .thenReturn(Collections.singletonList(chapter(
                         "[{\"type\":\"text\",\"beat\":\"outcome\",\"field\":\"fact\",\"nodeId\":501,"

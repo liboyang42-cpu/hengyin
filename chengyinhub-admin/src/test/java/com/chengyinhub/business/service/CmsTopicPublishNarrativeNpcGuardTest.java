@@ -38,6 +38,22 @@ import static org.mockito.Mockito.when;
  */
 class CmsTopicPublishNarrativeNpcGuardTest {
 
+    // Unit call context only: mapper doubles are not MySQL/Spring rollback evidence.
+    private boolean publicationWasActive, publicationWasReadOnly;
+    @org.junit.jupiter.api.BeforeEach
+    void enterPublicationWriteContext() {
+        publicationWasActive = org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive();
+        publicationWasReadOnly = org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly();
+        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
+        org.springframework.transaction.support.TransactionSynchronizationManager.setCurrentTransactionReadOnly(false);
+    }
+    @org.junit.jupiter.api.AfterEach
+    void restorePublicationWriteContext() {
+        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(publicationWasActive);
+        org.springframework.transaction.support.TransactionSynchronizationManager.setCurrentTransactionReadOnly(publicationWasReadOnly);
+    }
+
+
     private static final Long TOPIC_ID = 10L;
     private static final Long NODE_ID = 1L;
     private static final Long TEMPLATE_ID = 101L;
@@ -45,6 +61,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
     private CmsTopicMapper topicMapper;
     private CmsTopicNodeMapper nodeMapper;
     private CmsMemberTemplateMapper templateMapper;
+    private CmsTopicChapterMapper chapterMapper;
     private NpcProfileMapper npcProfileMapper;
     private CmsTopicServiceImpl service;
 
@@ -54,8 +71,28 @@ class CmsTopicPublishNarrativeNpcGuardTest {
         when(topicMapper.selectCmsTopicByIdForUpdate(anyLong()))
                 .thenAnswer(inv -> topicMapper.selectCmsTopicById(inv.getArgument(0)));
         nodeMapper = mock(CmsTopicNodeMapper.class);
+        chapterMapper = mock(CmsTopicChapterMapper.class);
         templateMapper = mock(CmsMemberTemplateMapper.class);
         npcProfileMapper = mock(NpcProfileMapper.class);
+
+        when(chapterMapper.selectByTopicForUpdate(TOPIC_ID)).thenAnswer(call -> {
+            CmsTopicChapter query = new CmsTopicChapter(); query.setTopicId(TOPIC_ID);
+            return chapterMapper.selectCmsTopicChapterList(query);
+        });
+        when(nodeMapper.selectByTopicForUpdate(TOPIC_ID)).thenAnswer(call -> {
+            CmsTopicNode query = new CmsTopicNode(); query.setTopicId(TOPIC_ID);
+            return nodeMapper.selectCmsTopicNodeList(query);
+        });
+        when(templateMapper.selectCmsMemberTemplateByIdsForUpdate(org.mockito.ArgumentMatchers.anyList())).thenAnswer(call -> {
+            java.util.List<Long> ids = call.getArgument(0);
+            java.util.List<CmsMemberTemplate> rows = new java.util.ArrayList<>();
+            for (Long id : ids) {
+                CmsMemberTemplate row = templateMapper.selectCmsMemberTemplateById(id);
+                if (row != null) rows.add(row);
+            }
+            return rows;
+        });
+
         service = new CmsTopicServiceImpl();
         org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
                 invocation -> "lockTopic".equals(invocation.getMethod().getName())
@@ -65,9 +102,11 @@ class CmsTopicPublishNarrativeNpcGuardTest {
                 mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
+        ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "cmsMemberTemplateMapper", templateMapper);
-        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "topicStateKeyRefService",
-                new TopicStateKeyRefService(nodeMapper, templateMapper, mock(com.chengyinhub.business.mapper.CmsTopicChapterMapper.class)));
+        TopicStateKeyRefService references = new TopicStateKeyRefService(nodeMapper, templateMapper, chapterMapper);
+        ReflectionTestUtils.setField(references, "cmsTopicMapper", topicMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "topicStateKeyRefService", references);
         com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "npcProfileMapper", npcProfileMapper);
         // R18-DRAFT:发布时补建自办活动壳 —— 成功路径会走到这两个协作者,不在场就是 NPE 假红。
         ReflectionTestUtils.setField(service, "cmsActivityMapper",
@@ -201,7 +240,6 @@ class CmsTopicPublishNarrativeNpcGuardTest {
         chapter.setId(11L);
         chapter.setTopicId(TOPIC_ID);
         chapter.setBlocksJson(blocksJson);
-        CmsTopicChapterMapper chapterMapper = mock(CmsTopicChapterMapper.class);
         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
                 .thenReturn(Collections.singletonList(chapter));
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
