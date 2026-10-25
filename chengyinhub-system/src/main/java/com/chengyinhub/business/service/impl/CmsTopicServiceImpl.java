@@ -1130,17 +1130,28 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         String attempt = payment.get("wx_out_trade_no");
         if (attempt == null || attempt.isBlank()) throw new IllegalStateException("保证金支付尝试身份缺失 inviteId=" + observed.getId());
         String state = payment.get("trade_state");
-        if ("NOTPAY".equalsIgnoreCase(state) || "USERPAYING".equalsIgnoreCase(state) || "PAYERROR".equalsIgnoreCase(state)) {
-            // The gateway persists original CLOSED/SUCCESS evidence before this method opens a mutation transaction.
-            if (!wechatPayService.closePaymentAttempt(observed.getDepositOutTradeNo(), attempt))
-                throw new IllegalStateException("保证金支付单关闭未确认,须按原号重查 inviteId=" + observed.getId());
-            payment.put("trade_state", "CLOSED");
-        } else if (!"SUCCESS".equalsIgnoreCase(state) && !"CLOSED".equalsIgnoreCase(state)) {
-            throw new IllegalStateException("保证金支付状态无法确认 inviteId=" + observed.getId());
+        if ("NOTPAY".equalsIgnoreCase(state) || "USERPAYING".equalsIgnoreCase(state)
+                || "PAYERROR".equalsIgnoreCase(state) || "REVOKED".equalsIgnoreCase(state)) {
+            try {
+                wechatPayService.closePaymentAttempt(observed.getDepositOutTradeNo(), attempt);
+            } catch (RuntimeException closeUnknown) {
+                logger.warn("保证金原支付尝试关单未确认，按原号回读 inviteId={}", observed.getId(), closeUnknown);
+            }
+            // Close acceptance/failure is not a terminal fact. Requery the observed original attempt,
+            // outside all business transactions; never resolve the business alias to a successor here.
+            Map<String, String> readback = wechatPayService.queryOrderStatus(attempt);
+            if (readback == null || !observed.getDepositOutTradeNo().equals(readback.get("out_trade_no"))
+                    || !attempt.equals(readback.get("wx_out_trade_no")))
+                throw new IllegalStateException("保证金关单回读归属不匹配 inviteId=" + observed.getId());
+            payment = new HashMap<>(readback);
         }
+        if (!"SUCCESS".equalsIgnoreCase(payment.get("trade_state"))
+                && !"CLOSED".equalsIgnoreCase(payment.get("trade_state")))
+            throw new IllegalStateException("保证金支付状态无法确认 inviteId=" + observed.getId());
+        Map<String, String> observedPayment = payment;
         TransactionTemplate mutation = new TransactionTemplate(transactionManager);
         mutation.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-        Boolean unpaid = mutation.execute(status -> applyObservedDepositPaymentForSettlement(observed, payment));
+        Boolean unpaid = mutation.execute(status -> applyObservedDepositPaymentForSettlement(observed, observedPayment));
         if (Boolean.TRUE.equals(unpaid)) invite.setDepositStatus(5); // Only after the short business transaction commits.
         return Boolean.TRUE.equals(unpaid);
     }
