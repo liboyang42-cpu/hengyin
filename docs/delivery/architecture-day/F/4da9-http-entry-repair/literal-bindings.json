@@ -1,0 +1,356 @@
+{
+  "observed_source": "4da950c59809c4367b2b136b519dbda5e5952ece",
+  "literal_count": 41,
+  "entries": [
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java",
+      "message": "该玩法不属于当前共享局",
+      "category": "ADVANCED_SHARED_SCOPE_MISMATCH",
+      "source_lines": [
+        424
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java",
+      "message": "该玩法不属于当前任务实例",
+      "category": "ADVANCED_TASK_INSTANCE_MISMATCH",
+      "source_lines": [
+        426
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java",
+      "message": "共享玩法权威版本缺失，请重新建立玩法实例",
+      "category": "ADVANCED_AUTHORITY_MISSING",
+      "source_lines": [
+        251
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java",
+      "message": "共享玩法权威版本缺失",
+      "category": "ADVANCED_AUTHORITY_MISSING",
+      "source_lines": [
+        427
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java",
+      "message": "状态已更新，请刷新后重试",
+      "category": "ADVANCED_STATE_CONFLICT",
+      "source_lines": [
+        407,
+        619,
+        1016
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java",
+      "message": "本局未开启相册提交",
+      "category": "ALBUM_SUBMISSION_DISABLED",
+      "source_lines": [
+        2140
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java",
+      "message": "相册需提交1至20张照片",
+      "category": "ALBUM_PHOTO_COUNT_INVALID",
+      "source_lines": [
+        2142
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java",
+      "message": "相册照片地址不合法",
+      "category": "ALBUM_PHOTO_ADDRESS_INVALID",
+      "source_lines": [
+        2143
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayCheckEngine.java",
+      "message": "本局未启用可信检定尝试",
+      "category": "CHECK_TRUSTED_ATTEMPT_DISABLED",
+      "source_lines": [
+        18,
+        32
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayCheckEngine.java",
+      "message": "本次检定已提交",
+      "category": "CHECK_ALREADY_SUBMITTED",
+      "source_lines": [
+        21,
+        33
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayCheckEngine.java",
+      "message": "请先掷骰",
+      "category": "CHECK_ROLL_REQUIRED",
+      "source_lines": [
+        41
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayCheckEngine.java",
+      "message": "幸运值不足",
+      "category": "CHECK_LUCK_INSUFFICIENT",
+      "source_lines": [
+        42
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayCheckEngine.java",
+      "message": "检定难度档位无效",
+      "category": "CHECK_TIER_INVALID",
+      "source_lines": [
+        54
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+      "message": "本局权威版本已更新，请刷新",
+      "category": "GAME_AUTHORITY_CONFLICT",
+      "source_lines": [
+        955
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+      "message": "本局权威版本已更新",
+      "category": "GAME_AUTHORITY_CONFLICT",
+      "source_lines": [
+        1053
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+      "message": "本队已完成最后章节，资产与回执可继续查看",
+      "category": "GAME_ROUTE_FINISHED",
+      "source_lines": [
+        224
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+      "message": "仅本场现有队长可消耗队伍物资",
+      "category": "GAME_RESOURCE_CAPTAIN_REQUIRED",
+      "source_lines": [
+        934
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+      "message": "检定不属于当前实例",
+      "category": "GAME_CHECK_INSTANCE_MISMATCH",
+      "source_lines": [
+        1441,
+        1453
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+      "message": "检定未启用结果规则",
+      "category": "GAME_CHECK_OUTCOME_RULES_MISSING",
+      "source_lines": [
+        1443
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+      "message": "本局已更新",
+      "category": "GAME_STATE_CONFLICT",
+      "source_lines": [
+        2138
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSharedRunControl.java",
+      "message": "本局暂停或由人工账本接管，当前只能读取",
+      "category": "GAME_RUN_PAUSED_OR_MANUAL",
+      "source_lines": [
+        123
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+      "message": "本局已更新，请刷新",
+      "category": "GAME_STATE_CONFLICT",
+      "source_lines": [
+        1955,
+        2825,
+        3125,
+        3373,
+        3381,
+        3407,
+        3467,
+        3532,
+        3567,
+        3602
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+      "message": "Outcome does not belong to the current attempt",
+      "category": "GAME_OUTCOME_ATTEMPT_MISMATCH",
+      "source_lines": [
+        2840
+      ]
+    },
+    {
+      "owner": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/UserSafeMessage.java",
+      "message": "系统繁忙，请稍后重试",
+      "category": "SYSTEM_BUSY_MASKED",
+      "source_lines": [
+        20
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AppMediaReferenceGuard.java",
+      "message": "媒体来源未经审核，请重新上传",
+      "category": "MEDIA_SOURCE_UNREVIEWED",
+      "source_lines": [
+        26
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AppMediaReferenceGuard.java",
+      "message": "媒体不属于当前账号，请重新上传",
+      "category": "MEDIA_FOREIGN_OWNER",
+      "source_lines": [
+        29
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AppMediaReferenceGuard.java",
+      "message": "媒体尚未审核通过，暂不能公开",
+      "category": "MEDIA_NOT_APPROVED",
+      "source_lines": [
+        32
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AppMediaPublicationGuard.java",
+      "message": "媒体配置格式不正确",
+      "category": "MEDIA_CONFIGURATION_INVALID",
+      "source_lines": [
+        104
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AppMediaPublicationGuard.java",
+      "message": "暂不支持外部链接，请删除后再发布",
+      "category": "MEDIA_EXTERNAL_LINK",
+      "source_lines": [
+        119
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AppMediaPublicationGuard.java",
+      "message": "主题不存在，不能审核媒体",
+      "category": "THEME_PUBLICATION_MISSING",
+      "source_lines": [
+        52
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AppMediaPublicationGuard.java",
+      "message": "节点模板不存在，不能公开",
+      "category": "THEME_TEMPLATE_MISSING",
+      "source_lines": [
+        64
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AppMediaPublicationGuard.java",
+      "message": "媒体所属内容不存在",
+      "category": "MEDIA_CONTENT_MISSING",
+      "source_lines": [
+        71
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/QuotaServiceImpl.java",
+      "message": "请先登录",
+      "category": "AUTH_REQUIRED",
+      "source_lines": [
+        44,
+        105,
+        125
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/QuotaServiceImpl.java",
+      "message": "用户不存在",
+      "category": "MEMBER_MISSING",
+      "source_lines": [
+        49,
+        110,
+        130
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/QuotaServiceImpl.java",
+      "message": "当前身份权限配置缺失，请联系管理员",
+      "category": "ROLE_CONFIG_MISSING",
+      "source_lines": [
+        54,
+        115,
+        135
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/QuotaServiceImpl.java",
+      "message": "当前身份不可创建主题",
+      "category": "THEME_ROLE_FORBIDDEN",
+      "source_lines": [
+        61
+      ]
+    },
+    {
+      "owner": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+      "message": "主题发布失败，请稍后重试",
+      "category": "TOPIC_PUBLISH_FAILED",
+      "source_lines": [
+        294
+      ]
+    },
+    {
+      "owner": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+      "message": "主题不存在或无权查看",
+      "category": "THEME_OWNER_OR_MISSING",
+      "source_lines": [
+        802
+      ]
+    },
+    {
+      "owner": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+      "message": "无权编辑该主题",
+      "category": "THEME_OWNER_FORBIDDEN",
+      "source_lines": [
+        854
+      ]
+    },
+    {
+      "owner": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+      "message": "无权操作该主题",
+      "category": "THEME_OWNER_FORBIDDEN",
+      "source_lines": [
+        1180,
+        1342,
+        1558
+      ]
+    },
+    {
+      "owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MemberIdentityService.java",
+      "message": "请先登记实名信息(姓名与身份证号),再发布",
+      "category": "PUBLISHER_IDENTITY_MISSING",
+      "source_lines": [
+        49
+      ]
+    }
+  ]
+}

@@ -40,12 +40,14 @@ FIXED_HTTP_MESSAGE_SOURCES = {
     'chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java': {
         '本局权威版本已更新，请刷新': 'GAME_AUTHORITY_CONFLICT',
         '本局权威版本已更新': 'GAME_AUTHORITY_CONFLICT',
-        '本局暂停或由人工账本接管，当前只能读取': 'GAME_RUN_PAUSED_OR_MANUAL',
         '本队已完成最后章节，资产与回执可继续查看': 'GAME_ROUTE_FINISHED',
         '仅本场现有队长可消耗队伍物资': 'GAME_RESOURCE_CAPTAIN_REQUIRED',
         '检定不属于当前实例': 'GAME_CHECK_INSTANCE_MISMATCH',
         '检定未启用结果规则': 'GAME_CHECK_OUTCOME_RULES_MISSING',
         '本局已更新': 'GAME_STATE_CONFLICT',
+    },
+    'chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSharedRunControl.java': {
+        '本局暂停或由人工账本接管，当前只能读取': 'GAME_RUN_PAUSED_OR_MANUAL',
     },
     'chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java': {
         '本局已更新，请刷新': 'GAME_STATE_CONFLICT',
@@ -617,7 +619,8 @@ class FailureDiagnosticTest(unittest.TestCase):
         for path, messages in FIXED_HTTP_MESSAGE_SOURCES.items():
             source = (ROOT / path).read_text()
             for message, category in messages.items():
-                self.assertIn(json.dumps(message, ensure_ascii=False), source)
+                self.assertTrue(json.dumps(message, ensure_ascii=False) in source,
+                                'Fixed HTTP literal missing: owner=' + path + '; category=' + category)
                 self.assertEqual([category], fixed_http_failure_categories(json.dumps({'msg': message})))
                 self.assertEqual([category], fixed_http_failure_categories(json.dumps({'msg': message}, ensure_ascii=True)))
                 for unknown in [marker, message + marker, marker + message, message + ' ', '已达到当前身份活动数量上限（123）']:

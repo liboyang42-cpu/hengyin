@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-25T00:22:10.463999+00:00",
+  "updated_utc": "2026-10-25T00:40:12.135734+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -75,12 +75,16 @@
       "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280"
     },
     "F": {
-      "state": "DELIVERED_POOL_EVIDENCE_IMPLEMENTATION_TARGETED_ACCEPTED",
-      "task": "7898408 applied; no new code assignment unless targeted actual runtime fails",
+      "state": "DELIVERED_HTTP_ENTRY_MAPPING_FROZEN_PENDING_RUNTIME",
+      "task": "Fix stale fixed-message owner map in ci/test_http_e2e_entry.py after shared runtime extraction; preserve exact41 literals/categories/UNKNOWN/redaction negative controls; no business changes",
       "thread_id": "01a16a23-5e0c-736b-9fc1-d4d070393009",
       "host_id": "durable",
       "residual_delivery": "verifier d58288edc65e4c57bc98ef61253fb084f38642f1; tool4b3239a559d2a81f057ab7356cb21e58e855b537; exact10 class refs/4 directions, C not granted; root6file+pin hashes exact",
-      "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280"
+      "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280",
+      "exclusive_files": [
+        "ci/test_http_e2e_entry.py",
+        "docs/delivery/architecture-day/F/4da9-http-entry-repair/"
+      ]
     },
     "G": {
       "state": "DELIVERED_EXACT_FRESH_PAIR_WIRING_FROZEN_PENDING_RUNTIME",
@@ -1019,7 +1023,7 @@
     "source_sha": "4da950c59809c4367b2b136b519dbda5e5952ece",
     "branch": "codex/architecture-day-auth-forward-4da9-20261025",
     "run": 40146372148,
-    "status": "IN_PROGRESS",
+    "status": "FAIL_PURE_ENTRY_CONTROL_BEFORE_JAVA_DB_HTTP",
     "owner": "root",
     "pending_owners": [],
     "prior_core_ci_repeated": false,
@@ -1034,23 +1038,25 @@
       {
         "databaseId": 121028477773,
         "name": "http (FreezeReuseThemeHttpE2eIT)",
-        "status": "in_progress",
-        "conclusion": ""
+        "status": "completed",
+        "conclusion": "failure"
       },
       {
         "databaseId": 121028477915,
         "name": "http (FreezeGameHttpE2eIT)",
-        "status": "in_progress",
-        "conclusion": ""
+        "status": "completed",
+        "conclusion": "failure"
       },
       {
         "databaseId": 121028477958,
         "name": "http (GenericGameplayHttpE2eIT)",
-        "status": "in_progress",
-        "conclusion": ""
+        "status": "completed",
+        "conclusion": "failure"
       }
     ],
-    "verification": "APIheadSha4da9 verified; XML and cleanup pending, no PASS inherited"
+    "verification": "APIheadSha4da9 verified; XML and cleanup pending, no PASS inherited",
+    "conclusion": "failure",
+    "failure_readback": "4da9-gameplay-http-entry-failure.json"
   },
   "runtime_evidence_implementation": {
     "owner": "F",
@@ -1274,5 +1280,16 @@
     "runtime": "PASS_SCOPED_FRESH_SCHEMA_AND_AUTH_REDIS_TARGET_4DA9",
     "integrated_source": "4da950c59809c4367b2b136b519dbda5e5952ece",
     "source_scan": "secret-file/diff PASS; staged gitleaks39498bytes no leaks"
+  },
+  "http_entry_literal_owner_delivery": {
+    "owner": "F",
+    "sha": "d2e74f1b5fdaed2d008099ddc2c37410241d8e6b",
+    "parent": "4da950c59809c4367b2b136b519dbda5e5952ece",
+    "source_exact_donor": true,
+    "scope": "Only one fixed literal owner moved to GameSharedRunControl and safe boolean assertion; all41 message/category pairs preserved",
+    "owner_controls": "Initial40PASS1environmentERROR missing master comparison ref; workflow prerequisite restored then only sameerroredcase1PASS; not single41green",
+    "root_integration_identity": "Exact AST41pairs preserved and every quotedliteral found in declaredsource",
+    "state": "APPLIED_PENDING_NEW_TARGET",
+    "runtime": "NOT_RUN"
   }
 }

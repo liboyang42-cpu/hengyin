@@ -1,0 +1,32 @@
+{
+  "source_sha": "4da950c59809c4367b2b136b519dbda5e5952ece",
+  "run": 40146372148,
+  "status": "FAIL_PURE_ENTRY_CONTROL_BEFORE_JAVA_DB_HTTP",
+  "jobs": [
+    121028477773,
+    121028477915,
+    121028477958
+  ],
+  "unique_first_failures": 1,
+  "failure_test": "ci.test_http_e2e_entry.FailureDiagnosticTest.test_fixed_http_categories_are_exact_public_literals_not_dynamic_messages",
+  "failure_line": 620,
+  "mechanism": "Fixed public message still assigned to original runtime source but current literal lives in GameSharedRunControl after module split",
+  "current_literal_owner": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSharedRunControl.java:123",
+  "production_assembly": "GameSessionRuntimeServiceImpl.sharedRunControl():186-187",
+  "pure_controls_per_job": {
+    "run": 41,
+    "failures": 1,
+    "passed": 40
+  },
+  "declared_http_cases": 36,
+  "actual_http_cases": "NOT_RUN",
+  "artifacts": 0,
+  "downstream_summary_upload": "Consequential missing receipts; not an additional business bug",
+  "owner": "Original F exact diagnostic mapping and direct controls; preserve all41 fixedcategories and strict UNKNOWN/redaction negatives",
+  "raw_log_sha256": {
+    "121028477773": "bd766feadfe5455a64f4e74649faba9f02f18211b11afe951f2579d2a9f56233",
+    "121028477915": "afff1370e2885473aaf7008e6170f911a3e12616dac7d19f31c7764fdf547875",
+    "121028477958": "e99f65ed8c4f2c6c8056afc73b9dc9ed274bb8f4e22834b878624b909096c97c"
+  },
+  "full_governance_complete": false
+}
