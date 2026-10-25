@@ -101,9 +101,11 @@ test('★负控:把 motion.haptic 换成裸 wx.vibrateShort,门禁必须判红',
 test('旧相册仍只展示和关闭；R5只发证据事件，不自己结算或触发奖励', () => {
   const src = read('playkit-album')
   assert.doesNotMatch(src, /motion\.haptic|sendRequest|session|settle|claim/)
-  assert.deepEqual([...src.matchAll(/triggerEvent\('([^']+)'/g)].map(m => m[1]), ['close', 'submit', 'shoot'])
+  assert.deepEqual([...new Set([...src.matchAll(/triggerEvent\('([^']+)'/g)].map(m => m[1]))], ['close', 'submit', 'shoot'])
   let config, selected = 0
-  new Function('Component', 'wx', src)(value => { config = value }, { chooseMedia() { selected++ } })
+  new Function('Component', 'wx', 'require', src)(value => { config = value }, { chooseMedia() { selected++ } }, () => ({
+    show() { assert.fail('旧相册不应打开审核确认') },
+  }))
   const events = []
   const instance = Object.assign({}, config.methods, { data: { completionEnabled: false, done: false, uploaded: true },
     triggerEvent(name) { events.push(name) } })
