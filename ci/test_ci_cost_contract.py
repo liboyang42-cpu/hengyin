@@ -339,21 +339,26 @@ def validate(source: str, backend_script: str | None = None, production_workflow
 
     mini = job_block(source, "mini_program")
     for contract in (
-        "    needs: [changes, mini_unit, mini_static]\n",
+        "    needs: [changes, mini_unit, mini_static, fast_gates, backend, admin_ui, admin_ui_contract, secret_scan, dependency_audit, migration_layout, migration_safety]\n",
         "    if: ${{ always() && (needs.changes.result != 'success' || github.event_name == 'workflow_dispatch' || needs.changes.outputs.xcx == 'true') }}\n",
         '          test "$CHANGES_RESULT" = success\n',
         '          test "$UNIT_RESULT" = success\n',
         '          test "$STATIC_RESULT" = success\n',
         "          UNIT_RESULT: ${{ needs.mini_unit.result }}\n",
         "          STATIC_RESULT: ${{ needs.mini_static.result }}\n",
+        "        if: ${{ needs.changes.outputs.selected != 'true' }}\n",
+        "        if: ${{ always() && needs.changes.outputs.selected == 'true' }}\n",
+        "        run: node ci/ci-selected-validation.js summarize\n",
     ):
         assert_contains(mini, contract)
     unit = job_block(source, "mini_unit")
     for contract in (
-        "    name: Mini program unit shard (${{ matrix.shard }}/20)\n",
+        "    name: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && format('PARTIAL SELECTED - Mini shard {0} of 20 partitions', matrix.shard) || format('Mini program unit shard ({0}/20)', matrix.shard) }}\n",
         "      fail-fast: false\n",
         "      max-parallel: 20\n",
         "        shard: [" + ", ".join(map(str, range(1, 21))) + "]\n",
+        "        exclude: ${{ fromJSON(needs.changes.outputs.mini_exclude) }}\n",
+        "          CI_UNIT_OUTCOME: ${{ steps.unit.outcome }}\n",
         "      TZ: Asia/Shanghai\n",
         "    runs-on: ubuntu-latest\n",
         "        run: node ci/xcx-unit-manifest.js --selftest\n",
@@ -546,6 +551,10 @@ def main() -> None:
             ("mini_unit", "19, 20"),
             ("mini_unit", "--test-shard=${{ matrix.shard }}/20 "),
             ("mini_unit", "        run: node ci/xcx-unit-manifest.js --selftest\n"),
+            ("mini_unit", "        exclude: ${{ fromJSON(needs.changes.outputs.mini_exclude) }}\n"),
+            ("mini_unit", "          CI_UNIT_OUTCOME: ${{ steps.unit.outcome }}\n"),
+            ("mini_program", "        if: ${{ needs.changes.outputs.selected != 'true' }}\n"),
+            ("mini_program", "        run: node ci/ci-selected-validation.js summarize\n"),
             ("mini_static", "        run: bash ci/xcx-check.sh\n"),
         )
     )
