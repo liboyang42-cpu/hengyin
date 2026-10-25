@@ -1,0 +1,4 @@
+5be310a9ad2f003ddaca056401830d6aa8afb12759e95fb277791570578547e0  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainFaultIsolationMySqlIT.java
+1514b8842294a3874c4d594fc7ba5f114f44f3cddf56c43a57282e5ec7a86257  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainStorageFixture.java
+e303cc6e1a49695976e478b84e7a525cb4b31b4db064e8aec2c1976e00433f4e  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainTransactionSamplingTest.java
+9115623efeea253dc901a78a5f1a4ec90ce620a7bcb3498ac882786b3408fbd3  docs/delivery/architecture-day/C/f1fe75-transaction-sample-freshness/README.md

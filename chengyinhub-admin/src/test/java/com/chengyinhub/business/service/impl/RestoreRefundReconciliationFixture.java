@@ -45,9 +45,11 @@ public final class RestoreRefundReconciliationFixture {
         source=new DriverManagerDataSource(prefix+schema+"?connectionTimeZone=UTC&useSSL=false&allowPublicKeyRetrieval=true",System.getenv("CHENGYIN_TEST_MYSQL_USER"),System.getenv("CHENGYIN_TEST_MYSQL_PASSWORD"));
         phase=System.getenv().getOrDefault("CHENGYIN_RESTORE_PHASE","SOURCE");gap="refund-gap".equals(System.getenv("CHENGYIN_RESTORE_COHORT"));
         if(phase.equals("SOURCE")) {
+            RestoreChildDiagnostics.stage(RestoreChildDiagnostics.Stage.SOURCE_IDENTITY);
             var admin=new JdbcTemplate(new DriverManagerDataSource(prefix+"?useSSL=false&allowPublicKeyRetrieval=true",source.getUsername(),source.getPassword()));
             require(admin.queryForObject("SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=?",Integer.class,schema)==0,"never adopt existing schema");
             require(System.getenv("CHENGYIN_RESTORE_SOURCE_UUID").equals(admin.queryForObject("SELECT @@server_uuid",String.class)),"source UUID");
+            RestoreChildDiagnostics.stage(RestoreChildDiagnostics.Stage.SOURCE_SCHEMA);
             admin.execute("CREATE DATABASE `"+schema+"` CHARACTER SET utf8mb4");
             String base=Files.readString(Path.of("../sql/base_schema_20260818.sql"));var initial=new JdbcTemplate(source);
             for(String table:List.of("cms_registration","cms_topic","cms_activity","refund_application")) {
@@ -60,6 +62,7 @@ public final class RestoreRefundReconciliationFixture {
                 new ResourceDatabasePopulator(new FileSystemResource(Path.of("sql",file))).execute(source);
             initial.update("INSERT INTO cms_activity(id,member_id,topic_id,is_settlement,del_flag) VALUES(20,3,NULL,0,0)");
         }
+        RestoreChildDiagnostics.stage(RestoreChildDiagnostics.Stage.SOURCE_ASSEMBLY);
         db=new JdbcTemplate(source);require(System.getenv("CHENGYIN_RESTORE_SOURCE_UUID").equals(db.queryForObject("SELECT @@server_uuid",String.class)),"phase UUID");
         tx=new DataSourceTransactionManager(source);
         var factory=new SqlSessionFactoryBean();factory.setDataSource(source);factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
@@ -109,7 +112,14 @@ public final class RestoreRefundReconciliationFixture {
         value.put("providerRefundId","WX-"+no);value.put("mchid","merchant");value.put("appid","wx-original");value.put("currency","CNY");value.put("totalFen",6800);
         return value;
     }
-    public static void main(String[] args)throws Exception{require(args.length==0,"fixed child");new RestoreRefundReconciliationFixture().run();}
+    public static void main(String[] args)throws Exception{
+        try {
+            require(args.length==0,"fixed child");var fixture=new RestoreRefundReconciliationFixture();
+            RestoreChildDiagnostics.stage("SOURCE".equals(fixture.phase) ? RestoreChildDiagnostics.Stage.SOURCE_TIMELINE
+                    : RestoreChildDiagnostics.Stage.OWNER_OBSERVATION);
+            fixture.run();
+        } catch (Throwable failure) { RestoreChildDiagnostics.report(failure); System.exit(1); }
+    }
     private void run()throws Exception {
         if(phase.equals("SOURCE")) {
             ReflectionTestUtils.invokeMethod(original,"paid",99L,null,"68.00");

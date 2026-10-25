@@ -154,5 +154,10 @@
     "not_compilation_proof": true
   },
   "Java_DB_CI": "NOT_RUN",
-  "all_complete": false
+  "all_complete": false,
+  "donor_transport_paths_note": "deliveries[].files retain original donor path names; only raw review-patch evidence transports were losslessly base64-renamed in final candidate, code unchanged except explicitly recorded root fixture overlay",
+  "candidate_transport_path_map": {
+    "docs/delivery/architecture-day/H/mixed-profile-6fcdf/owned.review.patch": "docs/delivery/architecture-day/H/mixed-profile-6fcdf/owned.review.patch.base64",
+    "docs/delivery/architecture-day/E/restore-http-graceful-stop-6fcdf/owned.patch": "docs/delivery/architecture-day/E/restore-http-graceful-stop-6fcdf/owned.patch.base64"
+  }
 }

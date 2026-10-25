@@ -5,6 +5,8 @@ No schema builder, app launcher, provider, payment dispatch or independent clean
 framework. A scoped observation is not whole-system capacity/Q4/Q8 acceptance.
 """
 import concurrent.futures
+import datetime
+import decimal
 import hashlib
 import importlib.util
 import itertools
@@ -54,10 +56,80 @@ GAMEPLAY_COMMAND = [
     "-Dloader.path=/recovery-testclasses", "-Dloader.main=" + GAMEPLAY_CHILD,
     "-cp", "/application.jar", "org.springframework.boot.loader.launch.PropertiesLauncher",
 ]
+# Existing economic/entitlement stores used by these actors, never a nonempty-baseline registry.
+GAMEPLAY_EMPTY_TABLES = ("oms_order", "oms_order_item", "coop_order", "registration_entitlement",
+                        "sms_coupon_history", "member_capability", "merchant_subscription",
+                        "ums_member_withdrawal", "member_cash_withdraw")
+AUTHORITY_TABLES = ("sys_role", "sys_role_menu", "sys_menu", "sys_user_role", "user_permission")
 
 
 class NotRun(RuntimeError):
     pass
+
+
+class NoCashFixtureError(RuntimeError):
+    def __init__(self, code, tables=()):
+        super().__init__(code)
+        self.reason_code, self.tables = code, list(tables)
+
+
+def member_rows_digest(columns, rows):
+    # Bind every original column/value and its Python SQL type, including Decimal scale and NULL.
+    return digest({"columns": columns, "rows": rows,
+                   "types": [[type(value).__name__ for value in row] for row in rows]})
+
+
+def gameplay_actor_proof(identities, columns, rows, schema, server_uuid, seed_boot, identities_sha, authority):
+    """Read-only proof of the real child's two source-seeded, zero-cash player identities."""
+    if not isinstance(authority, dict) or set(authority) != set(AUTHORITY_TABLES) | {"accountCredentials"}:
+        raise NoCashFixtureError("GAMEPLAY_ORIGINAL_AUTHORITY_PROOF_MISSING")
+    if len(rows) != 2 or len(columns) != len(set(columns)):
+        raise NoCashFixtureError("GAMEPLAY_MEMBER_COUNT_OR_COLUMNS", ("ums_member",))
+    required = {"id", "phone", "nickname", "wx_open_id", "password", "app_open_id", "union_id", "apple_id",
+                "role", "user_type", "status", "del_flag",
+                "level_id", "balance", "point", "freeze_end_time", "deregister_status",
+                "deregister_apply_time", "deregister_execute_after", "login_time"}
+    if not required.issubset(columns) or any(len(row) != len(columns) for row in rows):
+        raise NoCashFixtureError("GAMEPLAY_MEMBER_PROOF_FIELDS_MISSING", ("ums_member",))
+    records = [dict(zip(columns, row)) for row in rows]
+    actors = {}
+    for index, label in enumerate(("a", "b")):
+        identity = identities.get(label)
+        if not isinstance(identity, dict) or set(identity) != {"memberId", "token"}:
+            raise NoCashFixtureError("GAMEPLAY_ORIGINAL_ACTOR_IDENTITY_MISSING", ("ums_member",))
+        member_id, token = identity["memberId"], identity["token"]
+        if type(member_id) is not int or member_id <= 0 or not isinstance(token, str) or not re.fullmatch(
+                r"[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+", token):
+            raise NoCashFixtureError("GAMEPLAY_ORIGINAL_ACTOR_IDENTITY_INVALID", ("ums_member",))
+        matching = [(row, record) for row, record in zip(rows, records) if record["id"] == member_id]
+        if len(matching) != 1:
+            raise NoCashFixtureError("GAMEPLAY_MEMBER_IDENTITY_MISMATCH", ("ums_member",))
+        row, record = matching[0]
+        if (type(record["id"]) is not int or record["phone"] != "13800000" + ("901" if index == 0 else "902")
+                or record["nickname"] != "进程恢复夹具" + str(index)
+                or record["password"] != "" or any(record[key] is not None for key in ("app_open_id", "union_id", "apple_id"))
+                or not isinstance(record["wx_open_id"], str)
+                or not re.fullmatch(r"recovery-[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}", record["wx_open_id"])):
+            raise NoCashFixtureError("GAMEPLAY_MEMBER_SOURCE_IDENTITY_MISMATCH", ("ums_member",))
+        if not isinstance(record["balance"], decimal.Decimal) or record["balance"] != decimal.Decimal("0.00"):
+            raise NoCashFixtureError("GAMEPLAY_MEMBER_BALANCE_NOT_ZERO", ("ums_member",))
+        if type(record["point"]) is not int or record["point"] != 0:
+            raise NoCashFixtureError("GAMEPLAY_MEMBER_POINTS_NOT_ZERO", ("ums_member",))
+        if (record["role"] != "player" or any(type(record[key]) is not int or record[key] != value
+                for key, value in (("user_type", 1), ("status", 1), ("del_flag", 0), ("level_id", 0)))
+                or record["freeze_end_time"] is not None or record["deregister_status"] != "NORMAL"
+                or record["deregister_apply_time"] is not None or record["deregister_execute_after"] is not None
+                or not isinstance(record["login_time"], datetime.datetime)):
+            raise NoCashFixtureError("GAMEPLAY_MEMBER_AUTH_OR_LIFECYCLE_MISMATCH", ("ums_member",))
+        actors[label] = {"memberId": member_id, "tokenSha256": hashlib.sha256(token.encode()).hexdigest(),
+                         "rowSha256": member_rows_digest(columns, [row])}
+    if actors["a"]["memberId"] == actors["b"]["memberId"] or set(record["id"] for record in records) != {
+            actors["a"]["memberId"], actors["b"]["memberId"]}:
+        raise NoCashFixtureError("GAMEPLAY_MEMBER_EXTRA_OR_DUPLICATE_IDENTITY", ("ums_member",))
+    return {"schema": schema, "serverUuid": server_uuid, "seedBootId": seed_boot,
+            "identitiesSha256": identities_sha, "columns": list(columns),
+            "rowsSha256": member_rows_digest(columns, rows), "actors": actors,
+            "authority": json.loads(json.dumps(authority))}
 
 
 def validate_env(env):
@@ -142,7 +214,7 @@ def validate_gameplay_binding(objects, binding):
     hashes = ("jarSha256", "childSourceSha256", "childClassSha256",
               "testClassTreeSha256", "configSha256", "fixturePropertiesSha256")
     require(isinstance(binding, dict) and set(binding) == set(hashes) | {
-        "sourceSha", "boot", "appCid", "appPid", "appStartedAt", "networkId", "storeProcessIdentity",
+        "sourceSha", "boot", "appCid", "appPid", "appStartedAt", "networkId", "storeProcessIdentity", "actorProof",
     }, "exact gameplay profile binding required")
     require(isinstance(binding["sourceSha"], str) and binding["sourceSha"] == os.environ.get("GITHUB_SHA")
             and re.fullmatch(r"[0-9a-f]{40}", binding["sourceSha"]) is not None,
@@ -150,6 +222,12 @@ def validate_gameplay_binding(objects, binding):
     require(all(isinstance(binding[key], str)
                 and re.fullmatch(r"[0-9a-f]{64}", binding[key]) for key in hashes),
             "complete gameplay artifact binding required")
+    proof = binding["actorProof"]
+    require(isinstance(proof, dict) and set(proof) == {
+        "schema", "serverUuid", "seedBootId", "identitiesSha256", "columns", "rowsSha256", "actors", "authority",
+    } and isinstance(proof["actors"], dict) and set(proof["actors"]) == {"a", "b"}, "original actor proof required")
+    require(all(isinstance(proof[key], str) and re.fullmatch(r"[0-9a-f]{64}", proof[key])
+                for key in ("identitiesSha256", "rowsSha256")), "original actor proof hashes required")
     boot = binding["boot"]
     require(isinstance(boot, dict) and set(boot) == {
         "bootId", "javaPid", "sourceSha", "jarSha256", "childClassSha256", "configSha256", "port",
@@ -453,13 +531,16 @@ done
                     and not self.jar.is_symlink() and self.jar.resolve() == self.jar.absolute()
                     and file_digest(self.jar)["sha256"] == binding["jarSha256"], "gameplay source/JAR/PID changed")
             private = self.private.parent / "gameplay"
-            config_file, ready_file = private / "config.json", private / "ready.json"
-            for path in (private, config_file, ready_file):
+            config_file, ready_file, identities_file = private / "config.json", private / "ready.json", private / "identities.json"
+            for path in (private, config_file, ready_file, identities_file):
                 require(not path.is_symlink() and path.resolve() == path.absolute(), "gameplay private path changed")
             require(config_file.stat().st_mode & 0o777 == 0o600
-                    and ready_file.stat().st_mode & 0o777 == 0o600, "gameplay private file mode changed")
+                    and ready_file.stat().st_mode & 0o777 == 0o600
+                    and identities_file.stat().st_mode & 0o777 == 0o600, "gameplay private file mode changed")
             require(file_digest(config_file)["sha256"] == binding["configSha256"]
                     and json.loads(ready_file.read_text()) == binding["boot"], "original config/recovered boot changed")
+            require(file_digest(identities_file)["sha256"] == binding["actorProof"]["identitiesSha256"],
+                    "original actor identity file changed")
             config = json.loads(config_file.read_text())
             require(set(config) == {"sourceSha", "jarSha256", "childClassSha256", "schema", "serverUuid",
                                     "jdbcUrl", "redisHost", "tokenSecret", "capacityItems"}, "unknown gameplay config")
@@ -503,7 +584,8 @@ done
                         and actual[0]["Source"] == str(source_path) and actual[0]["RW"] is writable,
                         "fixed gameplay mount changed")
             files.extend(((config_file, "/recovery-private/config.json"),
-                          (ready_file, "/recovery-private/ready.json")))
+                          (ready_file, "/recovery-private/ready.json"),
+                          (identities_file, "/recovery-private/identities.json")))
             result.update(entry="GAMEPLAY_PROCESS_RECOVERY", bindingSha256=digest(binding),
                           childSourceSha256=binding["childSourceSha256"],
                           testClassTreeSha256=binding["testClassTreeSha256"],
@@ -597,16 +679,52 @@ done
         self.logged_at = time.monotonic()
 
     def protected(self):
-        tables = auth.FINANCIAL_TABLES + (
-            "sys_role", "sys_role_menu", "sys_menu", "sys_user_role", "user_permission")
+        tables = auth.FINANCIAL_TABLES + AUTHORITY_TABLES
+        if self.gameplay_binding is not None:
+            tables += GAMEPLAY_EMPTY_TABLES
         result = {}
+        self.report["protectedCollection"] = {"result": "COLLECTING", "tables": result}
         for table in tables:
-            values = self.rows("SELECT * FROM `" + table + "` ORDER BY 1")
-            result[table] = {"rows": len(values), "sha256": digest(values),
-                             "ddlSha256": digest(self.rows("SHOW CREATE TABLE `" + table + "`"))}
+            if table == "ums_member" and self.gameplay_binding is not None:
+                with self.db.cursor() as cur:
+                    cur.execute("SELECT * FROM ums_member ORDER BY id")
+                    values = cur.fetchmany(4097)
+                    require(len(values) <= 4096, "bounded fixture query exceeded")
+                    self.member_columns = [column[0] for column in cur.description]
+                    self.member_rows = values
+            else:
+                values = self.rows("SELECT * FROM `" + table + "` ORDER BY 1")
+            result[table] = {"rows": len(values), "sha256": digest(values)}
+            self.save()
+            result[table]["ddlSha256"] = digest(self.rows("SHOW CREATE TABLE `" + table + "`"))
+            self.save()
         result["accountCredentials"] = digest(self.rows(
             "SELECT user_id,user_name,password,status,del_flag FROM sys_user ORDER BY user_id"))
+        self.report["protectedCollection"]["result"] = "COLLECTED"
+        self.save()
         return result
+
+    def require_gameplay_no_cash(self, protected):
+        binding = self.gameplay_binding
+        require(binding is not None, "explicit gameplay profile required")
+        validate_gameplay_binding(self.objects, binding)
+        empty = tuple(table for table in auth.FINANCIAL_TABLES if table != "ums_member") + GAMEPLAY_EMPTY_TABLES
+        bad = [table for table in empty if protected[table]["rows"] != 0]
+        if bad:
+            raise NoCashFixtureError("GAMEPLAY_UNEXPECTED_ECONOMIC_ROWS", bad)
+        proof = binding["actorProof"]
+        path = self.private.parent / "gameplay/identities.json"
+        identities = json.loads(path.read_text())
+        observed = gameplay_actor_proof(identities, self.member_columns, self.member_rows,
+            self.schema, self.saved["serverUuid"], proof["seedBootId"], file_digest(path)["sha256"],
+            {key: protected[key] for key in AUTHORITY_TABLES + ("accountCredentials",)})
+        if observed["authority"] != proof["authority"]:
+            raise NoCashFixtureError("GAMEPLAY_ORIGINAL_AUTHORITY_CHANGED",
+                                     [key for key in observed["authority"] if observed["authority"][key] != proof["authority"].get(key)])
+        if observed != proof:
+            raise NoCashFixtureError("GAMEPLAY_ORIGINAL_MEMBER_FACT_CHANGED", ("ums_member",))
+        if self.rows("SELECT COUNT(*) FROM refund_application")[0][0] != 0:
+            raise NoCashFixtureError("GAMEPLAY_REFUND_FIXTURE_NOT_EMPTY", ("refund_application",))
 
     def refund(self):
         with self.db.cursor() as cur:
@@ -869,9 +987,19 @@ def observe(name, schema, out, private, relay_port, *, gameplay_binding=None):
         probe.save()
         probe.login()
         protected = probe.protected()
-        require(all(protected[table]["rows"] == 0 for table in auth.FINANCIAL_TABLES),
-                "financial fixture not empty; no cash workload permitted")
         report["protectedBefore"] = protected
+        probe.save()
+        if probe.gameplay_binding is None:
+            bad = [table for table in auth.FINANCIAL_TABLES if protected[table]["rows"] != 0]
+            report["protectedAdmission"] = {"reasonCode": "DEFAULT_FINANCIAL_NOT_EMPTY" if bad else "DEFAULT_FINANCIAL_EMPTY",
+                                            "tables": bad}
+            probe.save()
+            require(all(protected[table]["rows"] == 0 for table in auth.FINANCIAL_TABLES),
+                    "financial fixture not empty; no cash workload permitted")
+        else:
+            probe.require_gameplay_no_cash(protected)
+        report["protectedAdmission"] = {"reasonCode": "ORIGINAL_NO_CASH_FACTS_VERIFIED", "tables": []}
+        probe.save()
         probe.curves()
         probe.mixed()
         report["protectedAfter"] = probe.protected()
@@ -886,6 +1014,10 @@ def observe(name, schema, out, private, relay_port, *, gameplay_binding=None):
         first_error = exc
         report["result"] = "NOT_RUN_ADMISSION" if isinstance(exc, NotRun) else "FAIL_PARTIAL"
         report["firstFailure"] = {"type": type(exc).__name__}
+        if isinstance(exc, NoCashFixtureError):
+            report["firstFailure"].update(reasonCode=exc.reason_code, tables=exc.tables)
+        elif report.get("protectedAdmission", {}).get("tables"):
+            report["firstFailure"].update(report["protectedAdmission"])
         if probe is not None:
             try:
                 # Fence any unsettled command before either dependency recovers.
@@ -914,6 +1046,8 @@ def observe(name, schema, out, private, relay_port, *, gameplay_binding=None):
 
 def validate_observation(report, identity):
     require(report.get("result") == PASS_OBSERVATION, "observation incomplete")
+    require(report.get("protectedAdmission", {}).get("reasonCode") == "ORIGINAL_NO_CASH_FACTS_VERIFIED",
+            "original no-cash admission not proved")
     require(report.get("identity") == identity, "foreign source/run/attempt")
     require(report.get("initial") == report.get("final"), "runtime identity changed")
     require(report.get("jarBefore") == report.get("jarAfter")
@@ -948,6 +1082,7 @@ def finalize(name, schema, out, original_exit):
     """After existing auth.cleanup: independently check exact IDs and exact names."""
     path = out / "capacity-mixed.json"
     report = json.loads(path.read_text())
+    report.setdefault("businessResultBeforeCleanup", report["result"])
     report["originalExitCode"] = original_exit
     checks = []
     try:

@@ -1,0 +1,78 @@
+{
+  "source": "f1fe75d646f8ae57864ee5603c68e70e7fabc854",
+  "run": 40237893397,
+  "attempt": 1,
+  "artifact": 12615004081,
+  "ZIP_sha256": "a5d80cfcbcd9570460f95f5dd756669a187399509ff4deffaff5bfdf6031cd8a",
+  "CRC": "PASS",
+  "all3_original_receipts_source_scope_verified": true,
+  "original_receipts": {
+    "host": {
+      "acceptance": "NOT_FULL_T20_OR_PRODUCTION_ACCEPTANCE",
+      "cleanupFailures": [],
+      "cohort": "payment-gap",
+      "exitCode": 1,
+      "firstFailure": {
+        "errorType": null,
+        "failureType": "COMMAND_EXIT",
+        "guardCode": null,
+        "operation": "PROBE_FINALIZE",
+        "reasonCode": "UNKNOWN",
+        "returnCode": 1,
+        "safeReasonExcerpt": "No reviewed safe reason matched; do not infer the Docker rejection cause",
+        "stage": "finalize",
+        "stderrBytes": 84,
+        "stderrCaptured": true,
+        "stderrSha256": "b09dcc2b7128e83619ecbba5316a79fb2adc49e9d94c8f4161e30ea0e4e3e260",
+        "substage": "relay-close"
+      },
+      "lastStage": "finalize",
+      "mysqlTransports": {
+        "source": "OWNED_MYSQL_LOOPBACK_RELAY",
+        "target": "OWNED_MYSQL_LOOPBACK_RELAY"
+      },
+      "originalExit": 1,
+      "probeFinalized": false,
+      "resourceCleanup": "EXACT_ABSENCE",
+      "runAttempt": "1",
+      "runId": "40237893397",
+      "scope": "e6d02c14170747a1b71236e4be784fbe",
+      "sourceSha": "f1fe75d646f8ae57864ee5603c68e70e7fabc854"
+    },
+    "reconciliation": {
+      "businessResult": "FAIL",
+      "candidateState": "BLOCKED",
+      "cleanup": "PENDING_OUTER_EXACT_RESOURCE_CLEANUP",
+      "cleanupFailures": [
+        "source-create-unconfirmed"
+      ],
+      "dispatchRelease": false,
+      "primaryFailureType": "ValueError",
+      "primaryReason": "fixture child exited before fixed boundary",
+      "processExit": 1,
+      "resourcesSha256": "683797905025ad7a805f7e29bba0297d35f9d274579dc0e9ab69f8c94e1b1bb6",
+      "rpo": "UNKNOWN",
+      "rto": "UNKNOWN",
+      "schemaCleanup": "UNKNOWN",
+      "scope": "e6d02c14170747a1b71236e4be784fbe",
+      "sourceSha": "f1fe75d646f8ae57864ee5603c68e70e7fabc854"
+    },
+    "finalized": {
+      "absenceFailures": [],
+      "businessResult": "FAIL",
+      "candidateState": "BLOCKED",
+      "cohort": "payment-gap",
+      "dispatchRelease": false,
+      "originalExit": 1,
+      "resourceCleanup": "EXACT_ABSENCE",
+      "result": "FAIL",
+      "scope": "e6d02c14170747a1b71236e4be784fbe",
+      "sourceSha": "f1fe75d646f8ae57864ee5603c68e70e7fabc854"
+    }
+  },
+  "original_binding_missing_crossed": true,
+  "primary_business_failure": "fixture child exited before fixed boundary at source creation; no reviewed child cause available yet",
+  "secondary_host_failure": "finalize relay-close must not hide reconciliation primary",
+  "whole_seven_cohort_accepted": false,
+  "all_complete": false
+}

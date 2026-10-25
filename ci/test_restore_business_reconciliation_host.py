@@ -92,7 +92,11 @@ class RestoreHostControls(unittest.TestCase):
             with self.subTest(original=original, cleanup=cleanup), tempfile.TemporaryDirectory() as temp:
                 root = Path(temp); private = root / 'private'; private.mkdir(); output = root / 'out'; output.mkdir()
                 worker = host.Host(root, private, output, SCOPE, 'refund-complete')
-                worker.resources.write_text('{}'); (output / 'reconciliation.json').write_text('{}')
+                worker.resources.write_text('{}')
+                identity = dict(sourceSha=SHA, scope=SCOPE, cohort=worker.cohort, runId='101', runAttempt='1',
+                    resourcesSha256=host.hashlib.sha256(worker.resources.read_bytes()).hexdigest())
+                host.write_private(output / 'reconciliation.json', json.dumps(dict(identity,
+                    processExit=original, businessResult='FAIL' if original else 'SCOPED_DIFFERENCES_VERIFIED_RELEASE_BLOCKED')))
                 order = []
                 def remove():
                     order.append('resources-removed')
@@ -105,15 +109,20 @@ class RestoreHostControls(unittest.TestCase):
                     order.append('finalized')
                     if final_failure:
                         raise ValueError('fixed failure')
+                    host.write_private(output / 'finalized.json', json.dumps(dict(identity, finalization='RECORDED',
+                        originalExit=expected, dispatchRelease=False, resourceCleanup='EXACT_ABSENCE',
+                        businessResult='FAIL' if original else 'SCOPED_DIFFERENCES_VERIFIED_RELEASE_BLOCKED',
+                        result='FAIL' if expected else 'SCOPED_OBSERVATION_COMPLETE_RELEASE_BLOCKED')))
                 with mock.patch.object(worker, 'cleanup', side_effect=remove), \
                      mock.patch.object(worker, 'command', side_effect=finalize), \
-                     mock.patch.dict(os.environ, {'GITHUB_SHA': SHA}):
+                     mock.patch.dict(os.environ, {'GITHUB_SHA': SHA, 'GITHUB_RUN_ID': '101', 'GITHUB_RUN_ATTEMPT': '1'}):
                     self.assertEqual(expected, worker.finish(original))
                 self.assertEqual(['resources-removed', 'finalized'], order)
                 self.assertFalse(private.exists())
                 receipt = json.loads((output / 'host.json').read_text())
                 self.assertEqual(original, receipt['originalExit'])
                 self.assertEqual(expected, receipt['exitCode'])
+                self.assertEqual(not final_failure, receipt['probeFinalized'])
 
     def test_missing_probe_receipt_never_turns_bootstrap_failure_into_success(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -702,6 +711,70 @@ class RestoreHostControls(unittest.TestCase):
                     self.assertIsInstance(caught.exception, host.InspectAbsenceUnproven)
                     self.assertEqual('INSPECT_ABSENCE_UNPROVEN', caught.exception.guard_code)
                     self.assertNotIn('PRIVATE', str(caught.exception))
+
+    def test_business_child_exit_stays_primary_when_fail_finalizer_records_exact_cleanup(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); private = root / 'private'; private.mkdir(); output = root / 'out'; output.mkdir()
+            worker = host.Host(root, private, output, SCOPE, 'payment-gap'); worker.resources.write_text('{}')
+            identity = dict(sourceSha=SHA, scope=SCOPE, cohort=worker.cohort, runId='101', runAttempt='1',
+                resourcesSha256=host.hashlib.sha256(worker.resources.read_bytes()).hexdigest())
+            host.write_private(output / 'reconciliation.json', json.dumps(dict(identity, businessResult='FAIL',
+                processExit=1, schemaCleanup='UNKNOWN', cleanupFailures=['source-create-unconfirmed'],
+                primaryFailureType='ChildBoundaryFailure', primaryReasonCode='CHILD_EOF_BEFORE_BOUNDARY',
+                primaryReason='PRIVATE_SECRET_CANARY')))
+            events = []
+            def close():
+                self.assertEqual('PROBE_RUN', worker.first_failure['operation']); events.append('relay-close')
+            def cleanup(): events.append('exact-cleanup'); return []
+            def finalize(args, **kwargs):
+                self.assertEqual(['relay-close', 'exact-cleanup'], events)
+                self.assertEqual(('finalize', 'fixed-probe-finalize'), (worker.stage, worker.substage))
+                host.write_private(output / 'finalized.json', json.dumps(dict(identity, finalization='RECORDED',
+                    originalExit=1, result='FAIL', dispatchRelease=False, businessResult='FAIL',
+                    resourceCleanup='EXACT_ABSENCE')))
+                worker.remember_failure('COMMAND_EXIT', 'PROBE_FINALIZE', 1, b'PRIVATE_FINALIZER')
+                raise ValueError('expected nonzero business finalizer')
+            with mock.patch.dict(os.environ, {'GITHUB_SHA': SHA, 'GITHUB_RUN_ID': '101', 'GITHUB_RUN_ATTEMPT': '1'}), \
+                 mock.patch.object(worker.relays, 'close', side_effect=close), \
+                 mock.patch.object(worker, 'cleanup', side_effect=cleanup), mock.patch.object(worker, 'command', side_effect=finalize):
+                self.assertEqual(1, worker.finish(1))
+            receipt = json.loads((output / 'host.json').read_text())
+            self.assertTrue(receipt['probeFinalized']); self.assertEqual('EXACT_ABSENCE', receipt['resourceCleanup'])
+            self.assertEqual(('probe', 'fixed-probe-exit', 'PROBE_RUN', 1), tuple(receipt['firstFailure'][k]
+                for k in ('stage', 'substage', 'operation', 'returnCode')))
+            self.assertEqual('CHILD_EOF_BEFORE_BOUNDARY', receipt['firstFailure']['primaryReasonCode'])
+            self.assertEqual('MATCHED', receipt['firstFailure']['probeReceipt'])
+            self.assertNotIn('PRIVATE', json.dumps(receipt)); self.assertFalse(private.exists())
+
+    def test_unreadable_or_other_scope_probe_receipt_cannot_be_adopted_or_finalize_green(self):
+        for content in ('{PRIVATE', json.dumps(dict(sourceSha='f' * 40, scope=SCOPE, cohort='payment-gap',
+                         runId='101', runAttempt='1', resourcesSha256='0' * 64))):
+            with self.subTest(content=content[:1]), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp); private = root / 'private'; private.mkdir(); output = root / 'out'; output.mkdir()
+                worker = host.Host(root, private, output, SCOPE, 'payment-gap'); worker.resources.write_text('{}')
+                host.write_private(output / 'reconciliation.json', content)
+                host.write_private(output / 'finalized.json', content)
+                with mock.patch.dict(os.environ, {'GITHUB_SHA': SHA, 'GITHUB_RUN_ID': '101', 'GITHUB_RUN_ATTEMPT': '1'}), \
+                     mock.patch.object(worker, 'cleanup', return_value=[]), mock.patch.object(worker, 'command'):
+                    self.assertEqual(1, worker.finish(1))
+                receipt = json.loads((output / 'host.json').read_text())
+                self.assertFalse(receipt['probeFinalized'])
+                self.assertEqual('UNAVAILABLE_OR_MISMATCHED', receipt['firstFailure']['probeReceipt'])
+                self.assertEqual('PROBE_RUN', receipt['firstFailure']['operation'])
+                self.assertNotIn('PRIVATE', json.dumps(receipt))
+
+    def test_zero_probe_exit_cannot_overrule_a_matching_business_fail_receipt(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); worker = host.Host(root, root, root, SCOPE, 'payment-gap')
+            worker.resources.write_text('{}')
+            host.write_private(root / 'reconciliation.json', json.dumps(dict(sourceSha=SHA, scope=SCOPE,
+                cohort='payment-gap', runId='101', runAttempt='1', businessResult='FAIL',
+                resourcesSha256=host.hashlib.sha256(worker.resources.read_bytes()).hexdigest())))
+            with mock.patch.dict(os.environ, {'GITHUB_SHA': SHA, 'GITHUB_RUN_ID': '101', 'GITHUB_RUN_ATTEMPT': '1'}):
+                worker.remember_probe_exit(0)
+            self.assertEqual('PROBE_RUN_EXIT', worker.first_failure['failureType'])
+            self.assertEqual('MATCHED', worker.first_failure['probeReceipt'])
+            self.assertEqual(0, worker.first_failure['returnCode'])
 
     def test_untyped_owner_value_error_message_cannot_forge_guard_code_or_replace_first_substage(self):
         with tempfile.TemporaryDirectory() as temp:

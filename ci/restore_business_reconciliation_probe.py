@@ -33,6 +33,81 @@ TABLES = ('cms_registration', 'wx_pay_order_intent', 'wx_verified_payment_fact',
           'ums_member_balance_detail', 'refund_application', 'cms_registration_scan')
 HIGH_IDS = {'cms_registration': 'id', 'wx_pay_order_intent': 'id',
             'wx_verified_payment_fact': 'id', 'ums_member_points_detail': 'id'}
+CHILD_STAGES = {'ADMISSION', 'SOURCE_IDENTITY', 'SOURCE_SCHEMA', 'SOURCE_RESET', 'SOURCE_ASSEMBLY',
+                'HISTORICAL_PAYMENT', 'SOURCE_TIMELINE', 'BACKUP_BOUNDARY', 'AFTER_BACKUP', 'FAULT_BOUNDARY', 'OWNER_OBSERVATION'}
+CHILD_CAUSES = {'UNKNOWN', 'java.lang.IllegalArgumentException', 'java.lang.IllegalStateException',
+    'java.lang.NullPointerException', 'java.lang.AssertionError', 'java.lang.ClassNotFoundException',
+    'java.lang.NoClassDefFoundError', 'java.lang.ExceptionInInitializerError', 'java.lang.reflect.InvocationTargetException',
+    'java.io.IOException', 'java.nio.file.NoSuchFileException', 'java.sql.SQLException',
+    'java.sql.SQLSyntaxErrorException', 'java.sql.SQLIntegrityConstraintViolationException',
+    'java.sql.SQLNonTransientConnectionException', 'java.sql.SQLTransientConnectionException',
+    'org.opentest4j.AssertionFailedError', 'org.springframework.jdbc.BadSqlGrammarException',
+    'org.springframework.jdbc.CannotGetJdbcConnectionException', 'org.springframework.jdbc.datasource.init.ScriptStatementFailedException',
+    'org.springframework.dao.DataIntegrityViolationException', 'org.springframework.beans.factory.BeanCreationException',
+    'com.chengyinhub.common.exception.ServiceException'}
+CHILD_SQL_STATES = {'08001', '08003', '08004', '08006', '08S01', '28000', '42000', '42S01', '42S02', '42S21',
+                    '42S22', '23000', '22001', '22003', 'HY000', 'HY001', 'HYT00', 'HYT01', '40001'}
+CHILD_ORIGINS = {CHILD, 'com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest',
+    'com.chengyinhub.business.service.impl.RestoreWithdrawalReconciliationFixture',
+    'com.chengyinhub.business.service.impl.RestoreRefundReconciliationFixture',
+    'com.chengyinhub.business.service.impl.RefundRetryAndRemainderMySqlIT',
+    'com.chengyinhub.business.service.impl.FundsRecoveryProcessProbe$Store',
+    'com.chengyinhub.business.service.ai.RestoreVoiceReconciliationFixture'}
+
+
+class ChildBoundaryFailure(ValueError):
+    REASONS = {'CHILD_EOF_BEFORE_BOUNDARY': 'fixture child exited before fixed boundary',
+               'CHILD_EXIT_BEFORE_BOUNDARY': 'fixture child failed',
+               'CHILD_OUTPUT_BUDGET': 'fixture output exceeds fixed line budget',
+               'CHILD_BOUNDARY_TIMEOUT': 'fixed boundary deadline exceeded; no restart or replay'}
+    def __init__(self, code):
+        self.code = code
+        super().__init__(self.REASONS[code])
+
+
+def child_failure(path, expected):
+    """Bounded typed evidence only. Raw stderr/messages/paths never enter a public receipt."""
+    evidence = {'diagnosticState': 'UNKNOWN', 'stderrBytes': None, 'stderrSha256': None}
+    try:
+        path = private_file(path)
+        size = path.stat().st_size; evidence['stderrBytes'] = size
+        if size > 1048576:
+            evidence['diagnosticState'] = 'EXCEEDS_FIXED_BUDGET'; return evidence
+        with path.open('rb') as stream: raw = stream.read(1048577)
+        if len(raw) != size or path.stat().st_size != size:
+            evidence['diagnosticState'] = 'UNSTABLE_OR_EXCESS_STDERR'; return evidence
+        evidence['stderrSha256'] = sha(raw)
+        prefix = b'RESTORE_CHILD_FAILURE_V1:'
+        rows = [line[len(prefix):] for line in raw.splitlines() if line.startswith(prefix)]
+        if not rows:
+            evidence['diagnosticState'] = 'NO_TYPED_FAILURE'
+            headers = {('Error: Could not find or load main class ' + expected['childClass']).encode(): 'JVM_MAIN_CLASS_NOT_FOUND',
+                       ('Error: Unable to initialize main class ' + expected['childClass']).encode(): 'JVM_MAIN_CLASS_INITIALIZATION'}
+            matches = {code for line in raw.splitlines() for header, code in headers.items() if line == header}
+            if len(matches) == 1:
+                evidence.update(diagnosticState='REVIEWED_LAUNCHER_FAILURE', launcherCategory=matches.pop())
+            return evidence
+        require(len(rows) == 1 and len(rows[0]) <= 8192, 'one bounded typed failure required')
+        row = json.loads(rows[0])
+        require(set(row) == {'protocol', 'stage', 'sourceSha', 'scope', 'boot', 'cohort', 'causeTypes', 'sqlState', 'sqlErrorCode', 'origin'},
+                'typed failure shape differs')
+        require(row['protocol'] == 'RESTORE_CHILD_FAILURE_V1' and row['stage'] in CHILD_STAGES
+                and all(row[key] == expected[key] for key in ('sourceSha', 'scope', 'boot', 'cohort')),
+                'typed failure belongs to another original child')
+        require(isinstance(row['causeTypes'], list) and 1 <= len(row['causeTypes']) <= 8
+                and all(type(value) is str and value in CHILD_CAUSES for value in row['causeTypes']), 'unreviewed failure cause')
+        require(row['sqlState'] is None or (type(row['sqlState']) is str and row['sqlState'] in CHILD_SQL_STATES),
+                'invalid SQL state category')
+        require(row['sqlErrorCode'] is None or (row['sqlState'] is not None and type(row['sqlErrorCode']) is int
+                and 0 <= row['sqlErrorCode'] <= 65535), 'invalid SQL error category')
+        origin = row['origin']
+        require(origin is None or (type(origin) is dict and set(origin) == {'class', 'line'}
+                and type(origin['class']) is str and origin['class'] in CHILD_ORIGINS
+                and type(origin['line']) is int and 0 < origin['line'] <= 100000), 'unreviewed source origin')
+        evidence.update(diagnosticState='TYPED_FAILURE', javaFailure=row)
+    except BaseException:
+        evidence['diagnosticState'] = 'UNREADABLE_OR_UNTRUSTED'
+    return evidence
 
 
 def module(name, path):
@@ -320,15 +395,18 @@ def wait_phase(child, phase, deadline):
         ready, _, _ = select.select([child.stdout], [], [], min(1, max(0, deadline - time.monotonic())))
         if ready:
             block = os.read(child.stdout.fileno(), 65536)
-            require(block, 'fixture child exited before fixed boundary')
+            if not block:
+                try: child.wait(timeout=1)
+                except subprocess.TimeoutExpired: pass
+                raise ChildBoundaryFailure('CHILD_EOF_BEFORE_BOUNDARY')
             pending += block
-            require(len(pending) < 1024 * 1024, 'fixture output exceeds fixed line budget')
+            if len(pending) >= 1024 * 1024: raise ChildBoundaryFailure('CHILD_OUTPUT_BUDGET')
             while b'\n' in pending:
                 line, pending = pending.split(b'\n', 1)
                 if line.strip() == marker:
                     return
-        require(child.poll() is None, 'fixture child failed')
-    raise ValueError('fixed boundary deadline exceeded; no restart or replay')
+        if child.poll() is not None: raise ChildBoundaryFailure('CHILD_EXIT_BEFORE_BOUNDARY')
+    raise ChildBoundaryFailure('CHILD_BOUNDARY_TIMEOUT')
 
 
 def child_environment(resources, options, journal_path):
@@ -404,7 +482,8 @@ def run(resources_path, output, private):
     jar = ROOT / 'chengyinhub-admin/target/chengyinhub-admin.jar'
     with zipfile.ZipFile(jar) as package:
         require(not any(('ReconciliationFixture' in p and 'Restore' in p) or 'RestoreProviderJournal' in p
-                        or 'FundsRecoveryProcessProbe' in p for p in package.namelist()), 'test entry must not be packaged')
+                        or 'FundsRecoveryProcessProbe' in p or 'RestoreChildDiagnostics' in p
+                        for p in package.namelist()), 'test entry must not be packaged')
         # admin pom uses generateGitPropertiesFile=true/default outputDirectory/git.properties,
         # includeOnlyProperties=^git.commit.id$. No synthetic META-INF fallback/build stamp is accepted.
         build = dict(line.split('=', 1) for line in package.read('BOOT-INF/classes/git.properties').decode().splitlines()
@@ -423,6 +502,20 @@ def run(resources_path, output, private):
         # Its lifecycle is never called: actual datasource/schema/UUID are explicitly supplied by this bridge.
         env['CHENGYIN_TEST_MYSQL_DATABASE_BASE']='cy_restore_'+resources['scope'][:12]
     child, result, primary, created = None, {}, None, []
+    child_runs = []
+    unconfirmed_children = []
+    def stop_exact(process, phase):
+        if process.poll() is None:
+            try:
+                process.kill(); process.wait(timeout=15)
+            except BaseException:
+                unconfirmed_children.append(phase + '-child-exit-unconfirmed')
+    diagnostic_class = ROOT / 'chengyinhub-admin/target/test-classes/com/chengyinhub/business/service/RestoreChildDiagnostics.class'
+    require(diagnostic_class.is_file(), 'same-source typed diagnostic class missing')
+    child_identity = {'sourceSha': resources['sourceSha'], 'scope': resources['scope'], 'cohort': cohort,
+        'runId': os.environ['GITHUB_RUN_ID'], 'runAttempt': os.environ['GITHUB_RUN_ATTEMPT'],
+        'childClass': child_name, 'testChildSha256': tool.digest(child_class), 'jarSha256': tool.digest(jar),
+        'classpathFileSha256': tool.digest(cpfile), 'diagnosticClassSha256': tool.digest(diagnostic_class)}
     source_creation_pending = False
     target_creation_pending = False
     started = time.monotonic()
@@ -440,8 +533,10 @@ def run(resources_path, output, private):
         # Failure before the fixed boundary may have partially created a schema. Do NOT adopt/drop it as confirmed ownership.
         source_creation_pending = True
         with (private / 'child.stderr').open('xb') as errors:
+            os.chmod(errors.name, 0o600)
             child = subprocess.Popen(['java', '-Xmx512m', '-cp', cp, child_name], cwd=ROOT / 'chengyinhub-admin',
                                      env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=errors, bufsize=0)
+            child_runs.append((child, Path(errors.name), dict(child_identity, phase='SOURCE', boot=env['CHENGYIN_RESTORE_BOOT'])))
             wait_phase(child, 'BACKUP_READY', started + 180)
             created.append('source'); source_creation_pending = False
             before = snapshot('source'); p_before = read_journal(provider, resources['scope'])
@@ -478,9 +573,13 @@ def run(resources_path, output, private):
         if domain is None:
             guarded_env = dict(env, CHENGYIN_RESTORE_PHASE='RESTORED_GUARD',
                                CHENGYIN_RESTORE_GUARD_FILE=str(private / 'provider/gateway.json'))
-            guard = subprocess.run(['java', '-Xmx256m', '-cp', cp, CHILD], cwd=ROOT / 'chengyinhub-admin',
-                                   env=guarded_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=40)
-            require(guard.returncode == 0, 'disabled gateway probe failed')
+            with (private / 'guard.stderr').open('xb') as errors:
+                os.chmod(errors.name, 0o600)
+                guard = subprocess.Popen(['java', '-Xmx256m', '-cp', cp, CHILD], cwd=ROOT / 'chengyinhub-admin',
+                                         env=guarded_env, stdout=subprocess.DEVNULL, stderr=errors)
+                child_runs.append((guard, Path(errors.name), dict(child_identity, phase='RESTORED_GUARD', boot=env['CHENGYIN_RESTORE_BOOT'])))
+                try: require(guard.wait(timeout=40) == 0, 'disabled gateway probe failed')
+                finally: stop_exact(guard, 'guard')
             gateway = json.loads(private_file(private / 'provider/gateway.json').read_text())
             require(gateway == {'state': 'SDK_DISABLED_ONLY', 'createRejected': True,
                                 'allDispatchDomainsFenced': False, 'recoveryRelease': 'BLOCKED'}, 'gateway boundary changed')
@@ -502,11 +601,12 @@ def run(resources_path, output, private):
                 before_path=private / ('owner-'+phase+'-before.json');after_path=private / ('owner-'+phase+'-after.json')
                 save(before_path,previous_rows)
                 with (private / ('owner-'+phase+'.stderr')).open('xb') as errors:
+                    os.chmod(errors.name, 0o600)
                     process=subprocess.Popen(['java','-Xmx512m','-cp',cp,child_name],cwd=ROOT/'chengyinhub-admin',
                                              env=phase_env,stdout=subprocess.DEVNULL,stderr=errors)
+                    child_runs.append((process, Path(errors.name), dict(child_identity, phase=phase, boot=boot)))
                     try: require(process.wait(timeout=60)==0,'actual owner boot/readback failed')
-                    finally:
-                        if process.poll() is None:process.kill();process.wait(timeout=15)
+                    finally: stop_exact(process, phase)
                 observed=json.loads(private_file(evidence).read_text())
                 require(observed['pid']==process.pid and observed['boot']==boot and observed['startedAt'],'owner process identity')
                 current_rows=snapshot('target');current_external=read_journal(provider,resources['scope'])
@@ -554,9 +654,11 @@ def run(resources_path, output, private):
     except BaseException as failure:
         primary = failure
         result = {'sourceSha': resources['sourceSha'], 'scope': resources['scope'], 'businessResult': 'FAIL',
+                  'cohort': cohort, 'runId': os.environ['GITHUB_RUN_ID'], 'runAttempt': os.environ['GITHUB_RUN_ATTEMPT'],
                   'resourcesSha256': tool.digest(Path(resources_path)),
                   'candidateState': 'BLOCKED', 'dispatchRelease': False, 'primaryFailureType': type(failure).__name__,
-                  'primaryReason': str(failure) if isinstance(failure, ValueError) else 'private diagnostics required',
+                  'primaryReasonCode': failure.code if isinstance(failure, ChildBoundaryFailure) else 'UNKNOWN_PRIVATE_FAILURE',
+                  'primaryReason': str(failure) if isinstance(failure, ChildBoundaryFailure) else 'private diagnostics required',
                   'rpo': 'UNKNOWN', 'rto': 'UNKNOWN', 'cleanup': 'PENDING'}
         # Preserve inspectable failed restore state before exact-owned cleanup; never retry import.
         for side in created:
@@ -570,11 +672,10 @@ def run(resources_path, output, private):
         for signum,previous_handler in old_signals.items():signal.signal(signum,previous_handler)
         cleanup_failed = ['source-create-unconfirmed'] if source_creation_pending else []
         if target_creation_pending: cleanup_failed.append('target-create-unconfirmed')
-        if child is not None and child.poll() is None:
+        if child is not None:
             # Exact Popen child only. Never kill by name/pattern or touch MySQL/Redis.
-            child.kill()
-            try: child.wait(timeout=15)
-            except subprocess.TimeoutExpired: cleanup_failed.append('owned-child-exit-unconfirmed')
+            stop_exact(child, 'source')
+        cleanup_failed.extend(unconfirmed_children)
         for side in reversed(created):
             try:
                 # Do not invoke canonical identify here if source failed before CREATE; verify UUID independently.
@@ -589,6 +690,9 @@ def run(resources_path, output, private):
             except BaseException:
                 cleanup_failed.append(side)
         result['schemaCleanup'] = 'UNKNOWN' if cleanup_failed else 'CONFIRMED_EXACT_CREATED_SCHEMAS_ABSENT'
+        result['childExits'] = [dict(identity,
+            pid=process.pid, returnCode=process.poll(),
+            **child_failure(path, identity)) for process, path, identity in child_runs]
         result['cleanupFailures'] = cleanup_failed
         result['cleanup'] = 'PENDING_OUTER_EXACT_RESOURCE_CLEANUP'
         # Original error cannot be overwritten by a successful or unsuccessful cleanup.
@@ -622,6 +726,8 @@ def finalize(resources_path, output, original_exit):
     positive=result['businessResult']=='SCOPED_COMPLETE_FACTS_NORMAL_BOOT_READBACK_VERIFIED'
     save(Path(output) / 'finalized.json', {'sourceSha': result['sourceSha'], 'scope': resources['scope'],
          'cohort':resources.get('cohort','payment-gap'),
+         'runId': os.environ['GITHUB_RUN_ID'], 'runAttempt': os.environ['GITHUB_RUN_ATTEMPT'],
+         'resourcesSha256': sha(Path(resources_path).read_bytes()), 'finalization': 'RECORDED',
          'originalExit': original_exit, 'result': ('TEST_COHORT_NORMAL_READBACK_COMPLETE_NO_PRODUCTION_RELEASE' if positive else
              'SCOPED_OBSERVATION_COMPLETE_RELEASE_BLOCKED') if good else 'FAIL',
          'candidateState': 'TEST_OWNED_RECONCILED' if good and positive else 'BLOCKED', 'dispatchRelease': False, 'resourceCleanup': 'UNKNOWN' if failures else 'EXACT_ABSENCE',

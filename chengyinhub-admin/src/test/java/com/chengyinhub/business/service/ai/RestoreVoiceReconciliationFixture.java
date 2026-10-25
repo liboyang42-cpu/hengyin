@@ -2,6 +2,7 @@ package com.chengyinhub.business.service.ai;
 
 import com.chengyinhub.business.mapper.*;
 import com.chengyinhub.business.service.RestoreProviderJournal;
+import com.chengyinhub.business.service.RestoreChildDiagnostics;
 import com.chengyinhub.business.domain.NpcProfile;
 import com.chengyinhub.common.config.RestoreDispatchGuard;
 import java.io.*;
@@ -30,9 +31,11 @@ public final class RestoreVoiceReconciliationFixture {
         var source=new DriverManagerDataSource(prefix+schema+"?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=UTC",System.getenv("CHENGYIN_TEST_MYSQL_USER"),System.getenv("CHENGYIN_TEST_MYSQL_PASSWORD"));
         phase=System.getenv().getOrDefault("CHENGYIN_RESTORE_PHASE","SOURCE");gap="voice-gap".equals(System.getenv("CHENGYIN_RESTORE_COHORT"));
         if(phase.equals("SOURCE")) {
+            RestoreChildDiagnostics.stage(RestoreChildDiagnostics.Stage.SOURCE_IDENTITY);
             var admin=new JdbcTemplate(new DriverManagerDataSource(prefix+"?useSSL=false&allowPublicKeyRetrieval=true",source.getUsername(),source.getPassword()));
             require(admin.queryForObject("SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=?",Integer.class,schema)==0,"never adopt schema");
             require(System.getenv("CHENGYIN_RESTORE_SOURCE_UUID").equals(admin.queryForObject("SELECT @@server_uuid",String.class)),"source UUID");
+            RestoreChildDiagnostics.stage(RestoreChildDiagnostics.Stage.SOURCE_SCHEMA);
             admin.execute("CREATE DATABASE `"+schema+"` CHARACTER SET utf8mb4");var initial=new JdbcTemplate(source);
             // Exact existing NpcVoiceEnrollmentMySqlIT profile storage; canonical existing migrations only.
             initial.execute("CREATE TABLE npc_profile(id BIGINT PRIMARY KEY,scope_type INT NOT NULL,scope_id BIGINT NOT NULL,del_flag CHAR(1) NOT NULL DEFAULT '0',voice_version BIGINT NOT NULL DEFAULT 0,voice_id VARCHAR(96),voice_status INT NOT NULL DEFAULT 0,voice_sample VARCHAR(255),audit_status INT NOT NULL DEFAULT 1,update_time DATETIME(6)) ENGINE=InnoDB");
@@ -40,6 +43,7 @@ public final class RestoreVoiceReconciliationFixture {
                 new ResourceDatabasePopulator(new FileSystemResource(Path.of("sql",file))).execute(source);
             initial.update("INSERT INTO npc_profile(id,scope_type,scope_id) VALUES(555,2,31),(556,2,31),(557,2,31)");
         }
+        RestoreChildDiagnostics.stage(RestoreChildDiagnostics.Stage.SOURCE_ASSEMBLY);
         db=new JdbcTemplate(source);require(System.getenv("CHENGYIN_RESTORE_SOURCE_UUID").equals(db.queryForObject("SELECT @@server_uuid",String.class)),"phase UUID");
         var factory=new SqlSessionFactoryBean();factory.setDataSource(source);factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
         factory.setMapperLocations(new ClassPathResource("mapper/business/NpcProfileMapper.xml"),new ClassPathResource("mapper/business/NpcVoiceEnrollmentMapper.xml"));
@@ -65,7 +69,14 @@ public final class RestoreVoiceReconciliationFixture {
         value.put("voiceId",voice);value.put("origin","REAL_VOICE_ENROLLMENT_INTENT");return value;
     }
     private NpcProfile enroll(long npc){return owner.enroll(88L,2,31L,npc,"media-asset:73",()->"approved-private-provider-input");}
-    public static void main(String[] args)throws Exception{require(args.length==0,"fixed child");new RestoreVoiceReconciliationFixture().run();}
+    public static void main(String[] args)throws Exception{
+        try {
+            require(args.length==0,"fixed child");var fixture=new RestoreVoiceReconciliationFixture();
+            RestoreChildDiagnostics.stage("SOURCE".equals(fixture.phase) ? RestoreChildDiagnostics.Stage.SOURCE_TIMELINE
+                    : RestoreChildDiagnostics.Stage.OWNER_OBSERVATION);
+            fixture.run();
+        } catch (Throwable failure) { RestoreChildDiagnostics.report(failure); System.exit(1); }
+    }
     private void run()throws Exception {
         if(phase.equals("SOURCE")) {
             require("READY".equals(enroll(555).getVoiceIntentState()),"original provider-ready persisted");

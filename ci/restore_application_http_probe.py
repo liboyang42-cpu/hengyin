@@ -35,7 +35,7 @@ SUBSTAGES={'APPLICATION_SLOT_START','APPLICATION_READY','READ_ORIGINAL_IDENTITIE
 SAFE_REASON_CODES={'INVARIANT_REJECTED','UNCLASSIFIED_FAILURE','HTTP_OPERATION_REJECTED',
         'CAPTCHA_CONTRACT_REJECTED','CAPTCHA_ORACLE_REJECTED','ADMIN_LOGIN_REJECTED',
         'APP_STOP_EXIT_NOT_CONFIRMED','APP_EXITED_BEFORE_READY','APP_READINESS_TIMEOUT',
-        'APP_BOOT_IDENTITY_REJECTED','HTTP_STATUS_MALFORMED','HTTP_RESPONSE_NOT_JSON','HTTP_RESPONSE_NOT_OBJECT'}
+        'APP_BOOT_IDENTITY_REJECTED','APP_CHILD_STARTUP_REJECTED','HTTP_STATUS_MALFORMED','HTTP_RESPONSE_NOT_JSON','HTTP_RESPONSE_NOT_OBJECT'}
 FACT_REASON_CODES={
     'original controlled withdrawal must be terminal SUCCESS':'WITHDRAW_TERMINAL_FACT_REJECTED',
     'original wire IDs':'ORIGINAL_WIRE_ID_REJECTED',
@@ -252,6 +252,7 @@ def start_application(slot,report,path,phase,side,mode,uuid,seed=False):
 def source_quiescent_snapshot(slot, auth, port, schema, report, path):
     """The original source backup cannot read its final SQL state until exact JVM stop succeeds."""
     checkpoint(slot,report,path,'SOURCE_WORKLOAD','SOURCE_QUIESCENT_STOP')
+    require(getattr(slot,'ready_for_current_launch',False), 'source application must be ready before quiescent SQL snapshot')
     slot.stop()
     checkpoint(slot,report,path,'SOURCE_WORKLOAD','QUIESCENT_SQL_SNAPSHOT')
     return snapshot(auth,port,schema)
@@ -453,6 +454,7 @@ def run(name,schema,out,credentials):
             slot.stop(remove=False)
             report['applicationStop']='STOPPED_EXACT_APP_CID' if slot.cid else 'NO_ACTIVE_APP_SLOT'
             if slot.cid:report['stoppedApp']=slot.stopped
+            if hasattr(slot,'stop_proof_kind'):report['applicationStopProofKind']=slot.stop_proof_kind
         except BaseException as cleanup:
             report['applicationStop']='UNKNOWN'
             if hasattr(slot,'stopped'):report['stoppedApp']=slot.stopped

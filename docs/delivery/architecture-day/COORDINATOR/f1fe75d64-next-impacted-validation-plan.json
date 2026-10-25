@@ -1,0 +1,74 @@
+{
+  "parent": "f1fe75d646f8ae57864ee5603c68e70e7fabc854",
+  "state": "SOURCE_COMPLETE_FINAL_IMPACT_BEFORE_FREEZE",
+  "source_owners_complete": [
+    "B",
+    "C",
+    "E",
+    "H"
+  ],
+  "standard": {
+    "existing_workflow": "ci.yml",
+    "validation_scope": "selected",
+    "selected_jobs": [
+      "backend"
+    ],
+    "mini_shards": [],
+    "why": "New18 nontrivial direct Java controls and shared fixture children genuinely changed; previous15779 XML cannot execute new18. Existing backend entry once;no new generic selector/workflow."
+  },
+  "storage": {
+    "existing_workflow": "real-storage-it.yml",
+    "batch": "architecture-day-integrated-changes",
+    "classes": [
+      "CrossDomainFaultIsolationMySqlIT"
+    ],
+    "ordinary_source_cases": 1,
+    "why": "C real-cache sample calibration/freshness plus same original business assertion"
+  },
+  "runtime": [
+    "gameplay-capacity-mixed",
+    "restore-application-startup",
+    "payment-gap-diagnostic"
+  ],
+  "why_runtime": [
+    "H original exact two noncash source actors and authority preservation",
+    "E actual Quartz leadership/typed startup/pre-ready stop under original budget",
+    "B complete fixed four child diagnostic+primary/finalizer contract; original hidden sourcechildcause UNKNOWN"
+  ],
+  "all_source_same_SHA_required": true,
+  "actual_common_backend_job_and_new_unit_admission_before_parallel_runtime": true,
+  "not_repeat": [
+    "old17e822 storageclasses",
+    "acceptedDeposit12/Gameplay1",
+    "client/HTTP36/migrations/frontend/dependency unaffected"
+  ],
+  "required_new_java_unit_case_identities": {
+    "com.chengyinhub.business.it.CrossDomainTransactionSamplingTest": [
+      "cacheIdleUsesStrictlyGreaterThanThePinnedHundredMilliseconds",
+      "twentyMillisecondReadsCannotRenewThemselvesIntoAnEligibleSample",
+      "newWitnessBoundaryRequiresItsOwnQuietWindowEvenAfterAnOlderReadWasIdle",
+      "exhaustedOrInvalidMonotonicEvidenceIsUnknownRatherThanZero",
+      "emptyCacheCannotBecomeAZeroTransactionSuccessWithoutTheCurrentWitness",
+      "anOldPhysicalWitnessIsNotTheCurrentCacheGeneration",
+      "aValidatedCurrentWitnessMayAccompanyZeroDomainTransactions",
+      "calibrationAndOtherDomainTransactionsAreNeverExcludedByIdStateOrZeroWrites",
+      "witnessMustBeIndependentUnmodifiedAndActuallyOwnItsFixtureLock",
+      "duplicatedWitnessOrUnexpectedMysqlRoleCannotBeSilentlyNormalizedAway"
+    ],
+    "com.chengyinhub.business.it.RestoreHttpStartupContractTest": [
+      "actualBootFactoryWaitsOnShutdownWithoutBypassingTheOriginalLeaderCustomizer",
+      "aDifferentRealSchedulerCannotStandInForTheSelectedFactory",
+      "realSchedulerCanBecomeStartedAfterTheInitialObservationWithoutForcedAutostart",
+      "leadershipTimeoutPreservesTypedFailureAndNeverStartsTheScheduler",
+      "startupProjectionContainsOnlyFixedEnumsAndBoundIdentitiesNeverMessagesOrCauses"
+    ],
+    "com.chengyinhub.business.service.RestoreChildDiagnosticsTest": [
+      "sqlCauseIsTypedWithoutMessagesQueriesCredentialsOrPrivatePaths",
+      "unreviewedTypesStatesAndInvalidIdentityAreNotEchoed",
+      "fixedStageAndCauseBudgetNeverSerializeArbitraryThrowablePayload"
+    ]
+  },
+  "diagnostic_is_not_full_seven": true,
+  "after_diagnostic_success": "Independent original3JSON/source/JAR/cleanup readback first; then still require original full7cohorts and summary scope,not production release",
+  "all_complete": false
+}

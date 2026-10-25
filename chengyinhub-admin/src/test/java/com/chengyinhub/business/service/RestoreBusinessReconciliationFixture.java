@@ -61,6 +61,7 @@ public final class RestoreBusinessReconciliationFixture {
             Path journal = Path.of(System.getenv("CHENGYIN_RESTORE_PROVIDER_JOURNAL")).toRealPath();
             require(!Files.isSymbolicLink(journal), "Owned regular journal required");
             if ("RESTORED_GUARD".equals(System.getenv("CHENGYIN_RESTORE_PHASE"))) {
+                RestoreChildDiagnostics.stage(RestoreChildDiagnostics.Stage.OWNER_OBSERVATION);
                 Path evidence = Path.of(System.getenv("CHENGYIN_RESTORE_GUARD_FILE"));
                 require(evidence.toAbsolutePath().getParent().equals(journal.getParent()), "Private guard evidence only");
                 Files.createFile(evidence, java.nio.file.attribute.PosixFilePermissions.asFileAttribute(
@@ -69,23 +70,29 @@ public final class RestoreBusinessReconciliationFixture {
                 return;
             }
             require(System.getenv("CHENGYIN_RESTORE_PHASE") == null && Files.size(journal) == 0, "Fresh fixed timeline only");
+            RestoreChildDiagnostics.stage(RestoreChildDiagnostics.Stage.SOURCE_ASSEMBLY);
             var fixture = new RestoreBusinessReconciliationFixture(scope, journal);
             fixture.beforeBackup();
+            RestoreChildDiagnostics.stage(RestoreChildDiagnostics.Stage.BACKUP_BOUNDARY);
             signal("BACKUP_READY");
             try (var input = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
                 require("AFTER_BACKUP".equals(input.readLine()), "Only frozen timeline is accepted");
+                RestoreChildDiagnostics.stage(RestoreChildDiagnostics.Stage.AFTER_BACKUP);
                 fixture.afterBackup();
+                RestoreChildDiagnostics.stage(RestoreChildDiagnostics.Stage.FAULT_BOUNDARY);
                 signal("FAULT_READY");
                 require("STOP".equals(input.readLine()), "Only original child may finish");
             }
             // Host owns exact source/target cleanup. Never call the old fixture's DROP lifecycle here.
         } catch (Throwable failure) {
+            RestoreChildDiagnostics.report(failure);
             System.err.println("Restore financial fixture rejected; inspect private evidence (no exception payload emitted)");
             System.exit(1);
         }
     }
 
     private void beforeBackup() throws Exception {
+        RestoreChildDiagnostics.stage(RestoreChildDiagnostics.Stage.SOURCE_IDENTITY);
         var config = MysqlIntegrationTestConfig.fromEnvironment("funds_core_it");
         var admin = new JdbcTemplate(new org.springframework.jdbc.datasource.DriverManagerDataSource(
                 config.adminUrl(), config.user(), config.password()));
@@ -94,8 +101,11 @@ public final class RestoreBusinessReconciliationFixture {
         require(System.getenv("CHENGYIN_RESTORE_SOURCE_UUID").equals(
                 admin.queryForObject("SELECT @@server_uuid", String.class)), "Wrong source UUID");
         require("OFF".equals(admin.queryForObject("SELECT @@global.event_scheduler", String.class)), "Events must be off");
+        RestoreChildDiagnostics.stage(RestoreChildDiagnostics.Stage.SOURCE_SCHEMA);
         original.createDatabaseAndService();
+        RestoreChildDiagnostics.stage(RestoreChildDiagnostics.Stage.SOURCE_RESET);
         original.resetSchema();
+        RestoreChildDiagnostics.stage(RestoreChildDiagnostics.Stage.SOURCE_ASSEMBLY);
         var source = (javax.sql.DataSource) ReflectionTestUtils.getField(original, "dataSource");
         db = new JdbcTemplate(source);
         registrations = (ICmsRegistrationService) ReflectionTestUtils.getField(original, "registrationService");
@@ -108,6 +118,7 @@ public final class RestoreBusinessReconciliationFixture {
         ReflectionTestUtils.setField(intents, "businessOwner", owner);
         ReflectionTestUtils.setField(intents, "verifiedFacts", facts);
         // This original seed explicitly predates frozen request hashes. Do not convert it into a current-config intent.
+        RestoreChildDiagnostics.stage(RestoreChildDiagnostics.Stage.HISTORICAL_PAYMENT);
         CmsRegistration historical = registrations.selectCmsRegistrationById(11L);
         require(historical != null && "T20260724PAY".equals(historical.getRegistrationNo()), "Historical original missing");
         Map<String, Object> legacy = command("historical_paid", historical, null, null);
@@ -118,6 +129,7 @@ public final class RestoreBusinessReconciliationFixture {
         require(db.queryForObject("SELECT COUNT(*) FROM ums_member_points_detail", Integer.class) > 0,
                 "Real reward ledger must commit before backup");
         db.update("UPDATE oms_ticket SET remaining_inventory=10 WHERE id=9"); // fixture availability, not money/effect fabrication
+        RestoreChildDiagnostics.stage(RestoreChildDiagnostics.Stage.SOURCE_TIMELINE);
         create("late_success"); event(commands.get("late_success"), "SUBMIT"); event(commands.get("late_success"), "ACCEPTED");
         create("not_sent"); event(commands.get("not_sent"), "NOT_SENT");
         create("unknown"); event(commands.get("unknown"), "SUBMIT"); event(commands.get("unknown"), "UNKNOWN");

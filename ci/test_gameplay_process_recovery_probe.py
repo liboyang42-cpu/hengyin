@@ -56,6 +56,12 @@ class GameplayProcessRecoveryControls(unittest.TestCase):
         report.update(sourceSha='a' * 40, storeProcessIdentity={
             'mysql': {'id': 'm', 'Pid': 1, 'StartedAt': 'original-m', 'networkId': 'n'},
             'redis': {'id': 'r', 'Pid': 2, 'StartedAt': 'original-r', 'networkId': 'n'}})
+        report.update(schema='owned-schema', serverUuid='owned-uuid', initialBootId='original-seed', identitiesSha256='d' * 64,
+            originalActors={label: {'memberId': member, 'tokenSha256': 'e' * 64} for label, member in (('a', 7), ('b', 8))})
+        report['gameplayActorProof'] = {'schema': report['schema'], 'serverUuid': report['serverUuid'],
+            'seedBootId': report['initialBootId'], 'identitiesSha256': report['identitiesSha256'],
+            'columns': ['id'], 'rowsSha256': 'f' * 64, 'authority': {},
+            'actors': {label: dict(actor, rowSha256='f' * 64) for label, actor in report['originalActors'].items()}}
         boot = {key: report[key] for key in ('sourceSha', 'jarSha256', 'childClassSha256', 'configSha256')}
         boot.update(bootId='original-boot', javaPid=21, port=8080)
         app = {'Id': 'c' * 64, 'State': {'Running': True, 'Paused': False, 'OOMKilled': False,
@@ -334,9 +340,26 @@ class GameplayProcessRecoveryControls(unittest.TestCase):
                 written = json.loads((out / 'gameplay-process-recovery.json').read_text())
                 self.assertEqual(original['result'], written['businessResultBeforeCleanup'])
                 self.assertEqual(original['failureType'], written['failureType'])
+                self.assertEqual(original['failureType'], written['firstFailure']['type'])
                 self.assertEqual(original['reason'], written['reason'])
                 self.assertEqual('FAIL_OR_UNKNOWN_CLEANUP_OR_SCOPE', written['result'])
                 self.assertFalse((out / 'capacity-mixed.json').exists())
+
+    def test_original_no_cash_failure_is_not_replaced_by_finalizer_cleanup_failure(self):
+        name, schema = 'cy-auth-' + 'a' * 32, 'cy_e2e_auth_' + 'a' * 32
+        first = {'type': 'NoCashFixtureError', 'reasonCode': 'GAMEPLAY_MEMBER_BALANCE_NOT_ZERO', 'tables': ['ums_member']}
+        report = {'sourceSha': 'b' * 40, 'schema': schema, 'result': 'FAIL_OR_UNKNOWN_NO_RETRY',
+                  'failureType': first['type'], 'reason': first['reasonCode'], 'firstFailure': first}
+        with tempfile.TemporaryDirectory() as directory, mock.patch.object(probe, 'gate'), \
+                mock.patch.dict(os.environ, {'GITHUB_SHA': 'b' * 40}), mock.patch.object(probe, 'load') as shared:
+            out = Path(directory); (out / 'gameplay-process-recovery.json').write_text(json.dumps(report))
+            with self.assertRaises(RuntimeError): probe.finalize(name, schema, out, 1)
+            shared.assert_not_called()
+            written = json.loads((out / 'gameplay-process-recovery.json').read_text())
+            self.assertEqual(first, written['firstFailure'])
+            self.assertEqual(first['reasonCode'], written['reason'])
+            self.assertEqual(report['result'], written['businessResultBeforeCleanup'])
+            self.assertIn('finalizationFailureType', written)
 
     def test_child_is_test_only_and_observes_real_controller_without_fake_success_or_provider(self):
         child = ROOT / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GameplayProcessRecoveryChild.java'

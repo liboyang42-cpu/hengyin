@@ -1,0 +1,55 @@
+{
+  "owner": "B",
+  "parent": "f1fe75d646f8ae57864ee5603c68e70e7fabc854",
+  "commit": null,
+  "transport": "8 complete assistant diffblocks author-part+full SHA verified; all preimages exact public f1fe",
+  "patch_bytes": 77481,
+  "patch_sha256": "0b9c67c0ecbb6c535d1d0f93e8297ce94545d5b03fa9fda98554dc8d56e280de",
+  "files": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RestoreBusinessReconciliationFixture.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RestoreChildDiagnostics.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RestoreChildDiagnosticsTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/RestoreVoiceReconciliationFixture.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RestoreRefundReconciliationFixture.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RestoreWithdrawalReconciliationFixture.java",
+    "ci/restore_business_reconciliation_host.py",
+    "ci/restore_business_reconciliation_probe.py",
+    "ci/test_restore_business_reconciliation_host.py",
+    "ci/test_restore_business_reconciliation_probe.py",
+    "docs/delivery/architecture-day/B/f1fe-child-exit/README.md"
+  ],
+  "author_postimages11_exact": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RestoreBusinessReconciliationFixture.java": "7163fcdf8e5d8ae260c9239ee6f8f22be28485374e163ecaec628d8ac7671698",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RestoreChildDiagnostics.java": "d177680e8456cf5600751b1f9e9e5f6ec0da86fec899356b430aabcd3837b009",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RestoreChildDiagnosticsTest.java": "c68d47762a7098987cf42f1835cebc685029865e1bd1881f3c0ebc4f9b7c2d96",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/RestoreVoiceReconciliationFixture.java": "ab4db9121d77f9cbbf8e5c5c47c7e992d4ab48268005bd90e5e3903bd0a3f893",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RestoreRefundReconciliationFixture.java": "0402fe4b3b369f20e2b277fe0471746055e20668c3a0982fc07d7b86578e9d5e",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RestoreWithdrawalReconciliationFixture.java": "f515d58a553af6e6440d2e46075a07f79e64b6dc63aefbcce6ece4a86f0b5952",
+    "ci/restore_business_reconciliation_host.py": "d07790f84bed96d5f4cb5937020c7ff5da4a468be87e9db0c1cddbf7e27658eb",
+    "ci/restore_business_reconciliation_probe.py": "02b0787f7de93e52ffb3cabe98d37f0e8dce2f9795e9fb2cfc3172cae019c09c",
+    "ci/test_restore_business_reconciliation_host.py": "3fb8e351414e385743bc5bdb7d0a094113019b595e6a5e0ccffd65f7c14e9737",
+    "ci/test_restore_business_reconciliation_probe.py": "a312dbb70b7952f4fca3c462681aae05f7d46b518b2e8c9fc7d06fbe1f5fa00d",
+    "docs/delivery/architecture-day/B/f1fe-child-exit/README.md": "5fcee93c22b36d47433844b53db45bd0970385b01ffa8bb8329aef3381284408"
+  },
+  "applied": true,
+  "focused_review": "ROOT_FOCUSED_SOURCE_REVIEW_COMPLETE_NO_NEW_RUNTIME_PROOF",
+  "new_direct_controls_source": {
+    "host": 30,
+    "probe": 44,
+    "newJava": 3
+  },
+  "historical_exact_child_cause": "UNKNOWN",
+  "compile_tests_runtime": "NOT_RUN",
+  "all_complete": false,
+  "review": {
+    "four_fixed_child_diagnostics_not_just_payment_case": true,
+    "all_child_class_helper_classpath_JAR_PID_scope_boot_bindings_preserved": true,
+    "finite_types_SQLstate_errorcode_original_sourceclassline_not_rawmessages": true,
+    "private_stderr_bounded1MiB_stability_and_digest_only": true,
+    "primary_probe_failure_retained_before_close_and_finalize": true,
+    "finalized_FAIL_receipt_counts_executed_but_business_still_FAIL": true,
+    "all_seven_business_cohorts_and_old_UNKNOWN_highwater_payload_guards_unchanged": true,
+    "new3Java8Python_source_NOT_RUN": true,
+    "no_shared_auth_change_required": true
+  }
+}

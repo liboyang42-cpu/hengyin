@@ -383,6 +383,7 @@ class Host:
         for kind, key in (('container', 'target'), ('container', 'source'), ('network', 'network')):
             if key not in self.created:
                 continue
+            self.stage, self.substage = 'resource-cleanup', key + '-absence'
             # An interrupted create is recovered only by its fresh exact name and original label.
             expected = self.created[key]
             identity = expected or (self.name if key == 'network' else self.name + '-' + key)
@@ -400,7 +401,56 @@ class Host:
                 failures.append(key)
         return failures
 
+    def scoped_receipt(self, name):
+        try:
+            path = self.output / name
+            require(path.is_file() and not path.is_symlink() and not path.stat().st_mode & 0o077
+                    and path.stat().st_size <= 8 * 1024 * 1024, 'bounded private receipt required')
+            row = json.loads(path.read_bytes())
+            require(row['sourceSha'] == os.environ['GITHUB_SHA'] and row['scope'] == self.scope
+                    and row['cohort'] == self.cohort and row['runId'] == os.environ['GITHUB_RUN_ID']
+                    and row['runAttempt'] == os.environ['GITHUB_RUN_ATTEMPT']
+                    and row['resourcesSha256'] == hashlib.sha256(self.resources.read_bytes()).hexdigest(),
+                    'receipt does not belong to this exact probe')
+            return row
+        except BaseException:
+            return None  # Never copy malformed JSON, exception text or another scope into public evidence.
+
+    def remember_probe_exit(self, code):
+        receipt = self.scoped_receipt('reconciliation.json')
+        if (code == 0 and receipt is not None and receipt.get('processExit') == 0
+                and receipt.get('businessResult') in ('SCOPED_COMPLETE_FACTS_NORMAL_BOOT_READBACK_VERIFIED',
+                                                     'SCOPED_DIFFERENCES_VERIFIED_RELEASE_BLOCKED')):
+            return
+        if self.first_failure is not None:
+            return
+        self.stage, self.substage = 'probe', 'fixed-probe-exit'
+        self.remember_failure('PROBE_RUN_EXIT', 'PROBE_RUN', code)
+        self.first_failure['probeReceipt'] = 'MATCHED' if receipt is not None else 'UNAVAILABLE_OR_MISMATCHED'
+        if receipt is not None:
+            category = receipt.get('primaryFailureType')
+            reason = receipt.get('primaryReasonCode')
+            self.first_failure['primaryFailureType'] = category if category in (
+                'ValueError', 'ChildBoundaryFailure', 'TimeoutError', 'InterruptedError', 'CalledProcessError') else 'UNKNOWN'
+            self.first_failure['primaryReasonCode'] = reason if reason in (
+                'CHILD_EOF_BEFORE_BOUNDARY', 'CHILD_EXIT_BEFORE_BOUNDARY', 'CHILD_OUTPUT_BUDGET',
+                'CHILD_BOUNDARY_TIMEOUT', 'UNKNOWN_PRIVATE_FAILURE') else 'UNKNOWN'
+            self.first_failure['reconciliationSha256'] = hashlib.sha256((self.output / 'reconciliation.json').read_bytes()).hexdigest()
+
+    def finalization_recorded(self, original_exit):
+        row = self.scoped_receipt('finalized.json')
+        business = self.scoped_receipt('reconciliation.json')
+        return (row is not None and business is not None and row.get('finalization') == 'RECORDED'
+                and type(row.get('originalExit')) is int and row['originalExit'] == original_exit
+                and row.get('dispatchRelease') is False and row.get('businessResult') == business.get('businessResult')
+                and row.get('resourceCleanup') in ('EXACT_ABSENCE', 'UNKNOWN')
+                and row.get('result') in ('FAIL', 'TEST_COHORT_NORMAL_READBACK_COMPLETE_NO_PRODUCTION_RELEASE',
+                                         'SCOPED_OBSERVATION_COMPLETE_RELEASE_BLOCKED'))
+
     def finish(self, original_exit):
+        # Record the original probe/child exit before relay-close, cleanup or a deliberately failing finalizer.
+        if self.resources.exists() and (self.output / 'reconciliation.json').is_file():
+            self.remember_probe_exit(original_exit)
         relay_failures = []
         self.substage = 'relay-close'
         try:
@@ -415,10 +465,13 @@ class Host:
         if self.resources.exists() and (self.output / 'reconciliation.json').is_file():
             try:
                 self.stage = 'finalize'
+                self.substage = 'fixed-probe-finalize'
                 self.command([sys.executable, '-I', str(PROBE), 'finalize', '--resources', str(self.resources),
                               '--output', str(self.output), '--original-exit', str(result)], timeout=75)
-                finalized = True
+                finalized = self.finalization_recorded(result)
+                require(finalized, 'finalizer did not produce a matching receipt')
             except BaseException:
+                finalized = self.finalization_recorded(result)
                 result = result or 1
         else:
             result = result or 1
@@ -448,7 +501,9 @@ class Host:
             child = subprocess.Popen(invocation, stdout=log, stderr=log, start_new_session=True)
             try:
                 result = child.wait(timeout=1050)
-                return 128 - result if result < 0 else result
+                code = 128 - result if result < 0 else result
+                self.remember_probe_exit(code)
+                return code
             finally:
                 if child.poll() is None:
                     # This session contains only this exact probe and its fixed test children.

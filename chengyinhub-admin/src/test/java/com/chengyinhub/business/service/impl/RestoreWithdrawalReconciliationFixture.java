@@ -41,9 +41,11 @@ public final class RestoreWithdrawalReconciliationFixture {
         phase=System.getenv().getOrDefault("CHENGYIN_RESTORE_PHASE","SOURCE");
         gap="withdrawal-gap".equals(System.getenv("CHENGYIN_RESTORE_COHORT"));
         if(phase.equals("SOURCE")) {
+            RestoreChildDiagnostics.stage(RestoreChildDiagnostics.Stage.SOURCE_IDENTITY);
             var admin=new JdbcTemplate(new DriverManagerDataSource(url.replace("/"+schema+"?","/?"),source.getUsername(),source.getPassword()));
             require(admin.queryForObject("SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=?",Integer.class,schema)==0,"never adopt a schema");
             require(System.getenv("CHENGYIN_RESTORE_SOURCE_UUID").equals(admin.queryForObject("SELECT @@server_uuid",String.class)),"source UUID");
+            RestoreChildDiagnostics.stage(RestoreChildDiagnostics.Stage.SOURCE_SCHEMA);
             admin.execute("CREATE DATABASE `"+schema+"` CHARACTER SET utf8mb4");
             try(var c=source.getConnection()) {
                 ScriptUtils.executeSqlScript(c,new ClassPathResource("architecture-day-a-fixture.sql"));
@@ -51,11 +53,17 @@ public final class RestoreWithdrawalReconciliationFixture {
                     ScriptUtils.executeSqlScript(c,new FileSystemResource(Path.of("sql",migration)));
             }
         }
+        RestoreChildDiagnostics.stage(RestoreChildDiagnostics.Stage.SOURCE_ASSEMBLY);
         store=new FundsRecoveryProcessProbe.Store(source);
         require(System.getenv("CHENGYIN_RESTORE_SOURCE_UUID").equals(store.db.queryForObject("SELECT @@server_uuid",String.class)),"exact phase UUID");
     }
     public static void main(String[] args) throws Exception {
-        require(args.length==0,"fixed child"); var fixture=new RestoreWithdrawalReconciliationFixture(); fixture.run();
+        try {
+            require(args.length==0,"fixed child"); var fixture=new RestoreWithdrawalReconciliationFixture();
+            RestoreChildDiagnostics.stage("SOURCE".equals(fixture.phase) ? RestoreChildDiagnostics.Stage.SOURCE_TIMELINE
+                    : RestoreChildDiagnostics.Stage.OWNER_OBSERVATION);
+            fixture.run();
+        } catch (Throwable failure) { RestoreChildDiagnostics.report(failure); System.exit(1); }
     }
     private ICashWithdrawService owner(long member) throws Exception {
         var observer=new FundsRecoveryProcessProbe.GateObserver(store,"restore-observation",FundsRecoveryProcessProbe.Gate.NONE,

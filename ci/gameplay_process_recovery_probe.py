@@ -104,12 +104,20 @@ def capacity_profile_binding(report, boot, app, network_id):
         require(boot[key] == report[key], 'capacity boot differs from original recovery evidence')
     require(boot['port'] == 8080 and type(boot['javaPid']) is int and boot['javaPid'] > 0,
             'capacity requires the original Java PID and port')
+    proof = report['gameplayActorProof']
+    require(proof['schema'] == report['schema'] and proof['serverUuid'] == report['serverUuid']
+            and proof['seedBootId'] == report['initialBootId']
+            and proof['identitiesSha256'] == report['identitiesSha256']
+            and {label: {key: actor[key] for key in ('memberId', 'tokenSha256')}
+                 for label, actor in proof['actors'].items()} == report['originalActors'],
+            'capacity actors differ from original source-seeded identities')
     return {
         **{key: report[key] for key in ('sourceSha', 'jarSha256', 'childSourceSha256',
                                       'childClassSha256', 'testClassTreeSha256', 'configSha256', 'fixturePropertiesSha256')},
         'boot': dict(boot), 'appCid': app['Id'], 'appPid': app['State']['Pid'],
         'appStartedAt': app['State']['StartedAt'], 'networkId': network_id,
         'storeProcessIdentity': {key: dict(value) for key, value in report['storeProcessIdentity'].items()},
+        'actorProof': json.loads(json.dumps(proof)),
     }
 
 
@@ -454,7 +462,12 @@ def run(name, schema, out, credentials):
         require(objects[0]['HostConfig']['Memory'] == 1073741824 and objects[0]['HostConfig']['NanoCpus'] == 1000000000
                 and not objects[0]['HostConfig'].get('PortBindings'), 'app budget/publication mismatch')
         boot = ready()
-        identities = json.loads((private / 'identities.json').read_text())
+        identities_file = private / 'identities.json'
+        require(identities_file.is_file() and not identities_file.is_symlink()
+                and identities_file.stat().st_mode & 0o777 == 0o600, 'original private actor identity file required')
+        identities = json.loads(identities_file.read_text())
+        report['initialBootId'] = boot['bootId']
+        report['identitiesSha256'] = digest(identities_file.read_bytes())
         a, b = identities['a'], identities['b']
         owned.SECRET_VALUES.extend([a['token'], b['token']])
         private_json(credentials, {**saved, 'redactions': owned.SECRET_VALUES})
@@ -485,6 +498,32 @@ def run(name, schema, out, credentials):
                         for table in ('club_lead_state', 'game_command_receipt', 'business_audit_event')}
 
             financial = finance()
+            report['financialBefore'] = financial
+            owned.write_report(out, 'gameplay-process-recovery.json', report)
+            if capacity_module:
+                # Capture once before any kill/command; the observer must not invent a new live baseline.
+                empty = {table: {'rows': len(value), 'sha256': digest(value)}
+                         for table in capacity_module.GAMEPLAY_EMPTY_TABLES
+                         for value in [rows('SELECT * FROM `' + table + '` ORDER BY id')]}
+                report['gameplayEconomicStoresBefore'] = empty
+                owned.write_report(out, 'gameplay-process-recovery.json', report)
+                bad = [table for table, value in {**financial, **empty}.items()
+                       if table != 'ums_member' and value['rows'] != 0]
+                if bad:
+                    raise capacity_module.NoCashFixtureError('GAMEPLAY_UNEXPECTED_ECONOMIC_ROWS', bad)
+                members = rows('SELECT * FROM ums_member ORDER BY id')
+                columns = list(members[0]) if members else []
+                authority = {table: {'rows': len(value),
+                    'sha256': capacity_module.digest([tuple(row.values()) for row in value]),
+                    'ddlSha256': capacity_module.digest([tuple(row.values()) for row in rows('SHOW CREATE TABLE `' + table + '`')])}
+                    for table in capacity_module.AUTHORITY_TABLES
+                    for value in [rows('SELECT * FROM `' + table + '` ORDER BY 1')]}
+                authority['accountCredentials'] = capacity_module.digest([tuple(row.values()) for row in rows(
+                    'SELECT user_id,user_name,password,status,del_flag FROM sys_user ORDER BY user_id')])
+                report['gameplayActorProof'] = capacity_module.gameplay_actor_proof(
+                    identities, columns, [tuple(row[column] for column in columns) for row in members],
+                    schema, saved['serverUuid'], report['initialBootId'], report['identitiesSha256'], authority)
+                owned.write_report(out, 'gameplay-process-recovery.json', report)
             for phase in PHASES:
                 original = identities[phase]
                 request = {key: original[key] for key in ('activityId', 'commandId', 'expectedChapterId', 'targetChapterId')}
@@ -648,6 +687,9 @@ def run(name, schema, out, credentials):
         report['result'] = 'FAIL_OR_UNKNOWN_NO_RETRY'
         report['failureType'] = type(failure).__name__
         report['reason'] = owned.redact(str(failure), owned.SECRET_VALUES)
+        report.setdefault('firstFailure', {'type': type(failure).__name__,
+            'reasonCode': getattr(failure, 'reason_code', 'GAMEPLAY_BUSINESS_FAILED'),
+            'tables': getattr(failure, 'tables', [])})
         raise
     finally:
         report['elapsedSeconds'] = round(time.monotonic() - started, 3)
@@ -688,6 +730,8 @@ def finalize(name, schema, out, original_exit):
     path = out / 'gameplay-process-recovery.json'
     report = json.loads(path.read_text())
     report.setdefault('businessResultBeforeCleanup', report['result'])
+    if report.get('failureType'):
+        report.setdefault('firstFailure', {'type': report['failureType'], 'reasonCode': 'RECORDED_GAMEPLAY_BUSINESS_FAILURE'})
     try:
         require(original_exit == 0, 'original shell/cleanup did not succeed')
         if os.environ.get('CHENGYIN_CI_GAMEPLAY_CAPACITY') == 'true':
@@ -718,6 +762,7 @@ def finalize(name, schema, out, original_exit):
     except BaseException as failure:
         report['result'] = 'FAIL_OR_UNKNOWN_CLEANUP_OR_SCOPE'
         report['finalizationFailureType'] = type(failure).__name__
+        report.setdefault('firstFailure', {'type': type(failure).__name__, 'reasonCode': 'FINALIZATION_FAILED'})
         raise
     finally:
         owned.write_report(out, path.name, report)

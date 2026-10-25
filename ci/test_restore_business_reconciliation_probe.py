@@ -200,6 +200,137 @@ class ResourceTransportControls(unittest.TestCase):
                 with self.assertRaises(ValueError): p.validate_resources(resources, changed, network)
 
 
+class ChildExitControls(unittest.TestCase):
+    def identity(self):
+        return dict(sourceSha='a' * 40, scope='b' * 32, boot='c' * 32, cohort='payment-gap', childClass=p.CHILD)
+
+    def typed(self):
+        identity = self.identity()
+        return dict(protocol='RESTORE_CHILD_FAILURE_V1', stage='SOURCE_SCHEMA',
+            **{key: identity[key] for key in ('sourceSha', 'scope', 'boot', 'cohort')},
+            causeTypes=['org.springframework.jdbc.BadSqlGrammarException', 'java.sql.SQLSyntaxErrorException'],
+            sqlState='42S22', sqlErrorCode=1054, origin={'class': p.CHILD, 'line': 99})
+
+    def capture(self, raw):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'child.stderr'; path.write_bytes(raw); path.chmod(0o600)
+            return p.child_failure(path, self.identity())
+
+    def test_original_typed_child_failure_is_bound_and_raw_secret_is_only_hashed(self):
+        raw = b'PRIVATE_SECRET_CANARY sql/defaults/path\nRESTORE_CHILD_FAILURE_V1:' + json.dumps(self.typed()).encode() + b'\n'
+        evidence = self.capture(raw)
+        self.assertEqual('TYPED_FAILURE', evidence['diagnosticState'])
+        self.assertEqual(self.typed(), evidence['javaFailure'])
+        self.assertEqual((len(raw), p.sha(raw)), (evidence['stderrBytes'], evidence['stderrSha256']))
+        self.assertNotIn('PRIVATE', json.dumps(evidence)); self.assertNotIn('sql/defaults', json.dumps(evidence))
+
+    def test_wrong_boot_scope_unknown_type_payload_or_duplicate_marker_is_not_public_evidence(self):
+        for key, value in [('boot', 'f' * 32), ('scope', 'f' * 32), ('sourceSha', 'f' * 40),
+                           ('cohort', 'refund-gap'), ('causeTypes', ['PRIVATE_SECRET_CANARY']),
+                           ('stage', 'PRIVATE_SECRET_CANARY'), ('sqlState', 'SECRT'), ('sqlErrorCode', True),
+                           ('origin', {'class': 'PRIVATE_SECRET_CANARY', 'line': 99}),
+                           ('message', 'PRIVATE_SECRET_CANARY')]:
+            row = dict(self.typed(), **{key: value})
+            result = self.capture(b'RESTORE_CHILD_FAILURE_V1:' + json.dumps(row).encode() + b'\n')
+            self.assertEqual('UNREADABLE_OR_UNTRUSTED', result['diagnosticState'])
+            self.assertNotIn('javaFailure', result); self.assertNotIn('PRIVATE', json.dumps(result))
+        marker = b'RESTORE_CHILD_FAILURE_V1:' + json.dumps(self.typed()).encode() + b'\n'
+        self.assertEqual('UNREADABLE_OR_UNTRUSTED', self.capture(marker + marker)['diagnosticState'])
+        self.assertEqual('EXCEEDS_FIXED_BUDGET', self.capture(b'x' * 1048577)['diagnosticState'])
+
+    def test_unknown_raw_exit_is_unknown_and_only_exact_fixed_launcher_header_is_classified(self):
+        self.assertEqual('NO_TYPED_FAILURE', self.capture(b'PRIVATE_SECRET_CANARY')['diagnosticState'])
+        raw = ('Error: Could not find or load main class ' + p.CHILD + '\nPRIVATE_SECRET_CANARY').encode()
+        result = self.capture(raw)
+        self.assertEqual('REVIEWED_LAUNCHER_FAILURE', result['diagnosticState'])
+        self.assertEqual('JVM_MAIN_CLASS_NOT_FOUND', result['launcherCategory'])
+        self.assertNotIn('PRIVATE', json.dumps(result))
+        self.assertEqual('NO_TYPED_FAILURE', self.capture(raw.replace(p.CHILD.encode(), b'foreign.Main'))['diagnosticState'])
+
+    def test_stdout_eof_preserves_fixed_boundary_error_type_and_original_exit(self):
+        from unittest import mock
+        child = mock.Mock(); child.stdout.fileno.return_value = 10; child.wait.return_value = 17
+        with patch.object(p.time, 'monotonic', return_value=0), patch.object(p.select, 'select', return_value=([child.stdout], [], [])), \
+             patch.object(p.os, 'read', return_value=b''):
+            with self.assertRaises(ValueError) as caught: p.wait_phase(child, 'BACKUP_READY', 10)
+        self.assertIsInstance(caught.exception, p.ChildBoundaryFailure)
+        self.assertEqual('CHILD_EOF_BEFORE_BOUNDARY', caught.exception.code)
+        self.assertEqual('fixture child exited before fixed boundary', str(caught.exception))
+        child.wait.assert_called_once_with(timeout=1)
+
+    def test_source_boundary_failure_keeps_unconfirmed_schema_and_original_typed_child_exit(self):
+        # Orchestration control with a controlled launcher; it neither starts Java nor proves MySQL behavior.
+        from unittest import mock
+        import zipfile
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve(); repo = root / 'repo'; private = root / 'private'; output = root / 'out'
+            private.mkdir(mode=0o700); output.mkdir()
+            classes = repo / 'chengyinhub-admin/target/test-classes'; classes.mkdir(parents=True)
+            child_class = classes / (p.CHILD.replace('.', '/') + '.class'); child_class.parent.mkdir(parents=True)
+            child_class.write_bytes(b'controlled-class-source-only')
+            diagnostic = classes / 'com/chengyinhub/business/service/RestoreChildDiagnostics.class'
+            diagnostic.write_bytes(b'controlled-diagnostic-source-only')
+            jar = repo / 'chengyinhub-admin/target/chengyinhub-admin.jar'
+            with zipfile.ZipFile(jar, 'w') as package:
+                package.writestr('BOOT-INF/classes/git.properties', 'git.commit.id=' + 'b' * 40 + '\n')
+            resources, rows, network = ResourceTransportControls().resources()
+            resources.update(sourceSha='b' * 40, cohort='payment-gap', testClasspathFile=str(private / 'cp.txt'))
+            p.save(private / 'resources.json', resources)
+            (private / 'cp.txt').write_text(str(classes)); (private / 'cp.txt').chmod(0o600)
+            for side in ('source', 'target'):
+                path = private / (side + '.cnf')
+                path.write_text('[client]\nhost=127.0.0.1\nport=%d\nuser=root\npassword=%s\nprotocol=tcp\n' %
+                    (resources[side]['port'], 'x' * 24)); path.chmod(0o600)
+                resources[side]['defaultsFile'] = str(path)
+            (private / 'resources.json').write_text(json.dumps(resources))
+            tool = mock.Mock(); tool.digest.side_effect = lambda path: p.sha(Path(path).read_bytes())
+            auth = mock.Mock()
+            auth.command.side_effect = lambda argv: json.dumps([network if 'network' in argv else
+                next(row for row in rows if row['Id'] == argv[-1])]).encode()
+            domains = mock.Mock(); domains.SPECS = {}
+            def modules(name, path):
+                if path.endswith('restore_business_domain_facts.py'): return domains
+                if path.endswith('db-backup-restore.py'): return tool
+                if path.endswith('authenticated_redis_recovery_probe.py'): return auth
+                self.fail('unexpected module')
+            def sql(argv, **kwargs):
+                if kwargs['input'].startswith(b'SELECT @@server_uuid'):
+                    side = 'source' if 'source.cnf' in argv[1] else 'target'
+                    raw = (resources[side]['uuid'] + '\t8.0.45\tOFF').encode()
+                else: raw = b'0'
+                return p.subprocess.CompletedProcess(argv, 0, raw, b'')
+            child = mock.Mock(pid=12345); child.stdout.fileno.return_value = 10
+            child.wait.return_value = 17; child.poll.return_value = 17
+            def launch(argv, **kwargs):
+                row = dict(self.typed(), sourceSha=resources['sourceSha'], scope=resources['scope'],
+                           boot=kwargs['env']['CHENGYIN_RESTORE_BOOT'])
+                kwargs['stderr'].write(b'PRIVATE_SECRET_CANARY\nRESTORE_CHILD_FAILURE_V1:' + json.dumps(row).encode() + b'\n')
+                self.assertEqual(['java', '-Xmx512m', '-cp', str(classes), p.CHILD], argv)
+                self.assertEqual('127.0.0.1', kwargs['env']['CHENGYIN_TEST_MYSQL_HOST'])
+                return child
+            env = {'GITHUB_ACTIONS': 'true', 'RUNNER_ENVIRONMENT': 'github-hosted', 'RUNNER_OS': 'Linux',
+                'GITHUB_REPOSITORY': 'liboyang42-cpu/hengyin', 'GITHUB_EVENT_NAME': 'workflow_dispatch',
+                'GITHUB_JOB': 'isolated-restore-business-reconciliation', 'CHENGYIN_CI_RESTORE_BUSINESS': 'true',
+                'GITHUB_SHA': 'b' * 40, 'GITHUB_RUN_ID': '101', 'GITHUB_RUN_ATTEMPT': '1'}
+            with patch.object(p, 'ROOT', repo), patch.dict(p.os.environ, env, clear=True), \
+                 patch.object(p, 'module', side_effect=modules), patch.object(p.subprocess, 'check_output', return_value='b' * 40), \
+                 patch.object(p.subprocess, 'run', side_effect=sql), patch.object(p.subprocess, 'Popen', side_effect=launch), \
+                 patch.object(p.signal, 'signal'), patch.object(p.signal, 'alarm'), patch.object(p.time, 'monotonic', return_value=0), \
+                 patch.object(p.select, 'select', return_value=([child.stdout], [], [])), patch.object(p.os, 'read', return_value=b''):
+                with self.assertRaises(ValueError): p.run(private / 'resources.json', output, private)
+            result = json.loads((output / 'reconciliation.json').read_text())
+            self.assertEqual(('FAIL', 'BLOCKED', 1, 'UNKNOWN'), tuple(result[k] for k in
+                ('businessResult', 'candidateState', 'processExit', 'schemaCleanup')))
+            self.assertEqual(['source-create-unconfirmed'], result['cleanupFailures'])
+            self.assertEqual('CHILD_EOF_BEFORE_BOUNDARY', result['primaryReasonCode'])
+            self.assertEqual((12345, 17, 'TYPED_FAILURE'), tuple(result['childExits'][0][k]
+                for k in ('pid', 'returnCode', 'diagnosticState')))
+            self.assertEqual('SOURCE_SCHEMA', result['childExits'][0]['javaFailure']['stage'])
+            self.assertEqual(p.sha(child_class.read_bytes()), result['childExits'][0]['testChildSha256'])
+            self.assertFalse(result['dispatchRelease']); self.assertNotIn('PRIVATE', json.dumps(result))
+            tool.backup.assert_not_called(); tool.restore.assert_not_called(); child.kill.assert_not_called()
+
+
 class JournalControls(unittest.TestCase):
     def write(self, path, rows):
         previous = '0' * 64
@@ -352,7 +483,7 @@ class HostBoundaryControls(unittest.TestCase):
             kind, identity = argv[-3], argv[-1]
             return p.subprocess.CompletedProcess(argv, 1 if missing else 0, b'{}',
                     ('Error: No such ' + kind + ': ' + identity).encode() if missing else b'')
-        with patch.object(p, 'hosted'), patch.dict(p.os.environ, {'GITHUB_SHA': 'b' * 40}), \
+        with patch.object(p, 'hosted'), patch.dict(p.os.environ, {'GITHUB_SHA': 'b' * 40, 'GITHUB_RUN_ID': '101', 'GITHUB_RUN_ATTEMPT': '1'}), \
              patch.object(p.subprocess, 'run', side_effect=inspect):
             if original_exit or process_exit or not missing:
                 with self.assertRaises(ValueError): p.finalize(manifest, directory, original_exit)
@@ -369,7 +500,11 @@ class HostBoundaryControls(unittest.TestCase):
         self.assertEqual('FAIL', result['result']); self.assertEqual('UNKNOWN', result['resourceCleanup'])
 
     def test_inner_failure_survives_successful_resource_cleanup(self):
-        self.assertEqual('FAIL', self.finalization(process_exit=1)['result'])
+        result = self.finalization(process_exit=1)
+        self.assertEqual('FAIL', result['result'])
+        self.assertEqual('RECORDED', result['finalization'])
+        self.assertEqual('EXACT_ABSENCE', result['resourceCleanup'])
+        self.assertEqual(('101', '1'), (result['runId'], result['runAttempt']))
 
     def test_successful_scoped_observation_still_never_authorizes_dispatch(self):
         result = self.finalization()
