@@ -64,9 +64,10 @@ def save(path,value):
         os.chmod(path,0o600);json.dump(value,stream,sort_keys=True,indent=2);stream.flush();os.fsync(stream.fileno())
 
 
-def query(auth,port,schema,sql,args=()):
+def query(auth,port,schema,sql,args=None):
     with auth.database(port,schema) as db,db.cursor() as cur:
-        cur.execute(sql,args)
+        if args is None:cur.execute(sql)
+        else:cur.execute(sql,args)
         columns=[d[0] for d in cur.description]
         return [dict(zip(columns,map(typed,row))) for row in cur.fetchall()]
 

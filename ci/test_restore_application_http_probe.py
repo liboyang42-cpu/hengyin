@@ -1,5 +1,6 @@
 """Direct control SOURCE. Intentionally NOT_RUN in the source-construction task."""
 import copy
+from contextlib import nullcontext
 from decimal import Decimal
 import importlib.util
 from pathlib import Path
@@ -40,6 +41,34 @@ def late():
 
 
 class RestoreHttpDirectControls(unittest.TestCase):
+    def test_query_preserves_driver_no_parameter_and_original_tuple_contract(self):
+        calls=[]
+        class Cursor:
+            description=(('n',),)
+            def execute(self,sql,*args):
+                calls.append((sql,args))
+                # Pinned PyMySQL 1.1.1 Cursor.mogrify formats whenever args is not None.
+                # This is a driver-call control, not database or business acceptance.
+                if args and args[0] is not None:sql % args[0]
+            def fetchall(self):return ((1,),)
+        cursor=Cursor()
+        class Database:
+            def cursor(self):return nullcontext(cursor)
+        class Auth:
+            @staticmethod
+            def database(port,schema):return nullcontext(Database())
+        literal="SELECT COUNT(*) AS n FROM mysql.user WHERE User='startup_probe' AND Host='%'"
+        self.assertEqual(P.query(Auth,3306,None,literal),[{'n':1}])
+        self.assertEqual(calls[0],(literal,()))
+        sql='SELECT COUNT(*) AS n FROM mysql.user WHERE User=%s AND Host=%s'
+        parameters=('startup_probe','%')
+        self.assertEqual(P.query(Auth,3306,None,sql,parameters),[{'n':1}])
+        self.assertEqual(calls[1][0],sql)
+        self.assertEqual(len(calls[1][1]),1)
+        self.assertIs(calls[1][1][0],parameters)
+        self.assertEqual(P.query(Auth,3306,None,literal,None),[{'n':1}])
+        self.assertEqual(calls[2],(literal,()))
+
     def test_exact_real_owner_and_task_events_are_accepted(self):
         self.assertTrue(P.assert_owner_events(events(),'boot'))
 
