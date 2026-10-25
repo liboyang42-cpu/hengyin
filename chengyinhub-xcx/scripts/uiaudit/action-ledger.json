@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5140,
+  "controlCount": 5141,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -1267333,7 +1267333,209 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:106:bindtap:onHandle:21",
+      "id": "subpackageRoam/nearby/index.wxml:105:bindtap:closeSheet:19",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "closeSheet",
+        "line": 105,
+        "selectorHint": ".pdim",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "关闭",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:514"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:106:catchtap:noop:20",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "noop",
+        "line": 106,
+        "selectorHint": ".psheet",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:530"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:108:catchtap:closeSheet:21",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "closeSheet",
+        "line": 108,
+        "selectorHint": ".psheet__x",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "关闭",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:514"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:120:bindtap:onHandle:22",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1267356,7 +1267558,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onHandle",
-        "line": 106,
+        "line": 120,
         "selectorHint": ".mt-sbtn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1267475,7 +1267677,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:107:bindtap:onHandle:22",
+      "id": "subpackageRoam/nearby/index.wxml:121:bindtap:onHandle:23",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1267498,7 +1267700,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onHandle",
-        "line": 107,
+        "line": 121,
         "selectorHint": ".mt-sbtn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1267614,325 +1267816,6 @@
       "evidence": {
         "status": "pending",
         "staticSource": "subpackageRoam/nearby/index.js:660"
-      }
-    },
-    {
-      "id": "subpackageRoam/nearby/index.wxml:117:bindtap:closeSheet:23",
-      "route": "subpackageRoam/nearby/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageRoam/nearby/index.wxml",
-        "js": "subpackageRoam/nearby/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "closeSheet",
-        "line": 117,
-        "selectorHint": ".pdim",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "关闭",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:514"
-      }
-    },
-    {
-      "id": "subpackageRoam/nearby/index.wxml:118:catchtap:noop:24",
-      "route": "subpackageRoam/nearby/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageRoam/nearby/index.wxml",
-        "js": "subpackageRoam/nearby/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtap",
-        "handler": "noop",
-        "line": 118,
-        "selectorHint": ".psheet",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "tap",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:530"
-      }
-    },
-    {
-      "id": "subpackageRoam/nearby/index.wxml:120:catchtap:closeSheet:25",
-      "route": "subpackageRoam/nearby/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageRoam/nearby/index.wxml",
-        "js": "subpackageRoam/nearby/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtap",
-        "handler": "closeSheet",
-        "line": 120,
-        "selectorHint": ".psheet__x",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "关闭",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:514"
-      }
-    },
-    {
-      "id": "subpackageRoam/nearby/index.wxml:125:bindtap:loginForMyTeams:26",
-      "route": "subpackageRoam/nearby/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageRoam/nearby/index.wxml",
-        "js": "subpackageRoam/nearby/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "loginForMyTeams",
-        "line": 125,
-        "selectorHint": ".mt-sbtn",
-        "visibleCondition": "{{myReadAccess === 'login'}}",
-        "disabledCondition": null,
-        "ariaLabel": "去登录",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "tap",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
-          "/api/team/my",
-          "/api/team/my-applications"
-        ],
-        "primaryApis": [
-          "/api/config/features",
-          "/api/team/my",
-          "/api/team/my-applications"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/team/my",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/team/my-applications",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:698"
       }
     },
     {
@@ -1268187,7 +1268070,326 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:132:bindtap:onMyRowAction:27",
+      "id": "subpackageRoam/nearby/index.wxml:131:bindtap:closeSheet:24",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "closeSheet",
+        "line": 131,
+        "selectorHint": ".pdim",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "关闭",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:514"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:132:catchtap:noop:25",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "noop",
+        "line": 132,
+        "selectorHint": ".psheet",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:530"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:134:catchtap:closeSheet:26",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "closeSheet",
+        "line": 134,
+        "selectorHint": ".psheet__x",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "关闭",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:514"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:139:bindtap:loginForMyTeams:27",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "loginForMyTeams",
+        "line": 139,
+        "selectorHint": ".mt-sbtn",
+        "visibleCondition": "{{myReadAccess === 'login'}}",
+        "disabledCondition": null,
+        "ariaLabel": "去登录",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info",
+          "/api/team/my",
+          "/api/team/my-applications"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/team/my",
+          "/api/team/my-applications"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/team/my",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/team/my-applications",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:698"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:146:bindtap:onMyRowAction:28",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1268210,7 +1268412,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onMyRowAction",
-        "line": 132,
+        "line": 146,
         "selectorHint": ".mt-sbtn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1268348,7 +1268550,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:141:bindtap:closeSheet:28",
+      "id": "subpackageRoam/nearby/index.wxml:155:bindtap:closeSheet:29",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1268371,7 +1268573,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeSheet",
-        "line": 141,
+        "line": 155,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1268415,7 +1268617,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:145:catchtap:noop:29",
+      "id": "subpackageRoam/nearby/index.wxml:159:catchtap:noop:30",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1268438,7 +1268640,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 145,
+        "line": 159,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1268483,7 +1268685,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:147:catchtap:closeSheet:30",
+      "id": "subpackageRoam/nearby/index.wxml:161:catchtap:closeSheet:31",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1268506,7 +1268708,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "closeSheet",
-        "line": 147,
+        "line": 161,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1268550,7 +1268752,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:156:bindtap:openTopicPage:31",
+      "id": "subpackageRoam/nearby/index.wxml:170:bindtap:openTopicPage:32",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1268573,7 +1268775,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openTopicPage",
-        "line": 156,
+        "line": 170,
         "selectorHint": ".btn2",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1268618,7 +1268820,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:163:bindtap:closeLayerSheet:32",
+      "id": "subpackageRoam/nearby/index.wxml:177:bindtap:closeLayerSheet:33",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1268641,7 +1268843,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeLayerSheet",
-        "line": 163,
+        "line": 177,
         "selectorHint": ".mdd-mask",
         "visibleCondition": "{{layerSheet}}",
         "disabledCondition": null,
@@ -1268685,7 +1268887,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:165:bindtap:onLayerPickTap:33",
+      "id": "subpackageRoam/nearby/index.wxml:179:bindtap:onLayerPickTap:34",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1268708,7 +1268910,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onLayerPickTap",
-        "line": 165,
+        "line": 179,
         "selectorHint": ".mdd__i",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1268752,7 +1268954,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:173:bindtap:closePoiCard:34",
+      "id": "subpackageRoam/nearby/index.wxml:187:bindtap:closePoiCard:35",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1268775,7 +1268977,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closePoiCard",
-        "line": 173,
+        "line": 187,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1268819,7 +1269021,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:175:bindtouchend:onPcEnd:36",
+      "id": "subpackageRoam/nearby/index.wxml:189:bindtouchend:onPcEnd:37",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1268842,7 +1269044,7 @@
         "tag": "view",
         "event": "bindtouchend",
         "handler": "onPcEnd",
-        "line": 175,
+        "line": 189,
         "selectorHint": ".pc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1268886,7 +1269088,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:175:bindtouchstart:onPcStart:35",
+      "id": "subpackageRoam/nearby/index.wxml:189:bindtouchstart:onPcStart:36",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1268909,7 +1269111,7 @@
         "tag": "view",
         "event": "bindtouchstart",
         "handler": "onPcStart",
-        "line": 175,
+        "line": 189,
         "selectorHint": ".pc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1268954,7 +1269156,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:180:bindtap:onPoiFront:37",
+      "id": "subpackageRoam/nearby/index.wxml:194:bindtap:onPoiFront:38",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1268977,7 +1269179,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPoiFront",
-        "line": 180,
+        "line": 194,
         "selectorHint": ".pc__f",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1269063,7 +1269265,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:183:bindchange:onPoiSwipe:38",
+      "id": "subpackageRoam/nearby/index.wxml:197:bindchange:onPoiSwipe:39",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269086,7 +1269288,7 @@
         "tag": "swiper",
         "event": "bindchange",
         "handler": "onPoiSwipe",
-        "line": 183,
+        "line": 197,
         "selectorHint": ".pc__img",
         "visibleCondition": "{{poiCard.official && poiCard.thumbs.length > 1}}",
         "disabledCondition": null,
@@ -1269130,7 +1269332,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:199:bindtap:closePoiCard:39",
+      "id": "subpackageRoam/nearby/index.wxml:213:bindtap:closePoiCard:40",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269153,7 +1269355,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closePoiCard",
-        "line": 199,
+        "line": 213,
         "selectorHint": ".pb__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1269197,7 +1269399,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:205:bindchange:onPoiSwipe:40",
+      "id": "subpackageRoam/nearby/index.wxml:219:bindchange:onPoiSwipe:41",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269220,7 +1269422,7 @@
         "tag": "swiper",
         "event": "bindchange",
         "handler": "onPoiSwipe",
-        "line": 205,
+        "line": 219,
         "selectorHint": ".pb__sw",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1269264,7 +1269466,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:206:catchtap:onPoiImagePreview:41",
+      "id": "subpackageRoam/nearby/index.wxml:220:catchtap:onPoiImagePreview:42",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269287,7 +1269489,7 @@
         "tag": "image",
         "event": "catchtap",
         "handler": "onPoiImagePreview",
-        "line": 206,
+        "line": 220,
         "selectorHint": ".pb__swi",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1269341,7 +1269543,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:212:catchtap:onPoiImagePreview:42",
+      "id": "subpackageRoam/nearby/index.wxml:226:catchtap:onPoiImagePreview:43",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269364,7 +1269566,7 @@
         "tag": "image",
         "event": "catchtap",
         "handler": "onPoiImagePreview",
-        "line": 212,
+        "line": 226,
         "selectorHint": "image[catchtap]",
         "visibleCondition": "{{index < 3}}",
         "disabledCondition": null,
@@ -1269418,7 +1269620,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:222:bindtap:onPoiXhs:43",
+      "id": "subpackageRoam/nearby/index.wxml:236:bindtap:onPoiXhs:44",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269441,7 +1269643,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPoiXhs",
-        "line": 222,
+        "line": 236,
         "selectorHint": ".pb__row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1269495,7 +1269697,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:228:bindtap:onPoiQuote:44",
+      "id": "subpackageRoam/nearby/index.wxml:243:bindtap:onPoiQuote:45",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269518,7 +1269720,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPoiQuote",
-        "line": 228,
+        "line": 243,
         "selectorHint": ".pb__qt",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1269572,7 +1269774,74 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:240:bindtap:onReviewStar:45",
+      "id": "subpackageRoam/nearby/index.wxml:25:bindtap:setViewMode:3",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "setViewMode",
+        "line": 25,
+        "selectorHint": ".mt-mode__i",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "地图",
+        "ariaLabelExpression": null,
+        "ariaRole": "tab",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:486"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:259:bindtap:onReviewStar:46",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269595,7 +1269864,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "onReviewStar",
-        "line": 240,
+        "line": 259,
         "selectorHint": ".pb__star",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1269639,7 +1269908,74 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:241:bindinput:onReviewInput:46",
+      "id": "subpackageRoam/nearby/index.wxml:26:bindtap:setViewMode:4",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "setViewMode",
+        "line": 26,
+        "selectorHint": ".mt-mode__i",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "列表",
+        "ariaLabelExpression": null,
+        "ariaRole": "tab",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:486"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:260:bindinput:onReviewInput:47",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269662,7 +1269998,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onReviewInput",
-        "line": 241,
+        "line": 260,
         "selectorHint": ".pb__ta",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1269706,7 +1270042,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:242:bindtap:onReviewSubmit:47",
+      "id": "subpackageRoam/nearby/index.wxml:261:bindtap:onReviewSubmit:48",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269729,7 +1270065,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onReviewSubmit",
-        "line": 242,
+        "line": 261,
         "selectorHint": ".pb__send",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1269831,7 +1270167,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:244:bindtap:onPoiPhotoCredit:48",
+      "id": "subpackageRoam/nearby/index.wxml:263:bindtap:onPoiPhotoCredit:49",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269854,7 +1270190,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPoiPhotoCredit",
-        "line": 244,
+        "line": 263,
         "selectorHint": ".pb__photo-note",
         "visibleCondition": "{{poiCard.photoCredit}}",
         "disabledCondition": null,
@@ -1269898,7 +1270234,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:248:bindtap:onPoiPhotoCredit:49",
+      "id": "subpackageRoam/nearby/index.wxml:267:bindtap:onPoiPhotoCredit:50",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269921,7 +1270257,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPoiPhotoCredit",
-        "line": 248,
+        "line": 267,
         "selectorHint": ".pb__photo-note",
         "visibleCondition": "{{poiCard.photoCredit && poiExpand}}",
         "disabledCondition": null,
@@ -1269965,74 +1270301,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:25:bindtap:setViewMode:3",
-      "route": "subpackageRoam/nearby/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageRoam/nearby/index.wxml",
-        "js": "subpackageRoam/nearby/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "setViewMode",
-        "line": 25,
-        "selectorHint": ".mt-mode__i",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "地图",
-        "ariaLabelExpression": null,
-        "ariaRole": "tab",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:486"
-      }
-    },
-    {
-      "id": "subpackageRoam/nearby/index.wxml:255:bindtap:onPoiSecondary:50",
+      "id": "subpackageRoam/nearby/index.wxml:274:bindtap:onPoiSecondary:51",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270055,7 +1270324,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPoiSecondary",
-        "line": 255,
+        "line": 274,
         "selectorHint": ".pb__btn",
         "visibleCondition": "{{poiCard.secondary}}",
         "disabledCondition": null,
@@ -1270109,7 +1270378,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:256:bindtap:onPoiPrimary:51",
+      "id": "subpackageRoam/nearby/index.wxml:275:bindtap:onPoiPrimary:52",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270134,7 +1270403,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPoiPrimary",
-        "line": 256,
+        "line": 275,
         "selectorHint": ".pb__btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1270232,7 +1270501,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:258:bindtap:onPoiExpand:52",
+      "id": "subpackageRoam/nearby/index.wxml:277:bindtap:onPoiExpand:53",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270255,7 +1270524,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPoiExpand",
-        "line": 258,
+        "line": 277,
         "selectorHint": ".pb__hint",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1270299,74 +1270568,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:26:bindtap:setViewMode:4",
-      "route": "subpackageRoam/nearby/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageRoam/nearby/index.wxml",
-        "js": "subpackageRoam/nearby/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "setViewMode",
-        "line": 26,
-        "selectorHint": ".mt-mode__i",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "列表",
-        "ariaLabelExpression": null,
-        "ariaRole": "tab",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:486"
-      }
-    },
-    {
-      "id": "subpackageRoam/nearby/index.wxml:269:bind:close:closeSpotCam:54",
+      "id": "subpackageRoam/nearby/index.wxml:288:bind:close:closeSpotCam:55",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270389,7 +1270591,7 @@
         "tag": "cy-proto-cam",
         "event": "bind:close",
         "handler": "closeSpotCam",
-        "line": 269,
+        "line": 288,
         "selectorHint": "cy-proto-cam[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1270433,7 +1270635,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:269:bind:shot:onSpotShot:53",
+      "id": "subpackageRoam/nearby/index.wxml:288:bind:shot:onSpotShot:54",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270456,7 +1270658,7 @@
         "tag": "cy-proto-cam",
         "event": "bind:shot",
         "handler": "onSpotShot",
-        "line": 269,
+        "line": 288,
         "selectorHint": "cy-proto-cam[bind:shot]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1270542,7 +1270744,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:271:bind:settled:onPrivacyGateSettled:55",
+      "id": "subpackageRoam/nearby/index.wxml:290:bind:settled:onPrivacyGateSettled:56",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270565,7 +1270767,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 271,
+        "line": 290,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1270609,7 +1270811,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:274:bind:cancel:closeRange:57",
+      "id": "subpackageRoam/nearby/index.wxml:293:bind:cancel:closeRange:58",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270632,7 +1270834,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "closeRange",
-        "line": 274,
+        "line": 293,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1270676,7 +1270878,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:274:bind:select:onRangePick:56",
+      "id": "subpackageRoam/nearby/index.wxml:293:bind:select:onRangePick:57",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270699,7 +1270901,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onRangePick",
-        "line": 274,
+        "line": 293,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1270809,7 +1271011,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:279:bind:close:onResultClose:60",
+      "id": "subpackageRoam/nearby/index.wxml:298:bind:close:onResultClose:61",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270832,7 +1271034,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:close",
         "handler": "onResultClose",
-        "line": 279,
+        "line": 298,
         "selectorHint": "cy-result-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1270876,7 +1271078,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:279:bind:primary:onResultPrimary:58",
+      "id": "subpackageRoam/nearby/index.wxml:298:bind:primary:onResultPrimary:59",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270899,7 +1271101,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:primary",
         "handler": "onResultPrimary",
-        "line": 279,
+        "line": 298,
         "selectorHint": "cy-result-sheet[bind:primary]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1270945,7 +1271147,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:279:bind:secondary:onResultClose:59",
+      "id": "subpackageRoam/nearby/index.wxml:298:bind:secondary:onResultClose:60",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270968,7 +1271170,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:secondary",
         "handler": "onResultClose",
-        "line": 279,
+        "line": 298,
         "selectorHint": "cy-result-sheet[bind:secondary]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1271540,7 +1271742,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:62:bindtap:openRange:11",
+      "id": "subpackageRoam/nearby/index.wxml:65:bindtap:onListRowTap:11",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1271562,13 +1271764,13 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "openRange",
-        "line": 62,
-        "selectorHint": ".mt-corner",
+        "handler": "onListRowTap",
+        "line": 65,
+        "selectorHint": ".mt-card",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "{{rangeText}}",
+        "ariaLabelExpression": "{{item.name}}，{{item.badge}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -1271578,237 +1271780,91 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "read",
       "interactionMode": "tap",
-      "baseActionClass": "state",
+      "baseActionClass": "read",
       "effectClasses": [
+        "read",
+        "navigation",
         "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:485"
-      }
-    },
-    {
-      "id": "subpackageRoam/nearby/index.wxml:63:bindtap:openMyTeamsPage:12",
-      "route": "subpackageRoam/nearby/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageRoam/nearby/index.wxml",
-        "js": "subpackageRoam/nearby/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "openMyTeamsPage",
-        "line": 63,
-        "selectorHint": ".mt-corner",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "{{myTeamsText}}",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "subpackageRoam/my-teams/index"
+          "pages/privacy/index"
         ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "apis": [
+          "/api/city/nodes/",
+          "/api/comment/list",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info",
+          "/api/team/applications"
+        ],
+        "primaryApis": [
+          "/api/city/nodes/",
+          "/api/comment/list",
+          "/api/config/features",
+          "/api/team/applications"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/city/nodes/",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/comment/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/team/applications",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
-        "error"
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:493"
-      }
-    },
-    {
-      "id": "subpackageRoam/nearby/index.wxml:68:bindtap:closeSheet:13",
-      "route": "subpackageRoam/nearby/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageRoam/nearby/index.wxml",
-        "js": "subpackageRoam/nearby/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "closeSheet",
-        "line": 68,
-        "selectorHint": ".pdim",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "关闭",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:514"
-      }
-    },
-    {
-      "id": "subpackageRoam/nearby/index.wxml:69:catchtap:noop:14",
-      "route": "subpackageRoam/nearby/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageRoam/nearby/index.wxml",
-        "js": "subpackageRoam/nearby/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtap",
-        "handler": "noop",
-        "line": 69,
-        "selectorHint": ".psheet",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "tap",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:530"
+        "staticSource": "subpackageRoam/nearby/index.js:487"
       }
     },
     {
@@ -1271882,7 +1271938,279 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:71:catchtap:closeSheet:15",
+      "id": "subpackageRoam/nearby/index.wxml:76:bindtap:openRange:12",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openRange",
+        "line": 76,
+        "selectorHint": ".mt-corner",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{rangeText}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:485"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:77:bindtap:openMyTeamsPage:13",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openMyTeamsPage",
+        "line": 77,
+        "selectorHint": ".mt-corner",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{myTeamsText}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageRoam/my-teams/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:493"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:82:bindtap:closeSheet:14",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "closeSheet",
+        "line": 82,
+        "selectorHint": ".pdim",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "关闭",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:514"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:83:catchtap:noop:15",
+      "route": "subpackageRoam/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/nearby/index.wxml",
+        "js": "subpackageRoam/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "noop",
+        "line": 83,
+        "selectorHint": ".psheet",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/nearby/index.js:530"
+      }
+    },
+    {
+      "id": "subpackageRoam/nearby/index.wxml:85:catchtap:closeSheet:16",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1271905,7 +1272233,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "closeSheet",
-        "line": 71,
+        "line": 85,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1271949,7 +1272277,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:82:bindtap:onCardPrimary:16",
+      "id": "subpackageRoam/nearby/index.wxml:96:bindtap:onCardPrimary:17",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1271972,7 +1272300,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCardPrimary",
-        "line": 82,
+        "line": 96,
         "selectorHint": ".mt-btn",
         "visibleCondition": "{{current.card.primary}}",
         "disabledCondition": null,
@@ -1272063,7 +1272391,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:83:bindtap:onCardSecondary:17",
+      "id": "subpackageRoam/nearby/index.wxml:97:bindtap:onCardSecondary:18",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1272086,7 +1272414,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCardSecondary",
-        "line": 83,
+        "line": 97,
         "selectorHint": ".mt-btn",
         "visibleCondition": "{{current.card.secondary}}",
         "disabledCondition": null,
@@ -1272204,208 +1272532,6 @@
       "evidence": {
         "status": "pending",
         "staticSource": "subpackageRoam/nearby/index.js:571"
-      }
-    },
-    {
-      "id": "subpackageRoam/nearby/index.wxml:91:bindtap:closeSheet:18",
-      "route": "subpackageRoam/nearby/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageRoam/nearby/index.wxml",
-        "js": "subpackageRoam/nearby/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "closeSheet",
-        "line": 91,
-        "selectorHint": ".pdim",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "关闭",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:514"
-      }
-    },
-    {
-      "id": "subpackageRoam/nearby/index.wxml:92:catchtap:noop:19",
-      "route": "subpackageRoam/nearby/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageRoam/nearby/index.wxml",
-        "js": "subpackageRoam/nearby/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtap",
-        "handler": "noop",
-        "line": 92,
-        "selectorHint": ".psheet",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "tap",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:530"
-      }
-    },
-    {
-      "id": "subpackageRoam/nearby/index.wxml:94:catchtap:closeSheet:20",
-      "route": "subpackageRoam/nearby/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageRoam/nearby/index.wxml",
-        "js": "subpackageRoam/nearby/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtap",
-        "handler": "closeSheet",
-        "line": 94,
-        "selectorHint": ".psheet__x",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "关闭",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:514"
       }
     },
     {

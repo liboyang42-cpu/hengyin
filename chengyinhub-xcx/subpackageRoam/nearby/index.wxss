@@ -229,3 +229,34 @@ page { background: var(--cy-comp-sheet-player-page); }
 /* 卡开着时顶部计数条、筛选行淡出(原型 map-open),只留地图和卡 */
 .nb .mt-top, .nb .mt-filter { transition: opacity .25s ease; }
 .nb.map-open .mt-top, .nb.map-open .mt-filter { opacity: 0; pointer-events: none; }
+
+/* 2026-10-25 业主:顶部一行 = 筛选(文字)+ 地图 / 列表(图标);底部横滑卡片(漫游首页「附近活动」卡,加高,与标题左缘对齐) */
+.mt-top--end { justify-content: flex-end; pointer-events: none; }
+.mt-top--end .mt-mode { pointer-events: auto; height: 76rpx; }
+.mt-top--end .mt-mode__i { min-width: 76rpx; padding: 0; color: rgba(255,255,255,.6); } /* ds-ok 同 .mt-mode__i 未选 */
+.mt-top--end .mt-mode__i.is-on { color: var(--cy-color-play-ink); }
+.mt-filter--row { right: 196rpx; padding-right: 0; }
+.mt-strip { position: absolute; left: 0; right: 0; bottom: 0; z-index: 18; padding-top: 31rpx; background: linear-gradient(180deg, rgba(17,17,17,0) 0%, rgba(17,17,17,.55) 30%, #111 100%); } /* ds-ok 同漫游首页 .entry-peek 渐隐底 */
+.mt-strip__head { padding: 0 31rpx 19rpx; font-size: 33rpx; line-height: 42rpx; font-weight: 700; color: #fff; } /* ds-ok 同 .entry-peek__head */
+.mt-strip__cards { width: 100%; height: 300rpx; white-space: nowrap; }
+.mt-strip__track { display: inline-flex; gap: 23rpx; padding: 0 31rpx; }
+.mt-card { position: relative; display: inline-flex; flex: none; width: 481rpx; height: 300rpx; overflow: hidden; border-radius: 27rpx; background: #2C2C2E; vertical-align: top; } /* ds-ok 同 .entry-card,加高 */
+.mt-card__cover { position: absolute; top: 0; right: 0; bottom: 0; left: 0; width: 100%; height: 100%; }
+.mt-card__cover--team { background: linear-gradient(135deg, #0d2a4d, #123b6b); } /* ds-ok 队伍蓝 */
+.mt-card__cover--place, .mt-card__cover--shop { background: #2C2C2E; } /* ds-ok */
+.mt-card__shade { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,.8)); } /* ds-ok 同 .entry-card__shade */
+.mt-card__copy { position: absolute; left: 27rpx; right: 27rpx; bottom: 23rpx; display: flex; flex-direction: column; color: #fff; } /* ds-ok */
+.mt-card__tag { margin-bottom: 8rpx; font-size: 21rpx; font-weight: 700; } /* ds-ok */
+.mt-card__tag--team { color: #64D2FF; } /* ds-ok 队伍蓝 */
+.mt-card__tag--place { color: #7CF0A6; } /* ds-ok 地点绿 */
+.mt-card__tag--shop { color: #FFB340; } /* ds-ok 商家橙 */
+.mt-card__title { font-size: 29rpx; line-height: 1.25; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* ds-ok */
+.mt-card__meta { margin-top: 6rpx; font-size: 21rpx; color: rgba(255,255,255,.72); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* ds-ok */
+.mt-corner--icon { position: relative; width: 88rpx; padding: 0; justify-content: center; }
+.mt-corner__n { position: absolute; top: -6rpx; right: -6rpx; min-width: 34rpx; height: 34rpx; padding: 0 8rpx; box-sizing: border-box; border-radius: 17rpx; background: #0A84FF; color: #fff; font-size: 21rpx; font-weight: 700; line-height: 34rpx; text-align: center; } /* ds-ok 队伍蓝角标 */
+/* 2026-10-25 业主:展开卡里「网上怎么说」「玩家评价」左右滑,一条一张卡 */
+.pb__hs { width: 100%; white-space: nowrap; }
+.pb__hs-track { display: inline-flex; gap: 19rpx; padding-bottom: 4rpx; }
+.pb__hs .pb__qt, .pb__hs .pb__cm { display: inline-flex; flex-direction: column; flex: none; width: 470rpx; min-height: 200rpx; box-sizing: border-box; padding: 23rpx 27rpx; border: 0; border-radius: 31rpx; background: #2C2C2E; white-space: normal; vertical-align: top; } /* ds-ok 同 .pb__game 卡底 */
+.pb__hs .pb__qt-t, .pb__hs .pb__cm-t { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.pb__hs .pb__qt-s { margin-top: auto; padding-top: 12rpx; }
