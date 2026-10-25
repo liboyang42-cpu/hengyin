@@ -6,6 +6,7 @@
       description="审核商家据点投放与认领，并核对已生效据点的玩家可见性。"
       :updated-at="updatedAt"
     >
+      <el-button slot="primary" v-hasPermi="['business:roamPoi:edit']" type="primary" size="small" @click="editOfficial(null)">添加官方据点</el-button>
       <el-button slot="primary" size="small" icon="el-icon-refresh" :loading="loading" @click="getList">刷新列表</el-button>
     </cy-page-header>
 
@@ -39,7 +40,7 @@
           </template>
         </el-table-column>
         <el-table-column label="申请商家" min-width="160">
-          <template slot-scope="s">{{ s.row.merchantName || `merchant #${s.row.applicantMerchantId}` }}</template>
+          <template slot-scope="s">{{ Number(s.row.applicationType) === 3 ? '官方据点' : (s.row.merchantName || `merchant #${s.row.applicantMerchantId}`) }}</template>
         </el-table-column>
         <el-table-column label="目标/位置" min-width="180">
           <template slot-scope="s">
@@ -49,7 +50,7 @@
         </el-table-column>
         <el-table-column label="审核材料" min-width="260">
           <template slot-scope="s">
-            <template v-if="Number(s.row.applicationType) === 1">
+            <template v-if="[1, 3].includes(Number(s.row.applicationType))">
               <!-- 审核要判的是「这个玩法跑不跑得起来、题目合不合规」,只给模板 id 判不了 -->
               <div v-if="s.row.reviewMaterial && s.row.reviewMaterial.merchant" class="roam-poi-review__shop">
                 {{ s.row.reviewMaterial.merchant.name || '—' }}
@@ -77,7 +78,7 @@
                   D {{ s.row.reviewMaterial.template.questionD || '—' }}
                   · 正解 {{ s.row.reviewMaterial.template.correctAnswer || '（未标，玩家永远答不对）' }}
                 </div>
-                <div v-if="Number(s.row.reviewMaterial.template.validationMethod) === 2">拍照要求:{{ s.row.reviewMaterial.template.photoRequireDesc || '未填' }}</div>
+                <div v-if="Number(s.row.reviewMaterial.template.validationMethod) === 2 || s.row.photoRequired">拍照要求:{{ s.row.reviewMaterial.template.photoRequireDesc || '未填' }}</div>
                 <div v-if="s.row.reviewMaterial.template.hint1" class="roam-poi-object__meta">提示:{{ s.row.reviewMaterial.template.hint1 }}</div>
                 <div class="roam-poi-object__meta">
                   奖励:{{ s.row.reviewMaterial.template.couponId ? ('券 #' + s.row.reviewMaterial.template.couponId) : (s.row.reviewMaterial.template.feedbackText || '无') }}
@@ -89,8 +90,8 @@
               <el-image
                 v-if="s.row.coverImg"
                 class="roam-poi-application__cover"
-                :src="s.row.coverImg"
-                :preview-src-list="[s.row.coverImg]"
+                :src="poiCover(s.row.coverImg)"
+                :preview-src-list="[poiCover(s.row.coverImg)]"
                 fit="cover"
               />
             </template>
@@ -206,8 +207,9 @@
         </template>
       </el-table-column>
       <el-table-column label="创建时间" prop="createTime" width="150" align="center" />
-      <el-table-column label="操作" width="142" align="center">
+      <el-table-column label="操作" width="210" align="center">
         <template slot-scope="s">
+          <el-button v-if="Number(s.row.type) === 1" v-hasPermi="['business:roamPoi:edit']" type="text" size="mini" @click="editOfficial(s.row.id)">配置地点游戏</el-button>
           <el-button
             v-if="canTransition(s.row, 0)"
             v-hasPermi="['business:roamPoi:edit']"
@@ -229,11 +231,14 @@
       </el-table-column>
       </el-table>
     </section>
+    <official-editor :visible="officialEditorVisible" :poi-id="officialEditorId" @close="officialEditorVisible = false" @saved="onOfficialSaved" />
   </div>
 </template>
 
 <script>
 import { adminPoiList, poiOnline, poiOffline, roamPoiApplications, approveRoamPoiApplication, rejectRoamPoiApplication } from '@/api/business/roamPoi'
+import OfficialEditor from './official-editor.vue'
+import { approveOfficialPoi, rejectOfficialPoi } from '@/api/business/roamPoi'
 import CyEmptyState from '@/components/CyEmptyState'
 import CyFilterBar from '@/components/CyFilterBar'
 import CyPageHeader from '@/components/CyPageHeader'
@@ -278,9 +283,10 @@ function routeQuery(filters) {
 
 export default {
   name: 'RoamPoiAdmin',
-  components: { CyEmptyState, CyFilterBar, CyPageHeader, CyResourceState },
+  components: { OfficialEditor, CyEmptyState, CyFilterBar, CyPageHeader, CyResourceState },
   data() {
     return {
+      officialEditorVisible: false, officialEditorId: null,
       loading: false,
       list: [],
       listError: false,
@@ -324,6 +330,9 @@ export default {
     }
   },
   methods: {
+    poiCover(key) { return !key ? '' : /^(https?:)?\/\//.test(key) ? key : process.env.VUE_APP_BASE_API + '/profile/' + key.replace(/^\/?profile\//, '').replace(/^\//, '') },
+    editOfficial(id) { this.officialEditorId = id; this.officialEditorVisible = true },
+    onOfficialSaved() { return Promise.all([this.getApplications(), this.getList()]) },
     // 审核材料的字典。★ 未配的档位一律显示成「未配」而不是留空 ——
     // 空白会被审核员当成「这项不适用」,而它其实是「商家没配,玩家会卡死在这一关」。
     interactionTypeText(value) {
@@ -358,7 +367,7 @@ export default {
         .finally(() => { this.applicationLoading = false })
     },
     applicationTypeText(type) {
-      return Number(type) === 2 ? '节点认领' : '据点投放'
+      return Number(type) === 3 ? '官方据点' : Number(type) === 2 ? '节点认领' : '据点投放'
     },
     applicationStatusText(status) {
       if (Number(status) === 0) return '待审核'
@@ -371,10 +380,10 @@ export default {
       return this.$modal.confirm(`确认通过「${row.name || row.id}」？`)
         .then(() => {
           this.pendingApplicationId = row.id
-          return approveRoamPoiApplication(row.id)
+          return Number(row.applicationType) === 3 ? approveOfficialPoi(row.id) : approveRoamPoiApplication(row.id)
         })
         .then(() => {
-          this.$modal.msgSuccess('申请已通过，据点归属已写入。')
+          this.$modal.msgSuccess(Number(row.applicationType) === 3 ? '官方据点已上架，玩法与勋章已启用。' : '申请已通过，据点归属已写入。')
           return Promise.all([this.getApplications(), this.getList()])
         })
         .finally(() => { this.pendingApplicationId = null })
@@ -388,7 +397,7 @@ export default {
         inputErrorMessage: '驳回原因不能为空'
       }).then(({ value }) => {
         this.pendingApplicationId = row.id
-        return rejectRoamPoiApplication(row.id, value.trim())
+        return Number(row.applicationType) === 3 ? rejectOfficialPoi(row.id, value.trim()) : rejectRoamPoiApplication(row.id, value.trim())
       }).then(() => {
         this.$modal.msgSuccess('申请已驳回。')
         return this.getApplications()

@@ -22,6 +22,8 @@ public final class AppMediaSchema {
             "senderAvatar", "productPic", "skuPic", "nodeImgUrl", "topicImgUrl", "topicImgArr", "brandLogo", "voiceSample");
     public static final Set<String> MEDIA_JSON_FIELDS = Set.of("questionOptionMediaJson", "advancedConfigJson",
             "gameModuleConfigJson", "themeRuntimeConfigJson", "publishedThemeRuntimeConfigJson",
-            "configSnapshotJson", "moduleConfigSnapshotJson", "storyJson", "imagesJson", "blocksJson", "journeyStoryJson");
+            "configSnapshotJson", "moduleConfigSnapshotJson", "storyJson", "imagesJson", "blocksJson", "journeyStoryJson",
+            // 官方地点相册(roam_poi.gallery_json):JSON 字符串数组,逐张按 gallery 走审核事实,未登记的图不外发
+            "galleryJson");
     public static final Set<String> MULTI_MEDIA_FIELDS = Set.of("caseImages", "certImages", "images", "imgArr", "gallery", "pics", "casePics", "albumPics");
 }

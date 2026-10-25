@@ -10,7 +10,7 @@ const colors = { place: '#4ADE80', shop: '#E7A84B', plateText: '#132A2E' }
 test('筛选选项:地点 = 本屏主题/活动 + 地标标签;商家 = 商家标签;不预置分类', () => {
   const o = L.filterOptions(
     [{ type: 1, tags: '公园，滨江' }, { type: 2, tags: '咖啡、餐饮' }, { type: 2, tags: '咖啡' }],
-    [{ kind: 'topic' }, { kind: 'activity' }, { kind: 'topic' }])
+    [{ kind: 'topic', productType: 2 }, { kind: 'activity' }, { kind: 'topic', productType: 2 }])
   assert.deepEqual(o.place, ['全部地点', '主题', '活动', '公园', '滨江'])
   assert.deepEqual(o.shop, ['全部商家', '咖啡', '餐饮'])
   assert.deepEqual(L.filterOptions([], []), { place: ['全部地点'], shop: ['全部商家'] })
@@ -19,13 +19,22 @@ test('筛选选项:地点 = 本屏主题/活动 + 地标标签;商家 = 商家�
 test('筛选:队伍 / 地点子类 / 商家子类各管各的', () => {
   const f = (layer, sub = '') => ({ layer, sub })
   assert.equal(L.keepTeam(f('all')), true); assert.equal(L.keepTeam(f('shop')), false)
-  assert.equal(L.keepItem({ kind: 'topic' }, f('place', '主题')), true)
+  assert.equal(L.keepItem({ kind: 'topic', productType: 2 }, f('place', '主题')), true)
   assert.equal(L.keepItem({ kind: 'activity' }, f('place', '主题')), false)
-  assert.equal(L.keepItem({ kind: 'topic' }, f('team')), false)
+  assert.equal(L.keepItem({ kind: 'topic', productType: 2 }, f('team')), false)
   assert.equal(L.keepPoi({ type: 2, tags: '咖啡' }, f('shop', '咖啡')), true)
   assert.equal(L.keepPoi({ type: 2, tags: '餐饮' }, f('shop', '咖啡')), false)
   assert.equal(L.keepPoi({ type: 1, tags: '公园' }, f('shop')), false)
 })
+
+test('城市定向不能借全部或主题筛选重新出现', () => {
+  for (const productType of [1, '1', null, undefined]) {
+    const city = { kind: 'topic', productType };
+    for (const filter of [undefined, { layer: 'all' }, { layer: 'place', sub: '主题' }])
+      assert.equal(L.keepItem(city, filter), false);
+    assert.deepEqual(L.filterOptions([], [city]).place, ['全部地点']);
+  }
+});
 
 test('地标 / 商家点:id 尾号 6/7 不与既有 1–4、9 撞号;近处放大挂名牌;无坐标不画', () => {
   const ms = L.buildPoiMarkers([

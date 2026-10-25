@@ -44,6 +44,21 @@ beforeEach(() => {
   }
 })
 
+test('漫游商家图层排除城市定向节点，保留普通店铺和自由探索商家', async () => {
+  const page = mount();
+  page._pois = [];
+  page._resolveNearbyReady = () => {}; page._seenSweepHistory = () => {};
+  page._syncMarkers = () => {}; page._syncSparkCircles = () => {};
+  app.sendRequest = o => o.success({ code: 200, data: [
+    { id: 1, topicId: 11, productType: 1, latitude: 31, longitude: 121 },
+    { id: 2, topicId: 12, latitude: 31, longitude: 121 },
+    { id: 3, latitude: 31, longitude: 121 },
+    { id: 4, topicId: 14, productType: '2', latitude: 31, longitude: 121 },
+  ] });
+  await page._fetchNearbyMerchants({ lat: 31, lng: 121 });
+  assert.deepEqual(page._pois.map(p => p.regId), [3, 4]);
+});
+
 test('结算完成后主动GO开启独立新会话，不重用已完成关联', async () => {
   loseBootstrap = false
   const page = mount(); page._pendingTiles = ['wtw3sjq']; await page._flushReveal()

@@ -3,7 +3,7 @@
   "generatedFrom": "app.json + scene-* 组件扫描",
   "previousBatch": null,
   "counts": {
-    "routes": 144,
+    "routes": 145,
     "scenes": 27,
     "added": 0,
     "removed": 0
@@ -173,6 +173,19 @@
       "dataKeys": [
         "topicId",
         "registrationId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/play/poi-challenge/index",
+      "pkg": "pages/play",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "poiId"
       ],
       "hasJs": true,
       "hasWxml": true

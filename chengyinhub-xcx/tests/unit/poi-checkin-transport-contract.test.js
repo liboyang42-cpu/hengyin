@@ -58,7 +58,7 @@ function mount({ source = readSource(), storage = new Map(), owner = 7, poiId = 
   get()
   return {
     instance, storage, requests, locations, events, notices, identity, respond, get,
-    posts: () => requests.filter(request => request.method === 'POST'),
+    posts: () => requests.filter(request => request.method === 'POST' && /\/api\/city\/nodes\/\d+\/complete$/.test(request.url)),
     begin() { instance.completeNode(''); locations.at(-1).success({ latitude: 31.2, longitude: 121.5 }); return requests.at(-1) },
     detach() { definition.lifetimes.detached.call(instance) },
   }

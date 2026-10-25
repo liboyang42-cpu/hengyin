@@ -1,0 +1,14 @@
+{
+  "navigationStyle": "custom",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#000000",
+  "usingComponents": {
+    "cy-playkit-qa": "/pages/play/components/playkit-qa/index",
+    "cy-medal-screen": "/pages/play/components/medal-screen/index",
+    "cy-error": "/components/cy/error/index",
+    "cy-skeleton": "/components/cy/skeleton/index",
+    "cy-toast": "/components/cy/toast/index",
+    "cy-loading-mask": "/components/cy/loading-mask/index",
+    "cy-privacy-gate": "/components/cy/privacy-gate/index"
+  }
+}

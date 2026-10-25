@@ -78,6 +78,7 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/play/index` | 否 | `chengyinhub-admin/sql/migration_20260825_named_mechanic_advanced_config.sql:8` | KEEP |
 | `pages/play/merchant/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/logs/walk-merchant.json:317` | KEEP |
 | `pages/play/circle/index` | 否 | 旧分享；`chengyinhub-xcx/pages/play/circle/index.js:2` | KEEP |
+| `pages/play/poi-challenge/index` | 否 | 官方地点挑战；`chengyinhub-xcx/subpackageRoam/nearby/index.js:1059` | KEEP |
 | `pages/activity/detail/index` | 否 | `chengyinhub-xcx/pages/roam/index.js:5382` | KEEP |
 | `pages/activity/baoming/baoming` | 否 | `chengyinhub-xcx/pages/topic/index/index.js:794` | KEEP |
 | `pages/activity/list/index` | 否 | `chengyinhub-xcx/pages/activity/baoming/baoming.js:821` | KEEP |

@@ -47,6 +47,16 @@ public class CommentPublicationService {
         if (review && comment.getRating() != null
                 && (comment.getRating() < 0 || comment.getRating() > 5))
             return "评分必须在0至5之间";
+        if (Long.valueOf(4).equals(comment.getOwnerType())) {
+            if (comment.getContents() == null || comment.getContents().trim().isEmpty() || comment.getContents().length() > 500)
+                return "评价内容须为1至500字";
+            if (!reviewFacts.reviewTargetExists(4L, comment.getOwnerId())) return "据点未开放或已下线";
+            if (!reviewFacts.hasCompletedPoi(comment.getOwnerId(), comment.getMemberId())) return "完成据点挑战后才可评价";
+            if (comment.getReplyId() == null || comment.getReplyId() == 0) {
+                if (comment.getRating() == null || comment.getRating() < 1 || comment.getRating() > 5) return "请选择1至5星评分";
+                if (reviewFacts.countPoiReviews(comment.getOwnerId(), comment.getMemberId()) > 0) return "你已评价过这个据点";
+            } else comment.setRating(null);
+        }
         comment.setStatus(1);
         comment.setDelFlag(0);
         if (comments.insertUmsComment(comment) <= 0) throw new ServiceException("添加评论失败");

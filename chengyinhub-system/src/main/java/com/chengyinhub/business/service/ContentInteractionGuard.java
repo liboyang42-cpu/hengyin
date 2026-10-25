@@ -30,7 +30,7 @@ public class ContentInteractionGuard {
 
 /** 评论链由子到父锁定，最后锁帖文；所有入口使用相同顺序。 */
     public String lockTarget(Long ownerType, Long ownerId, Long replyId) {
-        if (ownerType == null || ownerType < 1 || ownerType > 3 || ownerId == null || ownerId <= 0
+        if (ownerType == null || ownerType < 1 || ownerType > 4 || ownerId == null || ownerId <= 0
                 || (replyId != null && replyId < 0)) return "评论对象参数不合规";
         Set<Long> visited = new HashSet<>();
         Long current = replyId;

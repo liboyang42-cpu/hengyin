@@ -7,6 +7,35 @@ import java.math.BigDecimal;
  * 供 /api/city/nodes 列表与详情;completed/favorited 由控制器按登录态填充。
  */
 public class CityNodeVO {
+    private Double averageRating;
+    private Integer ratingCount;
+    public Double getAverageRating() { return averageRating; }
+    public void setAverageRating(Double value) { averageRating = value; }
+    public Integer getRatingCount() { return ratingCount; }
+    public void setRatingCount(Integer value) { ratingCount = value; }
+    /** 官方地点公开引述(注明出处的报道 / 游记摘录),与玩家评价分开展示 */
+    private String quotesJson;
+    /** 地点玩法介绍(模板 description) */
+    private String templateDesc;
+    private String photoCredit;
+    public String getPhotoCredit() { return photoCredit; }
+    public void setPhotoCredit(String value) { photoCredit = value; }
+    public String getQuotesJson() { return quotesJson; }
+    public void setQuotesJson(String value) { quotesJson = value; }
+    public String getTemplateDesc() { return templateDesc; }
+    public void setTemplateDesc(String value) { templateDesc = value; }
+    private String galleryJson;
+    private Boolean photoRequired;
+    private String photoRequireDesc;
+    private String badgeCode;
+    public String getGalleryJson() { return galleryJson; }
+    public void setGalleryJson(String value) { galleryJson = value; }
+    public Boolean getPhotoRequired() { return photoRequired; }
+    public void setPhotoRequired(Boolean value) { photoRequired = value; }
+    public String getPhotoRequireDesc() { return photoRequireDesc; }
+    public void setPhotoRequireDesc(String value) { photoRequireDesc = value; }
+    public String getBadgeCode() { return badgeCode; }
+    public void setBadgeCode(String value) { badgeCode = value; }
     private Long poiId;
     private String name;
     private String description;

@@ -399,7 +399,7 @@ test('节点详情切换时忽略旧响应，未知核验方式不得静默降�
   assert.equal(harness.instance.data.node.canInteract, false)
 
   harness.instance.startInteract()
-  assert.equal(harness.requests.length, 2, '未知核验方式不得发起完成请求')
+  assert.equal(harness.requests.filter(request => /\/complete$/.test(request.url)).length, 0, '未知核验方式不得发起完成请求')
 })
 
 test('节点商家未知收费和营业状态如实显示，缺图时不再注入虚构商家图', () => {
@@ -454,7 +454,7 @@ function mountPoiCheckin({ storage = new Map(), owner = 7, poiId = '21', source 
   replyGet()
   return { instance, requests, locations, modalCalls, storage, events, notices, replyGet,
     detach() { definition.lifetimes.detached.call(instance) },
-    posts() { return requests.filter(request => request.method === 'POST') },
+    posts() { return requests.filter(request => request.method === 'POST' && /\/api\/city\/nodes\/\d+\/complete$/.test(request.url)) },
   }
 }
 

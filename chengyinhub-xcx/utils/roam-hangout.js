@@ -3,6 +3,11 @@
 // 契约:无坐标不画点(与 searchmap.createMarkersFromActivities 同一条铁律)。
 // marker id 必须是数字(微信 <map> 契约):局 = id*10+1,活动 = id*10+2,主题 = id*10+3,三类不撞号。
 
+// 城市定向只在独立主题入口展示；旧主题缺少玩法类型时也不进入探店地图。
+function isMapItem(it) {
+  return !!it && (it.kind === 'activity' || (it.kind === 'topic' && Number(it.productType) === 2));
+}
+
 const HANGOUT_FALLBACK_ICON = '/images/d_smapicon.png';
 const TITLE_MIN = 2;
 const TITLE_MAX = 30;
@@ -123,6 +128,6 @@ function validateHangoutForm(form) {
 }
 
 module.exports = {
-  buildHangoutMarkers, buildSelfMarker, buildRangeCircle, SELF_MARKER_ID, whenParts, parseMarkerId, emptyStateCopy, validateHangoutForm, fmtKm, numOrNull,
+  isMapItem, buildHangoutMarkers, buildSelfMarker, buildRangeCircle, SELF_MARKER_ID, whenParts, parseMarkerId, emptyStateCopy, validateHangoutForm, fmtKm, numOrNull,
   HANGOUT_FALLBACK_ICON, TITLE_MIN, TITLE_MAX, DESC_MAX,
 };

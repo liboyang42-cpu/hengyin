@@ -1,0 +1,21 @@
+-- Official POIs keep type=1; merchant ownership is never synthesized.
+SET @ddl = IF((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='roam_poi' AND column_name='gallery_json')=0, 'ALTER TABLE roam_poi ADD COLUMN gallery_json TEXT NULL', 'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @ddl = IF((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='roam_poi' AND column_name='photo_required')=0, 'ALTER TABLE roam_poi ADD COLUMN photo_required TINYINT NOT NULL DEFAULT 0', 'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @ddl = IF((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='roam_poi' AND column_name='badge_code')=0, 'ALTER TABLE roam_poi ADD COLUMN badge_code VARCHAR(80) NULL', 'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @ddl = IF((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='roam_poi_reward_log' AND column_name='photo_url')=0, 'ALTER TABLE roam_poi_reward_log ADD COLUMN photo_url VARCHAR(2048) NULL', 'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @ddl = IF((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='roam_poi_reward_log' AND column_name='submitted_answer')=0, 'ALTER TABLE roam_poi_reward_log ADD COLUMN submitted_answer VARCHAR(255) NULL', 'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;

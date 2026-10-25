@@ -17,7 +17,8 @@ function loadRoamPoi(dependencies) {
   const script = source.match(/<script>([\s\S]*?)<\/script>/)[1]
     .replace(/^import \{ adminPoiList, poiOnline, poiOffline, roamPoiApplications, approveRoamPoiApplication, rejectRoamPoiApplication \} from ['"]@\/api\/business\/roamPoi['"]$/m,
       'const { adminPoiList, poiOnline, poiOffline, roamPoiApplications, approveRoamPoiApplication, rejectRoamPoiApplication } = dependencies;')
-    .replace(/^import (Cy\w+) from .+$/gm, 'const $1 = {};')
+    .replace(/^import \{ approveOfficialPoi, rejectOfficialPoi \} from .+$/m, 'const { approveOfficialPoi, rejectOfficialPoi } = dependencies;')
+    .replace(/^import (Cy\w+|OfficialEditor) from .+$/gm, 'const $1 = {};')
   return new Function('dependencies', script.replace(/export\s+default\s*/, 'return '))(dependencies)
 }
 

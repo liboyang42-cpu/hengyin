@@ -284,8 +284,10 @@ function assertTitleInventory(readSource = read) {
   // 两线新增页面不重叠：本线145 + 官方线路列表/详情2 = 147。
   // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页、消息页改收件箱/发件箱(合并 master 584470ad 后按重建实测) ⇒ 145。
   // 2026-10-23 起名页 templateadd 退役删除(custom 导航页) ⇒ 145 → 144。
-  assert.equal(rows.length, 144, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 144)
+  // 2026-10-25 +1:官方地点挑战(pages/play/poi-challenge):整屏玩法页,拍照 / 答题用 cy-playkit-qa 自带的退出键,
+  //   勋章用 cy-medal-screen,与 citystamp / stamp-camera 同形态,不挂 cy-nav-bar / cy-page-title ⇒ 144 → 145。
+  assert.equal(rows.length, 145, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 145)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

@@ -201,6 +201,8 @@ chengyinhub-xcx/subpackageMember/components/cy/profile/index.js 2  # 商家身�
 chengyinhub-xcx/subpackageMember/components/cy/scene-play-activity-detail/index.js 4  # 详情读取落 state:error，取消预检和取消提交落 cancelError，评价提交落 commentError；各有页内反馈与恢复入口，通道 toast 会重复报错。
 chengyinhub-xcx/subpackageMember/components/cy/scene-qr-coupon/index.js 2  # 凭证签发失败落 qrState:error，状态轮询失败落 pollError；已使用或失效会清凭证，各有页内恢复入口，通道 toast 会重复报错。
 chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js 4  # 据点和商家读取落页内错误态，收藏失败落 favoriteError，打卡业务拒绝或网络异常落专用恢复面板；通道 toast 会重复报错。
+chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js 4  # 2026-10-24 地点相册许可为可选补充，读取失败保留照片；评价列表失败落页内重试，提交与删除失败各自提示并保留输入；避免通道重复 toast。
+chengyinhub-xcx/subpackageRoam/nearby/index.js 1  # 2026-10-24 地图相册许可背景补拉失败保留现有封面和地点卡，不打断地图操作。
 
 chengyinhub-xcx/utils/community-post-api.js 1  # canonical 社区内部 call 的 BASE+path 仅由本文件 publish/report 闭包生成；完整 GET/POST/PATCH/DELETE 目标逐项匹配真实 Controller，未知路由/错方法负控拒绝；业务与传输失败经 pipeline reject 分流到调用页 success/fail 可见错误或 toast，取消不报成功；owner=小程序，复核=B146
 
@@ -241,3 +243,5 @@ chengyinhub-xcx/subpackageMember/components/cy/team-report-sheet/index.js 1  # 2
 chengyinhub-xcx/pages/publish/components/topic-state-keys/index.js 3  # 2026-10-19 移植基线 49ee4a4d:状态键读取落 cy-error 重试;注册失败落表单 formError;删除失败落危险确认的 error 态,均为可见反馈
 chengyinhub-xcx/pages/shezhi/components/post-governance/index.js 2  # 2026-10-22 W9 帖子处置(F0521):处置列表读取失败落组件 cy-inline-error 带重试;申诉提交失败落组件 notice,结果不明先回读 me/enforcements 核对,不本地假设成功;通用 toast 会双弹
 chengyinhub-xcx/utils/predict-entry.js 1  # 2026-10-23 PR #508 业主第四轮:消息页「竞猜待答」入口只在有待答时出现。身份已先确认是可结算竞猜的商家,待答列表读失败时照样显示入口(fail-open),不让 48 小时期限的提醒悄悄消失;失败已有可见兜底(入口仍在、点进 predict 页有整页错误态),每次进消息页都弹通道 toast 是噪音
+chengyinhub-xcx/subpackageRoam/nearby/index.js 3  # 2026-10-25 官方地点卡展开:节点补读与评价列表是背景读取,卡片已先用地图数据渲染,读不到只少相册/玩法块或评价区(挑战页会重读同一节点并给错误页与重试);发布评价失败由 done() 自己 toast 后端原因,不再叠通用 toast。
+chengyinhub-xcx/pages/play/poi-challenge/index.js 2  # 2026-10-25 地点挑战页:节点读取失败落 cy-error 错误页 + 重试;提交 /complete 的拒绝原因由答题卡反馈或 toast 显示,未知结果 toast「结果还没确认」,不叠通用 toast。

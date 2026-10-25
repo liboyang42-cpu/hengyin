@@ -15,7 +15,7 @@ function mount(initialUid) {
 }
 test('游客我的队伍有登录入口，不请求私有列表或显示假0',async()=>{
  const h=mount('');h.page.loadMyTeams(false);assert.equal(h.requests.length,0);assert.equal(h.page.data.myReadAccess,'login');
- assert.equal(h.page.data.myTeamsText,'我的队伍');assert.equal(h.page.data.myLoaded,false);
+ assert.equal(h.page.data.myTeamsN,0);assert.equal(h.page.data.myLoaded,false);
  await h.page.loginForMyTeams();assert.equal(h.requests.length,2);
 });
 test('我的队伍401/403立即清内容，其余失败不是无队伍，异常HTTP解除loading',()=>{
@@ -36,7 +36,7 @@ test('账号切换后旧双请求不能覆盖新队伍或改成无权限',()=>{
 });
 test('只读到一个列表不把部分数据说成完整空态；退出后登录不继续读取',async()=>{
  const h=mount(7);h.page.loadMyTeams(false);h.requests[0].success({code:200,data:[]});h.requests[1].fail();
- assert.equal(h.page.data.myLoaded,false);assert.equal(h.page.data.myReadError,true);assert.equal(h.page.data.myTeamsText,'我的队伍');
+ assert.equal(h.page.data.myLoaded,false);assert.equal(h.page.data.myReadError,true);assert.equal(h.page.data.myTeamsN,0);
  const g=mount('');let resolve;g.app.firstLogin=()=>new Promise(r=>{resolve=r;});const p=g.page.loginForMyTeams();
  g.page.onUnload();g.switchUid(7);resolve({ok:true});await p;assert.equal(g.requests.length,0);
 });

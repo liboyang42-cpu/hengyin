@@ -609,6 +609,7 @@ const RAW = [
   ['F58', 'F58-club-settlement-ready.png', '/pages/club/settlement/index?clubId=42', 'club', 'permission', { state: 'ready', errorText: '', withdrawing: false, summary: { settledAmountText: '¥12,480.00', topics: [{ id: 7, name: '外滩建筑线索', status: 'settled', amountText: '¥6,240.00', arrivedText: '已到账 8月28日', paidText: '实付 ¥7,800.00' }, { id: 8, name: '苏州河夜航', status: 'pending', amountText: '¥6,240.00', arrivedText: '结算中', paidText: '实付 ¥7,800.00' }], pendingAdjustment: null } }, undefined, { selector: '.settle-amount, .settle-row', min: 2 }, 'identity+setData', 'P1', '', '金额一律用服务端格式化好的字符串,前端不做四则运算;pendingAdjustment 为 null 时整块不出 —— 不能编一个「¥0 无调整」'],
   ['F29', 'F29-merchant-team-empty.png', '/pages/merchant/team/index', 'merchant', 'empty', { accessState: 'ready', access: { active: true, roleName: '店主', canManageOperators: true, merchant: { id: 1, name: '河畔咖啡', logo: IMG } }, teamState: 'ready', operators: [], pendingInvites: [], hasIncomingInvite: false }, undefined, { selector: '.tm-page', min: 1 }, 'identity+setData', 'P1', '', '经营团队无员工空态；保留按岗位邀请的下一步入口。'],
   ['F81', 'F81-merchant-predict-ready.png', '/pages/merchant/predict/index', 'merchant', 'normal', { pageState: 'ready', items: [{ rid: '8:2026-09-11', nodeId: 8, playDay: '09-11', nodeName: '河畔咖啡', question: '明天哪款会卖得最好?', options: [{ key: 'A', label: '冰美式' }, { key: 'B', label: '燕麦拿铁' }], betCount: 12, betText: '12 个人押了这一轮', optionText: '2 个选项', daysLeft: 1, deadlineText: '还剩 1 天' }] }, undefined, { selector: '.pdm-card', min: 1 }, 'identity+setData', 'P1', '', '竞猜待答:有期限的一轮、押注人数与选项同屏。超过时限不给答案,这一轮由平台作废。'],
+  ['F200', 'F200-poi-challenge-missing.png', '/pages/play/poi-challenge/index', 'player', 'missing-param', null, undefined, { selector: '.pc-page__state', min: 1 }, 'real-data', 'P1', '', '官方地点挑战缺 poiId 时显示真实错误和返回入口；完整拍照、答题、勋章另走真实账号 E2E，不以缺参态代替通关验收。'],
 ];
 /* eslint-enable max-len */
 
@@ -646,11 +647,12 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-20 与新主干两条官方线路按唯一ID并集，blocked/已验证不增加，计数由实列复算。
 // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页:D93/D94 两条 P1 setData 行退场,total 341、P1 198、actionable 317(P1 191)、D 42、setData 179。
 // 2026-10-23 起名页 templateadd 退役删除:B46(P0 real-data)/E21(P0 identity+setData)两行退场,total 341→339、P0 133→131、actionable 317→315(P0 124→122)、B 70→69、E 27→26、identity+setData 117→116、real-data 38→37。
+// 2026-10-25 新增官方地点挑战缺参真实态 F200；不新增 blocked 或已验 fixture。
 const STATS = {
-  "total": 339,
+  "total": 340,
   "byPriority": {
     "P0": 131,
-    "P1": 198,
+    "P1": 199,
     "P2": 10
   },
   "blockedByPriority": {
@@ -660,9 +662,9 @@ const STATS = {
   },
   "actionable": {
     "P0": 122,
-    "P1": 191,
+    "P1": 192,
     "P2": 2,
-    "total": 315
+    "total": 316
   },
   "blocked": 24,
   "domains": {
@@ -671,12 +673,12 @@ const STATS = {
     "C": 56,
     "D": 42,
     "E": 26,
-    "F": 93
+    "F": 94
   },
   "control": {
     "setData": 179,
     "identity+setData": 116,
-    "real-data": 37,
+    "real-data": 38,
     "real-device": 7
   },
   "fixtureVerified": 16
