@@ -1,6 +1,6 @@
 name: Gameplay HTTP fixtures (manual)
 
-# Real HTTP36 in three isolated hosted jobs; not persistent migration/provider/device acceptance.
+# Default HTTP36 in three isolated hosted jobs; optional Generic26 is partial diagnostics only.
 on:
   workflow_dispatch:
     inputs:
@@ -8,6 +8,14 @@ on:
         description: Reviewed full40-character public candidate SHA
         required: true
         type: string
+      http_scope:
+        description: Full HTTP36 or Generic26 partial diagnostic scope
+        required: true
+        type: choice
+        default: all-three
+        options:
+          - all-three
+          - generic-only
   workflow_call:
     inputs:
       source_sha:
@@ -29,9 +37,10 @@ jobs:
       fail-fast: false
       max-parallel: 20
       matrix:
-        test_class: [GenericGameplayHttpE2eIT, FreezeGameHttpE2eIT, FreezeReuseThemeHttpE2eIT]
+        test_class: ${{ fromJSON(inputs.http_scope == 'generic-only' && '["GenericGameplayHttpE2eIT"]' || '["GenericGameplayHttpE2eIT", "FreezeGameHttpE2eIT", "FreezeReuseThemeHttpE2eIT"]') }}
     env:
       SOURCE_SHA: ${{ inputs.source_sha }}
+      HTTP_SCOPE: ${{ inputs.http_scope || 'all-three' }}
       CHENGYIN_HTTP_E2E_PROFILE: github-hosted
       CHENGYIN_HTTP_E2E_TESTS: ${{ matrix.test_class }}
       CHENGYIN_MYBATIS_IT_HOST: 127.0.0.1
@@ -41,7 +50,9 @@ jobs:
       TZ: Asia/Shanghai
     steps:
       - name: Validate exact source input
-        run: '[[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]'
+        run: |
+          [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          case "$HTTP_SCOPE" in all-three|generic-only) ;; *) exit 2 ;; esac
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.source_sha }}
@@ -108,6 +119,7 @@ jobs:
     timeout-minutes: 10
     env:
       SOURCE_SHA: ${{ inputs.source_sha }}
+      HTTP_SCOPE: ${{ inputs.http_scope || 'all-three' }}
       HTTP_JOBS_RESULT: ${{ needs.http.result }}
     steps:
       - uses: actions/checkout@v4
@@ -118,9 +130,9 @@ jobs:
         with:
           pattern: gameplay-http-*-a${{ github.run_attempt }}
           path: receipts
-      - name: Require all three exact class receipts and independent cleanup
+      - name: Require exact scoped class receipts and independent cleanup
         run: |
-          python3 ci/test_http_e2e_entry.py summarize --receipts receipts --source "$SOURCE_SHA" --output summary.json
+          python3 ci/test_http_e2e_entry.py summarize --receipts receipts --source "$SOURCE_SHA" --scope "$HTTP_SCOPE" --output summary.json
           test "$HTTP_JOBS_RESULT" = success
       - uses: actions/upload-artifact@v4
         if: always()
