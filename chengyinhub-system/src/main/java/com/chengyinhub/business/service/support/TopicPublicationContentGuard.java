@@ -236,6 +236,10 @@ public class TopicPublicationContentGuard {
     private List<ThemeStateKey> optionTagDeclarations(CmsTopic topic) {
         TopicStateKeyRefService.RefCollection refs = topicStateKeyRefService == null
                 ? new TopicStateKeyRefService.RefCollection() : topicStateKeyRefService.collect(topic);
+        return optionTagDeclarations(topic, refs);
+    }
+
+    private List<ThemeStateKey> optionTagDeclarations(CmsTopic topic, TopicStateKeyRefService.RefCollection refs) {
         assertStateKeyReferencesParsed(topic, refs);
         Set<String> nodeKeys = new LinkedHashSet<String>();
         for (Set<String> keys : refs.getRefsByNode().values()) nodeKeys.addAll(keys);
@@ -263,7 +267,8 @@ public class TopicPublicationContentGuard {
         if (topicStateKeyRefService == null) throw new IllegalStateException("发布状态键引用服务缺失");
         List<ThemeStateKey> current = publicationDeclarations(topic,
                 themeStateKeyService.listCurrentDeclarations(topic.getId()));
-        autoRegisterOptionTags(topic.getId(), current, optionTagDeclarations(topic));
+        autoRegisterOptionTags(topic.getId(), current,
+                optionTagDeclarations(topic, topicStateKeyRefService.collectForPublication(topic)));
     }
 
     /** Ordinary read-only check. Formal publication must use the captured-declarations overload. */
@@ -282,6 +287,7 @@ public class TopicPublicationContentGuard {
     public void assertStateKeysRegistered(CmsTopic topic, List<ThemeStateKey> declarations) {
         requirePublicationWriteTransaction(topic);
         List<ThemeStateKey> captured = publicationDeclarations(topic, declarations);
+        if (topicStateKeyRefService == null) throw new IllegalStateException("发布状态键引用服务缺失");
         assertStateKeysRegisteredUsing(topic, () -> captured, false);
     }
 
@@ -297,7 +303,8 @@ public class TopicPublicationContentGuard {
             // 节点块引用只在收集服务里,这一支没有,行为与旧单测一致。
             exhaustTag = journeyRulesExhaustTag(topic);
         } else {
-            TopicStateKeyRefService.RefCollection refs = topicStateKeyRefService.collect(topic);
+            TopicStateKeyRefService.RefCollection refs = preview ? topicStateKeyRefService.collect(topic)
+                    : topicStateKeyRefService.collectForPublication(topic);
             assertStateKeyReferencesParsed(topic, refs);
             for (Map.Entry<Long, Set<String>> entry : refs.getRefsByNode().entrySet()) {
                 String label = refs.getNodeLabels().get(entry.getKey());
@@ -463,6 +470,10 @@ public class TopicPublicationContentGuard {
     }
 
     private Set<Long> journeyStoryAvailableNpcIds(Long topicId) {
+        return journeyStoryAvailableNpcIds(topicId, null);
+    }
+
+    private Set<Long> journeyStoryAvailableNpcIds(Long topicId, TopicStateKeyRefService.CurrentContent current) {
         if (npcProfileMapper == null) {
             return null;
         }
@@ -470,7 +481,9 @@ public class TopicPublicationContentGuard {
         CmsTopicNode probe = new CmsTopicNode();
         probe.setTopicId(topicId);
         probe.setStatus(1L);
-        for (CmsTopicNode node : nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(probe))) {
+        List<CmsTopicNode> scopedNodes = current == null
+                ? nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(probe)) : current.activeNodes();
+        for (CmsTopicNode node : scopedNodes) {
             for (NpcProfile profile : nullToEmpty(npcProfileMapper.selectEnabledByScope(
                     NpcProfileService.SCOPE_NODE, node.getId()))) {
                 if (profile.getId() != null) ids.add(profile.getId());
@@ -653,7 +666,7 @@ public class TopicPublicationContentGuard {
     }
 
     public void assertThemeRuntimeReferences(CmsTopic topic) {
-        assertThemeRuntimeReferencesUsing(topic, () -> themeStateKeyService.listByTopic(topic.getId()), true);
+        assertThemeRuntimeReferencesUsing(topic, () -> themeStateKeyService.listByTopic(topic.getId()), true, null);
     }
 
     @org.springframework.transaction.annotation.Transactional(
@@ -661,11 +674,16 @@ public class TopicPublicationContentGuard {
     public void assertThemeRuntimeReferences(CmsTopic topic, List<ThemeStateKey> declarations) {
         requirePublicationWriteTransaction(topic);
         List<ThemeStateKey> captured = publicationDeclarations(topic, declarations);
-        assertThemeRuntimeReferencesUsing(topic, () -> captured, false);
+        if (topicStateKeyRefService == null) throw new IllegalStateException("发布状态键引用服务缺失");
+        TopicStateKeyRefService.CurrentContent current = topicStateKeyRefService.currentForPublication(topic);
+        if (current == null || current.topic() == null || !topic.getId().equals(current.topic().getId()))
+            throw new IllegalStateException("发布引用投影主题不一致");
+        assertThemeRuntimeReferencesUsing(current.topic(), () -> captured, false, current);
     }
 
     private void assertThemeRuntimeReferencesUsing(CmsTopic topic,
-            java.util.function.Supplier<List<ThemeStateKey>> declarations, boolean preview) {
+            java.util.function.Supplier<List<ThemeStateKey>> declarations, boolean preview,
+            TopicStateKeyRefService.CurrentContent current) {
         com.fasterxml.jackson.databind.node.ObjectNode config;
         try { config = ThemeRuntimeConfig.parse(topic.getThemeRuntimeConfigJson()); }
         catch (IllegalArgumentException invalid) { throw located(topic, "themeRuntimeConfigJson", invalid); }
@@ -675,10 +693,14 @@ public class TopicPublicationContentGuard {
         Set<Long> nodeIds = new LinkedHashSet<Long>();
         Set<String> previewClues = new LinkedHashSet<String>();
         if (preview) previewClues.addAll(com.chengyinhub.business.util.StateKeyRefs.declaredTemplateClues(config).keySet());
-        for (CmsTopicNode node : nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(probe))) {
+        List<CmsTopicNode> scopedNodes = current == null
+                ? nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(probe)) : current.nodes();
+        for (CmsTopicNode node : scopedNodes) {
             nodeIds.add(node.getId());
-            if (cmsMemberTemplateMapper != null && node.getTemplateId() != null) {
-                CmsMemberTemplate template = cmsMemberTemplateMapper.selectCmsMemberTemplateById(node.getTemplateId());
+            if ((current != null || cmsMemberTemplateMapper != null) && node.getTemplateId() != null) {
+                CmsMemberTemplate template = current == null
+                        ? cmsMemberTemplateMapper.selectCmsMemberTemplateById(node.getTemplateId())
+                        : current.templates().get(node.getTemplateId());
                 if (template != null && StringUtils.isNotEmpty(template.getAdvancedConfigJson())) {
                     JsonNode declared = assertItemReferencesAt(topic, template.getAdvancedConfigJson(), config,
                             "nodes[nodeId=" + node.getId() + "].template[templateId=" + template.getId() + "].advancedConfigJson");
@@ -705,12 +727,13 @@ public class TopicPublicationContentGuard {
             if (scene.has("journeyStory")) {
                 CmsTopic sceneTopic = new CmsTopic(); sceneTopic.setId(topic.getId());
                 sceneTopic.setJourneyStoryJson(scene.path("journeyStory").toString());
-                assertJourneyStoryReferences(sceneTopic, "themeRuntimeConfigJson.scenes[" + index + "].journeyStory");
+                assertJourneyStoryReferences(sceneTopic, "themeRuntimeConfigJson.scenes[" + index + "].journeyStory", current);
             }
         }
         if (config.path("chapters").size() > 0) {
             CmsTopicChapter chapterProbe = new CmsTopicChapter(); chapterProbe.setTopicId(topic.getId());
-            List<CmsTopicChapter> chapterRows = nullToEmpty(cmsTopicChapterMapper.selectCmsTopicChapterList(chapterProbe));
+            List<CmsTopicChapter> chapterRows = current == null
+                    ? nullToEmpty(cmsTopicChapterMapper.selectCmsTopicChapterList(chapterProbe)) : current.chapters();
             for (int index = 0; index < config.path("chapters").size(); index++) {
                 JsonNode chapter = config.path("chapters").get(index);
                 String path = "themeRuntimeConfigJson.chapters[" + index + "]";
@@ -757,6 +780,11 @@ public class TopicPublicationContentGuard {
     }
 
     private void assertJourneyStoryReferences(CmsTopic topic, String fieldPath) {
+        assertJourneyStoryReferences(topic, fieldPath, null);
+    }
+
+    private void assertJourneyStoryReferences(CmsTopic topic, String fieldPath,
+            TopicStateKeyRefService.CurrentContent current) {
         String raw = topic == null ? null : topic.getJourneyStoryJson();
         if (StringUtils.isEmpty(raw)) {
             return;
@@ -764,7 +792,9 @@ public class TopicPublicationContentGuard {
         CmsTopicChapter probe = new CmsTopicChapter();
         probe.setTopicId(topic.getId());
         Set<Long> chapterIds = new LinkedHashSet<Long>();
-        for (CmsTopicChapter chapter : nullToEmpty(cmsTopicChapterMapper.selectCmsTopicChapterList(probe))) {
+        List<CmsTopicChapter> scopedChapters = current == null
+                ? nullToEmpty(cmsTopicChapterMapper.selectCmsTopicChapterList(probe)) : current.chapters();
+        for (CmsTopicChapter chapter : scopedChapters) {
             if (chapter.getId() != null) chapterIds.add(chapter.getId());
         }
         // R14:sys.* 条件引用的 nodeId 与 dispositionNodeId 都要对得上本主题节点;
@@ -772,7 +802,8 @@ public class TopicPublicationContentGuard {
         CmsTopicNode nodeProbe = new CmsTopicNode();
         nodeProbe.setTopicId(topic.getId());
         nodeProbe.setStatus(1L);
-        List<CmsTopicNode> nodes = nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(nodeProbe));
+        List<CmsTopicNode> nodes = current == null
+                ? nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(nodeProbe)) : current.activeNodes();
         Set<Long> nodeIds = new LinkedHashSet<Long>();
         Set<Long> branchNodeIds = new LinkedHashSet<Long>();
         Set<Long> templateIds = new LinkedHashSet<Long>();
@@ -784,15 +815,24 @@ public class TopicPublicationContentGuard {
         Set<Long> branchNodeRefs = branchNodeIds;
         Set<Long> outcomeNodeIds = new LinkedHashSet<Long>();
         Set<Long> outcomeNodeRefs = outcomeNodeIds;
-        if (cmsMemberTemplateMapper == null) {
+        if (current == null && cmsMemberTemplateMapper == null) {
             branchNodeRefs = null;      // 手工 new 的单测:该侧不核对
             outcomeNodeRefs = null;
         } else if (!templateIds.isEmpty()) {
             // 空模板集合不能进 in 查询(生成 where id in 空,语法错)
             Map<Long, Boolean> branchByTemplate = new LinkedHashMap<Long, Boolean>();
             Map<Long, Boolean> outcomeByTemplate = new LinkedHashMap<Long, Boolean>();
-            for (CmsMemberTemplate template : nullToEmpty(
-                    cmsMemberTemplateMapper.selectCmsMemberTemplateByIds(new ArrayList<Long>(templateIds)))) {
+            List<CmsMemberTemplate> scopedTemplates;
+            if (current == null) {
+                scopedTemplates = nullToEmpty(cmsMemberTemplateMapper.selectCmsMemberTemplateByIds(new ArrayList<Long>(templateIds)));
+            } else {
+                scopedTemplates = new ArrayList<CmsMemberTemplate>();
+                for (Long id : templateIds) {
+                    CmsMemberTemplate template = current.templates().get(id);
+                    if (template != null) scopedTemplates.add(template);
+                }
+            }
+            for (CmsMemberTemplate template : scopedTemplates) {
                 if (template != null && template.getId() != null) {
                     branchByTemplate.put(template.getId(), blockIsBranch(template.getAdvancedConfigJson()));
                     outcomeByTemplate.put(template.getId(), blockWritesOutcome(template.getAdvancedConfigJson()));
@@ -806,7 +846,7 @@ public class TopicPublicationContentGuard {
         }
         try {
             journeyStoryValidator.validate(raw, com.chengyinhub.business.service.support.JourneyStoryValidator.Context.of(
-                    chapterIds, journeyStoryAvailableNpcIds(topic.getId()), nodeIds, branchNodeRefs, outcomeNodeRefs));
+                    chapterIds, journeyStoryAvailableNpcIds(topic.getId(), current), nodeIds, branchNodeRefs, outcomeNodeRefs));
         } catch (RuntimeException e) {
             throw new ServiceException("主题的剧情配置引用无效,主题发布失败:" + e.getMessage()
                     + publicationLocation(topic, fieldPath));

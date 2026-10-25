@@ -19,6 +19,11 @@ import static org.mockito.Mockito.*;
  * These tests do not establish MySQL RR, Spring propagation, bundle hash or G's compiler/freeze integration. */
 class TopicPublicationDeclarationsTest {
     private final ThemeStateKeyService keys = mock(ThemeStateKeyService.class);
+    private final CmsTopicMapper topics = mock(CmsTopicMapper.class);
+    private final List<CmsTopicNode> currentNodes = new ArrayList<>();
+    private final List<CmsTopicChapter> currentChapters = new ArrayList<>();
+    private final Map<Long,CmsMemberTemplate> currentTemplates = new LinkedHashMap<>();
+    private TopicStateKeyRefService references;
     private final CmsTopicNodeMapper nodes = mock(CmsTopicNodeMapper.class);
     private final CmsTopicChapterMapper chapters = mock(CmsTopicChapterMapper.class);
     private final CmsMemberTemplateMapper templates = mock(CmsMemberTemplateMapper.class);
@@ -41,6 +46,14 @@ class TopicPublicationDeclarationsTest {
         topic=new CmsTopic(); topic.setId(7L);
         CmsTopicNode node=new CmsTopicNode();node.setId(11L);node.setTopicId(7L);node.setStatus(1L);node.setName("原地点");node.setTemplateId(101L);
         template=new CmsMemberTemplate();template.setId(101L);template.setAdvancedConfigJson(OPTION);
+        currentNodes.add(node);currentTemplates.put(101L,template);
+        when(topics.selectCmsTopicByIdForUpdate(7L)).thenAnswer(c -> topic);
+        when(nodes.selectByTopicForUpdate(7L)).thenAnswer(c -> new ArrayList<>(currentNodes));
+        when(chapters.selectByTopicForUpdate(7L)).thenAnswer(c -> new ArrayList<>(currentChapters));
+        when(templates.selectCmsMemberTemplateByIdsForUpdate(anyList())).thenAnswer(c -> {
+            List<Long> ids=c.getArgument(0);List<CmsMemberTemplate> rows=new ArrayList<>();
+            for(Long id:ids)if(currentTemplates.containsKey(id))rows.add(currentTemplates.get(id));return rows;
+        });
         when(nodes.selectCmsTopicNodeList(any())).thenReturn(List.of(node));
         when(chapters.selectCmsTopicChapterList(any())).thenReturn(Collections.emptyList());
         when(templates.selectCmsMemberTemplateById(101L)).thenReturn(template);
@@ -49,7 +62,9 @@ class TopicPublicationDeclarationsTest {
         ReflectionTestUtils.setField(guard,"cmsTopicChapterMapper",chapters);
         ReflectionTestUtils.setField(guard,"cmsMemberTemplateMapper",templates);
         ReflectionTestUtils.setField(guard,"npcProfileMapper",mock(NpcProfileMapper.class));
-        ReflectionTestUtils.setField(guard,"topicStateKeyRefService",new TopicStateKeyRefService(nodes,templates,chapters));
+        references=spy(new TopicStateKeyRefService(nodes,templates,chapters));
+        ReflectionTestUtils.setField(references,"cmsTopicMapper",topics);
+        ReflectionTestUtils.setField(guard,"topicStateKeyRefService",references);
         ReflectionTestUtils.setField(guard,"themeStateKeyService",keys);
         ReflectionTestUtils.setField(guard,"topicRouteRuntimeService",runtime);
         ReflectionTestUtils.setField(guard,"routeOutcomeReader",new TopicRouteOutcomeReader(nodes,templates));
@@ -285,6 +300,79 @@ class TopicPublicationDeclarationsTest {
         IllegalArgumentException error=assertThrows(IllegalArgumentException.class,()->guard.normalizedBranchRouteForPublish(topic,List.of()));
         assertTrue(error.getMessage().contains("使用未声明变量"));assertTrue(error.getMessage().contains("topicId=7, path=routeGraphJson"));assertNotNull(error.getCause());
         verify(runtime,never()).freezePublication(any(),any(),any());verify(runtime,never()).compileTemplateRules(any());verifyNoInteractions(keys);
+    }
+
+    @Test void formalTagDerivationUsesPublicationCollectorRatherThanOldOrdinaryReferenceView() {
+        TopicStateKeyRefService collector=mock(TopicStateKeyRefService.class);
+        TopicStateKeyRefService.RefCollection current=new TopicStateKeyRefService.RefCollection();
+        current.getRefsByNode().put(11L,Set.of("tag.current"));current.getNodeLabels().put(11L,"当前地点");
+        when(collector.collectForPublication(topic)).thenReturn(current);
+        when(collector.collect(topic)).thenThrow(new AssertionError("formal derive used ordinary RR references"));
+        ReflectionTestUtils.setField(guard,"topicStateKeyRefService",collector);
+        guard.deriveOptionTagsForPublication(topic);
+        @SuppressWarnings("unchecked") ArgumentCaptor<List<ThemeStateKey>> fresh=ArgumentCaptor.forClass(List.class);
+        verify(keys).register(eq(7L),fresh.capture());assertEquals(List.of("tag.current"),fresh.getValue().stream().map(ThemeStateKey::getStateKey).toList());
+        verify(collector).collectForPublication(topic);verify(collector,never()).collect(any());
+    }
+    @Test void formalRegisteredKeyCheckUsesPublicationReferencesWithoutOrdinaryCollectorFallback() {
+        TopicStateKeyRefService collector=mock(TopicStateKeyRefService.class);
+        TopicStateKeyRefService.RefCollection current=new TopicStateKeyRefService.RefCollection();
+        current.getRefsByNode().put(11L,Set.of("tag.current"));current.getNodeLabels().put(11L,"当前地点");
+        when(collector.collectForPublication(topic)).thenReturn(current);
+        when(collector.collect(topic)).thenThrow(new AssertionError("formal key check used ordinary RR references"));
+        ReflectionTestUtils.setField(guard,"topicStateKeyRefService",collector);
+        assertDoesNotThrow(()->guard.assertStateKeysRegistered(topic,List.of(declaration("tag.current"))));
+        verify(collector).collectForPublication(topic);verify(collector,never()).collect(any());verifyNoInteractions(keys);
+    }
+    @Test void ordinaryCheckKeepsItsOrdinaryCollectorEvenInsideAWritableTransaction() {
+        TopicStateKeyRefService collector=mock(TopicStateKeyRefService.class);
+        TopicStateKeyRefService.RefCollection ordinary=new TopicStateKeyRefService.RefCollection();
+        ordinary.getRefsByNode().put(11L,Set.of("tag.preview"));ordinary.getNodeLabels().put(11L,"预检查地点");
+        when(collector.collect(topic)).thenReturn(ordinary);
+        when(collector.collectForPublication(topic)).thenThrow(new AssertionError("preview entered publication current-read port"));
+        ReflectionTestUtils.setField(guard,"topicStateKeyRefService",collector);
+        assertDoesNotThrow(()->guard.assertStateKeysRegistered(topic));
+        verify(collector).collect(topic);verify(collector,never()).collectForPublication(any());
+        verify(keys,never()).register(any(),any());verify(keys,never()).listCurrentDeclarations(any());
+    }
+
+    private void forbidOrdinaryChildReads() {
+        doThrow(new AssertionError("formal references used ordinary node snapshot")).when(nodes).selectCmsTopicNodeList(any());
+        doThrow(new AssertionError("formal references used ordinary chapter snapshot")).when(chapters).selectCmsTopicChapterList(any());
+        doThrow(new AssertionError("formal references used ordinary template snapshot")).when(templates).selectCmsMemberTemplateById(anyLong());
+        doThrow(new AssertionError("formal references used ordinary template batch snapshot")).when(templates).selectCmsMemberTemplateByIds(anyList());
+    }
+    @Test void formalRuntimeReferencesUseLockedTopicAndTemplateProjectionRatherThanStaleCallerOrOrdinaryReads() {
+        CmsTopic locked=new CmsTopic();locked.setId(7L);locked.setThemeRuntimeConfigJson(RUNTIME);
+        when(topics.selectCmsTopicByIdForUpdate(7L)).thenReturn(locked);
+        topic.setThemeRuntimeConfigJson("{"); // A stale ordinary caller bean must not drive formal validation.
+        forbidOrdinaryChildReads();
+        assertDoesNotThrow(()->guard.assertThemeRuntimeReferences(topic,captured()));
+        verify(references,times(1)).currentForPublication(topic);
+        verify(references,never()).collect(any());verify(references,never()).collectForPublication(any());
+        verify(nodes,times(1)).selectByTopicForUpdate(7L);verify(chapters,times(1)).selectByTopicForUpdate(7L);
+        verify(templates,times(1)).selectCmsMemberTemplateByIdsForUpdate(anyList());
+        assertEquals("{",topic.getThemeRuntimeConfigJson());verifyNoInteractions(keys);
+    }
+    @Test void nestedSceneAndChapterBudgetReuseOneCurrentProjectionIncludingNpcNodeScope() {
+        CmsTopicChapter chapter=new CmsTopicChapter();chapter.setId(22L);chapter.setTopicId(7L);currentChapters.add(chapter);
+        currentNodes.get(0).setChapterId(22L);
+        topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"capacity\":0,\"chapters\":[{\"index\":0,\"hpCost\":0,\"luckCost\":0}],\"scenes\":[{\"id\":\"one\",\"name\":\"场景\",\"journeyStory\":{\"schemaVersion\":1,\"openingChapterId\":22}}]}");
+        forbidOrdinaryChildReads();
+        assertDoesNotThrow(()->guard.assertThemeRuntimeReferences(topic,captured()));
+        verify(references,times(1)).currentForPublication(topic);verify(references,never()).collect(any());
+        verify(chapters,times(1)).selectByTopicForUpdate(7L);verify(nodes,times(1)).selectByTopicForUpdate(7L);
+        verify(templates,times(1)).selectCmsMemberTemplateByIdsForUpdate(anyList());verifyNoInteractions(keys);
+    }
+    @Test void nestedJourneyStillRejectsInactiveDispositionNodeWithOriginalSceneDiagnostic() {
+        CmsTopicNode inactive=new CmsTopicNode();inactive.setId(12L);inactive.setTopicId(7L);inactive.setStatus(0L);inactive.setTemplateId(201L);currentNodes.add(inactive);
+        CmsMemberTemplate branch=new CmsMemberTemplate();branch.setId(201L);branch.setAdvancedConfigJson("{\"schemaVersion\":1,\"branch\":{\"enabled\":true}}");currentTemplates.put(201L,branch);
+        topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"scenes\":[{\"id\":\"one\",\"name\":\"场景\",\"journeyStory\":{\"schemaVersion\":1,\"ending\":{\"dispositionNodeId\":12,\"endings\":[{\"code\":\"default\",\"title\":\"默认\",\"fallback\":true}]}}}]}");
+        forbidOrdinaryChildReads();
+        ServiceException error=assertThrows(ServiceException.class,()->guard.assertThemeRuntimeReferences(topic,captured()));
+        assertTrue(error.getMessage().contains("dispositionNodeId"));
+        assertTrue(error.getMessage().contains("path=themeRuntimeConfigJson.scenes[0].journeyStory"));
+        verify(references,times(1)).currentForPublication(topic);verify(references,never()).collect(any());verifyNoInteractions(keys);
     }
 
 }
