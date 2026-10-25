@@ -106,10 +106,36 @@ class RestoreBuildControls(unittest.TestCase):
         self.assertIn('dependency:copy-dependencies -DincludeScope=test', producer)
         self.assertIn('-Dmdep.useRepositoryLayout=true', producer)
         self.assertIn('include-hidden-files: true', producer)
+        self.assertIn('test "${CHENGYIN_RESTORE_MODE+x}" != x', producer)
+        self.assertIn('jar_sha256: ${{ steps.build.outputs.jar_sha256 }}', producer)
+        self.assertIn('id: build', producer)
         self.assertIn('python3 -I ci/restore_business_reconciliation_build.py pack', producer)
         self.assertNotIn('mvn ', consumers)
         self.assertIn('python3 -I ci/restore_business_reconciliation_build.py unpack', consumers)
         self.assertEqual(2, workflow.count('name: restore-business-build-${{ github.run_attempt }}'))
+
+    def test_pack_output_is_the_actual_staged_jar_digest_for_this_run(self):
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve(); checkout = root / 'source'; checkout.mkdir(); self.source(checkout)
+            output = root / 'job-output'
+            env = {'GITHUB_ACTIONS': 'true', 'RUNNER_ENVIRONMENT': 'github-hosted', 'RUNNER_OS': 'Linux',
+                   'GITHUB_REPOSITORY': 'liboyang42-cpu/hengyin', 'GITHUB_EVENT_NAME': 'workflow_dispatch',
+                   'GITHUB_JOB': 'restore-source-build', 'GITHUB_SHA': self.identity['sourceSha'],
+                   'GITHUB_RUN_ID': '123', 'GITHUB_RUN_ATTEMPT': '1', 'RUNNER_TEMP': str(root),
+                   'GITHUB_OUTPUT': str(output)}
+            with mock.patch.object(build, 'ROOT', checkout), mock.patch.dict(build.os.environ, env, clear=True), \
+                 mock.patch.object(build.sys, 'argv', ['build', 'pack']), \
+                 mock.patch.object(build.subprocess, 'check_output', return_value=self.identity['sourceSha'] + '\n'):
+                build.main()
+            receipt = json.loads((root / 'restore-business-build' / build.MANIFEST).read_text())
+            self.assertEqual('jar_sha256=' + build.digest(checkout / build.JAR) + '\n', output.read_text())
+            self.assertEqual(self.identity, {key: receipt[key] for key in self.identity})
+            for value in ('', 'false', 'true', 'invalid'):
+                with mock.patch.dict(build.os.environ, {'CHENGYIN_RESTORE_MODE': value}), \
+                     mock.patch.object(build.sys, 'argv', ['build', 'pack']), \
+                     self.subTest(value=value), self.assertRaises(ValueError):
+                    build.main()
 
 
 if __name__ == '__main__':

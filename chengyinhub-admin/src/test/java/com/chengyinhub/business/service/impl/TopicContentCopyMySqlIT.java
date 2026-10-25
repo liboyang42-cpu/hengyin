@@ -207,6 +207,35 @@ public class TopicContentCopyMySqlIT {
         f.assertOriginalUnchanged(); outcome = List.of(first, second);
     }
 
+    @Test void foreignFlatCouponInWholeTopicCopyRollsBackTheCompleteGraph() throws Exception {
+        f.installCouponOwnership();
+        f.db.update("insert into sms_coupon(id,member_id,del_flag) values(901,1000,0)");
+        f.db.update("update cms_member_template set coupon_id=901 where id=701"); f.before=f.snapshot();
+        rejected(()->f.copy(3,TopicContentCopyMySqlFixture.TARGET));
+        assertEquals(1,f.db.queryForObject("select count(*) from sms_coupon where id=901 and member_id=1000",Integer.class));
+    }
+
+    @Test void foreignConditionalCouponCannotBypassTheCopyFunnelAndItsTransaction() throws Exception {
+        f.installCouponOwnership();
+        f.db.update("insert into sms_coupon(id,member_id,del_flag) values(902,1000,0)");
+        f.db.update("update cms_member_template set reward_rules_json=? where id=701", "[{\"outcomeCode\":\"COMPLETED\",\"couponId\":902}]");
+        f.before=f.snapshot(); rejected(()->f.copy(3,TopicContentCopyMySqlFixture.TARGET));
+        assertEquals(1,f.db.queryForObject("select count(*) from sms_coupon where id=902 and member_id=1000",Integer.class));
+    }
+
+    @Test void sameOwnerForcedNpcCopyPreservesItsOwnedCouponAndOriginalLibraryLineage() throws Exception {
+        f.installCouponOwnership();
+        f.db.update("insert into sms_coupon(id,member_id,del_flag) values(903,1000,0)");
+        String rules="[{\"outcomeCode\":\"COMPLETED\",\"couponId\":903}]";
+        f.db.update("update cms_member_template set coupon_id=903,reward_rules_json=? where id=701",rules); f.before=f.snapshot();
+        long topic=f.copy(3,TopicContentCopyMySqlFixture.OWNER);
+        long template=f.number(named(f.nodes(topic)).get("node-11").get("template_id"));
+        assertNotEquals(701,template);var copy=f.templates.selectCmsMemberTemplateById(template);
+        assertEquals(TopicContentCopyMySqlFixture.OWNER,copy.getMemberId());assertEquals(301L,copy.getOriginalTemplateId());
+        assertEquals(903L,copy.getCouponId());assertEquals(f.json(rules),f.json(copy.getRewardRulesJson()));
+        f.assertOriginalUnchanged();assertEquals(f.before.get("sms_coupon"),f.snapshot().get("sms_coupon"));outcome=topic;
+    }
+
     private void rejected(Executable command) {
         RuntimeException exception = assertThrows(RuntimeException.class, command);
         Throwable root = exception;

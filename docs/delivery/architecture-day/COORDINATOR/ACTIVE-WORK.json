@@ -667,7 +667,7 @@
       "acceptance": false
     }
   },
-  "known_remaining_implementation": "Original E backend source fixes, D transferred full frontend reuse closure, C complete HTTP restored-app startup proof source, F final explicit registration/CI/evidence wiring now run independently. A/B final source reviews are complete/frozen; root integrates shared contracts and all source before one final same-candidate verification. No tests/compile/CI; all_complete=false.",
+  "known_remaining_implementation": "D complete frontend source, E complete backend reuse/coupon ownership source, and F complete current entry core are applied. Root restored target identity/relay/cleanup plus limited runtime-user source and7 new control methods are written. C full restored HTTP app probe/shared run-finalize/safe output source still being completed; root integrates actual C shared source and finalizes one same-source acceptance candidate. All tests/compilation/runtime remain NOT_RUN; full original governance/all_complete=false.",
   "remaining_acceptance_groups": [
     "Real HTTP multi-identity and authorized provider unknown-result scenarios",
     "Whole-business process termination/recovery and rollback evidence",
@@ -2798,7 +2798,7 @@
         "compilation": "NOT_RUN"
       }
     },
-    "ledger_requires_final_source_refresh": "Only if D returns actual client code delta; original final90e ledger5125 generated once already, do not regenerate unchanged source.",
+    "ledger_requires_final_source_refresh": false,
     "master_plan_public_commit": "ceb4e5f923091dc0fc5e5b6b7670d60c27bff85f",
     "complete_workpackage_dispatch": {
       "state": "FIVE_ORIGINAL_CLOUD_CHATS_DISPATCHED",
@@ -2949,14 +2949,14 @@
     },
     "latest_source_registration": {
       "state": "PROVISIONAL_SOURCE_REGISTRATION_NOT_FINAL_NOT_RUN",
-      "receipt": "/private/tmp/hengyin-theme-reuse-source-registration.json",
+      "receipt": "/private/tmp/hengyin-E-final-source-registration.json",
       "integrated_classes": 76,
-      "integrated_declarations": 916,
+      "integrated_declarations": 919,
       "extra_storage_declarations": 133,
       "tests": "NOT_RUN",
       "source_precheck": "NOT_RUN",
       "needs_final_G_H_recount": false,
-      "update_reason": "H full consumer adds ordinary unit source, no new real-storage class; final source-line declaration inventory retains76/916, no behavioral check executed.",
+      "update_reason": "E actual copyIT3 new source cases after F source916 snapshot; strict registry/test expectation now919, source-line inventory only, all original classes/gates unchanged.",
       "native_fixture_impact": "ThemeRuntimeMySqlIT original ordinary/parameterized suites remain in ci/backend-test.sh explicit MYBATIS_ITS + assert_it_ran; no force into ordinary-only storage registry and no repeated dedicated job added.",
       "needs_final_B_H_recount": false,
       "needs_final_H_E_C_recount": false,
@@ -3412,8 +3412,10 @@
         "hostId": "durable",
         "source": "90e18550ae75e83641e85bf4bb218f08922c7d3e",
         "turn": "01a173b0-901a-745b-89e0-8b7837b0c9c9",
-        "cursor": "bf46e2e6-88ca-4fad-a205-efca84d15256:26",
-        "status": "inProgress"
+        "cursor": "bf46e2e6-88ca-4fad-a205-efca84d15256:30",
+        "status": "completed",
+        "commit": "037afa2eb546402460738e5767c8df86e246cf1f",
+        "receipt": "/private/tmp/hengyin-E-final-reuse-coupon-source-integration.json"
       }
     ],
     "source_only": true,
@@ -3436,34 +3438,50 @@
       "thread": "01a16a23-2723-72e4-813f-03d7f1aa6017",
       "host": "durable",
       "turn": "01a173b0-901a-745b-89e0-8b7837b0c9c9",
-      "cursor": "bf46e2e6-88ca-4fad-a205-efca84d15256:29",
+      "cursor": "bf46e2e6-88ca-4fad-a205-efca84d15256:30",
       "purpose": "Backend authoring/library/adoption/publication production and Java fixtures; no frontend files after explicit handoff",
-      "state": "IN_PROGRESS"
+      "state": "FULL8_CODE_AUTHOR_AND3_DONOR_DOCS_SOURCE_EXACT_APPLIED_NOT_RUN",
+      "commit": "037afa2eb546402460738e5767c8df86e246cf1f",
+      "receipt": "/private/tmp/hengyin-E-final-reuse-coupon-source-integration.json",
+      "source_cases": "22new source declarations;copyIT25->28,declarationUnit32->35,newUnit16; all originalcases retained",
+      "registration_receipt": "/private/tmp/hengyin-E-final-source-registration.json"
     },
     "D": {
       "thread": "01a16a22-f399-7110-ba27-ef3f7245603b",
       "host": "durable",
       "turn": "01a173c6-9715-7416-b20f-fc1b1c7c9dab",
-      "cursor": "392a0141-0cc8-4147-8a14-b181aa78db38:23",
+      "cursor": "392a0141-0cc8-4147-8a14-b181aa78db38:24",
       "purpose": "Transferred full MiniProgram/Admin-Vue reuse/adoption/edit/bind/publish frontend and test SOURCE",
-      "state": "DISPATCHED"
+      "state": "FULL3_DONOR_AND3_AUTHOR_IMAGES_EXACT_SOURCE_APPLIED_NOT_RUN",
+      "commit": "5450c43a79cd50ddc54ed9c09a979066f0bc6653",
+      "receipt": "/private/tmp/hengyin-D-final-parallel-source-integration.json",
+      "source_cases": "Original39 retained+4new; no execution",
+      "anchors": "Two exact unique seven-line contexts moved3740->3743 and3867->3870; u4Dynamic67 reasons/count/caps unchanged",
+      "ledger": "Regenerated once only because D actual client source changed;5125 static controls, not UI acceptance"
     },
     "C": {
       "thread": "01a16a22-c697-7637-ae29-cdff6341000b",
       "host": "durable",
       "turn": "01a173c6-77ef-75e5-b83c-f1d03e44af5f",
-      "cursor": "587dd7ff-a4ef-45f7-b8ca-5c38d84758ff:26",
+      "cursor": "587dd7ff-a4ef-45f7-b8ca-5c38d84758ff:29",
       "purpose": "WP14/T20 full restored HTTP app startup dispatch-hold proof SOURCE; reuse original owner/resources, not a new runner",
       "evidence": "Existing C probe explicitly fullHttpApplicationStartup=NOT_COVERED_BY_THIS_FIXTURE; full original scope stays incomplete",
-      "state": "DISPATCHED"
+      "state": "DISPATCHED",
+      "latest_requirement": "Root limited startup_probe account setup after canonical import; app stopped and retained for exact cleanup logs; finalizer after4slots cleanup. Shared patches requested early for root to integrate concurrently."
     },
     "F": {
       "thread": "01a16a23-5e0c-736b-9fc1-d4d070393009",
       "host": "durable",
       "turn": "01a173c6-a775-7639-bd14-7c263eda5877",
-      "cursor": "446d298a-e8e5-46b0-bbe8-4c4beccfc008:31",
+      "cursor": "446d298a-e8e5-46b0-bbe8-4c4beccfc008:33",
       "purpose": "Actual SOURCE registration/explicit gates/unique execution/JSON receipt and summary integration; shared review.patch root applies",
-      "state": "DISPATCHED"
+      "state": "CORE8_SOURCE_AND4_DOCS_APPLIED_C_FINAL_MODE_ROOT_OWNED_PENDING_NOT_RUN",
+      "commit": "bfa08030efe2152197970854fc5c1e7316123d92",
+      "parent": "59d08acf0546e83cebcb4700f811e88dea40e0f6",
+      "receipt": "/private/tmp/hengyin-F-final-parallel-source-integration.json",
+      "transport_receipt": "/private/tmp/hengyin-F-final-entry-transport-normalization.json",
+      "composition": "Original8 code images exact at integration; ci/test_real_storage_it.py then only expected source totals updated25->28/916->919 for E actual added cases. Original author/source and composition hashes kept separately.",
+      "C_final_mode": "root integrates only actual C final argv/finalizer/safe output; no placeholder dispatch"
     },
     "root": {
       "purpose": "Shared mode/boolean contract/resource budget, actual integration, counts/anchors/scanning/freeze and final same-candidate acceptance",
@@ -3499,6 +3517,16 @@
           "ci/authenticated_redis_recovery_probe.py": "39a016ce87872a914b76183c4b383aa69774235fb17c2c69c23c31efa8c8a65e",
           "ci/test_authenticated_redis_recovery_probe.py": "e9d6fb8058faca12983438e3ab4d9c7ee5f33c4dc7ffabd2d0eca8139cbbda0e"
         }
+      },
+      "runtime_user_phase": "restore-runtime-user NAME SCHEMA OUT PRIVATE_CREDENTIALS 0",
+      "runtime_user_scope": "After canonical import on independent target, original startup_probe with only4CRUD/non-grantable on exact restored schema, no globals/root fallback; requires original600identity and native scope, refuses existinguser rebind",
+      "runtime_user_output": "restore-runtime-user.json",
+      "new_auth_control_source_methods": 7,
+      "tests": "NOT_RUN",
+      "compilation": "NOT_RUN",
+      "resource_source_postimages": {
+        "ci/authenticated_redis_recovery_probe.py": "f36c155c9523eba6384b11c6d53d4b0afd4e79cb0908d02354e04b4a1940ffdb",
+        "ci/test_authenticated_redis_recovery_probe.py": "d90513f4a2de53d138c6e93553450776d3a0ddcbb75f337817035cb7ea4f185b"
       }
     },
     "frozen": [

@@ -412,6 +412,53 @@ def prepare(name, schema, out, private, port):
                    'redactions': SECRET_VALUES}, stream)
 
 
+def prepare_restore_runtime_user(name, schema, out, private, port):
+    """Prepare only the original least-privilege app user on the owned restored server."""
+    validate_execution_env(os.environ)
+    require(os.environ.get('CHENGYIN_CI_RESTORE_HTTP_STARTUP') == 'true'
+            and os.environ.get('GITHUB_EVENT_NAME') == 'workflow_dispatch', 'restore runtime user not admitted')
+    require(re.fullmatch(r'cy-auth-[0-9a-f]{32}', name) is not None
+            and schema == 'cy_e2e_auth_' + name[8:], 'fixed restore user scope required')
+    require(private.is_file() and not private.is_symlink() and private.stat().st_mode & 0o777 == 0o600,
+            'original private restore identity required')
+    saved = json.loads(private.read_text())
+    source = json.loads((out / 'schema-summary.json').read_text())['mysqlReadiness']
+    target = json.loads((out / 'restore-mysql-readiness.json').read_text())['mysqlReadiness']
+    require(saved['schema'] == schema and saved['serverUuid'] == source['serverUuid']
+            and source['result'] == target['result'] == 'OWNED_MYSQL_TCP_READY'
+            and source['version'] == target['version'] == '8.0.45'
+            and source['serverUuid'] != target['serverUuid'] and source['id'] != target['id'],
+            'restored runtime user target differs from original scope')
+    require(re.fullmatch(r'[a-f0-9]{40}', os.environ.get('GITHUB_SHA', '')) is not None,
+            'restore runtime user needs the exact source identity')
+    SECRET_VALUES.extend(saved.get('redactions', []))
+    SECRET_VALUES.append('synthetic-local-only')
+    with mysql_relay(name, target, suffix='restore-mysql') as relay_port, database(relay_port) as db, db.cursor() as cur:
+        cur.execute('SELECT @@server_uuid')
+        require(cur.fetchone() == (target['serverUuid'],), 'restored server identity changed')
+        cur.execute('SELECT COUNT(*) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=%s', (schema,))
+        require(cur.fetchone() == (1,), 'exact restored schema must exist before runtime user setup')
+        cur.execute('SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=%s AND TABLE_NAME=%s',
+                    (schema, 'sys_user'))
+        require(cur.fetchone() == (1,), 'restored authentication table missing')
+        cur.execute('SELECT COUNT(*) FROM mysql.user WHERE User=%s AND Host=%s', ('startup_probe', '%'))
+        require(cur.fetchone() == (0,), 'runtime user already exists; do not rebind its credentials or grants')
+        cur.execute("CREATE USER 'startup_probe'@'%' IDENTIFIED BY %s", ('synthetic-local-only',))
+        cur.execute('GRANT SELECT,INSERT,UPDATE,DELETE ON `' + schema + "`.* TO 'startup_probe'@'%'")
+        grantee = "'startup_probe'@'%'"
+        cur.execute('SELECT TABLE_SCHEMA,PRIVILEGE_TYPE,IS_GRANTABLE FROM information_schema.SCHEMA_PRIVILEGES '
+                    'WHERE GRANTEE=%s ORDER BY TABLE_SCHEMA,PRIVILEGE_TYPE', (grantee,))
+        privileges = list(cur.fetchall())
+        require(privileges == [(schema, action, 'NO') for action in ('DELETE', 'INSERT', 'SELECT', 'UPDATE')],
+                'runtime schema privilege scope widened')
+        cur.execute("SELECT COUNT(*) FROM information_schema.USER_PRIVILEGES WHERE GRANTEE=%s AND PRIVILEGE_TYPE<>'USAGE'",
+                    (grantee,))
+        require(cur.fetchone() == (0,), 'runtime global privilege scope widened')
+    write_report(out, 'restore-runtime-user.json', {'sourceSha': os.environ['GITHUB_SHA'], 'schema': schema,
+                 'serverUuid': target['serverUuid'], 'mysqlCid': target['id'], 'runtimeUser': 'startup_probe',
+                 'privileges': privileges, 'result': 'OWNED_RESTORED_RUNTIME_USER_PREPARED'})
+
+
 def cleanup(name, schema, out, private, port):
     """Resolve even a lost docker-run reply by exact name and its original ownership label."""
     if private.exists():
@@ -751,8 +798,8 @@ def main():
     mode, name, schema, output, private_file, port = sys.argv[1:]
     require(re.fullmatch(r'cy-auth-[0-9a-f]{32}', name) is not None
             and schema == 'cy_e2e_auth_' + name[8:], 'fixed fixture scope required')
-    require(mode in ('mysql-ready', 'prepare', 'exercise', 'cleanup', 'restore-mysql-ready'), 'unknown fixture phase')
-    if mode == 'restore-mysql-ready':
+    require(mode in ('mysql-ready', 'prepare', 'exercise', 'cleanup', 'restore-mysql-ready', 'restore-runtime-user'), 'unknown fixture phase')
+    if mode in ('restore-mysql-ready', 'restore-runtime-user'):
         require(os.environ.get('CHENGYIN_CI_RESTORE_HTTP_STARTUP') == 'true'
                 and os.environ.get('GITHUB_EVENT_NAME') == 'workflow_dispatch', 'restore readiness not admitted')
     require(command(DOCKER + ['context', 'inspect', '--format', '{{.Endpoints.docker.Host}}']).strip()
@@ -768,6 +815,8 @@ def main():
                 {'prepare': prepare, 'exercise': exercise}[mode](name, schema, out, private, relay_port)
         elif mode == 'restore-mysql-ready':
             mysql_ready(name, schema, out, private, port, suffix='restore-mysql')
+        elif mode == 'restore-runtime-user':
+            prepare_restore_runtime_user(name, schema, out, private, port)
         else:
             {'mysql-ready': mysql_ready, 'cleanup': cleanup}[mode](name, schema, out, private, port)
     except BaseException as exc:

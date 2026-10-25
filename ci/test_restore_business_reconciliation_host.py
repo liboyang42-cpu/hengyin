@@ -272,6 +272,25 @@ class RestoreHostControls(unittest.TestCase):
         self.assertIn('python3 -I ci/restore_business_reconciliation_host.py --summarize', summary)
         self.assertNotIn('merge-multiple: true', summary)
         self.assertNotIn('private', summary)
+        self.assertIn('RESTORE_BUILD_JAR_SHA256: ${{ needs.restore-source-build.outputs.jar_sha256 }}', summary)
+
+    def test_all_cohorts_must_match_the_once_build_not_just_one_another(self):
+        for expected in (('c' * 64, 'd' * 64), ('e' * 64, 'd' * 64),
+                         ('c' * 64, 'e' * 64), ('', 'd' * 64)):
+            with self.subTest(expected=expected), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp).resolve(); self.receipts(root)
+                verifier = mock.Mock()
+                verifier.summarize_completed_cohorts.return_value = {'coverageScope': 'C_FIXED_RESTORE_COHORTS_ONLY'}
+                with mock.patch.object(host, 'domain_readers', return_value=verifier):
+                    if expected == ('c' * 64, 'd' * 64):
+                        result = host.summarize_receipts(root, SHA, '123', '1', expected_build=expected)
+                        self.assertTrue(result['onceBuildBound'])
+                        self.assertEqual(expected, (result['jarSha256'], result['canonicalToolSha256']))
+                        verifier.summarize_completed_cohorts.assert_called_once()
+                    else:
+                        with self.assertRaises(ValueError):
+                            host.summarize_receipts(root, SHA, '123', '1', expected_build=expected)
+                        verifier.summarize_completed_cohorts.assert_not_called()
 
 
 if __name__ == '__main__':

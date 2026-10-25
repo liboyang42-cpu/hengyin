@@ -547,5 +547,74 @@ class AuthenticatedRedisSafetyTest(unittest.TestCase):
                     probe.validate_execution_env(dict(env, **{key: value}))
 
 
+    def test_restore_runtime_user_is_limited_to_the_original_restored_schema(self):
+        name = 'cy-auth-' + 'a' * 32
+        schema = 'cy_e2e_auth_' + 'a' * 32
+        source_uuid = '11111111-1111-4111-8111-111111111111'
+        target_uuid = '22222222-2222-4222-8222-222222222222'
+        env = {'GITHUB_ACTIONS': 'true', 'RUNNER_OS': 'Linux', 'RUNNER_ENVIRONMENT': 'github-hosted',
+               'GITHUB_REPOSITORY': 'liboyang42-cpu/hengyin', 'GITHUB_WORKFLOW': 'Isolated authenticated Redis recovery',
+               'GITHUB_JOB': 'isolated-authenticated-redis-recovery', 'GITHUB_EVENT_NAME': 'workflow_dispatch',
+               'GITHUB_WORKFLOW_REF': 'liboyang42-cpu/hengyin/.github/workflows/isolated-authenticated-redis-recovery.yml@refs/heads/fixed',
+               'GITHUB_SHA': 'a' * 40, 'CHENGYIN_CI_AUTH_REDIS_RECOVERY': 'true', 'CHENGYIN_CI_RESTORE_HTTP_STARTUP': 'true'}
+        for case in ('complete', 'foreign-server', 'schema-missing', 'user-exists', 'wide-grants', 'unsafe-private'):
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as directory:
+                out = Path(directory)
+                source = {'result': 'OWNED_MYSQL_TCP_READY', 'serverUuid': source_uuid, 'id': 'b' * 64, 'version': '8.0.45'}
+                target = {'result': 'OWNED_MYSQL_TCP_READY', 'serverUuid': target_uuid, 'id': 'c' * 64, 'version': '8.0.45',
+                          'endpoint': {'id': 'c' * 64, 'networkId': 'd' * 64, 'ip': '172.19.0.3', 'pid': 124}}
+                (out / 'schema-summary.json').write_text(json.dumps({'mysqlReadiness': source}))
+                (out / 'restore-mysql-readiness.json').write_text(json.dumps({'mysqlReadiness': target}))
+                private = out / 'private.json'
+                private.write_text(json.dumps({'schema': schema, 'serverUuid': source_uuid,
+                                               'redactions': ['temporary-admin-secret'], 'password': 'temporary-admin-secret'}))
+                private.chmod(0o644 if case == 'unsafe-private' else 0o600)
+                before = private.read_bytes()
+                db, cur, transport = mock.MagicMock(), mock.MagicMock(), mock.MagicMock()
+                db.__enter__.return_value = db
+                db.cursor.return_value.__enter__.return_value = cur
+                transport.__enter__.return_value = 35002
+                transport.__exit__.return_value = False
+                values = [(target_uuid,), (1,), (1,), (0,), (0,)]
+                if case == 'foreign-server':
+                    values[0] = (source_uuid,)
+                elif case == 'schema-missing':
+                    values[1] = (0,)
+                elif case == 'user-exists':
+                    values[3] = (1,)
+                cur.fetchone.side_effect = values
+                grants = [(schema, action, 'NO') for action in ('DELETE', 'INSERT', 'SELECT', 'UPDATE')]
+                cur.fetchall.return_value = grants + ([(schema, 'CREATE', 'NO')] if case == 'wide-grants' else [])
+                with mock.patch.dict(probe.os.environ, env, clear=True), \
+                        mock.patch.object(probe.sys, 'platform', 'linux'), \
+                        mock.patch.object(probe, 'mysql_relay', return_value=transport) as relay, \
+                        mock.patch.object(probe, 'database', return_value=db) as connect:
+                    if case == 'complete':
+                        probe.prepare_restore_runtime_user(name, schema, out, private, 0)
+                    else:
+                        with self.assertRaises(RuntimeError):
+                            probe.prepare_restore_runtime_user(name, schema, out, private, 0)
+                writes = [call.args[0] for call in cur.execute.call_args_list
+                          if call.args[0].startswith(('CREATE ', 'GRANT '))]
+                report = out / 'restore-runtime-user.json'
+                if case == 'complete':
+                    relay.assert_called_once_with(name, target, suffix='restore-mysql')
+                    connect.assert_called_once_with(35002)
+                    self.assertEqual(writes, ["CREATE USER 'startup_probe'@'%' IDENTIFIED BY %s",
+                                     'GRANT SELECT,INSERT,UPDATE,DELETE ON `' + schema + "`.* TO 'startup_probe'@'%'"])
+                    saved = json.loads(report.read_text())
+                    self.assertEqual(saved['result'], 'OWNED_RESTORED_RUNTIME_USER_PREPARED')
+                    self.assertEqual(saved['serverUuid'], target_uuid)
+                    self.assertEqual(saved['sourceSha'], 'a' * 40)
+                    self.assertEqual(saved['privileges'], [list(row) for row in grants])
+                    self.assertNotIn('synthetic-local-only', report.read_text())
+                    self.assertNotIn('temporary-admin-secret', report.read_text())
+                else:
+                    self.assertFalse(report.exists())
+                    if case != 'wide-grants':
+                        self.assertEqual(writes, [])
+                self.assertEqual(private.read_bytes(), before)
+
+
 if __name__ == '__main__':
     unittest.main()

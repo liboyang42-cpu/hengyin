@@ -408,7 +408,7 @@
       "classes": [
         "com.chengyinhub.business.service.impl.TopicContentCopyMySqlIT"
       ],
-      "note": "25 ordinary@Test; no dynamic count/skip fallback. Source-bound XML/CLEAN required; pair with independently executed old-source25 before mechanical equivalence claim."
+      "note": "28 ordinary@Test source declarations: original25 retained plus3 actual coupon-ownership copy/rollback cases. No dynamic count/skip fallback. Source-bound XML/CLEAN required; historical25 execution retains its original source, no mechanical equivalence claim for the new3."
     },
     "architecture-day-topic-authoring": {
       "registered_source": "dbbb2350abe95f22fcc7b6fb291fcd0f66d7a004",
@@ -692,7 +692,7 @@
         "com.chengyinhub.business.it.CrossDomainFaultIsolationMySqlIT",
         "com.chengyinhub.business.service.RestoreMoneyDispatchMySqlIT"
       ],
-      "note": "65 unique registered storage classes, 810 declared cases, including original producer/refund, manual-case read projection and ASR shared quota. One matrix max-parallel20, no duplicates. Source SHA, original XML, zero skip and independent CLEAN required. Static inventory is not execution, HTTP/provider/restart/load/deployment acceptance."
+      "note": "Current composed source inventory:76 unique registered storage classes and919 ordinary@Test declarations, including original producer/refund, manual-case read, ASR shared quota, funds process recovery and copied coupon-owner fences. Original65/810 execution belongs to its historical source only. One matrix max-parallel20, no duplicates. Source SHA, original XML, zero skip and independent CLEAN required; source inventory is not execution/HTTP/provider/restart/load/deployment acceptance."
     }
   },
   "classes": {
@@ -1600,12 +1600,12 @@
       "note": "Actual ClubLead table-unavailable503/NOT_RUN, original claim rollback, no branch/journey session on denied GET/POST and real route creation after recovery; catalogue/node/template double."
     },
     "com.chengyinhub.business.service.impl.TopicContentCopyMySqlIT": {
-      "tests": 25,
+      "tests": 28,
       "storage": [
         "mysql"
       ],
       "gates": {},
-      "note": "Exact whole copy/rollback/transfer production mapper+transaction cases; source verifies legacy absence/extracted presence; catalogue outer transfer collaborators explicit doubles. Equivalence JSON retained under Surefire reports."
+      "note": "Exact whole copy/rollback/transfer production mapper+transaction cases; source verifies legacy absence/extracted presence; catalogue outer transfer collaborators explicit doubles. Equivalence JSON retained under Surefire reports. Current source retains original25 and adds3 coupon-ownership copy/rollback cases; declarations only, NOT_RUN."
     },
     "com.chengyinhub.business.service.impl.TopicContentGraphMySqlIT": {
       "tests": 32,

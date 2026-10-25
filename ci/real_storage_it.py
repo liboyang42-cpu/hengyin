@@ -114,6 +114,8 @@ def validate_class_entry(fqcn, entry):
         problems.append("%s.gates 必须是对象（没有门控写 {}）" % fqcn)
     else:
         for name, value in gates.items():
+            if name == "CHENGYIN_RESTORE_MODE":
+                problems.append("%s: CHENGYIN_RESTORE_MODE 不是测试审批门，parent 必须不存在" % fqcn)
             if not GATE_NAME_RE.match(name) or not isinstance(value, str) or not GATE_VALUE_RE.match(value):
                 problems.append("%s 的门控 %s=%r 不合规" % (fqcn, name, value))
     base = entry.get("database_base")
@@ -246,10 +248,25 @@ def public_env(env):
 
 def child_env(base, extra):
     """去掉继承来的 CHENGYIN_*，只留本类登记的那组，避免别的门控把其它测试一起打开。"""
+    require_normal_parent(base)
+    require_normal_parent(extra)
     env = {key: value for key, value in base.items()
            if not key.startswith("CHENGYIN_") and key not in REVIEWED_APPROVAL_GATES}
     env.update(extra)
     return env
+
+
+def require_normal_parent(environ):
+    if "CHENGYIN_RESTORE_MODE" in environ:
+        raise GateError("CHENGYIN_RESTORE_MODE 必须在验收 parent 环境中不存在，不能设空/false或静默删除")
+
+
+def require_class_source(fqcn, source_sha, environ):
+    # This actual Java owner binds GITHUB_SHA to its loaded class/source receipts.
+    # Do not forge GitHub context for an input SHA; dispatch from the same candidate.
+    if fqcn == "com.chengyinhub.business.service.impl.FundsProcessRecoveryMySqlIT" \
+            and environ.get("GITHUB_SHA") != source_sha:
+        raise GateError("FundsProcessRecoveryMySqlIT 必须从同一候选 workflow SHA 派发；不得覆盖 GITHUB_SHA")
 
 
 # ---------------------------------------------------------------- 计划
@@ -767,6 +784,7 @@ def cmd_plan(args, environ):
         raise GateError("候选检出 HEAD=%s，不是 %s" % (head, source_sha))
     problems = []
     for item in matrix:
+        require_class_source(item["class"], source_sha, environ)
         _, found = precheck(registry, args.source, item["class"])
         problems.extend("%s: %s" % (item["simple"], problem) for problem in found)
     if problems:
@@ -815,6 +833,8 @@ def cmd_precheck(args, environ):
         "verdict": "INCOMPLETE",
         "problems": [],
     })
+    require_normal_parent(environ)
+    require_class_source(fqcn, source_sha, environ)
     head = subprocess.run(["git", "-C", args.source, "log", "-1", "--format=%H%x00%s%x00%cI"],
                           stdout=subprocess.PIPE, universal_newlines=True).stdout.strip().split("\x00")
     if head[0] != source_sha:
@@ -851,6 +871,8 @@ def cmd_storage_start(args, environ):
 
 def cmd_run(args, environ):
     registry, fqcn = class_context(environ)
+    require_normal_parent(environ)
+    require_class_source(fqcn, required_env(environ, "SOURCE_SHA"), environ)
     entry = registry["classes"][fqcn]
     receipt = read_receipt(args.out)
     storage = receipt.get("storage", {})
@@ -874,6 +896,8 @@ def cmd_run(args, environ):
     executed, problems = verify_class_reports(cases, fqcn, entry["tests"], entry.get("nested", []))
     if reports.is_dir():
         shutil.copytree(str(reports), str(out / "surefire-reports"), dirs_exist_ok=True)
+    xml_hashes = {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+                  for path in sorted((out / "surefire-reports").glob("TEST-*.xml"))}
     if exit_code != 0:
         problems.append("mvn 退出码 %d" % exit_code)
     verdict = "FAIL" if problems else "PASS"
@@ -885,6 +909,7 @@ def cmd_run(args, environ):
         "maven": {"exit_code": exit_code, "selectors": selectors, "log": "maven.log",
                   "seconds": round(time.time() - started, 1)},
         "executed": executed,
+        "surefire_xml_sha256": xml_hashes,
         "verdict": verdict,
         "problems": ["run: %s" % problem for problem in problems],
     })
@@ -936,18 +961,48 @@ def cmd_storage_stop(args, environ):
 
 # ---------------------------------------------------------------- 汇总
 
-def summarize(registry, receipts_dir, planned, batch, source_sha):
+def summarize(registry, receipts_dir, planned, batch, source_sha, workflow=None):
     latest = {}
+    problems = []
+    if workflow is not None and (workflow.get('repository') != 'liboyang42-cpu/hengyin'
+            or not SHA_RE.fullmatch(workflow.get('workflow_sha') or '')
+            or any(not re.fullmatch(r'[1-9][0-9]*', workflow.get(key) or '')
+                   for key in ('run_id', 'run_attempt')) or not workflow.get('workflow_ref')):
+        raise GateError('汇总必须绑定真实公共 workflow/source/run/attempt')
     for path in sorted(Path(receipts_dir).glob("*/receipt.json")):
-        with open(path, encoding="utf-8") as handle:
-            receipt = json.load(handle)
+        try:
+            if path.parent.is_symlink() or path.is_symlink() or not path.is_file() or path.stat().st_size > 8 * 1024 * 1024:
+                raise ValueError()
+            with open(path, encoding="utf-8") as handle:
+                receipt = json.load(handle)
+            if not isinstance(receipt, dict):
+                raise ValueError()
+        except (OSError, ValueError):
+            problems.append("receipt: 无法确认有界的原JSON回执")
+            continue
         fqcn = receipt.get("class")
-        attempt = int(receipt.get("workflow", {}).get("run_attempt") or 0)
+        if not isinstance(fqcn, str) or not fqcn or not isinstance(receipt.get("workflow", {}), dict):
+            problems.append("receipt: class/workflow 类型无法确认")
+            continue
+        if workflow is not None:
+            observed = receipt.get("workflow", {})
+            if not isinstance(observed, dict) or any(observed.get(key) != workflow.get(key) for key in
+                    ("repository", "run_id", "run_attempt", "workflow_sha", "workflow_ref")) \
+                    or observed.get("job") != "storage_it":
+                problems.append("receipt: 非本次 workflow/run/attempt，不能以最新attempt替代")
+                continue
+            if receipt.get("schema") != RECEIPT_SCHEMA or fqcn in latest:
+                problems.append("receipt: 类型/重复原回执不能确认")
+                continue
+        try:
+            attempt = int(receipt.get("workflow", {}).get("run_attempt") or 0)
+        except (TypeError, ValueError):
+            problems.append("receipt: attempt 无法确认")
+            continue
         if fqcn and (fqcn not in latest or attempt > latest[fqcn][0]):
             latest[fqcn] = (attempt, receipt)
     planned_classes = [item["class"] for item in planned]
     rows = []
-    problems = []
     for fqcn in planned_classes:
         expected = registry["classes"][fqcn]["tests"]
         receipt = latest.get(fqcn, (0, None))[1]
@@ -966,10 +1021,37 @@ def summarize(registry, receipts_dir, planned, batch, source_sha):
         if cleanup_status != "CLEAN":
             verdict = "FAIL"
             problems.append("%s: cleanup %s，必须有 CLEAN 回读" % (simple_name(fqcn), cleanup_status or "MISSING"))
+        if workflow is not None:
+            def object_field(value, key):
+                field = value.get(key) if isinstance(value, dict) else None
+                return field if isinstance(field, dict) else {}
+            executed = object_field(receipt, "executed")
+            maven = object_field(receipt, "maven")
+            candidate = object_field(object_field(receipt, "precheck"), "candidate")
+            teardown = object_field(receipt, "teardown")
+            if (receipt.get("expected_tests") != expected or executed.get("tests") != expected
+                    or type(receipt.get("expected_tests")) is not int
+                    or type(executed.get("tests")) is not int
+                    or any(type(executed.get(key)) is not int or executed.get(key) != 0
+                           for key in ("failures", "errors", "skipped"))
+                    or type(maven.get("exit_code")) is not int or maven.get("exit_code") != 0
+                    or candidate.get("sha") != source_sha):
+                verdict = "FAIL"
+                problems.append("%s: 原JUnit/Maven/候选证据不完整" % simple_name(fqcn))
+            for kind in registry["classes"][fqcn]["storage"]:
+                observed_cleanup = (isinstance(cleanup, dict) and
+                                    (cleanup.get("mysql_leftover_schemas") == [] if kind == "mysql"
+                                     else type(cleanup.get("redis_dbsize_after")) is int
+                                     and cleanup.get("redis_dbsize_after") == 0))
+                if not observed_cleanup or object_field(teardown, kind).get("removed") is not True:
+                    verdict = "FAIL"
+                    problems.append("%s: %s 独立清理/原teardown缺失" % (simple_name(fqcn), kind))
         rows.append({
             "class": fqcn,
             "expected": expected,
-            "executed": receipt.get("executed", {}).get("tests", 0),
+            "executed": (receipt.get("executed", {}).get("tests", 0)
+                         if isinstance(receipt.get("executed"), dict)
+                         and type(receipt["executed"].get("tests")) is int else 0),
             "verdict": verdict,
             "cleanup": cleanup_status,
             "run_attempt": receipt.get("workflow", {}).get("run_attempt"),
@@ -1014,7 +1096,12 @@ def cmd_summarize(args, environ):
     require_valid_registry(registry)
     planned = json.loads(required_env(environ, "PLANNED"))
     summary, receipts = summarize(registry, args.receipts, planned, required_env(environ, "BATCH"),
-                                  required_env(environ, "SOURCE_SHA"))
+                                  required_env(environ, "SOURCE_SHA"), workflow=workflow_facts(environ))
+    # A failing artifact collector/step must not be hidden by an earlier PASS test receipt.
+    summary["storage_matrix_result"] = environ.get("STORAGE_MATRIX_RESULT", "UNKNOWN")
+    if summary["storage_matrix_result"] != "success":
+        summary["verdict"] = "FAIL"
+        summary["problems"].append("storage matrix 未成功，不能把部分原回执提升为整批通过")
     summary["timezone"] = environ.get("TIMEZONE")
     summary["workflow"] = workflow_facts(environ)
     out = Path(args.out)
@@ -1194,6 +1281,8 @@ def main(argv=None, environ=None):
                 "storage-stop": cmd_storage_stop, "summarize": cmd_summarize,
                 "m1-pair-plan": cmd_m1_pair_plan, "m1-pair-verify": cmd_m1_pair_verify}
     try:
+        if args.command in ("plan", "precheck", "storage-start", "run", "m1-pair-plan"):
+            require_normal_parent(environ)
         return handlers[args.command](args, environ)
     except GateError as error:
         print("❌ %s: %s" % (args.command, error), file=sys.stderr)

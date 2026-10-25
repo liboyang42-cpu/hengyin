@@ -1,6 +1,6 @@
 # 当前施工状态（唯一当前摘要）
 
-当前是**完整源码已收齐、root统一收口阶段**：`ALL_NEW_TESTS_NOT_RUN / all_complete=false`。已合成并公共推送源码候选 `90e18550ae75e83641e85bf4bb218f08922c7d3e`（tree `55ad70d6e20746d7b47ce368ca1d08f2014b59ff`）；当前工作树包含最后集中审查的必要增量与证据，尚非下一完整冻结候选，不继承旧绿色。
+当前是**复用主链源码已集成，完整恢复启动及最后验收接线仍在施工**：`ALL_NEW_TESTS_NOT_RUN / all_complete=false`。公共90e及9a99都是未验SOURCE检查点；原复用主链、A/B收口与恢复目标owner准备已公开，后续D/E/F与root必要增量继续组合，完整同源验收候选尚未冻结，不继承旧绿色。
 
 **最新实际进展：**H ce2bee0408baedcb4cd6ea7bc39ab8ea97236b16已交付并集成，三份原补丁摘要匹配且33个后像全部exact。原A–H完整源码包已收齐，停止轮询等待H。root已用原generator在最终client源生成一次action-ledger，5125控件只是登记，不是UI通过。接下来冻结同一公共隔离候选，原owner并行完成最后集中审查与实际问题的完整必要增量；仍不测试、不编译，所有原WP／Q／A／T／G目标仍all_complete=false。
 
@@ -21,6 +21,10 @@
 root固定新增手动mode restore-application-startup与CHENGYIN_CI_RESTORE_HTTP_STARTUP测试入场标志，默认／PR仍recovery。实际启动CHENGYIN_RESTORE_MODE由C用env设置并读回，不能导出空串当正常或用-D伪装。资源与脚本／workflow／registry由root唯一合成，C先交真实需要而不是自建provisioner。
 
 所有owner交完整实现／caller／配置／fixture／测试SOURCE和原case保留，不只一个小修；全部源码齐后统一冻结与验收，当前仍不测试、不编译、不启动资源。
+
+**并行产生的实际交付已集成：**D5450完整3文件／3作者后像exact，原前端39case保留＋4SOURCE；E037afa完整8代码／3文档已收，37989字节code patch及8作者后像exact，原复制IT25→28、声明unit32→35、新unit16共22SOURCE。F59d08＋bfa完整12供体和11作者记录已收，8个代码／workflow原像核对后接入；只将合法raw diff-context空白转成精确base64运输，随后严格登记测试的E新增3例预期由916→919，原门控／断言不删。联合现为76类／919源码声明，非实跑。原u4Dynamic67项只两锚等量平移／同7行上下文；D真实client改动后必要生成一次现成ledger，仍5125静态控件，不是UI测试。
+
+root继续和C并行：原owner已写固定restore-mysql身份、原loopback relay、独立UUID/readiness／四槽清理，以及canonical导入后只给startup_probe本schema四CRUD的restore-runtime-user SOURCE；拒绝已有用户重绑／额外全局权限，7个新增控制方法均未执行。C的完整真实HTTP应用启动／hold／run-finalize／安全输出源码仍未交齐，宿主最后唯一mode仍须按它的实际接口接通；不以健康200、provider disabled或旧七cohort代替。当前不测试、不编译、不启动资源，all_complete=false。
 
 用户要求所有必要实现、调用者、装配、配置及配套测试源码齐后再最后统一审查／验证。当前没有运行测试、编译、HTTP、数据库、故障注入或CI。差分／后像摘要／源登记不等于行为通过。
 

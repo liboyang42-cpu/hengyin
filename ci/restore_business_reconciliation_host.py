@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -289,7 +290,7 @@ def main():
     return code
 
 
-def summarize_receipts(root, source_sha, run_id, attempt):
+def summarize_receipts(root, source_sha, run_id, attempt, expected_build=None):
     expected = {'isolated-restore-business-reconciliation-' + cohort + '-' + attempt for cohort in COHORTS}
     require(root.is_dir() and not root.is_symlink() and root.resolve() == root.absolute(), 'owned receipt root required')
     require({path.name for path in root.iterdir()} == expected, 'seven exact cohort artifacts required')
@@ -342,8 +343,15 @@ def summarize_receipts(root, source_sha, run_id, attempt):
         rows.append({'cohort': cohort, 'scope': scope, 'businessResult': business['businessResult'],
                      'finalResult': final['result']})
     require(len(identities) == 1, 'cohorts must reuse one exact JAR and canonical backup tool')
+    if expected_build is not None:
+        require(isinstance(expected_build, tuple) and len(expected_build) == 2
+                and all(isinstance(value, str) and re.fullmatch('[a-f0-9]{64}', value)
+                        for value in expected_build), 'verified once-build JAR/tool hashes required')
+        require(identities == {expected_build}, 'cohort JAR/tool differs from this workflow build/source')
     completed = domain_readers().summarize_completed_cohorts(positive)
     return {'sourceSha': source_sha, 'runId': run_id, 'runAttempt': attempt,
+            'jarSha256': next(iter(identities))[0], 'canonicalToolSha256': next(iter(identities))[1],
+            'onceBuildBound': expected_build is not None,
             'result': 'SCOPED_SEVEN_RESTORE_COHORTS_COMPLETE_NO_PRODUCTION_RELEASE',
             'cohorts': rows, 'completeFacts': completed, 'productionDispatchRelease': False,
             'globalProductionFenceVerified': False}
@@ -363,10 +371,13 @@ def summary_main():
     code = 0
     try:
         result = summarize_receipts(temporary / 'restore-business-receipts', source,
-                                    os.environ['GITHUB_RUN_ID'], os.environ['GITHUB_RUN_ATTEMPT'])
+                                    os.environ['GITHUB_RUN_ID'], os.environ['GITHUB_RUN_ATTEMPT'],
+                                    expected_build=(os.environ.get('RESTORE_BUILD_JAR_SHA256', ''),
+                                                    hashlib.sha256((ROOT / 'scripts/db-backup-restore.py').read_bytes()).hexdigest()))
     except Exception as failure:
         code = 1
-        result = {'sourceSha': source, 'result': 'FAIL', 'reason': str(failure)[:400],
+        result = {'sourceSha': source, 'runId': os.environ['GITHUB_RUN_ID'],
+                  'runAttempt': os.environ['GITHUB_RUN_ATTEMPT'], 'result': 'FAIL', 'reason': str(failure)[:400],
                   'productionDispatchRelease': False, 'globalProductionFenceVerified': False}
     write_private(output / 'summary.json', json.dumps(result, sort_keys=True, indent=2))
     return code
