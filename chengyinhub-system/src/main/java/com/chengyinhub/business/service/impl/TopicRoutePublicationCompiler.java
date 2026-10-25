@@ -53,6 +53,8 @@ final class TopicRoutePublicationCompiler {
     /** One publication/authoring transaction uses one current, locked child projection.
      * Preview calls outside a writable transaction retain their existing read-only behavior. */
     private CurrentContent currentContent;
+    private boolean derivingDeclarations;
+    private boolean finalDeclarations;
     private final com.chengyinhub.business.mapper.CmsTopicMapper topicMapper;
     private static final class CurrentContent {
         final Long topicId;
@@ -60,13 +62,15 @@ final class TopicRoutePublicationCompiler {
         final List<CmsTopicChapter> chapters;
         final List<CmsTopicNode> nodes;
         final Map<Long, CmsMemberTemplate> templates;
+        final List<ThemeStateKey> declarations;
         CurrentContent(CmsTopic topic, List<CmsTopicChapter> chapters, List<CmsTopicNode> nodes,
-                Map<Long, CmsMemberTemplate> templates) {
+                Map<Long, CmsMemberTemplate> templates, List<ThemeStateKey> declarations) {
             this.topic = topic;
             this.topicId = topic.getId();
             this.chapters = chapters;
             this.nodes = nodes;
             this.templates = templates;
+            this.declarations = new ArrayList<>(declarations);
         }
     }
 
@@ -104,7 +108,12 @@ final class TopicRoutePublicationCompiler {
                     throw new IllegalStateException("发布玩法当前身份不一致");
             }
         }
-        currentContent = new CurrentContent(currentTopic, new ArrayList<>(chapters), new ArrayList<>(nodes), templates);
+        if (themeStateKeyMapper == null
+                || !topicId.equals(themeStateKeyMapper.lockTopicForStateKeyWrite(topicId)))
+            throw new IllegalStateException("主题属性声明当前读依赖缺失");
+        List<ThemeStateKey> declarations = themeStateKeyMapper.selectByTopicIdForUpdate(topicId);
+        com.chengyinhub.business.service.support.ThemeStateKeyDeclarationSnapshot.capture(topicId, declarations);
+        currentContent = new CurrentContent(currentTopic, new ArrayList<>(chapters), new ArrayList<>(nodes), templates, declarations);
         try {
             return operation.get();
         } finally {
@@ -157,7 +166,6 @@ final class TopicRoutePublicationCompiler {
         }
     }
 
-    private static final java.util.regex.Pattern TEMPLATE_CLUE = java.util.regex.Pattern.compile("^clue\\.h_[0-9a-f]{12}$");
 
     /** 主题下节点绑定模板的 advancedConfigJson(按模板 id);templateMapper 缺失/无绑定返回空表。 */
     private Map<Long, String> templateConfigs(List<CmsTopicNode> liveNodes) {
@@ -192,6 +200,20 @@ final class TopicRoutePublicationCompiler {
             if (template != null && template.getId() != null) byId.put(template.getId(), template);
         }
         return byId;
+    }
+
+    public void deriveTemplateCluesForPublication(CmsTopic topic) {
+        if (!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()
+                || org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly())
+            throw new IllegalStateException("正式发布的声明派生必须加入主题写事务");
+        withCurrentContent(topic.getId(), () -> {
+            derivingDeclarations = true;
+            try {
+                String compiled = compileCurrentTemplateRules(currentContent.topic);
+                if (compiled != null) registerTemplateClues(validator.readTree(compiled), currentContent.topic);
+            } finally { derivingDeclarations = false; }
+            return null;
+        });
     }
 
     public String compileTemplateRules(CmsTopic topic) {
@@ -436,41 +458,81 @@ final class TopicRoutePublicationCompiler {
     private boolean hasTemplateInteraction(JsonNode config) { return config!=null && (GameplayTemplateRules.hasSettlementRules(config) || config.has("interactionTools") || config.has("outcomeRules")); }
 
     /** 模板「线索」工具按线索名称生成 clue.h_ 标识（同名同键），保存/发布时自动登记为有/无标记，名称取模板里写的线索名。 */
+    private List<ThemeStateKey> declarationRows(Long topicId) {
+        if (currentContent != null && currentContent.topicId.equals(topicId)) return currentContent.declarations;
+        return themeStateKeyMapper == null ? null : themeStateKeyMapper.selectByTopicId(topicId);
+    }
+
     private void registerTemplateClues(JsonNode config, CmsTopic topic) {
         if (themeStateKeyMapper == null || topic.getId() == null) return;
-        Map<String,String> labels = new LinkedHashMap<>(); collectTemplateClues(config, labels);
+        Map<String, String> labels = new LinkedHashMap<>(); collectTemplateClues(config, labels);
         if (labels.isEmpty()) return;
         Set<String> existing = new LinkedHashSet<>();
-        List<ThemeStateKey> rows = themeStateKeyMapper.selectByTopicId(topic.getId());
-        if (rows != null) for (ThemeStateKey row : rows) existing.add(row.getStateKey());
-        Date now = new Date();
-        for (Map.Entry<String,String> clue : labels.entrySet()) if (!existing.contains(clue.getKey())) {
-            ThemeStateKey row = new ThemeStateKey(); row.setTopicId(topic.getId()); row.setStateKey(clue.getKey());
-            row.setKeyType(ThemeStateKey.TYPE_FLAG); row.setScope(ThemeStateKey.SCOPE_RUN); row.setLabel(clue.getValue()); row.setInitialValue(0);
-            row.setCreateTime(now); row.setUpdateTime(now); themeStateKeyMapper.upsertThemeStateKey(row);
+        List<ThemeStateKey> rows = declarationRows(topic.getId());
+        if (rows == null) throw new IllegalStateException("主题属性声明读取失败");
+        for (ThemeStateKey row : rows) existing.add(row.getStateKey());
+        boolean changed = false;
+        for (Map.Entry<String, String> clue : labels.entrySet()) if (!existing.contains(clue.getKey())) {
+            if (finalDeclarations) throw new IllegalStateException("最终声明投影缺少模板线索，拒绝发布");
+            if (!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()
+                    || org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly())
+                throw new IllegalStateException("自动线索声明必须加入主题写事务");
+            if (!topic.getId().equals(themeStateKeyMapper.lockTopicForStateKeyWrite(topic.getId())))
+                throw new IllegalStateException("主题属性声明写锁缺失");
+            ThemeStateKey original = themeStateKeyMapper.selectByTopicIdAndStateKeyForUpdate(topic.getId(), clue.getKey());
+            if (original == null) {
+                Date now = new Date();
+                ThemeStateKey row = new ThemeStateKey(); row.setTopicId(topic.getId()); row.setStateKey(clue.getKey());
+                row.setKeyType(ThemeStateKey.TYPE_FLAG); row.setScope(ThemeStateKey.SCOPE_RUN);
+                row.setLabel(clue.getValue()); row.setInitialValue(0); row.setCreateTime(now); row.setUpdateTime(now);
+                if (themeStateKeyMapper.upsertThemeStateKey(row) <= 0) throw new IllegalStateException("自动线索声明保存失败");
+                original = themeStateKeyMapper.selectByTopicIdAndStateKeyForUpdate(topic.getId(), clue.getKey());
+                if (original == null || !topic.getId().equals(original.getTopicId())
+                        || !clue.getKey().equals(original.getStateKey()) || !ThemeStateKey.TYPE_FLAG.equals(original.getKeyType())
+                        || !ThemeStateKey.SCOPE_RUN.equals(original.getScope()) || !Integer.valueOf(0).equals(original.getInitialValue())
+                        || !java.util.Objects.equals(clue.getValue(), original.getLabel()))
+                    throw new IllegalStateException("自动线索声明读回不一致");
+            }
+            existing.add(clue.getKey()); changed = true;
+        }
+        if (changed && currentContent != null) {
+            List<ThemeStateKey> fresh = themeStateKeyMapper.selectByTopicIdForUpdate(topic.getId());
+            com.chengyinhub.business.service.support.ThemeStateKeyDeclarationSnapshot.capture(topic.getId(), fresh);
+            currentContent.declarations.clear(); currentContent.declarations.addAll(fresh);
         }
     }
 
-    private static void collectTemplateClues(JsonNode n, Map<String,String> labels) {
-        if (n.isObject()) {
-            JsonNode names = n.path("clues");
-            if (names.isObject()) names.fields().forEachRemaining(row -> { if (TEMPLATE_CLUE.matcher(row.getKey()).matches() && row.getValue().isTextual()) labels.put(row.getKey(), row.getValue().asText()); });
-            String var = n.path("var").asText("");
-            if (TEMPLATE_CLUE.matcher(var).matches()) labels.putIfAbsent(var, var);
-            n.forEach(child -> collectTemplateClues(child, labels));
-        } else if (n.isArray()) n.forEach(child -> collectTemplateClues(child, labels));
+    private static void collectTemplateClues(JsonNode n, Map<String, String> labels) {
+        com.chengyinhub.business.util.StateKeyRefs.declaredTemplateClues(n).forEach(labels::put);
     }
 
     private void assertCompiledReferences(ObjectNode config,Set<Long> nodeIds,CmsTopic topic) {
         registerTemplateClues(config, topic);
+        if (derivingDeclarations) return; // Final E/Compiler validation runs only after both existing derivations.
         Set<String> stateKeys=new LinkedHashSet<>();
-        List<ThemeStateKey> keys=themeStateKeyMapper==null?null:themeStateKeyMapper.selectByTopicId(topic.getId());
+        List<ThemeStateKey> keys=declarationRows(topic.getId());
         if(keys!=null)for(ThemeStateKey key:keys)stateKeys.add(key.getStateKey());
         ThemeRuntimeConfig.assertReferences(config,nodeIds,stateKeys,JourneyRules.parse(topic.getJourneyRulesJson()));
     }
 
     public String freezePublication(CmsTopic topic, String routeSnapshot) {
         return withCurrentContent(topic.getId(), () -> freezeCurrentPublication(currentContent == null ? topic : currentContent.topic, routeSnapshot));
+    }
+
+    public String freezePublication(CmsTopic topic, String routeSnapshot, List<ThemeStateKey> declarations) {
+        if (!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()
+                || org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly())
+            throw new IllegalStateException("正式发布必须加入主题写事务");
+        List<ThemeStateKey> prepared = com.chengyinhub.business.service.support.ThemeStateKeyDeclarationSnapshot.copy(topic.getId(), declarations);
+        return withCurrentContent(topic.getId(), () -> {
+            if (!com.chengyinhub.business.service.support.ThemeStateKeyDeclarationSnapshot.capture(topic.getId(), prepared).equals(
+                    com.chengyinhub.business.service.support.ThemeStateKeyDeclarationSnapshot.capture(topic.getId(), currentContent.declarations)))
+                throw new IllegalStateException("最终属性声明投影已变化");
+            currentContent.declarations.clear(); currentContent.declarations.addAll(prepared);
+            finalDeclarations = true;
+            try { return freezeCurrentPublication(currentContent.topic, routeSnapshot); }
+            finally { finalDeclarations = false; }
+        });
     }
 
     private String freezeCurrentPublication(CmsTopic topic, String routeSnapshot) {
@@ -488,6 +550,7 @@ final class TopicRoutePublicationCompiler {
         publish.setPublishedThemeRuntimeConfigJson(compiled);
         ObjectNode frozen = (ObjectNode) validator.readTree(freezeJourney(
                 routeSnapshot == null ? linearSnapshot(liveNodes) : routeSnapshot, publish, liveNodes,publicationProbe));
+        freezeContentSnapshots(frozen, topic, liveNodes, publicationProbe.templatesById());
         frozen.put("runtimeSnapshotVersion", 1);
         frozen.put("r5AuthorValidationVersion",1);
         frozen.put("routeMode", topic.getRouteMode() == null ? "LINEAR" : topic.getRouteMode());
@@ -510,6 +573,10 @@ final class TopicRoutePublicationCompiler {
         }
         Set<Long> nodeIds=new LinkedHashSet<>();for(CmsTopicNode node:liveNodes)nodeIds.add(node.getId());
         if(frozen.path("themeConfig").isObject())assertCompiledReferences((ObjectNode)frozen.path("themeConfig"),nodeIds,topic);
+        List<ThemeStateKey> declarations = declarationRows(topic.getId());
+        if (declarations != null) {
+            JourneyInitialState.freezeKeys(frozen, declarations, journeyRules(topic), topic.getId());
+        }
         validateGameplayRuntime(frozen);
         return write(frozen);
     }
@@ -703,8 +770,7 @@ final class TopicRoutePublicationCompiler {
         try {
             root.set(NodeJourneySnapshot.JOURNEY_RULES_KEY,
                     JSON.valueToTree(journeyRules(topic)));
-            JourneyInitialState.freezeKeys(root, themeStateKeyMapper == null ? null
-                    : themeStateKeyMapper.selectByTopicId(topic.getId()), journeyRules(topic));
+            JourneyInitialState.freezeKeys(root, declarationRows(topic.getId()), journeyRules(topic));
         } catch (IllegalArgumentException unusableRules) {
             throw new IllegalStateException("旅程数值规则不可用", unusableRules);
         }
@@ -842,6 +908,54 @@ final class TopicRoutePublicationCompiler {
             row.set("blocks", JSON.valueToTree(ChapterBlockReadSupport.resolveFromTopicNodes(chapter, nodes)));
             if (ChapterBlockReadSupport.isRequiredChapter(chapter)) requiredBefore.addAll(nodeIds);
         }
+    }
+
+    private static final String[] TEMPLATE_PRESENTATION_FIELDS = ("id title description imgUrl players usageLocation "
+            + "requiredMaterials duration difficulty ruleInstructions merchantGuide interactionType questionName questionImg "
+            + "questionAudio questionOptionMediaJson questionA questionB questionC questionD storyText storyImg feedbackText "
+            + "photoRequireDesc audioUrl audioDuration medalName medalStyle medalImg couponId").split(" ");
+    private static final String[] NODE_PRESENTATION_FIELDS = ("id topicId chapterId templateId merchantMemberId name description "
+            + "address longitude latitude imgUrl hookText cardHookLong fragmentText nodeTime businessTime sortId unlockAfterNodeId").split(" ");
+
+    /** Internal snapshot, never a public response. Hint/reveal/answer projection stays with its original owner. */
+    private void freezeContentSnapshots(ObjectNode frozen, CmsTopic topic, List<CmsTopicNode> nodes,
+            Map<Long, CmsMemberTemplate> templates) {
+        Map<Long, CmsTopicChapter> chapters = new LinkedHashMap<>();
+        for (CmsTopicChapter chapter : runtimeChapters(topic.getId())) chapters.put(chapter.getId(), chapter);
+        ObjectNode answers = frozen.with(NodeJourneySnapshot.NODE_ANSWERS_KEY);
+        for (CmsTopicNode node : nodes) {
+            if (node.getId() == null || node.getId() <= 0 || !topic.getId().equals(node.getTopicId()))
+                throw new IllegalStateException("冻结节点身份不一致");
+            CmsTopicChapter chapter = node.getChapterId() == null ? null : chapters.get(node.getChapterId());
+            if (node.getChapterId() != null && (chapter == null || !topic.getId().equals(chapter.getTopicId())))
+                throw new IllegalStateException("冻结章节身份不一致");
+            if (node.getTemplateId() != null && node.getTemplateId() < 0) throw new IllegalStateException("冻结模板身份无效");
+            Long templateId = node.getTemplateId() != null && node.getTemplateId() > 0 ? node.getTemplateId() : null;
+            CmsMemberTemplate template = templateId == null ? null : templates.get(templateId);
+            if (templateId != null && (template == null || !templateId.equals(template.getId())))
+                throw new IllegalStateException("冻结模板身份不一致");
+            ObjectNode target = answers.with(String.valueOf(node.getId()));
+            target.put("contentSnapshotVersion", 1);
+            if (templateId == null) target.putNull("templateId"); else target.put("templateId", templateId);
+            ObjectNode nodePresentation = selectPresentation(node, NODE_PRESENTATION_FIELDS);
+            if (templateId == null) nodePresentation.putNull("templateId");
+            target.set("nodePresentation", nodePresentation);
+            target.set("templatePresentation", template == null ? JSON.createObjectNode()
+                    : selectPresentation(template, TEMPLATE_PRESENTATION_FIELDS));
+            if (chapter == null || chapter.getAudioUrl() == null) target.putNull("chapterAudioUrl");
+            else target.put("chapterAudioUrl", chapter.getAudioUrl());
+            if (template != null) {
+                putAnswerText(target, "hint1", template.getHint1());
+                putAnswerText(target, "hint2", template.getHint2());
+            }
+        }
+    }
+
+    private ObjectNode selectPresentation(Object entity, String[] fields) {
+        JsonNode source = JSON.valueToTree(entity);
+        ObjectNode selected = JSON.createObjectNode();
+        for (String field : fields) selected.set(field, source.has(field) ? source.get(field) : JSON.nullNode());
+        return selected;
     }
 
     /**

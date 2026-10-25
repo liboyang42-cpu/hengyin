@@ -45,6 +45,8 @@ public class TopicBundleReviewService {
     private com.chengyinhub.business.mapper.MerchantChapterOfferMapper offerMapper;
     @org.springframework.beans.factory.annotation.Autowired
     private com.chengyinhub.business.mapper.MmsMerchantMapper merchantMapper;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.mapper.ThemeStateKeyMapper themeStateKeyMapper;
     private final ObjectMapper json = new ObjectMapper()
             .enable(com.fasterxml.jackson.databind.DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
     private final AdvancedGameConfigValidator advancedConfigValidator = new AdvancedGameConfigValidator();
@@ -85,6 +87,11 @@ public class TopicBundleReviewService {
     }
 
     public Submission freezeForSubmission(Long topicId, Long ownerId) {
+        return freezeForSubmission(topicId, ownerId, null);
+    }
+
+    public Submission freezeForSubmission(Long topicId, Long ownerId,
+            List<com.chengyinhub.business.domain.ThemeStateKey> preparedDeclarations) {
         boolean currentRead = org.springframework.transaction.support.TransactionSynchronizationManager
                 .isActualTransactionActive()
                 && !org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly();
@@ -155,7 +162,7 @@ public class TopicBundleReviewService {
             templates.add(template);
         }
 
-        ObjectNode topicContent = topicContent(topic, chapters, nodes);
+        ObjectNode topicContent = topicContent(topic, chapters, nodes, preparedDeclarations);
         ObjectNode topicSnapshot = json.createObjectNode();
         topicSnapshot.put("id", topic.getId());
         topicSnapshot.put("memberId", topic.getMemberId());
@@ -254,13 +261,12 @@ public class TopicBundleReviewService {
         Collections.sort(currentIds);
         if (!submittedIds.equals(currentIds)) throw stale();
 
-        String currentTopicHash = sha256(topicContent(topic, chapters, nodes));
-        if (!currentTopicHash.equals(submittedTopic.path("contentHash").asText())) throw stale();
-
         List<CmsMemberTemplate> templates = submittedIds.isEmpty()
                 ? Collections.<CmsMemberTemplate>emptyList()
                 : safe(templateMapper.selectCmsMemberTemplateByIdsForUpdate(submittedIds));
         if (templates.size() != submittedIds.size()) throw stale();
+        String currentTopicHash = sha256(topicContent(topic, chapters, nodes));
+        if (!currentTopicHash.equals(submittedTopic.path("contentHash").asText())) throw stale();
         for (int i = 0; i < templates.size(); i++) {
             CmsMemberTemplate template = templates.get(i);
             Long expectedId = submittedIds.get(i);
@@ -307,6 +313,11 @@ public class TopicBundleReviewService {
     }
 
     private ObjectNode topicContent(CmsTopic topic, List<CmsTopicChapter> chapters, List<CmsTopicNode> nodes) {
+        return topicContent(topic, chapters, nodes, null);
+    }
+
+    private ObjectNode topicContent(CmsTopic topic, List<CmsTopicChapter> chapters, List<CmsTopicNode> nodes,
+            List<com.chengyinhub.business.domain.ThemeStateKey> preparedDeclarations) {
         ObjectNode content = json.createObjectNode();
         ObjectNode topicJson = json.valueToTree(topic);
         topicJson.remove("createBy"); topicJson.remove("createTime");
@@ -322,6 +333,13 @@ public class TopicBundleReviewService {
         if (StringUtils.isNotBlank(topic.getThemeRuntimeConfigJson())) {
             topicJson.set("themeRuntimeConfig", parseJson(topic.getThemeRuntimeConfigJson(), "主题运行配置 JSON 非法"));
         }
+        ArrayNode currentDeclarations = declarationSnapshot(topic.getId());
+        ArrayNode frozenDeclarations = preparedDeclarations == null ? currentDeclarations
+                : ThemeStateKeyDeclarationSnapshot.capture(topic.getId(), preparedDeclarations);
+        if (!frozenDeclarations.equals(currentDeclarations)) throw stale();
+        // Existing empty-declaration reviews retain their old content identity; a subsequently added
+        // declaration makes the current hash differ, rather than being silently backfilled.
+        if (!frozenDeclarations.isEmpty()) topicJson.set("stateKeyDeclarations", frozenDeclarations);
         content.set("topic", topicJson);
 
         Map<Long, List<CmsTopicNode>> nodesByChapter = new LinkedHashMap<Long, List<CmsTopicNode>>();
@@ -349,6 +367,28 @@ public class TopicBundleReviewService {
         }
         content.set("chapters", chapterValues);
         return content;
+    }
+
+    private ArrayNode declarationSnapshot(Long topicId) {
+        if (themeStateKeyMapper == null) throw new IllegalStateException("主题属性声明读取依赖缺失");
+        boolean currentRead = org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()
+                && !org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly();
+        java.util.List<com.chengyinhub.business.domain.ThemeStateKey> declarations;
+        if (currentRead) {
+            if (!topicId.equals(themeStateKeyMapper.lockTopicForStateKeyWrite(topicId))) throw stale();
+            declarations = themeStateKeyMapper.selectByTopicIdForUpdate(topicId);
+        } else declarations = themeStateKeyMapper.selectByTopicId(topicId);
+        return ThemeStateKeyDeclarationSnapshot.capture(topicId, declarations);
+    }
+
+    /** Submission and its publication share one declaration identity, including auto-registered keys. */
+    public void assertDeclarationsUnchanged(Long topicId, String snapshotJson) {
+        if (topicId == null || topicId <= 0) throw stale();
+        JsonNode submitted = snapshot(snapshotJson).path("topic");
+        if (submitted.path("id").asLong(-1L) != topicId) throw stale();
+        JsonNode expected = submitted.path("content").path("stateKeyDeclarations");
+        if (expected.isMissingNode()) expected = json.createArrayNode();
+        if (!expected.equals(declarationSnapshot(topicId))) throw stale();
     }
 
     private ObjectNode templateContent(CmsMemberTemplate template) {

@@ -46,7 +46,7 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     static final long TOPIC = 100L, OWNER = 42L;
     static final List<String> TABLES = List.of("cms_topic", "cms_topic_chapter", "cms_topic_node",
-            "cms_member_template", "npc_profile", "cms_collaborators", "product_role", "merchant_chapter_offer");
+            "cms_member_template", "npc_profile", "cms_collaborators", "product_role", "merchant_chapter_offer", "theme_state_key");
     final String ownerMode = System.getProperty("chengyin.wp10.graph.owner",
             System.getenv().getOrDefault("CHENGYIN_WP10_GRAPH_OWNER", "extracted"));
     final MysqlIntegrationTestConfig mysql = MysqlIntegrationTestConfig.fromEnvironment(
@@ -94,6 +94,11 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
         db = new JdbcTemplate(data);
         new ResourceDatabasePopulator(new ClassPathResource("it-schema/cms-topic-it-schema.sql"),
                 new ClassPathResource("it-schema/wp10-content-graph-scratch.sql")).execute(data);
+        for (String file : List.of("migration_theme_state_key_20260916.sql", "migration_20261022_theme_state_key_attribute_def.sql")) {
+            Path path = Paths.get("sql", file);
+            if (!Files.exists(path)) path = Paths.get("chengyinhub-admin", "sql", file);
+            new ResourceDatabasePopulator(new org.springframework.core.io.FileSystemResource(path.toFile())).execute(data);
+        }
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(data);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
@@ -103,7 +108,8 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
                 new ClassPathResource("mapper/business/CmsTopicNodeMapper.xml"),
                 new ClassPathResource("mapper/business/CmsMemberTemplateMapper.xml"),
                 new ClassPathResource("mapper/business/CmsCollaboratorsMapper.xml"),
-                new ClassPathResource("mapper/business/ProductRoleMapper.xml"));
+                new ClassPathResource("mapper/business/ProductRoleMapper.xml"),
+                new ClassPathResource("mapper/business/ThemeStateKeyMapper.xml"));
         sql = new SqlSessionTemplate(factory.getObject());
         topics = sql.getMapper(CmsTopicMapper.class);
         chapters = sql.getMapper(CmsTopicChapterMapper.class);
@@ -129,6 +135,13 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
                 (java.util.function.Function<Field, Object>) publicationField -> boundary(publicationField.getType(), publicationField.getName()));
         set("cmsTopicMapper", topics); set("cmsTopicChapterMapper", chapters); set("cmsTopicNodeMapper", nodes);
         set("cmsMemberTemplateMapper", templateMapper); set("cmsCollaboratorsMapper", collaborators);
+        ThemeStateKeyService keyService = new ThemeStateKeyService(sql.getMapper(ThemeStateKeyMapper.class));
+        ProxyFactory keyProxy = new ProxyFactory(keyService); keyProxy.setProxyTargetClass(true);
+        keyProxy.addAdvice(new TransactionInterceptor(manager, new AnnotationTransactionAttributeSource()));
+        set("themeStateKeyService", keyProxy.getProxy());
+        TopicStateKeyRefService references = new TopicStateKeyRefService(nodes, templateMapper, chapters);
+        ReflectionTestUtils.setField(references, "cmsTopicMapper", topics);
+        set("topicStateKeyRefService", references);
         set("productRoleService", roles); set("cmsMemberTemplateService", templateService);
         set("distanceCalculatorUtils", new DistanceCalculatorUtils());
         tickets = boundary(OmsTicketMapper.class, "ticket"); set("omsTicketMapper", tickets);
@@ -146,6 +159,7 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
                 mock(PlayerActivityRoleMapper.class), () -> 1L, Clock.fixed(Instant.parse("2026-01-02T03:04:05Z"), ZoneOffset.UTC),
                 RouteReachabilityProvider.UNKNOWN);
         ReflectionTestUtils.setField(runtime, "cmsTopicChapterMapper", chapters);
+        ReflectionTestUtils.setField(runtime, "themeStateKeyMapper", sql.getMapper(ThemeStateKeyMapper.class));
         set("topicRouteRuntimeService", runtime);
         TopicPublicationTestFixtures.wire(facade);
         String name = "com.chengyinhub.business.service.impl.TopicContentGraphAuthoringServiceImpl";

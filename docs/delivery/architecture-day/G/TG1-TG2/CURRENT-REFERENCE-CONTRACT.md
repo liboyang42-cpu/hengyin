@@ -20,4 +20,4 @@ E 正式 tag 派生/注册引用校验用 `collectForPublication`；正式主题
 
 新测试源码 `TopicStateKeyRefCurrentContentTest` 5 声明：current vs ordinary 输入；捕获后 parser 零 SQL；preview 保原路；block/chapter parseError 和 disabled-node；无 TX/readOnly/缺 parent/跨 topic/缺模板拒绝。它们使用 mapper doubles 与 unit flags，不证明 MySQL RR/锁。G 原真实存储 fixture 将注入真实 parent mapper；其他手工 new collector 的正式 fixture 需显式装配 parent port，不能填 guard=true。
 
-新 full snapshot 合同由 G producer 后续完整头交付：root `stateKeySnapshotVersion:1 + stateKeys`（完整作者定义，不含 id/time/运行值），`contentSnapshotOnly` 为原 helper 决定；每节点 `contentSnapshotVersion:1/templateId/templatePresentation/nodePresentation/chapterAudioUrl`。旧无标志保持原语义，H 按冻结字段读取，不读作者未来 live 重判。
+新 full snapshot 合同由 G producer 后续完整头交付：root `stateKeySnapshotVersion:1 + stateKeys`（完整作者定义，不含 id/time/运行值）；按 ROOT_FINAL_CONTRACT_V3 不新增 contentSnapshotOnly，只保全原冻结规则/剧情/节点事实给 H 复用原 helper；每节点 `contentSnapshotVersion:1/templateId/templatePresentation/nodePresentation/chapterAudioUrl`。旧无标志保持原语义，H 按冻结字段读取，不读作者未来 live 重判。

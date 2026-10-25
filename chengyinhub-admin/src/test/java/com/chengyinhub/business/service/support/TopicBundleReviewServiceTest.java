@@ -40,6 +40,11 @@ class TopicBundleReviewServiceTest {
         nodeMapper = mock(CmsTopicNodeMapper.class);
         templateMapper = mock(CmsMemberTemplateMapper.class);
         service = new TopicBundleReviewService(topicMapper, chapterMapper, nodeMapper, templateMapper);
+        com.chengyinhub.business.mapper.ThemeStateKeyMapper keys = mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class);
+        when(keys.selectByTopicId(10L)).thenReturn(Collections.emptyList());
+        when(keys.selectByTopicIdForUpdate(10L)).thenReturn(Collections.emptyList());
+        when(keys.lockTopicForStateKeyWrite(10L)).thenReturn(10L);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "themeStateKeyMapper", keys);
 
         topic = new CmsTopic();
         topic.setId(10L);
@@ -389,6 +394,35 @@ class TopicBundleReviewServiceTest {
         assertThrows(IllegalStateException.class,
                 () -> service.applyDecision(10L, 7L, submission.getSnapshotJson(), true));
         verify(templateMapper, never()).approveBundledDraft(anyLong(), anyLong());
+    }
+
+    @Test
+    void authoredDeclarationChangesInvalidateApprovalWithoutHashingAllocatorMetadata() throws Exception {
+        com.chengyinhub.business.mapper.ThemeStateKeyMapper keys = (com.chengyinhub.business.mapper.ThemeStateKeyMapper)
+                org.springframework.test.util.ReflectionTestUtils.getField(service, "themeStateKeyMapper");
+        com.chengyinhub.business.domain.ThemeStateKey key = new com.chengyinhub.business.domain.ThemeStateKey();
+        key.setTopicId(10L); key.setStateKey("counter.energy"); key.setKeyType("counter");
+        key.setScope("run"); key.setLabel("体力"); key.setInitialValue(3);
+        when(keys.selectByTopicId(10L)).thenReturn(Collections.singletonList(key));
+        String submitted = service.freezeForSubmission(10L, 7L).getSnapshotJson();
+        assertTrue(new ObjectMapper().readTree(submitted).path("topic").path("content")
+                .path("stateKeyDeclarations").get(0).path("minValue").isNull());
+        key.setId(999L); key.setUpdateTime(new java.util.Date());
+        assertEquals(submitted, service.freezeForSubmission(10L, 7L).getSnapshotJson());
+        stubLockedRows(); key.setInitialValue(4);
+        assertThrows(IllegalStateException.class, () -> service.applyDecision(10L, 7L, submitted, true));
+        verify(templateMapper, never()).approveBundledDraft(anyLong(), anyLong());
+    }
+
+    @Test
+    void postSubmissionAutoDeclarationCannotBeSilentlyUsedByPublication() {
+        String submitted = service.freezeForSubmission(10L, 7L).getSnapshotJson();
+        com.chengyinhub.business.mapper.ThemeStateKeyMapper keys = (com.chengyinhub.business.mapper.ThemeStateKeyMapper)
+                org.springframework.test.util.ReflectionTestUtils.getField(service, "themeStateKeyMapper");
+        com.chengyinhub.business.domain.ThemeStateKey key = new com.chengyinhub.business.domain.ThemeStateKey();
+        key.setTopicId(10L); key.setStateKey("clue.h_late"); key.setKeyType("flag"); key.setScope("run"); key.setInitialValue(0);
+        when(keys.selectByTopicId(10L)).thenReturn(Collections.singletonList(key));
+        assertThrows(IllegalStateException.class, () -> service.assertDeclarationsUnchanged(10L, submitted));
     }
 
     private void stubLockedRows() {

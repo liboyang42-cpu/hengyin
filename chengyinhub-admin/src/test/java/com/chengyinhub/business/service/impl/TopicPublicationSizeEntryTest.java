@@ -106,6 +106,45 @@ class TopicPublicationSizeEntryTest {
         verify(f.activity).ensureSelfHostActivityShell(TOPIC);
     }
 
+    @Test
+    void bundlePreparesOriginalDeclarationProducersBeforeHashAndChecksThemAfterPublication() {
+        Fixture f = new Fixture(30, 300);
+        f.service.submitTopicBundle(TOPIC, OWNER);
+        TopicPublicationContentGuard guard = (TopicPublicationContentGuard)
+                ReflectionTestUtils.getField(f.service, "publicationContentGuard");
+        var sequence = inOrder(guard, f.bundle, f.audit);
+        sequence.verify(guard).deriveOptionTagsForPublication(f.topic);
+        sequence.verify(guard).assertStateKeysRegistered(eq(f.topic), any());
+        sequence.verify(f.bundle).freezeForSubmission(TOPIC, OWNER);
+        sequence.verify(f.audit).submitOrRefreshTopicBundle(TOPIC, OWNER, "bundle-snapshot");
+        sequence.verify(f.bundle).assertDeclarationsUnchanged(TOPIC, "bundle-snapshot");
+    }
+
+    @Test
+    void createdOrdinaryContentUsesTheTypedPathWithoutAnAttributeFeatureGate() {
+        Fixture f = new Fixture(1, 1);
+        assertEquals(1, f.service.persistCreatedRouteSnapshot(TOPIC));
+        TopicPublicationContentGuard guard = (TopicPublicationContentGuard)
+                ReflectionTestUtils.getField(f.service, "publicationContentGuard");
+        verify(guard, never()).requiresFullRuntimeSnapshot(any());
+        verify(guard).normalizedBranchRouteForPublish(eq(f.topic), any());
+        verify(f.topics).publishRouteSnapshot(eq(TOPIC), eq("frozen-route"), any());
+        verifyNoInteractions(f.quota, f.audit, f.square, f.activity);
+    }
+
+    @Test
+    void approvalConsumesCurrentDeclarationsWithoutDerivingUnreviewedRows() {
+        Fixture f = new Fixture(1, 1);
+        f.service.publishApprovedRouteSnapshot(TOPIC);
+        var runtime = (com.chengyinhub.business.service.ITopicRouteRuntimeService)
+                ReflectionTestUtils.getField(f.service, "topicRouteRuntimeService");
+        TopicPublicationContentGuard guard = (TopicPublicationContentGuard)
+                ReflectionTestUtils.getField(f.service, "publicationContentGuard");
+        verify(runtime, never()).deriveTemplateCluesForPublication(any());
+        verify(guard, never()).deriveOptionTagsForPublication(any());
+        verify(f.topics).publishRouteSnapshot(eq(TOPIC), eq("frozen-route"), any());
+    }
+
     private static final class Fixture {
         final TopicPublicationService service = new TopicPublicationService();
         final CmsTopicMapper topics = mock(CmsTopicMapper.class);
@@ -136,6 +175,8 @@ class TopicPublicationSizeEntryTest {
             when(nodes.countContentByTopicForUpdate(TOPIC)).thenReturn((long) nodeCount);
             when(bundle.freezeForSubmission(TOPIC, OWNER)).thenReturn(
                     new TopicBundleReviewService.Submission("bundle-snapshot", Collections.emptyList()));
+            when(bundle.freezeForSubmission(eq(TOPIC), eq(OWNER), any()))
+                    .thenAnswer(call -> bundle.freezeForSubmission(TOPIC, OWNER));
             when(audit.submitOrRefreshTopicBundle(TOPIC, OWNER, "bundle-snapshot")).thenReturn(12L);
             AuditTask task = new AuditTask();
             task.setStatus(AuditTask.STATUS_PENDING);
@@ -149,12 +190,21 @@ class TopicPublicationSizeEntryTest {
             ReflectionTestUtils.setField(guard, "cmsTopicChapterMapper", chapters);
             ReflectionTestUtils.setField(guard, "cmsTopicNodeMapper", nodes);
             doNothing().when(guard).assertStateKeysRegistered(any());
+            doNothing().when(guard).deriveOptionTagsForPublication(any());
+            doNothing().when(guard).assertStateKeysRegistered(any(), any());
             doNothing().when(guard).assertThoughtRefsResolvable(any());
             doNothing().when(guard).assertJourneyStoryReferences(any());
             doNothing().when(guard).assertThemeRuntimeReferences(any());
+            doNothing().when(guard).assertThemeRuntimeReferences(any(), any());
             doNothing().when(guard).assertBlockNarrativeNpcReferences(any());
             doNothing().when(guard).assertBlockSysVarReferences(any());
             doReturn("frozen-route").when(guard).normalizedBranchRouteForPublish(any());
+            doReturn("frozen-route").when(guard).normalizedBranchRouteForPublish(any(), any());
+            var runtime = mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+            var keyService = mock(com.chengyinhub.business.service.support.ThemeStateKeyService.class);
+            when(keyService.listCurrentDeclarations(TOPIC)).thenReturn(Collections.emptyList());
+            ReflectionTestUtils.setField(service, "topicRouteRuntimeService", runtime);
+            ReflectionTestUtils.setField(service, "themeStateKeyService", keyService);
             ReflectionTestUtils.setField(service, "publicationContentGuard", guard);
             ReflectionTestUtils.setField(service, "cmsTopicMapper", topics);
             ReflectionTestUtils.setField(service, "quotaService", quota);

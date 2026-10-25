@@ -1,6 +1,8 @@
-# TG1/TG2：审核、发布与原局内容绑定
+# TG1/TG2：审核、发布与原局内容绑定（db2历史片）
 
-结论：本候选完成 G 所有发布源码的 RR 当前读接线及配套测试源码；不是完整游戏库或最终 TG1/TG2 验收。新增 14 个测试声明均 NOT_RUN。没有执行 Node/Python/Java/JUnit/MySQL/HTTP 测试或 CI。只执行源码读取、Git 差分及文件摘要。
+本文件保留 db2 的交付历史；当前完整 producer/共享接线和最终字段以 [PRODUCER-CLOSURE.md](PRODUCER-CLOSURE.md) 为准。
+
+结论：该历史片完成 G 发布源码的 RR 当前读接线及配套测试源码；不是完整游戏库或最终 TG1/TG2 验收。新增 14 个测试声明均 NOT_RUN。没有执行 Node/Python/Java/JUnit/MySQL/HTTP 测试或 CI。只执行源码读取、Git 差分及文件摘要。
 
 - 公共父提交：`fa5c263440573992701263d6bee60830844a49b8`。
 - 独立分支：`codex/architecture-day-g-tg1-tg2-binding`。

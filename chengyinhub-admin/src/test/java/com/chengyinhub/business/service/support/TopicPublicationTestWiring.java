@@ -73,6 +73,27 @@ public final class TopicPublicationTestWiring {
             Mockito.when(topicMapper.selectCmsTopicByIdForUpdate(org.mockito.ArgumentMatchers.anyLong()))
                     .thenAnswer(call -> topicMapper.selectCmsTopicById(call.getArgument(0)));
         }
+        TopicBundleReviewService bundle = (TopicBundleReviewService) get(facade, "topicBundleReviewService");
+        if (bundle != null && Mockito.mockingDetails(bundle).isMock() && !Mockito.mockingDetails(bundle).isSpy()
+                && Mockito.mockingDetails(bundle).getStubbings().stream().noneMatch(stub ->
+                "freezeForSubmission".equals(stub.getInvocation().getMethod().getName())
+                        && stub.getInvocation().getArguments().length == 3)) {
+            // Unit-only port adaptation: preserve the original fixture snapshot and original assertions.
+            Mockito.when(bundle.freezeForSubmission(org.mockito.ArgumentMatchers.anyLong(),
+                    org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyList()))
+                    .thenAnswer(call -> bundle.freezeForSubmission(call.getArgument(0), call.getArgument(1)));
+        }
+        com.chengyinhub.business.service.ITopicRouteRuntimeService runtime =
+                (com.chengyinhub.business.service.ITopicRouteRuntimeService) get(facade, "topicRouteRuntimeService");
+        if (runtime != null && Mockito.mockingDetails(runtime).isMock() && !Mockito.mockingDetails(runtime).isSpy()
+                && Mockito.mockingDetails(runtime).getStubbings().stream().anyMatch(stub ->
+                "freezePublication".equals(stub.getInvocation().getMethod().getName()) && stub.getInvocation().getArguments().length == 2)
+                && Mockito.mockingDetails(runtime).getStubbings().stream().noneMatch(stub ->
+                "freezePublication".equals(stub.getInvocation().getMethod().getName()) && stub.getInvocation().getArguments().length == 3)) {
+            // Adapt only an explicitly supplied original unit port. Never fabricate a missing snapshot.
+            Mockito.when(runtime.freezePublication(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.nullable(String.class),
+                    org.mockito.ArgumentMatchers.anyList())).thenAnswer(call -> runtime.freezePublication(call.getArgument(0), call.getArgument(1)));
+        }
         TopicContentWriteGuard guard = (TopicContentWriteGuard) ReflectionTestUtils.getField(facade, "contentWriteGuard");
         if (guard == null) {
             guard = new TopicContentWriteGuard(topicMapper,

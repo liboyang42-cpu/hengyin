@@ -88,11 +88,68 @@ class TopicRoutePublicationCurrentReadTest {
         }
     }
 
+    @Test
+    void autoClueRegistrationRefreshesTheSameLockedDeclarationProjection() throws Exception {
+        Fixture f = new Fixture();
+        java.util.concurrent.atomic.AtomicReference<ThemeStateKey> stored = new java.util.concurrent.atomic.AtomicReference<>();
+        when(f.keys.selectByTopicIdForUpdate(10L)).thenAnswer(call -> stored.get() == null
+                ? Collections.emptyList() : Collections.singletonList(stored.get()));
+        when(f.keys.selectByTopicIdAndStateKeyForUpdate(10L, "clue.h_abcdef123456")).thenAnswer(call -> stored.get());
+        when(f.keys.upsertThemeStateKey(any())).thenAnswer(call -> { stored.set(call.getArgument(0)); return 1; });
+        ObjectMapper json = new ObjectMapper();
+        var declaration = json.createObjectNode(); declaration.putObject("clues").put("clue.h_abcdef123456", "地图");
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+        try {
+            String frozen = org.springframework.test.util.ReflectionTestUtils.invokeMethod(f.compiler, "withCurrentContent", 10L,
+                    (java.util.function.Supplier<String>) () -> {
+                        org.springframework.test.util.ReflectionTestUtils.invokeMethod(f.compiler, "registerTemplateClues", declaration, f.topic);
+                        return f.compiler.freezePublication(f.topic, null);
+                    });
+            assertEquals(1, json.readTree(frozen).path("stateKeySnapshotVersion").asInt());
+            assertEquals("地图", json.readTree(frozen).path("stateKeys").get(0).path("label").asText());
+            assertEquals(0, json.readTree(frozen).path("stateKeys").get(0).path("initialValue").asInt());
+            verify(f.keys, never()).selectByTopicId(any());
+            var writes = inOrder(f.keys);
+            writes.verify(f.keys).lockTopicForStateKeyWrite(10L);
+            writes.verify(f.keys).selectByTopicIdForUpdate(10L);
+            writes.verify(f.keys).lockTopicForStateKeyWrite(10L);
+            writes.verify(f.keys).selectByTopicIdAndStateKeyForUpdate(10L, "clue.h_abcdef123456");
+            writes.verify(f.keys).upsertThemeStateKey(any());
+        } finally {
+            TransactionSynchronizationManager.setActualTransactionActive(false);
+        }
+    }
+
+    @Test
+    void purePreviewCannotRegisterAMissingAutomaticDeclaration() {
+        Fixture f = new Fixture();
+        var declaration = new ObjectMapper().createObjectNode();
+        declaration.putObject("clues").put("clue.h_abcdef123456", "地图");
+        assertThrows(IllegalStateException.class, () -> org.springframework.test.util.ReflectionTestUtils.invokeMethod(
+                f.compiler, "registerTemplateClues", declaration, f.topic));
+        verify(f.keys, never()).upsertThemeStateKey(any());
+        verify(f.keys, never()).lockTopicForStateKeyWrite(any());
+    }
+
+    @Test
+    void finalFreezeRejectsAChangedDeclarationSetBeforePublishingOrRegisteringAnything() {
+        Fixture f = new Fixture();
+        ThemeStateKey key = new ThemeStateKey(); key.setTopicId(10L); key.setStateKey("counter.energy");
+        key.setKeyType("counter"); key.setScope("run"); key.setInitialValue(3);
+        when(f.keys.selectByTopicIdForUpdate(10L)).thenReturn(Collections.singletonList(key));
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+        try {
+            assertThrows(IllegalStateException.class, () -> f.compiler.freezePublication(f.topic, null, Collections.emptyList()));
+            verify(f.keys, never()).upsertThemeStateKey(any());
+        } finally { TransactionSynchronizationManager.setActualTransactionActive(false); }
+    }
+
     private static final class Fixture {
         final CmsTopicMapper topics = mock(CmsTopicMapper.class);
         final CmsTopicNodeMapper nodes = mock(CmsTopicNodeMapper.class);
         final CmsTopicChapterMapper chapters = mock(CmsTopicChapterMapper.class);
         final CmsMemberTemplateMapper templates = mock(CmsMemberTemplateMapper.class);
+        final ThemeStateKeyMapper keys = mock(ThemeStateKeyMapper.class);
         final CmsTopic topic = new CmsTopic();
         final TopicRoutePublicationCompiler compiler;
         Fixture() {
@@ -111,7 +168,10 @@ class TopicRoutePublicationCurrentReadTest {
             when(templates.selectCmsMemberTemplateByIdsForUpdate(Collections.singletonList(701L)))
                     .thenReturn(Collections.singletonList(current));
             when(templates.selectCmsMemberTemplateByIds(any())).thenReturn(Collections.singletonList(snapshot));
-            compiler = new TopicRoutePublicationCompiler(nodes, templates, chapters, null, Clock.systemUTC(),
+            when(keys.lockTopicForStateKeyWrite(10L)).thenReturn(10L);
+            when(keys.selectByTopicIdForUpdate(10L)).thenReturn(Collections.emptyList());
+            when(keys.selectByTopicId(10L)).thenReturn(Collections.emptyList());
+            compiler = new TopicRoutePublicationCompiler(nodes, templates, chapters, keys, Clock.systemUTC(),
                     new ObjectMapper(), new TopicRouteConfigValidator(), topics);
         }
     }

@@ -34,9 +34,8 @@ class TopicPublicationBindingMySqlIT {
                     restoreOnAnotherConnection(f, editor);
                     bundle.applyDecision(100L, 42L, submitted, true);
                     // No bundled-draft UPDATE repairs the old read view: this was already approved.
-                    String frozen = compiler(f).freezePublication(f.topics.selectCmsTopicByIdForUpdate(100L), null);
-                    assertEquals(1, f.topics.publishRouteSnapshot(100L, frozen, new java.util.Date()));
-                    return frozen;
+                    ((TopicPublicationService) f.get("topicPublicationService")).publishApprovedRouteSnapshot(100L);
+                    return f.topics.selectCmsTopicByIdForUpdate(100L).getPublishedRouteGraphJson();
                 });
                 assertEquals("A", answers(published).path("11").path("questionAnswer").asText());
                 assertEquals("A", answers(published).path("13").path("questionAnswer").asText());
@@ -156,6 +155,89 @@ class TopicPublicationBindingMySqlIT {
         }
     }
 
+    @Test
+    void declaredMetadataRestoredAfterAnOldReadViewUsesTheOriginalCurrentHashAndFreeze() throws Exception {
+        try (var f = fixture()) {
+            var keys = f.sql.getMapper(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class);
+            var writer = new com.chengyinhub.business.service.support.ThemeStateKeyService(keys);
+            var key = new com.chengyinhub.business.domain.ThemeStateKey();
+            key.setStateKey("counter.energy"); key.setKeyType("counter"); key.setScope("run"); key.setLabel("体力"); key.setInitialValue(3);
+            f.tx.executeWithoutResult(tx -> writer.register(100L, java.util.Collections.singletonList(key)));
+            String submitted = bundle(f).freezeForSubmission(100L, 42L).getSnapshotJson();
+            var changed = new com.chengyinhub.business.domain.ThemeStateKey(); changed.setLabel("体力"); changed.setInitialValue(4);
+            f.tx.executeWithoutResult(tx -> writer.updateDefinition(100L, "counter.energy", changed));
+            ExecutorService editor = Executors.newSingleThreadExecutor();
+            try {
+                String frozen = f.tx.execute(tx -> {
+                    assertEquals(4, keys.selectByTopicId(100L).get(0).getInitialValue());
+                    try {
+                        editor.submit(() -> f.tx.execute(other -> {
+                            var restored = new com.chengyinhub.business.domain.ThemeStateKey(); restored.setLabel("体力"); restored.setInitialValue(3);
+                            return writer.updateDefinition(100L, "counter.energy", restored);
+                        })).get(10, TimeUnit.SECONDS);
+                    } catch (Exception e) { throw new IllegalStateException(e); }
+                    bundle(f).applyDecision(100L, 42L, submitted, true);
+                    ((TopicPublicationService) f.get("topicPublicationService")).publishApprovedRouteSnapshot(100L);
+                    return f.topics.selectCmsTopicByIdForUpdate(100L).getPublishedRouteGraphJson();
+                });
+                JsonNode actual = JSON.readTree(frozen);
+                assertEquals(1, actual.path("stateKeySnapshotVersion").asInt());
+                assertEquals(3, actual.path("stateKeys").get(0).path("initialValue").asInt());
+                assertEquals(JSON.readTree(submitted).path("topic").path("content").path("stateKeyDeclarations"), actual.path("stateKeys"));
+                assertTrue(actual.path("stateKeys").get(0).path("minValue").isNull());
+            } finally {
+                editor.shutdownNow(); assertTrue(editor.awaitTermination(10, TimeUnit.SECONDS));
+            }
+        }
+    }
+
+    @Test
+    void declarationAddedAfterSubmissionRollsBackWithTheOriginalTransaction() throws Exception {
+        try (var f = fixture()) {
+            String submitted = bundle(f).freezeForSubmission(100L, 42L).getSnapshotJson();
+            var writer = new com.chengyinhub.business.service.support.ThemeStateKeyService(
+                    f.sql.getMapper(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class));
+            assertThrows(IllegalStateException.class, () -> f.tx.execute(tx -> {
+                var key = new com.chengyinhub.business.domain.ThemeStateKey();
+                key.setStateKey("clue.h_abcdef123456"); key.setKeyType("flag"); key.setScope("run"); key.setLabel("地图"); key.setInitialValue(0);
+                writer.register(100L, java.util.Collections.singletonList(key));
+                bundle(f).assertDeclarationsUnchanged(100L, submitted);
+                return true;
+            }));
+            assertEquals(0, f.db.queryForObject("select count(*) from theme_state_key where topic_id=100", Integer.class));
+            assertEquals(0L, f.db.queryForObject("select published_config_version from cms_topic where id=100", Long.class));
+        }
+    }
+
+    @Test
+    void directCreatedOrdinaryAndNonTemplateContentFreezeWithoutEnablingStateFeatures() throws Exception {
+        for (boolean withTemplate : new boolean[]{true, false}) {
+            try (var f = fixture()) {
+                if (!withTemplate) f.db.update("update cms_topic_node set template_id=null where topic_id=100");
+                TopicPublicationService publication = (TopicPublicationService) f.get("topicPublicationService");
+                assertEquals(1, f.tx.execute(tx -> publication.persistCreatedRouteSnapshot(100L)));
+                JsonNode frozen = JSON.readTree(f.topics.selectCmsTopicById(100L).getPublishedRouteGraphJson());
+                assertEquals(1, frozen.path("runtimeSnapshotVersion").asInt());
+                assertEquals(1, frozen.path("stateKeySnapshotVersion").asInt());
+                assertFalse(frozen.has("contentSnapshotOnly"));
+                assertTrue(frozen.path("journeyRules").has("checkEnabled"));
+                assertTrue(frozen.path("journeyRules").has("stateEnabled"));
+                assertFalse(frozen.path("journeyRules").path("checkEnabled").asBoolean());
+                assertFalse(frozen.path("journeyRules").path("stateEnabled").asBoolean());
+                assertTrue(frozen.path("themeConfig").path("gameplayRuntime").isMissingNode());
+                JsonNode answer = frozen.path("nodeAnswers").path("11");
+                assertEquals(1, answer.path("contentSnapshotVersion").asInt());
+                if (withTemplate) {
+                    assertEquals(701L, answer.path("templateId").asLong());
+                    assertEquals("A", answer.path("questionAnswer").asText());
+                } else {
+                    assertTrue(answer.path("templateId").isNull());
+                    assertTrue(answer.path("templatePresentation").isEmpty());
+                }
+            }
+        }
+    }
+
     private static TopicContentGraphMySqlFixture fixture() throws Exception {
         TopicContentGraphMySqlFixture f = new TopicContentGraphMySqlFixture();
         try {
@@ -173,10 +255,14 @@ class TopicPublicationBindingMySqlIT {
     }
 
     private static TopicBundleReviewService bundle(TopicContentGraphMySqlFixture f) {
-        return new TopicBundleReviewService(f.topics, f.chapters, f.nodes, f.templateMapper);
+        TopicBundleReviewService bundle = new TopicBundleReviewService(f.topics, f.chapters, f.nodes, f.templateMapper);
+        org.springframework.test.util.ReflectionTestUtils.setField(bundle, "themeStateKeyMapper",
+                f.sql.getMapper(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class));
+        return bundle;
     }
     private static TopicRoutePublicationCompiler compiler(TopicContentGraphMySqlFixture f) {
-        return new TopicRoutePublicationCompiler(f.nodes, f.templateMapper, f.chapters, null,
+        return new TopicRoutePublicationCompiler(f.nodes, f.templateMapper, f.chapters,
+                f.sql.getMapper(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class),
                 Clock.systemUTC(), JSON, new TopicRouteConfigValidator(), f.topics);
     }
     private static JsonNode answers(String snapshot) throws Exception {
