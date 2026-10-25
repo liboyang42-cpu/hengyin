@@ -34,9 +34,19 @@ function harness(file, method, transport, request, sharedStorage, sourceOverride
     const hm = scope.match(new RegExp('^( +)' + name + '(?:\\(|: function)', 'm'));
     if (!hm) continue;
     const hs = hm.index + hm[1].length;
-    const he = scope.indexOf('\n' + hm[1] + '}', hs);
-    assert.ok(he > hs);
-    body += scope.slice(hs, he + hm[1].length + 2).replace(new RegExp('^' + name), alias) + ',';
+    const lineEnd = scope.indexOf('\n', hs);
+    const firstLine = scope.slice(hs, lineEnd < 0 ? scope.length : lineEnd).trimEnd();
+    let row;
+    if (/\},?$/.test(firstLine)) {
+      // club onHide is a complete one-line member. Looking for the next indented
+      // closing brace would capture the following Page.data (and its date initializer).
+      row = firstLine.replace(/,$/, '');
+    } else {
+      const he = scope.indexOf('\n' + hm[1] + '}', hs);
+      assert.ok(he > hs);
+      row = scope.slice(hs, he + hm[1].length + 2);
+    }
+    body += row.replace(new RegExp('^' + name), alias) + ',';
   }
   const values = {};
   const storage = sharedStorage || { getStorageSync: key => values[key],
@@ -71,6 +81,27 @@ function harness(file, method, transport, request, sharedStorage, sourceOverride
     : owner[method](request.url + ':' + (request.data.code || ''), '核销中', request, r => messages.push(r.msg));
   return { owner, storage, requests, messages, invoke, dispose: () => { if (hook) owner[hook](); else if (owner._verificationWorkflow) { owner._verificationWorkflow.destroy(); owner._verificationWorkflow = null; } }, switchOwner: id => { memberId = id; }, advanceLogin: () => { app._featureFlagsEpoch = (app._featureFlagsEpoch || 0) + 1; }, deadline: () => deadline() };
 }
+
+test('club lifecycle extraction keeps the real inline or block onHide without evaluating Page.data', () => {
+  const file = 'pages/club/detail/index.js';
+  const source = fs.readFileSync(path.resolve(__dirname, '../..', file), 'utf8');
+  const inline = '  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; },';
+  const multiline = source.replace(inline,
+    '  onHide() {\n    this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;\n  },');
+  assert.notEqual(multiline, source, 'real club lifecycle anchor must remain explicit');
+  for (const original of [source, multiline]) {
+    const h = harness(file, 'submitClubScan', false, undefined, undefined, original);
+    assert.doesNotMatch(h.owner.pageHide.toString(), /localDateText|eventCalendarMonth|\bdata\s*:/);
+    h.owner.pageHide();
+    assert.equal(h.owner._loginContinuationEpoch, 1, 'execute the original account-generation invalidation');
+    h.invoke(); h.requests[0].fail({ errMsg: 'request:fail timeout' });
+    h.owner.pageHide(); h.invoke();
+    assert.equal(h.owner._loginContinuationEpoch, 2);
+    assert.equal(h.requests.length, 1, 'lifecycle assembly must retain the original UNKNOWN fence');
+    h.dispose();
+  }
+});
+
 for (const [file, method] of entries) {
   for (const [label, callback, response, status] of [
     ['丢包', 'fail', { errMsg: 'request:fail timeout' }],
