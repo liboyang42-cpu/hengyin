@@ -2,6 +2,7 @@ package com.chengyinhub.business.service.support;
 
 import com.chengyinhub.business.domain.dto.CoopSettlementCandidate;
 import com.chengyinhub.business.domain.dto.CoopSettlementOriginLine;
+import com.chengyinhub.business.domain.dto.CoopSettlementPlan;
 import com.chengyinhub.business.domain.dto.CoopSettlementSnapshot;
 import com.chengyinhub.common.constant.ProductType;
 
@@ -76,6 +77,43 @@ public final class CoopSettlementContract {
             return lines;
         }
         throw manualRepair("compensationMode 快照非法:" + snapshot.getCompensationMode());
+    }
+
+    /**
+     * Every plan comes from prepare's closed frozen window and current evidence read.
+     * A registration is both the existing claim fulfillment identity and the original
+     * sale range. Its scan/group-member/seat sources all belong to that registration;
+     * no amount or winner is chosen to hide overlapping originals for one beneficiary.
+     */
+    public static void requireIndependentOrderScopes(List<CoopSettlementPlan> plans) {
+        if (plans == null) throw manualRepair("ORDER_SCOPE_PLANS_REQUIRED");
+        java.util.Set<Long> orders = new java.util.HashSet<>();
+        Map<String, Map<Long, Long>> registrationsByBeneficiary = new LinkedHashMap<>();
+        for (CoopSettlementPlan plan : plans) {
+            CoopSettlementSnapshot snapshot = plan == null ? null : plan.getSnapshot();
+            requireSupportedCashPath(snapshot);
+            if (snapshot.getOrderId() == null || snapshot.getOrderId() <= 0
+                    || !orders.add(snapshot.getOrderId()) || plan.getOriginLines() == null
+                    || !("NONE".equals(plan.getRoute()) && "NONE".equals(snapshot.getCompensationMode())
+                        || "COOP_ORDER".equals(plan.getRoute()) && !"NONE".equals(snapshot.getCompensationMode())))
+                throw manualRepair("ORIGINAL_ORDER_SCOPE_IDENTITY_UNPROVEN");
+            String beneficiary = snapshot.getBeneficiaryRole() + ":" + snapshot.getBeneficiaryId();
+            Map<Long, Long> occupied = registrationsByBeneficiary.computeIfAbsent(beneficiary, ignored -> new TreeMap<>());
+            java.util.Set<Long> local = new java.util.HashSet<>();
+            for (CoopSettlementOriginLine line : plan.getOriginLines()) {
+                if (line == null || line.getRegistrationId() == null || line.getRegistrationId() <= 0
+                        || !local.add(line.getRegistrationId()) || line.getOriginAmount() == null
+                        || line.getOriginAmount().signum() < 0 || line.getEligibleSalesSnapshot() == null
+                        || line.getEligibleSalesSnapshot().signum() < 0
+                        || "NONE".equals(plan.getRoute()) && line.getOriginAmount().signum() != 0)
+                    throw manualRepair("ORIGINAL_ORDER_SALES_OR_FULFILLMENT_SCOPE_UNPROVEN");
+                requireHeaderEquality(snapshot, line);
+                Long previous = occupied.putIfAbsent(line.getRegistrationId(), snapshot.getOrderId());
+                if (previous != null)
+                    throw manualRepair("ORIGINAL_ORDER_SCOPE_OVERLAP:orders=" + previous + "," + snapshot.getOrderId()
+                            + ":registration=" + line.getRegistrationId());
+            }
+        }
     }
 
     public static BigDecimal sumOrigin(List<CoopSettlementOriginLine> lines) {

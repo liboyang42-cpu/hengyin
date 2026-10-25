@@ -12,6 +12,7 @@ import com.chengyinhub.business.domain.dto.ChapterBlockDTO;
 import com.chengyinhub.business.domain.dto.CmsTopicCreateDTO;
 import com.chengyinhub.business.domain.dto.CoopGroupSettlementBasis;
 import com.chengyinhub.business.domain.dto.CoopSettlementPlan;
+import com.chengyinhub.business.domain.dto.CoopSettlementOriginLine;
 import com.chengyinhub.business.domain.dto.NodeDTO;
 import com.chengyinhub.business.domain.dto.TopicCreateDTO;
 import com.chengyinhub.business.domain.dto.TopicProductTypeResolver;
@@ -857,35 +858,28 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         Map<CoopSettlement, CoopSettlementPlan> claimedOriginPlans = new IdentityHashMap<>();
         // 固定本轮有效合作单列表，逐单按冻结合同准备履约计划。
         List<CoopOrder> effectiveOrders = coopOrderMapper.selectEffectiveOrdersByTopicId(topic.getId());
-        // [资损·重复计数] 同一受款方本轮只结一次。
-        //
-        // 循环是按**每张 coop_order** 走的,而商家基数
-        // selectVerifiedHeadsByTopicAndMerchant / merchantVerifiedSales 只按 (topic, merchant) 聚合 ——
-        // 同一商家若有多张生效合作单(多节点各发一次邀约即可产生;DDL 的唯一键只覆盖
-        // reg_id 非空的行,邀约单 reg_id=NULL 不入键),就会**把同一份销售额算 N 遍**,
-        // 各生成一条 MERCHANT_VERIFY。这与 2026-08-07 修的核销双付是同一类病:
-        // 「一个受款方在一个主题里有多个收款依据」。
-        //
-        // 在基数改成按单/按节点分摊之前,这里先按受款方去重止血 —— 宁可少结不可多结:
-        // 多结是真金白银出去且事后难追回,少结有对账和人工补的余地。
-        java.util.Set<String> settledPayees = new java.util.HashSet<>();
-        for (CoopOrder o : effectiveOrders) {
-            if (coopSettlementMapper.countByOrderId(o.getId()) > 0) continue; // 防重复挂单
-            String payeeKey = o.getToType() + "#" + o.getToId();
-            if (!settledPayees.add(payeeKey)) {
-                logger.error("【结算去重告警】同一受款方在本主题有多张生效合作单,已跳过后续单据 "
-                        + "topicId={} coopOrderId={} toType={} toId={} —— "
-                        + "基数按 (topic,payee) 聚合,不跳过会把同一份销售额重复结算",
-                        topic.getId(), o.getId(), o.getToType(), o.getToId());
-                continue;
-            }
-            boolean isClub = "club".equals(o.getToType());
-            CoopSettlementPlan claimPlan = coopSettlementClaimService.prepare(o, now);
-            if (claimPlan == null) throw new IllegalStateException("MANUAL_REPAIR:COOP_CLAIM_PLAN_REQUIRED");
-            if (!topic.getId().equals(claimPlan.getSnapshot().getTopicId()) || topic.getMemberId() == null
-                    || !topic.getMemberId().equals(claimPlan.getSnapshot().getInitiatorMemberId())) {
+        // Prepare every frozen original before choosing any economic write. A zero/NONE
+        // contract must not reserve a payee key and silently discard a later paid order.
+        if (effectiveOrders == null) throw new IllegalStateException("MANUAL_REPAIR:EFFECTIVE_COOP_ORDERS_REQUIRED");
+        Map<Long, CoopSettlementPlan> plansByOrder = new LinkedHashMap<>();
+        for (CoopOrder order : effectiveOrders) {
+            CoopSettlementPlan plan = coopSettlementClaimService.prepare(order, now);
+            if (plan == null || plan.getSnapshot() == null || order == null || order.getId() == null
+                    || !order.getId().equals(plan.getSnapshot().getOrderId()))
+                throw new IllegalStateException("MANUAL_REPAIR:COOP_CLAIM_PLAN_IDENTITY_CONFLICT");
+            if (!topic.getId().equals(plan.getSnapshot().getTopicId()) || topic.getMemberId() == null
+                    || !topic.getMemberId().equals(plan.getSnapshot().getInitiatorMemberId()))
                 throw new IllegalStateException("MANUAL_REPAIR:TOPIC_INITIATOR_SNAPSHOT_CONFLICT");
-            }
+            if (plansByOrder.putIfAbsent(order.getId(), plan) != null)
+                throw new IllegalStateException("MANUAL_REPAIR:DUPLICATE_EFFECTIVE_COOP_ORDER");
+        }
+        com.chengyinhub.business.service.support.CoopSettlementContract.requireIndependentOrderScopes(
+                new ArrayList<>(plansByOrder.values()));
+        Set<Long> verifiedMerchantPayees = new HashSet<>();
+        for (CoopOrder o : effectiveOrders) {
+            CoopSettlementPlan claimPlan = plansByOrder.get(o.getId());
+            if (coopSettlementMapper.countByOrderId(o.getId()) > 0) continue; // Already validated, never silently exempt a contract.
+            boolean isClub = "club".equals(o.getToType());
             if ("NONE".equals(claimPlan.getRoute())) {
                 noneClaimPlans.add(claimPlan);
                 continue;
@@ -902,7 +896,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             }
             // 快照与金额同口径,否则对账时「记着全主题 100 人头却只拿 0」对不上
             CoopSettlement s = newSettlementLine(topic, payee, amount, isClub ? "LEAD_FEE" : "MERCHANT_VERIFY",
-                    isClub ? "club" : "merchant", 0, payable, now, orderHeads, orderSales, verifiedRegIds);
+                    isClub ? "club" : "merchant", 0, payable, now, orderHeads, orderSales,
+                    joinVerifiedRegIds(claimPlan.getOriginLines().stream().map(CoopSettlementOriginLine::getRegistrationId).toList()));
             s.setCoopOrderId(o.getId());
             if ("SALES_PERCENT".equals(claimPlan.getSnapshot().getCompensationMode())) {
                 s.setShareMode(1);
@@ -914,7 +909,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             pending.add(s);
             claimedOriginPlans.put(s, claimPlan);
             merchantTotal = merchantTotal.add(amount);
-            if (!isClub && amount.compareTo(BigDecimal.ZERO) > 0) verifiedMerchantCount++; // 有真实核销的被邀商家(+2% 激活)
+            if (!isClub && amount.compareTo(BigDecimal.ZERO) > 0) verifiedMerchantPayees.add(payee);
+            verifiedMerchantCount = verifiedMerchantPayees.size(); // +2% remains per merchant, not per original order.
         }
 
         // 发起人保底 = 销售额 × (5% + 2%×有核销商家数,封顶 15%);发起人毛利 = 残差(定价赚的钱)。
@@ -1015,7 +1011,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         for (CoopOrder order : orders) {
             CoopSettlementPlan plan = coopSettlementClaimService.prepare(order, now);
             if (plan == null) throw new IllegalStateException("MANUAL_REPAIR:COOP_CLAIM_PLAN_REQUIRED");
-            if (!topic.getId().equals(plan.getSnapshot().getTopicId()) || topic.getMemberId() == null
+            if (plan.getSnapshot() == null || !order.getId().equals(plan.getSnapshot().getOrderId())
+                    || !topic.getId().equals(plan.getSnapshot().getTopicId()) || topic.getMemberId() == null
                     || !topic.getMemberId().equals(plan.getSnapshot().getInitiatorMemberId())) {
                 throw new IllegalStateException("MANUAL_REPAIR:TOPIC_INITIATOR_SNAPSHOT_CONFLICT");
             }
@@ -1024,6 +1021,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             }
             plans.add(plan);
         }
+        com.chengyinhub.business.service.support.CoopSettlementContract.requireIndependentOrderScopes(plans);
         for (CoopSettlementPlan plan : plans) coopSettlementClaimService.persist(plan, null);
     }
 
