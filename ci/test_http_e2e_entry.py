@@ -250,11 +250,42 @@ def failure_summary(paths, source):
         cleanup = receipt.get('cleanup', {})
         if not isinstance(cleanup, dict):
             cleanup = {}
-        receipts.append(dict(identity, state='FAIL', diagnostic=safe_receipt_diagnostic(receipt.get('diagnostic')),
-                             cleanup={key: cleanup.get(key) if type(cleanup.get(key)) is bool else None
-                                      for key in ('mysqlAbsent', 'redisStoppedAndPortFree')}))
+        try:
+            validate_final(receipt, source)
+            state = 'PASS'
+        except ValueError:
+            state = 'FAIL' if receipt.get('state') == 'FAIL' else 'INVALID' if receipt.get('state') == 'PASS' else 'UNKNOWN'
+        projected = dict(identity, state=state, diagnostic=safe_receipt_diagnostic(receipt.get('diagnostic')),
+                         cleanup={key: cleanup.get(key) if type(cleanup.get(key)) is bool else None
+                                  for key in ('mysqlAbsent', 'redisStoppedAndPortFree')})
+        if state == 'PASS':
+            projected.update(tests=receipt['tests'], xmlVerified=True, fixtureReportVerified=True, javaExit=0)
+        receipts.append(projected)
     return {'sourceSha': source, 'state': 'FAIL_HTTP_FIXTURE_ONLY', 'receipts': receipts,
             'missingClasses': sorted(set(EXPECTED) - seen), 'businessAccepted': False, 'migrationAccepted': False}
+
+
+def reviewed_case_call_frame(simple, canonical, trace, source):
+    # Only the existing reviewed Java test layout; unfamiliar layout stays unlocated.
+    if simple not in EXPECTED or canonical not in set(reviewed_case_identities(simple).values()):
+        return None
+    method = canonical.split('(', 1)[0]
+    declarations = list(re.finditer(r'(?m)^([ \t]+)(?:@Test(?:\s+@Order\([1-9][0-9]*\))?\s+)?void\s+'
+                                    + re.escape(method) + r'\([^)]*\)[^{\n]*\{[ \t]*$', source))
+    if len(declarations) != 1:
+        return None
+    declaration = declarations[0]
+    closing = re.search(r'(?m)^' + re.escape(declaration.group(1)) + r'\}[ \t]*$', source[declaration.end():])
+    if closing is None:
+        return None
+    first = source.count('\n', 0, declaration.start()) + 1
+    last = source.count('\n', 0, declaration.end() + closing.start()) + 1
+    pattern = (r'\bat ' + re.escape(PACKAGE + simple + '.' + method) + r'\('
+               + re.escape(simple + '.java') + r':([0-9]{1,7})\)')
+    for line in re.findall(pattern, trace):
+        if first <= int(line) <= last:
+            return simple + '.java:' + str(int(line))
+    return None
 
 
 def safe_diagnostic(report_path, stage, exit_code, java_exit):
@@ -407,7 +438,7 @@ def cli():
                                                errorNodeCount=sum(len(case.findall('error')) for case in cases),
                                                retryNodeCount=sum(len(case.findall(tag)) for case in cases
                                                                   for tag in ('rerunFailure', 'rerunError', 'flakyFailure', 'flakyError')))
-                                methods, codes, case_categories, case_frames = [], set(), {}, {}
+                                methods, codes, case_categories, case_frames, case_calls = [], set(), {}, {}, {}
                                 for case in cases:
                                     errors = case.findall('failure') + case.findall('error')
                                     method = case.get('name', '')
@@ -419,6 +450,10 @@ def cli():
                                             text = error.get('message', '') + '\n' + (error.text or '')
                                             categories.update(fixed_http_failure_categories(text))
                                             codes.update(int(code) for code in re.findall(r'"code"\s*:\s*([1-5][0-9]{2}|601)(?=\s*[,}])', text))
+                                        call_frame = reviewed_case_call_frame(n, known_cases[method],
+                                                                            '\n'.join(error.text or '' for error in errors), source)
+                                        if call_frame:
+                                            case_calls[known_cases[method]] = call_frame
                                         for error in errors:
                                             frames = []
                                             for filename, line in re.findall(r'\bat com\.chengyinhub\.[A-Za-z0-9_.$]+\(([A-Za-z_$][A-Za-z0-9_$]*\.java):([0-9]{1,7})\)', error.text or ''):
@@ -428,14 +463,18 @@ def cli():
                                                         frames.append(frame)
                                                     if len(frames) == 2:
                                                         break
+                                            if call_frame and call_frame not in frames:
+                                                frames.append(call_frame)
                                             if frames:
                                                 case_frames.setdefault(known_cases[method], frames)
                                                 if 'sourceFrame' not in failure:
                                                     failure['sourceFrame'] = frames[0]
-                                                    if len(frames) == 2:
+                                                    if len(frames) >= 2:
                                                         failure['callerFrame'] = frames[1]
                                                 break
                                 failure['caseSourceFrames'] = dict(sorted(case_frames.items()))
+                                if case_calls:
+                                    failure['caseCallFrames'] = dict(sorted(case_calls.items()))
                                 failure['failedMethods'] = list(dict.fromkeys(methods))[:EXPECTED[n]]
                                 failure['responseCodes'] = sorted(codes)
                                 failure['caseMessageCategories'] = {case: sorted(categories) for case, categories in sorted(case_categories.items())}
@@ -1111,6 +1150,119 @@ class BeforeVerifyFailureReceiptTest(unittest.TestCase):
             actual = json.loads((public / 'receipt.json').read_text())
             self.assertEqual('FAIL', actual['state']); self.assertEqual(1, actual['originalExit'])
             with self.assertRaises(ValueError): validate_final(actual)
+
+
+class MixedSummaryAndCaseFrameTest(unittest.TestCase):
+    marker = 'SYNTHETIC_PRIVATE_NEVER_PUBLISH'
+
+    def passed(self, simple):
+        return {'classes': [simple], 'sourceSha': 'a' * 40, 'profile': 'github-hosted',
+                'database': 'cy_e2e_w1_http_123_456', 'state': 'PASS', 'javaExit': 0,
+                'fixtureReportVerified': True, 'xmlVerified': True, 'tests': EXPECTED[simple],
+                'cleanup': {'mysqlAbsent': True, 'redisStoppedAndPortFree': True}}
+
+    def test_mixed_two_strict_pass_and_one_fail_preserves_each_state_but_summary_cli_fails(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d); paths = []
+            for simple in EXPECTED:
+                receipt = self.passed(simple)
+                if simple == 'GenericGameplayHttpE2eIT':
+                    receipt.update(state='FAIL', javaExit=1, xmlVerified=False,
+                                   diagnostic={'stage': 'xml-verify', 'javaExit': 1, 'exitCode': 1})
+                path = root / simple / 'receipt.json'; path.parent.mkdir(); path.write_text(json.dumps(receipt)); paths.append(path)
+            result = failure_summary(paths, 'a' * 40)
+            self.assertEqual('FAIL_HTTP_FIXTURE_ONLY', result['state'])
+            by_class = {r['classes'][0]: r for r in result['receipts']}
+            self.assertEqual({'GenericGameplayHttpE2eIT': 'FAIL', 'FreezeGameHttpE2eIT': 'PASS',
+                              'FreezeReuseThemeHttpE2eIT': 'PASS'}, {n: r['state'] for n, r in by_class.items()})
+            self.assertNotIn('tests', by_class['GenericGameplayHttpE2eIT'])
+            self.assertEqual(8, by_class['FreezeGameHttpE2eIT']['tests'])
+            self.assertEqual(2, by_class['FreezeReuseThemeHttpE2eIT']['tests'])
+            for n in ('FreezeGameHttpE2eIT', 'FreezeReuseThemeHttpE2eIT'):
+                self.assertTrue(by_class[n]['xmlVerified']); self.assertTrue(by_class[n]['fixtureReportVerified'])
+            output = root / 'summary.json'
+            run = subprocess.run([sys.executable, str(ROOT / 'ci/test_http_e2e_entry.py'), 'summarize',
+                                  '--receipts', str(root), '--source', 'a' * 40, '--output', str(output)],
+                                 capture_output=True, text=True, timeout=10)
+            self.assertNotEqual(0, run.returncode)
+            actual = json.loads(output.read_text())
+            # rglob order is not a class identity; compare every field after ordering by class.
+            for value in (result, actual):
+                value['receipts'] = sorted(value['receipts'], key=lambda r: r['classes'])
+            self.assertEqual(result, actual)
+
+    def test_fake_pass_foreign_duplicate_and_unknown_metadata_never_gain_pass(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = pathlib.Path(d) / 'receipt.json'; base = self.passed('FreezeReuseThemeHttpE2eIT')
+            for field in ('fixtureReportVerified', 'xmlVerified', 'tests', 'javaExit', 'cleanup'):
+                with self.subTest(field=field):
+                    receipt = dict(base); receipt.pop(field); path.write_text(json.dumps(receipt))
+                    item = failure_summary([path], 'a' * 40)['receipts'][0]
+                    self.assertEqual('INVALID', item['state']); self.assertNotIn('tests', item)
+            for change in ({'sourceSha': 'b' * 40}, {'classes': ['UnknownTest']},
+                           {'classes': ['FreezeReuseThemeHttpE2eIT'] * 2}, {'profile': 'vps'}):
+                path.write_text(json.dumps(dict(base, **change)))
+                with self.assertRaises(ValueError): failure_summary([path], 'a' * 40)
+            receipt = dict(base, state=self.marker, token=self.marker, diagnostic={'message': self.marker})
+            path.write_text(json.dumps(receipt)); result = failure_summary([path], 'a' * 40)
+            self.assertEqual('UNKNOWN', result['receipts'][0]['state'])
+            self.assertNotIn(self.marker, json.dumps(result))
+            path.write_text(json.dumps(base))
+            with self.assertRaises(ValueError): failure_summary([path, path], 'a' * 40)
+
+    def test_actual_case_frame_survives_two_helpers_in_safe_failed_xml_projection(self):
+        simple = 'GenericGameplayHttpE2eIT'
+        method = 'realHttpUsesTheProductionControllerAndRejectsAnonymousState'
+        source = (ROOT / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it' / (simple + '.java')).read_text()
+        line = source[:source.index('@Test void ' + method)].count('\n') + 2
+        helpers = [source[:source.index('assertEquals(200, response.path("code").asInt()')].count('\n') + 1,
+                   source[:source.index('private JsonNode success(JsonNode response)')].count('\n') + 1]
+        frame = simple + '.java:' + str(line)
+        trace = self.marker + ''.join('\n at ' + PACKAGE + simple + '.' + name + '(' + simple + '.java:' + str(number) + ')'
+                                      for name, number in [('appliedResponseData', helpers[0]), ('success', helpers[1]),
+                                                           (method, line)])
+        trace += '\n at com.chengyinhub.' + self.marker + '.leak(' + self.marker + '.java:1)'
+        self.assertEqual(frame, reviewed_case_call_frame(simple, method, trace, source))
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d); reports = root / 'reports'; reports.mkdir(); public = root / 'public'
+            schema = root / 'schema.json'; files = [{'path': 'fixture_' + str(i)} for i in range(101)]
+            schema.write_text(json.dumps({'mode': 'SUCCEEDED', 'database': 'cy_e2e_w1_http_123_456',
+                                          'files': files, 'completed': [r['path'] for r in files]}))
+            xml = HttpReceiptTest().sample(simple); xml.set('failures', '1')
+            case = next(c for c in xml.findall('testcase') if c.get('name') == method)
+            ET.SubElement(case, 'failure', message=json.dumps({'code': 500, 'msg': self.marker})).text = trace
+            ET.ElementTree(xml).write(reports / ('TEST-' + PACKAGE + simple + '.xml'))
+            env = dict(os.environ, SOURCE_SHA='a' * 40, CHENGYIN_HTTP_E2E_PROFILE='github-hosted',
+                       CHENGYIN_HTTP_E2E_DATABASE='cy_e2e_w1_http_123_456', CHENGYIN_HTTP_E2E_SCHEMA_REPORT=str(schema))
+            run = subprocess.run([sys.executable, str(ROOT / 'ci/test_http_e2e_entry.py'), 'verify', '--classes', simple,
+                                  '--reports', str(reports), '--output', str(public)], env=env,
+                                 capture_output=True, text=True, timeout=10)
+            self.assertNotEqual(0, run.returncode)
+            failure = json.loads((public / 'xml-failure.json').read_text())
+            self.assertEqual({method: frame}, failure['caseCallFrames'])
+            self.assertEqual([simple + '.java:' + str(n) for n in helpers] + [frame], failure['caseSourceFrames'][method])
+            self.assertEqual(simple + '.java:' + str(helpers[0]), failure['sourceFrame'])
+            self.assertEqual(simple + '.java:' + str(helpers[1]), failure['callerFrame'])
+            self.assertEqual(['UNKNOWN'], failure['messageCategories'])
+            self.assertEqual([500], failure['responseCodes']); self.assertEqual(26, failure['testcaseCount'])
+            self.assertNotIn(self.marker, json.dumps(failure) + run.stderr + run.stdout)
+            self.assertFalse((public / ('TEST-' + PACKAGE + simple + '.xml')).exists())
+
+    def test_case_frames_require_reviewed_method_exact_class_and_local_source_span(self):
+        simple = 'GenericGameplayHttpE2eIT'; canonical = 'r5HttpTypeInUnlimitedAndTimerDeadlineSurviveReentry(boolean)[1]'
+        method = canonical.split('(', 1)[0]
+        source = (ROOT / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it' / (simple + '.java')).read_text()
+        line = source[:source.index('void ' + method + '(')].count('\n') + 2
+        def frame(name=method, number=line, owner=PACKAGE + simple, filename=simple + '.java'):
+            return ' at ' + owner + '.' + name + '(' + filename + ':' + str(number) + ')'
+        self.assertEqual(simple + '.java:' + str(line), reviewed_case_call_frame(simple, canonical, frame(), source))
+        for trace in [frame(number=279), frame(number=len(source.splitlines())), frame(number=9999999),
+                      frame(owner='com.chengyinhub.external.' + simple), frame(name='success'), frame(filename='Unknown.java')]:
+            with self.subTest(trace=trace): self.assertIsNone(reviewed_case_call_frame(simple, canonical, trace, source))
+        self.assertIsNone(reviewed_case_call_frame(simple, 'unknownMethod', frame(), source))
+        # Unsupported formatting cannot be taken as a source span proof.
+        changed = source.replace('void ' + method + '(', 'public void ' + method + '(')
+        self.assertIsNone(reviewed_case_call_frame(simple, canonical, frame(), changed))
 
 
 class ProfileTest(unittest.TestCase):
