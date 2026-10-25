@@ -1,5 +1,7 @@
 """SOURCE ONLY: pure controls; no Docker, HTTP, database or provider execution."""
 import copy
+import datetime
+import decimal
 import importlib.util
 import json
 import tempfile
@@ -236,6 +238,10 @@ class GameplayProfileControls(unittest.TestCase):
                            for suffix, obj in zip(("mysql", "redis"), objects[1:])})
         binding["boot"] = {key: binding[key] for key in ("sourceSha", "jarSha256", "childClassSha256", "configSha256")}
         binding["boot"].update(bootId="12345678-1234-1234-1234-123456789abc", javaPid=21, port=8080)
+        binding["actorProof"] = {"schema": "owned-schema", "serverUuid": "owned-uuid", "seedBootId": "original-seed",
+            "identitiesSha256": "b" * 64, "columns": ["id"], "rowsSha256": "b" * 64,
+            "authority": {}, "actors": {label: {"memberId": member, "tokenSha256": "b" * 64, "rowSha256": "b" * 64}
+                       for label, member in (("a", 7), ("b", 8))}}
         return objects, binding
 
     def admission(self):
@@ -321,6 +327,10 @@ class GameplayProfileControls(unittest.TestCase):
             binding["configSha256"] = probe.file_digest(config_file)["sha256"]
             binding["boot"].update({key: binding[key] for key in ("jarSha256", "childClassSha256", "configSha256")})
             put("private/gameplay/ready.json", json.dumps(binding["boot"]).encode(), "/recovery-private/ready.json")
+            identities_file = put("private/gameplay/identities.json", json.dumps({
+                "a": {"memberId": 7, "token": "aaa.bbb.ccc"}, "b": {"memberId": 8, "token": "ddd.eee.fff"}}).encode(),
+                "/recovery-private/identities.json")
+            binding["actorProof"]["identitiesSha256"] = probe.file_digest(identities_file)["sha256"]
             objects[0]["Mounts"] = [{"Type": "bind", "Destination": target, "Source": str(path), "RW": writable}
                 for target, path, writable in (("/application.jar", jar, False), ("/fixture", properties.parent, False),
                     ("/recovery-testclasses", out / "gameplay-child-classes", False), ("/recovery-private", private, True))]
@@ -343,7 +353,7 @@ class GameplayProfileControls(unittest.TestCase):
                 self.assertEqual("GAMEPLAY_PROCESS_RECOVERY", evidence["entry"])
                 self.assertEqual(binding["configSha256"], evidence["configSha256"])
                 self.assertNotIn("private-config-canary", json.dumps(evidence))
-                for path in (jar, properties, source, config_file,
+                for path in (jar, properties, source, config_file, identities_file,
                              root / ("chengyinhub-admin/target/test-classes/" + probe.GAMEPLAY_CHILD_PATH + ".class")):
                     original = path.read_bytes(); path.write_bytes(original + b" changed")
                     try:
@@ -399,6 +409,135 @@ class GameplayProfileControls(unittest.TestCase):
                     "--spring.config.location=file:/fixture/application.properties"]
                 with self.assertRaisesRegex(RuntimeError, "wrong original application entry"):
                     subject.application_profile(objects, 21)
+
+
+class GameplayNoCashActorControls(unittest.TestCase):
+    """Synthetic row/protocol controls, not proof of an executed member insert or SQL admission."""
+    def facts(self):
+        identities = {label: {"memberId": member, "token": label + "aa.bbb.ccc"}
+                      for label, member in (("a", 990005), ("b", 990006))}
+        records = []
+        for index, label in enumerate(("a", "b")):
+            records.append({"id": identities[label]["memberId"], "phone": "13800000" + ("901" if index == 0 else "902"),
+                "nickname": "进程恢复夹具" + str(index), "wx_open_id": "recovery-12345678-1234-1234-1234-123456789abc",
+                "password": "", "app_open_id": None, "union_id": None, "apple_id": None,
+                "role": "player", "user_type": 1, "status": 1, "del_flag": 0, "level_id": 0,
+                "balance": decimal.Decimal("0.00"), "point": 0, "freeze_end_time": None,
+                "deregister_status": "NORMAL", "deregister_apply_time": None, "deregister_execute_after": None,
+                "login_time": datetime.datetime(2026, 10, 25, 12, 0), "avatar": "", "update_time": None})
+        columns = list(records[0])
+        rows = [tuple(record[column] for column in columns) for record in records]
+        authority = {table: {"rows": 1, "sha256": "b" * 64, "ddlSha256": "c" * 64}
+                     for table in probe.AUTHORITY_TABLES}
+        authority["accountCredentials"] = "d" * 64
+        return identities, columns, rows, authority
+
+    def test_only_exact_original_source_seeded_players_have_zero_cash_proof(self):
+        identities, columns, rows, authority = self.facts()
+        proof = probe.gameplay_actor_proof(identities, columns, rows, "schema", "uuid", "seed-boot", "a" * 64, authority)
+        self.assertEqual({990005, 990006}, {actor["memberId"] for actor in proof["actors"].values()})
+        self.assertNotIn("13800000", json.dumps(proof))
+        self.assertNotIn("aaa.bbb.ccc", json.dumps(proof))
+        changes = (("balance", decimal.Decimal("0.01")), ("balance", None), ("balance", "0.00"),
+                   ("point", 1), ("point", None), ("point", False), ("role", "merchant"), ("user_type", 2),
+                   ("level_id", 1), ("status", 2), ("del_flag", 2), ("deregister_status", "PENDING"),
+                   ("freeze_end_time", datetime.datetime(2026, 10, 26)), ("phone", "13800000999"),
+                   ("nickname", "foreign"), ("wx_open_id", "foreign-openid"), ("password", "injected"),
+                   ("app_open_id", "linked"), ("login_time", None))
+        for field, value in changes:
+            changed = [list(row) for row in rows]; changed[0][columns.index(field)] = value
+            with self.subTest(field=field, value=value), self.assertRaises(probe.NoCashFixtureError):
+                probe.gameplay_actor_proof(identities, columns, changed, "schema", "uuid", "seed-boot", "a" * 64, authority)
+        for changed in ([], rows[:1], rows + [rows[0]], [rows[0], rows[0]]):
+            with self.subTest(rows=len(changed)), self.assertRaises(probe.NoCashFixtureError):
+                probe.gameplay_actor_proof(identities, columns, changed, "schema", "uuid", "seed-boot", "a" * 64, authority)
+        foreign = copy.deepcopy(identities); foreign["a"]["memberId"] = 77
+        with self.assertRaises(probe.NoCashFixtureError):
+            probe.gameplay_actor_proof(foreign, columns, rows, "schema", "uuid", "seed-boot", "a" * 64, authority)
+        self.assertNotEqual(probe.member_rows_digest(columns, rows),
+            probe.member_rows_digest(columns, [tuple(str(value) if isinstance(value, decimal.Decimal) else value for value in row) for row in rows]))
+
+    def test_admission_rereads_original_full_rows_authority_and_every_empty_economic_store(self):
+        identities, columns, rows, authority = self.facts()
+        objects, binding = GameplayProfileControls().profile()
+        with tempfile.TemporaryDirectory() as directory, GameplayProfileControls().admission():
+            private = Path(directory).resolve() / "gameplay"; private.mkdir()
+            path = private / "identities.json"; path.write_text(json.dumps(identities)); path.chmod(0o600)
+            proof = probe.gameplay_actor_proof(identities, columns, rows, "schema", "uuid", "seed-boot",
+                                              probe.file_digest(path)["sha256"], authority)
+            binding["actorProof"] = proof
+            subject = object.__new__(probe.Probe)
+            subject.gameplay_binding, subject.objects = binding, objects
+            subject.private, subject.schema, subject.saved = private.parent / "credentials.json", "schema", {"serverUuid": "uuid"}
+            subject.member_columns, subject.member_rows = columns, rows
+            subject.rows = mock.Mock(return_value=[(0,)])
+            protected = {table: {"rows": 0, "sha256": "b" * 64, "ddlSha256": "c" * 64}
+                         for table in probe.auth.FINANCIAL_TABLES + probe.GAMEPLAY_EMPTY_TABLES}
+            protected["ums_member"]["rows"] = 2; protected.update(copy.deepcopy(authority))
+            subject.require_gameplay_no_cash(protected)
+            subject.rows.assert_called_with("SELECT COUNT(*) FROM refund_application")
+            for table in tuple(table for table in probe.auth.FINANCIAL_TABLES if table != "ums_member") + probe.GAMEPLAY_EMPTY_TABLES:
+                changed = copy.deepcopy(protected); changed[table]["rows"] = 1
+                with self.subTest(table=table), self.assertRaisesRegex(probe.NoCashFixtureError, "GAMEPLAY_UNEXPECTED_ECONOMIC_ROWS"):
+                    subject.require_gameplay_no_cash(changed)
+            for table in probe.AUTHORITY_TABLES + ("accountCredentials",):
+                changed = copy.deepcopy(protected)
+                if table == "accountCredentials": changed[table] = "f" * 64
+                else: changed[table]["sha256"] = "f" * 64
+                with self.subTest(authority=table), self.assertRaisesRegex(probe.NoCashFixtureError, "GAMEPLAY_ORIGINAL_AUTHORITY_CHANGED"):
+                    subject.require_gameplay_no_cash(changed)
+            changed_rows = [list(row) for row in rows]; changed_rows[0][columns.index("avatar")] = "late author mutation"
+            subject.member_rows = changed_rows
+            with self.assertRaisesRegex(probe.NoCashFixtureError, "GAMEPLAY_ORIGINAL_MEMBER_FACT_CHANGED"):
+                subject.require_gameplay_no_cash(protected)
+            subject.member_rows = rows
+            for field, value in (("schema", "foreign"), ("serverUuid", "foreign")):
+                old = proof[field]; proof[field] = value
+                try:
+                    with self.subTest(scope=field), self.assertRaises(probe.NoCashFixtureError):
+                        subject.require_gameplay_no_cash(protected)
+                finally: proof[field] = old
+            original = path.read_bytes(); altered = copy.deepcopy(identities); altered["a"]["token"] = "late.bbb.ccc"
+            path.write_text(json.dumps(altered))
+            with self.assertRaises(probe.NoCashFixtureError): subject.require_gameplay_no_cash(protected)
+            path.write_bytes(original)
+            subject.rows.return_value = [(1,)]
+            with self.assertRaisesRegex(probe.NoCashFixtureError, "GAMEPLAY_REFUND_FIXTURE_NOT_EMPTY"):
+                subject.require_gameplay_no_cash(protected)
+
+    def test_default_still_rejects_two_gameplay_members_and_saves_safe_first_failure(self):
+        subject = mock.Mock()
+        subject.gameplay_binding, subject.holder, subject.pause_intent = None, None, False
+        protected = {table: {"rows": 0, "sha256": "b" * 64} for table in probe.auth.FINANCIAL_TABLES}
+        protected["ums_member"]["rows"] = 2
+        subject.protected.return_value = protected
+        written = []
+        with mock.patch.object(probe, "Probe", return_value=subject), mock.patch.object(probe.auth, "write_report",
+                side_effect=lambda out, name, value: written.append(copy.deepcopy(value))):
+            with self.assertRaisesRegex(RuntimeError, "financial fixture not empty; no cash workload permitted"):
+                probe.observe("owned", "schema", Path("unused"), Path("unused"), 1234)
+        subject.curves.assert_not_called(); subject.mixed.assert_not_called()
+        self.assertEqual(protected, written[-1]["protectedBefore"])
+        self.assertEqual("DEFAULT_FINANCIAL_NOT_EMPTY", written[-1]["firstFailure"]["reasonCode"])
+        self.assertEqual(["ums_member"], written[-1]["firstFailure"]["tables"])
+        self.assertEqual("FAIL_PARTIAL", written[-1]["result"])
+
+    def test_finalization_retains_business_admission_code_before_cleanup_failure(self):
+        first = {"type": "NoCashFixtureError", "reasonCode": "GAMEPLAY_MEMBER_POINTS_NOT_ZERO", "tables": ["ums_member"]}
+        report = {"result": "FAIL_PARTIAL", "firstFailure": first, "protectedBefore": {
+            "ums_member": {"rows": 2, "sha256": "b" * 64}}}
+        path = mock.Mock(); path.read_text.return_value = json.dumps(report)
+        out = mock.Mock(); out.__truediv__ = mock.Mock(return_value=path)
+        written = []
+        with mock.patch.object(probe, "source_identity", return_value={}), \
+                mock.patch.object(probe.auth, "write_report", side_effect=lambda out, name, value: written.append(copy.deepcopy(value))), \
+                mock.patch.object(probe.subprocess, "run") as inspect:
+            with self.assertRaises(RuntimeError): probe.finalize("owned", "schema", out, 1)
+        inspect.assert_not_called()
+        self.assertEqual(first, written[-1]["firstFailure"])
+        self.assertEqual("FAIL_PARTIAL", written[-1]["businessResultBeforeCleanup"])
+        self.assertEqual(report["protectedBefore"], written[-1]["protectedBefore"])
+        self.assertIn("finalizationFailure", written[-1])
 
 
 class CapacityEntryCleanupControls(unittest.TestCase):
