@@ -21,9 +21,70 @@ import time
 import urllib.parse
 import uuid
 import zipfile
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 CLASS = 'CrossDomainCombinedLoadMySqlIT'
+TEST_PROFILE = 'combined-http-fixture-closure'
+TEST_SOURCES = (
+    'com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java',
+    'com/chengyinhub/business/it/CombinedCoreHttpWorkload.java',
+    'com/chengyinhub/business/it/CombinedControlledProviders.java',
+    'com/chengyinhub/business/it/CrossDomainStorageFixture.java',
+    'com/chengyinhub/business/it/CrossDomainTransportStage.java',
+    'com/chengyinhub/business/it/GameplayProcessRecoveryChild.java',
+    'com/chengyinhub/business/it/GenericGameplayHttpE2eIT.java',
+    'com/chengyinhub/business/it/MybatisItDatabase.java',
+    'com/chengyinhub/business/it/P0AcceptanceSchema.java',
+    'com/chengyinhub/business/it/ItSchema.java',
+    'com/chengyinhub/business/it/R5WeRunFixture.java',
+    'com/chengyinhub/business/service/MysqlIntegrationTestConfig.java',
+    'com/chengyinhub/business/service/ai/AiNotSentGatewayFixture.java',
+    'com/chengyinhub/business/service/impl/CrossDomainSubscriptionProvider.java',
+    'com/chengyinhub/business/service/impl/WechatVerifiedFactTestSupport.java',
+    'com/chengyinhub/business/service/impl/WechatPayTestWiring.java',
+    'com/chengyinhub/quartz/util/CrossDomainSchedulerStage.java',
+    'com/chengyinhub/quartz/util/SchedulerFenceProcessProbe.java',
+)
+REQUIRED_TEST_CLASSES = (
+    'com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT',
+    'com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT$Initializer',
+    'com.chengyinhub.business.it.CombinedCoreHttpWorkload',
+    'com.chengyinhub.business.it.CombinedCoreHttpWorkload$HttpStatusFailure',
+    'com.chengyinhub.business.it.CombinedControlledProviders',
+    'com.chengyinhub.business.it.CombinedControlledProviders$Mode',
+    'com.chengyinhub.business.it.CombinedControlledProviders$1',
+    'com.chengyinhub.business.it.CrossDomainStorageFixture',
+    'com.chengyinhub.business.it.CrossDomainStorageFixture$ParentSqlObservation',
+    'com.chengyinhub.business.it.CrossDomainTransportStage',
+    'com.chengyinhub.business.it.CrossDomainTransportStage$RequestProtocolException',
+    'com.chengyinhub.business.it.CrossDomainTransportStage$RequestInput',
+    'com.chengyinhub.business.it.CrossDomainTransportStage$MapClient',
+    'com.chengyinhub.business.it.GameplayProcessRecoveryChild',
+    'com.chengyinhub.business.it.GameplayProcessRecoveryChild$RecoveryConfiguration',
+    'com.chengyinhub.business.it.GameplayProcessRecoveryChild$LostReplyObserver',
+    'com.chengyinhub.business.it.GenericGameplayHttpE2eIT',
+    'com.chengyinhub.business.it.GenericGameplayHttpE2eIT$LocalInitializer',
+    'com.chengyinhub.business.it.GenericGameplayHttpE2eIT$ReviewedMediaFixture',
+    'com.chengyinhub.business.it.GenericGameplayHttpE2eIT$Lifecycle',
+    'com.chengyinhub.business.it.GenericGameplayHttpE2eIT$HttpSourceStage',
+    'com.chengyinhub.business.it.GenericGameplayHttpE2eIT$HttpSourceEndpoint',
+    'com.chengyinhub.business.it.MybatisItDatabase',
+    'com.chengyinhub.business.it.P0AcceptanceSchema',
+    'com.chengyinhub.business.it.ItSchema',
+    'com.chengyinhub.business.it.R5WeRunFixture',
+    'com.chengyinhub.business.service.MysqlIntegrationTestConfig',
+    'com.chengyinhub.business.service.ai.AiNotSentGatewayFixture',
+    'com.chengyinhub.business.service.impl.CrossDomainSubscriptionProvider',
+    'com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport',
+    'com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport$MemoryMapper',
+    'com.chengyinhub.business.service.impl.WechatPayTestWiring',
+    'com.chengyinhub.quartz.util.CrossDomainSchedulerStage',
+    'com.chengyinhub.quartz.util.CrossDomainSchedulerStage$Child',
+    'com.chengyinhub.quartz.util.SchedulerFenceProcessProbe',
+    'com.chengyinhub.quartz.util.SchedulerFenceProcessProbe$ProbeTask',
+    'com.chengyinhub.quartz.util.SchedulerFenceProcessProbe$FaultSource',
+)
 JDK = 'maven:3.9.11-eclipse-temurin-21@sha256:6fdc855a6ed81d288ca7ca37ac6ff5e9308b612485c0801d70b25a858c83d237'
 MYSQL = 'mysql:8.0.45@sha256:4af1f8815716546f5b12410f7621f37f93db8dd11a184706ef59111930b8c2ff'
 REDIS = 'redis:7.4-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499'
@@ -69,17 +130,97 @@ SAFE_RESOURCE_CODES = frozenset({'FIXED_COMMAND_FAILED','FIXED_HOSTED_CLASS_ONLY
     'ACTUAL_CGROUP_CHILD_OOM_KILL','ACTUAL_MAVEN_EXIT_REQUIRED','COMPILED_POSTIMAGE_DRIFT',
     'PRIVATE_LOG_NOT_COMPLETE','CACHE_EXECUTION_DEADLINE','CACHE_PROCESS_EXIT_BEFORE_RECEIPT',
     'CACHE_STATE_NOT_PROVEN','CACHE_COMPLETED_SHELL_EXIT_MISMATCH','APP_OOM_OR_UNKNOWN_EXIT',
-    'CACHE_OFFLINE_PACKAGE_PROBE_EXIT_REQUIRED'})
+    'CACHE_OFFLINE_PACKAGE_PROBE_EXIT_REQUIRED','FIXED_TEST_COMPILATION_PROFILE_REQUIRED',
+    'FIXED_TEST_COMPILATION_SOURCE_REQUIRED','FIXED_TEST_COMPILATION_OUTPUT_REQUIRED',
+    'STALE_TEST_OUTPUT_BOUNDARY_CHANGED','UNREVIEWED_TEST_COMPILATION_SOURCE',
+    'UNREVIEWED_TEST_COMPILATION_OUTPUT'})
 CACHE_SUBSTAGES=frozenset({'SOURCE_INPUTS','LOCAL_ENGINE','PINNED_IMAGE','CREATE_INPUTS','CREATE',
     'OWNER_TOOLCHAIN','MOUNT_ENV','START','CGROUP','WAIT_EXIT','MAVEN_EXIT','CORE_IDENTITY',
     'MANIFEST','PRIVATE_LOG','CLEANUP','TERMINAL'})
 CACHE_FAILURE_FUNCTIONS=frozenset({'warm_cache','cache_inputs','cache_manifest','cache_process_state',
-    'cache_terminal','cache_offline_probe_exit','command','inspect','validate_owner','validate_container','read_cgroup','validate_cgroup_limits'})
+    'cache_terminal','cache_offline_probe_exit','fixed_test_compilation_inputs','reset_fixed_test_outputs',
+    'fixed_test_compilation_outputs','command','inspect','validate_owner','validate_container','read_cgroup','validate_cgroup_limits'})
 CACHE_GOALS={
     'maven-resources-plugin':{'resources','testResources'},'maven-compiler-plugin':{'compile','testCompile'},
     'maven-surefire-plugin':{'test'},'maven-jar-plugin':{'jar'},'maven-install-plugin':{'install'},
     'maven-war-plugin':{'war'},'maven-dependency-plugin':{'properties','get'},
     'spring-boot-maven-plugin':{'repackage'},'git-commit-id-maven-plugin':{'revision'}}
+
+
+def fixed_test_compilation_inputs():
+    # The sole named admin profile is source, not a CLI/user-selected include expression.
+    ns={'m':'http://maven.apache.org/POM/4.0.0'}
+    pom=ROOT/'chengyinhub-admin/pom.xml'
+    require(pom.is_file() and not pom.is_symlink(),'FIXED_TEST_COMPILATION_PROFILE_REQUIRED')
+    try:root=ET.parse(pom).getroot()
+    except ET.ParseError:raise ValueError('FIXED_TEST_COMPILATION_PROFILE_REQUIRED') from None
+    profiles=[p for p in root.findall('m:profiles/m:profile',ns) if p.findtext('m:id',namespaces=ns)==TEST_PROFILE]
+    require(len(profiles)==1,'FIXED_TEST_COMPILATION_PROFILE_REQUIRED')
+    plugins=[p for p in profiles[0].findall('m:build/m:plugins/m:plugin',ns)
+             if p.findtext('m:artifactId',namespaces=ns)=='maven-compiler-plugin']
+    require(len(plugins)==1,'FIXED_TEST_COMPILATION_PROFILE_REQUIRED')
+    executions=[e for e in plugins[0].findall('m:executions/m:execution',ns)
+                if e.findtext('m:id',namespaces=ns)=='default-testCompile']
+    require(len(executions)==1,'FIXED_TEST_COMPILATION_PROFILE_REQUIRED')
+    config=executions[0].find('m:configuration',ns)
+    require(config is not None and config.findtext('m:implicit',namespaces=ns)=='none','FIXED_TEST_COMPILATION_PROFILE_REQUIRED')
+    includes=[p.text for p in config.findall('m:testIncludes/m:testInclude',ns)]
+    require(tuple(includes)==TEST_SOURCES,'FIXED_TEST_COMPILATION_SOURCE_REQUIRED')
+    sources={};source_root=ROOT/'chengyinhub-admin/src/test/java'
+    require(source_root.resolve()==source_root and not source_root.is_symlink(),'FIXED_TEST_COMPILATION_SOURCE_REQUIRED')
+    for relative in includes:
+        require(isinstance(relative,str) and re.fullmatch(r'com/chengyinhub/(?:[A-Za-z0-9_]+/)*[A-Za-z0-9_]+\.java',relative),
+                'FIXED_TEST_COMPILATION_SOURCE_REQUIRED')
+        source=source_root/relative
+        require(source.is_file() and not source.is_symlink()
+                and source.resolve().is_relative_to(source_root),'FIXED_TEST_COMPILATION_SOURCE_REQUIRED')
+        sources[relative]=digest(source)
+    return {'profile':TEST_PROFILE,'sources':sources}
+
+
+def reset_fixed_test_outputs():
+    # Only the original admin test output and testCompile state; never production classes/JARs,
+    # the dependency cache, source resources, public evidence or any other owner's module.
+    target=ROOT/'chengyinhub-admin/target'
+    paths=[target/suffix for suffix in ('test-classes','generated-test-sources','maven-status/maven-compiler-plugin/testCompile')]
+    for path in paths:
+        for current in (path,*path.parents):
+            if current==ROOT:break
+            require(not current.is_symlink(),'STALE_TEST_OUTPUT_BOUNDARY_CHANGED')
+        if path.exists():
+            require(path.is_dir() and path.resolve().is_relative_to(target.resolve()),'STALE_TEST_OUTPUT_BOUNDARY_CHANGED')
+    for path in paths:
+        if path.exists():shutil.rmtree(path)
+
+
+def fixed_test_compilation_outputs(inputs):
+    output=ROOT/'chengyinhub-admin/target/test-classes';classes={}
+    require(output.is_dir() and output.resolve()==output and not output.is_symlink(),'FIXED_TEST_COMPILATION_OUTPUT_REQUIRED')
+    status=ROOT/'chengyinhub-admin/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst'
+    require(status.is_file() and not status.is_symlink() and status.resolve()==status,'FIXED_TEST_COMPILATION_OUTPUT_REQUIRED')
+    observed=status.read_text().splitlines()
+    source_root=ROOT/'chengyinhub-admin/src/test/java'
+    require(len(observed)==len(TEST_SOURCES) and set(observed)=={str(source_root/path) for path in TEST_SOURCES},
+            'UNREVIEWED_TEST_COMPILATION_SOURCE')
+    generated=ROOT/'chengyinhub-admin/target/generated-test-sources'
+    require(not generated.is_symlink() and generated.resolve()==generated
+            and not any(p.is_symlink() or p.suffix=='.java' for p in generated.rglob('*')),'UNREVIEWED_TEST_COMPILATION_SOURCE')
+    # Keep every output, including unnamed/local classes; reject another compilation unit, never prune it.
+    allowed={relative[:-5] for relative in TEST_SOURCES}
+    all_classes={}
+    for path in sorted(output.rglob('*.class')):
+        relative=path.relative_to(output).as_posix()[:-6].split('$',1)[0]
+        require(relative in allowed,'UNREVIEWED_TEST_COMPILATION_OUTPUT')
+        require(not path.is_symlink(),'FIXED_TEST_COMPILATION_OUTPUT_REQUIRED')
+        all_classes[path.relative_to(output).as_posix()]=digest(path)
+    required={name.replace('.','/')+'.class' for name in REQUIRED_TEST_CLASSES}
+    for relative in sorted(required):
+        path=output/relative
+        require(relative in all_classes and path.is_file() and not path.is_symlink() and path.resolve().is_relative_to(output.resolve()),
+                'FIXED_TEST_COMPILATION_OUTPUT_REQUIRED')
+        classes[relative]=all_classes[relative]
+    return {**inputs,'compilerInputs':sorted(TEST_SOURCES),'classes':classes,
+            'classTree':{'classes':len(all_classes),'sha256':hashlib.sha256(json.dumps(list(all_classes.items()),separators=(',',':')).encode()).hexdigest()}}
 
 
 def require(ok, code):
@@ -157,10 +298,10 @@ def fixed_cache_command():
     common=cache_maven_arguments()
     # Same package in the pinned owner: prefer the existing offline closure, never trust a prior JAR.
     # skipTests belongs only to preparation/preflight. The original real test command never gains it.
-    goals=[common+['-pl','chengyinhub-admin','-am','package','-DskipTests'],
+    goals=[common+['-P'+TEST_PROFILE,'-pl','chengyinhub-admin','-am','package','-DskipTests'],
            common+['-N','org.apache.maven.plugins:maven-dependency-plugin:3.10.0:get',
                    '-Dartifact=org.apache.maven.surefire:surefire-junit-platform:3.5.6','-Dtransitive=true'],
-           common+['-o','-pl','chengyinhub-admin','-am','test','-DskipTests','-Dtest='+CLASS,
+           common+['-o','-P'+TEST_PROFILE,'-pl','chengyinhub-admin','-am','test','-DskipTests','-Dtest='+CLASS,
                    '-DfailIfNoTests=false','-Dsurefire.failIfNoSpecifiedTests=false']]
     # Structured argv are passed to a fixed shell without interpolation of source/env/credentials.
     package='package=('+ ' '.join("'"+value+"'" for value in ['mvn']+goals[0])+'); '
@@ -244,6 +385,7 @@ def warm_cache():
         publish();cache.mkdir(parents=True,exist_ok=True)
         require(not cache.is_symlink() and cache.resolve()==cache,'SYMLINK_OFFLINE_CACHE_FORBIDDEN')
         report['pomSha256']=cache_inputs()
+        compilation=fixed_test_compilation_inputs();reset_fixed_test_outputs()
         substage='LOCAL_ENGINE'
         require(command(DOCKER+['context','inspect','--format','{{.Endpoints.docker.Host}}']).decode().strip()
                 =='unix:///var/run/docker.sock','LOCAL_DOCKER_ONLY')
@@ -300,6 +442,8 @@ def warm_cache():
         require(re.fullmatch('[0-9a-f]{64}',core),'FIXED_CACHE_TOOLCHAIN_REQUIRED');report['mavenCoreSha256']=core
         substage='MAVEN_EXIT';require(report['originalExit']==0,'OFFLINE_CACHE_PREFLIGHT_FAILED')
         substage='MANIFEST'
+        require(fixed_test_compilation_inputs()==compilation,'COMPILED_POSTIMAGE_DRIFT')
+        report['testCompilation']=fixed_test_compilation_outputs(compilation)
         report['cache']=cache_manifest(cache);require(cache_inputs()==report['pomSha256'],'COMPILED_POSTIMAGE_DRIFT')
     except Exception as failure:
         first=failure;report['firstFailure']=cache_failure(failure,'PINNED_CACHE_PREPARATION',substage)
@@ -347,6 +491,7 @@ def verified_cache(cache):
             and not report.get('failures') and report.get('image')==JDK and report.get('mavenVersion')==CORE_VERSION
             and report.get('settingsSha256')==hashlib.sha256(EMPTY_SETTINGS.encode()).hexdigest()
             and report.get('pomSha256')==cache_inputs() and report.get('cache')==cache_manifest(cache)
+            and report.get('testCompilation')==fixed_test_compilation_outputs(fixed_test_compilation_inputs())
             and report.get('cleanup',{}).get('result')=='EXACT_CID_REMOVED_AND_ABSENT'
             and report['cleanup'].get('terminal',{}).get('OOMKilled') is False
             and report['cleanup'].get('terminal',{}).get('ExitCode') in (0,143)
@@ -876,6 +1021,7 @@ def source_manifest():
         for artifact in jars:
             require(not artifact.is_symlink(),'SYMLINK_REACTOR_ARTIFACT');artifacts[str(artifact.relative_to(ROOT))]=digest(artifact)
     return {'classTrees':trees,'reactorJars':artifacts,'selectedClassSha256':digest(selected),'gitPropertiesSha256':digest(props),'artifactJarSha256':digest(jar),
+            'testCompilation':fixed_test_compilation_outputs(fixed_test_compilation_inputs()),
             'freshSchemaReportSha256':digest(OUT/'fresh-schema.json'),
             'execution':'ORIGINAL_SUREFIRE_TEST_CLASSPATH_NOT_PACKAGED_APPLICATION_JAR'}
 
@@ -1072,7 +1218,7 @@ def fixed_maven_command():
             'mv /tmp/cy-budget.exit.next /tmp/cy-budget.exit; '
             'for i in {1..1200}; do [ -f /budget/stop ] && break; sleep .1; done; exit "$status"','--',
             '-o','-q','--settings','/budget/settings.xml','--global-settings','/budget/settings.xml',
-            '-Dmaven.repo.local=/cache/repository','-pl','chengyinhub-admin','-am','test',
+            '-Dmaven.repo.local=/cache/repository','-P'+TEST_PROFILE,'-pl','chengyinhub-admin','-am','test',
             '-DargLine=-Xmx512m -Djava.security.manager=allow --add-opens=java.base/java.lang=ALL-UNNAMED -Djava.io.tmpdir=/tmp -Djava.awt.headless=true',
             '-Dtest='+CLASS,'-DforkCount=1','-DreuseForks=true','-DfailIfNoTests=false','-Dsurefire.failIfNoSpecifiedTests=false']
 

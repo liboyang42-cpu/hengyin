@@ -585,11 +585,17 @@ class CombinedBudgetControls(unittest.TestCase):
         self.assertIn('-o',execution);self.assertNotIn('-DskipTests',execution);self.assertNotIn('-Dmaven.test.skip=true',execution)
         self.assertEqual(B.EMPTY_SETTINGS,'<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"/>\n')
 
+    def compilation_receipt(self):
+        # Synthetic transport binding only; actual sources/classes are checked separately below.
+        return {'profile':B.TEST_PROFILE,'sources':{'com/chengyinhub/business/it/'+B.CLASS+'.java':'d'*64},
+                'classes':{'com/chengyinhub/business/it/'+B.CLASS+'.class':'e'*64}}
+
     def cache_receipt(self):
         proof=self.subject_report()['cacheProof']
         return {**B.identity(self.env()),**{k:v for k,v in proof.items() if k!='reportSha256'},
                 'result':'PINNED_OFFLINE_TEST_PREFLIGHT_PROVEN','originalExit':0,'failures':[],
                 'mavenExitObserved':True,'mavenExit':0,'offlinePackageProbeExit':0,
+                'testCompilation':self.compilation_receipt(),
                 'pomSha256':{'pom.xml':'f'*64},'budget':{'memory':B.MEMORY,'memorySwap':B.MEMORY,'nanoCpus':1000000000,'pids':256},
                 'cgroup':{'limits':{'memory.max':str(B.MEMORY),'memory.swap.max':'0','cpu.max':'100000 100000','pids.max':'256'}},
                 'cleanup':{'result':'EXACT_CID_REMOVED_AND_ABSENT','terminal':{'OOMKilled':False,'ExitCode':143}}}
@@ -599,6 +605,8 @@ class CombinedBudgetControls(unittest.TestCase):
             path=Path(directory)/'cache.json';path.write_text(json.dumps(report))
             with patch.dict(os.environ,self.env(),clear=True),patch.object(B,'CACHE_REPORT',path),\
                  patch.object(B,'cache_inputs',return_value=changes.get('poms',{'pom.xml':'f'*64})),\
+                 patch.object(B,'fixed_test_compilation_inputs',return_value={k:v for k,v in self.compilation_receipt().items() if k!='classes'}),\
+                 patch.object(B,'fixed_test_compilation_outputs',return_value=changes.get('compilation',self.compilation_receipt())),\
                  patch.object(B,'cache_manifest',return_value=changes.get('cache',self.subject_report()['cacheProof']['cache'])):
                 return B.verified_cache(Path(directory))
 
@@ -754,6 +762,8 @@ class CombinedBudgetControls(unittest.TestCase):
             with patch.dict(os.environ,self.env(),clear=True),patch.object(B,'ROOT',root),patch.object(B,'PUBLIC',root/'public'),\
                  patch.object(B.Path,'home',return_value=root/'home'),\
                  patch.object(B,'cache_inputs',return_value={'pom.xml':'f'*64}),patch.object(B,'inspect',side_effect=inspect),\
+                 patch.object(B,'fixed_test_compilation_inputs',return_value={k:v for k,v in self.compilation_receipt().items() if k!='classes'}),\
+                 patch.object(B,'fixed_test_compilation_outputs',return_value=self.compilation_receipt()),\
                  patch.object(B,'command',side_effect=command),patch.object(B.subprocess,'run',side_effect=native),\
                  patch.object(B.time,'monotonic',side_effect=clock),\
                  patch.object(B,'absent'),patch.object(B,'read_cgroup',return_value={'limits':self.cache_receipt()['cgroup']['limits'],'memoryEvents':{'oom_kill':'0'}}),\
@@ -934,6 +944,113 @@ class CombinedBudgetControls(unittest.TestCase):
         last='[INFO] --- spring-boot:4.1.1:repackage (repackage) @ chengyinhub-admin ---'
         self.assertEqual(B.safe_cache_progress(header+last)['goal'],'repackage')
         self.assertNotIn('PRIVATE_TOKEN',json.dumps(B.safe_cache_progress(header)))
+
+    def compilation_sources(self,root,includes=None,implicit='none'):
+        if includes is None:includes=list(B.TEST_SOURCES)
+        pom=root/'chengyinhub-admin/pom.xml';pom.parent.mkdir(parents=True,exist_ok=True)
+        rows=''.join('<testInclude>'+value+'</testInclude>' for value in includes)
+        pom.write_text('<project xmlns="http://maven.apache.org/POM/4.0.0"><profiles><profile><id>'+B.TEST_PROFILE+
+            '</id><build><plugins><plugin><artifactId>maven-compiler-plugin</artifactId><executions><execution>'+
+            '<id>default-testCompile</id><configuration><implicit>'+implicit+'</implicit><testIncludes>'+rows+
+            '</testIncludes></configuration></execution></executions></plugin></plugins></build></profile></profiles></project>')
+        for relative in includes:
+            if '*' in relative or '..' in relative:continue
+            path=root/'chengyinhub-admin/src/test/java'/relative;path.parent.mkdir(parents=True,exist_ok=True)
+            path.write_text('// Synthetic SOURCE input, never an actual compiled class\n')
+        return pom
+
+    def test_fixed_profile_is_required_and_cannot_be_an_arbitrary_include_or_implicit_fallback(self):
+        selected='com/chengyinhub/business/it/'+B.CLASS+'.java'
+        with tempfile.TemporaryDirectory() as directory,patch.object(B,'ROOT',Path(directory)):
+            root=Path(directory)
+            with self.assertRaisesRegex(ValueError,'FIXED_TEST_COMPILATION_PROFILE_REQUIRED'):B.fixed_test_compilation_inputs()
+            self.compilation_sources(root)
+            inputs=B.fixed_test_compilation_inputs();self.assertEqual(inputs['profile'],B.TEST_PROFILE)
+            self.assertEqual(set(inputs['sources']),set(B.TEST_SOURCES));self.assertEqual(len(inputs['sources'][selected]),64)
+            for includes,implicit in (([selected,selected],'none'),([selected,'**/*.java'],'none'),
+                    ([selected,'../outside.java'],'none'),(['com/chengyinhub/business/it/Other.java'],'none'),([selected],'class')):
+                self.compilation_sources(root,includes,implicit)
+                with self.subTest(includes=includes,implicit=implicit),self.assertRaises(ValueError):B.fixed_test_compilation_inputs()
+
+    def test_fixed_test_output_reset_removes_only_admin_test_state_and_refuses_symlink_parents(self):
+        with tempfile.TemporaryDirectory() as directory,patch.object(B,'ROOT',Path(directory)):
+            root=Path(directory);target=root/'chengyinhub-admin/target';target.mkdir(parents=True)
+            preserved=[]
+            for relative in ('classes/main.class','original.jar','http-e2e/public/receipt.json','maven-status/maven-compiler-plugin/compile/state'):
+                path=target/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('preserve');preserved.append(path)
+            for relative in ('test-classes/stale.class','generated-test-sources/stale/Other.java','maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst'):
+                path=target/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('stale')
+            B.reset_fixed_test_outputs()
+            self.assertFalse((target/'test-classes').exists());self.assertFalse((target/'maven-status/maven-compiler-plugin/testCompile').exists())
+            self.assertFalse((target/'generated-test-sources').exists())
+            self.assertTrue(all(p.read_text()=='preserve' for p in preserved))
+            (target/'test-classes').symlink_to(target/'classes',target_is_directory=True)
+            with self.assertRaisesRegex(ValueError,'STALE_TEST_OUTPUT_BOUNDARY_CHANGED'):B.reset_fixed_test_outputs()
+            self.assertEqual((target/'classes/main.class').read_text(),'preserve')
+            (target/'test-classes').unlink();(target/'test-classes').mkdir()
+            witness=target/'test-classes/not-yet-removed.class';witness.write_bytes(b'owned witness')
+            (target/'generated-test-sources').symlink_to(target/'classes',target_is_directory=True)
+            with self.assertRaisesRegex(ValueError,'STALE_TEST_OUTPUT_BOUNDARY_CHANGED'):B.reset_fixed_test_outputs()
+            self.assertTrue(witness.exists());self.assertEqual((target/'classes/main.class').read_text(),'preserve')
+
+    def test_required_sources_and_reflected_inner_classes_cannot_be_replaced_by_a_prior_test_output(self):
+        with tempfile.TemporaryDirectory() as directory,patch.object(B,'ROOT',Path(directory)):
+            root=Path(directory);self.compilation_sources(root);inputs=B.fixed_test_compilation_inputs()
+            with self.assertRaisesRegex(ValueError,'FIXED_TEST_COMPILATION_OUTPUT_REQUIRED'):B.fixed_test_compilation_outputs(inputs)
+            classes=B.REQUIRED_TEST_CLASSES
+            for name in classes:
+                path=root/'chengyinhub-admin/target/test-classes'/(name.replace('.','/')+'.class')
+                path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(b'synthetic class-control bytes; not javac evidence')
+            self.compiler_input_status(root)
+            proof=B.fixed_test_compilation_outputs(inputs);self.assertEqual(len(proof['classes']),len(classes))
+            required=root/'chengyinhub-admin/target/test-classes/com/chengyinhub/business/it/CombinedControlledProviders$1.class'
+            required.unlink()
+            with self.assertRaisesRegex(ValueError,'FIXED_TEST_COMPILATION_OUTPUT_REQUIRED'):B.fixed_test_compilation_outputs(inputs)
+            other=root/'outside-control.class';other.write_bytes(b'foreign');required.symlink_to(other)
+            with self.assertRaisesRegex(ValueError,'FIXED_TEST_COMPILATION_OUTPUT_REQUIRED'):B.fixed_test_compilation_outputs(inputs)
+
+    def test_package_preflight_and_real_test_share_one_profile_and_drifted_compilation_cannot_reuse_cache(self):
+        shell=B.fixed_cache_command()[1];args=B.fixed_maven_command()
+        self.assertEqual(shell.count('-P'+B.TEST_PROFILE),2);self.assertIn('-P'+B.TEST_PROFILE,args)
+        self.assertIn('-o',args);self.assertNotIn('-DskipTests',args);self.assertNotIn('-Dmaven.test.skip=true',args)
+        changed=self.compilation_receipt();changed['classes'][next(iter(changed['classes']))]='0'*64
+        with self.assertRaisesRegex(ValueError,'OFFLINE_CACHE_PREFLIGHT_REQUIRED'):
+            self.check_cache_receipt(self.cache_receipt(),compilation=changed)
+
+    def compiler_input_status(self,root,extra=None):
+        status=root/'chengyinhub-admin/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst'
+        status.parent.mkdir(parents=True,exist_ok=True)
+        values=[str(root/'chengyinhub-admin/src/test/java'/relative) for relative in B.TEST_SOURCES]
+        if extra:values.append(str(root/extra))
+        status.write_text('\n'.join(values)+'\n');return status
+
+    def test_all_37_are_required_but_additional_inner_outputs_are_kept_and_unreviewed_sources_stop(self):
+        with tempfile.TemporaryDirectory() as directory,patch.object(B,'ROOT',Path(directory)):
+            root=Path(directory);self.compilation_sources(root);inputs=B.fixed_test_compilation_inputs()
+            output=root/'chengyinhub-admin/target/test-classes'
+            for name in B.REQUIRED_TEST_CLASSES:
+                path=output/(name.replace('.','/')+'.class');path.parent.mkdir(parents=True,exist_ok=True)
+                path.write_bytes(b'synthetic protocol control, not javac evidence')
+            self.compiler_input_status(root)
+            extra=output/'com/chengyinhub/business/it/GenericGameplayHttpE2eIT$99.class';extra.write_bytes(b'keep anonymous output')
+            proof=B.fixed_test_compilation_outputs(inputs)
+            self.assertEqual(len(proof['classes']),37);self.assertEqual(len(proof['sources']),18)
+            self.assertEqual(proof['classTree']['classes'],38)
+            self.assertEqual(proof['compilerInputs'],sorted(B.TEST_SOURCES));self.assertTrue(extra.exists())
+            for name in B.REQUIRED_TEST_CLASSES:
+                path=output/(name.replace('.','/')+'.class');saved=path.read_bytes();path.unlink()
+                with self.subTest(name=name),self.assertRaisesRegex(ValueError,'FIXED_TEST_COMPILATION_OUTPUT_REQUIRED'):
+                    B.fixed_test_compilation_outputs(inputs)
+                path.write_bytes(saved)
+            self.compiler_input_status(root,'chengyinhub-admin/src/test/java/Unreviewed.java')
+            with self.assertRaisesRegex(ValueError,'UNREVIEWED_TEST_COMPILATION_SOURCE'):B.fixed_test_compilation_outputs(inputs)
+            self.compiler_input_status(root)
+            foreign=output/'com/chengyinhub/business/it/Unreviewed.class';foreign.write_bytes(b'never prune to pass')
+            with self.assertRaisesRegex(ValueError,'UNREVIEWED_TEST_COMPILATION_OUTPUT'):B.fixed_test_compilation_outputs(inputs)
+            self.assertTrue(foreign.exists());foreign.unlink()
+            generated=root/'chengyinhub-admin/target/generated-test-sources/Unreviewed.java'
+            generated.parent.mkdir(parents=True,exist_ok=True);generated.write_text('// unknown processor source')
+            with self.assertRaisesRegex(ValueError,'UNREVIEWED_TEST_COMPILATION_SOURCE'):B.fixed_test_compilation_outputs(inputs)
 
 
 if __name__=='__main__':unittest.main()
