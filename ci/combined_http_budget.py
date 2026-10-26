@@ -17,7 +17,6 @@ import re
 import shutil
 import signal
 import subprocess
-import tempfile
 import time
 import urllib.parse
 import uuid
@@ -141,7 +140,7 @@ def fixed_cache_command():
 
 def warm_cache():
     identity_gate(os.environ);PUBLIC.mkdir(parents=True,exist_ok=True)
-    private=private_directory(Path(tempfile.mkdtemp(prefix='cy-http-budget.')))
+    private=private_directory(Path(command(['mktemp','-d','/tmp/cy-http-budget.XXXXXXXX']).decode().strip()))
     cache=Path.home()/'.m2/repository'
     report={**resource_envelope(os.environ),'result':'NOT_COMPLETED','originalExit':None,'failures':[],
             'preparationOnly':True,'mavenVersion':CORE_VERSION,'image':JDK,'settingsSha256':hashlib.sha256(EMPTY_SETTINGS.encode()).hexdigest()}

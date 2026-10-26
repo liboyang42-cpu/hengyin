@@ -663,14 +663,19 @@ class CombinedBudgetControls(unittest.TestCase):
     def warm_transport_control(self,exit_code=0,foreign=False,write_fails=False):
         # Transport/file protocol doubles only: not Maven/Java execution or dependency acceptance evidence.
         reports=[];mutations=[];obj={};image_id='sha256:'+'d'*64
-        with tempfile.TemporaryDirectory() as directory,tempfile.TemporaryDirectory(prefix='cy-http-budget.') as private:
-            root=Path(directory);owned=Path(private);cache=root/'home/.m2/repository';cache.mkdir(parents=True)
+        with tempfile.TemporaryDirectory() as directory,contextlib.ExitStack() as own_cleanup:
+            owned=B.private_directory(Path(B.command(['mktemp','-d','/tmp/cy-http-budget.XXXXXXXX']).decode().strip()))
+            own_cleanup.callback(lambda:B.shutil.rmtree(B.private_directory(owned)) if owned.exists() else None)
+            private=str(owned);root=Path(directory);cache=root/'home/.m2/repository';cache.mkdir(parents=True)
+            allocations=[]
             (cache/'synthetic-control.jar').write_bytes(b'not an actual dependency')
             def native(argv,**kwargs):
                 if 'logs' in argv:
                     kwargs['stdout'].write(b'Plugin org.apache.maven.plugins:maven-resources-plugin:3.3.1 or one of its dependencies could not be resolved: PRIVATE\n' if exit_code else b'SYNTHETIC_TRANSPORT_CONTROL_ONLY')
                 return SimpleNamespace(returncode=0,stdout=b'',stderr=b'')
             def command(argv,**kwargs):
+                if argv==['mktemp','-d','/tmp/cy-http-budget.XXXXXXXX']:
+                    allocations.append(argv);return (private+'\n').encode()
                 if argv[-1]=='{{.Endpoints.docker.Host}}':return b'unix:///var/run/docker.sock'
                 if 'image' in argv and 'inspect' in argv:return json.dumps([{'Id':image_id,'Config':{'Env':[]}}]).encode()
                 if 'create' in argv:
@@ -701,7 +706,7 @@ class CombinedBudgetControls(unittest.TestCase):
                 reports.append(copy.deepcopy(value))
                 if write_fails:raise OSError('PRIVATE evidence write problem')
             with patch.dict(os.environ,self.env(),clear=True),patch.object(B,'ROOT',root),patch.object(B,'PUBLIC',root/'public'),\
-                 patch.object(B.Path,'home',return_value=root/'home'),patch.object(B.tempfile,'mkdtemp',return_value=private),\
+                 patch.object(B.Path,'home',return_value=root/'home'),\
                  patch.object(B,'cache_inputs',return_value={'pom.xml':'f'*64}),patch.object(B,'inspect',side_effect=lambda x:obj),\
                  patch.object(B,'command',side_effect=command),patch.object(B.subprocess,'run',side_effect=native),\
                  patch.object(B,'absent'),patch.object(B,'read_cgroup',return_value={'limits':self.cache_receipt()['cgroup']['limits'],'memoryEvents':{'oom_kill':'0'}}),\
@@ -709,6 +714,7 @@ class CombinedBudgetControls(unittest.TestCase):
                 failure=None
                 try:B.warm_cache()
                 except Exception as error:failure=error
+            self.assertEqual(allocations,[['mktemp','-d','/tmp/cy-http-budget.XXXXXXXX']])
             return reports,mutations,failure,owned.exists()
 
     def test_warm_transport_attests_same_image_core_settings_budget_and_exact_cleanup(self):
@@ -739,6 +745,25 @@ class CombinedBudgetControls(unittest.TestCase):
         for number,code in ((B.signal.SIGINT,130),(B.signal.SIGTERM,143),(B.signal.SIGHUP,129)):
             with self.assertRaises(InterruptedError) as raised:B.cache_stop_signal(number,None)
             self.assertEqual(raised.exception.errno,code)
+
+    def test_private_allocator_failure_precedes_cache_or_container_creation(self):
+        with tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),\
+             patch.object(B,'PUBLIC',Path(directory)),patch.object(B,'command',side_effect=ValueError('FIXED_COMMAND_FAILED')) as create,\
+             patch.object(B.Path,'home') as home,patch.object(B,'cache_inputs') as inputs,\
+             patch.object(B,'inspect') as inspect,patch.object(B,'cleanup_slot') as cleanup:
+            with self.assertRaisesRegex(ValueError,'FIXED_COMMAND_FAILED'):B.warm_cache()
+        create.assert_called_once_with(['mktemp','-d','/tmp/cy-http-budget.XXXXXXXX'])
+        home.assert_not_called();inputs.assert_not_called();inspect.assert_not_called();cleanup.assert_not_called()
+
+    def test_bad_allocator_result_cannot_relax_original_private_path_fence(self):
+        for path in ('/tmp/cy-http-budget.bad_name','/elsewhere/cy-http-budget.Ab12Cd34'):
+            with tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),\
+                 patch.object(B,'PUBLIC',Path(directory)),patch.object(B,'command',return_value=(path+'\n').encode()) as create,\
+                 patch.object(B.Path,'home') as home,patch.object(B,'cache_inputs') as inputs,\
+                 patch.object(B,'inspect') as inspect,patch.object(B,'cleanup_slot') as cleanup:
+                with self.assertRaisesRegex(ValueError,'EXACT_PRIVATE_DIRECTORY_REQUIRED'):B.warm_cache()
+            create.assert_called_once_with(['mktemp','-d','/tmp/cy-http-budget.XXXXXXXX'])
+            home.assert_not_called();inputs.assert_not_called();inspect.assert_not_called();cleanup.assert_not_called()
 
 
 if __name__=='__main__':unittest.main()
