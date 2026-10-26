@@ -1,0 +1,5 @@
+# Standalone ecff + budget.review.patch only; root F composition will have its own hashes.
+d1729d253879bdc7e65fd9dbcd57274c790a6594addec688df4641d9d6c23653  PREIMAGE chengyinhub-admin/src/test/tools/generic-gameplay-http-e2e.sh
+9c2a7b37b77c13ebed21c40cb1be8a1c1bcfd4c063c81253b016489ed9fcac89  POSTIMAGE chengyinhub-admin/src/test/tools/generic-gameplay-http-e2e.sh
+4f737ccdb237805bda0f30eba7fc0c86477691e57a1dc766e371f3ecc11dcc06  PREIMAGE .github/workflows/gameplay-http-e2e.yml
+92612989175dfcc76a7ed28c02ef2a17fb43c549a11929ad8302518a19d31b5d  POSTIMAGE .github/workflows/gameplay-http-e2e.yml
