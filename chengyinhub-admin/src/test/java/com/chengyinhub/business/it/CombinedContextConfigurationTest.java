@@ -34,6 +34,21 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.dao.DataAccessResourceFailureException;
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import org.mybatis.spring.SqlSessionFactoryBean;
+import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.datasource.ConnectionHolder;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
+import com.chengyinhub.business.mapper.PhotoCheckIntentMapper;
+import com.chengyinhub.business.service.ai.PhotoCheckIntentService;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -302,6 +317,96 @@ class CombinedContextConfigurationTest {
                 "unsupported".equals(reference.getFieldName())), "Original failing field path is retained privately");
         verify(unsupportedRow).queryForList(eq(query), eq(parameters));
         verifyNoMoreInteractions(unsupportedRow);
+    }
+
+    @Test
+    void photoNeverReadRetainsConnectionAcrossIndependentTransaction() throws Exception {
+        // Real transaction manager, mapper XML and SqlSessionTemplate; JDBC is an explicit double.
+        // This proves the binding rule, not that it caused the earlier hosted failure.
+        DataSource source = mock(DataSource.class);
+        Connection outer = mock(Connection.class), independent = mock(Connection.class);
+        when(source.getConnection()).thenReturn(outer, independent);
+        var outerCloses = new java.util.concurrent.atomic.AtomicInteger();
+        doAnswer(call -> { outerCloses.incrementAndGet(); return null; }).when(outer).close();
+        when(outer.getAutoCommit()).thenReturn(true);
+        when(independent.getAutoCommit()).thenReturn(true);
+        PreparedStatement statement = mock(PreparedStatement.class);
+        ResultSet rows = mock(ResultSet.class);
+        ResultSetMetaData metadata = mock(ResultSetMetaData.class);
+        when(outer.prepareStatement(anyString())).thenReturn(statement);
+        when(statement.execute()).thenReturn(true);
+        when(statement.getResultSet()).thenReturn(rows);
+        when(statement.getConnection()).thenReturn(outer);
+        when(rows.getMetaData()).thenReturn(metadata);
+        when(outer.getMetaData()).thenReturn(mock(java.sql.DatabaseMetaData.class));
+        var factory = new SqlSessionFactoryBean();
+        factory.setDataSource(source);
+        factory.setMapperLocations(new ClassPathResource("mapper/business/PhotoCheckIntentMapper.xml"));
+        PhotoCheckIntentMapper mapper = new SqlSessionTemplate(factory.getObject()).getMapper(PhotoCheckIntentMapper.class);
+        var manager = new DataSourceTransactionManager(source);
+        var withoutBusinessTransaction = new TransactionTemplate(manager);
+        withoutBusinessTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_NEVER);
+        var shortTransaction = new TransactionTemplate(manager);
+        shortTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        withoutBusinessTransaction.execute(status -> {
+            assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+            assertTrue(TransactionSynchronizationManager.isSynchronizationActive());
+            assertNull(mapper.selectOwned(1L, 2L, "a".repeat(64)));
+            assertSame(outer, ((ConnectionHolder) TransactionSynchronizationManager.getResource(source)).getConnection());
+            shortTransaction.execute(shortStatus -> {
+                assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+                assertSame(independent, ((ConnectionHolder) TransactionSynchronizationManager.getResource(source)).getConnection());
+                assertEquals(0, outerCloses.get(), "Suspending an empty synchronization must not be mistaken for connection release");
+                return null;
+            });
+            assertSame(outer, ((ConnectionHolder) TransactionSynchronizationManager.getResource(source)).getConnection());
+            assertEquals(0, outerCloses.get(), "The original connection remains borrowed until the outer invocation completes");
+            return null;
+        });
+        assertFalse(TransactionSynchronizationManager.isSynchronizationActive());
+        assertFalse(TransactionSynchronizationManager.hasResource(source));
+        verify(source, times(2)).getConnection();
+        verify(outer).close(); verify(independent).close();
+    }
+
+    @Test
+    void photoPrepareFailureProjectionKeepsOnlyReviewedCodesAndCause() {
+        var fixture = new CrossDomainStorageFixture();
+        fixture.tx = mock(TransactionTemplate.class);
+        var service = mock(PhotoCheckIntentService.class);
+        var command = fixture.command(2);
+        var sql = new java.sql.SQLException("private SQL/body/token must not be projected", "40001", 1213);
+        var failure = new org.springframework.transaction.CannotCreateTransactionException("private configuration", sql);
+        doThrow(failure).when(fixture.tx).execute(any());
+        assertSame(failure, assertThrows(org.springframework.transaction.CannotCreateTransactionException.class,
+                () -> fixture.preparePhoto(service, command)));
+        assertSame(sql, failure.getCause());
+        assertEquals(Map.of("phase", "TX_BEGIN", "exceptionTypes", List.of("java.sql.SQLException",
+                "org.springframework.transaction.CannotCreateTransactionException"),
+                "sql", List.of(Map.of("sqlState", "40001", "vendorCode", "1213"))), fixture.photoPrepareFailure);
+        verifyNoInteractions(service);
+
+        doAnswer(call -> ((org.springframework.transaction.support.TransactionCallback<?>) call.getArgument(0))
+                .doInTransaction(mock(org.springframework.transaction.TransactionStatus.class)))
+                .when(fixture.tx).execute(any());
+        var prepareFailure = new DataAccessResourceFailureException("private prepare failure", sql);
+        doThrow(prepareFailure).when(service).prepare(command);
+        assertSame(prepareFailure, assertThrows(DataAccessResourceFailureException.class,
+                () -> fixture.preparePhoto(service, command)));
+        assertSame(sql, prepareFailure.getCause());
+        assertEquals("PHOTO_PREPARE", fixture.photoPrepareFailure.get("phase"));
+        assertEquals(List.of(Map.of("sqlState", "40001", "vendorCode", "1213")), fixture.photoPrepareFailure.get("sql"));
+        verify(service).prepare(same(command));
+        verifyNoMoreInteractions(service);
+
+        var invalid = new java.sql.SQLException("private again", "secret", 7654321);
+        invalid.setNextException(new java.sql.SQLException("private chained", "23000", 1062));
+        Map<String,Object> safe = CrossDomainStorageFixture.photoPrepareFailure("untrusted private phase", invalid);
+        assertEquals(Map.of("phase", "UNKNOWN", "exceptionTypes", List.of("java.sql.SQLException"),
+                "sql", List.of(Map.of("sqlState", "UNKNOWN", "vendorCode", "UNKNOWN"),
+                        Map.of("sqlState", "23000", "vendorCode", "1062"))), safe);
+        Map<String,Object> unknownType = CrossDomainStorageFixture.photoPrepareFailure("PHOTO_PREPARE", new java.io.IOException("secret"));
+        assertEquals(Map.of("phase", "PHOTO_PREPARE", "exceptionTypes", List.of("UNKNOWN_TYPE"), "sql", List.of()), unknownType);
     }
 
     private static ConfigurableApplicationContext combinationSeedContext(JdbcTemplate jdbc, long base) {

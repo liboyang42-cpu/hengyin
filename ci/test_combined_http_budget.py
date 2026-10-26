@@ -598,7 +598,7 @@ class CombinedBudgetControls(unittest.TestCase):
 
     def configuration_receipt(self):
         # Transport binding only. Real fixed XML/source/class controls are below.
-        return {'purpose':'CONFIG_ASSEMBLY_ONLY','businessExecuted':False,'tests':7,'failures':0,'errors':0,'skipped':0,
+        return {'purpose':'CONFIG_ASSEMBLY_ONLY','businessExecuted':False,'tests':9,'failures':0,'errors':0,'skipped':0,
                 'xmlSha256':'3'*64,'sourceSha256':'4'*64,'testClassSha256':'5'*64}
 
     def cache_receipt(self):
@@ -1054,8 +1054,8 @@ class CombinedBudgetControls(unittest.TestCase):
             self.compiler_input_status(root)
             extra=output/'com/chengyinhub/business/it/GenericGameplayHttpE2eIT$99.class';extra.write_bytes(b'keep anonymous output')
             proof=B.fixed_test_compilation_outputs(inputs)
-            self.assertEqual(len(proof['classes']),37);self.assertEqual(len(proof['sources'])-2,18)
-            self.assertEqual(proof['classTree']['classes'],40)
+            self.assertEqual(len(proof['classes']),37);self.assertEqual(len(proof['sources'])-3,18)
+            self.assertEqual(proof['classTree']['classes'],41)
             self.assertEqual(proof['compilerInputs'],sorted(B.TEST_SOURCES));self.assertTrue(extra.exists())
             for name in B.REQUIRED_TEST_CLASSES:
                 path=output/(name.replace('.','/')+'.class');saved=path.read_bytes();path.unlink()
@@ -1077,6 +1077,8 @@ class CombinedBudgetControls(unittest.TestCase):
         path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(b'synthetic provider class control, not javac evidence')
         configuration=path.parent/'CombinedContextConfigurationTest.class'
         configuration.write_bytes(b'synthetic configuration class control, not javac evidence')
+        photo=root/'chengyinhub-admin/target/test-classes'/(B.PHOTO_UNIT.replace('.','/')+'.class')
+        photo.parent.mkdir(parents=True,exist_ok=True);photo.write_bytes(b'synthetic photo unit class control, not javac evidence')
         return path
 
     def provider_scope(self,root):
@@ -1395,41 +1397,55 @@ class CombinedBudgetControls(unittest.TestCase):
         self.compilation_sources(root);self.provider_class(root)
         source=root/'chengyinhub-admin/src/test/java'/B.CONFIGURATION_SOURCE
         test_class=root/'chengyinhub-admin/target/test-classes'/(B.CONFIGURATION_UNIT.replace('.','/')+'.class')
-        compilation={'sources':{B.CONFIGURATION_SOURCE:B.digest(source)},'configurationTestClassSha256':B.digest(test_class)}
+        photo_source=root/'chengyinhub-admin/src/test/java'/B.PHOTO_SOURCE
+        photo_class=root/'chengyinhub-admin/target/test-classes'/(B.PHOTO_UNIT.replace('.','/')+'.class')
+        compilation={'sources':{B.CONFIGURATION_SOURCE:B.digest(source),B.PHOTO_SOURCE:B.digest(photo_source)},
+                     'configurationTestClassSha256':B.digest(test_class),'photoServiceTestClassSha256':B.digest(photo_class)}
         directory=root/'chengyinhub-admin/target/provider-runtime';directory.mkdir(mode=0o700)
         xml=directory/'configuration.xml'
-        xml.write_text('<testsuite name="'+B.CONFIGURATION_UNIT+'" tests="7" failures="0" errors="0" skipped="0">'
+        xml.write_text('<testsuite name="'+B.CONFIGURATION_UNIT+'" tests="9" failures="0" errors="0" skipped="0">'
             '<properties><property name="PRIVATE_VALUE" value="PRIVATE_VALUE"/></properties>'+
             ''.join('<testcase classname="'+B.CONFIGURATION_UNIT+'" name="'+method+'"/>' for method in B.CONFIGURATION_METHODS)+'</testsuite>')
+        photo_xml=directory/'photo-service.xml'
+        photo_xml.write_text('<testsuite name="'+B.PHOTO_UNIT+'" tests="'+str(len(B.PHOTO_METHODS))+'" failures="0" errors="0" skipped="0">'+
+            ''.join('<testcase classname="'+B.PHOTO_UNIT+'" name="'+method+'"/>' for method in B.PHOTO_METHODS)+'</testsuite>')
+        photo_xml.chmod(0o600)
         xml.chmod(0o600);return xml,source,test_class,compilation
 
     def test_configuration_unit_runs_once_online_without_replacing_either_provider_fork_or_business(self):
         shell=B.fixed_cache_command()[1]
         online=shell.split('"ONLINE_PROVIDER_RUNTIME"',1)[1].split('"OFFLINE_PROVIDER_RUNTIME"',1)[0]
         offline=shell.split('"OFFLINE_PROVIDER_RUNTIME"',1)[1].split('"OFFLINE_TEST_PREFLIGHT"',1)[0]
-        self.assertIn("'-Dtest="+B.PROVIDER_PROBE+','+B.CONFIGURATION_UNIT+"'",online)
+        self.assertIn("'-Dtest="+B.PROVIDER_PROBE+','+B.CONFIGURATION_UNIT+','+B.PHOTO_UNIT+"'",online)
         self.assertIn("'-Dtest="+B.PROVIDER_PROBE+"'",offline);self.assertNotIn(B.CONFIGURATION_UNIT,offline)
         self.assertIn('rm -f',online);self.assertIn('TEST-'+B.CONFIGURATION_UNIT+'.xml',online)
         self.assertIn('provider-runtime/configuration.xml',online)
+        self.assertIn('provider-runtime/photo-service.xml',online);self.assertNotIn(B.PHOTO_UNIT,offline)
+        self.assertIn(B.PHOTO_SOURCE,B.TEST_SOURCES)
         for phase in (online,offline):
             self.assertNotIn('-DskipTests',phase);self.assertNotIn('-Dmaven.test.skip=true',phase)
             self.assertIn('-DforkCount=1',phase);self.assertIn('-DreuseForks=true',phase)
         self.assertIn('-Dtest='+B.CLASS,B.fixed_maven_command())
         self.assertNotIn(B.CONFIGURATION_UNIT,B.fixed_maven_command())
-        self.assertEqual(B.TEST_SOURCES[-1],B.CONFIGURATION_SOURCE);self.assertEqual(len(B.TEST_SOURCES)-1,19)
+        self.assertEqual(B.TEST_SOURCES[-1],B.CONFIGURATION_SOURCE);self.assertEqual(len(B.TEST_SOURCES)-2,19)
         self.assertEqual(len(B.REQUIRED_TEST_CLASSES),37);self.assertEqual(B.LIMIT_SECONDS,1200);self.assertEqual(B.MEMORY,1073741824)
 
     def test_configuration_xml_requires_both_original_methods_no_retry_and_private_source_class_binding(self):
         with tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),patch.object(B,'ROOT',Path(directory)):
             xml,source,test_class,compilation=self.configuration_scope(Path(directory));proof=B.configuration_unit_proof(compilation)
             self.assertEqual(proof['purpose'],'CONFIG_ASSEMBLY_ONLY');self.assertIs(proof['businessExecuted'],False)
-            self.assertEqual({key:proof[key] for key in ('tests','failures','errors','skipped')},{'tests':7,'failures':0,'errors':0,'skipped':0})
+            self.assertEqual({key:proof[key] for key in ('tests','failures','errors','skipped')},{'tests':9,'failures':0,'errors':0,'skipped':0})
             self.assertEqual(proof['methods'],list(B.CONFIGURATION_METHODS));self.assertEqual(proof['xmlSha256'],B.digest(xml))
             self.assertEqual(proof['sourceSha256'],B.digest(source));self.assertEqual(proof['testClassSha256'],B.digest(test_class))
             self.assertEqual(proof['sourceSha'],self.env()['SOURCE_SHA']);self.assertEqual(proof['runId'],self.env()['GITHUB_RUN_ID'])
             self.assertEqual(proof['attempt'],self.env()['GITHUB_RUN_ATTEMPT'])
             self.assertNotIn('PRIVATE_VALUE',json.dumps(proof));self.assertNotIn(directory,json.dumps(proof))
-        for kind in ('missing','count','old-two','old-three','old-five','duplicate','case','method','failure','error','skip','retry','doctype','source','class','mode'):
+            photo=proof['relatedPhotoUnit'];self.assertEqual(photo['purpose'],'PHOTO_STATE_UNIT_ONLY')
+            self.assertIs(photo['businessExecuted'],False);self.assertEqual(photo['testClass'],B.PHOTO_UNIT)
+            self.assertEqual(photo['methods'],list(B.PHOTO_METHODS));self.assertEqual(photo['tests'],len(B.PHOTO_METHODS))
+            self.assertEqual(photo['sourceSha256'],B.digest(Path(directory)/'chengyinhub-admin/src/test/java'/B.PHOTO_SOURCE))
+            self.assertEqual(photo['testClassSha256'],compilation['photoServiceTestClassSha256'])
+        for kind in ('missing','count','old-two','old-three','old-five','old-seven','duplicate','case','method','failure','error','skip','retry','doctype','source','class','mode'):
             with self.subTest(kind=kind),tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),patch.object(B,'ROOT',Path(directory)):
                 xml,source,test_class,compilation=self.configuration_scope(Path(directory));raw=xml.read_text()
                 if kind=='missing':xml.unlink()
@@ -1437,10 +1453,10 @@ class CombinedBudgetControls(unittest.TestCase):
                 elif kind=='class':test_class.write_bytes(b'changed class')
                 elif kind=='mode':xml.chmod(0o644)
                 else:
-                    if kind=='count':raw=raw.replace('tests="7"','tests="6"')
-                    if kind in ('old-two','old-three','old-five'):
-                        retained={'old-two':2,'old-three':3,'old-five':5}[kind]
-                        raw=raw.replace('tests="7"','tests="'+str(retained)+'"')
+                    if kind=='count':raw=raw.replace('tests="9"','tests="8"')
+                    if kind in ('old-two','old-three','old-five','old-seven'):
+                        retained={'old-two':2,'old-three':3,'old-five':5,'old-seven':7}[kind]
+                        raw=raw.replace('tests="9"','tests="'+str(retained)+'"')
                         for method in B.CONFIGURATION_METHODS[retained:]:
                             raw=raw.replace('<testcase classname="'+B.CONFIGURATION_UNIT+'" name="'+method+'"/>','')
                     if kind=='duplicate':raw=raw.replace(B.CONFIGURATION_METHODS[1],B.CONFIGURATION_METHODS[0])
@@ -1453,6 +1469,23 @@ class CombinedBudgetControls(unittest.TestCase):
                     xml.write_text(raw)
                 with self.assertRaises(ValueError):B.configuration_unit_proof(compilation)
 
+        for kind in ('missing','count','method','source','class','mode','skip','retry'):
+            with self.subTest(photo=kind),tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),patch.object(B,'ROOT',Path(directory)):
+                xml,source,test_class,compilation=self.configuration_scope(Path(directory))
+                photo=xml.parent/'photo-service.xml';raw=photo.read_text()
+                if kind=='missing':photo.unlink()
+                elif kind=='mode':photo.chmod(0o644)
+                elif kind=='source':(Path(directory)/'chengyinhub-admin/src/test/java'/B.PHOTO_SOURCE).write_text('changed')
+                elif kind=='class':(Path(directory)/'chengyinhub-admin/target/test-classes'/(B.PHOTO_UNIT.replace('.','/')+'.class')).write_bytes(b'changed')
+                else:
+                    if kind=='count':raw=raw.replace('tests="'+str(len(B.PHOTO_METHODS))+'"','tests="0"')
+                    if kind=='method':raw=raw.replace(B.PHOTO_METHODS[0],'Unreviewed')
+                    if kind in ('skip','retry'):
+                        tag='skipped' if kind=='skip' else 'rerunFailure'
+                        raw=raw.replace('/></testsuite>','><'+tag+'/></testcase></testsuite>')
+                    photo.write_text(raw)
+                with self.assertRaises(ValueError):B.configuration_unit_proof(compilation)
+
     def test_configuration_class_and_fresh_receipt_are_required_on_cache_creation_and_reuse(self):
         with tempfile.TemporaryDirectory() as directory,patch.object(B,'ROOT',Path(directory)):
             root=Path(directory);self.compilation_sources(root);inputs=B.fixed_test_compilation_inputs()
@@ -1461,7 +1494,7 @@ class CombinedBudgetControls(unittest.TestCase):
                 path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(b'synthetic original required class')
             self.provider_class(root);self.compiler_input_status(root)
             proof=B.fixed_test_compilation_outputs(inputs)
-            self.assertEqual(len(proof['classes'])+2,39);self.assertEqual(len(proof['sources']),20)
+            self.assertEqual(len(proof['classes'])+3,40);self.assertEqual(len(proof['sources']),21)
             configuration=root/'chengyinhub-admin/target/test-classes'/(B.CONFIGURATION_UNIT.replace('.','/')+'.class')
             self.assertEqual(proof['configurationTestClassSha256'],B.digest(configuration))
             configuration.unlink()
@@ -1487,7 +1520,7 @@ class CombinedBudgetControls(unittest.TestCase):
             self.assertEqual(proof['reservedCodeCacheBytes'],code*1024**2);self.assertEqual(proof['collector'],'SerialGC')
         self.assertEqual(B.LIMIT_SECONDS,1200);self.assertEqual(B.MEMORY,1073741824)
         self.assertIn('-o',B.fixed_maven_command());self.assertIn('-Dtest='+B.CLASS,B.fixed_maven_command())
-        self.assertEqual(len(B.TEST_SOURCES),20);self.assertEqual(len(B.REQUIRED_TEST_CLASSES),37)
+        self.assertEqual(len(B.TEST_SOURCES),21);self.assertEqual(len(B.REQUIRED_TEST_CLASSES),37)
 
     def test_missing_duplicate_or_conflicting_jvm_allocations_are_rejected_before_acceptance(self):
         for role,options in (('MAVEN',B.RUNTIME_MAVEN_OPTIONS),('SUREFIRE',B.SUREFIRE_MEMORY_ARGUMENTS),
@@ -1545,9 +1578,12 @@ class CombinedBudgetControls(unittest.TestCase):
         self.assertEqual(B.CONFIGURATION_METHODS[2:3],('schedulerChildHeapIsFixedOnlyForOriginalCombinedScope',))
         self.assertEqual(B.CONFIGURATION_METHODS[3:5],('combinationIdentityFileRetainsFrozenBytesAcrossIntegerNodeWidths',
                          'combinationIdentityFileRejectsExistingAndPendingFilesBeforeSql'))
-        self.assertEqual(B.CONFIGURATION_METHODS[5:],('protectedFactDigestPreservesJdbcScalarAndTimeFacts',
+        self.assertEqual(B.CONFIGURATION_METHODS[5:7],('protectedFactDigestPreservesJdbcScalarAndTimeFacts',
                          'protectedFactDigestRetainsQueryAndSerializationFailures'))
-        self.assertEqual(len(B.CONFIGURATION_METHODS),7)
+        self.assertEqual(B.CONFIGURATION_METHODS[7:],('photoNeverReadRetainsConnectionAcrossIndependentTransaction',
+                         'photoPrepareFailureProjectionKeepsOnlyReviewedCodesAndCause'))
+        self.assertEqual(len(B.CONFIGURATION_METHODS),9)
+        self.assertEqual(len(B.PHOTO_METHODS),23)
 
 
 if __name__=='__main__':unittest.main()

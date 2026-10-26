@@ -83,12 +83,15 @@ public class PhotoCheckIntentService {
         if (TransactionSynchronizationManager.isActualTransactionActive()) {
             throw new IllegalStateException("Photo execution requires no active transaction");
         }
-        PhotoCheckIntentRow original = owned(memberId, intentId, requestFingerprint);
+        // NEVER can still establish an empty synchronization. Keep this method's
+        // locking read/session inside the existing short independent transaction,
+        // so its connection is released before provider work and later commits.
+        PhotoCheckIntentRow original = independent.execute(status -> owned(memberId, intentId, requestFingerprint));
         if (!"PREPARED".equals(original.getState())) return view(original);
         PhotoCheckIntentCommand command = decode(original);
         boolean claimed = Boolean.TRUE.equals(independent.execute(status ->
                 mapper.claim(intentId, memberId, requestFingerprint) == 1));
-        if (!claimed) return read(memberId, intentId, requestFingerprint);
+        if (!claimed) return independent.execute(status -> read(memberId, intentId, requestFingerprint));
 
         PhotoCheckVisionService.PreparedReview review;
         try {
@@ -117,7 +120,7 @@ public class PhotoCheckIntentService {
             if (mapper.saveResult(original) != 1) throw new IllegalStateException("Photo result persistence failed");
             return null;
         });
-        return read(memberId, intentId, requestFingerprint);
+        return independent.execute(status -> read(memberId, intentId, requestFingerprint));
     }
 
     /** No nonce allocation, permission mutation, quota or provider call on reads. */

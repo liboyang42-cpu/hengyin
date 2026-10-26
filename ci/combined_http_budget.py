@@ -28,13 +28,42 @@ CLASS = 'CrossDomainCombinedLoadMySqlIT'
 PROVIDER_PROBE = 'com.chengyinhub.business.it.CombinedSurefireRuntimeProbeTest'
 CONFIGURATION_UNIT = 'com.chengyinhub.business.it.CombinedContextConfigurationTest'
 CONFIGURATION_SOURCE = 'com/chengyinhub/business/it/CombinedContextConfigurationTest.java'
+PHOTO_UNIT = 'com.chengyinhub.business.service.ai.PhotoCheckIntentServiceTest'
+PHOTO_SOURCE = 'com/chengyinhub/business/service/ai/PhotoCheckIntentServiceTest.java'
+PHOTO_METHODS = (
+    'mandatoryAndNeverGuardsRejectBeforeAnyWork',
+    'consentRefusalHasNoIntentQuotaOrProviderEffects',
+    'approvedButNotOwnedMediaRefusalPrecedesPlanning',
+    'prepareStoresCanonicalFullContextAndOriginalPlanBeforeConsumption',
+    'sameKeySameHashReturnsOriginalWithoutNewSecurityOrQuotaActions',
+    'sameKeyDifferentFingerprintRejectsWithoutEffects',
+    'readRequiresOriginalOwnerAndFingerprintAndDoesNoExternalWork',
+    'damagedSessionBindingFailsClosed',
+    'inFlightAndUnknownNeverResendOrSynthesizeDegraded',
+    'losingCasOnlyReadsOriginalInFlight',
+    'firstActualReviewPersistsSnapshotBeforeOriginalResultAndReplaysIt',
+    'firstActualDegradedResultAndProviderUnknownAreStoredSeparately',
+    'thrownSecurityRefusalIsNotConvertedToFallbackResult',
+    'snapshotPersistenceFailureStopsBeforeModelWork',
+    'markAppliedRequiresOriginalReadyResultAndMatchingReceiptAndSupportsSameReceiptReplay',
+    'applyCasFailurePropagatesToBusinessTransaction',
+    'losingClaimUsesThreeIndependentBoundariesAndKeepsPublicReadCallerOwned',
+    'firstOwnedReadFailureRollsBackBeforeClaimOrProviderAndPreservesOriginalError',
+    'finalOwnedReadFailureCannotEraseCommittedResultOrPermitAnotherProviderCall',
+    'photoExecuteProxyReleasesOwnReadsBeforeProviderAndAfterResultReadback',
+    'photoExecuteProxyLosingClaimReadsCurrentOriginalInShortTransaction',
+    'photoExecuteProxyUnknownResultKeepsIdentityAndNeverReexecutes',
+    'photoExecuteProxyThrownFailureClosesOwnResourcesAndRetainsUnknown',
+)
 CONFIGURATION_METHODS = ('boundedPoolOverridesBothIncompatibleInheritedFloorsWithoutChangingOtherOwners',
                          'originalDruidPropertiesAssemblesAValidUninitializedThreeConnectionPool',
                          'schedulerChildHeapIsFixedOnlyForOriginalCombinedScope',
                          'combinationIdentityFileRetainsFrozenBytesAcrossIntegerNodeWidths',
                          'combinationIdentityFileRejectsExistingAndPendingFilesBeforeSql',
                          'protectedFactDigestPreservesJdbcScalarAndTimeFacts',
-                         'protectedFactDigestRetainsQueryAndSerializationFailures')
+                         'protectedFactDigestRetainsQueryAndSerializationFailures',
+                         'photoNeverReadRetainsConnectionAcrossIndependentTransaction',
+                         'photoPrepareFailureProjectionKeepsOnlyReviewedCodesAndCause')
 RUNTIME_MAVEN_OPTIONS = '-Xms16m -Xmx128m -XX:MaxDirectMemorySize=16m -XX:ReservedCodeCacheSize=32m -XX:+UseSerialGC -Djava.io.tmpdir=/tmp -Duser.home=/tmp/home'
 SUREFIRE_MEMORY_ARGUMENTS = '-Xms16m -Xmx384m -XX:MaxDirectMemorySize=64m -XX:ReservedCodeCacheSize=64m -XX:+UseSerialGC'
 SCHEDULER_MEMORY_ARGUMENTS = '-Xmx64m'
@@ -61,6 +90,7 @@ TEST_SOURCES = (
     'com/chengyinhub/quartz/util/CrossDomainSchedulerStage.java',
     'com/chengyinhub/quartz/util/SchedulerFenceProcessProbe.java',
     'com/chengyinhub/business/it/CombinedSurefireRuntimeProbeTest.java',
+    PHOTO_SOURCE,
     CONFIGURATION_SOURCE,
 )
 REQUIRED_TEST_CLASSES = (
@@ -253,9 +283,12 @@ def fixed_test_compilation_outputs(inputs):
     require(probe in all_classes,'FIXED_TEST_COMPILATION_OUTPUT_REQUIRED')
     configuration=CONFIGURATION_UNIT.replace('.','/')+'.class'
     require(configuration in all_classes,'FIXED_TEST_COMPILATION_OUTPUT_REQUIRED')
+    photo=PHOTO_UNIT.replace('.','/')+'.class'
+    require(photo in all_classes,'FIXED_TEST_COMPILATION_OUTPUT_REQUIRED')
     return {**inputs,'compilerInputs':sorted(TEST_SOURCES),'classes':classes,
             'providerProbeClassSha256':all_classes[probe],
             'configurationTestClassSha256':all_classes[configuration],
+            'photoServiceTestClassSha256':all_classes[photo],
             'classTree':{'classes':len(all_classes),'sha256':hashlib.sha256(json.dumps(list(all_classes.items()),separators=(',',':')).encode()).hexdigest()}}
 
 
@@ -287,10 +320,19 @@ def configuration_unit_proof(compilation):
             and compilation['sources'].get(CONFIGURATION_SOURCE)==digest(source)
             and compilation.get('configurationTestClassSha256')==digest(test_class),'CONFIGURATION_UNIT_PROOF_REQUIRED')
     xml=exact_test_xml(directory/'configuration.xml',CONFIGURATION_UNIT,CONFIGURATION_METHODS,'CONFIGURATION_UNIT_XML_REQUIRED')
+    photo_source=ROOT/'chengyinhub-admin/src/test/java'/PHOTO_SOURCE
+    photo_class=ROOT/'chengyinhub-admin/target/test-classes'/(PHOTO_UNIT.replace('.','/')+'.class')
+    require(all(path.is_file() and not path.is_symlink() and path.resolve()==path for path in (photo_source,photo_class))
+            and compilation['sources'].get(PHOTO_SOURCE)==digest(photo_source)
+            and compilation.get('photoServiceTestClassSha256')==digest(photo_class),'CONFIGURATION_UNIT_PROOF_REQUIRED')
+    photo_xml=exact_test_xml(directory/'photo-service.xml',PHOTO_UNIT,PHOTO_METHODS,'CONFIGURATION_UNIT_XML_REQUIRED')
     return {'purpose':'CONFIG_ASSEMBLY_ONLY','businessExecuted':False,
             'sourceSha':os.environ['SOURCE_SHA'],'runId':os.environ['GITHUB_RUN_ID'],'attempt':os.environ['GITHUB_RUN_ATTEMPT'],
             'testClass':CONFIGURATION_UNIT,'methods':list(CONFIGURATION_METHODS),
-            'sourceSha256':digest(source),'testClassSha256':digest(test_class),**xml}
+            'sourceSha256':digest(source),'testClassSha256':digest(test_class),**xml,
+            'relatedPhotoUnit':{'purpose':'PHOTO_STATE_UNIT_ONLY','businessExecuted':False,
+                'testClass':PHOTO_UNIT,'methods':list(PHOTO_METHODS),'sourceSha256':digest(photo_source),
+                'testClassSha256':digest(photo_class),**photo_xml}}
 
 
 def provider_runtime_proof(cache):
@@ -438,12 +480,13 @@ def fixed_cache_command():
     # Real provider selection and fork, not skipTests. Same reactor/profile/test classpath, no business.
     report='chengyinhub-admin/target/surefire-reports/TEST-'+PROVIDER_PROBE+'.xml'
     configuration_report='chengyinhub-admin/target/surefire-reports/TEST-'+CONFIGURATION_UNIT+'.xml'
+    photo_report='chengyinhub-admin/target/surefire-reports/TEST-'+PHOTO_UNIT+'.xml'
     for stage,phase,offline in (('ONLINE_PROVIDER_RUNTIME','ONLINE',False),('OFFLINE_PROVIDER_RUNTIME','OFFLINE',True)):
-        selection=PROVIDER_PROBE if offline else PROVIDER_PROBE+','+CONFIGURATION_UNIT
+        selection=PROVIDER_PROBE if offline else PROVIDER_PROBE+','+CONFIGURATION_UNIT+','+PHOTO_UNIT
         args=common+(['-o'] if offline else [])+['-P'+TEST_PROFILE,'-pl','chengyinhub-admin','-am','test',
             '-DargLine='+SUREFIRE_FORK_ARGUMENTS+' -Dcombined.provider.phase='+phase,
             '-Dtest='+selection,'-DforkCount=1','-DreuseForks=true','-DfailIfNoTests=false','-Dsurefire.failIfNoSpecifiedTests=false']
-        remove="rm -f '"+report+"'"+(" '"+configuration_report+"'" if not offline else '')
+        remove="rm -f '"+report+"'"+(" '"+configuration_report+"' '"+photo_report+"'" if not offline else '')
         encoded+='; printf "%s\\n" "'+stage+'" >/tmp/cy-cache.phase; '+remove+'; '+\
             "MAVEN_OPTS='"+RUNTIME_MAVEN_OPTIONS+"' "+\
             ' '.join("'"+value+"'" for value in ['mvn']+args)+' || exit $?; '+\
@@ -451,7 +494,9 @@ def fixed_cache_command():
             "chmod 600 'chengyinhub-admin/target/provider-runtime/"+phase.lower()+".xml' || exit $?"
         if not offline:
             encoded+="; cp '"+configuration_report+"' 'chengyinhub-admin/target/provider-runtime/configuration.xml' || exit $?; "+\
-                     "chmod 600 'chengyinhub-admin/target/provider-runtime/configuration.xml' || exit $?"
+                     "chmod 600 'chengyinhub-admin/target/provider-runtime/configuration.xml' || exit $?; "+\
+                     "cp '"+photo_report+"' 'chengyinhub-admin/target/provider-runtime/photo-service.xml' || exit $?; "+\
+                     "chmod 600 'chengyinhub-admin/target/provider-runtime/photo-service.xml' || exit $?"
     encoded+='; printf "%s\\n" "OFFLINE_TEST_PREFLIGHT" >/tmp/cy-cache.phase; '+\
         ' '.join("'"+value+"'" for value in ['mvn']+goals[2])+' || exit $?'
     return ['-c','mkdir -p /tmp/home /tmp/m2 || exit 98; '

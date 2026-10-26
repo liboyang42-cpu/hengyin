@@ -152,4 +152,49 @@ class PhotoCheckIntentFreshReadMySqlIT {
         } finally {worker.shutdownNow();}
         verify(vision,times(1)).reviewPrepared(any(),any(),any(),any(),any());verify(gateway,times(1)).planQuotaReservation(any(),any(),any());
     }
+
+    @Test @SuppressWarnings("unchecked")
+    void executeWithoutCallerReadReleasesOwnResourcesBeforeProviderAndRetainsOriginalResult() {
+        assertTrue(org.springframework.aop.support.AopUtils.isAopProxy(service));
+        PhotoCheckIntentView prepared=prepare();Stored original=independent(prepared.intentId());
+        when(vision.reviewPrepared(any(),any(),any(),any(),any())).thenAnswer(call->{
+            assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+            assertTrue(TransactionSynchronizationManager.isSynchronizationActive());
+            assertFalse(TransactionSynchronizationManager.hasResource(dataSource),"No method-owned read connection at provider entry");
+            assertFalse(TransactionSynchronizationManager.getResourceMap().keySet().stream()
+                    .anyMatch(org.apache.ibatis.session.SqlSessionFactory.class::isInstance));
+            noOwnedRowLockAtProviderEntry(prepared.intentId());
+            Stored claimed=independent(prepared.intentId());assertEquals("IN_FLIGHT",claimed.state());
+            assertEquals(original.nonce(),claimed.nonce());assertEquals(original.reservation(),call.getArgument(3));
+            Consumer<PhotoCheckVisionService.InputSnapshot> snapshot=call.getArgument(4);
+            snapshot.accept(new PhotoCheckVisionService.InputSnapshot("e".repeat(64),"configured-model","prompt-v1","encoder-v1"));
+            assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+            assertFalse(TransactionSynchronizationManager.hasResource(dataSource));
+            assertFalse(TransactionSynchronizationManager.getResourceMap().keySet().stream()
+                    .anyMatch(org.apache.ibatis.session.SqlSessionFactory.class::isInstance));
+            return new PhotoCheckVisionService.PreparedReview(PhotoCheckVisionResult.concluded(true,93,"original-result"),"RECEIVED","RESULT_RECEIVED");
+        });
+        withoutBusinessTransaction().execute(status->{
+            assertFalse(TransactionSynchronizationManager.hasResource(dataSource)); // No caller primer in this scenario.
+            PhotoCheckIntentView ready=service.executeOnce(7L,prepared.intentId(),HASH);
+            assertEquals(prepared.intentId(),ready.intentId());assertEquals(7L,ready.memberId());
+            assertEquals(HASH,ready.requestFingerprint());assertEquals(PhotoCheckIntentState.RESULT_READY,ready.state());
+            assertEquals("RECEIVED",ready.providerState());assertTrue(ready.result().isPass());
+            assertEquals(93,ready.result().getConfidence());assertEquals("original-result",ready.result().getReason());
+            assertFalse(TransactionSynchronizationManager.hasResource(dataSource),"Post-result current read must finish inside its short transaction");
+            assertFalse(TransactionSynchronizationManager.getResourceMap().keySet().stream()
+                    .anyMatch(org.apache.ibatis.session.SqlSessionFactory.class::isInstance));
+            PhotoCheckIntentView replay=service.executeOnce(7L,prepared.intentId(),HASH);
+            assertEquals(ready.intentId(),replay.intentId());assertEquals(ready.requestFingerprint(),replay.requestFingerprint());
+            assertEquals(ready.state(),replay.state());assertEquals(ready.result().getReason(),replay.result().getReason());
+            assertFalse(TransactionSynchronizationManager.hasResource(dataSource));
+            Stored committed=independent(prepared.intentId());assertEquals("RESULT_READY",committed.state());
+            assertEquals(original.nonce(),committed.nonce());assertEquals(original.reservation(),committed.reservation());
+            return null;
+        });
+        assertFalse(TransactionSynchronizationManager.isSynchronizationActive());
+        assertFalse(TransactionSynchronizationManager.hasResource(dataSource));
+        verify(vision,times(1)).reviewPrepared(any(),any(),any(),any(),any());
+        verify(gateway,times(1)).planQuotaReservation(any(),any(),any());
+    }
 }

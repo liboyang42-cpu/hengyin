@@ -490,6 +490,59 @@ def safe_maven_failure(log_path):
     return result
 
 
+def fixed_photo_prepare_failure(suite, source):
+    # Diagnostic only: a known failed case, one bounded original observation and fixed values.
+    if (not re.fullmatch(r'[1-9][0-9]*', os.environ.get('GITHUB_RUN_ID', ''))
+            or not re.fullmatch(r'[1-9][0-9]*', os.environ.get('GITHUB_RUN_ATTEMPT', ''))
+            or not re.fullmatch(r'[0-9a-f]{40}', source or '')
+            or suite.tag != 'testsuite' or suite.get('name') != PACKAGE + COMBINATION_SUITE):
+        return None
+    cases = suite.findall('testcase')
+    if (len(cases) != 1 or cases[0].get('classname') != PACKAGE + COMBINATION_SUITE
+            or cases[0].get('name') != 'realCommandsRemainIsolatedAcrossHeldProvidersAndOriginalEconomicRecovery'
+            or not (cases[0].findall('failure') + cases[0].findall('error'))):
+        return None
+    lines = [line[len('CONTROLLED_COMBINATION_OBSERVATIONS '):]
+             for output in suite.iter('system-out') for line in (output.text or '').splitlines()
+             if line.startswith('CONTROLLED_COMBINATION_OBSERVATIONS ')]
+    if len(lines) != 1 or len(lines[0].encode()) > 128 * 1024:
+        return None
+    try:
+        report = json.loads(lines[0])
+        if (not isinstance(report, dict) or report.get('sourceSha') != source
+                or report.get('runId') != os.environ.get('GITHUB_RUN_ID')
+                or report.get('runAttempt') != os.environ.get('GITHUB_RUN_ATTEMPT')
+                or report.get('format') != 'CONTROLLED_COMBINATION_V1'
+                or report.get('result') != 'FAIL_OR_UNKNOWN'
+                or report.get('wholeSystemCapacityAccepted') is not False or report.get('q4q8Complete') is not False):
+            return None
+        value = report.get('photoPreparationFailure')
+        types = {'java.lang.IllegalStateException', 'java.lang.IllegalArgumentException', 'java.sql.SQLException',
+                 'java.sql.SQLTimeoutException', 'java.sql.SQLTransientConnectionException', 'java.sql.SQLNonTransientConnectionException',
+                 'java.sql.SQLIntegrityConstraintViolationException', 'java.sql.SQLSyntaxErrorException', 'java.sql.SQLTransactionRollbackException',
+                 'org.springframework.transaction.CannotCreateTransactionException', 'org.springframework.jdbc.CannotGetJdbcConnectionException',
+                 'org.springframework.dao.DataAccessResourceFailureException', 'org.springframework.dao.TransientDataAccessResourceException',
+                 'org.springframework.dao.CannotAcquireLockException', 'org.springframework.dao.QueryTimeoutException',
+                 'org.mybatis.spring.MyBatisSystemException', 'com.chengyinhub.common.exception.ServiceException', 'UNKNOWN_TYPE'}
+        states = {'08001', '08003', '08006', '08S01', '23000', '40001', '42000', '42S02', 'HY000', 'HYT00', 'HYT01', 'UNKNOWN'}
+        codes = {'0', '1040', '1045', '1049', '1054', '1062', '1146', '1205', '1213', '1317', '2003', '2006', '2013', 'UNKNOWN'}
+        if (not isinstance(value, dict) or set(value) != {'phase', 'exceptionTypes', 'sql'}
+                or value['phase'] not in ('TX_BEGIN', 'PHOTO_PREPARE', 'UNKNOWN')
+                or not isinstance(value['exceptionTypes'], list) or not 1 <= len(value['exceptionTypes']) <= 8
+                or any(not isinstance(item, str) or item not in types for item in value['exceptionTypes'])
+                or value['exceptionTypes'] != sorted(set(value['exceptionTypes']))
+                or not isinstance(value['sql'], list) or len(value['sql']) > 32):
+            return None
+        for row in value['sql']:
+            if (not isinstance(row, dict) or set(row) != {'sqlState', 'vendorCode'}
+                    or not isinstance(row['sqlState'], str) or row['sqlState'] not in states
+                    or not isinstance(row['vendorCode'], str) or row['vendorCode'] not in codes):
+                return None
+        return value
+    except (ValueError, TypeError, KeyError):
+        return None
+
+
 def fixed_startup_exception_types(text):
     # Only public framework/JDK exception names, never cause messages or bean values.
     reviewed = {
@@ -503,6 +556,9 @@ def fixed_startup_exception_types(text):
         'org.springframework.context.ApplicationContextException',
         'org.springframework.jdbc.CannotGetJdbcConnectionException', 'org.springframework.jdbc.BadSqlGrammarException',
         'org.springframework.dao.DataAccessResourceFailureException', 'org.springframework.dao.QueryTimeoutException',
+        'org.springframework.dao.CannotAcquireLockException', 'org.springframework.dao.DuplicateKeyException',
+        'org.springframework.dao.DataIntegrityViolationException', 'org.springframework.dao.TransientDataAccessResourceException',
+        'org.springframework.dao.PermissionDeniedDataAccessException', 'org.springframework.jdbc.UncategorizedSQLException',
         'com.fasterxml.jackson.databind.JsonMappingException', 'com.fasterxml.jackson.databind.exc.InvalidDefinitionException',
         'java.lang.ClassNotFoundException', 'java.lang.NoClassDefFoundError', 'java.lang.NoSuchMethodError',
         'java.net.BindException', 'java.sql.SQLSyntaxErrorException',
@@ -532,6 +588,10 @@ def fixed_startup_source_frames(text):
         ("com.chengyinhub.business.it.GameplayProcessRecoveryChild", "seedCombination", "GameplayProcessRecoveryChild.java"): ("COMBINATION_IDENTITY_SEED", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GameplayProcessRecoveryChild.java", 237),
         ("com.chengyinhub.business.it.GameplayProcessRecoveryChild", "seedRows", "GameplayProcessRecoveryChild.java"): ("ORIGINAL_ACTOR_AND_GAME_ROWS", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GameplayProcessRecoveryChild.java", 237),
         ("com.chengyinhub.business.it.GameplayProcessRecoveryChild", "require", "GameplayProcessRecoveryChild.java"): ("ORIGINAL_FIXTURE_REQUIRE", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GameplayProcessRecoveryChild.java", 237),
+        ("com.chengyinhub.business.service.ai.PhotoCheckIntentService", "prepare", "PhotoCheckIntentService.java"): ("PHOTO_INTENT_PREPARE", "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java", 430),
+        ("com.chengyinhub.business.service.ai.PhotoCheckIntentService", "executeOnce", "PhotoCheckIntentService.java"): ("PHOTO_INTENT_EXECUTE_ONCE", "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java", 430),
+        ("com.chengyinhub.business.it.CrossDomainStorageFixture", "command", "CrossDomainStorageFixture.java"): ("ORIGINAL_PHOTO_COMMAND", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainStorageFixture.java", 577),
+        ("com.chengyinhub.business.it.CrossDomainStorageFixture", "photo", "CrossDomainStorageFixture.java"): ("ORIGINAL_PHOTO_SERVICE_ASSEMBLY", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainStorageFixture.java", 577),
         ("com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT", "digest", "CrossDomainCombinedLoadMySqlIT.java"): ("SQL_FACT_SNAPSHOT", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java", 411),
         ("com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT", "actorDigest", "CrossDomainCombinedLoadMySqlIT.java"): ("ACTOR_ORIGINAL_FACT_SNAPSHOT", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java", 411),
         ("com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT", "economicDigest", "CrossDomainCombinedLoadMySqlIT.java"): ("ECONOMIC_ORIGINAL_FACT_SNAPSHOT", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java", 411),
@@ -672,6 +732,9 @@ def cli():
                             failed = ET.parse(original).getroot()
                             if failed.tag == 'testsuite' and failed.get('name') == PACKAGE + n:
                                 failure['state'] = 'FAILED_VERIFICATION'
+                                photo_failure = fixed_photo_prepare_failure(failed, receipt['sourceSha'])
+                                if photo_failure is not None:
+                                    failure['photoPreparationFailure'] = photo_failure
                                 for key in ('tests', 'failures', 'errors', 'skipped'):
                                     value = failed.get(key, '')
                                     if re.fullmatch(r'[0-9]{1,6}', value):
@@ -1040,6 +1103,48 @@ class ManualRouterTest(unittest.TestCase):
 
 
 class FailureDiagnosticTest(unittest.TestCase):
+    def test_photo_prepare_projection_is_fixed_source_bound_and_diagnostic_only(self):
+        marker = 'SYNTHETIC_PRIVATE_NEVER_PUBLISH'
+        expected = {'phase': 'PHOTO_PREPARE', 'exceptionTypes': ['java.sql.SQLException'],
+                    'sql': [{'sqlState': '40001', 'vendorCode': '1213'}]}
+        original = {'sourceSha': 'a' * 40, 'runId': '17', 'runAttempt': '2',
+                    'format': 'CONTROLLED_COMBINATION_V1', 'result': 'FAIL_OR_UNKNOWN',
+                    'wholeSystemCapacityAccepted': False, 'q4q8Complete': False,
+                    'photoPreparationFailure': expected}
+        with mock.patch.dict(os.environ, GITHUB_RUN_ID='17', GITHUB_RUN_ATTEMPT='2'):
+            for mode in ('valid', 'foreign-source', 'foreign-run', 'foreign-attempt', 'unknown-case', 'duplicate',
+                         'phase', 'type', 'state', 'code', 'extra-field', 'unbounded', 'false-success',
+                         'missing-report-run', 'missing-env-run', 'invalid-source'):
+                report = json.loads(json.dumps(original))
+                suite = ET.Element('testsuite', name=PACKAGE + COMBINATION_SUITE)
+                case = ET.SubElement(suite, 'testcase', classname=PACKAGE + COMBINATION_SUITE,
+                                     name='realCommandsRemainIsolatedAcrossHeldProvidersAndOriginalEconomicRecovery')
+                ET.SubElement(case, 'error', message=marker).text = marker
+                if mode == 'foreign-source':report['sourceSha'] = 'b' * 40
+                elif mode == 'foreign-run':report['runId'] = '18'
+                elif mode == 'foreign-attempt':report['runAttempt'] = '3'
+                elif mode == 'unknown-case':case.set('name', marker)
+                elif mode == 'phase':report['photoPreparationFailure']['phase'] = marker
+                elif mode == 'type':report['photoPreparationFailure']['exceptionTypes'] = [marker]
+                elif mode == 'state':report['photoPreparationFailure']['sql'][0]['sqlState'] = marker
+                elif mode == 'code':report['photoPreparationFailure']['sql'][0]['vendorCode'] = marker
+                elif mode == 'extra-field':report['photoPreparationFailure']['message'] = marker
+                elif mode == 'unbounded':report['private'] = marker * (128 * 1024)
+                elif mode == 'false-success':report['result'] = 'OBSERVED_REPRESENTATIVE_COMBINATION'
+                elif mode == 'missing-report-run':report.pop('runId')
+                line = 'CONTROLLED_COMBINATION_OBSERVATIONS ' + json.dumps(report)
+                ET.SubElement(suite, 'system-out').text = line + ('\n' + line if mode == 'duplicate' else '')
+                if mode == 'missing-env-run':
+                    with mock.patch.dict(os.environ, {}, clear=True):
+                        report.pop('runId')
+                        suite.find('system-out').text = 'CONTROLLED_COMBINATION_OBSERVATIONS ' + json.dumps(report)
+                        actual = fixed_photo_prepare_failure(suite, 'a' * 40)
+                else:
+                    actual = fixed_photo_prepare_failure(suite, 'invalid' if mode == 'invalid-source' else 'a' * 40)
+                self.assertEqual(expected if mode == 'valid' else None, actual, mode)
+                self.assertNotIn(marker, json.dumps(actual))
+                self.assertEqual(1, len(case.findall('error')), 'Diagnostic projection cannot consume the original error')
+
     def test_fixed_http_categories_are_exact_public_literals_not_dynamic_messages(self):
         marker = 'SYNTHETIC_PRIVATE_NEVER_PUBLISH'
         count = 0
@@ -1184,6 +1289,12 @@ class FailureDiagnosticTest(unittest.TestCase):
                           'org.springframework.jdbc.CannotGetJdbcConnectionException'], fixed_startup_exception_types(
             'Caused by: com.fasterxml.jackson.databind.exc.InvalidDefinitionException: PRIVATE_VALUE\n'
             'Suppressed: org.springframework.jdbc.CannotGetJdbcConnectionException: PRIVATE_SQL_OR_URL'))
+        self.assertEqual(['org.springframework.dao.CannotAcquireLockException',
+                          'org.springframework.dao.DuplicateKeyException'], fixed_startup_exception_types(
+            'org.springframework.dao.CannotAcquireLockException: PRIVATE_SQL_OR_URL\n'
+            'Caused by: org.springframework.dao.DuplicateKeyException: PRIVATE_ROW_VALUE'))
+        self.assertNotIn('PRIVATE', json.dumps(fixed_startup_exception_types(
+            'org.springframework.dao.DuplicateKeyException: PRIVATE_SQL_OR_URL')))
 
     def test_startup_exception_projection_rejects_messages_frames_custom_types_and_unbounded_prefix(self):
         for text in ('private.SECRET.Exception: PRIVATE', 'message org.springframework.beans.factory.BeanCreationException',
@@ -1199,12 +1310,14 @@ class FailureDiagnosticTest(unittest.TestCase):
                 '\tat com.chengyinhub.business.it.CrossDomainStorageFixture.open(CrossDomainStorageFixture.java:150)\n'
                 '\tat com.chengyinhub.business.it.GameplayProcessRecoveryChild.seedCombination(GameplayProcessRecoveryChild.java:116)\n'
                 '\tat com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT.digest(CrossDomainCombinedLoadMySqlIT.java:383)\n'
+                '\tat com.chengyinhub.business.service.ai.PhotoCheckIntentService.prepare(PhotoCheckIntentService.java:45)\n'
                 'PRIVATE_VALUE SQL password=PRIVATE_VALUE')
         self.assertEqual([{'phase': 'MASTER_DATASOURCE_FACTORY', 'sourceFrame': 'DruidConfig.java:37'},
                           {'phase': 'DRUID_POOL_INIT', 'sourceFrame': 'DruidDataSource.java:721'},
                           {'phase': 'INDEPENDENT_ECONOMIC_ASSEMBLY', 'sourceFrame': 'CrossDomainStorageFixture.java:150'},
                           {'phase': 'COMBINATION_IDENTITY_SEED', 'sourceFrame': 'GameplayProcessRecoveryChild.java:116'},
-                          {'phase': 'SQL_FACT_SNAPSHOT', 'sourceFrame': 'CrossDomainCombinedLoadMySqlIT.java:383'}],
+                          {'phase': 'SQL_FACT_SNAPSHOT', 'sourceFrame': 'CrossDomainCombinedLoadMySqlIT.java:383'},
+                          {'phase': 'PHOTO_INTENT_PREPARE', 'sourceFrame': 'PhotoCheckIntentService.java:45'}],
                          fixed_startup_source_frames(text))
         self.assertNotIn('PRIVATE', json.dumps(fixed_startup_source_frames(text)))
 

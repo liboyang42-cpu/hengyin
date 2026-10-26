@@ -1,0 +1,8 @@
+7acecc1a310e81b506b5519398ebfa58c0111e4546c7124b6374e012a128f5e7  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java
+663a5b1788bf5bf99b5788adb682ad97e81d4f98668216e1b42a45a50de8ee6e  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainStorageFixture.java
+c182d5dde6b9f5e29083f99557da9c90569a183e7cd65e3f02b50b57a22ec0b0  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CombinedContextConfigurationTest.java
+6e1b9dbecc477e97376eb7690b7f6ebc6094149c786bea90c39e234e0095adba  docs/delivery/architecture-day/C/combined-photo-prepare-window/README.md
+7befece483e35f8001b7cc7087f60f5d2fe4c9af2ae1121b0a41d11ec76e8e33  docs/delivery/architecture-day/C/combined-photo-prepare-window/control-contract.json
+124bacf8da362e7fe7b4248f61ef8a3f6f142d5ef1c1e70ed0f56dad6b4490df  docs/delivery/architecture-day/C/combined-photo-prepare-window/official-sources.tsv
+547e6a7277734d63bed3b721543792c573a523f327682cbfa1a4c3500dc5d5db  docs/delivery/architecture-day/C/combined-photo-prepare-window/http-failure-projection.review.patch
+441c25e5b7f8759d7bb1637b4c15d1c06bd29a3f981d459819252f3534e558dd  docs/delivery/architecture-day/C/combined-photo-prepare-window/photo-owned-read-short-transaction.review.patch

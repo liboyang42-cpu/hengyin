@@ -1457,7 +1457,7 @@
       "note": "Current locked original-key recovery; exact no-row/hash conflict/owner refusal, cached-null and RR committed-original observations; composes owned Photo fixture."
     },
     "com.chengyinhub.business.service.ai.PhotoCheckIntentFreshReadMySqlIT": {
-      "tests": 3,
+      "tests": 4,
       "storage": [
         "mysql"
       ],
