@@ -1,0 +1,15 @@
+--- a/ci/test_controlled_combination_entry.py
++++ b/ci/test_controlled_combination_entry.py
+@@ -159,8 +159,10 @@
+         self.assertEqual(list(entry.EXPECTED), json.loads(matrix[3]))
+         self.assertIn('default: all-three', workflow); self.assertIn('max-parallel: 20', workflow)
+         self.assertIn('PARTIAL controlled combination', workflow)
+-        self.assertIn('org.apache.maven.plugins:maven-dependency-plugin:3.10.0:get', workflow)
+-        self.assertIn('-Dartifact=org.apache.maven.surefire:surefire-junit-platform:3.5.6 -Dtransitive=true', workflow)
++        self.assertIn('python3 -I ci/combined_http_budget.py warm-cache', workflow)
++        warm = budget_controls_source.B.fixed_cache_command()[1]
++        self.assertIn("'org.apache.maven.plugins:maven-dependency-plugin:3.10.0:get'", warm)
++        self.assertIn("'-Dartifact=org.apache.maven.surefire:surefire-junit-platform:3.5.6' '-Dtransitive=true'", warm)
+         self.assertNotIn('http_scope:', workflow.split('  workflow_call:', 1)[1].split('permissions:', 1)[0])
+
+     def test_shell_admits_only_exact_manual_hosted_single_class_without_starting_tools(self):

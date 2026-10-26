@@ -15,7 +15,9 @@ import os
 from pathlib import Path
 import re
 import shutil
+import signal
 import subprocess
+import tempfile
 import time
 import urllib.parse
 import uuid
@@ -34,6 +36,19 @@ MEMORY = 1073741824
 LIMIT_SECONDS = 1200  # Owner ceiling, not a replacement for the original Java/workload deadlines.
 BOOTSTRAP_REPORT = PUBLIC/'combined-http-bootstrap.json'
 MYSQL_PRIVATE = OUT/'combined-mysql-private'
+EMPTY_SETTINGS='<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"/>\n'
+CACHE_REPORT=PUBLIC/'combined-http-cache.json'
+CORE_VERSION='3.9.11'
+REVIEWED_PLUGINS={
+    'org.apache.maven.plugins:maven-resources-plugin':{'3.3.1'},
+    'org.apache.maven.plugins:maven-jar-plugin':{'3.4.1'},
+    'org.apache.maven.plugins:maven-install-plugin':{'3.1.2'},
+    'org.apache.maven.plugins:maven-compiler-plugin':{'3.15.0'},
+    'org.apache.maven.plugins:maven-surefire-plugin':{'3.5.6'},
+    'org.apache.maven.plugins:maven-dependency-plugin':{'3.10.0'},
+    'org.apache.maven.plugins:maven-war-plugin':{'3.1.0'},
+    'org.springframework.boot:spring-boot-maven-plugin':{'4.1.1'},
+    'io.github.git-commit-id:git-commit-id-maven-plugin':{'5.0.0'}}
 SAFE_RESOURCE_CODES = frozenset({'FIXED_COMMAND_FAILED','FIXED_HOSTED_CLASS_ONLY','FULL_SOURCE_REQUIRED',
     'RUN_ATTEMPT_REQUIRED','FIXED_BACKING_IDENTITY_REQUIRED','BACKING_MYSQL_FOREIGN','BACKING_NAME_CID_CHANGED',
     'BACKING_MYSQL_BUDGET_MISMATCH','BACKING_LOOPBACK_SCOPE_CHANGED','BACKING_MYSQL_EXACT_EPHEMERAL_STORAGE_REQUIRED',
@@ -43,7 +58,10 @@ SAFE_RESOURCE_CODES = frozenset({'FIXED_COMMAND_FAILED','FIXED_HOSTED_CLASS_ONLY
     'MYSQL_TCP_READY_BUDGET_EXHAUSTED','MYSQL_TCP_IDENTITY_MISMATCH','ORIGINAL_SYNTHETIC_MYSQL_CREDENTIAL_REQUIRED',
     'LOCAL_DOCKER_ONLY','FOREIGN_CONTAINER_OR_IMAGE','FOREIGN_LABEL','ACTUAL_CID_MISMATCH',
     'ABSENCE_NOT_INDEPENDENTLY_PROVEN','NETWORK_NOT_EXACT_OR_NOT_EMPTY','MYSQL_CREATE_ID_UNKNOWN',
-    'SHELL_BOOTSTRAP_FAILED','PRIVATE_RESOURCE_PATH_UNSAFE','NEVER_ADOPT_PREVIOUS_BOOTSTRAP'})
+    'SHELL_BOOTSTRAP_FAILED','PRIVATE_RESOURCE_PATH_UNSAFE','NEVER_ADOPT_PREVIOUS_BOOTSTRAP',
+    'FIXED_CACHE_TOOLCHAIN_REQUIRED','OFFLINE_CACHE_PREFLIGHT_FAILED','OFFLINE_CACHE_PREFLIGHT_REQUIRED',
+    'OFFLINE_CACHE_PROOF_CHANGED','BOUNDED_OFFLINE_CACHE_REQUIRED','EMPTY_OFFLINE_CACHE',
+    'SYMLINK_OFFLINE_CACHE_FORBIDDEN','NONREGULAR_OFFLINE_CACHE_FORBIDDEN'})
 
 
 def require(ok, code):
@@ -65,6 +83,181 @@ def write(path, value):
 
 
 def digest(path): return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def safe_plugin_resolution(text):
+    """Only exact reviewed plugin coordinates in Maven's standard resolution error, never its cause."""
+    result={}
+    text=re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]','',text[-1024*1024:])
+    matches=re.findall(r'\bPlugin ([a-z][a-z0-9_.]{0,99}):([a-z][a-z0-9-]{0,79}):([0-9][A-Za-z0-9_.-]{0,39}) or one of its dependencies could not be resolved:',text)
+    for group,artifact,version in reversed(matches):
+        key=group+':'+artifact
+        if version in REVIEWED_PLUGINS.get(key,set()):
+            result={'plugin':key,'pluginVersion':version,'pluginPhase':'RESOLUTION_BEFORE_GOAL'};break
+    return result
+
+
+def cache_manifest(cache):
+    require(cache.is_dir() and not cache.is_symlink(),'EXISTING_OFFLINE_CACHE_REQUIRED')
+    rows=[];total=0
+    for path in sorted(cache.rglob('*')):
+        require(not path.is_symlink(),'SYMLINK_OFFLINE_CACHE_FORBIDDEN')
+        if path.is_dir():continue
+        require(path.is_file(),'NONREGULAR_OFFLINE_CACHE_FORBIDDEN')
+        total+=path.stat().st_size;rows.append((str(path.relative_to(cache)),path.stat().st_size,digest(path)))
+        require(len(rows)<=100000 and total<=8*1024**3,'BOUNDED_OFFLINE_CACHE_REQUIRED')
+    require(rows,'EMPTY_OFFLINE_CACHE')
+    return {'files':len(rows),'bytes':total,'sha256':hashlib.sha256(json.dumps(rows,separators=(',',':')).encode()).hexdigest()}
+
+
+def cache_inputs():
+    require(command(['git','-C',str(ROOT),'rev-parse','HEAD']).decode().strip()==os.environ['SOURCE_SHA'],'WRONG_CHECKOUT')
+    require(subprocess.run(['git','-C',str(ROOT),'diff','--quiet','HEAD','--'],capture_output=True).returncode==0,'DIRTY_SOURCE')
+    return {str(p.relative_to(ROOT)):digest(p) for p in [ROOT/'pom.xml']+[ROOT/m/'pom.xml' for m in MODULES]}
+
+
+def cache_maven_arguments():
+    return ['-B','-q','--settings','/cache-owner/settings.xml','--global-settings','/cache-owner/settings.xml',
+            '-Dmaven.repo.local=/cache/repository']
+
+
+def fixed_cache_command():
+    common=cache_maven_arguments()
+    # Original package/get, now run by the SAME pinned core/settings/repository as execution.
+    # skipTests belongs only to preparation/preflight. The original real test command never gains it.
+    goals=[common+['-pl','chengyinhub-admin','-am','package','-DskipTests'],
+           common+['-N','org.apache.maven.plugins:maven-dependency-plugin:3.10.0:get',
+                   '-Dartifact=org.apache.maven.surefire:surefire-junit-platform:3.5.6','-Dtransitive=true'],
+           common+['-o','-pl','chengyinhub-admin','-am','test','-DskipTests','-Dtest='+CLASS,
+                   '-DfailIfNoTests=false','-Dsurefire.failIfNoSpecifiedTests=false']]
+    # Structured argv are passed to a fixed shell without interpolation of source/env/credentials.
+    encoded='; '.join('printf "%s\\n" "'+stage+'" >/tmp/cy-cache.phase; '+
+                     ' '.join("'"+value+"'" for value in ['mvn']+goal)+' || exit $?'
+                     for stage,goal in zip(('ONLINE_PACKAGE','ORIGINAL_PROVIDER_GET','OFFLINE_TEST_PREFLIGHT'),goals))
+    return ['-c','mkdir -p /tmp/home /tmp/m2; ('+encoded+'); status=$?; '
+            'printf "%s\\n" "$status" >/tmp/cy-cache.exit; '
+            'for i in {1..1200}; do [ -f /cache-owner/stop ] && break; sleep .1; done; exit "$status"']
+
+
+def warm_cache():
+    identity_gate(os.environ);PUBLIC.mkdir(parents=True,exist_ok=True)
+    private=private_directory(Path(tempfile.mkdtemp(prefix='cy-http-budget.')))
+    cache=Path.home()/'.m2/repository'
+    report={**resource_envelope(os.environ),'result':'NOT_COMPLETED','originalExit':None,'failures':[],
+            'preparationOnly':True,'mavenVersion':CORE_VERSION,'image':JDK,'settingsSha256':hashlib.sha256(EMPTY_SETTINGS.encode()).hexdigest()}
+    state={'nonce':uuid.uuid4().hex,'slots':{}};first=None;cleaned=None
+    def publish():
+        try:write(CACHE_REPORT,report)
+        except Exception as failure:report['failures'].append(resource_failure(failure,'CACHE_REPORT_WRITE'))
+    try:
+        publish();cache.mkdir(parents=True,exist_ok=True)
+        require(not cache.is_symlink() and cache.resolve()==cache,'SYMLINK_OFFLINE_CACHE_FORBIDDEN')
+        report['pomSha256']=cache_inputs()
+        require(command(DOCKER+['context','inspect','--format','{{.Endpoints.docker.Host}}']).decode().strip()
+                =='unix:///var/run/docker.sock','LOCAL_DOCKER_ONLY')
+        found=subprocess.run(DOCKER+['image','inspect',JDK],capture_output=True,timeout=20)
+        if found.returncode:command(DOCKER+['pull',JDK],timeout=300)
+        image=json.loads(command(DOCKER+['image','inspect',JDK]))[0];report['imageId']=image['Id']
+        (private/'settings.xml').write_text(EMPTY_SETTINGS);os.chmod(private/'settings.xml',0o600)
+        name='cy-http-cache-'+os.environ['GITHUB_RUN_ID']+'-'+os.environ['GITHUB_RUN_ATTEMPT']+'-'+state['nonce'][:12]
+        absent('container',name);state['slots']['app']={'name':name,'cid':None,'attempted':True}
+        args=DOCKER+['create','--name',name,'--network','bridge','--memory=1g','--memory-swap=1g','--cpus=1',
+                    '--pids-limit=256','--read-only','--cap-drop=ALL','--security-opt=no-new-privileges:true',
+                    '--tmpfs','/tmp:rw,size=256m','--user',str(os.getuid())+':'+str(os.getgid()),
+                    '--entrypoint','/bin/bash','--workdir',str(ROOT),'--cidfile',str(private/'app.cid')]
+        for key,value in labels(os.environ,state['nonce']).items():args+=['--label',key+'='+value]
+        mounts=[(ROOT,ROOT,'readonly'),(cache,Path('/cache/repository'),'readonly=false'),(private,Path('/cache-owner'),'readonly')]
+        for module in MODULES:
+            target=ROOT/module/'target';target.mkdir(parents=True,exist_ok=True)
+            require(not target.is_symlink(),'ORIGINAL_TARGET_REQUIRED');mounts.append((target,target,'readonly=false'))
+        for source,target,mode in mounts:args+=['--mount','type=bind,src='+str(source)+',dst='+str(target)+','+mode]
+        env={'HOME':'/tmp/home','MAVEN_CONFIG':'/tmp/m2','MAVEN_OPTS':'-Xmx512m -Djava.io.tmpdir=/tmp -Duser.home=/tmp/home',
+             'SOURCE_SHA':os.environ['SOURCE_SHA'],'GITHUB_SHA':os.environ['SOURCE_SHA']}
+        for key,value in env.items():args+=['--env',key+'='+value]
+        cid=command(args+[JDK]+fixed_cache_command(),timeout=30).decode().strip()
+        require(re.fullmatch('[0-9a-f]{64}',cid) and (private/'app.cid').read_text().strip()==cid,'CREATED_CID_NOT_PROVEN')
+        state['slots']['app']['cid']=cid;obj=inspect(cid)
+        report['budget']=validate_container(obj,name,JDK,labels(os.environ,state['nonce']),MEMORY,'bridge',cid)
+        require(obj['Image']==image['Id'] and obj['Config']['Cmd']==fixed_cache_command()
+                and obj['Config']['Entrypoint']==['/bin/bash']
+                and obj['Config']['User']==str(os.getuid())+':'+str(os.getgid()),'FIXED_CACHE_TOOLCHAIN_REQUIRED')
+        expected_mounts={(str(s),str(t),mode!='readonly') for s,t,mode in mounts}
+        require({(m['Source'],m['Destination'],m['RW']) for m in obj['Mounts'] if m['Type']=='bind'}==expected_mounts
+                and all(m['Type']=='bind' or (m['Type']=='tmpfs' and m['Destination']=='/tmp') for m in obj['Mounts'])
+                and obj['HostConfig']['ReadonlyRootfs'] is True and not obj['HostConfig'].get('Devices')
+                and not obj['HostConfig'].get('VolumesFrom'),'PRIVATE_MOUNT_BOUNDARY_CHANGED')
+        require(dict(item.split('=',1) for item in obj['Config']['Env'])==
+                {**dict(item.split('=',1) for item in image['Config'].get('Env',[])),**env},'PRIVATE_ENV_BOUNDARY_CHANGED')
+        publish();command(DOCKER+['start',cid]);deadline=time.monotonic()+LIMIT_SECONDS
+        obj=inspect(cid);report['cgroup']=read_cgroup(obj['State']['Pid'],cid);publish()
+        while True:
+            obj=inspect(cid);validate_owner(obj,name,JDK,labels(os.environ,state['nonce']),cid)
+            require(obj['State']['Running'] and time.monotonic()<deadline,'OWNED_EXECUTION_DEADLINE')
+            status=command(DOCKER+['exec',cid,'/bin/bash','-c','if [ -f /tmp/cy-cache.exit ]; then cat /tmp/cy-cache.exit; fi']).decode().strip()
+            if status:
+                require(re.fullmatch('[0-9]{1,3}',status) and int(status)<256,'ACTUAL_MAVEN_EXIT_REQUIRED');break
+            time.sleep(.5)
+        report['originalExit']=int(status)
+        report['cgroup']=read_cgroup(obj['State']['Pid'],cid)
+        require(int(report['cgroup']['memoryEvents'].get('oom_kill','-1'))==0,'ACTUAL_CGROUP_CHILD_OOM_KILL')
+        core=command(DOCKER+['exec',cid,'sha256sum','/usr/share/maven/lib/maven-core-'+CORE_VERSION+'.jar']).decode().split()[0]
+        require(re.fullmatch('[0-9a-f]{64}',core),'FIXED_CACHE_TOOLCHAIN_REQUIRED');report['mavenCoreSha256']=core
+        require(report['originalExit']==0,'OFFLINE_CACHE_PREFLIGHT_FAILED')
+        report['cache']=cache_manifest(cache);require(cache_inputs()==report['pomSha256'],'COMPILED_POSTIMAGE_DRIFT')
+    except Exception as failure:
+        first=failure;report['firstFailure']=resource_failure(failure,'PINNED_CACHE_PREPARATION')
+        if report['originalExit'] in (None,0):
+            report['originalExit']=failure.errno if isinstance(failure,InterruptedError) and failure.errno in (129,130,143) else 2
+    finally:
+        # Preserve bounded private diagnostics even on timeout/OOM/create failure, BEFORE exact cleanup.
+        try:
+            slot=state['slots'].get('app',{})
+            if slot.get('cid'):
+                obj=inspect(slot['cid']);validate_owner(obj,slot['name'],JDK,labels(os.environ,state['nonce']),slot['cid'])
+                log=private/'cache.log'
+                with log.open('xb') as stream:
+                    os.chmod(log,0o600);logs=subprocess.run(DOCKER+['logs',slot['cid']],stdout=stream,stderr=subprocess.STDOUT,timeout=30)
+                require(logs.returncode==0 and log.stat().st_size<32*1024**2,'PRIVATE_LOG_NOT_COMPLETE')
+                with log.open('rb') as stream:
+                    stream.seek(max(0,log.stat().st_size-1024*1024));report['pluginFailure']=safe_plugin_resolution(stream.read().decode(errors='replace'))
+                if obj['State']['Running']:
+                    phase=command(DOCKER+['exec',slot['cid'],'cat','/tmp/cy-cache.phase']).decode().strip()
+                    report['phase']=phase if phase in ('ONLINE_PACKAGE','ORIGINAL_PROVIDER_GET','OFFLINE_TEST_PREFLIGHT') else 'UNKNOWN'
+        except Exception as failure:report['failures'].append(resource_failure(failure,'CACHE_PRIVATE_LOG'))
+        try:
+            cleaned=cleanup_slot(private,state,'app');report['cleanup']=cleaned
+            if cleaned['result']=='EXACT_CID_REMOVED_AND_ABSENT':
+                require(not cleaned['terminal']['OOMKilled'],'APP_OOM_OR_UNKNOWN_EXIT')
+                require(cleaned['terminal']['ExitCode'] in (report['originalExit'],143),'ACTUAL_MAVEN_EXIT_REQUIRED')
+        except Exception as failure:report['failures'].append(resource_failure(failure,'CACHE_CONTAINER_CLEANUP'))
+        accepted=first is None and report['originalExit']==0 and not report['failures'] and cleaned is not None and cleaned['result']=='EXACT_CID_REMOVED_AND_ABSENT'
+        report['result']='PINNED_OFFLINE_TEST_PREFLIGHT_PROVEN' if accepted else 'NOT_ACCEPTED';publish()
+        # A failed preparation retains its own private diagnostic journal; public never gets raw logs/settings.
+        if accepted and not report['failures']:shutil.rmtree(private_directory(private))
+    require(report['result']=='PINNED_OFFLINE_TEST_PREFLIGHT_PROVEN' and not report['failures'],'OFFLINE_CACHE_PREFLIGHT_FAILED')
+
+
+def verified_cache(cache):
+    require(CACHE_REPORT.is_file() and not CACHE_REPORT.is_symlink() and CACHE_REPORT.stat().st_size<2*1024*1024,'OFFLINE_CACHE_PREFLIGHT_REQUIRED')
+    report=json.loads(CACHE_REPORT.read_text())
+    require({k:report.get(k) for k in ('sourceSha','runId','attempt','class')}==identity(os.environ)
+            and report.get('result')=='PINNED_OFFLINE_TEST_PREFLIGHT_PROVEN' and report.get('originalExit')==0
+            and not report.get('failures') and report.get('image')==JDK and report.get('mavenVersion')==CORE_VERSION
+            and report.get('settingsSha256')==hashlib.sha256(EMPTY_SETTINGS.encode()).hexdigest()
+            and report.get('pomSha256')==cache_inputs() and report.get('cache')==cache_manifest(cache)
+            and report.get('cleanup',{}).get('result')=='EXACT_CID_REMOVED_AND_ABSENT'
+            and report['cleanup'].get('terminal',{}).get('OOMKilled') is False
+            and re.fullmatch('sha256:[0-9a-f]{64}',report.get('imageId',''))
+            and re.fullmatch('[0-9a-f]{64}',report.get('mavenCoreSha256',''))
+            and report.get('budget',{}).get('memory')==report['budget'].get('memorySwap')==MEMORY
+            and report['budget'].get('nanoCpus')==1000000000 and report['budget'].get('pids')==256,'OFFLINE_CACHE_PREFLIGHT_REQUIRED')
+    validate_cgroup_limits(report['cgroup']['limits'])
+    return {key:report[key] for key in ('image','imageId','mavenVersion','mavenCoreSha256','settingsSha256','cache')} | {'reportSha256':digest(CACHE_REPORT)}
+
+
+def cache_stop_signal(number,_frame):
+    require(number in (signal.SIGINT,signal.SIGTERM,signal.SIGHUP),'FIXED_CACHE_SIGNAL_ONLY')
+    raise InterruptedError(128+number,'FIXED_CACHE_PREPARATION_STOP')
 
 
 def resource_failure(failure, phase):
@@ -651,13 +844,15 @@ def prepare(path):
             ('cid','serverUuid','version','hostEndpoint','executionEndpoint')),'BOOTSTRAP_NOT_VERIFIED')
     cache = Path.home()/'.m2/repository'
     require(cache.is_dir() and not cache.is_symlink(), 'EXISTING_OFFLINE_CACHE_REQUIRED')
+    cache_proof=verified_cache(cache)
     require((cache/'org/apache/maven/surefire/surefire-junit-platform/3.5.6/surefire-junit-platform-3.5.6.jar').is_file(),
             'EXISTING_OFFLINE_SUREFIRE_PROVIDER_REQUIRED')
     images = {image:json.loads(command(DOCKER+['image','inspect',image]))[0] for image in (JDK,REDIS)} # Never pull here.
+    require(images[JDK]['Id']==cache_proof['imageId'],'FIXED_CACHE_TOOLCHAIN_REQUIRED')
     nonce = uuid.uuid4().hex
     state = {'identity':identity(os.environ),'nonce':nonce,
              'name':'cy-http-combined-'+os.environ['GITHUB_RUN_ID']+'-a'+os.environ['GITHUB_RUN_ATTEMPT']+'-'+nonce[:12],
-             'mysql':proof,'mysqlHostPid':mysql['State']['Pid'],'cache':str(cache.resolve()),
+             'mysql':proof,'mysqlHostPid':mysql['State']['Pid'],'cache':str(cache.resolve()),'cacheProof':cache_proof,
              'mysqlBootstrap':bootstrap,
              'redisPort':int(os.environ['CHENGYIN_HTTP_E2E_REDIS_PORT']),'schema':os.environ['CHENGYIN_HTTP_E2E_DATABASE'],
              'source':None,'slots':{},'javaProcesses':[],'result':'NOT_ACCEPTED','phase':'PREPARE',
@@ -673,7 +868,7 @@ def prepare(path):
     (path/'launch/CombinedHttpNamespacePortProbe.java').write_bytes(probe.read_bytes())
     os.chmod(path/'launch/CombinedHttpNamespacePortProbe.java',0o600)
     state['namespaceProbeSourceSha256']=digest(probe);save(path,state)
-    (path/'launch/settings.xml').write_text('<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"/>\n')
+    (path/'launch/settings.xml').write_text(EMPTY_SETTINGS)
     os.chmod(path/'launch/settings.xml',0o600)
     cid = create_slot(path,state,'redis',REDIS,['--bind','127.0.0.1','--port',str(state['redisPort']),'--protected-mode','yes',
                                               '--save','','--appendonly','no','--dir','/tmp'])
@@ -798,7 +993,8 @@ def validate_app_inputs(obj,path,state):
 
 def run(path):
     gate(os.environ); path,state = load_private(path); require(state['phase'] == 'PREPARED','PREPARED_OWNER_REQUIRED')
-    backing_mysql(os.environ); state['source']=source_manifest();save(path,state)
+    backing_mysql(os.environ);require(verified_cache(Path(state['cache']))==state['cacheProof'],'OFFLINE_CACHE_PROOF_CHANGED')
+    state['source']=source_manifest();save(path,state)
     state['mysqlAddressProof'] = mysql_address_proof(state['mysql']['cid'])
     mounts = [(ROOT,ROOT,'readonly'),(Path(state['cache']),Path('/cache/repository'),'readonly'),(path/'launch',Path('/budget'),'readonly')]
     for module in MODULES:
@@ -830,6 +1026,7 @@ def run(path):
         result = subprocess.run(DOCKER+['logs',cid],stdout=stream,stderr=subprocess.STDOUT,timeout=30)
     require(result.returncode == 0 and (OUT/'run.log').stat().st_size < 32*1024*1024,'PRIVATE_LOG_NOT_COMPLETE')
     require(source_manifest() == state['source'],'COMPILED_POSTIMAGE_DRIFT')
+    require(verified_cache(Path(state['cache']))==state['cacheProof'],'OFFLINE_CACHE_PROOF_CHANGED')
     require(any(x['role']=='MAVEN' for x in state['javaProcesses']) and any(x['role']=='SUREFIRE' for x in state['javaProcesses']), 'REAL_MAVEN_AND_JUNIT_PID_PROOF_REQUIRED')
     require(not obj['State']['OOMKilled'],'APP_OOM_OR_UNKNOWN_EXIT')
     require(mysql_address_proof(state['mysql']['cid']) == state['mysqlAddressProof'],'MYSQL_ADDRESS_OR_UUID_DRIFT')
@@ -922,7 +1119,7 @@ def finalize(path, original_exit):
     successful = accepted_outcome(state,original_exit,failures,cleaned,port_proof)
     report = {**state['identity'],'result':'FIXED_COMBINED_BUDGET_PROCESS_PROVEN' if successful else 'NOT_ACCEPTED',
               'originalExit':original_exit,'mavenExit':state.get('mavenExit'),'appExit':state.get('appExit'),'mysql':state['mysql'],
-              'mysqlAddressProof':state.get('mysqlAddressProof'),'mysqlBootstrap':state['mysqlBootstrap'],
+              'mysqlAddressProof':state.get('mysqlAddressProof'),'mysqlBootstrap':state['mysqlBootstrap'],'cacheProof':state['cacheProof'],
               'namespaceRedisPortFree':port_proof,'redisPort':state['redisPort'],'database':state['schema'],
               'source':state['source'],'slots':{role:{k:v for k,v in value.items() if k in ('name','cid','budget')} for role,value in state['slots'].items()},
               'javaProcesses':state['javaProcesses'],'cleanup':cleaned,'failures':failures,'firstFailure':state.get('firstFailure'),
@@ -966,6 +1163,13 @@ def check_subject(report, subject_identity, java_pid, jar_sha256):
                 and proof.get('image')==image and proof.get('memory')==proof.get('memorySwap')==memory
                 and proof.get('nanoCpus')==1000000000 and proof.get('pids')==256,'SUBJECT_RESOURCE_PROOF_MISMATCH')
     for process in report['javaProcesses']: validate_cgroup_limits(process['cgroup']['limits'])
+    cache_proof=report.get('cacheProof',{})
+    require(cache_proof.get('image')==JDK and cache_proof.get('mavenVersion')==CORE_VERSION
+            and cache_proof.get('imageId')==report['slots']['app']['budget'].get('imageId')
+            and cache_proof.get('settingsSha256')==hashlib.sha256(EMPTY_SETTINGS.encode()).hexdigest()
+            and all(re.fullmatch('[0-9a-f]{64}',cache_proof.get(k,'')) for k in ('reportSha256','mavenCoreSha256'))
+            and type(cache_proof.get('cache',{}).get('files')) is int and cache_proof['cache']['files']>0
+            and re.fullmatch('[0-9a-f]{64}',cache_proof['cache'].get('sha256','')),'OFFLINE_CACHE_PREFLIGHT_REQUIRED')
     mysql=report.get('mysql',{})
     require(re.fullmatch('[0-9a-f]{64}',mysql.get('cid','')) and mysql.get('image')==MYSQL
             and mysql.get('memory')==mysql.get('memorySwap')==MEMORY and mysql.get('nanoCpus')==1000000000
@@ -1136,9 +1340,15 @@ def cleanup_mysql():
 def main():
     os.umask(0o077)
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('phase',choices=('prepare','run','finalize','cleanup-mysql','bootstrap-init','bootstrap-ready','bootstrap-failure','run-host-path'))
+    parser.add_argument('phase',choices=('prepare','run','finalize','cleanup-mysql','bootstrap-init','bootstrap-ready','bootstrap-failure','run-host-path','warm-cache'))
     parser.add_argument('private',nargs='?',type=Path);parser.add_argument('original_exit',nargs='?',type=int)
     args=parser.parse_args()
+    if args.phase=='warm-cache':
+        require(args.private is None and args.original_exit is None,'FIXED_BOOTSTRAP_ARGS')
+        previous={number:signal.signal(number,cache_stop_signal) for number in (signal.SIGINT,signal.SIGTERM,signal.SIGHUP)}
+        try:warm_cache();return 0
+        finally:
+            for number,handler in previous.items():signal.signal(number,handler)
     if args.phase=='run-host-path':
         require(args.private is None and args.original_exit is None,'FIXED_BOOTSTRAP_ARGS');return run_host_path()
     if args.phase in ('bootstrap-init','bootstrap-ready'):
@@ -1167,6 +1377,6 @@ if __name__=='__main__':
             print('Combined HTTP budget failure evidence: UNKNOWN',file=__import__('sys').stderr)
         # Never publish exception text, inspect payload, argv, environment or raw SQL/logs.
         phase=__import__('sys').argv[1] if len(__import__('sys').argv)>1 and __import__('sys').argv[1] in (
-                'prepare','run','finalize','cleanup-mysql','bootstrap-init','bootstrap-ready','bootstrap-failure','run-host-path') else 'FIXED_ARGUMENTS'
+                'prepare','run','finalize','cleanup-mysql','bootstrap-init','bootstrap-ready','bootstrap-failure','run-host-path','warm-cache') else 'FIXED_ARGUMENTS'
         print('Combined HTTP budget failed: '+json.dumps(resource_failure(failure,phase),sort_keys=True),file=__import__('sys').stderr)
         raise SystemExit(2)

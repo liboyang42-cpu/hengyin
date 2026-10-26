@@ -1,0 +1,10 @@
+# Parent c0355527bd2082ea957b08fd684a4a8887470858; shared files NOT edited by C.
+# workflow.review.patch preimage / postimage
+716d37ff18324731bd5a9879acdf17009084e4d5f644dd204fa6e9ee624f47a9  a/.github/workflows/gameplay-http-e2e.yml
+ea0f0aeb0df262faf7bfffb4ec90448a6d7d5bd1e9e0218f8f6088bc5bced4de  b/.github/workflows/gameplay-http-e2e.yml
+# diagnostic.review.patch preimage / postimage
+c9e9d5544a08cf6e820850bed6edf5d7876396efec575fe4280dd77d308a29eb  a/ci/test_http_e2e_entry.py
+425ac95a9df2c7635374257c1293c8ed5013a80360727de24d1a22ef71c139de  b/ci/test_http_e2e_entry.py
+# caller-control.review.patch preimage / postimage
+8ded943a6382e8149f35ccc96b86bac69338134f36f83a681ba217c92243f9e1  a/ci/test_controlled_combination_entry.py
+fb0bf0459cebce079db1f21bcb9191805e8bf3c3c45a288d02c120539942a6e9  b/ci/test_controlled_combination_entry.py

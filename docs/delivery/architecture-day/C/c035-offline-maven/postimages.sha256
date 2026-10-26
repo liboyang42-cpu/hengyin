@@ -1,0 +1,7 @@
+62f63a2d0181f4d766aad5b24366d7f97fe6ed2eacf37cb9f4db9e40f9929b80  ci/combined_http_budget.py
+e23737450c5a27ab1ef6b9164cb47bf67308e614b199c7300236a4f35e1a7acd  ci/test_combined_http_budget.py
+507396686f0938457721fedf6c6b707e055fd4429a2f2c08761095f2729d3789  docs/delivery/architecture-day/C/c035-offline-maven/README.md
+046f6f8b208d69c75a5816ea28d0d243fb036d38f38f083aab15edc7832fe558  docs/delivery/architecture-day/C/c035-offline-maven/caller-control.review.patch
+72ea9096a0942ba4ac2458a5d50c7ee0f763d7f03ea4bf8cbd431fb7b8602410  docs/delivery/architecture-day/C/c035-offline-maven/diagnostic.review.patch
+10ae3f0827af26ef047f738fc8ff8d62cdc7bc54c62e154a581227a3322362bd  docs/delivery/architecture-day/C/c035-offline-maven/workflow.review.patch
+056417d697d37a57b43d3d20619ff7054cc5238390be6b260042b26e603b4f0b  docs/delivery/architecture-day/C/c035-offline-maven/shared-postimages.sha256
