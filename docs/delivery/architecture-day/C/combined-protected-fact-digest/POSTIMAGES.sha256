@@ -1,0 +1,5 @@
+4972a9293fe6b09cc7e13584428e2b3f8b335a81aaf836ae6662424b0c688253  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java
+ee031a6fb8ef22879408e9734f4b65a23053a7e814615d8b12e8670b6e17307f  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CombinedContextConfigurationTest.java
+3778e7b6e28aac0aeae93d79a910f04176689e9c46d4db34a59d777dd10be7c9  docs/delivery/architecture-day/C/combined-protected-fact-digest/README.md
+9c4f2ffc6c435f3ea206df6b59a66890555767887d0a6ba23a82c74c43453294  docs/delivery/architecture-day/C/combined-protected-fact-digest/control-contract.json
+5b29a34883af6d0bf7306ecc06ddee2a2d40a617a3eba9af692fc5b5a90d8cbc  docs/delivery/architecture-day/C/combined-protected-fact-digest/official-sources.tsv

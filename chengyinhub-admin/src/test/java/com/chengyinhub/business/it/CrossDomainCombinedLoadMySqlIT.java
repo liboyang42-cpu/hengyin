@@ -6,6 +6,7 @@ import com.chengyinhub.business.domain.route.TopicRouteState;
 import com.chengyinhub.business.service.ai.*;
 import com.chengyinhub.quartz.util.CrossDomainSchedulerStage;
 import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.parallel.ResourceLock;
@@ -36,6 +37,10 @@ class CrossDomainCombinedLoadMySqlIT {
     @Autowired JdbcTemplate jdbc;
     @TempDir Path privateDirectory;
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final ObjectMapper FACT_JSON = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
     private static final List<String> NO_CASH = List.of("oms_order", "oms_order_item", "coop_order",
             "registration_entitlement", "sms_coupon_history", "member_capability", "merchant_subscription",
             "ums_member_withdrawal", "member_cash_withdraw");
@@ -379,8 +384,28 @@ class CrossDomainCombinedLoadMySqlIT {
         originals.forEach((id, hash) -> assertEquals(hash, retainedDigest(storage, id), "UNKNOWN must keep original identity, body and reservation"));
     }
     private static String digest(JdbcTemplate source, String query, Object... args) {
-        try { return CombinedCoreHttpWorkload.sha(JSON.writeValueAsBytes(source.queryForList(query, args))); }
-        catch (Exception failure) { throw new IllegalStateException("CONTROLLED_FACT_OBSERVATION_FAILED"); }
+        try {
+            List<Map<String,Object>> facts = new ArrayList<>();
+            for (Map<String,Object> row : source.queryForList(query, args)) {
+                Map<String,Object> complete = new TreeMap<>();
+                for (var column : row.entrySet()) {
+                    Object value = column.getValue();
+                    // Jackson's legacy Date serializer keeps only milliseconds. Preserve SQL
+                    // Timestamp nanos, and all Date/Time milliseconds, without timezone formatting.
+                    if (value instanceof java.sql.Timestamp timestamp)
+                        value = List.of("java.sql.Timestamp", timestamp.toInstant().getEpochSecond(), timestamp.getNanos());
+                    else if (value instanceof java.sql.Date date)
+                        value = List.of("java.sql.Date", date.getTime());
+                    else if (value instanceof java.sql.Time time)
+                        value = List.of("java.sql.Time", time.getTime());
+                    complete.put(column.getKey(), value);
+                }
+                facts.add(complete); // Keep the original SQL row order, every column and every null.
+            }
+            return CombinedCoreHttpWorkload.sha(FACT_JSON.writeValueAsBytes(facts));
+        } catch (Exception failure) {
+            throw new IllegalStateException("CONTROLLED_FACT_OBSERVATION_FAILED", failure);
+        }
     }
     private static String resourceFile(String name) {
         try { return Files.readString(Path.of("/sys/fs/cgroup", name)).trim(); }
