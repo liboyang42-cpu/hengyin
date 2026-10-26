@@ -1,0 +1,22 @@
+diff --git a/ci/combined_http_budget.py b/ci/combined_http_budget.py
+--- a/ci/combined_http_budget.py
++++ b/ci/combined_http_budget.py
+@@ -1241,13 +1241,16 @@ def booter_binding(argv, cache):
+     # Surefire folds manifest lines. Decode only its fixed local Class-Path, never a remote URL.
+     text = raw.decode().replace('\r\n','\n').replace('\n ','')
+     line = next((x[len('Class-Path: '):] for x in text.splitlines() if x.startswith('Class-Path: ')), '')
+-    require(str(ROOT/'chengyinhub-admin/target/test-classes') in line
+-            and str(ROOT/'chengyinhub-admin/target/classes') in line, 'REAL_TEST_CLASSPATH_BINDING_REQUIRED')
++    resolved = set()
+     for entry in line.split():
+         parsed = urllib.parse.urlsplit(entry); require(parsed.scheme in ('','file') and not parsed.netloc,'REMOTE_BOOTER_CLASSPATH_FORBIDDEN')
+         local = Path(urllib.parse.unquote(parsed.path))
+         if not local.is_absolute(): local = path.parent/local
+         local = local.resolve()
+         require(local.is_relative_to(Path('/cache/repository')) or
+                 any(local.is_relative_to(ROOT/module/'target') for module in MODULES),'FOREIGN_BOOTER_CLASSPATH')
++        resolved.add(local)
++    require({(ROOT/'chengyinhub-admin/target/test-classes').resolve(),
++             (ROOT/'chengyinhub-admin/target/classes').resolve()}.issubset(resolved),
++            'REAL_TEST_CLASSPATH_BINDING_REQUIRED')
+     agents = [x[len('-javaagent:'):] for x in argv if x.startswith('-javaagent:')]

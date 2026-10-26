@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "parentSourceSha": "a2f20508f747b8ce69dc92c59c8d6642ff3d64d7",
+  "state": "STATIC_SOURCE_ONLY_NOT_RUN",
+  "ownedScope": "docs/delivery/architecture-day/C/combined-booter-binding/",
+  "officialSurefireTag": "surefire-3.5.6",
+  "officialSurefireCommit": "25ea054860a5c1e5932b360d8aa0a31944c2b841",
+  "officialSurefireAnnotatedTagObject": "4d2ac80420e49ecb7f5edf6c045c4a000d25974e",
+  "actualFailureReason": "UNKNOWN_NO_PRIVATE_MANIFEST_OR_ARGV_AVAILABLE",
+  "absenceOfAcceptedSurefireObservationProvesNoFork": false,
+  "houseSources": [
+    {"file": "ci/combined_http_budget.py", "lines": "1232-1258", "role": "booter JAR, manifest Class-Path, original cache agent binding"},
+    {"file": "ci/combined_http_budget.py", "lines": "1261-1290,1321-1359", "role": "same CID/cgroup/network/PID/startticks; binding precedes accepted proof append"},
+    {"file": "chengyinhub-admin/pom.xml", "lines": "103-120", "role": "original dependency-plugin properties and Mockito startup agent appended to argLine"}
+  ],
+  "officialGeneration": {
+    "mode": "Manifest-only JAR when nonmodular and classloader configuration makes it usable; retain current -jar-only contract, do not add -cp/module-path fallback",
+    "tempDirectory": "Linux original project.build.directory/tempDir, default tempDir=surefire",
+    "filename": "surefirebooter-<yyyyMMddHHmmssSSS>_<fileId>.jar",
+    "javaArgv": ["<actual configured java executable>", "<original parsed JVM argLine and Mockito agent>", "-jar", "<absolute owned target/surefire/surefirebooter-...jar>", "<temp directory>", "<dump prefix>", "<Surefire properties basename>", "<optional system-properties basename>"],
+    "manifest": {
+      "headers": ["Manifest-Version: 1.0", "Class-Path: <complete boot+test+provider classpath>", "Main-Class: <original Surefire start class>"],
+      "classPathOrderSource": "DefaultForkConfiguration.java:190-204 joins boot, test and provider classpaths",
+      "relativePreference": "JarManifestForkConfiguration.java:177-194 uses booter JAR parent.relativize(classPathElement) then percent-encodes the result",
+      "absoluteFallback": "JarManifestForkConfiguration.java:181-187,195-212 uses file URI only when relativize raises IllegalArgumentException",
+      "directorySuffix": "JarManifestForkConfiguration.java:146-158 appends / for actual directory entries",
+      "separators": "single spaces between URI entries",
+      "escaping": "JarManifestForkConfiguration.java:233-240 URLEncoder UTF-8, + converted to %20, encoded slash/backslash converted to /; decode percent escapes with unquote, not unquote_plus",
+      "folding": "Written with java.util.jar.Manifest.write. JDK21 reference Manifest.println72 writes CRLF then one SPACE continuation; unfold before URI token splitting/percent decoding",
+      "rawPrivateManifestObserved": false
+    }
+  },
+  "comparisons": [
+    {"house": "1233-1237", "status": "SOURCE_COMPATIBLE_FOR_FIXED_LINUX_MODE", "fact": "-jar, owned admin target JAR, surefirebooter- name and bounded size match source generation; preserve all checks"},
+    {"house": "1242-1243", "status": "SOURCE_COMPATIBLE_WITH_OFFICIAL_FOLDING", "fact": "CRLF normalization and removal of continuation newline+one space precede token split; no new generic parser or wrapper needed for this fixed generator"},
+    {"house": "1244-1245", "status": "PROVEN_STATIC_CONTRACT_MISMATCH", "fact": "Raw absolute path substring is not a required representation of official relative URIs. A legitimate ../test-classes/ ../classes/ can be rejected before existing canonical path checks"},
+    {"house": "1246-1252", "status": "REUSE_EXISTING_PATH_OWNER_CHECKS", "fact": "Existing URL restriction, percent decoding, relative-to-booter-parent resolution and cache/reactor target allowlist already provide the appropriate canonical path stage"},
+    {"house": "1253-1257", "status": "KEEP_ORIGINAL_AGENT_CONTRACT", "fact": "Exactly one original startup agent rooted at container /cache/repository; map to original host cache for agent file/hash. Do not turn trailing Surefire args into public argv or relax agent validation"},
+    {"house": "1280-1287", "status": "OBSERVATION_IS_NOT_NEGATIVE_FORK_PROOF", "fact": "Candidate SUREFIRE is classified and booter_binding called before proof appended. A thrown binding rejection can leave no accepted SUREFIRE item even after a real PID was encountered"}
+  ],
+  "minimalChange": {
+    "reviewPatch": "binding.review.patch",
+    "owner": "B/root only applies actual helper patch",
+    "operation": "Replace raw substring check with exact canonical membership after every entry passed the existing owner allowlist",
+    "requiredSet": ["<ROOT>/chengyinhub-admin/target/test-classes", "<ROOT>/chengyinhub-admin/target/classes"],
+    "membership": "Path.resolve applied to both sides; subset of resolved entries, not string prefix or substring",
+    "counterexample": "target/test-classes-shadow and target/classes-shadow are not the required directories even if their strings contain those names",
+    "retainedFailureCode": "REAL_TEST_CLASSPATH_BINDING_REQUIRED",
+    "noChange": ["JAR location/name/size bounds", "original URI scheme/authority rejection", "all-entry cache/reactor containment", "folding and URI decoder", "exact Mockito startup agent/hash", "actual fork PID/cgroup/namespace/source/JAR checks", "actual test/XML/receipt gate", "nonzero failure and independent cleanup", "fixed budget or offline/read-only/network policy"]
+  },
+  "directControls": [
+    {"id": "relative-original", "source": "../test-classes/ ../classes/", "expected": "CANONICAL_REQUIRED_MEMBERS_PRESENT; still require original cache agent and all other proof"},
+    {"id": "absolute-original", "source": "file:<absolute original target directories>", "expected": "Same canonical members, no new authority accepted"},
+    {"id": "folded-original", "source": "Official CRLF+SPACE continuation inside/between URI text", "expected": "Unfold first, preserving actual separator spaces, then same member set"},
+    {"id": "encoded-local", "source": "Percent-encoded path inside an original allowed root", "expected": "Decode once before containment; literal plus is not a space"},
+    {"id": "missing-required", "source": "One or both exact required directories absent", "expected": "REAL_TEST_CLASSPATH_BINDING_REQUIRED"},
+    {"id": "prefix-decoy", "source": "Only absolute target/test-classes-shadow and target/classes-shadow entries", "expected": "REAL_TEST_CLASSPATH_BINDING_REQUIRED, not raw-substring success"},
+    {"id": "remote-uri", "source": "https URI or file URI with foreign authority", "expected": "REMOTE_BOOTER_CLASSPATH_FORBIDDEN"},
+    {"id": "foreign-traversal", "source": "Relative URI resolving outside original cache/reactor target roots", "expected": "FOREIGN_BOOTER_CLASSPATH"},
+    {"id": "wrong-booter-or-agent", "source": "Wrong target/name, missing/duplicate/foreign original Mockito agent", "expected": "Original strict rejection retained"},
+    {"id": "binding-rejected", "source": "Actual observed candidate PID rejected by a binding guard", "expected": "FAIL/UNKNOWN accepted-fork status with safe fixed reason, not NO_FORK; preserve original nonzero and exact cleanup"}
+  ],
+  "jdkReferenceBoundary": "Fixed OpenJDK jdk21u tag jdk-21.0.8-ga is a source reference for JAR folding only, not proof of the actual pinned image JVM patch version or a claim to have run it",
+  "notRun": ["Python import or parsing", "controls or tests", "Java", "Maven", "DB", "Docker", "HTTP workload", "CI"],
+  "businessAccepted": false
+}
