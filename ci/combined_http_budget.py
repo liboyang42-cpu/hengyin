@@ -137,7 +137,17 @@ SAFE_RESOURCE_CODES = frozenset({'FIXED_COMMAND_FAILED','FIXED_HOSTED_CLASS_ONLY
     'FIXED_TEST_COMPILATION_SOURCE_REQUIRED','FIXED_TEST_COMPILATION_OUTPUT_REQUIRED',
     'STALE_TEST_OUTPUT_BOUNDARY_CHANGED','UNREVIEWED_TEST_COMPILATION_SOURCE',
     'UNREVIEWED_TEST_COMPILATION_OUTPUT','PROVIDER_RUNTIME_PROOF_REQUIRED','PROVIDER_RUNTIME_XML_REQUIRED',
-    'PROVIDER_RUNTIME_CLASSPATH_CHANGED'})
+    'PROVIDER_RUNTIME_CLASSPATH_CHANGED','ORIGINAL_SUREFIRE_FORK_REQUIRED','SAME_TARGET_BOOTER_REQUIRED',
+    'BOUNDED_BOOTER_MANIFEST_REQUIRED','ORIGINAL_SUREFIRE_MAIN_REQUIRED','REAL_TEST_CLASSPATH_BINDING_REQUIRED',
+    'REMOTE_BOOTER_CLASSPATH_FORBIDDEN','FOREIGN_BOOTER_CLASSPATH','REAL_BOOTER_CLASSPATH_ENTRY_REQUIRED',
+    'ORIGINAL_MOCKITO_STARTUP_AGENT_REQUIRED','CACHED_ORIGINAL_AGENT_REQUIRED','ACTUAL_APP_HOST_PID_REQUIRED',
+    'MYSQL_PROCESS_REPLACED','BOUNDED_PROCESS_IDENTITY_REQUIRED','BOUNDED_JAVA_IDENTITY_REQUIRED',
+    'FORK_ESCAPED_FIXED_BUDGET','ACTUAL_NAMESPACE_PID_REQUIRED','FIXED_CLASS_NOT_ON_ACTUAL_MAVEN_PROCESS',
+    'NOT_SAME_OWNED_LOOPBACK_NAMESPACE','APP_EXIT_BEFORE_MAVEN_STATUS','OWNED_EXECUTION_DEADLINE',
+    'REAL_MAVEN_AND_JUNIT_PID_PROOF_REQUIRED','MYSQL_ADDRESS_OR_UUID_DRIFT','ORIGINAL_EXECUTION_NAMESPACE_NOT_LIVE',
+    'MYSQL_PROCESS_REPLACED_BEFORE_PORT_PROOF','PORT_PROBE_NAMESPACE_CHANGED','NAMESPACE_PROBE_POSTIMAGE_CHANGED',
+    'ACTUAL_NAMESPACE_BIND_PROOF_REQUIRED','PRIVATE_APP_IDENTITY_OR_ROOTFS_CHANGED','FIXED_OFFLINE_MAVEN_COMMAND_CHANGED',
+    'UNCLASSIFIED_RESOURCE_FAILURE'})
 CACHE_SUBSTAGES=frozenset({'SOURCE_INPUTS','LOCAL_ENGINE','PINNED_IMAGE','CREATE_INPUTS','CREATE',
     'OWNER_TOOLCHAIN','MOUNT_ENV','START','CGROUP','WAIT_EXIT','MAVEN_EXIT','CORE_IDENTITY',
     'MANIFEST','PROVIDER_RUNTIME','PRIVATE_LOG','CLEANUP','TERMINAL'})
@@ -1229,60 +1239,117 @@ def validate_cgroup_limits(limits):
             'ACTUAL_CGROUP_CPU_MISMATCH')
 
 
+EXECUTION_SUBSTAGES=frozenset({'BACKING_IDENTITY','SOURCE_MANIFEST','MYSQL_ADDRESS','APP_CREATE','APP_LIMITS',
+    'APP_INPUTS','NETWORK_NAMESPACE','APP_RELEASE','APP_INSPECT','APP_OWNER','APP_LIVE','DEADLINE',
+    'JAVA_SAMPLE','JAVA_CGROUP','MYSQL_PROCESS','PROCESS_LIST','JAVA_PROC','JAVA_PROC_CGROUP',
+    'JAVA_NAMESPACE_PID','SUREFIRE_BOOTER_BINDING','MAVEN_COMMAND','CGROUP_OOM','MAVEN_STATUS',
+    'MAVEN_STATUS_VALUE','PRIVATE_LOG','POSTIMAGE','CACHE_RECHECK','REQUIRED_JVM_ROLES','APP_OOM',
+    'FINAL_MYSQL_ADDRESS','NAMESPACE_PORT_PROOF'})
+EXECUTION_FAILURE_FUNCTIONS=frozenset({'run_owned_app','sample_java','booter_binding','read_cgroup',
+    'validate_cgroup_limits','validate_container','validate_owner','validate_app_inputs','inspect','command',
+    'source_manifest','verified_cache','mysql_address_proof','backing_mysql','create_slot','namespace_port_proof'})
+
+
+def execution_failure(failure,phase,substage):
+    # Only fixed owner predicates and reviewed source locations, never str(failure), argv or raw logs.
+    value=failure.args[0] if isinstance(failure,ValueError) and failure.args else None
+    result={'phase':phase if phase in ('PREPARE','PREPARED','APP_CREATE','APP_EXECUTION','MAVEN_EXITED_AWAIT_CLEANUP',
+            'NAMESPACE_PORT_PROOF') else 'UNKNOWN',
+            'substage':substage if substage in EXECUTION_SUBSTAGES else 'UNKNOWN',
+            'type':type(failure).__name__ if type(failure).__name__ in ('ValueError','OSError','FileNotFoundError',
+                'PermissionError','TimeoutExpired','JSONDecodeError','KeyError','TypeError','UnicodeDecodeError',
+                'BadZipFile','StopIteration') else 'UNKNOWN',
+            'reasonCode':value if isinstance(value,str) and value in SAFE_RESOURCE_CODES else 'UNCLASSIFIED_RESOURCE_FAILURE'}
+    trace=failure.__traceback__;origin=None
+    while trace is not None:
+        if trace.tb_frame.f_code.co_filename==__file__ and trace.tb_frame.f_code.co_name in EXECUTION_FAILURE_FUNCTIONS:
+            origin={'function':trace.tb_frame.f_code.co_name,'line':trace.tb_lineno}
+        trace=trace.tb_next
+    if origin is not None:result['origin']=origin
+    return result
+
+
 def booter_binding(argv, cache):
-    require('-jar' in argv and argv.index('-jar')+1 < len(argv), 'ORIGINAL_SUREFIRE_FORK_REQUIRED')
+    require(argv.count('-jar')==1 and argv.index('-jar')+1 < len(argv), 'ORIGINAL_SUREFIRE_FORK_REQUIRED')
     path = Path(argv[argv.index('-jar')+1])
     require(path.resolve().is_relative_to(ROOT/'chengyinhub-admin/target') and path.name.startswith('surefirebooter-')
             and path.suffix == '.jar' and path.is_file() and not path.is_symlink() and path.stat().st_size < 16*1024*1024,
             'SAME_TARGET_BOOTER_REQUIRED')
     with zipfile.ZipFile(path) as archive:
-        raw = archive.read('META-INF/MANIFEST.MF')
-        require(len(raw) < 1024*1024,'BOUNDED_BOOTER_MANIFEST_REQUIRED')
+        entries=[info for info in archive.infolist() if info.filename=='META-INF/MANIFEST.MF']
+        require(len(entries)==1 and entries[0].file_size<1024*1024,'BOUNDED_BOOTER_MANIFEST_REQUIRED')
+        raw = archive.read(entries[0])
     # Surefire folds manifest lines. Decode only its fixed local Class-Path, never a remote URL.
     text = raw.decode().replace('\r\n','\n').replace('\n ','')
-    line = next((x[len('Class-Path: '):] for x in text.splitlines() if x.startswith('Class-Path: ')), '')
-    require(str(ROOT/'chengyinhub-admin/target/test-classes') in line
-            and str(ROOT/'chengyinhub-admin/target/classes') in line, 'REAL_TEST_CLASSPATH_BINDING_REQUIRED')
+    main=text.split('\n\n',1)[0].splitlines()
+    require([x[len('Main-Class: '):] for x in main if x.startswith('Main-Class: ')]==
+            ['org.apache.maven.surefire.booter.ForkedBooter'],'ORIGINAL_SUREFIRE_MAIN_REQUIRED')
+    lines=[x[len('Class-Path: '):] for x in main if x.startswith('Class-Path: ')]
+    require(len(lines)==1 and lines[0].split(),'REAL_TEST_CLASSPATH_BINDING_REQUIRED')
+    line=lines[0];resolved=[]
     for entry in line.split():
-        parsed = urllib.parse.urlsplit(entry); require(parsed.scheme in ('','file') and not parsed.netloc,'REMOTE_BOOTER_CLASSPATH_FORBIDDEN')
-        local = Path(urllib.parse.unquote(parsed.path))
+        parsed = urllib.parse.urlsplit(entry)
+        require(parsed.scheme in ('','file') and not parsed.netloc and not parsed.query and not parsed.fragment,
+                'REMOTE_BOOTER_CLASSPATH_FORBIDDEN')
+        decoded=urllib.parse.unquote(parsed.path,errors='strict')
+        require(decoded and not any(value in decoded for value in ('\0','\r','\n','\\')),'FOREIGN_BOOTER_CLASSPATH')
+        local = Path(decoded)
         if not local.is_absolute(): local = path.parent/local
-        local = local.resolve()
+        # Surefire 3.5.6 relativizes URI entries against the manifest JAR directory.
+        # Normalize in the CONTAINER namespace before mapping its read-only cache to the host.
+        local = Path(os.path.normpath(local))
         require(local.is_relative_to(Path('/cache/repository')) or
                 any(local.is_relative_to(ROOT/module/'target') for module in MODULES),'FOREIGN_BOOTER_CLASSPATH')
+        mapped=cache/local.relative_to('/cache/repository') if local.is_relative_to('/cache/repository') else local
+        require(not mapped.is_symlink() and mapped.resolve()==mapped and
+                (mapped.is_dir() or mapped.is_file()),'REAL_BOOTER_CLASSPATH_ENTRY_REQUIRED')
+        resolved.append(local.as_posix())
+    require({str(ROOT/'chengyinhub-admin/target/test-classes'),str(ROOT/'chengyinhub-admin/target/classes')}
+            <=set(resolved),'REAL_TEST_CLASSPATH_BINDING_REQUIRED')
     agents = [x[len('-javaagent:'):] for x in argv if x.startswith('-javaagent:')]
     require(len(agents) == 1 and re.fullmatch(r'/cache/repository/org/mockito/mockito-core/[A-Za-z0-9_.-]+/mockito-core-[A-Za-z0-9_.-]+\.jar',agents[0]),
             'ORIGINAL_MOCKITO_STARTUP_AGENT_REQUIRED')
     agent = cache/Path(agents[0]).relative_to('/cache/repository')
-    require(agent.is_file() and not agent.is_symlink(),'CACHED_ORIGINAL_AGENT_REQUIRED')
-    return {'booterJarSha256':digest(path),'manifestSha256':hashlib.sha256(raw).hexdigest(),'mockitoAgentSha256':digest(agent)}
+    require(agent.is_file() and not agent.is_symlink() and agent.resolve()==agent,'CACHED_ORIGINAL_AGENT_REQUIRED')
+    return {'booterJarSha256':digest(path),'manifestSha256':hashlib.sha256(raw).hexdigest(),'mockitoAgentSha256':digest(agent),
+            'classpathEntries':len(resolved),
+            'resolvedClasspathSha256':hashlib.sha256(json.dumps(resolved,separators=(',',':')).encode()).hexdigest()}
 
 
 def sample_java(state, obj):
+    state['executionSubstage']='JAVA_CGROUP'
     cid = obj['Id']; init = obj['State']['Pid']; require(init > 0,'ACTUAL_APP_HOST_PID_REQUIRED')
     base = read_cgroup(init,cid)
     state['cgroupMemoryEvents'] = base['memoryEvents']
     # Shared network namespace must still belong to the same current MySQL process.
-    mysql = inspect(state['mysql']['cid'])
+    state['executionSubstage']='MYSQL_PROCESS';mysql = inspect(state['mysql']['cid'])
     require(mysql['State']['Running'] and mysql['State']['Pid'] == state['mysqlHostPid'], 'MYSQL_PROCESS_REPLACED')
-    rows = command(DOCKER+['top',cid,'-eo','pid,ppid,comm']).decode().splitlines()[1:]
+    state['executionSubstage']='PROCESS_LIST';rows = command(DOCKER+['top',cid,'-eo','pid,ppid,comm']).decode().splitlines()[1:]
     for row in rows:
         fields = row.split(); require(len(fields) == 3,'BOUNDED_PROCESS_IDENTITY_REQUIRED')
         if fields[2] != 'java': continue
         pid = int(fields[0]); proc = Path('/proc',str(pid))
         try:
+            state['executionSubstage']='JAVA_PROC'
             stat = (proc/'stat').read_text(); tail = stat[stat.rfind(')')+2:].split()
             start = int(tail[19]); raw = (proc/'cmdline').read_bytes(); require(len(raw)<1024*1024,'BOUNDED_JAVA_IDENTITY_REQUIRED')
             argv = [x.decode() for x in raw.split(b'\0') if x]
+            state['executionSubstage']='JAVA_PROC_CGROUP'
             cg = read_cgroup(pid,cid); require(cg['pathSha256'] == base['pathSha256'] and cg['limits']==base['limits'],'FORK_ESCAPED_FIXED_BUDGET')
+            state['executionSubstage']='JAVA_NAMESPACE_PID'
             namespace_pids = next(x.split()[1:] for x in (proc/'status').read_text().splitlines() if x.startswith('NSpid:'))
             require(namespace_pids and int(namespace_pids[0]) == pid,'ACTUAL_NAMESPACE_PID_REQUIRED')
             role = 'MAVEN' if any('org.codehaus.plexus.classworlds.launcher.Launcher' == x for x in argv) else (
                     'SUREFIRE' if any('surefirebooter-' in x and x.endswith('.jar') for x in argv) else 'DESCENDANT_JVM')
-            binding = booter_binding(argv,Path(state['cache'])) if role == 'SUREFIRE' else {}
+            candidate={'hostPid':pid,'parentHostPid':int(fields[1]),'namespacePid':int(namespace_pids[-1]),'startTicks':start,
+                       'role':role,'argvSha256':hashlib.sha256(raw).hexdigest(),'cgroup':cg}
+            state['executionSubstage']='SUREFIRE_BOOTER_BINDING' if role=='SUREFIRE' else 'MAVEN_COMMAND'
+            try:binding = booter_binding(argv,Path(state['cache'])) if role == 'SUREFIRE' else {}
+            except Exception:
+                state.setdefault('rejectedJavaCandidate',{**candidate,'accepted':False})
+                raise # An observed candidate is not an accepted fork and supplies no success evidence.
             if role == 'MAVEN': require('-Dtest='+CLASS in argv,'FIXED_CLASS_NOT_ON_ACTUAL_MAVEN_PROCESS')
-            proof = {'hostPid':pid,'parentHostPid':int(fields[1]),'namespacePid':int(namespace_pids[-1]),'startTicks':start,
-                     'role':role,'argvSha256':hashlib.sha256(raw).hexdigest(),'cgroup':cg,**binding}
+            proof = {**candidate,**binding}
             key = (pid,start)
             if not any((x['hostPid'],x['startTicks']) == key for x in state['javaProcesses']): state['javaProcesses'].append(proof)
         except FileNotFoundError:
@@ -1320,42 +1387,74 @@ def validate_app_inputs(obj,path,state):
 
 def run(path):
     gate(os.environ); path,state = load_private(path); require(state['phase'] == 'PREPARED','PREPARED_OWNER_REQUIRED')
+    try:return run_owned_app(path,state)
+    except Exception as failure:
+        # Persist this in-memory sample and its first exact predicate, not the previous loop snapshot.
+        state.setdefault('firstFailure',execution_failure(failure,state['phase'],state.get('executionSubstage')))
+        try:save(path,state)
+        except Exception:print('Combined HTTP execution failure evidence: UNKNOWN',file=__import__('sys').stderr)
+        raise
+
+
+def run_owned_app(path,state):
+    state['executionSubstage']='BACKING_IDENTITY'
     backing_mysql(os.environ);require(verified_cache(Path(state['cache']))==state['cacheProof'],'OFFLINE_CACHE_PROOF_CHANGED')
+    state['executionSubstage']='SOURCE_MANIFEST'
     state['source']=source_manifest();save(path,state)
+    state['executionSubstage']='MYSQL_ADDRESS'
     state['mysqlAddressProof'] = mysql_address_proof(state['mysql']['cid'])
     mounts = [(ROOT,ROOT,'readonly'),(Path(state['cache']),Path('/cache/repository'),'readonly'),(path/'launch',Path('/budget'),'readonly')]
     for module in MODULES:
         target = ROOT/module/'target'; require(target.is_dir() and not target.is_symlink(),'ORIGINAL_TARGET_REQUIRED')
         mounts.append((target,target,'readonly=false'))
     state['phase']='APP_CREATE';save(path,state)
+    state['executionSubstage']='APP_CREATE'
     cid = create_slot(path,state,'app',JDK,fixed_maven_command(),mounts,path/'private.env')
+    state['executionSubstage']='APP_LIMITS'
     obj = inspect(cid); read_cgroup(obj['State']['Pid'],cid) # actual limits before releasing Maven/test.
+    state['executionSubstage']='APP_INPUTS'
     state['launchProof'] = validate_app_inputs(obj,path,state)
+    state['executionSubstage']='NETWORK_NAMESPACE'
     app_namespace = command(DOCKER+['exec',cid,'readlink','/proc/self/ns/net']).strip()
     mysql_namespace = command(DOCKER+['exec',state['mysql']['cid'],'readlink','/proc/self/ns/net']).strip()
     require(app_namespace == mysql_namespace and re.fullmatch(rb'net:\[[0-9]+\]',app_namespace),'NOT_SAME_OWNED_LOOPBACK_NAMESPACE')
     state['networkNamespaceSha256'] = hashlib.sha256(app_namespace).hexdigest();save(path,state)
+    state['executionSubstage']='APP_RELEASE'
     (path/'launch/release').write_text('fixed-source-budget-verified\n')
     deadline = time.monotonic()+LIMIT_SECONDS; state['phase']='APP_EXECUTION';save(path,state)
     while True:
+        state['executionSubstage']='APP_INSPECT'
         obj = inspect(cid)
+        state['executionSubstage']='APP_OWNER'
         validate_container(obj,state['slots']['app']['name'],JDK,labels(os.environ,state['nonce']),MEMORY,'container:'+state['mysql']['cid'],cid)
+        state['executionSubstage']='APP_LIVE'
         require(obj['State']['Running'],'APP_EXIT_BEFORE_MAVEN_STATUS')
+        state['executionSubstage']='DEADLINE'
         require(time.monotonic()<deadline,'OWNED_EXECUTION_DEADLINE')
+        state['executionSubstage']='JAVA_SAMPLE'
         sample_java(state,obj);save(path,state)
+        state['executionSubstage']='CGROUP_OOM'
         require(int(state['cgroupMemoryEvents']['oom_kill']) == 0,'ACTUAL_CGROUP_CHILD_OOM_KILL')
+        state['executionSubstage']='MAVEN_STATUS'
         status = command(DOCKER+['exec',cid,'/bin/bash','-c','if [ -f /tmp/cy-budget.exit ]; then cat /tmp/cy-budget.exit; fi']).decode().strip()
         if status:
+            state['executionSubstage']='MAVEN_STATUS_VALUE'
             require(re.fullmatch('[0-9]{1,3}',status) and int(status)<256,'ACTUAL_MAVEN_EXIT_REQUIRED');break
         time.sleep(.5)
     state['mavenExit'] = int(status);state['phase']='MAVEN_EXITED_AWAIT_CLEANUP';save(path,state)
+    state['executionSubstage']='PRIVATE_LOG'
     with (OUT/'run.log').open('xb') as stream:
         result = subprocess.run(DOCKER+['logs',cid],stdout=stream,stderr=subprocess.STDOUT,timeout=30)
     require(result.returncode == 0 and (OUT/'run.log').stat().st_size < 32*1024*1024,'PRIVATE_LOG_NOT_COMPLETE')
+    state['executionSubstage']='POSTIMAGE'
     require(source_manifest() == state['source'],'COMPILED_POSTIMAGE_DRIFT')
+    state['executionSubstage']='CACHE_RECHECK'
     require(verified_cache(Path(state['cache']))==state['cacheProof'],'OFFLINE_CACHE_PROOF_CHANGED')
+    state['executionSubstage']='REQUIRED_JVM_ROLES'
     require(any(x['role']=='MAVEN' for x in state['javaProcesses']) and any(x['role']=='SUREFIRE' for x in state['javaProcesses']), 'REAL_MAVEN_AND_JUNIT_PID_PROOF_REQUIRED')
+    state['executionSubstage']='APP_OOM'
     require(not obj['State']['OOMKilled'],'APP_OOM_OR_UNKNOWN_EXIT')
+    state['executionSubstage']='FINAL_MYSQL_ADDRESS'
     require(mysql_address_proof(state['mysql']['cid']) == state['mysqlAddressProof'],'MYSQL_ADDRESS_OR_UUID_DRIFT')
     return state['mavenExit']
 
@@ -1400,6 +1499,30 @@ def cleanup_slot(path,state,role):
     return {'role':role,'cid':cid,'result':'EXACT_CID_REMOVED_AND_ABSENT','terminal':terminal}
 
 
+def namespace_port_proof(path,state):
+    # The original JDK app is the existing execution tool; MySQL remains the namespace owner.
+    # Maven exit is not a prerequisite for recording cleanup evidence, nor is this business acceptance.
+    app=state['slots']['app']
+    obj=inspect(app['cid']);validate_container(obj,app['name'],JDK,labels(os.environ,state['nonce']),
+            MEMORY,'container:'+state['mysql']['cid'],app['cid'])
+    require(obj['State']['Running'],'ORIGINAL_EXECUTION_NAMESPACE_NOT_LIVE')
+    mysql,_=backing_mysql(os.environ)
+    require(mysql['Id']==state['mysql']['cid'] and mysql['State']['Pid']==state['mysqlHostPid'],
+            'MYSQL_PROCESS_REPLACED_BEFORE_PORT_PROOF')
+    namespace=command(DOCKER+['exec',mysql['Id'],'readlink','/proc/self/ns/net']).strip()
+    require(re.fullmatch(rb'net:\[[0-9]+\]',namespace)
+            and hashlib.sha256(namespace).hexdigest()==state['networkNamespaceSha256']
+            and command(DOCKER+['exec',app['cid'],'readlink','/proc/self/ns/net']).strip()==namespace,'PORT_PROBE_NAMESPACE_CHANGED')
+    require(digest(path/'launch/CombinedHttpNamespacePortProbe.java')==state['namespaceProbeSourceSha256'],
+            'NAMESPACE_PROBE_POSTIMAGE_CHANGED')
+    result=command(DOCKER+['exec',app['cid'],'java','-Xmx32m','/budget/CombinedHttpNamespacePortProbe.java',str(state['redisPort'])])
+    require(result==('NAMESPACE_REDIS_PORT_FREE '+str(state['redisPort'])+'\n').encode(),'ACTUAL_NAMESPACE_BIND_PROOF_REQUIRED')
+    state['cgroupMemoryEvents']=read_cgroup(obj['State']['Pid'],app['cid'])['memoryEvents']
+    return {'result':'ACTUAL_OWNER_NAMESPACE_BIND_FREE','executionCid':app['cid'],
+            'mysqlCid':state['mysql']['cid'],'namespaceSha256':state['networkNamespaceSha256'],
+            'probeSourceSha256':state['namespaceProbeSourceSha256'],'port':state['redisPort']}
+
+
 def finalize(path, original_exit):
     gate(os.environ); path,state = load_private(path); failures=[]; cleaned=[]
     # Recover private original logs before removing the app, including timeout/create failures.
@@ -1411,27 +1534,16 @@ def finalize(path, original_exit):
                 result=subprocess.run(DOCKER+['logs',app['cid']],stdout=stream,stderr=subprocess.STDOUT,timeout=30)
             require(result.returncode==0,'PRIVATE_LOG_RECOVERY_FAILED')
         except Exception as failure: failures.append({'phase':'PRIVATE_LOG','type':type(failure).__name__})
-    order = ('redis','app') if 'mavenExit' in state else ('app','redis')
+    # Keep the original namespace and JDK alive until the exact Redis removal + real bind attempt,
+    # including sampling/identity failures where no Maven exit receipt has been observed.
+    order = ('redis','app')
     port_proof = {'result':'UNKNOWN'}
     for role in order:
-        if role == 'app' and 'mavenExit' in state:
+        if role == 'app':
             try:
-                obj=inspect(app['cid']);validate_owner(obj,app['name'],JDK,labels(os.environ,state['nonce']),app['cid'])
-                require(obj['State']['Running'],'ORIGINAL_EXECUTION_NAMESPACE_NOT_LIVE')
-                mysql,_=backing_mysql(os.environ)
-                require(mysql['Id']==state['mysql']['cid'] and mysql['State']['Pid']==state['mysqlHostPid'],'MYSQL_PROCESS_REPLACED_BEFORE_PORT_PROOF')
-                namespace=command(DOCKER+['exec',mysql['Id'],'readlink','/proc/self/ns/net']).strip()
-                require(hashlib.sha256(namespace).hexdigest()==state['networkNamespaceSha256']
-                        and command(DOCKER+['exec',app['cid'],'readlink','/proc/self/ns/net']).strip()==namespace,'PORT_PROBE_NAMESPACE_CHANGED')
-                require(digest(path/'launch/CombinedHttpNamespacePortProbe.java')==state['namespaceProbeSourceSha256'],
-                        'NAMESPACE_PROBE_POSTIMAGE_CHANGED')
-                result = command(DOCKER+['exec',app['cid'],'java','-Xmx32m','/budget/CombinedHttpNamespacePortProbe.java',str(state['redisPort'])])
-                require(result == ('NAMESPACE_REDIS_PORT_FREE '+str(state['redisPort'])+'\n').encode(),'ACTUAL_NAMESPACE_BIND_PROOF_REQUIRED')
-                port_proof = {'result':'ACTUAL_OWNER_NAMESPACE_BIND_FREE','executionCid':app['cid'],
-                              'mysqlCid':state['mysql']['cid'],'namespaceSha256':state['networkNamespaceSha256'],
-                              'probeSourceSha256':state['namespaceProbeSourceSha256'],'port':state['redisPort']}
-                state['cgroupMemoryEvents']=read_cgroup(obj['State']['Pid'],app['cid'])['memoryEvents']
-            except Exception as failure: failures.append({'phase':'NAMESPACE_PORT_PROOF','type':type(failure).__name__})
+                port_proof=namespace_port_proof(path,state)
+            except Exception as failure:failures.append(execution_failure(failure,'NAMESPACE_PORT_PROOF','NAMESPACE_PORT_PROOF'))
+        if role == 'app' and 'mavenExit' in state:
             try:
                 (path/'launch/stop').write_text('original-maven-exit-only\n')
                 for _ in range(50):
@@ -1450,6 +1562,7 @@ def finalize(path, original_exit):
               'namespaceRedisPortFree':port_proof,'redisPort':state['redisPort'],'database':state['schema'],
               'source':state['source'],'slots':{role:{k:v for k,v in value.items() if k in ('name','cid','budget')} for role,value in state['slots'].items()},
               'javaProcesses':state['javaProcesses'],'cleanup':cleaned,'failures':failures,'firstFailure':state.get('firstFailure'),
+              'rejectedJavaCandidate':state.get('rejectedJavaCandidate'),
               'networkNamespaceSha256':state.get('networkNamespaceSha256'),
               'launchProof':state.get('launchProof'),
               'cgroupMemoryEvents':state.get('cgroupMemoryEvents'),
@@ -1699,7 +1812,7 @@ if __name__=='__main__':
         try:
             if len(__import__('sys').argv)>2 and __import__('sys').argv[1] in ('prepare','run'):
                 path,state=load_private(Path(__import__('sys').argv[2]))
-                state.setdefault('firstFailure',{'phase':state['phase'],'type':type(failure).__name__});save(path,state)
+                state.setdefault('firstFailure',execution_failure(failure,state['phase'],state.get('executionSubstage')));save(path,state)
         except Exception:
             print('Combined HTTP budget failure evidence: UNKNOWN',file=__import__('sys').stderr)
         # Never publish exception text, inspect payload, argv, environment or raw SQL/logs.

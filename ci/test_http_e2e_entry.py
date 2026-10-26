@@ -490,6 +490,37 @@ def safe_maven_failure(log_path):
     return result
 
 
+def safe_execution_failure(path):
+    """Project the original budget owner's fixed cause only for this exact execution."""
+    try:
+        expected = {'sourceSha': os.environ.get('SOURCE_SHA', ''),
+                    'runId': os.environ.get('GITHUB_RUN_ID', ''),
+                    'attempt': os.environ.get('GITHUB_RUN_ATTEMPT', ''), 'class': COMBINATION_SUITE}
+        if (os.environ.get('CHENGYIN_HTTP_E2E_TESTS') != COMBINATION_SUITE or
+                not re.fullmatch('[0-9a-f]{40}', expected['sourceSha']) or
+                any(not re.fullmatch('[1-9][0-9]*', expected[key]) for key in ('runId', 'attempt')) or
+                path.is_symlink() or not path.is_file() or path.stat().st_size > 2 * 1024 * 1024):
+            return {}
+        report = json.loads(path.read_text())
+        if not isinstance(report, dict) or any(report.get(key) != value for key, value in expected.items()):
+            return {}
+        failure = report.get('firstFailure')
+        if (not isinstance(failure, dict) or
+                failure.get('phase') not in ('PREPARE', 'PREPARED', 'APP_CREATE', 'APP_EXECUTION',
+                                              'MAVEN_EXITED_AWAIT_CLEANUP', 'NAMESPACE_PORT_PROOF', 'UNKNOWN') or
+                failure.get('type') not in ('ValueError', 'OSError', 'FileNotFoundError', 'PermissionError',
+                                            'TimeoutExpired', 'JSONDecodeError', 'KeyError', 'TypeError',
+                                            'UnicodeDecodeError', 'BadZipFile', 'StopIteration', 'UNKNOWN')):
+            return {}
+        spec = importlib.util.spec_from_file_location('http_budget_failure_projection', ROOT / 'ci/combined_http_budget.py')
+        owner = importlib.util.module_from_spec(spec); spec.loader.exec_module(owner)
+        code = failure.get('reasonCode')
+        code = code if isinstance(code, str) and code in owner.SAFE_RESOURCE_CODES else 'UNCLASSIFIED_RESOURCE_FAILURE'
+        return {'phase': failure['phase'], 'type': failure['type'], 'reasonCode': code}
+    except (OSError, ValueError, TypeError):
+        return {}
+
+
 def cli():
     p = argparse.ArgumentParser(description=__doc__)
     sub = p.add_subparsers(dest='command', required=True)
@@ -693,6 +724,9 @@ def cli():
                                          original_exit, a.java_exit)
             if diagnostic['stage'] == 'xml-verify' and a.java_exit != 0:
                 diagnostic['mavenFailure'] = safe_maven_failure(a.output.parent / 'run.log')
+                execution_failure = safe_execution_failure(a.output / 'combined-http-budget.json')
+                if execution_failure:
+                    diagnostic['executionFailure'] = execution_failure
             (a.output / 'diagnostic.json').write_text(json.dumps(diagnostic, sort_keys=True) + '\n')
             receipt.update(stage=diagnostic['stage'], originalExit=diagnostic['exitCode'], diagnostic=diagnostic)
             dest.write_text(json.dumps(receipt, indent=2) + '\n')
@@ -1040,6 +1074,74 @@ class FailureDiagnosticTest(unittest.TestCase):
             self.assertEqual('FAIL', receipt['state'])
             self.assertFalse(receipt['businessAccepted']); self.assertFalse(receipt['xmlVerified'])
             self.assertEqual(identity, receipt_identity(receipt))
+
+    def test_budget_execution_failure_projects_fixed_cause_and_excludes_private_payload(self):
+        env = {'SOURCE_SHA': 'a' * 40, 'GITHUB_RUN_ID': '123', 'GITHUB_RUN_ATTEMPT': '1',
+               'CHENGYIN_HTTP_E2E_TESTS': COMBINATION_SUITE}
+        failure = {'phase': 'APP_EXECUTION', 'type': 'ValueError', 'reasonCode': 'FIXED_COMMAND_FAILED'}
+        marker = 'SYNTHETIC_PRIVATE_NEVER_PUBLISH'
+        with tempfile.TemporaryDirectory() as directory, mock.patch.dict(os.environ, env):
+            path = pathlib.Path(directory) / 'combined-http-budget.json'
+            report = {'sourceSha': env['SOURCE_SHA'], 'runId': '123', 'attempt': '1',
+                      'class': COMBINATION_SUITE, 'firstFailure': {**failure, 'message': marker}, 'argv': marker}
+            path.write_text(json.dumps(report))
+            self.assertEqual(failure, safe_execution_failure(path))
+            report['firstFailure']['reasonCode'] = marker; path.write_text(json.dumps(report))
+            self.assertEqual({**failure, 'reasonCode': 'UNCLASSIFIED_RESOURCE_FAILURE'}, safe_execution_failure(path))
+            self.assertNotIn(marker, json.dumps(safe_execution_failure(path)))
+
+    def test_foreign_or_unbounded_budget_failure_cannot_supply_execution_diagnostic(self):
+        env = {'SOURCE_SHA': 'a' * 40, 'GITHUB_RUN_ID': '123', 'GITHUB_RUN_ATTEMPT': '1',
+               'CHENGYIN_HTTP_E2E_TESTS': COMBINATION_SUITE}
+        original = {'sourceSha': env['SOURCE_SHA'], 'runId': '123', 'attempt': '1', 'class': COMBINATION_SUITE,
+                    'firstFailure': {'phase': 'APP_EXECUTION', 'type': 'ValueError', 'reasonCode': 'FIXED_COMMAND_FAILED'}}
+        with tempfile.TemporaryDirectory() as directory, mock.patch.dict(os.environ, env):
+            path = pathlib.Path(directory) / 'budget.json'
+            for key, value in (('sourceSha', 'b' * 40), ('runId', '124'), ('attempt', '2'), ('class', 'Other')):
+                with self.subTest(key=key):
+                    path.write_text(json.dumps({**original, key: value}))
+                    self.assertEqual({}, safe_execution_failure(path))
+            for key in ('phase', 'type'):
+                with self.subTest(key=key):
+                    path.write_text(json.dumps({**original, 'firstFailure': {**original['firstFailure'], key: 'PRIVATE'}}))
+                    self.assertEqual({}, safe_execution_failure(path))
+            path.write_text('{'); self.assertEqual({}, safe_execution_failure(path))
+            path.write_bytes(b' ' * (2 * 1024 * 1024 + 1)); self.assertEqual({}, safe_execution_failure(path))
+            path.write_text(json.dumps(original))
+            linked = pathlib.Path(directory) / 'linked.json'; linked.symlink_to(path)
+            self.assertEqual({}, safe_execution_failure(linked))
+            with mock.patch.dict(os.environ, {'CHENGYIN_HTTP_E2E_TESTS': 'GenericGameplayHttpE2eIT'}):
+                self.assertEqual({}, safe_execution_failure(path))
+            path.unlink(); self.assertEqual({}, safe_execution_failure(path))
+
+    def test_actual_finalize_preserves_budget_primary_cause_and_all_business_refusal_flags(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory); public = root / 'public'; public.mkdir()
+            identity = {'sourceSha': 'a' * 40, 'classes': [COMBINATION_SUITE],
+                        'profile': 'github-hosted', 'database': 'cy_e2e_w1_http_123_456'}
+            schema = root / 'schema.json'
+            schema.write_text(json.dumps({'mode': 'SUCCEEDED', 'database': identity['database']}))
+            (public / 'receipt.json').write_text(json.dumps({**identity, 'state': 'PENDING_CLEANUP',
+                                                            'businessAccepted': False, 'xmlVerified': False}))
+            failure = {'phase': 'APP_EXECUTION', 'type': 'ValueError', 'reasonCode': 'FIXED_COMMAND_FAILED'}
+            (public / 'combined-http-budget.json').write_text(json.dumps({
+                'sourceSha': identity['sourceSha'], 'runId': '123', 'attempt': '1',
+                'class': COMBINATION_SUITE, 'firstFailure': failure}))
+            env = dict(os.environ, SOURCE_SHA=identity['sourceSha'], GITHUB_RUN_ID='123', GITHUB_RUN_ATTEMPT='1',
+                       CHENGYIN_HTTP_E2E_TESTS=COMBINATION_SUITE, CHENGYIN_HTTP_E2E_PROFILE=identity['profile'],
+                       CHENGYIN_HTTP_E2E_DATABASE=identity['database'], CHENGYIN_HTTP_E2E_SCHEMA_REPORT=str(schema),
+                       CHENGYIN_HTTP_E2E_STAGE='xml-verify', CHENGYIN_HTTP_E2E_ORIGINAL_EXIT='1')
+            run = subprocess.run([sys.executable, str(ROOT / 'ci/test_http_e2e_entry.py'), 'finalize',
+                                  '--output', str(public), '--java-exit', '1',
+                                  '--mysql-clean', 'true', '--redis-clean', 'false'],
+                                 env=env, text=True, capture_output=True, timeout=10)
+            self.assertNotEqual(0, run.returncode)
+            diagnostic = json.loads((public / 'diagnostic.json').read_text())
+            self.assertEqual(failure, diagnostic['executionFailure'])
+            receipt = json.loads((public / 'receipt.json').read_text())
+            self.assertEqual('FAIL', receipt['state']); self.assertEqual(identity, receipt_identity(receipt))
+            self.assertFalse(receipt['businessAccepted']); self.assertFalse(receipt['xmlVerified'])
+            self.assertFalse(receipt['cleanup']['redisStoppedAndPortFree'])
 
     def test_hosted_online_vps_offline_and_existing_finalize_maven_failure(self):
         shell = (TOOLS / 'generic-gameplay-http-e2e.sh').read_text()

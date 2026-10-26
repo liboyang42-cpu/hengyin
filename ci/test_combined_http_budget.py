@@ -1154,4 +1154,228 @@ class CombinedBudgetControls(unittest.TestCase):
             self.check_cache_receipt(self.cache_receipt(),provider=changed)
 
 
+    def booter_fixture(self,directory):
+        # Synthetic manifest/JAR bytes for URI contract controls; never Maven/JVM evidence.
+        root=Path(directory)/'checkout with space';root.mkdir()
+        cache=Path(directory)/'repository';cache.mkdir()
+        target=root/'chengyinhub-admin/target';booter=target/'surefire/surefirebooter-control.jar'
+        booter.parent.mkdir(parents=True)
+        for relative in ('classes','test-classes'):(target/relative).mkdir()
+        relative='org/mockito/mockito-core/5.23.0/mockito-core-5.23.0.jar'
+        agent=cache/relative;agent.parent.mkdir(parents=True);agent.write_bytes(b'synthetic agent control')
+        local=[target/'test-classes',target/'classes',Path('/cache/repository')/relative]
+        entries=[B.urllib.parse.quote(os.path.relpath(path,booter.parent),safe='/') for path in local]
+        self.write_booter(booter,entries)
+        argv=['java','-javaagent:/cache/repository/'+relative,'-jar',str(booter)]
+        return root,cache,booter,argv,entries
+
+    def write_booter(self,path,entries,main='org.apache.maven.surefire.booter.ForkedBooter'):
+        line='Class-Path: '+' '.join(entries)
+        folded='\r\n '.join(line[index:index+55] for index in range(0,len(line),55))
+        raw=('Manifest-Version: 1.0\r\nMain-Class: '+main+'\r\n'+folded+'\r\n\r\n').encode()
+        with B.zipfile.ZipFile(path,'w') as archive:archive.writestr('META-INF/MANIFEST.MF',raw)
+        return raw
+
+    def test_relative_folded_manifest_uris_bind_real_targets_and_mapped_readonly_cache(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root,cache,booter,argv,entries=self.booter_fixture(directory)
+            self.assertNotIn(str(root),booter.read_bytes().decode(errors='ignore'))
+            with patch.object(B,'ROOT',root):proof=B.booter_binding(argv,cache)
+            self.assertEqual(proof['booterJarSha256'],B.digest(booter));self.assertEqual(proof['classpathEntries'],3)
+            self.assertEqual(proof['mockitoAgentSha256'],B.digest(next(cache.rglob('*.jar'))))
+            self.assertNotIn(str(root),json.dumps(proof));self.assertEqual(len(proof['resolvedClasspathSha256']),64)
+
+    def test_absolute_and_relative_manifest_uris_have_the_same_canonical_binding(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root,cache,booter,argv,entries=self.booter_fixture(directory)
+            with patch.object(B,'ROOT',root):
+                relative=B.booter_binding(argv,cache)
+                local=[root/'chengyinhub-admin/target/test-classes',root/'chengyinhub-admin/target/classes',
+                       Path('/cache/repository/org/mockito/mockito-core/5.23.0/mockito-core-5.23.0.jar')]
+                self.write_booter(booter,[path.as_uri() for path in local])
+                absolute=B.booter_binding(argv,cache)
+            self.assertEqual(relative['resolvedClasspathSha256'],absolute['resolvedClasspathSha256'])
+            self.assertNotEqual(relative['manifestSha256'],absolute['manifestSha256'])
+
+    def test_remote_foreign_missing_or_substring_only_manifest_entries_are_rejected(self):
+        for kind in ('remote','authority','foreign','traversal','query','missing-entry','missing-test','missing-both','substring','main','symlink'):
+            with self.subTest(kind=kind),tempfile.TemporaryDirectory() as directory:
+                root,cache,booter,argv,entries=self.booter_fixture(directory);main='org.apache.maven.surefire.booter.ForkedBooter'
+                if kind=='remote':entries.append('https://example.invalid/PRIVATE_VALUE.jar')
+                if kind=='authority':entries.append('file://example.invalid/cache/repository/PRIVATE_VALUE.jar')
+                if kind=='foreign':entries.append('file:///tmp/PRIVATE_VALUE.jar')
+                if kind=='traversal':
+                    foreign=Path(directory)/'foreign.jar';foreign.write_bytes(b'synthetic foreign file')
+                    entries.append(B.urllib.parse.quote(os.path.relpath(foreign,booter.parent),safe='/'))
+                if kind=='query':entries[0]+='?PRIVATE_VALUE'
+                if kind=='missing-entry':entries.append('../missing.jar')
+                if kind=='missing-test':entries=entries[1:]
+                if kind=='missing-both':entries=entries[2:]
+                if kind=='substring':
+                    for index,name in enumerate(('test-classes','classes')):
+                        shadow=root/'chengyinhub-admin/target'/(name+'-shadow');shadow.mkdir();entries[index]=shadow.as_uri()
+                if kind=='main':main='PRIVATE_VALUE'
+                if kind=='symlink':
+                    classes=root/'chengyinhub-admin/target/classes';classes.rmdir();classes.symlink_to(cache,target_is_directory=True)
+                self.write_booter(booter,entries,main)
+                with patch.object(B,'ROOT',root),self.assertRaises(ValueError):B.booter_binding(argv,cache)
+
+    def test_original_agent_and_exact_jar_manifest_remain_mandatory(self):
+        for kind in ('extra-agent','foreign-agent','missing-agent','wrong-manifest-case','missing-jar','wrong-name','wrong-target'):
+            with self.subTest(kind=kind),tempfile.TemporaryDirectory() as directory:
+                root,cache,booter,argv,entries=self.booter_fixture(directory)
+                if kind=='extra-agent':argv.insert(1,argv[1])
+                if kind=='foreign-agent':argv[1]='-javaagent:/tmp/PRIVATE_VALUE.jar'
+                if kind=='missing-agent':next(cache.rglob('*.jar')).unlink()
+                if kind=='wrong-manifest-case':
+                    # A differently cased path cannot replace the one exact main manifest entry.
+                    with B.zipfile.ZipFile(booter,'w') as archive:archive.writestr('meta-inf/manifest.mf',b'PRIVATE_VALUE')
+                if kind=='missing-jar':booter.unlink()
+                if kind in ('wrong-name','wrong-target'):
+                    other=booter.with_name('not-surefire.jar') if kind=='wrong-name' else Path(directory)/booter.name
+                    booter.rename(other);argv[-1]=str(other)
+                with patch.object(B,'ROOT',root),self.assertRaises(ValueError):B.booter_binding(argv,cache)
+
+    def test_literal_plus_is_not_space_and_percent_encoding_is_decoded_once(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root,cache,booter,argv,entries=self.booter_fixture(directory)
+            plus=root/'chengyinhub-admin/target/literal+plus';plus.mkdir()
+            entries+=['../literal+plus/','../literal%2Bplus/'];self.write_booter(booter,entries)
+            with patch.object(B,'ROOT',root):proof=B.booter_binding(argv,cache)
+            self.assertEqual(proof['classpathEntries'],5)
+            self.assertFalse((plus.parent/'literal plus').exists())
+
+    def test_actual_candidate_binding_controls_acceptance_without_claiming_no_fork_on_rejection(self):
+        for reject in (False,True):
+            with self.subTest(reject=reject),tempfile.TemporaryDirectory() as directory:
+                root,cache,booter,argv,entries=self.booter_fixture(directory)
+                if reject:self.write_booter(booter,entries[1:])
+                proc=Path(directory)/'synthetic-proc';proc.mkdir()
+                raw=b'\0'.join(value.encode() for value in argv+['PRIVATE_PROPERTIES_MARKER'])+b'\0'
+                (proc/'cmdline').write_bytes(raw);(proc/'status').write_text('NSpid:\t100\t2\n')
+                (proc/'stat').write_text('100 (java) '+' '.join(['S']+['0']*18+['123'])+'\n')
+                def local_path(*parts):return proc if parts==('/proc','100') else Path(*parts)
+                state={'mysql':{'cid':'2'*64},'mysqlHostPid':555,'cache':str(cache),'javaProcesses':[]}
+                obj={'Id':'1'*64,'State':{'Pid':120}}
+                cg={'pathSha256':'a'*64,'limits':{'synthetic':'control'},'memoryEvents':{'oom_kill':'0'}}
+                with patch.object(B,'ROOT',root),patch.object(B,'Path',side_effect=local_path),\
+                     patch.object(B,'read_cgroup',return_value=cg),patch.object(B,'inspect',return_value={'State':{'Running':True,'Pid':555}}),\
+                     patch.object(B,'command',return_value=b'PID PPID COMMAND\n100 90 java\n'):
+                    if reject:
+                        with self.assertRaisesRegex(ValueError,'REAL_TEST_CLASSPATH_BINDING_REQUIRED'):B.sample_java(state,obj)
+                        self.assertFalse(state['javaProcesses']);self.assertIs(state['rejectedJavaCandidate']['accepted'],False)
+                        self.assertEqual(state['rejectedJavaCandidate']['role'],'SUREFIRE')
+                        self.assertEqual(state['rejectedJavaCandidate']['namespacePid'],2)
+                    else:
+                        B.sample_java(state,obj);self.assertEqual(state['javaProcesses'][0]['role'],'SUREFIRE')
+                        self.assertIn('booterJarSha256',state['javaProcesses'][0]);self.assertNotIn('rejectedJavaCandidate',state)
+                self.assertNotIn('PRIVATE_PROPERTIES_MARKER',json.dumps(state))
+
+    def test_execution_failure_exports_only_reviewed_reason_stage_and_source_location(self):
+        try:B.booter_binding(['java'],Path('/not-used'))
+        except ValueError as failure:proof=B.execution_failure(failure,'APP_EXECUTION','SUREFIRE_BOOTER_BINDING')
+        self.assertEqual(proof['reasonCode'],'ORIGINAL_SUREFIRE_FORK_REQUIRED')
+        self.assertEqual(proof['origin']['function'],'booter_binding');self.assertGreater(proof['origin']['line'],0)
+        self.assertEqual(proof['substage'],'SUREFIRE_BOOTER_BINDING')
+        for failure in (ValueError('PRIVATE_PASSWORD raw argv SQL'),RuntimeError('PRIVATE_PASSWORD')):
+            unknown=B.execution_failure(failure,'PRIVATE_PASSWORD','PRIVATE_PASSWORD')
+            self.assertEqual(unknown['reasonCode'],'UNCLASSIFIED_RESOURCE_FAILURE');self.assertEqual(unknown['phase'],'UNKNOWN')
+            self.assertNotIn('PRIVATE_PASSWORD',json.dumps(unknown));self.assertNotIn('origin',unknown)
+
+    def test_run_failure_saves_current_partial_sample_and_preserves_original_first_failure(self):
+        state={'phase':'PREPARED','javaProcesses':[]};saved=[]
+        def failing_owner(path,current):
+            current['phase']='APP_EXECUTION';current['executionSubstage']='SUREFIRE_BOOTER_BINDING'
+            current['javaProcesses'].append({'role':'MAVEN','argvSha256':'a'*64})
+            B.booter_binding(['java'],Path('/not-used'))
+        with patch.dict(os.environ,self.env(),clear=True),patch.object(B,'load_private',return_value=(Path('/not-used'),state)),\
+             patch.object(B,'run_owned_app',side_effect=failing_owner),patch.object(B,'save',side_effect=lambda path,value:saved.append(copy.deepcopy(value))):
+            with self.assertRaisesRegex(ValueError,'ORIGINAL_SUREFIRE_FORK_REQUIRED'):B.run(Path('/not-used'))
+            first=copy.deepcopy(state['firstFailure'])
+            state['phase']='PREPARED' # Synthetic handler replay; no real admission or process restart.
+            with self.assertRaises(ValueError):B.run(Path('/not-used'))
+        self.assertEqual(saved[0]['javaProcesses'][0]['role'],'MAVEN')
+        self.assertEqual(first['origin']['function'],'booter_binding');self.assertEqual(state['firstFailure'],first)
+        self.assertNotIn('mavenExit',state);self.assertNotIn('appExit',state)
+
+    def namespace_fixture(self,directory):
+        path=Path(directory)/'private';(path/'launch').mkdir(parents=True)
+        source=path/'launch/CombinedHttpNamespacePortProbe.java';source.write_bytes(b'synthetic source-control bytes, not Java execution')
+        namespace=b'net:[12345]';obj=self.obj();obj['State'].update(Running=True,Pid=120)
+        mysql={'Id':'2'*64,'State':{'Running':True,'Pid':555}}
+        state={**B.identity(self.env()),'identity':B.identity(self.env()),'nonce':'nonce','mysql':{'cid':'2'*64},
+               'mysqlHostPid':555,'networkNamespaceSha256':B.hashlib.sha256(namespace).hexdigest(),
+               'namespaceProbeSourceSha256':B.digest(source),'redisPort':6391,'schema':self.env()['CHENGYIN_HTTP_E2E_DATABASE'],
+               'source':None,'mysqlBootstrap':{},'cacheProof':{},'phase':'APP_EXECUTION','javaProcesses':[{'role':'MAVEN'}],
+               'slots':{'app':{'cid':'1'*64,'name':'own-app'},'redis':{'cid':'3'*64,'name':'own-redis'}},
+               'firstFailure':{'phase':'APP_EXECUTION','type':'ValueError','reasonCode':'REAL_TEST_CLASSPATH_BINDING_REQUIRED'}}
+        return path,state,obj,mysql,namespace
+
+    def test_failed_execution_removes_redis_then_attempts_real_namespace_bind_before_app_cleanup(self):
+        with tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True):
+            path,state,obj,mysql,namespace=self.namespace_fixture(directory);events=[];reports=[]
+            out=Path(directory)/'out';out.mkdir();(out/'run.log').write_bytes(b'private existing log')
+            def command(argv,**kw):
+                if argv[-2:]==['readlink','/proc/self/ns/net']:return namespace
+                self.assertEqual(argv,B.DOCKER+['exec','1'*64,'java','-Xmx32m','/budget/CombinedHttpNamespacePortProbe.java','6391'])
+                events.append('REAL_BIND_COMMAND');return b'NAMESPACE_REDIS_PORT_FREE 6391\n'
+            def cleanup(path,current,role):
+                events.append('CLEANUP_'+role)
+                return {'role':role,'cid':current['slots'][role]['cid'],'result':'EXACT_CID_REMOVED_AND_ABSENT',
+                        'terminal':{'ExitCode':143 if role=='app' else 0,'OOMKilled':False,'Running':False,'Pid':0}}
+            with patch.object(B,'load_private',return_value=(path,state)),patch.object(B,'OUT',out),\
+                 patch.object(B,'inspect',return_value=obj),patch.object(B,'backing_mysql',return_value=(mysql,{})),\
+                 patch.object(B,'command',side_effect=command),patch.object(B,'read_cgroup',return_value={'memoryEvents':{'oom_kill':'0'}}),\
+                 patch.object(B,'cleanup_slot',side_effect=cleanup),patch.object(B,'write',side_effect=lambda path,value:reports.append(copy.deepcopy(value))):
+                with self.assertRaisesRegex(ValueError,'ORIGINAL_EXIT_OR_BUDGET_OR_CLEANUP_NOT_ACCEPTED'):B.finalize(path,2)
+            report=reports[-1]
+            self.assertEqual(events,['CLEANUP_redis','REAL_BIND_COMMAND','CLEANUP_app'])
+            self.assertEqual(report['namespaceRedisPortFree']['result'],'ACTUAL_OWNER_NAMESPACE_BIND_FREE')
+            self.assertEqual(report['result'],'NOT_ACCEPTED');self.assertEqual(report['firstFailure'],state['firstFailure'])
+            self.assertIsNone(report['mavenExit']);self.assertIsNone(report['appExit']);self.assertEqual(report['originalExit'],2)
+            B.redis_cleanup_proven(report,B.identity(self.env()))
+
+    def test_failed_namespace_bind_retains_first_failure_and_still_cleans_the_exact_app(self):
+        with tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True):
+            path,state,obj,mysql,namespace=self.namespace_fixture(directory);events=[];reports=[]
+            out=Path(directory)/'out';out.mkdir();(out/'run.log').write_bytes(b'private existing log')
+            def cleanup(path,current,role):
+                events.append(role)
+                return {'role':role,'cid':current['slots'][role]['cid'],'result':'EXACT_CID_REMOVED_AND_ABSENT',
+                        'terminal':{'ExitCode':143,'OOMKilled':False,'Running':False,'Pid':0}}
+            with patch.object(B,'load_private',return_value=(path,state)),patch.object(B,'OUT',out),\
+                 patch.object(B,'namespace_port_proof',side_effect=ValueError('ACTUAL_NAMESPACE_BIND_PROOF_REQUIRED')),\
+                 patch.object(B,'cleanup_slot',side_effect=cleanup),patch.object(B,'write',side_effect=lambda path,value:reports.append(copy.deepcopy(value))):
+                with self.assertRaisesRegex(ValueError,'ORIGINAL_EXIT_OR_BUDGET_OR_CLEANUP_NOT_ACCEPTED'):B.finalize(path,2)
+            report=reports[-1];self.assertEqual(events,['redis','app']);self.assertEqual(report['result'],'NOT_ACCEPTED')
+            self.assertEqual(report['namespaceRedisPortFree'],{'result':'UNKNOWN'})
+            self.assertEqual(report['firstFailure'],state['firstFailure'])
+            self.assertEqual(report['failures'][0]['reasonCode'],'ACTUAL_NAMESPACE_BIND_PROOF_REQUIRED')
+            with self.assertRaisesRegex(ValueError,'ACTUAL_INTERNAL_REDIS_CLEANUP_REQUIRED'):B.redis_cleanup_proven(report,B.identity(self.env()))
+
+    def test_changed_mysql_namespace_probe_or_bind_result_never_certifies_redis_cleanup(self):
+        for kind in ('mysql-pid','namespace','source','bind','budget'):
+            with self.subTest(kind=kind),tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True):
+                path,state,obj,mysql,namespace=self.namespace_fixture(directory);calls=[]
+                if kind=='mysql-pid':mysql['State']['Pid']+=1
+                if kind=='namespace':state['networkNamespaceSha256']='0'*64
+                if kind=='source':(path/'launch/CombinedHttpNamespacePortProbe.java').write_bytes(b'changed')
+                if kind=='budget':obj['HostConfig']['Memory']=123
+                def command(argv,**kw):
+                    calls.append(argv)
+                    if argv[-2:]==['readlink','/proc/self/ns/net']:return namespace
+                    return b'HOST_SOCKET_BIND_OK PRIVATE_VALUE\n'
+                with patch.object(B,'inspect',return_value=obj),patch.object(B,'backing_mysql',return_value=(mysql,{})),\
+                     patch.object(B,'command',side_effect=command):
+                    with self.assertRaises(ValueError):B.namespace_port_proof(path,state)
+                if kind!='bind':self.assertFalse(any('java' in argv for argv in calls))
+
+    def test_already_stopped_app_cannot_substitute_container_absence_for_namespace_bind(self):
+        with tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True):
+            path,state,obj,mysql,namespace=self.namespace_fixture(directory);obj['State'].update(Running=False,Pid=0)
+            with patch.object(B,'inspect',return_value=obj),patch.object(B,'command') as command,patch.object(B,'backing_mysql') as backing:
+                with self.assertRaisesRegex(ValueError,'ORIGINAL_EXECUTION_NAMESPACE_NOT_LIVE'):B.namespace_port_proof(path,state)
+            command.assert_not_called();backing.assert_not_called()
+
+
 if __name__=='__main__':unittest.main()
