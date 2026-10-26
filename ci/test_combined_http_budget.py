@@ -589,7 +589,7 @@ class CombinedBudgetControls(unittest.TestCase):
         proof=self.subject_report()['cacheProof']
         return {**B.identity(self.env()),**{k:v for k,v in proof.items() if k!='reportSha256'},
                 'result':'PINNED_OFFLINE_TEST_PREFLIGHT_PROVEN','originalExit':0,'failures':[],
-                'mavenExitObserved':True,'mavenExit':0,
+                'mavenExitObserved':True,'mavenExit':0,'offlinePackageProbeExit':0,
                 'pomSha256':{'pom.xml':'f'*64},'budget':{'memory':B.MEMORY,'memorySwap':B.MEMORY,'nanoCpus':1000000000,'pids':256},
                 'cgroup':{'limits':{'memory.max':str(B.MEMORY),'memory.swap.max':'0','cpu.max':'100000 100000','pids.max':'256'}},
                 'cleanup':{'result':'EXACT_CID_REMOVED_AND_ABSENT','terminal':{'OOMKilled':False,'ExitCode':143}}}
@@ -608,7 +608,8 @@ class CombinedBudgetControls(unittest.TestCase):
         self.assertEqual(len(result['reportSha256']),64)
         for key,value in [('sourceSha','b'*40),('runId','99'),('attempt','9'),('class','GenericGameplayHttpE2eIT'),
                           ('mavenVersion','3.9.12'),('image','maven:latest'),('settingsSha256','0'*64),
-                          ('originalExit',1),('result','NOT_ACCEPTED'),('mavenExitObserved',False),('mavenExit',None)]:
+                          ('originalExit',1),('result','NOT_ACCEPTED'),('mavenExitObserved',False),('mavenExit',None),
+                          ('offlinePackageProbeExit',None),('offlinePackageProbeExit',-1),('offlinePackageProbeExit',256)]:
             report=self.cache_receipt();report[key]=value
             with self.assertRaisesRegex(ValueError,'OFFLINE_CACHE_PREFLIGHT_REQUIRED'):self.check_cache_receipt(report)
         report=self.cache_receipt();report['cleanup']['terminal']['OOMKilled']=True
@@ -695,7 +696,7 @@ class CombinedBudgetControls(unittest.TestCase):
             self.assertEqual(owner.safe_maven_failure(path),{'category':'offline-resolution','helpException':'PluginResolutionException'})
 
     def warm_transport_control(self,exit_code=0,foreign=False,write_fails=False,
-                               failure_point=None,terminal_exit=143,no_plugin=False):
+                               failure_point=None,terminal_exit=143,no_plugin=False,probe_exit=0):
         # Transport/file protocol doubles only: not Maven/Java execution or dependency acceptance evidence.
         reports=[];mutations=[];obj={};image_id='sha256:'+'d'*64
         with tempfile.TemporaryDirectory() as directory,contextlib.ExitStack() as own_cleanup:
@@ -733,6 +734,8 @@ class CombinedBudgetControls(unittest.TestCase):
                     return cid.encode()
                 if 'sha256sum' in argv:return ('c'*64+'  fixed-core.jar\n').encode()
                 if argv[-1]=='/tmp/cy-cache.phase':return b'OFFLINE_TEST_PREFLIGHT'
+                if 'exec' in argv and '/tmp/cy-cache.offline.exit' in argv[-1]:
+                    return b'' if probe_exit is None else str(probe_exit).encode()
                 if 'exec' in argv:return b'PRIVATE_BAD_RECEIPT' if failure_point=='INVALID_RECEIPT' else str(exit_code).encode()
                 if 'stop' in argv:obj['State'].update(Running=False,Pid=0,ExitCode=terminal_exit);mutations.append('stop')
                 if 'rm' in argv:mutations.append('remove')
@@ -875,6 +878,62 @@ class CombinedBudgetControls(unittest.TestCase):
         class PrivateTokenFailure(Exception):pass
         result=B.cache_failure(PrivateTokenFailure('PRIVATE_TOKEN'),'PINNED_CACHE_PREPARATION','WAIT_EXIT')
         self.assertEqual(result['type'],'UNKNOWN');self.assertNotIn('PRIVATE_TOKEN',json.dumps(result))
+
+    def test_offline_package_uses_the_original_fixed_goal_and_only_central_miss_can_enter_online_repair(self):
+        shell=B.fixed_cache_command()[1]
+        self.assertIn('package=(\'mvn\'',shell)
+        self.assertEqual(shell.count("'package' '-DskipTests'"),1)
+        self.assertIn('"${package[@]}" -o 2>&1 | tee /tmp/cy-cache.offline.log',shell)
+        self.assertIn('codes=("${PIPESTATUS[@]}"); probe=${codes[0]}',shell)
+        self.assertIn('[ "${codes[1]}" -eq 0 ] || exit 98',shell)
+        self.assertIn('"OFFLINE_PACKAGE_PROBE"',shell)
+        self.assertIn('if grep -Eq',shell)
+        self.assertIn(r'Cannot access central \(https://repo\.maven\.apache\.org/maven2\) in offline mode and the artifact',shell)
+        self.assertIn('has not been downloaded from it before',shell)
+        self.assertIn('else exit "$probe"; fi; fi;',shell)
+        self.assertEqual(shell.count('"${package[@]}"'),2)
+        self.assertEqual(shell.count('maven-dependency-plugin:3.10.0:get'),1)
+        self.assertEqual(shell.count('OFFLINE_TEST_PREFLIGHT'),1)
+        self.assertIn('--no-transfer-progress',shell);self.assertIn('-Dstyle.color=never',shell)
+        self.assertNotIn("'-q'",shell)
+        self.assertEqual(B.LIMIT_SECONDS,1200);self.assertEqual(B.MEMORY,1073741824)
+
+    def test_reused_and_repaired_closures_both_require_a_current_fixed_toolchain_receipt(self):
+        # Transport doubles only. They do not execute the shell, Maven, download, compiler or business workload.
+        for probe_exit in (0,1):
+            with self.subTest(probe_exit=probe_exit):
+                reports,mutations,failure,private_exists=self.warm_transport_control(probe_exit=probe_exit)
+                report=reports[-1]
+                self.assertIsNone(failure);self.assertFalse(private_exists);self.assertEqual(mutations,['stop','remove'])
+                self.assertEqual(report['offlinePackageProbeExit'],probe_exit)
+                self.assertEqual(report['mavenExit'],0);self.assertIs(report['mavenExitObserved'],True)
+                self.assertEqual(report['result'],'PINNED_OFFLINE_TEST_PREFLIGHT_PROVEN')
+                self.assertEqual(report['image'],B.JDK);self.assertEqual(report['mavenCoreSha256'],'c'*64)
+
+    def test_missing_or_bad_offline_package_probe_receipt_cannot_be_replaced_by_a_final_zero_exit(self):
+        for probe_exit in (None,256):
+            with self.subTest(probe_exit=probe_exit):
+                reports,mutations,failure,private_exists=self.warm_transport_control(probe_exit=probe_exit)
+                report=reports[-1]
+                self.assertIsInstance(failure,ValueError);self.assertTrue(private_exists)
+                self.assertEqual(mutations,['stop','remove']);self.assertEqual(report['mavenExit'],0)
+                self.assertIs(report['mavenExitObserved'],True)
+                self.assertEqual(report['firstFailure']['reasonCode'],'CACHE_OFFLINE_PACKAGE_PROBE_EXIT_REQUIRED')
+                self.assertEqual(report['result'],'NOT_ACCEPTED')
+
+    def test_last_reviewed_goal_is_bounded_not_a_failure_claim_or_a_private_message(self):
+        header='[INFO] --- compiler:3.15.0:testCompile (PRIVATE_TOKEN) @ chengyinhub-admin ---\n'
+        expected={'plugin':'org.apache.maven.plugins:maven-compiler-plugin','pluginVersion':'3.15.0',
+                  'goal':'testCompile','module':'chengyinhub-admin'}
+        self.assertEqual(B.safe_cache_progress('\x1b[32m'+header+'\x1b[0m'),expected)
+        self.assertEqual(B.safe_cache_progress(header+'PRIVATE_TOKEN URL SQL password=PRIVATE_TOKEN'),expected)
+        for changed in (header.replace('compiler:','foreign:'),header.replace('3.15.0','3.15.0-PRIVATE_TOKEN'),
+                        header.replace('testCompile','foreignGoal'),header.replace('chengyinhub-admin','private-module')):
+            self.assertEqual(B.safe_cache_progress(changed),{})
+        self.assertEqual(B.safe_cache_progress('PRIVATE_TOKEN before any goal'),{})
+        last='[INFO] --- spring-boot:4.1.1:repackage (repackage) @ chengyinhub-admin ---'
+        self.assertEqual(B.safe_cache_progress(header+last)['goal'],'repackage')
+        self.assertNotIn('PRIVATE_TOKEN',json.dumps(B.safe_cache_progress(header)))
 
 
 if __name__=='__main__':unittest.main()

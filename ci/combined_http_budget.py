@@ -68,12 +68,18 @@ SAFE_RESOURCE_CODES = frozenset({'FIXED_COMMAND_FAILED','FIXED_HOSTED_CLASS_ONLY
     'ACTUAL_CGROUP_MEMORY_SWAP_PIDS_MISMATCH','ACTUAL_CGROUP_CPU_MISMATCH',
     'ACTUAL_CGROUP_CHILD_OOM_KILL','ACTUAL_MAVEN_EXIT_REQUIRED','COMPILED_POSTIMAGE_DRIFT',
     'PRIVATE_LOG_NOT_COMPLETE','CACHE_EXECUTION_DEADLINE','CACHE_PROCESS_EXIT_BEFORE_RECEIPT',
-    'CACHE_STATE_NOT_PROVEN','CACHE_COMPLETED_SHELL_EXIT_MISMATCH','APP_OOM_OR_UNKNOWN_EXIT'})
+    'CACHE_STATE_NOT_PROVEN','CACHE_COMPLETED_SHELL_EXIT_MISMATCH','APP_OOM_OR_UNKNOWN_EXIT',
+    'CACHE_OFFLINE_PACKAGE_PROBE_EXIT_REQUIRED'})
 CACHE_SUBSTAGES=frozenset({'SOURCE_INPUTS','LOCAL_ENGINE','PINNED_IMAGE','CREATE_INPUTS','CREATE',
     'OWNER_TOOLCHAIN','MOUNT_ENV','START','CGROUP','WAIT_EXIT','MAVEN_EXIT','CORE_IDENTITY',
     'MANIFEST','PRIVATE_LOG','CLEANUP','TERMINAL'})
 CACHE_FAILURE_FUNCTIONS=frozenset({'warm_cache','cache_inputs','cache_manifest','cache_process_state',
-    'cache_terminal','command','inspect','validate_owner','validate_container','read_cgroup','validate_cgroup_limits'})
+    'cache_terminal','cache_offline_probe_exit','command','inspect','validate_owner','validate_container','read_cgroup','validate_cgroup_limits'})
+CACHE_GOALS={
+    'maven-resources-plugin':{'resources','testResources'},'maven-compiler-plugin':{'compile','testCompile'},
+    'maven-surefire-plugin':{'test'},'maven-jar-plugin':{'jar'},'maven-install-plugin':{'install'},
+    'maven-war-plugin':{'war'},'maven-dependency-plugin':{'properties','get'},
+    'spring-boot-maven-plugin':{'repackage'},'git-commit-id-maven-plugin':{'revision'}}
 
 
 def require(ok, code):
@@ -109,6 +115,20 @@ def safe_plugin_resolution(text):
     return result
 
 
+def safe_cache_progress(text):
+    """Last reviewed Maven goal header only; not a claim that this goal caused the timeout."""
+    text=re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]','',text[-1024*1024:])
+    headers=re.findall(r'--- ([a-z][a-z0-9-]{0,79}):([0-9][A-Za-z0-9_.-]{0,39}):([A-Za-z][A-Za-z0-9]{0,39})[^\r\n]{0,160} @ ([a-z][a-z0-9-]{0,79}) ---',text)
+    for prefix,version,goal,module in reversed(headers):
+        if module not in (*MODULES,'chengyinhub'):continue
+        for coordinate,versions in REVIEWED_PLUGINS.items():
+            artifact=coordinate.split(':')[1]
+            aliases={artifact,artifact.removeprefix('maven-').removesuffix('-plugin'),artifact.removesuffix('-maven-plugin')}
+            if prefix in aliases and version in versions and goal in CACHE_GOALS.get(artifact,set()):
+                return {'plugin':coordinate,'pluginVersion':version,'goal':goal,'module':module}
+    return {}
+
+
 def cache_manifest(cache):
     require(cache.is_dir() and not cache.is_symlink(),'EXISTING_OFFLINE_CACHE_REQUIRED')
     rows=[];total=0
@@ -129,13 +149,13 @@ def cache_inputs():
 
 
 def cache_maven_arguments():
-    return ['-B','-q','--settings','/cache-owner/settings.xml','--global-settings','/cache-owner/settings.xml',
+    return ['-B','--no-transfer-progress','-Dstyle.color=never','--settings','/cache-owner/settings.xml','--global-settings','/cache-owner/settings.xml',
             '-Dmaven.repo.local=/cache/repository']
 
 
 def fixed_cache_command():
     common=cache_maven_arguments()
-    # Original package/get, now run by the SAME pinned core/settings/repository as execution.
+    # Same package in the pinned owner: prefer the existing offline closure, never trust a prior JAR.
     # skipTests belongs only to preparation/preflight. The original real test command never gains it.
     goals=[common+['-pl','chengyinhub-admin','-am','package','-DskipTests'],
            common+['-N','org.apache.maven.plugins:maven-dependency-plugin:3.10.0:get',
@@ -143,9 +163,21 @@ def fixed_cache_command():
            common+['-o','-pl','chengyinhub-admin','-am','test','-DskipTests','-Dtest='+CLASS,
                    '-DfailIfNoTests=false','-Dsurefire.failIfNoSpecifiedTests=false']]
     # Structured argv are passed to a fixed shell without interpolation of source/env/credentials.
-    encoded='; '.join('printf "%s\\n" "'+stage+'" >/tmp/cy-cache.phase; '+
+    package='package=('+ ' '.join("'"+value+"'" for value in ['mvn']+goals[0])+'); '
+    # Only the original Central offline-miss diagnostic permits online closure repair. Compile/package
+    # failures are not retried online; every path still compiles/packages this source in this container.
+    missing=r'Cannot access central \(https://repo\.maven\.apache\.org/maven2\) in offline mode and the artifact [^[:space:]]+ has not been downloaded from it before\.'
+    encoded=package+'printf "%s\\n" "OFFLINE_PACKAGE_PROBE" >/tmp/cy-cache.phase; '+\
+            '"${package[@]}" -o 2>&1 | tee /tmp/cy-cache.offline.log; codes=("${PIPESTATUS[@]}"); probe=${codes[0]}; '+\
+            '[ "${codes[1]}" -eq 0 ] || exit 98; '+\
+            'printf "%s\\n" "$probe" >/tmp/cy-cache.offline.exit.next; mv /tmp/cy-cache.offline.exit.next /tmp/cy-cache.offline.exit; '+\
+            'if [ "$probe" -ne 0 ]; then '+\
+            "if grep -Eq '"+missing+"' /tmp/cy-cache.offline.log; then "+\
+            'printf "%s\\n" "ONLINE_PACKAGE" >/tmp/cy-cache.phase; "${package[@]}" || exit $?; '+\
+            'else exit "$probe"; fi; fi; '
+    encoded+='; '.join('printf "%s\\n" "'+stage+'" >/tmp/cy-cache.phase; '+
                      ' '.join("'"+value+"'" for value in ['mvn']+goal)+' || exit $?'
-                     for stage,goal in zip(('ONLINE_PACKAGE','ORIGINAL_PROVIDER_GET','OFFLINE_TEST_PREFLIGHT'),goals))
+                     for stage,goal in zip(('ORIGINAL_PROVIDER_GET','OFFLINE_TEST_PREFLIGHT'),goals[1:]))
     return ['-c','mkdir -p /tmp/home /tmp/m2 || exit 98; '
             'child=; trap \'[ -z "$child" ] || kill -TERM "$child" 2>/dev/null; exit 143\' TERM INT HUP; '
             '('+encoded+') & child=$!; wait "$child"; status=$?; child=; '
@@ -178,6 +210,14 @@ def cache_process_state(obj):
     return {key:state[key] for key in ('Running','OOMKilled','ExitCode')} | {'pidPresent':state['Pid']>0}
 
 
+def cache_offline_probe_exit(cid,required=True):
+    value=command(DOCKER+['exec',cid,'/bin/bash','-c',
+        'if [ -f /tmp/cy-cache.offline.exit ]; then cat /tmp/cy-cache.offline.exit; fi']).decode().strip()
+    if not required and not value:return None
+    require(re.fullmatch('[0-9]{1,3}',value) and int(value)<256,'CACHE_OFFLINE_PACKAGE_PROBE_EXIT_REQUIRED')
+    return int(value)
+
+
 def cache_terminal(report,cleaned,preparation_failed):
     # Exact owned resource absence is independent of why the workload stopped.
     # A synthetic host failure exit is never represented as a Maven exit or compared to SIGKILL.
@@ -193,7 +233,7 @@ def warm_cache():
     private=private_directory(Path(command(['mktemp','-d','/tmp/cy-http-budget.XXXXXXXX']).decode().strip()))
     cache=Path.home()/'.m2/repository'
     report={**resource_envelope(os.environ),'result':'NOT_COMPLETED','originalExit':None,'failures':[],
-            'preparationOnly':True,'mavenExitObserved':False,'mavenExit':None,
+            'preparationOnly':True,'mavenExitObserved':False,'mavenExit':None,'offlinePackageProbeExit':None,
             'mavenVersion':CORE_VERSION,'image':JDK,'settingsSha256':hashlib.sha256(EMPTY_SETTINGS.encode()).hexdigest()}
     state={'nonce':uuid.uuid4().hex,'slots':{}};first=None;cleaned=None
     substage='SOURCE_INPUTS'
@@ -253,6 +293,7 @@ def warm_cache():
                 require(re.fullmatch('[0-9]{1,3}',status) and int(status)<256,'ACTUAL_MAVEN_EXIT_REQUIRED');break
             time.sleep(.5)
         substage='MAVEN_EXIT';report['originalExit']=report['mavenExit']=int(status);report['mavenExitObserved']=True
+        report['offlinePackageProbeExit']=cache_offline_probe_exit(cid)
         report['cgroup']=read_cgroup(obj['State']['Pid'],cid)
         require(int(report['cgroup']['memoryEvents'].get('oom_kill','-1'))==0,'ACTUAL_CGROUP_CHILD_OOM_KILL')
         substage='CORE_IDENTITY';core=command(DOCKER+['exec',cid,'sha256sum','/usr/share/maven/lib/maven-core-'+CORE_VERSION+'.jar']).decode().split()[0]
@@ -275,10 +316,13 @@ def warm_cache():
                     os.chmod(log,0o600);logs=subprocess.run(DOCKER+['logs',slot['cid']],stdout=stream,stderr=subprocess.STDOUT,timeout=30)
                 require(logs.returncode==0 and log.stat().st_size<32*1024**2,'PRIVATE_LOG_NOT_COMPLETE')
                 with log.open('rb') as stream:
-                    stream.seek(max(0,log.stat().st_size-1024*1024));report['pluginFailure']=safe_plugin_resolution(stream.read().decode(errors='replace'))
+                    stream.seek(max(0,log.stat().st_size-1024*1024));tail=stream.read().decode(errors='replace')
+                    report['pluginFailure']=safe_plugin_resolution(tail);report['lastReviewedMavenGoal']=safe_cache_progress(tail)
                 if obj['State']['Running']:
                     phase=command(DOCKER+['exec',slot['cid'],'cat','/tmp/cy-cache.phase']).decode().strip()
-                    report['phase']=phase if phase in ('ONLINE_PACKAGE','ORIGINAL_PROVIDER_GET','OFFLINE_TEST_PREFLIGHT') else 'UNKNOWN'
+                    report['phase']=phase if phase in ('OFFLINE_PACKAGE_PROBE','ONLINE_PACKAGE','ORIGINAL_PROVIDER_GET','OFFLINE_TEST_PREFLIGHT') else 'UNKNOWN'
+                    if report['offlinePackageProbeExit'] is None and not report['mavenExitObserved']:
+                        report['offlinePackageProbeExit']=cache_offline_probe_exit(slot['cid'],required=False)
         except Exception as failure:report['failures'].append(cache_failure(failure,'CACHE_PRIVATE_LOG','PRIVATE_LOG'))
         try:
             cleaned=cleanup_slot(private,state,'app');report['cleanup']=cleaned
@@ -299,6 +343,7 @@ def verified_cache(cache):
     require({k:report.get(k) for k in ('sourceSha','runId','attempt','class')}==identity(os.environ)
             and report.get('result')=='PINNED_OFFLINE_TEST_PREFLIGHT_PROVEN' and report.get('originalExit')==0
             and report.get('mavenExitObserved') is True and report.get('mavenExit')==0
+            and type(report.get('offlinePackageProbeExit')) is int and 0<=report['offlinePackageProbeExit']<256
             and not report.get('failures') and report.get('image')==JDK and report.get('mavenVersion')==CORE_VERSION
             and report.get('settingsSha256')==hashlib.sha256(EMPTY_SETTINGS.encode()).hexdigest()
             and report.get('pomSha256')==cache_inputs() and report.get('cache')==cache_manifest(cache)
