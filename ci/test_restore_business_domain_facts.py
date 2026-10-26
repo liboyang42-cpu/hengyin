@@ -309,4 +309,101 @@ class ExternalNamespaceControls(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'incomplete'):d.journal(file,'a'*32,'withdrawal-complete')
 
 
+class ProductionVersionContractControls(unittest.TestCase):
+    """SOURCE contracts plus synthetic negatives, not a hosted cohort receipt."""
+    def test_unknown_projection_is_admission_not_a_guessed_plus_one_or_two(self):
+        for version in (2,3):
+            with self.subTest(version=version):
+                s,p=voice(True)
+                s['tables']['npc_voice_enrollment_intent']['rows'][1][
+                    [c[0] for c in s['tables']['npc_voice_enrollment_intent']['columns']].index('profile_version')]=str(version)
+                with self.assertRaisesRegex(ValueError,'UNKNOWN must retain original admission version'):
+                    evaluate('voice-gap',(s,p))
+
+    def test_ready_projection_needs_both_pending_and_ready_cas(self):
+        for version in (1,2,4):
+            with self.subTest(version=version):
+                s,p=voice();put(s,'npc_voice_enrollment_intent','profile_version',version)
+                with self.assertRaisesRegex(ValueError,'PENDING/READY version progression'):
+                    evaluate('voice-complete',(s,p))
+
+    def test_original_journal_version_cannot_be_replaced_by_current_projection(self):
+        s,p=voice(True);original=copy.deepcopy(p)
+        evaluate('voice-gap',(s,p))
+        self.assertEqual(original,p)
+        p['originals']['known_voice']['profile_version']=3
+        with self.assertRaisesRegex(ValueError,'PENDING/READY version progression'):
+            evaluate('voice-gap',(s,p))
+
+    def test_journal_admission_version_requires_original_json_integer(self):
+        for value in (None,True,1.0,'1',0,-1,9223372036854775808):
+            with self.subTest(value=value):
+                s,p=voice();p['originals']['known_voice']['profile_version']=value
+                with self.assertRaisesRegex(ValueError,'version representation'):evaluate('voice-complete',(s,p))
+        s,p=voice();del p['originals']['known_voice']['profile_version']
+        with self.assertRaisesRegex(ValueError,'version representation'):evaluate('voice-complete',(s,p))
+
+    def test_projection_requires_exact_cast_text_not_numeric_coercion(self):
+        for value in (None,True,3,3.0,'3.0','03','+3','3 ','0','9223372036854775808'):
+            with self.subTest(value=value):
+                s,p=voice();column=[c[0] for c in s['tables']['npc_voice_enrollment_intent']['columns']].index('profile_version')
+                s['tables']['npc_voice_enrollment_intent']['rows'][0][column]=value
+                with self.assertRaisesRegex(ValueError,'version representation'):evaluate('voice-complete',(s,p))
+
+    def test_voice_source_distinguishes_admission_unknown_pending_and_ready(self):
+        root=HERE.parent
+        source=(root/'chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/NpcVoiceEnrollmentService.java').read_text()
+        finish=source.split('private NpcProfile finish(',1)[1].split('private NpcProfile profile(',1)[0]
+        self.assertIn('row.setProfileVersion(current.getVoiceVersion() + 1);',source)
+        self.assertIn('if (!"UNKNOWN".equals(state) && Objects.equals(current.getVoiceVersion(), row.getProfileVersion())',finish)
+        self.assertIn('("PENDING".equals(state) && "IN_FLIGHT".equals(row.getState()))',finish)
+        self.assertIn('("READY".equals(state) && "PENDING".equals(row.getState()))',finish)
+        self.assertLess(finish.index('requireOne(update(current));'),finish.index('row.setProfileVersion(current.getVoiceVersion());'))
+        self.assertLess(finish.index('row.setProfileVersion(current.getVoiceVersion());'),finish.index('requireOne(intents.complete(row));'))
+        xml=ET.parse(root/'chengyinhub-system/src/main/resources/mapper/business/NpcVoiceEnrollmentMapper.xml')
+        self.assertIn('profile_version=#{profileVersion}',xml.find("update[@id='complete']").text)
+        fixture=(root/'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/RestoreVoiceReconciliationFixture.java').read_text()
+        self.assertIn('value.put(key,row.get(key))',fixture)
+        self.assertIn('pending.get("profile_version")',fixture)
+        self.assertIn('original.get("profile_version")).longValue()+1',fixture)
+        host=(HERE/'restore_business_reconciliation_probe.py').read_text()
+        self.assertIn("'CAST(' + tool.quoted(c[0]) + ' AS CHAR CHARACTER SET utf8mb4)'",host)
+
+    def test_withdrawal_keeps_two_actual_v1_sources_and_original_master_snapshot(self):
+        root=HERE.parent/'chengyinhub-system/src/main/java/com/chengyinhub/business'
+        dto=(root/'domain/dto/CashWithdrawTransferIntent.java').read_text()
+        self.assertIn('enum OriginalSource { FUND_FACT, TRANSFER_INTENT }',dto)
+        self.assertIn('public static final int REQUEST_VERSION = 1;',dto)
+        admission=(root/'service/support/WithdrawalBalanceAdmissionService.java').read_text()
+        self.assertIn('cash.insertFundFact(fact)',admission)
+        self.assertIn('transferIntents.insert(intent)',admission)
+        s,p=cash();put(s,'member_cash_withdraw_transfer_intent','request_hash','a'*64)
+        with self.assertRaisesRegex(ValueError,'original master V1'):evaluate('withdrawal-complete',(s,p))
+
+    def test_refund_original_gross_money_and_done_are_separate_required_facts(self):
+        s,p=refund();p['originals']['original_refund']['totalFen']=2000
+        with self.assertRaisesRegex(ValueError,'payment money/provenance'):evaluate('refund-complete',(s,p))
+        constants=(HERE.parent/'chengyinhub-system/src/main/java/com/chengyinhub/business/domain/WxPaymentCallbackInbox.java').read_text()
+        self.assertIn('STATE_DONE = 2;',constants);self.assertIn('BIZ_TYPE_REFUND = 2;',constants)
+        s,p=refund();put(s,'wx_payment_callback_inbox','state',0)
+        with self.assertRaisesRegex(ValueError,'DONE'):evaluate('refund-complete',(s,p))
+
+    def test_fixed_failure_context_preserves_original_predicate_and_value_error(self):
+        for reason,code in d._FAILURE_CODES.items():
+            with self.subTest(code=code):
+                try:d.require(False,reason)
+                except ValueError as failure:
+                    self.assertEqual((reason,),failure.args)
+                    self.assertEqual({'contractCode':code},d.failure_context(failure))
+                else:self.fail('failed contract was accepted')
+
+    def test_unreviewed_failure_cannot_export_message_rows_or_promote_unknown(self):
+        canary='CANARY_PRIVATE_RESPONSE_SQL_TOKEN'
+        for failure in (ValueError(canary),RuntimeError(canary),d.DomainFactMismatch(canary),
+                        d.DomainFactMismatch({'row':canary}),d.DomainFactMismatch('original master V1',canary)):
+            observed=d.failure_context(failure)
+            self.assertEqual({'contractCode':'UNKNOWN_DOMAIN_FACT_CONTRACT'},observed)
+            self.assertNotIn(canary,json.dumps(observed))
+
+
 if __name__=='__main__':unittest.main()

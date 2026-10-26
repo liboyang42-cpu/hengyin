@@ -1,0 +1,7 @@
+16601336ae52d37c97a3ea6c64c0545b61a7d7854e4275c7572a30274d3b28e0  ci/restore_business_domain_facts.py
+c18862ae9fa077e7cdf4c7ad25a1e96e2693d6579f27c99c287eae760341ca08  ci/test_restore_business_domain_facts.py
+bb89f7bf5eaf064d5010c46b99e425486d80286552f18a00b1ad2e7b20fc5c39  docs/delivery/architecture-day/F/domain-facts-8b15/README.md
+cc56cb102696607180ba6283a266012f0a4bb971d6438056762a5441c8d7f5dd  docs/delivery/architecture-day/F/domain-facts-8b15/owned-source.patch.b64
+e5bf292d7e3005999c1a57e9b848f2e3180953cc51d9d9b4d65ff9018952b95a  docs/delivery/architecture-day/F/domain-facts-8b15/host-context.review.patch.b64
+81c277ae2c13011f31c9a1cbd299ba1c559e6b49baefed072f1abb97293e637e  docs/delivery/architecture-day/F/domain-facts-8b15/PATCHES.sha256
+4b08d9d3c64d10bb0e473f6772e42b3380ae39cf014a7fe2ffed3bec85ea2fa6  docs/delivery/architecture-day/F/domain-facts-8b15/SOURCE-POSTIMAGES.sha256

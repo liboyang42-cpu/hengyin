@@ -3,6 +3,7 @@ from decimal import Decimal
 import hashlib
 import json
 from pathlib import Path
+import re
 
 BASE = 'com.chengyinhub.business.service.'
 SPECS = {
@@ -29,8 +30,64 @@ for _domain in ('withdrawal','refund','voice'):
 ALL_TABLES = frozenset(t for s in SPECS.values() for t in s['tables'])
 
 
+# Fixed SOURCE contract labels only. Never export the rejected row, value, provider
+# identity, arbitrary exception message or SQL through the host's public receipt.
+_FAILURE_CODES = {
+    'typed original row shape': 'TYPED_ROW_SHAPE',
+    'full typed restore rows/high-water differ': 'RESTORED_TYPED_SNAPSHOT',
+    'external store rolled back': 'EXTERNAL_JOURNAL_PREFIX',
+    'complete cohort cannot hide post-backup writes/allocated identities': 'COMPLETE_SOURCE_SNAPSHOT',
+    'all original withdrawal IDs must be uniquely accounted': 'WITHDRAWAL_ORIGINAL_ROSTER',
+    'orphan or extra original financial identity': 'WITHDRAWAL_EVIDENCE_ROSTER',
+    'original master V1': 'WITHDRAWAL_MASTER_V1',
+    'preserve both independent V1 identities and actual debit': 'WITHDRAWAL_LEDGER_V1',
+    'original success required': 'WITHDRAWAL_ORIGINAL_SUCCESS',
+    'original payment consumption reference': 'REFUND_PAYMENT_CONSUMPTION',
+    'original refund ID/amount': 'REFUND_ORIGINAL_ID_AMOUNT',
+    'refund original consumed payment': 'REFUND_ORIGINAL_PAYMENT_REFERENCE',
+    'refund cannot substitute payment money/provenance': 'REFUND_ORIGINAL_GROSS_AMOUNT',
+    'verified original refund success required': 'REFUND_ORIGINAL_VERIFIED_SUCCESS',
+    'real original callback DONE receipt': 'REFUND_ORIGINAL_DONE',
+    'original voice request ID missing': 'VOICE_ORIGINAL_REQUEST',
+    'original voice owner/version changed': 'VOICE_ORIGINAL_OWNER',
+    'unqueryable voice must remain UNKNOWN': 'VOICE_UNKNOWN_IDENTITY',
+    'original voice version representation': 'VOICE_VERSION_REPRESENTATION',
+    'UNKNOWN must retain original admission version': 'VOICE_UNKNOWN_ADMISSION_VERSION',
+    'original PENDING/READY version progression': 'VOICE_READY_PROJECTION_VERSION',
+    'voice profile is not the same original projection': 'VOICE_PROFILE_BINDING',
+    'owner changed original full economic/task rows': 'OWNER_ORIGINAL_ROWS',
+    'owner changed an unregistered allocator/high-water': 'OWNER_ORIGINAL_HIGH_WATER',
+}
+
+
+class DomainFactMismatch(ValueError):
+    """Still a failed predicate, never an observation/approval or a replacement fact."""
+    pass
+
+
+def failure_context(failure):
+    """Optional host projection; unknown failures/messages remain undisclosed UNKNOWN."""
+    if type(failure) is not DomainFactMismatch or len(failure.args) != 1:
+        return {'contractCode': 'UNKNOWN_DOMAIN_FACT_CONTRACT'}
+    reason = failure.args[0]
+    code = _FAILURE_CODES.get(reason) if type(reason) is str else None
+    return {'contractCode': code or 'UNKNOWN_DOMAIN_FACT_CONTRACT'}
+
+
 def require(ok, reason):
-    if not ok: raise ValueError(reason)
+    if not ok: raise DomainFactMismatch(reason)
+
+
+def voice_versions(row, identity):
+    # capture.table_rows CASTs numeric columns to text; RestoreProviderJournal
+    # records the JDBC admission BIGINT as a JSON integer. Do not coerce floats,
+    # booleans, missing fields or the current projection into an original version.
+    projected, admitted = row.get('profile_version'), identity.get('profile_version')
+    require(type(projected) is str and re.fullmatch(r'[1-9][0-9]{0,18}', projected) is not None
+            and int(projected) <= 9223372036854775807
+            and type(admitted) is int and 0 < admitted <= 9223372036854775807,
+            'original voice version representation')
+    return int(projected), admitted
 
 
 def rows(snapshot, name):
@@ -166,16 +223,19 @@ def evaluate(cohort, backup, fault, restored, provider_before, provider_after):
                 require(r[key]==str(identity[key]),'original voice owner/version changed')
             require(r['sample_sha256']==identity['sample_sha256'] and r['sample_reference']==identity['sample_reference']
                     and r['actor_member_id']=='88' and r['scope_id']=='31','original sample ownership/reference')
+            projected_version, admission_version = voice_versions(r, identity)
             if case=='unknown_voice':
                 require(r['state']=='UNKNOWN' and r['voice_id'] is None and identity['voiceId'] is None,'unqueryable voice must remain UNKNOWN')
-                require(int(r['profile_version'])==int(identity['profile_version']),'UNKNOWN must retain original admission version')
+                # finish(UNKNOWN) explicitly skips update(current); claim already
+                # committed the admission projection before the provider call.
+                require(projected_version==admission_version,'UNKNOWN must retain original admission version')
                 require(not any(e['case']==case and e['operation']=='QUERY' for e in provider_after['records']),'never query prefix or invent original voice id')
                 differences.append({'case':case,'reason':'PROVIDER_ORIGINAL_UNQUERYABLE_MANUAL','originalId':r['id']})
             else:
                 require(r['state']=='READY' and r['voice_id']==identity['voiceId']=='fixture-original-voice-555','persisted original voice result')
                 # Original finish(PENDING) and finish(READY) each CAS the profile and advance this local projection once.
                 # The provider identity retains the ORIGINAL admission version; do not overwrite it with the final projection.
-                require(int(r['profile_version'])==int(identity['profile_version'])+2,'original PENDING/READY version progression')
+                require(projected_version==admission_version+2,'original PENDING/READY version progression')
             profiles=[p for p in rows(restored,'npc_profile') if p['id']==r['npc_id']]
             require(len(profiles)==1 and profiles[0]['voice_version']==r['profile_version']
                     and profiles[0]['voice_id']==r['voice_id'],'voice profile is not the same original projection')
