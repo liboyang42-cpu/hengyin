@@ -23,6 +23,8 @@
       <text>{{notice || '原操作结果待确认，已冻结新提交'}}</text>
       <text wx:if="{{pending}}" class="score-muted">{{pending.kind}} · 原请求 {{pending.requestId || '待核对'}}</text>
       <cy-btn wx:if="{{pending}}" variant="secondary" disabled="{{busy}}" bindtap="recover">查询原操作结果</cy-btn>
+      <cy-btn wx:if="{{pending && !pending.requestId && pending.kind !== 'STORAGE'}}" variant="secondary" disabled="{{busy}}" bindtap="requestManualReview">提交历史操作人工核对</cy-btn>
+      <cy-btn wx:if="{{pending.kind === 'SYNC' && pending.requestId}}" variant="secondary" disabled="{{busy}}" bindtap="resumeSync">继续原任务同步</cy-btn>
     </view>
     <view class="score-card">
       <text class="score-title">结算结果</text>
@@ -34,7 +36,31 @@
       </block>
       <text wx:else class="score-muted">本局尚未结算，暂不能确认积分或探索值到账。</text>
       <cy-btn wx:if="{{score.canSync}}" variant="secondary" disabled="{{busy || !!pending}}" loading="{{busy}}" bindtap="sync">同步已通过任务</cy-btn>
+      <text wx:if="{{score.pendingReviewCount !== '0'}}" class="score-muted">仍有 {{score.pendingReviewCount}} 项任务待审核，审核结束后再结算。</text>
       <cy-btn wx:if="{{score.canSettle}}" disabled="{{busy || !!pending}}" bindtap="settle">结算本局</cy-btn>
+    </view>
+    <view wx:if="{{score.recoveries.length}}" class="score-card">
+      <text class="score-title">历史操作人工核对</text>
+      <view class="score-entry" wx:for="{{score.recoveries}}" wx:key="id">
+        <text>{{item.kind}} · {{item.statusText}} · {{item.id}}</text>
+        <text wx:if="{{item.note}}">核对意见：{{item.note}}</text>
+        <text wx:if="{{item.referenceId}}">关联记录 {{item.referenceId}}</text>
+      </view>
+      <text class="score-muted">核对意见不等于原请求成功；原待办保留，不能据此重复提交。</text>
+    </view>
+    <view class="score-card">
+      <text class="score-title">本场榜单</text>
+      <text class="score-muted">每人取最新一局；同分同用时并列，分支主题先看是否到达结局。</text>
+      <cy-btn variant="secondary" disabled="{{boardState === 'loading'}}" bindtap="loadLeaderboard">{{boardState === 'loading' ? '正在读取榜单' : '读取本场榜单'}}</cy-btn>
+      <text wx:if="{{boardState === 'error'}}">榜单暂时无法读取，请重试。</text>
+      <block wx:if="{{boardState === 'ready' && board}}">
+        <text wx:if="{{!board.list.length}}">本场暂无成绩</text>
+        <view class="score-row" wx:for="{{board.list}}" wx:key="rowKey">
+          <text>{{item.rank}} · {{item.mine ? '本人' : '参赛玩家'}}</text>
+          <text>{{board.mode === 'ROUTE' ? (item.reachedEnding ? '已到结局' : '未到结局') : item.score}} · {{item.elapsed}}</text>
+        </view>
+        <text wx:if="{{board.me}}">本人名次 {{board.me.rank}} · {{board.me.score}} · {{board.me.elapsed}}</text>
+      </block>
     </view>
     <view class="score-card">
       <text class="score-title">计分时间线</text>

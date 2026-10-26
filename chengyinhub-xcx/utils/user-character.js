@@ -54,6 +54,9 @@ function attribute(raw, partial) {
   // Only visible display fields enter setData; raw rules/variables/unknown metadata stay out.
   return { stateKey: raw.stateKey, label: text(raw.label), value: raw.value, min: raw.min, max: raw.max,
     displayType: raw.displayType || 'number', persistScope: raw.persistScope, levelLabel,
+    // 仅消费已知展示元数据；旧局 partial 不以实时定义补齐。色值/图标不得成为 CSS 或 URL 输入。
+    color: !partial && typeof raw.color === 'string' && /^#[0-9a-fA-F]{6}$/.test(raw.color) ? raw.color : '',
+    icon: !partial && typeof raw.icon === 'string' && /^[a-z0-9][a-z0-9-]{0,31}$/.test(raw.icon) ? raw.icon : '',
     scopeText: raw.persistScope == null ? '保留范围未记录' : raw.persistScope === 'topic' ? '同主题跨局保留' : '每局重置',
     percent: raw.max === raw.min ? 100 : Math.round((raw.value - raw.min) * 100 / (raw.max - raw.min)),
     stars: raw.displayType === 'stars' && raw.min === 0 && raw.max > 0 && raw.max <= 10
@@ -97,6 +100,7 @@ function projectCard(raw, topicId) {
     const partial = raw.definitionSource === 'SESSION_SNAPSHOT_PARTIAL';
     const attributes = raw.attributes.map(row => attribute(row, partial)).filter(Boolean);
     const definitionNote = partial ? '本局属性使用开始时的配置；部分展示信息未记录'
+      : raw.definitionSource === 'SESSION_SNAPSHOT_V1' ? '属性定义已随本局冻结'
       : raw.definitionSource === 'LEGACY_LIVE' ? '旧局未保存完整配置，当前展示可能随主题更新'
       : raw.created ? '属性以当前已保存的记录为准' : '以下为角色模板的初始属性，尚未创建角色';
     if (new Set(attributes.map(row => row.stateKey)).size !== attributes.length) return null;

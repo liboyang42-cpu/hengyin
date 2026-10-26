@@ -125,7 +125,7 @@ test('共用玩法列出节点，另存副本传完整作者字段且成功后�
   const { p, source } = sharedPage();
   assert.deepEqual(p.data.nodeSharedSites.map(s => s.label), ['第一章 · 第一站', '第一章 · 第二站']);
   p.onCopyBoundTemplate();
-  const detail = sent.find(r => r.url === '/api/template/myinfo');
+  const detail = sent.find(r => r.url === '/api/template/author-myinfo');
   assert.equal(p.data.nodesForm.templateId, 31);
   detail.success({ code: '200', data: source });
   const draft = sent.find(r => r.url === '/api/template/draft');
@@ -148,7 +148,7 @@ test('另存失败或回包不确定保留原绑定且不自动重试', () => {
     sent.length = 0;
     const { p, source } = sharedPage();
     p.onCopyBoundTemplate();
-    sent.find(r => r.url === '/api/template/myinfo').success({ code: '200', data: source });
+    sent.find(r => r.url === '/api/template/author-myinfo').success({ code: '200', data: source });
     const draft = sent.find(r => r.url === '/api/template/draft');
     if (kind === 'failure') draft.success({ code: 500, msg: '保存失败' });
     else draft.fail({}, 0);
@@ -170,7 +170,7 @@ test('另存回读资源槽类型变化时重新校验，不沿用旧数值对�
   const updated = Object.assign({}, source, { advancedConfigJson: JSON.stringify({ interactionRules: {
     resourceSlots: [{ key: 'value_1', kind: 'ITEM', label: '支付的物资', required: true }]
   } }) });
-  sent.find(r => r.url === '/api/template/myinfo').success({ code: '200', data: updated });
+  sent.find(r => r.url === '/api/template/author-myinfo').success({ code: '200', data: updated });
   sent.find(r => r.url === '/api/template/draft').success({ code: '200', data: 89 });
   assert.equal(p.data.nodesForm.templateId, 89);
   assert.deepEqual(p._nodeBindingDraft.values, {});
@@ -186,7 +186,7 @@ test('修改原模板入口明确沿用会员草稿 id 并返回主题编辑器'
   p.onEditBoundTemplate();
   wx.navigateTo = navigateTo;
   assert.equal(url, '/pages/publish/temp/index?from=fabu&id=31&scope=my&runtimeEndings=%5B%5D');
-  assert.equal(p._editingBoundTemplateId, 31);
+  assert.equal(p._editingBoundTemplateId, '31');
 });
 
 test('选公共玩法先采用为我的草稿,再用会员模板 id 绑节点', () => {
@@ -195,15 +195,17 @@ test('选公共玩法先采用为我的草稿,再用会员模板 id 绑节点', 
   p.selectTemp(tap(libraryRow, 'public'));
   p.confirmTemp();
 
+  sent.find(r=>r.url==='/api/template/adoption-source').success({code:200,data:{originalTemplateId:'7',sourceVersion:'a'.repeat(64)}});
   const adopt = sent.find((r) => r.url === '/api/template/adopt-draft');
   assert.ok(adopt, '必须调用采用接口');
-  assert.equal(JSON.parse(adopt.data).originalTemplateId, 7);
+  assert.equal(JSON.parse(adopt.data).originalTemplateId, '7');
   assert.equal(p.data.nodesForm.templateId, 0, '采用返回前不得把库 id 写进节点');
 
-  adopt.success({ code: '200', data: 9001 });
+  const command=JSON.parse(adopt.data);
+  adopt.success({code:200,data:{requestId:command.requestId,originalTemplateId:'7',sourceVersion:'a'.repeat(64),status:'COMPLETED',draftId:'9001'}});
   assert.equal(p.data.nodesForm.templateId, 0, '会员草稿详情刷新前不得使用公共库投影');
-  const detail = sent.find((r) => r.url === '/api/template/myinfo');
-  assert.equal(detail.data.id, 9001);
+  const detail = sent.find((r) => r.url === '/api/template/adoption-detail');
+  assert.equal(detail.data.requestId, command.requestId);
   detail.success({ code: '200', data: { id: 9001, title: '公共猜谜', advancedConfigJson: '{}' } });
   assert.equal(p.data.nodesForm.templateId, 9001, '绑定的是会员草稿 id');
   assert.equal(p.data.nodesForm.templateInfo.title, '公共猜谜');
@@ -216,6 +218,7 @@ test('采用结果不确定时不绑定也不自动重发', () => {
   p.selectTemp(tap(libraryRow, 'public'));
   p.confirmTemp();
   p.confirmTemp(); // 在途重复点
+  sent.find(r=>r.url==='/api/template/adoption-source').success({code:200,data:{originalTemplateId:'7',sourceVersion:'a'.repeat(64)}});
   const adopts = sent.filter((r) => r.url === '/api/template/adopt-draft');
   assert.equal(adopts.length, 1, '在途时不得重复采用');
   adopts[0].fail({}, 0);
@@ -231,7 +234,7 @@ test('我的模板直接绑定;与公共库重号时选中态按来源区分', (
   assert.equal(p.data.selectedTempSource, 'mine', '同 id 不同来源应切换选中，而不是取消');
   p.confirmTemp();
   assert.equal(sent.filter((r) => r.url === '/api/template/adopt-draft').length, 0);
-  sent.find((r) => r.url === '/api/template/myinfo').success({ code: '200',
+  sent.find((r) => r.url === '/api/template/author-myinfo').success({ code: '200',
     data: { id: 7, title: '我的同号模板', advancedConfigJson: '{}' } });
   assert.equal(p.data.nodesForm.templateId, 7);
   assert.equal(p.data.nodesForm.templateInfo.title, '我的同号模板');
@@ -242,10 +245,10 @@ test('玩法详情异步回读时切换选择，旧回包不能覆盖新模板',
   p.data.nodesForm = { name: '', templateId: 0 };
   p.selectTemp(tap({ id: 31, title: '旧玩法' }, 'mine'));
   p.confirmTemp();
-  const oldRequest = sent.find(r => r.url === '/api/template/myinfo');
+  const oldRequest = sent.find(r => r.url === '/api/template/author-myinfo');
   p.selectTemp(tap({ id: 32, title: '新玩法' }, 'mine'));
   p.confirmTemp();
-  const newRequest = sent.filter(r => r.url === '/api/template/myinfo')[1];
+  const newRequest = sent.filter(r => r.url === '/api/template/author-myinfo')[1];
   oldRequest.success({ code: '200', data: { id: 31, title: '旧玩法', advancedConfigJson: '{}' } });
   assert.equal(p.data.nodesForm.templateId, 0);
   newRequest.success({ code: '200', data: { id: 32, title: '新玩法', advancedConfigJson: '{}' } });

@@ -4310,6 +4310,7 @@ page { background: var(--cy-btn-solid-bg); }
 .route-mapping-card { padding: 0 var(--cy-space-3-5); }
 
 .route-mapping-row {
+  flex-wrap: wrap;
   min-height: var(--cy-btn-h);
   display: flex;
   align-items: center;
@@ -4319,6 +4320,8 @@ page { background: var(--cy-btn-solid-bg); }
 }
 
 .route-mapping-row:last-child { border-bottom: 0; }
+
+.route-mapping-rules { flex: 0 0 100%; min-width: 0; }
 
 .route-mapping-row__label {
   display: block;

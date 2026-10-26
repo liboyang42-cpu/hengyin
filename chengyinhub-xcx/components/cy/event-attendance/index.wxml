@@ -1,0 +1,41 @@
+<view class="attendance">
+ <text class="title">赛事联络与到场签到</text>
+ <text wx:if="loading">正在读取</text>
+ <view wx:if="error"><text>{{error}}</text><button bindtap="reload">重试读取</button></view>
+ <view wx:if="snapshot">
+  <text>{{snapshot.dutyLabel}}</text><text>{{snapshot.dutyWindow}}（北京时间）</text>
+  <view wx:if="snapshot.config">
+   <text>{{snapshot.config.role}} {{snapshot.config.phone}}</text><button bindtap="contact">联系值班岗位</button>
+   <view wx:if="snapshot.config.backupPhone"><text>{{snapshot.config.backupRole}} {{snapshot.config.backupPhone}}</text><button data-backup="true" bindtap="contact">联系备用岗位</button></view>
+   <text>集合点：{{snapshot.config.meetingName}} · {{snapshot.config.meetingAddress}}</text>
+   <text>WGS84：{{snapshot.config.latitude}}, {{snapshot.config.longitude}}</text>
+  </view>
+  <text>拨号不代表已接听或救援已受理；不上传你的位置。保险不是参与必要条件。</text>
+  <text>签到窗口：{{snapshot.checkinWindow || '尚未配置'}}（北京时间）</text>
+  <text wx:if="!snapshot.receiving">{{snapshot.receivingReason}}</text>
+  <block wx:if="organizer">
+   <view wx:for="{{fields}}" wx:key="key"><text>{{item.label}}</text><input value="{{item.value}}" data-key="{{item.key}}" bindinput="input" disabled="{{recovery.state || recovery.busy}}" /></view>
+   <view><switch checked="{{publicConfirmed}}" bindchange="confirmPublic" disabled="{{recovery.state || recovery.busy}}"/><text>我已确认以上岗位电话可公开，并负责其有效性</text></view>
+   <button bindtap="saveConfig" disabled="{{recovery.state || recovery.busy}}">保存联系与签到配置</button>
+   <input value="{{code}}" bindinput="inputCode" placeholder="完整签到码（不是号码布）" disabled="{{recovery.state || recovery.busy}}" />
+   <button bindtap="scan" disabled="{{recovery.state || recovery.busy}}">扫描候选码</button><button bindtap="verify" disabled="{{recovery.state || recovery.busy}}">核验到场签到</button>
+  </block>
+  <block wx:else>
+   <text wx:if="snapshot.mine.bib">号码布 {{snapshot.mine.bib}}（仅展示编号） · 版本 {{snapshot.mine.version}}</text>
+   <text wx:if="snapshot.mine.checkedAt">签到已记录：{{snapshot.mine.checkedAt}}</text>
+   <image wx:if="snapshot.mine.qrImage" src="{{snapshot.mine.qrImage}}" mode="aspectFit" style="width:300px;height:300px" aria-label="本人签到二维码" />
+   <text wx:if="snapshot.mine.credential" user-select="true">签到码：{{snapshot.mine.credential}}</text>
+   <button wx:if="snapshot.activeParticipation" bindtap="claim" disabled="{{recovery.state || recovery.busy}}">领取／读回本人签到码</button>
+   <button wx:if="snapshot.mine.credential &amp;&amp; !snapshot.mine.checkedAt" bindtap="rotate" disabled="{{recovery.state || recovery.busy}}">主动换码</button>
+   <text>签到只记录到场，不改变计时、成绩、奖励或核销资格。</text>
+  </block>
+ </view>
+ <text wx:if="notice">{{notice}}</text>
+ <view wx:if="recovery.state || recovery.busy">
+  <text>{{recovery.label}}：{{recovery.message}}</text><text user-select="true">请求号 {{recovery.requestId}}</text>
+  <block wx:if="recovery.state === 'UNKNOWN'"><button data-action="query" bindtap="commandAction" disabled="{{recovery.busy}}">查询原结果</button><button data-action="retry" bindtap="commandAction" disabled="{{recovery.busy}}">原请求重试</button><button data-action="cancel" bindtap="commandAction" disabled="{{recovery.busy}}">终止未执行请求</button></block>
+  <button wx:if="recovery.state === 'APPLIED' || recovery.state === 'REJECTED' || recovery.state === 'CANCELLED'" data-action="acknowledge" bindtap="commandAction">确认归档</button>
+  <button wx:if="recovery.state === 'STORAGE_ERROR'" bindtap="open">重新读取原记录</button>
+ </view>
+ <view wx:if="result.data.bib"><text>原核验结果：号码布 {{result.data.bib}} · {{result.data.state}} · {{result.data.checkedAt}}</text></view>
+</view>

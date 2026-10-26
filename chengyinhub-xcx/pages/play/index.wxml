@@ -123,6 +123,23 @@
     <scroll-view class="tools tools--corner {{toolsOut ? 'is-out' : ''}}" wx:if="{{sessionToolsOpen}}" scroll-y enhanced show-scrollbar="{{false}}">
 <view wx:if="{{themeBag.inventoryEnabled && themeBag.scope !== 'TEAM'}}" class="drow" bindtap="openThemeHistory" aria-role="button" aria-label="我的游玩记录" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="clock" size="36" /><text>我的游玩记录</text></view>
         <include src="theme-player-ops-entry.wxml" />
+        <include src="orient-lifecycle.wxml" />
+        <view class="drow drow--static" wx:if="{{arrivalGuard}}" aria-role="text" aria-label="到达核验结果">
+          <view class="dcopy"><text class="dt">{{arrivalGuard.message}}</text><text class="ds">{{arrivalGuard.reason}}</text><text class="ds" wx:if="{{arrivalGuard.guardLogId}}">记录号 {{arrivalGuard.guardLogId}}</text><text class="ds">{{arrivalGuard.next}}</text></view>
+        </view>
+        <view wx:if="{{guardAppealView}}" aria-label="原局守卫申诉">
+          <view class="drow drow--static"><view class="dcopy">
+            <text class="dt">原局守卫申诉</text>
+            <text class="ds">记录号 {{guardAppealView.reference.guardLogId}}</text>
+            <text class="ds">{{guardAppealView.message || '请读取原局申诉资格'}}</text>
+            <text class="ds" wx:if="{{guardAppealView.command}}">原请求号 {{guardAppealView.command.requestId}}</text>
+            <text class="ds" wx:if="{{guardAppealView.reason}}">申诉理由：{{guardAppealView.reason}}</text>
+            <text class="ds" wx:if="{{guardAppealView.state === 'UNKNOWN'}}">结果尚未确认，保留原号与理由，仅查询原请求。</text>
+          </view></view>
+          <view class="drow" bindtap="readGuardAppeal" aria-role="button" aria-label="查询原局守卫申诉" hover-class="cy-pressed"><text>{{guardAppealView.command ? '查询原请求结果' : '读取原局申诉资格'}}</text></view>
+          <view class="drow" wx:if="{{!guardAppealView.command && guardAppealView.eligibility.canSubmit}}" bindtap="submitGuardAppeal" aria-role="button" aria-label="提交原局守卫申诉" hover-class="cy-pressed"><text>填写理由并提交申诉</text></view>
+          <view class="drow" wx:if="{{guardAppealView.state === 'FOUND' && guardAppealView.result.canReverify}}" bindtap="reverifyGuardArrival" aria-role="button" aria-label="原局重新现场核验" hover-class="cy-pressed"><view class="dcopy"><text class="dt">原局重新现场核验</text><text class="ds">重新获取现场定位，仍执行原守卫条件，不直接放行或补发奖励。</text></view></view>
+        </view>
         <view class="drow" wx:if="{{themeBag.sessionId && (themeBag.actionRows.length || themeBag.awaitingChallenge || zeroHpView || themeBag.pendingRows.length)}}" bindtap="openThemeGameplay" aria-role="button" aria-label="打开背包与任务" hover-class="cy-pressed" hover-stay-time="80"><view class="dcopy"><text class="dt">背包与任务</text><text class="ds" wx:if="{{zeroHpView}}">{{zeroHpView.message || zeroHpView.title}}</text><text class="ds" wx:elif="{{themeBag.awaitingChallenge}}">{{themeBag.names.hp}}已归零 · 完成挑战可{{themeBag.challengeRestoreText}}{{themeBag.challengeProgressText ? ' · ' + themeBag.challengeProgressLabel + ' ' + themeBag.challengeProgressText : ''}}</text><text class="ds" wx:elif="{{themeBag.pendingRows.length}}">有待领取物品</text><text class="ds" wx:else>{{themeBag.names.hp}} {{themeBag.hp}} · {{themeBag.names.luck}} {{themeBag.luck}} · {{themeBag.names.action}} {{themeBag.actions}}</text></view><view class="darr"></view></view>
         <!-- 伏笔(2026-09-22 用户裁决「玩家侧收进右上角菜单」):只列已经埋下的那些。
              没埋下的服务端根本不下发 —— 提前露出名字就是剧透。进度靠到站同步步数推进。
@@ -341,7 +358,7 @@
                 aria-role="button" aria-label="继续故事" hover-class="cy-pressed" hover-stay-time="80">继续故事</view>
         </view>
         <view wx:elif="{{item.kind === 'journeyCheck'}}" class="chfull__kit" style="padding-top:calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-3))">
-          <cy-playkit-journey-check show="{{journeyCheck.show}}" loading="{{journeyCheck.loading}}"
+          <cy-playkit-journey-check show="{{journeyCheck.show}}" loading="{{journeyCheck.loading}}" unknown="{{journeyCheck.unknown}}"
             skill="{{journeyCheck.skill}}" tier="{{journeyCheck.tier}}" mods="{{journeyCheck.mods}}"
             advantage="{{journeyCheck.advantage}}" disadvantage="{{journeyCheck.disadvantage}}"
             receipt="{{journeyCheck.receipt}}" r5="{{journeyCheck.r5}}" allowed-actions="{{journeyCheck.allowedActions}}" disabled-reason="{{journeyCheck.disabledReason}}" bind:action="onJourneyCheckAction" bind:close="closeJourneyCheck" />
@@ -1574,7 +1591,7 @@
 
 <!-- R14 旅程检定(入口在 encounter.allowedActions,与 playKit 是两套;
      失败也推进:结算前后都能退出,不拦节点完成) -->
-<cy-playkit-journey-check show="{{journeyCheck.show && journeyCheck.present !== 'inline'}}" loading="{{journeyCheck.loading}}"
+<cy-playkit-journey-check show="{{journeyCheck.show && journeyCheck.present !== 'inline'}}" loading="{{journeyCheck.loading}}" unknown="{{journeyCheck.unknown}}"
   skill="{{journeyCheck.skill}}" tier="{{journeyCheck.tier}}" mods="{{journeyCheck.mods}}"
   advantage="{{journeyCheck.advantage}}" disadvantage="{{journeyCheck.disadvantage}}"
   receipt="{{journeyCheck.receipt}}" r5="{{journeyCheck.r5}}" allowed-actions="{{journeyCheck.allowedActions}}" disabled-reason="{{journeyCheck.disabledReason}}"
@@ -1771,18 +1788,18 @@
     <block wx:else>
       <view class="board__empty" wx:if="{{board.error}}">{{board.error}}<text class="board__retry" bindtap="openBoard" hover-class="cy-pressed" hover-stay-time="80">重试</text></view>
       <view class="board__empty" wx:elif="{{!board.list.length}}">这一场还没人上榜，你走一关就是第一名</view>
-      <view class="board__row {{index === 0 ? 'is-first' : ''}}" wx:for="{{board.list}}" wx:key="memberId">
+      <view class="board__row {{index === 0 ? 'is-first' : ''}}" wx:for="{{board.list}}" wx:key="rowKey">
         <text class="board__rank {{index === 0 ? 'is-first' : ''}}">{{item.rank}}</text>
         <image class="board__avatar" wx:if="{{item.avatar}}" src="{{item.avatar}}" mode="aspectFill" />
         <view class="board__avatar board__avatar--ph" wx:else></view>
         <text class="board__nick">{{item.nickname || '同行者'}}</text>
-        <text class="board__score">{{item.score}} 关</text>
+        <text class="board__score">{{item.scoreText}}<text wx:if="{{item.elapsedText}}"> · {{item.elapsedText}}</text></text>
         <view class="board__crown" wx:if="{{index === 0}}"><cy-icon name="star" size="32" /></view>
       </view>
       <view class="board__me" wx:if="{{board.me}}">
         <text class="board__me-rank">{{board.me.rank != null ? board.me.rank : '—'}}</text>
         <text class="board__me-nick">我</text>
-        <text class="board__me-score">{{board.me.score}} 关{{board.me.rank ? '' : ' · 继续走进榜'}}</text>
+        <text class="board__me-score">{{board.me.scoreText}}<text wx:if="{{board.me.elapsedText}}"> · {{board.me.elapsedText}}</text></text>
       </view>
     </block>
     <cy-option-sheet checkmark="{{true}}" show="{{tagSheetShow}}" title="改成哪个结果" items="{{tagSheetItems}}"

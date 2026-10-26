@@ -1,6 +1,7 @@
 'use strict';
 
-const STATUS = { SUBMITTED: '待开具', ISSUED: '已开具', REJECTED: '已驳回', CANCELLED: '已撤回' };
+const STATUS = { SUBMITTED: '待开具', ISSUED: '已开具', REJECTED: '已驳回', CANCELLED: '已撤回', CLAIMED: '已认领', PROCESSING: '开票处理中', ISSUE_UNKNOWN: '开票结果待确认', PAUSED: '退款核对中' };
+const RECONCILIATION = { REQUIRED: '退款情况正在人工核对，原申请和订单占用保留', NO_ISSUE_CONFIRMED: '已确认未开具，申请已关闭；可申请订单以最新查询为准', TAX_REVIEW_REQUIRED: '已转税务人工核对，请勿重复申请或开具' };
 const requestId = value => typeof value === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(value);
 function exactId(value) {
   if (typeof value === 'number') {
@@ -24,6 +25,7 @@ function title(value) {
 function order(value) {
   if (!value || !exactId(value.orderId) || !/^(?:0|[1-9]\d*)(?:\.\d{1,2})?$/.test(String(value.amount))) throw Error('订单数据无法确认');
   return { orderId: exactId(value.orderId), amount: String(value.amount), orderTitle: String(value.orderTitle || '报名订单'),
+    issuerId: value.issuerId == null ? '' : exactId(value.issuerId), issuerName: String(value.issuerName || '待配置开票主体'),
     ticketName: String(value.ticketName || ''), paymentTime: String(value.paymentTime || ''), selected: false };
 }
 function application(value, summary = false) {
@@ -33,9 +35,12 @@ function application(value, summary = false) {
       || !Array.isArray(value.orders) || !Number.isInteger(value.orderCount) || value.orderCount < 1
       || value.orderCount > 50 || value.orderCount !== value.orders.length
         && !(summary === true && value.orders.length === 0)) throw Error('申请结果无法确认');
+  const reconciliationStatus = value.reconciliationStatus == null ? '' : value.reconciliationStatus;
+  if (reconciliationStatus !== '' && !Object.prototype.hasOwnProperty.call(RECONCILIATION, reconciliationStatus)) throw Error('核对结果无法确认');
   const orders = value.orders.map(order);
   if (new Set(orders.map(row => row.orderId)).size !== orders.length) throw Error('申请订单无法确认');
   return { id: exactId(value.id), requestId: value.requestId, applicationNo: value.applicationNo,
+    reconciliationStatus, reconciliationText: RECONCILIATION[reconciliationStatus] || '',
     status: value.status, statusText: STATUS[value.status], titleName: String(value.titleName || ''),
     taxNoMasked: masked(value.taxNoMasked), totalAmount: String(value.totalAmount), orderCount: value.orderCount,
     invoiceNo: String(value.invoiceNo || ''), rejectReason: String(value.rejectReason || ''),
@@ -49,6 +54,12 @@ function titlePayload(draft) {
   if (draft.id && !exactId(draft.id)) throw Error('抬头编号无法确认，请刷新');
   return Object.assign({ titleType, titleName, isDefault: draft.isDefault === true },
     draft.id ? { id: exactId(draft.id) } : {}, taxNo ? { taxNo } : {});
+}
+function titleSaveReceipt(value, expectedRequestId, expectedTitleId) {
+  if (!value || value.status !== 'SAVED' || !requestId(value.requestId) || !exactId(value.titleId)
+      || expectedRequestId && value.requestId !== expectedRequestId
+      || expectedTitleId && exactId(value.titleId) !== expectedTitleId) throw Error('抬头保存回执与原请求不匹配');
+  return { requestId: value.requestId, titleId: exactId(value.titleId), status: 'SAVED' };
 }
 function classify(res, status, decode, transportFailure = false) {
   if (res && res.errorCode === 'INVOICE_FEATURE_OFF') return { status: 'failed', response: res };
@@ -68,13 +79,16 @@ function send(app, endpoint, options) {
   switch (endpoint) {
     case 'titles': return app.sendRequest(Object.assign({}, options, { url: '/api/invoice/titles' }));
     case 'titles/save': return app.sendRequest(Object.assign({}, options, { url: '/api/invoice/titles/save' }));
+    case 'titles/save-request': return app.sendRequest(Object.assign({}, options, { url: '/api/invoice/titles/save-request' }));
+    case 'titles/request': return app.sendRequest(Object.assign({}, options, { url: '/api/invoice/titles/request' }));
     case 'titles/delete': return app.sendRequest(Object.assign({}, options, { url: '/api/invoice/titles/delete' }));
     case 'orders/eligible': return app.sendRequest(Object.assign({}, options, { url: '/api/invoice/orders/eligible' }));
     case 'apply': return app.sendRequest(Object.assign({}, options, { url: '/api/invoice/apply' }));
     case 'list': return app.sendRequest(Object.assign({}, options, { url: '/api/invoice/list' }));
     case 'detail': return app.sendRequest(Object.assign({}, options, { url: '/api/invoice/detail' }));
+    case 'request': return app.sendRequest(Object.assign({}, options, { url: '/api/invoice/request' }));
     case 'cancel': return app.sendRequest(Object.assign({}, options, { url: '/api/invoice/cancel' }));
     default: throw Error('未登记的发票接口');
   }
 }
-module.exports = { exactId, title, order, application, applicationSummary: value => application(value, true), titlePayload, classify, send };
+module.exports = { exactId, title, order, application, applicationSummary: value => application(value, true), titlePayload, titleSaveReceipt, classify, send };

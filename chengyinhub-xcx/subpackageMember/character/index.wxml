@@ -20,14 +20,17 @@
       <view wx:for="{{card.attributes}}" wx:key="stateKey" class="character-section">
         <cy-card>
           <view class="character-heading">
-            <text class="character-title">{{item.label}}</text>
+            <view class="character-attribute-title">
+              <cy-icon wx:if="{{item.icon}}" name="{{item.icon}}" size="32" style="{{item.color ? 'color: ' + item.color + ';' : ''}}" />
+              <text class="character-title">{{item.label}}</text>
+            </view>
             <text class="character-value">{{item.value}}</text>
           </view>
           <view wx:if="{{item.displayType === 'bar'}}" class="character-meter" aria-label="{{item.label + ' ' + item.value + '，范围 ' + item.min + ' 到 ' + item.max}}">
-            <view class="character-meter-fill" style="width: {{item.percent || 0}}%;"></view>
+            <view class="character-meter-fill" style="width: {{item.percent || 0}}%; {{item.color ? 'background-color: ' + item.color + ';' : ''}}"></view>
           </view>
           <view wx:if="{{item.stars.length}}" class="character-stars" aria-label="{{item.label + ' ' + item.value + ' / ' + item.max}}">
-            <cy-icon wx:for="{{item.stars}}" wx:for-item="star" wx:key="index" name="star" size="32" class="{{star.filled ? 'character-star-filled' : 'character-star-empty'}}" />
+            <cy-icon wx:for="{{item.stars}}" wx:for-item="star" wx:key="index" name="star" size="32" class="{{star.filled ? 'character-star-filled' : 'character-star-empty'}}" style="{{star.filled && item.color ? 'color: ' + item.color + ';' : ''}}" />
           </view>
           <view class="character-meta">
             <text>{{item.scopeText}}</text>

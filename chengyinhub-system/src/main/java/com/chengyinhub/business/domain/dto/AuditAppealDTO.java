@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 /** 作者申诉命令；申诉人只取登录态，不信任请求体。evidence 为可选 JSON 对象/数组(如图片地址列表)。 */
 public class AuditAppealDTO {
+    private String requestId;
+    public String getRequestId() { return requestId; }
+    public void setRequestId(String requestId) { this.requestId = requestId; }
     private String bizType;
     private Long bizId;
     private String reason;

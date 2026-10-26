@@ -44,6 +44,26 @@ public class AuditProblemService {
                 || AuditTask.BIZ_TEMPLATE_LIBRARY.equals(task.getBizType()));
     }
 
+    /** Syntax-only immutable intent: replay must not depend on subsequently edited content. */
+    public static List<java.util.Map<String, Object>> intent(List<AuditReviewDTO.ProblemItem> items) {
+        List<java.util.Map<String, Object>> result = new ArrayList<>();
+        if (items == null) return result;
+        if (items.size() > MAX_ITEMS) throw new IllegalArgumentException("逐项问题最多 " + MAX_ITEMS + " 条");
+        for (AuditReviewDTO.ProblemItem item : items) {
+            if (item == null) throw new IllegalArgumentException("逐项问题不能为空");
+            String text = item.getReasonText() == null ? "" : item.getReasonText().trim();
+            if (text.isEmpty() || text.length() > MAX_TEXT_LENGTH) throw new IllegalArgumentException("逐项问题说明须为1至200字");
+            java.util.Map<String, Object> row = new java.util.LinkedHashMap<>();
+            row.put("itemType", item.getItemType() == null ? "" : item.getItemType().trim().toUpperCase(Locale.ROOT));
+            row.put("itemId", item.getItemId() == null ? null : item.getItemId().toString());
+            row.put("reasonCode", item.getReasonCode() == null || item.getReasonCode().trim().isEmpty() ? null
+                    : AuditReasonCodes.normalize(Collections.singletonList(item.getReasonCode())).get(0));
+            row.put("reasonText", text);
+            result.add(row);
+        }
+        return result;
+    }
+
     public List<AuditProblem> prepare(AuditTask task, List<AuditReviewDTO.ProblemItem> items) {
         if (items == null || items.isEmpty()) return Collections.emptyList();
         if (!supports(task)) throw new IllegalArgumentException("该审核类型不支持逐项问题");

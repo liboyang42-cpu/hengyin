@@ -87,7 +87,7 @@ class RefundNotificationMybatisIntegrationTest {
                 .getMapper(RefundApplicationMapper.class);
         notifications = new NotifyServiceImpl();
         setChannel(this::captureCommittedRefund);
-        RefundServiceImpl target = new RefundServiceImpl();
+        RefundServiceImpl target = com.chengyinhub.business.service.support.RefundF3TestSupport.nonBundle(new RefundServiceImpl());
         org.springframework.test.util.ReflectionTestUtils.setField(target, "firstReviewPointsClawback",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.FirstReviewPointsClawbackService.class));
         ReflectionTestUtils.setField(target, "refundApplicationMapper", mapper);
@@ -96,6 +96,7 @@ class RefundNotificationMybatisIntegrationTest {
         registration.setWechatPaymentAmount(new BigDecimal("30.00"));
         CmsRegistrationMapper registrations = mock(CmsRegistrationMapper.class);
         when(registrations.selectCmsRegistrationById(11L)).thenReturn(registration);
+        when(registrations.selectCmsRegistrationByIdForUpdate(11L)).thenReturn(registration);
         ReflectionTestUtils.setField(target, "cmsRegistrationMapper", registrations);
         ReflectionTestUtils.setField(target, "notifyService", notifications);
         // 2026-09-16: 回调 inbox 去重是 handleRefundNotify 的必经一步(cc36b4552),本套此前从未真跑过
@@ -188,6 +189,7 @@ class RefundNotificationMybatisIntegrationTest {
         CmsRegistrationMapper registrations =
                 mock(CmsRegistrationMapper.class);
         when(registrations.selectCmsRegistrationById(11L)).thenReturn(registration);
+        when(registrations.selectCmsRegistrationByIdForUpdate(11L)).thenReturn(registration);
         when(registrations.claimRegistrationRefunded(
                 eq(11L), any(), any())).thenReturn(1);
         when(registrations.claimPointsReturn(
@@ -203,7 +205,7 @@ class RefundNotificationMybatisIntegrationTest {
                 mock(CmsActivityMapper.class);
         when(activities.selectCmsActivityById(22L)).thenReturn(activity);
         IRefundService application = mock(IRefundService.class);
-        when(application.saveRefund(any())).thenAnswer(call -> {
+        when(application.savePreparedRegistrationRefund(any(), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class))).thenAnswer(call -> {
             ((RefundApplication) call.getArgument(0)).setId(7L);
             return 1;
         });

@@ -58,6 +58,10 @@ public class RefundServiceImpl implements IRefundService {
     /** 系统自动退款的审核人(与 TeamGroupServiceImpl.SYSTEM_OPERATOR 同值)。 */
     private static final Long SYSTEM_OPERATOR = 0L;
 
+    @Autowired
+    private com.chengyinhub.business.service.IFreeExploreBundleRefundService freeExploreBundleRefundService;
+
+
     private static final Logger logger = LoggerFactory.getLogger(RefundServiceImpl.class);
 
     /** refund_application.payout_receipt_url 的列宽,见 migration_refund_manual_fallback_20260714.sql。 */
@@ -488,6 +492,39 @@ public class RefundServiceImpl implements IRefundService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int saveRefund(RefundApplication refund) {
+        return saveRefundInternal(refund, null, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public com.chengyinhub.business.service.support.FreeExploreRefundContext prepareRegistrationFullRefund(
+            Long sourceRegistrationId, BigDecimal cash) {
+        var context = freeExploreBundleRefundService.prepareFullRefund(sourceRegistrationId, cash);
+        if (context == null) throw new IllegalStateException("退款准备回执缺失");
+        return context;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int savePreparedRegistrationRefund(RefundApplication refund,
+            com.chengyinhub.business.service.support.FreeExploreRefundContext context, Long replacesRefundId) {
+        if (refund == null || context == null || !"registration".equals(refund.getSourceType())
+                || !java.util.Objects.equals(refund.getSourceId(), context.getSourceRegistrationId())
+                || refund.getRefundAmount() == null || context.getCashAmount().compareTo(refund.getRefundAmount()) != 0) {
+            throw new IllegalArgumentException("退款准备与原申请范围/金额不符");
+        }
+        return saveRefundInternal(refund, context, replacesRefundId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void completeZeroCashRegistrationRefund(
+            com.chengyinhub.business.service.support.FreeExploreRefundContext context) {
+        freeExploreBundleRefundService.completeZeroCashRefund(context);
+    }
+
+    private int saveRefundInternal(RefundApplication refund,
+            com.chengyinhub.business.service.support.FreeExploreRefundContext prepared, Long replacesRefundId) {
         if (refund == null || refund.getSourceType() == null || refund.getSourceId() == null
                 || refund.getRefundAmount() == null || refund.getRefundAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("source and refundAmount are required");
@@ -533,7 +570,21 @@ public class RefundServiceImpl implements IRefundService {
                 && refund.getRefundAmount().compareTo(refund.getPaidAmount()) > 0) {
             throw new IllegalArgumentException("退款金额不得超过实付金额");
         }
-        return refundApplicationMapper.insertRefundApplication(refund);
+        var context = prepared;
+        if ("registration".equals(refund.getSourceType()) && context == null) {
+            context = prepareRegistrationFullRefund(refund.getSourceId(), refund.getRefundAmount());
+        }
+        int rows = refundApplicationMapper.insertRefundApplication(refund);
+        // 后续审批、渠道派发及恢复均依赖原退款单ID；缺写入回执不能继续取消或资金副作用。
+        // 包括实际已插入但生成键未回填的情况：抛错让同一事务整体回滚，不能重建另一退款意图。
+        if (rows != 1 || refund.getId() == null || refund.getId() <= 0) {
+            throw new IllegalStateException("退款申请写入回执异常，请核对原申请后重试");
+        }
+        if (context != null) {
+            // 即使当前不是F3，也让09验证准备对象确属本事务；不能用伪造空列表绕过单位裁定。
+            freeExploreBundleRefundService.bindFullRefund(context, refund.getId(), replacesRefundId);
+        }
+        return rows;
     }
 
     @Override
@@ -633,6 +684,12 @@ public class RefundServiceImpl implements IRefundService {
                 ensureWithinOrderCash(refund);
             }
         }
+        if (Integer.valueOf(1).equals(request.getStatus()) && registration != null) {
+            var context = prepareRegistrationFullRefund(registration.getId(), refund.getRefundAmount());
+            if (!context.getRegistrations().isEmpty()) {
+                freeExploreBundleRefundService.bindFullRefund(context, refund.getId(), null);
+            }
+        }
         int rows = refundApplicationMapper.updateRefundStatusIfPending(
                 request.getId(), request.getStatus(), operatorId, DateUtils.getNowDate(), request.getReviewReason());
         if (rows <= 0 || !Integer.valueOf(1).equals(request.getStatus())) {
@@ -640,6 +697,7 @@ public class RefundServiceImpl implements IRefundService {
         }
 
         markRegistrationRefunded(registration);
+        if (registration != null) freeExploreBundleRefundService.onRegistrationRefundApproved(registration.getId());
         // P0-B 多方分账退款漏冲:一笔支付拆 merchant/platform/creator 多条明细,必须逐条负向冲销。
         // 旧 selectSettledDetail 的 `order by id desc limit 1` 只冲最大 id 一条(商家 id 最小 → 永远漏冲),
         // 改用 selectSettledDetails 取全部已结算明细逐条冲销;退款比例按订单口径统一算一次再套到每条。
@@ -703,22 +761,16 @@ public class RefundServiceImpl implements IRefundService {
         if (registration == null) {
             throw new IllegalArgumentException("registration not found");
         }
-        if (refund.getOwnerType() == null) {
-            refund.setOwnerType(registration.getOwnerType());
-        }
-        if (refund.getOwnerId() == null) {
-            refund.setOwnerId(registration.getOwnerId());
-        }
-        if (refund.getMemberId() == null) {
-            refund.setMemberId(registration.getMemberId());
-        }
+        // 退款归属与收件人只认已锁定的原报名；后台填入其他买家/owner也不能改变资金来源身份。
+        // 历史字段缺失时保留缺失，不让调用方替不存在的服务端事实补一个任意身份。
+        refund.setOwnerType(registration.getOwnerType());
+        refund.setOwnerId(registration.getOwnerId());
+        refund.setMemberId(registration.getMemberId());
         // FX-06(9-18 拍板) / FX-14:实付只认服务端,客户端传的 paidAmount 一律覆盖 —— 原来只在为空/≤0 时覆盖,
         // 后台手填就能把从单(payable=0)的上限抬起来(抬高 paidAmount 即可绕过「退款额 ≤ 实付」)。
         // 多票首单的「同单还剩多少」另由 ensureWithinOrderCash(OrderRefundCash.remaining)在后台建单/批准时封顶。
         refund.setPaidAmount(firstNonNull(registration.getPayableAmount(), registration.getTotalAmount(), registration.getOriginalAmount()));
-        if (refund.getMerchantId() == null) {
-            refund.setMerchantId(resolveRegistrationMerchantId(registration));
-        }
+        refund.setMerchantId(resolveRegistrationMerchantId(registration));
         List<RefundApplication> history = registrationRefundHistory(registration.getId());
         BigDecimal approved = approvedRefundCash(history, null);
         BigDecimal paid = refund.getPaidAmount();
@@ -765,6 +817,9 @@ public class RefundServiceImpl implements IRefundService {
         for (RefundApplication prior : registrationRefundHistory(registrationId)) {
             if (prior.getId() == null || !Integer.valueOf(0).equals(prior.getStatus())) {
                 continue;
+            }
+            if (!Integer.valueOf(RefundApplication.PAYOUT_DISPATCH_PENDING).equals(prior.getPayoutStatus())) {
+                throw new IllegalStateException("待审退款派发事实无法确认，不能自动取代，请后台核对原意图");
             }
             if (refundApplicationMapper.updateRefundStatusIfPending(prior.getId(), 2, SYSTEM_OPERATOR, now, note) != 1) {
                 throw new IllegalStateException("待审核退款申请状态已变化，请刷新后重试");

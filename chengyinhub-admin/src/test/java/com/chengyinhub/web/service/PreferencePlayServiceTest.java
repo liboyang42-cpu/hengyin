@@ -50,6 +50,36 @@ class PreferencePlayServiceTest {
     }
 
     @Test
+    void separateOriginalRunsNeverReadTheLegacyOrOtherRunReceipt() {
+        PreferencePlayService service = new PreferencePlayService();
+        PlayAttemptLogMapper attempts = mock(PlayAttemptLogMapper.class);
+        IPlayerTopicTagService tags = mock(IPlayerTopicTagService.class);
+        ReflectionTestUtils.setField(service, "attemptMapper", attempts);
+        ReflectionTestUtils.setField(service, "tagService", tags);
+        when(tags.pendingForNode(7L, 9L, 11L)).thenReturn(Collections.emptyList());
+        java.util.Set<String> keys = new java.util.HashSet<>();
+        when(attempts.selectByIdempotencyKey(org.mockito.ArgumentMatchers.anyString())).thenAnswer(call -> {
+            String key = call.getArgument(0);
+            org.junit.jupiter.api.Assertions.assertTrue(key.startsWith("preference:run:"));
+            org.junit.jupiter.api.Assertions.assertTrue(key.length() <= 128);
+            keys.add(key);
+            PlayAttemptLog receipt = new PlayAttemptLog();
+            receipt.setResultJson("{\"progress\":{\"originalKey\":\"" + key + "\"}}");
+            return receipt;
+        });
+        CmsMemberTemplate template = new CmsMemberTemplate();
+        template.setPreferenceJson(validConfig());
+        for (String instance : new String[]{"journey:101", "game:102", "journey:101"}) {
+            service.submit(7L, 9L, 10L, 11L, template,
+                    new com.chengyinhub.business.domain.dto.PreferenceSubmitRequest(), instance,
+                    outcome -> { throw new AssertionError("原局回执重放不能再次推进"); });
+        }
+        assertEquals(2, keys.size());
+        verify(attempts, org.mockito.Mockito.never()).selectByIdempotencyKey("preference:7:9:10:11");
+        verify(attempts, org.mockito.Mockito.never()).insertPlayAttemptLog(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
     void operatingSystemStaysClosedUntilTheCompletionRuleIsTrue() {
         PreferencePlayService service = new PreferencePlayService();
         PlayAttemptLogMapper attempts = mock(PlayAttemptLogMapper.class);

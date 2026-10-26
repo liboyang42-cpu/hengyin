@@ -36,9 +36,9 @@ class ApiPlayCheckControllerTest {
         when(service.reroll(MEMBER, TOPIC, null, NODE, "ask_arong")).thenReturn(receipt);
         when(service.settle(MEMBER, TOPIC, null, NODE, "ask_arong")).thenReturn(receipt);
 
-        assertEquals(receipt, controller.roll("10", null, "1", "ask_arong").get(AjaxResult.DATA_TAG));
-        assertEquals(receipt, controller.reroll("10", null, "1", "ask_arong").get(AjaxResult.DATA_TAG));
-        assertEquals(receipt, controller.settle("10", null, "1", "ask_arong").get(AjaxResult.DATA_TAG));
+        assertEquals(new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(receipt), controller.roll("10", null, "1", "ask_arong").get(AjaxResult.DATA_TAG));
+        assertEquals(new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(receipt), controller.reroll("10", null, "1", "ask_arong").get(AjaxResult.DATA_TAG));
+        assertEquals(new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(receipt), controller.settle("10", null, "1", "ask_arong").get(AjaxResult.DATA_TAG));
     }
 
     @Test
@@ -50,7 +50,7 @@ class ApiPlayCheckControllerTest {
         AjaxResult result = controller.rest("10", null, "1");
 
         assertEquals(Integer.valueOf(200), result.get(AjaxResult.CODE_TAG));
-        assertEquals(receipt, result.get(AjaxResult.DATA_TAG));
+        assertEquals(new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(receipt), result.get(AjaxResult.DATA_TAG));
     }
 
     @Test

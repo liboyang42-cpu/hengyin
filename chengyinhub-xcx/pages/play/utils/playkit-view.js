@@ -360,6 +360,15 @@ function pickJourneyCheck(encounter) {
  */
 function checkReceiptView(receipt) {
   const r = receipt || {};
+  // A hidden/redacted receipt must not leak through totals, modifiers or the dice canvas.
+  const hidden = r.detailsHidden === true || r.hidden === true || r.redacted === true || r.breakdown && (r.breakdown.hidden === true || r.breakdown.redacted === true
+    || r.breakdown.skill && (r.breakdown.skill.hidden === true || r.breakdown.skill.redacted === true)
+    || r.breakdown.situational && (r.breakdown.situational.hidden === true || r.breakdown.situational.redacted === true));
+  if (hidden) return { detailsHidden: true, breakdownRows: [], rolled: true, tier: r.tier || '',
+    dc: null, dice: [], kept: null, total: null, success: typeof r.success === 'boolean' ? r.success : null,
+    nat: '', rerolled: !!r.rerolled, settled: !!r.settled, text: r.settled ? r.text || '' : '',
+    failCostLabel: r.settled ? r.failCostLabel || '' : '', hp: r.hp == null ? null : r.hp,
+    luck: r.luck == null ? null : r.luck, exhausted: !!r.exhausted, mods: [] };
   const num = (v) => (v == null ? null : Number(v) || 0);
   const breakdownRows = [];
   const b = r.breakdown;

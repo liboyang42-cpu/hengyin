@@ -81,3 +81,16 @@ export function pauseOfficialEventV2(id, form) {
 export function resumeOfficialEventV2(id, reason) {
   return request({ url: '/business/officialevent/v2/' + id + '/resume', method: 'post', params: { reason: reason } })
 }
+
+export function queryBroadcastCreation(requestId) {
+  return request({ url: '/business/officialevent/broadcast-request', method: 'get', params: { requestId } })
+}
+export function cancelBroadcastCreation(requestId) {
+  return request({ url: '/business/officialevent/broadcast-request/cancel', method: 'post', data: { requestId } })
+}
+export function readBroadcastDelivery(id) {
+  return request({ url: '/business/officialevent/broadcast/' + id + '/stats', method: 'get' })
+}
+export function recoverBroadcastDelivery(id) {
+  return request({ url: '/business/officialevent/broadcast/' + id + '/recover', method: 'post' })
+}

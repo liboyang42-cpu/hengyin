@@ -1,6 +1,10 @@
 package com.chengyinhub.business.domain.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+
 public class MerchantReviewWriteResultVO {
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long reviewId;
     private String status;
     private Integer version;

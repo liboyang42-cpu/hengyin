@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.TemplateAdoptionReceiptMapper">
+  <sql id="facts">select actor_member_id as actor, owner_member_id as owner, request_id as requestId,
+    scope, source_id as sourceId, source_version as sourceVersion, request_hash as requestHash,
+    status, draft_id as draftId, draft_version as draftVersion, reason from template_adoption_receipt</sql>
+  <insert id="reserve">
+    insert into template_adoption_receipt(actor_member_id, request_id, owner_member_id, scope,
+      source_id, source_version, request_hash, status)
+    values(#{actor}, #{requestId}, #{owner}, #{scope}, #{sourceId}, #{sourceVersion}, #{requestHash}, 'PENDING')
+    on duplicate key update request_id = request_id
+  </insert>
+  <select id="lock" resultType="java.util.HashMap">
+    <include refid="facts"/> where actor_member_id=#{actor} and request_id=#{requestId} for update
+  </select>
+  <select id="read" resultType="java.util.HashMap">
+    <include refid="facts"/> where actor_member_id=#{actor} and request_id=#{requestId}
+  </select>
+  <select id="sourceCanonicalId" resultType="java.lang.Long">
+    select member_template_id from cms_template_library where id=#{id}
+  </select>
+  <select id="lockSource" resultMap="com.chengyinhub.business.mapper.CmsTemplateLibraryMapper.CmsTemplateLibraryResult">
+    <include refid="com.chengyinhub.business.mapper.CmsTemplateLibraryMapper.selectCmsTemplateLibraryVo"/>
+    where id=#{id} for update
+  </select>
+  <select id="lockDraft" resultMap="com.chengyinhub.business.mapper.CmsMemberTemplateMapper.CmsMemberTemplateResult">
+    <include refid="com.chengyinhub.business.mapper.CmsMemberTemplateMapper.selectCmsMemberTemplateVo"/>
+    where id=#{id} for update
+  </select>
+  <update id="finish">
+    update template_adoption_receipt set status=#{status}, draft_id=#{draftId}, reason=#{reason}, draft_version=#{draftVersion}
+    where actor_member_id=#{actor} and request_id=#{requestId} and status='PENDING'
+  </update>
+</mapper>

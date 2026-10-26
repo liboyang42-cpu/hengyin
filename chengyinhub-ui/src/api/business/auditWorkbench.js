@@ -15,16 +15,30 @@ export function getAuditTask(id) {
   })
 }
 
-export function getAuditTaskDetail(id) {
+export function getAuditTaskDetail(id, requestId) {
   return request({
     url: '/business/audit/' + id + '/detail',
-    method: 'get'
+    method: 'get',
+    params: requestId ? { requestId } : undefined
   })
+}
+
+// Preserve the review error before the shared interceptor reduces non-200 bodies to 'error'.
+export function parseAuditReviewResponse(raw) {
+  const body = typeof raw === 'string' ? JSON.parse(raw) : raw
+  if (body && Number(body.code) !== 200) {
+    const error = new Error(body.msg || '审核处理未确认')
+    error.auditCode = Number(body.code)
+    error.auditErrorCode = body.errorCode
+    throw error
+  }
+  return body
 }
 
 export function reviewAuditTask(data) {
   return request({
     url: '/business/audit/review',
+    transformResponse: [parseAuditReviewResponse],
     method: 'post',
     data: data
   })

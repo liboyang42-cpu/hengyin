@@ -12,6 +12,13 @@ import com.chengyinhub.business.domain.OfficialBroadcast;
  */
 public interface OfficialBroadcastMapper
 {
+    java.util.Map<String,Object> lockDispatch(@Param("id") Long id);
+    int freezeAudience(@Param("id") Long id);
+    OfficialBroadcast findRequest(@Param("owner") String owner,@Param("key") String key);
+    int reserveCreation(@Param("owner") String owner,@Param("key") String key);
+    java.util.Map<String,Object> readCreation(@Param("owner") String owner,@Param("key") String key);
+    java.util.Map<String,Object> lockCreation(@Param("owner") String owner,@Param("key") String key);
+    int finishCreation(@Param("owner") String owner,@Param("key") String key,@Param("state") String state,@Param("broadcast") Long broadcast);
     int insertOfficialBroadcast(OfficialBroadcast officialBroadcast);
 
     int updateOfficialBroadcast(OfficialBroadcast officialBroadcast);

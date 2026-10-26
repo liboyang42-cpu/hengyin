@@ -12,6 +12,17 @@ import java.util.Date;
  */
 public class OfficialBroadcast
 {
+    private String clientRequestId;
+    private String requestOwner;
+    private String requestHash;
+    public String getClientRequestId(){return clientRequestId;}
+    public void setClientRequestId(String v){clientRequestId=v;}
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public String getRequestOwner(){return requestOwner;}
+    public void setRequestOwner(String v){requestOwner=v;}
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public String getRequestHash(){return requestHash;}
+    public void setRequestHash(String v){requestHash=v;}
     private Long id;
     private Long eventId;          // 可空=纯公告
     private String title;

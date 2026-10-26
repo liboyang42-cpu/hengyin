@@ -1,0 +1,3141 @@
+{
+  "publicBase": "921d172199f3ffe224206ee05af031c87df62b87",
+  "sourceTree": "d9e5aac6b628f0aa947f297f56fa1bfe33b1812f",
+  "files": [
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/sql/migration_20261026_official_broadcast_delivery.sql",
+      "sha256": "ca5538fae79b01ac4690065da6cde4ac3b7922dce5c0d09a04a5ff58bca1076f"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/sql/migration_20261026_official_event_attendance.sql",
+      "sha256": "b49da83d06dd84b699f11c1e21ab4188bd4c8bf32d7e14e83b06fad6f57373d9"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/sql/migration_20261026_team_event_command_receipt.sql",
+      "sha256": "06888f11813bb1024de1ae0041fbbfacd57aff1cbf0b99433fadd537ee18c1ce"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/sql/migration_20261026_theme_attribute_registry_version.sql",
+      "sha256": "6864624782c112b9c804112fe559002e97a83fb85b78ea2364772ac0573ff54f"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/sql/migration_20261026_user_invoice_menu.sql",
+      "sha256": "078d59279328a462bf73a948382904129ef2abce8acb9864b3731a9bd9614c61"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/sql/migration_20261026_user_invoice_processing.sql",
+      "sha256": "35067817cedcf73e0e513fee1024fd32a018cf18802d6ca0fd4f612932487b1a"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/sql/migration_20261026_user_invoice_title_receipt.sql",
+      "sha256": "db0dfe988c1d1963f7d4313b9032c9ece9f63cbddd55ef4e0493aaa683cb4e68"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/sql/migration_20261027_template_adoption_receipt.sql",
+      "sha256": "9c72d1698d6de5920ad00d87fed6f0f37789c78793b2119d113cc394f88663da"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/sql/migration_doc2_f3_refund_hold_20261026.sql",
+      "sha256": "74b1ef1e1488b1ee69eb8f104dde6466246d690db7fc01de19ab8c84d37b2556"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/sql/migration_orient_score_recovery_20261026.sql",
+      "sha256": "7ad0d698bd3b5f0ebb5d36b1c30a2099868ca2b7598570cb82c8848fb93134a8"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/sql/migration_orient_score_sync_receipt_20261026.sql",
+      "sha256": "615f1a9e64f42ff8d8ee398e32aac14168ff00f67edd4ddf34b6c12f90fd9f33"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/sql/migration_w8_refund_fulfillment_recovery_20261026.sql",
+      "sha256": "28b65fad53c1aa768b7d7d56886e4b4a1998cecb8faad59bcc8d9c996bf432f1"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java",
+      "sha256": "edbefe5d02a4c49b7e1bd76f94faefe5192508130cbc291da3baaebd5bbed197"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAuditController.java",
+      "sha256": "ada81311c60851675131d1b991a879ccd24bc58055f19667296410bdfd41f38d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiFreeExploreBundleController.java",
+      "sha256": "e6b29203122e122c5a22768bcff125a729ce235936fd6a7a95956cfdff81e3c1"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantDeskController.java",
+      "sha256": "818e328587ca73c7f71f1deddf9e675ef011018d9c697b1e66ec8f9fd0cbeca2"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantReviewController.java",
+      "sha256": "4bf6dd28e741a0fea73b982c1b2f00dbd4ca594ec7f862fdd2716218c420eea3"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantReviewReplyReceiptController.java",
+      "sha256": "d86514c5a936bda43ad39d76d1340bf43f7840b3f139634fad3912f7bd679bca"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiOfficialEventController.java",
+      "sha256": "c6f3f425b8af8414c37a3550540d324be6829ac5f73acbdeac0e5eca261ae951"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiOrientScoringController.java",
+      "sha256": "b2e407c613860a8e409bf02dd62f9c2f90265d612d53919712a12edf166a2de9"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiOrientTaskReceiptController.java",
+      "sha256": "0f353eff2fcbf8bd5b45e90eab8eeead87e53614cc61fc7bcbdef4ad1bc8691a"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCharacterController.java",
+      "sha256": "9701ee19a4540a4818f7c28368b0c4bbb93b9347882471ced15bf22ee0c3c592"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCheckController.java",
+      "sha256": "75ce61013945a161a2e1c49934734037b591c9ee782fd9f6a5eab87910dd9bc4"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+      "sha256": "455a858d0da293bf51529c1686422085e2ded79c251b6348b444b210d8a73c9d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayTeamController.java",
+      "sha256": "b9ac35256ff807693784f100a6833f27378cedf4595046f97069eb3110def5b9"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+      "sha256": "4e141c2e4f9502ef8386e68c0b6715d035d59caafd614063b45a705265e9acf6"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamPassportController.java",
+      "sha256": "acd3828d865daddd43321f871267591a351856de9300b19294b412ef71bcde80"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTemplateController.java",
+      "sha256": "1fa0e94878baf057763b63d1feed08566903794864f540445bba9e767aa7e49b"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicAttributeBindingController.java",
+      "sha256": "e387cc01246dab8988a6de2b1c292eb7ba20d35ea208260558a3172b669df4e1"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+      "sha256": "c08b960b15d04353b32bfe5835cd8621c747d4e0e432d1b8b987bc2564c7d182"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiUserInvoiceController.java",
+      "sha256": "2077b76f70abc78f31b977309f6c47dabbbd5ab54c84c824e565c3e7198ca7df"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/MerchantDeskWire.java",
+      "sha256": "0ac3434064af39000f63cf3a0b6d5aba0dc157e268c15ef11c6a67b34eda3b38"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AuditWorkbenchController.java",
+      "sha256": "283ff39901a621736f510e8b29dc4ba1d81632465f09871270771a5c179ed8e8"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/BusinessImController.java",
+      "sha256": "884685f1435654e7aefa16269d0b3f40330194c5d0679eeb458027ec1f85e69d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/BusinessOfficialEventController.java",
+      "sha256": "91a170fba841945c7295c67621c80a30c6ab2f2d5e30add637aaae7887706183"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/OrientScoringAdminController.java",
+      "sha256": "df00b4e1df60cf6a67f793202a6a6fd50335b8de5678b5eb54bd1201d9c9d55a"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RefundController.java",
+      "sha256": "ee6083a9c84bb3b5080ed40c56eed9984e0d35a1b4887ac4a994c844acc42a77"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/UserInvoiceProcessingController.java",
+      "sha256": "24afba10f5d9d1ae2e3933aa356d6f80ab734bf5319ebde1c267045823cabe64"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/PreferencePlayService.java",
+      "sha256": "c7094008e8d8306bd3dcac4834286216bfedf65c8a257bd4eb4ff5e34404472a"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/TopicRouteCompletionCoordinator.java",
+      "sha256": "2e1d10f79dc3c2bc7c9e72aedb9fb116da4549c1d61ebe35be0f68d3825482e3"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/audit/GuardArrivalEvidenceReaderImpl.java",
+      "sha256": "faec8810462d1227ba080a24ef24784b328cdc8c417ce90f8bceeac7f226068b"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayBasicCommandApplication.java",
+      "sha256": "cf23b31b1cd4fa6bbd0d8b346668026701ce62b0ca657739d3cbb2bc2215ab4f"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayBasicIntentApplication.java",
+      "sha256": "6dc7cb9a4611eb80983fe34a5926e3c797448a647d23b5b5f828f13dcc3e294b"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayCompletionFacts.java",
+      "sha256": "ef5bb8691b306f5f0e625a76252d01a0add0cb26e986035e2ea1897be5f2b47e"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayEntryApplication.java",
+      "sha256": "880130f2d497881d75d28d319e49fed3f91165be19a7710e6405c9da82031cf5"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayHistoryQueryApplication.java",
+      "sha256": "9d8304b0edead8c9ad8e65ce8c8dfd2b38bd06a5bc82a26e446a8538709a8d2d"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayNodeCompletionApplication.java",
+      "sha256": "7139ffeb7bd9a14f87b4b651769d478edd80d01f193bcf13937f6f39d1077af3"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayNodeContext.java",
+      "sha256": "2a34bbef0a7e28ba0814b5567e126c4b14092125bb9549da4a6803e8632292f8"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayNodeQueryApplication.java",
+      "sha256": "e8713b063f48213551d6e6a8252e62c23329ea6e1c29057723854129fbf92365"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayOriginalRun.java",
+      "sha256": "4c5236a0019ebc94af78d4280658b3ea9056180ddfa1d38139b77769e2c963fa"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayPhotoCommandApplication.java",
+      "sha256": "523d358aae6dabce2c8e9ae7f3d3deba4e7b1ad845ebe6e33a2686bca628c8ca"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayPlayerQueryApplication.java",
+      "sha256": "91adbb4433f940217493dcfbb71c660e45f070b7eb0e9a71ef2a265963e8d386"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayPreferenceApplication.java",
+      "sha256": "221d0ec2dd48022c5f061a838fdb119724ac77a32f96136289b340be1ed9191e"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayPuzzleCommandApplication.java",
+      "sha256": "edf0990bad7fc727369ea33907d4cd0497fc1329ceff3b5103855a0e5dfea835"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayTaskPresentation.java",
+      "sha256": "9ca7281b09b9433bfdbbbca68871e0508f587bf88ca1166f373bf94eca837127"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/domain/vo/MerchantReviewIdSerializationTest.java",
+      "sha256": "7f8dd55ad16290c4aa760b9c76e7b801f237a28a785adcc726640ab1e01b180a"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/AuthorAttributeBindingMyBatisIT.java",
+      "sha256": "27442892cd0e45250d4bc7ff8c0d33f5fcd412b0532fe949df8a2a9c1a8d0730"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ContentSearchCityMyBatisIT.java",
+      "sha256": "826512740f21cf2217e4b173027baeafede5aaad1fa45adbc7ba86d106a8efa8"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayHintUnlockMySqlIT.java",
+      "sha256": "9f023b4b9bc7eb7f57b8e1573a6a413c81d6126dce9e7bf1a72d24ba9b6b7fdb"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayLeadAdmissionFailureMySqlIT.java",
+      "sha256": "748a203465f6361a7f6fb81cb77696ac038f48de4b8391a47f60bb33350e5bea"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/TemplateAdoptionReceiptMyBatisIT.java",
+      "sha256": "3edc391e04aaa20b5f9a8bd052299631335065d91f776661c906d3ae384e4d16"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ThemeCharacterMapperMyBatisIT.java",
+      "sha256": "fc4f2ff2f9b06654c6c675f4e26ed53888351167cda3bad41b51bb94f30d55a8"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ImModerationUnreadMySqlIT.java",
+      "sha256": "4c8255d71431fb219b9b2b8b28ce3686a40d8103e12337d87bdbd8e956006fb2"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/MerchantDeskMapperSqlTest.java",
+      "sha256": "0ef7bbbdd809adf9fb658f9d85c16746786b737640995ca6502581739b5f5493"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/MerchantReviewMapperContractTest.java",
+      "sha256": "fa6982e10e5f15c8bd8fa9fffdbbea07bf69aecf1cd87b3743214e49d593fb3d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/MerchantReviewMerchantRowMyBatisTest.java",
+      "sha256": "620e0a3fe5d758d55e552ce5589ee6a9ba3096f7a14f300414e38a4dad1f4812"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/MerchantReviewReplyReceiptMapperSqlTest.java",
+      "sha256": "6ae3c4f7f419de4d20d456c232393392654aa7f14c20d7b9832632d16cc50483"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/AuditItemProblemMySqlIT.java",
+      "sha256": "baaa6af8ef86e7b91fc9bba46dab86d8f307c94fe02a9a48e551b6cc8113ad10"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/AuditItemProblemTest.java",
+      "sha256": "dcd22b13efd8596354a8bd57dd1900b08cbfe9072f64bd3b95bdbb246a8e4cd5"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/AuthorPublishBindingTest.java",
+      "sha256": "9755c3a50bc262f469abb91a13130bc1c56de3290dbc1dbe8aeb95e173b8a4c2"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CartSettlementWriteReceiptMySqlIT.java",
+      "sha256": "1d94f996245be837a966f732f0f8fcfbb5856da169d3ef8a0a03ef36e21e6845"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubEventTransferCancellationMySqlIT.java",
+      "sha256": "3350c7bcac7b222569fc4792000f6d665ec8914cee8523c3f4d72c25814396a6"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubFulfillmentChainGateTest.java",
+      "sha256": "867196630595497dd9ec8c3c1c64795246ebe5494e24fa41d11997717f249d33"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubOwnerCancelOwnershipGateTest.java",
+      "sha256": "19fb8d10ec59d34460dc5bb668bfcc11439ee1069eefafba62abf735886a498c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreReleaseWiringTest.java",
+      "sha256": "e76af40a4824db2d020c6acf3278f07c5f62a314d017c04b24b1247f92b62164"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/FreeSessionCancelReleaseV2Test.java",
+      "sha256": "395e23fe1ab3e0e61e3f314848903e4caf20e2567de12139e9a7c0a2a95310e9"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/FundIdempotencyConcurrencyTest.java",
+      "sha256": "b907242027fdcf40f5ccf7a88870258288ee7fc6d37945b6854e123f58126463"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantDeskServiceImplTest.java",
+      "sha256": "c7449ed57cc7295471f259c28e96b04dcd3d5cc5a5a235f0c4f0352ca36aa861"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantReviewExactOrderHttpTest.java",
+      "sha256": "e4fb4309b593e057d9f5efd7f37358934370f640a7f9239097474d40ab364a61"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantReviewReplyReceiptServiceTest.java",
+      "sha256": "8a22552d3ee45d03530d7341ebe77aa1562ed4c430f50157e7cbd4e32ec769d4"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantReviewServiceImplTest.java",
+      "sha256": "19b605e78f28cdcc01fa4ad585991bfc6c721958cb64a11f96a29e3797017411"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/OfficialBroadcastDeliveryMySqlIT.java",
+      "sha256": "6f1705d995a7a73ca09c2412e466a074be868580f372298857bbf3b9cfee3c3a"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/OfficialEventAttendanceMySqlIT.java",
+      "sha256": "a51e832f14bc1add74253e68eb2983191d0d2e11c5a4aeb1406a09279127b9b6"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundBalanceFloorTest.java",
+      "sha256": "5dccc4efb75bf2a124c58ef21472a7621e5efdcc2a34530e99c72c7370803d7d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundDeadlineGateTest.java",
+      "sha256": "bb25d66c0ea64855fa635f4bd6927547a8a2d6aaf201723410ad293d662b9061"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundMultiPartyClawbackTest.java",
+      "sha256": "0c6d569ee5ff3f091896ab9ecd9c5f9dad98c5d76efdea072999c68a1d9f292c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundNotificationMybatisIntegrationTest.java",
+      "sha256": "c377a5b493d03087ca56507d74844990430ec8b45dd4b12cfc6d60b3872ddb5d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundPartialClawbackTest.java",
+      "sha256": "a77ad90e3867c58f03bf9b6df0f19010281ab63139522d2bf690da8ec2ed7069"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundPayoutAtomicityContractTest.java",
+      "sha256": "0d94dd42bb6eee11fb107e3ed88cd26477cdc9b2f760cdeb5e2e9bad235640f4"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundPayoutMybatisIntegrationTest.java",
+      "sha256": "fb53675d94c9d87a29def53389264fae6964e45740dfe25c1676feeedbedc354"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundSingleSidedDebitGuardTest.java",
+      "sha256": "850c7aab23a157c52d87f7b5e310aa407bc9ac12a4463bd16aaa18d79853398f"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundSingleSidedDebitTopicGuardTest.java",
+      "sha256": "9ee66f70500ca11c169ba9eaf44ec1f009b885b8673c28c72802fc8813a8c71b"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+      "sha256": "135333bc2bd4e0d24432bb01b7f5a3ce0ea8b9ec764d8e2e5ec507fce092a534"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TeamEventCommandMySqlIT.java",
+      "sha256": "bdad1f77f22aee563c49a99068303f42921b143340a66d6780226e5b6a4e7e3c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ThemeStateKeyServiceTest.java",
+      "sha256": "7582dcfcd1618f9384932a15f6ca933e74f39caacf49db15f3ac777f5911abc1"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/UserInvoiceLifecycleMySqlIT.java",
+      "sha256": "3f2f6011c5262ab88be3a1b535bc70aa02fe20ec1e556c8487bf9a5bc82610ec"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/compliance/UserInvoiceServiceTest.java",
+      "sha256": "dd4e90f98052dc332ad18aed1c09be22386a2a3b0326267e8ceed7fe1f5284b5"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ActivityCancelFreeOrderMybatisIT.java",
+      "sha256": "3f8f62e78c2fe736eb9cfd05fd15c0b925c78e8666631383be2904f9feda732b"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ActivityCancelTest.java",
+      "sha256": "12e82c405279e7f15538a70700ef7a6a594d1f89cb8b69de950803cc796df2c3"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImplTest.java",
+      "sha256": "92717a33a936194df2971696a29ae9d7a242fb94507c1971bd612aa9e70984f5"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AuditAppealAttachmentTest.java",
+      "sha256": "948dddcc2e528001e0242919aa9fd224f2b1a86a0ff705759154ebf85f324df7"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AuditAppealRequestMySqlIT.java",
+      "sha256": "0f5c082db9e30628bb568d80cf70923de6e7b84286f379ee9c3577aae6d3021b"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java",
+      "sha256": "7b153a79daaecf068e1b4d079cd82b9a0c4bdbbbfe454449ce13be33479b7309"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/FreeExploreBundleLedgerMySqlIT.java",
+      "sha256": "1612bb1b8e0db54076563a052421c0646ca58df9f70082caa69fead078a3af06"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/FreeExploreBundleRefundContractTest.java",
+      "sha256": "f7791f4f9dae59a765a8a78f5eac6ba442ff66cd3775659553c03b8eb3541797"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/FreeExploreBundleServiceTest.java",
+      "sha256": "c6bf475114d909668829dae2fffc62c2c9786800b3304b094aa1d227ebe0bdc6"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/FreeExploreBundleWireTest.java",
+      "sha256": "73b70b7587054cd9f87079533791d89abca0c8920b6bd42118d5633ca9f118bf"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/FreeOrderCancelAcceptanceTest.java",
+      "sha256": "39c2d00aebe4c9b8a98b54aea5f3d2f9afe5f00f33f6de00483c11b2616795e8"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GuardAppealReferenceTest.java",
+      "sha256": "742c00e835a4d3f5eba2ea15c1a8b0e3355f2d34bb37c2f8b2b64b25fb4c5edf"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GuardAppealReviewRecoveryTest.java",
+      "sha256": "30f528f0ade2bde3dde7e0062c72d137f1b725952f3546e3b008825bdb4b1be7"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GuardWorkbenchScopeMySqlIT.java",
+      "sha256": "5e8198ecb1bf342ab31af64e0d931ce3db970318b589d75de8e25cab800dc633"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/HostWeatherCancelTest.java",
+      "sha256": "83bd00ef75373ee07fdabe3254d196bd66533cd0e3cd3ef39e53bd9f242e3f35"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImAdminSendIdempotencyMySqlIT.java",
+      "sha256": "29bc869ebc08ed36be0baa95f8e90c55a93a11622567c3b2bcff750614e17b6d"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImAdminSendIdempotencyTest.java",
+      "sha256": "e01e5b78e8ef247174919c5f48cd8bc4a08e9ed962422ffa9f1cfb28594dd30b"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OWN_C02_27Test.java",
+      "sha256": "09e2e47946e4b791306edad642a953b613ded87363832dc9e0f2348816245bd0"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialBroadcastDeliveryTest.java",
+      "sha256": "2b24159de3b8cc06d3c3b0b2e37da69ad595357fcc94d889b65b7f036e23b876"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialEventAttendanceServiceTest.java",
+      "sha256": "708d2223c9a17ebb0e0127f70cec306288b1dc4fe84d906d5af7b63cbfa62446"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialEventContractTest.java",
+      "sha256": "15849ca2014d98cf859ca46d1ffb2b573008d1670f889e3ba4fba517a73ca1ae"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialEventSignupRejectionTest.java",
+      "sha256": "5f1f93f17250721d4491851b8d5567af954614d337098e900992249288761041"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OrientScoringFlowMySqlIT.java",
+      "sha256": "f9d3e8d899495c410ef43184e5bb24f889388714319f5fd484b564dcfe359e83"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OrientScoringServiceImplTest.java",
+      "sha256": "0a13c8399330578398cf3d04c80bacbc01b38c21d60239a68de721429c6bf414"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OrientTaskServiceImplTest.java",
+      "sha256": "2da203ce0864a779a9cd8006573b1d1a4b4fbb0fc9cf58676043275b27a57b76"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OriginalSharedGuardEligibilityTest.java",
+      "sha256": "43efb17ed30fb7c32f3e4d78074ca3f1b91e710ad26ad6266052811ce81b18bb"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PartialChapterAftercareTest.java",
+      "sha256": "2177a99409d1588e128cc3bc92deb5e2033afcae286a0408e70f946605e0c79b"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PersonalGameplayRuntimeServiceTest.java",
+      "sha256": "1cccb9659587bc65d7bc4a5ba59966d8b8aa190a41b1bc556f51112419598438"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PuzzlePlayServiceImplTest.java",
+      "sha256": "5dcf9dc3ea2a503422ff7cd53567cc9c7330d2f297e205dfb611f1e9e7d24eb7"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PuzzleRevealArrivalFactTest.java",
+      "sha256": "f99b2d3a0b548184fcbc4d04b135549df5ceac20f44fa3cf2a11b1fafbc457c6"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundF3PreparationTest.java",
+      "sha256": "218f980df406a444a18aeb751777bbe137ba0edaad765eb2a50b5f2c821773bc"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundFulfillmentViewTest.java",
+      "sha256": "088b1705179dd56ad9802857a86bb022dd79d8a10d2cc45e2ecd8830a7234566"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundManualPayoutTest.java",
+      "sha256": "3f43783056a61e6c8bbc791ac14fbfc46bd809bd0a92a674e0e8e8e5b5330a0f"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundOverpayGuardTest.java",
+      "sha256": "b40341f8291fbcd3c26865b42adc876a0ab5bfd3e7d08d7d0d0215e3db5a2f2c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundPayoutReceiptUrlGateTest.java",
+      "sha256": "367478c051ec948010aceac29977240c03f0db876b1e29e5a83b3f1c49f4f3d4"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundRegistrationIdentityTest.java",
+      "sha256": "8a6074e742d4e6dc903e8f34ceded041b2789e35e09ba9a1b2ac92ae27c540bb"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundRetryAndRemainderMySqlIT.java",
+      "sha256": "1004bfb7bd4d8646549e27fe64e88d13f32a3a0f7043bffa289b360a9b9469c6"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundServiceImplTest.java",
+      "sha256": "ac118271d6ed09de9ff9d75c994ee7cdacebd11ea5b4d96fb68d7dc7de1e6fed"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundVerifiedFactsTest.java",
+      "sha256": "5a4da9c9ebb784d87a72328843af7e3fd59bdb59569f27d008afc5b221778afc"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundWriteReceiptTest.java",
+      "sha256": "d1cf362a6e73ea3e422ca83a604c737d44d8402154e15fd8833e97b0963206af"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RegistrationPointPrecisionTest.java",
+      "sha256": "b7650515d4812a624799ef9e9870c00702229cdb515bbc7e37595fd13edc64f8"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RegistrationRefundFulfillmentRecoveryTest.java",
+      "sha256": "74790633081959b974195ed8822772ac8ecbfab772380d2fccd1fc5d9e4606db"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TeamGroupF3PreparationTest.java",
+      "sha256": "c71d0f1966864fda4f30707e056b4ca0c0db49e7e748e0c940f310c9d59429c7"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteCheckServiceImplTest.java",
+      "sha256": "9726ad7822931315e5161f6f9e06fcc4080b2862689471b377d8bf49726f25a8"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImplTest.java",
+      "sha256": "3393575df989c05237b8d81ad0afcb452936964dfd7e13da36421785c173da76"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/UserInvoiceProcessingServiceTest.java",
+      "sha256": "f0788a49311c1e7641dd9bf0638b1dc024871d9c25ad5338ac318971131320d5"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/UserInvoiceProcessingWireTest.java",
+      "sha256": "b96840853881bc946483099850e3bd031526e8bb6eec8a9b275f57156d431d41"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/UserInvoiceRefundReconciliationJobTest.java",
+      "sha256": "08a07a9b83c9c0b5ff75a0b40de685c9792f183fdb1a6544b2964277fd949146"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/UserInvoiceWireContractTest.java",
+      "sha256": "55ec1bc3ad8bf7c5d5bf522f3d287fa8b77036d7cc37c00c84b29219419daed1"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WholeOrderRefundTest.java",
+      "sha256": "4fa947b5a9e9607d7b3719028f501c555cc877d797189b7d63341026db10f1e0"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WxSubscribeMsgSendErrcodeTest.java",
+      "sha256": "4fedcd71d5362d462053ff701d0517b09b61079974955ba091de44852ecbece9"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/AdvancedActionReceiptReaderTest.java",
+      "sha256": "3cf477c6ee2c9ffd41e704d1b081784ca6c917729968affe58be727c9de043bb"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/AuthorAttributeBindingTest.java",
+      "sha256": "1309451bab1b8ef8ab13f812f853fd4757601ce343d25d62679aeb6f1d20811b"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/AuthorAttributeRegistryReaderTest.java",
+      "sha256": "7f4e66b43b6ce89f9246b0673b3815a5f245a38c13f47d295367bad36a6e9468"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/CheckReceiptProjectionTest.java",
+      "sha256": "0daf5819f1ff7e3c6c62c2d952caeb96a79d3321202373965d072fa8e9ce7d4c"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/FrozenAttributeDefinitionsTest.java",
+      "sha256": "7a9e616176d7cde0f8b0c4e58af0f79a0a72b7b064a2c5e3e77d061e27e75a04"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/GuardAppealEligibilityTest.java",
+      "sha256": "991bb2639f38de234df7f97a94f4aaef6d414c855a175c11e4ea37e9f71799f8"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/JourneyRulesValidatorTest.java",
+      "sha256": "33153cdf5ef46623917d67a04ac78352fa58b5b3a4ee7e1182b7e2b2eeb62a4c"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/OrientRouteSettlementMySqlIT.java",
+      "sha256": "ce60cb0a355e12ee1784a21e63c991ed389f5decfbd1e06176e2da0b13bf8bca"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/OrientRouteSettlementTest.java",
+      "sha256": "afde718db106303671cfef129f12044eefe7f85013ac48ec04a7f4ca2bf0cb87"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/RefundF3TestSupport.java",
+      "sha256": "1e8aa582d3dd442f78d1799f72e137658edd9e8d6fd2c464ffc4a24f923db809"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/RegistrationCancellationCashReadTest.java",
+      "sha256": "0890d82731a0b5c17731ea53a356c27b828247017f3023a33a59f7e2139c3575"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/RegistrationRefundFactsTest.java",
+      "sha256": "fb6ac149450e41a78d46649a05a76a0507e390482a036f3b23687ad6ae699d7d"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TemplateAdoptionServiceTest.java",
+      "sha256": "67d06979537f6db54a7d42b6cfadd381f63bae65d5cd296a7f95e2cbcd637370"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/ThemeCharacterServiceTest.java",
+      "sha256": "548d99aed41631228e22795613ce4b3992f48685575d88f7316a7726b5bad6b3"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/task/RefundReconcileTaskTest.java",
+      "sha256": "cba8c34f93c8ce9f959a61479f02b486df5427415c6ae41ceab6d12d5f5139ec"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/framework/aspectj/DeadlockRetryEntryPointContractTest.java",
+      "sha256": "74063bc0962f86ea3593734930f41ace99f5040bdebe824bd0a57ba64d07eba8"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayControllerTest.java",
+      "sha256": "a1b1cc861ce29f52feef39225e188da008cbf83a1b75be06b119a249d44de6ab"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAuditControllerOwnershipTest.java",
+      "sha256": "d269ea7fd8a916e0e7b34cb72ec583512b6dd94a44d4004e87f31e94842ed859"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCartControllerSettlementTest.java",
+      "sha256": "9b3eb72fd114bfd54594700a689d3dad81eef88a146129fb4242c7de07d4e8e6"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiContentSearchControllerTest.java",
+      "sha256": "11e5ad91e6dc5b27537cb0b60678604ff69c8d71725f4cb65611305ec5015050"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiMerchantDeskControllerTest.java",
+      "sha256": "879f627fa318c3211fc881be881c1e137b03964717ba9fec46ce62b70504f333"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayBranchNodeVisibilityTest.java",
+      "sha256": "aeb434dafe26bf25a33b24d61eb71aa76f81ebdc60d033567e8b6ec73249fd2a"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCharacterControllerTest.java",
+      "sha256": "64dab02b78a56007c0f8ab376eefb5dfac5e309da4d43aee4bc9c40acd7bfee9"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCheckControllerTest.java",
+      "sha256": "2302f81a43e4d4bc16b6d253e8113bf0c080aaf1dd7803fade153ff3f73fddb1"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCheckinDuplicateCodeTest.java",
+      "sha256": "7e921b06eaf6be4ce70c8fcef09c3dfeb95b961acb5c97eac71d7e809aab1dcb"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCheckinLiveCodeTest.java",
+      "sha256": "4267862bb709ab54186a6cc6eab9d1002870d9c78ea90c62688cf9e181d0fbd8"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCompletedRouteSourcesTest.java",
+      "sha256": "716c6f3d847162564e4c36c7d75a51df3348fb586952b71d388d352e78f231dc"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCurrentUseBoundaryTest.java",
+      "sha256": "3b9c54fccd14ac712c1f35a727d0ca2d6167b5f103baf92b8e06b7654898e3ce"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java",
+      "sha256": "4f6eb71e9da8a8e72c1be17cca9c0383dcb550222ebfd4c3e430c7565d74c648"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEndingCompanionFactTest.java",
+      "sha256": "6c93ea9f47cb2511734758cfd0867306e8600eb616e15bc7562af477c736a966"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayGpsGeofenceValidationTest.java",
+      "sha256": "435084bceb3364ddb6a727456b31d30e1f62578437b002f385a24c207534fc3a"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHintUnlockTest.java",
+      "sha256": "2c3c049cba62f5768afcc6f7ab821528c916965cfaf4f09f392a63ce5b0c38db"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryFulfillmentAccessTest.java",
+      "sha256": "facfb2fa393dbde472011dc9d0e94143697c74071fdfeaad1907ff5d11abe686"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryNodesContractTest.java",
+      "sha256": "f45f8fdef1a637fc8203727ced6b815eb655574e247edc6abfc5ba2ae81e9631"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryNodesOldEntryContractTest.java",
+      "sha256": "d7c9f838897de9bb525a57b4dd27a82f856bdb5d9cec3d5d08ab45e79b4e11a3"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayLeadSpectatorGateTest.java",
+      "sha256": "ded08a71a1a5a102efe00835f57a8d73b34c9c2338beff6afc1a6d2346b1f3ec"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayLeaderboardTest.java",
+      "sha256": "9370e97781a022ca49d9a7350e9ea9077f80452056c0433a30acaee030e71341"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayMyCompletedSelfPlayContractTest.java",
+      "sha256": "d01b168b58bce468abf1be0ea3b5a5ed3c793b4e81a20cda18ab02d53ef4422d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayNodeNpcPreferenceTest.java",
+      "sha256": "44200213c9cc6c0b6190042a4583f2cc4b924eb350efe87c8f67b403729e48c5"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPhotoRetryAndFailureContractTest.java",
+      "sha256": "b53b6aced8fa808bf4c379a7f348a43b90200b17389bdf86236048370b17f38f"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java",
+      "sha256": "7adab5086ed09896a546070251f95dfa5fd1bff047794618bd138b540f6d18e4"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCouponGrantFailureTest.java",
+      "sha256": "3831d769616854569753aa991a10bc0a17a96c4bf327e6e0adc3d8e0c04405c5"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java",
+      "sha256": "f5e23c2d82ba7d86e98cb21b12d5e7f428538bfc3d0fb5eabf2bef3768e6d36f"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPuzzleHintTest.java",
+      "sha256": "f4e3c8330e377f9a055a25394e71964bc382d27e0fc6384780c1994dfc843629"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayRouteConflictHttpContractTest.java",
+      "sha256": "9b3c98aa07c8c56ef36af6b233d4fb7331092c3444270a9361c67ed7a9e7dec1"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySelfPlayPassGateTest.java",
+      "sha256": "3c3fdd24c117f9156eb0a74c8f2620a0c9cbbdacdd2b54b1d83a369f5e386be6"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java",
+      "sha256": "b9695663219d129145bc84e61d6dbff62b4d444654cc5fa969aa5bdd89c7970d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayUnlockGateTest.java",
+      "sha256": "29873fede07f77f28495b446c63c85a2b7825f39a4f12a474bedf27175ff280c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayVitalsOnTest.java",
+      "sha256": "6859539dff8e263042be0b327c720ac15944de032dca1988343169d8367a23ef"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiTemplateMerchantOperatorScopeTest.java",
+      "sha256": "86e315eced714d9dff202740765c47f8b6d4a78d6d25c6f11ffdd5c6a3f5cced"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiTopicAttributeBindingControllerTest.java",
+      "sha256": "64a1ddacf74cc5e49a46d4c962ba3e3b13ea0570028f5047086412b97b6e9f4f"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ArchitectureDayGCompletionFallbackTest.java",
+      "sha256": "1a00199a85aa3d0e11c8856e607c53f87301a9a173492de81f03f2d3b03ee055"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/BasicPlayCommandFixtures.java",
+      "sha256": "bc4ed0a7d45baf10beb2a0efae2df31479336280ddda4b855f3bf82ac4b70d05"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/CityStationOrderAcceptanceTest.java",
+      "sha256": "4227dfca4c3253e998040e2e2076745b41f3cb60380799522c10e0693a6a50d8"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ClubLeadGateTest.java",
+      "sha256": "9489220462a387f86d4cd148c9cb674dc542ed6bb646918839863c9e999ed04b"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/CollectIdempotencyTest.java",
+      "sha256": "cd66c87d83feb5cb85d5253f94f4dffbdcbce117b3d262e604e5f01532c900cd"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/FreeOrderCancelEntryGateAcceptanceTest.java",
+      "sha256": "d35d4b1427175eea5c9bc471b3e414ed5c1b71d2e968198e689a76311cf23ed4"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/JourneyPublishFreezeTest.java",
+      "sha256": "68b91041b01785f44b1bcf607f89864ab44117a004a490ff0e22fc75fd7e9b09"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/LogAttemptFailureTest.java",
+      "sha256": "445f6b48cc4bd38aa8d6532ba212b28aa8bfeb173dbb9a6204c201a9b1310299"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/NodeHintUnlockTestFixtures.java",
+      "sha256": "89fac5505210efe3d24530487d392a7cf51ef4a56731d0d9d19d08d1c0c6b3db"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/NodeMedalClaimTest.java",
+      "sha256": "7c421fd2583ef8094863e44352eb80f5dc86c39cd298835c58c589d7e4e25ba2"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/O08PrivateLocationReadPathTest.java",
+      "sha256": "50329d5034e39f2d3bfb028220aa24740983943c434eb458f8d474cf5ce8fc54"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/OrientScoringRecoveryPermissionTest.java",
+      "sha256": "0a79322d24d22146bd52ea1d538302bee130398bbd68db2da56cb3978ed07988"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/OrientScoringSyncControllerTest.java",
+      "sha256": "5330c462536fa9fe6204f3ac13a988346160efa01cf9cf3d8c0605c8c295177f"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoOwnerBindingContractTest.java",
+      "sha256": "0bcb7acc89cc097f8c2913fa26895cb7c19828d92d73c2ce8af4045360018f30"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoReviewRewardContractTest.java",
+      "sha256": "206aff93f5df6c0a02857ea4f389bfa549ecb3952d623953edb0842d92767879"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayCommandIntentTest.java",
+      "sha256": "2b61da8f2a090eb30e819a4fbf9401d4d5146e01b98ce8182d9a0ffac5daed98"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayLeadAdmissionFailureTest.java",
+      "sha256": "834d577578483a56f1e4a279315a9cfeadea416c1506b8d994eae4c3396346bb"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayNodeAccessTestFixtures.java",
+      "sha256": "1edc6bacb5ed26b88f3ee880cb632bcc4ff42c8fe17c17e2fdbc5ef35e58c34f"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayProgressVarsTest.java",
+      "sha256": "cfdacb46e886c913f5f98e99f79d9a83d4e0e1ec6030d7008329e7d82fc09e1d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayResolveModeTest.java",
+      "sha256": "7500f19cc4e5c6fc90bb50ff750d4433b205268cf79ff617eb2e6a8150e3a1cf"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlaySelfPlayCompletionTest.java",
+      "sha256": "2d0114bb95fdb917368914402a860b848a7619b1a44be94ce65e0add980a7851"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamPassportReadMySqlIT.java",
+      "sha256": "2869613d495ddd94837a7d586509de959080249109be9374cfe844fc1b875f52"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamPassportReadTest.java",
+      "sha256": "81693b1d99fdd5ddd27108fbab1a945353e9c57e16369ec660a5dbab0390203a"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamTileMemoryPageTest.java",
+      "sha256": "8b88b14bbf7793ff4e221b4cb79fd243ad23e0efda8afc83c4547780803a5677"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ShopDayExperienceLayerContractTest.java",
+      "sha256": "1109cfac05df691dc49fecf7294f1b8d6bb48093f2869ea77742abcddb1db1eb"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/TopicRouteFrozenSessionReadSideTest.java",
+      "sha256": "78656322b8b0e67ae86320546ecebb7a593d89dcc7a5bf5fa3c7bff4c8eda0ef"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/BusinessImReceiptContractTest.java",
+      "sha256": "90e7308fc95a829c6558dfa6d57a08ff67da59d2d4978dd61b8ee9df12883724"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/GuardAppealReadScopeTest.java",
+      "sha256": "aeabb2a792297bf024e4b2449b916dbcc24d3f14ec2b751832860f90d0bb65cd"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/PreferencePlayServiceTest.java",
+      "sha256": "6e84f8b634aa838ab3983df5620d4126c4b7e34b9019d04088fd4f04e9a5b7e2"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/TopicRouteCompletionCoordinatorTest.java",
+      "sha256": "e25f8eaa15fbcf2aaa68039ac6a2e9d70255baec5115e3fe12700ccebdb0a1c3"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/audit/GuardArrivalEvidenceReaderTest.java",
+      "sha256": "eae231ecf4b3932d4544274b4bb77848b5fcb1c48dce3bfaed7633ec6d35d9cf"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayFrozenContentProjectionTest.java",
+      "sha256": "b7a6e5dd0f7b4565053ac375dea6af4c8318ce50a1ee8bc7ed358fe6635ba081"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayOriginalRunTest.java",
+      "sha256": "49911cc51cb730561a35cf2d385bf5ba8c451f97130c442d423caa412a95cdfb"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayOriginalSessionIntentTest.java",
+      "sha256": "12bf5241e15c75a0f7454b7fb345a498289978f50b992b16ced430b47a15e01b"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/AuditProblem.java",
+      "sha256": "f2ee6bf8e4548570f54b8ffb1cf04ea9c386fd8ab97e71c1e4ee6a0bf495a4f2"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/ExploreBundleExitCase.java",
+      "sha256": "0ddaa37ab8e97cc8f5b771523e53fd2c29513fb1a72c28fb4f1511217759c745"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/ExploreBundleGrant.java",
+      "sha256": "04207bec67b67a3e0d82088cf2adcc2fda364824d5d7e67064ae3a0352b8e65e"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/ExploreBundleOrder.java",
+      "sha256": "0bc7f39e33b9eb618d1ef9d86f1a83a5b0605ab4685db8f823f824763a204f27"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/ExploreBundleRefundHold.java",
+      "sha256": "6ca9f38defde33d8479ef50ba508c55a080ddecc06b35d19fbcd18b46f9b5c0c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/ExploreBundleReservation.java",
+      "sha256": "a5d5d7c51e150aa83a2bab2148b54005b40c07c068aae99a79c3a72fc539bcf3"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/ExploreBundleUnit.java",
+      "sha256": "0c22c7090a2a53172e501557c27cfc84b1d30e6646ece2728792256d74630c4a"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/JourneyRules.java",
+      "sha256": "5af637ac1353267b291c92b263746bc09c8f9dd919ac8845d8cf2525b6f8556b"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/OfficialBroadcast.java",
+      "sha256": "82fdf68b7b7bc8c8492c876c9bc244e7c7bb2bec4329c7bb6e6bd6636b66b380"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/OrientScoreRecovery.java",
+      "sha256": "7b2c375865512cb9ba172e4864d18a8d91861ce3e9dfca7d4e6437eb0b0f8107"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/OrientScoreSyncReceipt.java",
+      "sha256": "375efc6ddfde351171a3c24ad1d288b4fb76b17188fdb9d72ff6e4b31c82a50f"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/UserInvoiceOrderLine.java",
+      "sha256": "1a89d92d7c55779885732c776018eacc3162e85f1080510f96f588776701dc20"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/AuditAppealDTO.java",
+      "sha256": "f50f010327768885731eaf6e08f9a263107cd6e58c231195baf7552fed451fcf"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/GuardAppealDTO.java",
+      "sha256": "8b77e2c16beefcd39b3a0656851cc7bf1b4fe73939c6812d28a2eda5b2551631"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/NodeHintUnlockCommand.java",
+      "sha256": "b6070a9aa2a332fc85482618150acced913e339d4bc8df1df318898059eb8157"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/PreferenceSubmitRequest.java",
+      "sha256": "cf1f863e551093797562062bfc6e7c8ad16843bcb4836eec1578c9835a4154b8"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/SensorResultRequest.java",
+      "sha256": "68d136e8eff0cfdaa422a39538b3100d670f054a65aaf6c43cd29fb4bedd9133"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/TeamEventCommand.java",
+      "sha256": "7a397b68e9623f23ad8b7a101522ba10f8b4975e567238322dd48b36c954f53e"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/TemplateAdoptionCommand.java",
+      "sha256": "366173f614dc78eb550b691bdbeff3303832c6d8e077912d1708153938ebf7c8"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/route/PlayCheckReceipt.java",
+      "sha256": "842935d78e623b93092b10f21327edd8b186497738b56ca96d3c359f42d4a0a1"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/ContentSearchItemVO.java",
+      "sha256": "b536d97829e9cd331f65c3ca6cf7b60bc5795458f8f5ea0095b2e03ac385e5f6"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/MerchantReviewEligibilityVO.java",
+      "sha256": "18a656c5195573a958020f021dcd153d57d9771eb93976173d5dae45a3b82b3d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/MerchantReviewVO.java",
+      "sha256": "4ff20aabed548c9bb5d369465d11fa0100e372d69424e78300c915dc2ff7c2af"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/MerchantReviewWriteResultVO.java",
+      "sha256": "e7fd233bf60e52ca90f94cab52bc6bbc371bcf501a36f59a0cefe7767e8ef978"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/NodeHintUnlockResult.java",
+      "sha256": "790846edbb3c16c143e1266fee2677663af64a4d21229178605cfa274eda726d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/AuditTaskMapper.java",
+      "sha256": "550bf8883a8c42e951be8a1eee6596e05968ef5bd111d14c1a501e06909ef860"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CompletedRouteFactMapper.java",
+      "sha256": "eb6c8390c6690685d958b19a0550910a9e4ed76911f28129cf53f7848b1ebdda"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ExploreBundleMapper.java",
+      "sha256": "c7cade2ace1d369f0ee4074d9df4343e27d64452cb36e989a858297cca212f2e"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ExploreBundleRefundMapper.java",
+      "sha256": "af21908325f48efaa3590da7e9b243437ea6fc01d34adb0011b51dd39adb7f26"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/GameRuntimeSessionMapper.java",
+      "sha256": "99ffb26ce561b8e21c166bdc729ac62efacd634f50a3d7ee731f66221423c400"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ImMessageMapper.java",
+      "sha256": "7032a6a942a9123c249337c5d06b77b2dfdce4623e09ce39cbaabf361a20f106"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MerchantDeskMapper.java",
+      "sha256": "bf81b626ba03e2a28ca597c8adf4600d32957feaef312bad9c405b47c9359b6f"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MerchantReviewMapper.java",
+      "sha256": "25b3f02f4e8f67ea13fabf974845d8b841d5754215882758ffb2226168152798"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MerchantReviewReplyReceiptMapper.java",
+      "sha256": "273ed9f4465cb3e7c8bda712610b30410bda0f7a2a5243c28a13033b25894ecc"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/OfficialBroadcastLogMapper.java",
+      "sha256": "98b017694d7fabb53ec76056347a4c981ac9c734262c14885ba32201b99b3a20"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/OfficialBroadcastMapper.java",
+      "sha256": "5024a25e8ca266894673e40317f13974ac6a57880328141e37b77f96ccefbc3e"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/OfficialEventAttendanceMapper.java",
+      "sha256": "8c04cf4f6fdf7661e0c2beaf370f71d156e42fd7bc5be2f3ee17cf9140d4dc72"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/OrientMapper.java",
+      "sha256": "6fafea542a2994b292866c4b8eff7b67b09dc806369ebaa8522e1e144b3359b3"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/OrientScoringMapper.java",
+      "sha256": "2326a066db86253ce2f4fabdcb8fc28e2426b6195d55cc9ad58f2d4ccb9f9a1f"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayArriveGuardLogMapper.java",
+      "sha256": "5cff0352587bf24419c6903136f3ea87ddd2eee2b6ee16b81014818fe83293e6"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RefundApplicationMapper.java",
+      "sha256": "defa975b7f6c9852f43e0de1847447abafa57a67eee2c7d9a8c91c023d58fd4b"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RoamPassportMapper.java",
+      "sha256": "7b893f335ccc4912ebc3f5d03cc63e0e29a9d2a203d1651542178cfbc2425af9"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/TeamEventCommandMapper.java",
+      "sha256": "979523749fbe80d1d8deda9551957e2c3b2ef95092a61e341fc3fa8308d99f18"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/TemplateAdoptionReceiptMapper.java",
+      "sha256": "19a23091f461a03532b98bf759d9346ccd0efd11714570967cf03ee67ed0bed1"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ThemeStateKeyMapper.java",
+      "sha256": "b1a5b22204335f975b438ccdb9c770a3cd691d19698359b2ae4b4fc3111df405"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/UserInvoiceMapper.java",
+      "sha256": "31c06bcc58e98e37b29cd30f6d96aa5b2989913b81c6c873c325412a426f3cba"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/UserInvoiceProcessingMapper.java",
+      "sha256": "0206f9548d6a5feb2e2ea442192e1dfb3a2c5edfe924a106eaaf1a8b8ddf72c1"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/notify/WxSubscribeChannel.java",
+      "sha256": "ab975d07a4b100e47715806dcd3f707aa913d8ef88881365e207692f30b4e1fa"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/GuardArrivalEvidenceReader.java",
+      "sha256": "d25f9f50b45556150721453429b9173ffa5d08571599c0a525b5821b28045057"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IAdvancedGameRuntimeService.java",
+      "sha256": "b443befc754d7d2476726ea8d2c282d1aae56fe391d44984bc0146adb7311d8c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IAuditTaskService.java",
+      "sha256": "c0da25da88d5cc449e3ddf4962051168c88cb769beb612a3963c768dd385fd13"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsTopicService.java",
+      "sha256": "b4f11497e9ad9f5b9f3236ee277057c086799dc36c17f99a11c083648a08b32c"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IFreeExploreBundleRefundService.java",
+      "sha256": "dcef4ae69f1108c8f4bf9e87e164249e8c3a6e3ece34b4b7d246d010ecb22c88"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IFreeExploreBundleService.java",
+      "sha256": "3ed1f9ba1b2edd8126984e64106722de46efea78d688b8bd6cbbc806d93d340f"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IGameSessionRuntimeService.java",
+      "sha256": "8eeb1ca2afb18a1f7b217cefafdf97e0f4790015c949f343e14a18a3a6284e84"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IImService.java",
+      "sha256": "224bf9ced33f817cd614d3b2012bb865ae97462238c89af91c9ba86f746716fe"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IMerchantDeskService.java",
+      "sha256": "58f1717b13bcd2d7859251a9c9ced2552d45ac81ae5940f05ce7830928e67f26"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IMerchantReviewService.java",
+      "sha256": "e43411e48c1e1f812e2ca7b76b284eb03dc820da07fb68465aea6a2e40ed7d82"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IOfficialBroadcastService.java",
+      "sha256": "c75af79f468852fdfca97c9130892ca22bcbffd688e0ab2d428d63089e49fb21"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IOrientScoringService.java",
+      "sha256": "853c32aaaeefd055094b649d68aa2a37901cf9595465cf95675c97c372ad8944"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IOrientTaskService.java",
+      "sha256": "f54a8ff3f014851f7a9efcc0b03a7e1431cc715a76826c66f0b9d5d46fce6b28"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IPuzzlePlayService.java",
+      "sha256": "7665576494732538b14dd9c017e9536e2c513326142ebfb135859b7d65474472"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IRefundService.java",
+      "sha256": "d448eff88c532434263597533898e47cbe70ba5c40adcbee71388fd6df1b79ee"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ITopicRouteRuntimeService.java",
+      "sha256": "0392eb70f6c458b70ce131538ebb9c23f00241d52b67c88cdb0bc00f75a04939"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IUserInvoiceRefundFactConsumer.java",
+      "sha256": "bb0846ef4d63cfb4e623b6fe5b474b352235a5a8a2f612d51eabc04fb47fb840"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IUserInvoiceService.java",
+      "sha256": "12153c74cf330c95498b63ad88c6e09e2189e2702cc030ef219f4d9d775e0768"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IWxSubscribeMsgService.java",
+      "sha256": "e24c2bfd44ea90fdc0ecfdfcf38c49f53b2dd0c5e6c7226eb0fcaa56a575cc11"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java",
+      "sha256": "e5137c057106d2b701495011537679ce972ae567ab76167942f65170b3e5ed4b"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AuditTaskServiceImpl.java",
+      "sha256": "ca33a35a55d76cb27b9f9e6304b3ecc2dfaefdd2ecf7029d9abea685d43ad476"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "sha256": "5566f7fbf0d5a9523264ad5ffa516accb6cc332a21684e9c2edd1f25bb52c308"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+      "sha256": "ee73fa76eab13edf8a5057dbff556a621624ec091cfabb66b074afd79fa929ac"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/FreeExploreBundleRefundServiceImpl.java",
+      "sha256": "aae56484174ba4012a77dedd028f2772c2b14ab8990e27ec03a6b01bd9d4dda5"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/FreeExploreBundleServiceImpl.java",
+      "sha256": "f376ecefb3e16ba5d53b3551c71080863c616b40e7d3e587a0ca1f1cb0a5e7ca"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+      "sha256": "5b2261dbdef60998631c2ccb1ebe890f6ba9197ad3124eabc20b58df04c3c4d4"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+      "sha256": "43ee05efd2150c4d5d616c6c110a5567c04293119dc61e66ce138d5c3724db02"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantDeskServiceImpl.java",
+      "sha256": "5ff1c6d40085e22b9808c9d6da6a4861c410be1efe9ea6658e2270f66a8ae96b"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantReviewServiceImpl.java",
+      "sha256": "66b4e3b8c6fb6682b26217e0f4558a01aca1a9767b025bc12d648ba473414a0e"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialBroadcastDeliveryService.java",
+      "sha256": "71b714c0f2e96c0b4869fd0570edc5381b36a36d4b4bdb837460911827c6f033"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialBroadcastServiceImpl.java",
+      "sha256": "5b7e6ef48c006d487d50403c1d888efdb31af164bd70eb5cfae01f31466a487d"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialEventAttendanceService.java",
+      "sha256": "5fadc8670df6ede143c304cf12ef055928793afafc7e1ced00f1284c22151774"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialEventV2ServiceImpl.java",
+      "sha256": "a67447fdde1ab11f7f790cffde1bb5960f467827526b5392745ef8604fe8a9ef"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientScoringServiceImpl.java",
+      "sha256": "6bab0b79b794b3c085ab71ea2855ac66fd095194148d4838be3f042bb15e86bb"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientSessionServiceImpl.java",
+      "sha256": "049fb9f6b757b53ce37912ef08a31dda83b41544880aed60bf619a42a0c69005"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientTaskServiceImpl.java",
+      "sha256": "d39ddbd7a240900d6729bf5813f8c940c3d7d080c3a0fede25a095c20d90d055"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PuzzlePlayServiceImpl.java",
+      "sha256": "1538913981f46d6ae0707e09037d118405501ee6c23b61a5be7d3a579ee5120c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java",
+      "sha256": "edb7e988fba3507198efa1280069131d03c8bd1822b3baaa61badb83a1bcb4ee"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationRefundFulfillmentRecovery.java",
+      "sha256": "b2fe90d5ce2a3cd194253419b9e97bb447a272753f79e7622a33913f7cd195ca"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationRefundFulfillmentSyncService.java",
+      "sha256": "e0b7a9738a9b6edd277050d017ac20008fe8a062b28f8d9ca39bfe76679d801d"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationRefundFulfillmentViewService.java",
+      "sha256": "7b74e32e9760f4999424d005612457ee65a517ffb7f985dc8138f12cd293e8ae"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamEventCommandService.java",
+      "sha256": "b945c0e31d1e8d245c554bf4699cc3b9ad44cf21f3c4c6d378a8ac333921b155"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java",
+      "sha256": "9b4ec67540e8177a5cfd313ae13aab998950091fddb85e43b515089f2c29c42c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+      "sha256": "0912bb90ebff7cd345a0938157548397f060b557d36f325a0daa8dc620982c88"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java",
+      "sha256": "3bc984aca188d09de6270bfdeabf3ac6757f90460b28ece7ca9f4d753bca6a52"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UserInvoiceProcessingService.java",
+      "sha256": "9445428b150b8f177aa6d64e4f6a9b1fca216086e81002676fc5e093af5053e8"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UserInvoiceRefundReconciliationJob.java",
+      "sha256": "67889d9f4e4faa4f25f1f0b1792fbe6be5c660d7548bf51121f654165b7f5df7"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UserInvoiceServiceImpl.java",
+      "sha256": "5ff1816883ef4b57328dd46c9c3017368fee6ff06f25d6cd1124e3384a263335"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxSubscribeMsgServiceImpl.java",
+      "sha256": "10ddd7ac0a0105d7881cc56bb93a29fc89827771a8ff20b24d1f2836086b29a2"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedActionReceiptReader.java",
+      "sha256": "8c90ac7b799f76d452a77fe0e2521fe69c0df8dc5d61a503075b0231252f7baf"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AuditProblemService.java",
+      "sha256": "bca0ea733ffaa602131d4e7f8b10b7729f8399f65aa1668126dfbddac8926c22"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AuthorAttributeBinding.java",
+      "sha256": "7acd88799bd43ee2beb4f56ffd3e8d7acc345e86e83851613c24f26ce85ddc5d"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AuthorAttributeRegistryReader.java",
+      "sha256": "f22425cd325473c11e4dd105b898ce20b89cf68edf01d726f38dee1243937146"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CheckReceiptProjection.java",
+      "sha256": "2298efed31b37c6a99d2b87a47ec3bd8c295f076af683e8804a6d6e801f2cb0f"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CompletedRouteFactReader.java",
+      "sha256": "a64d94bd1cd258980fdb15eecc048012c9af0cc6fd6625eae057ae9d3c484f08"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/FreeExploreBundlePolicy.java",
+      "sha256": "dacf057b113b46290c3a70850857638810885d421d2f68b7c0cc759577926d96"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/FreeExploreRefundContext.java",
+      "sha256": "c98662cde82d77e2b76664d9bb6ea1d3f128da7eab3b10fe21207d357eb7f298"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/FrozenAttributeDefinitions.java",
+      "sha256": "6fcc1d06d3bd18fdb4fa5ee6817a52d0daaf300843a5f8e013710507760a64ef"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GuardAppealEligibility.java",
+      "sha256": "91a6fa1521653abdf1b4fb1f917317478267f20a7e63e2dea8059ec3ec79599d"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GuardAppealReviewerScope.java",
+      "sha256": "617060a1e4296441d91a1fa155898f1d713e0f64fea2c5e8bd9aed0bf7db6369"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/JourneyInitialState.java",
+      "sha256": "576651ac1963be282768f615c0985c67c173aa64851ea131f5ef668b7ebf7e11"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/JourneyRulesValidator.java",
+      "sha256": "c24214b65383d25b9450bfd08cb2878e015e685aa2029f2c2e73c6a24b542876"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/MerchantReviewReplyReceiptService.java",
+      "sha256": "c7ade6eb62592c8ffc3d945121b4d5f78a0b6e596b0c1792db493ec3dbaf3aae"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/NodeJourneySnapshot.java",
+      "sha256": "063cbecec0ae64daecf2d67791ba3ef7e7b1ee02d35c8096f8a0565016e0f07a"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/OrientRouteSettlement.java",
+      "sha256": "419719444c4424601900999b54e64e6bd61fcc34da27f25d164d8e544c20608f"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/OrientScoringException.java",
+      "sha256": "9da34d41d367ad30b47d3e4242a0a7961137375a6d54b24c063b9ecde2c3ab27"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/PlayNodeAccessService.java",
+      "sha256": "96ee44917344df696b30224b6a1a98d24bee4dc16b76025a145eadaaa414f49e"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/RegistrationCancellationReadService.java",
+      "sha256": "5a75fb75eddb63ff9d6457b87a9dbed50d55968b6de8dd81d3b6d93e219d05af"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/RegistrationRefundFacts.java",
+      "sha256": "39c5c64a80cc8159c1733c52f485cfb59f612519a090d652f63082553df70ffb"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/RoamPassportReadService.java",
+      "sha256": "85c3ce3651bcd66ab039720a0571b1f40ffb7a2d404d1d051f73af6e0454105e"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TemplateAdoptionService.java",
+      "sha256": "4cf8076f7e1fa1f94f295d3ed1b524076d4c291b92323042742936ac27fe2361"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TemplateAdoptionWire.java",
+      "sha256": "eba79b96a3e809962d04afc5f63252401b4f818b4fc05ffedba1bd9c8f86e0d9"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeAttributeDefinition.java",
+      "sha256": "2f4f56d07b6d18763823f7a57534d47a4ca8b3ea922fee0dc12eb752ebc8fca4"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeCharacterService.java",
+      "sha256": "d76d2477704b70531c2c005f7c27fc6e88116e014950e78adad31f46dc311cea"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeStateKeyService.java",
+      "sha256": "1a13f308064eb84a3f91efbc079b63b18c60bfdfec74aba93b8a96ef00bbec4e"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java",
+      "sha256": "a2a26fe4a4061a77605f24cfcf350329999e85c3e63d925017999173771cddb5"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/util/OrderRefundCash.java",
+      "sha256": "4130cdf5eca9618070849a37f1a6b41bb6ba74d5dda90952d003e6d923092e22"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/AuditTaskMapper.xml",
+      "sha256": "d5a9361d9df7d1b99ee83a3163660b29e8c883b35bb5f5371810f9e1c97e83e9"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CompletedRouteFactMapper.xml",
+      "sha256": "48cacbc75efd3abc2685e45d909da33a683fd3b678b9111bef19885ddde6bf80"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ContentSearchMapper.xml",
+      "sha256": "2343b95afc4fc65ea021264d6916ca51a3270b7c062c7ae8365226c549d9a104"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ExploreBundleMapper.xml",
+      "sha256": "d92965b6d9f1d01f8b3af4a5263f4b0ebd496d0e61f42a07d69f13e638ba60c2"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ExploreBundleRefundMapper.xml",
+      "sha256": "ee39315a78f2a173270f1ed6977741adf3cec8afa9a4f389608b55d003a40b80"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/GameRuntimeSessionMapper.xml",
+      "sha256": "41ccb9cc74ae7fda0facce74eaf23e22336122cfa978afab31e0a392971281ef"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ImMessageMapper.xml",
+      "sha256": "d03b8c8f11c21da17879f6ca9a66500173df8b10fd1b91be0e0b570645a4e837"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/MerchantDeskMapper.xml",
+      "sha256": "27daca2ca2d855b313a21cbb914d83903c9533290e1447a82acd10ab6e46c873"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/MerchantReviewMapper.xml",
+      "sha256": "063ce13e3c5e28eb3686709bfc7a996c7c4ecfa6743049133e02b9f658ebfbce"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/MerchantReviewReplyReceiptMapper.xml",
+      "sha256": "0d3e524d4b2520d84cac63401cafdb05c16262c1f388e84222c2101a1cfcde4a"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/OfficialBroadcastLogMapper.xml",
+      "sha256": "a9e859bf1edfa6ceb129095b4d110ec6511855cccc4f33056e5091fe863d13ad"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/OfficialBroadcastMapper.xml",
+      "sha256": "67939d8c11d6ff33d2a042f79ea4963730504eb268a6270836d2cd5b71c7250a"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/OfficialEventAttendanceMapper.xml",
+      "sha256": "91c1477b03c5740cdb70afac1d053b1245fcbeb6b37a6d161296aef216888c3b"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/OrientMapper.xml",
+      "sha256": "44e9e89f809dd8234180875c141ee7b02f0dfa5d5bc96585da5fbcc2d2277612"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/OrientScoringMapper.xml",
+      "sha256": "2f459ff62d774b348c62039edf669ad617d13cdd7fd4845feb412e778b2be631"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/PlayArriveGuardLogMapper.xml",
+      "sha256": "12714335052acdab3afc33a677010e26e2d20782df3873498d6ec891eaa7e4ac"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+      "sha256": "8f5de947544accccc291d6f024655cb2a025d3a8e980d5ef8f2a84f57ad86bda"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RoamPassportMapper.xml",
+      "sha256": "e8649d195fd40a41030bc6ec21d8e4439ad18d5981c18679c67c9ab2c733adbb"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/TeamEventCommandMapper.xml",
+      "sha256": "89ec7dcfa17707aae0416d7d8a0895fd441002f8636089b03cef806c120eed41"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/TemplateAdoptionReceiptMapper.xml",
+      "sha256": "42d696209dded0cbae85b1318558b99a279dd145339de564354ea5de3e5a3054"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ThemeStateKeyMapper.xml",
+      "sha256": "4523007f3622eba5bcdccbcbcfe876c6344ca6975158778dfd0f622556831047"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/UserInvoiceMapper.xml",
+      "sha256": "3bd47752c70717eef822770331450c34bb58000c6d4de73b0a399174dce8239b"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-system/src/main/resources/mapper/business/UserInvoiceProcessingMapper.xml",
+      "sha256": "c3295dd37b82ff782ee211b6e1b1b9718a5fae67760f07d8a83c730eecbd46c1"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-ui/src/api/business/auditWorkbench.js",
+      "sha256": "8e1833082dce22294aab93c18f211a134e71e6fcc002dcd6a16f708c3070faf0"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-ui/src/api/business/im.js",
+      "sha256": "9b54b1f733260fb56a1ac932abc47435b97633137fe2e536d59f236b098fbfdd"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-ui/src/api/business/officialevent.js",
+      "sha256": "a1ba7c7153343425d4af828cce14f6edd47dedefa2abc81daca4c6b01a839992"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-ui/src/api/business/orientScoring.js",
+      "sha256": "6b6c358ef15ffda2d89aaa4f98f54cbf067ca49b05fa0c1d37e51f62106b0d23"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-ui/src/api/business/refund.js",
+      "sha256": "962ec1e2767e9ed1ae64eeae03cf797014778f402c0e4f32d56f9d26111b3218"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-ui/src/utils/im-admin-send-intent.js",
+      "sha256": "b8e40af6535a5f371af34eee29647077bd1f61236eaf31c5dfbe52de01dae460"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-ui/src/utils/official-broadcast-recovery.js",
+      "sha256": "a8b11e08808480fb00033fc354255e1934fb10ede76cb455f22dc2bfee6109d6"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-ui/src/views/business/audit/index.vue",
+      "sha256": "b45dac504a257a133b80ec711f8508cbdeae4e02b0c59acab04bd07e3c24219b"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-ui/src/views/business/finance/refund/index.vue",
+      "sha256": "dc4cebc7d20061447db269b0c5677ede0b94de329d86692502535ae6fbf53ad8"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-ui/src/views/business/im/index.vue",
+      "sha256": "15ad758b8b614b75d60f1e64393541af9d4c46defb6c2202f0fa4b7ef2ababa6"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-ui/src/views/business/officialevent/index.vue",
+      "sha256": "ef2dd6306d8b14d03ff748d40354dd9294c0e1a44a0d57be27ef1195536f678e"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-ui/src/views/business/orient-scoring/components/OrientRecoveryConsole.vue",
+      "sha256": "3254473900633d71a422a4ae8289a44adc33a0469c117d5d2fe90cefa831bf87"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-ui/src/views/business/orient-scoring/components/OrientScoringConsole.vue",
+      "sha256": "7335cc3342b58d74cb0173a9bb90e76a84cc0a6df5ae374b08456adc059734e0"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-ui/src/views/business/userInvoice/index.vue",
+      "sha256": "9a234ec35457b8abfeab86c937727b0e7e026c5fbd0062d6cb52dfc454fd4d9c"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-ui/tests/unit/audit-item-review.test.js",
+      "sha256": "b9130a16a18deee9a5bf9594ff60bd743853171f1b4b73480bc14da449b13a60"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-ui/tests/unit/audit-workbench-status-contract.test.js",
+      "sha256": "44cd4e466aa0c9ba02aea1c35efa17d9d8dd2464b5da93aa2f8507845107168f"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-ui/tests/unit/im-admin-page-recovery.test.cjs",
+      "sha256": "7b84767182cf2d200337f3c5a953af06a5fbdcb26b39d606b9c07d59568423de"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-ui/tests/unit/im-admin-send-intent.test.cjs",
+      "sha256": "48cab5e2b34c111911a34c2def594815fd035b839c1e89370573d2c6cfbf294b"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-ui/tests/unit/official-broadcast-recovery.test.js",
+      "sha256": "cf015c82d0e17cea92d6355e0d7755525af5916a015c7695b4346a4b23a1f40b"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-ui/tests/unit/orient-recovery-console.test.js",
+      "sha256": "d5d93076730ad569c0b4dd109cb94d8c38f7030385aa3ba9a64c4b8984d90528"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-ui/tests/unit/refund-fulfillment.test.cjs",
+      "sha256": "d2573b8ec04df0b020b39d35488f37b035ddf8069ffc612f7387802421e3e808"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-ui/tests/unit/user-invoice-processing.test.js",
+      "sha256": "789e62248bf86287cf56e3a676ca4db4ae6988c2f585f22f107745a583f8d00b"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/app.json",
+      "sha256": "0d584c2340ab8a9fe87c0794b4edd40fa3a8a3de063f204333b9d439c67a10ea"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/components/cy/event-attendance/index.js",
+      "sha256": "35e1adfdc8806ae6f9e941a292ad5c140f7ba005d8e60ed62b63a669991c3ee0"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/components/cy/event-attendance/index.json",
+      "sha256": "3f316a87b9b912d079b5aec883d345185014d5aaaadd2fc8845ff502b97ca0e0"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/components/cy/event-attendance/index.wxml",
+      "sha256": "ae611561abebc6322d89fc3c186bef918900836de7f80c0599086518369f9d61"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/components/cy/event-attendance/index.wxss",
+      "sha256": "db3285ff1775e1de1ffe8ffce79a62a8fb1b999496252d2d92e86c3daf0a8a37"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/components/cy/scene-roam-history/index.js",
+      "sha256": "9ee021e641492627fde5eac19c8dd3e45dd3bbca302441ed48747efbcb3a8b8c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/components/cy/scene-roam-history/index.wxml",
+      "sha256": "5f7d645afd8b8a2606ac845c569d345f982f0060b81642ab461c2cb86210470c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/components/cy/scene-roam-session/index.js",
+      "sha256": "3dc8eb954c0d4cc7c377505fbfc7b8f6c588f898b5c0f5045d6be1667acf71f1"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/components/cy/scene-roam-session/index.wxml",
+      "sha256": "47bef80d929cf8da0f1bd1552511028abc35bb11f19cd74a08c9730e69aa674e"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/activity/official-detail/index.js",
+      "sha256": "82e475df6bfb8f8633ba9ce8b41be01d4349a459e4a07c04f516304e6bf39527"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/activity/official-detail/index.json",
+      "sha256": "244259ec7074c05a24dea588ebe6431d16eea7e2938a11197ff0ba372a3d3a28"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/activity/official-detail/index.wxml",
+      "sha256": "8bc6f00a295590a20b1b3b5ab50810911085610cef7f18c873be18e30e16bf45"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/activity/official-mine/index.js",
+      "sha256": "f6a17d55a5c1d2b9ad33d94a8765598e542b4c2db2c4fb4f25038efa7b3b54fc"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/activity/official-mine/index.wxml",
+      "sha256": "f787a4c36d6bd0ac53cd9bc807a61b846ce3c43401ef6ad7f0ac54641e6ab17b"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/activity/official-organizer/index.js",
+      "sha256": "92532081abe4c90fd83e2d7483647b62244cd670d56b1f4f5810cfc81c72c991"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/activity/official-organizer/index.json",
+      "sha256": "e8a8c9c287a48505ba471283be321f420bf0773d31d6a4a88adc64d4e20c7240"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/activity/official-organizer/index.wxml",
+      "sha256": "98ca76e98c3c28fcc7c4c597578ca22b4e4ba7cf3567143893941e5e18317a93"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/merchant/components/desk/contract.js",
+      "sha256": "f6b910fabea6d8ebe1f2c3acd6eca51dd1bf96b9f58b2bec7eb4a091fd630638"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/merchant/components/desk/index.js",
+      "sha256": "426feffaeab66b1d9ae57c15c7b6140ad3975a325ceca2b8b78f344ad893e70e"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/merchant/components/desk/index.json",
+      "sha256": "e61538ed2e3fe8fb908fbfa1d66db98bdef3bdb3442f1feec7c034e2c6f7f782"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/merchant/components/desk/index.wxml",
+      "sha256": "fe71356fb674c6de83c283d9950fc811ae945d81f6c2be45d9c3e5f2cdc35774"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/merchant/components/desk/index.wxss",
+      "sha256": "b5c6e59292018bc1ede0d238bb2245b1f139b3978981ad94486a6c4c25801972"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/merchant/decor/ai-npc/index.js",
+      "sha256": "1c622b2e246f1ff5d1bc01128d093fbbc37932af90b5d06543e893ce5510dd3f"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/merchant/index/index.json",
+      "sha256": "4dbc77380236e26caa6b4eaec12ec21c84dcbeaf04fc783c6fa7dcff29267e2d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/merchant/index/index.wxml",
+      "sha256": "1c316aed3cf0d2be763b7a459f245df4807d6771c4062b5f3701743948e8c6a6"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/merchant/reviews/index.js",
+      "sha256": "72d05d6d15347c7337b131ab534f8d6a5fda06d3a72f102010bd0821fd8ace3e"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/merchant/reviews/index.json",
+      "sha256": "64632a89ae85d0c645ecdbe6b16fc97500268eee13497466f8761d17eaf7ac19"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/merchant/reviews/index.wxml",
+      "sha256": "3596a0b51925dde0acbb424c9fe4d6103fb69da7a33d98fc2ce061e1c637afdf"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/merchant/reviews/reply-recovery.js",
+      "sha256": "7d2d35a829d6a35ff32a3f34e10ea8650185123020668794e182dd56ec67487e"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/merchant/reviews/view-model.js",
+      "sha256": "2759be83ce9763e213105c99ec2bb8138e4b686e88f3de050d367b75a493208d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/play/components/advanced-game/index.js",
+      "sha256": "644d940369461c88e210763d9363487c63ce2169957edf16d3df7fff337d2791"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/play/components/playkit-journey-check/index.js",
+      "sha256": "1d57620ba8edb0a7337526dad322635297a979c6f6634f76554f25e06ba990db"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/play/components/playkit-journey-check/index.wxml",
+      "sha256": "ed0dad138e246fa3385c10c1a80ccb195f185d08265608d221824965a4b2d59c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/play/index.js",
+      "sha256": "edb5f556207920bf204f7e686e50394378f46e5cdf74a7293e4d336ecd7282e6"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/play/index.wxml",
+      "sha256": "708f692742e71f7f0e2e66c57ce3e249b6e654e300b02088e93b83e8ce845347"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/play/orient-lifecycle.wxml",
+      "sha256": "a12cdd6b3e5f4dc5e2b5798a19d141e6ce69e5aad6c60bc01bda7f664a089d6c"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/play/utils/arrival-guard-view.js",
+      "sha256": "436d6172ee0390050d1f9ead97b2ac2665728bf42282835607171d1c2c69d9bd"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/play/utils/guard-appeal.js",
+      "sha256": "ef98bf1b29cda9eeb3cc48e8ae45c0670e26b0ab9c41371bb7d9c9b4eb6d6ed3"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/play/utils/journey-check-recovery.js",
+      "sha256": "8d7622b63ff91ad2f9ab5ff80b95b0df836f1840a44bc275d4263c7cb443ea4e"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/play/utils/orient-lifecycle.js",
+      "sha256": "3d249af10b4109ddd99308e1314084dea95668d073957da0462703f82a9a9060"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/play/utils/play-board-view.js",
+      "sha256": "f110a3f2edf072771d50a460f9bfcde39af25eacc714f1855c301c013542b55a"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/play/utils/play-route-state.js",
+      "sha256": "4f666f10a65ff690dff9a154b4a6c031c61bc0dd4e5ec285ba1bda993ec15f2c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/play/utils/playkit-view.js",
+      "sha256": "0296281a010f272a0f6923767914375c60bcc279e74b3e01b28d2e5124fedf32"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/play/utils/r5-player-runtime.js",
+      "sha256": "e9372a23e76638e2ecf449e12fde6d1ad695ad66817be3b463b4e5bd445b12b9"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/privacy/index.js",
+      "sha256": "8936d177ba55c12db1cc71109082ad999c1fab516e27c8c197463fd9a3adad0e"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/publish/components/attribute-binding-editor/index.js",
+      "sha256": "f1245eb629139842fbce62af9af327e3c462d8dfc62c4af85c8f6c7356dfa08d"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/publish/components/attribute-binding-editor/index.json",
+      "sha256": "3f316a87b9b912d079b5aec883d345185014d5aaaadd2fc8845ff502b97ca0e0"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/publish/components/attribute-binding-editor/index.wxml",
+      "sha256": "14073a774b4d569b219ffd07d9febc0067233db2879210dfdd7784712d936dfb"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/publish/components/attribute-binding-editor/index.wxss",
+      "sha256": "13010490ae933133fa12903e24dce40fcbe65851fcc460cac684ab379b10b25e"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/publish/components/story-rule-editor/index.js",
+      "sha256": "645df432309ff3c2b4edbd00a27f9f3b981e2d06a2dc4e635e9b868cad4eddc7"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/publish/components/story-rule-editor/index.json",
+      "sha256": "3f316a87b9b912d079b5aec883d345185014d5aaaadd2fc8845ff502b97ca0e0"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/publish/components/story-rule-editor/index.wxml",
+      "sha256": "8058f2fb30c4b7464504233b5decb5404bd55467c296b4af0b3586d399372648"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/publish/components/story-rule-editor/index.wxss",
+      "sha256": "fa6e6535c9aa7d0c3b1aa05e94074e7019e2ca5a2db6144f20e12513228d66b9"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/publish/fabu/index.js",
+      "sha256": "3960dc24848a3721e454107204073c6b6f70f0374f4cc780a7c6b940e1399ac5"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/publish/fabu/index.json",
+      "sha256": "27597f2c03b54d35dd9d2252132e14347ce68a1b0e10b8854e5500d75bd1bc4f"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/publish/fabu/index.wxml",
+      "sha256": "ea43822b1dda3de8e6f9743bd8c8413a120ca50a52a0445d35397005bbb8a6eb"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/publish/fabu/index.wxss",
+      "sha256": "654018050df25f9024b8cf69d80786c171ecf1cd52d3e9036a247b681851577f"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/publish/fabu/theme-runtime.js",
+      "sha256": "ecfa5ee91c1842d093fdeb3c98e8fb67cc58d0381aac9ba18eca54ab5f8170ad"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/publish/fabu/topic-detail-sheet.wxml",
+      "sha256": "865e63c1b8516e771ccb66cbb6a262028d630c2c80d8d181f6614c6ac3047e34"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/publish/temp/index.js",
+      "sha256": "90af84b53c6bd98c404b98603975dbae202c975731341d9a7a815b2bf2aea00b"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/publish/temp/index.wxml",
+      "sha256": "734c253da82eb1e94df63636f93b28be7dfdfda7a2c94e7773df68f099c29567"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/publish/utils/publish/attribute-binding.js",
+      "sha256": "7352bbd6767dd541f9ae24fb7a77dd5ae30ce5027817faa5981e4344874cc68d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/publish/utils/publish/pro-editor-draft.js",
+      "sha256": "35b086758a68ad3d386b54d6315dd193fda00fa518f79a2d2482b48c1dc1d5a8"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/publish/utils/publish/server-draft.js",
+      "sha256": "57d8e81912ef0a89a3409599a1f7ea12e342e82bf1d7d548a6202f13b03d4ae8"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/publish/utils/publish/story-initial-state.js",
+      "sha256": "b263d92b512fa826bd22e94e6209cb5b3c8497b9f52d6cf9628916a021304b0f"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/publish/utils/publish/story-rule-form.js",
+      "sha256": "2d62a231fccbdff471eae324406e27acf5ce5ffcd36017c31aa3e31a5b3cf20e"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/publish/utils/publish/story-vocabulary.js",
+      "sha256": "aea162704ea52ced359697a65365a65b326b3f76349ae0fcd953cab56282cc96"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/pages/publish/utils/publish/template-adoption.js",
+      "sha256": "10fbb12e6a9522186857ff8520ccbdc3c1013257fa157fac11bdc987e633c109"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/publish/utils/publish/template-binding.js",
+      "sha256": "e2fda0a0cd6b450cda2fb07e913e0e235deed31c1b8fb5c1f9180db22e071bb3"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/publish/utils/publish/topic-route-graph.js",
+      "sha256": "8de4c2941e89095803a31a30ca7fd8e5136d03c9d3a1e4a2fce4e7cc9c2e9e3c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/roam/index.js",
+      "sha256": "47e159c16a63dd26bf7c4a299b204731e3377cb7255a7a022446ee171e2f06ae"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/roam/index.wxml",
+      "sha256": "16e33000a9f99f29724cf12f181e031e1f037e9ad14770cdc455558f68b18ece"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/search2/result/index.js",
+      "sha256": "f482b4abc683415c1bc12629e978f1b2ca6a89d65be8fd1da5f63e2770fe9b79"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/search2/result/index.wxml",
+      "sha256": "a4f2f368799b8fac4df5e276cfef129d915ed577ccfbd61699e9fb571d07f5b1"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/search2/result/index.wxss",
+      "sha256": "6f2cad6d478b42ad1be2d8471fa69287b9eabd61c7fa90c6db09257033525df2"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/shezhi/components/privacy-sheet/index.js",
+      "sha256": "105b72bcf3b0fcd9dac95c5f32e1b2eb0e67a06b92724f923b15d45a11af88e0"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/square/detail/index.js",
+      "sha256": "4ebf8a595c8b668398eb86222671617778a646c2d27b346cca91ec15f7d4844b"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/square/detail/index.wxml",
+      "sha256": "f035e8c94b5a2c4d6de38c2c5a2b0612652389044ef769542010a9b19e9eb56f"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/team/detail/index.js",
+      "sha256": "369ea3bb736d586532a45efaa87b6d05497fcfb4af4d97abadfe1337373d6580"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/team/detail/index.json",
+      "sha256": "15b58ef0381e8cff16ebf0d5673b73601a7485eb853886904d704e898a67cbf7"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/team/detail/index.wxml",
+      "sha256": "d5a8448a0b63b962eb36fa55124d64a2dc150ce5ee418a64abaf937b24cc4443"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/team/join/index.js",
+      "sha256": "57214199f7007e96547257dff0aaceef54282be4b4eea06bcddca19ba3566ed5"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/team/join/index.json",
+      "sha256": "5a9e3f03a6aefac1b48463d7ad27f3ed6eb5d0818e213ed956ebd6b48aaae27c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/pages/team/join/index.wxml",
+      "sha256": "8c6fadacc8b61abd7d1b957ae3c14a4a98c98b8d8a55ec5ee9a3479e22a5314e"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+      "sha256": "4aa67b2f28cddd9e7b8857f3476a1cf692c04474a3b5cff44cc494b1a953b102"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/scripts/uiaudit/route-matrix.json",
+      "sha256": "4ed171f67a52a4bfb238ed9c395fcf83c3839d2b7cde77627bf4238e3808fb33"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageA/pages/myproject/index.js",
+      "sha256": "6fbcef11250645ed199700096835c8b323f36247624c0cbf6d951fd480e8cddb"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageA/pages/myproject/index.wxml",
+      "sha256": "80f60600c27fdabff4fd38e7cedb0e364537b2896e1181e1b2880fd34107dbfa"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageA/utils/audit-timeline.js",
+      "sha256": "ac19afd65b7fc632916400f9234351282ab4169f513c9a84992d48a4cca5dcbf"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageB/pages/im/list/index.js",
+      "sha256": "abb32991d1277c0969b5f2da6325578f40142f8c58e8620336caa71a167a57ca"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageMember/character/index.wxml",
+      "sha256": "b673b66c2d31429cbe2016a54440c1f92104208adf54764d0afd4035531f6254"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageMember/character/index.wxss",
+      "sha256": "a6de1257dd587d14b0432f95bea98790c6242531a179ce9089009c22941c01d5"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js",
+      "sha256": "7c2a8c0a100b2ae90d9885b5b203188e45e73124acacd407a96ca7fdc0fe47f5"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js",
+      "sha256": "16d6393c320c341ffb7f27412d1d182836091da7930d67e7ae0f58bf4dd9e79c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.wxml",
+      "sha256": "b02aba128a2b758d190f81bf8b65b1c2199efb73351328e1b0be9b46dceb6e6e"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/subpackageMember/free-explore/index.js",
+      "sha256": "03a2ffb3581e5fa407398a1f187f298508a84a24a50988ab80508038ded7ae45"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/subpackageMember/free-explore/index.json",
+      "sha256": "5c1c2ddd00208471d15974b67b033b9c0ce95d5de9f0e909db1f0d09916f0326"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/subpackageMember/free-explore/index.wxml",
+      "sha256": "a5f59f5c3c985c074f1c44d61e6d7ae2b9dd3c6b9de6e7a21906593018d04699"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/subpackageMember/free-explore/index.wxss",
+      "sha256": "19174a15389f3024a980eb24d0ca1a3a69782a2357df930c521cdbea3b8123c2"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageMember/invoice/index.js",
+      "sha256": "1e5db841e336210a0209245008376d64f9328c18fce30b0d60e6a352305ac155"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageMember/invoice/index.wxml",
+      "sha256": "9c79d5cf108afa4dbf9269728d6370c0590f6a7705cbcf050b106a38af9b733a"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageMember/orient-score/index.js",
+      "sha256": "430a064f81225cec87de439d1ccb7bdbc02a93db9b3eb43e0410b2fecb2a8bd6"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageMember/orient-score/index.wxml",
+      "sha256": "0ab09c86f6afa7b4ecfcff1cd7027045478d7412bad1e632eb325d11f1663965"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageRoam/history/index.js",
+      "sha256": "f66c8275692d28025266eebc8a0e5268d5a12d6a5a05710addfb25f212b88a21"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageRoam/my-teams/index.js",
+      "sha256": "e67fd219b6f9fb5d1c5aa80a7ec22829b7caa5ff809864471bce1869380eefda"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageRoam/my-teams/index.wxml",
+      "sha256": "729132d20d14c5e8796220bfd7af6c2e34aa80ba688416b5bc0219ee0f911fdc"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageRoam/my-teams/index.wxss",
+      "sha256": "e868e1201eb7eb08513e1a905d96dc8e49686f8fae503d99c7b592c65d9d7f0d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageRoam/nearby/index.js",
+      "sha256": "32d03d0a9711264fe31a64000a8fe6b0a0e5774ba57ba3060cbd56b42da7de47"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageRoam/nearby/index.wxml",
+      "sha256": "78b5da007baa49f074b88f5632cbd38ad0acc620aa92c37ea8e81e708c3d4f64"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageRoam/nearby/index.wxss",
+      "sha256": "00a305ac0cf77642a03dc013eda1b2cdd791a9ff49df16e7487196558c2a2304"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageRoam/session/index.js",
+      "sha256": "4631cf76d71ad497dce251903779b43576dfb034b10c0c4aa3f1e2cd3dc4a00b"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/subpackageRoam/session/index.wxml",
+      "sha256": "b6982e9073535cac7742c279fcd2388fe782a76954d6b178aefa31286d6a958e"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/subpackageRoam/utils/team-recovery-panel.wxml",
+      "sha256": "0fdda33ead4f456e964bbc6fa3beb6e72c9a321ec48e2de0a0e1706281ea074a"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/subpackageRoam/utils/team-recovery-panel.wxss",
+      "sha256": "176895ec5389ac92285a5b55fe7e099852a211a5be68abce4992a80af3b119df"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/lint/ui-integrity-baseline.js",
+      "sha256": "81adada4e1f4ddbf6ca5d42b89434352ecb386c972a8c6a6b914be70ccf9259b"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/advanced-game-receipt-contract.test.js",
+      "sha256": "799b40c16e45d4c604f964d4b34f39007bcd570e3b4c413fc458dbc95469d56b"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/architecture-day-c-intent.test.js",
+      "sha256": "5d85a508c8c932674933bcfb3ebd2f1f0ffe6ebbdfe4623104783c3175705189"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/b02-publish-write-unknown.test.js",
+      "sha256": "45ca4c362a8786aa81085dd5dad2e74d4ba53adf7f7cf5a93bab25113b85bb7e"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/bl217-official-organizer-offline-state.test.js",
+      "sha256": "73f107ee8efef460ff4843ea8989a5f58a2ab8aa1ef545e7afb2c534aa8503eb"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/citynode-validation-methods.test.js",
+      "sha256": "4f11108fb93e4d30065a5f9e545ed98a574b03539597f8435fed98ea49a9955b"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/community-comment-cold-recovery.test.js",
+      "sha256": "6b2ac666b136d354d0aa924ed365aa1459dab4da9612f35e6e009fe3dbb823bf"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/community-request-context.test.js",
+      "sha256": "89294f155d1cafe2042502f0f33eb67defa3d32b725d7f86444059338dc073df"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/cy26-w8-roam-photo-scope.test.js",
+      "sha256": "a7b983e1022585c1429160736437ba455df332260510d3f4d12ff8d79c4fa2d1"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/fabu-cloud-autosave.test.js",
+      "sha256": "2b09d5e441c5d2d117173c7313fc006e81237f83a025343b749c17e6626f7b9c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/fabu-edit-existing-topic.test.js",
+      "sha256": "82d5a08450bce489d8c44e126996a9227e0667ac84f712d9bafc579c2089fdeb"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/fabu-route-editor.test.js",
+      "sha256": "5d7f1463fd298b74ee45a67f0791d946665355e14fc6ded69406cee716a8ab0f"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/fabu-server-draft.test.js",
+      "sha256": "921a3366745b98d3d5913cd8444f2680c5c3782b0b4a5c9db3a9ddb3a7abd0d6"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/fabu-template-binding-copy.test.js",
+      "sha256": "d96067514b4a6be8850ee336faf9c403c90a75645afabd2839ece489e25002d1"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/followup-a2-audit-appeal-timeline.test.js",
+      "sha256": "5bf7603c46c4afc33ae7fc7e23ac568ba31029f6147eaabc3dba273061e27b10"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/free-explore-bundle-page.test.js",
+      "sha256": "5aab925fab253befe4afd6152734f26908d6c64725bf8589493f7d18523be017"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/g6-roam-cover-qr-history-contract.test.js",
+      "sha256": "f3f995d599ce281a3a67704b675a60c8cd5cf18ff5120863321e82c8ca728fc0"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/guard-appeal-recovery.test.js",
+      "sha256": "bd4e544641ec30a5633a286ffc247fcb1ad1485d0b8a4b48c2e6f489e1f68a0c"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/helpers/team-event-platform.js",
+      "sha256": "e71c2a936a194b42378338cfe45b3cdfbd713b4e09ed929de0500ead4ca1b6da"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/im-list-account-isolation.test.js",
+      "sha256": "c3d71616ee60f23743869f67f8bb64b0fcf1bded7e7cd33586177400a48c1bd5"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/l21-bl-185-topic-publish-check.test.js",
+      "sha256": "b1aeac315ed3a023f3d0517da66a11d04659cf6b0f0b10f2296386df5c247730"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-34.test.js",
+      "sha256": "8de4427291667a5386a98db5519ac0f8642edf82fd5e4ab9780d0723394f4911"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/map-team-page-contract.test.js",
+      "sha256": "049cad636ff3fac93fab4a79918fa9095477a4de1661c1d92d5d97a89a1f854a"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/merchant-desk-component.test.js",
+      "sha256": "c8bf8f8e0af9df93e60a61a29dfb640b2699c4866185d88751a4ab6ac29a8312"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/merchant-review-decimal-id.test.js",
+      "sha256": "31a6038986b7b19b489c70ee201e9ef7fd8eff59ce29e0f4b86385756c53456e"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/merchant-review-pages-contract.test.js",
+      "sha256": "cda98d075395f90934c0b294e88187780d801fbfb080f0d047be3a3a8036ba07"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/merchant-review-read-session.test.js",
+      "sha256": "fbd23226524d32633b70eb160b6821b791f19d046214fd9ff5e4523e5d43f0a8"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/merchant-review-reply-edit-contract.test.js",
+      "sha256": "c7aa3c8e04a5277215d38531e2303c56a507deaf0c93ae8212823fa06b87f72c"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/merchant-review-reply-recovery.test.js",
+      "sha256": "e77453e83148ca573f2945089b5d1bd9a4239b9bb87d8ec1c3c1efcb571c49db"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/npc-voice-clear-reader.test.js",
+      "sha256": "891ac614a9e2f5e014ba716918871f03584a08922788175a9e4bd7497b458346"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/npc-voice-reset-bl43.test.js",
+      "sha256": "16124759468894dcc87219cfd02e36b25b44db41a88d41c14f89783062880dbd"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/official-broadcast-stats.test.js",
+      "sha256": "19e252656b13db7fcb8cd3bc01af7da4a109783cdd8461eae1bf2e87c203192c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/official-detail-cta-single-flight.test.js",
+      "sha256": "5b45f6412768ea6d5afa86c03b9aa3afad6aba19920dad6e4c45eddfec438b3d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/official-organizer-console.test.js",
+      "sha256": "d12ab1afa2b6f057e42a20ddb228eefdbf972b7d599d4b9ad44b0bd395cd7761"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/orient-score-page.test.js",
+      "sha256": "27e8dfa9c637df0d2268ab7defbff1b0126c5be7a6a45793a91c5349be867a5a"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/participation-result-entry.test.js",
+      "sha256": "cc25c14c60359ab4dfdc60fe64d93808fdf47da453f2101f248ed60fcf1872aa"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/play-arrival-guard-view.test.js",
+      "sha256": "dd6da9cdf27c503ca7e09e203b23f9ccdd5284d107dc74a8b45243dd8454d4e5"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/play-board-read-model.test.js",
+      "sha256": "9d50e29858e12485678984ae7ba6ed0819123219b06262f105100fcb0dcfa89a"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/play-check-recovery.test.js",
+      "sha256": "f8e8c66a3140003a6904b12122d56fc42eacbe1866a22681f52f66e8c61f1bdb"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/play-guard-appeal-entry.test.js",
+      "sha256": "b95ab5cead56fa467dda1d8a6484a7c5353d9cf5d85cb730c9355f5971231371"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/play-orient-lifecycle.test.js",
+      "sha256": "d07cf46cc041627d803df4cfe717af9632b2b7e2a7a83c404ea7cf95c5a6e444"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/play-orient-transport.test.js",
+      "sha256": "ab3169a7fad6a9f08c0e68d0d15c6ccbf0681b2611a9dcb51d1a614b1244407d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/play-qa-recovery-contract.test.js",
+      "sha256": "f863c63b258c6550276eadf74f3550735d69e98f50e7e93d23c7222ab347f3e0"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/play-route-page-behavior.test.js",
+      "sha256": "86e603a651c1e116141b84db39b1ad1d066bca125ad4db55eb2a68ba128bf36c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/play-route-state.test.js",
+      "sha256": "6ead24d277212ffa06d0ddcebf7d9d7368d064995181f6c2179f6cd66019e103"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/playkit-check-breakdown.test.js",
+      "sha256": "4cb745ec8840c16a9965eec5f8c43927c72bb19e0d956d76b910978b6e1055d7"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/playkit-journey-check-contract.test.js",
+      "sha256": "c647a83662e9877358153b8531ef44d352730dca89529c4c7dcf5b17aff519b9"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/poi-checkin-transport-contract.test.js",
+      "sha256": "97d2c2005da431288bbe820bd24fd50114fa54afce848e385e22fb4e0b5ab8b0"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/privacy-page-revoke-reader.test.js",
+      "sha256": "da9f217461ba0a3289cf7547ae5108e3d3562217a539bddbe8585e49675b4199"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/privacy-sheet-reader-recovery.test.js",
+      "sha256": "413af41861eb512725fcd1db950a373f0b640a435cbd55eb4f057edf16cad6a3"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/pro-editor-draft.test.js",
+      "sha256": "b25e4421de231668f1e27c6567a6cf8f440a64a48c6b536e1a81e69171dda40b"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/publish-step3-switches.test.js",
+      "sha256": "d12d95babfe8bbb520163c4513c8257161264226abbbdaa921a3606c3a2996d6"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/r5-player-runtime.test.js",
+      "sha256": "66ad7ff3de7495ad47bc47fbe3085a3901d54e8f3f8033f228dc02cf79e55048"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/roam-history-repair.test.js",
+      "sha256": "b6f698527df2ed9d50b9c0879fef02cddcf0843cec45dbe116a47c55e93b331d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/roam-intro-passport.test.js",
+      "sha256": "35d4a71b9882b99bce739957e6de88cd16141d7ca082cbba090527dedb49433c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/roam-location-retention.test.js",
+      "sha256": "d1fe1981c15e432abae39136afb7ab6d42d198e4a32f221c2de62f381a487d58"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/roam-passport-server-read.test.js",
+      "sha256": "7889643bab4bc79f8516e5c6d73d9508bbfb1c1cb825d1074fcdd1be8601c24c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/roam-player-memory.test.js",
+      "sha256": "682258e36bbce40b92d1ebf5eccbe39bbc156f5c926e396133f3af439320f5ad"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/roam-recovery-flow.test.js",
+      "sha256": "1240bdb4fa8ae81dee0a86467f145d0b3a78493a875815096c3594ffc8f24ecd"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/roam-share-snapshot.test.js",
+      "sha256": "08fa9d54212043e04bc446ebde9b7a9c23e2cbbe9a82bc615c1b1aac21e6fd67"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/roam-team-command-recovery.test.js",
+      "sha256": "5229d1e777b29951bbda39669c0a56343baa10aca8dc4fe8331a009212fb89fc"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/roam-team-write-scope.test.js",
+      "sha256": "244da6a793e8edf0062f207a4290a7d20a590c3f1ddf975346a0e9f4e67e83f2"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/roam-tile-memory-sync.test.js",
+      "sha256": "42bf94d1406bcb6096093ce9996132dba5279ef90ca6ca896b65aac99684e734"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/route-matrix-freshness.test.js",
+      "sha256": "2c310ea96039e090ec4b4e3d336413b61d9ab55e78fdea015e257bfa1f12156e"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/sc-ui-date-count-cross-page.test.js",
+      "sha256": "469aa46410a671ac3bccef2851ffe6625f8c9b9438973ced61ea3f5f4898a124"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/search-unified-page.test.js",
+      "sha256": "3949cdbb8b0a63ce9db1c0bb764cd18f0b462c7671e88b93e76e160224b566b9"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/square-detail-account-context.test.js",
+      "sha256": "de6a74e2c432691c0a5b3510145c8d7a16c160b35bf3db4e02d284182fef93ba"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/story-initial-state.test.js",
+      "sha256": "93b7a1b19056c6df2dca352d4b6d039993387e56ec106cb2282e3539ee1b1c5d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/team-detail-join-mode-contract.test.js",
+      "sha256": "0f9d120ef0f92f2ea2836ce40f776b5e53bd94a0d8976ecd5f0dfa405538dabf"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/team-detail-orient-board.test.js",
+      "sha256": "dc898278ce21d5f19ce826cc36631025564c96b5be18dc880d0b341796b2320d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/team-p1-contract.test.js",
+      "sha256": "97700e5953eb2c67781f1923a79e421c8ab7ac34bd1b439ed536dcd7ad1ff8f4"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/template-adopt-draft-and-preview-summary-contract.test.js",
+      "sha256": "bb67e3e9774e52c0d554da08f33a187dec952176e972cf0512a5697c299003c6"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/user-character-display.test.js",
+      "sha256": "97ba6fa48d80639d682687954dad9b734cffb256fdec7c053034143248248e1e"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/user-character-page.test.js",
+      "sha256": "d14399469bf83a2f7094df61f1d2e0f3cb9a0b8751c9bacefbcca9226fbe799d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/user-invoice-page.test.js",
+      "sha256": "6bfa14c48085a8d5f3183d5bd7674ea0cd6c31a9c932e902b64943db12726efb"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/user-invoice-title-receipt.test.js",
+      "sha256": "51df96a4fab0d180c5e863dd78762cdb90c640f7f115111d047c33531f0898fe"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/tests/unit/w10a-merchant-review-filter.test.js",
+      "sha256": "75e344907a443775757950e152fe8c637814efc8a610efde754a99b7d99be240"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/w8-07-attendance-component.test.js",
+      "sha256": "8a46e0e9b68cd2cd008104e38a40d8a9e175d2ec0b06cf54f66134d628b7a3cc"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/w8-07-broadcast-delivery-page.test.js",
+      "sha256": "9467f1f74cf7366c4add73842c950ab8823de098bdc8a7793c1eb452d7760cc9"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/w8-07-command-recovery.test.js",
+      "sha256": "773baddd4a86ce4a688f03ebffae49a0bb6323572feb441539b263534eb8ff94"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/w8-07-enrollment-recovery.test.js",
+      "sha256": "e28ac01c65d3c9c68c707da8039749866a6546405666c123c51490a40f6923df"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/w8-07-entry-account.test.js",
+      "sha256": "e8d7e3c1b49127daa4e83fa1af879d63f9b9b4a6f47eeb5f3409bd98482fb14d"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/w8-07-official-detail-identity.test.js",
+      "sha256": "64607df291870d79e478e1bc51067175303a4ee7bf695796a7fc4b65f3f5f9b3"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/w8-07-team-membership-refresh.test.js",
+      "sha256": "6740beac02bb333382c77bd4809727409d2fe93d3ea388ea0598a488e71db9cb"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/w8-attribute-binding.test.js",
+      "sha256": "bc27c1f225df00837886d73903fdf75d5fed84de24f2397914862840cbafabc2"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/w8-author-media-recovery.test.js",
+      "sha256": "dc32f954339c69e1dc823141e42545475c9d7fb829a75d44e7cc76edd33f2f71"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/w8-author-publication-readback.test.js",
+      "sha256": "5c7f55fc154693014bdfdc8c5b97884af4ee40d1997879973d306092b9e2fd4b"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/w8-author-save-confirmation.test.js",
+      "sha256": "b10374febeaa2f5c04e097d4e017dc8c82dd7390c3f82899bb69a6591f1127dd"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/w8-author-vocabulary.test.js",
+      "sha256": "fd584c60b5dd7e11fb231caa72d5d55b71003e75de40e0a607dd1f4246933cc2"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/w8-story-rule-editor.test.js",
+      "sha256": "49a4f20bcc16121f4e974be183fedff3e4f41cee27af3824a728f84a22178026"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/tests/unit/w8-template-adoption-recovery.test.js",
+      "sha256": "51de35bb065d437395f473538e3bc06806d0317e69d2c82588c520a742741ee3"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/utils/community-comment-recovery.js",
+      "sha256": "6331c0f375983fba09a53c0ff77afc87e862224f47390500421417d9296ae210"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/utils/community-post-api.js",
+      "sha256": "e67e87432ea8879c83d806bf0bf78c9e84c689be8ba9a060807733c1135fd9f9"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/utils/discover-search.js",
+      "sha256": "84b2a3200866e9d05464f1b2bc26694b016427f480795aaa1d5ab246e2f6a233"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/utils/free-explore-bundle.js",
+      "sha256": "0f6c75a63601df3911ccc3f270757b3c6fe2531fc3055e811860a7eafe617bba"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/utils/orient-score-view.js",
+      "sha256": "75f5076a06e6e5a49da9008969dccc1f0b57e497ed7efa7d33e16db9f13d01dd"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/utils/roam-passport-read.js",
+      "sha256": "9f26c470d536a968d578fe469dfa835a9b1e5fa252da4cdf8112ff63bd073368"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/utils/roam-player-memory.js",
+      "sha256": "197e343db7f0d0ada28f5733e1616379f9587e16110a52a3d5feb0bcdb5f4bed"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/utils/roam-route-privacy.js",
+      "sha256": "cb76bc62cc32e82314ea2d74e17b80f0fd238fc7e67061bed0297f495885d4ca"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/utils/roam-session-photos.js",
+      "sha256": "f9f910d2ac4d12be58d16ff0b0ba59c2d439c09bd8792c191b9d2c1f7ecc215a"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/utils/roam-share-snapshot.js",
+      "sha256": "0ff5f8a7f32a7ecb0924c3272cc123e8db1793c292bf3b2f207f75f6fba434f5"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/utils/roam-team-operation.js",
+      "sha256": "cca6daebe75160eb0ffc9a0e4e7ff358b7fa15ede5a97f9115b160fe2cee7c81"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/utils/roam-team-recovery.js",
+      "sha256": "9d4bc1072cc4b41cead044a689884e9dbbc4da4a83b3f100dbb7d4e18b92e0aa"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/utils/roam-tile-cursor.js",
+      "sha256": "44634c7d54ab97dc28bd2c8c3ac89afd234d1d993960316769b71e3a50550d73"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/utils/roam-tile-memory-sync.js",
+      "sha256": "17489dbe3fc03ff081f781f4242c5f499a890d90918dc6d1a450094228ff3a2d"
+    },
+    {
+      "status": "A",
+      "path": "chengyinhub-xcx/utils/team-event-command.js",
+      "sha256": "15010ac9b845c4e28ec7e01fd2e1c3f4233c6647e51010575116d764f47bcb1c"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/utils/user-character.js",
+      "sha256": "43b3456e1b0a6f595810819f43c24a485ba85d9deee83a8be90f6022b8b1d55d"
+    },
+    {
+      "status": "M",
+      "path": "chengyinhub-xcx/utils/user-invoice.js",
+      "sha256": "13361ac7b4dfe00330f2b37f17774ddfd3ee10bb79e381a28de33c1e4d19cd04"
+    },
+    {
+      "status": "M",
+      "path": "ci/migration-dependencies.json",
+      "sha256": "ef2f7426977897b2ed244612d7ea2d4d43e48e69bbdf7e537c44d167f1a8f41f"
+    },
+    {
+      "status": "M",
+      "path": "ci/silent-error-allowlist.txt",
+      "sha256": "dce99793b8b8bc7e69763c0e0b809e9f34e724d1df18770713c5168751638df7"
+    }
+  ]
+}

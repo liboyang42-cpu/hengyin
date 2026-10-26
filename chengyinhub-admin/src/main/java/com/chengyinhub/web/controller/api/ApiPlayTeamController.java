@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.business.domain.dto.TeamEventCommand;
+import com.chengyinhub.business.service.impl.TeamEventCommandService;
 import com.chengyinhub.business.domain.PlayTeam;
 import com.chengyinhub.business.service.IPlayTeamService;
 import com.chengyinhub.common.annotation.Anonymous;
@@ -25,6 +27,26 @@ import java.util.Map;
 @Tag(name = "玩家组队")
 @RequestMapping("/api/team")
 public class ApiPlayTeamController extends BaseController {
+
+    @Autowired
+    private TeamEventCommandService commandReceipts;
+
+    @PostMapping("/command")
+    public AjaxResult command(@RequestBody TeamEventCommand input) {
+        Long actor = memberId();
+
+        return AjaxResult.success(commandReceipts.execute(actor, "TEAM", input));
+    }
+
+    @PostMapping("/command/query")
+    public AjaxResult commandQuery(@RequestBody TeamEventCommand input) {
+        return AjaxResult.success(commandReceipts.query(memberId(), "TEAM", input == null ? null : input.getRequestId()));
+    }
+
+    @PostMapping("/command/cancel")
+    public AjaxResult commandCancel(@RequestBody TeamEventCommand input) {
+        return AjaxResult.success(commandReceipts.cancel(memberId(), "TEAM", input));
+    }
 
     @Autowired
     private IPlayTeamService playTeamService;

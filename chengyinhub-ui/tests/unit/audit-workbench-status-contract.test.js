@@ -18,8 +18,8 @@ function loadComponent(listAuditTasks, getAuditTaskDetail, reviewAuditTask, revi
     .replace(/^\s*import[^\n]*\n/gm, '')
     .replace(/components:\s*\{[^}]+\},/, 'components: {},')
     .replace(/export\s+default\s*/, 'return ');
-  const component = new Function('listAuditTasks', 'getAuditTaskDetail', 'reviewAuditTask', 'reviewMediaAsset', body)(
-    listAuditTasks, getAuditTaskDetail, reviewAuditTask, reviewMediaAsset);
+  const component = new Function('listAuditTasks', 'getAuditTaskDetail', 'reviewAuditTask', 'reviewMediaAsset', 'sessionStorage', body)(
+    listAuditTasks, getAuditTaskDetail, reviewAuditTask, reviewMediaAsset, (() => { const rows = new Map(); return { getItem: k => rows.get(k) || null, setItem: (k,v) => rows.set(k,v), removeItem: k => rows.delete(k) }; })());
   return component;
 }
 
@@ -32,16 +32,24 @@ function deferred() {
 test('审核提交按当前选中任务选择媒体或普通入口，不依赖旧详情，失败保留确认层', async () => {
   const sent = [];
   let rejectMedia = false;
-  const component = loadComponent(undefined, undefined,
-    data => { sent.push(['audit', data]); return Promise.resolve(); },
+  const component = loadComponent(undefined, () => Promise.resolve({ code: 200, itemProblemReceipt: { ...sent.at(-1)[1], state: 'FOUND', applied: true } }),
+    data => { sent.push(['audit', data]); return Promise.resolve({ code: 200 }); },
     data => { sent.push(['media', data]); return rejectMedia ? Promise.reject(Error('拒绝')) : Promise.resolve(); });
   const vm = { ...component.data(), ...component.methods, $modal: { msgSuccess() {} }, getList() {} };
+  vm.$store = { getters: { id: '7', token: 'review-session', permissions: ['business:audit:review'] } };
+  for (const [name, getter] of Object.entries(component.computed)) Object.defineProperty(vm, name, { get: () => getter.call(vm) });
   for (const [bizType, expected] of [['MEDIA_ASSET', 'media'], ['TOPIC', 'audit']]) {
     vm.detailTask = { bizType: bizType === 'MEDIA_ASSET' ? 'TOPIC' : 'MEDIA_ASSET' };
     vm.openReview({ id: 42, version: 3, bizType }, 2);
     vm.reviewForm.reasonText = '实际审核原因';
     await vm.submitReview();
-    assert.deepEqual(sent.at(-1), [expected, { taskId: 42, expectedVersion: 3, status: 2, reasonText: '实际审核原因' }]);
+    if (bizType === 'TOPIC') {
+      const requestId = sent.at(-1)[1].requestId;
+      assert.ok(requestId);
+      assert.deepEqual(sent.at(-1), [expected, { taskId: '42', expectedVersion: 3, status: 2, reasonText: '实际审核原因', problems: [], requestId }]);
+      assert.equal(vm.reviewConfirmed, true);
+      vm.finishConfirmedReview();
+    } else assert.deepEqual(sent.at(-1), [expected, { taskId: 42, expectedVersion: 3, status: 2, reasonText: '实际审核原因' }]);
     assert.equal(vm.reviewOpen, false);
   }
   rejectMedia = true;

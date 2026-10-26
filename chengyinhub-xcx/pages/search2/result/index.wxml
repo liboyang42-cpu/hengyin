@@ -6,7 +6,7 @@
   <cy-nav-bar />
   <view class="result-nav-spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>
   <view class="result-search">
-    <cy-search value="{{keyword}}" placeholder="搜索主题、活动、俱乐部、商家"
+    <cy-search value="{{keyword}}" placeholder="搜索主题、活动、帖文、俱乐部、商家"
       loading="{{searchLoading}}" bind:input="onKeywordInput" bind:confirm="onSearchConfirm" />
   </view>
 
@@ -15,14 +15,16 @@
       <cy-tabs class="result-tabs" tabs="{{resultTabs}}" active="{{activeResultType}}"
         variant="chip" bind:change="onResultTab" />
 
-      <cy-inline-error wx:if="{{clubLoginRequired}}" title="登录后搜索俱乐部" action="登录" bind:action="loginForClubs" />
+      <cy-inline-error wx:if="{{clubLoginRequired}}" title="登录后搜索内容和俱乐部" action="登录" bind:action="loginForClubs" />
       <cy-inline-error wx:elif="{{clubSearchDenied}}" title="{{clubSearchDenied}}" />
 
       <view wx:if="{{showSearchSkeleton && !visibleResults.length}}">
         <cy-skeleton type="feed-card" count="3" />
       </view>
       <cy-error load-failure class="fill-slot cy-fade-in" wx:elif="{{searchError && !visibleResults.length}}" fill="{{true}}" size="lg" title="没能完成搜索" sub="{{searchError}}" bind:retry="runSearch" auto-back="{{!everLoaded}}" />
-      <cy-empty class="fill-slot" wx:if="{{!searchLoading && !searchError && !visibleResults.length}}" fill="{{true}}" size="lg" kind="empty" title="没有找到" sub="" />
+      <cy-empty class="fill-slot" wx:if="{{!searchLoading && !contentLoading && !contentError && !searchError && !visibleResults.length}}" fill="{{true}}" size="lg" kind="empty" title="没有找到" sub="" />
+      <view wx:if="{{contentFilterNotice}}" class="content-pagination">{{contentFilterNotice}}</view>
+      <cy-inline-error wx:if="{{contentError}}" title="{{contentError}}" action="重试本页" bind:action="loadMoreContent" />
       <view class="result-list" wx:if="{{visibleResults.length}}">
         <!-- owner 10-22:每次打开都让卡片逐张飞进来(回到本页会重搜、结果重挂,自然重播) -->
         <view class="cy-fly-in" style="animation-delay: {{index < 5 ? index * 40 : 200}}ms" wx:for="{{visibleResults}}" wx:key="key">
@@ -79,6 +81,11 @@
             <cy-icon class="result-card__arrow" name="arrow-right" size="24" />
           </view>
         </view>
+      </view>
+      <view wx:if="{{contentEnabled}}" class="content-pagination">
+        <button wx:if="{{contentHasMore && !contentError}}" loading="{{contentLoading}}" disabled="{{contentLoading}}" bindtap="loadMoreContent">{{contentLoading ? '加载中' : '加载更多内容'}}</button>
+        <text wx:elif="{{!contentHasMore}}">内容已加载完</text>
+        <button bindtap="runSearch" disabled="{{searchLoading || contentLoading}}">刷新搜索结果</button>
       </view>
     </view>
   </view>

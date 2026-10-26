@@ -72,7 +72,7 @@ function makePage() {
 function openForEdit(topicPatch, loadOptions) {
   const page = makePage();
   page.onLoad(Object.assign({ id: '77' }, loadOptions || {}));
-  const detailReq = sent.find((r) => r.url === '/api/topic/edit-detail');
+  const detailReq = sent.find((r) => r.url === '/api/topic/author-edit-detail');
   assert.ok(detailReq, '带 id 进入必须去拉主题详情回填');
   detailReq.success({
     code: '200',

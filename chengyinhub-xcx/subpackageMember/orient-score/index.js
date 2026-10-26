@@ -8,7 +8,7 @@ const ok = response => response && Number(response.code) === 200;
 
 Page({
   data: { state: 'loading', stateTitle: '', score: null, pending: null, busy: false,
-    notice: '', form: '', reason: '', nodeId: '', entryId: '', formError: '', sessions: [], canChoose: false },
+    board: null, boardState: '', notice: '', form: '', reason: '', nodeId: '', entryId: '', formError: '', sessions: [], canChoose: false },
   onLoad(options) { this._scope = view.scope(options); this._epoch = 0; this._hidden = false; },
   onShow() { this._hidden = false; this.load(); },
   onHide() { this.suspend(); },
@@ -19,7 +19,7 @@ Page({
     if (this._workflow) this._workflow.destroy();
     this._workflow = null;
     this._identity = null;
-    this.setData({ score: null, form: '', reason: '', nodeId: '', entryId: '', busy: false });
+    this.setData({ score: null, board: null, boardState: '', form: '', reason: '', nodeId: '', entryId: '', busy: false });
   },
   identity() { return { owner: view.id(app.getUserID()), auth: app.getAuthorization() }; },
   current(capture) {
@@ -50,7 +50,7 @@ Page({
       this.setData({ score: null, pending: null, form: '', reason: '', nodeId: '', entryId: '', notice: '', busy: false, sessions: [], canChoose: false });
     }
     const capture = this.capture();
-    this.setData({ state: 'loading' });
+    this.setData({ state: 'loading', board: null, boardState: '' });
     if (this._sessionId) this.readScore(capture);
     else this.readSessions(capture);
   },
@@ -76,7 +76,7 @@ Page({
     const sessionId = view.id(event && event.currentTarget && event.currentTarget.dataset.sessionId);
     if (this._hidden || this.data.state !== 'choosing' || !this.data.sessions.some(row => row.sessionId === sessionId)) return;
     this._sessionId = sessionId; this._epoch += 1;
-    this.setData({ state: 'loading', pending: null, notice: '', form: '', reason: '' });
+    this.setData({ state: 'loading', pending: null, board: null, boardState: '', notice: '', form: '', reason: '' });
     this.readScore(this.capture());
   },
   chooseAnother() {
@@ -96,6 +96,23 @@ Page({
       fail: (body, status) => { if (this.current(capture)) this.readFailure(body, status); },
       successStatusAbnormal: (body, status) => { if (this.current(capture)) this.readFailure(body, status); }
     });
+  },
+  loadLeaderboard() {
+    if (this.data.state !== 'ready' || !this.data.score || this.data.boardState === 'loading') return;
+    const capture = this.capture(), sessionId = this.data.score.sessionId;
+    if (!this.current(capture) || !this._identity || this._identity.owner !== capture.owner || this._identity.auth !== capture.auth) {
+      this.load(); return;
+    }
+    this.setData({ board: null, boardState: 'loading' });
+    let finished = false;
+    const finish = body => {
+      if (finished || !this.current(capture)) return;
+      finished = true;
+      const board = ok(body) && view.leaderboard(body.data, sessionId);
+      this.setData({ board: board || null, boardState: board ? 'ready' : 'error' });
+    };
+    app.sendRequest({ url: BASE + '/session/' + sessionId + '/leaderboard', method: 'GET', hideLoading: true,
+      success: finish, fail: finish, successStatusAbnormal: finish });
   },
   readFailure(body, status) {
     const state = view.failure(body, status);
@@ -121,8 +138,8 @@ Page({
   recover() {
     if (this._recovering || this.data.busy || !this._pending || !this._pending.length) return;
     const pending = this._pending[0];
-    if (pending.kind === 'SYNC' || !pending.requestId) {
-      this.setData({ notice: '同步结果待确认；已刷新计分，但仍无法确认本次同步是否完成。请勿重复同步，无法确认时联系平台处理。' }); return;
+    if (!pending.requestId) {
+      this.setData({ notice: '历史操作缺少原请求编号，不能确认或重放。可提交人工核对，处理进度会显示在本局记录中。' }); return;
     }
     const capture = this.capture(), sessionId = this.data.score && this.data.score.sessionId;
     if (!sessionId) return;
@@ -141,7 +158,7 @@ Page({
             || !this._workflow.confirmRequest(pending.key, pending.requestId)) { unknown(); return; }
         this._pending.shift();
         this.setData({ pending: this._pending[0] || null, form: '', reason: '', entryId: '', nodeId: '',
-          notice: pending.kind === 'SETTLE' ? '已查到本局结算结果' : '已查到原申请记录，处理进度以列表为准' });
+          notice: pending.kind === 'SYNC' ? '已查到原任务同步结果' : pending.kind === 'SETTLE' ? '已查到本局结算结果' : '已查到原申请记录，处理进度以列表为准' });
         if (this._pending.length) this.recover();
         else this.load();
       }, fail: (body, status) => {
@@ -154,6 +171,75 @@ Page({
         if (view.failure(body, status).kind !== 'offline') { this._recovering = false; this.readFailure(body, status); return; }
         unknown();
       }
+    });
+  },
+  requestManualReview() {
+    const pending = this.data.pending, score = this.data.score;
+    if (!pending || pending.requestId || !view.KINDS.includes(pending.kind) || !score
+        || this.data.busy || this._confirming) return;
+    const capture = this.capture(), sessionId = score.sessionId, kind = pending.kind;
+    if (!this.current(capture) || !this._identity || this._identity.owner !== capture.owner || this._identity.auth !== capture.auth) {
+      this.load(); return;
+    }
+    this._confirming = true;
+    let confirmed = false;
+    modal.show({ title: '提交历史操作人工核对', content: '将本局历史待办交给计分审核人员核对。登记不会重放原操作，也不会解除原待办。',
+      confirmText: '提交核对', cancelText: '取消', success: result => {
+        if (confirmed || !this.current(capture)) return;
+        confirmed = true; this._confirming = false;
+        if (!result.confirm) return;
+        this.setData({ busy: true });
+        let finished = false;
+        const finish = body => {
+          if (finished || !this.current(capture)) return;
+          finished = true; this.setData({ busy: false });
+          const row = body && body.data;
+          if (ok(body) && row && view.id(row.id) && view.id(row.sessionId) === sessionId
+              && view.id(row.memberId) === capture.owner && row.kind === kind && [0, 1].includes(row.status)) {
+            this.load();
+          } else this.setData({ notice: '人工核对登记结果尚未确认，请刷新本局记录。原待办仍保留。' });
+        };
+        app.sendRequest({ url: BASE + '/session/' + sessionId + '/recovery', method: 'POST', write: true,
+          data: { kind }, header: { 'content-type': 'application/x-www-form-urlencoded' }, hideLoading: true,
+          success: finish, fail: finish, successStatusAbnormal: finish });
+      }, fail: () => { if (!confirmed && this.current(capture)) { confirmed = true; this._confirming = false; } }
+    });
+  },
+  resumeSync() {
+    const pending = this.data.pending, score = this.data.score;
+    if (!pending || pending.kind !== 'SYNC' || !pending.requestId || !score
+        || this.data.busy || this._recovering || this._confirming) return;
+    const capture = this.capture(), sessionId = score.sessionId;
+    if (!this.current(capture) || !this._identity || this._identity.owner !== capture.owner
+        || this._identity.auth !== capture.auth) { this.load(); return; }
+    this._confirming = true;
+    let confirmed = false;
+    modal.show({ title: '继续原任务同步', content: '保留原请求编号继续同步。已入账任务不会重复计分，结果确认前仍不能提交新操作。',
+      confirmText: '继续原同步', cancelText: '取消', success: result => {
+        if (confirmed || !this.current(capture)) return;
+        confirmed = true;
+        this._confirming = false;
+        if (!result.confirm) return;
+        this.setData({ busy: true });
+        let finished = false;
+        const finish = (body, success) => {
+          if (finished || !this.current(capture)) return;
+          finished = true;
+          this.setData({ busy: false });
+          if (success && ok(body) && view.receiptMatches(body.data, pending, capture.owner, sessionId)
+              && this._workflow.confirmRequest(pending.key, pending.requestId)) {
+            this.setData({ pending: null, notice: '原任务同步已确认' });
+            this.load();
+          } else {
+            this.setData({ notice: '原任务同步仍待确认，已保留原请求编号，请查询原操作结果。' });
+          }
+        };
+        app.sendRequest({ url: BASE + '/session/' + sessionId + '/sync', method: 'POST', write: true,
+          data: { sessionId, idempotencyKey: pending.requestId },
+          header: { 'content-type': 'application/x-www-form-urlencoded' }, hideLoading: true,
+          success: body => finish(body, true), fail: body => finish(body, false),
+          successStatusAbnormal: body => finish(body, false) });
+      }, fail: () => { if (!confirmed && this.current(capture)) { confirmed = true; this._confirming = false; } }
     });
   },
   allowed(kind) {
@@ -217,6 +303,7 @@ Page({
         const success = channel === 'success' && ok(body) && (kind === 'SYNC'
           ? view.precise(body.data) && body.data && view.id(body.data.sessionId) === sessionId && !!view.integer(body.data.totalCenti)
             && /^\d+$/.test(view.integer(body.data.added))
+            && (body.data.state == null || view.receiptMatches(body.data, pending, owner, sessionId))
           : view.receiptMatches(body.data, pending, owner, sessionId, payload));
         done({ status: success ? 'success' : view.rejected(body, status) ? 'failed' : 'unknown', response: body, httpStatus: status });
       };

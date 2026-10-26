@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -52,6 +53,7 @@ class AuditItemProblemTest {
     private CmsTopicChapterMapper chapterMapper;
     private CmsTopicNodeMapper nodeMapper;
     private AuditTaskServiceImpl service;
+    private com.chengyinhub.business.mapper.BusinessAuditEventMapper auditMapper;
 
     @BeforeEach
     void setUp() {
@@ -64,7 +66,7 @@ class AuditItemProblemTest {
         service = new AuditTaskServiceImpl();
         ReflectionTestUtils.setField(service, "auditTaskMapper", taskMapper);
         ReflectionTestUtils.setField(service, "auditRecordMapper", recordMapper);
-        com.chengyinhub.business.mapper.BusinessAuditEventMapper auditMapper =
+        auditMapper =
                 mock(com.chengyinhub.business.mapper.BusinessAuditEventMapper.class);
         ReflectionTestUtils.setField(service, "businessAuditEventMapper", auditMapper);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
@@ -254,4 +256,77 @@ class AuditItemProblemTest {
         assertFalse(rounds.get(0).containsKey("problems"));
         verify(problemMapper, never()).selectByTaskForOwner(anyLong(), anyLong());
     }
+    @Test
+    void frozenProblemIntentRejectsMutationAndReplaysWithoutReadingMutableNodes() throws Exception {
+        enable();
+        AuditReviewDTO command = reject(item("NODE", 41L, null, "原节点问题"));
+        command.setRequestId("problem-replay");
+        assertEquals(1, service.review(9L, 1L, command));
+        org.mockito.ArgumentCaptor<com.chengyinhub.business.domain.BusinessAuditEvent> capture =
+                org.mockito.ArgumentCaptor.forClass(com.chengyinhub.business.domain.BusinessAuditEvent.class);
+        verify(auditMapper).insertBusinessAuditEvent(capture.capture());
+        com.chengyinhub.business.domain.BusinessAuditEvent event = capture.getValue();
+        assertTrue(new com.fasterxml.jackson.databind.ObjectMapper().readTree(event.getAfterJson()).path("itemProblemsApplied").asBoolean());
+        when(auditMapper.selectByDomainActionRequestForUpdate("PLATFORM", 9L, "AUDIT_DECISION_REJECT", "problem-replay")).thenReturn(event);
+        org.mockito.Mockito.clearInvocations(nodeMapper, problemMapper, taskMapper);
+        when(nodeMapper.selectCmsTopicNodeById(41L)).thenReturn(null);
+        assertEquals(1, service.review(9L, 1L, command));
+        verify(nodeMapper, never()).selectCmsTopicNodeById(anyLong());
+        verify(problemMapper, never()).insertAuditProblem(any());
+        AuditReviewDTO altered = reject(item("NODE", 41L, null, "更改说明"));
+        altered.setRequestId("problem-replay");
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class, () -> service.review(9L, 1L, altered));
+        for (AuditReviewDTO changed : Arrays.asList(reject(item("NODE", 42L, null, "原节点问题")),
+                reject(item("NODE", 41L, "OTHER", "原节点问题")), reject(),
+                reject(item("NODE", 41L, null, "原节点问题"), item("TOPIC", null, null, "新增问题")))) {
+            changed.setRequestId("problem-replay");
+            assertThrows(com.chengyinhub.common.exception.ServiceException.class, () -> service.review(9L, 1L, changed));
+        }
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class, () -> service.review(9L, 2L, command));
+        verify(taskMapper, never()).updateAuditTaskReviewCas(anyLong(), anyInt(), anyInt(), anyLong(), anyInt(), any());
+    }
+
+    @Test
+    void disabledDecisionKeepsIgnoreSemanticsAfterFlagChanges() {
+        AuditReviewDTO command = reject(item("BOGUS", null, null, "ignored"));
+        command.setRequestId("disabled-replay");
+        service.review(9L, 1L, command);
+        org.mockito.ArgumentCaptor<com.chengyinhub.business.domain.BusinessAuditEvent> capture =
+                org.mockito.ArgumentCaptor.forClass(com.chengyinhub.business.domain.BusinessAuditEvent.class);
+        verify(auditMapper).insertBusinessAuditEvent(capture.capture());
+        when(auditMapper.selectByDomainActionRequestForUpdate("PLATFORM", 9L, "AUDIT_DECISION_REJECT", "disabled-replay"))
+                .thenReturn(capture.getValue());
+        enable();
+        assertEquals(1, service.review(9L, 1L, command));
+        verify(problemMapper, never()).insertAuditProblem(any());
+    }
+
+    @Test
+    void detailReceiptRequiresOriginalReviewerAndPersistedProblemRows() {
+        enable();
+        AuditReviewDTO command = reject(item("NODE", 41L, null, "原节点问题"));
+        command.setRequestId("readback");
+        service.review(9L, 1L, command);
+        org.mockito.ArgumentCaptor<com.chengyinhub.business.domain.BusinessAuditEvent> event =
+                org.mockito.ArgumentCaptor.forClass(com.chengyinhub.business.domain.BusinessAuditEvent.class);
+        org.mockito.ArgumentCaptor<AuditProblem> problem = org.mockito.ArgumentCaptor.forClass(AuditProblem.class);
+        verify(auditMapper).insertBusinessAuditEvent(event.capture());
+        verify(problemMapper).insertAuditProblem(problem.capture());
+        when(auditMapper.selectByTarget("AUDIT_TASK", 9L)).thenReturn(Collections.singletonList(event.getValue()));
+        assertEquals("NOT_FOUND", service.itemProblemReceipt(9L, 2L, "readback").get("state"));
+        assertEquals("UNKNOWN", service.itemProblemReceipt(9L, 1L, "readback").get("state"));
+        when(problemMapper.selectByTaskForOwner(9L, 5L)).thenReturn(Collections.singletonList(problem.getValue()));
+        assertEquals("FOUND", service.itemProblemReceipt(9L, 1L, "readback").get("state"));
+    }
+
+    @Test
+    void problemReadModelKeepsLongIdsExact() throws Exception {
+        AuditProblem problem = new AuditProblem();
+        problem.setId(Long.MAX_VALUE); problem.setItemId(Long.MAX_VALUE - 1);
+        com.fasterxml.jackson.databind.JsonNode json = new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(problem);
+        assertTrue(json.path("id").isTextual());
+        assertEquals("9223372036854775807", json.path("id").asText());
+        assertEquals("9223372036854775806", json.path("itemId").asText());
+    }
+
 }

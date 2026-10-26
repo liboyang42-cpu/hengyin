@@ -67,8 +67,8 @@ public class JourneyRulesValidator {
         if (StringUtils.isBlank(rawJson)) {
             return null;
         }
-        if (rawJson.getBytes(StandardCharsets.UTF_8).length > MAX_JSON_BYTES) {
-            throw new IllegalArgumentException("旅程数值规则不能超过 16 KiB");
+        if (rawJson.getBytes(StandardCharsets.UTF_8).length > 64 * 1024) {
+            throw new IllegalArgumentException("旅程数值规则不能超过 64 KiB");
         }
         final JsonNode parsed;
         try {
@@ -80,7 +80,12 @@ public class JourneyRulesValidator {
             throw new IllegalArgumentException("旅程数值规则必须是对象");
         }
         ObjectNode root = (ObjectNode) parsed;
-        if (root.path("schemaVersion").asInt(-1) != SCHEMA_VERSION) {
+        if (!root.has("attributeDefinition") && rawJson.getBytes(StandardCharsets.UTF_8).length > MAX_JSON_BYTES) {
+            throw new IllegalArgumentException("旅程数值规则不能超过 16 KiB");
+        }
+        JsonNode schemaVersion = root.path("schemaVersion");
+        if (!schemaVersion.isIntegralNumber() || !schemaVersion.canConvertToInt()
+                || schemaVersion.intValue() != SCHEMA_VERSION) {
             throw new IllegalArgumentException("旅程数值规则版本不支持");
         }
         boolean checkEnabled = boolField(root, "checkEnabled", false);
@@ -136,7 +141,9 @@ public class JourneyRulesValidator {
         out.put("schemaVersion", SCHEMA_VERSION);
         out.put("checkEnabled", checkEnabled);
         if (root.has("stateEnabled")) out.put("stateEnabled", boolField(root, "stateEnabled", false));
-        if (root.has("attributes")) out.set("attributes", JourneyInitialState.normalize(root.get("attributes")));
+        if (root.has("attributes")) out.set("attributes", root.has("attributeBinding")
+                ? AuthorAttributeBinding.projection(root.get("attributes")) : JourneyInitialState.normalize(root.get("attributes")));
+        if (root.has("attributeBinding")) out.set("attributeBinding", AuthorAttributeBinding.normalize(root.get("attributeBinding")));
         ArrayNode thoughts = normalizeThoughts(root.get("thoughts"));
         if (thoughts != null) out.set("thoughts", thoughts);
         ObjectNode hpOut = out.putObject("hp");
@@ -177,6 +184,7 @@ public class JourneyRulesValidator {
             } catch (IllegalArgumentException invalid) { throw invalid; }
             catch (Exception invalid) { throw new IllegalArgumentException("状态联动规则无法解析", invalid); }
         }
+        if (root.has("attributeDefinition")) out.set("attributeDefinition", AuthorAttributeBinding.validateDefinition(root.get("attributeDefinition")));
         try {
             return objectMapper.writeValueAsString(out);
         } catch (Exception e) {
@@ -221,7 +229,9 @@ public class JourneyRulesValidator {
             JsonNode needNode = row.get("need");
             Integer need = null;
             if (needNode != null && !needNode.isNull()) {
-                if (!needNode.isIntegralNumber()) throw new IllegalArgumentException("念头要走多少步才想通,必须是整数");
+                if (!needNode.isIntegralNumber() || !needNode.canConvertToInt()) {
+                    throw new IllegalArgumentException("念头要走多少步才想通,必须是范围内的整数");
+                }
                 need = needNode.asInt();
                 if (need < 1 || need > MAX_THOUGHT_NEED) {
                     throw new IllegalArgumentException("念头的步数阈值要在 1 到 " + MAX_THOUGHT_NEED + " 之间");
@@ -265,7 +275,7 @@ public class JourneyRulesValidator {
                 item.put("op", op);
                 item.put("value", tag);
             } else if ("NODE_COMPLETED".equals(op)) {
-                long nodeId = c.path("nodeId").asLong(0L);
+                long nodeId = thoughtNodeId(c.path("nodeId"));
                 if (nodeId <= 0L) throw new IllegalArgumentException("念头「" + name + "」的站点条件缺站点");
                 item.put("op", op);
                 item.put("nodeId", nodeId);
@@ -274,6 +284,16 @@ public class JourneyRulesValidator {
             }
         }
         return out;
+    }
+
+    private static long thoughtNodeId(JsonNode value) {
+        if (value.isIntegralNumber() && value.canConvertToLong()) return value.longValue();
+        // Long 字符串供小程序无损传参；拒绝小数、指数、溢出与隐式类型转换。
+        if (value.isTextual() && value.textValue().matches("[1-9][0-9]{0,18}")) {
+            try { return Long.parseLong(value.textValue()); }
+            catch (NumberFormatException invalid) { return 0L; }
+        }
+        return 0L;
     }
 
     private static void putTier(ObjectNode tiers, String name, int dc, int damage) {

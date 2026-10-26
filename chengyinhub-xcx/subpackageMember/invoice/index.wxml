@@ -14,6 +14,13 @@
       </view>
       <cy-inline-error wx:if="{{error}}" kind="error" title="请核对当前状态" sub="{{error}}" />
       <text wx:if="{{notice}}" class="invoice-note" aria-live="polite">{{notice}}</text>
+      <view wx:if="{{titlePending}}" class="invoice-card">
+        <text class="invoice-title">原抬头保存结果待确认</text>
+        <text class="invoice-note" selectable>原请求号：{{titleRequestId || '旧版待确认记录'}}</text>
+        <text class="invoice-note">未查到回执不代表未保存。离页后不保留完整税号，只查询原回执；旧版未发送请求号的记录仍需平台核对。</text>
+        <cy-btn variant="secondary" disabled="{{writing || !titleRequestId}}" bindtap="queryTitleSave">查询原保存回执</cy-btn>
+        <cy-btn wx:if="{{titleRetryable}}" variant="secondary" loading="{{writing}}" disabled="{{writing}}" bindtap="retryTitleSave">使用原输入重试保存</cy-btn>
+      </view>
       <view wx:if="{{pending}}" class="invoice-card">
         <text class="invoice-title">原申请结果待确认</text>
         <text class="invoice-note">订单和抬头已冻结。请核对原申请，勿退出后重新提交。</text>
@@ -54,6 +61,7 @@
           <text class="invoice-value">合计 {{money.amount(detail.totalAmount)}} · {{detail.orderCount || 0}} 笔订单</text>
           <text class="invoice-note" wx:if="{{detail.invoiceNo}}" selectable>发票号：{{detail.invoiceNo}}</text>
           <text class="invoice-note" wx:if="{{detail.rejectReason}}">驳回原因：{{detail.rejectReason}}</text>
+          <text class="invoice-note" wx:if="{{detail.reconciliationText}}">{{detail.reconciliationText}}</text>
           <text class="invoice-note" wx:if="{{detail.issuedAt}}">开具时间：{{detail.issuedAt}}</text>
           <view class="invoice-line" wx:for="{{detail.orders}}" wx:key="orderId">
             <text class="invoice-value">{{item.orderTitle}} {{item.ticketName}}</text>
@@ -63,6 +71,7 @@
           <view class="invoice-actions">
             <cy-btn variant="secondary" disabled="{{writing}}" bindtap="refreshDetail">刷新详情</cy-btn>
             <cy-btn wx:if="{{detail.status === 'SUBMITTED'}}" variant="danger" loading="{{writing}}" disabled="{{cancelPending}}" bindtap="cancel">撤回申请</cy-btn>
+            <cy-btn wx:if="{{detail.status === 'REJECTED'}}" variant="secondary" disabled="{{writing || pending || titlePending || cancelPending}}" bindtap="prepareReapplication">核对抬头并重新申请</cy-btn>
             <cy-btn variant="ghost" disabled="{{writing}}" bindtap="closeDetail">返回记录</cy-btn>
           </view>
         </view>
@@ -82,6 +91,7 @@
           <cy-empty wx:if="{{!orders.length}}" title="暂无可开票订单" />
           <view wx:for="{{orders}}" wx:key="orderId" class="invoice-card invoice-choice {{item.selected ? 'invoice-choice--selected' : ''}}" data-id="{{item.orderId}}" bindtap="pickOrder" hover-class="{{pending || writing ? 'none' : 'invoice-choice--pressed'}}" aria-role="checkbox" aria-checked="{{item.selected}}" aria-disabled="{{pending || writing}}" aria-label="{{item.orderTitle}}，{{money.amount(item.amount)}}">
             <text class="invoice-value">{{item.selected ? '已选 · ' : ''}}{{item.orderTitle}} {{item.ticketName}}</text>
+            <text class="invoice-value">开票主体：{{item.issuerName}}</text>
             <text class="invoice-note">{{money.amount(item.amount)}} · {{item.paymentTime}}</text>
             <text class="invoice-note" selectable>订单 {{item.orderId}}</text>
           </view>
@@ -91,7 +101,7 @@
       </block>
 
       <block wx:elif="{{tab === 'titles'}}">
-        <text class="invoice-note" wx:if="{{titlePending}}">上次保存结果待确认，暂不能再次新建或修改。请刷新抬头并联系平台核对。</text>
+        <text class="invoice-note" wx:if="{{titlePending}}">上次保存结果待确认，暂不能再次新建或修改。请查询原保存回执。</text>
         <view class="invoice-actions">
           <cy-btn variant="primary" disabled="{{writing || titlePending}}" bindtap="editTitle">新增抬头</cy-btn>
           <cy-btn variant="ghost" disabled="{{writing}}" bindtap="loadTitles">刷新抬头</cy-btn>

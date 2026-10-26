@@ -243,6 +243,7 @@
       "root": "subpackageMember",
       "name": "subpackageMember",
       "pages": [
+        "free-explore/index",
         "character/index",
         "orient-score/index",
         "invoice/index",

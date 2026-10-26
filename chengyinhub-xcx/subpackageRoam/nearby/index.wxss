@@ -1,3 +1,4 @@
+@import "../utils/team-recovery-panel.wxss";
 @import "/style/proto-sheet.wxss";
 /* 漫游地图 · 附近的队伍(地图组队 P 方案,Figma txQoyVyKb3aQdFCnc8qmhj 590:1014)。1px = 1.923rpx。
    半屏壳 / 标题 / 副标题沿用 proto-sheet(与漫游同源);本页只补稿上新出现的几件。 */

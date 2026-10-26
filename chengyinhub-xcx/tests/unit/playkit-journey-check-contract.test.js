@@ -33,6 +33,7 @@ const ENCOUNTER = {
   },
 }
 const ROLL_RECEIPT = {
+  sessionId: '99', nodeId: '501', actionId: 'check:501:c-77-1:roll',
   checkId: 'c-77-1', tier: 'medium', dc: 13,
   mods: [{ label: '带着伞', value: 2, applied: true }],
   advantage: true, disadvantage: false,
@@ -41,7 +42,7 @@ const ROLL_RECEIPT = {
   hp: 8, luck: 2, exhausted: false, stateVersion: 4,
 }
 const SETTLE_RECEIPT = Object.assign({}, ROLL_RECEIPT, {
-  settled: true, text: '你从伞骨的划痕里读出了方向。', stateVersion: 5,
+  actionId: 'check:501:c-77-1:settle', settled: true, text: '你从伞骨的划痕里读出了方向。', stateVersion: 5,
 })
 
 // ===== 纯函数 =====
@@ -125,6 +126,7 @@ test('★失败也推进:结算屏的退出入口不受成败影响(wxml 里没�
 let pageConfig
 let requests
 let responder = null
+let storage = new Map()
 
 const APP = {
   globalData: {},
@@ -136,9 +138,9 @@ global.getApp = () => APP
 global.wx = {
   getSystemInfoSync: () => ({ windowWidth: 375, statusBarHeight: 20 }),
   getMenuButtonBoundingClientRect: () => ({ top: 20, height: 32 }),
-  getStorageSync: () => null,
-  setStorageSync: () => {},
-  removeStorageSync: () => {},
+  getStorageSync: key => storage.get(key),
+  setStorageSync: (key, value) => storage.set(key, value),
+  removeStorageSync: key => storage.delete(key),
   showToast: () => {},
   createSelectorQuery: () => ({
     selectAll: () => ({ boundingClientRect: () => {} }),
@@ -162,6 +164,7 @@ function makePage() {
   const page = Object.assign({}, pageConfig)
   page.data = JSON.parse(JSON.stringify(pageConfig.data))
   page.data.topicId = '77'
+  page._routeState = { sessionId: '99' }
   page.setData = function (patch) {
     Object.keys(patch).forEach(key => setAtPath(page.data, key, patch[key]))
   }
@@ -174,6 +177,7 @@ const postData = (options) => (options.data && typeof options.data === 'object')
 
 beforeEach(() => {
   pageConfig = null
+  storage = new Map()
   requests = []
   responder = null
   delete require.cache[require.resolve(PLAY)]
@@ -238,7 +242,7 @@ test('★掷 → 结算:两个请求都打到对的端点、带对的字段;文�
   page.onJourneyCheckAction({ detail: { action: 'roll' } })
   await flush()
   assert.deepEqual(seen, ['/api/play/check/roll'])
-  assert.deepEqual(postData(requests[0]), { topicId: '77', activityId: 0, nodeId: 501, checkId: 'c-77-1' })
+  assert.deepEqual(postData(requests[0]), { topicId: '77', activityId: '0', sessionId: '99', nodeId: '501', checkId: 'c-77-1' })
   assert.equal(page.data.journeyCheck.receipt.settled, false)
   assert.equal(page.data.journeyCheck.receipt.text, '', 'roll 回执不该有文案')
 
@@ -249,7 +253,7 @@ test('★掷 → 结算:两个请求都打到对的端点、带对的字段;文�
   assert.equal(page.data.journeyCheck.receipt.text, '你从伞骨的划痕里读出了方向。')
 })
 
-test('★上一局已结算:掷骰被打回时自动回读 settle(幂等),而不是把玩家卡在掷不了', async () => {
+test('★已结算原局以GET读取原动作回执，绝不调用settle作为恢复', async () => {
   const page = makePage()
   page.data.journeyCheck = Object.assign({ show: true, nodeId: 501, receipt: null }, pickJourneyCheck(ENCOUNTER))
   const seen = []
@@ -257,12 +261,16 @@ test('★上一局已结算:掷骰被打回时自动回读 settle(幂等),而不
     requests.push(options)
     seen.push(options.url)
     if (options.url === '/api/play/check/roll') options.success({ code: 500, msg: '该检定已结算' })
-    else options.success({ code: 200, data: SETTLE_RECEIPT })
+    else options.success({ code: 200, data: { ...SETTLE_RECEIPT, actionId: ROLL_RECEIPT.actionId } })
   }
 
   page.onJourneyCheckAction({ detail: { action: 'roll' } })
   await flush()
-  assert.deepEqual(seen, ['/api/play/check/roll', '/api/play/check/settle'])
+  assert.equal(page.data.journeyCheck.unknown, true)
+  await page.onJourneyCheckAction({ detail: { action: 'recover' } })
+  assert.deepEqual(seen, ['/api/play/check/roll', '/api/play/check/receipt'])
+  assert.equal(requests[1].method, 'GET')
+  assert.equal(requests[1].data.action, 'roll')
   assert.equal(page.data.journeyCheck.receipt.settled, true)
   assert.equal(page.data.journeyCheck.receipt.success, true)
 })
@@ -310,7 +318,7 @@ test('★重掷走 /reroll,回执里 rerolled=true 进视图', async () => {
   responder = (options) => {
     requests.push(options)
     seen.push(options.url)
-    options.success({ code: 200, data: Object.assign({}, ROLL_RECEIPT, { rerolled: true, kept: 18, total: 18 }) })
+    options.success({ code: 200, data: Object.assign({}, ROLL_RECEIPT, { actionId: 'check:501:c-77-1:reroll', rerolled: true, kept: 18, total: 18 }) })
   }
   page.onJourneyCheckAction({ detail: { action: 'reroll' } })
   await flush()

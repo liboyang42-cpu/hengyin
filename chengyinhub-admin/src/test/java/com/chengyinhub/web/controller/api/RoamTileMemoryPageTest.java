@@ -39,6 +39,7 @@ class RoamTileMemoryPageTest
         Map<?, ?> data = (Map<?, ?>) result.get(AjaxResult.DATA_TAG);
         assertEquals(Arrays.asList("wtw3sjq", "wtw3sjr"), data.get("tiles"));
         assertEquals(12L, data.get("nextAfterId"));
+        assertEquals("12", data.get("nextAfterIdExact"));
         assertEquals(Boolean.TRUE, data.get("hasMore"));
         verify(roamMapper).selectTilePageByMember(77L, 0L, 3);
     }
@@ -58,6 +59,7 @@ class RoamTileMemoryPageTest
         assertTrue(result.get(AjaxResult.DATA_TAG) instanceof Map);
         Map<?, ?> data = (Map<?, ?>) result.get(AjaxResult.DATA_TAG);
         assertEquals(22L, data.get("nextAfterId"));
+        assertEquals("22", data.get("nextAfterIdExact"));
         assertEquals(Boolean.FALSE, data.get("hasMore"));
     }
 
@@ -75,6 +77,28 @@ class RoamTileMemoryPageTest
         assertTrue(select.contains("s.status = 0 or (s.status = 1 and s.finished_at &gt; date_sub(now(), interval 30 day))"));
         assertTrue(select.contains("order by f.id asc"));
         assertTrue(select.contains("limit #{limit}"));
+    }
+
+    @Test
+    void longCursorRemainsExactIncludingEmptyFinalPage()
+    {
+        ApiRoamController controller = spy(new ApiRoamController());
+        RoamMapper mapper = mock(RoamMapper.class);
+        ReflectionTestUtils.setField(controller, "roamMapper", mapper);
+        doReturn(77L).when(controller).getAppUserId();
+        long after = 9_007_199_254_740_993L;
+        when(mapper.selectTilePageByMember(77L, after, 2)).thenReturn(
+                Arrays.asList(tile(Long.MAX_VALUE, "wtw3sjq")));
+        Map<?, ?> data = (Map<?, ?>) controller.tilePage(after, 1).get(AjaxResult.DATA_TAG);
+        assertEquals(Long.toString(Long.MAX_VALUE), data.get("nextAfterIdExact"));
+        assertEquals(Long.MAX_VALUE, data.get("nextAfterId"));
+        assertEquals(Boolean.FALSE, data.get("hasMore"));
+        when(mapper.selectTilePageByMember(77L, Long.MAX_VALUE, 2)).thenReturn(List.of());
+        Map<?, ?> empty = (Map<?, ?>) controller.tilePage(Long.MAX_VALUE, 1).get(AjaxResult.DATA_TAG);
+        assertEquals(Long.toString(Long.MAX_VALUE), empty.get("nextAfterIdExact"));
+        assertEquals(List.of(), empty.get("tiles"));
+        verify(mapper).selectTilePageByMember(77L, after, 2);
+        verify(mapper).selectTilePageByMember(77L, Long.MAX_VALUE, 2);
     }
 
     private static Map<String, Object> tile(Long id, String geohash7)

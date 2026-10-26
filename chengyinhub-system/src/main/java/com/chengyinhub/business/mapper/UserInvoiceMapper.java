@@ -3,13 +3,33 @@ package com.chengyinhub.business.mapper;
 import com.chengyinhub.business.domain.UserInvoiceApplication;
 import com.chengyinhub.business.domain.UserInvoiceOrderLine;
 import com.chengyinhub.business.domain.UserInvoiceTitle;
+import com.chengyinhub.business.domain.CmsRegistration;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /** DOC2 F7 用户发票。所有会员侧读写都带 member_id，越权读写在 SQL 层就命中 0 行。 */
 public interface UserInvoiceMapper {
+    CmsRegistration selectInvoiceRegistrationById(@Param("id") Long id);
+    List<Long> resolveInvoiceIssuers(@Param("orderIds") List<Long> orderIds);
+    List<Map<String,Object>> selectInvoiceIssuerPreviews(@Param("orderIds") List<Long> orderIds);
+    List<Map<String, Object>> selectMemberReconciliation(@Param("memberId") Long memberId,
+                                                        @Param("ids") List<Long> ids);
+    int insertProcessing(@Param("id") Long id, @Param("issuerId") Long issuerId);
+
+    List<CmsRegistration> selectInvoiceRegistrationSeeds(@Param("memberId") Long memberId, @Param("orderIds") List<Long> orderIds);
+    CmsRegistration lockInvoiceRegistration(@Param("id") Long id);
+    List<CmsRegistration> lockInvoiceParentOrder(@Param("parentOrderNo") String parentOrderNo);
+    List<Long> selectActiveInvoiceOrderIdsForUpdate(@Param("orderIds") List<Long> orderIds);
+    int reserveTitleReceipt(@Param("memberId") Long memberId, @Param("requestId") String requestId,
+                            @Param("fingerprint") String fingerprint);
+    Map<String, Object> selectTitleReceipt(@Param("memberId") Long memberId, @Param("requestId") String requestId);
+    Map<String, Object> lockTitleReceipt(@Param("memberId") Long memberId, @Param("requestId") String requestId);
+    int finishTitleReceipt(@Param("memberId") Long memberId, @Param("requestId") String requestId,
+                           @Param("titleId") Long titleId);
+
     List<UserInvoiceTitle> selectTitlesByMember(@Param("memberId") Long memberId);
 
     UserInvoiceTitle selectTitle(@Param("memberId") Long memberId, @Param("id") Long id);

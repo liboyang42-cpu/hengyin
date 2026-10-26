@@ -91,4 +91,21 @@ class MerchantDeskMapperSqlTest {
             if (s[1].equals("insertEvidence")) assertTrue(s[2].contains("v.status = 0"), "只能给待复核单补材料");
         }
     }
+    @Test
+    void frozenHistorySqlBindsOwnerAndStableDescendingCursor() throws Exception {
+        Configuration cfg = new Configuration();
+        try (InputStream in = Resources.getResourceAsStream(XML)) {
+            new XMLMapperBuilder(in, cfg, XML, cfg.getSqlFragments()).parse();
+        }
+        var statement = cfg.getMappedStatement(MerchantDeskMapper.class.getName() + ".selectFrozenBatchPage");
+        var bound = statement.getBoundSql(java.util.Map.of("ownerMemberId", 501L,
+                "afterPeriodYm", "2026-10", "afterBatchId", 9007199254740993L));
+        String sql = bound.getSql().replaceAll("\\s+", " ").trim();
+        assertTrue(sql.contains("merchant_member_id = ? and frozen = 1"));
+        assertTrue(sql.contains("period_ym < ? or (period_ym = ? and id < ?)"));
+        assertTrue(sql.contains("order by period_ym desc, id desc limit 25"));
+        assertEquals(java.util.List.of("ownerMemberId", "afterPeriodYm", "afterPeriodYm", "afterBatchId"),
+                bound.getParameterMappings().stream().map(p -> p.getProperty()).toList());
+    }
+
 }

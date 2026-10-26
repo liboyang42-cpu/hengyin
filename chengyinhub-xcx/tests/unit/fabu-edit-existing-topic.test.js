@@ -5,7 +5,7 @@
 // 原草稿纹丝不动,重复主题越攒越多。整条链路上没有任何报错 —— 只有钉死请求形状才抓得到。
 //
 // 承重不变量:
-//  - 带 id 进入 → 必须先拉 /api/topic/edit-detail 回填 formData(名字/章节/票都要落到位)
+//  - 带 id 进入 → 必须先拉 /api/topic/author-edit-detail 回填 formData(名字/章节/票都要落到位)
 //  - 保存 → 必须打 /api/topic/update 且 payload 带 id;绝不能再打 /api/topic/create
 //  - 不带 id(新建)→ 行为不变,仍打 /api/topic/create 且 payload 不带 id
 //  - editScope=WHITELIST(已过审开卖)→ 上送体必须剔掉日期/章节结构/票,只留白名单文案与图
@@ -135,7 +135,7 @@ function editDetailFixture(editScope) {
 function openForEdit(editScope) {
   const page = makePage();
   page.onLoad({ id: '77' });
-  const detailReq = sent.find((r) => r.url === '/api/topic/edit-detail');
+  const detailReq = sent.find((r) => r.url === '/api/topic/author-edit-detail');
   assert.ok(detailReq, '带 id 进入必须去拉主题详情回填，否则编辑器就是个空白新建表单');
   assert.equal(detailReq.data.id, '77');
   detailReq.success({ code: '200', data: editDetailFixture(editScope) });
@@ -220,7 +220,7 @@ test('不带 id(新建):专业故事走 V2 create 且不带 id', () => {
   page.onLoad({});
 
   assert.equal(page.data.editingTopicId, '');
-  assert.equal(sent.filter((r) => r.url === '/api/topic/edit-detail').length, 0,
+  assert.equal(sent.filter((r) => r.url === '/api/topic/author-edit-detail').length, 0,
     '新建不该去拉详情');
   sent = [];
   page._doSubmit();

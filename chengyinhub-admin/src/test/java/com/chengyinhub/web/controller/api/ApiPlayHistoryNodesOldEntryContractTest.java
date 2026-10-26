@@ -75,18 +75,18 @@ class ApiPlayHistoryNodesOldEntryContractTest
 
         controller = spy(new ApiPlayProgressController());
         doReturn(MEMBER).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "cmsPointsSettingService", mock(ICmsPointsSettingService.class));
-        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", mock(ICmsMemberTemplateService.class));
-        ReflectionTestUtils.setField(controller, "omsTicketService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
+        var fixtureHintSettings = mock(ICmsPointsSettingService.class);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService", mock(ICmsMemberTemplateService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService",
                 mock(com.chengyinhub.business.service.IOmsTicketService.class));
-        ReflectionTestUtils.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
-        ReflectionTestUtils.setField(controller, "puzzlePlayService", mock(IPuzzlePlayService.class));
-        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", mock(ITopicRouteRuntimeService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "puzzlePlayService", mock(IPuzzlePlayService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", mock(ITopicRouteRuntimeService.class));
 
         CmsActivity activity = new CmsActivity();
         activity.setId(ACTIVITY);
@@ -113,11 +113,14 @@ class ApiPlayHistoryNodesOldEntryContractTest
         when(nodeService.selectCmsTopicNodeById(DELISTED_ARRIVAL))
                 .thenReturn(node(DELISTED_ARRIVAL, "仅到店站", 0L, "不该出现"));
 
+        CurrentPlayControllerFixtures.install(controller);
+        BasicPlayCommandFixtures.scope(controller, TOPIC);
         progressRows = new ArrayList<>(Arrays.asList(
                 done(MEMBER, DELISTED_DONE, 1000L),
                 arrival(MEMBER, DELISTED_ARRIVAL, 2000L),
                 done(MEMBER, ACTIVE_NODE, 3000L)));
         when(progressService.selectPlayerNodeProgressList(any())).thenAnswer(inv -> progressRows);
+        com.chengyinhub.web.controller.api.NodeHintUnlockTestFixtures.pricing(controller, fixtureHintSettings);
     }
 
     private CmsTopicNode node(long id, String name, Long status, String fragment)
@@ -193,8 +196,7 @@ class ApiPlayHistoryNodesOldEntryContractTest
         // 负控收紧(§7-2):已完成者(status=1)的幂等重试现在走原回执豁免,不再是「新完成」;
         // 本用例钉住的正是**未完成**玩家——无本人完成行,下架闸必须原样拦住。
         progressRows.clear();
-        AjaxResult answer = controller.answer(
-                String.valueOf(ACTIVITY), String.valueOf(DELISTED_DONE), "A", null, null, null);
+        AjaxResult answer = BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(DELISTED_DONE), "A", null, null, null);
 
         assertEquals(500, answer.get("code"));
         assertEquals("该站已下架，暂时无法完成", answer.get("msg"),
@@ -211,7 +213,7 @@ class ApiPlayHistoryNodesOldEntryContractTest
         delisted.setCheckinCode("OLD-CODE");
         when(nodeService.selectCmsTopicNodeList(any())).thenReturn(Collections.singletonList(delisted));
 
-        AjaxResult result = controller.checkin(String.valueOf(ACTIVITY), "OLD-CODE", null, null, null);
+        AjaxResult result = BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), "OLD-CODE", null, null, null, null, String.valueOf(DELISTED_DONE));
 
         assertEquals(500, result.get("code"));
         assertEquals("该站已下架，暂时无法完成", result.get("msg"));

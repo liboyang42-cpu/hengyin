@@ -1,0 +1,191 @@
+
+[INFO] -------------------------------------------------------------
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OrientTaskServiceImplTest.java:[57,44] cannot find symbol
+  symbol:   class TopicRouteMapper
+  location: package com.chengyinhub.business.mapper
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/FreeOrderCancelEntryGateAcceptanceTest.java:[3,42] package com.chengyinhub.web.service.verify does not exist
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/AuditItemProblemTest.java:[268,9] cannot find symbol
+  symbol:   method assertTrue(boolean)
+  location: class com.chengyinhub.business.service.AuditItemProblemTest
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/AuditItemProblemTest.java:[326,9] cannot find symbol
+  symbol:   method assertTrue(boolean)
+  location: class com.chengyinhub.business.service.AuditItemProblemTest
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ThemeStateKeyServiceTest.java:[209,58] cannot find symbol
+  symbol:   method anyLong()
+  location: class com.chengyinhub.business.service.ThemeStateKeyServiceTest
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ThemeStateKeyServiceTest.java:[210,56] cannot find symbol
+  symbol:   method anyLong()
+  location: class com.chengyinhub.business.service.ThemeStateKeyServiceTest
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ThemeStateKeyServiceTest.java:[211,37] cannot find symbol
+  symbol:   method inOrder(com.chengyinhub.business.mapper.ThemeStateKeyMapper)
+  location: class com.chengyinhub.business.service.ThemeStateKeyServiceTest
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[213,59] cannot find symbol
+  symbol:   class TopicPublicationTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[257,63] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[299,29] cannot find symbol
+  symbol:   method lockTopicContentBudget(long)
+  location: interface com.chengyinhub.business.mapper.CmsTopicMapper
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[301,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[326,57] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[343,63] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[349,63] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[390,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[398,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[404,57] cannot find symbol
+  symbol:   class TopicPublicationTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[418,63] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[445,63] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[474,63] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[499,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[562,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[588,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[635,63] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[675,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[690,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[705,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[721,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[739,63] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[754,63] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[771,63] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[784,63] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[802,63] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[820,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[834,63] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[848,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[862,63] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[874,63] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[882,63] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[891,63] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[908,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[938,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[964,67] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[983,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[1005,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[1021,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[1037,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[1049,63] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[1058,63] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[1066,63] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[1073,49] cannot find symbol
+  symbol:   class TopicPublicationTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[1083,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[1092,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[1121,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[1154,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[1161,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java:[1177,49] cannot find symbol
+  symbol:   class TopicGraphTestWiring
+  location: package com.chengyinhub.business.service.support
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OrientTaskServiceImplTest.java:[114,59] cannot find symbol
+  symbol:   class TopicRouteMapper
+  location: package com.chengyinhub.business.mapper
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/framework/aspectj/DeadlockRetryEntryPointContractTest.java:[269,61] package com.chengyinhub.web.service.registration does not exist
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/CityStationOrderAcceptanceTest.java:[87,9] cannot find symbol
+  symbol:   variable ReflectionTestUtils
+  location: class com.chengyinhub.web.controller.api.CityStationOrderAcceptanceTest
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/CityStationOrderAcceptanceTest.java:[88,9] cannot find symbol
+  symbol:   variable ReflectionTestUtils
+  location: class com.chengyinhub.web.controller.api.CityStationOrderAcceptanceTest
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/FreeOrderCancelEntryGateAcceptanceTest.java:[60,21] cannot find symbol
+  symbol:   class RegistrationTicketApplication
+  location: class com.chengyinhub.web.controller.api.FreeOrderCancelEntryGateAcceptanceTest
+[ERROR] chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/FreeOrderCancelEntryGateAcceptanceTest.java:[60,96] cannot find symbol
+  symbol:   class RegistrationSeatService
+  location: package com.chengyinhub.business.service
+[INFO] 63 errors
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO]

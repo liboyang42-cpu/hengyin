@@ -54,30 +54,30 @@ class ApiPlaySensorResultTest {
         doReturn(MEMBER).when(controller).getAppUserId();
         ICmsActivityService activities = mock(ICmsActivityService.class);
         registrations = mock(ICmsRegistrationService.class);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activities);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrations);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
-        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templateService);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "pointsAwardService", points);
-        ReflectionTestUtils.setField(controller, "rewardDropService", drops);
-        ReflectionTestUtils.setField(controller, "smsCouponHistoryService", coupons);
-        ReflectionTestUtils.setField(controller, "playerProgressionService", progression);
-        ReflectionTestUtils.setField(controller, "growthService", growth);
-        ReflectionTestUtils.setField(controller, "topicCompletionAwardService", completion);
-        ReflectionTestUtils.setField(controller, "shopDayProofService", proof);
-        ReflectionTestUtils.setField(controller, "nodeMerchantOverrideService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activities);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrations);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService", templateService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "pointsAwardService", points);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "rewardDropService", drops);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "smsCouponHistoryService", coupons);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerProgressionService", progression);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "growthService", growth);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicCompletionAwardService", completion);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "shopDayProofService", proof);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "nodeMerchantOverrideService",
                 new com.chengyinhub.business.service.impl.NodeMerchantOverrideServiceImpl(
                         mock(ICmsRegistrationMerchantService.class)));
         SensorChallengeServiceImpl sensorChallenges = new SensorChallengeServiceImpl();
         ReflectionTestUtils.setField(sensorChallenges, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "sensorChallengeService", sensorChallenges);
-        ReflectionTestUtils.setField(controller, "xpBudgetService", mock(IXpBudgetService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "sensorChallengeService", sensorChallenges);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "xpBudgetService", mock(IXpBudgetService.class));
         clubLeadMapper = mock(com.chengyinhub.business.mapper.ClubLeadMapper.class);
-        ReflectionTestUtils.setField(controller, "clubLeadMapper", clubLeadMapper);
-        ReflectionTestUtils.setField(controller, "memberCollectibleMapper", memberCollectibles);
-        ReflectionTestUtils.setField(controller, "playAttemptLogMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper", clubLeadMapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "memberCollectibleMapper", memberCollectibles);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playAttemptLogMapper",
                 mock(com.chengyinhub.business.mapper.PlayAttemptLogMapper.class));
 
         node = new CmsTopicNode();
@@ -113,6 +113,7 @@ class ApiPlaySensorResultTest {
         when(completion.grantOnce(MEMBER, TOPIC, ACTIVITY, null))
                 .thenReturn(new TopicCompletionAwardVO());
         CurrentPlayControllerFixtures.install(controller);
+        BasicPlayCommandFixtures.scope(controller, TOPIC);
     }
 
     @Test
@@ -143,13 +144,33 @@ class ApiPlaySensorResultTest {
     }
 
     @Test
+    void originalUnboundSensorStillUsesOriginalConfigAndRefusesUntrustedCompletion() {
+        ITopicRouteRuntimeService route=mock(ITopicRouteRuntimeService.class);
+        PlayNodeAccessTestFixtures.setField(controller,"topicRouteRuntimeService",route);
+        when(route.canPlay(eq(MEMBER),eq(TOPIC),eq(ACTIVITY),eq(NODE),nullable(String.class))).thenReturn(true);
+        var content=new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+        content.put("contentSnapshotVersion",1).put("templateId",85L).put("validationMethod",ValidationMethod.APP_SENSOR)
+                .put("sensorType","still").put("sensorConfig","{\"durationSec\":10}");
+        content.putObject("nodePresentation").put("id",NODE).put("topicId",TOPIC).put("templateId",85L);
+        content.putObject("templatePresentation");
+        when(route.nodeAnswers(MEMBER,TOPIC,ACTIVITY,NODE)).thenReturn(content);
+        node.setTemplateId(null);template.setSensorType("later-author-type");
+        AjaxResult result=controller.sensorResult(request("still",payload("heldSec",12)));
+        assertEquals(500,result.get("code"));assertEquals("传感器可信证明缺失，暂不能完成挑战",result.get("msg"));
+        verify(templateService,never()).selectCmsMemberTemplateById(any());
+        verify(progressService,never()).insertPlayerNodeProgress(any());
+        verify(points,never()).award(anyLong(),anyLong(),anyLong(),anyString());
+        verify(growth,never()).addExp(anyLong(),anyInt(),anyString());
+    }
+
+    @Test
     void filterShotPhotoGrantsXpAndBadgesOnly() {
         template.setValidationMethod(ValidationMethod.PHOTO);
         template.setSensorType("filter_shot");
         template.setSensorConfig("{\"filterStyle\":\"night_vision\"}");
         allowVerifiedUpload();
 
-        AjaxResult result = controller.photo(
+        AjaxResult result = BasicPlayCommandFixtures.photo(controller,
                 String.valueOf(ACTIVITY), String.valueOf(NODE), "filter-shot.png", null);
 
         assertEquals(200, result.get("code"));
@@ -181,7 +202,7 @@ class ApiPlaySensorResultTest {
         when(proof.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE)).thenReturn(true);
         allowVerifiedUpload();
 
-        AjaxResult result = controller.photo(
+        AjaxResult result = BasicPlayCommandFixtures.photo(controller,
                 String.valueOf(ACTIVITY), String.valueOf(NODE), "filter-shot.png", null);
 
         assertEquals(200, result.get("code"));
@@ -224,7 +245,7 @@ class ApiPlaySensorResultTest {
         doReturn(Arrays.asList(doneRow, arrivedOnly)).when(progressService).selectPlayerNodeProgressList(any());
         allowVerifiedUpload(); // 此用例验证完成计数，上传真实性由独立来源校验用例覆盖。
 
-        AjaxResult result = controller.photo(
+        AjaxResult result = BasicPlayCommandFixtures.photo(controller,
                 String.valueOf(ACTIVITY), String.valueOf(NODE), "filter-shot.png", null);
 
         assertEquals(200, result.get("code"));
@@ -242,7 +263,7 @@ class ApiPlaySensorResultTest {
         template.setSensorConfig("{\"filterStyle\":\"pet_pov\"}");
         when(proof.hasArrived(MEMBER, ACTIVITY, NODE)).thenReturn(false);
 
-        AjaxResult result = controller.photo(
+        AjaxResult result = BasicPlayCommandFixtures.photo(controller,
                 String.valueOf(ACTIVITY), String.valueOf(NODE), "filter-shot.png", null);
 
         assertEquals(500, result.get("code"));
@@ -261,7 +282,7 @@ class ApiPlaySensorResultTest {
         template.setSensorConfig("{\"filterStyle\":\"night_vision\"}");
         when(proof.hasArrived(MEMBER, ACTIVITY, NODE)).thenReturn(true);
 
-        AjaxResult result = controller.photo(
+        AjaxResult result = BasicPlayCommandFixtures.photo(controller,
                 String.valueOf(ACTIVITY), String.valueOf(NODE), "filter-shot.png", null);
 
         assertEquals(500, result.get("code"));
@@ -281,7 +302,7 @@ class ApiPlaySensorResultTest {
         gathering.setStatus(1);
         when(clubLeadMapper.selectByActivity(ACTIVITY)).thenReturn(gathering);
 
-        AjaxResult result = controller.photo(
+        AjaxResult result = BasicPlayCommandFixtures.photo(controller,
                 String.valueOf(ACTIVITY), String.valueOf(NODE), "filter-shot.png", null);
 
         assertEquals(500, result.get("code"));
@@ -304,7 +325,7 @@ class ApiPlaySensorResultTest {
         when(coupons.grantCouponById(MEMBER, 909L)).thenReturn(true);
         allowVerifiedUpload();
 
-        AjaxResult result = controller.photo(
+        AjaxResult result = BasicPlayCommandFixtures.photo(controller,
                 String.valueOf(ACTIVITY), String.valueOf(NODE), "ordinary-photo.png", null);
 
         assertEquals(200, result.get("code"));
@@ -324,7 +345,7 @@ class ApiPlaySensorResultTest {
         template.setSensorConfig(null);
         rejectUploadAsInvalid();
 
-        AjaxResult result = controller.photo(
+        AjaxResult result = BasicPlayCommandFixtures.photo(controller,
                 String.valueOf(ACTIVITY), String.valueOf(NODE), "not-an-uploaded-photo", null);
 
         assertEquals(500, result.get("code"));
@@ -344,7 +365,7 @@ class ApiPlaySensorResultTest {
         when(proof.hasArrived(MEMBER, ACTIVITY, NODE)).thenReturn(true);
         rejectUploadAsInvalid();
 
-        AjaxResult result = controller.photo(
+        AjaxResult result = BasicPlayCommandFixtures.photo(controller,
                 String.valueOf(ACTIVITY), String.valueOf(NODE), "not-an-uploaded-photo", null);
 
         assertEquals(500, result.get("code"));
@@ -361,7 +382,7 @@ class ApiPlaySensorResultTest {
         String picUrl = "https://lie-channelwin.oss-cn-hangzhou.aliyuncs.com/upload/"
                 + "0123456789abcdef0123456789abcdef.jpg?Expires=4102444800&OSSAccessKeyId=k&Signature=s";
 
-        AjaxResult result = controller.photo(
+        AjaxResult result = BasicPlayCommandFixtures.photo(controller,
                 String.valueOf(ACTIVITY), String.valueOf(NODE), picUrl, null);
 
         assertEquals(200, result.get("code"));
@@ -379,8 +400,8 @@ class ApiPlaySensorResultTest {
         template.setSensorType(null);
         template.setSensorConfig(null);
         java.util.concurrent.atomic.AtomicInteger calls = new java.util.concurrent.atomic.AtomicInteger();
-        ReflectionTestUtils.setField(controller, "photoUploadFactVerifier",
-                (ApiPlayProgressController.PlayPhotoUploadFactVerifier) (picUrl, memberId) -> {
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "photoUploadFactVerifier",
+                (com.chengyinhub.web.service.play.PlayPhotoCommandApplication.PlayPhotoUploadFactVerifier) (picUrl, memberId) -> {
                     if (calls.incrementAndGet() == 1) {
                         throw new IllegalStateException("对象存储查询失败");
                     }
@@ -388,14 +409,14 @@ class ApiPlaySensorResultTest {
         String picUrl = "https://lie-channelwin.oss-cn-hangzhou.aliyuncs.com/upload/"
                 + "0123456789abcdef0123456789abcdef.jpg?Expires=4102444800&OSSAccessKeyId=k&Signature=s";
 
-        AjaxResult first = controller.photo(
+        AjaxResult first = BasicPlayCommandFixtures.photo(controller,
                 String.valueOf(ACTIVITY), String.valueOf(NODE), picUrl, null);
         assertEquals(503, first.get("code"));
         assertEquals("照片校验服务暂不可用，请稍后重试", first.get("msg"));
         verify(progressService, never()).insertPlayerNodeProgress(any());
         verify(points, never()).award(anyLong(), anyLong(), anyLong(), anyString());
 
-        AjaxResult retry = controller.photo(
+        AjaxResult retry = BasicPlayCommandFixtures.photo(controller,
                 String.valueOf(ACTIVITY), String.valueOf(NODE), picUrl, null);
         assertEquals(200, retry.get("code"));
         verify(progressService).insertPlayerNodeProgress(any());
@@ -417,7 +438,7 @@ class ApiPlaySensorResultTest {
         String picUrl = "https://lie-channelwin.oss-cn-hangzhou.aliyuncs.com/upload/"
                 + "0123456789abcdef0123456789abcdef.jpg?Expires=4102444800&OSSAccessKeyId=k&Signature=s";
 
-        AjaxResult result = controller.photo(
+        AjaxResult result = BasicPlayCommandFixtures.photo(controller,
                 String.valueOf(ACTIVITY), String.valueOf(NODE), picUrl, null);
 
         assertEquals(200, result.get("code"));
@@ -431,7 +452,7 @@ class ApiPlaySensorResultTest {
         for (Integer method : new Integer[] {null, 0, 1, 3, 4, 5, 6, 8, 9, 10, 99}) {
             template.setValidationMethod(method);
             template.setSensorType(null);
-            AjaxResult result = controller.photo(
+            AjaxResult result = BasicPlayCommandFixtures.photo(controller,
                     String.valueOf(ACTIVITY), String.valueOf(NODE), "photo.png", null);
             assertEquals(500, result.get("code"), "validationMethod=" + method);
         }
@@ -441,7 +462,7 @@ class ApiPlaySensorResultTest {
     @Test
     void photoCannotCompleteANodeWithoutATemplate() {
         node.setTemplateId(null);
-        AjaxResult result = controller.photo(
+        AjaxResult result = BasicPlayCommandFixtures.photo(controller,
                 String.valueOf(ACTIVITY), String.valueOf(NODE), "photo.png", null);
         assertEquals(500, result.get("code"));
         verifyNoInteractions(progressService, points, drops, coupons, progression, completion, proof);
@@ -453,7 +474,7 @@ class ApiPlaySensorResultTest {
         template.setSensorType("filter_shot");
         template.setSensorConfig("{\"filterStyle\":\"pet_pov\"}");
 
-        AjaxResult result = controller.checkin(String.valueOf(ACTIVITY), "NODE-CODE", null);
+        AjaxResult result = BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), "NODE-CODE", null, null, null, null, String.valueOf(NODE));
 
         assertEquals(500, result.get("code"));
         assertEquals("该站需通过 App 滤镜相机完成", result.get("msg"));
@@ -466,7 +487,7 @@ class ApiPlaySensorResultTest {
         template.setSensorType("filter_shot");
         template.setSensorConfig("{\"filterStyle\":\"unknown\"}");
 
-        AjaxResult result = controller.photo(
+        AjaxResult result = BasicPlayCommandFixtures.photo(controller,
                 String.valueOf(ACTIVITY), String.valueOf(NODE), "filter-shot.png", null);
 
         assertEquals(500, result.get("code"));
@@ -626,21 +647,21 @@ class ApiPlaySensorResultTest {
 
     @Test
     void vm7CannotBypassSensorValidationThroughLegacyCompletionEndpoints() {
-        assertEquals(500, controller.checkin(String.valueOf(ACTIVITY), "NODE-CODE", null).get("code"));
-        assertEquals(500, controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null).get("code"));
-        assertEquals(500, controller.photo(String.valueOf(ACTIVITY), String.valueOf(NODE), "photo.jpg", null).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), "NODE-CODE", null, null, null, null, String.valueOf(NODE)).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.photo(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "photo.jpg", null).get("code"));
         verify(progressService, never()).insertPlayerNodeProgress(any());
     }
 
     /** 控制器合同测试只关心“校验通过后是否推进”;真实校验逻辑由 FileOssUploadUtils 专属测试覆盖。 */
     private void allowVerifiedUpload() {
-        ReflectionTestUtils.setField(controller, "photoUploadFactVerifier",
-                (ApiPlayProgressController.PlayPhotoUploadFactVerifier) (picUrl, memberId) -> { });
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "photoUploadFactVerifier",
+                (com.chengyinhub.web.service.play.PlayPhotoCommandApplication.PlayPhotoUploadFactVerifier) (picUrl, memberId) -> { });
     }
 
     private void rejectUploadAsInvalid() {
-        ReflectionTestUtils.setField(controller, "photoUploadFactVerifier",
-                (ApiPlayProgressController.PlayPhotoUploadFactVerifier) (picUrl, memberId) -> {
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "photoUploadFactVerifier",
+                (com.chengyinhub.web.service.play.PlayPhotoCommandApplication.PlayPhotoUploadFactVerifier) (picUrl, memberId) -> {
                     throw new IllegalArgumentException("照片上传凭证无效，请重新拍摄上传");
                 });
     }

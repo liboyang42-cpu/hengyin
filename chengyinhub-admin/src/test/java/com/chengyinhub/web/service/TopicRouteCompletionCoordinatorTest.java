@@ -163,4 +163,30 @@ class TopicRouteCompletionCoordinatorTest {
         assertNull(error.getCode());
         assertEquals("节点当前不可用", error.getMessage());
     }
+
+    @Test void originalCompletionNeverResolvesCurrentRun() {
+        ITopicRouteRuntimeService runtime = mock(ITopicRouteRuntimeService.class);
+        TopicRouteCompletionCoordinator coordinator = new TopicRouteCompletionCoordinator(runtime);
+        TopicRouteState result = new TopicRouteState();
+        when(runtime.advanceOriginal(eq(7L), eq(10L), eq(20L), eq(71L), eq(4),
+                eq("original-action"), eq("CHOICE"), any(NodeOutcome.class))).thenReturn(result);
+        assertEquals(result, coordinator.advanceOriginal(7L, 10L, 20L, 30L, 71L,
+                "original-action", 4, "player-node-progress:99", null, null));
+        verify(runtime, org.mockito.Mockito.never()).state(anyLong(), anyLong(), anyLong());
+        verify(runtime, org.mockito.Mockito.never()).advance(anyLong(), anyLong(), anyLong(),
+                anyInt(), anyString(), anyString(), any(NodeOutcome.class));
+    }
+
+    @Test void originalCompletionPropagatesSettlementFailure() {
+        ITopicRouteRuntimeService runtime = mock(ITopicRouteRuntimeService.class);
+        TopicRouteCompletionCoordinator coordinator = new TopicRouteCompletionCoordinator(runtime);
+        when(runtime.advanceOriginal(anyLong(), anyLong(), anyLong(), anyLong(), anyInt(),
+                anyString(), anyString(), any(NodeOutcome.class)))
+                .thenThrow(new ServiceException("ORIENT_REVIEW_PENDING", 409));
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> coordinator.advanceOriginal(7L, 10L, 20L, 30L, 71L,
+                        "original-action", 4, "player-node-progress:99", null, null));
+        assertEquals(Integer.valueOf(409), error.getCode());
+        assertEquals("ORIENT_REVIEW_PENDING", error.getMessage());
+    }
 }

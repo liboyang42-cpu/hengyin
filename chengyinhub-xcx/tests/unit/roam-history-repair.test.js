@@ -297,6 +297,46 @@ test('R9-44 历史分享的分享源只吃选中记录,不吃当前漫游的 _tr
 let pageConfig
 let storage
 
+test('存档重试替换原记录，不释放仍被第50条存档引用的照片', () => {
+  const page = loadRoamPage()
+  const released = []
+  global.wx.removeSavedFile = ({ filePath }) => released.push(filePath)
+  storage['roam_memory_v1:9:sessions'] = Array.from({ length: 50 }, (_, i) => ({
+    ts: 1000 + i, photos: [{ path: 'wxfile://archive/' + i, persisted: true }],
+  }))
+  page._recoveryArchiveTs = 1000
+  page._pois = []; page._reveals = []; page._track = []
+  const fin = { distance: 1, photos: storage['roam_memory_v1:9:sessions'][0].photos }
+  try {
+    assert.equal(page._saveSession(fin), true)
+    assert.equal(page._saveSession(fin), true)
+    assert.equal(storage['roam_memory_v1:9:sessions'].length, 50)
+    assert.equal(storage['roam_memory_v1:9:sessions'][49].photos[0].path, 'wxfile://archive/49')
+    assert.deepEqual(released, [])
+  } finally { delete global.wx.removeSavedFile }
+})
+
+test('新增存档仅在保存成功后释放淘汰照片，其他存档的共同引用保留', () => {
+  const page = loadRoamPage()
+  const released = []
+  global.wx.removeSavedFile = ({ filePath }) => released.push(filePath)
+  storage['roam_memory_v1:9:sessions'] = Array.from({ length: 50 }, (_, i) => ({
+    ts: 1000 + i, photos: [{ path: 'wxfile://archive/' + i, persisted: true }],
+  }))
+  storage['roam_memory_v1:9:sessions'][49].photos.push({ path: 'wxfile://archive/0', persisted: true })
+  page._recoveryArchiveTs = 2000
+  page._pois = []; page._reveals = []; page._track = []
+  const setStorage = global.wx.setStorageSync
+  try {
+    global.wx.setStorageSync = () => { throw new Error('storage unavailable') }
+    assert.equal(page._saveSession({ distance: 1, photos: [] }), false)
+    assert.deepEqual(released, [])
+    global.wx.setStorageSync = setStorage
+    assert.equal(page._saveSession({ distance: 1, photos: [] }), true)
+    assert.deepEqual(released, ['wxfile://archive/49'])
+  } finally { global.wx.setStorageSync = setStorage; delete global.wx.removeSavedFile }
+})
+
 function setByPath(target, keyPath, value) {
   const parts = keyPath.split('.')
   let cursor = target
@@ -409,4 +449,25 @@ test('旧版本千点历史在分享与正文回放读取时受点数预算约�
   assert.ok(arch.archSegs.length > 0 && arch.archSegs.length <= 179)
   assert.ok(replay.segs.length > 0 && replay.segs.length <= 179)
   assert.equal(JSON.stringify(route), before)
+})
+
+test('history recovery read failure exposes retry instead of claiming no active roam', () => {
+  const definition = loadComponent('components/cy/scene-roam-history/index.js')
+  const old = { wx: global.wx, getApp: global.getApp }
+  let recoveryReads = 0
+  global.getApp = () => ({ getUserID: () => '7' })
+  global.wx = { getStorageSync(key) {
+    if (key.endsWith(':sessions')) return []
+    if (key.endsWith(':recovery') && ++recoveryReads === 2) throw Error('read failed')
+    return null
+  } }
+  const component = { ...definition.methods, data: { ...definition.data }, setData(patch) { Object.assign(this.data, patch) } }
+  try {
+    component._load()
+    assert.equal(component.data.state, 'error')
+    assert.deepEqual(component.data.list, [])
+    component.retry()
+    assert.equal(component.data.state, 'ready')
+    assert.equal(component.data.inProgress, false)
+  } finally { Object.assign(global, old) }
 })

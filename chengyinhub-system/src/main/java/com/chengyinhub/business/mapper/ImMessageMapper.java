@@ -20,6 +20,10 @@ public interface ImMessageMapper
     ImMessage selectViewerVisibleByIdForShare(@Param("conversationId") Long conversationId,
             @Param("viewerMemberId") Long viewerMemberId, @Param("id") Long id);
 
+    /** 原发送回执只读查询：完整唯一键范围，不加行锁或改变消息状态。 */
+    ImMessage selectByClientMessageId(@Param("conversationId") Long conversationId,
+            @Param("senderId") Long senderId, @Param("clientMessageId") String clientMessageId);
+
     ImMessage selectByClientMessageIdForUpdate(@Param("conversationId") Long conversationId,
             @Param("senderId") Long senderId, @Param("clientMessageId") String clientMessageId);
 

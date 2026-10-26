@@ -36,6 +36,7 @@ Component({
       id: 0,
       info: {},
       displayInfo: {},
+      bundleRegistrationId: '',
       resultTopicId: '',
       resultEntryError: '',
       // R1-C04:本页此前没有加载/失败态,接口失败只弹 toast,页面照样把空值渲染成完整骨架。
@@ -92,7 +93,7 @@ Component({
       this._detailHidden = true;
       this._detailRequestEpoch = (this._detailRequestEpoch || 0) + 1;
       this._resultReader = null;
-      this.setData({ resultTopicId: '', resultEntryError: '' });
+      this.setData({ resultTopicId: '', bundleRegistrationId: '', resultEntryError: '' });
     },
   },
   methods: {
@@ -170,6 +171,22 @@ Component({
         ? '/subpackageMember/character/index?topicId=' + encodeURIComponent(entry.topicId)
         : '/subpackageMember/orient-score/index?topicId=' + encodeURIComponent(entry.topicId) + '&activityId=' + encodeURIComponent(entry.activityId);
       this._leave(url, () => character.sameReader(app, reader));
+    },
+    _bundleEntry() {
+      if (!this._resultEntry()) return '';
+      const info = this.data.info || {};
+      if (Number(info.ownerType) !== 1 || !info.cmsTopic
+          || !(Number(info.purchaseKind) === 3 || Number(info.cmsTopic.productType) === 2)) return '';
+      return character.exactId(info.id);
+    },
+    goBundle() {
+      if (this._detailDisposed || this._detailHidden || this._resultLeaving) return;
+      const registrationId = this._bundleEntry();
+      if (!registrationId) { this.setData({ bundleRegistrationId: '' }); return; }
+      const reader = this._resultReader;
+      this._resultLeaving = true;
+      this._leave('/subpackageMember/free-explore/index?registrationId=' + encodeURIComponent(registrationId),
+        () => character.sameReader(app, reader));
     },
     goCharacter() { this._openResult('character'); },
     goScore() { this._openResult('score'); },
@@ -256,7 +273,7 @@ Component({
       const reader = character.reader(app);
       this._resultReader = null;
       this._resultLeaving = false;
-      this.setData({ resultTopicId: '', resultEntryError: '' });
+      this.setData({ resultTopicId: '', bundleRegistrationId: '', resultEntryError: '' });
       const id = that.data.id;
       const requestEpoch = (this._detailRequestEpoch || 0) + 1;
       this._detailRequestEpoch = requestEpoch;
@@ -289,7 +306,7 @@ Component({
             });
             that._resultReader = reader;
             const entry = that._resultEntry();
-            that.setData({ resultTopicId: entry ? entry.topicId : '',
+            that.setData({ bundleRegistrationId: that._bundleEntry(), resultTopicId: entry ? entry.topicId : '',
               resultEntryError: entry ? '' : '无法确认当前账号的报名与主题关联，请重新加载参与详情；若仍不可用请联系客服。' });
           } else {
             const fallback = res && res.code == "200" ? '参与详情数据暂不可用' : '获取参与详情失败，请重试';

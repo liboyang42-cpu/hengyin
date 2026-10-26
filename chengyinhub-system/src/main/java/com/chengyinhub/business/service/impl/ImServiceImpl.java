@@ -1432,6 +1432,61 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     @Transactional(rollbackFor = Exception.class)
     public Long sendFromAdmin(Long toMemberId, Integer msgType, String content, String extraJson)
     {
+        return sendAdminMessage(toMemberId, msgType, content, extraJson, null, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long sendFromAdmin(Long adminId, Long toMemberId, Integer msgType, String content,
+            String extraJson, String requestId)
+    {
+        String commandKey = adminCommandKey(adminId, toMemberId, requestId);
+        int type = msgType == null ? ImMessage.MSG_TEXT : msgType;
+        String hash = CanonicalDigest.sha256Hex(JSON.toJSONString(
+                Arrays.asList(adminId, toMemberId, type, content, extraJson)));
+        return sendAdminMessage(toMemberId, type, content, extraJson, commandKey, hash);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> adminSendReceipt(Long adminId, Long toMemberId, String requestId)
+    {
+        String commandKey = adminCommandKey(adminId, toMemberId, requestId);
+        Map<String, Object> receipt = new HashMap<>();
+        receipt.put("found", false);
+        receipt.put("requestId", requestId);
+        receipt.put("memberId", String.valueOf(toMemberId));
+        // The administrator permission is checked at the HTTP boundary. Resolve only the
+        // recipient's existing customer-service conversation, never a caller-supplied conversation.
+        ImConversation c = conversationMapper.selectByTypeAndBizKey(
+                ImConversation.TYPE_MERCHANT, "cs_" + toMemberId);
+        if (c == null) return receipt;
+        ImMessage message = messageMapper.selectByClientMessageId(c.getId(), 0L, commandKey);
+        if (message == null) return receipt;
+        if (!toMemberId.equals(message.getReceiverId()))
+            throw new ServiceException("原消息接收人不匹配", 409);
+        receipt.put("found", true);
+        receipt.put("messageId", String.valueOf(message.getId()));
+        receipt.put("msgType", message.getMsgType());
+        receipt.put("content", message.getContent());
+        receipt.put("extraJson", message.getExtraJson());
+        receipt.put("status", message.getStatus());
+        return receipt;
+    }
+
+    private String adminCommandKey(Long adminId, Long toMemberId, String requestId)
+    {
+        if (adminId == null || adminId <= 0 || toMemberId == null || toMemberId <= 0)
+            throw new ServiceException("管理员或接收人无效", 400);
+        if (requestId == null || !requestId.matches("[A-Za-z0-9_-]{8,96}"))
+            throw new ServiceException("须携带原发送请求号", 400);
+        return CanonicalDigest.sha256Hex(JSON.toJSONString(
+                Arrays.asList("admin-send", adminId, toMemberId, requestId)));
+    }
+
+    private Long sendAdminMessage(Long toMemberId, Integer msgType, String content, String extraJson,
+            String commandKey, String requestHash)
+    {
         if (toMemberId == null || toMemberId <= 0)
         {
             throw new RuntimeException("接收人不存在");
@@ -1451,6 +1506,18 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             conversationMapper.insertImConversation(c);
         }
         conversationMapper.selectImConversationByIdForUpdate(c.getId());
+        // Serialize the receipt check and all message/unread effects in the existing transaction.
+        // A concurrent first-conversation insert may fail; the caller retains this same request key.
+        if (commandKey != null)
+        {
+            ImMessage previous = messageMapper.selectByClientMessageIdForUpdate(c.getId(), 0L, commandKey);
+            if (previous != null)
+            {
+                if (!requestHash.equals(previous.getRequestHash()))
+                    throw new ServiceException("原请求号已用于其他消息内容", 409);
+                return previous.getId();
+            }
+        }
         ensureMember(c.getId(), toMemberId, 0);
 
         int type = msgType == null ? ImMessage.MSG_TEXT : msgType;
@@ -1459,6 +1526,8 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         msg.setSenderId(0L);
         msg.setReceiverId(toMemberId);
         msg.setMsgType(type);
+        msg.setClientMessageId(commandKey);
+        msg.setRequestHash(requestHash);
         msg.setContent(content);
         msg.setExtraJson(extraJson);
         msg.setStatus(ImMessage.STATUS_NORMAL);

@@ -18,6 +18,7 @@ function harness(mode = 'manage', initialOwner = '7') {
   vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'pages/merchant/reviews/index.js'), 'utf8'), {
     Page(value) { definition = value; }, getApp: () => app,
     require(name) {
+      if (name === './reply-recovery') return require('../../pages/merchant/reviews/reply-recovery.js');
       if (name.includes('view-model')) return model;
       if (name.includes('ensure-session')) return require('../../pages/merchant/utils/session/ensure-session.js');
       if (name.includes('merchant-theme')) return { merchantPageShow() {}, merchantPageRestore() {} };
@@ -61,7 +62,7 @@ for (const mode of ['manage', 'public']) test(`${mode} 口碑旧账号回包不�
 test('口碑刷新旧响应不能覆盖最新响应，离页旧错误也不能覆盖状态', () => {
   const h = harness(); h.page.loadReviews(false); h.page.loadReviews(false);
   h.requests[1].success(response('manage', 72)); h.requests[0].success(response('manage', 71));
-  assert.equal(h.page.data.items[0].id, 72);
+  assert.equal(h.page.data.items[0].id, '72');
   h.page.loadReviews(false); h.page.onUnload(); const before = JSON.stringify(h.page.data);
   h.requests[2].fail({ code: 500 }); assert.equal(JSON.stringify(h.page.data), before);
 });

@@ -15,7 +15,7 @@ Page({
   },
   openSession(event) {
     const detail = event.detail || {}
-    wx.navigateTo({ url: `/subpackageRoam/session/index?ts=${detail.params && detail.params.ts}` })
+    wx.navigateTo({ url: `/subpackageRoam/session/index?ts=${encodeURIComponent(detail.params && detail.params.ts || '')}&sessionId=${encodeURIComponent(detail.params && detail.params.sessionId || '')}` })
   },
   goBack() {
     if (getCurrentPages().length > 1) wx.navigateBack()

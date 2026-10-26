@@ -11,7 +11,7 @@
  * 下次发布前先补做;补不成就不发布新快照 —— 否则补做的 revoke 会把刚发出去的新链接一起删掉,
  * 而旧的、按旧设置裁剪的链接反倒一直能看。
  */
-const { clipSavedTrackForSharing, readSharePrivacy, VISIBILITY } = require('./roam-route-privacy.js')
+const { clipSavedTrackForSharing, readSharePrivacyResult, VISIBILITY } = require('./roam-route-privacy.js')
 const { limitTrack } = require('./roam-track-simplify.js')
 
 const REVOKE_PENDING_PREFIX = 'roam_share_revoke_pending:'
@@ -31,6 +31,12 @@ function numberOrNull(value) {
   const number = typeof value === 'string' && value.trim() !== '' ? Number(value) : value
   return typeof number === 'number' && Number.isFinite(number) && number >= 0 ? number : null
 }
+function coordinate(value, limit) {
+  if (typeof value !== 'number' && typeof value !== 'string') return null
+  if (typeof value === 'string' && !value.trim()) return null
+  const number = Number(value)
+  return Number.isFinite(number) && Math.abs(number) <= limit ? number : null
+}
 /** 分享卡上看得到的东西,原样组成快照。session = 页面归一后的 s(含 routeName/time)。 */
 function buildSharePayload(session, privacy) {
   const clipped = limitTrack(clipSavedTrackForSharing((session && session.track) || [], privacy))
@@ -40,9 +46,10 @@ function buildSharePayload(session, privacy) {
     .slice(0, 50)
     .map((poi) => {
       const row = { name: String(poi.name || ''), cat: String(poi.cat || ''), catLabel: String(poi.catLabel || '') }
-      if (Number.isFinite(Number(poi.lat)) && Number.isFinite(Number(poi.lng)) && poi.lat !== '' && poi.lat != null) {
-        row.lat = Number(poi.lat)
-        row.lng = Number(poi.lng)
+      const lat = coordinate(poi.lat, 90), lng = coordinate(poi.lng, 180)
+      if (lat !== null && lng !== null) {
+        row.lat = lat
+        row.lng = lng
       }
       return row
     })
@@ -67,18 +74,24 @@ function readRevokePending(app, storage) {
   try { const key = revokePendingKey(app); return !!key && storage.getStorageSync(key) === 1 } catch (_) { return true }
 }
 function writeRevokePending(storage, key, pending) {
-  if (key) try {
+  if (!key) return false
+  try {
     if (pending) storage.setStorageSync(key, 1)
     else storage.removeStorageSync(key)
-  } catch (_) {}
+    return pending ? storage.getStorageSync(key) === 1 : !storage.getStorageSync(key)
+  } catch (_) { return false }
+}
+function prepareShareRevocation(app, storage) {
+  return writeRevokePending(storage, revokePendingKey(app), true)
 }
 /** 作废本人全部分享快照。返回 Promise<boolean>;false 时待办标记留着,下次发布前补做。 */
 function revokeShareSnapshots(app, storage) {
   const key = revokePendingKey(app), generation = (revokeGenerations.get(key) || 0) + 1
-  if (!key) return Promise.resolve(false); revokeGenerations.set(key, generation); writeRevokePending(storage, key, true)
+  if (!key || !writeRevokePending(storage, key, true)) return Promise.resolve(false)
+  revokeGenerations.set(key, generation)
   return send(app, { url: '/api/roam/share/revoke', method: 'POST', data: {} }).then((res) => {
     if (!isOk(res)) return false
-    if (revokeGenerations.get(key) === generation) writeRevokePending(storage, key, false)
+    if (revokeGenerations.get(key) === generation) return writeRevokePending(storage, key, false)
     return true
   })
 }
@@ -90,7 +103,9 @@ function publishShareSnapshot(app, storage, session) {
     ? app.getAuthorization() : app.globalData && app.globalData.authorization
   const authorization = currentAuthorization()
   const isCurrentOwner = () => owner === revokePendingKey(app) && authorization === currentAuthorization()
-  const privacy = readSharePrivacy(storage)
+  const privacyRead = readSharePrivacyResult(storage)
+  if (!privacyRead.ok) return Promise.resolve({ token: '', reason: 'failed' })
+  const privacy = privacyRead.privacy
   if (privacy.visibility === VISIBILITY.PRIVATE) return Promise.resolve({ token: '', reason: 'private' })
   const { exactSessionId } = require('./roam-recovery.js')
   const sessionId = exactSessionId(session && session.sessionId)
@@ -131,6 +146,7 @@ function readShareSnapshot(app, token) {
 
 module.exports = {
   revokePendingKey,
+  prepareShareRevocation,
   buildSharePayload,
   publishShareSnapshot,
   revokeShareSnapshots,

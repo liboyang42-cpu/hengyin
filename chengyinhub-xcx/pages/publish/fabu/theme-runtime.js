@@ -536,13 +536,15 @@ const methods = {
     const r = initial.parse(this.data.formData.journeyRules);
     const attributes = (r.attributes || []).filter(row => values.COUNTER.test(row.key || ''));
     const index = e && e.currentTarget && e.currentTarget.dataset.index != null ? Number(e.currentTarget.dataset.index) : -1;
+    if (r.attributeBinding && index < 0) { this.openInitialState(); return; }
     const row = index < 0 ? { key: values.nextKey(r.attributes), label: '', min: 0, max: 100, initial: 0, visible: true }
       : copy(attributes[index]);
     if (!row) return;
-    this.setData({ valueEditor: { show: true, index, row, links: copy((r.statLinks || []).filter(link => link.sourceKey === row.key)), error: '' } });
+    this.setData({ valueEditor: { show: true, index, row, definitionReadOnly: !!r.attributeBinding, links: copy((r.statLinks || []).filter(link => link.sourceKey === row.key)), error: '' } });
   },
   closeValueEditor() { this.setData({ 'valueEditor.show': false }); },
   onValueField(e) {
+    if (this.data.valueEditor.definitionReadOnly) return;
     const field = e.currentTarget.dataset.field;
     if (!['label', 'min', 'max', 'visible'].includes(field)) return;
     this.setData({ ['valueEditor.row.' + field]: field === 'visible' ? !!e.detail.value : e.detail.value, 'valueEditor.error': '' });
@@ -581,9 +583,16 @@ const methods = {
     const attributes = (r.attributes || []).slice();
     const current = attributes.findIndex(row => row.key === editor.row.key);
     try {
-      const min = Number(editor.row.min), row = values.attribute(Object.assign({}, editor.row, { initial: min }));
-      row.initial = current < 0 ? editor.row.initial : attributes[current].initial;
-      if (current < 0) attributes.push(row); else attributes[current] = row;
+      let row;
+      if (r.attributeBinding) {
+        if (current < 0 || !r.attributeBinding.enabledKeys.includes(editor.row.key)) throw new Error('请先在初始状态中启用注册属性');
+        row = attributes[current];
+        if (['key','label','min','max','initial','visible'].some(field => row[field] !== editor.row[field])) throw new Error('属性定义已变化，请重新读取后编辑关联');
+      } else {
+        const min = Number(editor.row.min); row = values.attribute(Object.assign({}, editor.row, { initial: min }));
+        row.initial = current < 0 ? editor.row.initial : attributes[current].initial;
+        if (current < 0) attributes.push(row); else attributes[current] = row;
+      }
       if (attributes.length > 32) throw new Error('初始属性最多配置 32 项');
       const links = (r.statLinks || []).filter(link => link.sourceKey !== row.key).concat(editor.links);
       r.statLinks = values.links(links, attributes, r.hp.enabled, this.data.runtimeHpLabel);
@@ -594,6 +603,7 @@ const methods = {
   },
   removeValue(e) {
     const r = initial.parse(this.data.formData.journeyRules), c = this._runtimeConfig();
+    if (r.attributeBinding) { this.setData({ runtimeValueError: '请在初始状态中调整启用属性；定义由注册表管理' }); return; }
     const key = e && e.currentTarget && e.currentTarget.dataset.key || this.data.valueEditor.row.key;
     const refs = values.references(key, this.data.formData, c, r);
     if (refs.length) {

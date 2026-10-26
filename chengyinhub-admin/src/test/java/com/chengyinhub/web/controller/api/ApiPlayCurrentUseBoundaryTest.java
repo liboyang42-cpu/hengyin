@@ -41,15 +41,22 @@ class ApiPlayCurrentUseBoundaryTest {
         original.setRegistrationStatus(2);original.setPaymentStatus(2);original.setPurchaseKind(3);current=original;
         when(registrations.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(original));
         when(registrations.selectCmsRegistrationByIdForUpdate(19L)).thenAnswer(call->current);
-        ReflectionTestUtils.setField(controller,"currentPlayActivityMapper",activities);
-        ReflectionTestUtils.setField(controller,"cmsRegistrationMapper",registrations);
-        ReflectionTestUtils.setField(controller,"cmsActivityService",activityService);
-        ReflectionTestUtils.setField(controller,"cmsTopicNodeService",nodes);
-        ReflectionTestUtils.setField(controller,"cmsTopicService",topics);
-        ReflectionTestUtils.setField(controller,"playerNodeProgressService",progress);
-        ReflectionTestUtils.setField(controller,"topicRouteRuntimeService",routes);
+        com.chengyinhub.business.mapper.ClubLeadMapper noLead = mock(com.chengyinhub.business.mapper.ClubLeadMapper.class);
+        when(noLead.selectByActivity(anyLong())).thenReturn(null);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"clubLeadMapper",noLead);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"currentPlayActivityMapper",activities);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"cmsRegistrationMapper",registrations);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"cmsActivityService",activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"cmsTopicNodeService",nodes);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"cmsTopicService",topics);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"playerNodeProgressService",progress);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"topicRouteRuntimeService",routes);
+        ICmsRegistrationService registrationService=mock(ICmsRegistrationService.class);
+        when(registrationService.selectCmsRegistrationList(any())).thenAnswer(call->registrations.selectCmsRegistrationList(call.getArgument(0)));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"cmsRegistrationService",registrationService);
+        BasicPlayCommandFixtures.scope(controller,29L);
     }
-    private AjaxResult answer() { return controller.answer("9","39","answer",null,null,null); }
+    private AjaxResult answer() { return BasicPlayCommandFixtures.answer(controller, "9", "39", "answer", null, null, null); }
     @Test void expiredExploreOrderCannotReachOriginalAnswerMechanism() {
         activity.setEndDate(new Date(0L));AjaxResult result=answer();assertEquals(500,result.get("code"));
         assertTrue(String.valueOf(result.get("msg")).contains("结束"));verifyNoInteractions(progress);
@@ -76,7 +83,7 @@ class ApiPlayCurrentUseBoundaryTest {
         current.setRegistrationStatus(2);current.setPaymentStatus(0);current.setPurchaseKind(2);current.setExpiresAt(new Date(1000L));
         when(registrations.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(current));
     }
-    private AjaxResult selfPlayAnswer() { return controller.answer(null,"39","answer","29"); }
+    private AjaxResult selfPlayAnswer() { return BasicPlayCommandFixtures.answer(controller, null, "39", "answer", "29"); }
     @Test void expiredSelfPlayPassStillFinishesARouteAlreadyStarted() {
         expiredSelfPlayPass();
         when(routes.hasRunningSession(7L,29L,0L)).thenReturn(true);

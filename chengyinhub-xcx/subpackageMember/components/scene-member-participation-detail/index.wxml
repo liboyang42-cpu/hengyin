@@ -61,6 +61,9 @@
   </view>
 </cy-card>
 
+<cy-card wx:if="{{bundleRegistrationId}}" interactive hover-class="cy-pressed" hover-stay-time="80" accessibility-label="查看本人自由探索权益" bindtap="goBundle">
+  <view>自由探索权益</view>
+</cy-card>
 <cy-card wx:if="{{resultTopicId}}" interactive hover-class="cy-pressed" hover-stay-time="80" accessibility-label="查看本人角色卡" bindtap="goCharacter">
   <view>我的角色卡</view>
 </cy-card>

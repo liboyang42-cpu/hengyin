@@ -54,6 +54,9 @@ class OrientTaskServiceImplTest {
     private Map<String, String> config;
     private PlayTeamMapper playTeamMapper;
     private IOrientSafetyService safety;
+    private com.chengyinhub.business.mapper.TopicRouteSessionMapper routeMapper;
+    private com.chengyinhub.business.service.IOrientScoringService scoring;
+    private com.chengyinhub.business.domain.TopicRouteSession originalRun;
     private CmsTopic topic;
     private CmsTopicNode node;
     private final AtomicInteger photoChecks = new AtomicInteger();
@@ -108,6 +111,17 @@ class OrientTaskServiceImplTest {
         ReflectionTestUtils.setField(service, "geoService", geo);
         ReflectionTestUtils.setField(service, "safetyService", safety);
         ReflectionTestUtils.setField(service, "switches", switches);
+        routeMapper = mock(com.chengyinhub.business.mapper.TopicRouteSessionMapper.class);
+        scoring = mock(com.chengyinhub.business.service.IOrientScoringService.class);
+        originalRun = new com.chengyinhub.business.domain.TopicRouteSession();
+        originalRun.setId(71L); originalRun.setMemberId(PLAYER); originalRun.setTopicId(TOPIC);
+        originalRun.setActivityId(0L); originalRun.setPlayInstanceId("run-71"); originalRun.setStatus(0);
+        when(routeMapper.selectByOwner(0L, TOPIC, PLAYER, "run-71")).thenReturn(originalRun);
+        when(routeMapper.selectAccessibleByIdForUpdate(71L, PLAYER)).thenReturn(originalRun);
+        when(scoring.isActiveFor(topic)).thenReturn(true);
+        ReflectionTestUtils.setField(service, "routeMapper", routeMapper);
+        ReflectionTestUtils.setField(service, "scoringService", scoring);
+
         service.photoVerifier = (url, member) -> {
             photoChecks.incrementAndGet();
             if (!url.startsWith("https://oss/")) throw new IllegalArgumentException("照片无效");
@@ -152,17 +166,42 @@ class OrientTaskServiceImplTest {
     }
 
     @Test
+    void originalReceiptTracksReviewWithoutWritingOrExposingEvidence() throws Exception {
+        Map<String, Object> photo = service.submit(cmdInRun("PHOTO", "k-photo-read", c -> c.picUrl = "https://oss/p1.jpg"));
+        Map<String, Object> pending = service.receipt(PLAYER, TOPIC, 0L, "run-71", TASK, "k-photo-read");
+        assertEquals("PENDING_REVIEW", pending.get("outcome"));
+        assertEquals(false, pending.get("completed"));
+        assertFalse(pending.containsKey("picUrl"));
+        assertFalse(pending.containsKey("requestFingerprint"));
+        assertEquals(1L, db.count("select count(*) from orient_task_attempt"));
+        assertEquals(0L, db.count("select count(*) from orient_task_completion"));
+        service.review(OWNER, (Long) photo.get("attemptId"), true);
+        assertEquals("COMPLETED", service.receipt(PLAYER, TOPIC, 0L, "run-71", TASK, "k-photo-read").get("outcome"));
+        assertEquals(1L, db.count("select count(*) from orient_task_attempt"));
+    }
+
+    @Test
+    void originalReceiptRejectsAnotherOwnerInstanceAndMissingKey() throws Exception {
+        service.submit(cmd("QUIZ", "k-read-owner", c -> c.answer = "wrong"));
+        assertThrows(OrientRejection.class, () -> service.receipt(777L, TOPIC, 0L, null, TASK, "k-read-owner"));
+        assertThrows(OrientRejection.class, () -> service.receipt(PLAYER, TOPIC, 0L, "another", TASK, "k-read-owner"));
+        assertThrows(OrientRejection.class, () -> service.receipt(PLAYER, TOPIC, 0L, null, TASK, "k-not-found"));
+        assertEquals("REJECTED", service.receipt(PLAYER, TOPIC, 0L, null, TASK, "k-read-owner").get("outcome"));
+        assertEquals(1L, db.count("select count(*) from orient_task_attempt"));
+    }
+
+    @Test
     void photoUnderReviewDoesNotClearTheTaskUntilOwnerApproves() throws Exception {
-        Map<String, Object> photo = service.submit(cmd("PHOTO", "k-photo-0001", c -> c.picUrl = "https://oss/p1.jpg"));
+        Map<String, Object> photo = service.submit(cmdInRun("PHOTO", "k-photo-0001", c -> c.picUrl = "https://oss/p1.jpg"));
         assertEquals("PENDING_REVIEW", photo.get("outcome"));
         assertEquals(false, photo.get("completed"));
         assertEquals(1, photoChecks.get(), "照片走上传事实校验");
-        Map<String, Object> state = service.taskState(PLAYER, TOPIC, 0L, null, TASK);
+        Map<String, Object> state = service.taskState(PLAYER, TOPIC, 0L, "run-71", TASK);
         assertEquals(false, state.get("completed"));
         assertEquals(true, state.get("photoPendingReview"));
 
         OrientRejection again = assertThrows(OrientRejection.class,
-                () -> service.submit(cmd("PHOTO", "k-photo-0002", c -> c.picUrl = "https://oss/p2.jpg")));
+                () -> service.submit(cmdInRun("PHOTO", "k-photo-0002", c -> c.picUrl = "https://oss/p2.jpg")));
         assertEquals(OrientRejection.PHOTO_PENDING, again.getErrorCode());
 
         OrientRejection stranger = assertThrows(OrientRejection.class,
@@ -179,8 +218,8 @@ class OrientTaskServiceImplTest {
 
     @Test
     void approvingPhotoAfterAnotherPathWonIsSupersededNotDoubleCompleted() throws Exception {
-        Map<String, Object> photo = service.submit(cmd("PHOTO", "k-photo-0003", c -> c.picUrl = "https://oss/p3.jpg"));
-        service.submit(cmd("SCAN", "k-scan-0003", c -> c.code = "BUND-2026"));
+        Map<String, Object> photo = service.submit(cmdInRun("PHOTO", "k-photo-0003", c -> c.picUrl = "https://oss/p3.jpg"));
+        service.submit(cmdInRun("SCAN", "k-scan-0003", c -> c.code = "BUND-2026"));
         Map<String, Object> approved = service.review(OWNER, (Long) photo.get("attemptId"), true);
         assertEquals("SUPERSEDED", approved.get("outcome"));
         assertEquals("SCAN", approved.get("completedVia"));
@@ -189,7 +228,7 @@ class OrientTaskServiceImplTest {
 
     @Test
     void rejectedPhotoLeavesTaskOpen() throws Exception {
-        Map<String, Object> photo = service.submit(cmd("PHOTO", "k-photo-0004", c -> c.picUrl = "https://oss/p4.jpg"));
+        Map<String, Object> photo = service.submit(cmdInRun("PHOTO", "k-photo-0004", c -> c.picUrl = "https://oss/p4.jpg"));
         Map<String, Object> rejected = service.review(OWNER, (Long) photo.get("attemptId"), false);
         assertEquals("REJECTED", rejected.get("outcome"));
         assertEquals(false, rejected.get("completed"));
@@ -318,6 +357,55 @@ class OrientTaskServiceImplTest {
         assertEquals(OrientRejection.PHOTO_INVALID, bad.getErrorCode());
         assertFalse(db.count("select count(*) from orient_task_attempt") > 0);
         assertTrue(photoChecks.get() > 0);
+    }
+
+
+    @Test
+    void reviewLocksOriginalSessionBeforeAttemptAndReplayDoesNotRescore() throws Exception {
+        Map<String, Object> photo = service.submit(cmdInRun("PHOTO", "review-order-1", c -> c.picUrl = "https://oss/p.jpg"));
+        com.chengyinhub.business.mapper.OrientMapper mapper = org.mockito.Mockito.spy(db.mapper);
+        ReflectionTestUtils.setField(service, "orientMapper", mapper);
+        Long attemptId = (Long) photo.get("attemptId");
+        service.review(OWNER, attemptId, true);
+        org.mockito.InOrder order = org.mockito.Mockito.inOrder(mapper, routeMapper, scoring);
+        order.verify(mapper).selectAttemptById(attemptId);
+        order.verify(routeMapper).selectByOwner(0L, TOPIC, PLAYER, "run-71");
+        order.verify(routeMapper).selectAccessibleByIdForUpdate(71L, PLAYER);
+        order.verify(mapper).selectAttemptByIdForUpdate(attemptId);
+        order.verify(scoring).syncSession(PLAYER, 71L, "lifecycle:alternative:" + attemptId);
+        originalRun.setStatus(1);
+        assertEquals(true, service.review(OWNER, attemptId, true).get("replay"));
+        org.mockito.Mockito.verify(scoring, org.mockito.Mockito.times(1)).syncSession(PLAYER, 71L, "lifecycle:alternative:" + attemptId);
+    }
+
+    @Test
+    void legacyMissingBindingAndEndedRunCannotCreateCompletion() throws Exception {
+        Map<String, Object> old = service.submit(cmd("PHOTO", "review-legacy-1", c -> c.picUrl = "https://oss/p.jpg"));
+        assertThrows(OrientRejection.class, () -> service.review(OWNER, (Long) old.get("attemptId"), true));
+        org.mockito.Mockito.verifyNoInteractions(routeMapper, scoring);
+        Map<String, Object> bound = service.submit(cmdInRun("PHOTO", "review-ended-1", c -> c.picUrl = "https://oss/p.jpg"));
+        originalRun.setStatus(1);
+        assertThrows(OrientRejection.class, () -> service.review(OWNER, (Long) bound.get("attemptId"), true));
+        assertEquals(0L, db.count("select count(*) from orient_task_completion"));
+    }
+
+    @Test
+    void lockedIdentityChangeRejectsBeforeReviewCas() throws Exception {
+        Map<String, Object> photo = service.submit(cmdInRun("PHOTO", "review-identity-1", c -> c.picUrl = "https://oss/p.jpg"));
+        Long attemptId = (Long) photo.get("attemptId");
+        com.chengyinhub.business.mapper.OrientMapper mapper = org.mockito.Mockito.spy(db.mapper);
+        com.chengyinhub.business.domain.OrientTaskAttempt changed = db.mapper.selectAttemptById(attemptId);
+        changed.setRequestFingerprint("different");
+        org.mockito.Mockito.doReturn(changed).when(mapper).selectAttemptByIdForUpdate(attemptId);
+        ReflectionTestUtils.setField(service, "orientMapper", mapper);
+        assertEquals(OrientRejection.IDEMPOTENCY_CONFLICT,
+                assertThrows(OrientRejection.class, () -> service.review(OWNER, attemptId, true)).getErrorCode());
+        assertEquals(0L, db.count("select count(*) from orient_task_completion"));
+        org.mockito.Mockito.verifyNoInteractions(scoring);
+    }
+
+    private static SubmitCommand cmdInRun(String type, String key, Tweak tweak) {
+        SubmitCommand command = cmd(type, key, tweak); command.playInstanceId = "run-71"; return command;
     }
 
     private interface Tweak {

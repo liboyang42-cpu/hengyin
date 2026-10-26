@@ -186,7 +186,7 @@ class RegistrationFundsMybatisIntegrationTest {
                 mock(IRegistrationOrderCreateGate.class));
         registrationOrderService = orderTarget;
 
-        refundService = new RefundServiceImpl();
+        refundService = com.chengyinhub.business.service.support.RefundF3TestSupport.nonBundle(new RefundServiceImpl());
 
         org.springframework.test.util.ReflectionTestUtils.setField(refundService, "firstReviewPointsClawback",
 
@@ -851,6 +851,93 @@ class RegistrationFundsMybatisIntegrationTest {
     }
 
     @Test
+    void parentRefundRejectsAmbiguousOrMissingCashPayerWithoutChangingRows() throws Exception {
+        execute("UPDATE cms_registration SET owner_type=2,owner_id=55,parent_order_no='P-CASH-UNKNOWN',"
+                        + "ticket_id=9,payment_status=2,registration_status=2 WHERE id=11",
+                "UPDATE cms_activity SET start_date=DATE_ADD(NOW(),INTERVAL 3 DAY) WHERE id=55",
+                "INSERT INTO cms_registration(id,registration_no,parent_order_no,owner_type,owner_id,member_id,"
+                        + "payable_amount,wechat_payment_amount,payment_status,registration_status,verification_status,point_used,points_returned)"
+                        + " VALUES(12,'SECOND-CASH','P-CASH-UNKNOWN',2,55,7,100,100,2,2,0,0,0)");
+        IRefundService refunds = mock(IRefundService.class);
+        IWechatPayService wechat = mock(IWechatPayService.class);
+        var group = activityCancellation(wechat, refunds);
+        for (int attempt = 0; attempt < 2; attempt++) {
+            if (attempt == 1) {
+                execute("UPDATE cms_registration SET payable_amount=NULL WHERE id=11",
+                        "UPDATE cms_registration SET payable_amount=0 WHERE id=12");
+            }
+            assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                    () -> new TransactionTemplate(transactionManager).execute(status -> group.cancelPaidRegistration(11L, 7L)));
+            assertEquals(2, number("SELECT COUNT(*) FROM cms_registration WHERE payment_status=2 AND registration_status=2"));
+            assertEquals(0, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
+            assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
+            org.mockito.Mockito.verifyNoInteractions(wechat, refunds);
+        }
+    }
+
+    @Test
+    void unpaidPlayerCancelRejectsOverflowingPointSnapshotBeforeClaimOrInventoryReturn() throws Exception {
+        execute("UPDATE cms_registration SET ticket_id=9,point_used=2147483648,points_returned=0 WHERE id=11");
+        assertThrows(IllegalStateException.class, () -> registrationService.cancelRegistration(11L, 7L, "test actor"));
+        assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(0, number("SELECT points_returned FROM cms_registration WHERE id=11"));
+        assertEquals(0, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(1, number("SELECT registration_status FROM cms_registration WHERE id=11"));
+        assertEquals(0, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
+    }
+
+    @Test
+    void expiredCloseRejectsOverflowingPointReturnAndRollsBackOrderAndMarker() throws Exception {
+        execute("UPDATE cms_registration SET ticket_id=NULL,pay_expire_time=DATE_SUB(NOW(),INTERVAL 1 MINUTE),"
+                        + "point_used=2147483648,points_returned=0 WHERE id=11");
+        assertThrows(IllegalStateException.class, () -> registrationService.closeExpiredOne(11L));
+        assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(0, number("SELECT points_returned FROM cms_registration WHERE id=11"));
+        assertEquals(0, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(1, number("SELECT registration_status FROM cms_registration WHERE id=11"));
+    }
+
+    @Test
+    void playerRefundWithOverflowingPointsRollsBackClaimInventoryAndBalance() throws Exception {
+        execute("UPDATE cms_registration SET owner_type=2,owner_id=55,ticket_id=9,payment_status=2,"
+                        + "registration_status=2,wechat_payment_amount=0,payable_amount=0,"
+                        + "point_used=2147483648,points_returned=0 WHERE id=11",
+                "UPDATE cms_activity SET start_date=DATE_ADD(NOW(),INTERVAL 3 DAY) WHERE id=55");
+        var group = activityCancellation(mock(IWechatPayService.class), mock(IRefundService.class));
+        ReflectionTestUtils.setField(group, "firstReviewPointsClawback",
+                mock(com.chengyinhub.business.service.impl.FirstReviewPointsClawbackService.class));
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> new TransactionTemplate(transactionManager).execute(status -> group.cancelPaidRegistration(11L, 7L)));
+        assertTrue(failure.getMessage().contains("积分快照"));
+        assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(0, number("SELECT points_returned FROM cms_registration WHERE id=11"));
+        assertEquals(2, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(2, number("SELECT registration_status FROM cms_registration WHERE id=11"));
+        assertEquals(0, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
+    }
+
+    @Test
+    void playerRefundWithUnknownCashDoesNotCancelOrRestoreInventory() throws Exception {
+        execute("UPDATE cms_registration SET owner_type=2,owner_id=55,ticket_id=9,payment_status=2,"
+                        + "registration_status=2,wechat_payment_amount=NULL,point_used=20,points_returned=0 WHERE id=11",
+                "UPDATE cms_activity SET start_date=DATE_ADD(NOW(),INTERVAL 3 DAY) WHERE id=55");
+        IRefundService refunds = mock(IRefundService.class);
+        IWechatPayService wechat = mock(IWechatPayService.class);
+        var group = activityCancellation(wechat, refunds);
+        com.chengyinhub.common.exception.ServiceException failure = assertThrows(
+                com.chengyinhub.common.exception.ServiceException.class,
+                () -> new TransactionTemplate(transactionManager).execute(status -> group.cancelPaidRegistration(11L, 7L)));
+        assertEquals(409, failure.getCode());
+        assertTrue(failure.getMessage().contains("现金快照"));
+        assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(0, number("SELECT points_returned FROM cms_registration WHERE id=11"));
+        assertEquals(2, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(2, number("SELECT registration_status FROM cms_registration WHERE id=11"));
+        assertEquals(0, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
+        org.mockito.Mockito.verifyNoInteractions(wechat, refunds);
+    }
+
+    @Test
     void expiredCloseRollsBackWhenPointReturnUpdatesNoMember() throws Exception {
         execute("UPDATE cms_registration SET ticket_id=NULL,pay_expire_time=DATE_SUB(NOW(),INTERVAL 1 MINUTE),"
                         + "point_used=20,points_returned=0 WHERE id=11",
@@ -1320,7 +1407,7 @@ class RegistrationFundsMybatisIntegrationTest {
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("SUCCESS"));
         IRefundService refunds = mock(IRefundService.class);
-        when(refunds.saveRefund(org.mockito.ArgumentMatchers.any())).thenAnswer(call -> {
+        when(refunds.savePreparedRegistrationRefund(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class))).thenAnswer(call -> {
             ((com.chengyinhub.business.domain.RefundApplication) call.getArgument(0)).setId(700L);
             return 1;
         });
@@ -1336,7 +1423,7 @@ class RegistrationFundsMybatisIntegrationTest {
 
         assertEquals("WX-TX-11", text("SELECT transaction_id FROM cms_registration WHERE id=11"));
         assertEquals(3, number("SELECT registration_status FROM cms_registration WHERE id=11"));
-        verify(refunds).saveRefund(org.mockito.ArgumentMatchers.argThat(app -> Long.valueOf(11L).equals(app.getSourceId())));
+        verify(refunds).savePreparedRegistrationRefund(org.mockito.ArgumentMatchers.argThat(app -> Long.valueOf(11L).equals(app.getSourceId())), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
         verify(wechat, never()).closePaymentAttempt(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
         assertEquals(1, number("SELECT COUNT(*) FROM cms_activity WHERE id=55 AND cancel_time IS NOT NULL"));
     }
@@ -1369,7 +1456,7 @@ class RegistrationFundsMybatisIntegrationTest {
         // 权益失效原因按枚举 javadoc:「主办方取消活动」本就是 ORGANIZER_CANCEL 的定义之一,
         // 取消路径与对账任务(下一条用例)现在传的是同一个值。
         verify(perkLedgerService).releaseOnRefund(11L, EntitlementInvalidReason.ORGANIZER_CANCEL);
-        verify(refunds, never()).saveRefund(org.mockito.ArgumentMatchers.any());
+        verify(refunds, never()).savePreparedRegistrationRefund(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
         assertEquals(1, number("SELECT COUNT(*) FROM cms_activity WHERE id=55 AND cancel_time IS NOT NULL"));
     }
 

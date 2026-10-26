@@ -37,6 +37,7 @@
         <view class="node-card__main">
           <text class="node-card__title">竖版封面<text class="g-req">*</text></text>
         </view>
+        <view wx:if="{{formData.imgUrl}}" class="node-pill" catchtap="removeBanner" aria-role="button" aria-label="删除竖版封面" hover-class="cy-pressed"><text>删除</text></view>
         <view class="node-pill node-pill--solid" catchtap="uploadBanner" aria-role="button" aria-label="{{formData.imgUrl ? '更换竖版封面' : '上传竖版封面'}}" hover-class="cy-pressed" hover-stay-time="80">
           <text wx:if="{{formData.imgUrl}}">已上传</text>
           <block wx:else><cy-icon name="plus" size="24" /><text>上传 3:4</text></block>

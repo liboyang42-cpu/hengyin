@@ -103,6 +103,18 @@ function saveDraft(storage, input) {
   if (input.publishAttempt && input.publishAttempt.status === 'UNKNOWN') {
     envelope.publishAttempt = { status: 'UNKNOWN', topicId: value(input.publishAttempt.topicId) };
     if (input.publishAttempt.kind === 'SERVER_DRAFT') envelope.publishAttempt.kind = 'SERVER_DRAFT';
+    ['configVersion', 'registryVersion'].forEach(function(field) {
+      var version = input.publishAttempt[field];
+      if (typeof version === 'string' && /^[1-9][0-9]{0,18}$/.test(version)
+          && (version.length < 19 || version <= '9223372036854775807')) envelope.publishAttempt[field] = version;
+    });
+  }
+  if (input.serverDraftAttempt && input.serverDraftAttempt.status === 'UNKNOWN') {
+    envelope.serverDraftAttempt = {
+      status: 'UNKNOWN',
+      topicId: value(input.serverDraftAttempt.topicId),
+      payload: clone(input.serverDraftAttempt.payload),
+    };
   }
   if (input.editorMeta) envelope.editorMeta = clone(input.editorMeta);
   if (value(input.topicId)) envelope.topicId = input.topicId;

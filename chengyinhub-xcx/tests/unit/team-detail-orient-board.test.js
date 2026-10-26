@@ -5,6 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { createRequire } = require('node:module');
 const file = path.resolve(__dirname, '../../pages/team/detail/index.js');
+const { platform, receipt } = require('./helpers/team-event-platform');
 const clone = v => JSON.parse(JSON.stringify(v));
 const teamId = '9007199254740993';
 const ownerId = '9223372036854775807';
@@ -15,7 +16,7 @@ function mount() {
     getRequestErrorMessage: (res, fallback) => res && res.msg || fallback,
     sendRequest: r => { requests.push(r); return { abort() {} }; } };
   vm.runInNewContext(fs.readFileSync(file, 'utf8'), { Page: d => { definition = d; }, getApp: () => app,
-    wx: { stopPullDownRefresh() {} }, console,
+    wx: platform(), console,
     require: id => id.includes('toast') ? () => {} : createRequire(file)(id) });
   const page = { ...definition, data: clone(definition.data),
     setData(patch) { writes.push(clone(patch)); for (const [key, value] of Object.entries(patch)) {
@@ -104,7 +105,7 @@ test('identity change without a reload clears data when pending read returns', (
   assert.equal(h.page.data.board, null); assert.equal(h.page.data.team, null); assert.equal(h.page.data.joined, false);
 });
 
-test('duplicate callbacks cannot settle next read; member loss clears board; ordinary actions remain usable', () => {
+test('duplicate callbacks cannot settle next read; member loss clears board; ordinary actions remain usable', async () => {
   const h = ready(); const oldRank = h.requests.at(-1);
   h.page.load(); h.page.load(); assert.equal(h.requests.length, 4, 'info reads are single flight');
   h.info({ joined: false, leader: false });
@@ -112,10 +113,11 @@ test('duplicate callbacks cannot settle next read; member loss clears board; ord
   assert.equal(h.page.data.boardState, 'not-member'); assert.equal(h.page.data.board, null);
   assert.equal(h.requests.length, 4);
   const ordinary = start(); ordinary.requests.at(-1).success({ code: 500, errorCode: 'ORIENT_NOT_ORIENTEERING' });
-  ordinary.page.onJoinModeChange({ detail: { value: false } });
-  assert.equal(ordinary.requests.at(-1).url, '/api/team/join-mode');
-  assert.equal(JSON.parse(ordinary.requests.at(-1).data).teamId, teamId, 'write keeps Long exact too');
-  ordinary.requests.at(-1).success({ code: 200, data: { joinMode: 1 } });
+  await ordinary.page.onJoinModeChange({ detail: { value: false } });
+  assert.equal(ordinary.requests.at(-1).url, '/api/team/command');
+  assert.equal(JSON.parse(ordinary.requests.at(-1).data).targetId, teamId, 'write keeps Long exact too');
+  ordinary.requests.at(-1).success(receipt(ordinary.requests.at(-1), 'APPLIED'));
+  ordinary.info({ team: { id: teamId, ownerType: 2, ownerId, status: 0, joinMode: 1 } });
   assert.equal(ordinary.page.data.joinModePublic, false);
 });
 
@@ -152,16 +154,18 @@ test('settled detail and ranking callbacks do not overwrite their first result',
   rank.fail({ errorCode: 'ORIENT_DISABLED' }); assert.equal(h.writes.length, settled);
 });
 
-test('read refresh preserves an in-flight join-mode lock and accepts its eventual write receipt', () => {
+test('read refresh preserves an in-flight join-mode lock and accepts its eventual write receipt', async () => {
   const h = ready();
-  h.page.onJoinModeChange({ detail: { value: false } }); const write = h.requests.at(-1);
-  assert.equal(write.url, '/api/team/join-mode');
+  await h.page.onJoinModeChange({ detail: { value: false } }); const write = h.requests.at(-1);
+  assert.equal(write.url, '/api/team/command');
+  assert.equal(JSON.parse(write.data).action, 'join-mode');
   h.page.load(); h.info();
   assert.equal(h.page.data.joinModeSaving, true);
   const before = h.requests.length;
   h.page.onJoinModeChange({ detail: { value: false } });
   assert.equal(h.requests.length, before, 'read refresh must not allow another write');
-  write.success({ code: 200, data: { joinMode: 1 } });
+  write.success(receipt(write, 'APPLIED'));
+  h.info({ team: { id: teamId, ownerType: 2, ownerId, status: 0, joinMode: 1 } });
   assert.equal(h.page.data.joinModeSaving, false);
   assert.equal(h.page.data.team.joinMode, 1);
 });

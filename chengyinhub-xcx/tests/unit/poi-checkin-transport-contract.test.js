@@ -82,7 +82,7 @@ function mount({ source = readSource(), storage = new Map(), owner = 7, poiId = 
   }
   const get = (flags = {}, statusCode = 200) => respond(requests.at(-1), {
     code: statusCode === 200 ? 200 : statusCode,
-    data: { poiId: Number(instance.data.poiId), status: 1, validationMethod: 5, completed: false, needRedeem: false, ...flags },
+    data: { poiId: instance.data.poiId, status: 1, validationMethod: 5, completed: false, needRedeem: false, ...flags },
   }, statusCode)
   definition.lifetimes.attached.call(instance)
   assert.equal(requests[0].method, 'GET')
@@ -94,6 +94,40 @@ function mount({ source = readSource(), storage = new Map(), owner = 7, poiId = 
     detach() { definition.lifetimes.detached.call(instance) },
   }
 }
+
+test('Long owner/POI/coupon IDs survive UNKNOWN, reopen and positive recovery exactly', () => {
+  const owner = '9223372036854775807', poiId = '9007199254740993'
+  const h = mount({ owner, poiId })
+  assert.equal(h.instance.data.state, 'ready')
+  const post = h.begin()
+  assert.ok(post.url.endsWith('/' + poiId + '/complete'))
+  post.fail({ errMsg: 'timeout' }); post.complete({})
+  const key = 'cy_roam_poi_checkin_pending:v1:' + owner + ':' + poiId
+  const pending = h.storage.get(key)
+  assert.equal(pending.ownerId, owner)
+  assert.equal(pending.poiId, poiId)
+  const reopened = mount({ owner, poiId, storage: h.storage })
+  assert.equal(reopened.instance.data.checkinPending, true)
+  assert.equal(reopened.storage.get(key).attemptId, pending.attemptId)
+  reopened.instance.reverifyOnSite(); reopened.get()
+  const retry = reopened.begin()
+  reopened.respond(retry, { code: 200, data: { poiId, needRedeem: true, completed: false, couponId: '9007199254740995' } })
+  assert.equal(reopened.storage.size, 0)
+  assert.equal(reopened.events.filter(e => e.name === 'completed').length, 1)
+  assert.equal(reopened.events.at(-1).detail.recovered, true)
+})
+
+test('review ownership handles numeric and string IDs and never marks another owner mine', () => {
+  for (const owner of [7, '7', '9223372036854775807']) {
+    const h = mount({ owner })
+    h.instance.loadReviews()
+    h.respond(h.requests.at(-1), { code: 200, data: { rows: [
+      { id: '31', memberId: String(owner) }, { id: '32', memberId: '8' },
+    ] } })
+    assert.equal(h.instance.data.reviews[0].mine, true)
+    assert.equal(h.instance.data.reviews[1].mine, false)
+  }
+})
 
 function assertLocationSingleUse(source) {
   const h = mount({ source })

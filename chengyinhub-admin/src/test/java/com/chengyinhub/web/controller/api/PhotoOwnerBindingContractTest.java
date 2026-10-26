@@ -91,32 +91,32 @@ class PhotoOwnerBindingContractTest
         IPlayerProgressionService progressionService = mock(IPlayerProgressionService.class);
         ITopicCompletionAwardService completionAwardService = mock(ITopicCompletionAwardService.class);
 
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
-        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templateService);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "pointsAwardService", pointsAwardService);
-        ReflectionTestUtils.setField(controller, "rewardDropService", mock(IRewardDropService.class));
-        ReflectionTestUtils.setField(controller, "smsCouponHistoryService", mock(ISmsCouponHistoryService.class));
-        ReflectionTestUtils.setField(controller, "playerProgressionService", progressionService);
-        ReflectionTestUtils.setField(controller, "growthService", mock(IGrowthService.class));
-        ReflectionTestUtils.setField(controller, "topicCompletionAwardService", completionAwardService);
-        ReflectionTestUtils.setField(controller, "shopDayProofService", proofService);
-        ReflectionTestUtils.setField(controller, "xpBudgetService", mock(IXpBudgetService.class));
-        ReflectionTestUtils.setField(controller, "clubLeadMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService", templateService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "pointsAwardService", pointsAwardService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "rewardDropService", mock(IRewardDropService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "smsCouponHistoryService", mock(ISmsCouponHistoryService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerProgressionService", progressionService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "growthService", mock(IGrowthService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicCompletionAwardService", completionAwardService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "shopDayProofService", proofService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "xpBudgetService", mock(IXpBudgetService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper",
                 mock(com.chengyinhub.business.mapper.ClubLeadMapper.class));
-        ReflectionTestUtils.setField(controller, "playAttemptLogMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playAttemptLogMapper",
                 mock(com.chengyinhub.business.mapper.PlayAttemptLogMapper.class));
-        ReflectionTestUtils.setField(controller, "memberCollectibleMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "memberCollectibleMapper",
                 mock(com.chengyinhub.business.mapper.MemberCollectibleMapper.class));
-        ReflectionTestUtils.setField(controller, "nodeMerchantOverrideService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "nodeMerchantOverrideService",
                 new NodeMerchantOverrideServiceImpl(
                         mock(com.chengyinhub.business.service.ICmsRegistrationMerchantService.class)));
         SensorChallengeServiceImpl sensorChallenges = new SensorChallengeServiceImpl();
         ReflectionTestUtils.setField(sensorChallenges, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "sensorChallengeService", sensorChallenges);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "sensorChallengeService", sensorChallenges);
 
         CmsTopicNode node = new CmsTopicNode();
         node.setId(NODE);
@@ -167,6 +167,7 @@ class PhotoOwnerBindingContractTest
         doReturn(new java.net.URL(PIC_URL)).when(ossClient)
                 .generatePresignedUrl(any(com.aliyun.oss.model.GeneratePresignedUrlRequest.class));
         CurrentPlayControllerFixtures.install(controller);
+        BasicPlayCommandFixtures.scope(controller, TOPIC);
     }
 
     private static String objectKey()
@@ -184,14 +185,14 @@ class PhotoOwnerBindingContractTest
 
     private void installVerifier()
     {
-        ReflectionTestUtils.setField(controller, "photoUploadFactVerifier",
-                (ApiPlayProgressController.PlayPhotoUploadFactVerifier) (picUrl, memberId) ->
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "photoUploadFactVerifier",
+                (com.chengyinhub.web.service.play.PlayPhotoCommandApplication.PlayPhotoUploadFactVerifier) (picUrl, memberId) ->
                         PhotoOwnerTestBridge.verifyForMember(picUrl, ossClient, BUCKET, memberId));
     }
 
     private AjaxResult submit()
     {
-        return controller.photo(String.valueOf(ACTIVITY), String.valueOf(NODE), PIC_URL, null);
+        return BasicPlayCommandFixtures.photo(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), PIC_URL, null);
     }
 
     private void verifyNoProgressNorReward()

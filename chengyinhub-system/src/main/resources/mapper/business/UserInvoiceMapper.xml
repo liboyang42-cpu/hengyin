@@ -1,6 +1,92 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.chengyinhub.business.mapper.UserInvoiceMapper">
+    <select id="selectInvoiceRegistrationById" resultMap="InvoiceRegistration" useCache="false" flushCache="true">
+        select <include refid="registrationLockColumns"/> from cms_registration where id=#{id}
+    </select>
+    <select id="resolveInvoiceIssuers" resultType="long" useCache="false" flushCache="true">
+        select i.id from cms_registration r
+        join user_invoice_issuer_owner m on m.owner_type=r.owner_type and m.owner_id=r.owner_id
+        join user_invoice_issuer i on i.id=m.issuer_id and i.enabled=1
+        join user_invoice_scope q on q.issuer_id=i.id and q.user_id=i.reconciliation_user_id
+            and q.enabled=1 and q.can_reconcile=1
+        join sys_user u on u.user_id=q.user_id and u.status='0' and u.del_flag='0'
+        where r.id in <foreach collection="orderIds" item="id" open="(" close=")" separator=",">#{id}</foreach>
+        and exists (select 1 from user_invoice_scope h join sys_user hu on hu.user_id=h.user_id
+            and hu.status='0' and hu.del_flag='0'
+            where h.issuer_id=i.id and h.enabled=1 and h.can_handle=1)
+        order by r.id for share
+    </select>
+    <select id="selectInvoiceIssuerPreviews" resultType="map">
+        select r.id as order_id, i.id as issuer_id, i.issuer_name from cms_registration r
+        join user_invoice_issuer_owner m on m.owner_type=r.owner_type and m.owner_id=r.owner_id
+        join user_invoice_issuer i on i.id=m.issuer_id
+        where r.id in <foreach collection="orderIds" item="id" open="(" close=")" separator=",">#{id}</foreach>
+    </select>
+    <insert id="insertProcessing">
+        insert into user_invoice_processing(application_id,issuer_id) values(#{id},#{issuerId})
+    </insert>
+
+    <resultMap id="InvoiceRegistration" type="com.chengyinhub.business.domain.CmsRegistration">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="parentOrderNo" column="parent_order_no"/>
+        <result property="ownerType" column="owner_type"/>
+        <result property="ownerId" column="owner_id"/>
+        <result property="paymentStatus" column="payment_status"/>
+        <result property="registrationStatus" column="registration_status"/>
+        <result property="wechatPaymentAmount" column="wechat_payment_amount"/>
+        <result property="payableAmount" column="payable_amount"/>
+    </resultMap>
+    <sql id="registrationLockColumns">
+        id, member_id, parent_order_no, owner_type, owner_id, payment_status,
+        registration_status, wechat_payment_amount, payable_amount
+    </sql>
+    <!-- Only the first registration carries a multi-ticket parent's aggregate cash. -->
+    <sql id="cashCarrier">
+        (r.parent_order_no is null or r.parent_order_no = '' or
+         (r.payable_amount &gt; 0 and not exists
+          (select 1 from cms_registration child where child.parent_order_no=r.parent_order_no and child.id &lt; r.id)))
+    </sql>
+    <select id="selectInvoiceRegistrationSeeds" resultMap="InvoiceRegistration" useCache="false">
+        select r.id, r.member_id, r.parent_order_no, r.owner_type, r.owner_id, r.payment_status,
+               r.registration_status, r.wechat_payment_amount, r.payable_amount
+        from cms_registration r where r.member_id=#{memberId}
+        and r.id in <foreach collection="orderIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+        and <include refid="cashCarrier"/> order by r.id
+    </select>
+    <select id="lockInvoiceRegistration" resultMap="InvoiceRegistration" useCache="false" flushCache="true">
+        select <include refid="registrationLockColumns"/> from cms_registration where id=#{id} for update
+    </select>
+    <select id="lockInvoiceParentOrder" resultMap="InvoiceRegistration" useCache="false" flushCache="true">
+        select <include refid="registrationLockColumns"/> from cms_registration
+        where parent_order_no=#{parentOrderNo} order by id for update
+    </select>
+    <select id="selectActiveInvoiceOrderIdsForUpdate" resultType="long" useCache="false" flushCache="true">
+        select order_id from user_invoice_application_order
+        where order_source='registration' and active_key=1
+        and order_id in <foreach collection="orderIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+        order by order_id, id for update
+    </select>
+
+    <!-- Same-key contenders wait for the first transaction; no payload/result is overwritten. -->
+    <insert id="reserveTitleReceipt">
+        insert into user_invoice_title_receipt(member_id, request_id, payload_fingerprint, create_time)
+        values(#{memberId}, #{requestId}, #{fingerprint}, now())
+        on duplicate key update member_id = member_id
+    </insert>
+    <select id="selectTitleReceipt" resultType="java.util.HashMap">
+        select request_id as requestId, payload_fingerprint as fingerprint, title_id as titleId
+        from user_invoice_title_receipt where member_id=#{memberId} and request_id=#{requestId}
+    </select>
+    <select id="lockTitleReceipt" resultType="java.util.HashMap">
+        select request_id as requestId, payload_fingerprint as fingerprint, title_id as titleId
+        from user_invoice_title_receipt where member_id=#{memberId} and request_id=#{requestId} for update
+    </select>
+    <update id="finishTitleReceipt">
+        update user_invoice_title_receipt set title_id=#{titleId}
+        where member_id=#{memberId} and request_id=#{requestId} and title_id is null
+    </update>
 
     <!-- 抬头名称与税号一律绑 PiiCryptoTypeHandler（库里只落 v1: 密文）；缺 chengyin.pii.key 时 handler 自己 fail-closed 拒写。 -->
     <resultMap id="TitleResult" type="com.chengyinhub.business.domain.UserInvoiceTitle">
@@ -45,6 +131,8 @@
         <result property="memberId" column="member_id"/>
         <result property="orderSource" column="order_source"/>
         <result property="orderId" column="order_id"/>
+        <result property="issuerId" column="issuer_id"/>
+        <result property="issuerName" column="issuer_name"/>
         <result property="amount" column="amount"/>
         <result property="activeKey" column="active_key"/>
         <result property="createTime" column="create_time"/>
@@ -111,17 +199,27 @@
           and r.payment_status = 2
           and r.registration_status = 2
           and r.wechat_payment_amount &gt; 0
+          and <include refid="cashCarrier"/>
+          and not exists (
+              select 1 from cms_registration child
+              where r.parent_order_no is not null and r.parent_order_no != '' and child.parent_order_no=r.parent_order_no
+                and (child.member_id != r.member_id or child.owner_type != r.owner_type or child.owner_id != r.owner_id
+                     or child.payment_status != 2 or child.registration_status != 2))
           <if test="orderIds != null and orderIds.size() > 0">
           and r.id in
           <foreach collection="orderIds" item="oid" open="(" separator="," close=")">#{oid}</foreach>
           </if>
           and not exists (
               select 1 from refund_application ra
-              where ra.source_type = 'registration' and ra.source_id = r.id
+              where ra.source_type = 'registration' and
+                (ra.source_id = r.id or (r.parent_order_no is not null and r.parent_order_no != '' and exists
+                 (select 1 from cms_registration sibling where sibling.parent_order_no=r.parent_order_no and sibling.id=ra.source_id)))
                 and ra.del_flag = 0 and ra.status in (0, 1))
           and not exists (
               select 1 from user_invoice_application_order o
-              where o.order_source = 'registration' and o.order_id = r.id and o.active_key = 1)
+              where o.order_source = 'registration' and o.active_key = 1
+                and (o.order_id = r.id or (r.parent_order_no is not null and r.parent_order_no != '' and exists
+                 (select 1 from cms_registration sibling where sibling.parent_order_no=r.parent_order_no and sibling.id=o.order_id))))
     </sql>
 
     <select id="selectInvoiceableRegistrations" resultMap="OrderLineResult">
@@ -217,4 +315,11 @@
         update user_invoice_application_order set active_key = null
         where application_id = #{applicationId} and active_key = 1
     </update>
+    <!-- Owner-scoped, bounded projection: never expose processing evidence or actor data. -->
+    <select id="selectMemberReconciliation" resultType="map">
+      select p.application_id as applicationId, p.reconciliation_status as reconciliationStatus
+      from user_invoice_processing p join user_invoice_application a on a.id=p.application_id
+      where a.member_id=#{memberId} and a.id in
+      <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
 </mapper>

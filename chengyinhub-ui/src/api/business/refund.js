@@ -154,3 +154,12 @@ export function reopenActivityCancelRefundAssessment(data) {
     data
   })
 }
+
+// 原ID保持字符串；履约刷新不调用支付/退款渠道。
+export function getRefundFulfillment(refundId) {
+  return request({ url: `/business/refund/${encodeURIComponent(String(refundId))}/fulfillment`, method: 'get' })
+}
+
+export function refreshRefundFulfillment(refundId) {
+  return request({ url: `/business/refund/${encodeURIComponent(String(refundId))}/fulfillment/refresh`, method: 'post' })
+}

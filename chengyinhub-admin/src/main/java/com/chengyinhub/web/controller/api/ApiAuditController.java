@@ -59,12 +59,15 @@ public class ApiAuditController extends BaseController {
         }
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "申诉参数不完整");
         try {
-            AuditAppeal appeal = auditTaskService.submitAppeal(request.getBizType(), request.getBizId(), memberId,
-                    request.getReason(), request.getEvidence() == null ? null : request.getEvidence().toString(),
-                    request.getAttachments());
+            String evidence = request.getEvidence() == null ? null : request.getEvidence().toString();
+            AuditAppeal appeal = request.getRequestId() == null
+                    ? auditTaskService.submitAppeal(request.getBizType(), request.getBizId(), memberId,
+                            request.getReason(), evidence, request.getAttachments())
+                    : auditTaskService.submitAppeal(request.getBizType(), request.getBizId(), memberId,
+                            request.getReason(), evidence, request.getAttachments(), request.getRequestId());
             AjaxResult ajax = success();
-            ajax.put("appealId", appeal.getId());
-            ajax.put("taskId", appeal.getTaskId());
+            ajax.put("appealId", request.getRequestId() == null ? appeal.getId() : String.valueOf(appeal.getId()));
+            ajax.put("taskId", request.getRequestId() == null ? appeal.getTaskId() : String.valueOf(appeal.getTaskId()));
             ajax.put("state", appeal.getState());
             ajax.put("dueAt", appeal.getDueAt());
             return ajax;
@@ -73,6 +76,54 @@ public class ApiAuditController extends BaseController {
             if (e.getDetailMessage() != null) error.put("errorCode", e.getDetailMessage());
             return error;
         }
+    }
+
+    @Operation(summary = "原作者申诉请求回执")
+    @GetMapping("/appeal/receipt")
+    public AjaxResult appealReceipt(@RequestParam("bizType") String bizType, @RequestParam("bizId") Long bizId,
+                                   @RequestParam("requestId") String requestId) {
+        Long memberId;
+        try { memberId = getAppUserId(); }
+        catch (Exception e) { return new AjaxResult(HttpStatus.UNAUTHORIZED, "请先登录"); }
+        try { return success(auditTaskService.appealReceipt(bizType, bizId, memberId, requestId)); }
+        catch (ServiceException e) {
+            return new AjaxResult(e.getCode() == null ? HttpStatus.ERROR : e.getCode(), e.getMessage());
+        }
+    }
+
+    @Operation(summary = "本人原局守卫拒绝引用")
+    @GetMapping("/guard/reference")
+    public AjaxResult guardReference(@RequestParam("guardLogId") Long guardLogId,
+                                    @RequestParam("arrivalRequestId") String arrivalRequestId) {
+        Long memberId;
+        try { memberId = getAppUserId(); }
+        catch (Exception e) { return new AjaxResult(HttpStatus.UNAUTHORIZED, "请先登录"); }
+        try { return success(auditTaskService.guardAppealReference(memberId, guardLogId, arrivalRequestId)); }
+        catch (ServiceException e) { return new AjaxResult(e.getCode() == null ? HttpStatus.ERROR : e.getCode(), e.getMessage()); }
+    }
+
+    @Operation(summary = "本人原局守卫申诉")
+    @PostMapping("/guard/appeal")
+    public AjaxResult guardAppeal(@RequestBody com.chengyinhub.business.domain.dto.GuardAppealDTO request) {
+        Long memberId;
+        try { memberId = getAppUserId(); }
+        catch (Exception e) { return new AjaxResult(HttpStatus.UNAUTHORIZED, "请先登录"); }
+        try {
+            AuditAppeal appeal = auditTaskService.submitGuardAppeal(memberId, request);
+            AjaxResult result = success(); result.put("appealId", appeal.getId().toString());
+            result.put("taskId", appeal.getTaskId().toString()); result.put("state", appeal.getState()); return result;
+        } catch (ServiceException e) { return new AjaxResult(e.getCode() == null ? HttpStatus.ERROR : e.getCode(), e.getMessage()); }
+    }
+
+    @Operation(summary = "本人守卫申诉原号回读")
+    @GetMapping("/guard/appeal/receipt")
+    public AjaxResult guardAppealReceipt(@RequestParam("guardLogId") Long guardLogId,
+                                        @RequestParam("requestId") String requestId) {
+        Long memberId;
+        try { memberId = getAppUserId(); }
+        catch (Exception e) { return new AjaxResult(HttpStatus.UNAUTHORIZED, "请先登录"); }
+        try { return success(auditTaskService.guardAppealReceipt(memberId, guardLogId, requestId)); }
+        catch (ServiceException e) { return new AjaxResult(e.getCode() == null ? HttpStatus.ERROR : e.getCode(), e.getMessage()); }
     }
 
     @Operation(summary = "我的内容审核时间线(仅作者本人)")

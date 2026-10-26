@@ -54,7 +54,7 @@ class ApiPlayUnlockGateTest {
         CmsTopicNode node = new CmsTopicNode();
         node.setId(402L);
         node.setUnlockAfterNodeId(unlockAfter);
-        return ReflectionTestUtils.invokeMethod(controller, "unlockGateError", MEMBER, ACT, node);
+        return com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "unlockGateError", MEMBER, ACT, node);
     }
 
     private PlayerNodeProgress progress(int status) {
@@ -94,10 +94,10 @@ class ApiPlayUnlockGateTest {
     @Test
     void preferenceFlow_reusesTheSameUnlockGate() throws Exception {
         String source = new String(Files.readAllBytes(Paths.get(
-                "src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java")),
+                "src/main/java/com/chengyinhub/web/service/play/PlayPreferenceApplication.java")),
                 StandardCharsets.UTF_8);
-        int start = source.indexOf("private PreferencePlayCtx resolvePreferencePlayCtx");
-        int end = source.indexOf("private static final class PreferencePlayCtx", start);
+        int start = source.indexOf("public PreferencePlayCtx resolvePreferencePlayCtx");
+        int end = source.indexOf("\n    }\n}", start);
         assertTrue(start >= 0 && end > start, "偏好玩法上下文解析器必须存在");
         String body = source.substring(start, end);
         assertTrue(body.contains("unlockGateError(memberId, out.playCtx.actId, out.node)"),

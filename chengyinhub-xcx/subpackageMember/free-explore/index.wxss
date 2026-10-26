@@ -1,0 +1,6 @@
+page { background: var(--cy-color-bg-page); }
+.bundle-page { min-height: 100vh; color: var(--cy-color-text-primary); }
+.bundle-content { padding: 0 var(--cy-page-x) var(--cy-space-7); }
+.bundle-title { display: block; font-size: var(--cy-type-card-title); margin: var(--cy-space-3) 0; }
+.bundle-note { display: block; color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); line-height: var(--cy-leading-normal); margin: var(--cy-space-2) 0; overflow-wrap: anywhere; }
+.bundle-actions { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); margin: var(--cy-space-3) 0; }

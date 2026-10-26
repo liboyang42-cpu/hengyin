@@ -74,6 +74,8 @@ public interface ITopicRouteRuntimeService {
                             String trustedTriggerType, NodeOutcome outcome);
     TopicRouteState advance(Long memberId, Long topicId, Long activityId, Integer expectedVersion,
                             String routeActionId, String trustedTriggerType, NodeOutcome outcome);
+    TopicRouteState advanceOriginal(Long memberId, Long topicId, Long activityId, Long sessionId,
+                            Integer expectedVersion, String routeActionId, String trustedTriggerType, NodeOutcome outcome);
     boolean canPlay(Long memberId, Long topicId, Long activityId, Long nodeId);
     boolean canPlay(Long memberId, Long topicId, Long activityId, Long nodeId, String routeActionId);
     boolean isCompleted(Long memberId, Long topicId, Long activityId, int total, int done);
@@ -81,17 +83,22 @@ public interface ITopicRouteRuntimeService {
     default PlayCheckReceipt roll(Long memberId, Long topicId, Long nodeId, String checkId) {
         return roll(memberId, topicId, null, nodeId, checkId);
     }
+    /** Pure read of an owned original run/action; never creates a run or settles a check. */
+    PlayCheckReceipt checkReceipt(Long memberId, Long sessionId, Long nodeId, String checkId, String action);
     PlayCheckReceipt roll(Long memberId, Long topicId, Long activityId, Long nodeId, String checkId);
+    PlayCheckReceipt roll(Long memberId, Long topicId, Long activityId, Long nodeId, String checkId, Long sessionId);
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     default PlayCheckReceipt reroll(Long memberId, Long topicId, Long nodeId, String checkId) {
         return reroll(memberId, topicId, null, nodeId, checkId);
     }
     PlayCheckReceipt reroll(Long memberId, Long topicId, Long activityId, Long nodeId, String checkId);
+    PlayCheckReceipt reroll(Long memberId, Long topicId, Long activityId, Long nodeId, String checkId, Long sessionId);
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     default PlayCheckReceipt settle(Long memberId, Long topicId, Long nodeId, String checkId) {
         return settle(memberId, topicId, null, nodeId, checkId);
     }
     PlayCheckReceipt settle(Long memberId, Long topicId, Long activityId, Long nodeId, String checkId);
+    PlayCheckReceipt settle(Long memberId, Long topicId, Long activityId, Long nodeId, String checkId, Long sessionId);
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     default PlayCheckReceipt rest(Long memberId, Long topicId, Long nodeId) {
         return rest(memberId, topicId, null, nodeId);
@@ -238,4 +245,7 @@ public interface ITopicRouteRuntimeService {
         return String.valueOf(memberId) + ':' + String.valueOf(topicId) + ':'
                 + String.valueOf(activityId == null ? 0L : activityId);
     }
+
+    com.fasterxml.jackson.databind.JsonNode queryNodeContentSnapshot(Long memberId, Long topicId, Long activityId, Long nodeId);
+
 }

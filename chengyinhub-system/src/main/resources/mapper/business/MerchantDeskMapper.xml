@@ -24,6 +24,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                 #{actorMemberId}, #{createdAt})
     </insert>
 
+    <!-- 原回执只提供目标主键；重进时按当前商家归属定位可读父资源，不能全表按id查。 -->
+    <select id="selectReceiptSkuProductId" resultType="java.lang.Long">
+        select p.id from pms_sku s join pms_product p on p.id = s.product_id
+        where s.id = #{skuId} and p.merchant_id = #{merchantId}
+          and (p.del_flag is null or p.del_flag = 0)
+    </select>
+
+    <select id="selectReceiptEvidenceReviewId" resultType="java.lang.Long">
+        select v.id from verification_review_evidence e join verification_review v on v.id = e.review_id
+        where e.id = #{evidenceId} and e.owner_member_id = #{ownerMemberId}
+          and v.verifier_member_id = #{ownerMemberId}
+    </select>
+
     <!-- ================= 门店 ================= -->
     <select id="selectStore" resultType="java.util.LinkedHashMap">
         select id as storeId, name, logo, address, location_lat as locationLat, location_lng as locationLng,
@@ -177,6 +190,21 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         limit 500
     </select>
 
+    <!-- 保留旧slots合同；新消费者用稳定时间/id游标逐页读取，101条含下一页哨兵。 -->
+    <select id="selectCapacitySlotPage" resultType="java.util.LinkedHashMap">
+        select id as slotId, sku_id as skuId, slot_start as slotStart, slot_end as slotEnd,
+               capacity_total as capacityTotal, capacity_reserved as capacityReserved, status,
+               source_batch as sourceBatch
+        from pms_sku_capacity_slot
+        where merchant_id = #{merchantId} and sku_id = #{skuId}
+          and slot_start &gt;= #{from} and slot_start &lt; #{to}
+        <if test="afterStart != null">
+          and (slot_start &gt; #{afterStart} or (slot_start = #{afterStart} and id &gt; #{afterSlotId}))
+        </if>
+        order by slot_start asc, id asc
+        limit 101
+    </select>
+
     <!-- ================= 今日到店 ================= -->
     <select id="selectRedeemedBetween" resultType="java.util.LinkedHashMap">
         select r.id as redemptionId, r.registration_id as registrationId, r.topic_id as topicId,
@@ -284,5 +312,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where merchant_member_id = #{ownerMemberId} and frozen = 1
         order by period_ym desc
         limit 24
+    </select>
+    <select id="selectFrozenBatchPage" resultType="java.util.LinkedHashMap">
+        select id as batchId, period_ym as periodYm, amount_total as amountTotal, status,
+               invoice_status as invoiceStatus, frozen_reason as frozenReason, frozen_at as frozenAt
+        from merchant_payable_batch
+        where merchant_member_id = #{ownerMemberId} and frozen = 1
+        <if test="afterPeriodYm != null">
+          and (period_ym &lt; #{afterPeriodYm} or (period_ym = #{afterPeriodYm} and id &lt; #{afterBatchId}))
+        </if>
+        order by period_ym desc, id desc
+        limit 25
     </select>
 </mapper>

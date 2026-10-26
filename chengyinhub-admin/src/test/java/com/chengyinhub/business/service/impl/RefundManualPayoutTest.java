@@ -47,7 +47,7 @@ class RefundManualPayoutTest {
         refundApplicationMapper = mock(RefundApplicationMapper.class);
         notifyService = mock(INotifyService.class);
         alarmService = mock(AlarmService.class);
-        svc = new RefundServiceImpl();
+        svc = com.chengyinhub.business.service.support.RefundF3TestSupport.nonBundle(new RefundServiceImpl());
         ReflectionTestUtils.setField(svc, "refundApplicationMapper", refundApplicationMapper);
         CmsRegistration registration = new CmsRegistration();
         registration.setRegistrationNo("REG88");

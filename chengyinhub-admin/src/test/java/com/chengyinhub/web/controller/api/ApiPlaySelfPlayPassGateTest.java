@@ -60,27 +60,26 @@ class ApiPlaySelfPlayPassGateTest {
 
         controller = spy(new ApiPlayProgressController());
         doReturn(MEMBER).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "npcProfileService", npcProfileService);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "npcProfileService", npcProfileService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService",
                 mock(IPlayerNodeProgressService.class));
-        ReflectionTestUtils.setField(controller, "cmsPointsSettingService",
-                mock(ICmsPointsSettingService.class));
-        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService",
+        var fixtureHintSettings = mock(ICmsPointsSettingService.class);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService",
                 mock(ICmsMemberTemplateService.class));
-        ReflectionTestUtils.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
-        ReflectionTestUtils.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
-        ReflectionTestUtils.setField(controller, "puzzlePlayService", mock(IPuzzlePlayService.class));
-        ReflectionTestUtils.setField(controller, "topicOnsiteMetricsMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "puzzlePlayService", mock(IPuzzlePlayService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicOnsiteMetricsMapper",
                 mock(com.chengyinhub.business.mapper.TopicOnsiteMetricsMapper.class));
-        ReflectionTestUtils.setField(controller, "topicTemplateMetaMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicTemplateMetaMapper",
                 mock(com.chengyinhub.business.mapper.CmsTopicTemplateMetaMapper.class));
-        ReflectionTestUtils.setField(controller, "merchantChapterOfferMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "merchantChapterOfferMapper",
                 mock(com.chengyinhub.business.mapper.MerchantChapterOfferMapper.class));
-        ReflectionTestUtils.setField(controller, "coopPerkMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "coopPerkMapper",
                 mock(com.chengyinhub.business.mapper.CoopPerkMapper.class));
 
         CmsTopic topic = new CmsTopic();
@@ -95,6 +94,7 @@ class ApiPlaySelfPlayPassGateTest {
         node.setName("幸会咖啡");
         node.setStatus(1L);
         when(nodeService.selectCmsTopicNodeList(any())).thenReturn(Collections.singletonList(node));
+        com.chengyinhub.web.controller.api.NodeHintUnlockTestFixtures.pricing(controller, fixtureHintSettings);
     }
 
     private static CmsRegistration pass(Date expiresAt) {
@@ -150,10 +150,10 @@ class ApiPlaySelfPlayPassGateTest {
         com.chengyinhub.business.mapper.CmsRegistrationMapper mapper = mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class);
         when(mapper.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(expired));
         when(mapper.selectCmsRegistrationByIdForUpdate(79L)).thenReturn(expired);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationMapper", mapper);
-        ReflectionTestUtils.setField(controller, "currentPlayActivityMapper", mock(com.chengyinhub.business.mapper.CmsActivityMapper.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationMapper", mapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "currentPlayActivityMapper", mock(com.chengyinhub.business.mapper.CmsActivityMapper.class));
         com.chengyinhub.business.service.ITopicRouteRuntimeService routes = mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
-        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", routes);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", routes);
 
         when(routes.hasRunningSession(MEMBER, TOPIC, 0L)).thenReturn(true);
         assertEquals(200, controller.nodes(null, TOPIC).get(AjaxResult.CODE_TAG), "已开局：中途到期仍下发本局节点");

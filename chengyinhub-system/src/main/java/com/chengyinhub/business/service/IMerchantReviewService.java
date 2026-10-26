@@ -11,6 +11,10 @@ public interface IMerchantReviewService {
     MerchantReviewPageVO publicList(Long viewerMemberId, Long merchantRowId,
                                     Integer pageNum, Integer pageSize);
 
+    /** Specified order never falls back to another order; null retains the legacy latest-order hint. */
+    MerchantReviewPageVO publicList(Long viewerMemberId, Long merchantRowId,
+                                    Integer pageNum, Integer pageSize, Long registrationId);
+
     default MerchantReviewPageVO manageList(Long principalMemberId, Integer pageNum, Integer pageSize) {
         return manageList(principalMemberId, null, pageNum, pageSize);
     }

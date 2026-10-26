@@ -41,13 +41,12 @@ test('hidden and redacted projections never reveal attribute identity or reverse
       skill: { [flag]: true, label: 'SECRET', statKey: 'counter.secret', value: 99 },
       situational: { [flag]: true, raw: 97, cap: 98, applied: 96 },
     } });
-    assert.deepEqual(view.breakdownRows, [
-      { label: '采用骰点', value: 20 },
-      { label: '属性加值', value: '已隐藏' },
-      { label: '达成值', value: 23 },
-      { label: '难度 DC', value: 25 },
-      { label: '自然骰自动判定', value: '关闭' },
-    ]);
+    assert.deepEqual(view.breakdownRows, []);
+    assert.equal(view.detailsHidden, true);
+    assert.equal(view.total, null);
+    assert.equal(view.dc, null);
+    assert.deepEqual(view.dice, []);
+    assert.doesNotMatch(JSON.stringify(view), /SECRET|counter.secret|99|97|98|96/);
     assert.deepEqual(checkReceiptView({ breakdown: { ...breakdown, [flag]: true } }).breakdownRows, []);
   }
 });

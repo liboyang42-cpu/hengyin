@@ -39,7 +39,7 @@ Page({
   data: {
     statusBarHeight: 20,
     navBarHeight: 44,
-    ts: '',
+    ts: '', sessionId: '',
     s: { pois: [] },
     segs: [],
     poiDots: [],
@@ -71,6 +71,7 @@ Page({
     this._ts = Number(options && options.ts);
     this.setData({
       ts: (options && options.ts) || '',
+      sessionId: (options && options.sessionId) || (String(options && options.ts || '').startsWith('server:') ? String(options.ts).slice(7) : ''),
       statusBarHeight: (app.globalData && app.globalData.statusBarHeight) || 20,
       navBarHeight: (app.globalData && app.globalData.navBarHeight) || 44,
     });
@@ -195,6 +196,16 @@ Page({
   },
 
   _load() {
+    if (this.data.sessionId) {
+      this._sessionOwner = String(getApp().getUserID() || '');
+      this._clearSessionView('');
+      try {
+        const state = currentPlayerRoamMemory(getApp(), wx).readSessionState();
+        const saved = state.ok && state.sessions.find(row => String(row.sessionId) === this.data.sessionId);
+        if (saved) this._setSessionView(saved);
+      } catch (_) { /* Remote body remains independently readable; no local share source. */ }
+      return;
+    }
     const owner = String(getApp().getUserID() || '');
     if (this._sessionOwner !== owner) this._clearSessionView('notfound');
     this._sessionOwner = owner;

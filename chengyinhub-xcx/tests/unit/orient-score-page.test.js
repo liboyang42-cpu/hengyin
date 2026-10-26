@@ -159,7 +159,9 @@ test('unknown settlement accepts only positive same-session settlement; generic 
 });
 test('sync unknown never retries or guesses success from a refreshed total', () => {
   const h = harness(); h.read(); h.page.sync(); h.confirm(); h.writes()[0].fail({ errMsg: 'network' });
-  assert.equal(h.page.data.pending.kind, 'SYNC'); assert.equal(h.receipt(), undefined);
+  assert.equal(h.page.data.pending.kind, 'SYNC');
+  assert.equal(h.receipt().data.idempotencyKey, h.writes()[0].data.idempotencyKey);
+  h.respond(h.receipt(), { state: 'NOT_FOUND' });
   h.page.load(); h.respond(h.calls.at(-1), breakdown({ totalCenti: '9999' }));
   assert.equal(h.page.data.pending.kind, 'SYNC'); h.page.sync(); assert.equal(h.writes().length, 1);
 });
@@ -297,6 +299,103 @@ test('score recovery uses player-facing copy while keeping uncertainty explicit'
   assert.doesNotMatch(js + xml, /回执|服务端/);
   const h = harness(); h.read(); h.page.sync(); h.confirm(); h.writes()[0].fail({ errMsg: 'network' });
   assert.equal(h.page.data.pending.kind, 'SYNC');
-  assert.match(h.page.data.notice, /仍无法确认本次同步是否完成.*请勿重复同步/);
+  h.respond(h.receipt(), { state: 'NOT_FOUND' });
+  assert.match(h.page.data.notice, /暂未查到记录不代表提交失败.*请勿重复操作/);
   h.page.sync(); assert.equal(h.writes().length, 1);
+});
+
+ test('SYNC receipt recovers the original request after reentry and rejects unrelated positive receipts', () => {
+  const h = harness(); h.read(); h.page.sync(); h.confirm();
+  const original = h.writes()[0].data.idempotencyKey; h.timeout(); h.page.onUnload();
+  const next = harness(h.storage); next.read();
+  assert.equal(next.receipt().data.idempotencyKey, original);
+  const receipt = { state: 'SYNCED', kind: 'SYNC', sessionId: SID, memberId: OWNER,
+    idempotencyKey: original, added: 0, totalCenti: '-25' };
+  next.respond(next.receipt(), { ...receipt, idempotencyKey: 'other' });
+  assert.ok(next.page.data.pending);
+  next.page.recover(); next.respond(next.receipt(), receipt);
+  assert.equal(next.page.data.pending, null); assert.equal(next.storage.size, 0);
+  assert.equal(next.writes().length, 0); assert.equal(next.calls.at(-1).url, '/api/orient/scoring/session/' + SID);
+ });
+ test('pending photo review disables settlement but retains ledger and review access', () => {
+  const h = harness(); h.read(breakdown({ pendingReviewCount: 1 }));
+  assert.equal(h.page.data.score.canSettle, false); h.page.settle();
+  assert.equal(h.modals.length, 0); assert.equal(h.page.data.score.canAppeal, true);
+ });
+
+test('explicit resume sends frozen original SYNC identity, never unlocks on rejection, and can recover legacy pending', () => {
+  const h = harness(); h.read(); h.page.sync(); h.confirm(); const first = h.writes()[0]; h.timeout();
+  h.respond(h.receipt(), { state: 'NOT_FOUND' });
+  h.page.resumeSync(); h.confirm(); const resumed = h.writes()[1];
+  assert.deepEqual(clone(resumed.data), clone(first.data));
+  resumed.success({ code: 500, errorCode: 'ORIENT_INVALID_ARGUMENT' });
+  assert.equal(h.page.data.pending.requestId, first.data.idempotencyKey); assert.equal(h.storage.size, 1);
+  h.page.resumeSync(); h.confirm(); const successful = h.writes()[2];
+  h.respond(successful, { state: 'SYNCED', kind: 'SYNC', sessionId: SID, memberId: OWNER,
+    idempotencyKey: first.data.idempotencyKey, added: 0, totalCenti: '125' });
+  assert.equal(h.storage.size, 0); assert.equal(h.page.data.pending, null);
+});
+test('account change during resume confirmation cannot send original owners sync', () => {
+  const h = harness(); h.read(); h.page.sync(); h.confirm(); h.timeout();
+  h.respond(h.receipt(), { state: 'NOT_FOUND' }); h.page.resumeSync();
+  h.switchOwner('99'); h.confirm(); assert.equal(h.writes().length, 1); assert.equal(h.storage.size, 1);
+});
+
+test('a keyed sync response from another request stays unknown; duplicate resume confirmations send once', () => {
+  const h = harness(); h.read(); h.page.sync(); h.confirm(); const original = h.writes()[0];
+  h.respond(original, { state: 'SYNCED', kind: 'SYNC', sessionId: SID, memberId: OWNER,
+    idempotencyKey: 'different', added: 1, totalCenti: '100' });
+  assert.equal(h.page.data.pending.requestId, original.data.idempotencyKey);
+  h.respond(h.receipt(), { state: 'NOT_FOUND' }); h.page.resumeSync(); h.confirm(); h.confirm();
+  assert.equal(h.writes().length, 2);
+});
+
+const boardRow = (extra = {}) => ({ rowKey: '1', rank: '1', scoreCenti: '500', elapsedMs: '1000', reachedEnding: true, mine: false, ...extra });
+test('full board consumer preserves server tie ranks, own rank outside top 50 and exact scores', () => {
+  const h = harness(); h.read(); h.page.loadLeaderboard();
+  const request = h.calls.at(-1); assert.equal(request.method, 'GET'); assert.equal(request.url, '/api/orient/scoring/session/' + SID + '/leaderboard');
+  h.respond(request, { sessionId: SID, mode: 'SCORE', list: [boardRow(), boardRow({ rowKey: '2' }), boardRow({ rowKey: '3', rank: '3', scoreCenti: '-25' })], me: boardRow({ rowKey: '55', rank: '54', mine: true }) });
+  assert.deepEqual(clone(h.page.data.board.list.map(row => row.rank)), ['1', '1', '3']);
+  assert.equal(h.page.data.board.me.rank, '54'); assert.equal(h.page.data.board.list[2].score, '-0.25 分');
+  assert.equal(h.writes().length, 0);
+});
+test('board rejects wrong session and malformed rows, and ignores duplicate/stale account results', () => {
+  const h = harness(); h.read(); h.page.loadLeaderboard(); const first = h.calls.at(-1);
+  h.respond(first, { sessionId: '99', mode: 'SCORE', list: [], me: null }); assert.equal(h.page.data.boardState, 'error');
+  h.page.loadLeaderboard(); const second = h.calls.at(-1);
+  h.respond(second, { sessionId: SID, mode: 'SCORE', list: [boardRow({ scoreCenti: 9007199254740992 })] }); assert.equal(h.page.data.boardState, 'error');
+  h.page.loadLeaderboard(); const third = h.calls.at(-1); h.switchOwner('99'); h.page.load();
+  h.respond(third, { sessionId: SID, mode: 'SCORE', list: [boardRow()] }); assert.equal(h.page.data.board, null);
+});
+function legacyPending(h, kind = 'SYNC') {
+  h.read();
+  if (kind === 'SYNC') h.page.sync();
+  else { h.page.openDispute(); h.page.onReasonInput({ detail: { value: '历史意见' } }); h.page.submitReview(); }
+  h.confirm(); h.timeout(); h.page.onUnload();
+  for (const value of h.storage.values()) delete value.requestIdentityVersion;
+  const reopened = harness(h.storage); reopened.read(); return reopened;
+}
+test('legacy missing-request case has a real manual intake and independently read review without releasing original', () => {
+  const old = harness(), h = legacyPending(old, 'DISPUTE');
+  assert.equal(h.page.data.pending.requestId, null);
+  h.page.requestManualReview(); h.confirm(); const request = h.writes()[0];
+  assert.equal(request.url, '/api/orient/scoring/session/' + SID + '/recovery'); assert.deepEqual(clone(request.data), { kind: 'DISPUTE' });
+  const record = { id: '88', sessionId: SID, memberId: OWNER, kind: 'DISPUTE', status: 0, referenceId: null };
+  h.respond(request, record); h.respond(h.calls.at(-1), breakdown({ recoveries: [record] }));
+  assert.equal(h.page.data.score.recoveries[0].statusText, '人工核对中'); assert.equal(h.storage.size, 1);
+  h.page.load(); h.respond(h.calls.at(-1), breakdown({ recoveries: [{ ...record, status: 1, resolutionNote: '已核对账本，仍不能认定原操作结果' }] }));
+  assert.equal(h.page.data.score.recoveries[0].statusText, '已记录核对意见');
+  assert.equal(h.page.data.pending.requestId, null); assert.equal(h.storage.size, 1);
+  h.page.settle(); assert.equal(h.writes().length, 1);
+});
+test('manual intake timeout keeps legacy frozen and retry retains the same session/kind', () => {
+  const h = legacyPending(harness()); h.page.requestManualReview(); h.confirm();
+  const request = h.writes()[0]; request.fail({ errMsg: 'network' });
+  assert.equal(h.storage.size, 1); assert.equal(h.page.data.pending.requestId, null);
+  h.page.requestManualReview(); h.confirm(); assert.deepEqual(clone(h.writes()[1].data), clone(request.data));
+  assert.equal(h.writes()[1].url, request.url);
+});
+test('manual intake confirmation crossing accounts never submits or clears old pending', () => {
+  const h = legacyPending(harness()); h.page.requestManualReview(); h.switchOwner('99'); h.confirm();
+  assert.equal(h.writes().length, 0); assert.equal(h.storage.size, 1);
 });

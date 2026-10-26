@@ -33,6 +33,7 @@ class PartialChapterAftercareTest {
     private TeamGroupServiceImpl service() {
         CmsRegistration row = registration();
         when(registrations.selectCmsRegistrationById(78L)).thenReturn(row);
+        when(registrations.selectCmsRegistrationByIdForUpdate(78L)).thenReturn(row);
         when(registrations.selectByParentOrderNoForUpdate(row.getParentOrderNo(),24L))
             .thenReturn(Collections.singletonList(row));
         CmsActivity activity = new CmsActivity();activity.setId(24L);activity.setTopicId(990028L);activity.setMemberId(9003L);

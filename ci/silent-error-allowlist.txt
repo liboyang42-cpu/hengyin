@@ -133,7 +133,7 @@ chengyinhub-xcx/components/cy/scene-qr-ticket/index.js 1  # 2026-08-25 状态底
 chengyinhub-xcx/pages/square/components/cy/post-compose/index.js 3  # 选活动两路读取落activityError并给重试；发布失败由当前编辑器显式提示，关闭、切号或旧请求错误不能污染新界面
 chengyinhub-xcx/pages/publish/activity/index.js 4  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹;2026-09-12 编辑回填 /api/activity/info 同口径 +1
 chengyinhub-xcx/pages/publish/fabu/index.js 1  # 2026-08-25 状态底座:AI 安全预检失败按可用性红线降级放行(不堵发布路),其余为页内错误态承接;两类都不该再弹通用 toast
-chengyinhub-xcx/pages/publish/temp/index.js 4  # 2026-10-13 当前真实四处：权限、提交、edit-detail、adopt-draft 失败落当前表单error；归属变化淘汰旧结果，采用结果不确定保留核对提示，避免重复采用；旧5减至4
+chengyinhub-xcx/pages/publish/temp/index.js 3  # 2026-10-26 03恢复冻结包：权限、提交、模板详情失败落当前表单error；归属变化淘汰旧结果；采用调用移至独立模块，原4减至3
 chengyinhub-xcx/pages/search2/index.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/pages/shezhi/components/marketing-consent/index.js 2  # 2026-08-25 营销授权:加载/保存失败落组件 error 状态,保留原值与重试入口;通用 toast 会双弹
 chengyinhub-xcx/pages/shezhi/shezhi.js 1  # 2026-08-25 状态底座:调用点自己 showToast 精确文案,关掉通用 toast 是防双弹
@@ -209,8 +209,7 @@ chengyinhub-xcx/utils/community-post-api.js 1  # canonical 社区内部 call 的
 # 2026-10-13 前端owner逐literal/回调/WXML闭包审阅；仅实名登记，不增加冻结BASELINE_TOTAL或任何UNREVIEWED额度。
 chengyinhub-xcx/app.js 1  # /api/config/features 背景读取失败finish(null)，社区读写旗保持false；owner/token/epoch校验淘汰旧回包，不伪造功能已启用
 chengyinhub-xcx/pages/privacy/index.js 1  # requestOwnMedia统一入口：401/403清自有媒体并显示权限反馈，其他错误传done或mediaError；epoch/owner/token隔离，重试写失败不会假报成功
-chengyinhub-xcx/pages/publish/fabu/index.js 8  # edit-detail按作者/seq恢复权限；adopt-draft明确失败/unknown toast防重建；采用后myinfo不能绑有提示；选模板myinfo有token及toast；copy前myinfo与draft失败落nodeCopyError且unknown锁；节点myinfo失败落nodeBindingError；public homeData失败保留空列表不伪造模板。另1处既有precheck显式skip标签保持原记录
-chengyinhub-xcx/pages/publish/fabu/index.js 1  # 2026-10-22 L21 BL-185 发布前 /api/topic/publish-check 只读试检查：error 经 onFail 落「草稿已保存、还没发布」结果面板写明原因，warn 走确认弹窗；拿不到结果按可用性放行由 publish-draft 服务端照样拦，通用 toast 会与结果面板双弹
+chengyinhub-xcx/pages/publish/fabu/index.js 6  # 2026-10-26 03恢复冻结包：edit-detail按作者/seq恢复权限；选模板myinfo有token及toast；copy前myinfo与draft失败落nodeCopyError且unknown锁；节点myinfo失败落nodeBindingError；adoption-home失败保留空列表不伪造模板。采用调用移至独立模块，原8减至6；另1处既有precheck显式skip标签保持原记录
 chengyinhub-xcx/pages/shezhi/shezhi.js 1  # user/info真实401/403显示WXML错误标题并清账号资料，500留旧资料或留白；该处仅读取，club/my路由判据失败toast已记原1处
 chengyinhub-xcx/subpackageB/pages/im/chat/index.js 1  # 解除拉黑失败由当前会话tips或dc.failed明确显示；epoch/账号/会话隔离迟到回包，不静默写失败、不污染新页面
 chengyinhub-xcx/subpackageMember/complaint/index.js 2  # mine读取401/403/参数错误落WXML且owner/seq/hidden隔离；report真实写失败落submitError并保持可重试，不报成功；主题读取另记1处

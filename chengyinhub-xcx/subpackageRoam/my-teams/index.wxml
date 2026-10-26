@@ -9,6 +9,7 @@
     <view slot="actions" class="mt-map" bindtap="openMap" aria-role="button" aria-label="打开地图找队伍" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="map" size="31" /><text>地图</text></view>
   </cy-nav-bar>
   <cy-page-title title="我的队伍" />
+  <include src="../utils/team-recovery-panel.wxml" />
   <view class="mt-stats cy-rise-in">
     <view class="mt-stat" wx:for="{{stats}}" wx:key="k"><text class="mt-stat__v">{{item.v}}</text><text class="mt-stat__k">{{item.k}}</text></view>
   </view>

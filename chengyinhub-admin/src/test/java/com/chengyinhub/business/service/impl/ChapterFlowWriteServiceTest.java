@@ -97,6 +97,20 @@ class ChapterFlowWriteServiceTest
         updatedChapters = new ArrayList<>();
         insertedNodes = new ArrayList<>();
         updatedTopics = new ArrayList<>();
+        List<CmsTopicChapter> currentChapters = new ArrayList<>();
+        List<CmsTopicNode> currentNodes = new ArrayList<>();
+        org.mockito.Mockito.doAnswer(call -> new ArrayList<>(currentChapters))
+                .when(chapterMapper).selectByTopicForUpdate(TOPIC_ID);
+        org.mockito.Mockito.doAnswer(call -> new ArrayList<>(currentNodes))
+                .when(nodeMapper).selectByTopicForUpdate(TOPIC_ID);
+        org.mockito.Mockito.doAnswer(call -> new ArrayList<>(currentChapters))
+                .when(chapterMapper).selectCmsTopicChapterList(any());
+        org.mockito.Mockito.doAnswer(call -> new ArrayList<>(currentNodes))
+                .when(nodeMapper).selectCmsTopicNodeList(any());
+        org.mockito.Mockito.doAnswer(call -> currentChapters.removeIf(row -> row.getId().equals(call.getArgument(0))) ? 1 : 0)
+                .when(chapterMapper).deleteCmsTopicChapterById(any());
+        org.mockito.Mockito.doAnswer(call -> currentNodes.removeIf(row -> row.getId().equals(call.getArgument(0))) ? 1 : 0)
+                .when(nodeMapper).deleteCmsTopicNodeById(any());
         AtomicLong chapterIds = new AtomicLong(700L);
         AtomicLong nodeIds = new AtomicLong(900L);
 
@@ -119,17 +133,22 @@ class ChapterFlowWriteServiceTest
             CmsTopicChapter chapter = invocation.getArgument(0);
             chapter.setId(chapterIds.incrementAndGet());
             insertedChapters.add(chapter);
+            currentChapters.add(chapter);
             return 1;
         }).when(chapterMapper).insertCmsTopicChapter(any());
         doAnswer(invocation -> {
             CmsTopicChapter chapter = invocation.getArgument(0);
             updatedChapters.add(chapter);
+            insertedChapters.stream().filter(row -> row.getId().equals(chapter.getId())).forEach(row -> {
+                if (chapter.getBlocksJson() != null) row.setBlocksJson(chapter.getBlocksJson());
+            });
             return 1;
         }).when(chapterMapper).updateCmsTopicChapter(any());
         doAnswer(invocation -> {
             CmsTopicNode node = invocation.getArgument(0);
             node.setId(nodeIds.incrementAndGet());
             insertedNodes.add(node);
+            currentNodes.add(node);
             return 1;
         }).when(nodeMapper).insertCmsTopicNode(any());
 
@@ -189,6 +208,9 @@ class ChapterFlowWriteServiceTest
         ReflectionTestUtils.setField(media, "nodes", nodeMapper);
         ReflectionTestUtils.setField(media, "templates", memberTemplateMapper);
         ReflectionTestUtils.setField(service, "mediaPublicationGuard", media);
+        set("themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
+                mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
+        // The current production owner implements V2 writes directly; all collaborators are wired above.
     }
 
     @Test
@@ -264,11 +286,23 @@ class ChapterFlowWriteServiceTest
         ChapterDTO chapter = chapter("第一章", draftNode);
         chapter.setBlocks(Collections.singletonList(nodeBlock(0)));
 
+        // Observe admission at the first actual graph write, preserving the insert Answer.
+        // This base has no separate lockTopicContentBudget mapper contract.
+        var originalInsert = org.mockito.Mockito.mockingDetails(chapterMapper).getStubbings().stream()
+                .filter(stub -> "insertCmsTopicChapter".equals(stub.getInvocation().getMethod().getName()))
+                .findFirst().orElseThrow();
+        java.util.concurrent.atomic.AtomicBoolean admissionObserved = new java.util.concurrent.atomic.AtomicBoolean();
+        org.mockito.Mockito.doAnswer(call -> {
+            if (admissionObserved.compareAndSet(false, true))
+                verify(topicMapper, times(2)).selectCmsTopicByIdForUpdate(TOPIC_ID);
+            return originalInsert.answer(call);
+        }).when(chapterMapper).insertCmsTopicChapter(any());
+
         service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
 
         verify(bundleReviewService).freezeForSubmission(TOPIC_ID, MEMBER_ID);
         verify(auditTaskService).submitOrRefreshTopicBundle(TOPIC_ID, MEMBER_ID, submission.getSnapshotJson());
-        verify(topicMapper, times(2)).selectCmsTopicByIdForUpdate(TOPIC_ID);
+        assertTrue(admissionObserved.get(), "必须实际写入章节，且写入前已完成两次准入锁");
         org.mockito.InOrder lockOrder = inOrder(auditTaskService, topicMapper);
         lockOrder.verify(topicMapper).selectCmsTopicByIdForUpdate(TOPIC_ID);
         lockOrder.verify(auditTaskService).lockOpenTopicBundleTask(TOPIC_ID);
@@ -346,8 +380,10 @@ class ChapterFlowWriteServiceTest
 
     @Test
     void submittedSimpleDraftPublishesWhileSavingItKeepsItPrivate() {
-        ChapterDTO chapter = chapter("第一章");
-        chapter.setBlocks(Collections.singletonList(text("发布测试故事")));
+        // Keep the same story and draft/publish assertions; a formal snapshot also needs
+        // one real playable station, persisted by the original graph mapper Answers.
+        ChapterDTO chapter = chapter("第一章", node("发布测试站点"));
+        chapter.setBlocks(Arrays.asList(text("发布测试故事"), nodeBlock(0)));
         TopicUpdateDTO dto = update(chapter);
         dto.setPublishMode("simple");
         dto.setSaveDraft(1);
@@ -496,9 +532,9 @@ class ChapterFlowWriteServiceTest
         when(nodeRead.selectCmsTopicNodeList(any())).thenReturn(insertedNodes);
         when(progressRead.selectPlayerNodeProgressList(any())).thenReturn(Collections.emptyList());
         ApiPlayProgressController guard = new ApiPlayProgressController();
-        ReflectionTestUtils.setField(guard, "cmsTopicNodeService", nodeRead);
-        ReflectionTestUtils.setField(guard, "playerNodeProgressService", progressRead);
-        Boolean blocked = ReflectionTestUtils.invokeMethod(guard, "isPrevDone", MEMBER_ID, 501L,
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(guard, "cmsTopicNodeService", nodeRead);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(guard, "playerNodeProgressService", progressRead);
+        Boolean blocked = com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(guard, "isPrevDone", MEMBER_ID, 501L,
                 insertedNodes.get(0));
         assertEquals(Boolean.FALSE, blocked,
                 "blocks 中排在当前节点之前的节点未完成时，isPrevDone 必须拒绝跳关");
@@ -510,7 +546,7 @@ class ChapterFlowWriteServiceTest
         completed.setStatus(1);
         when(progressRead.selectPlayerNodeProgressList(any()))
                 .thenReturn(Collections.singletonList(completed));
-        Boolean allowed = ReflectionTestUtils.invokeMethod(guard, "isPrevDone", MEMBER_ID, 501L,
+        Boolean allowed = com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(guard, "isPrevDone", MEMBER_ID, 501L,
                 insertedNodes.get(0));
         assertEquals(Boolean.TRUE, allowed,
                 "派生顺序中的真实前置节点完成后，isPrevDone 才能放行当前节点");

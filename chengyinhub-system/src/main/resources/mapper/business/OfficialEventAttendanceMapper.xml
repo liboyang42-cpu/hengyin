@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.OfficialEventAttendanceMapper">
+ <select id="config" resultType="map">select config_json, version from official_event_attendance_config where event_id=#{event}</select>
+ <insert id="saveConfig">insert into official_event_attendance_config(event_id,config_json,updated_by,version) values(#{event},#{json},#{actor},#{version}) on duplicate key update config_json=#{json},updated_by=#{actor},version=#{version},update_time=current_timestamp(3)</insert>
+ <select id="mine" resultType="map">select * from official_event_attendance where event_id=#{event} and member_id=#{actor}</select>
+ <select id="credential" resultType="map">select * from official_event_attendance where event_id=#{event} and credential=#{code}</select>
+ <insert id="issue">insert into official_event_attendance(participation_id,event_id,member_id,credential) values(#{participation},#{event},#{actor},#{code})</insert>
+ <update id="rotate">update official_event_attendance set credential=#{code},version=version+1 where participation_id=#{participation} and checked_at is null</update>
+ <update id="checkin">update official_event_attendance set checked_at=#{at},checked_by=#{actor} where participation_id=#{participation} and checked_at is null</update>
+</mapper>

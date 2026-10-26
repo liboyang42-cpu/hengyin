@@ -29,9 +29,10 @@ public class ApiMerchantReviewController extends BaseController {
     @PostMapping("/public")
     public AjaxResult publicList(@RequestParam("merchantRowId") Long merchantRowId,
                                  @RequestParam(value = "pageNum", required = false) Integer pageNum,
-                                 @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+                                 @RequestParam(value = "pageSize", required = false) Integer pageSize,
+                                 @RequestParam(value = "registrationId", required = false) Long registrationId) {
         try {
-            return success(merchantReviewService.publicList(optionalPrincipal(), merchantRowId, pageNum, pageSize));
+            return success(merchantReviewService.publicList(optionalPrincipal(), merchantRowId, pageNum, pageSize, registrationId));
         } catch (ServiceException e) {
             return serviceError(e);
         }

@@ -97,6 +97,15 @@ function makeServer() {
       opts.success(s.persist(body))
       return
     }
+    if (opts.url.endsWith('/receipt')) {
+      s.gets.push(opts.data)
+      const plan = s.statePlan.shift() || 'ok'
+      if (plan === 'network-fail') { opts.fail({ errMsg: 'request:fail' }); return }
+      const original = s.idempotency.get(opts.data.idempotencyKey)
+      opts.success(original ? { code: 200, data: { sessionId: String(opts.data.sessionId),
+        idempotencyKey: opts.data.idempotencyKey, view: original.data } } : { code: 404 })
+      return
+    }
     if (opts.url.endsWith('/state')) {
       s.gets.push(opts.data)
       const plan = s.statePlan.shift() || 'ok'
@@ -274,7 +283,7 @@ test('负控:生命周期视图缺 sessionId/version 时失败关闭并明确提
   assert.ok(toasts.some((t) => /玩法状态不完整/.test(t)), '必须给人话提示，不静默')
 })
 
-test('SUBMIT_QA 未提交网络失败:不重复发、不假完成、基础路线可继续', async () => {
+test('SUBMIT_QA负向回读不能证明未写入，原输入冻结并等待原回执', async () => {
   const { page, advanced } = loadChain()
   advanced.start()
   await tick()
@@ -287,22 +296,24 @@ test('SUBMIT_QA 未提交网络失败:不重复发、不假完成、基础路线
 
   assert.equal(server.posts.length, 1, '不得自动重发')
   assert.equal(server.persisted.length, 0, '不得算完成')
-  assert.equal(advanced.data.unknown, false, '刷新给出结论后应退出 unknown')
-  assert.match(advanced.data.error, /没有提交成功/, '必须明说未提交，不装成功')
+  assert.equal(advanced.data.unknown, true, '没有原回执不能解除 unknown')
+  assert.equal(advanced.data.error, '', '不把未知伪装为失败')
   assert.equal(advanced.data.state.version, 1)
   assert.equal(page.data.playKit.kit.version, 1, '题目会话保持一致')
   assert.equal(page.data.playKit.show, true, '基础路线不得丢')
 
-  // 恢复后可继续:重拍一次并成功提交,只执行一次
-  server.actionPlan.push('ok')
-  server.statePlan.push('ok')
   shootAndUpload(page, comp, 'b.jpg')
   await tick()
-  assert.equal(server.persisted.length, 1, '恢复后成功提交一次')
-  assert.equal(server.persisted[0].payload.imageUrl, 'https://cdn/b.jpg', '恢复后提交的是重拍的那张')
+  assert.equal(server.persisted.length, 0)
+  assert.equal(server.posts.length, 1, '未知时不能换图重发')
+  server.persist(server.posts[0]) // 原请求迟到提交
+  await advanced.resolveUnknown()
+  assert.equal(server.persisted.length, 1)
+  assert.equal(server.persisted[0].payload.imageUrl, 'https://cdn/a.jpg', '核对的是冻结的原图')
   assert.equal(advanced.data.state.version, 2)
   assert.equal(advanced.data.error, '')
   assert.equal(advanced.data.unknown, false)
+
 })
 
 test('SUBMIT_QA 已提交但丢回包:回读判 landed,不重复算完成', async () => {
@@ -341,7 +352,7 @@ test('unknown 回读失败后再次恢复(点再核对一次),期间不得提交
 
   assert.equal(advanced.data.unknown, true, '刷新失败必须保持 unknown')
   assert.equal(advanced.data.readingBack, false)
-  assert.match(advanced.data.unknownText, /再试/)
+  assert.match(advanced.data.unknownText, /核对/)
   assert.equal(advanced.data.state.version, 1, '未知态不得伪装完成')
   assert.equal(server.persisted.length, 1)
   assert.equal(server.persisted[0].payload.imageUrl, 'https://cdn/d.jpg')
@@ -363,7 +374,7 @@ test('unknown 回读失败后再次恢复(点再核对一次),期间不得提交
   assert.ok(page.data.playKit.show, '基础路线仍在')
 })
 
-test('unknown 回读失败后恢复为未提交:可重拍并只成功一次', async () => {
+test('unknown 回读失败后查无记录仍冻结，原请求迟到只完成一次', async () => {
   const { page, advanced } = loadChain()
   advanced.start()
   await tick()
@@ -376,16 +387,20 @@ test('unknown 回读失败后恢复为未提交:可重拍并只成功一次', as
   assert.equal(advanced.data.unknown, true)
 
   await advanced.resolveUnknown()
-  assert.equal(advanced.data.unknown, false)
-  assert.match(advanced.data.error, /没有提交成功/)
+  assert.equal(advanced.data.unknown, true)
+  assert.equal(advanced.data.error, '')
   assert.equal(server.persisted.length, 0)
 
-  server.actionPlan.push('ok')
-  server.statePlan.push('ok')
   shootAndUpload(page, comp, 'e2.jpg')
   await tick()
+  assert.equal(server.persisted.length, 0)
+  assert.equal(server.posts.length, 1)
+  server.persist(server.posts[0])
+  await advanced.resolveUnknown()
   assert.equal(server.persisted.length, 1)
-  assert.equal(server.persisted[0].payload.imageUrl, 'https://cdn/e2.jpg')
+  assert.equal(server.persisted[0].payload.imageUrl, 'https://cdn/e.jpg')
   assert.equal(advanced.data.state.version, 2)
   assert.equal(advanced.data.error, '')
+  assert.equal(advanced.data.unknown, false)
+
 })

@@ -296,4 +296,5 @@
   <cy-result-sheet show="{{resultSheet.show}}" kind="{{resultSheet.kind}}" title="{{resultSheet.title}}"
     why="{{resultSheet.why}}" primary-text="{{resultSheet.primaryText}}" secondary-text="{{resultSheet.secondaryText}}"
     bind:primary="onResultPrimary" bind:secondary="onResultClose" bind:close="onResultClose" />
+  <include src="../utils/team-recovery-panel.wxml" />
 </view>

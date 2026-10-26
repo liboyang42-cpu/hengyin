@@ -123,3 +123,19 @@ test('UNKNOWN marker roundtrips without extra payload fields and remains account
   saveDraft(storage, input())
   assert.equal(loadDraft(storage, { draftUuid: 'draft-a' }, { memberId: 42 }).envelope.publishAttempt, undefined)
 })
+
+test('UNKNOWN save retains the original frozen input separately from newer edits and fences ownership', () => {
+  const storage = makeStorage()
+  const attempt = { status: 'UNKNOWN', topicId: '77', payload: { requestId: 'original', name: 'submitted', configVersion: 3 }, token: 'discard' }
+  saveDraft(storage, input({ serverDraftAttempt: attempt, formData: { name: 'newer edit', chapters: [] } }))
+  attempt.payload.name = 'mutated after save'
+  const restored = loadDraft(storage, { draftUuid: 'draft-a' }, { memberId: 42 }).envelope
+  assert.deepEqual(restored.serverDraftAttempt, {
+    status: 'UNKNOWN', topicId: '77', payload: { requestId: 'original', name: 'submitted', configVersion: 3 },
+  })
+  assert.equal(restored.formData.name, 'newer edit')
+  assert.equal(loadDraft(storage, { draftUuid: 'draft-a' }, { memberId: 43 }).envelope, null)
+  assert.equal(loadDraft(storage, { draftUuid: 'draft-a' }, { memberId: 42, operationScope: 'MERCHANT' }).status, 'scope_mismatch')
+  saveDraft(storage, input())
+  assert.equal(loadDraft(storage, { draftUuid: 'draft-a' }, { memberId: 42 }).envelope.serverDraftAttempt, undefined)
+})

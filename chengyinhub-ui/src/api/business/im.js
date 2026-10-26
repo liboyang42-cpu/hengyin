@@ -43,3 +43,8 @@ export function unblockImUser(memberId) {
     params: { memberId: memberId }
   })
 }
+
+// Read the original result; a missing receipt is still UNKNOWN.
+export function getImSendReceipt(query) {
+  return request({ url: '/business/im/send/receipt', method: 'get', params: query })
+}

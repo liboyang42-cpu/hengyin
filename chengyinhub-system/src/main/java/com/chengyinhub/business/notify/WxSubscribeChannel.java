@@ -71,6 +71,21 @@ public class WxSubscribeChannel implements NotifyChannel {
         }
     }
 
+    /** Official broadcast only; no boolean-to-result inference or fanout. */
+    public IWxSubscribeMsgService.OfficialBroadcastResult sendOfficialBroadcast(Long memberId, String title, String sub) {
+        try {
+            IWxSubscribeMsgService.OfficialBroadcastResult result = wx.notifyOfficialBroadcastResult(memberId, title, sub);
+            return result == null ? officialUnknown() : result;
+        } catch (Throwable failure) {
+            return officialUnknown();
+        }
+    }
+
+    private static IWxSubscribeMsgService.OfficialBroadcastResult officialUnknown() {
+        return new IWxSubscribeMsgService.OfficialBroadcastResult(IWxSubscribeMsgService.OfficialBroadcastResult.State.UNKNOWN,
+                IWxSubscribeMsgService.OfficialBroadcastResult.Reason.TRANSPORT_UNCONFIRMED, null);
+    }
+
     /** 漫游召回模板是否已配置。RoamRecallService 据此决定要不要消耗重试次数。 */
     public boolean isRoamRecallReady() {
         return wx.isRoamRecallReady();

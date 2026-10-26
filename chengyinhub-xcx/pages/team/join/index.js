@@ -1,10 +1,13 @@
 const toast = require('../../../utils/toast.js');
+const { exactId, reader, sameReader } = require('../../../utils/user-character.js');
+const { createRecovery } = require('../../../utils/team-event-command.js');
 const app = getApp();
 
 Page({
   data: {
     statusBarHeight: app.globalData.statusBarHeight,
     navBarHeight: app.globalData.navBarHeight,
+    commandRecovery: null,
     team: null,
     joined: false,
     loading: true,
@@ -18,13 +21,61 @@ Page({
   },
 
   onLoad(options) {
+    this._disposed = false;
+    this._hidden = false;
     this.inviteCode = String(options.code || '');
     this.legacyTeamId = String(options.teamId || '');
+    this._openRecovery();
     this.load();
+  },
+
+  onShow() {
+    const refresh = this._hidden || this._reader && !sameReader(app, this._reader);
+    this._hidden = false;
+    if (refresh) { this._openRecovery(); this.load(); }
+  },
+  onHide() { if (this._recovery) this._recovery.dispose(); this._hidden = true; this._epoch = (this._epoch || 0) + 1; this._inviteLoading = false; },
+  onUnload() { this._disposed = true; this.onHide(); },
+
+  _openRecovery() {
+    this._recoveryReader = reader(app);
+    if (this._recovery) this._recovery.dispose();
+    this._recovery = createRecovery({ app, platform: wx, domain: 'TEAM',
+      scopeKey: 'invite:' + this.inviteCode, targetId: null,
+      changed: value => this.setData({ commandRecovery: value, joining: value.busy }),
+      terminal: () => {
+        this._epoch = (this._epoch || 0) + 1;
+        this._inviteLoading = false;
+        // Membership can have changed since this receipt; always display a fresh server projection.
+        this.load();
+      } });
+  },
+  queryCommand() { this._recovery.query(); },
+  retryCommand() { this._recovery.retry(); },
+  cancelCommand() { this._recovery.cancel(); },
+  acknowledgeCommand() { this._recovery.acknowledge(); },
+
+  _context() { return { code: this.inviteCode, reader: reader(app) }; },
+  _current(context) {
+    if (this._hidden || this._disposed || context.code !== this.inviteCode) return false;
+    if (!sameReader(app, context.reader)) {
+      if (this._reader && (this._reader.id !== context.reader.id || this._reader.token !== context.reader.token)) return false;
+      this.setData({ team: null, joined: false, joining: false });
+      this.teamId = '';
+      return false;
+    }
+    return true;
   },
 
   load() {
     const that = this;
+    if (this._hidden || this._disposed) return;
+    if (this._reader && !sameReader(app, this._reader)) {
+      this._inviteLoading = false;
+      this.teamId = '';
+      this.setData({ team: null, joined: false, joining: false, joinError: '' });
+    }
+    this._reader = reader(app);
     if (!this.inviteCode) {
       this.setData({
         loading: false,
@@ -38,6 +89,9 @@ Page({
     }
     if (this._inviteLoading) return;
     this._inviteLoading = true;
+    const epoch = this._epoch = (this._epoch || 0) + 1;
+    const context = this._context();
+    const current = () => epoch === this._epoch && this._current(context);
     const hasTeam = !!this.data.team;
     this.setData({
       loading: !hasTeam,
@@ -51,9 +105,11 @@ Page({
       data: JSON.stringify({ inviteCode: this.inviteCode }),
       header: { 'Content-Type': 'application/json' },
       success(res) {
+        if (!current()) return;
         that._inviteLoading = false;
-        if (res.code == '200' && res.data && res.data.team) {
-          that.teamId = String(res.data.team.id);
+        if (res && res.code == '200' && res.data && res.data.team && exactId(res.data.team.id)) {
+          that.teamId = exactId(res.data.team.id);
+          that._recovery.setTarget(that.teamId);
           that.setData({
             loading: false,
             refreshing: false,
@@ -63,6 +119,8 @@ Page({
             errorSub: ''
           });
         } else {
+          that.teamId = '';
+          that.setData({ team: null, joined: false });
           const authDenied = String(res && res.code) === '401' || String(res && res.code) === '403';
           // F-W1-12:静默重登后仍 401/403 是身份问题,留可见的登录/权限说明,不按加载失败留白。
           that.setData({
@@ -76,6 +134,7 @@ Page({
         }
       },
       fail() {
+        if (!current()) return;
         that._inviteLoading = false;
         that.setData({
           loading: false,
@@ -99,26 +158,15 @@ Page({
 
   join() {
     if (app.ensureLoginFor && !app.ensureLoginFor('team', () => this.join())) return; // 2026-10-24 游客写前登录
-    if (this.data.joining) return;
-    const that = this;
-    this.setData({ joining: true, joinError: '' });
-    app.sendRequest({
-      url: '/api/team/join', method: 'POST',
-      data: JSON.stringify({ inviteCode: this.inviteCode }),
-      header: { 'Content-Type': 'application/json' },
-      success(res) {
-        that.setData({ joining: false });
-        if (res.code == '200') {
-          that.setData({ joined: true, joinError: '' });
-          toast('已加入队伍');
-          setTimeout(function () { that.goDetail(); }, 500);
-        } else that.setData({ joinError: res.msg || '邀请状态可能已变化，请重试' });
-      },
-      fail() { that.setData({ joining: false, joinError: '网络没连上，请检查后重试' }); }
-    });
+    if (this.data.joining || this._hidden || this._disposed || !this.inviteCode) return;
+    if (!this._recoveryReader || !sameReader(app, this._recoveryReader)) this._openRecovery();
+    if (!this._recovery || this._recovery.pending() || !exactId(this.teamId)) return;
+    this._recovery.setTarget(this.teamId);
+    return this._recovery.start('join', { inviteCode: this.inviteCode });
   },
 
   goDetail() {
+    if (!exactId(this.teamId) || this._hidden || this._disposed) return;
     const pages = getCurrentPages();
     const previous = pages.length > 1 ? pages[pages.length - 2] : null;
     if (previous && previous.route === 'pages/team/detail/index') {

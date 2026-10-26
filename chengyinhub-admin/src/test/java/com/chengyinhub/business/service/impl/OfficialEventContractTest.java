@@ -57,6 +57,26 @@ class OfficialEventContractTest {
         ReflectionTestUtils.setField(s, "audienceMapper", aud);
         ReflectionTestUtils.setField(s, "imService", im);
         ReflectionTestUtils.setField(s, "notifyService", wx);
+        // Exercise the new delivery adapter; old audience/content assertions stay intact.
+        OfficialBroadcastMapper batch=mock(OfficialBroadcastMapper.class);
+        when(batch.lockDispatch(anyLong())).thenReturn(java.util.Map.of("audience_frozen",0,"status",OfficialBroadcast.ST_PENDING));
+        java.util.Map<Long,java.util.Map<String,Object>> rows=new java.util.LinkedHashMap<>();
+        org.mockito.Mockito.doAnswer(c->{
+            com.chengyinhub.business.domain.OfficialBroadcastLog legacy=new com.chengyinhub.business.domain.OfficialBroadcastLog();
+            if(logMapper.insertIgnore(legacy)==0)return 0;
+            long id=rows.size()+1;java.util.Map<String,Object> row=new java.util.HashMap<>();
+            row.put("id",id);row.put("broadcast_id",c.getArgument(0));row.put("member_id",c.getArgument(1));row.put("channel",c.getArgument(3));row.put("frozen_title",c.getArgument(4));row.put("frozen_sub",c.getArgument(5));row.put("delivery_state",c.getArgument(6));rows.put(id,row);return 1;
+        }).when(logMapper).snapshot(anyLong(),anyLong(),anyString(),anyString(),anyString(),anyString(),anyString());
+        when(logMapper.deliveryRows(anyLong())).thenAnswer(c->new java.util.ArrayList<>(rows.values()));
+        when(logMapper.lockDelivery(anyLong())).thenAnswer(c->rows.get(c.getArgument(0)));
+        org.mockito.Mockito.doAnswer(c->{rows.get(c.getArgument(0)).put("delivery_state",c.getArgument(1));return 1;}).when(logMapper).deliveryState(anyLong(),anyString(),org.mockito.ArgumentMatchers.nullable(Long.class),org.mockito.ArgumentMatchers.nullable(Long.class),anyInt());
+        when(im.enqueueSystemNotification(anyLong(),anyInt(),anyString(),anyString(),anyString())).thenReturn(101L);
+        when(im.deliverSystemNotification(anyLong())).thenReturn(201L);
+        com.chengyinhub.business.notify.WxSubscribeChannel channel=mock(com.chengyinhub.business.notify.WxSubscribeChannel.class);
+        when(channel.sendOfficialBroadcast(anyLong(),anyString(),anyString())).thenAnswer(c->{wx.notifyOfficialBroadcast(c.getArgument(0),c.getArgument(1),c.getArgument(2));return new com.chengyinhub.business.service.IWxSubscribeMsgService.OfficialBroadcastResult(com.chengyinhub.business.service.IWxSubscribeMsgService.OfficialBroadcastResult.State.UNKNOWN,com.chengyinhub.business.service.IWxSubscribeMsgService.OfficialBroadcastResult.Reason.TRANSPORT_UNCONFIRMED,null);});
+        org.springframework.transaction.PlatformTransactionManager tm=mock(org.springframework.transaction.PlatformTransactionManager.class);
+        when(tm.getTransaction(any())).thenAnswer(c->new org.springframework.transaction.support.SimpleTransactionStatus());
+        ReflectionTestUtils.setField(s,"delivery",new OfficialBroadcastDeliveryService(logMapper,batch,im,channel,tm));
         return s;
     }
 
@@ -90,7 +110,7 @@ class OfficialEventContractTest {
 
         // 去重后 4 人,站内信 4 次(未去重会是 5 次)
         assertEquals(4, reached);
-        verify(im, times(4)).sendSystem(anyLong(), eq(3), anyString(), anyString());
+        verify(im, times(4)).enqueueSystemNotification(anyLong(), eq(3), anyString(), anyString(), anyString());
         // 订阅渠道也 4 次
         verify(wx, times(4)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
     }
@@ -111,7 +131,7 @@ class OfficialEventContractTest {
         int reached = broadcastService(aud, logMapper, im, wx).dispatch(bc(1, null));
 
         assertEquals(0, reached);
-        verify(im, never()).sendSystem(anyLong(), anyInt(), anyString(), anyString());
+        verify(im, never()).enqueueSystemNotification(anyLong(), anyInt(), anyString(), anyString(), anyString());
         verify(wx, never()).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
     }
 
@@ -131,7 +151,7 @@ class OfficialEventContractTest {
         broadcastService(aud, logMapper, im, wx).dispatch(bc(2, content));
 
         ArgumentCaptor<String> titleCap = ArgumentCaptor.forClass(String.class);
-        verify(im, times(1)).sendSystem(eq(10L), eq(3), titleCap.capture(), anyString());
+        verify(im, times(1)).enqueueSystemNotification(eq(10L), eq(3), titleCap.capture(), anyString(), anyString());
         assertEquals("玩家标题", titleCap.getValue()); // 玩家收到玩家文案,而非默认标题
     }
 
@@ -154,8 +174,8 @@ class OfficialEventContractTest {
         int reached = broadcastService(aud, logMapper, im, wx).dispatch(bc(1, null));
 
         assertEquals(1, reached); // 仅 11 收到
-        verify(im, times(1)).sendSystem(eq(11L), anyInt(), anyString(), anyString());
-        verify(im, never()).sendSystem(eq(10L), anyInt(), anyString(), anyString());
+        verify(im, times(1)).enqueueSystemNotification(eq(11L), anyInt(), anyString(), anyString(), anyString());
+        verify(im, never()).enqueueSystemNotification(eq(10L), anyInt(), anyString(), anyString(), anyString());
     }
 
     @Test
@@ -176,8 +196,8 @@ class OfficialEventContractTest {
         int reached = broadcastService(aud, logMapper, im, wx).dispatch(bc(1, null));
 
         assertEquals(1, reached);
-        verify(im, times(1)).sendSystem(eq(11L), anyInt(), anyString(), anyString());
-        verify(im, never()).sendSystem(eq(10L), anyInt(), anyString(), anyString());
+        verify(im, times(1)).enqueueSystemNotification(eq(11L), anyInt(), anyString(), anyString(), anyString());
+        verify(im, never()).enqueueSystemNotification(eq(10L), anyInt(), anyString(), anyString(), anyString());
     }
 
     @Test

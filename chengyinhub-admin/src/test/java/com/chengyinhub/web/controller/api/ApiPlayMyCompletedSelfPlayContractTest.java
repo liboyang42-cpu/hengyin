@@ -13,6 +13,7 @@ import com.chengyinhub.business.service.IPerkLedgerService;
 import com.chengyinhub.business.service.IPlayerNodeProgressService;
 import com.chengyinhub.business.service.ITopicRouteRuntimeService;
 import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.web.service.play.PlayHistoryQueryApplication;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -69,15 +70,19 @@ class ApiPlayMyCompletedSelfPlayContractTest
 
         controller = spy(new ApiPlayProgressController());
         doReturn(PLAYER).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "perkLedgerService", perkLedgerService);
-        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", routeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "perkLedgerService", perkLedgerService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", routeService);
+        com.chengyinhub.business.service.support.CompletedRouteFactReader completedRoutes =
+                mock(com.chengyinhub.business.service.support.CompletedRouteFactReader.class);
+        when(completedRoutes.findCurrentCompletedRoutes(PLAYER)).thenReturn(Collections.emptyList());
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "completedRouteFactReader", completedRoutes);
 
-        when(registrationService.selectExplorePassesByActivity(PLAYER)).thenReturn(Collections.emptyMap());
+        when(registrationService.selectCmsRegistrationList(any(CmsRegistration.class))).thenReturn(Collections.emptyList());
         when(routeService.sessionStatuses(any())).thenReturn(Collections.emptyMap());
         when(progressService.selectPlayerNodeProgressList(any())).thenReturn(new ArrayList<>());
     }
@@ -242,9 +247,10 @@ class ApiPlayMyCompletedSelfPlayContractTest
         when(topicService.selectCmsTopicById(ACTIVITY_TOPIC)).thenReturn(topic(ACTIVITY_TOPIC, "探索票主题"));
         CmsRegistration pass = new CmsRegistration();
         pass.setId(700L);
-        Map<Long, CmsRegistration> passes = new LinkedHashMap<>();
-        passes.put(ACTIVITY, pass);
-        when(registrationService.selectExplorePassesByActivity(PLAYER)).thenReturn(passes);
+        pass.setMemberId(PLAYER); pass.setOwnerType(2L); pass.setOwnerId(ACTIVITY);
+        pass.setPurchaseKind(com.chengyinhub.common.constant.PurchaseKind.EXPLORE_PASS);
+        pass.setRegistrationStatus(2); pass.setPaymentStatus(2);
+        when(registrationService.selectCmsRegistrationList(any(CmsRegistration.class))).thenReturn(Collections.singletonList(pass));
         when(perkLedgerService.isExploreCompleted(700L, ACTIVITY_TOPIC)).thenReturn(true);
         when(progressService.selectPlayerNodeProgressList(any())).thenReturn(new ArrayList<>());
 
@@ -374,13 +380,17 @@ class ApiPlayMyCompletedSelfPlayContractTest
     {
         com.chengyinhub.business.service.ICommunityPostService references =
                 mock(com.chengyinhub.business.service.ICommunityPostService.class);
-        ReflectionTestUtils.setField(controller, "communityPostService", references);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "communityPostService", references);
+        // The boolean HTTP adapter now delegates to the application; stub its original-history seam.
+        PlayHistoryQueryApplication historyReader = spy((PlayHistoryQueryApplication)
+                PlayNodeAccessTestFixtures.owner(controller, PlayHistoryQueryApplication.class));
+        ReflectionTestUtils.setField(controller, "playHistoryQueryApplication", historyReader);
         List<Map<String, Object>> history = new ArrayList<>();
         Map<String, Object> cancelled = new LinkedHashMap<>();
         cancelled.put("dataType", 1); cancelled.put("dataId", 63L); cancelled.put("completed", true);
         history.add(cancelled);
         AjaxResult original = AjaxResult.success(history);
-        doReturn(original).when(controller).myCompleted();
+        doReturn(original).when(historyReader).myCompleted(PLAYER);
         org.junit.jupiter.api.Assertions.assertSame(original, controller.myCompleted(false));
         org.mockito.Mockito.verify(references, org.mockito.Mockito.never()).filterPublicCompletedReferences(anyLong(), any());
         when(references.filterPublicCompletedReferences(PLAYER, history)).thenReturn(Collections.emptyList());
@@ -389,7 +399,7 @@ class ApiPlayMyCompletedSelfPlayContractTest
         assertEquals(Collections.emptyList(), publicResult.get("data"));
         assertEquals(1, history.size(), "filtering must not erase historical rows");
         AjaxResult failure = AjaxResult.error("please login");
-        doReturn(failure).when(controller).myCompleted();
+        doReturn(failure).when(historyReader).myCompleted(PLAYER);
         org.junit.jupiter.api.Assertions.assertSame(failure, controller.myCompleted(true));
         org.mockito.Mockito.verify(references, org.mockito.Mockito.times(1)).filterPublicCompletedReferences(anyLong(), any());
     }

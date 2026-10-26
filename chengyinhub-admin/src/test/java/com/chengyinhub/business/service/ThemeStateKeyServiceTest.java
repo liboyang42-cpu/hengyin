@@ -18,6 +18,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -174,6 +176,46 @@ class ThemeStateKeyServiceTest {
         assertTrue(xml.contains("initial_value = values(initial_value)"));
     }
 
+    @Test
+    void freezeExportsOnlyEnabledRegisteredDefinitionsAndRejectsConflictWithoutWrites() throws Exception {
+        ThemeStateKey enabled = key("counter.hp", "counter", "run");
+        enabled.setLabel("体力"); enabled.setInitialValue(3); enabled.setMinValue(0); enabled.setMaxValue(20);
+        enabled.setColor("#123ABC"); enabled.setIcon("heart"); enabled.setPersistScope("topic");
+        ThemeStateKey inactive = key("counter.other", "counter", "run");
+        when(mapper.selectByTopicIdForUpdate(7L)).thenReturn(Arrays.asList(enabled, inactive));
+        String raw = "{\"schemaVersion\":1,\"stateEnabled\":true,\"attributes\":[{\"key\":\"counter.hp\",\"label\":\"体力\",\"initial\":3,\"min\":0,\"max\":20}]}";
+        when(mapper.lockRegistryVersion(7L)).thenReturn(1L);
+        com.fasterxml.jackson.databind.node.ObjectNode frozen = service.freezeDefinition(7L, Long.MAX_VALUE, "1",
+                com.chengyinhub.business.domain.JourneyRules.parse(raw));
+        assertEquals("9223372036854775807", frozen.path("configVersion").asText());
+        assertEquals(1, frozen.path("attributes").size());
+        assertEquals("number", frozen.path("attributes").get(0).path("displayType").asText());
+        assertTrue(frozen.path("attributes").get(0).has("rules"));
+        String snapshot = new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode()
+                .set(com.chengyinhub.business.service.support.ThemeAttributeDefinition.KEY, frozen).toString();
+        assertTrue(com.chengyinhub.business.service.support.ThemeAttributeDefinition.read(snapshot).complete);
+        enabled.setInitialValue(4);
+        ServiceException conflict = assertThrows(ServiceException.class, () -> service.freezeDefinition(7L, 3L, "1",
+                com.chengyinhub.business.domain.JourneyRules.parse(raw)));
+        assertEquals("ATTRIBUTE_DEFINITION_CONFLICT", conflict.getDetailMessage());
+        verify(mapper, never()).upsertThemeStateKey(any(ThemeStateKey.class));
+        verify(mapper, never()).updateDefinition(any(ThemeStateKey.class));
+    }
+
+    @Test
+    void staleRegistryBindingRejectsBeforeReadingDefinitions() {
+        when(mapper.lockRegistryVersion(7L)).thenReturn(2L);
+        ServiceException conflict = assertThrows(ServiceException.class, () -> service.freezeDefinition(7L, 3L, "1",
+                new com.chengyinhub.business.domain.JourneyRules()));
+        assertEquals("ATTRIBUTE_REGISTRY_VERSION_CONFLICT", conflict.getDetailMessage());
+        verify(mapper, never()).selectByTopicIdForUpdate(anyLong());
+        verify(mapper, never()).advanceRegistryVersion(anyLong());
+        org.mockito.InOrder locks = inOrder(mapper);
+        locks.verify(mapper).lockTopic(7L);
+        locks.verify(mapper).ensureRegistryVersion(7L);
+        locks.verify(mapper).lockRegistryVersion(7L);
+    }
+
     private static ThemeStateKey key(String stateKey, String type, String scope) {
         ThemeStateKey key = new ThemeStateKey();
         key.setStateKey(stateKey);
@@ -187,7 +229,7 @@ class ThemeStateKeyServiceTest {
     void updateDefinitionKeepsTheStateKeyAndWritesTheNewMetadata() {
         ThemeStateKey existing = key("counter.str", "counter", "run");
         existing.setId(5L);
-        when(mapper.selectByTopicIdAndStateKey(7L, "counter.str")).thenReturn(existing);
+        when(mapper.selectByTopicIdAndStateKeyForUpdate(7L, "counter.str")).thenReturn(existing);
         ThemeStateKey patch = new ThemeStateKey();
         patch.setLabel("膂力");
         patch.setInitialValue(8);
@@ -231,7 +273,7 @@ class ThemeStateKeyServiceTest {
     /** 老数据没有范围 = 0..100;定义接口里越界初值 → 400 STATE_KEY_RANGE。 */
     @Test
     void updateDefinitionRejectsInitialOutsideDefaultRange() {
-        when(mapper.selectByTopicIdAndStateKey(7L, "counter.str")).thenReturn(key("counter.str", "counter", "run"));
+        when(mapper.selectByTopicIdAndStateKeyForUpdate(7L, "counter.str")).thenReturn(key("counter.str", "counter", "run"));
         ThemeStateKey patch = new ThemeStateKey();
         patch.setInitialValue(120);
 
@@ -257,6 +299,34 @@ class ThemeStateKeyServiceTest {
         ServiceException error = assertThrows(ServiceException.class,
                 () -> service.register(7L, Arrays.asList(ranged)));
         assertEquals(ThemeStateKeyService.ERR_RANGE, error.getDetailMessage());
+    }
+
+    @Test
+    void omittedInitialIsCheckedAsZeroBeforeAnyBatchWrite() {
+        for (int[] range : new int[][] {{1, 10}, {-10, -1}}) {
+            ThemeStateKey ranged = key("counter.hp", "counter", "run");
+            ranged.setMinValue(range[0]);
+            ranged.setMaxValue(range[1]);
+            ServiceException error = assertThrows(ServiceException.class,
+                    () -> service.register(7L, Arrays.asList(key("counter.valid", "counter", "run"), ranged)));
+            assertEquals(ThemeStateKeyService.ERR_RANGE, error.getDetailMessage());
+            assertEquals(Integer.valueOf(400), error.getCode());
+            assertFalse(service.check(Arrays.asList(ranged)).isEmpty());
+        }
+        verify(mapper, never()).upsertThemeStateKey(any(ThemeStateKey.class));
+    }
+
+    @Test
+    void omittedInitialAcceptsZeroAtEitherRangeBoundary() {
+        for (int[] range : new int[][] {{0, 10}, {-10, 0}, {0, 0}}) {
+            ThemeStateKey ranged = key("counter.hp", "counter", "run");
+            ranged.setMinValue(range[0]);
+            ranged.setMaxValue(range[1]);
+            service.register(7L, Arrays.asList(ranged));
+            assertEquals(Integer.valueOf(0), ranged.getInitialValue());
+            assertTrue(service.check(Arrays.asList(ranged)).isEmpty());
+        }
+        verify(mapper, times(3)).upsertThemeStateKey(any(ThemeStateKey.class));
     }
 
     @Test

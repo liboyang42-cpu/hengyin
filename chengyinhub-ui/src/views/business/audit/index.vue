@@ -162,8 +162,25 @@
       </div>
     </el-drawer>
 
-    <el-dialog title="审核处理" :visible.sync="reviewOpen" width="520px" append-to-body>
-      <el-form ref="reviewForm" :model="reviewForm" label-width="84px">
+    <el-dialog title="审核处理" @close="saveReviewDraft" :visible.sync="reviewOpen" width="520px" append-to-body>
+      <el-alert v-if="reviewError" :title="reviewError" type="warning" :closable="false" />
+      <el-form ref="reviewForm" :model="reviewForm" label-width="84px" :disabled="reviewBusy || reviewFrozen">
+        <section v-if="supportsProblems">
+          <p>可选逐项说明，最多50项，每项200字。章节、节点及引用玩法的归属由后台校验。</p>
+          <p>逐项保存取决于现有审核配置；审核成功不代表逐项明细已保存。</p>
+          <el-button :disabled="reviewForm.problems.length >= 50" @click="addProblem">添加问题</el-button>
+          <div v-for="(problem, index) in reviewForm.problems" :key="index">
+            <el-form-item :label="'问题 ' + (index + 1)">
+              <el-select v-model="problem.itemType">
+                <el-option v-for="type in problemTypes" :key="type" :label="problemTypeLabels[type]" :value="type" />
+              </el-select>
+              <el-input v-model="problem.itemId" placeholder="条目编号；主题或模板本身可留空" />
+              <el-select v-model="problem.reasonCode" clearable placeholder="原因分类（可选）"><el-option v-for="option in problemReasons" :key="option.value" :label="option.label" :value="option.value" /></el-select>
+              <el-input v-model="problem.reasonText" type="textarea" maxlength="200" show-word-limit placeholder="说明具体问题（必填）" />
+              <el-button @click="reviewForm.problems.splice(index, 1)">删除此项</el-button>
+            </el-form-item>
+          </div>
+        </section>
         <el-form-item label="处理结果">
           <cy-status-tag :label="statusLabel(reviewForm.status)" :tone="statusTone(reviewForm.status)" />
         </el-form-item>
@@ -172,7 +189,10 @@
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="submitReview">确认处理</el-button>
+        <el-button type="primary" :disabled="reviewBusy || reviewFrozen" @click="submitReview">确认处理</el-button>
+        <el-button v-if="reviewFrozen && !reviewConfirmed" :disabled="reviewBusy" @click="submitReview">继续原请求</el-button>
+        <el-button v-if="reviewConfirmed" :disabled="reviewBusy" @click="finishConfirmedReview">完成本次核对</el-button>
+        <el-button v-if="reviewRow" :disabled="reviewBusy" @click="recoverReview">读取当前审核事实</el-button>
         <el-button @click="reviewOpen = false">取消</el-button>
       </div>
     </el-dialog>
@@ -298,10 +318,27 @@ export default {
       queryParams: { pageNum: 1, pageSize: 10, bizType: null, bizId: null, status: null },
       reviewForm: { taskId: null, status: null, reasonText: null },
       reviewBizType: '',
+      reviewRow: null, reviewBusy: false, reviewFrozen: false, reviewConfirmed: false, reviewError: '',
+      reviewCommand: null, reviewOwner: '', reviewWasUnknown: false,
+      problemReasons: [
+        { value: 'TEXT_RISK', label: '文字内容违规' }, { value: 'IMAGE_RISK', label: '图片内容违规' },
+        { value: 'FALSE_INFORMATION', label: '虚假信息' }, { value: 'PRICE_ISSUE', label: '价格信息有误' },
+        { value: 'LOCATION_ISSUE', label: '地点信息有误' }, { value: 'INTELLECTUAL_PROPERTY', label: '知识产权或内容盗用' },
+        { value: 'MINOR_SAFETY', label: '未成年人安全' }, { value: 'OTHER', label: '其他' }
+      ],
+      problemTypeLabels: { TOPIC: '主题', CHAPTER: '章节', NODE: '节点', TEMPLATE: '玩法模板' },
       commercialSubmitForm: { topicId: null, phase: 'PROJECT', requestedTarget: 'RECRUITING' }
     }
   },
   computed: {
+    guardReview() { return this.reviewBizType === 'play_arrive_guard' },
+    recoverableReview() { return this.supportsProblems || this.guardReview },
+    supportsProblems() {
+      return this.reviewForm.status === 2 && this.reviewRow && this.reviewRow.sourceType !== 'APPEAL'
+        && ['TOPIC', 'TEMPLATE', 'TEMPLATE_LIBRARY'].includes(this.reviewBizType)
+    },
+    problemTypes() { return this.reviewBizType === 'TOPIC' ? ['TOPIC', 'CHAPTER', 'NODE', 'TEMPLATE'] : ['TEMPLATE'] },
+    auditReviewer() { return String(this.$store.getters.id || '') + ':' + String(this.$store.getters.token || '') },
     appealAttachmentImageUrls() {
       return this.appealAttachments.filter(item => item.mediaType === 'IMAGE' && item.previewUrl).map(item => item.previewUrl)
     },
@@ -363,6 +400,14 @@ export default {
       ]
     }
   },
+  watch: {
+    reviewForm: { deep: true, handler() { if (this.reviewOpen && !this.reviewFrozen) this.saveReviewDraft() } },
+    auditReviewer() {
+      this.reviewOpen = false; this.reviewForm = { problems: [] }; this.reviewRow = null
+      this.reviewCommand = null; this.reviewFrozen = false; this.reviewBusy = false; this.reviewError = ''; this.reviewOwner = ''; this.reviewConfirmed = false; this.reviewWasUnknown = false
+    }
+  },
+  beforeDestroy() { this.reviewOwner = '' },
   created() {
     if (this.$route.query.bizType) {
       this.queryParams.bizType = this.$route.query.bizType
@@ -528,19 +573,150 @@ export default {
       if (!value) return '当前任务没有附带内容快照'
       try { return JSON.stringify(JSON.parse(value), null, 2) } catch (error) { return value }
     },
-    openReview(row, status) {
-      this.reviewBizType = row.bizType
-      this.reviewForm = { taskId: row.id, expectedVersion: row.version, status: status, reasonText: null }
-      this.reviewOpen = true
+    reviewStorageKey() {
+      const id = this.exactAuditId(this.$store.getters.id)
+      return 'audit-item-review:' + id
     },
-    submitReview() {
-      const review = this.reviewBizType === 'MEDIA_ASSET' ? reviewMediaAsset : reviewAuditTask
-      return review(this.reviewForm).then(() => {
-        this.$modal.msgSuccess('审核处理成功')
-        this.reviewOpen = false
-        this.detailOpen = false
+    exactAuditId(value) {
+      if (typeof value === 'number' && !Number.isSafeInteger(value)) throw Error('编号精度异常，请重新读取')
+      const id = String(value == null ? '' : value).trim()
+      if (!/^[1-9]\d{0,18}$/.test(id) || id.length === 19 && id > '9223372036854775807') throw Error('请输入有效条目编号')
+      return id
+    },
+    saveReviewDraft() {
+      if (!this.reviewRow || !this.recoverableReview || this.reviewOwner !== this.auditReviewer) return false
+      try {
+        const value = JSON.stringify({ row: this.reviewRow, form: this.reviewForm, command: this.reviewCommand,
+          frozen: this.reviewFrozen, confirmed: this.reviewConfirmed, receiptVersion: 1, unknown: this.reviewWasUnknown })
+        sessionStorage.setItem(this.reviewStorageKey(), value)
+        if (sessionStorage.getItem(this.reviewStorageKey()) !== value) throw Error('草稿未保存')
+        return true
+      } catch (e) { this.reviewError = '审核草稿保存失败，本次不能提交：' + e.message; return false }
+    },
+    openReview(row, status) {
+      if (this.reviewBusy) return
+      this.reviewBizType = row.bizType
+      this.reviewForm = { taskId: row.id, expectedVersion: row.version, status, reasonText: null, problems: [] }
+      this.reviewRow = { ...row }
+      this.reviewConfirmed = false; this.reviewFrozen = false; this.reviewCommand = null
+      if (row.bizType !== 'play_arrive_guard' && (!['TOPIC', 'TEMPLATE', 'TEMPLATE_LIBRARY'].includes(row.bizType) || status !== 2 || row.sourceType === 'APPEAL')) {
+        this.reviewOpen = true; this.reviewError = ''; return
+      }
+      this.reviewOwner = this.auditReviewer; this.reviewOpen = true; this.reviewError = ''
+      try {
+        const stored = JSON.parse(sessionStorage.getItem(this.reviewStorageKey()) || 'null')
+        const same = stored && (stored.frozen || String(stored.row.id) === String(row.id) && stored.form.status === status)
+        this.reviewRow = same ? stored.row : { ...row }
+        this.exactAuditId(this.reviewRow.id)
+        this.reviewBizType = this.reviewRow.bizType
+        this.reviewForm = same ? stored.form : { taskId: row.id, expectedVersion: row.version, status, reasonText: '', problems: [] }
+        this.reviewCommand = same ? stored.command : null
+        if (this.reviewCommand && (this.exactAuditId(this.reviewCommand.taskId) !== this.exactAuditId(this.reviewRow.id)
+          || (this.guardReview ? ![1, 2].includes(this.reviewCommand.status) : this.reviewCommand.status !== 2) || this.reviewCommand.expectedVersion !== this.reviewForm.expectedVersion
+          || typeof this.reviewCommand.requestId !== 'string' || !this.reviewCommand.requestId || this.reviewCommand.requestId.length > 64)) throw Error('原请求与审核对象不匹配')
+        this.reviewWasUnknown = !!(same && (stored.unknown || stored.frozen && !stored.confirmed)); this.reviewFrozen = !!(same && stored.frozen); this.reviewConfirmed = !!(same && stored.receiptVersion === 1 && stored.confirmed)
+        if (this.reviewFrozen) this.reviewError = this.reviewConfirmed
+          ? '原审核回执已确认，原说明保留供核对。'
+          : '原审核结果待确认，输入已冻结；仅可读取事实或继续原请求。'
+      } catch (e) { this.reviewRow = null; this.reviewFrozen = true; this.reviewError = '无法恢复原审核，请保留记录：' + e.message }
+    },
+    addProblem() {
+      if (!this.supportsProblems || this.reviewBusy || this.reviewFrozen || this.reviewForm.problems.length >= 50) return
+      this.reviewForm.problems.push({ itemType: this.problemTypes[0], itemId: '', reasonCode: '', reasonText: '' })
+    },
+    finishConfirmedReview() {
+      if (!this.reviewConfirmed || this.reviewBusy || this.reviewOwner !== this.auditReviewer) return
+      try {
+        sessionStorage.removeItem(this.reviewStorageKey())
+        this.reviewOpen = false; this.reviewRow = null; this.reviewCommand = null; this.reviewFrozen = false
+      } catch (e) { this.reviewError = '已确认的核对记录未能清理，请保留原记录' }
+    },
+    reviewPayload() {
+      const form = this.reviewForm
+      const payload = { taskId: this.exactAuditId(form.taskId), expectedVersion: form.expectedVersion,
+        status: form.status, reasonText: String(form.reasonText || '').trim() }
+      if (!Number.isSafeInteger(payload.expectedVersion) || payload.expectedVersion < 0) throw Error('审核版本缺失，请读取最新证据')
+      if (payload.status === 2 && !payload.reasonText) throw Error('请填写整体处理原因')
+      if (this.supportsProblems) {
+        if (form.problems.length > 50) throw Error('逐项问题最多50条')
+        payload.problems = form.problems.map((problem, index) => {
+          if (!this.problemTypes.includes(problem.itemType)) throw Error('问题类型不属于本次审核')
+          const itemId = String(problem.itemId || '').trim() ? this.exactAuditId(problem.itemId) : null
+          const whole = problem.itemType === 'TOPIC' || this.reviewBizType !== 'TOPIC'
+          if (!whole && !itemId) throw Error('第' + (index + 1) + '项必须填写条目编号')
+          if (whole && itemId && itemId !== this.exactAuditId(this.reviewRow.bizId)) throw Error('问题条目不属于本次审核内容')
+          const reasonText = String(problem.reasonText || '').trim()
+          if (!reasonText || reasonText.length > 200) throw Error('第' + (index + 1) + '项请填写1至200字说明')
+          const reasonCode = problem.reasonCode || null
+          if (reasonCode && !this.problemReasons.some(option => option.value === reasonCode)) throw Error('请选择有效原因分类')
+          return { itemType: problem.itemType, itemId, reasonCode, reasonText }
+        })
+      }
+      return payload
+    },
+    async recoverReview() {
+      if (!this.reviewCommand) return this.openDetail(this.reviewRow)
+      const owner = this.auditReviewer, command = this.reviewCommand
+      try {
+        const response = await getAuditTaskDetail(command.taskId, command.requestId)
+        if (owner !== this.auditReviewer || owner !== this.reviewOwner || command !== this.reviewCommand) return
+        const receipt = response && (this.guardReview ? response.guardReviewReceipt : response.itemProblemReceipt)
+        if (!response || response.code !== 200 || !receipt || receipt.state !== 'FOUND') throw Error('原审核回执尚未确认；继续保留原请求')
+        if (receipt.taskId !== command.taskId || receipt.requestId !== command.requestId
+          || receipt.expectedVersion !== command.expectedVersion || receipt.status !== command.status
+          || receipt.reasonText !== command.reasonText) throw Error('回执与原审核意图不一致')
+        if (receipt.applied !== true && receipt.applied !== false) throw Error('逐项处理状态不明确')
+        if (receipt.applied && (!Array.isArray(receipt.problems) || receipt.problems.length !== (command.problems || []).length
+          || receipt.problems.some((item, index) => !item || ['itemType', 'itemId', 'reasonCode', 'reasonText'].some(key => item[key] !== command.problems[index][key])))) throw Error('逐项回执与原输入不一致')
+        this.reviewConfirmed = true
+        this.reviewError = this.guardReview ? '守卫申诉处理回执已确认；成立后仍须在有效原局重新现场核验，不直接放行或补发奖励。' : receipt.applied ? '原审核及逐项说明已由服务端回执确认。' : '原审核已确认；本次逐项开关关闭，逐项说明未保存。'
+      } catch (e) {
+        if (owner !== this.auditReviewer || owner !== this.reviewOwner) return
+        this.reviewError = e.message || '读取失败，保留原请求'
+        this.reviewWasUnknown = true
+      }
+      if (owner === this.auditReviewer && owner === this.reviewOwner) this.saveReviewDraft()
+    },
+    async submitReview() {
+      if (!this.recoverableReview && !this.reviewFrozen) {
+        const review = this.reviewBizType === 'MEDIA_ASSET' ? reviewMediaAsset : reviewAuditTask
+        const { problems, ...payload } = this.reviewForm
+        return review(payload).then(() => {
+          this.$modal.msgSuccess('审核处理成功'); this.reviewOpen = false; this.detailOpen = false; this.getList()
+        })
+      }
+      if (this.reviewBusy || !this.reviewRow || this.reviewConfirmed || this.reviewOwner !== this.auditReviewer) return
+      const owner = this.auditReviewer
+      // Keep the existing permissions; hidden buttons are not the authorization boundary.
+      const permissions = this.$store.getters.permissions || []
+      const permission = this.reviewBizType === 'MEDIA_ASSET'
+        ? (this.reviewForm.status === 1 ? 'business:mediaReview:approve' : 'business:mediaReview:reject') : 'business:audit:review'
+      if (!permissions.includes('*:*:*') && !permissions.includes(permission)) { this.reviewError = '没有本次审核处理权限'; return }
+      this.reviewBusy = true; this.reviewError = ''
+      try {
+        if (!this.reviewFrozen) {
+          const payload = this.reviewPayload()
+          payload.requestId = 'audit-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2)
+          this.reviewCommand = payload; this.reviewFrozen = true
+          if (!this.saveReviewDraft()) { this.reviewFrozen = false; this.reviewCommand = null; return }
+        }
+        if (!this.reviewCommand) throw Error('原请求不完整，不能提交')
+        const review = this.reviewBizType === 'MEDIA_ASSET' ? reviewMediaAsset : reviewAuditTask
+        const result = await review(JSON.parse(JSON.stringify(this.reviewCommand)))
+        if (owner !== this.auditReviewer || owner !== this.reviewOwner) return
+        if (!result || result.code !== 200) throw Error(result && result.msg || '审核结果未确认')
+        // POST acceptance is not independent proof of the original immutable intent.
+        this.reviewWasUnknown = true
+        await this.recoverReview()
         this.getList()
-      })
+      } catch (e) {
+        if (owner !== this.auditReviewer || owner !== this.reviewOwner) return
+        this.reviewError = (e && e.message || '审核结果待确认') + '；原输入已保留。'
+        // Only a first attempt rejected before any write can return to editing. An UNKNOWN retry stays frozen.
+        if (e && e.auditCode === 400 && !this.reviewWasUnknown) { this.reviewFrozen = false; this.reviewCommand = null }
+        else if (this.reviewCommand) this.reviewWasUnknown = true
+        this.saveReviewDraft()
+      } finally { if (owner === this.auditReviewer && owner === this.reviewOwner) this.reviewBusy = false }
     },
     openCommercialSubmit() {
       this.commercialSubmitForm = { topicId: null, phase: 'PROJECT', requestedTarget: 'RECRUITING' }

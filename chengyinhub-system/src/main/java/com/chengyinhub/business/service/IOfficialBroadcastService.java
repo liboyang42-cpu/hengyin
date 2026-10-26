@@ -20,6 +20,13 @@ public interface IOfficialBroadcastService
     /** 仅发布者本人读取自己通知；V2 行还会逐条复核本场受控操作者范围。 */
     List<OfficialBroadcast> listBySender(Long senderAccount, Long actorMemberId);
 
+    java.util.Map<String,Object> cancelCreation(String owner,String key);
+
+    java.util.Map<String,Object> creationReceipt(String owner,String key);
+
+    java.util.Map<String,Object> recover(Long id, Long actorMemberId);
+    java.util.Map<String,Object> recoverOwned(Long id, Long actorMemberId, String owner);
+
     /** Quartz:发送所有到点的定时广播。 */
     void runDueScheduled();
 

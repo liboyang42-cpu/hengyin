@@ -24,6 +24,10 @@ public interface IOrientTaskService {
     /** 玩家视角的任务状态:是否已完成、经哪条路径、是否有待审照片、可用替代方式(不含答案)。 */
     Map<String, Object> taskState(Long memberId, Long topicId, Long activityId, String playInstanceId, Long taskId);
 
+    /** 只读本人原尝试;不重放写入、不返回答案/照片,待审随审核结果更新。 */
+    Map<String, Object> receipt(Long memberId, Long topicId, Long activityId, String playInstanceId,
+                               Long taskId, String idempotencyKey);
+
     /** 替代方式提交。返回 outcome:COMPLETED / PENDING_REVIEW / REJECTED / ALREADY_COMPLETED / SUPERSEDED。 */
     Map<String, Object> submit(SubmitCommand command);
 

@@ -114,37 +114,37 @@ class PhotoReviewRewardContractTest
         progressionService = mock(IPlayerProgressionService.class);
         ITopicCompletionAwardService completionAwardService = mock(ITopicCompletionAwardService.class);
 
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
-        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templateService);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "pointsAwardService", pointsAwardService);
-        ReflectionTestUtils.setField(controller, "growthService", growthService);
-        ReflectionTestUtils.setField(controller, "playerProgressionService", progressionService);
-        ReflectionTestUtils.setField(controller, "topicCompletionAwardService", completionAwardService);
-        ReflectionTestUtils.setField(controller, "rewardDropService", mock(IRewardDropService.class));
-        ReflectionTestUtils.setField(controller, "smsCouponHistoryService", mock(ISmsCouponHistoryService.class));
-        ReflectionTestUtils.setField(controller, "xpBudgetService", mock(IXpBudgetService.class));
-        ReflectionTestUtils.setField(controller, "memberCollectibleMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService", templateService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "pointsAwardService", pointsAwardService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "growthService", growthService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerProgressionService", progressionService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicCompletionAwardService", completionAwardService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "rewardDropService", mock(IRewardDropService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "smsCouponHistoryService", mock(ISmsCouponHistoryService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "xpBudgetService", mock(IXpBudgetService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "memberCollectibleMapper",
                 mock(com.chengyinhub.business.mapper.MemberCollectibleMapper.class));
-        ReflectionTestUtils.setField(controller, "playAttemptLogMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playAttemptLogMapper",
                 mock(com.chengyinhub.business.mapper.PlayAttemptLogMapper.class));
-        ReflectionTestUtils.setField(controller, "clubLeadMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper",
                 mock(com.chengyinhub.business.mapper.ClubLeadMapper.class));
-        ReflectionTestUtils.setField(controller, "cmsPointsSettingService", mock(ICmsPointsSettingService.class));
-        ReflectionTestUtils.setField(controller, "puzzlePlayService",
+        var fixtureHintSettings = mock(ICmsPointsSettingService.class);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "puzzlePlayService",
                 mock(com.chengyinhub.business.service.IPuzzlePlayService.class));
         chapterService = mock(ICmsTopicChapterService.class);
-        ReflectionTestUtils.setField(controller, "cmsTopicChapterService", chapterService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", chapterService);
         when(chapterService.selectCmsTopicChapterList(any())).thenReturn(Collections.emptyList());
-        ReflectionTestUtils.setField(controller, "nodeMerchantOverrideService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "nodeMerchantOverrideService",
                 new NodeMerchantOverrideServiceImpl(
                         mock(com.chengyinhub.business.service.ICmsRegistrationMerchantService.class)));
         // 拍照来源校验在本类里不重测(PhotoOwnerBindingContractTest 已钉),放行到业务链
-        ReflectionTestUtils.setField(controller, "photoUploadFactVerifier",
-                (ApiPlayProgressController.PlayPhotoUploadFactVerifier) (picUrl, memberId) -> { });
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "photoUploadFactVerifier",
+                (com.chengyinhub.web.service.play.PlayPhotoCommandApplication.PlayPhotoUploadFactVerifier) (picUrl, memberId) -> { });
 
         node = new CmsTopicNode();
         node.setId(NODE);
@@ -201,11 +201,13 @@ class PhotoReviewRewardContractTest
         when(completionAwardService.grantOnce(anyLong(), anyLong(), anyLong(), any()))
                 .thenReturn(new TopicCompletionAwardVO());
         CurrentPlayControllerFixtures.install(controller);
+        BasicPlayCommandFixtures.scope(controller, TOPIC);
+        com.chengyinhub.web.controller.api.NodeHintUnlockTestFixtures.pricing(controller, fixtureHintSettings);
     }
 
     private AjaxResult submit()
     {
-        return controller.photo(String.valueOf(ACTIVITY), String.valueOf(NODE), PIC_URL, null);
+        return BasicPlayCommandFixtures.photo(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), PIC_URL, null);
     }
 
     private PlayerNodeProgress row(int status, int reviewStatus)
@@ -248,6 +250,7 @@ class PhotoReviewRewardContractTest
         assertEquals("已提交,打卡成功", result.get("msg"));
         PlayerNodeProgress inserted = capturedInsert(progressService);
         assertEquals(Integer.valueOf(1), inserted.getStatus(), "开关开着也必须提交即完成");
+        assertEquals(Integer.valueOf(1), inserted.getReviewStatus(), "既有机审完成事实必须可被计分读取，不能持久化为待审");
         assertEquals(PIC_URL, inserted.getPicUrl());
         verify(pointsAwardService, times(1)).award(PLAYER, 12L, NODE, "节点打卡");
         verify(growthService, times(1)).addExp(PLAYER, 12, "节点探索");

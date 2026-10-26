@@ -1,0 +1,7 @@
+.team-command-panel { max-height: 45vh; box-sizing: border-box; color: var(--cy-comp-sheet-player-text); }
+.nb > .team-command-panel { position: fixed; left: 0; right: 0; bottom: env(safe-area-inset-bottom); z-index: 120; background: var(--cy-comp-sheet-player-bg); }
+.team-command-card { display: flex; flex-direction: column; gap: var(--cy-space-2); margin: var(--cy-space-3); padding: var(--cy-space-3); border-radius: var(--cy-radius-lg); background: var(--cy-comp-sheet-player-elevated); font-size: var(--cy-type-label); overflow-wrap: anywhere; }
+.team-command-title { font-weight: 700; font-size: var(--cy-type-body); }
+.team-command-actions { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); }
+.team-command-card button { margin: 0; font-size: var(--cy-type-label); background: var(--cy-comp-sheet-player-surface-strong); color: var(--cy-comp-sheet-player-text); }
+.team-command-card button[disabled] { opacity: .5; }

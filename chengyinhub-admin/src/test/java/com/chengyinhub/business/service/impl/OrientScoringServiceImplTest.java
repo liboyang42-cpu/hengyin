@@ -123,6 +123,23 @@ class OrientScoringServiceImplTest {
     }
 
     @Test
+    void unavailableConfigurationCannotMasqueradeAsDisabledScoring() {
+        when(config.selectConfigByKey("orient.scoring.enabled")).thenThrow(new IllegalStateException("configuration unavailable"));
+        assertThrows(IllegalStateException.class, () -> service.isActiveFor(topics.selectCmsTopicById(300L)));
+        org.mockito.Mockito.verifyNoInteractions(mapper, growth, members, pointsDetails);
+    }
+
+    @Test
+    void pendingReviewBlocksPreflightWhileRunIsStillActiveWithoutLedgerWrites() {
+        session.setStatus(TopicRouteSession.STATUS_RUNNING);
+        when(mapper.countPendingProgress(7L, 500L, 300L, "default")).thenReturn(1);
+        assertEquals(OrientScoringException.REVIEW_PENDING,
+                assertThrows(OrientScoringException.class, () -> service.assertCompletionAllowed(10L)).getErrorCode());
+        assertTrue(ledger.isEmpty()); assertNull(settled);
+        org.mockito.Mockito.verifyNoInteractions(growth, members, pointsDetails);
+    }
+
+    @Test
     void switchOffByDefaultMakesEveryEntryPointInert() {
         cfg.remove("orient.scoring.enabled");
         assertEquals(OrientScoringException.DISABLED,
@@ -323,5 +340,77 @@ class OrientScoringServiceImplTest {
         assertEquals(0, OrientScoringServiceImpl.project(99, 100));
         assertEquals(1, OrientScoringServiceImpl.project(199, 100));
         assertEquals(0, OrientScoringServiceImpl.project(100000, 0));
+        assertEquals(Integer.MAX_VALUE, OrientScoringServiceImpl.project(Long.MAX_VALUE, 100_000));
+        assertEquals(Integer.MAX_VALUE, OrientScoringServiceImpl.project(Long.MAX_VALUE, 1));
     }
+    @Test
+    void keyedSyncReplaysOriginalSnapshotAndReadbackDoesNotAccrueLaterTasks() {
+        Map<String, com.chengyinhub.business.domain.OrientScoreSyncReceipt> receipts = new HashMap<>();
+        when(mapper.selectSyncReceipt(eq(10L), anyString())).thenAnswer(i -> receipts.get(i.getArgument(1)));
+        when(mapper.selectSyncReceiptForUpdate(eq(10L), anyString())).thenAnswer(i -> receipts.get(i.getArgument(1)));
+        when(mapper.insertSyncReceipt(any())).thenAnswer(i -> {
+            com.chengyinhub.business.domain.OrientScoreSyncReceipt receipt = i.getArgument(0);
+            receipts.put(receipt.getIdempotencyKey(), receipt); return 1;
+        });
+        Map<String, Object> first = service.syncSession(7L, 10L, "sync-1");
+        assertEquals("SYNCED", first.get("state"));
+        assertEquals(3, first.get("added"));
+        when(mapper.selectClearedProgress(7L, 500L, 300L, "default")).thenThrow(new AssertionError("replay must not accrue"));
+        assertEquals(first, service.syncSession(7L, 10L, "sync-1"));
+        assertEquals(first, service.receipt(7L, "SYNC", 10L, "sync-1"));
+        assertEquals("NOT_FOUND", service.receipt(7L, "SYNC", 10L, "unknown").get("state"));
+        assertThrows(OrientScoringException.class, () -> service.receipt(8L, "SYNC", 10L, "sync-1"));
+        assertThrows(OrientScoringException.class, () -> service.syncSession(8L, 10L, "sync-1"));
+        assertEquals(3, ledger.size());
+    }
+
+    @Test
+    void photoPendingBlocksSettlementBeforeLedgerOrRewards() {
+        when(mapper.countPendingProgress(7L, 500L, 300L, "default")).thenReturn(1);
+        assertEquals(OrientScoringException.REVIEW_PENDING,
+                assertThrows(OrientScoringException.class, () -> service.settle(7L, 10L, "pending")).getErrorCode());
+        assertTrue(ledger.isEmpty());
+        verify(mapper, never()).insertSettlement(any());
+        verify(pointsDetails, never()).insertOrientSettlementPointsDetail(any());
+        verify(growth, never()).addExp(anyLong(), anyInt(), anyString());
+    }
+
+    @Test
+    void puzzleCentiConversionRejectsOverflowInsteadOfWrapping() {
+        assertEquals(0, OrientScoringServiceImpl.puzzleCenti(0));
+        assertEquals(2147483600, OrientScoringServiceImpl.puzzleCenti(21474836));
+        assertEquals(-100, OrientScoringServiceImpl.puzzleCenti(-1));
+        assertThrows(OrientScoringException.class, () -> OrientScoringServiceImpl.puzzleCenti(21474837));
+        assertThrows(OrientScoringException.class, () -> OrientScoringServiceImpl.puzzleCenti(Integer.MAX_VALUE));
+        assertThrows(OrientScoringException.class, () -> OrientScoringServiceImpl.puzzleCenti(Integer.MIN_VALUE));
+    }
+
+    @Test
+    void boardKeepsExistingPaidEntryAndHiddenBoardRestrictions() {
+        var registrations = mock(com.chengyinhub.business.service.ICmsRegistrationService.class);
+        var activities = mock(com.chengyinhub.business.service.ICmsActivityService.class);
+        var game = mock(com.chengyinhub.business.service.IGameSessionRuntimeService.class);
+        ReflectionTestUtils.setField(service, "scoringRegistrations", registrations);
+        ReflectionTestUtils.setField(service, "scoringActivities", activities);
+        ReflectionTestUtils.setField(service, "scoringGameSessions", game);
+        var activity = new com.chengyinhub.business.domain.CmsActivity(); activity.setTopicId(300L);
+        when(activities.selectCmsActivityById(500L)).thenReturn(activity);
+        when(registrations.selectCmsRegistrationList(any())).thenReturn(List.of());
+        assertThrows(OrientScoringException.class, () -> service.leaderboard(7L, 10L));
+        var registration = new com.chengyinhub.business.domain.CmsRegistration();
+        when(registrations.selectCmsRegistrationList(any())).thenReturn(List.of(registration));
+        when(game.isRouteLeaderboardHidden(500L)).thenReturn(true);
+        assertThrows(OrientScoringException.class, () -> service.leaderboard(7L, 10L));
+        session.setActivityId(0L); registration.setExpiresAt(new Date(1L));
+        assertThrows(OrientScoringException.class, () -> service.leaderboard(7L, 10L));
+        verify(mapper, never()).selectRankedBoard(anyLong(), anyLong(), anyLong(), org.mockito.ArgumentMatchers.anyBoolean(), anyInt());
+        registration.setExpiresAt(null);
+        when(mapper.selectRankedBoard(0L, 300L, 7L, false, 50)).thenReturn(List.of());
+        assertEquals("SCORE", service.leaderboard(7L, 10L).get("mode"));
+        ArgumentCaptor<com.chengyinhub.business.domain.CmsRegistration> probe = ArgumentCaptor.forClass(com.chengyinhub.business.domain.CmsRegistration.class);
+        verify(registrations, times(4)).selectCmsRegistrationList(probe.capture());
+        assertEquals(7L, probe.getValue().getMemberId()); assertEquals(300L, probe.getValue().getOwnerId());
+        assertEquals(1L, probe.getValue().getOwnerType()); assertEquals(2, probe.getValue().getRegistrationStatus());
+    }
+
 }

@@ -40,8 +40,13 @@ test('route-matrix 生成物必须与当前 app.json 和 scene 扫描逐字一�
   // 2026-10-23 起名页 templateadd 退役删除 ⇒ 145 → 144。
   // 2026-10-25 +1 官方地点挑战页 pages/play/poi-challenge ⇒ 144 → 145。
   // 2026-10-26 +3:角色卡、定向计分、本人发票独立页 ⇒ 145 → 148。
-  assert.equal(current.routes.length, 148)
-  assert.equal(matrix.counts.routes, 148)
+  // W8-12: 已校验W8-09权益页加入现有分包，148 → 149。
+  assert.equal(current.routes.length, 149)
+  assert.equal(matrix.counts.routes, 149)
+  const bundle = matrix.routes.find(route => route.pagePath === 'subpackageMember/free-explore/index')
+  assert.equal(bundle.role, 'player')
+  assert.equal(bundle.needsLogin, true)
+  assert.ok(bundle.dataKeys.includes('registrationId'))
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail)
   assert.equal(inventoryMatchesCurrent(matrix), true)
   // 2026-09-04 导演台整页收编:锚点换成新宿主页 topic-detail。这条要证的是

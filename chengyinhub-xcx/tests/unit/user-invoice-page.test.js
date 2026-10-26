@@ -72,8 +72,10 @@ test('Page drives all eight real JSON endpoints: titles, save, delete, eligible,
   assert.equal(p.data.draft.taxNo, '');
   p.input({ ...tap('', { field: 'taxNo' }), detail: { value: '913100001234567890' } });
   p.saveTitle();
-  assert.deepEqual(h.latest('titles/save').body, { id: TITLE, titleType: 'COMPANY', titleName: '发票测试单位', taxNo: '913100001234567890', isDefault: true });
-  h.respond('titles/save', title()); h.respond('titles', [title()]);
+  const saveRequestId = h.latest('titles/save-request').body.requestId;
+  assert.match(saveRequestId, /^vr_/);
+  assert.deepEqual(h.latest('titles/save-request').body, { id: TITLE, titleType: 'COMPANY', titleName: '发票测试单位', taxNo: '913100001234567890', isDefault: true, requestId: saveRequestId });
+  h.respond('titles/save-request', { requestId: saveRequestId, titleId: TITLE, status: 'SAVED' }); h.respond('titles', [title()]);
   assert.equal(p.data.editing, false);
   assert.equal(JSON.stringify([...h.values]).includes('913100001234567890'), false);
   h.select(); p.apply();
@@ -100,24 +102,24 @@ test('Page drives all eight real JSON endpoints: titles, save, delete, eligible,
   h.respond('titles/delete', null); h.respond('titles', []);
   assert.equal(p.data.titles.length, 0);
   assert.deepEqual([...new Set(h.requests.map(row => row.path))].sort(),
-    ['titles', 'titles/save', 'titles/delete', 'orders/eligible', 'apply', 'list', 'detail', 'cancel'].sort());
+    ['titles', 'titles/save-request', 'titles/delete', 'orders/eligible', 'apply', 'list', 'detail', 'cancel'].sort());
   for (const request of h.requests) { assert.equal(request.method, 'POST'); assert.equal(request.header['Content-Type'], 'application/json'); }
   assert.equal(h.values.size, 0);
 });
 
 test('company edits never write masked tax back; input is cleared on hide and unknown save stays protected after remount', () => {
   const h = mount(); h.boot(); h.seed(); const p = h.page;
-  p.editTitle(tap(TITLE)); p.saveTitle(); assert.equal(h.count('titles/save'), 0);
-  p.input({ ...tap('', { field: 'taxNo' }), detail: { value: '91******1234' } }); p.saveTitle(); assert.equal(h.count('titles/save'), 0);
+  p.editTitle(tap(TITLE)); p.saveTitle(); assert.equal(h.count('titles/save-request'), 0);
+  p.input({ ...tap('', { field: 'taxNo' }), detail: { value: '91******1234' } }); p.saveTitle(); assert.equal(h.count('titles/save-request'), 0);
   p.input({ ...tap('', { field: 'taxNo' }), detail: { value: '913100001234567890' } }); p.saveTitle();
-  h.latest('titles/save').fail({ errMsg: 'timeout' });
+  h.latest('titles/save-request').fail({ errMsg: 'timeout' });
   assert.equal(p.data.titlePending, true); assert.equal(p.data.draft.taxNo, '');
-  p.saveTitle(); assert.equal(h.count('titles/save'), 1);
+  p.saveTitle(); assert.equal(h.count('titles/save-request'), 1);
   assert.equal(JSON.stringify([...h.values]).includes('913100001234567890'), false);
   p.onHide(); assert.equal(p.data.draft.taxNo, '');
   const next = mount(h.values); next.boot(); next.seed();
   next.page.editTitle(tap(TITLE)); next.page.saveTitle();
-  assert.equal(next.page.data.titlePending, true); assert.equal(next.count('titles/save'), 0);
+  assert.equal(next.page.data.titlePending, true); assert.equal(next.count('titles/save-request'), 0);
 });
 
 test('deadline keeps original request and frozen IDs; late success and negative reads never unlock another apply', () => {
@@ -128,8 +130,8 @@ test('deadline keeps original request and frozen IDs; late success and negative 
   h.page.pickOrder(tap(ORDER)); assert.equal(h.page.data.selectedCount, 1);
   h.page.apply(); assert.equal(h.count('apply'), 1);
   sent.success({ code: 200, data: application(id, { replayed: false }) }); assert.equal(h.page.data.pending, true);
-  h.page.queryOriginal(); h.respond('list', []); assert.equal(h.page.data.pending, true);
-  h.page.queryOriginal(); h.respond('list', [application('another-request')]); assert.equal(h.page.data.pending, true);
+  h.page.queryOriginal(); h.latest('request').success({ code: 500, errorCode: 'INVOICE_NOT_FOUND' }); assert.equal(h.page.data.pending, true);
+  h.page.queryOriginal(); h.respond('request', application('another-request')); assert.equal(h.page.data.pending, true);
   h.page.onUnload();
   const next = mount(h.values); next.boot(); next.seed();
   assert.equal(next.page.data.requestId, id);
@@ -137,13 +139,13 @@ test('deadline keeps original request and frozen IDs; late success and negative 
   assert.deepEqual(json(next.page.data.frozenOrderIds), [ORDER]);
   assert.equal(next.page.data.selectedCount, 1);
   next.page.apply(); assert.equal(next.count('apply'), 0);
-  next.page.queryOriginal(); next.respond('list', [application(id)]);
+  next.page.queryOriginal(); next.respond('request', application(id));
   assert.equal(next.page.data.pending, true);
   next.respond('detail', application('wrong-request')); assert.equal(next.page.data.pending, true);
-  next.page.queryOriginal(); next.respond('list', [application(id)]);
+  next.page.queryOriginal(); next.respond('request', application(id));
   next.respond('detail', application(id, { orders: [] }));
   assert.equal(next.page.data.pending, true); assert.equal(next.page.data.detail, null);
-  next.page.queryOriginal(); next.respond('list', [application(id)]); next.respond('detail', application(id));
+  next.page.queryOriginal(); next.respond('request', application(id)); next.respond('detail', application(id));
   assert.equal(next.page.data.pending, false); assert.equal(next.page.data.detail.requestId, id);
   assert.equal(next.values.size, 0); assert.equal(next.count('apply'), 0);
 });
@@ -162,13 +164,13 @@ test('positive recovery must match the frozen order set before releasing the ori
   const h = mount(); h.boot(); h.seed(); h.select(); h.page.apply();
   const requestId = h.latest('apply').body.requestId;
   h.latest('apply').fail({ errMsg: 'timeout' });
-  h.page.queryOriginal(); h.respond('list', [application(requestId)]);
+  h.page.queryOriginal(); h.respond('request', application(requestId));
   h.respond('detail', application(requestId, { orders: [order({ orderId: '19' })] }));
   assert.equal(h.page.data.pending, true);
   assert.equal(h.page.data.requestId, requestId);
   assert.match(h.page.data.error, /冻结输入不匹配/);
   h.page.apply(); assert.equal(h.count('apply'), 1);
-  h.page.queryOriginal(); h.respond('list', [application(requestId)]); h.respond('detail', application(requestId));
+  h.page.queryOriginal(); h.respond('request', application(requestId)); h.respond('detail', application(requestId));
   assert.equal(h.page.data.pending, false);
   assert.equal(h.page.data.detail.requestId, requestId);
 });
@@ -249,12 +251,12 @@ test('unsafe Long response fields and invalid IDs never become write targets', (
 });
 
 test('FEATURE_OFF from every read/write response collapses to the same unavailable view', () => {
-  const cases = ['titles', 'orders/eligible', 'list', 'detail', 'apply', 'titles/save', 'titles/delete', 'cancel'];
+  const cases = ['titles', 'orders/eligible', 'list', 'detail', 'apply', 'titles/save-request', 'titles/delete', 'cancel'];
   for (const route of cases) {
     const h = mount(); h.boot(); h.seed(); const p = h.page;
     if (route === 'detail') p.openDetail(tap(APP));
     if (route === 'apply') { h.select(); p.apply(); }
-    if (route === 'titles/save') { p.editTitle(tap(TITLE)); p.input({ ...tap('', { field: 'taxNo' }), detail: { value: '913100001234567890' } }); p.saveTitle(); }
+    if (route === 'titles/save-request') { p.editTitle(tap(TITLE)); p.input({ ...tap('', { field: 'taxNo' }), detail: { value: '913100001234567890' } }); p.saveTitle(); }
     if (route === 'titles/delete') { p.deleteTitle(tap(TITLE)); h.confirm(); }
     if (route === 'cancel') { p.openDetail(tap(APP)); h.respond('detail', application('known')); p.cancel(); h.confirm(); }
     // A new read is needed after seed already settled its initial response.
@@ -276,7 +278,7 @@ test('network and authority failures settle loading state and keep unknown write
   h.page.loadTitles(); h.respond('titles', [title()]); h.respond('orders/eligible', [order()]); h.respond('list', []);
   h.select(); h.page.apply(); h.latest('apply').successStatusAbnormal({ msg: 'gateway' }, 504);
   assert.equal(h.page.data.writing, false); assert.equal(h.page.data.pending, true);
-  h.page.queryOriginal(); h.latest('list').fail({ errMsg: 'offline' });
+  h.page.queryOriginal(); h.latest('request').fail({ errMsg: 'offline' });
   assert.equal(h.page.data.recovering, false); assert.equal(h.page.data.pending, true);
 });
 
@@ -339,4 +341,159 @@ test('invoice choices have disabled-aware press feedback and shared empty-safe m
   assert.equal(money.exports.amount(null), '—');
   assert.equal(money.exports.amount(0), '¥0');
   assert.equal(money.exports.amount('12.34'), '¥12.34');
+});
+
+test('confirmed cancellation cannot be overwritten by detail and list reads started before its receipt', () => {
+  const h = mount(); h.boot(); h.seed();
+  h.page.openDetail(tap(APP)); h.respond('detail', application('known'));
+  h.page.cancel(); h.confirm();
+  h.page.refreshDetail(); // writing guard prevents this public action
+  h.page.openDetail(tap(APP)); const oldDetail = h.latest('detail');
+  h.page.loadRecords(); const oldList = h.latest('list');
+  h.respond('cancel', application('known', { status: 'CANCELLED' }));
+  oldDetail.success({ code: 200, data: application('known') });
+  oldList.success({ code: 200, data: [application('known', { orders: [] })] });
+  assert.equal(h.page.data.detail.status, 'CANCELLED');
+  assert.equal(h.page.data.records.some(row => row.status === 'SUBMITTED'), false);
+  h.page.cancel(); assert.equal(h.count('cancel'), 1);
+  h.respond('list', [application('known', { status: 'CANCELLED' })]);
+  h.respond('orders/eligible', [order()]);
+  assert.equal(h.page.data.records[0].status, 'CANCELLED');
+  assert.equal(h.page.data.orders[0].orderId, ORDER);
+  assert.equal(h.page.data.recovering, false);
+});
+
+test('confirmed title deletion invalidates an older title list even if the fresh list fails', () => {
+  const h = mount(); h.boot(); h.seed();
+  h.page.deleteTitle(tap(TITLE)); h.confirm();
+  h.page.loadTitles(); const oldTitles = h.latest('titles');
+  h.respond('titles/delete', null);
+  h.latest('titles').fail({ errMsg: 'offline' });
+  const before = json(h.page.data);
+  oldTitles.success({ code: 200, data: [title({ titleName: 'stale response' })] });
+  assert.deepEqual(json(h.page.data), before);
+  assert.equal(h.page.data.loading, false);
+});
+
+test('UNKNOWN recovery uses the exact owner request even when the recent list omits it', () => {
+  const h = mount(); h.boot(); h.seed(); h.select(); h.page.apply();
+  const requestId = h.latest('apply').body.requestId;
+  h.latest('apply').fail({ errMsg: 'timeout' });
+  h.page.queryOriginal();
+  assert.deepEqual(h.latest('request').body, { requestId });
+  h.respond('request', application(requestId));
+  h.respond('detail', application(requestId));
+  assert.equal(h.page.data.pending, false);
+  assert.equal(h.page.data.detail.requestId, requestId);
+  assert.equal(h.count('apply'), 1);
+});
+
+test('exact original-request lookup failures never release frozen input or accept another request', () => {
+  const h = mount(); h.boot(); h.seed(); h.select(); h.page.apply();
+  const requestId = h.latest('apply').body.requestId;
+  h.latest('apply').fail({ errMsg: 'timeout' });
+  h.page.queryOriginal();
+  h.latest('request').success({ code: 500, errorCode: 'INVOICE_NOT_FOUND', msg: '暂未查到原申请' });
+  assert.equal(h.page.data.pending, true); assert.equal(h.page.data.requestId, requestId);
+  h.page.queryOriginal();
+  h.respond('request', application('different-request'));
+  assert.equal(h.count('detail'), 0);
+  assert.equal(h.page.data.pending, true);
+  assert.deepEqual(json(h.page.data.frozenOrderIds), [ORDER]);
+  h.page.apply(); assert.equal(h.count('apply'), 1);
+});
+
+test('exact recovery is independent of list availability and ignores stale failures after positive detail', () => {
+  const h = mount(); h.boot(); h.seed(); h.select(); h.page.apply();
+  const requestId = h.latest('apply').body.requestId;
+  h.latest('apply').fail({ errMsg: 'timeout' });
+  const listCount = h.count('list');
+  h.page.queryOriginal(); const first = h.latest('request');
+  assert.equal(h.count('list'), listCount, 'explicit recovery must not depend on a capped or unavailable list');
+  h.page.loadRecords(); h.respond('list', [application(requestId)]);
+  h.respond('detail', application(requestId));
+  assert.equal(h.page.data.pending, false);
+  const before = json(h.page.data);
+  first.fail({ msg: 'old failed read' });
+  assert.deepEqual(json(h.page.data), before);
+});
+
+test('exact recovery retains feature gating and rejects callbacks after switching accounts', () => {
+  for (const action of ['disabled', 'account']) {
+    const h = mount(); h.boot(); h.seed(); h.select(); h.page.apply();
+    const requestId = h.latest('apply').body.requestId;
+    h.latest('apply').fail({ errMsg: 'timeout' }); h.page.queryOriginal(); const read = h.latest('request');
+    if (action === 'disabled') {
+      read.success({ code: 500, errorCode: 'INVOICE_FEATURE_OFF' });
+      assert.equal(h.page.data.unavailable, true);
+      assert.ok(h.values.size, 'feature gating cannot erase UNKNOWN');
+    } else {
+      h.owner('8'); read.success({ code: 200, data: application(requestId) });
+      assert.equal(h.page.data.detail, null); assert.equal(h.count('detail'), 0);
+      assert.equal(h.page.data.requestId, '');
+    }
+  }
+});
+
+test('W8-11 processing: actual Page separates trusted issuer selections without rounding IDs', () => {
+  const h = mount(); h.boot(); h.seed(); h.page.loadOrders();
+  h.respond('orders/eligible', [order({ issuerId: TITLE, issuerName: '主体一' }),
+    order({ orderId: APP, issuerId: APP, issuerName: '主体二' })]);
+  h.page.pickOrder(tap(ORDER)); h.page.pickOrder(tap(APP));
+  assert.equal(h.page.data.selectedCount, 1);
+  assert.match(h.page.data.error, /不同开票主体/);
+  assert.equal(h.page.data.orders[0].issuerId, TITLE);
+  h.page.pickOrder(tap(ORDER)); h.page.pickOrder(tap(APP));
+  assert.equal(h.page.data.selectedCount, 1); assert.equal(h.page.data.orders[1].selected, true);
+});
+
+test('W8-11 processing: member reads new handling states and cannot cancel an external or paused application', () => {
+  for (const status of ['CLAIMED', 'PROCESSING', 'ISSUE_UNKNOWN', 'PAUSED']) {
+    const h = mount(); h.boot(); h.seed();
+    h.page.loadRecords(); h.respond('list', [application('flow-' + status, { status })]);
+    assert.equal(h.page.data.records[0].status, status);
+    h.page.openDetail(tap(APP)); h.respond('detail', application('flow-' + status, { status }));
+    assert.equal(h.page.data.detail.status, status);
+    assert.ok(h.page.data.detail.statusText);
+    h.page.cancel();
+    assert.equal(h.count('cancel'), 0);
+    assert.equal(h.page.data.detail.taxNoMasked, '91******1234');
+    assert.equal(h.page.data.draft.taxNo, '');
+  }
+});
+
+test('W8-11 rejection: fresh eligibility and explicit new intent, never copy masked tax or old orders', () => {
+  const h = mount(); h.boot(); h.seed(); h.select();
+  h.page.openDetail(tap(APP)); h.respond('detail', application('rejected-original', { status: 'REJECTED' }));
+  h.page.prepareReapplication();
+  assert.equal(h.page.data.tab, 'titles'); assert.equal(h.page.data.detail, null);
+  assert.equal(h.page.data.draft.taxNo, ''); assert.equal(h.page.data.selectedCount, 0);
+  assert.deepEqual(json(h.page.data.orders), []); assert.equal(h.count('apply'), 0);
+  h.respond('titles', [title()]); h.respond('orders/eligible', [order({ orderId: TITLE })]);
+  assert.equal(h.page.data.orders[0].selected, false);
+  h.page.pickOrder(tap(TITLE)); h.page.apply();
+  assert.notEqual(h.latest('apply').body.requestId, 'rejected-original');
+  assert.deepEqual(h.latest('apply').body.orderIds, [TITLE]);
+});
+
+test('W8-11 rejection: pending original requests cannot be replaced by reapplication', () => {
+  for (const flag of ['pending', 'titlePending', 'cancelPending']) {
+    const h = mount(); h.boot(); h.seed();
+    h.page.openDetail(tap(APP)); h.respond('detail', application('rejected-original', { status: 'REJECTED' }));
+    h.page.setData({ [flag]: true }); const before = json(h.page.data);
+    h.page.prepareReapplication(); assert.deepEqual(json(h.page.data), before);
+    assert.equal(h.count('apply'), 0);
+  }
+});
+
+test('W8-11 reconciliation: member receives controlled outcome without administrative metadata', () => {
+  for (const reconciliationStatus of ['REQUIRED', 'NO_ISSUE_CONFIRMED', 'TAX_REVIEW_REQUIRED', undefined]) {
+    const h = mount(); h.boot(); h.seed(); h.page.openDetail(tap(APP));
+    h.respond('detail', application('reconcile-read', { status: reconciliationStatus === 'NO_ISSUE_CONFIRMED' ? 'REJECTED' : 'PAUSED',
+      reconciliationStatus, evidenceRef: 'private-evidence', handlerId: '901' }));
+    assert.equal(h.page.data.detail.reconciliationStatus, reconciliationStatus || '');
+    assert.equal(!!h.page.data.detail.reconciliationText, !!reconciliationStatus);
+    assert.equal(h.page.data.detail.evidenceRef, undefined); assert.equal(h.page.data.detail.handlerId, undefined);
+    assert.equal(h.page.data.draft.taxNo, '');
+  }
 });

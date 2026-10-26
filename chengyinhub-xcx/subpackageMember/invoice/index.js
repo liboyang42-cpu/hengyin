@@ -1,12 +1,14 @@
 const app = getApp();
 const invoice = require('../../utils/user-invoice.js');
 const { createVerificationWorkflow } = require('../../utils/verification-readback.js');
+const { createWriteActionWorkflow } = require('../../utils/write-action-workflow.js');
 const { retryLogin, waitForInitialSession } = require('../../utils/session/login-reload.js');
 const modal = require('../../utils/modal.js');
 
 const draft = () => ({ id: '', titleType: 'PERSONAL', titleName: '', taxNo: '', isDefault: false });
 const empty = () => ({ titles: [], orders: [], records: [], selectedTitle: '', selectedCount: 0,
   detail: null, editing: false, draft: draft(), pending: false, requestId: '', frozenTitleId: '', frozenOrderIds: [], titlePending: false,
+  titleRequestId: '', titleRetryable: false,
   cancelPending: false, writing: false, loading: false, recovering: false, error: '', notice: '', unavailable: false, login: false });
 
 Page({
@@ -44,7 +46,8 @@ Page({
     this._workflow = createVerificationWorkflow({ storage: wx, requestIdentity: true, getOwner: () => this.owner() });
     try {
       const pending = this._workflow.pendingRequest(this.key('apply'));
-      const titlePending = !!this._workflow.pendingRequest(this.key('title-save'));
+      const titleRequest = this._workflow.pendingRequest(this.key('title-save'));
+      const titlePending = !!titleRequest;
       let frozen = null;
       if (pending) {
         frozen = wx.getStorageSync(this.contextKey());
@@ -53,16 +56,21 @@ Page({
             || frozen.orderIds.some(id => !invoice.exactId(id))) frozen = null;
       }
       this.setData({ pending: !!pending, requestId: pending && pending.requestId || '', titlePending,
+        titleRequestId: titleRequest && titleRequest.requestId || '',
         frozenTitleId: frozen ? frozen.titleId : '', frozenOrderIds: frozen ? frozen.orderIds : [],
         selectedTitle: frozen ? frozen.titleId : '',
-        notice: titlePending ? '上次抬头保存结果待确认，请查看抬头并联系平台核对，勿重复新建。' : '' });
+        notice: titlePending ? '上次抬头保存结果待确认，请查询原保存回执，勿重复新建。' : '' });
     } catch (error) {
       this.setData({ pending: true, titlePending: true, error: '本机待办无法读取，请检查存储并联系平台核对，勿重复提交' });
     }
     this.reload();
+    if (this.data.titlePending) this.queryTitleSave();
     if (this._initialDetail) { this.openDetailId(this._initialDetail); this._initialDetail = ''; }
   },
   stop() {
+    this._titleIntent = null;
+    if (this._titleRetry) this._titleRetry.destroy();
+    this._titleRetry = null;
     this._epoch = (this._epoch || 0) + 1;
     if (this._workflow) this._workflow.destroy();
     this._workflow = null;
@@ -82,7 +90,7 @@ Page({
   _reset() {
     this.setData({ titles: [], orders: [], records: [], selectedTitle: '', selectedCount: 0,
       detail: null, editing: false, draft: draft(), pending: false, requestId: '', frozenTitleId: '', frozenOrderIds: [],
-      titlePending: false, cancelPending: false, writing: false, loading: false, recovering: false,
+      titlePending: false, titleRequestId: '', titleRetryable: false, cancelPending: false, writing: false, loading: false, recovering: false,
       error: '', notice: '', unavailable: false, login: false });
   },
   _readLoading(flag, value) {
@@ -147,10 +155,20 @@ Page({
       if (!this.data.pending) return;
       const found = records.find(row => row.requestId === this.data.requestId);
       if (found) this.openDetailId(found.id, this.data.requestId);
-      else this.setData({ notice: '暂未查到原申请，也不能证明未提交。请稍后核对或联系平台，勿重新申请。' });
+      else this.lookupOriginal();
     }, 'recovering');
   },
-  queryOriginal() { if (this.ready() && !this.data.writing && !this.data.recovering) this.loadRecords(); },
+  lookupOriginal() {
+    if (!this.ready() || !this.data.pending || this.data.writing || !this.data.requestId) return;
+    const requestId = this.data.requestId;
+    this.setData({ notice: '正在按原请求号核对；暂未查到不代表未提交，请勿重新申请。' });
+    this.read('request', { requestId }, invoice.application, row => {
+      if (!this.data.pending || this.data.requestId !== requestId) return;
+      if (row.requestId !== requestId) throw Error('申请详情与原请求不匹配');
+      this.openDetailId(row.id, requestId);
+    }, 'recovering');
+  },
+  queryOriginal() { this.lookupOriginal(); },
   tab(e) {
     if (!this.ready()) return;
     const tab = e.currentTarget.dataset.tab;
@@ -170,6 +188,9 @@ Page({
     const row = orders.find(item => item.orderId === id);
     if (!row) return;
     if (!row.selected && this.data.selectedCount >= 50) { this.setData({ error: '一次最多合并50笔订单' }); return; }
+    if (!row.selected && row.issuerId && orders.some(item => item.selected && item.issuerId && item.issuerId !== row.issuerId)) {
+      this.setData({ error: '不同开票主体的订单须分开申请' }); return;
+    }
     row.selected = !row.selected;
     this.setData({ orders, selectedCount: orders.filter(item => item.selected).length });
   },
@@ -178,7 +199,12 @@ Page({
     const epoch = this._epoch, key = this.key(action);
     this.setData({ writing: true, error: '', notice: '' });
     this._workflow.run(key, (done, identity) => {
-      const body = path === 'apply' ? Object.assign({}, payload, { requestId: identity.requestId }) : payload;
+      const body = ['apply', 'titles/save-request'].includes(path) ? Object.assign({}, payload, { requestId: identity.requestId }) : payload;
+      if (path === 'titles/save-request') {
+        // Sensitive input stays only in this visible page's memory, never in wx storage.
+        this._titleIntent = Object.freeze(Object.assign({}, body));
+        this.setData({ titleRequestId: identity.requestId, titleRetryable: true });
+      }
       if (path === 'apply') {
         this.setData({ pending: true, requestId: identity.requestId, frozenTitleId: payload.titleId, frozenOrderIds: payload.orderIds.slice() });
         // 只持久化精确编号；完整税号、抬头名称和金额都不进入本机待办。
@@ -196,13 +222,23 @@ Page({
     }, result => {
       if (!this.current(epoch)) return;
       this.setData({ writing: false });
-      if (result.status === 'success') { received(result.value); return; }
+      if (result.status === 'success') {
+        // A pre-receipt read may still contain the old state. Only fresh reads
+        // may replace a confirmed write, including after a cancellation.
+        Object.keys(this._reads).forEach(path => { this._reads[path] += 1; });
+        this.setData({ loading: false, recovering: false });
+        received(result.value); return;
+      }
       if (result.response && result.response.errorCode === 'INVOICE_FEATURE_OFF') { this.off(); return; }
       if (path === 'apply') {
         this.setData({ pending: result.status !== 'failed', requestId: result.requestId || '' });
         if (result.status === 'failed') this.clearContext(result.requestId);
       }
-      if (path === 'titles/save') this.setData({ titlePending: result.status === 'unknown', draft: Object.assign({}, this.data.draft, { taxNo: '' }) });
+      if (path === 'titles/save-request') {
+        if (result.status !== 'unknown') this._titleIntent = null;
+        this.setData({ titlePending: result.status === 'unknown', titleRequestId: result.requestId || '',
+          titleRetryable: !!this._titleIntent, draft: Object.assign({}, this.data.draft, { taxNo: '' }) });
+      }
       if (path === 'cancel') this.setData({ cancelPending: result.status === 'unknown' });
       this.setData({ error: result.status === 'unknown' ? '操作结果待确认，请核对本人记录；未出现记录不能证明未提交，请勿重复操作。'
         : result.response && result.response.msg || '本次未提交，请检查本机存储和登录后再试' });
@@ -250,9 +286,48 @@ Page({
     if (!this.ready() || this.data.titlePending || this.data.writing) return;
     let payload;
     try { payload = invoice.titlePayload(this.data.draft); } catch (error) { this.setData({ error: error.message }); return; }
-    this.mutate('titles/save', payload, 'title-save', invoice.title, row => {
-      this.setData({ editing: false, draft: draft(), selectedTitle: row.id, titlePending: false, notice: '抬头已保存' });
-      this.loadTitles();
+    this.mutate('titles/save-request', payload, 'title-save', (value, requestId) => invoice.titleSaveReceipt(value, requestId, payload.id), row => this.titleSaved(row));
+  },
+  titleSaved(row) {
+    this._titleIntent = null;
+    if (this._titleRetry) this._titleRetry.destroy();
+    this._titleRetry = null;
+    this._reads['titles/request'] = (this._reads['titles/request'] || 0) + 1;
+    this.setData({ editing: false, draft: draft(), selectedTitle: row.titleId, titlePending: false, writing: false,
+      titleRequestId: '', titleRetryable: false, notice: '原抬头保存已确认，当前抬头信息以刷新结果为准' });
+    this.loadTitles();
+  },
+  confirmTitleSave(row) {
+    if (!this.data.titlePending || row.requestId !== this.data.titleRequestId) throw Error('原保存回执已变化');
+    if (!this._workflow.confirmRequest(this.key('title-save'), row.requestId)) throw Error('本机原保存待办仍未清除，请继续核对');
+    this.titleSaved(row);
+  },
+  queryTitleSave() {
+    if (!this.ready() || this.data.writing || !this.data.titlePending || !this.data.titleRequestId) return;
+    const requestId = this.data.titleRequestId;
+    const titleId = this._titleIntent && this._titleIntent.id;
+    this.read('titles/request', { requestId }, value => invoice.titleSaveReceipt(value, requestId, titleId), row => this.confirmTitleSave(row));
+  },
+  retryTitleSave() {
+    if (!this.ready() || this.data.writing || !this.data.titlePending || !this._titleIntent
+        || this._titleIntent.requestId !== this.data.titleRequestId) return;
+    const body = this._titleIntent, epoch = this._epoch;
+    if (this._titleRetry) this._titleRetry.destroy();
+    this._titleRetry = createWriteActionWorkflow();
+    this.setData({ writing: true, error: '' });
+    this._titleRetry.run('title-retry', done => invoice.send(app, 'titles/save-request', {
+      method: 'POST', header: { 'Content-Type': 'application/json' }, data: JSON.stringify(body),
+      hideLoading: true, autoErrorToast: false,
+      success: res => done(invoice.classify(res, 200, value => invoice.titleSaveReceipt(value, body.requestId, body.id))),
+      fail: () => done({ status: 'unknown' }), successStatusAbnormal: () => done({ status: 'unknown' }),
+    }), result => {
+      if (!this.current(epoch)) return;
+      this.setData({ writing: false });
+      if (result.response && result.response.errorCode === 'INVOICE_FEATURE_OFF') { this.off(); return; }
+      if (result.status === 'success') {
+        try { this.confirmTitleSave(result.value); return; } catch (error) { this.setData({ error: error.message }); return; }
+      }
+      this.setData({ error: '原保存结果仍待确认，已保留原请求及冻结输入；请继续查询回执。' });
     });
   },
   deleteTitle(e) {
@@ -278,6 +353,7 @@ Page({
             || !frozen.every(orderId => row.orders.some(order => order.orderId === orderId)))) throw Error('原申请订单与冻结输入不匹配');
         if (!this._workflow.confirmRequest(this.key('apply'), originalRequestId)) throw Error('本机原请求仍待确认，请勿重新申请');
         this.clearContext(originalRequestId);
+        this._reads.request = (this._reads.request || 0) + 1;
         this.setData({ pending: false, requestId: '', notice: '已找到原申请' });
       }
       const key = this.key('cancel:' + id), pending = this._workflow.pendingRequest(key);
@@ -289,6 +365,15 @@ Page({
     if (this.data.writing) return;
     this._reads.detail = (this._reads.detail || 0) + 1;
     this.setData({ detail: null, cancelPending: false });
+  },
+  prepareReapplication() {
+    if (!this.ready() || this.data.writing || this.data.pending || this.data.titlePending
+        || this.data.cancelPending || !this.data.detail || this.data.detail.status !== 'REJECTED') return;
+    Object.keys(this._reads).forEach(path => { this._reads[path] += 1; });
+    this.setData({ tab: 'titles', detail: null, editing: false, draft: draft(), titles: [], orders: [],
+      selectedTitle: '', selectedCount: 0, error: '',
+      notice: '原申请记录保留。请核对或修改抬头，再到申请页选择当前可开票订单，确认后提交新申请。' });
+    this.loadTitles(); this.loadOrders();
   },
   refreshDetail() { if (this.data.detail && !this.data.writing) this.openDetailId(this.data.detail.id); },
   cancel() {

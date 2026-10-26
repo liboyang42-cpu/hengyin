@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Map;
 
 public interface GameRuntimeSessionMapper {
+    List<GameRuntimeSession> selectDefaultMemberSessionsByTopic(@Param("activityId") Long activityId,
+            @Param("topicId") Long topicId, @Param("memberId") Long memberId);
+
     int insert(GameRuntimeSession session);
     GameRuntimeSession selectByIdForUpdate(@Param("id") Long id);
     GameRuntimeSession selectOwnerByInstance(@Param("activityId") Long activityId, @Param("topicId") Long topicId,

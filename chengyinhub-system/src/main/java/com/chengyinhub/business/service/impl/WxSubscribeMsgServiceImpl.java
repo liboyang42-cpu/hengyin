@@ -266,6 +266,62 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
     }
 
     @Override
+    public OfficialBroadcastResult notifyOfficialBroadcastResult(Long memberId, String title, String sub) {
+        String body;
+        String token;
+        try {
+            if (StringUtils.isEmpty(tplOfficialEvent)) return officialNotSubmitted(OfficialBroadcastResult.Reason.TEMPLATE_MISSING);
+            if (memberId == null || memberId <= 0) return officialNotSubmitted(OfficialBroadcastResult.Reason.IDENTITY_MISSING);
+            String openid = openidOf(memberId);
+            if (StringUtils.isEmpty(openid)) return officialNotSubmitted(OfficialBroadcastResult.Reason.IDENTITY_MISSING);
+            token = wxSec.getAccessToken();
+            if (StringUtils.isEmpty(token)) return officialNotSubmitted(OfficialBroadcastResult.Reason.TOKEN_MISSING);
+            Map<String, Object> fields = new java.util.LinkedHashMap<>();
+            fields.put("thing1", Map.of("value", clip(title)));
+            fields.put("time2", Map.of("value", nowTime()));
+            fields.put("thing3", Map.of("value", clip(sub)));
+            Map<String, Object> payload = new java.util.LinkedHashMap<>();
+            payload.put("touser", openid); payload.put("template_id", tplOfficialEvent);
+            payload.put("page", defaultPage); payload.put("data", fields);
+            body = JSON.toJSONString(payload);
+        } catch (Exception preparationFailure) {
+            return officialNotSubmitted(OfficialBroadcastResult.Reason.LOCAL_PREPARATION_FAILED);
+        }
+        try {
+            return officialBroadcastResponse(post(SEND_URL + "?access_token=" + token, body));
+        } catch (Exception transportFailure) {
+            return new OfficialBroadcastResult(OfficialBroadcastResult.State.UNKNOWN,
+                    OfficialBroadcastResult.Reason.TRANSPORT_UNCONFIRMED, null);
+        }
+    }
+
+    private static OfficialBroadcastResult officialNotSubmitted(OfficialBroadcastResult.Reason reason) {
+        return new OfficialBroadcastResult(OfficialBroadcastResult.State.NOT_SUBMITTED, reason, null);
+    }
+
+    /** Parse only a received response. Never infer a provider result from an old boolean. */
+    static OfficialBroadcastResult officialBroadcastResponse(String response) {
+        try {
+            Object parsed = JSON.parse(response);
+            if (parsed instanceof Map<?, ?> values) {
+                Object raw = values.get("errcode");
+                // Strings, booleans, decimals, absent and overflowing values are not numeric codes.
+                if (raw instanceof Byte || raw instanceof Short || raw instanceof Integer || raw instanceof Long
+                        || raw instanceof java.math.BigInteger) {
+                    int code = new java.math.BigInteger(raw.toString()).intValueExact();
+                    return new OfficialBroadcastResult(code == 0 ? OfficialBroadcastResult.State.ACCEPTED
+                            : OfficialBroadcastResult.State.REJECTED, code == 0 ? OfficialBroadcastResult.Reason.PROVIDER_ACCEPTED
+                            : OfficialBroadcastResult.Reason.PROVIDER_REJECTED, code);
+                }
+            }
+        } catch (RuntimeException invalid) {
+            // Do not retain the response or parser exception: either may contain private data.
+        }
+        return new OfficialBroadcastResult(OfficialBroadcastResult.State.UNKNOWN,
+                OfficialBroadcastResult.Reason.RESPONSE_UNCONFIRMED, null);
+    }
+
+    @Override
     public boolean notifyOfficialBroadcast(Long memberId, String title, String sub) {
         // 模板【官方活动通知】:活动名称 thing1 / 活动时间 time2 / 温馨提示 thing3。best-effort。
         // 未配专用模板 ⇒ 不发。不回退 tplRecruit:那是「新活动招募→发布者」的真实模板,

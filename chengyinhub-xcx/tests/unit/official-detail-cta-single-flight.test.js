@@ -4,15 +4,16 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
+const { platform, receipt } = require('./helpers/team-event-platform');
 
 const PAGE = path.resolve(__dirname, '../../pages/activity/official-detail/index.js');
 
 function harness() {
   const requests = [];
   let config;
-  global.getApp = () => ({ sendRequest: (o) => requests.push(o), globalData: {}, getUserID: () => 1 });
-  global.wx = {
-    showToast() {}, hideToast() {}, vibrateShort() {}, getStorageSync() { return ''; },
+  global.getApp = () => ({ sendRequest: (o) => requests.push(o), globalData: {}, getUserID: () => 1, getAuthorization: () => 'test-token' });
+  global.wx = { ...platform(),
+    showToast() {}, hideToast() {}, vibrateShort() {},
     requestSubscribeMessage() {}, getSystemInfoSync() { return {}; },
   };
   global.Page = (c) => { config = c; };
@@ -39,23 +40,28 @@ test('BL-199 连调两次「完成任务」只发 1 个请求,回包后可再次
   assert.equal(hits(requests, '/complete').length, 2);
 });
 
-test('BL-199 连调两次「报名」只发 1 个请求,回包后可再次触发', () => {
+test('BL-199 报名单飞，UNKNOWN保留原请求，终态确认后才允许新意图', async () => {
   const { page, requests } = harness();
   page.data.cta = { type: 'signup' };
   page.onCta();
   page.onCta();
-  assert.equal(hits(requests, '/signup').length, 1);
-  hits(requests, '/signup')[0].complete();
-  page.onCta();
-  assert.equal(hits(requests, '/signup').length, 2);
+  await Promise.resolve(); await Promise.resolve();
+  assert.equal(hits(requests, '/signup-command').length, 1);
+  const first = hits(requests, '/signup-command')[0]; first.fail({});
+  await page.onCta(); assert.equal(hits(requests, '/signup-command').length, 1);
+  page.queryCommand(); const query = requests.at(-1); query.success(receipt(first, 'APPLIED'));
+  await page.onCta(); assert.equal(hits(requests, '/signup-command').length, 1);
+  page.acknowledgeCommand(); await page.onCta();
+  assert.equal(hits(requests, '/signup-command').length, 2);
 });
 
-test('BL-199 V2 活动「完成任务」仍提示现场验证,不发请求也不占用在途标记', () => {
+test('BL-199 V2 活动「完成任务」仍提示现场验证,不发请求也不占用在途标记', async () => {
   const { page, requests } = harness();
   page.data.e = { contractVersion: 2 };
   page.onCta();
   assert.equal(hits(requests, '/complete').length, 0);
   page.data.cta = { type: 'signup' };
   page.onCta();
-  assert.equal(hits(requests, '/signup').length, 1);
+  await Promise.resolve(); await Promise.resolve();
+  assert.equal(hits(requests, '/signup-command').length, 1);
 });

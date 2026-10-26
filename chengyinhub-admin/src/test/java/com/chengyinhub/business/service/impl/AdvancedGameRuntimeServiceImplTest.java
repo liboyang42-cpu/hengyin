@@ -24,6 +24,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
+import com.fasterxml.jackson.databind.JsonNode;
+import static org.mockito.Mockito.verifyNoInteractions;
 import java.util.Collections;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -2902,4 +2905,61 @@ class AdvancedGameRuntimeServiceImplTest {
         assertEquals("NONE", scan.get("arMode"));
         assertFalse(scan.containsKey("markerUrl"));
     }
+    @Test
+    void defaultContentReadKeepsNullActivityAndLegacyConfigWithoutLiveFallback() {
+        GameRuntimeSession row = runningSession("{\"frozen\":7}", "{}");
+        row.setActivityId(0L); row.setPlayInstanceId("default");
+        when(sessionMapper.selectDefaultMemberSessionsByTopic(0L, TOPIC_ID, MEMBER_ID)).thenReturn(List.of(row));
+        JsonNode result = service.queryDefaultNodeContents(MEMBER_ID, null, TOPIC_ID).path(String.valueOf(NODE_ID));
+        assertTrue(result.path("legacyNodeContent").asBoolean());
+        assertEquals(7, result.path("nodeConfigs").path(String.valueOf(NODE_ID)).path("frozen").asInt());
+        assertFalse(result.has("nodeAnswers"));
+        verifyNoInteractions(nodeMapper, templateMapper);
+        verify(sessionMapper, never()).insert(any());
+        verify(sessionMapper, never()).updateStateCas(any());
+    }
+
+    @Test
+    void defaultContentReadRejectsRowsFromAnotherRunOrOwner() {
+        GameRuntimeSession row = runningSession("{}", "{}");
+        row.setPlayInstanceId("new-run");
+        when(sessionMapper.selectDefaultMemberSessionsByTopic(ACTIVITY_ID, TOPIC_ID, MEMBER_ID)).thenReturn(List.of(row));
+        assertThrows(IllegalStateException.class, () -> service.queryDefaultNodeContents(MEMBER_ID, ACTIVITY_ID, TOPIC_ID));
+        row.setPlayInstanceId("default"); row.setOwnerId(99L);
+        assertThrows(IllegalStateException.class, () -> service.queryDefaultNodeContents(MEMBER_ID, ACTIVITY_ID, TOPIC_ID));
+        row.setOwnerId(MEMBER_ID); row.setTopicId(999L);
+        assertThrows(IllegalStateException.class, () -> service.queryDefaultNodeContents(MEMBER_ID, ACTIVITY_ID, TOPIC_ID));
+        verifyNoInteractions(nodeMapper, templateMapper);
+    }
+
+    @Test
+    void defaultContentReadPrefersOwnPlayerOtherwiseLastAccessibleTeam() {
+        GameRuntimeSession team = runningSession("{\"source\":1}", "{}");
+        team.setPlayInstanceId("default"); team.setOwnerType(GameRuntimeSession.OWNER_TEAM); team.setOwnerId(88L);
+        GameRuntimeSession own = runningSession("{\"source\":2}", "{}"); own.setPlayInstanceId("default");
+        GameRuntimeSession laterTeam = runningSession("{\"source\":3}", "{}");
+        laterTeam.setPlayInstanceId("default"); laterTeam.setOwnerType(GameRuntimeSession.OWNER_TEAM); laterTeam.setOwnerId(89L);
+        when(sessionMapper.selectDefaultMemberSessionsByTopic(ACTIVITY_ID, TOPIC_ID, MEMBER_ID)).thenReturn(List.of(team, own, laterTeam));
+        String key = String.valueOf(NODE_ID);
+        assertEquals(2, service.queryDefaultNodeContents(MEMBER_ID, ACTIVITY_ID, TOPIC_ID).path(key).path("nodeConfigs").path(key).path("source").asInt());
+        when(sessionMapper.selectDefaultMemberSessionsByTopic(ACTIVITY_ID, TOPIC_ID, MEMBER_ID)).thenReturn(List.of(team, laterTeam));
+        assertEquals(3, service.queryDefaultNodeContents(MEMBER_ID, ACTIVITY_ID, TOPIC_ID).path(key).path("nodeConfigs").path(key).path("source").asInt());
+    }
+
+    @Test
+    void defaultContentReadRejectsMismatchedFrozenIdentityAndReturnsIndependentCopy() {
+        String state = "{\"originalNodeContent\":{\"contentSnapshotVersion\":1,\"nodePresentation\":{\"id\":29,\"topicId\":19},\"templateId\":null}}";
+        GameRuntimeSession row = runningSession("{}", state); row.setTemplateId(null); row.setPlayInstanceId("default");
+        when(sessionMapper.selectDefaultMemberSessionsByTopic(ACTIVITY_ID, TOPIC_ID, MEMBER_ID)).thenReturn(List.of(row));
+        JsonNode first = service.queryDefaultNodeContents(MEMBER_ID, ACTIVITY_ID, TOPIC_ID);
+        ((com.fasterxml.jackson.databind.node.ObjectNode)first.path("29").path("nodeAnswers").path("29").path("nodePresentation")).put("topicId", 999);
+        assertEquals(19, service.queryDefaultNodeContents(MEMBER_ID, ACTIVITY_ID, TOPIC_ID).path("29").path("nodeAnswers").path("29").path("nodePresentation").path("topicId").asInt());
+        assertEquals(state, row.getStateJson());
+        row.setTemplateId(TEMPLATE_ID);
+        assertThrows(IllegalStateException.class, () -> service.queryDefaultNodeContents(MEMBER_ID, ACTIVITY_ID, TOPIC_ID));
+        row.setTemplateId(null); row.setNodeId(30L);
+        assertThrows(IllegalStateException.class, () -> service.queryDefaultNodeContents(MEMBER_ID, ACTIVITY_ID, TOPIC_ID));
+        verifyNoInteractions(nodeMapper, templateMapper);
+    }
+
 }

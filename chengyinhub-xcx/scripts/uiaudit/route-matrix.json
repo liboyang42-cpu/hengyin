@@ -3,7 +3,7 @@
   "generatedFrom": "app.json + scene-* 组件扫描",
   "previousBatch": null,
   "counts": {
-    "routes": 148,
+    "routes": 149,
     "scenes": 27,
     "added": 0,
     "removed": 0
@@ -1437,6 +1437,22 @@
       "needsLogin": false,
       "needsData": false,
       "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/free-explore/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "registrationId",
+        "topicId",
+        "requestId",
+        "unitId"
+      ],
       "hasJs": true,
       "hasWxml": true
     },

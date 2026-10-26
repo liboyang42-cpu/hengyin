@@ -51,21 +51,20 @@ class ApiPlayBranchNodeVisibilityTest {
 
         controller = spy(new ApiPlayProgressController());
         doReturn(MEMBER).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", routeRuntimeService);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", routeRuntimeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService",
                 mock(com.chengyinhub.business.service.IPlayerNodeProgressService.class));
-        ReflectionTestUtils.setField(controller, "cmsPointsSettingService",
-                mock(com.chengyinhub.business.service.ICmsPointsSettingService.class));
-        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService",
+        var fixtureHintSettings = mock(com.chengyinhub.business.service.ICmsPointsSettingService.class);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService",
                 mock(com.chengyinhub.business.service.ICmsMemberTemplateService.class));
-        ReflectionTestUtils.setField(controller, "omsTicketService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService",
                 mock(com.chengyinhub.business.service.IOmsTicketService.class));
-        ReflectionTestUtils.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
-        ReflectionTestUtils.setField(controller, "puzzlePlayService", mock(IPuzzlePlayService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "puzzlePlayService", mock(IPuzzlePlayService.class));
 
         CmsActivity activity = new CmsActivity();
         activity.setId(ACTIVITY);
@@ -84,6 +83,7 @@ class ApiPlayBranchNodeVisibilityTest {
         CmsTopicNode visible = node(101L, "已解锁地点", 1L);
         CmsTopicNode hidden = node(102L, "未选择支线秘密", 2L);
         when(nodeService.selectCmsTopicNodeList(any())).thenReturn(Arrays.asList(visible, hidden));
+        com.chengyinhub.web.controller.api.NodeHintUnlockTestFixtures.pricing(controller, fixtureHintSettings);
     }
 
     @SuppressWarnings("unchecked")
@@ -155,7 +155,7 @@ class ApiPlayBranchNodeVisibilityTest {
     @Test
     void freeExploreThoughtsInitializeJourneyWithoutFilteringFreeChoices() {
         topic.setProductType(2);
-        ReflectionTestUtils.setField(controller, "npcProfileService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "npcProfileService",
                 mock(com.chengyinhub.business.service.impl.NpcProfileService.class));
         topic.setPublishedRouteGraphJson(null);
         topic.setJourneyRulesJson("{\"schemaVersion\":1,\"checkEnabled\":false,"
@@ -186,7 +186,7 @@ class ApiPlayBranchNodeVisibilityTest {
     void freeMerchantGameWithoutRedemptionDoesNotCountAsDone() {
         prepareFreeProgress(101L, 102L);
         ICmsTopicNodeService nodeService = (ICmsTopicNodeService)
-                ReflectionTestUtils.getField(controller, "cmsTopicNodeService");
+                com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "cmsTopicNodeService");
         CmsTopicNode content = node(101L, "故事地点", 1L);
         CmsTopicNode merchant = node(102L, "等待商家核销", 2L);
         merchant.setMerchantMemberId(501L);
@@ -208,21 +208,21 @@ class ApiPlayBranchNodeVisibilityTest {
     private void prepareFreeProgress(Long... completedIds) {
         topic.setProductType(2);
         topic.setPublishedRouteGraphJson(null);
-        ReflectionTestUtils.setField(controller, "npcProfileService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "npcProfileService",
                 mock(com.chengyinhub.business.service.impl.NpcProfileService.class));
-        ReflectionTestUtils.setField(controller, "topicOnsiteMetricsMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicOnsiteMetricsMapper",
                 mock(com.chengyinhub.business.mapper.TopicOnsiteMetricsMapper.class));
-        ReflectionTestUtils.setField(controller, "topicTemplateMetaMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicTemplateMetaMapper",
                 mock(com.chengyinhub.business.mapper.CmsTopicTemplateMetaMapper.class));
-        ReflectionTestUtils.setField(controller, "merchantChapterOfferMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "merchantChapterOfferMapper",
                 mock(com.chengyinhub.business.mapper.MerchantChapterOfferMapper.class));
-        ReflectionTestUtils.setField(controller, "coopPerkMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "coopPerkMapper",
                 mock(com.chengyinhub.business.mapper.CoopPerkMapper.class));
-        ReflectionTestUtils.setField(controller, "perkLedgerService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "perkLedgerService",
                 mock(com.chengyinhub.business.service.IPerkLedgerService.class));
         com.chengyinhub.business.service.IPlayerNodeProgressService progressService =
                 (com.chengyinhub.business.service.IPlayerNodeProgressService)
-                        ReflectionTestUtils.getField(controller, "playerNodeProgressService");
+                        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "playerNodeProgressService");
         List<com.chengyinhub.business.domain.PlayerNodeProgress> progress = new java.util.ArrayList<>();
         for (Long id : completedIds) {
             com.chengyinhub.business.domain.PlayerNodeProgress row =

@@ -156,6 +156,10 @@
         where member_id = #{memberId} and idempotency_key = #{idempotencyKey}
     </select>
 
+    <select id="selectAttemptById" resultMap="OrientTaskAttemptResult">
+        select <include refid="attemptColumns"/> from orient_task_attempt where id = #{id}
+    </select>
+
     <select id="selectAttemptByIdForUpdate" resultMap="OrientTaskAttemptResult">
         select <include refid="attemptColumns"/> from orient_task_attempt where id = #{id} for update
     </select>

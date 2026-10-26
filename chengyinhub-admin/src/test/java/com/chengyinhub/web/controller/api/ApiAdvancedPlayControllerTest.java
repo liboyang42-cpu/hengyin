@@ -10,7 +10,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyMap;
@@ -61,6 +61,6 @@ class ApiAdvancedPlayControllerTest {
         InOrder order = inOrder(runtimeService);
         order.verify(runtimeService).act(anyLong(), anyLong(), any(), anyString(), anyString(), anyMap());
         order.verify(runtimeService).finishPendingCardMint(judged);
-        assertSame(finished, result.get(AjaxResult.DATA_TAG), "回包必须是收尾之后的那一份,不然当场出卡丢了");
+        assertEquals(new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(finished), result.get(AjaxResult.DATA_TAG), "回包必须是收尾之后的那一份,不然当场出卡丢了");
     }
 }

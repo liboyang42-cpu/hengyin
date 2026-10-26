@@ -11,7 +11,7 @@ const sent = [];
 let response = { code: 200, data: {} };
 const app = { getUserID: () => 99, globalData: { features: {} }, isDevEnv: () => false,
   sendRequest(options) { sent.push(options); options.success(response); } };
-global.wx = { getStorageSync: () => '', getSystemInfoSync: () => ({ statusBarHeight: 20 }) };
+global.wx = { getStorageSync: () => '', setStorageSync() {}, removeStorageSync() {}, getSystemInfoSync: () => ({ statusBarHeight: 20 }) };
 global.getApp = () => app;
 let pageSpec;
 global.Page = value => { pageSpec = value; };
@@ -31,7 +31,7 @@ function component(name, props = {}) {
   const filename = require.resolve('../../pages/play/components/' + name + '/index.js');
   vm.runInNewContext(fs.readFileSync(filename, 'utf8'), {
     Component: value => { spec = value; }, getApp: () => app, wx: global.wx,
-    require: p => p.includes('play-action-key') || p.includes('playkit-view') ? require(path.resolve(path.dirname(filename), p)) : { haptic() {}, safeUserMessage: (_, fallback) => fallback },
+    require: p => p.includes('play-action-key') || p.includes('playkit-view') || p.includes('orient-score-view') ? require(path.resolve(path.dirname(filename), p)) : { haptic() {}, safeUserMessage: (_, fallback) => fallback },
     Date, setTimeout, clearTimeout, setInterval, clearInterval,
   });
   const data = { ...spec.data };
@@ -75,6 +75,7 @@ test('Page R5 check uses Advanced actions; legacy keeps existing endpoint', asyn
   p.onAdvancedSession({ detail: { ...typeDto(true), nodeId: 29 } });
   assert.equal(p.data.journeyCheck.show, false, '切换R5玩法清理旧检定界面');
   sent.length = 0;
+  p._routeState = { sessionId: '51' };
   p.data.journeyCheck = { show: true, checkId: 'legacy', nodeId: 29 };
   p.onJourneyCheckAction({ detail: { action: 'roll' } });
   await new Promise(resolve => setImmediate(resolve));
@@ -113,26 +114,28 @@ test('R5 real component buttons obey server permissions and exhaustion', () => {
 
 test('Advanced refusal never replaces receipt with client success', async () => {
   const { c, events } = component('advanced-game', { state: checkDto(), node: { nodeId: 29 } });
-  c.request = async () => ({ code: 409, msg: '幸运值不足' });
+  c.request = async () => ({ code: 409, msg: '幸运值不足', data: { view: checkDto() } });
   await c.action('REROLL_CHECK', {});
   assert.equal(c.data.state.check.dice, undefined);
   assert.equal(c.data.acting, false);
   assert.ok(events.some(event => event.name === 'actionfail'));
 });
 
-test('TEAM network unknown replays identical actionId and receipt through real Advanced handler', async () => {
+test('TEAM network unknown reads original identity without another write', async () => {
   const { c } = component('advanced-game', { state: checkDto({}, 2), node: { nodeId: 29 } });
   const requests = []; const receipt = rollDto().check;
   c.request = async (url, method, command) => {
-    requests.push({ url, command: JSON.parse(JSON.stringify(command)) });
+    requests.push({ url, method, command: JSON.parse(JSON.stringify(command)) });
     if (requests.length === 1) throw new Error('response lost');
-    return { code: 200, data: { ...checkDto(receipt, 2), version: 1 } };
+    return { code: 200, data: { sessionId: String(command.sessionId), idempotencyKey: command.idempotencyKey, view: { ...checkDto(receipt, 2), version: 1 } } };
   };
   c.syncTimer = () => {};
   await c.action('ROLL_CHECK', {});
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(requests.length, 2);
-  assert.deepEqual(requests[0], requests[1]);
+  assert.equal(requests[1].method, 'GET');
+  assert.equal(requests[1].url, '/api/play/advanced/receipt');
+  assert.deepEqual(requests[1].command, { sessionId: requests[0].command.sessionId, idempotencyKey: requests[0].command.idempotencyKey });
   assert.ok(requests[0].command.idempotencyKey);
   assert.deepEqual(c.data.state.check.dice, [12]);
   assert.equal(c.data.unknown, false);
@@ -253,4 +256,59 @@ test('零血失败与未完成恢复次数的检定不遮住明确挑战入口�
     assert.equal(p.data.playKit.kit.canRetry, true);
     assert.equal(p.data.playKit.readyForBase, false);
   }
+});
+
+test('hidden check projection suppresses numeric side channels and keeps the attempt usable', () => {
+  const hidden = runtime.checkView(rollDto({ hidden: true, dice: [], total: 19, dc: 13, mods: [{ label: 'secret', value: 7 }] }), {});
+  assert.ok(hidden.receipt, 'hidden rolled attempt is not an unrolled check');
+  assert.equal(hidden.receipt.detailsHidden, true);
+  assert.equal(hidden.receipt.total, null);
+  assert.equal(hidden.receipt.dc, null);
+  assert.deepEqual(hidden.receipt.mods, []);
+  assert.deepEqual(hidden.mods, []);
+});
+
+test('R5 parent never sends another check action while Advanced is UNKNOWN', async () => {
+  const p = page(); p.data.journeyCheck = runtime.checkView(rollDto(), {});
+  let calls = 0;
+  p.selectComponent = () => ({ data: { unknown: true, state: { sessionId: 51 } }, action() { calls++; } });
+  await p._r5CheckAction('settle');
+  assert.equal(calls, 0); assert.match(p.data.journeyCheck.disabledReason, /待确认/);
+});
+
+test('late R5 completion cannot clear a new check loading state', async () => {
+  const p = page(); p.data.journeyCheck = runtime.checkView(rollDto(), {});
+  let finish;
+  p.selectComponent = () => ({ data: { state: { sessionId: 51 } }, action: () => new Promise(resolve => { finish = resolve; }) });
+  const work = p._r5CheckAction('settle');
+  p.data.journeyCheck = { show: true, r5: true, sessionId: 99, loading: true };
+  finish(true); await work;
+  assert.equal(p.data.journeyCheck.loading, true);
+});
+
+test('hidden or absent total never produces a margin from null as zero', () => {
+  for (const receipt of [{ total: null, dc: 13 }, { total: null, dc: null, detailsHidden: true }]) {
+    const { c, spec } = component('playkit-journey-check', { receipt, show: true });
+    spec.observers['show, tier, receipt'].call(c, true, 'medium', receipt);
+    assert.equal(c.data.marginText, '');
+  }
+});
+
+test('late R5 readback cannot unlock a replaced check; confirmed same check clears pending explanation', async () => {
+  const p = page();
+  p.data.journeyCheck = { show: true, r5: true, sessionId: 51, unknown: true, disabledReason: '待确认' };
+  let finish;
+  const game = { data: { state: { sessionId: 51 }, unknown: true }, resolveUnknown: () => new Promise(resolve => { finish = resolve; }) };
+  p.selectComponent = () => game;
+  const first = p.onJourneyCheckAction({ detail: { action: 'recover' } });
+  p.data.journeyCheck = { ...p.data.journeyCheck, sessionId: 99, disabledReason: '新局待确认' };
+  game.data.unknown = false; finish(true); await first;
+  assert.equal(p.data.journeyCheck.unknown, true);
+  assert.equal(p.data.journeyCheck.disabledReason, '新局待确认');
+  p.data.journeyCheck = { show: true, r5: true, sessionId: 51, unknown: true, disabledReason: '待确认' };
+  game.data.unknown = true;
+  const second = p.onJourneyCheckAction({ detail: { action: 'recover' } });
+  game.data.unknown = false; finish(true); await second;
+  assert.equal(p.data.journeyCheck.unknown, false);
+  assert.equal(p.data.journeyCheck.disabledReason, '');
 });

@@ -6,8 +6,8 @@
 // 「附近的队伍」里,切换对任何界面都没有效果。
 //
 // 契约:① 队长 + 招募中 → 开关按 team.joinMode 回显;
-//      ② 切换发 POST /api/team/join-mode,body 带 teamId 与目标 joinMode;
-//      ③ 失败/非 200 → 回滚回显,不本地假设成功;
+//      ② 切换发 POST /api/team/command，冻结 targetId、joinMode 和 requestId;
+//      ③ UNKNOWN 保留原输入；只有原请求终态后重新读取回显，不乐观更新;
 //      ④ 行只对队长且 status=0 渲染。
 // 负控:去掉提交与回滚,对应用例必须真红。
 
@@ -18,6 +18,7 @@ const { createRequire } = require('node:module');
 const path = require('node:path');
 const vm = require('node:vm');
 
+const { platform, receipt } = require('./helpers/team-event-platform');
 const ROOT = path.resolve(__dirname, '../..');
 const PAGE_REL = 'pages/team/detail/index.js';
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
@@ -28,11 +29,12 @@ function loadPage(source) {
   let definition = null;
   const absolutePath = path.join(ROOT, PAGE_REL);
   const app = {
+    getUserID: () => '71', getAuthorization: () => 'token-a',
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
     getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
     sendRequest(options) { requests.push(options); return { abort() {}, aborted: false }; },
   };
-  const wxApi = {
+  const wxApi = { ...platform(),
     stopPullDownRefresh() {}, navigateBack() {}, switchTab() {}, showToast() {},
   };
   vm.runInNewContext(source || read(PAGE_REL), {
@@ -81,67 +83,49 @@ function openWithTeam(overrides, source) {
   return env;
 }
 
-test('C-02b:招募中的队长把公开改成仅邀请,发 /api/team/join-mode 并回显服务端结果', () => {
-  const { page, requests, toasts } = openWithTeam({ joinMode: 2 });
-  assert.equal(page.data.leader, true);
-  assert.equal(page.data.joinModePublic, true, '公开招募(joinMode=2)回显为开');
-
-  page.onJoinModeChange({ detail: { value: false } });
-  const update = requests.find((r) => r.url === '/api/team/join-mode');
-  assert.ok(update, '切换必须发 join-mode 请求');
-  assert.deepEqual(JSON.parse(update.data), { teamId: 9, joinMode: 1 }, '关 = 仅邀请(joinMode=1)');
-  assert.equal(page.data.joinModeSaving, true, '提交中要禁用开关防重入');
-
-  update.success({ code: '200', data: { joinMode: 1 } });
-  assert.equal(page.data.joinModeSaving, false);
-  assert.equal(page.data.joinModePublic, false);
-  assert.equal(page.data.team.joinMode, 1, '回显以服务端返回为准');
-  assert.equal(toasts.at(-1), '已改为仅邀请');
+test('C-02b:队长切换先冻结原请求，不乐观改开关，APPLIED后从info回读', async () => {
+  const { page, requests } = openWithTeam({ joinMode: 2 });
+  await page.onJoinModeChange({ detail: { value: false } });
+  const update = requests.find(r => r.url === '/api/team/command');
+  assert.ok(update); const body = JSON.parse(update.data);
+  assert.equal(body.action, 'join-mode'); assert.equal(body.targetId, '9'); assert.equal(body.joinMode, 1);
+  assert.match(body.requestId, /^[a-f0-9]{32}$/);
+  assert.equal(page.data.joinModePublic, true); assert.equal(page.data.joinModeSaving, true);
+  update.success(receipt(update, 'APPLIED'));
+  requests.at(-1).success({ code: 200, data: { team: teamFixture({ joinMode: 1 }), members: [], joined: true, leader: true } });
+  assert.equal(page.data.joinModePublic, false); assert.equal(page.data.team.joinMode, 1);
 });
 
-test('C-02b:反向切换回公开招募,body 带 joinMode=2', () => {
+test('C-02b:反向切换与重试始终保留原号和目标模式', async () => {
   const { page, requests } = openWithTeam({ joinMode: 1 });
-  assert.equal(page.data.joinModePublic, false);
-
-  page.onJoinModeChange({ detail: { value: true } });
-  const update = requests.find((r) => r.url === '/api/team/join-mode');
-  assert.deepEqual(JSON.parse(update.data), { teamId: 9, joinMode: 2 });
-  update.success({ code: '200', data: { joinMode: 2 } });
-  assert.equal(page.data.joinModePublic, true);
+  await page.onJoinModeChange({ detail: { value: true } });
+  const update = requests.at(-1); assert.equal(JSON.parse(update.data).joinMode, 2);
+  update.fail({}); page.retryCommand();
+  assert.equal(requests.at(-1).data, update.data);
 });
 
-test('C-02b:提交失败回滚开关,不本地假设成功', () => {
-  const { page, requests, toasts } = openWithTeam({ joinMode: 2 });
-  page.onJoinModeChange({ detail: { value: false } });
-  const update = requests.find((r) => r.url === '/api/team/join-mode');
-  update.success({ code: 500, msg: '只有队长可以操作' });
-  assert.equal(page.data.joinModePublic, true, '非 200 必须回滚回原来的公开态');
-  assert.equal(page.data.joinModeSaving, false);
-  assert.equal(toasts.at(-1), '只有队长可以操作');
-
-  const network = openWithTeam({ joinMode: 2 });
-  network.page.onJoinModeChange({ detail: { value: false } });
-  network.requests.find((r) => r.url === '/api/team/join-mode').fail({ errMsg: 'request:fail timeout' });
-  assert.equal(network.page.data.joinModePublic, true, '网络失败同样回滚');
-  assert.equal(network.toasts.at(-1), '网络异常，请重试');
+test('C-02b:业务拒绝终态和网络UNKNOWN都不乐观修改；UNKNOWN不放行新输入', async () => {
+  for (const state of ['REJECTED', 'UNKNOWN']) {
+    const { page, requests } = openWithTeam({ joinMode: 2 });
+    await page.onJoinModeChange({ detail: { value: false } });
+    const update = requests.at(-1);
+    if (state === 'UNKNOWN') update.fail({}); else update.success(receipt(update, state));
+    assert.equal(page.data.joinModePublic, true);
+    assert.equal(page.data.commandRecovery.state, state);
+    const count = requests.length;
+    await page.onJoinModeChange({ detail: { value: false } }); assert.equal(requests.length, count);
+  }
 });
 
-test('C-02b:入口只对队长且在招募中(status=0)渲染;负控去掉失败回滚必须真红', () => {
+test('C-02b:入口仍只给招募中的队长，负控乐观改值必须被原位断言捕获', async () => {
   const wxml = read('pages/team/detail/index.wxml');
-  assert.match(wxml, /wx:if="\{\{leader && team\.status == 0\}\}"/, '行只给招募中的队长');
-  assert.match(wxml, /<cy-switch[^>]*checked="\{\{joinModePublic\}\}"[^>]*disabled="\{\{joinModeSaving\}\}"[^>]*bindchange="onJoinModeChange"/);
-  const json = JSON.parse(read('pages/team/detail/index.json'));
-  assert.equal(json.usingComponents['cy-switch'], '/components/cy/switch/index');
-
-  // 负控:去掉失败回滚,回滚用例必须能复现「开关留在错的一侧」
+  assert.match(wxml, /wx:if="\{\{leader && team\.status == 0\}\}"/);
+  assert.match(wxml, /disabled="\{\{joinModeSaving\}\}"/);
   const source = read(PAGE_REL);
-  const broken = source.replace(
-    "        that.setData({ joinModeSaving: false, joinModePublic: prevMode === 2 });\n        cyToast(app.getRequestErrorMessage(res, '切换失败，请重试'));",
-    "        that.setData({ joinModeSaving: false });\n        cyToast(app.getRequestErrorMessage(res, '切换失败，请重试'));",
-  );
-  assert.notEqual(broken, source, '负控锚点失效:回滚分支未命中');
-  const { page, requests } = openWithTeam({ joinMode: 2 }, broken);
-  page.onJoinModeChange({ detail: { value: false } });
-  requests.find((r) => r.url === '/api/team/join-mode').success({ code: 500 });
-  assert.equal(page.data.joinModePublic, false, '负控必须复现「失败后开关留在仅邀请」');
+  const before = "    this.setData({ joinModePublic: prevMode === 2 });\n    if (this._recovery.pending()) return;";
+  const broken = source.replace(before, "    this.setData({ joinModePublic: nextMode === 2 });\n    if (this._recovery.pending()) return;");
+  assert.notEqual(broken, source, '负控必须命中');
+  const { page } = openWithTeam({ joinMode: 2 }, broken);
+  await page.onJoinModeChange({ detail: { value: false } });
+  assert.equal(page.data.joinModePublic, false, '负控确实复现错误的乐观开关');
 });

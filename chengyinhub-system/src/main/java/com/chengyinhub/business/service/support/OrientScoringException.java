@@ -8,6 +8,7 @@ public class OrientScoringException extends RuntimeException {
     public static final String NOT_APPLICABLE = "ORIENT_SCORING_NOT_APPLICABLE";
     public static final String SESSION_NOT_FOUND = "ORIENT_SESSION_NOT_FOUND";
     public static final String SESSION_NOT_ENDED = "ORIENT_SESSION_NOT_ENDED";
+    public static final String REVIEW_PENDING = "ORIENT_REVIEW_PENDING";
     public static final String INVALID_ARGUMENT = "ORIENT_INVALID_ARGUMENT";
     public static final String IDEMPOTENCY_CONFLICT = "ORIENT_IDEMPOTENCY_CONFLICT";
     public static final String WINDOW_CLOSED = "ORIENT_WINDOW_CLOSED";

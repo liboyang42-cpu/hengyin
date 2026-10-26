@@ -66,6 +66,11 @@ public class OrientSessionServiceImpl implements IOrientSessionService {
     private final Clock clock;
 
     @Autowired
+    @org.springframework.context.annotation.Lazy
+    private com.chengyinhub.business.service.IOrientScoringService orientScoringService;
+
+
+    @Autowired
     public OrientSessionServiceImpl(OrientSessionFeatureGate gate, OrientSessionMapper orientMapper,
                                     TopicRouteSessionMapper routeMapper, ITopicRouteRuntimeService routeRuntime,
                                     CmsTopicMapper topicMapper, CmsTopicNodeMapper nodeMapper,
@@ -235,6 +240,9 @@ public class OrientSessionServiceImpl implements IOrientSessionService {
         result.put("completedAt", doneAt.getTime());
         result.put("elapsedMs", Math.max(0L, doneAt.getTime() - sessionClock.getStartedAt().getTime()));
         result.put("phase", phase.name());
+        if (orientScoringService != null && orientScoringService.isActiveFor(topicMapper.selectCmsTopicById(row.getTopicId()))) {
+            orientScoringService.syncSession(memberId, sessionId, "lifecycle:task:" + sessionId + ":" + taskId);
+        }
         record(row, memberId, key, taskId, RECEIPT_TASK_PREFIX + taskId, "ORIENT_TASK", fingerprint, result);
         return result;
     }
@@ -321,6 +329,7 @@ public class OrientSessionServiceImpl implements IOrientSessionService {
         view.put("sessionId", row.getId());
         view.put("topicId", row.getTopicId());
         view.put("activityId", row.getActivityId());
+        view.put("playInstanceId", row.getPlayInstanceId());
         view.put("phase", phase.name());
         view.put("status", row.getStatus());
         view.put("configVersion", row.getConfigVersion());

@@ -14,7 +14,8 @@
     "cy-toast": "/components/cy/toast/index",
     "team-report-sheet": "/subpackageMember/components/cy/team-report-sheet/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
-    "cy-modal-host": "/components/cy/modal-host/index"
+    "cy-modal-host": "/components/cy/modal-host/index",
+    "cy-btn": "/components/cy/btn/index"
   },
   "componentPlaceholder": {
     "team-report-sheet": "view"

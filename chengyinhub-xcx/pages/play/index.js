@@ -19,6 +19,12 @@ const { resolveLeadMemberTicket } = require('./utils/lead-ticket-scan.js');
 const { routeColorForKey, ROUTE_BORDER_COLOR } = require('../../utils/play-visual-tokens.js');
 const { getPlayMapState, getPlayRouteNodeState } = require('../../utils/play-state-contract.js');
 const gameSessionClient = require('../../utils/game-session-client.js');
+const orientLifecycle = require('./utils/orient-lifecycle.js');
+const arrivalGuardView = require('./utils/arrival-guard-view.js');
+const guardAppeal = require('./utils/guard-appeal.js');
+const playBoardView = require('./utils/play-board-view.js');
+const { id: precisePlayId } = require('../../utils/orient-score-view.js');
+const journeyCheckRecovery = require('./utils/journey-check-recovery.js');
 const { reportBlocksParseFailure } = require('./utils/chapter-blocks-health.js');   // P1-021 块流回落埋点
 const audioSession = require('./utils/audio-session.js');       // 音频打断/恢复 + 长音频不熄屏
 const { createPoller } = require('./utils/poller.js');           // 带领场进度:退避轮询
@@ -61,6 +67,7 @@ const {
   orderedJourneyNodes,
   buildVisibleRoutePath,
   createRouteActionStore,
+  scopedRouteActionStore,
   isRouteConflict,
 } = require('./utils/play-route-state.js');
 // 顶部浮层的纵向起点:必须由微信胶囊的真实位置算出。原来 .play-header-wrap 写死 top:104rpx,
@@ -207,18 +214,58 @@ function uuid4() {
 }
 
 function req(url, method, data, header, silentError) {
+  const basic = method === 'POST' && (['/api/play/answer', '/api/play/checkin', '/api/play/arrive', '/api/play/photo', '/api/play/puzzle/reveal', '/api/play/sensor/result'].includes(url) || /^\/api\/play\/preference\/[1-9][0-9]*\/submit$/.test(url));
+  if (basic && data && typeof data._intentCurrent === 'function' && !data._intentCurrent()) return Promise.resolve({ obsolete: true });
+  if (basic && data && data._intentOwner != null && data._intentOwner !== String((app.getUserID && app.getUserID()) || '')) return Promise.resolve({ obsolete: true });
+  if (basic && data && data.receiptOnly) {
+    return req('/api/play/action-receipt', 'GET', { activityId: data.activityId, topicId: data.topicId, nodeId: data.nodeId, routeActionId: data.routeActionId }, undefined, true).then(response => {
+      return response.intentTerminal ? response : Object.assign({}, response, { code: 520, intentUnknown: true, httpFail: true });
+    });
+  }
+  if (basic && data && data.routeSessionId == null) {
+    const owner = data._intentOwner;
+    return req('/api/play/action-context', 'GET', { activityId: data.activityId, topicId: data.topicId, nodeId: data.nodeId }, undefined, true).then(response => {
+      if (typeof data._intentCurrent === 'function' && !data._intentCurrent()) return { obsolete: true };
+      if (owner != null && owner !== String((app.getUserID && app.getUserID()) || '')) return { obsolete: true };
+      if (!(response.code == 200 || response.code == '200') || !response.data) return response;
+      const context = response.data;
+      if (data._expectedSessionId && String(context.routeSessionId) !== data._expectedSessionId) return { code: 409, intentNotExecuted: true, msg: '原游玩局已变化，请确认后重新操作' };
+      const fields = Object.assign({}, context, { expectedRouteVersion: data.expectedRouteVersion == null ? context.expectedRouteVersion : data.expectedRouteVersion });
+      if (typeof data._bindRouteContext !== 'function') return { code: 520, httpFail: true, msg: '原命令身份未保存，请重新进入确认结果' };
+      try { data._bindRouteContext(fields); } catch (error) { return { code: 520, httpFail: true, msg: error.message }; }
+      if (url === '/api/play/answer') return req('/api/play/answer', 'POST', data, header, silentError);
+      if (url === '/api/play/checkin') return req('/api/play/checkin', 'POST', data, header, silentError);
+      if (url === '/api/play/arrive') return req('/api/play/arrive', 'POST', data, header, silentError);
+      if (url === '/api/play/photo') return req('/api/play/photo', 'POST', data, header, silentError);
+      if (url === '/api/play/puzzle/reveal') return req('/api/play/puzzle/reveal', 'POST', data, header, silentError);
+      if (url === '/api/play/sensor/result') return req('/api/play/sensor/result', 'POST', data, header, silentError);
+      return req('/api/play/preference/' + data.nodeId + '/submit', 'POST', data, header, silentError);
+    });
+  }
+  if (basic && data && data._intentOwner != null && data._intentOwner !== String((app.getUserID && app.getUserID()) || '')) return Promise.resolve({ obsolete: true });
   return new Promise((resolve) => {
+    const settle = response => {
+      if (basic && !response.intentTerminal && !response.intentNotExecuted && !response.obsolete) {
+        response = Object.assign({}, response, { code: 520, httpFail: true, intentUnknown: true,
+          msg: response.msg || '结果还没确认，请稍后再查看' });
+      }
+      if (basic && data && typeof data._markIntentUnknown === 'function'
+          && (response.netFail || response.httpFail || Number(response.code) === 520)) {
+        try { data._markIntentUnknown(); } catch (error) { response.msg = error.message + '；原结果仍待确认'; }
+      }
+      resolve(response);
+    };
     app.sendRequest({
       url, method, data, header, hideLoading: true, silentError: !!silentError,
-      success: (res) => resolve(res || {}),
+      success: (res) => settle(basic && res && Number(res.code) === 520 ? Object.assign({}, res, { httpFail: true, intentUnknown: true }) : res || {}),
       // request-client 对 HTTP 非 200 只调 successStatusAbnormal；必须结束 Promise，
       // 否则首屏加载与节点提交的恢复逻辑会永久等待。
       // HTTP 已返回并不等于请求没送达；尤其 POST 可能已经执行，不能开放盲重试。
       // 强制覆盖 body.code，避免网关错误体里的 200/402 被误当成业务成功/购票态。
-      successStatusAbnormal: (res) => resolve(fromHttpStatusAbnormal(res)),
+      successStatusAbnormal: (res) => settle(fromHttpStatusAbnormal(res)),
       // netFail 让调用方能区分「请求没送到」与「服务端说不行」—— 二者都走 code!=200,
       // 光看 code 分不出来(submitGame 曾因此把断网当成答错)。
-      fail: () => resolve({ code: 'fail', netFail: true, msg: '网络异常，请重试' })
+      fail: () => settle({ code: 'fail', netFail: true, msg: '网络异常，请重试' })
     });
   });
 }
@@ -333,6 +380,22 @@ const themeTrade = require('./utils/theme-trade.js');
 const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
 Page({
+  ...journeyCheckRecovery.methods(req),
+  ...orientLifecycle.methods((url, method, data) => {
+    const header = { 'content-type': 'application/x-www-form-urlencoded' };
+    switch (url) {
+      case '/api/play/orient/session/current': return req('/api/play/orient/session/current', method, data, header, true);
+      case '/api/play/orient/session/prepare': return req('/api/play/orient/session/prepare', method, data, header, true);
+      case '/api/play/orient/session/start': return req('/api/play/orient/session/start', method, data, header, true);
+      case '/api/play/orient/session/abandon': return req('/api/play/orient/session/abandon', method, data, header, true);
+      case '/api/play/orient/session/receipt': return req('/api/play/orient/session/receipt', method, data, header, true);
+    }
+    const task = /^\/api\/play\/orient\/session\/task\/([1-9][0-9]*)\/result$/.exec(url);
+    if (task) return req('/api/play/orient/session/task/' + task[1] + '/result', method, data, header, true);
+    const score = /^\/api\/orient\/scoring\/session\/([1-9][0-9]*)$/.exec(url);
+    if (score) return req('/api/orient/scoring/session/' + score[1], method, data, header, true);
+    throw new Error('Unknown orient lifecycle endpoint');
+  }),
   ...r5PlayerRuntime.methods(), closeR5Verdict() { this.setData({ 'r5Verdict.show': false }); },  // 结果反馈判定屏「继续」(状态见 r5-player-runtime)
   ...themeBackpack.methods(req),
   ...themeRecords.methods(req, true),
@@ -343,6 +406,9 @@ Page({
   _routeState: normalizeRouteState(null),
 
   data: {
+    ...orientLifecycle.data,
+    arrivalGuard: null,
+    guardAppealView: null,
     communityPostWrite: false,
     ...r5PlayerRuntime.data,
     ...themeBackpack.data,
@@ -521,6 +587,7 @@ Page({
 
   onLoad(options) {
     this._playOwner = this._playMember();
+    this._playLoginContext = this._capturePlayLoginContext();
     this._playDisposed = false;
     options = options || {};
     this._entryTopicName = options.topicName ? decodeURIComponent(options.topicName) : '';
@@ -615,6 +682,12 @@ Page({
     });
   },
   _playMember() { return String((app.getUserID && app.getUserID()) || ''); },
+  _capturePlayLoginContext() {
+    let issuedAt = '';
+    try { issuedAt = wx.getStorageSync('authorization_issued_at') || ''; } catch (_) {}
+    return { authorization: app.getAuthorization ? app.getAuthorization() : undefined,
+      generation: String(app._featureFlagsEpoch || 0) + ':' + String(issuedAt) };
+  },
   /** 高级玩法组件句柄;页面未挂 selectComponent(预渲染/桩)时按「无组件」处理。 */
   _advancedGameComponent() {
     return typeof this.selectComponent === 'function' ? this.selectComponent('#advancedGame') : null;
@@ -622,11 +695,14 @@ Page({
   /** 本页归属账号:首次使用时绑定(onLoad 已绑;直接调用方法的场景在捕获上下文前补绑)。 */
   _boundPlayOwner() {
     if (this._playOwner === undefined) this._playOwner = this._playMember();
+    if (!this._playLoginContext) this._playLoginContext = this._capturePlayLoginContext();
     return this._playOwner;
   },
   /** 页面未卸载(_playDisposed 为唯一卸载标记)且仍是进页时的账号。 */
   _isPlayAccountCurrent() {
-    return !this._playDisposed && this._boundPlayOwner() === this._playMember();
+    const owner = this._boundPlayOwner(), current = this._capturePlayLoginContext();
+    return !this._playDisposed && owner === this._playMember()
+      && this._playLoginContext.authorization === current.authorization && this._playLoginContext.generation === current.generation;
   },
   onShow() {
     // 只看账号是否已切换(卸载态由各回调自己的 _isPlayAccountCurrent 挡)
@@ -635,6 +711,7 @@ Page({
       wx.reLaunch({ url: '/pages/index/index' });
       return;
     }
+    this.restoreGuardAppeal();
     this._syncCommunityEntry();
     this._themeHidden = false; this._startThemePoll();
     this._startZeroHpTimer();
@@ -653,9 +730,30 @@ Page({
     const p = params || this._sessionParams();
     return p.activityId ? 'a:' + String(p.activityId) : 't:' + String(p.topicId == null ? '' : p.topicId);
   },
+  _ensureRouteActionStore() {
+    const owner = this._boundPlayOwner();
+    const scope = [owner, this._sessionKey(), String((this._routeState || {}).sessionId || '')];
+    const scopeKey = JSON.stringify(scope);
+    if (this._routeActionsScope !== scopeKey) {
+      this._routeActionsScope = scopeKey;
+      // 非登录预渲染没有持久账号身份；真实写仍由服务端拒绝。
+      this._routeActions = owner ? scopedRouteActionStore(scope, wx) : createRouteActionStore();
+    }
+    return this._routeActions;
+  },
   _routeWritePayload(kind, nodeId, payload) {
-    if (!this._routeActions) this._routeActions = createRouteActionStore();
-    return Object.assign({}, this._sessionParams(), payload || {}, this._routeActions.context(kind, nodeId, this._routeState));
+    const owner = this._boundPlayOwner();
+    this._ensureRouteActionStore();
+    const basic = ['answer', 'arrive', 'checkin', 'photo', 'puzzleReveal', 'sensor', 'preference'].includes(kind);
+    if (!basic && !this._otherRouteActions) this._otherRouteActions = createRouteActionStore();
+    const store = basic ? this._routeActions : this._otherRouteActions;
+    const body = store.payload(kind, nodeId, this._routeState, Object.assign({}, this._sessionParams(), { nodeId }, payload || {}));
+    const sessionKey = this._sessionKey(), runtime = String((this._routeState || {}).sessionId || '');
+    Object.defineProperty(body, '_intentOwner', { value: owner });
+    Object.defineProperty(body, '_intentCurrent', { value: () => this._isPlayAccountCurrent()
+      && sessionKey === this._sessionKey() && runtime === String((this._routeState || {}).sessionId || '') });
+    Object.defineProperty(body, '_expectedSessionId', { value: String((this._routeState || {}).sessionId || '') });
+    return body;
   },
   _withThoughtSync(write, isCurrent) {
     const current = () => typeof isCurrent !== 'function' || isCurrent();
@@ -678,7 +776,25 @@ Page({
     });
   },
   _resolveRouteAction(kind, nodeId) {
-    if (this._routeActions) this._routeActions.resolve(kind, nodeId);
+    const basic = ['answer', 'arrive', 'checkin', 'photo', 'puzzleReveal', 'sensor', 'preference'].includes(kind);
+    const store = basic ? this._routeActions : this._otherRouteActions;
+    if (store) store.resolve(kind, nodeId);
+  },
+  _sendBasicRouteIntent(url, payload) {
+    if (!this._isPlayAccountCurrent()) return Promise.resolve({ obsolete: true });
+    if (url === '/api/play/answer') return req('/api/play/answer', 'POST', payload);
+    if (url === '/api/play/checkin') return req('/api/play/checkin', 'POST', payload);
+    if (url === '/api/play/arrive') return req('/api/play/arrive', 'POST', payload);
+    if (url === '/api/play/photo') return req('/api/play/photo', 'POST', payload);
+    if (url === '/api/play/puzzle/reveal') return req('/api/play/puzzle/reveal', 'POST', payload);
+    if (url === '/api/play/sensor/result') return req('/api/play/sensor/result', 'POST', payload);
+    if (/^\/api\/play\/preference\/[1-9][0-9]*\/submit$/.test(url)) return req('/api/play/preference/' + payload.nodeId + '/submit', 'POST', payload, { 'content-type': 'application/json' });
+    return Promise.resolve({ code: 500, msg: '无法确认本次操作，请重新进入' });
+  },
+  _readBasicRouteIntent(kind, nodeId) {
+    if (!this._isPlayAccountCurrent()) return Promise.resolve({ obsolete: true });
+    const body = this._routeWritePayload(kind, nodeId, { nodeId });
+    return req('/api/play/action-receipt', 'GET', { activityId: body.activityId, topicId: body.topicId, nodeId: body.nodeId, routeActionId: body.routeActionId }, undefined, true);
   },
   _routeNoticeForState(routeState) {
     const state = normalizeRouteState(routeState);
@@ -846,6 +962,8 @@ Page({
   },
 
   onUnload() {
+    this.suspendOrientLifecycle();
+    this.setData({ arrivalGuard: null });
     this._playDisposed = true;
     this._leadArrivalEpoch = (this._leadArrivalEpoch || 0) + 1; this._leadArriving = false;
     this._themeRecordsDisposed = true;
@@ -891,6 +1009,8 @@ Page({
   // 2026-08-20 并 master:开卡包的三个 timeout 与定位无关,该清照清;
   //    只把 master 那侧的 _watching=false / offLocationChange / stopLocationUpdate 三句拿掉。
   onHide() {
+    this.suspendOrientLifecycle();
+    this.setData({ arrivalGuard: null });
     this._leadArrivalEpoch = (this._leadArrivalEpoch || 0) + 1; this._leadArriving = false;
     this._playLoadEpoch = (this._playLoadEpoch || 0) + 1;
     this._playReloadOnShow = true;
@@ -3225,13 +3345,30 @@ Page({
     const sequence = this._boardReadSequence = (this._boardReadSequence || 0) + 1;
     const current = () => this._isPlayAccountCurrent() && owner === this._playOwner
       && sequence === this._boardReadSequence && this.data.board.show
-      && sessionKey === this._sessionKey();
+      && sessionKey === this._sessionKey()
+      && originalSessionId === precisePlayId((this._routeState || {}).sessionId);
     this.setData({ board: { show: true, loading: true, list: [], me: null, error: '' } });
-    req('/api/play/leaderboard', 'GET', params).then((res) => {
+    const originalSessionId = precisePlayId((this._routeState || {}).sessionId);
+    const orientBoard = this.data.mode === 1 && !!originalSessionId;
+    let usingOrientBoard = orientBoard;
+    const loadBoard = orientBoard
+      ? req('/api/orient/scoring/session/' + originalSessionId + '/leaderboard', 'GET', {}, undefined, true).then(res => {
+        // Only an explicit feature/applicability refusal allows the legacy board. Network/permission failures do not.
+        if (current() && ['ORIENT_SCORING_DISABLED', 'ORIENT_SCORING_NOT_APPLICABLE'].includes(res.errorCode || res.err)) {
+          usingOrientBoard = false;
+          return req('/api/play/leaderboard', 'GET', params);
+        }
+        return res;
+      }) : req('/api/play/leaderboard', 'GET', params);
+    loadBoard.then((res) => {
       if (!current()) return;
       if (res.code == 200 || res.code == '200') {
         const d = res.data || {};
-        this.setData({ board: { show: true, loading: false, list: d.list || [], me: d.me || null, error: '' } });
+        const view = playBoardView.project(d);
+        if (!view || usingOrientBoard && (!['SCORE', 'ROUTE'].includes(d.mode) || precisePlayId(d.sessionId) !== originalSessionId)) {
+          this.setData({ 'board.loading': false, 'board.error': '榜单结果不完整，请重新读取本局榜单' }); return;
+        }
+        this.setData({ board: { show: true, loading: false, ...view, error: '' } });
       } else {
         // 失败 ≠ 空:不落 error 的话,WXML 会拿空 list 显示「还没人上榜」——把网络失败说成事实。
         this.setData({ 'board.loading': false, 'board.error': (res && res.msg) || '榜单加载失败' });
@@ -5181,7 +5318,7 @@ Page({
   },
   _beginRouteWriteContext(channel) {
     // 先建好路线动作存储:否则首写时 _routeWritePayload 才懒建,刚捕获的 routeActions 立刻失配。
-    if (!this._routeActions) this._routeActions = createRouteActionStore();
+    this._ensureRouteActionStore();
     const context = { channel, owner: this._boundPlayOwner(), sessionKey: this._sessionKey(),
       routeSessionId: String((this._routeState || {}).sessionId || ''), routeActions: this._routeActions };
     this[channel + 'Intent'] = context;
@@ -5199,6 +5336,63 @@ Page({
     this[context.channel + 'InFlight'] = false;
   },
 
+  _ensureGuardAppeal() {
+    const owner = this._boundPlayOwner(), session = this._sessionKey();
+    const scope = owner + ':' + session;
+    if (!this._guardAppeal || this._guardAppealScope !== scope) {
+      this._guardAppealScope = scope;
+      this._guardAppeal = guardAppeal.create({ storage: wx, owner, session,
+        current: () => this._isPlayAccountCurrent() && this._sessionKey() === session && this._guardAppealScope === scope,
+        send: (url, method, body) => req(url, method, body, { 'content-type': 'application/json' }, true),
+        changed: view => this.setData({ guardAppealView: view }), keyFactory: uuid4 });
+    }
+    return this._guardAppeal;
+  },
+  restoreGuardAppeal() {
+    if (!this._isPlayAccountCurrent() || this.data.isPreview || this.data.isMock || !(this.data.activityId || this.data.topicId)) return;
+    try {
+      const flow = this._ensureGuardAppeal(); this.setData({ guardAppealView: flow.view() });
+      if (flow.view()) return flow.read();
+    } catch (error) { this.diegetic(error.message); }
+  },
+  readGuardAppeal() { return this.restoreGuardAppeal(); },
+  async submitGuardAppeal() {
+    if (!this._isPlayAccountCurrent()) return;
+    const flow = this._ensureGuardAppeal(); await flow.read();
+    const view = flow.view();
+    if (!this._isPlayAccountCurrent() || !view || view.command || !view.eligibility || !view.eligibility.canSubmit) return;
+    const session = this._sessionKey();
+    wx.showModal({ title: '原局守卫申诉', editable: true, placeholderText: '请填写申诉理由（最多500字）',
+      content: '成立后仍需重新现场核验，不直接放行或补发奖励。',
+      success: async result => {
+        if (!result.confirm || !this._isPlayAccountCurrent() || session !== this._sessionKey()) return;
+        try { await flow.submit(result.content); } catch (error) { if (this._isPlayAccountCurrent()) this.diegetic(error.message); }
+      } });
+  },
+  async reverifyGuardArrival() {
+    if (!this._isPlayAccountCurrent() || this._themeHidden) return;
+    const flow = this._ensureGuardAppeal(); await flow.read();
+    if (!this._isPlayAccountCurrent() || this._themeHidden) return;
+    const view = flow.view(), session = this._sessionKey();
+    const run = String((this._routeState || {}).sessionId || '');
+    if (!view || !view.result || !view.result.canReverify || run !== view.reference.routeSessionId) {
+      this.diegetic('原局当前不可重新核验，可继续查询申诉结果'); return;
+    }
+    const live = () => this._isPlayAccountCurrent() && !this._themeHidden && this._sessionKey() === session
+      && String((this._routeState || {}).sessionId || '') === run;
+    cyModal.show({ title: '重新现场核验', content: '仅本次获取当前位置；仍执行原现场条件和速度距离守卫，不补发奖励。',
+      success: result => {
+        if (!result.confirm || !live()) return;
+        wx.getLocation({ type: 'gcj02', isHighAccuracy: true,
+          success: loc => {
+            if (!live()) return;
+            if (!Number.isFinite(loc.latitude) || !Number.isFinite(loc.longitude)) { this.diegetic('定位无效，未提交'); return; }
+            this._loc = { latitude: loc.latitude, longitude: loc.longitude, accuracy: loc.accuracy };
+            this.arrive(view.reference.nodeId, 'guard-reverify');
+          }, fail: () => { if (live()) this.diegetic('未取得现场定位，未提交'); } });
+      } });
+  },
+
   arrive(nodeId, via) {
     if (!this._isPlayAccountCurrent()) return;
     if (this.data.isPreview || this.data.isMock) { this.onComplete(nodeId, {}); return; }
@@ -5206,17 +5400,21 @@ Page({
     const that = this;
     const loc = this._loc || {};
     const context = this._beginRouteWriteContext('_arrivalWrite');
+    let arrivalRequestId = null;
     const isCurrent = () => this._isRouteWriteContextCurrent(context);
     // 完成请求在伏笔/步数同步之后才生成,带上同步后的路线版本。
     this._withThoughtSync(() => {
       if (!isCurrent()) return Promise.resolve({ obsolete: true });
-      return req('/api/play/arrive', 'POST', this._routeWritePayload('arrive', nodeId, { nodeId, longitude: loc.longitude, latitude: loc.latitude, accuracy: playAccuracy.accuracyOf(loc) }));
+      const payload = this._routeWritePayload('arrive', nodeId, { nodeId, longitude: loc.longitude, latitude: loc.latitude, accuracy: playAccuracy.accuracyOf(loc) });
+      arrivalRequestId = payload.routeActionId;
+      return req('/api/play/arrive', 'POST', payload);
     }, isCurrent)
       .then((r) => {
         const current = isCurrent(); that._finishRouteWriteContext(context);
         if (!current || (r && r.obsolete)) return;
         if (r.code == 200 || r.code == '200') {
           that._resolveRouteAction('arrive', nodeId);
+          that.setData({ arrivalGuard: null });
           if (that.data.mode === 2) { that.onShopDayArrived(nodeId, r.data); return; }
           that.onComplete(nodeId, r.data);
         }
@@ -5225,6 +5423,11 @@ Page({
         else if (r.netFail) that.recordArrivalNetworkFailure('打卡请求没有送达', { type: 'arrive', nodeId, via });
         else {
           that._resolveRouteAction('arrive', nodeId);
+          const guard = arrivalGuardView.project(r, nodeId, arrivalRequestId);
+          that.setData({ arrivalGuard: guard });
+          if (guard && guard.appealable && guard.appealBizType === 'play_arrive_guard') {
+            try { that._ensureGuardAppeal().reference(guard); } catch (error) { that.diegetic(error.message); }
+          }
           if (playAccuracy.isLowAccuracyMsg(r.msg)) that.setData({ gpsLowAcc: true, gpsHint: playAccuracy.LOW_ACCURACY_HINT });
           that.diegetic(r.msg || '还没到这一站附近');
           if (that._hasGenericProofFlow()) return that._readGenericProof(nodeId);
@@ -5327,13 +5530,13 @@ Page({
   recordGameHttpUnknown(message, nodeId) {
     this._gameWriteUnknown = true;
     this._gameWriteUnknownMessage = (message ? message + '；' : '') + '提交结果待确认，请重新进入后查看，暂请勿重复提交';
-    this._lastGameAttempt = null;
+    // UNKNOWN 保留原局、动作和输入，供原号恢复使用；写入口继续冻结。
     this.setData({ gWrong: false, gNetErr: this._gameWriteUnknownMessage, gNetRetryable: false, gWriteUnknown: true });
     if (this._hasGenericProofFlow()) return this._readGenericProof(nodeId || this.data.game.nodeId, '', 'game');
   },
   clearGameNetworkError() {
-    this._lastGameAttempt = null;
     const unknown = !!this._gameWriteUnknown;
+    if (!unknown) this._lastGameAttempt = null;
     if (this.data.gNetErr || this.data.gNetRetryable || this.data.gWriteUnknown !== unknown) {
       this.setData({
         gNetErr: unknown ? this._gameWriteUnknownMessage : '',
@@ -5343,14 +5546,14 @@ Page({
       });
     }
   },
-  /** 显式重试沿用原请求体(同一 routeActionId 幂等),只把路线版本换成同步后的当前值;首发请求体本就在同步后生成。 */
+  /** 同号恢复保持完整原请求体，包括原版本；冲突后的新意图必须重新确认。 */
   _retriedRouteWriteBody(payload, retried) {
-    return retried ? Object.assign({}, payload, { expectedRouteVersion: normalizeRouteState(this._routeState).version }) : payload;
+    return payload;
   },
   _legacyGameWritePayload(type, kind, nodeId, extra, retryAttempt) {
     // 显式重试在同步等待期间就会结束;调用方须在发起时捕获重试意图并传进来。
     const retry = retryAttempt === undefined ? this._retryGameAttempt : retryAttempt;
-    if (retry && retry.type === type && retry.payload) return Object.assign({}, retry.payload);
+    if (retry && retry.type === type && retry.payload) return retry.payload;
     return this._routeWritePayload(kind, nodeId, extra);
   },
   retryGameSubmission() {
@@ -6987,6 +7190,7 @@ Page({
       const kit = pickJourneyCheck(r.data);
       if (!kit) return;
       this.setData({ journeyCheck: Object.assign({ show: true, nodeId: node.nodeId, receipt: null }, kit) });
+      this._restoreJourneyCheck();
       if (kit.present === 'inline' && !kit.blocked) {
         this.setData({ 'sheet.show': false });
         this.openChapterFull();
@@ -6994,78 +7198,22 @@ Page({
     }).catch(() => {});
   },
 
-  _releaseJourneyCheckIntent(intent) {
-    const pending = this._checkPendingByKey;
-    if (intent && pending && pending[intent.key] === intent) delete pending[intent.key];
-  },
-
   _isJourneyCheckIntentCurrent(intent) {
     const kit = this.data.journeyCheck || {};
     return !!intent && this._isPlayAccountCurrent() && this._checkWriteIntent === intent
       && intent.loadEpoch === this._playLoadEpoch && kit.show
-      && intent.payload.topicId === this.data.topicId
-      && intent.payload.activityId === (this.data.activityId || 0)
+      && String(intent.payload.topicId) === String(this.data.topicId)
+      && String(intent.payload.activityId) === String(this.data.activityId || 0)
       && String(intent.payload.nodeId) === String(kit.nodeId)
-      && intent.payload.checkId === kit.checkId;
-  },
-
-  /** 上局已结算过时只回读原检定；旧回包不得写入新检定。 */
-  _recoverSettledCheck(payload, intent) {
-    if (!this._isJourneyCheckIntentCurrent(intent)) return;
-    req('/api/play/check/settle', 'POST', payload).then((r) => {
-      this._releaseJourneyCheckIntent(intent);
-      if (!this._isJourneyCheckIntentCurrent(intent)) return;
-      this._checkActing = false;
-      this._checkWriteIntent = null;
-      if ((r.code == 200 || r.code == '200') && r.data) {
-        this.setData({ 'journeyCheck.receipt': checkReceiptView(r.data) });
-        return;
-      }
-      cyToast('这次检定已经结算过了');
-    });
+      && intent.payload.checkId === kit.checkId
+      && String(intent.payload.sessionId) === String((this._routeState || {}).sessionId);
   },
 
   onJourneyCheckAction(e) {
     if (!this._isPlayAccountCurrent()) return;
     const action = (e.detail && e.detail.action) || '';
-    const kit = this.data.journeyCheck;
-    if (kit.r5) return this._r5CheckAction(action);
-    if (!kit.show || !kit.checkId || !['roll', 'reroll', 'settle'].includes(action)
-        || (this._checkActing && this._isJourneyCheckIntentCurrent(this._checkWriteIntent))) return;
-    const payload = { topicId: this.data.topicId, activityId: this.data.activityId || 0, nodeId: kit.nodeId, checkId: kit.checkId };
-    const key = JSON.stringify([this._boundPlayOwner(), payload.topicId, payload.activityId, payload.nodeId, payload.checkId]);
-    const pending = this._checkPendingByKey = this._checkPendingByKey || Object.create(null);
-    if (pending[key]) return;
-    const intent = this._checkWriteIntent = { payload, key, loadEpoch: this._playLoadEpoch };
-    pending[key] = intent;
-    this._checkActing = true;
-    // 保留三条字面URL和原操作；本地意图只用于回包归属，不是新的服务端请求身份。
-    if (action === 'roll') {
-      req('/api/play/check/roll', 'POST', payload).then((r) => this._afterCheck('roll', r, payload, intent));
-      return;
-    }
-    if (action === 'reroll') {
-      req('/api/play/check/reroll', 'POST', payload).then((r) => this._afterCheck('reroll', r, payload, intent));
-      return;
-    }
-    req('/api/play/check/settle', 'POST', payload).then((r) => this._afterCheck('settle', r, payload, intent));
-  },
-
-  /** 检定回包只能收尾发起它的意图；原幂等settle回读继续沿同一意图。 */
-  _afterCheck(action, r, payload, intent) {
-    if (!this._isJourneyCheckIntentCurrent(intent)) { this._releaseJourneyCheckIntent(intent); return; }
-    const res = r || {};
-    const ok = res.code == 200 || res.code == '200';
-    if (action === 'roll' && !ok && /已结算/.test(res.msg || '')) {
-      this._recoverSettledCheck(payload, intent);
-      return;
-    }
-    this._releaseJourneyCheckIntent(intent);
-    this._checkActing = false;
-    this._checkWriteIntent = null;
-    const FAIL = { roll: '掷骰没成功，再试一次', reroll: '重掷没成功，再试一次', settle: '结算没成功，再试一次' };
-    if (ok && res.data) { this.setData({ 'journeyCheck.receipt': checkReceiptView(res.data) }); return; }
-    cyToast(res.msg || FAIL[action] || '操作没成功，再试一次');
+    if (this.data.journeyCheck.r5) return this._r5CheckAction(action);
+    return this._legacyCheckAction(action);
   },
 
   /** 检定屏退出。结算前后都能关 —— 失败也推进是产品口径,这里不设任何通关闸。 */

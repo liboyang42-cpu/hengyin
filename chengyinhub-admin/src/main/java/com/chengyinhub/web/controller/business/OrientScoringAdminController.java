@@ -74,6 +74,25 @@ public class OrientScoringAdminController extends BaseController {
         return run(() -> orientScoringService.reverseEntry(id, reasonCode, getUserId(), idempotencyKey));
     }
 
+    @PreAuthorize("@ss.hasPermi('business:orientScoring:list')")
+    @GetMapping("/recoveries")
+    public AjaxResult recoveries(Integer status, Integer limit) {
+        return success(orientScoringService.listRecoveries(status, limit == null ? 50 : limit));
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:orientScoring:review')")
+    @Log(title = "历史计分人工核对", businessType = BusinessType.UPDATE)
+    @PostMapping("/recoveries/{id}/review")
+    public AjaxResult reviewRecovery(@PathVariable("id") Long id, String referenceId, String note) {
+        return run(() -> {
+            Long reference = referenceId == null || referenceId.isBlank() ? null : Convert.toLong(referenceId, null);
+            if (referenceId != null && !referenceId.isBlank() && (reference == null || reference <= 0)) {
+                throw new OrientScoringException(OrientScoringException.INVALID_ARGUMENT, "关联编号不合法");
+            }
+            return orientScoringService.reviewRecovery(id, reference, note, getUsername());
+        });
+    }
+
     private AjaxResult run(Supplier<Object> action) {
         try {
             return success(action.get());

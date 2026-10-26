@@ -19,6 +19,13 @@ public class UserInvoiceOrderLine {
     private String orderSource;
     @JsonSerialize(using = ToStringSerializer.class)
     private Long orderId;
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long issuerId;
+    private String issuerName;
+    public Long getIssuerId() { return issuerId; }
+    public void setIssuerId(Long v) { issuerId=v; }
+    public String getIssuerName() { return issuerName; }
+    public void setIssuerName(String v) { issuerName=v; }
     private BigDecimal amount;
     private Integer activeKey;
     private Date createTime;

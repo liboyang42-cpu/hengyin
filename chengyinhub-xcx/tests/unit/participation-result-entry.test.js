@@ -168,3 +168,44 @@ test('hide/show after account or token switch requires fresh ownership readback'
     assert.deepEqual(h.events, [['close'], ['navigate', '/subpackageMember/orient-score/index?topicId=901&activityId=0']]);
   }
 });
+
+test('F3 entry preserves exact owned registration ID from both existing participation hosts', () => {
+  const id = '9223372036854775807';
+  for (const shell of [false, true]) for (const extra of [{ purchaseKind: 3 }, { cmsTopic: { id: '901', productType: 2 } }]) {
+    const h = mount(shell); h.boot(id); h.respond(topic({ id, ...extra }));
+    assert.equal(h.component.data.bundleRegistrationId, id);
+    h.click('自由探索权益');
+    assert.deepEqual(h.events, [['close'], ['navigate', '/subpackageMember/free-explore/index?registrationId=' + id]]);
+    h.component.goBundle(); assert.equal(h.events.length, 2);
+    assert.equal(h.requests.length, 1);
+  }
+});
+
+test('F3 entry rejects foreign, non-F3, activity, stale and mismatched registrations', () => {
+  for (const info of [topic(), activity({ purchaseKind: 3 }), topic({ purchaseKind: 3, memberId: '72' }),
+    topic({ purchaseKind: 3, id: '82' }), topic({ purchaseKind: 3, id: 9007199254740992 })]) {
+    const h = mount(); h.boot(); h.respond(info);
+    assert.equal(h.component.data.bundleRegistrationId, ''); h.component.goBundle(); assert.deepEqual(h.events, []);
+  }
+  for (const stop of ['hide', 'detach']) {
+    const h = mount(); h.boot(); h.respond(topic({ purchaseKind: 3 })); h[stop]();
+    h.component.goBundle(); assert.deepEqual(h.events, []);
+  }
+  const h = mount(); h.boot(); h.respond(topic({ purchaseKind: 3 })); h.account('72');
+  h.component.goBundle(); assert.deepEqual(h.events, []); assert.equal(h.component.data.bundleRegistrationId, '');
+  const closing = mount(); closing.boot(); closing.respond(topic({ purchaseKind: 3 }));
+  closing.onClose(() => closing.account('72')); closing.click('自由探索权益'); assert.deepEqual(closing.events, [['close']]);
+});
+
+test('integration registers delivered routes and mounts merchant desk with actual access and no redemption adapter', () => {
+  const config = JSON.parse(read('app.json'));
+  const member = config.subPackages.find(item => item.root === 'subpackageMember');
+  assert.equal(member.pages.filter(item => item === 'free-explore/index').length, 1);
+  for (const ext of ['js', 'json', 'wxml', 'wxss']) assert.ok(read('subpackageMember/free-explore/index.' + ext));
+  const merchant = JSON.parse(read('pages/merchant/index/index.json'));
+  assert.equal(merchant.usingComponents['cy-merchant-desk'], '/pages/merchant/components/desk/index');
+  const tag = read('pages/merchant/index/index.wxml').match(/<cy-merchant-desk\b[^>]*\/>/)[0];
+  assert.match(tag, /wx:if="\{\{merchantAccess.active\}\}"/);
+  assert.match(tag, /access="\{\{merchantAccess\}\}"/);
+  assert.doesNotMatch(tag, /redemption-ready|redemption-result|redeemrequest/);
+});

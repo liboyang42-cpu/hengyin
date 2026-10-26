@@ -20,6 +20,15 @@ public class JourneyRules {
     private int schemaVersion = SCHEMA_VERSION;
     private boolean checkEnabled;
     private boolean stateEnabled;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private com.fasterxml.jackson.databind.node.ObjectNode attributeBinding;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private com.fasterxml.jackson.databind.node.ObjectNode attributeDefinition;
+    public com.fasterxml.jackson.databind.node.ObjectNode getAttributeBinding() { return attributeBinding; }
+    public void setAttributeBinding(com.fasterxml.jackson.databind.node.ObjectNode value) { attributeBinding = value; }
+    public com.fasterxml.jackson.databind.node.ObjectNode getAttributeDefinition() { return attributeDefinition; }
+    public void setAttributeDefinition(com.fasterxml.jackson.databind.node.ObjectNode value) { attributeDefinition = value; }
+
     private com.fasterxml.jackson.databind.node.ArrayNode attributes = MAPPER.createArrayNode();
     private com.fasterxml.jackson.databind.node.ArrayNode statLinks = MAPPER.createArrayNode();
 

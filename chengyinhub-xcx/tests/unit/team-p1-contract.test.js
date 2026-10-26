@@ -8,6 +8,7 @@ const test = require('node:test')
 const vm = require('../helpers/ui-sandbox-vm.js') // node:vm + 沙箱里装真 utils/toast.js·loading.js
 
 const ROOT = path.resolve(__dirname, '../..')
+const { platform } = require('./helpers/team-event-platform')
 const read = (relative) => fs.readFileSync(path.join(ROOT, relative), 'utf8')
 
 const TEAM_COMPLIANCE_FILES = [
@@ -104,10 +105,11 @@ function loadTeamPage(relative) {
       sendRequest(request) { requests.push(request) },
       getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
       // PR10 F-W1-12:本文件的读失败用例都是「已登录账号」;无会话的登录引导见 pr10-review-ui-fixes。
-      getUserID: () => '1001',
+      getUserID: () => '1001', getAuthorization: () => 'test-token',
     }),
     Page(value) { definition = value },
     wx: {
+      ...platform(),
       showModal() {},
       showToast(options) { toasts.push(options) },
       navigateBack(options) { backs.push(options || {}) },
@@ -357,7 +359,7 @@ test('队伍详情缺参可返回；刷新失败保留最后一次确认的队�
   assert.equal(stale.page.data.team.title, '夜行小队')
 })
 
-test('邀请缺参只返回来源页；加入失败在按钮附近留下重试状态', () => {
+test('邀请缺参只返回来源页；加入失败保留原请求恢复状态', async () => {
   const missing = loadTeamPage('pages/team/join/index.js')
   missing.page.onLoad({})
   assert.equal(missing.page.data.errorKind, 'missing-param')
@@ -367,17 +369,19 @@ test('邀请缺参只返回来源页；加入失败在按钮附近留下重试�
   assert.equal(missing.requests.length, 0)
 
   const join = loadTeamPage('pages/team/join/index.js')
-  join.page.inviteCode = 'safe-code'
-  join.page.data.team = { id: 31, status: 0 }
-  join.page.load()
+  join.page.onLoad({ code: 'safe-code' })
   join.page.load()
   assert.equal(join.requests.length, 1, '邀请重试同步连点不能发出并发请求')
+  join.requests[0].success({ code: 200, data: { team: { id: 31, status: 0 } } })
   join.requests.length = 0
-  join.page.join()
+  await join.page.join()
   assert.equal(join.page.data.joining, true)
   join.requests[0].fail()
   assert.equal(join.page.data.joining, false)
-  assert.equal(join.page.data.joinError, '网络没连上，请检查后重试')
+  assert.equal(join.page.data.commandRecovery.state, 'UNKNOWN')
+  const original = join.requests[0].data
+  join.page.retryCommand()
+  assert.equal(join.requests[1].data, original)
 })
 
 test('负控:退回纯文字 loading 或移除加入局部错误时，状态契约必须判红', () => {

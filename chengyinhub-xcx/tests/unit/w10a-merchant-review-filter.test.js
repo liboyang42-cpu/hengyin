@@ -20,6 +20,7 @@ function harness(mode = 'manage') {
   vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'pages/merchant/reviews/index.js'), 'utf8'), {
     Page(value) { definition = value; }, getApp: () => app,
     require(name) {
+      if (name === './reply-recovery') return require('../../pages/merchant/reviews/reply-recovery.js');
       if (name.includes('view-model')) return model;
       if (name.includes('ensure-session')) return require('../../pages/merchant/utils/session/ensure-session.js');
       if (name.includes('merchant-theme')) return { merchantPageShow() {}, merchantPageRestore() {} };
@@ -86,7 +87,7 @@ test('管理态切筛选:带 filter 重读第一页,列表与计数都用服务�
 
   // 服务端说「平台复审中」有这两条,即便它们评分 5、无图,也照单显示 —— 筛选口径归服务端。
   h.requests[1].success(manageResponse('platform', [{ id: 8, underPlatformReview: true }, { id: 9, status: 'PENDING_REVIEW' }]));
-  assert.deepEqual(h.page.data.filteredItems.map((item) => item.id), [8, 9]);
+  assert.deepEqual(h.page.data.filteredItems.map((item) => item.id), ['8', '9']);
   assert.equal(h.page.data.filterLoading, false);
   assert.equal(h.page.data.total, 40, '页头总数是全店口径，不是筛选后条数');
 });
@@ -115,7 +116,7 @@ test('筛选快速切换:先发后到的旧筛选响应被丢弃', () => {
   h.requests[2].success(manageResponse('photo', [{ id: 5, imageUrls: ['https://img/a.jpg'] }]));
   h.requests[1].success(manageResponse('low', [{ id: 4, rating: 1 }]));
   assert.equal(h.page.data.activeFilter, 'photo');
-  assert.deepEqual(h.page.data.filteredItems.map((item) => item.id), [5]);
+  assert.deepEqual(h.page.data.filteredItems.map((item) => item.id), ['5']);
 });
 
 test('公开态仍只筛已加载评价,不发管理接口,也不接受管理专属筛选', () => {
@@ -128,7 +129,7 @@ test('公开态仍只筛已加载评价,不发管理接口,也不接受管理专
     ] } });
   tap(h.page, 'low');
   assert.equal(h.requests.length, 1);
-  assert.deepEqual(h.page.data.filteredItems.map((item) => item.id), [1]);
+  assert.deepEqual(h.page.data.filteredItems.map((item) => item.id), ['1']);
   tap(h.page, 'platform');
   assert.equal(h.page.data.activeFilter, 'low');
 });

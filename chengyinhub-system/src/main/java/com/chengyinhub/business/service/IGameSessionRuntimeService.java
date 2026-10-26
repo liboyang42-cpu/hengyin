@@ -42,4 +42,12 @@ public interface IGameSessionRuntimeService {
     GameCommandReceiptView command(GameActorContext actor, GameSessionCommand command);
     GameCommandReceiptView recordFailure(GameActorContext actor, GameSessionCommand command, GameSessionException failure);
     GameCommandReceiptView receipt(GameActorContext actor, Long activityId, String requestId);
+
+    com.chengyinhub.business.domain.route.TopicRouteState querySharedRouteState(Long memberId, Long topicId, Long activityId);
+    com.fasterxml.jackson.databind.JsonNode querySharedRouteSnapshot(Long memberId, Long topicId, Long activityId, Long nodeId);
+
+    boolean isOriginalSharedRouteEligible(Long memberId, Long topicId, Long activityId, Long nodeId,
+                                          Long sessionId, String runtimeInstance, Integer authorityEpoch);
+    boolean isOriginalSharedRouteEligibleForUpdate(Long memberId, Long topicId, Long activityId, Long nodeId,
+                                                   Long sessionId, String runtimeInstance, Integer authorityEpoch);
 }

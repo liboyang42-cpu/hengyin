@@ -1,3 +1,4 @@
+const templateIdOf = require('./template-adoption.js').id;
 // 主题云端草稿:保存草稿 → 经 edit-detail 回读确认 → (可选)发布这份已保存的草稿。
 //
 // 三种「保存」别混:
@@ -16,11 +17,13 @@
 //           hasChanges()(可选,仅保存草稿):回读确认后若返回 true,改报 onFail({ stage: 'readback', localChanges: true, detail })。
 //
 // 结果不确定(网络中断/回包丢失)与确定失败要分开:
-//  - 首次建草稿丢回包:页面用同一个意图键重试,服务端认出已建的那份并回 recovered;这里随即用最新内容再存一次;
+//  - 首次建草稿丢回包:页面保留原意图键与输入;recovered 后先回读原保存,再由页面处理后续新编辑;
 //  - 发布丢回包,或重试时服务端说「不是草稿」:先回读真实状态,已发布就按已发布展示,不再说「没发布出去」。
 
 const templateBinding = require('./template-binding.js');
 const initial = require('./story-initial-state.js');
+const routeGraph = require('./topic-route-graph.js');
+const vocabulary = require('./story-vocabulary.js');
 const { PRESETS, LEGACY_ALIAS, normalizeAtmosphere } = require('../../../../utils/chapter-atmosphere.js');
 
 function topicIdOf(data) {
@@ -83,7 +86,7 @@ function authoredConfig(cfg, pos) {
   }).filter(Boolean).sort((a, b) => a.index - b.index);
   const bindings = Object.keys(cfg.templateBindings || {}).map((key) => {
     const value = cfg.templateBindings[key] || {};
-    return at(key) + ':' + Number(value.templateId) + ':' + sorted(value.values) + sorted(value.items);
+    return at(key) + ':' + templateIdOf(value.templateId) + ':' + sorted(value.values) + sorted(value.items);
   }).sort();
   const game = cfg.gameplayRuntime || {};
   return {
@@ -105,6 +108,29 @@ function initialOf(raw) {
     const pick = s => (s && s.enabled ? [s.init, s.max] : []);
     return JSON.stringify([pick(rules.hp), pick(rules.luck), (rules.attributes || []).map(a => [a.key, a.initial, a.max])]);
   } catch (error) { return 'invalid'; }
+}
+
+// 只允许服务端补字段；作者明确写下的规则不能在回读时丢失。
+// 初始状态的缺省兼容仍由 initialOf 处理，其他规则不能缩减成 hp/luck 投影。
+function authoredRulesMatch(sent, stored) {
+  const parse = raw => {
+    const value = typeof raw === 'string' ? JSON.parse(raw.trim() || '{}') : (raw || {});
+    if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('invalid rules');
+    return value;
+  };
+  const matches = (want, have) => {
+    if (Array.isArray(want)) return Array.isArray(have) && want.length === have.length
+      && want.every((row, index) => matches(row, have[index]));
+    if (want && typeof want === 'object') return !!have && typeof have === 'object' && !Array.isArray(have)
+      && Object.keys(want).every(key => matches(want[key], have[key]));
+    return typeof want === 'string' && typeof have === 'string' ? want.trim() === have.trim() : want === have;
+  };
+  try {
+    const want = parse(sent), have = parse(stored);
+    // 新旧主题缺省均 true；显式 false 必须在云端仍为 false。
+    if (have.natAuto == null) have.natAuto = true;
+    return matches(want, have);
+  } catch (error) { return false; }
 }
 
 // 只核对当前写接口实际持久的票字段；totalStock 写入 totalInventory，票号与顺序由服务端决定。
@@ -133,6 +159,34 @@ function ticketMatches(before, after, productType) {
 function stable(value) {
   return JSON.stringify(value, (key, row) => row && typeof row === 'object' && !Array.isArray(row)
     ? Object.keys(row).sort().reduce((out, field) => { out[field] = row[field]; return out; }, {}) : row);
+}
+
+function authoredRoute(raw, positions) {
+  const graph = typeof raw === 'string' ? JSON.parse(raw) : JSON.parse(JSON.stringify(raw));
+  if (!graph || typeof graph !== 'object' || Array.isArray(graph)) throw Error('invalid route');
+  const at = id => {
+    const key = String(id == null ? '' : id);
+    const position = positions.get(key) || positions.get('client:' + key);
+    if (position === undefined) throw Error('unknown route node');
+    return position;
+  };
+  graph.startNodeId = at(graph.startNodeId || graph.startNodeKey);
+  graph.terminalNodeIds = (graph.terminalNodeIds || graph.terminalNodeKeys || []).map(at);
+  (graph.edges || []).forEach(edge => {
+    edge.fromNodeId = at(edge.fromNodeId || edge.fromNodeKey);
+    edge.toNodeId = at(edge.toNodeId || edge.toNodeKey);
+    edge.conditions = (edge.conditions || []).map(c => vocabulary.mapNodes(c, row => {
+      const result = Object.assign({}, row, { nodeId: at(row.nodeId || row.nodeKey) });
+      delete result.nodeKey;
+      return result;
+    }));
+  });
+  (graph.fallbacks || []).forEach(row => {
+    row.fromNodeId = at(row.fromNodeId || row.fromNodeKey);
+    row.toNodeId = at(row.toNodeId || row.toNodeKey);
+  });
+  (graph.nodeRequirements || []).forEach(row => { row.nodeId = at(row.nodeId || row.nodeKey); delete row.nodeKey; });
+  return stable(routeGraph.normalizeGraph(graph).graph);
 }
 
 // 对照 ChapterFlowCompiler.materializeBlocks；只忽略服务端补出的 key，不能忽略正文、条件或节点引用。
@@ -180,6 +234,13 @@ function storedBlock(block, nodes, submitted, keepKey) {
 }
 
 function savedContentIssue(sent, detail) {
+  const topicFields = { subtitle: '副标题', description: '说明', imgUrl: '主封面', imgArr: '多图封面',
+    startDate: '开始时间', endDate: '结束时间', categoryIds: '分类' };
+  for (const field of Object.keys(topicFields)) {
+    if (sent[field] === undefined) continue;
+    const value = raw => raw == null ? '' : String(raw);
+    if (value(sent[field]) !== value(detail.topic[field])) return '云端保存的' + topicFields[field] + '与本机不一致';
+  }
   if (sent.collaboratorIds !== undefined) {
     const ids = list => Array.isArray(list) && list.every(id => topicIdOf(id))
       ? list.map(id => String(Number(id))).sort() : null;
@@ -239,6 +300,11 @@ function savedContentIssue(sent, detail) {
 function readbackIssue(sent, detail, expectDraft) {
   if (!detail || !detail.topic) return '没能取回云端保存的主题';
   if (expectDraft && detail.isDraft !== true) return '云端保存的主题不是草稿';
+  if (expectDraft && sent && Object.prototype.hasOwnProperty.call(sent, 'configVersion')) {
+    const version = topicIdOf(detail.topic.configVersion);
+    const previous = sent.configVersion === '' || sent.configVersion == null ? 0 : topicIdOf(sent.configVersion);
+    if (!version || version <= previous || (sent.configVersion && !previous)) return '云端保存的版本尚未确认';
+  }
   if (String(detail.topic.name || '') !== String((sent && sent.name) || '')) return '云端保存的主题名与本机不一致';
   const sentChapters = (sent && sent.chapters) || [];
   const got = detail.chapters;
@@ -254,11 +320,21 @@ function readbackIssue(sent, detail, expectDraft) {
     for (let ni = 0; ni < bn.length; ni++) {
       if (!(Number(bn[ni] && bn[ni].id) > 0)) return '云端保存的节点缺少编号';
       if (String(an[ni].name || '').trim() !== String(bn[ni].name || '').trim()) return '第' + (ci + 1) + '章节点顺序或名称与本机不一致';
-      if ((Number(an[ni].templateId) || 0) !== (Number(bn[ni].templateId) || 0)) return '第' + (ci + 1) + '章「' + (bn[ni].name || '') + '」的玩法与本机不一致';
+      if ((templateIdOf(an[ni].templateId) || 0) !== (templateIdOf(bn[ni].templateId) || 0)) return '第' + (ci + 1) + '章「' + (bn[ni].name || '') + '」的玩法与本机不一致';
     }
   }
   const contentIssue = savedContentIssue(sent || {}, detail);
   if (contentIssue) return contentIssue;
+  if (sent && Object.prototype.hasOwnProperty.call(sent, 'routeMode')) {
+    if (sent.routeMode !== (detail.topic.routeMode || 'LINEAR')) return '云端保存的路线模式与本机不一致';
+    if (sent.routeMode === 'BRANCH_GRAPH') {
+      try {
+        const want = authoredRoute(sent.routeGraphJson, positionsOf(sentChapters, 'nodes', templateBinding.nodeKey));
+        const have = authoredRoute(detail.topic.routeGraphJson, positionsOf(got, 'cmsTopicNodeList', node => String(node.id)));
+        if (want !== have) return '云端保存的路线条件、效果或节点配置与本机不一致';
+      } catch (error) { return '云端保存的路线配置无法确认'; }
+    }
+  }
   const sentConfig = parseConfig(sent && sent.themeRuntimeConfig);
   const gotConfig = parseConfig(detail.themeRuntimeConfig || detail.topic.themeRuntimeConfigJson);
   if (!sentConfig || !gotConfig) return '云端保存的玩法配置无法解析';
@@ -267,7 +343,12 @@ function readbackIssue(sent, detail, expectDraft) {
   for (const key of Object.keys(CONFIG_LABELS)) {
     if (JSON.stringify(want[key]) !== JSON.stringify(have[key])) return '云端保存的' + CONFIG_LABELS[key] + '与本机不一致';
   }
+  try {
+    require('./attribute-binding.js').frozenReadback(detail.journeyRules || detail.topic.journeyRulesJson,
+      detail.topic.configVersion, detail.topic.id);
+  } catch (invalid) { return invalid.message; }
   if (initialOf(sent && sent.journeyRules) !== initialOf(detail.journeyRules || detail.topic.journeyRulesJson)) return '云端保存的初始状态与本机不一致';
+  if (!authoredRulesMatch(sent && sent.journeyRules, detail.journeyRules || detail.topic.journeyRulesJson)) return '云端保存的旅程规则与本机不一致';
   return '';
 }
 
@@ -280,6 +361,7 @@ function createServerDraftSaver(deps) {
   let published = false;
   let destroyed = false;
   const current = () => !destroyed && (!deps.isCurrent || deps.isCurrent());
+  let unconfirmedVersionInfo = null;
   let unconfirmedPublish = 0; // 上次发布结果不确定的主题号:下次发布前先查真实状态,别对已发布主题再存草稿
 
   function run(payload, publish, handlers) {
@@ -305,19 +387,43 @@ function createServerDraftSaver(deps) {
     };
     const draftPayload = Object.assign({}, payload, { saveDraft: 1 });
 
+    const publicationMatches = (detail, expected) => {
+      if (!expected) return true; // Legacy callers without a versioned author command.
+      const version = expected.configVersion;
+      if (version == null || !/^[1-9][0-9]*$/.test(String(version))
+          || String(detail.topic.configVersion) !== String(version)) return false;
+      if (expected.registryVersion != null) {
+        try {
+          const rules = JSON.parse(detail.journeyRules || detail.topic.journeyRulesJson || '{}');
+          if (!rules.attributeBinding || rules.attributeBinding.registryVersion !== expected.registryVersion) return false;
+          require('./attribute-binding.js').frozenReadback(rules, version, detail.topic.id);
+        } catch (invalid) { return false; }
+      }
+      return true;
+    };
+    const expectedPublication = (savedDetail) => {
+      if (savedDetail && savedDetail.topic && savedDetail.topic.configVersion != null) {
+        const expected = { configVersion: savedDetail.topic.configVersion };
+        try {
+          const rules = JSON.parse(savedDetail.journeyRules || savedDetail.topic.journeyRulesJson || '{}');
+          if (rules.attributeBinding) expected.registryVersion = rules.attributeBinding.registryVersion;
+        } catch (invalid) { return {}; }
+        return expected;
+      }
+      return typeof deps.pendingPublication === 'function' ? (deps.pendingPublication() || {}) : unconfirmedVersionInfo;
+    };
+
     const reconcilePublish = (topicId, savedDetail, pub) => {
       // 发布结果不确定(丢回包),或重试时服务端说「不是草稿」:回读真实状态再说话
       request('readback', topicId, (back) => {
         if (!current()) return;
-        if (back && back.ok && matchingTopic(back.data, topicId) && back.data.isDraft === false) {
+        if (back && back.ok && matchingTopic(back.data, topicId) && back.data.isDraft === false
+            && publicationMatches(back.data, expectedPublication(savedDetail))) {
           published = true;
           finish(handlers.onSuccess, { topicId, detail: back.data, published: { recovered: true, status: (back.data.topic || {}).status }, localChanges: !!readbackIssue(payload, back.data, false) });
           return;
         }
-        if (back && back.ok && matchingTopic(back.data, topicId) && back.data.isDraft === true) {
-          finish(handlers.onFail, Object.assign({ stage: 'publish', topicId, detail: back.data }, pub || {}, { unknown: false }));
-          return;
-        }
+        // 仍是草稿只说明读取时尚未发布，不能排除原请求仍在执行。
         unconfirmedPublish = topicId;
         finish(handlers.onFail, Object.assign({ stage: 'publish', topicId, detail: savedDetail }, pub || {}, { unknown: true }));
       });
@@ -347,11 +453,30 @@ function createServerDraftSaver(deps) {
             finish(handlers.onFail, { stage: 'persist', topicId, msg: '本地草稿保存失败，尚未发起发布，请检查存储空间' });
             return;
           }
+          unconfirmedVersionInfo = expectedPublication(back.data);
           request('publish', topicId, (pub) => {
             if (!current()) return;
             if (pub && pub.ok && confirmedPublication(pub.data, topicId)) {
-              published = true;
-              finish(handlers.onSuccess, { topicId, detail: back.data, published: pub.data || {} });
+              if (back.data.topic.configVersion != null) {
+                const expected = expectedPublication(back.data);
+                request('readback', topicId, (confirmed) => {
+                  if (!current()) return;
+                  if (!confirmed || !confirmed.ok || !matchingTopic(confirmed.data, topicId)
+                      || confirmed.data.isDraft !== false || !publicationMatches(confirmed.data, expected)
+                      || readbackIssue(payload, confirmed.data, false)) {
+                    unconfirmedPublish = topicId;
+                    finish(handlers.onFail, { stage: 'publish', topicId, detail: back.data, unknown: true,
+                      msg: '发布已返回，原版本的发布状态尚未回读确认，请重试核对' });
+                    return;
+                  }
+                  published = true;
+                  finish(handlers.onSuccess, { topicId, detail: confirmed.data, published: Number(confirmed.data.topic.status) === 2
+                    ? { recovered: true, status: 2 } : pub.data });
+                });
+              } else {
+                published = true;
+                finish(handlers.onSuccess, { topicId, detail: back.data, published: pub.data || {} });
+              }
               return;
             }
             if (!pub || pub.ok || pub.networkError || /不是草稿/.test(String(pub.msg || ''))) { reconcilePublish(topicId, back.data, pub); return; }
@@ -360,10 +485,11 @@ function createServerDraftSaver(deps) {
         };
         // BL-185:发布前试检查(已存的这一版)。error 不发,只有 warn 由页面提示后决定;未注入就直接发布
         if (typeof deps.publishCheck !== 'function') { publishNow(); return; }
-        deps.publishCheck(topicId, (check) => {
+        request('publishCheck', topicId, (check) => {
           if (!current()) return;
-          if (check && check.ok === false) {
-            finish(handlers.onFail, { stage: 'publish', topicId, detail: back.data, msg: check.msg, unknown: false });
+          if (!check || check.ok !== true) {
+            finish(handlers.onFail, { stage: 'publish', topicId, detail: back.data,
+              msg: check && check.msg || '发布检查未完成，请重试', unknown: false });
             return;
           }
           publishNow();
@@ -376,34 +502,26 @@ function createServerDraftSaver(deps) {
       const topicId = res && res.ok ? topicIdOf(res.data) : 0;
       if (!topicId) {
         finish(handlers.onFail, Object.assign({ stage: 'save' }, res || {},
-          res && res.ok ? { msg: '保存结果缺少主题编号' } : {}, { unknown: !!(res && res.networkError) }));
+          res && res.ok ? { msg: '保存结果缺少主题编号' } : {}, { unknown: !res || !!(res.ok || res.networkError) }));
         return;
       }
       if (typeof handlers.onSaved === 'function') handlers.onSaved(topicId);
-      // 丢回包后的重试被服务端认出:那份草稿是上次的内容,随即用当前内容再存一次(此时已按主题号走 update)
-      if (res.data && res.data.recovered) {
-        request('save', draftPayload, (again) => {
-          if (!current()) return;
-          if (!again || !again.ok) {
-            finish(handlers.onFail, Object.assign({ stage: 'save', topicId }, again || {}, { unknown: !!(again && again.networkError) }));
-            return;
-          }
-          afterSaved(topicId);
-        });
-        return;
-      }
+      // recovered 也先核对冻结输入；后续新编辑由页面在正向回读之后另行保存。
       afterSaved(topicId);
     });
-    if (unconfirmedPublish) {
+    if (handlers.recoverSave && topicIdOf(handlers.recoveryTopicId)) {
+      afterSaved(topicIdOf(handlers.recoveryTopicId));
+    } else if (unconfirmedPublish) {
       const topicId = unconfirmedPublish;
       request('readback', topicId, (back) => {
         if (!current()) return;
-        if (back && back.ok && matchingTopic(back.data, topicId) && back.data.isDraft === false) {
+        if (back && back.ok && matchingTopic(back.data, topicId) && back.data.isDraft === false
+            && publicationMatches(back.data, expectedPublication(null))) {
           published = true; unconfirmedPublish = 0;
           finish(handlers.onSuccess, { topicId, detail: back.data, published: { recovered: true, status: (back.data.topic || {}).status }, localChanges: !!readbackIssue(payload, back.data, false) });
           return;
         }
-        if (back && back.ok && matchingTopic(back.data, topicId) && back.data.isDraft === true) { unconfirmedPublish = 0; start(); return; }
+        // 没有原请求的确定失败回执时保留 UNKNOWN；重试只读，不能重放写入。
         finish(handlers.onFail, Object.assign({ stage: 'publish', topicId }, back || {}, { unknown: true }));
       });
     } else start();

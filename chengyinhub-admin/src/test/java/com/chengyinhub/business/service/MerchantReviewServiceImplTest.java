@@ -90,6 +90,25 @@ class MerchantReviewServiceImplTest {
     }
 
     @Test
+    void exactOrderHintDoesNotBorrowLatestEligibilityAndKeepsLegacyCallCompatible() {
+        when(mapper.selectLatestEligibility(AUTHOR, MERCHANT_ROW)).thenReturn(eligibility());
+        when(mapper.selectEligibilityForRegistration(AUTHOR, MERCHANT_ROW, REGISTRATION)).thenReturn(eligibility());
+        assertTrue(service.publicList(AUTHOR, MERCHANT_ROW, 1, 20, REGISTRATION).getEligibility().isCanCreate());
+        assertEquals(REGISTRATION, service.publicList(AUTHOR, MERCHANT_ROW, 1, 20, REGISTRATION)
+                .getEligibility().getRequestedRegistrationId());
+        assertFalse(service.publicList(AUTHOR, MERCHANT_ROW, 1, 20, 999L).getEligibility().isCanCreate());
+        verify(mapper, never()).selectLatestEligibility(any(), any());
+        verify(mapper, never()).selectEligibility(any(), any(), any());
+        assertTrue(service.publicList(AUTHOR, MERCHANT_ROW, 1, 20).getEligibility().isCanCreate());
+        when(mapper.countActiveMerchantRowsForRow(MERCHANT_ROW)).thenReturn(2);
+        assertEquals("AMBIGUOUS_LEGACY_MERCHANT_SCOPE", service.publicList(AUTHOR, MERCHANT_ROW, 1, 20, 998L)
+                .getEligibility().getReasonCode());
+        verify(mapper, never()).selectEligibilityForRegistration(AUTHOR, MERCHANT_ROW, 998L);
+        assertEquals("LOGIN_REQUIRED", service.publicList(null, MERCHANT_ROW, 1, 20, REGISTRATION)
+                .getEligibility().getReasonCode());
+    }
+
+    @Test
     void createBindsAuthorMerchantAndRedemptionOnlyFromServerEligibility() {
         when(mapper.selectEligibility(AUTHOR, MERCHANT_ROW, REGISTRATION)).thenReturn(eligibility());
         when(mapper.insertReview(any(MerchantReview.class))).thenAnswer(call -> {

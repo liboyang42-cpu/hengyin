@@ -246,3 +246,43 @@ test('partial frozen definitions never invent persistence metadata and legacy li
   assert.equal(character.projectCard(card({ attributes: [attribute({ persistScope: null })] }), '901'), null);
   assert.match(character.projectCard(card({ definitionSource: 'LEGACY_LIVE' }), '901').definitionNote, /可能随主题更新/);
 });
+
+test('range boundaries and a renamed label preserve the server state key', () => {
+  for (const value of [-10000, 10000]) {
+    const h = harness(); h.open();
+    h.requests[0].success({ code: 200, data: card({ attributes: [attribute({
+      stateKey: 'counter.hp', label: '耐力', min: -10000, max: 10000, value,
+    })] }) });
+    assert.equal(h.page.data.card.attributes[0].stateKey, 'counter.hp');
+    assert.equal(h.page.data.card.attributes[0].label, '耐力');
+    assert.equal(h.page.data.card.attributes[0].value, value);
+  }
+  for (const extra of [{ value: -1 }, { value: 11 }, { min: 11 }, { value: 1.5 }]) {
+    const h = harness(); h.open();
+    h.requests[0].success({ code: 200, data: card({ attributes: [attribute(extra)] }) });
+    assert.equal(h.page.data.state, 'error');
+    assert.equal(h.page.data.card, null);
+  }
+});
+
+test('reentering the same topic rejects a late previous-run card and duplicate callbacks', () => {
+  const h = harness(); h.open(); const previousRun = h.requests[0];
+  h.page.onHide(); h.page.onShow(); const currentRun = h.requests[1];
+  currentRun.success({ code: 200, data: card({ attributes: [attribute({ value: 2 })] }) });
+  previousRun.success({ code: 200, data: card({ attributes: [attribute({ value: 9 })] }) });
+  currentRun.success({ code: 200, data: card({ attributes: [attribute({ value: 8 })] }) });
+  currentRun.fail({ code: 500 });
+  assert.equal(h.page.data.state, 'ready');
+  assert.equal(h.page.data.card.attributes[0].value, 2);
+});
+
+test('partial card missing a numeric boundary is rejected without inferring live defaults', () => {
+  for (const field of ['value', 'min', 'max']) {
+    const row = attribute({ displayType: null, persistScope: null }); delete row[field];
+    const h = harness(); h.open();
+    h.requests[0].success({ code: 200, data: card({ definitionSource: 'SESSION_SNAPSHOT_PARTIAL', attributes: [row] }) });
+    assert.equal(h.page.data.state, 'error');
+    assert.equal(h.page.data.card, null);
+    assert.equal(h.requests.length, 1, 'no live-definition request may fill a partial snapshot');
+  }
+});

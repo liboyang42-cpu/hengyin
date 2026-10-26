@@ -1,5 +1,8 @@
 package com.chengyinhub.business.domain.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.util.ArrayList;
@@ -8,6 +11,7 @@ import java.util.List;
 
 /** 对外评价投影；刻意不含 authorMemberId、报名/核销内部 ID。 */
 public class MerchantReviewVO {
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
     private Integer rating;
     private String content;

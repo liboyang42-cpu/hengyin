@@ -78,7 +78,7 @@ function loadPage(options = {}) {
     const body = JSON.parse(write.data);
     write.success({ code: 200, data: { topicId: options2.topicId || 501 } });
     const back = sent[sent.length - 1];
-    assert.equal(back.url, '/api/topic/edit-detail');
+    assert.equal(back.url, '/api/topic/author-edit-detail');
     if (options2.beforeReadback) options2.beforeReadback();
     back.success({ code: 200, data: options2.detail || detailFor(body, options2) });
     return body;
@@ -143,7 +143,7 @@ test('本机存储写失败：状态如实显示「本机未存」，不伪造�
   assert.equal(toasts.filter(x => /本地草稿保存失败/.test(x)).length, 1, '同一故障只提示一次');
 });
 
-test('断网：本机稿保留、标云端未存，不弹面板；下次编辑后沿用同一意图键再存', (t) => {
+test('断网：原意图冻结且本机新编辑保留，不自动重发；手动核对沿用原输入', (t) => {
   const { page, writes, envelope } = loadPage();
   page.type('断网时写');
   t.mock.timers.tick(2000);
@@ -156,7 +156,10 @@ test('断网：本机稿保留、标云端未存，不弹面板；下次编辑�
   assert.equal(writes().length, 1, '结果不明时不自动盲重试');
   page.type('断网后继续写');
   t.mock.timers.tick(2000);
+  assert.equal(writes().length, 1, '新编辑不能自动重发未知创建');
+  page.saveServerDraft();
   assert.equal(writes().length, 2);
+  assert.equal(JSON.parse(writes()[1].data).name, '断网时写', '保留原意图输入');
   assert.equal(JSON.parse(writes()[1].data).requestId, firstKey, '同一份本机草稿沿用原意图键，服务端可认出已建的那份');
   assert.equal(writes()[1].url, '/api/topic/v2/create');
 });
@@ -202,7 +205,7 @@ test('保存中继续编辑：不换上回读版本、不标已存云端，接�
   assert.equal(body.id, '501'); assert.equal(body.name, '第二版'); assert.equal(Number(body.configVersion), 5);
   answer(writes()[1], { configVersion: 6 });
   assert.equal(page.data.themeSaveLabel, '已存云端');
-  assert.equal(requests('/api/topic/edit-detail').length, 2);
+  assert.equal(requests('/api/topic/author-edit-detail').length, 2);
 });
 
 test('保存与发布竞争：自动保存在途时发布不并发写；发布在途时定时器不起保存', (t) => {
@@ -247,22 +250,20 @@ test('UNKNOWN：保存回读网络失败标待确认且不自动重试；发布 
   assert.equal(sent.length, 2, '新建发布结果不明时自动建草稿会造成重复主题');
 });
 
-test('CAS 冲突等确定失败：标云端未存、只提示一次并暂停自动保存，不改本机内容；手动保存重新放行', (t) => {
+test('旧CAS接口仅给500文案：保留未知与原输入，不靠文案推断事务已回滚', (t) => {
   const { page, writes, toasts } = loadPage();
   Object.assign(page.data, { editingTopicId: '501', editLoaded: true, editIsDraft: true });
   page.type('另一端也在改');
   t.mock.timers.tick(2000);
   writes()[0].success({ code: 500, msg: '路线配置已更新，请刷新后重试' });
-  assert.equal(page.data.themeSaveLabel, '云端未存');
+  assert.equal(page.data.themeSaveLabel, '待确认');
   assert.equal(page.data.formData.name, '另一端也在改');
   assert.equal(page.data.resultSheet.show, false);
-  assert.equal(toasts.filter(x => /自动保存未成功/.test(x)).length, 1);
-  page.type('继续改');
-  t.mock.timers.tick(10000);
-  assert.equal(writes().length, 1, '确定失败后不反复撞同一个冲突');
-  assert.equal(toasts.filter(x => /自动保存未成功/.test(x)).length, 1, '不反复弹提示');
+  page.type('继续改'); t.mock.timers.tick(10000);
+  assert.equal(writes().length, 1, '不反复撞同一个冲突');
   page.saveServerDraft({ type: 'tap' });
-  assert.equal(writes().length, 2, '手动保存照常发起');
+  assert.equal(writes().length, 1, '手动核对只读，不重放未知写');
+  assert.equal(page._serverDraftAttempt.payload.name, '另一端也在改');
 });
 
 test('回读章节/站点身份不符：不清本机恢复稿、不标已存云端、暂停自动保存', (t) => {
@@ -277,7 +278,7 @@ test('回读章节/站点身份不符：不清本机恢复稿、不标已存云�
   sent.at(-1).success({ code: 200, data: bad });
   assert.equal(page.applied.length, 0);
   assert.notEqual(page.data.themeSaveState, 'saved');
-  assert.equal(page.data.themeSaveLabel, '云端未存');
+  assert.equal(page.data.themeSaveLabel, '待确认');
   assert.equal(envelope().status, 'ready', '新建时那份本机恢复稿仍在');
   assert.equal(envelope({ topicId: '501' }).envelope.formData.name, '身份确认', '按主题号的恢复稿也在');
   page.type('继续');
@@ -413,7 +414,7 @@ test('F-2：真机 setData 回调异步时，保存换版与重开都不把草�
   Object.assign(page.data, { editingTopicId: '501', draftUuid: '', draftMemberId: '' });
   page._draftAutosaveReady = false;
   page.loadEditingTopic('501');
-  const load = sent.find(r => r.url === '/api/topic/edit-detail');
+  const load = sent.find(r => r.url === '/api/topic/author-edit-detail');
   load.success({ code: 200, data: detailFor({ name: '重开确认', chapters: [{ name: '第一章', nodes: [{ name: '甲', templateId: 3 }] }] }, { configVersion: 2 }) });
   page.flush();
   t.mock.timers.tick(10000);
@@ -441,7 +442,7 @@ test('F-2 配套：重开时本机恢复稿与云端不同才上传一次；与�
     Object.assign(ctx.page.data, { editingTopicId: '501', draftUuid: '', draftMemberId: '' });
     ctx.page._draftAutosaveReady = false;
     ctx.page.loadEditingTopic('501');
-    ctx.sent.find(r => r.url === '/api/topic/edit-detail').success({ code: 200, data: detailFor(cloud, { configVersion: 2 }) });
+    ctx.sent.find(r => r.url === '/api/topic/author-edit-detail').success({ code: 200, data: detailFor(cloud, { configVersion: 2 }) });
     ctx.page.flush();
     t.mock.timers.tick(2000);
     ctx.page.flush();

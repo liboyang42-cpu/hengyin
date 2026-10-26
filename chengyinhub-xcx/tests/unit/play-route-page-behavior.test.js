@@ -73,7 +73,7 @@ test('play 页 LINEAR 保持 sortId，BRANCH_GRAPH 只消费服务端下一站',
   assert.equal(branch.computeNext(rows, null).nodeId, 30)
 })
 
-test('play 页完成请求只追加稳定 routeActionId 和 expectedRouteVersion', () => {
+test('play 页先冻结动作与版本，再绑定服务端原局身份', () => {
   const { definition } = loadPage()
   const page = context(definition, {
     activityId: 88,
@@ -84,8 +84,12 @@ test('play 页完成请求只追加稳定 routeActionId 和 expectedRouteVersion
   const retry = page._routeWritePayload('answer', 30, { nodeId: 30, answer: 'A' })
   assert.equal(first.routeActionId, retry.routeActionId)
   assert.equal(first.expectedRouteVersion, 4)
+  assert.equal(first.routeSessionId, undefined, '尚未取得服务端身份时不得伪造个人局')
+  first._bindRouteContext({ routeSessionId: '9007199254740993', expectedRouteVersion: 4 })
+  assert.equal(page._routeWritePayload('answer', 30, { answer: 'B' }).routeSessionId, '9007199254740993')
+  assert.equal(page._routeWritePayload('answer', 30, { answer: 'B' }).answer, 'A')
   assert.deepEqual(Object.keys(first).sort(), [
-    'activityId', 'answer', 'expectedRouteVersion', 'nodeId', 'routeActionId',
+    'activityId', 'answer', 'expectedRouteVersion', 'nodeId', 'routeActionId', 'routeSessionId',
   ])
   assert.equal('targetNodeId' in first, false)
   assert.equal('outcomeCode' in first, false)

@@ -66,7 +66,7 @@ class RefundVerifiedFactsTest {
         when(refunds.selectByRefundNo("RF11")).thenReturn(refund);
         when(refunds.updatePayoutResult(eq(7L), any(), any())).thenReturn(1);
         when(registrations.selectCmsRegistrationById(11L)).thenReturn(registration);
-        business = new RefundServiceImpl();
+        business = com.chengyinhub.business.service.support.RefundF3TestSupport.nonBundle(new RefundServiceImpl());
         ReflectionTestUtils.setField(business, "refundApplicationMapper", refunds);
         ReflectionTestUtils.setField(business, "cmsRegistrationMapper", registrations);
         ReflectionTestUtils.setField(business, "wxPaymentCallbackInboxService", inbox);

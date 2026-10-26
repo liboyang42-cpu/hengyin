@@ -108,6 +108,14 @@ public class ApiMerchantDeskController extends BaseController {
                 number(body, "skuId"), text(body, "fromDate"), integer(body, "days")));
     }
 
+    @Operation(summary = "SKU时段游标分页（最多14天，实时容量读回）")
+    @PostMapping("/products/sku/slots/page")
+    public AjaxResult skuSlotPage(@RequestBody(required = false) Map<String, Object> body) {
+        return run(MerchantPermission.PROJECT_MANAGE, access -> merchantDeskService.capacitySlotPage(access,
+                number(body, "skuId"), text(body, "fromDate"), integer(body, "days"),
+                number(body, "afterStartAt"), number(body, "afterSlotId")));
+    }
+
     @Operation(summary = "今日到店(今日已核销 + 生效供给章节上的未核销权益数)")
     @PostMapping("/arrivals/today")
     public AjaxResult arrivalsToday() {
@@ -169,6 +177,13 @@ public class ApiMerchantDeskController extends BaseController {
         return run(MerchantPermission.FINANCE_READ, merchantDeskService::frozenBatches);
     }
 
+    @Operation(summary = "当前冻结批次完整历史游标分页（只读）")
+    @PostMapping("/frozen/page")
+    public AjaxResult frozenPage(@RequestBody(required = false) Map<String, Object> body) {
+        return run(MerchantPermission.FINANCE_READ, access -> merchantDeskService.frozenBatchPage(access,
+                text(body, "afterPeriodYm"), number(body, "afterBatchId")));
+    }
+
     @Operation(summary = "商家看板指标口径字典")
     @PostMapping("/metrics/dictionary")
     public AjaxResult metricDictionary() {
@@ -182,7 +197,7 @@ public class ApiMerchantDeskController extends BaseController {
         try {
             deskSwitch.requireEnabled();
             MerchantAccessContext access = merchantAccessService.require(principal, permission);
-            return success(action.apply(access));
+            return success(MerchantDeskWire.response(action.apply(access)));
         } catch (MerchantDeskException e) {
             AjaxResult result = new AjaxResult(e.getHttpCode(), e.getMessage());
             result.put("errorCode", e.getErrorCode());

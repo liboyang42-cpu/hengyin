@@ -243,7 +243,7 @@ test('real retry-load entry invalidates in-flight update callback and preserves 
   page.sendData({ name: 'topic' });
   const write = sent[0];
   page.retryLoadEditingTopic();
-  assert.equal(sent[1].url, '/api/topic/edit-detail');
+  assert.equal(sent[1].url, '/api/topic/author-edit-detail');
   const before = JSON.stringify(storage);
   const pageBefore = JSON.stringify(page.data);
   write.success({ code: 200, data: 77 });

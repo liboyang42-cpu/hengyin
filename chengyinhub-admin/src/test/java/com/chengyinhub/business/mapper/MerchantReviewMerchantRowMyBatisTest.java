@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class MerchantReviewMerchantRowMyBatisTest {
     private static final String XML = "mapper/business/MerchantReviewMapper.xml";
@@ -40,6 +41,39 @@ class MerchantReviewMerchantRowMyBatisTest {
                     "A 店回复 CAS 不得命中 B 店评价");
             assertEquals(2, mapper.countActiveMerchantRowsForRow(7L),
                     "必须真实检测到同 owner 的两个活跃门店，让 Service 对旧核销 fail-closed");
+            session.rollback();
+        }
+    }
+
+    @Test
+    void exactOrderReadDoesNotBorrowOtherOrdersAndRejectsInvalidRedemptions() throws Exception {
+        try (SqlSession session = factory().openSession(false)) {
+            createSchema(session);
+            try (Statement sql = session.getConnection().createStatement()) {
+                sql.execute("insert into mms_merchant values (7,202,1,1,0)");
+                sql.execute("insert into cms_registration values (303,101),(304,101),(305,102),(306,101)");
+                sql.execute("insert into redemption values (404,303,202,'ACTIVE',current_timestamp),"
+                        + "(405,304,202,'ACTIVE',current_timestamp),(406,305,202,'ACTIVE',current_timestamp),"
+                        + "(407,306,202,'REVERSED',current_timestamp)");
+            }
+            MerchantReviewMapper mapper = session.getMapper(MerchantReviewMapper.class);
+            assertEquals(303L, mapper.selectEligibilityForRegistration(101L, 7L, 303L).getRegistrationId());
+            assertEquals(304L, mapper.selectEligibilityForRegistration(101L, 7L, 304L).getRegistrationId());
+            assertNull(mapper.selectEligibilityForRegistration(101L, 7L, 305L), "other holder");
+            assertNull(mapper.selectEligibilityForRegistration(101L, 7L, 306L), "reversed redemption");
+            try (Statement sql = session.getConnection().createStatement()) {
+                sql.execute("insert into merchant_review(id,merchant_row_id,merchant_owner_member_id,"
+                        + "registration_id,redemption_id,author_member_id,rating,content,images_json,status,version,"
+                        + "create_time,update_time) values (501,7,202,303,404,101,5,'reviewed','[]','HIDDEN',0,current_timestamp,current_timestamp)");
+            }
+            session.clearCache();
+            assertNull(mapper.selectEligibilityForRegistration(101L, 7L, 303L), "reviewed A cannot borrow B");
+            assertEquals(304L, mapper.selectEligibilityForRegistration(101L, 7L, 304L).getRegistrationId());
+            try (Statement sql = session.getConnection().createStatement()) {
+                sql.execute("insert into mms_merchant values (8,202,1,1,0)");
+            }
+            session.clearCache();
+            assertNull(mapper.selectEligibilityForRegistration(101L, 7L, 304L), "ambiguous active merchant rows");
             session.rollback();
         }
     }

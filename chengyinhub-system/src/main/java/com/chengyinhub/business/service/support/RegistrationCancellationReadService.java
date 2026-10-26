@@ -110,13 +110,28 @@ public class RegistrationCancellationReadService {
         boolean cancelled = true;
         long pointsUsed = 0;
         long pointsReturned = 0;
+        boolean pointsKnown = true;
         CmsRegistration payer = parentOrder ? null : row;
+        boolean parentCashKnown = true;
         for (CmsRegistration member : order) {
             cancelled &= Integer.valueOf(3).equals(member.getRegistrationStatus());
             long used = member.getPointUsed() == null ? 0 : member.getPointUsed();
-            pointsUsed += used;
-            if (Integer.valueOf(1).equals(member.getPointsReturned())) pointsReturned += used;
+            if (used < 0) {
+                pointsKnown = false;
+            } else if (pointsKnown) {
+                try {
+                    pointsUsed = Math.addExact(pointsUsed, used);
+                    if (Integer.valueOf(1).equals(member.getPointsReturned())) {
+                        pointsReturned = Math.addExact(pointsReturned, used);
+                    }
+                } catch (ArithmeticException overflow) {
+                    pointsKnown = false;
+                }
+            }
             // 与 refundWholeOrder 一致：首单承载汇总应付额，从单 wechatPaymentAmount 不代表真实支付。
+            if (parentOrder && (member.getPayableAmount() == null || member.getPayableAmount().signum() < 0)) {
+                parentCashKnown = false;
+            }
             if (parentOrder && member.getPayableAmount() != null && member.getPayableAmount().signum() > 0) {
                 if (payer != null) return unconfirmedCancellationFeedback(registrationId, "取消操作已提交，订单支付归属尚未确认，请刷新订单");
                 payer = member;
@@ -129,7 +144,17 @@ public class RegistrationCancellationReadService {
         String cashMessage = "无现金退款";
         data.put("cashRefundStatus", "NOT_NEEDED");
         data.put("cashRefundAmount", java.math.BigDecimal.ZERO);
-        if (payer != null && payer.getWechatPaymentAmount() != null && payer.getWechatPaymentAmount().signum() > 0) {
+        // 旧单可能没有 wechat_payment_amount；与订单详情相同，只在缺失时回落应付快照。
+        // 整单必须使用首单的汇总应付额，不能从从单的历史现金占位字段推断付款。
+        java.math.BigDecimal cash;
+        if (parentOrder) {
+            cash = parentCashKnown ? (payer == null ? java.math.BigDecimal.ZERO : payer.getPayableAmount()) : null;
+        } else {
+            cash = row.getWechatPaymentAmount() == null ? row.getPayableAmount() : row.getWechatPaymentAmount();
+        }
+        if (cash == null || cash.signum() < 0) {
+            cashMessage = cashRefundFeedback(null, data);
+        } else if (cash.signum() > 0) {
             RefundApplication refund = null;
             try {
                 refund = latestRegistrationRefund(payer.getId(), payer.getMemberId());
@@ -138,11 +163,11 @@ public class RegistrationCancellationReadService {
             }
             cashMessage = cashRefundFeedback(refund, data);
         }
-        data.put("pointsUsed", pointsUsed);
-        data.put("pointsReturned", pointsReturned);
-        data.put("pointsRefundStatus", pointsUsed == 0 ? "NOT_NEEDED"
+        data.put("pointsUsed", pointsKnown ? pointsUsed : null);
+        data.put("pointsReturned", pointsKnown ? pointsReturned : null);
+        data.put("pointsRefundStatus", !pointsKnown ? "UNCONFIRMED" : pointsUsed == 0 ? "NOT_NEEDED"
                 : pointsUsed == pointsReturned ? "RETURNED" : pointsReturned > 0 ? "PARTIAL" : "UNCONFIRMED");
-        String pointsMessage = pointsUsed == 0 ? "本单未使用积分"
+        String pointsMessage = !pointsKnown ? "本单积分返还结果尚未确认，请查看订单" : pointsUsed == 0 ? "本单未使用积分"
                 : pointsUsed == pointsReturned ? "本单已返还" + pointsReturned + "积分"
                 : "本单已返还" + pointsReturned + "/" + pointsUsed + "积分，其余尚未确认";
         return new Result((cancelled ? "报名已取消" : "取消操作已提交，报名状态尚未确认")

@@ -90,6 +90,33 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by deadline_at is null, deadline_at asc, submitted_at asc, id asc
     </select>
 
+    <!-- Dedicated workbench read; guard scope comes only from authenticated server configuration. -->
+    <select id="selectWorkbenchQueueWithGuardScope" resultMap="AuditTaskResult">
+        <include refid="selectAuditTaskVo"/>
+        <where>
+            <if test="filter != null">
+                <if test="filter.bizType != null and filter.bizType != ''"> and biz_type = #{filter.bizType}</if>
+                <if test="filter.bizId != null"> and biz_id = #{filter.bizId}</if>
+                <if test="filter.submitterId != null"> and submitter_id = #{filter.submitterId}</if>
+                <if test="filter.status != null"> and status = #{filter.status}</if>
+                <if test="filter.riskLevel != null and filter.riskLevel != ''"> and risk_level = #{filter.riskLevel}</if>
+            </if>
+            and (biz_type is null or biz_type != 'play_arrive_guard'
+            <if test="guardTopicIds != null and guardTopicIds.size() > 0">
+                or (biz_type = 'play_arrive_guard' and source_type = 'appeal' and exists (
+                    select 1 from audit_appeal ga
+                    inner join play_arrive_guard_log gl on gl.id = ga.biz_id and gl.member_id = ga.member_id
+                    where ga.task_id = audit_task.id and ga.biz_type = audit_task.biz_type
+                      and ga.biz_id = audit_task.biz_id and ga.member_id = audit_task.submitter_id
+                      and gl.topic_id in
+                      <foreach collection="guardTopicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+                ))
+            </if>
+            )
+        </where>
+        order by deadline_at is null, deadline_at asc, submitted_at asc, id asc
+    </select>
+
     <insert id="insertAuditTask" parameterType="AuditTask" useGeneratedKeys="true" keyProperty="id">
         insert into audit_task
         <trim prefix="(" suffix=")" suffixOverrides=",">

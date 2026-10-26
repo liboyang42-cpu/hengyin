@@ -772,3 +772,19 @@ test('P0-102 同会话内连续重拉POI只认最后一次请求，旧回包晚�
   pending[0].success({ code: 200, data: [{ id: 1, type: 1, name: '旧范围地点', lat: 31, lng: 121, found: false }] }); await settle()
   assert.deepEqual(page._pois.filter(p => p._roamId != null).map(p => p._roamId), [2])
 })
+
+for (const failure of ['throw', 'silent']) test('轨迹落盘' + failure + '失败不标记存档完成，恢复存储后可重试', () => {
+  const page = mount(); page._pois = []; page._reveals = [{ lat: 31, lng: 121, r: 10 }]
+  const write = wx.setStorageSync
+  wx.setStorageSync = (key, value) => {
+    if (key.endsWith(':reveals')) { if (failure === 'throw') throw new Error('disk full'); return }
+    write(key, value)
+  }
+  assert.equal(page._saveSession({ distance: 1, photos: [] }), false)
+  assert.notEqual(page._revealsSaved, true)
+  wx.setStorageSync = write
+  assert.equal(page._saveSession({ distance: 1, photos: [] }), true)
+  assert.equal(page._revealsSaved, true)
+  assert.equal(values['roam_memory_v1:9:sessions'].length, 1)
+  assert.equal(values['roam_memory_v1:9:reveals'].length, 1)
+})

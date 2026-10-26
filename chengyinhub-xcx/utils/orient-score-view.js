@@ -69,6 +69,10 @@ function normalize(data, target) {
       || !integer(data.totalCenti) || !data.byDimension || typeof data.byDimension !== 'object' || Array.isArray(data.byDimension)
       || !Object.keys(DIMENSIONS).every(key => integer(data.byDimension[key])) || !Array.isArray(data.timeline)
       || !Array.isArray(data.appeals) || !Array.isArray(data.disputes)) return null;
+  const recoveries = data.recoveries == null ? [] : data.recoveries;
+  if (!Array.isArray(recoveries) || !recoveries.every(row => row && id(row.id) && id(row.sessionId) === id(data.sessionId)
+      && KINDS.includes(row.kind) && [0, 1].includes(row.status)
+      && (row.referenceId == null || id(row.referenceId)))) return null;
   const sessionId = id(data.sessionId), ended = [1, 2].includes(data.status);
   if (data.settlement && !settled(data.settlement, sessionId)) return null;
   if (!data.timeline.every(row => row && id(row.entryId) && integer(row.deltaCenti) && integer(row.runningCenti)
@@ -84,15 +88,21 @@ function normalize(data, target) {
       dimension: DIMENSIONS[row.dimension] || row.dimension, delta: centi(row.deltaCenti, true),
       running: centi(row.runningCenti), reason: row.reasonCode || '', at: time(row.at), reversesEntryId: id(row.reversesEntryId),
       appealPending: data.appeals.some(a => Number(a.status) === 0 && id(a.entryId) === id(row.entryId)) })),
+    recoveries: recoveries.map(row => ({ id: id(row.id), kind: row.kind, status: row.status,
+      statusText: row.status === 0 ? '人工核对中' : '已记录核对意见', note: row.resolutionNote || '', referenceId: id(row.referenceId) })),
     appeals: reviews(data.appeals), disputes: reviews(data.disputes),
     settlement: data.settlement ? { id: id(data.settlement.settlementId), total: centi(data.settlement.totalCenti),
       points: integer(data.settlement.pointsAwarded), xp: integer(data.settlement.xpAwarded), at: time(data.settlement.settledAt) } : null,
-    deadline: time(data.disputeWindowDeadline), canSync: !data.settlement && data.status !== 3, canSettle: ended && !data.settlement,
+    pendingReviewCount: integer(data.pendingReviewCount) || '0',
+    deadline: time(data.disputeWindowDeadline), canSync: !data.settlement && data.status !== 3, canSettle: ended && !data.settlement && (data.pendingReviewCount == null || integer(data.pendingReviewCount) === '0'),
     canAppeal: true, canDispute: ended && !!data.disputeWindowDeadline && !data.disputes.some(a => Number(a.status) === 0) };
 }
 function writeKey(owner, sessionId, kind) { return owner + ':orient-score:' + sessionId + ':' + kind; }
 function receiptMatches(data, pending, owner, sessionId, payload) {
   if (!precise(data) || !pending || !pending.requestId) return false;
+  if (pending.kind === 'SYNC') return !!data && data.state === 'SYNCED' && data.kind === 'SYNC'
+    && id(data.sessionId) === sessionId && id(data.memberId) === owner && data.idempotencyKey === pending.requestId
+    && /^\d+$/.test(integer(data.added)) && !!integer(data.totalCenti);
   if (pending.kind === 'SETTLE') return settled(data, sessionId);
   if (!['APPEAL', 'DISPUTE'].includes(pending.kind)) return false;
   const row = data && data.record || data;
@@ -102,6 +112,19 @@ function receiptMatches(data, pending, owner, sessionId, payload) {
       || data.state !== ({ 0: 'PENDING', 1: 'ACCEPTED', 2: 'REJECTED' })[row.status])) return false;
   return !payload || row.reason === payload.reason && (pending.kind !== 'APPEAL'
     || id(row.entryId) === id(payload.entryId) && id(row.nodeId) === id(payload.nodeId));
+}
+function leaderboard(data, sessionId) {
+  if (!data || !precise(data) || id(data.sessionId) !== sessionId || !['SCORE', 'ROUTE'].includes(data.mode)
+      || !Array.isArray(data.list) || data.list.length > 50) return null;
+  const valid = row => row && id(row.rowKey) && id(row.rank) && integer(row.scoreCenti)
+    && (row.elapsedMs === null || /^\d+$/.test(integer(row.elapsedMs)))
+    && typeof row.mine === 'boolean' && typeof row.reachedEnding === 'boolean';
+  if (!data.list.every(valid) || data.me != null && !valid(data.me)
+      || new Set(data.list.map(row => row.rowKey)).size !== data.list.length) return null;
+  const project = row => ({ rowKey: row.rowKey, rank: integer(row.rank), mine: row.mine,
+    score: centi(row.scoreCenti), reachedEnding: row.reachedEnding,
+    elapsed: row.elapsedMs === null ? '用时待确认' : integer(row.elapsedMs) + ' 毫秒' });
+  return { mode: data.mode, list: data.list.map(project), me: data.me ? project(data.me) : null };
 }
 function failure(body, status) {
   const code = body && (body.errorCode || body.err);
@@ -116,4 +139,4 @@ function rejected(body, status) {
   return [400, 401, 403, 404, 405, 413, 415, 426, 429].includes(Number(status))
     || !!(body && /^(ORIENT_|FORBIDDEN)/.test(body.errorCode || body.err || ''));
 }
-module.exports = { KINDS, integer, id, centi, precise, scope, sameScope, sessions, normalize, settled, writeKey, receiptMatches, failure, rejected };
+module.exports = { leaderboard, KINDS, integer, id, centi, precise, scope, sameScope, sessions, normalize, settled, writeKey, receiptMatches, failure, rejected };

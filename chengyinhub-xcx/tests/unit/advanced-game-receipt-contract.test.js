@@ -19,6 +19,8 @@ loadDefinition();
 
 /** queue: 每次 request 按顺序取一项；{ res } 走 resolve，{ err } 走 reject。 */
 function createGame(queue, state) {
+  const storage = new Map();
+  global.wx = { getStorageSync: k => storage.get(k), setStorageSync: (k,v) => storage.set(k,v), removeStorageSync: k => storage.delete(k) };
   const calls = [];
   const instance = {
     properties: {},
@@ -42,8 +44,10 @@ function createGame(queue, state) {
     calls.push({ url, method, data });
     const next = queue.shift();
     if (!next) return Promise.reject(new Error('unexpected request: ' + url));
+    if (next.receipt) return Promise.resolve({ code: 200, data: { sessionId: String(data.sessionId), idempotencyKey: data.idempotencyKey, view: next.receipt } });
     return next.err ? Promise.reject(next.err) : Promise.resolve(next.res);
   };
+  instance._unknownCommand = { sessionId: 42, version: 3, idempotencyKey: 'original', action: 'DRAW' };
   instance.calls = calls;
   return instance;
 }
@@ -151,19 +155,16 @@ test('★负控：响应丢失 ⇒ unknown，不得写成失败，也不得放�
   assert.equal(game.calls.length, before, 'unknown 未解除前不得再发写请求');
 });
 
-test('unknown 回读发现 version 已前进 ⇒ 判定已落地，清锁且不重发', async () => {
-  const game = createGame([
-    { err: new Error('timeout') },
-    { res: { code: 200, data: { sessionId: 42, version: 4, status: 'RUNNING', draws: [{ id: 'x' }], config: {} } } },
-  ]);
-  await game.action('DRAW', {});
-  await new Promise(setImmediate);
-  await new Promise(setImmediate);
-
+test('原请求回执匹配才解锁；读取不会再次写入', async () => {
+  const game = createGame([{ err: new Error('timeout') },
+    { receipt: { sessionId: 42, version: 4, status: 'RUNNING', draws: [{ id: 'x' }], config: {} } }]);
+  await game.action('DRAW', {}); await new Promise(setImmediate);
   assert.equal(game.data.unknown, false);
-  assert.equal(game.data.state.version, 4, '必须采用服务端权威 version');
-  assert.equal(game.data.error, '', '写入已落地，不该提示重试');
-  assert.equal(game.calls[1].url, '/api/play/advanced/state', '刷新必须问服务端，不是读本地缓存');
+  assert.equal(game.data.state.version, 4);
+  assert.equal(game.data.error, '');
+  assert.equal(game.calls[1].url, '/api/play/advanced/receipt');
+  assert.equal(game.calls[1].method, 'GET');
+  assert.equal(game.calls[1].data.idempotencyKey, game.calls[0].data.idempotencyKey);
 });
 
 test('★多人局:version 前进也不算证据 —— 队友的写入同样推高它,不许判成我方已落地', async () => {
@@ -177,13 +178,13 @@ test('★多人局:version 前进也不算证据 —— 队友的写入同样推
   await new Promise(setImmediate);
   await new Promise(setImmediate);
 
-  assert.equal(game.data.unknown, false, '刷新拿到结果就该解锁，不能永远转圈');
-  assert.notEqual(game.data.error, '', '证不到是我落的，就不许把提示清空当成功');
-  assert.match(game.data.error, /没能确认/, '要如实说「没能确认」,别谎报成功也别谎报失败');
-  assert.match(game.data.error, /不会重复提交/, '得告诉用户重试是安全的(幂等键保底)');
+  assert.equal(game.data.unknown, true, '队友版本增长不能解除本人UNKNOWN');
+  assert.equal(game.data.error, '');
+  assert.match(game.data.unknownText, /未查到不代表未提交/);
+  assert.equal(game.calls.filter(c => c.method === 'POST').length, 1);
 });
 
-test('unknown 回读发现 version 未变 ⇒ 说清没提交成功，才放行重试', async () => {
+test('unknown 回读版本未变仍不能证明未写入，保持冻结', async () => {
   const game = createGame([
     { err: new Error('timeout') },
     { res: { code: 200, data: { sessionId: 42, version: 3, status: 'RUNNING', draws: [], config: {} } } },
@@ -192,8 +193,8 @@ test('unknown 回读发现 version 未变 ⇒ 说清没提交成功，才放行�
   await new Promise(setImmediate);
   await new Promise(setImmediate);
 
-  assert.equal(game.data.unknown, false);
-  assert.match(game.data.error, /没有提交成功/);
+  assert.equal(game.data.unknown, true);
+  assert.match(game.data.unknownText, /未查到不代表未提交/);
 });
 
 test('回读本身也失败 ⇒ 保持 unknown 锁定，不猜结论', async () => {
@@ -221,7 +222,7 @@ test('★同一 version 上重试复用同一幂等键 —— 服务端 replay �
     '同一 session+version+动作+入参必须出同一个键');
 });
 
-test('服务端说「状态已更新」⇒ 自动回读权威状态，不让用户拿旧 version 反复重发', async () => {
+test('通用错误文案不能证明回滚，查询原回执且保持UNKNOWN', async () => {
   const game = createGame([
     { res: { code: 500, msg: '状态已更新，请刷新后重试' } },
     { res: { code: 200, data: { sessionId: 42, version: 9, status: 'RUNNING', draws: [], config: {} } } },
@@ -230,8 +231,10 @@ test('服务端说「状态已更新」⇒ 自动回读权威状态，不让用�
   await new Promise(setImmediate);
   await new Promise(setImmediate);
 
-  assert.equal(game.calls[1].url, '/api/play/advanced/state');
-  assert.equal(game.data.state.version, 9);
+  assert.equal(game.calls[1].url, '/api/play/advanced/receipt');
+  assert.equal(game.calls[1].method, 'GET');
+  assert.equal(game.data.unknown, true);
+  assert.equal(game.data.state.version, 3);
   assert.equal(game.data.acting, false);
 });
 
@@ -288,7 +291,7 @@ test('草稿建档走本地kit，提交和重新打开都不请求正式会话',
 
 
 test('限时打字开始业务拒绝发送失败出口，并携带当次局标识', async () => {
-  const game = createGame([{ res: { code: 500, msg: '不能开始这一局' } }]);
+  const game = createGame([{ res: { code: 409, msg: '不能开始这一局', data: { view: { sessionId: 42, version: 3, config: {} } } } }]);
   const failed = [];
   game.triggerEvent = (name, detail) => { if (name === 'actionfail') failed.push(detail); };
   await game.action('START_CHALLENGE', { game: 'typeIn' });
@@ -299,24 +302,13 @@ test('限时打字开始业务拒绝发送失败出口，并携带当次局标�
   assert.equal(failed[0].sessionId, 42);
 });
 
-test('限时打字响应丢失按服务器started回读；版本增长不冒充开表事实', async () => {
-  for (const started of [true, false]) {
-    const game = createGame([{ err: new Error('timeout') },
-      { res: { code: 200, data: { sessionId: 42, version: 4, config: {}, playKit: {
-        typeIn: { enabled: true, target: 'hi', seconds: 10, started }
-      } } } }]);
-    const failed = [];
-    game.triggerEvent = (name, detail) => { if (name === 'actionfail') failed.push({ detail, unknown: game.data.unknown }); };
-    await game.action('START_CHALLENGE', { game: 'typeIn' });
-    await new Promise(setImmediate);
-    assert.equal(game.data.unknown, false);
-    assert.equal(game.data.state.playKit.typeIn.started, started);
-    assert.equal(failed.length, started ? 0 : 1);
-    if (!started) {
-      assert.equal(failed[0].unknown, false, '先解除unknown再通知可重试');
-      assert.match(game.data.error, /没有提交成功/);
-    }
-  }
+test('限时打字原请求回执恢复started事实，不重新起表', async () => {
+  const game = createGame([{ err: new Error('timeout') }, { receipt: { sessionId: 42, version: 4,
+    config: {}, playKit: { typeIn: { enabled: true, target: 'hi', seconds: 10, started: true } } } }]);
+  await game.action('START_CHALLENGE', { game: 'typeIn' }); await new Promise(setImmediate);
+  assert.equal(game.data.unknown, false);
+  assert.equal(game.data.state.playKit.typeIn.started, true);
+  assert.equal(game.calls.filter(c => c.method === 'POST').length, 1);
 });
 
 test('打字回读缺started事实保持unknown，禁止重复开表直到能核对', async () => {
@@ -534,30 +526,20 @@ for (const nextStatus of ['RUNNING', 'COMPLETED', 'FAILED', 'EXPIRED']) {
   });
 }
 
-test('旧unknown读不以本地高版本猜本人成功，保留锁并允许再次权威核对', async () => {
-  const game = createGame([]);
-  game.data.unknown = true;
-  game._unknownVersion = 3;
-  game._unknownAction = 'DRAW';
-  let finish;
-  game.request = () => new Promise(resolve => { finish = resolve; });
+test('旧原请求回执可以确认动作但不得倒退已读的新版本', async () => {
+  const game = createGame([]); game.data.unknown = true;
+  let finish; game.request = () => new Promise(resolve => { finish = resolve; });
   const old = game.resolveUnknown();
   game.hydrate({ sessionId: 42, version: 5, config: {}, vars: { stage: 'latest' } });
   const current = game.data.state;
-  finish({ code: 200, data: { sessionId: 42, version: 4, config: {} } });
+  finish({ code: 200, data: { sessionId: '42', idempotencyKey: 'original', view: { sessionId: 42, version: 4, config: {} } } });
   await old;
   assert.equal(game.data.state, current);
-  assert.equal(game.data.unknown, true);
-  assert.equal(game.data.readingBack, false);
-  const retry = game.resolveUnknown();
-  finish({ code: 200, data: { sessionId: 42, version: 5,
-    config: { multiplayer: { enabled: true } }, vars: { stage: 'latest' } } });
-  await retry;
   assert.equal(game.data.unknown, false);
-  assert.match(game.data.error, /没能确认/);
+  assert.equal(game.data.readingBack, false);
 });
 
-test('CAS拒绝后的旧回读不倒退视图，仍按拒绝释放锁与抛失败出口', async () => {
+test('通用错误后的原回执迟到不倒退视图，也不冒充确定拒绝', async () => {
   const game = createGame([]);
   let finish;
   game.request = url => url.endsWith('/action')
@@ -573,8 +555,9 @@ test('CAS拒绝后的旧回读不倒退视图，仍按拒绝释放锁与抛失�
   await old;
   assert.equal(game.data.state, current);
   assert.equal(game.data.acting, false);
-  assert.match(game.data.error, /状态已更新/);
-  assert.equal(events.filter(e => e.name === 'actionfail').length, 1);
+  assert.equal(game.data.unknown, true);
+  assert.equal(game.data.error, '');
+  assert.equal(events.filter(e => e.name === 'actionfail').length, 0);
   assert.equal(events.filter(e => e.name === 'session').length, 1);
 });
 
@@ -592,35 +575,36 @@ test('同局等版本仍可接受，新局低版本不能被旧局高版本挡�
   assert.equal(game.data.state.version, 1);
 });
 
-test('团队挑战不看 config.multiplayer：原命令同键重放核对，不能借队友版本增长判成功', async () => {
-  const state = { sessionId: 51, nodeId: 7, ownerType: 2, ownerId: 88, version: 0, config: { multiplayer: { enabled: false } },
-    challenge: { instanceId: 'one', progress: 0, goal: 10, success: false }, playKit: { ballShake: { goal: 10, submitted: false } } };
-  const game = createGame([{ err: new Error('timeout') }, { err: new Error('still offline') },
-    { res: { code: 200, data: { ...state, version: 1, challenge: { ...state.challenge, progress: 6 }, playKit: { ballShake: { goal: 10, hits: 6, submitted: false } } } } }], state);
+test('团队挑战只读本人原请求，队友版本增长不改写历史进度', async () => {
+  const state = { sessionId: 51, nodeId: 7, ownerType: 2, ownerId: 88, version: 0, config: {},
+    challenge: { instanceId: 'one', progress: 0, goal: 10, success: false } };
+  const game = createGame([{ err: new Error('timeout') }, { err: new Error('offline') },
+    { receipt: { ...state, version: 1, challenge: { ...state.challenge, progress: 6 } } }], state);
   game.data.node = { nodeId: 7 };
   await game.action('SUBMIT_BALL_SHAKE', { hits: 6 }); await new Promise(setImmediate);
   assert.equal(game.data.unknown, true);
-  const original = JSON.parse(JSON.stringify(game.calls[0].data));
-  game.data.state.version = 9; // 队友写入，不是本人提交证据。
+  const original = game.calls[0].data;
+  game.data.state.version = 9;
   assert.equal(await game.resolveUnknown(), true);
-  assert.ok(game.calls.every(call => call.url === '/api/play/advanced/action' && call.method === 'POST'));
-  assert.deepEqual(game.calls.map(call => call.data), [original, original, original]);
-  assert.equal(game.data.state.challenge.progress, 6);
+  assert.equal(game.calls.filter(c => c.method === 'POST').length, 1);
+  for (const call of game.calls.slice(1)) {
+    assert.equal(call.method, 'GET'); assert.equal(call.url, '/api/play/advanced/receipt');
+    assert.deepEqual(call.data, { sessionId: original.sessionId, idempotencyKey: original.idempotencyKey });
+  }
+  assert.equal(game.data.state.version, 9);
+  assert.equal(game.data.state.challenge.progress, 0, '历史回执不覆盖当前视图');
   assert.equal(game.data.state.challenge.success, false);
   assert.equal(game.data.unknown, false);
-  let emitted; game.triggerEvent = (name, detail) => { if (name === 'session') emitted = detail; };
-  game.emitSession(game.data.state); assert.equal(emitted.ownerType, 2); assert.equal(emitted.challenge.progress, 6);
 });
 
-test('团队挑战原键被明确拒绝后读取新状态，保留失败提示，不把版本推进当回执', async () => {
+test('团队挑战原回执查询冲突不能解除UNKNOWN或发起state副作用', async () => {
   const state = { ownerType: 2, nodeId: 7, challenge: { progress: 0, goal: 10, success: false } };
-  const game = createGame([{ err: new Error('timeout') }, { res: { code: 409, msg: '状态已更新，请刷新后重试' } },
-    { res: { code: 200, data: { sessionId: 42, nodeId: 7, version: 9, ...state, config: {} } } }], state);
+  const game = createGame([{ err: new Error('timeout') }, { res: { code: 409, msg: '原回执冲突' } }], state);
   game.data.node = { nodeId: 7 };
   await game.action('SUBMIT_BALL_SHAKE', { hits: 6 }); await new Promise(setImmediate);
-  assert.equal(game.data.unknown, false); assert.match(game.data.error, /状态已更新/);
-  assert.equal(game.data.state.challenge.success, false); assert.equal(game.data.state.version, 9);
-  assert.deepEqual(game.calls[0].data, game.calls[1].data);
+  assert.equal(game.data.unknown, true); assert.equal(game.data.error, '');
+  assert.equal(game.data.state.challenge.success, false); assert.equal(game.data.state.version, 3);
+  assert.equal(game.calls.length, 2); assert.equal(game.calls[1].method, 'GET');
 });
 
 test('共享挑战旧原键回执迟到不能覆盖新局或解除新局写锁', async () => {
@@ -652,13 +636,14 @@ test('零血恢复必须明确重试，接受同属新会话并解除提交锁',
 test('零血重试丢失响应后个人局也按原键核对新会话，不能猜版本成功', async () => {
   const next = { sessionId: 43, retrySourceSessionId: 42, nodeId: 9, version: 0, status: 'RUNNING',
     ownerType: 1, ownerId: 7, config: {}, draws: [], challenge: { instanceId: 'next' } };
-  const game = createGame([{ err: new Error('lost response') }, { res: { code: 200, data: next } }],
+  const game = createGame([{ err: new Error('lost response') }, { receipt: next }],
     { status: 'FAILED', canRetry: true, ownerType: 1, ownerId: 7, challenge: { instanceId: 'old' } });
   game.data.node = { nodeId: 9 };
   await game.retry();
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(game.calls.length, 2);
-  assert.deepEqual(game.calls[0].data, game.calls[1].data);
+  assert.equal(game.calls[1].method, 'GET');
+  assert.deepEqual(game.calls[1].data, { sessionId: game.calls[0].data.sessionId, idempotencyKey: game.calls[0].data.idempotencyKey });
   assert.equal(game.data.state.sessionId, 43);
   assert.equal(game.data.unknown, false);
   assert.equal(game.data.readingBack, false);
@@ -670,7 +655,8 @@ test('新挑战回执必须属于原会话、原成员和原节点，普通动�
   const context = game.sessionRequestContext();
   const next = { sessionId: 43, retrySourceSessionId: 42, nodeId: 9, ownerType: 1, ownerId: 7 };
   assert.equal(game.responseMatchesSession(next, context, 'RETRY'), true);
-  for (const patch of [{ retrySourceSessionId: 99 }, { nodeId: 8 }, { ownerId: 8 }, { sessionId: '43' }]) {
+  assert.equal(game.responseMatchesSession({ ...next, sessionId: '9007199254740993' }, context, 'RETRY'), true);
+  for (const patch of [{ retrySourceSessionId: 99 }, { nodeId: 8 }, { ownerId: 8 }, { sessionId: 9007199254740992 }]) {
     assert.equal(game.responseMatchesSession({ ...next, ...patch }, context, 'RETRY'), false);
   }
   assert.equal(game.responseMatchesSession(next, context, 'SUBMIT_QA'), false);
@@ -686,4 +672,40 @@ test('已完成一次但恢复次数不足的零血挑战仍需明确继续，�
   assert.equal(game.calls.length, 1);
   assert.equal(game.calls[0].data.action, 'RETRY');
   assert.equal(game.data.state.sessionId, 43);
+});
+
+test('组件重建后仅查询持久化原请求，不重新start或保存照片输入', async () => {
+  const first = createGame([{ err: new Error('timeout') }, { err: new Error('offline') }]);
+  await first.action('SUBMIT_QA', { imageUrl: 'private-photo', answer: 'private-answer' });
+  await new Promise(setImmediate);
+  const savedWx = global.wx;
+  const saved = savedWx.getStorageSync(first.pendingKey());
+  assert.equal(saved.command.action, 'SUBMIT_QA');
+  assert.equal(saved.command.payload, undefined);
+  assert.doesNotMatch(JSON.stringify(saved), /private-photo|private-answer/);
+  const second = createGame([{ receipt: { sessionId: 42, version: 4, config: {} } }]);
+  global.wx = savedWx;
+  await second.start();
+  assert.equal(second.calls.length, 1);
+  assert.equal(second.calls[0].url, '/api/play/advanced/receipt');
+  assert.equal(second.calls[0].method, 'GET');
+  assert.equal(second.calls[0].data.idempotencyKey, saved.command.idempotencyKey);
+  assert.equal(second.data.unknown, false);
+  assert.equal(savedWx.getStorageSync(second.pendingKey()), undefined);
+});
+
+test('持久化失败先于网络写入，不能丢失原请求身份', async () => {
+  const game = createGame([]);
+  global.wx.setStorageSync = () => { throw new Error('full'); };
+  await game.action('DRAW', {});
+  assert.equal(game.calls.length, 0);
+  assert.equal(game.data.acting, false);
+  assert.match(game.data.error, /尚未提交/);
+});
+
+test('unsafe numeric node identity cannot be rounded into a start request', () => {
+  const game = createGame([]); game.data.node = { nodeId: 9007199254740992 };
+  game.start();
+  assert.equal(game.calls.length, 0);
+  assert.match(game.data.error, /标识不完整/);
 });

@@ -69,7 +69,7 @@ class RefundSingleSidedDebitTopicGuardTest {
         umsMemberMapper = mock(UmsMemberMapper.class);
         umsMemberBalanceDetailMapper = mock(UmsMemberBalanceDetailMapper.class);
 
-        svc = new RefundServiceImpl();
+        svc = com.chengyinhub.business.service.support.RefundF3TestSupport.nonBundle(new RefundServiceImpl());
 
         org.springframework.test.util.ReflectionTestUtils.setField(svc, "firstReviewPointsClawback",
 

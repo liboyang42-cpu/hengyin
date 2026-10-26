@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantReviewReplyReceiptMapper">
+    <select id="countApplied" resultType="int">
+        select count(*) from business_audit_event
+        where domain_type = 'MERCHANT' and domain_id = #{merchantId}
+          and owner_member_id = #{ownerMemberId} and actor_member_id = #{actorMemberId}
+          and target_type = 'MERCHANT_REVIEW' and target_id = #{reviewId}
+          and action = #{action} and request_id = #{requestId}
+    </select>
+</mapper>

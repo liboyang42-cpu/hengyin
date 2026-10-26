@@ -172,6 +172,10 @@
   </view>
   <!-- ② 漫游护照:顶部四项读数 + 上排方卡(功能) + 下排大卡(玩法)。版式与 play 第二 tab 同一套 .pp-* -->
   <view wx:else class="intro-passport">
+    <view wx:if="{{passportLoading}}" aria-role="status">正在读取漫游护照…</view>
+    <cy-error load-failure wx:elif="{{passportError}}" title="漫游护照读取失败" retry="重试" bind:retry="retryPassport" />
+    <block wx:else>
+    <view>以下统计来自已确认完成的漫游；本机旧记录可在漫游记录中查看</view>
     <view class="pp-stats">
       <view class="pp-stat" wx:for="{{passport.stats}}" wx:key="k">
         <text class="pp-stat__v">{{item.v}}</text>
@@ -199,6 +203,7 @@
         <text class="pp-trip__cap">{{item.sub}}</text>
       </view>
     </scroll-view>
+    </block>
   </view>
 
 </view>

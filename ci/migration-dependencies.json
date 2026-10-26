@@ -841,6 +841,9 @@
     "20261022_theme_state_key_attribute_def": ["theme_state_key_20260916"],
     "20261022_theme_character": ["theme_state_key_20260916", "20261022_theme_state_key_attribute_def"],
     "20261022_f7_user_invoice": [],
+    "20261026_user_invoice_processing": ["20261022_f7_user_invoice"],
+    "20261026_user_invoice_title_receipt": ["20261022_f7_user_invoice"],
+    "20261026_user_invoice_menu": ["20261012_missing_business_menu", "20261026_user_invoice_processing", "20261026_user_invoice_title_receipt"],
     "20261022_f7_minor_guardian": []
   }
 }

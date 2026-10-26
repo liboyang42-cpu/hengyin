@@ -978,6 +978,10 @@
         <view class="story-game-row__action" data-key="{{item.key}}" data-preview="1" bindtap="onCreateGame" aria-role="button" aria-label="预览{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">预览</view>
         <view wx:if="{{!supportNodeChallenge && !supportNodeSettled || !storySupportReasons[item.key]}}" class="story-game-row__action" data-key="{{item.key}}" bindtap="onCreateGame" aria-role="button" aria-label="配置{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">配置</view>
       </view>
+      <view wx:if="{{templateAdoptionError}}" class="node-card__value">
+        <text>{{templateAdoptionError}}</text>
+        <view bindtap="inspectAdoptedTemplates" aria-role="button" aria-label="查看我的玩法" class="node-pill">查看我的玩法</view>
+      </view>
       <view class="temp-seg">
         <text class="temp-seg__tit">公共玩法库</text>
         <text class="temp-seg__sub" wx:if="{{publicTempState === 'loading'}}">加载中…</text>
@@ -1058,11 +1062,12 @@
       <!-- 稿 S36 的这句是防走错门用的:人常把这张当成"改玩法"的地方。 -->
 
       <view class="node-card route-mapping-card">
-        <view class="route-mapping-row" wx:for="{{routeMappingRows}}" wx:key="code" wx:for-item="mapping" wx:for-index="mappingIndex">
+        <view class="route-mapping-row" wx:for="{{routeMappingRows}}" wx:key="mappingKey" wx:for-item="mapping" wx:for-index="mappingIndex">
           <text class="route-mapping-row__label">{{mapping.label}}</text>
           <cy-dropdown topic-editor="{{true}}" class="route-mapping-row__picker" range="{{mapping.targetOptions}}" range-key="label" data-rowindex="{{mappingIndex}}" bind:change="onRouteMappingTargetPick">
             <view class="route-mapping-row__target"><text>{{mapping.targetLabel}}</text><cy-icon name="arrow-right" size="24" /></view>
           </cy-dropdown>
+          <story-rule-editor class="route-mapping-rules" wx:if="{{routeMappingShow}}" identity="{{mapping.formIdentity}}" value="{{mapping.ruleConfig}}" baseline="{{mapping.ruleBaseline}}" nodes="{{routeRuleNodes}}" variables="{{routeRuleVariables}}" bind:change="onRouteRulesChange" />
         </view>
         <view class="route-mapping-row route-mapping-row--fallback">
           <view>
@@ -1706,10 +1711,10 @@
       <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeValueEditor" aria-role="button" aria-label="关闭数值编辑" hover-class="cy-pressed">退出</view><view class="node-sheet__done" bindtap="saveValueEditor" aria-role="button" aria-label="保存数值" hover-class="cy-pressed">完成</view></view>
       <view class="node-sheet__titlebar"><text class="node-sheet__eyebrow">取值范围</text><text class="node-sheet__name node-sheet__name--static">{{valueEditor.index < 0 ? '添加数值' : '编辑数值'}}</text></view>
       <view class="node-card">
-        <view class="rt-field"><text>名称</text><input value="{{valueEditor.row.label}}" maxlength="24" placeholder="输入数值名称" data-field="label" bindinput="onValueField" /></view>
+        <view class="rt-field"><text>名称</text><input value="{{valueEditor.row.label}}" disabled="{{valueEditor.definitionReadOnly}}" maxlength="128" placeholder="输入数值名称" data-field="label" bindinput="onValueField" /></view>
         <text class="story-initial__example">改名后，已有引用仍会保持关联。</text>
-        <view class="rt-two"><view class="rt-field"><text>下限</text><input type="text" value="{{valueEditor.row.min}}" data-field="min" bindinput="onValueField" /></view><view class="rt-field"><text>上限</text><input type="text" value="{{valueEditor.row.max}}" data-field="max" bindinput="onValueField" /></view></view>
-        <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">玩家可见</text></view><cy-switch checked="{{valueEditor.row.visible}}" data-field="visible" bindchange="onValueField" /></view>
+        <view class="rt-two"><view class="rt-field"><text>下限</text><input type="text" value="{{valueEditor.row.min}}" disabled="{{valueEditor.definitionReadOnly}}" data-field="min" bindinput="onValueField" /></view><view class="rt-field"><text>上限</text><input type="text" value="{{valueEditor.row.max}}" disabled="{{valueEditor.definitionReadOnly}}" data-field="max" bindinput="onValueField" /></view></view>
+        <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">玩家可见</text></view><cy-switch checked="{{valueEditor.row.visible}}" disabled="{{valueEditor.definitionReadOnly}}" data-field="visible" bindchange="onValueField" /></view>
         <text class="story-initial__example">开局值在第一章的「初始状态」中填写；修改范围后，越界的开局值会标出并阻止发布。</text>
       </view>
       <view class="node-card">
@@ -1727,7 +1732,8 @@
           <view class="node-pill" data-index="{{li}}" bindtap="removeValueLink" aria-role="button" aria-label="移除关联" hover-class="cy-pressed">移除关联</view>
         </view>
       </view>
-      <view class="node-card node-card--danger" wx:if="{{valueEditor.index >= 0}}" bindtap="removeValue" aria-role="button" aria-label="删除数值" hover-class="cy-pressed">删除数值</view>
+      <view class="node-card node-card--danger" wx:if="{{valueEditor.index >= 0 && !valueEditor.definitionReadOnly}}" bindtap="removeValue" aria-role="button" aria-label="删除数值" hover-class="cy-pressed">删除数值</view>
+      <view wx:if="{{valueEditor.definitionReadOnly}}" class="rt-hint">定义在主题配置的状态键中管理；这里可以编辑数值关联。</view>
       <cy-inline-error wx:if="{{valueEditor.error}}" title="{{valueEditor.error}}" />
     </view>
   </cy-sheet>
@@ -1766,6 +1772,10 @@
       <text class="node-sheet__eyebrow">主题配置</text>
       <text class="node-sheet__name node-sheet__name--static">初始状态</text>
     </view>
+    <view class="node-card">
+      <attribute-binding-editor wx:if="{{initialStateEditor.show}}" rules="{{formData.journeyRules}}" snapshot="{{attributeRegistrySnapshot}}" topic-id="{{editingTopicId}}" config-version="{{formData.configVersion}}" read-only="{{editScope === 'WHITELIST'}}" bind:confirm="onAttributeBindingConfirm" bind:manage="manageAttributeDefinitions" bind:refresh="loadAttributeRegistry" />
+      <cy-inline-error wx:if="{{attributeRegistryError}}" title="{{attributeRegistryError}}" />
+    </view>
     <view class="node-card" wx:if="{{initialStateEditor.rules.hp.enabled}}">
       <view class="story-initial__row"><text class="node-card__title">{{runtimeHpInitialLabel}}</text><cy-switch checked="{{true}}" disabled="{{editScope === 'WHITELIST'}}" data-field="hp.enabled" bind:change="onInitialStateField" accessibility-label="启用{{runtimeHpInitialLabel}}" /></view>
       <view class="story-initial__numbers">
@@ -1782,7 +1792,7 @@
     </view>
     <view class="node-card" wx:for="{{initialStateEditor.values}}" wx:key="key">
       <view class="story-initial__row"><text class="node-card__title">{{item.label}}</text><text class="node-card__value">{{item.min}} 至 {{item.max}}</text></view>
-      <view class="story-initial__numbers"><cy-field label="开局{{item.label}}" value="{{item.initial}}" data-index="{{item.index}}" data-field="attribute.initial" bind:input="onInitialStateField" readonly="{{editScope === 'WHITELIST'}}" /></view>
+      <view class="story-initial__numbers"><cy-field label="开局{{item.label}}" value="{{item.initial}}" data-index="{{item.index}}" data-field="attribute.initial" bind:input="onInitialStateField" readonly="{{editScope === 'WHITELIST' || initialStateEditor.rules.attributeBinding}}" /></view>
       <cy-inline-error wx:if="{{item.invalidInitial}}" title="开局值超出当前范围，请修改后完成" />
     </view>
     <view class="story-initial__choices" wx:if="{{editScope !== 'WHITELIST'}}">

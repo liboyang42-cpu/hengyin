@@ -93,15 +93,15 @@ class CityStationOrderAcceptanceTest {
         pendingPhoto.setNodeId(1L);
         pendingPhoto.setStatus(0);
         when(progress.selectPlayerNodeProgressList(any())).thenReturn(List.of(pendingPhoto));
-        Boolean allowed = ReflectionTestUtils.invokeMethod(controller, "isPrevDone", MEMBER, ACT, second);
+        Boolean allowed = com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "isPrevDone", MEMBER, ACT, second);
         assertFalse(allowed, "拍照待审不算完成,第二站不能提前通过");
 
         PlayerNodeProgress done = new PlayerNodeProgress();
         done.setNodeId(1L);
         done.setStatus(1);
         when(progress.selectPlayerNodeProgressList(any())).thenReturn(List.of(done));
-        assertTrue(ReflectionTestUtils.<Boolean>invokeMethod(controller, "isPrevDone", MEMBER, ACT, second));
-        assertFalse(ReflectionTestUtils.<Boolean>invokeMethod(controller, "isPrevDone", MEMBER, ACT, third),
+        assertTrue(PlayNodeAccessTestFixtures.<Boolean>invokeMethod(controller, "isPrevDone", MEMBER, ACT, second));
+        assertFalse(PlayNodeAccessTestFixtures.<Boolean>invokeMethod(controller, "isPrevDone", MEMBER, ACT, third),
                 "第三站还要求第二站完成");
     }
 }

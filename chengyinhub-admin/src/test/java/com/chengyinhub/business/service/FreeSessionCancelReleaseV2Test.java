@@ -81,6 +81,7 @@ class FreeSessionCancelReleaseV2Test {
         r.setWechatPaymentAmount(payable);
         r.setPointUsed(pointUsed);
         when(regMapper.selectCmsRegistrationById(REG)).thenReturn(r);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(r);
         return r;
     }
 

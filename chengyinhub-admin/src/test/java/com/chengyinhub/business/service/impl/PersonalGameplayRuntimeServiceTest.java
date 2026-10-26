@@ -50,6 +50,35 @@ class PersonalGameplayRuntimeServiceTest {
         service.recordPlayerArrival(7L,10L,0L,11L,"scan-north",null);
         service.recordPlayerArrival(7L,10L,0L,12L,"scan-east",null);
     }
+    @Test void gameplayBridgeKeepsActionCasResponseOrderAndReplayHasNoScoring() {
+        OrientRouteSettlement bridge=mock(OrientRouteSettlement.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(service,"orientRouteSettlement",bridge);
+        when(bridge.active(topic)).thenReturn(true);when(bridge.lock(session)).thenReturn(session);
+        clearInvocations(mapper);
+        service.gameplayAction(7L,99L,session.getVersion(),"bridge-start","QUEST_START","north",null);
+        var order=inOrder(bridge,mapper);
+        order.verify(bridge).lock(session);
+        order.verify(mapper).insertAction(any());
+        order.verify(mapper).updateStateCas(session);
+        order.verify(bridge).complete(eq(session),any());
+        order.verify(mapper).updateActionResponse(anyLong(),anyString());
+        clearInvocations(bridge);
+        service.gameplayAction(7L,99L,0,"bridge-start","QUEST_START","north",null);
+        verifyNoInteractions(bridge);
+        assertThrows(ServiceException.class,()->service.gameplayAction(7L,99L,0,"bridge-start","QUEST_START","east",null));
+        verifyNoInteractions(bridge);
+    }
+    @Test void endedThemeReadNeverInvokesSettlementOrReopensRun() throws Exception {
+        finishForReplay();
+        OrientRouteSettlement bridge=mock(OrientRouteSettlement.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(service,"orientRouteSettlement",bridge);
+        when(bridge.active(topic)).thenReturn(true);when(bridge.lock(session)).thenReturn(session);
+        clearInvocations(mapper);
+        service.themeView(7L,10L,0L,99L);
+        verify(bridge,never()).complete(any(),any());
+        verify(mapper,never()).updateStateCas(any());
+        assertEquals(TopicRouteSession.STATUS_COMPLETED,session.getStatus());
+    }
     @Test void personalR5CheckActionProjectionReadsFrozenAttemptAndLuckWithoutWriting() throws Exception {
         ObjectNode frozen=(ObjectNode)json.readTree(session.getConfigSnapshotJson());
         frozen.with("journeyRules").putObject("luck").put("enabled",true).put("init",1).put("max",1);

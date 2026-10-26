@@ -2,6 +2,7 @@
   <el-dialog title="城市定向计分 · 申诉与争议" :visible="visible" width="94%" append-to-body :close-on-click-modal="false" :before-close="close">
     <cy-resource-state v-if="!canList" kind="forbidden" title="没有计分后台查看权限" description="需要已有的城市定向计分查看权限。" />
     <template v-else>
+      <cy-orient-recovery :active="visible" />
       <p>单位为 centi（1 centi = 0.01 分）。处置只追加计分条目；结算后的变化影响展示分，不追发或追扣已发积分与 XP。</p>
       <cy-resource-state v-if="operationError" kind="error" title="处置尚未确认" :description="operationError" />
       <el-alert v-if="outcome" :title="outcome.message" :type="outcome.type" :closable="false" show-icon />
@@ -107,10 +108,11 @@ import { checkPermi } from '@/utils/permission'
 import CyResourceState from '@/components/CyResourceState'
 import CyEmptyState from '@/components/CyEmptyState'
 import CyEvidencePanel from '@/components/CyEvidencePanel'
+import CyOrientRecovery from './OrientRecoveryConsole.vue'
 
 export default {
   name: 'OrientScoringConsole',
-  components: { CyResourceState, CyEmptyState, CyEvidencePanel },
+  components: { CyResourceState, CyEmptyState, CyEvidencePanel, CyOrientRecovery },
   props: { visible: { type: Boolean, default: false } },
   data() {
     return {

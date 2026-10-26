@@ -222,13 +222,38 @@
           <article class="cockpit-card"><header><div><p class="eyebrow">关键覆盖</p><h2>缺口不能假绿</h2></div></header><div v-if="!(activity360.coverage || []).length" class="inline-empty">此活动没有外部履约需求</div><div v-for="item in activity360.coverage || []" :key="item.requirementId" class="coverage-row"><span>{{ coverageTargetText(item) }}</span><el-tag size="mini" :type="Number(item.coveredBy) > 0 ? 'success' : 'danger'">{{ Number(item.coveredBy) > 0 ? '已覆盖' : '有缺口' }}</el-tag></div></article>
           <article class="cockpit-card wide"><header><div><p class="eyebrow">名单与奖励</p><h2>资格与投递状态</h2></div><el-button v-if="activity360.status === 4" v-hasPermi="['business:officialevent:settle']" type="text" @click="settle(activity360)">重试结算</el-button></header><el-table :data="activity360.participantsAndRewards || []" size="small"><el-table-column prop="memberId" label="成员" width="110" /><el-table-column label="参与状态" width="130"><template slot-scope="scope">{{ participationStateText(scope.row.state) }}</template></el-table-column><el-table-column prop="completedMissions" label="有效完成任务" width="140" /><el-table-column label="奖励投递" min-width="130"><template slot-scope="scope">{{ rewardStatusText(scope.row.rewardStatus) }}</template></el-table-column><el-table-column prop="failureReason" label="异常说明" min-width="180" /></el-table></article>
           <article class="cockpit-card wide"><header><div><p class="eyebrow">暂停控制</p><h2>影响、替代与通知必须可回读</h2></div></header><div v-if="activity360.pausedAt || activity360.resumeNote"><p class="risk-line"><strong>暂停开始：</strong>{{ fmt(activity360.pausedAt) }} · {{ activity360.pausedReason || '未记录原因' }}</p><p class="risk-line"><strong>影响范围：</strong>{{ activity360.pauseImpactScope || '未接入' }}</p><p class="risk-line"><strong>替代方案：</strong>{{ activity360.pauseAlternativePlan || '未接入' }}</p><p class="risk-line"><strong>通知策略 / 状态：</strong>{{ activity360.pauseNotificationPlan || '未接入' }} / {{ pauseNotificationText(activity360.pauseNotificationStatus) }}</p><p class="risk-line"><strong>恢复条件：</strong>{{ activity360.resumeConditions || '未接入' }}<span v-if="activity360.resumeNote">；最近处理：{{ activity360.resumeNote }}</span></p></div><div v-else class="inline-empty">尚无暂停记录。</div></article>
-          <article class="cockpit-card wide risk-card"><header><div><p class="eyebrow">通知与风险</p><h2>待发公告、阻塞与运行风险</h2></div></header><div v-if="(activity360.notifications || []).length"><p v-for="notice in activity360.notifications" :key="notice.id" class="risk-line"><i class="el-icon-bell"></i><strong>{{ notice.title || '未命名通知' }}</strong> · {{ broadcastStatusText(notice.status) }} · {{ fmt(notice.scheduledTime || notice.createTime) }} · 站内已触达 {{ notice.reachedCount || 0 }}</p></div><div v-else class="inline-empty">本活动尚未建立通知，首条通知不可预览。</div><div v-if="activity360.publishCheck && activity360.publishCheck.blockers && activity360.publishCheck.blockers.length"><p v-for="risk in activity360.publishCheck.blockers" :key="risk" class="risk-line"><i class="el-icon-warning-outline"></i>{{ risk }}</p></div><div v-else class="inline-empty">当前无发布合同阻塞项。点击和订阅消息总触达等未接入指标不会在这里估算。</div><div v-for="risk in activity360.sourceRisks || []" :key="risk" class="risk-line"><i class="el-icon-warning-outline"></i>{{ risk }}</div></article>
+          <article class="cockpit-card wide risk-card"><header><div><p class="eyebrow">通知与风险</p><h2>待发公告、阻塞与运行风险</h2></div></header><div v-if="(activity360.notifications || []).length"><p v-for="notice in activity360.notifications" :key="notice.id" class="risk-line"><i class="el-icon-bell"></i><strong>{{ notice.title || '未命名通知' }}</strong> · {{ broadcastStatusText(notice.status) }} · {{ fmt(notice.scheduledTime || notice.createTime) }} · 历史汇总 {{ notice.reachedCount || 0 }}<el-button type="text" @click="readDelivery(notice.id)">逐渠道状态</el-button></p></div><div v-else class="inline-empty">本活动尚未建立通知，首条通知不可预览。</div><div v-if="activity360.publishCheck && activity360.publishCheck.blockers && activity360.publishCheck.blockers.length"><p v-for="risk in activity360.publishCheck.blockers" :key="risk" class="risk-line"><i class="el-icon-warning-outline"></i>{{ risk }}</p></div><div v-else class="inline-empty">当前无发布合同阻塞项。点击和订阅消息总触达等未接入指标不会在这里估算。</div><div v-for="risk in activity360.sourceRisks || []" :key="risk" class="risk-line"><i class="el-icon-warning-outline"></i>{{ risk }}</div></article>
         </section>
       </main>
     </section>
 
+    <el-card v-if="broadcastRecovery.record || broadcastRecovery.error" class="risk-card">
+      <p>{{ broadcastRecovery.error || (broadcastRecovery.record.result ? '原创建请求已有回执，不代表通知送达' : '创建结果待确认，原输入已冻结') }}</p>
+      <p v-if="broadcastRecovery.record">原请求号 {{ broadcastRecovery.record.payload.clientRequestId }}</p>
+      <template v-if="broadcastRecovery.record &amp;&amp; !broadcastRecovery.record.result">
+        <el-button :disabled="broadcastRecovery.busy" @click="broadcastRecoveryAction('query')">查询原创建结果</el-button>
+        <el-button :disabled="broadcastRecovery.busy" @click="broadcastRecoveryAction('retry')">原请求重试</el-button>
+        <el-button :disabled="broadcastRecovery.busy" @click="broadcastRecoveryAction('cancel')">终止未执行创建</el-button>
+      </template>
+      <template v-if="broadcastRecovery.record &amp;&amp; broadcastRecovery.record.result">
+        <p>{{ broadcastRecovery.record.result.state }} · 广播 {{ broadcastRecovery.record.result.broadcastId }}</p>
+        <el-button v-if="broadcastRecovery.record.result.broadcastId" @click="readDelivery(broadcastRecovery.record.result.broadcastId)">读取投递状态</el-button>
+        <el-button @click="broadcastRecoveryAction('acknowledge')">确认归档创建回执</el-button>
+      </template>
+      <el-button v-if="broadcastRecovery.error" @click="openBroadcastRecovery">重新读取记录</el-button>
+    </el-card>
+    <el-card v-if="deliveryView || deliveryError" class="risk-card">
+      <p>{{ deliveryError }}</p>
+      <template v-if="deliveryView">
+        <p>{{ deliveryView.deliveryNote }}</p>
+        <p v-for="(count,state) in deliveryView.deliveryCounts" :key="state">{{ deliveryStateText(state) }}：{{ count }}</p>
+        <el-button @click="readDelivery(deliveryView.id)">读取原广播结果</el-button>
+        <el-button v-if="deliveryView.canRecoverInapp" v-hasPermi="['business:officialevent:notify']" @click="readDelivery(deliveryView.id,true)">安全恢复原投递</el-button>
+        <p>本轮仅人工恢复，自动规则及新增到期策略已暂缓；UNKNOWN需核对渠道事实，不会盲目重发。</p>
+      </template>
+    </el-card>
     <el-dialog title="官方通知" :visible.sync="notifyOpen" width="620px" append-to-body :close-on-click-modal="false">
-      <el-form label-position="top"><el-form-item label="通知对象"><el-checkbox-group v-model="notify.audience"><el-checkbox label="player">玩家</el-checkbox><el-checkbox label="club">俱乐部</el-checkbox><el-checkbox label="merchant">商家</el-checkbox></el-checkbox-group></el-form-item><el-form-item label="标题"><el-input v-model="notify.title" /></el-form-item><el-form-item label="内容"><el-input v-model="notify.content" type="textarea" :rows="4" /></el-form-item><el-form-item label="渠道"><el-checkbox-group v-model="notify.channels"><el-checkbox label="inapp">站内信</el-checkbox><el-checkbox label="subscribe">订阅消息</el-checkbox></el-checkbox-group></el-form-item></el-form>
+      <el-form :disabled="!!broadcastRecovery.record || broadcastRecovery.busy || !!broadcastRecovery.error" label-position="top"><el-form-item label="通知对象"><el-checkbox-group v-model="notify.audience"><el-checkbox label="player">玩家</el-checkbox><el-checkbox label="club">俱乐部</el-checkbox><el-checkbox label="merchant">商家</el-checkbox></el-checkbox-group></el-form-item><el-form-item label="标题"><el-input v-model="notify.title" /></el-form-item><el-form-item label="内容"><el-input v-model="notify.content" type="textarea" :rows="4" /></el-form-item><el-form-item label="渠道"><el-checkbox-group v-model="notify.channels"><el-checkbox label="inapp">站内信</el-checkbox><el-checkbox label="subscribe">订阅消息</el-checkbox></el-checkbox-group></el-form-item></el-form>
       <div slot="footer"><el-button @click="notifyOpen = false">取消</el-button><el-button v-hasPermi="['business:officialevent:notify']" type="primary" @click="submitNotify">发送通知</el-button></div>
     </el-dialog>
 
@@ -255,11 +280,13 @@
 <script>
 import {
   listOfficialEvent, getOfficialEvent, settleOfficialEvent, broadcastOfficial,
+  queryBroadcastCreation, cancelBroadcastCreation, readBroadcastDelivery, recoverBroadcastDelivery,
   saveOfficialEventV2Draft, getOfficialEventV2Draft, checkOfficialEventV2Publish,
   scheduleOfficialEventV2, getOfficialEvent360, pauseOfficialEventV2, resumeOfficialEventV2,
   getOfficialEventV2OperatorIdentity, authorizeOfficialEventV2Operator, revokeOfficialEventV2Operator
 } from '@/api/business/officialevent'
 import auth from '@/plugins/auth'
+import { createBroadcastRecovery } from '@/utils/official-broadcast-recovery'
 import { toTimestamp } from '@/utils/ruoyi'
 
 const STATUS = { 0: '草稿', 1: '已排期', 2: '报名中', 3: '进行中', 4: '待结算', 5: '已结束', 6: '已复盘', 9: '已下线' }
@@ -274,7 +301,7 @@ const MISSION_TYPE_TEXT = {
   ROAM_SESSION_AREA: '漫游区域覆盖'
 }
 const POLICY_TEXT = { SELF_RUN: '官方自行运行', OPTIONAL_PARTNERS: '合作可选', REQUIRED_FULFILLMENT: '外部履约必需' }
-const BROADCAST_STATUS_TEXT = { 0: '草稿', 1: '待发', 2: '已发', 3: '已停止（已送达内容不回收）' }
+const BROADCAST_STATUS_TEXT = { 0: '草稿', 1: '待发', 2: '投递处理结束（不代表已读）', 3: '已停止（已送达内容不回收）' }
 const PARTY_ROLE_TEXT = { ORGANIZER: '主办方', CO_ORGANIZER: '协办方', FULFILLMENT_MERCHANT: '商家履约', FULFILLMENT_CLUB: '俱乐部履约', SPONSOR: '支持方', PROMOTION_PARTNER: '推广伙伴' }
 const PARTY_TYPE_TEXT = { OFFICIAL: '官方', MERCHANT: '商家', CLUB: '俱乐部' }
 const PARTY_STATUS_TEXT = { INVITED: '已邀请待确认', ACCEPTED: '已接受', ACTIVE: '已生效', DECLINED: '已拒绝', WITHDRAWN: '已撤回', SUSPENDED: '已暂停', COMPLETED: '已完成', ARCHIVED: '已归档' }
@@ -340,6 +367,7 @@ export default {
       draft: this.emptyDraft(), reward: this.emptyReward(), activity360: {},
       operatorIdentity: { sysUserId: null, memberId: null, authorized: false, authorizationStatus: 'UNBOUND' },
       operatorAuthOpen: false, operatorAuthForm: { sysUserId: null, memberId: null, reason: '' },
+      broadcastRecovery: {record:null,error:'',busy:false}, deliveryView:null, deliveryError:'',
       notifyOpen: false, notifyEventId: null, notify: this.emptyNotify(), pauseOpen: false, pauseForm: this.emptyPause(), legacyOpenVisible: false, legacyEvent: null
     }
   },
@@ -353,8 +381,28 @@ export default {
       return this.canWriteV2 ? '当前主办会员 #' + this.operatorIdentity.memberId : '当前后台账号未绑定主办会员'
     }
   },
-  created() { this.getList(); this.loadOperatorIdentity() },
+  created() { this.getList(); this.loadOperatorIdentity(); this.openBroadcastRecovery() },
+  watch: {
+    '$store.state.user.id'() {this.deliveryView=null;this.deliveryError='';this.openBroadcastRecovery()},
+    '$store.state.user.token'() {this.deliveryView=null;this.deliveryError='';this.openBroadcastRecovery()}
+  },
+  beforeDestroy() { if(this._broadcastRecovery)this._broadcastRecovery.dispose() },
   methods: {
+    openBroadcastRecovery() {
+      if(this._broadcastRecovery)this._broadcastRecovery.dispose()
+      this._broadcastRecovery=createBroadcastRecovery({storage:window.localStorage,
+        identity:()=>({id:String(this.$store.state.user.id||''),token:this.$store.state.user.token}),
+        random:bytes=>window.crypto.getRandomValues(bytes),publish:broadcastOfficial,query:queryBroadcastCreation,cancel:cancelBroadcastCreation,
+        changed:value=>{this.broadcastRecovery=value}})
+    },
+    broadcastRecoveryAction(action) {if(['query','retry','cancel','acknowledge'].includes(action))this._broadcastRecovery[action]()},
+    readDelivery(id, recover=false) {
+      const actor=String(this.$store.state.user.id),token=this.$store.state.user.token
+      this.deliveryError=''
+      const read=()=>readBroadcastDelivery(id)
+      const task=recover?this.$modal.confirm('只恢复原收件人的可安全恢复投递；UNKNOWN不会重发。').then(()=>recoverBroadcastDelivery(id)).then(read):read()
+      task.then(res=>{if(actor===String(this.$store.state.user.id)&&token===this.$store.state.user.token)this.deliveryView={id,...res.data}}).catch(()=>{if(actor===String(this.$store.state.user.id)&&token===this.$store.state.user.token)this.deliveryError='结果暂未确认，请读取原广播状态；不要新建广播重发'})
+    },
     emptyDraft() {
       return { event: { contractVersion: 2, category: 'city_light', fulfillmentPolicy: 'SELF_RUN', bannerEnabled: 0, collectiveEnabled: 0, collectiveMetric: 'complete_count', collectiveThreshold: 0, leaderboardEnabled: 0 }, bindings: [], missions: [], parties: [], fulfillmentRequirements: [] }
     },
@@ -427,6 +475,7 @@ export default {
     },
     bindingTypeText(type) { return enumText(BINDING_TYPE_TEXT, type, '未记录绑定类型') },
     statusType(status) { return status === 3 ? 'success' : (status === 4 ? 'warning' : (status === 9 ? 'info' : '')) },
+    deliveryStateText(state) { return ({INAPP_STORED:'站内已入库',CHANNEL_ACCEPTED:'订阅渠道已受理（非已读）',REJECTED:'订阅明确拒绝，不自动重发',NOT_SUBMITTED:'订阅未提交，修复前置后人工恢复',RETRYABLE:'可沿原站内意图恢复',UNKNOWN:'渠道结果待核，不重发',READY:'已冻结待处理',CAPPED:'原频控阻止，未投递',LEGACY_UNCONFIRMED:'历史结果待核，不重发'})[state] || '未知状态' },
     broadcastStatusText(status) { return enumText(BROADCAST_STATUS_TEXT, status, '状态未知') },
     policyText(policy) { return enumText(POLICY_TEXT, policy, '未设置') },
     fmt(value) { if (!value) return '未设置'; const date = new Date(Number(value)); return isNaN(date.getTime()) ? String(value) : date.getFullYear() + '/' + (date.getMonth() + 1) + '/' + date.getDate() + ' ' + String(date.getHours()).padStart(2, '0') + ':' + String(date.getMinutes()).padStart(2, '0') },
@@ -526,13 +575,15 @@ export default {
     openLegacy(row) { getOfficialEvent(row.id).then(res => { this.legacyEvent = res.data || row; this.legacyOpenVisible = true }) },
     openNotify(row) {
       if (!auth.hasPermi('business:officialevent:notify')) { this.$modal.msgWarning('没有通知权限'); return }
+      if(this._broadcastRecovery&&this._broadcastRecovery.pending()){this.$modal.msgWarning('请先处理原广播请求');return}
       this.notifyEventId = row ? row.id : null; this.notify = Object.assign(this.emptyNotify(), { title: row ? row.title : '', city: row ? row.city || '' : '' }); this.notifyOpen = true
     },
     submitNotify() {
       if (!auth.hasPermi('business:officialevent:notify')) { this.$modal.msgWarning('没有通知权限'); return }
       if (!this.notify.audience.length) { this.$modal.msgWarning('请选择通知对象'); return }
       const data = { eventId: this.notifyEventId, title: this.notify.title || '官方通知', audience: this.notify.audience.join(','), copyMode: 1, contentJson: JSON.stringify({ title: this.notify.title || '官方通知', sub: this.notify.content }), channels: this.notify.channels.join(',') || 'inapp', city: this.notify.city || null }
-      broadcastOfficial(data).then(res => { this.$modal.msgSuccess(res.msg || '通知已发送'); this.notifyOpen = false })
+      if(!data.title.trim()||!data.audience){this.$modal.msgWarning('请填写标题和通知对象');return}
+      this._broadcastRecovery.start(data)
     }
   }
 }

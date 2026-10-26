@@ -43,15 +43,19 @@ class TopicRouteFrozenSessionReadSideTest {
     void myCompletedUsesFrozenBranchSessionEvenAfterPublishedRouteBecomesLinear() {
         ApiPlayProgressController controller = spy(new ApiPlayProgressController());
         doReturn(MEMBER).when(controller).getAppUserId();
+        com.chengyinhub.business.service.support.CompletedRouteFactReader completedRoutes =
+                mock(com.chengyinhub.business.service.support.CompletedRouteFactReader.class);
+        when(completedRoutes.findCurrentCompletedRoutes(MEMBER)).thenReturn(Collections.emptyList());
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "completedRouteFactReader", completedRoutes);
 
         IPlayerNodeProgressService progressService = mock(IPlayerNodeProgressService.class);
         when(progressService.selectPlayerNodeProgressList(any()))
                 .thenReturn(Collections.singletonList(progress(MEMBER, ACTIVITY, TOPIC, 1L)));
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
 
         ICmsRegistrationService registrationService = mock(ICmsRegistrationService.class);
-        when(registrationService.selectExplorePassesByActivity(MEMBER)).thenReturn(Collections.emptyMap());
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
+        when(registrationService.selectCmsRegistrationList(any(com.chengyinhub.business.domain.CmsRegistration.class))).thenReturn(Collections.emptyList());
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
 
         CmsActivity activity = new CmsActivity();
         activity.setId(ACTIVITY);
@@ -59,24 +63,24 @@ class TopicRouteFrozenSessionReadSideTest {
         activity.setName("冻结分支活动");
         ICmsActivityService activityService = mock(ICmsActivityService.class);
         when(activityService.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
 
         ICmsTopicNodeService nodeService = mock(ICmsTopicNodeService.class);
         when(nodeService.selectCmsTopicNodeList(any())).thenReturn(Arrays.asList(node(1L), node(2L)));
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
 
         CmsTopic publishedLinear = new CmsTopic();
         publishedLinear.setId(TOPIC);
         publishedLinear.setPublishedRouteGraphJson(null);
         ICmsTopicService topicService = mock(ICmsTopicService.class);
         when(topicService.selectCmsTopicById(TOPIC)).thenReturn(publishedLinear);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
 
         ITopicRouteRuntimeService runtime = mock(ITopicRouteRuntimeService.class);
         when(runtime.sessionStatuses(any())).thenReturn(Collections.singletonMap(
                 ITopicRouteRuntimeService.sessionKey(MEMBER, TOPIC, ACTIVITY),
                 TopicRouteSession.STATUS_COMPLETED));
-        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", runtime);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", runtime);
 
         AjaxResult result = controller.myCompleted();
 
@@ -100,32 +104,32 @@ class TopicRouteFrozenSessionReadSideTest {
         club.setStatus(1L);
         club.setDelFlag(0);
         when(clubService.selectClubById(CLUB)).thenReturn(club);
-        ReflectionTestUtils.setField(controller, "clubService", clubService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubService", clubService);
 
         CmsTopic publishedLinear = new CmsTopic();
         publishedLinear.setId(TOPIC);
         publishedLinear.setName("混合代际主题");
         ICmsTopicService topicService = mock(ICmsTopicService.class);
         when(topicService.selectCmsTopicList(any())).thenReturn(Collections.singletonList(publishedLinear));
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
 
         ICmsTopicNodeService nodeService = mock(ICmsTopicNodeService.class);
         when(nodeService.selectCmsTopicNodeList(any())).thenReturn(Arrays.asList(node(1L), node(2L)));
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
 
         IPlayerNodeProgressService progressService = mock(IPlayerNodeProgressService.class);
         when(progressService.selectPlayerNodeProgressList(any())).thenReturn(Arrays.asList(
                 progress(1L, ACTIVITY, TOPIC, 1L),
                 progress(2L, ACTIVITY, TOPIC, 1L), progress(2L, ACTIVITY, TOPIC, 2L),
                 progress(3L, ACTIVITY, TOPIC, 1L), progress(3L, ACTIVITY, TOPIC, 2L)));
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
 
         ITopicRouteRuntimeService runtime = mock(ITopicRouteRuntimeService.class);
         when(runtime.participantMemberIds(TOPIC))
                 .thenReturn(new LinkedHashSet<Long>(Arrays.asList(1L, 3L)));
         when(runtime.completedMemberIds(TOPIC))
                 .thenReturn(new LinkedHashSet<Long>(Collections.singletonList(1L)));
-        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", runtime);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", runtime);
 
         AjaxResult result = controller.club(Collections.<String, Object>singletonMap("clubId", CLUB));
 

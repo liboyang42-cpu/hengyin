@@ -13,7 +13,7 @@ const MAX_APPEAL_REASON = 500;
 
 // 项目卡(主题 / 活动):只在未通过或已下架时给审核记录。
 function projectTarget(item) {
-  if (!item || !item.id || (item.state !== 'rejected' && item.state !== 'offline')) return null;
+  if (!item || !item.id || typeof item.id === 'number' && !Number.isSafeInteger(item.id) || (item.state !== 'rejected' && item.state !== 'offline')) return null;
   if (item.bizType === 'topic') return { bizType: 'TOPIC', bizId: String(item.id) };
   if (item.bizType === 'activity') return { bizType: 'ACTIVITY', bizId: String(item.id) };
   return null;
@@ -21,9 +21,10 @@ function projectTarget(item) {
 
 // 玩法卡:个人审核未通过 → 个人玩法(TEMPLATE);否则广场记录被驳回 / 下架 → 广场(TEMPLATE_LIBRARY)。
 function templateTarget(t) {
-  if (!t || !t.id) return null;
+  if (!t || !t.id || typeof t.id === 'number' && !Number.isSafeInteger(t.id)) return null;
   const is = (value, expected) => value === expected || value === String(expected);
   if (is(t.draftStatus, 1) && (is(t.status, 2) || is(t.checkStatus, 2))) return { bizType: 'TEMPLATE', bizId: String(t.id) };
+  if (typeof t.marketTemplateId === 'number' && !Number.isSafeInteger(t.marketTemplateId)) return null;
   const market = /^[1-9]\d*$/.test(String(t.marketTemplateId || ''));
   if (market && (is(t.marketStatus, 2) || (is(t.marketStatus, 1) && is(t.marketPublishStatus, 0)))) {
     return { bizType: 'TEMPLATE_LIBRARY', bizId: String(t.marketTemplateId) };
@@ -47,6 +48,15 @@ function timelineRows(data) {
         label: kind + ' · ' + ACTION_TEXT[record.action],
         sub: [reasonLabels, record.reasonText, record.createTime].filter(function (v) { return v != null && String(v).trim(); }).join(' · ')
       });
+    });
+    const problems = round && Array.isArray(round.problems) ? round.problems : [];
+    const types = { TOPIC: '主题', CHAPTER: '章节', NODE: '节点', TEMPLATE: '玩法' };
+    problems.forEach(function (problem, i) {
+      if (!problem || typeof problem.reasonText !== 'string') return;
+      const id = problem.itemId == null ? '' : String(problem.itemId);
+      rows.push({ key: r + '-problem-' + (problem.id == null ? i : problem.id),
+        label: kind + ' · ' + (types[problem.itemType] || '内容') + (id ? ' #' + id : '') + '问题',
+        sub: problem.reasonText });
     });
   });
   return rows;

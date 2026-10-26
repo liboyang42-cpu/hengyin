@@ -11,7 +11,7 @@
  * 夹具里的四个节点:两个带玩法的普通站、一个不需要打卡的剧情站(templateId=0,非必需)、一个已下架站(status=0)。
  * 按口径应数 3 站。status=0 = 后台「是否显示=隐藏」(作者保存一律写 1)。
  * /api/topic/info-to-user 按章节查节点带 status=1(ApiTopicInfoHiddenNodeTest 钉住),回包里没有隐藏节点;
- * /api/topic/edit-detail 仍原样带着(作者保存是整体替换,少回一个 = 重存时删掉它;保存按旧 id 保留隐藏态),
+ * /api/topic/author-edit-detail 仍原样带着(作者保存是整体替换,少回一个 = 重存时删掉它;保存按旧 id 保留隐藏态),
  * 所以向导那份回包里有 104,向导自己只数 status=1。 */
 'use strict'
 const { test } = require('node:test')

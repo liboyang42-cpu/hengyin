@@ -135,6 +135,7 @@ class RefundDeadlineGateTest {
     @Test
     void topicTicketMissingStartTime_refundRejected() {
         when(regMapper.selectCmsRegistrationById(REG)).thenReturn(paidTopicRegistration());
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(paidTopicRegistration());
         givenTicket(1, null, null);            // G2:mode=1 票 start_time 为 null
 
         RuntimeException e = assertThrows(RuntimeException.class,
@@ -147,6 +148,7 @@ class RefundDeadlineGateTest {
     @Test
     void freeExploreTicketMissingEndTime_refundRejected() {
         when(regMapper.selectCmsRegistrationById(REG)).thenReturn(paidTopicRegistration());
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(paidTopicRegistration());
         givenTicket(2, null, null);            // G3:mode=2 票 end_time 为 null
 
         RuntimeException e = assertThrows(RuntimeException.class,
@@ -158,6 +160,7 @@ class RefundDeadlineGateTest {
     @Test
     void missedDeadline_stillRejected() {
         when(regMapper.selectCmsRegistrationById(REG)).thenReturn(paidTopicRegistration());
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(paidTopicRegistration());
         givenTicket(1, new Date(System.currentTimeMillis() - 86400_000L), future());
 
         RuntimeException e = assertThrows(RuntimeException.class,
@@ -316,6 +319,7 @@ class RefundDeadlineGateTest {
     @Test
     void missingDeadline_refusalLeavesSearchableWarnLog() {
         when(regMapper.selectCmsRegistrationById(REG)).thenReturn(paidTopicRegistration());
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(paidTopicRegistration());
         givenTicket(1, null, null);            // G2:mode=1 票 start_time 为 null
 
         assertThrows(RuntimeException.class, () -> service.cancelPaidRegistration(REG, MEMBER));

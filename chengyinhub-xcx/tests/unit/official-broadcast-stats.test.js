@@ -13,11 +13,13 @@ function loadPage() {
   const requests = [];
   vm.runInNewContext(fs.readFileSync(FILE, 'utf8'), {
     getApp: () => ({
+      getUserID: () => '7', getAuthorization: () => 'fixture',
       sendRequest: r => { requests.push(r); },
       getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
     }),
     Page: p => { page = p; },
     require: id => {
+      if (id.endsWith('/user-character.js')) return require(path.join(root, 'utils/user-character.js'));
       if (id.endsWith('/response-shape.js')) return require(path.join(root, 'utils/response-shape.js'));
       return {};
     },

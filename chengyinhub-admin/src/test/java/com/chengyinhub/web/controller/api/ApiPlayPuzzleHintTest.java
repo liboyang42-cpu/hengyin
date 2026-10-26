@@ -84,43 +84,49 @@ class ApiPlayPuzzleHintTest
         attemptMapper = mock(PlayAttemptLogMapper.class);
         when(attemptMapper.insertPlayAttemptLog(any())).thenReturn(1);
 
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templateService);
-        ReflectionTestUtils.setField(controller, "nodeMerchantOverrideService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService", templateService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "nodeMerchantOverrideService",
                 new com.chengyinhub.business.service.impl.NodeMerchantOverrideServiceImpl(
                         mock(com.chengyinhub.business.service.ICmsRegistrationMerchantService.class)));
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
-        ReflectionTestUtils.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
         progressService = mock(IPlayerNodeProgressService.class);
         when(progressService.selectPlayerNodeProgressList(any())).thenReturn(Collections.emptyList());
         when(progressService.insertPlayerNodeProgress(any())).thenReturn(1);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "playAttemptLogMapper", attemptMapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playAttemptLogMapper", attemptMapper);
         com.chengyinhub.business.mapper.PlayerNodeProgressMapper progressMapper =
                 mock(com.chengyinhub.business.mapper.PlayerNodeProgressMapper.class);
         when(progressMapper.selectPlayerNodeProgressList(any())).thenReturn(Collections.emptyList());
         com.chengyinhub.business.mapper.UmsMemberMapper memberMapper =
                 mock(com.chengyinhub.business.mapper.UmsMemberMapper.class);
         when(memberMapper.lockMemberById(MEMBER)).thenReturn(MEMBER);
-        ReflectionTestUtils.setField(controller, "puzzlePlayService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "puzzlePlayService",
                 new com.chengyinhub.business.service.impl.PuzzlePlayServiceImpl(
-                        templateService, attemptMapper, progressMapper, memberMapper));
-        ReflectionTestUtils.setField(controller, "pointsAwardService",
+                        templateService, attemptMapper, progressMapper, memberMapper,
+                mock(com.chengyinhub.business.service.ICmsTopicNodeService.class),
+                mock(com.chengyinhub.business.service.support.PlayNodeAccessService.class),
+                mock(com.chengyinhub.business.service.ICmsPointsSettingService.class),
+                mock(com.chengyinhub.business.service.IUmsMemberService.class),
+                mock(com.chengyinhub.business.service.IUmsMemberPointsDetailService.class)));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "pointsAwardService",
                 mock(com.chengyinhub.business.service.IPointsAwardService.class));
         com.chengyinhub.business.service.IPlayerProgressionService progression =
                 mock(com.chengyinhub.business.service.IPlayerProgressionService.class);
         when(progression.onNodeDone(MEMBER)).thenReturn(Collections.emptyList());
-        ReflectionTestUtils.setField(controller, "playerProgressionService", progression);
-        ReflectionTestUtils.setField(controller, "xpBudgetService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerProgressionService", progression);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "xpBudgetService",
                 mock(com.chengyinhub.business.service.IXpBudgetService.class));
-        ReflectionTestUtils.setField(controller, "growthService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "growthService",
                 mock(com.chengyinhub.business.service.IGrowthService.class));
-        ReflectionTestUtils.setField(controller, "rewardDropService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "rewardDropService",
                 mock(com.chengyinhub.business.service.IRewardDropService.class));
-        ReflectionTestUtils.setField(controller, "memberCollectibleMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "memberCollectibleMapper",
                 mock(com.chengyinhub.business.mapper.MemberCollectibleMapper.class));
         CurrentPlayControllerFixtures.install(controller);
+        BasicPlayCommandFixtures.scope(controller, TOPIC);
     }
 
     @SuppressWarnings("unchecked")
@@ -166,10 +172,10 @@ class ApiPlayPuzzleHintTest
         template.setQuestionAnswer("1932");
         template.setAnswerReveal("1932，门楣最左边的年份");
         ICmsMemberTemplateService service = (ICmsMemberTemplateService)
-                ReflectionTestUtils.getField(controller, "cmsMemberTemplateService");
+                com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "cmsMemberTemplateService");
         when(service.selectCmsMemberTemplateById(TEMPLATE)).thenReturn(template);
 
-        AjaxResult result = controller.revealPuzzle(null, String.valueOf(NODE), String.valueOf(TOPIC));
+        AjaxResult result = BasicPlayCommandFixtures.revealPuzzle(controller, null, String.valueOf(NODE), String.valueOf(TOPIC));
 
         assertEquals(200, result.get("code"));
         Map<String, Object> data = (Map<String, Object>) result.get("data");
@@ -186,8 +192,9 @@ class ApiPlayPuzzleHintTest
     @Test
     void orientingPuzzleSecretsAreNotDownlinkedBeforeServerFactIsRecorded() throws Exception
     {
+        // The production /nodes projection moved out of the HTTP facade; keep the same secret guard.
         String source = new String(Files.readAllBytes(Paths.get("src", "main", "java", "com", "chengyinhub",
-                "web", "controller", "api", "ApiPlayProgressController.java")), StandardCharsets.UTF_8)
+                "web", "service", "play", "PlayNodeQueryApplication.java")), StandardCharsets.UTF_8)
                 .replaceAll("\\s+", " ");
 
         assertEquals(true, source.contains("if (!puzzleScoring) {"),
@@ -198,16 +205,109 @@ class ApiPlayPuzzleHintTest
     void revealCannotBypassScanOrGpsValidation()
     {
         ICmsMemberTemplateService service = (ICmsMemberTemplateService)
-                ReflectionTestUtils.getField(controller, "cmsMemberTemplateService");
+                com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "cmsMemberTemplateService");
         CmsMemberTemplate physicalTask = new CmsMemberTemplate();
         physicalTask.setId(TEMPLATE);
 
         physicalTask.setValidationMethod(4);
         when(service.selectCmsMemberTemplateById(TEMPLATE)).thenReturn(physicalTask);
-        assertEquals(500, controller.revealPuzzle(null, String.valueOf(NODE), String.valueOf(TOPIC)).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.revealPuzzle(controller, null, String.valueOf(NODE), String.valueOf(TOPIC)).get("code"));
 
         physicalTask.setValidationMethod(5);
-        assertEquals(500, controller.revealPuzzle(null, String.valueOf(NODE), String.valueOf(TOPIC)).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.revealPuzzle(controller, null, String.valueOf(NODE), String.valueOf(TOPIC)).get("code"));
         verify(progressService, never()).insertPlayerNodeProgress(any());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void admittedUnregisteredBrowseUsesPublishedOrdinaryAndNonTemplateContentWithoutRuntimeEntry() throws Exception
+    {
+        ICmsTopicNodeService nodes=(ICmsTopicNodeService)PlayNodeAccessTestFixtures.getField(controller,"cmsTopicNodeService");
+        ICmsTopicService topics=(ICmsTopicService)PlayNodeAccessTestFixtures.getField(controller,"cmsTopicService");
+        ICmsMemberTemplateService templates=(ICmsMemberTemplateService)PlayNodeAccessTestFixtures.getField(controller,"cmsMemberTemplateService");
+        ICmsRegistrationService registrations=(ICmsRegistrationService)PlayNodeAccessTestFixtures.getField(controller,"cmsRegistrationService");
+        CmsTopic topic=topics.selectCmsTopicById(TOPIC); topic.setPublishedConfigVersion(1L);
+        when(topics.selectCmsTopicDetailById(TOPIC,MEMBER)).thenReturn(topic);
+        when(registrations.selectCmsRegistrationList(any())).thenReturn(Collections.emptyList());
+        CmsTopicNode current=nodes.selectCmsTopicNodeById(NODE);current.setTemplateId(null);current.setName("later author name");current.setStatus(1L);
+        CmsTopicNode noTemplate=new CmsTopicNode();noTemplate.setId(402L);noTemplate.setTopicId(TOPIC);noTemplate.setStatus(1L);
+        CmsTopicNode notPublished=new CmsTopicNode();notPublished.setId(403L);notPublished.setTopicId(TOPIC);notPublished.setTemplateId(TEMPLATE);
+        when(nodes.selectCmsTopicNodeList(any())).thenReturn(java.util.List.of(current,noTemplate,notPublished));
+        var json=new com.fasterxml.jackson.databind.ObjectMapper();var publication=json.createObjectNode().put("runtimeSnapshotVersion",1).put("routeMode","LINEAR");
+        publication.putObject("journeyRules").put("schemaVersion",1);
+        publication.put("journeyStory","");
+        var frozen=publication.putObject("nodeAnswers").putObject(String.valueOf(NODE));
+        frozen.put("contentSnapshotVersion",1).put("templateId",TEMPLATE).put("validationMethod",1).put("questionAnswer","secret-answer");
+        frozen.putObject("nodePresentation").put("id",NODE).put("topicId",TOPIC).put("templateId",TEMPLATE).put("name","original node");
+        ((com.fasterxml.jackson.databind.node.ObjectNode)frozen.path("nodePresentation")).put("chapterId",201L);
+        frozen.put("chapterAudioUrl","/original/chapter.mp3");
+        frozen.putObject("templatePresentation").put("title","original game").put("questionName","original question");
+        frozen.put("hint1","secret-unused-hint");
+        var plain=publication.with("nodeAnswers").putObject("402").put("contentSnapshotVersion",1);
+        plain.putNull("templateId");plain.putObject("templatePresentation");
+        plain.putObject("nodePresentation").put("id",402L).put("topicId",TOPIC).putNull("templateId").put("name","original non-template node");
+        publication.putObject("nodeConfigs").putObject(String.valueOf(NODE)).put("schemaVersion",1);
+        topic.setPublishedRouteGraphJson(publication.toString());
+        topic.setJourneyRulesJson("{\"schemaVersion\":1,\"stateEnabled\":true,\"attributes\":[{\"key\":\"counter.later\",\"label\":\"later\"}]}");
+        var activity=new com.chengyinhub.business.domain.CmsActivity();activity.setId(700L);activity.setTopicId(TOPIC);
+        var activities=mock(com.chengyinhub.business.service.ICmsActivityService.class);
+        when(activities.selectCmsActivityById(700L)).thenReturn(activity);
+        var runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        var shared=mock(com.chengyinhub.business.service.IGameSessionRuntimeService.class);
+        PlayNodeAccessTestFixtures.setField(controller,"cmsActivityService",activities);
+        PlayNodeAccessTestFixtures.setField(controller,"topicRouteRuntimeService",runtime);
+        PlayNodeAccessTestFixtures.setField(controller,"gameSessionRuntimeService",shared);
+        var chapter=new com.chengyinhub.business.domain.CmsTopicChapter();chapter.setId(201L);chapter.setTopicId(TOPIC);chapter.setAudioUrl("/later/chapter.mp3");
+        var chapters=mock(com.chengyinhub.business.service.ICmsTopicChapterService.class);
+        when(chapters.selectCmsTopicChapterList(any())).thenReturn(java.util.List.of(chapter));
+        PlayNodeAccessTestFixtures.setField(controller,"cmsTopicChapterService",chapters);
+        PlayNodeAccessTestFixtures.setField(controller,"umsMemberPointsDetailService",mock(com.chengyinhub.business.service.IUmsMemberPointsDetailService.class));
+        org.mockito.Mockito.clearInvocations(templates);
+
+        AjaxResult result=controller.nodes(700L,null);
+
+        assertEquals(200,result.get("code"));Map<String,Object> data=(Map<String,Object>)result.get("data");
+        assertEquals(false,data.get("registered"));assertEquals(2,data.get("total"));
+        var projected=(java.util.List<Map<String,Object>>)data.get("nodes");
+        assertEquals("original question",projected.get(0).get("question"));
+        assertEquals("original non-template node",projected.get(1).get("name"));
+        assertEquals(false,projected.get(1).containsKey("gameTitle"));
+        assertEquals(false,json.writeValueAsString(data).contains("secret-"));
+        assertEquals(null,data.get("vitalsOn"));
+        assertEquals("/original/chapter.mp3",((java.util.List<Map<String,Object>>)data.get("chapters")).get(0).get("audioUrl"));
+        verify(templates,never()).selectCmsMemberTemplateById(any());
+        verify(runtime,never()).state(any(),any(),any());
+        verify(runtime,never()).nodeRuntimeConfig(any(),any(),any(),any());
+        verify(runtime,never()).queryNodeContentSnapshot(any(),any(),any(),any());
+        org.mockito.Mockito.verifyNoInteractions(runtime,shared);
+        verify(progressService,never()).insertPlayerNodeProgress(any());
+        verify(attemptMapper,never()).insertPlayAttemptLog(any());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void originalHintCallerUsesFrozenContentAfterTemplateUnbindAndKeepsHintFact() {
+        ICmsTopicNodeService nodes=(ICmsTopicNodeService)PlayNodeAccessTestFixtures.getField(controller,"cmsTopicNodeService");
+        ICmsMemberTemplateService templates=(ICmsMemberTemplateService)PlayNodeAccessTestFixtures.getField(controller,"cmsMemberTemplateService");
+        nodes.selectCmsTopicNodeById(NODE).setTemplateId(null);
+        var runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        when(runtime.canPlay(MEMBER,TOPIC,0L,NODE,null)).thenReturn(true);
+        var frozen=new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+        frozen.put("contentSnapshotVersion",1).put("templateId",TEMPLATE).put("validationMethod",1);
+        frozen.putObject("nodePresentation").put("id",NODE).put("topicId",TOPIC).put("templateId",TEMPLATE);
+        frozen.putObject("templatePresentation");
+        frozen.put("hint1","冻结第一提示").put("hint2","未使用第二提示");
+        when(runtime.nodeAnswers(MEMBER,TOPIC,0L,NODE)).thenReturn(frozen);
+        PlayNodeAccessTestFixtures.setField(controller,"topicRouteRuntimeService",runtime);
+        AjaxResult result=controller.puzzleHint(null,String.valueOf(NODE),String.valueOf(TOPIC),1);
+        assertEquals(200,result.get("code"));Map<String,Object> data=(Map<String,Object>)result.get("data");
+        assertEquals("冻结第一提示",data.get("hint"));assertEquals(70,data.get("scoreCap"));
+        assertEquals(Collections.singletonList("冻结第一提示"),data.get("hints"));
+        ArgumentCaptor<PlayAttemptLog> attempt=ArgumentCaptor.forClass(PlayAttemptLog.class);
+        verify(attemptMapper).insertPlayAttemptLog(attempt.capture());
+        assertEquals(MEMBER,attempt.getValue().getMemberId());assertEquals(TOPIC,attempt.getValue().getTopicId());
+        assertEquals(NODE,attempt.getValue().getNodeId());assertEquals(0L,attempt.getValue().getActivityId());
+        verify(templates,never()).selectCmsMemberTemplateById(any());
+        verify(progressService,never()).insertPlayerNodeProgress(any());
     }
 }

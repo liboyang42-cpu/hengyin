@@ -65,3 +65,11 @@ export function resolveScoringDispute(id, data) {
 export function reverseScoringEntry(id, data) {
   return request({ url: `/business/orient/scoring/entries/${scoringId(id)}/reverse`, method: 'post', data: tansParams(data), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, transformResponse: [parseScoringResponse] })
 }
+
+export function listScoringRecoveries(status) {
+  return request({ url: '/business/orient/scoring/recoveries', method: 'get', params: { status: status === '' ? undefined : status, limit: 200 }, transformResponse: [parseScoringResponse] })
+}
+
+export function reviewScoringRecovery(id, data) {
+  return request({ url: `/business/orient/scoring/recoveries/${scoringId(id)}/review`, method: 'post', data: tansParams(data), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, transformResponse: [parseScoringResponse] })
+}

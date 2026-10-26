@@ -41,7 +41,12 @@ class PuzzleRevealArrivalFactTest
         attemptLogMapper = mock(PlayAttemptLogMapper.class);
         progressMapper = mock(PlayerNodeProgressMapper.class);
         UmsMemberMapper memberMapper = mock(UmsMemberMapper.class);
-        service = new PuzzlePlayServiceImpl(templateService, attemptLogMapper, progressMapper, memberMapper);
+        service = new PuzzlePlayServiceImpl(templateService, attemptLogMapper, progressMapper, memberMapper,
+                mock(com.chengyinhub.business.service.ICmsTopicNodeService.class),
+                mock(com.chengyinhub.business.service.support.PlayNodeAccessService.class),
+                mock(com.chengyinhub.business.service.ICmsPointsSettingService.class),
+                mock(com.chengyinhub.business.service.IUmsMemberService.class),
+                mock(com.chengyinhub.business.service.IUmsMemberPointsDetailService.class));
         when(memberMapper.lockMemberById(MEMBER)).thenReturn(MEMBER);
         when(attemptLogMapper.insertPlayAttemptLog(any())).thenReturn(1);
     }
@@ -66,6 +71,20 @@ class PuzzleRevealArrivalFactTest
 
         service.recordReveal(MEMBER, TOPIC, NODE, ACTIVITY);
 
+        verify(attemptLogMapper).insertPlayAttemptLog(any());
+    }
+
+    @Test
+    void originalRunProbeDoesNotUseCompletionFromAnotherRun() {
+        when(progressMapper.selectPlayerNodeProgressList(any())).thenAnswer(call -> {
+            PlayerNodeProgress probe = call.getArgument(0);
+            org.junit.jupiter.api.Assertions.assertEquals("journey:102", probe.getPlayInstanceId());
+            org.junit.jupiter.api.Assertions.assertEquals(MEMBER, probe.getMemberId());
+            org.junit.jupiter.api.Assertions.assertEquals(TOPIC, probe.getTopicId());
+            org.junit.jupiter.api.Assertions.assertEquals(ACTIVITY, probe.getActivityId());
+            return Collections.emptyList();
+        });
+        service.recordReveal(MEMBER, TOPIC, NODE, ACTIVITY, "journey:102");
         verify(attemptLogMapper).insertPlayAttemptLog(any());
     }
 

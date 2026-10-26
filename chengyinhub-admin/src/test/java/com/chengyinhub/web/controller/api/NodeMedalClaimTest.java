@@ -59,11 +59,11 @@ class NodeMedalClaimTest {
     void setUp() {
         mapper = mock(NodeMedalClaimMapper.class);
         controller = new ApiPlayProgressController();
-        ReflectionTestUtils.setField(controller, "nodeMedalClaimMapper", mapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "nodeMedalClaimMapper", mapper);
     }
 
     private Integer claim() {
-        return controller.claimNodeMedal(NODE, MEMBER, ACTIVITY, TOPIC, PROGRESS);
+        return PlayNodeAccessTestFixtures.<Integer>invokeMethod(controller, "claimNodeMedal", NODE, MEMBER, ACTIVITY, TOPIC, PROGRESS);
     }
 
     /** 正控:金牌被别人占走 ⇒ 退到银牌并真的插进去。 */
@@ -206,7 +206,7 @@ class NodeMedalClaimTest {
     }
 
     private Integer claim(Long memberId, Long activityId) {
-        return controller.claimNodeMedal(NODE, memberId, activityId, TOPIC, PROGRESS);
+        return PlayNodeAccessTestFixtures.<Integer>invokeMethod(controller, "claimNodeMedal", NODE, memberId, activityId, TOPIC, PROGRESS);
     }
 
     // ---------------- A 组:走真阶梯,看涌现性质 ----------------
@@ -533,7 +533,7 @@ class NodeMedalClaimTest {
         final ApiCreativeSquareController controller = new ApiCreativeSquareController();
 
         FeedFixture() {
-            ReflectionTestUtils.setField(controller, "viewCreativeSquareService", viewService);
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "viewCreativeSquareService", viewService);
             // topicRouteRuntimeService 留 null:controller 自己有 null 分支(@Autowired(required = false))
         }
 

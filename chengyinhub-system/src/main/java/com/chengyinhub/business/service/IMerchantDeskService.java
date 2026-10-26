@@ -36,6 +36,9 @@ public interface IMerchantDeskService {
 
     List<Map<String, Object>> capacitySlots(MerchantAccessContext access, Long skuId, String fromDate, Integer days);
 
+    Map<String, Object> capacitySlotPage(MerchantAccessContext access, Long skuId, String fromDate, Integer days,
+                                         Long afterStartAt, Long afterSlotId);
+
     Map<String, Object> arrivalsToday(MerchantAccessContext access);
 
     List<Map<String, Object>> reviews(MerchantAccessContext access, Integer status);
@@ -49,4 +52,6 @@ public interface IMerchantDeskService {
     Map<String, Object> reconciliationClaims(MerchantAccessContext access, String route, Integer pageNum, Integer pageSize);
 
     List<Map<String, Object>> frozenBatches(MerchantAccessContext access);
+
+    Map<String, Object> frozenBatchPage(MerchantAccessContext access, String afterPeriodYm, Long afterBatchId);
 }

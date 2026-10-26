@@ -97,6 +97,9 @@
               />
             </div>
 
+            <el-alert v-if="sendRecoveryError" :title="sendRecoveryError" type="warning" :closable="false" />
+            <el-button v-if="pendingSend" v-hasPermi="['business:im:send']"
+              :loading="checkingSend" :disabled="sending || checkingSend" @click="checkSendReceipt">查询原结果</el-button>
             <div class="im-send">
               <el-input
                 v-model="sendText"
@@ -104,15 +107,15 @@
                 :rows="2"
                 placeholder="输入消息，回车发送（Shift+回车换行）"
                 @keyup.enter.native.exact="onEnter"
-                :disabled="current.blocked"
+                :disabled="current.blocked || sending || !!pendingSend"
               />
               <el-button
                 type="primary"
                 v-hasPermi="['business:im:send']"
                 :loading="sending"
-                :disabled="!sendText.trim() || current.blocked"
+                :disabled="!sendText.trim() || current.blocked || checkingSend"
                 @click="doSend"
-              >发送</el-button>
+              >{{ pendingSend ? "按原请求重试" : "发送" }}</el-button>
             </div>
           </template>
         </el-card>
@@ -122,7 +125,9 @@
 </template>
 
 <script>
-import { listImConversations, listImMessages, sendImMessage } from '@/api/business/im'
+import { listImConversations, listImMessages, sendImMessage, getImSendReceipt } from '@/api/business/im'
+import { adminSendIntent, clearAdminSendIntent } from '@/utils/im-admin-send-intent'
+import { getToken } from '@/utils/auth'
 import CyEmptyState from '@/components/CyEmptyState'
 import CyPageHeader from '@/components/CyPageHeader'
 import CyResourceState from '@/components/CyResourceState'
@@ -143,13 +148,27 @@ export default {
       messagesError: '',
       messageRequestId: 0,
       sendText: '',
+      checkingSend: false,
+      pendingSend: null,
+      sendRecoveryError: '',
       sending: false
     }
   },
   created() {
     this.ensureCanonicalRoute()
   },
+  beforeDestroy() { this._sendEpoch = (this._sendEpoch || 0) + 1 },
   watch: {
+    '$store.state.user.token'() {
+      this._sendEpoch = (this._sendEpoch || 0) + 1
+      this.clearCurrentConversation()
+      this.convs = []
+      this.convsLoading = false
+      this.convsLoaded = false
+      this.convsError = ''
+      this.sending = false
+      this.checkingSend = false
+    },
     '$route'() {
       this.ensureCanonicalRoute()
     }
@@ -162,11 +181,20 @@ export default {
       }
       this.loadConvs()
     },
+    readerGuard() {
+      const token = getToken()
+      const id = String(this.$store.state.user.id)
+      const epoch = this._sendEpoch || 0
+      return () => token === getToken() && id === String(this.$store.state.user.id) &&
+        epoch === (this._sendEpoch || 0)
+    },
     loadConvs() {
       if (this.convsLoading) return
       this.convsLoading = true
+      const isReader = this.readerGuard()
       return listImConversations()
         .then(res => {
+          if (!isReader()) return
           this.convs = res.data || []
           this.convsLoaded = true
           this.convsError = ''
@@ -177,12 +205,16 @@ export default {
             else this.clearCurrentConversation()
           }
         })
-        .catch(() => { this.convsError = '客服会话读取失败，请检查网络后重试。' })
-        .finally(() => { this.convsLoading = false })
+        .catch(() => { if (isReader()) this.convsError = '客服会话读取失败，请检查网络后重试。' })
+        .finally(() => { if (isReader()) this.convsLoading = false })
     },
     selectConv(c) {
       if (!c || !c.conversationId) return
       this.current = c
+      this.sendText = ''
+      this.pendingSend = null
+      this.sendRecoveryError = ''
+      this.restoreSendIntent()
       this.msgs = []
       this.messagesError = ''
       return this.loadMsgs()
@@ -190,24 +222,28 @@ export default {
     loadMsgs() {
       if (!this.current || !this.current.conversationId) return Promise.resolve()
       const conversationId = this.current.conversationId
+      const isReader = this.readerGuard()
       const requestId = ++this.messageRequestId
       this.messagesLoading = true
       this.messagesError = ''
       return listImMessages({ conversationId: conversationId, cursorId: 0, size: 50 }).then(res => {
-        if (requestId !== this.messageRequestId || !this.current || String(this.current.conversationId) !== String(conversationId)) return
+        if (!isReader() || requestId !== this.messageRequestId || !this.current || String(this.current.conversationId) !== String(conversationId)) return
         this.msgs = (res.data && res.data.list) || []
         this.$nextTick(this.scrollBottom)
       }).catch(() => {
-        if (requestId !== this.messageRequestId || !this.current || String(this.current.conversationId) !== String(conversationId)) return
+        if (!isReader() || requestId !== this.messageRequestId || !this.current || String(this.current.conversationId) !== String(conversationId)) return
         this.msgs = []
         this.messagesError = '会话消息读取失败，请重新读取。'
       }).finally(() => {
-        if (requestId === this.messageRequestId) this.messagesLoading = false
+        if (isReader() && requestId === this.messageRequestId) this.messagesLoading = false
       })
     },
     clearCurrentConversation() {
       this.messageRequestId += 1
       this.current = null
+      this.pendingSend = null
+      this.sendText = ''
+      this.sendRecoveryError = ''
       this.msgs = []
       this.messagesError = ''
       this.messagesLoading = false
@@ -220,27 +256,84 @@ export default {
       if (e.shiftKey) return
       this.doSend()
     },
-    doSend() {
-      const content = (this.sendText || '').trim()
-      if (!content || this.sending || !this.current) return
-      const conversationId = this.current.conversationId
-      const memberId = this.current.memberId
-      this.sending = true
-      return sendImMessage({ memberId: memberId, msgType: 1, content: content }).then(res => {
-        if (res.code === 200) {
-          if (this.isCurrentConversation(conversationId)) {
-            this.sendText = ''
-            this.loadMsgs()
-          }
-          this.loadConvs()
-        } else {
-          this.$modal.msgError(res.msg || '发送失败')
+    restoreSendIntent() {
+      if (!this.current) return
+      try {
+        this.pendingSend = adminSendIntent(window.sessionStorage, this.$store.state.user.id,
+          this.current.memberId, '', () => '')
+        if (this.pendingSend) {
+          this.sendText = this.pendingSend.content
+          this.sendRecoveryError = '原消息结果待确认；重试将使用原请求号和原内容。'
         }
-      }).catch(() => {
-        this.$modal.msgError('发送失败，请稍后重试。')
-      }).finally(() => {
-        this.sending = false
-      })
+      } catch (e) { this.sendRecoveryError = e.message }
+    },
+    checkSendReceipt() {
+      if (!this.pendingSend || !this.current || this.sending || this.checkingSend) return
+      const intent = this.pendingSend
+      const conversationId = this.current.conversationId
+      const isReader = this.readerGuard()
+      this.checkingSend = true
+      return getImSendReceipt({ memberId: intent.memberId, requestId: intent.requestId }).then(res => {
+        if (!isReader()) return
+        const receipt = res && res.data
+        if (res.code !== 200 || !receipt) throw new Error('原消息回执读取失败')
+        if (!receipt.found) {
+          if (this.isCurrentConversation(conversationId)) this.sendRecoveryError = '暂未查到原消息；结果仍待确认，原请求号和内容已保留。'
+          return
+        }
+        if (receipt.requestId !== intent.requestId || String(receipt.memberId) !== intent.memberId ||
+            receipt.msgType !== intent.msgType || receipt.content !== intent.content ||
+            (receipt.extraJson != null && receipt.extraJson !== '') ||
+            !/^[1-9][0-9]*$/.test(String(receipt.messageId))) throw new Error('原回执与冻结内容不一致，请保留原记录核查')
+        clearAdminSendIntent(window.sessionStorage, intent)
+        if (this.isCurrentConversation(conversationId) && this.pendingSend &&
+            this.pendingSend.requestId === intent.requestId && this.pendingSend.memberId === intent.memberId) {
+          this.pendingSend = null
+          this.sendText = ''
+          this.sendRecoveryError = receipt.status === 0 ? '' : '原消息已发送，当前已隐藏或删除；不会再次发送。'
+          this.loadMsgs()
+        }
+        this.loadConvs()
+      }).catch(e => {
+        if (isReader() && this.isCurrentConversation(conversationId)) this.sendRecoveryError =
+          (e && e.message ? e.message : '回执读取失败') + '；原请求已保留。'
+      }).finally(() => { if (isReader()) this.checkingSend = false })
+    },
+    doSend() {
+      if (this.sending || !this.current || this.checkingSend || this.current.blocked) return
+      const conversationId = this.current.conversationId
+      const token = getToken()
+      const adminId = String(this.$store.state.user.id)
+      const epoch = this._sendEpoch || 0
+      let intent
+      try {
+        intent = adminSendIntent(window.sessionStorage, adminId, this.current.memberId,
+          this.sendText, () => window.crypto.randomUUID())
+        if (!intent) return
+      } catch (e) { this.$modal.msgError(e.message); return }
+      this.pendingSend = intent
+      this.sendText = intent.content
+      this.sending = true
+      const current = () => epoch === (this._sendEpoch || 0) && token === getToken() &&
+        adminId === String(this.$store.state.user.id)
+      return sendImMessage({ memberId: intent.memberId, msgType: intent.msgType,
+        content: intent.content, requestId: intent.requestId }).then(res => {
+        if (!current()) return
+        if (res.code !== 200) throw new Error(res.msg || '原消息结果待确认')
+        clearAdminSendIntent(window.sessionStorage, intent)
+        if (this.isCurrentConversation(conversationId)) {
+          this.pendingSend = null
+          this.sendText = ''
+          this.sendRecoveryError = ''
+          this.loadMsgs()
+        }
+        this.loadConvs()
+      }).catch(e => {
+        if (current() && this.isCurrentConversation(conversationId)) {
+          this.sendRecoveryError = (e && e.message ? e.message + '；' : '') +
+            '保留原请求号与内容，可按原请求重试。'
+        }
+      }).finally(() => { if (current()) this.sending = false })
     },
     isCurrentConversation(conversationId) {
       return Boolean(this.current) && String(this.current.conversationId) === String(conversationId)

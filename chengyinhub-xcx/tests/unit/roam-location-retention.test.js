@@ -50,3 +50,29 @@ test('unknown or impossible archive time strips geometry and an empty recovery o
     assert.equal(clean.locationExpired, true)
   }
 })
+
+test('recovery read failure cannot erase potentially active geometry; retry keeps active run', () => {
+  const values = { 'roam_memory_v1:8:tiles': { tiles: { active: 1 }, retentionAt: { active: 1 }, serverCursor: 7 },
+    'roam_memory_v1:8:sessions': [{ ts: 1, track: [{ lat: 3 }] }],
+    'roam_memory_v1:8:recovery': { archiveTs: 1, allTiles: ['active'] } }
+  let unavailable = true
+  const memory = createPlayerRoamMemory(8, { getStorageSync: k => {
+    if (unavailable && k.endsWith(':recovery')) throw Error('storage read failed')
+    return values[k]
+  }, setStorageSync: (k,v) => { values[k] = v } })
+  const before = JSON.stringify(values)
+  assert.throws(() => memory.readTiles(), /读取/)
+  assert.deepEqual(memory.readSessionState(), { ok: false, sessions: [] })
+  assert.equal(JSON.stringify(values), before)
+  unavailable = false
+  assert.deepEqual(memory.readTiles().tiles, { active: 1 })
+  assert.deepEqual(memory.readSessionState().sessions[0].track, [{ lat: 3 }])
+})
+test('reveal read failure neither reports empty history nor overwrites it', () => {
+  let written = false
+  const memory = createPlayerRoamMemory(8, { getStorageSync: () => { throw Error('unavailable') },
+    setStorageSync: () => { written = true } })
+  assert.throws(() => memory.readReveals(), /读取/)
+  assert.equal(memory.writeReveals([{ lat: 1, lng: 2 }]), false)
+  assert.equal(written, false)
+})

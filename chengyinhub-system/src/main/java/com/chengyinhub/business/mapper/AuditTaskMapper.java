@@ -24,6 +24,9 @@ public interface AuditTaskMapper {
     /** 工作台队列:deadline_at 升序(最紧急在前),无 deadline 垫底。 */
     List<AuditTask> selectAuditTaskQueue(AuditTask auditTask);
 
+    List<AuditTask> selectWorkbenchQueueWithGuardScope(@Param("filter") AuditTask filter,
+                                                       @Param("guardTopicIds") List<Long> guardTopicIds);
+
     int insertAuditTask(AuditTask auditTask);
 
     /** O5b-3:未结单(PENDING/ESCALATED)的 deadline 只收紧到 #{deadline},已更早或已结单不动。 */

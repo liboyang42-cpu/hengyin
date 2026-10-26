@@ -75,6 +75,7 @@ class FreeOrderCancelAcceptanceTest {
 
         regMapper = mock(CmsRegistrationMapper.class);
         when(regMapper.selectCmsRegistrationById(REG_ID)).thenReturn(registration);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG_ID)).thenReturn(registration);
         ticketMapper = mock(OmsTicketMapper.class);
         when(ticketMapper.restoreInventory(eq(TICKET), anyLong())).thenReturn(1);
         memberMapper = mock(UmsMemberMapper.class);
@@ -113,7 +114,7 @@ class FreeOrderCancelAcceptanceTest {
         verify(ticketMapper, times(1)).restoreInventory(TICKET, 2L);
         verify(perkLedger, times(1)).releaseOnRefund(eq(REG_ID), anyString());
         // 0 现金:不建退款单、不派发打款
-        verify(refundService, never()).saveRefund(any());
+        verify(refundService, never()).savePreparedRegistrationRefund(any(), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
         verify(refundService, never()).reviewRefund(any(), any());
         verify(payoutService, never()).payoutAfterReview(anyLong());
         // 0 积分:不 CAS 积分标记、不加积分
@@ -141,7 +142,7 @@ class FreeOrderCancelAcceptanceTest {
         verify(regMapper, times(2)).claimRegistrationRefunded(eq(REG_ID), anyString(), any(Date.class));
         verify(ticketMapper, times(1)).restoreInventory(TICKET, 2L);
         verify(perkLedger, times(1)).releaseOnRefund(eq(REG_ID), anyString());
-        verify(refundService, never()).saveRefund(any());
+        verify(refundService, never()).savePreparedRegistrationRefund(any(), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
         verify(memberMapper, never()).addPoints(anyLong(), anyInt());
     }
 

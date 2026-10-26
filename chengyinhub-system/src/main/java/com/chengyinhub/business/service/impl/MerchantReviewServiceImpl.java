@@ -75,7 +75,14 @@ public class MerchantReviewServiceImpl implements IMerchantReviewService {
     @Override
     public MerchantReviewPageVO publicList(Long viewerMemberId, Long merchantRowId,
                                            Integer pageNum, Integer pageSize) {
+        return publicList(viewerMemberId, merchantRowId, pageNum, pageSize, null);
+    }
+
+    @Override
+    public MerchantReviewPageVO publicList(Long viewerMemberId, Long merchantRowId,
+                                           Integer pageNum, Integer pageSize, Long registrationId) {
         requirePositive(merchantRowId, "merchantRowId");
+        if (registrationId != null) requirePositive(registrationId, "registrationId");
         Page page = page(pageNum, pageSize);
         long total = merchantReviewMapper.countPublicReviews(merchantRowId);
         List<MerchantReview> rows = total == 0 ? Collections.<MerchantReview>emptyList()
@@ -87,6 +94,7 @@ public class MerchantReviewServiceImpl implements IMerchantReviewService {
         out.setAverageRating(decimalValue(summary, "averageRating"));
         applyReviewStats(out, merchantRowId);
         MerchantReviewEligibilityVO eligibility = new MerchantReviewEligibilityVO();
+        eligibility.setRequestedRegistrationId(registrationId);
         if (viewerMemberId == null || viewerMemberId <= 0) {
             eligibility.setCanCreate(false);
             eligibility.setReasonCode("LOGIN_REQUIRED");
@@ -99,8 +107,9 @@ public class MerchantReviewServiceImpl implements IMerchantReviewService {
                 eligibility.setCanCreate(false);
                 eligibility.setReasonCode("AMBIGUOUS_LEGACY_MERCHANT_SCOPE");
             } else {
-                MerchantReviewEligibility eligible = merchantReviewMapper.selectLatestEligibility(
-                        viewerMemberId, merchantRowId);
+                MerchantReviewEligibility eligible = registrationId == null
+                        ? merchantReviewMapper.selectLatestEligibility(viewerMemberId, merchantRowId)
+                        : merchantReviewMapper.selectEligibilityForRegistration(viewerMemberId, merchantRowId, registrationId);
                 eligibility.setCanCreate(eligible != null);
                 eligibility.setReasonCode(eligible == null ? "NO_UNUSED_ACTIVE_REDEMPTION" : "ELIGIBLE");
                 eligibility.setRegistrationId(eligible == null ? null : eligible.getRegistrationId());

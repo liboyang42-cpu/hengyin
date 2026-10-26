@@ -7,6 +7,7 @@
 //    故 pages/privacy 路由页保留不删。
 const toast = require('../../../../utils/toast.js');
 const app = getApp();
+const { reader, sameReader } = require('../../../../utils/user-character.js');
 const presencePrivacy = require('../../../../utils/roam-presence-privacy.js');
 const bgTracker = require('../../../../utils/location/bg-tracker.js');
 
@@ -19,7 +20,24 @@ Component({
   data: {
     submitting: false,
   },
+  lifetimes: {
+    attached() { this._privacyHidden = false; this.setData({ submitting: false }); },
+    detached() { this.invalidatePrivacyAction(); },
+  },
+  pageLifetimes: {
+    hide() { this.invalidatePrivacyAction(); },
+    show() { this._privacyHidden = false; this.setData({ submitting: false }); },
+  },
   methods: {
+    invalidatePrivacyAction() {
+      this._privacyHidden = true;
+      this._privacyActionEpoch = (this._privacyActionEpoch || 0) + 1;
+    },
+    privacyActionCurrent() {
+      const captured = reader(app);
+      const epoch = this._privacyActionEpoch = (this._privacyActionEpoch || 0) + 1;
+      return () => !this._privacyHidden && epoch === this._privacyActionEpoch && sameReader(app, captured);
+    },
     /* ⚠️ 只发事件,**不**自己 setData({show:false}):show 是父级传进来的属性,组件自己改一次,
        父级那份状态并没有跟着变;等父级下次想再打开时 setData(true) 与它自己记着的 true 无差异,
        不会重新下发,弹窗就再也打不开了。开关的所有权留在父级(cy-sheet 本身也是这么做的)。 */
@@ -46,19 +64,17 @@ Component({
     disablePresenceSharing() {
       if (this.data.submitting) return;
       this.setData({ submitting: true });
-      presencePrivacy.setSharing(app, null, false)
-        .then(() => toast('已关闭附近的人位置分享'))
-        .catch(error => toast(error.message))
-        .finally(() => this.setData({ submitting: false }));
+      const current = this.privacyActionCurrent();
+      Promise.resolve().then(() => current() ? presencePrivacy.setSharing(app, null, false) : Promise.reject(new Error('账号已变化')))
+        .then(() => { if (current()) toast('已关闭附近的人位置分享'); })
+        .catch(error => { if (current()) toast(error.message); })
+        .finally(() => { if (current()) this.setData({ submitting: false }); });
     },
 
     withdrawRoamLocationConsent() {
       if (this.data.submitting) return;
       this.setData({ submitting: true });
-      const owner = String(app.getUserID ? app.getUserID() || '' : '');
-      const epoch = this._roamRevokeEpoch = (this._roamRevokeEpoch || 0) + 1;
-      const current = () => epoch === this._roamRevokeEpoch
-        && owner === String(app.getUserID ? app.getUserID() || '' : '');
+      const current = this.privacyActionCurrent();
       // 撤回先作用于本机用途；审计失败仍由 consent-client 保留原账号/requestId 补传。
       bgTracker.revoke('roam');
       let audit;
@@ -73,7 +89,7 @@ Component({
         if (!current()) return;
         toast('本机漫游已停，记录待确认');
       }).finally(() => {
-        if (epoch === this._roamRevokeEpoch) this.setData({ submitting: false });
+        if (current()) this.setData({ submitting: false });
       });
     },
   },

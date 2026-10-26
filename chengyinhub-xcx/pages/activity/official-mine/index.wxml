@@ -25,6 +25,7 @@
         <view class="om-row"><text class="om-t">{{item._title}}</text><cy-badge type="status" variant="neutral" label="{{item._st}}" /></view>
         <text class="om-sub">{{item._mode}} · 发给 {{item._aud}} · {{item._city}}</text>
         <view class="om-stat"><text class="om-reach">{{item._statsText || item._reach}}</text></view>
+        <button wx:if="{{item._canRecover}}" data-index="{{index}}" catchtap="recoverBroadcast">安全恢复原投递</button>
       </view>
       <view class="om-bottom"></view>
     </block>

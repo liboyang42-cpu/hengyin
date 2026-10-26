@@ -1,0 +1,10 @@
+{
+  "tree": "d9e5aac6b628f0aa947f297f56fa1bfe33b1812f",
+  "publicBase": "921d172199f3ffe224206ee05af031c87df62b87",
+  "offlineClasses": 228,
+  "mysqlClasses": 31,
+  "B_applied": false,
+  "restoreMode": "NOT_READY",
+  "javaMySQL": "NOT_RUN",
+  "note": "Tree identifies source before closeout documentation; test-targets.json binds test file hashes. Both import-only compile corrections are included."
+}
