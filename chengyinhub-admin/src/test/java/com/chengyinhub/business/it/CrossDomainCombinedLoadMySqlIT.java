@@ -142,7 +142,9 @@ class CrossDomainCombinedLoadMySqlIT {
                     var intent = storage.preparePhoto(service, command); assertNotNull(intent); original.add(intent);
                     pending.add(transport.callers.submit(() -> service.executeOnce(CrossDomainStorageFixture.MEMBER, intent.intentId(), command.requestFingerprint())));
                 }
-                assertTrue(transport.aiEntered.await(5, TimeUnit.SECONDS));
+                boolean aiHandlersEntered = transport.aiEntered.await(5, TimeUnit.SECONDS);
+                if (!aiHandlersEntered) throw CrossDomainTransportStage.aiEntryFailure(pending, transport.providerFailures);
+                assertTrue(aiHandlersEntered);
                 for (var request : pending) {
                     var unknown = request.get(6, TimeUnit.SECONDS);
                     assertEquals(PhotoCheckIntentState.RESULT_READY, unknown.state()); assertEquals("UNKNOWN", unknown.providerState());

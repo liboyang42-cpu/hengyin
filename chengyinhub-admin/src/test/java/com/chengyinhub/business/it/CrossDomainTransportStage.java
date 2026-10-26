@@ -45,7 +45,8 @@ final class CrossDomainTransportStage implements AutoCloseable {
     final List<String> origins = new ArrayList<>();
     ThreadPoolExecutor http, cleanup;
     AiHttpAdmission admission;
-    boolean fault, cleanupArmed;
+    volatile boolean fault;
+    boolean cleanupArmed;
     int originalCore;
     final MapClient map = new MapClient();
     final MapGeocodeServiceImpl cities = new MapGeocodeServiceImpl();
@@ -159,6 +160,33 @@ final class CrossDomainTransportStage implements AutoCloseable {
         return new OpenAiCompatibleLlmClient("t19-controlled", origins.get(origin), "fixture-token", "fixture-model", true, 2000, admission);
     }
     String image() { return fault ? LARGE_IMAGE : SMALL_IMAGE; }
+
+    /** Preserve completed caller failures at the original entry barrier; never wait/retry another call. */
+    static AssertionError aiEntryFailure(List<? extends Future<PhotoCheckIntentView>> pending,
+                                         List<? extends Throwable> providerFailures) throws InterruptedException {
+        assertEquals(4, pending.size(), "The original four photo calls must be retained");
+        AssertionError missing = new AssertionError("All four original AI provider handlers must enter the held window");
+        for (Future<PhotoCheckIntentView> request : pending) {
+            if (!request.isDone()) continue;
+            try {
+                PhotoCheckIntentView result = request.get(); // isDone: no extra wait or timeout budget.
+                String state = result == null ? "NULL" : result.state() == null ? "UNAVAILABLE" : result.state().name();
+                String provider = result != null && result.providerState() != null
+                        && Set.of("NOT_SENT", "UNKNOWN", "RECEIVED").contains(result.providerState())
+                        ? result.providerState() : "UNAVAILABLE";
+                missing.addSuppressed(new AssertionError("Photo completed before the four-handler barrier: state="
+                        + state + ", providerState=" + provider));
+            } catch (ExecutionException failed) {
+                Throwable original = failed.getCause() == null ? failed : failed.getCause();
+                if (missing.getCause() == null) missing.initCause(original);
+                else missing.addSuppressed(original);
+            } catch (CancellationException cancelled) {
+                missing.addSuppressed(cancelled);
+            }
+        }
+        providerFailures.forEach(missing::addSuppressed);
+        return missing;
+    }
 
     void beginFault() throws Exception {
         fault = true;
