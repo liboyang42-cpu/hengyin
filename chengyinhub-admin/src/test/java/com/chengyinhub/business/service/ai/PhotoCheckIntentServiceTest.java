@@ -194,7 +194,12 @@ class PhotoCheckIntentServiceTest {
     }
 
     @Test void losingClaimUsesThreeIndependentBoundariesAndKeepsPublicReadCallerOwned() {
-        when(mapper.claim(1L, 7L, HASH)).thenAnswer(call -> { row.setState("IN_FLIGHT"); return 0; });
+        // when(claim(...)) would execute setup's existing state-changing Answer
+        // while restubbing, before executeOnce can observe its original PREPARED row.
+        doAnswer(call -> { assertEquals("PREPARED", row.getState()); row.setState("IN_FLIGHT"); return 0; })
+                .when(mapper).claim(1L, 7L, HASH);
+        assertEquals("PREPARED", row.getState());
+        verifyNoInteractions(transactions); verify(mapper, never()).claim(any(), any(), any());
         PhotoCheckIntentView current = service.executeOnce(7L, 1L, HASH);
         assertEquals(1L, current.intentId()); assertEquals(HASH, current.requestFingerprint());
         assertEquals(PhotoCheckIntentState.IN_FLIGHT, current.state()); assertNull(current.result());
@@ -204,8 +209,17 @@ class PhotoCheckIntentServiceTest {
                 assertEquals(TransactionDefinition.PROPAGATION_REQUIRES_NEW, definition.getPropagationBehavior()));
         verify(transactions, times(3)).commit(any()); verify(transactions, never()).rollback(any());
         verify(mapper, times(2)).selectOwned(1L, 7L, HASH); verifyNoInteractions(vision, gateway);
+        var order = inOrder(transactions, mapper);
+        order.verify(transactions).getTransaction(any()); order.verify(mapper).selectOwned(1L, 7L, HASH);
+        order.verify(transactions).commit(any());
+        order.verify(transactions).getTransaction(any()); order.verify(mapper).claim(1L, 7L, HASH);
+        order.verify(transactions).commit(any());
+        order.verify(transactions).getTransaction(any()); order.verify(mapper).selectOwned(1L, 7L, HASH);
+        order.verify(transactions).commit(any()); order.verifyNoMoreInteractions();
         service.read(7L, 1L, HASH); // Public read still belongs to its caller's lock/transaction.
         verify(transactions, times(3)).getTransaction(any());
+        verify(transactions, times(3)).commit(any()); verify(transactions, never()).rollback(any());
+        verifyNoMoreInteractions(transactions); verifyNoInteractions(vision, gateway, consent, media);
     }
 
     @Test void firstOwnedReadFailureRollsBackBeforeClaimOrProviderAndPreservesOriginalError() {
