@@ -1,46 +1,37 @@
-# Current result: DRAFT PR #625 — NOT READY TO MERGE
+# 草稿 PR #625：不可合并或部署
 
-Published commit: 2d7c5dfd99339ed24d43a97819c59e850e2fa275. Approved-VPS compile PASS; admin selected tests: 2360 run, 17 failures, 240 errors, zero skipped. Many errors are stale Controller reflection injection after application-layer migration; preserve assertions while repairing fixtures. CI run 40374590684 has failed jobs and is still running. These are known failures, not acceptance. Later paragraphs retain earlier diagnostic history.
+十二条线既有源码已汇总上传；这不代表业务验收完成。用户批准本次收尾的提交前检查例外。新增功能开发已停止，仅处理已发现的编译、测试和 CI 缺陷。
 
-# DRAFT PR — NOT READY TO MERGE OR DEPLOY
+- 草稿 PR：https://github.com/liboyang42-cpu/hengyin/pull/625
+- 公开分支：feature/cy26-w8-closeout
+- 已测试源码提交：2d7c5dfd99339ed24d43a97819c59e850e2fa275
+- 首轮 CI：https://github.com/liboyang42-cpu/hengyin/actions/runs/40374590684
+- 后续文档提交不代表新的源码验证；复验必须绑定下一次实际源码 SHA。
 
-User explicitly authorized this closeout-only draft exception before compile/unit gates pass. Source preservation is not acceptance. The seven test-file repair is included; the recheck is running. compile-errors.txt records the previous candidate failure, not an assertion that the repaired candidate passed or failed.
+## 已核实结果
 
-# W8 closeout handoff
+完整编译 PASS。测试 VPS 的 admin 定向测试运行 2360 项，17 失败、240 错误、0 跳过。
+GitHub 后端测试运行 14413 项，27 失败、241 错误、638 跳过；不能将跳过项视为通过。
+CI 最终 FAILURE。密钥扫描、依赖扫描、迁移目录检查和后台 E2E 合同门通过，其余失败见清单。
 
-User requested closure: stop new cloud development; preserve existing source, finish necessary gates, publish a draft PR and hand off. No autonomous new work or merge/deployment.
+## 接手入口
 
-Public base: `921d172199f3ffe224206ee05af031c87df62b87`. The source-only tree after both compile fixes is `d9e5aac6b628f0aa947f297f56fa1bfe33b1812f`; this document is a later documentation addition.
+- 交接总表.md：十二条线与既有证据。
+- source-files.json：627 个源码路径及哈希。
+- verification/test-targets.json：259 个目标测试文件及哈希；228 类离线单测、31 类 MySQL 测试分开列出。
+- vps-unit-failures.json：VPS 单测去重诊断。
+- ci-node-failures.json：前端失败测试、文件和位置；201 条记录不等于201个独立业务缺陷。
+- github-backend-failures.json：GitHub 后端去重诊断。
+- compile-errors.txt：首次测试编译失败历史；对应7文件修复已经纳入，后续完整编译通过。
 
-| Lane | Scope | Included source |
-|---|---|---|
-| 01 | Funds and refunds | F3 preparation, refund outcomes and persistent fair reconciliation queue |
-| 02 | Identity, community and support | Idempotent admin messaging, receipt recovery and privacy/voice state |
-| 03 | Authoring and publishing | Frozen published attributes and template-adoption request recovery |
-| 04 | Gameplay | Original-run actions, attribute checks, scoring, endings and recovery; owns former 06/08 gameplay work |
-| 05 | Maps, roaming and passport | Account-scoped history, detail and summary readback |
-| 06 | Audit and guard appeals | Scoped queue, immutable original receipt, personal/shared eligibility and onsite recheck |
-| 07 | Teams, events and broadcast | Contact/attendance, command recovery, manual broadcast recovery and typed channel results |
-| 08 | Search | City facts, exact IDs and stale-response isolation |
-| 09 | F3 rights and aftersales | Frozen refund contracts and entitlement reconciliation; new mall features deferred |
-| 10 | Merchant tools | Previously completed source retained; further mall development paused by user |
-| 11 | Invoice | Entity-scoped processing, original-request recovery and refund reconciliation hold |
-| 12 | Integration | Public routes, entries, merged source and verification inventory |
+## 下一步与边界
 
-## Validation and limitations
+优先修共享应用层测试夹具：旧测试仍向已迁移的 Controller 注入字段。保留断言，不能给生产添加空字段或删测试。
+然后处理真实行为失败、动态API路径、静默错误/危险操作登记和迁移依赖声明；不得放宽门禁制造通过。
+只复验受影响项，完整稳定候选再跑必要CI，不重复已通过且源码未变的检查。
 
-First approved-VPS compile found a wrong TopicRouteMapper reference and missing StringUtils import. The original owner supplied a two-file correction; subsequent build encountered missing HEAD in the reconstructed verification directory. That environment issue was repaired by fetching the real public base, without inventing a candidate commit. Final compile/unit outcome is recorded separately by the coordinator and GitHub checks, not assumed here.
-
-- No merge, production deployment, migration or real message/payment was authorized by this closeout.
-- B restore-fence review patch is NOT applied; restore-mode acceptance remains NOT_READY.
-- Broadcast automatic retry/backoff/new expiry is DEFERRED_BY_USER.
-- Existing frontend evidence is reused; Java/MySQL evidence must bind the exact candidate.
-- Do not interpret source integration or green CI as device/provider/business acceptance.
-
-## Resume safely
-
-Start from this public branch, preserve existing source and unique domain ownership. Read repository AGENTS.md. Use the approved VPS for backend builds and GitHub-hosted CI for automated gates; never run local Java or bypass resource admission. Check exact head SHA and actual test reports; do not rerun completed suites without a change or failure. Complete missing compilation/test fixes first, then the 31 named MySQL classes and real-role/device/provider acceptance as applicable. Do not default unconfigured invoice reviewer scopes to broader access. Guard-appeal approval permits onsite recheck of the still-valid original run only, with no automatic completion/reward or risk-history clearing.
-
-Full lane table: [交接总表](交接总表.md). Exact test inventory: [verification/test-targets.json](verification/test-targets.json).
-
-Latest approved-VPS result: production source compiled, test compilation failed on missing fixture/type references and imports; see compile-errors.txt. Unit tests and 31 MySQL classes have NOT run. The default 384 MiB Java heap caused GC saturation; a task-only 1024 MiB heap within the unchanged 1536 MiB budget resolved that environment delay. The pending compile fixes must preserve assertions; do not skip or delete tests to pass.
+新商家商城功能暂停；已有源码保留。广播仅人工恢复，自动重试规则暂缓。
+恢复模式B补丁未合入，仍NOT_READY；声音授权撤回和样本留存等未决政策不得自行决定。
+发票未配置主体和处理范围时不可处理；守卫申诉通过仅允许仍有效原局现场重核，不直接完成或发奖。
+未执行生产迁移、部署、真实支付或通知。MySQL、真实角色、设备和渠道仍需独立验收。
+后端使用已批准VPS或GitHub-hosted CI，不在本机运行Java。VPS构建保持1536MiB/1CPU/预算锁，临时Maven堆1024MiB。

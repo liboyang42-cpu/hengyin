@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-26T18:09:57.585455+00:00",
+  "updatedAt": "2026-10-26T18:14:28.058401+00:00",
   "publicBase": "921d172199f3ffe224206ee05af031c87df62b87",
   "integratedTreeBeforeCompileFix": "3e0ea26924ae8105c0197fd94436870cf6d9ed35",
   "sourceTreeAfterCompileFix": "d9e5aac6b628f0aa947f297f56fa1bfe33b1812f",
@@ -101,7 +101,13 @@
       "errors": 240,
       "skipped": 0
     },
-    "ci": "IN_PROGRESS_WITH_FAILED_JOBS"
+    "ci": "FAILURE",
+    "githubBackendSummary": {
+      "tests": 14413,
+      "failures": 27,
+      "errors": 241,
+      "skipped": 638
+    }
   },
   "push": "PUSHED_AS_DRAFT_PR",
   "draft": true,
