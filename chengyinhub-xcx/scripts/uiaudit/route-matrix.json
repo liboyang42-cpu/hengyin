@@ -3,7 +3,7 @@
   "generatedFrom": "app.json + scene-* 组件扫描",
   "previousBatch": null,
   "counts": {
-    "routes": 145,
+    "routes": 148,
     "scenes": 27,
     "added": 0,
     "removed": 0
@@ -1437,6 +1437,43 @@
       "needsLogin": false,
       "needsData": false,
       "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/character/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "topicId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/orient-score/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/invoice/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
       "hasJs": true,
       "hasWxml": true
     },

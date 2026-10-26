@@ -2174,6 +2174,19 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
       const dependency = resolveSourceDependency(rel(scanFile), request, ['.js', '/index.js'])
       if (!dependency) return
       if (dependency === 'utils/community-post-api.js') return
+      if (dependency === 'utils/user-invoice.js' && rel(scanFile) === 'subpackageMember/invoice/index.js') {
+        // Resolve the page's finite dispatch arguments instead of importing every invoice write.
+        const adapter = fs.readFileSync(path.join(ROOT, dependency), 'utf8')
+        const endpoints = new Map([...adapter.matchAll(/case '([^']+)':[^\n]+url: '([^']+)'/g)].map(match => [match[1], match[2]]))
+        for (const call of expandedSource.matchAll(/this\.(?:read|mutate)\(\s*'([^']+)'/g)) {
+          if (!maskNonCodeSafely(expandedSource).slice(call.index).startsWith('this.')) continue
+          const url = endpoints.get(call[1])
+          if (!url) throw new Error(`未登记的发票接口: ${call[1]}`)
+          targets.apis.push(url)
+          targets.apiContracts.push({ url, method: 'POST', auth: 'authenticated', source: 'invoice-wrapper-call' })
+        }
+        return
+      }
       if (dependency === 'utils/game-session-client.js') {
         const methods = {
           loadProjection: ['/api/game/session/view', 'GET'],

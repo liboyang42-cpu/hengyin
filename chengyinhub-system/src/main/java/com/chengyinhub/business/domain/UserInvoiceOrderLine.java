@@ -1,5 +1,8 @@
 package com.chengyinhub.business.domain;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -14,6 +17,7 @@ public class UserInvoiceOrderLine {
     private Long applicationId;
     private Long memberId;
     private String orderSource;
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long orderId;
     private BigDecimal amount;
     private Integer activeKey;

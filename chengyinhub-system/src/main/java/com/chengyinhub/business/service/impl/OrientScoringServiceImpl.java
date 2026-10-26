@@ -304,8 +304,14 @@ public class OrientScoringServiceImpl implements IOrientScoringService {
                                            String sourceType, String sourceRef, Long operatorId, String key) {
         if (original.getReversesEntryId() != null) throw invalid("冲正条目不能再被冲正,请追加修正条目");
         String reason = reasonCode == null || !CODE.matcher(reasonCode).matches() ? "REVERSAL" : reasonCode;
+        int reversedDelta;
+        try {
+            reversedDelta = Math.negateExact(original.getDeltaCenti() == null ? 0 : original.getDeltaCenti());
+        } catch (ArithmeticException overflow) {
+            throw invalid("原流水分值超出可冲正范围");
+        }
         OrientScoreEntry reversal = newEntry(session, original.getDimension(),
-                -(original.getDeltaCenti() == null ? 0 : original.getDeltaCenti()), reason, sourceType, sourceRef,
+                reversedDelta, reason, sourceType, sourceRef,
                 original.getNodeId(), original.getId(), key, "ADMIN", operatorId);
         OrientScoreEntry replay = mapper.selectEntryByIdem(session.getId(), key);
         if (replay != null) return sameOrConflict(replay, reversal);
@@ -339,6 +345,7 @@ public class OrientScoringServiceImpl implements IOrientScoringService {
     private OrientScoreEntry newEntry(TopicRouteSession session, String dimension, int delta, String reason,
                                       String sourceType, String sourceRef, Long nodeId, Long reverses, String key,
                                       String operatorType, Long operatorId) {
+        if (delta == Integer.MIN_VALUE) throw invalid("计分分值超出可冲正范围");
         OrientScoreEntry e = new OrientScoreEntry();
         e.setSessionId(session.getId());
         e.setActivityId(session.getActivityId() == null ? 0L : session.getActivityId());

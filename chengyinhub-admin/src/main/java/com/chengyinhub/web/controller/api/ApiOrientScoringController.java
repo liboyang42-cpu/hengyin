@@ -85,7 +85,7 @@ public class ApiOrientScoringController extends BaseController {
             return error("城市定向计分暂未开放").put("errorCode", OrientScoringException.DISABLED);
         }
         try {
-            return success(action.get());
+            return success(OrientPlayerWire.response(action.get()));
         } catch (OrientScoringException e) {
             return error(e.getMessage()).put("errorCode", e.getErrorCode());
         }

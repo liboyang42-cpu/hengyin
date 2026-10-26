@@ -243,6 +243,9 @@
       "root": "subpackageMember",
       "name": "subpackageMember",
       "pages": [
+        "character/index",
+        "orient-score/index",
+        "invoice/index",
         "complaint/index",
         "coupon-wallet/index",
         "coupon-qr/index",

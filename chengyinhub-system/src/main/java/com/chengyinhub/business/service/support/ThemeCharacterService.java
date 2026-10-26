@@ -33,7 +33,7 @@ import java.util.Set;
 /**
  * 动态角色卡(F2 RPG P0 / T02)。
  *
- * <p>属性定义来自 theme_state_key 的 counter 键(T01 扩展列给范围 / 展示 / 持久化);
+ * <p>运行局优先读取冻结的 journeyRules.attributes；旧局及模板读取 theme_state_key 的 counter 键。
  * 属性值的唯一真源仍是局状态 {@code topic_route_session.state_json.variables} —— 本服务不新增
  * 任何客户端写入口。{@code persist_scope=topic} 的值在建新一局时从该玩家最近一局结转进
  * theme_character,再灌回新局;run 作用域每局从初值重置。没有任何 topic 作用域键的主题
@@ -74,13 +74,15 @@ public class ThemeCharacterService {
         if (deleted || (!published && OwnershipUtils.notOwner(topic.getMemberId(), memberId))) {
             throw new ServiceException("主题不存在", HttpStatus.NOT_FOUND).setDetailMessage("CHARACTER_TOPIC_NOT_FOUND");
         }
-        Map<String, JsonNode> attributes = journeyAttributes(topic.getJourneyRulesJson());
-        List<ThemeStateKey> keys = cardKeys(topicId, attributes);
-
         ThemeCharacter character = themeCharacterMapper.selectByMemberAndTopic(memberId, topicId);
         TopicRouteSession latest = latestSession(memberId, topicId);
-        Map<String, Integer> carried = carriedValues(character, latest, keys);
         boolean running = latest != null && Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(latest.getStatus());
+        // 非运行态仍按既有跨局台账/模板口径展示，不改变每局重置和结转语义。
+        JsonNode frozen = running ? frozenRules(latest.getConfigSnapshotJson()) : null;
+        String rulesJson = frozen == null ? topic.getJourneyRulesJson() : frozen.toString();
+        Map<String, JsonNode> attributes = journeyAttributes(rulesJson);
+        List<ThemeStateKey> keys = frozen == null ? cardKeys(topicId, attributes) : snapshotKeys(frozen, attributes);
+        Map<String, Integer> carried = carriedValues(character, latest, keys);
         Map<String, Integer> live = running ? variables(latest.getStateJson()) : new HashMap<String, Integer>();
 
         List<Map<String, Object>> rows = new ArrayList<Map<String, Object>>();
@@ -94,22 +96,89 @@ public class ThemeCharacterService {
             row.put("value", Integer.valueOf(clamp(value.intValue(), key, attributes)));
             row.put("min", Integer.valueOf(key.effectiveMin()));
             row.put("max", Integer.valueOf(key.effectiveMax()));
-            row.put("displayType", key.getDisplayType() == null ? ThemeStateKey.DISPLAY_NUMBER : key.getDisplayType());
+            row.put("displayType", frozen != null ? null
+                    : key.getDisplayType() == null ? ThemeStateKey.DISPLAY_NUMBER : key.getDisplayType());
             row.put("color", key.getColor());
             row.put("icon", key.getIcon());
-            row.put("persistScope", key.persistsAcrossRuns() ? ThemeStateKey.PERSIST_TOPIC : ThemeStateKey.PERSIST_RUN);
+            row.put("persistScope", frozen != null ? null
+                    : key.persistsAcrossRuns() ? ThemeStateKey.PERSIST_TOPIC : ThemeStateKey.PERSIST_RUN);
             row.put("rules", rules(key.getRulesJson()));
             rows.add(row);
         }
         Map<String, Object> card = new LinkedHashMap<String, Object>();
-        card.put("topicId", topicId);
+        card.put("topicId", topicId.toString());
         card.put("created", Boolean.valueOf(character != null || latest != null));
         card.put("running", Boolean.valueOf(running));
+        card.put("definitionSource", frozen != null ? "SESSION_SNAPSHOT_PARTIAL"
+                : character == null && latest == null ? "TEMPLATE_LIVE" : "LEGACY_LIVE");
+        card.put("configVersion", frozen != null && latest.getConfigVersion() != null && latest.getConfigVersion() > 0L
+                ? latest.getConfigVersion().toString() : null);
+        if (frozen != null) {
+            List<String> missing = new ArrayList<String>(java.util.Arrays.asList("stateKeys.visible", "stateKeys.keyType",
+                    "stateKeys.initialValue", "stateKeys.minValue", "stateKeys.maxValue", "stateKeys.sortOrder",
+                    "stateKeys.displayType", "stateKeys.color", "stateKeys.icon", "stateKeys.persistScope", "stateKeys.rulesJson"));
+            if (!frozen.path("attributes").isArray()) missing.add("journeyRules.attributes");
+            else for (String field : java.util.Arrays.asList("visible", "initial", "min", "max")) {
+                for (JsonNode attribute : frozen.path("attributes")) {
+                    JsonNode value = attribute.path(field);
+                    if ("visible".equals(field) ? !value.isBoolean() : !snapshotInteger(value)) {
+                        missing.add("journeyRules.attributes." + field);
+                        break;
+                    }
+                }
+            }
+            card.put("definitionMissingFields", missing);
+        }
         card.put("attributes", rows);
         // F6 T12:主题开了 journeyRules.rpg 才多一个 rpg 块(动量 / 侧面 / 特质 / 进度钟);老主题响应不变。
-        JourneyRules rpgRules = rpgRules(topic.getJourneyRulesJson());
+        JourneyRules rpgRules = rpgRules(rulesJson);
         if (rpgRules != null) card.put("rpg", JourneyRpg.view(rpgRules, running ? engineState(latest.getStateJson()) : null));
         return card;
+    }
+
+    /** 缺少属性快照的旧局兼容实时读取；已存在但损坏的定义不能回落到作者最新编辑。 */
+    private static JsonNode frozenRules(String snapshotJson) {
+        if (StringUtils.isBlank(snapshotJson)) return null;
+        try {
+            JsonNode snapshot = JSON.readTree(snapshotJson);
+            if (snapshot != null && snapshot.isObject() && !snapshot.has(NodeJourneySnapshot.JOURNEY_RULES_KEY)) return null;
+            JsonNode rules = snapshot == null ? null : snapshot.get(NodeJourneySnapshot.JOURNEY_RULES_KEY);
+            if (rules != null && rules.isObject() && !rules.has("attributes")) return null;
+            return rules != null && rules.isObject() ? rules : JSON.createObjectNode();
+        } catch (Exception unusableSnapshot) {
+            return JSON.createObjectNode();
+        }
+    }
+
+    /** 与 PLAYER 的 JourneyInitialState.playerView 共用冻结属性；缺失可见性或范围时不公开该行。 */
+    private static List<ThemeStateKey> snapshotKeys(JsonNode frozen, Map<String, JsonNode> attributes) {
+        List<ThemeStateKey> keys = new ArrayList<ThemeStateKey>();
+        if (!frozen.path("stateEnabled").asBoolean(false) || !frozen.path("attributes").isArray()) return keys;
+        // shortcut: stateKeys 生产者目前仅冻结 key/label，扩展列补齐前不推断展示或跨局元数据。
+        for (JsonNode row : frozen.path("attributes")) {
+            String name = row.path("key").asText();
+            JsonNode attribute = attributes.get(name);
+            if (attribute == null || !name.startsWith("counter.") || !row.path("visible").isBoolean()
+                    || !row.path("visible").asBoolean() || !snapshotInteger(row.path("initial"))
+                    || !snapshotInteger(row.path("min")) || !snapshotInteger(row.path("max"))) continue;
+            int min = row.path("min").asInt();
+            int max = row.path("max").asInt();
+            int initial = row.path("initial").asInt();
+            if (min > max || initial < min || initial > max) continue;
+            ThemeStateKey key = new ThemeStateKey();
+            key.setStateKey(name);
+            key.setKeyType(ThemeStateKey.TYPE_COUNTER);
+            key.setLabel(attribute.path("label").asText());
+            key.setInitialValue(attribute.path("initial").asInt());
+            key.setMinValue(attribute.path("min").asInt());
+            key.setMaxValue(attribute.path("max").asInt());
+            keys.add(key);
+        }
+        return keys;
+    }
+
+    private static boolean snapshotInteger(JsonNode value) {
+        return value.isIntegralNumber() && value.canConvertToInt();
     }
 
     private static JourneyRules rpgRules(String journeyRulesJson) {

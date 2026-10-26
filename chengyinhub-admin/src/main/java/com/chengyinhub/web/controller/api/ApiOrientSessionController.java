@@ -61,6 +61,12 @@ public class ApiOrientSessionController extends BaseController {
                 idempotencyKey));
     }
 
+    @Operation(summary = "只读查询本人已有路线局;多局时由玩家明确选择")
+    @GetMapping("/current")
+    public AjaxResult current(Long topicId, Long activityId) {
+        return call(memberId -> orientSessionService.current(memberId, topicId, activityId));
+    }
+
     @Operation(summary = "读取本局阶段与服务端计时")
     @GetMapping
     public AjaxResult view(Long sessionId) {
@@ -79,10 +85,10 @@ public class ApiOrientSessionController extends BaseController {
             return AjaxResult.error(401, "请先登录").put("err", "ORIENT_LOGIN_REQUIRED");
         }
         try {
-            return success(action.apply(memberId));
+            return success(OrientPlayerWire.response(action.apply(memberId)));
         } catch (OrientSessionException e) {
             AjaxResult result = AjaxResult.error(e.getHttpCode(), e.getMessage()).put("err", e.getErr());
-            if (e.getData() != null) result.put(AjaxResult.DATA_TAG, e.getData());
+            if (e.getData() != null) result.put(AjaxResult.DATA_TAG, OrientPlayerWire.response(e.getData()));
             return result;
         }
     }

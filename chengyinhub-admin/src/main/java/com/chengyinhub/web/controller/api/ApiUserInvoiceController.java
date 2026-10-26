@@ -141,9 +141,15 @@ public class ApiUserInvoiceController extends BaseController {
     }
 
     private static Long toLong(Object value) {
-        if (value instanceof Number n) return n.longValue();
-        if (value instanceof String s && s.trim().matches("\\d{1,18}")) return Long.valueOf(s.trim());
-        return null;
+        if (!(value instanceof String) && !(value instanceof Number)) return null;
+        String text = value.toString().trim();
+        if (!text.matches("\\d{1,19}")) return null;
+        try {
+            long id = Long.parseLong(text);
+            return id > 0 ? id : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     /** 非法元素原样转成 null，交给服务层统一拒绝，不在这里静默丢弃。 */

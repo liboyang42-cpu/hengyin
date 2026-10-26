@@ -8,7 +8,7 @@ const source = fs.readFileSync(path.resolve(__dirname, '../../src/views/business
 function loadMerchant(listMerchant) {
   const script = source.match(/<script>([\s\S]*?)<\/script>/)[1]
     .replace(/^import \{[^}]+\} from "@\/api\/business\/merchant"$/m, 'const { listMerchant } = dependencies;')
-    .replace(/^import (Cy\w+) from .+$/gm, 'const $1 = {};');
+    .replace(/^import (\w+) from .+$/gm, 'const $1 = {};');
   return new Function('dependencies', script.replace(/export\s+default\s*/, 'return '))({ listMerchant });
 }
 

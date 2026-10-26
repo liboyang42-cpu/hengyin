@@ -305,7 +305,7 @@ public class UserInvoiceServiceImpl implements IUserInvoiceService {
 
     static Map<String, Object> titleView(UserInvoiceTitle title) {
         Map<String, Object> view = new LinkedHashMap<>();
-        view.put("id", title.getId());
+        view.put("id", title.getId() == null ? null : title.getId().toString());
         view.put("titleType", title.getTitleType());
         view.put("titleName", title.getTitleName());
         view.put("taxNoMasked", maskTaxNo(title.getTaxNo()));
@@ -315,7 +315,8 @@ public class UserInvoiceServiceImpl implements IUserInvoiceService {
 
     static Map<String, Object> applicationView(UserInvoiceApplication app) {
         Map<String, Object> view = new LinkedHashMap<>();
-        view.put("id", app.getId());
+        view.put("id", app.getId() == null ? null : app.getId().toString());
+        view.put("requestId", app.getRequestId());
         view.put("applicationNo", app.getApplicationNo());
         view.put("status", app.getStatus());
         view.put("titleType", app.getTitleType());
@@ -332,7 +333,7 @@ public class UserInvoiceServiceImpl implements IUserInvoiceService {
         for (UserInvoiceOrderLine line : app.getOrders()) {
             Map<String, Object> o = new LinkedHashMap<>();
             o.put("orderSource", line.getOrderSource() == null ? UserInvoiceOrderLine.SOURCE_REGISTRATION : line.getOrderSource());
-            o.put("orderId", line.getOrderId());
+            o.put("orderId", line.getOrderId() == null ? null : line.getOrderId().toString());
             o.put("amount", line.getAmount());
             o.put("orderTitle", line.getOrderTitle());
             o.put("ticketName", line.getTicketName());

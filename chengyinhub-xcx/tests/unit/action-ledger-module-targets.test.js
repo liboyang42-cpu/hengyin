@@ -4,7 +4,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
-const { targetsForHandler } = require('../../scripts/uiaudit/build-action-ledger')
+const { targetsForHandler, isWriteApi } = require('../../scripts/uiaudit/build-action-ledger')
 const ROOT = path.resolve(__dirname, '../..')
 const targets = (file, handler) => targetsForHandler(path.join(ROOT, file), handler)
 const writes = result => result.apiContracts.filter(api => api.method !== 'GET').map(api => api.url).sort()
@@ -186,4 +186,12 @@ test('actual revoke helper closure and contract reject an additional snapshot wr
       { urlTemplate: '/api/roam/share/snapshot', method: 'POST', kind: 'write' },
     ]), /success/)
   } finally { fs.rmSync(dir, { recursive: true, force: true }) }
+})
+
+ test('invoice dispatch keeps each action write and readback without sibling writes', () => {
+  for (const [handler, expected] of [['loadTitles', []], ['loadRecords', []], ['saveTitle', ['/api/invoice/titles/save']], ['apply', ['/api/invoice/apply']], ['cancel', ['/api/invoice/cancel']]]) {
+    const result = targets('subpackageMember/invoice/index.js', handler)
+    assert.deepEqual(result.apis.filter(isWriteApi), expected, handler)
+    if (handler === 'loadTitles') assert.ok(result.apiContracts.some(api => api.url === '/api/invoice/titles' && api.method === 'POST'))
+  }
 })

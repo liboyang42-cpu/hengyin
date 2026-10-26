@@ -214,6 +214,10 @@ Page({
     this.openScene('settings-deregister');
   },
 
+  goInvoice() {
+    wx.navigateTo({ url: '/subpackageMember/invoice/index' });
+  },
+
   goAbout() {
     wx.navigateTo({ url: '/pages/shezhi/about/index' });
   },

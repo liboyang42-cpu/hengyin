@@ -7,7 +7,7 @@
   <cy-nav-bar custom-back bind:back="backToList" />
   <view style="height: {{statusBarHeight + navBarHeight}}px;"></view>
   <cy-page-title title="参与详情" safe-top="{{false}}" />
-  <cy-scene-member-participation-detail id="participationDetail" record-id="{{id}}" bind:back="backToList" bind:close="backToList" bind:refresh="noop" />
+  <cy-scene-member-participation-detail id="participationDetail" record-id="{{id}}" bind:back="backToList" bind:close="noop" bind:refresh="noop" />
 </view>
 </view>
 <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />

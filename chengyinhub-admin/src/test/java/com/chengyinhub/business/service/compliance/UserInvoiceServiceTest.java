@@ -151,7 +151,7 @@ class UserInvoiceServiceTest {
         Map<String, Object> view = service.apply(ME, "req-1", 31L, List.of(1L, 2L));
 
         assertEquals(true, view.get("replayed"));
-        assertEquals(500L, view.get("id"));
+        assertEquals("500", view.get("id"));
         verify(mapper, never()).insertApplication(any());
         verify(mapper, never()).insertOrderLines(anyList());
         verify(issuer, never()).submit(any());

@@ -1,0 +1,14 @@
+page { background: var(--cy-color-bg-page); }
+.invoice-page { min-height: 100vh; color: var(--cy-color-text-primary); }
+.invoice-content { padding: 0 var(--cy-page-x) var(--cy-space-7); }
+.invoice-tabs, .invoice-actions { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); margin-bottom: var(--cy-space-3); }
+.invoice-card { padding: var(--cy-space-4); margin: var(--cy-space-3) 0; background: var(--cy-color-bg-surface); border-radius: var(--cy-radius-md); }
+.invoice-title { display: block; font-size: var(--cy-type-card-title); font-weight: 600; margin: var(--cy-space-3) 0; }
+.invoice-note { display: block; color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); line-height: var(--cy-leading-normal); margin: var(--cy-space-2) 0; overflow-wrap: anywhere; }
+.invoice-value { display: block; color: var(--cy-color-text-primary); font-size: var(--cy-type-body); line-height: var(--cy-leading-normal); overflow-wrap: anywhere; }
+.invoice-label { display: block; font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); margin: var(--cy-space-4) 0; }
+.invoice-input { min-height: var(--cy-btn-h); margin-top: var(--cy-space-2); padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-md); background: var(--cy-color-input-bg-empty); color: var(--cy-color-input-text); font-size: var(--cy-type-body); }
+.invoice-check { display: flex; align-items: center; justify-content: space-between; font-size: var(--cy-type-body); margin: var(--cy-space-4) 0; }
+.invoice-choice { border: thin solid var(--cy-color-border-subtle); }
+.invoice-choice--selected { background: var(--cy-color-bg-surface-subtle); border-color: var(--cy-color-text-primary); }
+.invoice-line { margin: var(--cy-space-3) 0; padding: var(--cy-space-2) 0; }

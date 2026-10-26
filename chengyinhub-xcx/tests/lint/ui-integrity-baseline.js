@@ -1,3 +1,4 @@
+// 2026-10-26 参与详情结果入口接线：既有核销调用 190→226，理由和数量不变，仅重算定位摘要。
 // 2026-10-25 上传候选整合：保留地点线逐项登记，既有调用按逐字相同行迁锚，未扩大地点线门禁上限。
 // 2026-10-25 地点卡补照片来源署名一行:nearby 评价列表读取 1004→1005(同一调用点,理由不变),u5Silent digest 按同一算法重算。
 // 2026-10-25 地点勋章用「点亮一隅」徽记 + 地点卡公开引述:badge-wall 201→206(同一行 this.setData(patch))、nearby 评价列表读取 1003→1004,上下文逐字相同、理由不变;u4Dynamic / u5Silent digest 按同一算法重算。
@@ -404,7 +405,7 @@ module.exports = {
       // 受控路由、理由及 10 条登记保持，digest 仅随行号更新。
       // 2026-10-11 登录隔离及正常失败状态兼容：App consent wrapper 329→343，同一调用及理由，数量仍11。
       // 2026-10-14 W5尾项:profile 544→559/870→885、参与详情 176→177 仅行号下移，同一调用及理由，数量仍11。
-      "u1Variable": "66025e05bf07b638bcb3718ebb22bd9a4dc4d327ddac38048714815e01b145cd",
+      "u1Variable": "9dc92d572503652629f433c719cc40f71620083fd2553b19359db2841c53a7d2",
       // 2026-08-25 816 并入:key 集合按上面的逐条核对结果变化,digest 显式更新。
       "u3Debt": // 2026-09-09 一枚圆钮:roam#onCenterHoldStart / onCenterHoldEnd 两笔零绑定债务已还
       //   —— 长按 3 秒结束的逻辑接到了主键的 touchstart/touchend 上。99→97,digest 显式更新。
@@ -1036,7 +1037,7 @@ module.exports = {
     "chengyinhub-xcx/components/cy/scene-route-content/index.js:551": "request 只取自本方法内 requests[sceneId] 的七个非提现固定写接口对象，未知 sceneId 显示提交错误并返回；提现分支在此前已转交 withdrawal-preflight，不会走到本调用；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/pages/index/index.js:1057": "retry 只回放 _listReq 中由 getListData 首次字面量调用冻结的 topic/list 或 activity/list，外部输入不能写该缓存；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/pages/search2/result/index.js:169": "request 数组只由 utils/discover-search.buildRequests 构造，其按搜索类型枚举后端字面量且当前 U1 全仓扫描覆盖；owner=小程序，复核=2026-09-15",
-    "chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js:190": "会员快捷核销只消费 verification-scan.js 的有限核销路由，非法扫码在 sendRequest 前显示 toast 并返回；owner=小程序，复核=2026-09-15"
+    "chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js:226": "会员快捷核销只消费 verification-scan.js 的有限核销路由，非法扫码在 sendRequest 前显示 toast 并返回；owner=小程序，复核=2026-09-15"
   },
   "u3Debt": {
     "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js#onThemeTap": "存量零绑定债务：onThemeTap 在同页 WXML 与 JS 调用图均无入口；owner=小程序，到期=2026-09-30",

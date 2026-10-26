@@ -16,6 +16,8 @@ public interface IOrientSessionService {
     Map<String, Object> disqualify(Long memberId, Long sessionId, String reasonCode, String idempotencyKey);
     Map<String, Object> taskResult(Long memberId, Long sessionId, Long taskId, String alternativeTaskType,
                                    String idempotencyKey);
+    /** 只读列出本人已有局;activityId=null 不限定场次,不猜测当前局。 */
+    Map<String, Object> current(Long memberId, Long topicId, Long activityId);
     Map<String, Object> view(Long memberId, Long sessionId);
     Map<String, Object> receipt(Long memberId, Long sessionId, String idempotencyKey);
 }

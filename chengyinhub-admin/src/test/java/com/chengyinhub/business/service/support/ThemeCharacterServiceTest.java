@@ -11,6 +11,7 @@ import com.chengyinhub.business.mapper.ThemeStateKeyMapper;
 import com.chengyinhub.business.mapper.TopicRouteSessionMapper;
 import com.chengyinhub.common.exception.ServiceException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -31,6 +32,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /** F2 T02:动态角色卡模板 / 跨局结转 / 每局重置 / 幂等 / 归属的书面契约。 */
@@ -81,6 +83,8 @@ class ThemeCharacterServiceTest {
         Map<String, Object> card = service.card(MEMBER, TOPIC);
 
         assertEquals(Boolean.FALSE, card.get("created"));
+        assertEquals("TEMPLATE_LIVE", card.get("definitionSource"));
+        assertNull(card.get("configVersion"), "发布版本不能冒充模板定义版本");
         List<Map<String, Object>> rows = rows(card);
         assertEquals(2, rows.size(), "只展示可见的 counter;journeyRules 隐藏属性、visible=false、tag 都不上卡");
         assertEquals("counter.focus", rows.get(0).get("stateKey"), "按 sortOrder 升序");
@@ -181,6 +185,192 @@ class ThemeCharacterServiceTest {
 
         assertEquals(10, rows.get(0).get("value"), "注册表 max=10 封顶展示值");
         assertEquals(7, rows.get(1).get("value"));
+    }
+
+    @Test
+    void runningDefinitionsStayWithTheSessionAfterTheAuthorEditsRulesAndRegistry() {
+        TopicRouteSession running = frozenSession(RULES);
+        when(sessions.selectHistoryPage(eq(MEMBER), eq(TOPIC), isNull(), eq(1)))
+                .thenReturn(Collections.singletonList(running));
+        Map<String, Object> before = service.card(MEMBER, TOPIC);
+
+        topics.selectCmsTopicById(TOPIC).setJourneyRulesJson("{\"schemaVersion\":1,\"stateEnabled\":true,\"attributes\":["
+                + "{\"key\":\"counter.str\",\"label\":\"新版力量\",\"initial\":1,\"min\":0,\"max\":2},"
+                + "{\"key\":\"counter.secret\",\"label\":\"新版公开\",\"initial\":1,\"visible\":true}]}");
+        ThemeStateKey changed = key(1L, "counter.str", "新版注册名", ThemeStateKey.PERSIST_RUN);
+        changed.setMaxValue(2);
+        when(keys.selectByTopicId(TOPIC)).thenReturn(Collections.singletonList(changed));
+
+        Map<String, Object> after = service.card(MEMBER, TOPIC);
+
+        assertEquals(before, after, "作者修改不能改变运行局的定义、hidden、范围或数值");
+        assertEquals("SESSION_SNAPSHOT_PARTIAL", after.get("definitionSource"));
+        assertEquals("2", after.get("configVersion"), "使用局配置版本，不用主题发布版本或 state CAS version");
+        assertEquals(2, rows(after).size());
+        assertEquals("力量", rows(after).get(0).get("label"));
+        assertEquals(7, rows(after).get(0).get("value"));
+        assertEquals(20, rows(after).get(0).get("max"));
+        assertEquals(10, rows(after).get(1).get("value"), "数值按冻结定义夹取，不按作者最新范围");
+        assertEquals(10, rows(after).get(1).get("max"));
+        assertNull(rows(after).get(0).get("persistScope"), "生产者未冻结的元数据不能冒充已知");
+        assertNull(rows(after).get(0).get("displayType"));
+        assertTrue(((List<?>) after.get("definitionMissingFields")).contains("stateKeys.visible"));
+        verifyNoInteractions(keys);
+        verify(characters, org.mockito.Mockito.times(2)).selectByMemberAndTopic(MEMBER, TOPIC);
+        verify(sessions, org.mockito.Mockito.times(2)).selectHistoryPage(MEMBER, TOPIC, null, 1);
+        verify(topics, org.mockito.Mockito.times(3)).selectCmsTopicById(TOPIC);
+        verifyNoMoreInteractions(characters, sessions, topics);
+    }
+
+    @Test
+    void oldSessionWithoutAttributeSnapshotKeepsLiveDefinitionsButHasNoKnownDefinitionVersion() {
+        TopicRouteSession legacy = session(42L, 8, TopicRouteSession.STATUS_RUNNING,
+                "{\"variables\":{\"counter.str\":7,\"counter.focus\":9}}");
+        legacy.setConfigVersion(2L);
+        legacy.setConfigSnapshotJson("{\"journeyRules\":{\"checkEnabled\":false},\"stateKeys\":[{\"key\":\"counter.str\",\"label\":\"旧名\"}]}");
+        when(sessions.selectHistoryPage(eq(MEMBER), eq(TOPIC), isNull(), eq(1)))
+                .thenReturn(Collections.singletonList(legacy));
+
+        Map<String, Object> card = service.card(MEMBER, TOPIC);
+
+        assertEquals("LEGACY_LIVE", card.get("definitionSource"));
+        assertNull(card.get("configVersion"), "局版本不能给实时定义背书");
+        assertEquals(9, rows(card).get(0).get("value"));
+        assertEquals("力量", rows(card).get(1).get("label"));
+        verifyCardReadsOnly(true);
+    }
+
+    @Test
+    void emptyTemplateDoesNotCreateCharacterOrSession() {
+        topics.selectCmsTopicById(TOPIC).setJourneyRulesJson(null);
+        when(keys.selectByTopicId(TOPIC)).thenReturn(Collections.emptyList());
+
+        Map<String, Object> card = service.card(MEMBER, TOPIC);
+
+        assertEquals(Boolean.FALSE, card.get("created"));
+        assertEquals(Boolean.FALSE, card.get("running"));
+        assertEquals("TEMPLATE_LIVE", card.get("definitionSource"));
+        assertNull(card.get("configVersion"));
+        assertTrue(rows(card).isEmpty());
+        verify(topics, org.mockito.Mockito.times(2)).selectCmsTopicById(TOPIC);
+        verify(keys).selectByTopicId(TOPIC);
+        verify(characters).selectByMemberAndTopic(MEMBER, TOPIC);
+        verify(sessions).selectHistoryPage(MEMBER, TOPIC, null, 1);
+        verifyNoMoreInteractions(keys, characters, sessions, topics);
+    }
+
+    @Test
+    void partialSnapshotNeverPublishesUnknownVisibilityOrRangeAndNeverReadsAuthorRegistry() {
+        TopicRouteSession partial = frozenSession(RULES);
+        partial.setConfigSnapshotJson("{\"journeyRules\":{\"schemaVersion\":1,\"stateEnabled\":true,\"attributes\":["
+                + "{\"key\":\"counter.str\",\"label\":\"未知可见性\",\"initial\":3,\"min\":0,\"max\":20},"
+                + "{\"key\":\"counter.focus\",\"label\":\"未知范围\",\"initial\":5,\"visible\":true},"
+                + "{\"key\":\"counter.secret\",\"label\":\"隐藏\",\"initial\":1,\"min\":0,\"max\":10,\"visible\":false}]}}");
+        when(sessions.selectHistoryPage(eq(MEMBER), eq(TOPIC), isNull(), eq(1)))
+                .thenReturn(Collections.singletonList(partial));
+
+        Map<String, Object> card = service.card(MEMBER, TOPIC);
+
+        assertEquals("SESSION_SNAPSHOT_PARTIAL", card.get("definitionSource"));
+        assertTrue(rows(card).isEmpty(), "缺字段不能由 normalize 默认值变成公开定义");
+        assertTrue(((List<?>) card.get("definitionMissingFields")).contains("journeyRules.attributes.visible"));
+        assertTrue(((List<?>) card.get("definitionMissingFields")).contains("journeyRules.attributes.min"));
+        verifyCardReadsOnly(false);
+    }
+
+    @Test
+    void malformedExistingSnapshotDoesNotFallBackToLatestAuthorDefinitions() {
+        TopicRouteSession invalid = frozenSession(RULES);
+        invalid.setConfigVersion(null);
+        invalid.setConfigSnapshotJson("{\"journeyRules\":{\"attributes\":null}}");
+        when(sessions.selectHistoryPage(eq(MEMBER), eq(TOPIC), isNull(), eq(1)))
+                .thenReturn(Collections.singletonList(invalid));
+
+        Map<String, Object> card = service.card(MEMBER, TOPIC);
+
+        assertEquals("SESSION_SNAPSHOT_PARTIAL", card.get("definitionSource"));
+        assertNull(card.get("configVersion"));
+        assertTrue(rows(card).isEmpty());
+        assertTrue(((List<?>) card.get("definitionMissingFields")).contains("journeyRules.attributes"));
+        verifyCardReadsOnly(false);
+    }
+
+    @Test
+    void frozenEmptyAttributesDoNotPickUpNewLiveDefinitions() {
+        TopicRouteSession empty = frozenSession("{\"schemaVersion\":1,\"stateEnabled\":true,\"attributes\":[]}");
+        when(sessions.selectHistoryPage(eq(MEMBER), eq(TOPIC), isNull(), eq(1)))
+                .thenReturn(Collections.singletonList(empty));
+
+        Map<String, Object> card = service.card(MEMBER, TOPIC);
+
+        assertEquals("SESSION_SNAPSHOT_PARTIAL", card.get("definitionSource"));
+        assertTrue(rows(card).isEmpty(), "已冻结空数组与旧局没有属性快照不同");
+        verifyCardReadsOnly(false);
+    }
+
+    @Test
+    void topicAndConfigVersionRemainExactBeyondJavascriptSafeIntegers() {
+        CmsTopic topic = new CmsTopic();
+        topic.setId(Long.MAX_VALUE);
+        topic.setMemberId(OWNER);
+        topic.setPublishedConfigVersion(Long.MAX_VALUE);
+        when(topics.selectCmsTopicById(Long.MAX_VALUE)).thenReturn(topic);
+        TopicRouteSession running = frozenSession(RULES);
+        running.setConfigVersion(Long.MAX_VALUE);
+        when(sessions.selectHistoryPage(eq(MEMBER), eq(Long.MAX_VALUE), isNull(), eq(1)))
+                .thenReturn(Collections.singletonList(running));
+
+        Map<String, Object> card = service.card(MEMBER, Long.MAX_VALUE);
+
+        assertEquals("9223372036854775807", card.get("topicId"));
+        assertEquals("9223372036854775807", card.get("configVersion"));
+        ObjectNode serialized = new ObjectMapper().valueToTree(card);
+        assertTrue(serialized.path("topicId").isTextual());
+        assertTrue(serialized.path("configVersion").isTextual());
+        verifyNoInteractions(keys);
+    }
+
+    @Test
+    void invalidFrozenIntegerRangesNeverReachTheCard() {
+        TopicRouteSession invalid = frozenSession(RULES);
+        when(sessions.selectHistoryPage(eq(MEMBER), eq(TOPIC), isNull(), eq(1)))
+                .thenReturn(Collections.singletonList(invalid));
+        for (String range : Arrays.asList("\"initial\":3,\"min\":0,\"max\":9223372036854775807",
+                "\"initial\":9223372036854775807,\"min\":0,\"max\":20",
+                "\"initial\":3,\"min\":9223372036854775807,\"max\":20",
+                "\"initial\":3,\"min\":10,\"max\":2")) {
+            invalid.setConfigSnapshotJson("{\"journeyRules\":{\"schemaVersion\":1,\"stateEnabled\":true,\"attributes\":["
+                    + "{\"key\":\"counter.str\",\"label\":\"坏范围\",\"visible\":true," + range + "}]}}");
+
+            Map<String, Object> card = service.card(MEMBER, TOPIC);
+
+            assertEquals("SESSION_SNAPSHOT_PARTIAL", card.get("definitionSource"));
+            assertTrue(rows(card).isEmpty(), "原始整数溢出或 min>max 时不能生成角色卡属性");
+        }
+        verifyNoInteractions(keys);
+        verify(characters, never()).updateIfNewer(any(ThemeCharacter.class));
+        verify(characters, never()).insertIfAbsent(any(ThemeCharacter.class));
+    }
+
+    private void verifyCardReadsOnly(boolean liveKeys) {
+        verify(topics).selectCmsTopicById(TOPIC);
+        verify(characters).selectByMemberAndTopic(MEMBER, TOPIC);
+        verify(sessions).selectHistoryPage(MEMBER, TOPIC, null, 1);
+        if (liveKeys) verify(keys).selectByTopicId(TOPIC);
+        verifyNoMoreInteractions(topics, characters, sessions, keys);
+    }
+
+    private static TopicRouteSession frozenSession(String rules) {
+        ObjectMapper json = new ObjectMapper();
+        ObjectNode snapshot = json.createObjectNode();
+        JourneyRules parsed = JourneyRules.parse(rules);
+        snapshot.set(NodeJourneySnapshot.JOURNEY_RULES_KEY, json.valueToTree(parsed));
+        JourneyInitialState.freezeKeys(snapshot, Collections.emptyList(), parsed);
+        TopicRouteSession session = session(42L, 8, TopicRouteSession.STATUS_RUNNING,
+                "{\"variables\":{\"counter.str\":7,\"counter.focus\":99,\"counter.secret\":8}}");
+        session.setConfigVersion(2L);
+        session.setConfigSnapshotJson(snapshot.toString());
+        return session;
     }
 
     @Test
