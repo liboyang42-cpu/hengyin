@@ -655,6 +655,85 @@ def safe_cache_progress(text):
     return {}
 
 
+def compile_failure_evidence(report,inputs,state,obj,phase,text):
+    """Bounded javac locations only. Not a compiled postimage, acceptance gate or inferred old cause."""
+    unknown={'purpose':'PREPARATION_COMPILER_DIAGNOSTIC_ONLY','businessAccepted':False,'state':'UNKNOWN'}
+    try:
+        require(report.get('mavenExitObserved') is True and type(report.get('mavenExit')) is int
+                and 0<report['mavenExit']<256 and report.get('originalExit')==report['mavenExit']
+                and phase in ('OFFLINE_PACKAGE_PROBE','ONLINE_PACKAGE','ONLINE_PROVIDER_RUNTIME',
+                              'ONLINE_CONFIGURATION_UNITS','OFFLINE_PROVIDER_RUNTIME','OFFLINE_TEST_PREFLIGHT')
+                and report.get('phase')==phase,'COMPILER_DIAGNOSTIC_IDENTITY_UNPROVEN')
+        identity_gate(os.environ);bound=identity(os.environ)
+        require({key:report.get(key) for key in bound}==bound,'COMPILER_DIAGNOSTIC_IDENTITY_UNPROVEN')
+        slot=state['slots']['app']
+        owner=validate_container(obj,slot['name'],JDK,labels(os.environ,state['nonce']),MEMORY,'bridge',slot['cid'])
+        require(owner==report['budget'] and obj['Image']==report['imageId']
+                and obj['Config']['Cmd']==fixed_cache_command() and obj['Config']['Entrypoint']==['/bin/bash']
+                and obj['Config']['User']==str(os.getuid())+':'+str(os.getgid())
+                and obj['State']['Running'] is True and obj['State']['Pid']>0
+                and report.get('image')==JDK and report.get('mavenVersion')==CORE_VERSION
+                and report.get('settingsSha256')==hashlib.sha256(EMPTY_SETTINGS.encode()).hexdigest()
+                and re.fullmatch('[0-9a-f]{64}',report.get('mavenCoreSha256','')),'COMPILER_DIAGNOSTIC_IDENTITY_UNPROVEN')
+        environment=dict(value.split('=',1) for value in obj['Config']['Env'])
+        require(all(environment.get(key)==value for key,value in
+                {'SOURCE_SHA':bound['sourceSha'],'GITHUB_SHA':bound['sourceSha'],'GITHUB_RUN_ID':bound['runId'],'GITHUB_RUN_ATTEMPT':bound['attempt']}.items())
+                and report.get('pomSha256')==cache_inputs() and fixed_test_compilation_inputs()==inputs
+                and inputs.get('profile')==TEST_PROFILE and set(inputs.get('sources',{}))==set(TEST_SOURCES),
+                'COMPILER_DIAGNOSTIC_IDENTITY_UNPROVEN')
+    except Exception:return {**unknown,'unavailableReason':'EXIT_STAGE_SOURCE_OR_OWNER_UNPROVEN'}
+    try:
+        require(isinstance(text,str) and 0<len(text)<=1024*1024,'COMPILER_DIAGNOSTIC_UNPROVEN')
+        text=re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]','',text)
+        goal={'plugin':'org.apache.maven.plugins:maven-compiler-plugin','pluginVersion':'3.15.0',
+              'goal':'testCompile','module':'chengyinhub-admin'}
+        require(safe_cache_progress(text)==goal,'COMPILER_DIAGNOSTIC_UNPROVEN')
+        headers=list(re.finditer(r'^\[INFO\] --- (?:compiler|maven-compiler-plugin):3\.15\.0:testCompile \(default-testCompile\) @ chengyinhub-admin ---\s*$',text,re.MULTILINE))
+        goals=list(re.finditer(r'^\[INFO\] --- [^\r\n]{1,512} ---[ \t]*$',text,re.MULTILINE))
+        require(headers and goals and goals[-1].start()==headers[-1].start(),'COMPILER_DIAGNOSTIC_UNPROVEN')
+        lines=text[headers[-1].end():].splitlines()
+        markers=[index for index,line in enumerate(lines) if re.fullmatch(r'\[ERROR\] COMPILATION ERROR :\s*',line)]
+        require(len(markers)==1,'COMPILER_DIAGNOSTIC_UNPROVEN');section=lines[markers[0]+1:]
+        ends=[(index,re.fullmatch(r'\[INFO\] ([0-9]{1,7}) errors?\s*',line)) for index,line in enumerate(section)]
+        ends=[(index,match) for index,match in ends if match is not None]
+        require(ends and 1<=int(ends[0][1][1])<=8,'COMPILER_DIAGNOSTIC_UNPROVEN')
+        expected=int(ends[0][1][1]);rows=[];seen=set();root=ROOT/'chengyinhub-admin/src/test/java'
+        for line in section[:ends[0][0]]:
+            if not line.startswith('[ERROR] '):continue
+            match=re.fullmatch(r'\[ERROR\] ([^\r\n]{1,4096}\.java):\[([0-9]{1,7}),([0-9]{1,7})\] ([^\r\n]{1,4096})',line)
+            if match is None:
+                # Continuation text is private. A malformed location cannot hide among valid rows.
+                require('.java:' not in line,'COMPILER_DIAGNOSTIC_UNPROVEN');continue
+            location=Path(match[1]);require(location.is_absolute() and str(location)==match[1]
+                and '..' not in location.parts and location.is_relative_to(root),'COMPILER_DIAGNOSTIC_UNPROVEN')
+            relative=location.relative_to(root).as_posix()
+            require(relative in TEST_SOURCES and location.is_file() and not location.is_symlink()
+                    and location.resolve()==location,'COMPILER_DIAGNOSTIC_UNPROVEN')
+            raw=location.read_bytes();source_hash=hashlib.sha256(raw).hexdigest()
+            require(inputs['sources'].get(relative)==source_hash,'COMPILER_DIAGNOSTIC_UNPROVEN')
+            source_lines=raw.decode('utf-8').split('\n');number=int(match[2]);column=int(match[3])
+            require(1<=number<=len(source_lines),'COMPILER_DIAGNOSTIC_UNPROVEN');width=0
+            for character in source_lines[number-1].rstrip('\r'):
+                width=((width//8)+1)*8 if character=='\t' else width+len(character.encode('utf-16-le'))//2
+            require(1<=column<=width+1,'COMPILER_DIAGNOSTIC_UNPROVEN')
+            message=match[4].removeprefix('error: ');category=None
+            if message=='cannot find symbol':category='CANNOT_FIND_SYMBOL'
+            elif re.fullmatch(r'incompatible types: .{1,4000}',message):category='INCOMPATIBLE_TYPES'
+            elif re.fullmatch(r'duplicate class: .{1,2000}|(?:variable|method|constructor|class) .{1,2000} is already defined in .{1,2000}',message):category='DUPLICATE_DEFINITION'
+            elif re.fullmatch(r'unreported exception .{1,2000}; must be caught or declared to be thrown',message):category='UNDECLARED_CHECKED_EXCEPTION'
+            elif message in ("';' expected",'not a statement','illegal start of expression','illegal start of type',
+                             'reached end of file while parsing','class, interface, enum, or record expected'):
+                category='SYNTAX_ERROR'
+            require(category is not None,'COMPILER_DIAGNOSTIC_UNPROVEN')
+            key=(relative,number,column,category)
+            require(key not in seen and len(rows)<8,'COMPILER_DIAGNOSTIC_UNPROVEN');seen.add(key)
+            rows.append({'source':relative,'sourceSha256':source_hash,'line':number,'column':column,'category':category})
+        require(len(rows)==expected,'COMPILER_DIAGNOSTIC_UNPROVEN')
+        return {**unknown,**bound,'state':'OBSERVED','phase':phase,'mavenExitObserved':True,
+                'mavenExit':report['mavenExit'],'compiler':goal,'errors':rows}
+    except Exception:return {**unknown,'unavailableReason':'MISSING_OR_UNREVIEWED_COMPILER_ERROR_SECTION'}
+
+
 def cache_manifest(cache):
     require(cache.is_dir() and not cache.is_symlink(),'EXISTING_OFFLINE_CACHE_REQUIRED')
     rows=[];total=0
@@ -794,7 +873,7 @@ def warm_cache():
     report={**resource_envelope(os.environ),'result':'NOT_COMPLETED','originalExit':None,'failures':[],
             'preparationOnly':True,'mavenExitObserved':False,'mavenExit':None,'offlinePackageProbeExit':None,
             'mavenVersion':CORE_VERSION,'image':JDK,'settingsSha256':hashlib.sha256(EMPTY_SETTINGS.encode()).hexdigest()}
-    state={'nonce':uuid.uuid4().hex,'slots':{}};first=None;cleaned=None;failed_postimage=None
+    state={'nonce':uuid.uuid4().hex,'slots':{}};first=None;cleaned=None;failed_postimage=None;compiler_log_tail=None
     substage='SOURCE_INPUTS'
     def publish():
         try:write(CACHE_REPORT,report)
@@ -910,7 +989,7 @@ def warm_cache():
                     os.chmod(log,0o600);logs=subprocess.run(DOCKER+['logs',slot['cid']],stdout=stream,stderr=subprocess.STDOUT,timeout=30)
                 require(logs.returncode==0 and log.stat().st_size<32*1024**2,'PRIVATE_LOG_NOT_COMPLETE')
                 with log.open('rb') as stream:
-                    stream.seek(max(0,log.stat().st_size-1024*1024));tail=stream.read().decode(errors='replace')
+                    stream.seek(max(0,log.stat().st_size-1024*1024));tail=stream.read().decode(errors='replace');compiler_log_tail=tail
                     report['pluginFailure']=safe_plugin_resolution(tail);report['lastReviewedMavenGoal']=safe_cache_progress(tail)
                 if obj['State']['Running']:
                     phase=command(DOCKER+['exec',slot['cid'],'cat','/tmp/cy-cache.phase']).decode().strip()
@@ -929,8 +1008,11 @@ def warm_cache():
                 phase=command(DOCKER+['exec',slot['cid'],'cat','/tmp/cy-cache.phase']).decode().strip()
                 if phase in ('OFFLINE_PACKAGE_PROBE','ONLINE_PACKAGE','ORIGINAL_PROVIDER_GET',
                              'ONLINE_PROVIDER_RUNTIME','ONLINE_CONFIGURATION_UNITS','OFFLINE_PROVIDER_RUNTIME','OFFLINE_TEST_PREFLIGHT'):report['phase']=phase
+                report['compileFailure']=compile_failure_evidence(report,compilation,state,obj,phase,compiler_log_tail)
                 report['preparationTests']=preparation_test_evidence(report,compilation,failed_postimage,state,obj,phase)
             except Exception:
+                report.setdefault('compileFailure',{'purpose':'PREPARATION_COMPILER_DIAGNOSTIC_ONLY','businessAccepted':False,
+                    'state':'UNKNOWN','unavailableReason':'EXIT_STAGE_SOURCE_OR_OWNER_UNPROVEN'})
                 report['preparationTests']={'purpose':'PREPARATION_JUNIT_DIAGNOSTIC_ONLY','state':'UNKNOWN',
                     'businessAccepted':False,'unavailableReason':'EXIT_STAGE_SOURCE_OR_COMPILE_IDENTITY_UNPROVEN'}
         try:

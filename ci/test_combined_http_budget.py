@@ -736,7 +736,7 @@ class CombinedBudgetControls(unittest.TestCase):
 
     def warm_transport_control(self,exit_code=0,foreign=False,write_fails=False,
                                failure_point=None,terminal_exit=143,no_plugin=False,probe_exit=0,
-                               preparation_phase='OFFLINE_TEST_PREFLIGHT',log_error=False,compiler_exit=0):
+                               preparation_phase='OFFLINE_TEST_PREFLIGHT',log_error=False,compiler_exit=0,compiler_log=None):
         # Transport/file protocol doubles only: not Maven/Java execution or dependency acceptance evidence.
         reports=[];mutations=[];obj={};image_id='sha256:'+'d'*64
         with tempfile.TemporaryDirectory() as directory,contextlib.ExitStack() as own_cleanup:
@@ -748,7 +748,8 @@ class CombinedBudgetControls(unittest.TestCase):
             def native(argv,**kwargs):
                 if 'logs' in argv:
                     if log_error:raise OSError('PRIVATE_LOG_VALUE')
-                    kwargs['stdout'].write(b'Plugin org.apache.maven.plugins:maven-resources-plugin:3.3.1 or one of its dependencies could not be resolved: PRIVATE\n' if exit_code and not no_plugin else b'SYNTHETIC_TRANSPORT_CONTROL_ONLY')
+                    kwargs['stdout'].write(compiler_log.encode() if compiler_log is not None else
+                        b'Plugin org.apache.maven.plugins:maven-resources-plugin:3.3.1 or one of its dependencies could not be resolved: PRIVATE\n' if exit_code and not no_plugin else b'SYNTHETIC_TRANSPORT_CONTROL_ONLY')
                 return SimpleNamespace(returncode=0,stdout=b'',stderr=b'')
             def command(argv,**kwargs):
                 if argv==['mktemp','-d','/tmp/cy-http-budget.XXXXXXXX']:
@@ -2042,6 +2043,125 @@ class CombinedBudgetControls(unittest.TestCase):
                 changed=B.source_manifest()
                 self.assertEqual(before['classTrees'],changed['classTrees']);self.assertEqual(before['reactorJars'],changed['reactorJars'])
                 self.assertNotEqual(before['controlledContentSecurity'],changed['controlledContentSecurity']);self.assertNotEqual(before,changed)
+
+
+    def compiler_diagnostic_scope(self,root):
+        # Source/log/owner protocol only. Deliberately no class files or compiled postimage.
+        self.compilation_sources(root)
+        for relative in B.TEST_SOURCES:
+            (root/'chengyinhub-admin/src/test/java'/relative).write_text(('\t// PRIVATE_SOURCE_SQL_URL '+('x'*80)+'\n')*20)
+        inputs=B.fixed_test_compilation_inputs();obj=self.obj();obj['HostConfig']['NetworkMode']='bridge'
+        obj['State'].update(Running=True,Pid=17)
+        obj['Config'].update(Cmd=B.fixed_cache_command(),Entrypoint=['/bin/bash'],User=str(os.getuid())+':'+str(os.getgid()),
+            Env=[key+'='+value for key,value in {'SOURCE_SHA':self.env()['SOURCE_SHA'],'GITHUB_SHA':self.env()['SOURCE_SHA'],
+                'GITHUB_RUN_ID':self.env()['GITHUB_RUN_ID'],'GITHUB_RUN_ATTEMPT':self.env()['GITHUB_RUN_ATTEMPT']}.items()])
+        state={'nonce':'nonce','slots':{'app':{'cid':obj['Id'],'name':'own-app'}}}
+        report={**B.identity(self.env()),'phase':'ONLINE_PACKAGE','mavenExitObserved':True,'mavenExit':1,'originalExit':1,
+            'image':B.JDK,'imageId':obj['Image'],'mavenVersion':B.CORE_VERSION,'mavenCoreSha256':'c'*64,
+            'settingsSha256':B.hashlib.sha256(B.EMPTY_SETTINGS.encode()).hexdigest(),'pomSha256':{'pom.xml':'f'*64},
+            'budget':B.validate_container(obj,'own-app',B.JDK,B.labels(self.env(),'nonce'),B.MEMORY,'bridge',obj['Id'])}
+        return report,inputs,state,obj
+
+    def compiler_diagnostic_log(self,root,diagnostics=None):
+        if diagnostics is None:diagnostics=['cannot find symbol']
+        source=root/'chengyinhub-admin/src/test/java'/B.TEST_SOURCES[0]
+        rows=['[ERROR] '+str(source)+':['+str(index+1)+',9] '+message+'\n  symbol: PRIVATE_SYMBOL\n  location: PRIVATE_LOCATION'
+              for index,message in enumerate(diagnostics)]
+        return ('[INFO] --- compiler:3.15.0:testCompile (default-testCompile) @ chengyinhub-admin ---\n'
+                '[ERROR] COMPILATION ERROR : \n[INFO] -------------------------------------------------------------\n'+
+                '\n'.join(rows)+'\n[INFO] '+str(len(rows))+' errors \n[ERROR] PRIVATE_FINAL_MESSAGE URL SQL token=PRIVATE_TOKEN\n')
+
+    def compiler_diagnostic_scan(self,scope,text):
+        report,inputs,state,obj=scope
+        with patch.object(B,'cache_inputs',return_value={'pom.xml':'f'*64}):
+            return B.compile_failure_evidence(report,inputs,state,obj,report['phase'],text)
+
+    def test_compiler_projection_binds_current_source_without_binary_proof_and_only_exports_fixed_locations_and_categories(self):
+        with tempfile.TemporaryDirectory() as name,patch.object(B,'ROOT',Path(name)),patch.dict(os.environ,self.env(),clear=True):
+            root=Path(name);scope=self.compiler_diagnostic_scope(root);before=copy.deepcopy(scope[0])
+            messages=['cannot find symbol','incompatible types: PRIVATE_A cannot be converted to PRIVATE_B',
+                'variable PRIVATE_A is already defined in method PRIVATE_B()',
+                'unreported exception PRIVATE_A; must be caught or declared to be thrown',"';' expected"]
+            text=self.compiler_diagnostic_log(root,messages);result=self.compiler_diagnostic_scan(scope,text)
+            self.assertEqual(result['state'],'OBSERVED');self.assertIs(result['businessAccepted'],False)
+            self.assertEqual(result['purpose'],'PREPARATION_COMPILER_DIAGNOSTIC_ONLY')
+            self.assertEqual([row['category'] for row in result['errors']],['CANNOT_FIND_SYMBOL','INCOMPATIBLE_TYPES',
+                'DUPLICATE_DEFINITION','UNDECLARED_CHECKED_EXCEPTION','SYNTAX_ERROR'])
+            self.assertEqual([row['line'] for row in result['errors']],[1,2,3,4,5])
+            for row in result['errors']:
+                self.assertEqual(set(row),{'source','sourceSha256','line','column','category'})
+                self.assertEqual(row['source'],B.TEST_SOURCES[0]);self.assertEqual(row['column'],9)
+                self.assertEqual(row['sourceSha256'],scope[1]['sources'][B.TEST_SOURCES[0]])
+            self.assertEqual(scope[0],before);self.assertEqual(result['mavenExit'],1)
+            self.assertFalse((root/'chengyinhub-admin/target/test-classes').exists())
+            for private in ('PRIVATE_',name,'cannot find symbol','symbol:','location:','URL','SQL'):
+                self.assertNotIn(private,json.dumps(result))
+            # A legitimate source edit/import moves both hash and valid positions. No old line is pinned.
+            source=root/'chengyinhub-admin/src/test/java'/B.TEST_SOURCES[0];old_hash=result['errors'][0]['sourceSha256']
+            source.write_text('// current import row\n'+source.read_text());scope[1].update(B.fixed_test_compilation_inputs())
+            moved=self.compiler_diagnostic_scan(scope,self.compiler_diagnostic_log(root).replace(':[1,9]',':[2,9]'))
+            self.assertEqual(moved['state'],'OBSERVED');self.assertEqual(moved['errors'][0]['line'],2)
+            self.assertNotEqual(moved['errors'][0]['sourceSha256'],old_hash)
+
+    def test_compiler_projection_rejects_wrong_owner_stage_exit_source_and_malformed_mixed_or_expanding_log_sections(self):
+        kinds=('sourceSha','runId','attempt','phase','zero','unobserved','original-exit','core','owner','budget','command','env',
+               'source-drift','symlink','profile','oversize','missing-marker','missing-count','wrong-goal','later-goal','foreign','traversal',
+               'mixed','line','column','unknown-category','duplicate','inflation','arbitrary-hint','bad-location')
+        for kind in kinds:
+            with self.subTest(kind=kind),tempfile.TemporaryDirectory() as name,patch.object(B,'ROOT',Path(name)),patch.dict(os.environ,self.env(),clear=True):
+                root=Path(name);report,inputs,state,obj=scope=self.compiler_diagnostic_scope(root)
+                text=self.compiler_diagnostic_log(root);source=root/'chengyinhub-admin/src/test/java'/B.TEST_SOURCES[0]
+                if kind in ('sourceSha','runId','attempt'):report[kind]='PRIVATE_ID'
+                if kind=='phase':report['phase']='CONTENT_SECURITY_COMPILE'
+                if kind=='zero':report['mavenExit']=report['originalExit']=0
+                if kind=='unobserved':report['mavenExitObserved']=False
+                if kind=='original-exit':report['originalExit']=2
+                if kind=='core':report['mavenCoreSha256']='PRIVATE_CORE'
+                if kind=='owner':obj['Config']['Labels']['chengyin.http.source']='0'*40
+                if kind=='budget':obj['HostConfig']['Memory']=B.MEMORY*2
+                if kind=='command':obj['Config']['Cmd'].append('PRIVATE_COMMAND')
+                if kind=='env':obj['Config']['Env'].append('SOURCE_SHA=PRIVATE_ENV')
+                if kind=='source-drift':source.write_text('changed')
+                if kind=='symlink':
+                    source.unlink();private=root/'PRIVATE_FILE';private.write_text('private');source.symlink_to(private)
+                if kind=='profile':inputs['profile']='PRIVATE_PROFILE'
+                if kind=='oversize':text='x'*(1024*1024+1)+text
+                if kind=='missing-marker':text=text.replace('[ERROR] COMPILATION ERROR : ','PRIVATE_HEADER')
+                if kind=='missing-count':text=text.replace('[INFO] 1 errors ','PRIVATE_COUNT')
+                if kind=='wrong-goal':text=text.replace('compiler:3.15.0:testCompile','compiler:3.14.0:testCompile')
+                if kind=='later-goal':text+='[INFO] --- PRIVATE_PLUGIN:1.0.0:run (PRIVATE_EXECUTION) @ chengyinhub-admin ---\n'
+                if kind=='foreign':text=text.replace(str(source),'/PRIVATE_ROOT/Foreign.java')
+                if kind=='traversal':text=text.replace(str(source),str(source.parent)+'/../'+source.parent.name+'/'+source.name)
+                if kind=='mixed':text=text.replace('[INFO] 1 errors ',
+                    '[ERROR] /PRIVATE_ROOT/Foreign.java:[1,9] cannot find symbol\n[INFO] 2 errors ')
+                if kind=='line':text=text.replace(':[1,9]',':[999999,9]')
+                if kind=='column':text=text.replace(':[1,9]',':[1,999999]')
+                if kind=='unknown-category':text=text.replace('cannot find symbol','PRIVATE_UNKNOWN_REASON')
+                if kind=='duplicate':text=text.replace('[INFO] 1 errors ',
+                    '[ERROR] '+str(source)+':[1,9] cannot find symbol\n[INFO] 2 errors ')
+                if kind=='inflation':text=self.compiler_diagnostic_log(root,['cannot find symbol']*9)
+                if kind=='arbitrary-hint':text=text.replace('[ERROR] '+str(source),'[INFO] quoted hint [ERROR] '+str(source))
+                if kind=='bad-location':text=text.replace(':[1,9]',':[PRIVATE_LINE,9]')
+                result=self.compiler_diagnostic_scan(scope,text)
+                self.assertEqual(result['state'],'UNKNOWN');self.assertIs(result['businessAccepted'],False)
+                self.assertNotIn('errors',result);self.assertNotIn('PRIVATE_',json.dumps(result));self.assertNotIn(name,json.dumps(result))
+
+    def test_failed_compilation_finally_projects_before_cleanup_without_replacing_first_failure_or_junit_unknown(self):
+        original=B.compile_failure_evidence;cleanup=B.cleanup_slot;events=[]
+        text='[INFO] --- compiler:3.15.0:testCompile (default-testCompile) @ chengyinhub-admin ---\nPRIVATE_LOG SQL URL'
+        def collect(*args):
+            events.append('COMPILER_DIAGNOSTIC');self.assertEqual(args[-1],text)
+            self.assertIs(args[0]['mavenExitObserved'],True);self.assertEqual(args[0]['mavenExit'],1)
+            return original(*args) # Transport fixture has no complete source table; never manufacture proof.
+        def remove(*args):events.append('CLEANUP');return cleanup(*args)
+        with patch.object(B,'compile_failure_evidence',side_effect=collect),patch.object(B,'cleanup_slot',side_effect=remove):
+            reports,mutations,failure,private=self.warm_transport_control(exit_code=1,preparation_phase='ONLINE_PACKAGE',compiler_log=text)
+        report=reports[-1];self.assertEqual(events,['COMPILER_DIAGNOSTIC','CLEANUP']);self.assertEqual(mutations,['stop','remove'])
+        self.assertEqual(report['firstFailure']['reasonCode'],'OFFLINE_CACHE_PREFLIGHT_FAILED')
+        self.assertEqual(report['originalExit'],1);self.assertEqual(report['mavenExit'],1);self.assertEqual(report['result'],'NOT_ACCEPTED')
+        self.assertEqual(report['compileFailure']['state'],'UNKNOWN');self.assertEqual(report['preparationTests']['state'],'UNKNOWN')
+        self.assertEqual(report['failures'],[]);self.assertTrue(private);self.assertIsInstance(failure,ValueError)
+        self.assertNotIn('PRIVATE_LOG',json.dumps(report));self.assertNotIn('PRIVATE_LOG',json.dumps(report['compileFailure']))
 
 
 if __name__=='__main__':unittest.main()

@@ -1,0 +1,3 @@
+b9e71db5c046b063af9f7d8667a83250cb16719a3a0c10295a94f91eb84ae943  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GenericGameplayHttpE2eIT.java
+a9b55e4232df021ffb9a92dae68826de5dc5b7a053ecfb064242e4de88f6e6bf  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CombinedSurefireRuntimeProbeTest.java
+640a554d4cc9648abf69111a506084a78a45b5672f6e3f812bc12972bdaaeccf  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CombinedContextConfigurationTest.java
