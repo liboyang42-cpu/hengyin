@@ -408,6 +408,31 @@ class CombinedContextConfigurationTest {
                         Map.of("sqlState", "23000", "vendorCode", "1062"))), safe);
         Map<String,Object> unknownType = CrossDomainStorageFixture.photoPrepareFailure("PHOTO_PREPARE", new java.io.IOException("secret"));
         assertEquals(Map.of("phase", "PHOTO_PREPARE", "exceptionTypes", List.of("UNKNOWN_TYPE"), "sql", List.of()), unknownType);
+
+        var faultField = java.util.Arrays.stream(CrossDomainTransportStage.class.getDeclaredFields())
+                .filter(field -> field.getName().equals("fault")).findFirst().orElseThrow();
+        assertTrue(java.lang.reflect.Modifier.isVolatile(faultField.getModifiers()),
+                "The test thread's fault mode must be published to independently dispatched HTTP handlers");
+        var originalExecutionFailure = new IllegalStateException("private original photo execution failure");
+        var originalProviderFailure = new java.io.IOException("private original handler failure");
+        var unfinished = new java.util.concurrent.CompletableFuture<com.chengyinhub.business.service.ai.PhotoCheckIntentView>();
+        var failedCall = java.util.concurrent.CompletableFuture
+                .<com.chengyinhub.business.service.ai.PhotoCheckIntentView>failedFuture(originalExecutionFailure);
+        var missingEntry = assertDoesNotThrow(() -> CrossDomainTransportStage.aiEntryFailure(
+                List.of(failedCall, unfinished, unfinished, unfinished), List.of(originalProviderFailure)));
+        assertEquals("All four original AI provider handlers must enter the held window", missingEntry.getMessage());
+        assertSame(originalExecutionFailure, missingEntry.getCause());
+        assertSame(originalProviderFailure, missingEntry.getSuppressed()[0]);
+        assertFalse(unfinished.isDone(), "Barrier failure must not await/cancel/retry an unfinished original call");
+        var completedWithoutResult = java.util.concurrent.CompletableFuture
+                .<com.chengyinhub.business.service.ai.PhotoCheckIntentView>completedFuture(null);
+        var noFailureCause = assertDoesNotThrow(() -> CrossDomainTransportStage.aiEntryFailure(
+                List.of(completedWithoutResult, unfinished, unfinished, unfinished), List.of()));
+        assertNull(noFailureCause.getCause());
+        assertEquals(1, noFailureCause.getSuppressed().length);
+        assertEquals("Photo completed before the four-handler barrier: state=NULL, providerState=UNAVAILABLE",
+                noFailureCause.getSuppressed()[0].getMessage());
+        assertFalse(unfinished.isDone());
     }
 
     @Test
