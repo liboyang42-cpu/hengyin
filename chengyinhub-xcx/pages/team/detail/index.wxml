@@ -64,12 +64,12 @@
       class="team-note" aria-role="status">{{boardMessage}}</view>
     <block wx:if="{{boardState === 'ready' && board}}">
       <view class="team-card">
-        <view class="team-member-name">队伍已完成 {{board.summary.teamDoneCount}} / {{board.summary.totalTasks}} 项</view>
-        <view class="team-note">当前在岗 {{board.threshold.activeCount}} 人，每项需 {{board.threshold.required}} 人完成</view>
+        <view class="team-member-name">队伍已完成 {{board.summary.teamDoneCount}} / {{board.summary.totalTasks || 0}} 项</view>
+        <view class="team-note">当前在岗 {{board.threshold.activeCount || 0}} 人，每项需 {{board.threshold.required || 0}} 人完成</view>
         <cy-empty wx:if="{{!board.tasks.length}}" title="暂无定向任务" />
         <view class="team-board-task" wx:for="{{board.tasks}}" wx:for-item="task" wx:key="taskId">
           <view class="team-member-name">{{task.name}}</view>
-          <view class="team-note">{{task.teamDone ? '队伍已完成' : '队伍未完成'}} · {{task.completedCount}} 人完成</view>
+          <view class="team-note">{{task.teamDone ? '队伍已完成' : '队伍未完成'}} · {{task.completedCount || 0}} 人完成</view>
           <view class="team-board-member" wx:for="{{task.members}}" wx:for-item="member" wx:key="memberId">
             <text>{{member.name}}</text><text>{{member.done ? '已完成' : '未完成'}}</text>
           </view>
@@ -84,7 +84,7 @@
           <text>{{item.rank}}</text>
           <view class="team-member-main">
             <view class="team-member-name">{{item.title}}{{item.mine ? '（我的队伍）' : ''}}</view>
-            <view class="team-note">已完成 {{item.teamDoneCount}} / {{item.totalTasks}} 项</view>
+            <view class="team-note">已完成 {{item.teamDoneCount}} / {{item.totalTasks || 0}} 项</view>
           </view>
         </view>
       </view>

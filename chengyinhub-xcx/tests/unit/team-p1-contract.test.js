@@ -3,6 +3,7 @@
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
+const { createRequire } = require('node:module')
 const test = require('node:test')
 const vm = require('../helpers/ui-sandbox-vm.js') // node:vm + 沙箱里装真 utils/toast.js·loading.js
 
@@ -75,6 +76,7 @@ function assertTeamCompliance(sources) {
 function loadDetailPage(source) {
   let definition
   vm.runInNewContext(source || read('pages/team/detail/index.js'), {
+    require: createRequire(path.join(ROOT, 'pages/team/detail/index.js')),
     getApp: () => ({
       globalData: { statusBarHeight: 20, navBarHeight: 44 },
       getUserID: () => 88,
@@ -96,6 +98,7 @@ function loadTeamPage(relative) {
   const redirects = []
   const pullStops = []
   vm.runInNewContext(read(relative), {
+    require: createRequire(path.join(ROOT, relative)),
     getApp: () => ({
       globalData: { statusBarHeight: 20, navBarHeight: 44 },
       sendRequest(request) { requests.push(request) },
