@@ -116,6 +116,27 @@ class RestoreBuildControls(unittest.TestCase):
         self.assertIn('python3 -I ci/restore_business_reconciliation_build.py unpack', consumers)
         self.assertEqual(2, workflow.count('name: restore-business-build-${{ github.run_attempt }}'))
 
+    def test_changed_journal_unit_reuses_install_before_packing_one_candidate(self):
+        workflow = (build.ROOT / '.github/workflows/isolated-restore-business-reconciliation.yml').read_text()
+        producer, consumers = workflow.split('  isolated-restore-business-reconciliation:\n', 1)
+        install = 'mvn -B -pl chengyinhub-admin -am -DskipTests install'
+        unit = 'mvn -B -pl chengyinhub-admin -Dtest=RestoreRefundObservationSourceTest test'
+        gate = 'python3 -I ci/assert_it_ran.py chengyinhub-admin/target/surefire-reports RestoreRefundObservationSourceTest'
+        pack = 'python3 -I ci/restore_business_reconciliation_build.py pack'
+        self.assertEqual(1, producer.count(unit))
+        self.assertLess(producer.index(install), producer.index(unit))
+        self.assertLess(producer.index(unit), producer.index(gate))
+        self.assertLess(producer.index(gate), producer.index(pack))
+        self.assertIn('name: restore-business-source-unit-${{ github.run_attempt }}', producer)
+        self.assertIn('TEST-com.chengyinhub.business.service.impl.RestoreRefundObservationSourceTest.xml', producer)
+        for module in ('test_restore_business_reconciliation_probe', 'test_restore_business_domain_facts',
+                       'test_restore_business_reconciliation_host', 'test_restore_business_reconciliation_build',
+                       'test_combined_http_budget', 'test_restore_application_http_probe', 'test_http_e2e_entry'):
+            command = 'python3 -B ci/' + module + '.py'
+            self.assertEqual(1, producer.count(command))
+            self.assertLess(producer.index(command), producer.index(install))
+        self.assertNotIn('mvn ', consumers)
+
     def test_pack_output_is_the_actual_staged_jar_digest_for_this_run(self):
         from unittest import mock
         with tempfile.TemporaryDirectory() as temp:

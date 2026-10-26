@@ -66,6 +66,102 @@ CALLBACK_REASONS = {'UNKNOWN', 'MUTATION_EXCEPTION', 'PAYLOAD_MISSING', 'REQUIRE
     'CALLBACK_NOT_COMPLETED', 'PAYMENT_STATE_CONFLICT', 'PAYMENT_ATTEMPT_CONFLICT', 'VERIFIED_ORIGINAL_ORDER_MISMATCH',
     'CLOSED_REGISTRATION_ORIGINAL_PAYMENT_RECOVERY_REQUIRED', 'TOPIC_CLOSED_ORIGINAL_PAYMENT_RECOVERY_REQUIRED',
     'ORDER_DISAPPEARED', 'FAILURE_STATE_CONFLICT', 'REFUND_REQUIRES_VERIFIED_ORIGINAL_REFUND'}
+HOST_STAGES = {'SOURCE_START','SOURCE_BACKUP_BOUNDARY','SOURCE_CAPTURE','CANONICAL_BACKUP',
+    'SOURCE_FAULT_BOUNDARY','FAULT_CAPTURE','SOURCE_STOP','TARGET_SCHEMA_CREATE','CANONICAL_RESTORE',
+    'RESTORED_CAPTURE','DOMAIN_EVALUATE','OWNER_BEFORE','OWNER_BOOT','OWNER_EVIDENCE','OWNER_AFTER',
+    'OWNER_VERIFY','FINAL_JOURNAL','RESULT_PROJECTION'}
+HOST_STEPS = {'SCHEMA_ABSENCE','LAUNCH','WAIT_BOUNDARY','TABLE_ROWS','HIGH_WATER','JOURNAL',
+    'SAVE_PRIVATE','CANONICAL_CALL','SIGNAL_CHILD','CHILD_EXIT','DATABASE_OPTIONS','CREATE_SCHEMA',
+    'EVALUATE','READ_EVIDENCE','VERIFY','PROJECT'}
+HOST_REASON_CODES = {
+    'host': {'target CREATE failed; never adopt existing schema':'TARGET_CREATE_REJECTED',
+        'missing typed table definition':'TYPED_TABLE_METADATA_MISSING',
+        'typed row shape changed':'TYPED_ROW_SHAPE_CHANGED',
+        'unregistered table':'TABLE_NOT_REGISTERED',
+        'source fixture database options unavailable':'DATABASE_OPTIONS_UNAVAILABLE',
+        'source fixture database options unsupported':'DATABASE_OPTIONS_UNSUPPORTED',
+        'source fixture failed':'SOURCE_CHILD_NONZERO',
+        'actual owner boot/readback failed':'OWNER_CHILD_NONZERO',
+        'owner process identity':'OWNER_PROCESS_IDENTITY_MISMATCH'},
+    'canonical': {
+        'MySQL command failed; no backup or restore is considered verified':'CANONICAL_MYSQL_REJECTED',
+        'Restore database definition differs; create the empty target with matching source options':'CANONICAL_DATABASE_DEFINITION_MISMATCH',
+        'Restore target must be empty; existing data is never dropped':'CANONICAL_TARGET_NOT_EMPTY',
+        'Restore requires a different MySQL instance of the same version':'CANONICAL_UUID_OR_VERSION_MISMATCH',
+        'Backup hash differs from its receipt':'CANONICAL_BACKUP_HASH_MISMATCH',
+        'Restore failed verification; isolate target for investigation, do not retry over it':'CANONICAL_POSTIMPORT_MISMATCH',
+        'The isolated restore server must have its event scheduler disabled':'CANONICAL_SCHEDULER_NOT_DISABLED',
+        'Unsupported SQL mode for verifiable table definition quoting':'CANONICAL_SQL_MODE_UNSUPPORTED',
+        'Column charset differs from actual metadata':'CANONICAL_COLUMN_CHARSET_MISMATCH',
+        'Column collation differs from actual metadata':'CANONICAL_COLUMN_COLLATION_MISMATCH'}}
+HOST_FUNCTIONS={'host':{'run','require','table_rows','capture','journal','reconcile','activity_receivables',
+                      'private_file','save','wait_phase','database_create_sql'},
+                'canonical':{'restore','backup','identify','mysql','snapshot','definition_hash',
+                             'table_charset_definition','manifest_definitions','batch_cell','object_rows'},
+                'domain':{'require','evaluate','rows','journal','voice_versions','require_original_receipts','verify_owner',
+                          'verify_saved_refund_observation'}}
+
+
+def safe_host_failure(row):
+    """The outer fixed host may copy ONLY this finite JSON projection, after its original scope/hash checks."""
+    required={'stage','step','reasonCode','locations'};optional={'side','ownerPhase','tableIndex','idIndex'}
+    if type(row) is not dict or not required<=set(row)<=required|optional:return None
+    codes={code for group in HOST_REASON_CODES.values() for code in group.values()}|set(ChildBoundaryFailure.REASONS)|{'UNKNOWN_PRIVATE_FAILURE'}
+    if any(type(row[k]) is not str for k in ('stage','step','reasonCode')):return None
+    if row['stage'] not in HOST_STAGES|{'UNKNOWN'} or row['step'] not in HOST_STEPS|{'UNKNOWN'} or row['reasonCode'] not in codes:return None
+    if type(row['locations']) is not list or len(row['locations'])>8:return None
+    for location in row['locations']:
+        if (type(location) is not dict or set(location)!={'source','function','line'}
+                or type(location['source']) is not str or type(location['function']) is not str
+                or location['function'] not in HOST_FUNCTIONS.get(location['source'],set())
+                or type(location['line']) is not int or not 0<location['line']<=100000):return None
+    if row['reasonCode']!='UNKNOWN_PRIVATE_FAILURE' and not row['locations']:return None
+    if 'side' in row and (type(row['side']) is not str or row['side'] not in ('source','target')):return None
+    if 'ownerPhase' in row and (type(row['ownerPhase']) is not str or row['ownerPhase'] not in (
+            'RESTORED_GUARD','RESTORED_OWNER','RESTORED_INVALID_OWNER','RESTORED_EMPTY_OWNER','NORMAL_READBACK')):return None
+    if any(type(row[k]) is not int or not 0<=row[k]<256 for k in ('tableIndex','idIndex') if k in row):return None
+    return dict(row,locations=[dict(location) for location in row['locations']])
+
+
+def host_failure(failure, progress):
+    """Finite source locations and reviewed literal predicates only; no traceback formatting/locals/message."""
+    progress=progress if type(progress) is dict else {}
+    observed={'stage':progress.get('stage') if type(progress.get('stage')) is str and progress['stage'] in HOST_STAGES else 'UNKNOWN',
+              'step':progress.get('step') if type(progress.get('step')) is str and progress['step'] in HOST_STEPS else 'UNKNOWN',
+              'reasonCode':'UNKNOWN_PRIVATE_FAILURE','locations':[]}
+    for key in ('side','ownerPhase'):
+        allowed={'side':{'source','target'},'ownerPhase':{'RESTORED_GUARD','RESTORED_OWNER','RESTORED_INVALID_OWNER','RESTORED_EMPTY_OWNER','NORMAL_READBACK'}}[key]
+        if type(progress.get(key)) is str and progress[key] in allowed:observed[key]=progress[key]
+    for key in ('tableIndex','idIndex'):
+        if type(progress.get(key)) is int and 0<=progress[key]<256:observed[key]=progress[key]
+    trusted_root=Path(__file__).resolve().parents[1]
+    sources={str(Path(__file__).resolve()):('host',HOST_FUNCTIONS['host']),
+             str((trusted_root/'scripts/db-backup-restore.py').resolve()):('canonical',HOST_FUNCTIONS['canonical']),
+             str((trusted_root/'ci/restore_business_domain_facts.py').resolve()):('domain',HOST_FUNCTIONS['domain'])}
+    trace=failure.__traceback__;last=None
+    while trace is not None:
+        frame=trace.tb_frame;entry=sources.get(str(Path(frame.f_code.co_filename).resolve()))
+        last=(entry,frame.f_code.co_name)
+        if entry and frame.f_code.co_name in entry[1] and 0<trace.tb_lineno<=100000:
+            observed['locations'].append({'source':entry[0],'function':frame.f_code.co_name,'line':trace.tb_lineno})
+        trace=trace.tb_next
+    observed['locations']=observed['locations'][-8:]
+    if type(failure) is ValueError and last and last[0] and last[1] in last[0][1] and len(failure.args)==1 and type(failure.args[0]) is str:
+        observed['reasonCode']=HOST_REASON_CODES.get(last[0][0],{}).get(failure.args[0],'UNKNOWN_PRIVATE_FAILURE')
+    if isinstance(failure,ChildBoundaryFailure):observed['reasonCode']=failure.code
+    return observed
+
+
+def database_create_sql(tool, source, database):
+    # Fixed fixture options, read from the original source rather than guessed from the target default.
+    raw=tool.mysql(source,'SELECT JSON_ARRAY(DEFAULT_CHARACTER_SET_NAME,DEFAULT_COLLATION_NAME) '
+                   'FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=DATABASE()')
+    rows=[json.loads(line) for line in raw.splitlines() if line]
+    require(len(rows)==1 and type(rows[0]) is list and len(rows[0])==2,'source fixture database options unavailable')
+    charset,collation=rows[0]
+    require(charset=='utf8mb4' and type(collation) is str and re.fullmatch('utf8mb4_[a-z0-9_]{1,55}',collation),
+            'source fixture database options unsupported')
+    return 'CREATE DATABASE '+tool.quoted(database)+' CHARACTER SET utf8mb4 COLLATE '+collation
 
 
 class ChildBoundaryFailure(ValueError):
@@ -330,9 +426,13 @@ def table_rows(tool, args, table):
     return {'columns': columns, 'rows': sorted(rows, key=lambda row: canonical(row))}
 
 
-def capture(tool, args, tables=TABLES, high_ids=HIGH_IDS):
-    result = {'tables': {t: table_rows(tool, args, t) for t in tables}, 'highWater': {}}
-    for table, key in high_ids.items():
+def capture(tool, args, tables=TABLES, high_ids=HIGH_IDS, *, progress=None):
+    result = {'tables': {}, 'highWater': {}}
+    for index,table in enumerate(tables):
+        if progress is not None:progress.update(step='TABLE_ROWS',tableIndex=index);progress.pop('idIndex',None)
+        result['tables'][table]=table_rows(tool,args,table)
+    for index,(table, key) in enumerate(high_ids.items()):
+        if progress is not None:progress.update(step='HIGH_WATER',idIndex=index);progress.pop('tableIndex',None)
         row = json.loads(tool.mysql(args, "SET SESSION information_schema_stats_expiry=0; SELECT JSON_ARRAY(COALESCE((SELECT MAX(" + tool.quoted(key) + ") FROM "
                 + tool.quoted(table) + "),0),AUTO_INCREMENT) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE()"
                 " AND TABLE_NAME='" + table + "'"))
@@ -559,7 +659,9 @@ def run(resources_path, output, private):
     tables = TABLES if domain is None else domain['tables']
     high_ids = HIGH_IDS if domain is None else domain['ids']
     read_journal = journal if domain is None else lambda path,scope:domains.journal(path,scope,cohort)
-    def snapshot(side): return capture(tool, args[side], tables, high_ids)
+    def snapshot(side):
+        progress['side']=side
+        return capture(tool, args[side], tables, high_ids,progress=progress)
     require(Path(resources_path).resolve().parent == private, 'resource manifest must remain in this private root')
     tool = module('canonical_restore_tool', 'scripts/db-backup-restore.py')
     auth = module('original_owned_helpers', 'ci/authenticated_redis_recovery_probe.py')
@@ -634,6 +736,12 @@ def run(resources_path, output, private):
         'runId': os.environ['GITHUB_RUN_ID'], 'runAttempt': os.environ['GITHUB_RUN_ATTEMPT'],
         'childClass': child_name, 'testChildSha256': tool.digest(child_class), 'jarSha256': tool.digest(jar),
         'classpathFileSha256': tool.digest(cpfile), 'diagnosticClassSha256': tool.digest(diagnostic_class)}
+    resources_digest=tool.digest(Path(resources_path));probe_digest=tool.digest(Path(__file__))
+    progress={}
+    def mark(stage,step,side=None,owner=None):
+        progress.clear();progress.update(stage=stage,step=step)
+        if side is not None:progress['side']=side
+        if owner is not None:progress['ownerPhase']=owner
     source_creation_pending = False
     target_creation_pending = False
     started = time.monotonic()
@@ -643,6 +751,7 @@ def run(resources_path, output, private):
     old_signals={s:signal.signal(s,deadline) for s in (signal.SIGTERM,signal.SIGINT,signal.SIGHUP)}
     signal.alarm(600 if domain is None else 900)
     try:
+        mark('SOURCE_START','SCHEMA_ABSENCE')
         # Confirm both named schemas absent; never adopt or remove a pre-existing target.
         for side in ('source', 'target'):
             check = subprocess.run(['mysql', '--defaults-extra-file=' + str(args[side].defaults_file), '--batch', '--skip-column-names'],
@@ -650,45 +759,59 @@ def run(resources_path, output, private):
             require(check.returncode == 0 and check.stdout.strip() == b'0', 'pre-existing schema forbidden')
         # Failure before the fixed boundary may have partially created a schema. Do NOT adopt/drop it as confirmed ownership.
         source_creation_pending = True
+        mark('SOURCE_START','LAUNCH','source')
         with (private / 'child.stderr').open('xb') as errors:
             os.chmod(errors.name, 0o600)
             child = subprocess.Popen(['java', '-Xmx512m', '-cp', cp, child_name], cwd=ROOT / 'chengyinhub-admin',
                                      env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=errors, bufsize=0)
             child_runs.append((child, Path(errors.name), dict(child_identity, phase='SOURCE', boot=env['CHENGYIN_RESTORE_BOOT'])))
+            mark('SOURCE_BACKUP_BOUNDARY','WAIT_BOUNDARY','source')
             wait_phase(child, 'BACKUP_READY', started + 180)
             created.append('source'); source_creation_pending = False
-            before = snapshot('source'); p_before = read_journal(provider, resources['scope'])
+            mark('SOURCE_CAPTURE','TABLE_ROWS','source');before = snapshot('source')
+            mark('SOURCE_CAPTURE','JOURNAL','source');p_before = read_journal(provider, resources['scope'])
+            mark('SOURCE_CAPTURE','SAVE_PRIVATE','source')
             save(private / 'before.json', before)
             save(private / 'provider/before.json', p_before)
             args['source'].output = private / 'backup/backup.sql'
+            mark('CANONICAL_BACKUP','CANONICAL_CALL','source')
             backup_started = now(); tool.backup(args['source']); backup_finished = now();backup_tick=time.monotonic()
             manifest = json.loads(Path(str(args['source'].output) + '.json').read_text())
-            child.stdin.write(b'AFTER_BACKUP\n'); child.stdin.flush()
+            mark('SOURCE_FAULT_BOUNDARY','SIGNAL_CHILD','source');child.stdin.write(b'AFTER_BACKUP\n'); child.stdin.flush()
+            mark('SOURCE_FAULT_BOUNDARY','WAIT_BOUNDARY','source')
             wait_phase(child, 'FAULT_READY', started + 300)
             fault_at = now();fault_gap=time.monotonic()-backup_tick
-            fault = snapshot('source'); p_after = read_journal(provider, resources['scope'])
+            mark('FAULT_CAPTURE','TABLE_ROWS','source');fault = snapshot('source')
+            mark('FAULT_CAPTURE','JOURNAL','source');p_after = read_journal(provider, resources['scope'])
+            mark('FAULT_CAPTURE','SAVE_PRIVATE','source')
             save(private / 'fault.json', fault)
             save(private / 'provider/after.json', p_after)
-            child.stdin.write(b'STOP\n'); child.stdin.flush(); require(child.wait(timeout=20) == 0, 'source fixture failed')
+            mark('SOURCE_STOP','SIGNAL_CHILD','source');child.stdin.write(b'STOP\n'); child.stdin.flush()
+            mark('SOURCE_STOP','CHILD_EXIT','source');require(child.wait(timeout=20) == 0, 'source fixture failed')
         # Recreate only matching DATABASE options. No tables, cleanup SQL or seed are applied to the target.
-        schema = tool.quoted(resources['schema'])
-        create = 'CREATE DATABASE ' + schema + ' CHARACTER SET utf8mb4'
+        mark('TARGET_SCHEMA_CREATE','DATABASE_OPTIONS','source')
+        create = database_create_sql(tool,args['source'],resources['schema'])
         command = ['mysql', '--defaults-extra-file=' + str(args['target'].defaults_file)]
         target_creation_pending = True
+        mark('TARGET_SCHEMA_CREATE','CREATE_SCHEMA','target')
         made = subprocess.run(command, input=create.encode(), capture_output=True, timeout=20)
         require(made.returncode == 0, 'target CREATE failed; never adopt existing schema')
         created.append('target'); target_creation_pending = False
         args['target'].backup = args['source'].output
         restore_started, tick = now(), time.monotonic()
+        mark('CANONICAL_RESTORE','CANONICAL_CALL','target')
         tool.restore(args['target']) # Every original guard, checksum, trigger/definition and AUTO_INCREMENT check remains active.
         restore_finished, elapsed = now(), time.monotonic() - tick
-        restored = snapshot('target')
+        mark('RESTORED_CAPTURE','TABLE_ROWS','target');restored = snapshot('target')
+        mark('RESTORED_CAPTURE','SAVE_PRIVATE','target')
         save(private / 'restored.json', restored)
+        mark('DOMAIN_EVALUATE','EVALUATE','target')
         proof = (reconcile(before, fault, restored, p_before, p_after) if domain is None else
                  domains.evaluate(cohort, before, fault, restored, p_before, p_after))
         # Exercise the actual disabled production gateway in a separate test-only JVM, without source setup or target writes.
         owner_proofs=[]; normal_available_at=None;normal_available_elapsed=None
         if domain is None:
+            mark('OWNER_BOOT','LAUNCH','target','RESTORED_GUARD')
             guarded_env = dict(env, CHENGYIN_RESTORE_PHASE='RESTORED_GUARD',
                                CHENGYIN_RESTORE_GUARD_FILE=str(private / 'provider/gateway.json'))
             with (private / 'guard.stderr').open('xb') as errors:
@@ -696,8 +819,11 @@ def run(resources_path, output, private):
                 guard = subprocess.Popen(['java', '-Xmx256m', '-cp', cp, CHILD], cwd=ROOT / 'chengyinhub-admin',
                                          env=guarded_env, stdout=subprocess.DEVNULL, stderr=errors)
                 child_runs.append((guard, Path(errors.name), dict(child_identity, phase='RESTORED_GUARD', boot=env['CHENGYIN_RESTORE_BOOT'])))
-                try: require(guard.wait(timeout=40) == 0, 'disabled gateway probe failed')
+                try:
+                    mark('OWNER_BOOT','CHILD_EXIT','target','RESTORED_GUARD')
+                    require(guard.wait(timeout=40) == 0, 'disabled gateway probe failed')
                 finally: stop_exact(guard, 'guard')
+            mark('OWNER_EVIDENCE','READ_EVIDENCE','target','RESTORED_GUARD')
             gateway = json.loads(private_file(private / 'provider/gateway.json').read_text())
             require(gateway == {'state': 'SDK_DISABLED_ONLY', 'createRejected': True,
                                 'allDispatchDomainsFenced': False, 'recoveryRelease': 'BLOCKED'}, 'gateway boundary changed')
@@ -715,20 +841,27 @@ def run(resources_path, output, private):
                                   'CHENGYIN_RESTORE_MODE':mode,'CHENGYIN_RESTORE_BOOT':boot,
                                   'CHENGYIN_TEST_MYSQL_DATABASE_BASE':'cy_restore_'+resources['scope'][:12],
                                   'CHENGYIN_RESTORE_OWNER_EVIDENCE':str(evidence)})
-                previous_rows=snapshot('target');previous_external=read_journal(provider,resources['scope'])
+                mark('OWNER_BEFORE','TABLE_ROWS','target',phase);previous_rows=snapshot('target')
+                mark('OWNER_BEFORE','JOURNAL','target',phase);previous_external=read_journal(provider,resources['scope'])
                 before_path=private / ('owner-'+phase+'-before.json');after_path=private / ('owner-'+phase+'-after.json')
-                save(before_path,previous_rows)
+                mark('OWNER_BEFORE','SAVE_PRIVATE','target',phase);save(before_path,previous_rows)
                 with (private / ('owner-'+phase+'.stderr')).open('xb') as errors:
                     os.chmod(errors.name, 0o600)
+                    mark('OWNER_BOOT','LAUNCH','target',phase)
                     process=subprocess.Popen(['java','-Xmx512m','-cp',cp,child_name],cwd=ROOT/'chengyinhub-admin',
                                              env=phase_env,stdout=subprocess.DEVNULL,stderr=errors)
                     child_runs.append((process, Path(errors.name), dict(child_identity, phase=phase, boot=boot)))
-                    try: require(process.wait(timeout=60)==0,'actual owner boot/readback failed')
+                    try:
+                        mark('OWNER_BOOT','CHILD_EXIT','target',phase)
+                        require(process.wait(timeout=60)==0,'actual owner boot/readback failed')
                     finally: stop_exact(process, phase)
+                mark('OWNER_EVIDENCE','READ_EVIDENCE','target',phase)
                 observed=json.loads(private_file(evidence).read_text())
                 require(observed['pid']==process.pid and observed['boot']==boot and observed['startedAt'],'owner process identity')
-                current_rows=snapshot('target');current_external=read_journal(provider,resources['scope'])
-                save(after_path,current_rows)
+                mark('OWNER_AFTER','TABLE_ROWS','target',phase);current_rows=snapshot('target')
+                mark('OWNER_AFTER','JOURNAL','target',phase);current_external=read_journal(provider,resources['scope'])
+                mark('OWNER_AFTER','SAVE_PRIVATE','target',phase);save(after_path,current_rows)
+                mark('OWNER_VERIFY','VERIFY','target',phase)
                 observation=domains.verify_owner(cohort,observed,previous_rows,current_rows,previous_external,current_external,phase)
                 owner_proofs.append(dict(observation,pid=observed['pid'],boot=boot,startedAt=observed['startedAt'],startupMode=mode,
                     fullBeforeRowsSha256=tool.digest(before_path),fullAfterRowsSha256=tool.digest(after_path),
@@ -740,15 +873,16 @@ def run(resources_path, output, private):
             proof['declaredDispatchMethods']=list(domain['blocked'])
             proof['observedBlockedMethods']=sorted(observed_methods)
             proof['allDeclaredDispatchMethodsFenced']=observed_methods==set(domain['blocked'])
-        final_provider=read_journal(provider,resources['scope'])
+        mark('FINAL_JOURNAL','JOURNAL');final_provider=read_journal(provider,resources['scope'])
+        mark('RESULT_PROJECTION','PROJECT')
         result = {**proof, 'sourceSha': resources['sourceSha'], 'jarSha256': tool.digest(jar),
                   'runtimeKind':'TEST_CLASSPATH_PRODUCTION_OWNERS','fullHttpApplicationStartup':'NOT_COVERED_BY_THIS_FIXTURE',
                   'cohort':cohort,'runId':os.environ['GITHUB_RUN_ID'],'runAttempt':os.environ['GITHUB_RUN_ATTEMPT'],
                   'sourceCid':resources['source']['cid'],'targetCid':resources['target']['cid'],
-                  'resourcesSha256': tool.digest(Path(resources_path)),
+                  'resourcesSha256': resources_digest,
                   'testChildSha256': tool.digest(child_class), 'classpathFileSha256': tool.digest(cpfile),
                   'classpathProofs': classpath_evidence(entries, tool),
-                  'probeSourceSha256': tool.digest(Path(__file__)),
+                  'probeSourceSha256': probe_digest,
                   'canonicalToolSha256': tool.digest(ROOT / 'scripts/db-backup-restore.py'),
                   'scope': resources['scope'], 'sourceUuid': resources['source']['uuid'], 'targetUuid': resources['target']['uuid'],
                   'manifestSha256': tool.digest(Path(str(args['source'].output) + '.json')),
@@ -771,12 +905,15 @@ def run(resources_path, output, private):
                                      'SCOPED_DIFFERENCES_VERIFIED_RELEASE_BLOCKED'), 'cleanup': 'PENDING'}
     except BaseException as failure:
         primary = failure
+        try:diagnostic=host_failure(failure,progress)
+        except BaseException:diagnostic={'stage':'UNKNOWN','step':'UNKNOWN','reasonCode':'UNKNOWN_PRIVATE_FAILURE','locations':[]}
         result = {'sourceSha': resources['sourceSha'], 'scope': resources['scope'], 'businessResult': 'FAIL',
                   'cohort': cohort, 'runId': os.environ['GITHUB_RUN_ID'], 'runAttempt': os.environ['GITHUB_RUN_ATTEMPT'],
-                  'resourcesSha256': tool.digest(Path(resources_path)),
+                  'resourcesSha256': resources_digest,'jarSha256':child_identity['jarSha256'],'probeSourceSha256':probe_digest,
                   'candidateState': 'BLOCKED', 'dispatchRelease': False, 'primaryFailureType': type(failure).__name__,
-                  'primaryReasonCode': failure.code if isinstance(failure, ChildBoundaryFailure) else 'UNKNOWN_PRIVATE_FAILURE',
+                  'primaryReasonCode': diagnostic['reasonCode'],'hostFailure':diagnostic,
                   'primaryReason': str(failure) if isinstance(failure, ChildBoundaryFailure) else 'private diagnostics required',
+                  'domainContractFailure': domains.failure_context(failure),
                   'rpo': 'UNKNOWN', 'rto': 'UNKNOWN', 'cleanup': 'PENDING'}
         # Preserve inspectable failed restore state before exact-owned cleanup; never retry import.
         for side in created:

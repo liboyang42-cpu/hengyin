@@ -589,6 +589,7 @@ class CombinedBudgetControls(unittest.TestCase):
         proof=self.subject_report()['cacheProof']
         return {**B.identity(self.env()),**{k:v for k,v in proof.items() if k!='reportSha256'},
                 'result':'PINNED_OFFLINE_TEST_PREFLIGHT_PROVEN','originalExit':0,'failures':[],
+                'mavenExitObserved':True,'mavenExit':0,
                 'pomSha256':{'pom.xml':'f'*64},'budget':{'memory':B.MEMORY,'memorySwap':B.MEMORY,'nanoCpus':1000000000,'pids':256},
                 'cgroup':{'limits':{'memory.max':str(B.MEMORY),'memory.swap.max':'0','cpu.max':'100000 100000','pids.max':'256'}},
                 'cleanup':{'result':'EXACT_CID_REMOVED_AND_ABSENT','terminal':{'OOMKilled':False,'ExitCode':143}}}
@@ -607,10 +608,12 @@ class CombinedBudgetControls(unittest.TestCase):
         self.assertEqual(len(result['reportSha256']),64)
         for key,value in [('sourceSha','b'*40),('runId','99'),('attempt','9'),('class','GenericGameplayHttpE2eIT'),
                           ('mavenVersion','3.9.12'),('image','maven:latest'),('settingsSha256','0'*64),
-                          ('originalExit',1),('result','NOT_ACCEPTED')]:
+                          ('originalExit',1),('result','NOT_ACCEPTED'),('mavenExitObserved',False),('mavenExit',None)]:
             report=self.cache_receipt();report[key]=value
             with self.assertRaisesRegex(ValueError,'OFFLINE_CACHE_PREFLIGHT_REQUIRED'):self.check_cache_receipt(report)
         report=self.cache_receipt();report['cleanup']['terminal']['OOMKilled']=True
+        with self.assertRaisesRegex(ValueError,'OFFLINE_CACHE_PREFLIGHT_REQUIRED'):self.check_cache_receipt(report)
+        report=self.cache_receipt();report['cleanup']['terminal']['ExitCode']=137
         with self.assertRaisesRegex(ValueError,'OFFLINE_CACHE_PREFLIGHT_REQUIRED'):self.check_cache_receipt(report)
 
     def test_changed_pom_or_repository_tracking_metadata_cannot_reuse_preflight(self):
@@ -691,18 +694,19 @@ class CombinedBudgetControls(unittest.TestCase):
             path.write_text(suffix)
             self.assertEqual(owner.safe_maven_failure(path),{'category':'offline-resolution','helpException':'PluginResolutionException'})
 
-    def warm_transport_control(self,exit_code=0,foreign=False,write_fails=False):
+    def warm_transport_control(self,exit_code=0,foreign=False,write_fails=False,
+                               failure_point=None,terminal_exit=143,no_plugin=False):
         # Transport/file protocol doubles only: not Maven/Java execution or dependency acceptance evidence.
         reports=[];mutations=[];obj={};image_id='sha256:'+'d'*64
         with tempfile.TemporaryDirectory() as directory,contextlib.ExitStack() as own_cleanup:
             owned=B.private_directory(Path(B.command(['mktemp','-d','/tmp/cy-http-budget.XXXXXXXX']).decode().strip()))
             own_cleanup.callback(lambda:B.shutil.rmtree(B.private_directory(owned)) if owned.exists() else None)
             private=str(owned);root=Path(directory);cache=root/'home/.m2/repository';cache.mkdir(parents=True)
-            allocations=[]
+            allocations=[];inspections=[];ticks=[]
             (cache/'synthetic-control.jar').write_bytes(b'not an actual dependency')
             def native(argv,**kwargs):
                 if 'logs' in argv:
-                    kwargs['stdout'].write(b'Plugin org.apache.maven.plugins:maven-resources-plugin:3.3.1 or one of its dependencies could not be resolved: PRIVATE\n' if exit_code else b'SYNTHETIC_TRANSPORT_CONTROL_ONLY')
+                    kwargs['stdout'].write(b'Plugin org.apache.maven.plugins:maven-resources-plugin:3.3.1 or one of its dependencies could not be resolved: PRIVATE\n' if exit_code and not no_plugin else b'SYNTHETIC_TRANSPORT_CONTROL_ONLY')
                 return SimpleNamespace(returncode=0,stdout=b'',stderr=b'')
             def command(argv,**kwargs):
                 if argv==['mktemp','-d','/tmp/cy-http-budget.XXXXXXXX']:
@@ -729,17 +733,26 @@ class CombinedBudgetControls(unittest.TestCase):
                     return cid.encode()
                 if 'sha256sum' in argv:return ('c'*64+'  fixed-core.jar\n').encode()
                 if argv[-1]=='/tmp/cy-cache.phase':return b'OFFLINE_TEST_PREFLIGHT'
-                if 'exec' in argv:return str(exit_code).encode()
-                if 'stop' in argv:obj['State'].update(Running=False,Pid=0,ExitCode=143);mutations.append('stop')
+                if 'exec' in argv:return b'PRIVATE_BAD_RECEIPT' if failure_point=='INVALID_RECEIPT' else str(exit_code).encode()
+                if 'stop' in argv:obj['State'].update(Running=False,Pid=0,ExitCode=terminal_exit);mutations.append('stop')
                 if 'rm' in argv:mutations.append('remove')
                 return b''
             def publish(path,value):
                 reports.append(copy.deepcopy(value))
                 if write_fails:raise OSError('PRIVATE evidence write problem')
+            def inspect(identity):
+                inspections.append(identity)
+                if failure_point=='STOPPED' and len(inspections)==3:
+                    obj['State'].update(Running=False,Pid=0,ExitCode=1)
+                return obj
+            def clock():
+                ticks.append(1)
+                return B.LIMIT_SECONDS if failure_point=='DEADLINE' and len(ticks)>1 else 0
             with patch.dict(os.environ,self.env(),clear=True),patch.object(B,'ROOT',root),patch.object(B,'PUBLIC',root/'public'),\
                  patch.object(B.Path,'home',return_value=root/'home'),\
-                 patch.object(B,'cache_inputs',return_value={'pom.xml':'f'*64}),patch.object(B,'inspect',side_effect=lambda x:obj),\
+                 patch.object(B,'cache_inputs',return_value={'pom.xml':'f'*64}),patch.object(B,'inspect',side_effect=inspect),\
                  patch.object(B,'command',side_effect=command),patch.object(B.subprocess,'run',side_effect=native),\
+                 patch.object(B.time,'monotonic',side_effect=clock),\
                  patch.object(B,'absent'),patch.object(B,'read_cgroup',return_value={'limits':self.cache_receipt()['cgroup']['limits'],'memoryEvents':{'oom_kill':'0'}}),\
                  patch.object(B,'write',side_effect=publish):
                 failure=None
@@ -754,6 +767,7 @@ class CombinedBudgetControls(unittest.TestCase):
         report=reports[-1];self.assertEqual(report['result'],'PINNED_OFFLINE_TEST_PREFLIGHT_PROVEN')
         self.assertEqual(report['mavenCoreSha256'],'c'*64);self.assertEqual(report['budget']['memory'],B.MEMORY)
         self.assertTrue(report['preparationOnly']);self.assertFalse(report['wholeSystemCapacityAccepted'])
+        self.assertIs(report['mavenExitObserved'],True);self.assertEqual(report['mavenExit'],0)
 
     def test_warm_nonzero_preserves_plugin_failure_and_private_journal_after_exact_cleanup(self):
         reports,mutations,failure,private_exists=self.warm_transport_control(exit_code=1)
@@ -795,6 +809,72 @@ class CombinedBudgetControls(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError,'EXACT_PRIVATE_DIRECTORY_REQUIRED'):B.warm_cache()
             create.assert_called_once_with(['mktemp','-d','/tmp/cy-http-budget.XXXXXXXX'])
             home.assert_not_called();inputs.assert_not_called();inspect.assert_not_called();cleanup.assert_not_called()
+
+    def test_cache_shell_has_atomic_receipt_and_fixed_signal_unwind_without_changing_goals_or_budget(self):
+        shell=B.fixed_cache_command()[1]
+        self.assertIn('wait "$child"; status=$?',shell)
+        self.assertIn('mv /tmp/cy-cache.exit.next /tmp/cy-cache.exit',shell)
+        self.assertIn('kill -TERM "$child"',shell);self.assertIn('trap \'exit "$status"\' TERM INT HUP',shell)
+        self.assertEqual(1,shell.count("'package' '-DskipTests'"))
+        self.assertEqual(1,shell.count('maven-dependency-plugin:3.10.0:get'))
+        self.assertEqual(1,shell.count('OFFLINE_TEST_PREFLIGHT'))
+        self.assertEqual(B.LIMIT_SECONDS,1200);self.assertEqual(B.MEMORY,1073741824)
+
+    def test_deadline_is_a_fixed_predicate_not_unknown_plugin_or_cleanup_failure(self):
+        reports,mutations,failure,private_exists=self.warm_transport_control(failure_point='DEADLINE',terminal_exit=137)
+        report=reports[-1];self.assertIsInstance(failure,ValueError);self.assertTrue(private_exists)
+        self.assertEqual(mutations,['stop','remove']);self.assertEqual(report['result'],'NOT_ACCEPTED')
+        first=report['firstFailure'];self.assertEqual(first['substage'],'WAIT_EXIT')
+        self.assertEqual(first['reasonCode'],'CACHE_EXECUTION_DEADLINE')
+        self.assertEqual(first['origin']['function'],'warm_cache');self.assertGreater(first['origin']['line'],0)
+        self.assertFalse(report['mavenExitObserved']);self.assertIsNone(report['mavenExit'])
+        self.assertEqual(report['cleanup']['result'],'EXACT_CID_REMOVED_AND_ABSENT')
+        self.assertEqual(report['cleanup']['terminal']['ExitCode'],137)
+        self.assertIs(report['cleanup']['terminal']['OOMKilled'],False)
+        self.assertEqual(report['pluginFailure'],{});self.assertEqual(report['failures'],[])
+
+    def test_stopped_workload_is_not_a_deadline_or_a_maven_exit_receipt(self):
+        reports,mutations,failure,_=self.warm_transport_control(failure_point='STOPPED')
+        report=reports[-1];self.assertIsInstance(failure,ValueError);self.assertEqual(mutations,['remove'])
+        self.assertEqual(report['firstFailure']['reasonCode'],'CACHE_PROCESS_EXIT_BEFORE_RECEIPT')
+        self.assertEqual(report['lastContainerState'],{'Running':False,'OOMKilled':False,'ExitCode':1,'pidPresent':False})
+        self.assertFalse(report['mavenExitObserved']);self.assertEqual(report['result'],'NOT_ACCEPTED')
+
+    def test_malformed_receipt_does_not_become_observed_exit_or_publish_its_value(self):
+        reports,mutations,failure,_=self.warm_transport_control(failure_point='INVALID_RECEIPT')
+        report=reports[-1];self.assertIsInstance(failure,ValueError);self.assertEqual(mutations,['stop','remove'])
+        self.assertEqual(report['firstFailure']['reasonCode'],'ACTUAL_MAVEN_EXIT_REQUIRED')
+        self.assertFalse(report['mavenExitObserved']);self.assertIsNone(report['mavenExit'])
+        self.assertNotIn('PRIVATE_BAD_RECEIPT',json.dumps(report));self.assertEqual(report['result'],'NOT_ACCEPTED')
+
+    def test_maven_nonzero_without_plugin_stays_known_exit_and_unknown_plugin_after_forced_cleanup(self):
+        reports,mutations,failure,_=self.warm_transport_control(exit_code=1,terminal_exit=137,no_plugin=True)
+        report=reports[-1];self.assertIsInstance(failure,ValueError);self.assertEqual(mutations,['stop','remove'])
+        self.assertIs(report['mavenExitObserved'],True);self.assertEqual(report['mavenExit'],1)
+        self.assertEqual(report['originalExit'],1);self.assertEqual(report['pluginFailure'],{})
+        self.assertEqual(report['firstFailure']['reasonCode'],'OFFLINE_CACHE_PREFLIGHT_FAILED')
+        self.assertEqual(report['cleanup']['result'],'EXACT_CID_REMOVED_AND_ABSENT');self.assertEqual(report['failures'],[])
+        self.assertEqual(report['result'],'NOT_ACCEPTED')
+
+    def test_successful_preflight_cannot_sign_a_forced_or_oom_shell_terminal(self):
+        reports,_,failure,_=self.warm_transport_control(terminal_exit=137)
+        report=reports[-1];self.assertIsInstance(failure,ValueError)
+        self.assertEqual(report['cleanup']['result'],'EXACT_CID_REMOVED_AND_ABSENT')
+        self.assertEqual(report['failures'][0]['phase'],'CACHE_PROCESS_TERMINAL')
+        self.assertEqual(report['failures'][0]['reasonCode'],'CACHE_COMPLETED_SHELL_EXIT_MISMATCH')
+        self.assertEqual(report['result'],'NOT_ACCEPTED')
+        with self.assertRaisesRegex(ValueError,'APP_OOM_OR_UNKNOWN_EXIT'):
+            B.cache_terminal({'originalExit':0,'mavenExit':0,'mavenExitObserved':True},
+                {'result':'EXACT_CID_REMOVED_AND_ABSENT','terminal':{'OOMKilled':True,'ExitCode':137}},True)
+
+    def test_cache_diagnostic_does_not_copy_arbitrary_type_message_stage_or_private_trace(self):
+        try:raise ValueError('PRIVATE_TOKEN SQL argv /private/path')
+        except ValueError as failure: result=B.cache_failure(failure,'PINNED_CACHE_PREPARATION','PRIVATE_TOKEN')
+        self.assertEqual(result,{'phase':'PINNED_CACHE_PREPARATION','type':'ValueError',
+            'reasonCode':'UNCLASSIFIED_RESOURCE_FAILURE','substage':'UNKNOWN'})
+        class PrivateTokenFailure(Exception):pass
+        result=B.cache_failure(PrivateTokenFailure('PRIVATE_TOKEN'),'PINNED_CACHE_PREPARATION','WAIT_EXIT')
+        self.assertEqual(result['type'],'UNKNOWN');self.assertNotIn('PRIVATE_TOKEN',json.dumps(result))
 
 
 if __name__=='__main__':unittest.main()

@@ -60,7 +60,20 @@ SAFE_RESOURCE_CODES = frozenset({'FIXED_COMMAND_FAILED','FIXED_HOSTED_CLASS_ONLY
     'SHELL_BOOTSTRAP_FAILED','PRIVATE_RESOURCE_PATH_UNSAFE','NEVER_ADOPT_PREVIOUS_BOOTSTRAP',
     'FIXED_CACHE_TOOLCHAIN_REQUIRED','OFFLINE_CACHE_PREFLIGHT_FAILED','OFFLINE_CACHE_PREFLIGHT_REQUIRED',
     'OFFLINE_CACHE_PROOF_CHANGED','BOUNDED_OFFLINE_CACHE_REQUIRED','EMPTY_OFFLINE_CACHE',
-    'SYMLINK_OFFLINE_CACHE_FORBIDDEN','NONREGULAR_OFFLINE_CACHE_FORBIDDEN'})
+    'SYMLINK_OFFLINE_CACHE_FORBIDDEN','NONREGULAR_OFFLINE_CACHE_FORBIDDEN',
+    'WRONG_CHECKOUT','DIRTY_SOURCE','ORIGINAL_TARGET_REQUIRED','CREATED_CID_NOT_PROVEN',
+    'PRIVATE_MOUNT_BOUNDARY_CHANGED','PRIVATE_ENV_BOUNDARY_CHANGED','HARD_BUDGET_MISMATCH',
+    'UNSAFE_CONTAINER_CAPABILITY','WRONG_OWNED_NETWORK_NAMESPACE','CGROUP_V2_REQUIRED',
+    'PID_OUTSIDE_EXACT_CGROUP','FOREIGN_CGROUP_PATH','ACTUAL_OOM_COUNTER_REQUIRED',
+    'ACTUAL_CGROUP_MEMORY_SWAP_PIDS_MISMATCH','ACTUAL_CGROUP_CPU_MISMATCH',
+    'ACTUAL_CGROUP_CHILD_OOM_KILL','ACTUAL_MAVEN_EXIT_REQUIRED','COMPILED_POSTIMAGE_DRIFT',
+    'PRIVATE_LOG_NOT_COMPLETE','CACHE_EXECUTION_DEADLINE','CACHE_PROCESS_EXIT_BEFORE_RECEIPT',
+    'CACHE_STATE_NOT_PROVEN','CACHE_COMPLETED_SHELL_EXIT_MISMATCH','APP_OOM_OR_UNKNOWN_EXIT'})
+CACHE_SUBSTAGES=frozenset({'SOURCE_INPUTS','LOCAL_ENGINE','PINNED_IMAGE','CREATE_INPUTS','CREATE',
+    'OWNER_TOOLCHAIN','MOUNT_ENV','START','CGROUP','WAIT_EXIT','MAVEN_EXIT','CORE_IDENTITY',
+    'MANIFEST','PRIVATE_LOG','CLEANUP','TERMINAL'})
+CACHE_FAILURE_FUNCTIONS=frozenset({'warm_cache','cache_inputs','cache_manifest','cache_process_state',
+    'cache_terminal','command','inspect','validate_owner','validate_container','read_cgroup','validate_cgroup_limits'})
 
 
 def require(ok, code):
@@ -133,9 +146,46 @@ def fixed_cache_command():
     encoded='; '.join('printf "%s\\n" "'+stage+'" >/tmp/cy-cache.phase; '+
                      ' '.join("'"+value+"'" for value in ['mvn']+goal)+' || exit $?'
                      for stage,goal in zip(('ONLINE_PACKAGE','ORIGINAL_PROVIDER_GET','OFFLINE_TEST_PREFLIGHT'),goals))
-    return ['-c','mkdir -p /tmp/home /tmp/m2; ('+encoded+'); status=$?; '
-            'printf "%s\\n" "$status" >/tmp/cy-cache.exit; '
+    return ['-c','mkdir -p /tmp/home /tmp/m2 || exit 98; '
+            'child=; trap \'[ -z "$child" ] || kill -TERM "$child" 2>/dev/null; exit 143\' TERM INT HUP; '
+            '('+encoded+') & child=$!; wait "$child"; status=$?; child=; '
+            'printf "%s\\n" "$status" >/tmp/cy-cache.exit.next; mv /tmp/cy-cache.exit.next /tmp/cy-cache.exit; '
+            'trap \'exit "$status"\' TERM INT HUP; '
             'for i in {1..1200}; do [ -f /cache-owner/stop ] && break; sleep .1; done; exit "$status"']
+
+
+def cache_failure(failure,phase,substage):
+    """Fixed predicate and reviewed function/line only; never a traceback, message, argv or private path."""
+    result=resource_failure(failure,phase)
+    result['substage']=substage if substage in CACHE_SUBSTAGES else 'UNKNOWN'
+    if result['type'] not in {'ValueError','OSError','FileNotFoundError','PermissionError','TimeoutExpired',
+                              'InterruptedError','JSONDecodeError','KeyError','TypeError'}:result['type']='UNKNOWN'
+    origin=None;trace=failure.__traceback__
+    while trace is not None:
+        code=trace.tb_frame.f_code
+        if code.co_filename==__file__ and code.co_name in CACHE_FAILURE_FUNCTIONS:
+            origin={'function':code.co_name,'line':trace.tb_lineno}
+        trace=trace.tb_next
+    if origin is not None:result['origin']=origin
+    return result
+
+
+def cache_process_state(obj):
+    state=obj.get('State',{})
+    require(type(state.get('Running')) is bool and type(state.get('OOMKilled')) is bool
+            and type(state.get('Pid')) is int and state['Pid']>=0
+            and type(state.get('ExitCode')) is int and 0<=state['ExitCode']<256,'CACHE_STATE_NOT_PROVEN')
+    return {key:state[key] for key in ('Running','OOMKilled','ExitCode')} | {'pidPresent':state['Pid']>0}
+
+
+def cache_terminal(report,cleaned,preparation_failed):
+    # Exact owned resource absence is independent of why the workload stopped.
+    # A synthetic host failure exit is never represented as a Maven exit or compared to SIGKILL.
+    if cleaned['result']!='EXACT_CID_REMOVED_AND_ABSENT':return
+    require(cleaned['terminal'].get('OOMKilled') is False,'APP_OOM_OR_UNKNOWN_EXIT')
+    if not preparation_failed:
+        require(report.get('mavenExitObserved') is True and report.get('mavenExit')==report['originalExit']
+                and cleaned['terminal']['ExitCode'] in (report['mavenExit'],143),'CACHE_COMPLETED_SHELL_EXIT_MISMATCH')
 
 
 def warm_cache():
@@ -143,8 +193,10 @@ def warm_cache():
     private=private_directory(Path(command(['mktemp','-d','/tmp/cy-http-budget.XXXXXXXX']).decode().strip()))
     cache=Path.home()/'.m2/repository'
     report={**resource_envelope(os.environ),'result':'NOT_COMPLETED','originalExit':None,'failures':[],
-            'preparationOnly':True,'mavenVersion':CORE_VERSION,'image':JDK,'settingsSha256':hashlib.sha256(EMPTY_SETTINGS.encode()).hexdigest()}
+            'preparationOnly':True,'mavenExitObserved':False,'mavenExit':None,
+            'mavenVersion':CORE_VERSION,'image':JDK,'settingsSha256':hashlib.sha256(EMPTY_SETTINGS.encode()).hexdigest()}
     state={'nonce':uuid.uuid4().hex,'slots':{}};first=None;cleaned=None
+    substage='SOURCE_INPUTS'
     def publish():
         try:write(CACHE_REPORT,report)
         except Exception as failure:report['failures'].append(resource_failure(failure,'CACHE_REPORT_WRITE'))
@@ -152,12 +204,13 @@ def warm_cache():
         publish();cache.mkdir(parents=True,exist_ok=True)
         require(not cache.is_symlink() and cache.resolve()==cache,'SYMLINK_OFFLINE_CACHE_FORBIDDEN')
         report['pomSha256']=cache_inputs()
+        substage='LOCAL_ENGINE'
         require(command(DOCKER+['context','inspect','--format','{{.Endpoints.docker.Host}}']).decode().strip()
                 =='unix:///var/run/docker.sock','LOCAL_DOCKER_ONLY')
-        found=subprocess.run(DOCKER+['image','inspect',JDK],capture_output=True,timeout=20)
+        substage='PINNED_IMAGE';found=subprocess.run(DOCKER+['image','inspect',JDK],capture_output=True,timeout=20)
         if found.returncode:command(DOCKER+['pull',JDK],timeout=300)
         image=json.loads(command(DOCKER+['image','inspect',JDK]))[0];report['imageId']=image['Id']
-        (private/'settings.xml').write_text(EMPTY_SETTINGS);os.chmod(private/'settings.xml',0o600)
+        substage='CREATE_INPUTS';(private/'settings.xml').write_text(EMPTY_SETTINGS);os.chmod(private/'settings.xml',0o600)
         name='cy-http-cache-'+os.environ['GITHUB_RUN_ID']+'-'+os.environ['GITHUB_RUN_ATTEMPT']+'-'+state['nonce'][:12]
         absent('container',name);state['slots']['app']={'name':name,'cid':None,'attempted':True}
         args=DOCKER+['create','--name',name,'--network','bridge','--memory=1g','--memory-swap=1g','--cpus=1',
@@ -173,38 +226,42 @@ def warm_cache():
         env={'HOME':'/tmp/home','MAVEN_CONFIG':'/tmp/m2','MAVEN_OPTS':'-Xmx512m -Djava.io.tmpdir=/tmp -Duser.home=/tmp/home',
              'SOURCE_SHA':os.environ['SOURCE_SHA'],'GITHUB_SHA':os.environ['SOURCE_SHA']}
         for key,value in env.items():args+=['--env',key+'='+value]
-        cid=command(args+[JDK]+fixed_cache_command(),timeout=30).decode().strip()
+        substage='CREATE';cid=command(args+[JDK]+fixed_cache_command(),timeout=30).decode().strip()
         require(re.fullmatch('[0-9a-f]{64}',cid) and (private/'app.cid').read_text().strip()==cid,'CREATED_CID_NOT_PROVEN')
-        state['slots']['app']['cid']=cid;obj=inspect(cid)
+        substage='OWNER_TOOLCHAIN';state['slots']['app']['cid']=cid;obj=inspect(cid)
         report['budget']=validate_container(obj,name,JDK,labels(os.environ,state['nonce']),MEMORY,'bridge',cid)
         require(obj['Image']==image['Id'] and obj['Config']['Cmd']==fixed_cache_command()
                 and obj['Config']['Entrypoint']==['/bin/bash']
                 and obj['Config']['User']==str(os.getuid())+':'+str(os.getgid()),'FIXED_CACHE_TOOLCHAIN_REQUIRED')
-        expected_mounts={(str(s),str(t),mode!='readonly') for s,t,mode in mounts}
+        substage='MOUNT_ENV';expected_mounts={(str(s),str(t),mode!='readonly') for s,t,mode in mounts}
         require({(m['Source'],m['Destination'],m['RW']) for m in obj['Mounts'] if m['Type']=='bind'}==expected_mounts
                 and all(m['Type']=='bind' or (m['Type']=='tmpfs' and m['Destination']=='/tmp') for m in obj['Mounts'])
                 and obj['HostConfig']['ReadonlyRootfs'] is True and not obj['HostConfig'].get('Devices')
                 and not obj['HostConfig'].get('VolumesFrom'),'PRIVATE_MOUNT_BOUNDARY_CHANGED')
         require(dict(item.split('=',1) for item in obj['Config']['Env'])==
                 {**dict(item.split('=',1) for item in image['Config'].get('Env',[])),**env},'PRIVATE_ENV_BOUNDARY_CHANGED')
-        publish();command(DOCKER+['start',cid]);deadline=time.monotonic()+LIMIT_SECONDS
-        obj=inspect(cid);report['cgroup']=read_cgroup(obj['State']['Pid'],cid);publish()
+        substage='START';publish();command(DOCKER+['start',cid]);deadline=time.monotonic()+LIMIT_SECONDS
+        substage='CGROUP';obj=inspect(cid);report['cgroup']=read_cgroup(obj['State']['Pid'],cid);publish()
+        substage='WAIT_EXIT'
         while True:
             obj=inspect(cid);validate_owner(obj,name,JDK,labels(os.environ,state['nonce']),cid)
-            require(obj['State']['Running'] and time.monotonic()<deadline,'OWNED_EXECUTION_DEADLINE')
+            report['lastContainerState']=cache_process_state(obj)
+            require(obj['State']['Running'],'CACHE_PROCESS_EXIT_BEFORE_RECEIPT')
+            require(time.monotonic()<deadline,'CACHE_EXECUTION_DEADLINE')
             status=command(DOCKER+['exec',cid,'/bin/bash','-c','if [ -f /tmp/cy-cache.exit ]; then cat /tmp/cy-cache.exit; fi']).decode().strip()
             if status:
                 require(re.fullmatch('[0-9]{1,3}',status) and int(status)<256,'ACTUAL_MAVEN_EXIT_REQUIRED');break
             time.sleep(.5)
-        report['originalExit']=int(status)
+        substage='MAVEN_EXIT';report['originalExit']=report['mavenExit']=int(status);report['mavenExitObserved']=True
         report['cgroup']=read_cgroup(obj['State']['Pid'],cid)
         require(int(report['cgroup']['memoryEvents'].get('oom_kill','-1'))==0,'ACTUAL_CGROUP_CHILD_OOM_KILL')
-        core=command(DOCKER+['exec',cid,'sha256sum','/usr/share/maven/lib/maven-core-'+CORE_VERSION+'.jar']).decode().split()[0]
+        substage='CORE_IDENTITY';core=command(DOCKER+['exec',cid,'sha256sum','/usr/share/maven/lib/maven-core-'+CORE_VERSION+'.jar']).decode().split()[0]
         require(re.fullmatch('[0-9a-f]{64}',core),'FIXED_CACHE_TOOLCHAIN_REQUIRED');report['mavenCoreSha256']=core
-        require(report['originalExit']==0,'OFFLINE_CACHE_PREFLIGHT_FAILED')
+        substage='MAVEN_EXIT';require(report['originalExit']==0,'OFFLINE_CACHE_PREFLIGHT_FAILED')
+        substage='MANIFEST'
         report['cache']=cache_manifest(cache);require(cache_inputs()==report['pomSha256'],'COMPILED_POSTIMAGE_DRIFT')
     except Exception as failure:
-        first=failure;report['firstFailure']=resource_failure(failure,'PINNED_CACHE_PREPARATION')
+        first=failure;report['firstFailure']=cache_failure(failure,'PINNED_CACHE_PREPARATION',substage)
         if report['originalExit'] in (None,0):
             report['originalExit']=failure.errno if isinstance(failure,InterruptedError) and failure.errno in (129,130,143) else 2
     finally:
@@ -222,14 +279,14 @@ def warm_cache():
                 if obj['State']['Running']:
                     phase=command(DOCKER+['exec',slot['cid'],'cat','/tmp/cy-cache.phase']).decode().strip()
                     report['phase']=phase if phase in ('ONLINE_PACKAGE','ORIGINAL_PROVIDER_GET','OFFLINE_TEST_PREFLIGHT') else 'UNKNOWN'
-        except Exception as failure:report['failures'].append(resource_failure(failure,'CACHE_PRIVATE_LOG'))
+        except Exception as failure:report['failures'].append(cache_failure(failure,'CACHE_PRIVATE_LOG','PRIVATE_LOG'))
         try:
             cleaned=cleanup_slot(private,state,'app');report['cleanup']=cleaned
-            if cleaned['result']=='EXACT_CID_REMOVED_AND_ABSENT':
-                require(not cleaned['terminal']['OOMKilled'],'APP_OOM_OR_UNKNOWN_EXIT')
-                require(cleaned['terminal']['ExitCode'] in (report['originalExit'],143),'ACTUAL_MAVEN_EXIT_REQUIRED')
-        except Exception as failure:report['failures'].append(resource_failure(failure,'CACHE_CONTAINER_CLEANUP'))
-        accepted=first is None and report['originalExit']==0 and not report['failures'] and cleaned is not None and cleaned['result']=='EXACT_CID_REMOVED_AND_ABSENT'
+        except Exception as failure:report['failures'].append(cache_failure(failure,'CACHE_CONTAINER_CLEANUP','CLEANUP'))
+        if cleaned is not None:
+            try:cache_terminal(report,cleaned,first is not None)
+            except Exception as failure:report['failures'].append(cache_failure(failure,'CACHE_PROCESS_TERMINAL','TERMINAL'))
+        accepted=first is None and report['mavenExitObserved'] and report['mavenExit']==report['originalExit']==0 and not report['failures'] and cleaned is not None and cleaned['result']=='EXACT_CID_REMOVED_AND_ABSENT'
         report['result']='PINNED_OFFLINE_TEST_PREFLIGHT_PROVEN' if accepted else 'NOT_ACCEPTED';publish()
         # A failed preparation retains its own private diagnostic journal; public never gets raw logs/settings.
         if accepted and not report['failures']:shutil.rmtree(private_directory(private))
@@ -241,11 +298,13 @@ def verified_cache(cache):
     report=json.loads(CACHE_REPORT.read_text())
     require({k:report.get(k) for k in ('sourceSha','runId','attempt','class')}==identity(os.environ)
             and report.get('result')=='PINNED_OFFLINE_TEST_PREFLIGHT_PROVEN' and report.get('originalExit')==0
+            and report.get('mavenExitObserved') is True and report.get('mavenExit')==0
             and not report.get('failures') and report.get('image')==JDK and report.get('mavenVersion')==CORE_VERSION
             and report.get('settingsSha256')==hashlib.sha256(EMPTY_SETTINGS.encode()).hexdigest()
             and report.get('pomSha256')==cache_inputs() and report.get('cache')==cache_manifest(cache)
             and report.get('cleanup',{}).get('result')=='EXACT_CID_REMOVED_AND_ABSENT'
             and report['cleanup'].get('terminal',{}).get('OOMKilled') is False
+            and report['cleanup'].get('terminal',{}).get('ExitCode') in (0,143)
             and re.fullmatch('sha256:[0-9a-f]{64}',report.get('imageId',''))
             and re.fullmatch('[0-9a-f]{64}',report.get('mavenCoreSha256',''))
             and report.get('budget',{}).get('memory')==report['budget'].get('memorySwap')==MEMORY

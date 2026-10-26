@@ -39,6 +39,7 @@ public final class RestoreRefundReconciliationFixture {
     private final DataSourceTransactionManager tx;
     private final IRefundService refunds;
     private final RefundPayoutServiceImpl payout;
+    private final IWechatPayService provider;
     private final WechatVerifiedPaymentFactService facts;
     private final RefundApplicationMapper mapper;
     private final String phase;
@@ -90,7 +91,7 @@ public final class RestoreRefundReconciliationFixture {
         var mutation=new WxPaymentCallbackMutationService();set(mutation,"mapper",sql.getMapper(WxPaymentCallbackInboxMapper.class));set(mutation,"registrationMapper",sql.getMapper(CmsRegistrationMapper.class));
         set(mutation,"activityMapper",sql.getMapper(CmsActivityMapper.class));set(mutation,"topicMapper",sql.getMapper(CmsTopicMapper.class));set(mutation,"refundMapper",mapper);set(inbox,"mutationService",proxy(mutation));
         set(target,"wxPaymentCallbackInboxService",proxy(inbox));refunds=proxy(target);
-        var provider=mock(IWechatPayService.class);
+        provider=mock(IWechatPayService.class);
         when(provider.submitRefund(any(WechatVerifiedPaymentFact.Reference.class),anyString(),anyString(),any(),any(),any())).thenAnswer(call->{
             var identity=identity(call.getArgument(2)); external.append("REFUND","original_refund","SUBMIT","ACCEPTED",identity);
             external.append("REFUND","original_refund","RESULT",gap?"UNKNOWN":"SUCCESS",identity);
@@ -211,7 +212,17 @@ public final class RestoreRefundReconciliationFixture {
                 Map<String,String> result=ReflectionTestUtils.invokeMethod(original,"facts",mapper.selectRefundApplicationById(request.getId()));
                 require(refunds.handleRefundNotify(result),"real verified original refund callback commits");
             }else {
-                require(findRetainedRefund(external.original("REFUND","original_refund"))==null,"gap backup must not contain a local refund success");
+                // Separate journal validation from the SQL predicate: failure here is not evidence of a REFUND row.
+                var retained=external.original("REFUND","original_refund");
+                var paid=facts.requireVerified(new WechatVerifiedPaymentFact.Reference(originalLong(retained,"paymentFactId"),(String)retained.get("paymentFactHash")));
+                var persisted=mapper.selectRefundApplicationById(request.getId());
+                requireOriginalRefund(paid,persisted,retained,persisted.getRefundNo());
+                verify(provider).submitRefund(eq(paid.reference()),eq(paid.facts().businessOutTradeNo()),eq(persisted.getRefundNo()),
+                        eq(persisted.getRefundAmount()),eq(BigDecimal.valueOf(paid.facts().totalFen(),2)),any());
+                verify(provider,never()).queryRefundFacts(any(WechatVerifiedPaymentFact.Reference.class),anyString());
+                require(originalQueries==0&&originalQueryFailure==null,"gap source must retain the first UNKNOWN without a recovery query");
+                var stored=findRetainedRefund(retained);
+                require(stored==null,"gap backup must not contain a local refund success");
                 require("UNKNOWN".equals(external.state("REFUND","original_refund")),"gap success must arrive only after backup");
             }
             signal("BACKUP_READY");

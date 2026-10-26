@@ -469,6 +469,7 @@ class ChildExitControls(unittest.TestCase):
             auth.command.side_effect = lambda argv: json.dumps([network if 'network' in argv else
                 next(row for row in rows if row['Id'] == argv[-1])]).encode()
             domains = mock.Mock(); domains.SPECS = {}
+            domains.failure_context.return_value={'contractCode':'UNKNOWN_DOMAIN_FACT_CONTRACT'}
             def modules(name, path):
                 if path.endswith('restore_business_domain_facts.py'): return domains
                 if path.endswith('db-backup-restore.py'): return tool
@@ -510,6 +511,193 @@ class ChildExitControls(unittest.TestCase):
             self.assertEqual(p.sha(child_class.read_bytes()), result['childExits'][0]['testChildSha256'])
             self.assertFalse(result['dispatchRelease']); self.assertNotIn('PRIVATE', json.dumps(result))
             tool.backup.assert_not_called(); tool.restore.assert_not_called(); child.kill.assert_not_called()
+
+
+class HostPostSourceControls(unittest.TestCase):
+    """Original real canonical/domain predicates with transport doubles; every orchestration result is FAIL."""
+    def test_database_options_are_read_from_original_source_and_not_target_defaults(self):
+        from unittest import mock
+        tool=mock.Mock();tool.quoted.side_effect=lambda name:'`'+name+'`'
+        source=object()
+        for collation in ('utf8mb4_general_ci','utf8mb4_0900_ai_ci','utf8mb4_bin'):
+            tool.mysql.return_value=json.dumps(['utf8mb4',collation])
+            self.assertEqual(p.database_create_sql(tool,source,'owned_fixture'),
+                             'CREATE DATABASE `owned_fixture` CHARACTER SET utf8mb4 COLLATE '+collation)
+            self.assertIs(tool.mysql.call_args.args[0],source)
+        for value in ([],['utf8mb4'],['latin1','latin1_swedish_ci'],['utf8mb4','utf8mb4_bin; PRIVATE_SQL'],['utf8mb4',None]):
+            tool.mysql.return_value=json.dumps(value)
+            with self.assertRaisesRegex(ValueError,'source fixture database options'):p.database_create_sql(tool,source,'owned_fixture')
+
+    def test_failure_projection_only_maps_exact_literal_from_trusted_source(self):
+        from unittest import mock
+        tool=mock.Mock();tool.mysql.return_value='[]'
+        try:p.database_create_sql(tool,object(),'PRIVATE_SCHEMA')
+        except ValueError as failure:
+            result=p.host_failure(failure,{'stage':'TARGET_SCHEMA_CREATE','step':'DATABASE_OPTIONS','side':'source'})
+        self.assertEqual(result['reasonCode'],'DATABASE_OPTIONS_UNAVAILABLE')
+        self.assertTrue(any(row['function']=='database_create_sql' for row in result['locations']))
+        self.assertNotIn('PRIVATE_SCHEMA',json.dumps(result))
+        for message in ('source fixture database options unavailable','source fixture database options unavailable PRIVATE_SQL',
+                        'password=PRIVATE_TOKEN SELECT PRIVATE_BODY'):
+            try:raise ValueError(message)
+            except ValueError as failure:result=p.host_failure(failure,{'stage':'PRIVATE_PATH','step':[],'side':'PRIVATE_ACCOUNT','tableIndex':999})
+            self.assertEqual(result['reasonCode'],'UNKNOWN_PRIVATE_FAILURE')
+            self.assertEqual((result['stage'],result['step']),('UNKNOWN','UNKNOWN'))
+            for marker in ('PRIVATE_PATH','PRIVATE_ACCOUNT','PRIVATE_TOKEN','PRIVATE_SQL','PRIVATE_BODY'):
+                self.assertNotIn(marker,json.dumps(result))
+            self.assertNotIn('tableIndex',result)
+
+    def test_capture_records_only_registered_index_and_keeps_typed_row_failure(self):
+        from unittest import mock
+        tool=mock.Mock();tool.mysql.return_value='';progress={'stage':'RESTORED_CAPTURE','step':'TABLE_ROWS','side':'target'}
+        domains=mock.Mock();domains.ALL_TABLES=set()
+        with patch.object(p,'module',return_value=domains):
+            try:p.capture(tool,object(),tables=('cms_registration',),high_ids={},progress=progress)
+            except ValueError as failure:result=p.host_failure(failure,progress)
+        self.assertEqual(result['reasonCode'],'TYPED_TABLE_METADATA_MISSING');self.assertEqual(result['tableIndex'],0)
+        self.assertEqual(result['step'],'TABLE_ROWS');self.assertNotIn('cms_registration',json.dumps(result))
+
+    def diagnostic_payload(self):
+        return {'stage':'CANONICAL_RESTORE','step':'CANONICAL_CALL','side':'target',
+                'reasonCode':'CANONICAL_DATABASE_DEFINITION_MISMATCH',
+                'locations':[{'source':'canonical','function':'restore','line':1}]}
+
+    def test_outer_json_projection_is_finite_and_rejects_extra_private_or_untrusted_locations(self):
+        value=self.diagnostic_payload();self.assertEqual(p.safe_host_failure(value),value)
+        changed=[]
+        extra=copy.deepcopy(value);extra['sql']='PRIVATE_SQL';changed.append(extra)
+        for key,invalid in (('stage','PRIVATE_STAGE'),('step',[]),('reasonCode','PRIVATE_REASON'),('side','PRIVATE_ACCOUNT'),('tableIndex',256)):
+            row=copy.deepcopy(value);row[key]=invalid;changed.append(row)
+        for location in ({'source':'canonical','function':'PRIVATE_FUNCTION','line':1},
+                         {'source':'PRIVATE_PATH','function':'restore','line':1},
+                         {'source':'canonical','function':'restore','line':True},
+                         {'source':'canonical','function':'restore','line':100001}):
+            row=copy.deepcopy(value);row['locations']=[location];changed.append(row)
+        row=copy.deepcopy(value);row['locations']*=9;changed.append(row)
+        for row in changed:self.assertIsNone(p.safe_host_failure(row))
+
+    def test_outer_actual_consumer_preserves_bound_host_stage_and_never_copies_untrusted_receipt(self):
+        spec=importlib.util.spec_from_file_location('post_source_outer_host',HERE/'restore_business_reconciliation_host.py')
+        host=importlib.util.module_from_spec(spec);spec.loader.exec_module(host)
+        for alteration in ('none','probe-hash','extra-private','foreign-source'):
+            with self.subTest(alteration=alteration),tempfile.TemporaryDirectory() as directory:
+                root=Path(directory);private=root/'private';output=root/'out';private.mkdir(mode=0o700);output.mkdir()
+                worker=host.Host(root,private,output,'a'*32,'withdrawal-complete')
+                host.write_private(worker.resources,'{}')
+                row={'sourceSha':'b'*40,'scope':'a'*32,'cohort':'withdrawal-complete','runId':'101','runAttempt':'1',
+                     'resourcesSha256':p.sha(worker.resources.read_bytes()),'probeSourceSha256':p.sha(Path(p.__file__).read_bytes()),
+                     'businessResult':'FAIL','processExit':1,'primaryFailureType':'ValueError',
+                     'primaryReasonCode':'CANONICAL_DATABASE_DEFINITION_MISMATCH','hostFailure':self.diagnostic_payload(),
+                     'primaryReason':'PRIVATE_TOKEN'}
+                if alteration=='probe-hash':row['probeSourceSha256']='f'*64
+                if alteration=='extra-private':row['hostFailure']['sql']='PRIVATE_SQL'
+                if alteration=='foreign-source':row['sourceSha']='f'*40
+                host.write_private(output/'reconciliation.json',json.dumps(row))
+                with patch.dict(p.os.environ,{'GITHUB_SHA':'b'*40,'GITHUB_RUN_ID':'101','GITHUB_RUN_ATTEMPT':'1'},clear=True):
+                    worker.remember_probe_exit(1)
+                self.assertEqual((worker.first_failure['operation'],worker.first_failure['returnCode']),('PROBE_RUN',1))
+                if alteration=='none':
+                    self.assertEqual(worker.first_failure['hostFailure'],self.diagnostic_payload())
+                    self.assertEqual(worker.first_failure['primaryReasonCode'],'CANONICAL_DATABASE_DEFINITION_MISMATCH')
+                else:self.assertNotIn('hostFailure',worker.first_failure)
+                self.assertNotIn('PRIVATE_TOKEN',json.dumps(worker.first_failure));self.assertNotIn('PRIVATE_SQL',json.dumps(worker.first_failure))
+
+    def post_source_failure(self,canonical_failure):
+        from unittest import mock
+        import zipfile
+        tool=p.module('post_source_canonical_control','scripts/db-backup-restore.py')
+        domains=p.module('post_source_domain_control','ci/restore_business_domain_facts.py')
+        cohort='withdrawal-complete';child_name=domains.SPECS[cohort]['child']
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory).resolve();repo=root/'repo';private=root/'private';output=root/'out'
+            private.mkdir(mode=0o700);output.mkdir()
+            classes=repo/'chengyinhub-admin/target/test-classes';classes.mkdir(parents=True)
+            child_class=classes/(child_name.replace('.','/')+'.class');child_class.parent.mkdir(parents=True)
+            child_class.write_bytes(b'SOURCE_CONTROL_NOT_JAVA')
+            diagnostic=classes/'com/chengyinhub/business/service/RestoreChildDiagnostics.class';diagnostic.parent.mkdir(parents=True,exist_ok=True)
+            diagnostic.write_bytes(b'SOURCE_CONTROL_DIAGNOSTIC')
+            jar=repo/'chengyinhub-admin/target/chengyinhub-admin.jar'
+            with zipfile.ZipFile(jar,'w') as package:package.writestr('BOOT-INF/classes/git.properties','git.commit.id='+'b'*40+'\n')
+            resources,objects,network=ResourceTransportControls().resources()
+            resources.update(sourceSha='b'*40,cohort=cohort,testClasspathFile=str(private/'cp.txt'))
+            (private/'cp.txt').write_text(str(classes));(private/'cp.txt').chmod(0o600)
+            for side in ('source','target'):
+                path=private/(side+'.cnf');path.write_text('[client]\nhost=127.0.0.1\nport=%d\nuser=root\npassword=%s\nprotocol=tcp\n' %
+                    (resources[side]['port'],'x'*24));path.chmod(0o600);resources[side]['defaultsFile']=str(path)
+            p.save(private/'resources.json',resources)
+            canonical_snapshot={'tables':{'t':{'rows':1,'checksum':'1'}},'views':[],
+                'objects':{'ROUTINES':0,'TRIGGERS':0,'EVENTS':0},
+                'definitions':{'DATABASE:'+resources['schema']:'a'*64,'TABLE:t':'b'*64}}
+            empty={'tables':{},'views':[],'objects':{'ROUTINES':0,'TRIGGERS':0,'EVENTS':0},
+                   'definitions':{'DATABASE:'+resources['schema']:('c' if canonical_failure else 'a')*64}}
+            def backup(args):
+                args.output.write_bytes(b'CONTROL_SQL_NOT_EXECUTED');args.output.chmod(0o600)
+                p.save(Path(str(args.output)+'.json'),{'formatVersion':3,'definitionAlgorithm':'mysql8-column-charset-v1',
+                    'serverUuid':resources['source']['uuid'],'mysqlVersion':'8.0.45','database':resources['schema'],
+                    'sha256':tool.digest(args.output),'snapshot':canonical_snapshot})
+            auth=mock.Mock();auth.command.side_effect=lambda argv:json.dumps([network if 'network' in argv else
+                next(row for row in objects if row['Id']==argv[-1])]).encode()
+            def modules(name,path):
+                return {'ci/restore_business_domain_facts.py':domains,'scripts/db-backup-restore.py':tool,
+                        'ci/authenticated_redis_recovery_probe.py':auth}[path]
+            statements=[];imports=[]
+            def transport(argv,**kwargs):
+                if 'stdin' in kwargs:
+                    imports.append('canonical-original-import');return p.subprocess.CompletedProcess(argv,0,b'',b'')
+                sql=kwargs['input'];statements.append(sql)
+                if sql.startswith(b'SELECT @@server_uuid'):
+                    side='source' if 'source.cnf' in argv[1] else 'target'
+                    raw=(resources[side]['uuid']+'\t8.0.45\tOFF').encode() if b'VERSION()' in sql else resources[side]['uuid'].encode()
+                else:raw=b'0'
+                return p.subprocess.CompletedProcess(argv,0,raw,b'')
+            child=mock.Mock(pid=12345);child.wait.return_value=0;child.poll.return_value=0
+            fake_rows=[{'tables':{},'highWater':{},'control':'backup'},{'tables':{},'highWater':{},'control':'fault'},
+                       {'tables':{},'highWater':{},'control':'restored'}]
+            canonical_reads=[]
+            def canonical_state(args):
+                canonical_reads.append(args.server_uuid)
+                return empty if len(canonical_reads)==1 else canonical_snapshot
+            def mysql(args,sql,**kwargs):
+                return json.dumps(['utf8mb4','utf8mb4_general_ci']) if 'DEFAULT_CHARACTER_SET_NAME' in sql else 'OFF'
+            env={'GITHUB_ACTIONS':'true','RUNNER_ENVIRONMENT':'github-hosted','RUNNER_OS':'Linux',
+                'GITHUB_REPOSITORY':'liboyang42-cpu/hengyin','GITHUB_EVENT_NAME':'workflow_dispatch',
+                'GITHUB_JOB':'isolated-restore-business-reconciliation','CHENGYIN_CI_RESTORE_BUSINESS':'true',
+                'GITHUB_SHA':'b'*40,'GITHUB_RUN_ID':'101','GITHUB_RUN_ATTEMPT':'1'}
+            with patch.object(p,'ROOT',repo),patch.dict(p.os.environ,env,clear=True),patch.object(p,'module',side_effect=modules),\
+                 patch.object(p.subprocess,'check_output',return_value='b'*40),patch.object(p.subprocess,'run',side_effect=transport),\
+                 patch.object(p.subprocess,'Popen',return_value=child) as launch,patch.object(p,'wait_phase'),\
+                 patch.object(p,'capture',side_effect=fake_rows),patch.object(domains,'journal',return_value={'records':[]}),\
+                 patch.object(tool,'backup',side_effect=backup),patch.object(tool,'mysql',side_effect=mysql),\
+                 patch.object(tool,'identify',return_value=[resources['target']['uuid'],'8.0.45',resources['schema']]),\
+                 patch.object(tool,'snapshot',side_effect=canonical_state),patch.object(p.signal,'signal'),patch.object(p.signal,'alarm'),\
+                 patch.object(p.time,'monotonic',return_value=0):
+                with self.assertRaisesRegex(ValueError,'isolated drill failed'):p.run(private/'resources.json',output,private)
+            result=json.loads((output/'reconciliation.json').read_text())
+            self.assertEqual(launch.call_count,1);self.assertEqual(child.wait.call_args.kwargs,{'timeout':20})
+            self.assertEqual((result['businessResult'],result['processExit'],result['schemaCleanup']),
+                             ('FAIL',1,'CONFIRMED_EXACT_CREATED_SCHEMAS_ABSENT'))
+            self.assertEqual((result['childExits'][0]['phase'],result['childExits'][0]['returnCode'],result['childExits'][0]['diagnosticState']),
+                             ('SOURCE',0,'NO_TYPED_FAILURE'))
+            self.assertEqual((result['cohort'],result['runId'],result['runAttempt']),('withdrawal-complete','101','1'))
+            self.assertEqual(result['jarSha256'],p.sha(jar.read_bytes()));self.assertFalse(result['dispatchRelease'])
+            self.assertTrue(any(b'CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci' in sql for sql in statements))
+            self.assertNotIn('CONTROL_SQL_NOT_EXECUTED',json.dumps(result));self.assertNotIn(str(private),json.dumps(result))
+            return result,imports
+
+    def test_source_zero_canonical_rejection_is_located_without_starting_restored_owner(self):
+        result,imports=self.post_source_failure(True)
+        self.assertEqual(result['hostFailure']['stage'],'CANONICAL_RESTORE')
+        self.assertEqual(result['primaryReasonCode'],'CANONICAL_DATABASE_DEFINITION_MISMATCH')
+        self.assertTrue(any(row['source']=='canonical' and row['function']=='restore' for row in result['hostFailure']['locations']))
+        self.assertEqual(imports,[])
+
+    def test_source_zero_real_domain_rejection_retains_original_predicate_and_cleanup(self):
+        result,imports=self.post_source_failure(False)
+        self.assertEqual(result['hostFailure']['stage'],'DOMAIN_EVALUATE')
+        self.assertEqual(result['primaryReasonCode'],'UNKNOWN_PRIVATE_FAILURE')
+        self.assertEqual(result['domainContractFailure'],{'contractCode':'RESTORED_TYPED_SNAPSHOT'})
+        self.assertTrue(any(row['source']=='domain' and row['function']=='evaluate' for row in result['hostFailure']['locations']))
+        self.assertEqual(imports,['canonical-original-import'])
 
 
 class JournalControls(unittest.TestCase):

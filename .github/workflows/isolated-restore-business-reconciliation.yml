@@ -64,12 +64,25 @@ jobs:
           python3 -B ci/test_restore_business_domain_facts.py
           python3 -B ci/test_restore_business_reconciliation_host.py
           python3 -B ci/test_restore_business_reconciliation_build.py
+          python3 -B ci/test_combined_http_budget.py
+          python3 -B ci/test_restore_application_http_probe.py
+          python3 -B ci/test_http_e2e_entry.py
       - name: Compile one exact candidate and copy only its existing test dependencies
         id: build
         run: |
           mvn -B -pl chengyinhub-admin -am -DskipTests install
           mvn -B -pl chengyinhub-admin dependency:copy-dependencies -DincludeScope=test "-DoutputDirectory=$GITHUB_WORKSPACE/chengyinhub-admin/target/restore-lib" -Dmdep.useRepositoryLayout=true
+          mvn -B -pl chengyinhub-admin -Dtest=RestoreRefundObservationSourceTest test
+          python3 -I ci/assert_it_ran.py chengyinhub-admin/target/surefire-reports RestoreRefundObservationSourceTest
           python3 -I ci/restore_business_reconciliation_build.py pack
+      - name: Preserve changed journal unit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: restore-business-source-unit-${{ github.run_attempt }}
+          path: chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.RestoreRefundObservationSourceTest.xml
+          if-no-files-found: warn
+          retention-days: 1
       - uses: actions/upload-artifact@v4
         with:
           name: restore-business-build-${{ github.run_attempt }}

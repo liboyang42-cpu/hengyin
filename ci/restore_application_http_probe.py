@@ -224,8 +224,30 @@ def held_jobs(ids):
     return jobs
 
 
+def observe_phase_timing(slot,report,phase,substage):
+    # Bounded relative timing only; never a cached identity/SQL/readiness observation. The
+    # original constructor deadline is read, not moved. Every existing checkpoint remains.
+    deadline=getattr(slot,'deadline',None)
+    if type(deadline) not in (int,float):return # Source-only unit slots without a lifecycle clock.
+    tick=time.monotonic()
+    previous=getattr(slot,'_phase_timing_cursor',None)
+    samples=report.setdefault('phaseElapsed',[])
+    if previous is not None:
+        elapsed=max(0,int((tick-previous['tick'])*1000))
+        if len(samples)<128:
+            samples.append({'phase':previous['phase'],'substage':previous['substage'],
+                    'createdBootCount':previous['createdBootCount'],'elapsedMillis':elapsed})
+        else:report['phaseElapsedTruncated']=True
+    report['lifecycleTiming']={'budgetSeconds':1500,
+            'elapsedMillis':max(0,int((tick-(deadline-1500))*1000)),
+            'remainingMillis':max(0,int((deadline-tick)*1000))}
+    slot._phase_timing_cursor={'tick':tick,'phase':phase,'substage':substage,
+            'createdBootCount':len(getattr(slot,'owned',()))}
+
+
 def checkpoint(slot,report,path,phase,substage):
     require(phase in RUN_PHASES and substage in SUBSTAGES,'fixed diagnostic checkpoint only')
+    observe_phase_timing(slot,report,phase,substage)
     report['phase']=phase;report['substage']=substage
     slot.runtime_report_write(path,report)
 
@@ -267,9 +289,11 @@ def query(auth,port,schema,sql,args=None):
 def snapshot(auth,port,schema,expected_uuid):
     require(isinstance(expected_uuid,str) and re.fullmatch('[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}',expected_uuid),
             'original snapshot UUID required')
-    # TABLES.AUTO_INCREMENT is cached dynamic metadata by default (86400s). All four operations
-    # share this exact connection; a SET on query()'s separate session cannot prove current values.
-    with auth.database(port,schema) as db,db.cursor() as cur:
+    # One NEW connection per complete observation, never shared with a later stage/boot. The
+    # original relay verifies its physical endpoint on each connection. Opening one connection
+    # per table repeats that transport/identity handshake without making the row read fresher.
+    # Autocommit is explicit and read back: this does NOT establish an RR transaction/snapshot.
+    with auth.database(port,schema,autocommit=True) as db,db.cursor() as cur:
         cur.execute('SET SESSION information_schema_stats_expiry=0')
         cur.execute('SELECT @@SESSION.information_schema_stats_expiry,@@server_uuid,DATABASE()')
         identity=cur.fetchone()
@@ -279,15 +303,22 @@ def snapshot(auth,port,schema,expected_uuid):
         cur.execute("SELECT TABLE_NAME,AUTO_INCREMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA=%s AND TABLE_TYPE='BASE TABLE' ORDER BY TABLE_NAME",(schema,))
         columns=[column[0] for column in cur.description]
         tables=[dict(zip(columns,map(typed,row))) for row in cur.fetchall()]
-    names={row['TABLE_NAME'] for row in tables}
-    require(REQUIRED_TABLES<=names,'full canonical schema/financial evidence tables required')
-    result={}
-    for table in tables:
-        name=table['TABLE_NAME'];require(re.fullmatch('[A-Za-z0-9_]+',name),'fixed canonical table identifier')
-        if name in ALLOWED_MUTABLE:continue
-        rows=query(auth,port,schema,'SELECT * FROM `'+name+'`')
-        result[name]={'rows':sorted(rows,key=lambda row:canonical(row)), 'nextId':table['AUTO_INCREMENT']}
-    return result
+        names={row['TABLE_NAME'] for row in tables}
+        require(REQUIRED_TABLES<=names,'full canonical schema/financial evidence tables required')
+        cur.execute('SELECT @@SESSION.autocommit')
+        actual_autocommit=cur.fetchone()
+        require(isinstance(actual_autocommit,tuple) and len(actual_autocommit)==1
+                and type(actual_autocommit[0]) is int and actual_autocommit[0]==1,
+                'fresh per-statement snapshot reads require session autocommit')
+        result={}
+        for table in tables:
+            name=table['TABLE_NAME'];require(re.fullmatch('[A-Za-z0-9_]+',name),'fixed canonical table identifier')
+            if name in ALLOWED_MUTABLE:continue
+            cur.execute('SELECT * FROM `'+name+'`')
+            columns=[column[0] for column in cur.description]
+            rows=[dict(zip(columns,map(typed,row))) for row in cur.fetchall()]
+            result[name]={'rows':sorted(rows,key=lambda row:canonical(row)), 'nextId':table['AUTO_INCREMENT']}
+        return result
 
 
 def assert_equal(before,after,except_tables=()):
@@ -505,6 +536,15 @@ def source_quiescent_snapshot(slot, auth, port, schema, report, path):
     return snapshot(auth,port,schema,slot.boots[-1]['serverUuid'])
 
 
+def normal_readback_rows(slot,auth,port,schema,expected_uuid,before,original_provider_bytes):
+    # The report is the exact complete observation just checked, not a second SQL sample and
+    # not a cache for any later baseline, action, callback, stop or boot.
+    observed=snapshot(auth,port,schema,expected_uuid)
+    require(observed==before,'normal original-ID readback created an effect/high-water change')
+    require((slot.root/'withdrawal-provider.json').read_bytes()==original_provider_bytes,'normal boot repeated provider submit/query')
+    return public_snapshot(observed)
+
+
 def completed_held_rows(auth,port,schema,expected_uuid,stable):
     # The app has already passed its ready-stop fence. One complete post-stop read supplies the
     # original full-table report AND all three allocator fields at the same observation point.
@@ -635,9 +675,8 @@ def run(name,schema,out,credentials):
             checkpoint(slot,report,report_path,'RESTORED_NORMAL_READBACK','NORMAL_ORIGINAL_READBACK')
             require(good(slot.http(receipt_path,a))==original_receipt,'normal test-owned original receipt readback')
             good(slot.http('/api/wallet/withdraws',a,{}));good(slot.http('/business/cashwithdraw/requery/'+str(wid),admin,{}))
-            require(snapshot(auth,tp,schema,identities['target']['uuid'])==before,'normal original-ID readback created an effect/high-water change')
-            require((slot.root/'withdrawal-provider.json').read_bytes()==original_provider_bytes,'normal boot repeated provider submit/query')
-            report['normalReadbackRows']=public_snapshot(snapshot(auth,tp,schema,identities['target']['uuid']))
+            report['normalReadbackRows']=normal_readback_rows(slot,auth,tp,schema,identities['target']['uuid'],
+                    before,original_provider_bytes)
             slot.verify_network();slot.stop();report['normalReadbackCompleted']=now()
             # No normal boot occurs below: introducing the independent late SUCCESS intentionally creates
             # a difference that remains held. It is never auto-repaired/reissued or marked READY.
@@ -726,6 +765,7 @@ def run(name,schema,out,credentials):
                                          'case':'held-full-http-and-actual-wake','mode':mode,'owners':actual,
                                          'lateCallback':'FACT_AND_WAIT_INBOX_PRESERVED_NO_ECONOMIC_CONSUME','newDispatches':0})
             require(len({b['bootId'] for b in slot.boots})==5,'five distinct real application processes')
+            observe_phase_timing(slot,report,report['phase'],report.get('substage'))
             report['completeBoots']=[{k:b[k] for k in ('bootId','side','restoreMode','guardHeld','jarSha256','appCid',
                                     'javaPid','sourceSha','serverUuid','schema','schedulerStarted')} for b in slot.boots[:2]]
             report['result']='SCOPED_RESTORE_HTTP_STARTUP_AND_REAL_OWNER_HOLD_VERIFIED'
@@ -735,6 +775,7 @@ def run(name,schema,out,credentials):
             report['fullHttpApplicationStartup']='ACTUAL_SPRING_SECURITY_MVC_QUARTZ_ON_RESTORED_FULL_SCHEMA'
     except BaseException as exc:
         failure=exc;report['firstFailureType']=type(exc).__name__;report['firstFailurePhase']=report['phase']
+        observe_phase_timing(slot,report,report['phase'],report.get('substage'))
         report['firstFailureDiagnostic']=failure_diagnostic(exc,report['phase'],report.get('substage'))
         print('Restore HTTP failure diagnostic: '+json.dumps(report['firstFailureDiagnostic'],sort_keys=True),
               file=__import__('sys').stderr)
@@ -757,6 +798,7 @@ def run(name,schema,out,credentials):
         except BaseException as diagnostic:
             report['applicationDiagnostic']={'result':'UNKNOWN',
                     'failure':failure_diagnostic(diagnostic,report['phase'],report.get('substage'))}
+        if hasattr(slot,'lifecycle_budget_observation'):report['lastBudgetObservation']=slot.lifecycle_budget_observation
         if hasattr(slot,'last_http'):report['lastHttpObservation']=slot.last_http
         if hasattr(slot,'last_callback_observation'):report['lastCallbackObservation']=slot.last_callback_observation
         report['ownedAppCids']=slot.owned;report['removedAppCids']=slot.removed
