@@ -32,7 +32,9 @@ CONFIGURATION_METHODS = ('boundedPoolOverridesBothIncompatibleInheritedFloorsWit
                          'originalDruidPropertiesAssemblesAValidUninitializedThreeConnectionPool',
                          'schedulerChildHeapIsFixedOnlyForOriginalCombinedScope',
                          'combinationIdentityFileRetainsFrozenBytesAcrossIntegerNodeWidths',
-                         'combinationIdentityFileRejectsExistingAndPendingFilesBeforeSql')
+                         'combinationIdentityFileRejectsExistingAndPendingFilesBeforeSql',
+                         'protectedFactDigestPreservesJdbcScalarAndTimeFacts',
+                         'protectedFactDigestRetainsQueryAndSerializationFailures')
 RUNTIME_MAVEN_OPTIONS = '-Xms16m -Xmx128m -XX:MaxDirectMemorySize=16m -XX:ReservedCodeCacheSize=32m -XX:+UseSerialGC -Djava.io.tmpdir=/tmp -Duser.home=/tmp/home'
 SUREFIRE_MEMORY_ARGUMENTS = '-Xms16m -Xmx384m -XX:MaxDirectMemorySize=64m -XX:ReservedCodeCacheSize=64m -XX:+UseSerialGC'
 SCHEDULER_MEMORY_ARGUMENTS = '-Xmx64m'

@@ -501,6 +501,9 @@ def fixed_startup_exception_types(text):
         'java.lang.NumberFormatException', 'java.lang.SecurityException', 'java.lang.UnsupportedOperationException',
         'java.lang.ExceptionInInitializerError', 'java.lang.OutOfMemoryError', 'java.sql.SQLException',
         'org.springframework.context.ApplicationContextException',
+        'org.springframework.jdbc.CannotGetJdbcConnectionException', 'org.springframework.jdbc.BadSqlGrammarException',
+        'org.springframework.dao.DataAccessResourceFailureException', 'org.springframework.dao.QueryTimeoutException',
+        'com.fasterxml.jackson.databind.JsonMappingException', 'com.fasterxml.jackson.databind.exc.InvalidDefinitionException',
         'java.lang.ClassNotFoundException', 'java.lang.NoClassDefFoundError', 'java.lang.NoSuchMethodError',
         'java.net.BindException', 'java.sql.SQLSyntaxErrorException',
         'java.sql.SQLInvalidAuthorizationSpecException', 'java.sql.SQLNonTransientConnectionException',
@@ -529,6 +532,11 @@ def fixed_startup_source_frames(text):
         ("com.chengyinhub.business.it.GameplayProcessRecoveryChild", "seedCombination", "GameplayProcessRecoveryChild.java"): ("COMBINATION_IDENTITY_SEED", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GameplayProcessRecoveryChild.java", 237),
         ("com.chengyinhub.business.it.GameplayProcessRecoveryChild", "seedRows", "GameplayProcessRecoveryChild.java"): ("ORIGINAL_ACTOR_AND_GAME_ROWS", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GameplayProcessRecoveryChild.java", 237),
         ("com.chengyinhub.business.it.GameplayProcessRecoveryChild", "require", "GameplayProcessRecoveryChild.java"): ("ORIGINAL_FIXTURE_REQUIRE", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GameplayProcessRecoveryChild.java", 237),
+        ("com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT", "digest", "CrossDomainCombinedLoadMySqlIT.java"): ("SQL_FACT_SNAPSHOT", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java", 411),
+        ("com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT", "actorDigest", "CrossDomainCombinedLoadMySqlIT.java"): ("ACTOR_ORIGINAL_FACT_SNAPSHOT", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java", 411),
+        ("com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT", "economicDigest", "CrossDomainCombinedLoadMySqlIT.java"): ("ECONOMIC_ORIGINAL_FACT_SNAPSHOT", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java", 411),
+        ("com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT", "unknownDigest", "CrossDomainCombinedLoadMySqlIT.java"): ("UNKNOWN_ORIGINAL_FACT_SNAPSHOT", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java", 411),
+        ("com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT", "retainedDigest", "CrossDomainCombinedLoadMySqlIT.java"): ("RETAINED_ORIGINAL_FACT_SNAPSHOT", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java", 411),
         ("com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT", "realCommandsRemainIsolatedAcrossHeldProvidersAndOriginalEconomicRecovery", "CrossDomainCombinedLoadMySqlIT.java"): ("CASE_BODY", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java", 411),
         ("com.chengyinhub.business.it.CrossDomainStorageFixture", "open", "CrossDomainStorageFixture.java"): ("INDEPENDENT_ECONOMIC_ASSEMBLY", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainStorageFixture.java", 577),
         ("com.chengyinhub.business.it.CombinedControlledProviders", "<init>", "CombinedControlledProviders.java"): ("CONTROLLED_PROVIDER_CASE_ASSEMBLY", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CombinedControlledProviders.java", 120),
@@ -1172,6 +1180,10 @@ class FailureDiagnosticTest(unittest.TestCase):
         self.assertNotIn('PRIVATE', json.dumps(fixed_startup_exception_types(text)))
         self.assertEqual(['java.lang.OutOfMemoryError'], fixed_startup_exception_types(
             'Caused by: java.lang.OutOfMemoryError: PRIVATE_HEAP_OR_DIRECT_MEMORY_DETAIL'))
+        self.assertEqual(['com.fasterxml.jackson.databind.exc.InvalidDefinitionException',
+                          'org.springframework.jdbc.CannotGetJdbcConnectionException'], fixed_startup_exception_types(
+            'Caused by: com.fasterxml.jackson.databind.exc.InvalidDefinitionException: PRIVATE_VALUE\n'
+            'Suppressed: org.springframework.jdbc.CannotGetJdbcConnectionException: PRIVATE_SQL_OR_URL'))
 
     def test_startup_exception_projection_rejects_messages_frames_custom_types_and_unbounded_prefix(self):
         for text in ('private.SECRET.Exception: PRIVATE', 'message org.springframework.beans.factory.BeanCreationException',
@@ -1186,11 +1198,13 @@ class FailureDiagnosticTest(unittest.TestCase):
                 '\tat com.alibaba.druid.pool.DruidDataSource.init(DruidDataSource.java:721)\n'
                 '\tat com.chengyinhub.business.it.CrossDomainStorageFixture.open(CrossDomainStorageFixture.java:150)\n'
                 '\tat com.chengyinhub.business.it.GameplayProcessRecoveryChild.seedCombination(GameplayProcessRecoveryChild.java:116)\n'
+                '\tat com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT.digest(CrossDomainCombinedLoadMySqlIT.java:383)\n'
                 'PRIVATE_VALUE SQL password=PRIVATE_VALUE')
         self.assertEqual([{'phase': 'MASTER_DATASOURCE_FACTORY', 'sourceFrame': 'DruidConfig.java:37'},
                           {'phase': 'DRUID_POOL_INIT', 'sourceFrame': 'DruidDataSource.java:721'},
                           {'phase': 'INDEPENDENT_ECONOMIC_ASSEMBLY', 'sourceFrame': 'CrossDomainStorageFixture.java:150'},
-                          {'phase': 'COMBINATION_IDENTITY_SEED', 'sourceFrame': 'GameplayProcessRecoveryChild.java:116'}],
+                          {'phase': 'COMBINATION_IDENTITY_SEED', 'sourceFrame': 'GameplayProcessRecoveryChild.java:116'},
+                          {'phase': 'SQL_FACT_SNAPSHOT', 'sourceFrame': 'CrossDomainCombinedLoadMySqlIT.java:383'}],
                          fixed_startup_source_frames(text))
         self.assertNotIn('PRIVATE', json.dumps(fixed_startup_source_frames(text)))
 

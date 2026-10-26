@@ -1,0 +1,20 @@
+{
+  "parentSourceSha": "f41464113e2ba0916e57888349faa9455068890b",
+  "status": "SOURCE_ONLY_NOT_RUN",
+  "actualPriorFailureCause": "UNKNOWN",
+  "configurationClass": "com.chengyinhub.business.it.CombinedContextConfigurationTest",
+  "originalMethodsPreserved": 5,
+  "resultingMethodCount": 7,
+  "additionalMethods": [
+    "protectedFactDigestPreservesJdbcScalarAndTimeFacts",
+    "protectedFactDigestRetainsQueryAndSerializationFailures"
+  ],
+  "actualDigestOwner": "com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT",
+  "actualDigestMethod": "digest(JdbcTemplate,String,Object...)",
+  "unchangedCallerMethods": ["actorDigest", "economicDigest", "unknownDigest", "retainedDigest"],
+  "additionalCompileSources": [],
+  "additionalDependencies": [],
+  "newNestedHelperClasses": [],
+  "sharedConfigurationRegistrationOwner": "root",
+  "runtimeAcceptanceClaimed": false
+}
