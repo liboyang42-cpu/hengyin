@@ -1,0 +1,4 @@
+89d0fd2767dbb426c555ccf2f5656c317f4b748f9d34fc6fbdc8dab59d2f98cc  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GameplayProcessRecoveryChild.java
+0d2ced6d018b3041c4a43698ec38077a778aa1815efa51e45ca2c5fb0d37d076  ci/test_http_e2e_entry.py
+e30e66433493a69ccdb664f547849dc0a42c33ff39f6044e8cd6089873bcc688  chengyinhub-admin/src/test/tools/generic-gameplay-http-e2e.sh
+d7fc467255132ca0048d3b7d9c4b116344015a493147934c1034ed29f8b13b56  .github/workflows/gameplay-http-e2e.yml
