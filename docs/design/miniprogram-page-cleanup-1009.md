@@ -6,7 +6,9 @@
 
 | 注册页面 | DELETE | KEEP | UNSURE | 未注册孤立 Page+WXML |
 | --- | --- | --- | --- | --- |
-| 136 | **0** | **132** | **4** | 0 |
+| 148 | **0** | **144** | **4** | 0 |
+
+2026-10-26 按当前 app.json 回读为 148 页；本轮补入角色卡、定向计分、本人发票三页，均保留，未进行设备验收。
 
 2026-10-17 漫游上线新增 6 个注册页(我的队伍 + 5 个漫游工具页),均由漫游入口或漫游记录直接引用,判定 KEEP。
 
@@ -179,6 +181,9 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/userinfo/userinfo` | 否 | `chengyinhub-admin/sql/migration_merchant_npc_menu_20260824.sql:116` | KEEP |
 | `pages/mylike/mylike` | 否 | `chengyinhub-xcx/pages/shezhi/shezhi.js:154` | KEEP |
 | `pages/crop/index` | 否 | `chengyinhub-xcx/app.js:470` | KEEP |
+| `subpackageMember/character/index` | 否 | `chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js:148` | KEEP |
+| `subpackageMember/orient-score/index` | 否 | `chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js:148` | KEEP |
+| `subpackageMember/invoice/index` | 否 | `chengyinhub-xcx/pages/shezhi/shezhi.js:218` | KEEP |
 | `subpackageMember/complaint/index` | 否 | `chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:1749` | KEEP |
 | `subpackageMember/coupon-wallet/index` | 否 | `chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:1753` | KEEP |
 | `subpackageMember/coupon-qr/index` | 否 | `chengyinhub-xcx/utils/scene-registry.js:48` | KEEP |

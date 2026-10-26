@@ -12,3 +12,4 @@ page { background: var(--cy-color-bg-page); }
 .invoice-choice { border: thin solid var(--cy-color-border-subtle); }
 .invoice-choice--selected { background: var(--cy-color-bg-surface-subtle); border-color: var(--cy-color-text-primary); }
 .invoice-line { margin: var(--cy-space-3) 0; padding: var(--cy-space-2) 0; }
+.invoice-choice--pressed { opacity: 0.92; }

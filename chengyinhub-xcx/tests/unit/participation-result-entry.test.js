@@ -153,3 +153,18 @@ test('hide, detach, record changes and settled failures reject late callbacks an
   failed.component.goScore(); assert.equal(failed.events.length, 0);
   failed.component.onErrorAction(); failed.respond(topic()); failed.click('定向成绩');
 });
+
+test('hide/show after account or token switch requires fresh ownership readback', () => {
+  for (const [id, token] of [['72', 'token-b'], ['71', 'refreshed']]) {
+    const h = mount(); h.boot(); const old = h.requests[0]; h.respond(topic());
+    h.hide(); h.account(id, token); h.show();
+    assert.equal(h.requests.length, 2);
+    const before = h.writes.length;
+    old.success({ code: 200, data: topic() }); old.fail({ msg: 'late' });
+    assert.equal(h.writes.length, before);
+    assert.equal(h.component.data.resultTopicId, '');
+    h.component.goCharacter(); h.component.goScore(); assert.deepEqual(h.events, []);
+    h.respond(topic({ memberId: id })); h.click('定向成绩');
+    assert.deepEqual(h.events, [['close'], ['navigate', '/subpackageMember/orient-score/index?topicId=901&activityId=0']]);
+  }
+});

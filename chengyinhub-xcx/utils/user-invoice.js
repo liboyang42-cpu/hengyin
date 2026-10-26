@@ -32,7 +32,7 @@ function application(value, summary = false) {
       || !/^(?:0|[1-9]\d*)(?:\.\d{1,2})?$/.test(String(value.totalAmount))
       || !Array.isArray(value.orders) || !Number.isInteger(value.orderCount) || value.orderCount < 1
       || value.orderCount > 50 || value.orderCount !== value.orders.length
-        && !(summary === true && value.orders.length === 0)) throw Error('申请回执无法确认');
+        && !(summary === true && value.orders.length === 0)) throw Error('申请结果无法确认');
   const orders = value.orders.map(order);
   if (new Set(orders.map(row => row.orderId)).size !== orders.length) throw Error('申请订单无法确认');
   return { id: exactId(value.id), requestId: value.requestId, applicationNo: value.applicationNo,

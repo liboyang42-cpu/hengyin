@@ -1261837,124 +1261837,7 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:10:bindtap:tab:2",
-      "route": "subpackageMember/invoice/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageMember/invoice/index.wxml",
-        "js": "subpackageMember/invoice/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "tab",
-        "line": 10,
-        "selectorHint": "cy-btn[bindtap]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "tap",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/merchant/ledger/index?view=redemptions"
-        ],
-        "apis": [
-          "/api/invoice/detail",
-          "/api/invoice/list",
-          "/api/invoice/orders/eligible",
-          "/api/invoice/titles",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/invoice/detail",
-          "/api/invoice/list",
-          "/api/invoice/orders/eligible",
-          "/api/invoice/titles"
-        ],
-        "auxiliaryApis": [
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/invoice/detail",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/invoice/list",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/invoice/orders/eligible",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/invoice/titles",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageMember/invoice/index.js:154"
-      }
-    },
-    {
-      "id": "subpackageMember/invoice/index.wxml:103:bindtap:editTitle:22",
+      "id": "subpackageMember/invoice/index.wxml:104:bindtap:editTitle:22",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1261977,7 +1261860,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "editTitle",
-        "line": 103,
+        "line": 104,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{writing || titlePending}}",
@@ -1262072,7 +1261955,7 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:104:bindtap:deleteTitle:23",
+      "id": "subpackageMember/invoice/index.wxml:105:bindtap:deleteTitle:23",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1262095,7 +1261978,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "deleteTitle",
-        "line": 104,
+        "line": 105,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{writing}}",
@@ -1262201,7 +1262084,7 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:11:bindtap:tab:3",
+      "id": "subpackageMember/invoice/index.wxml:11:bindtap:tab:2",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1262318,7 +1262201,7 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:110:bindtap:loadRecords:24",
+      "id": "subpackageMember/invoice/index.wxml:111:bindtap:loadRecords:24",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1262341,7 +1262224,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "loadRecords",
-        "line": 110,
+        "line": 111,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{writing}}",
@@ -1262435,7 +1262318,7 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:116:bindtap:openDetail:25",
+      "id": "subpackageMember/invoice/index.wxml:117:bindtap:openDetail:25",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1262458,7 +1262341,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "openDetail",
-        "line": 116,
+        "line": 117,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1262552,7 +1262435,7 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:12:bindtap:tab:4",
+      "id": "subpackageMember/invoice/index.wxml:12:bindtap:tab:3",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1262669,7 +1262552,124 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:22:bindtap:queryOriginal:5",
+      "id": "subpackageMember/invoice/index.wxml:13:bindtap:tab:4",
+      "route": "subpackageMember/invoice/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/invoice/index.wxml",
+        "js": "subpackageMember/invoice/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "tab",
+        "line": 13,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/ledger/index?view=redemptions"
+        ],
+        "apis": [
+          "/api/invoice/detail",
+          "/api/invoice/list",
+          "/api/invoice/orders/eligible",
+          "/api/invoice/titles",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/invoice/detail",
+          "/api/invoice/list",
+          "/api/invoice/orders/eligible",
+          "/api/invoice/titles"
+        ],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/invoice/detail",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/invoice/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/invoice/orders/eligible",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/invoice/titles",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/invoice/index.js:154"
+      }
+    },
+    {
+      "id": "subpackageMember/invoice/index.wxml:23:bindtap:queryOriginal:5",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1262692,7 +1262692,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "queryOriginal",
-        "line": 22,
+        "line": 23,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{writing}}",
@@ -1262786,195 +1262786,7 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:29:bindtap:titleType:6",
-      "route": "subpackageMember/invoice/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageMember/invoice/index.wxml",
-        "js": "subpackageMember/invoice/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "titleType",
-        "line": 29,
-        "selectorHint": "cy-btn[bindtap]",
-        "visibleCondition": null,
-        "disabledCondition": "{{writing || titlePending}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "tap",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/merchant/ledger/index?view=redemptions"
-        ],
-        "apis": [
-          "/api/invoice/detail",
-          "/api/invoice/list",
-          "/api/invoice/orders/eligible",
-          "/api/invoice/titles",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/invoice/detail",
-          "/api/invoice/list",
-          "/api/invoice/orders/eligible",
-          "/api/invoice/titles"
-        ],
-        "auxiliaryApis": [
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/invoice/detail",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/invoice/list",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/invoice/orders/eligible",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/invoice/titles",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageMember/invoice/index.js:241"
-      }
-    },
-    {
-      "id": "subpackageMember/invoice/index.wxml:3:bind:back:onBack:0",
-      "route": "subpackageMember/invoice/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageMember/invoice/index.wxml",
-        "js": "subpackageMember/invoice/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-nav-bar",
-        "event": "bind:back",
-        "handler": "onBack",
-        "line": 3,
-        "selectorHint": "cy-nav-bar[bind:back]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "event-contract",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/member/index/index"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageMember/invoice/index.js:306"
-      }
-    },
-    {
-      "id": "subpackageMember/invoice/index.wxml:30:bindtap:titleType:7",
+      "id": "subpackageMember/invoice/index.wxml:30:bindtap:titleType:6",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1263091,7 +1262903,124 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:33:bindinput:input:8",
+      "id": "subpackageMember/invoice/index.wxml:31:bindtap:titleType:7",
+      "route": "subpackageMember/invoice/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/invoice/index.wxml",
+        "js": "subpackageMember/invoice/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "titleType",
+        "line": 31,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": "{{writing || titlePending}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/ledger/index?view=redemptions"
+        ],
+        "apis": [
+          "/api/invoice/detail",
+          "/api/invoice/list",
+          "/api/invoice/orders/eligible",
+          "/api/invoice/titles",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/invoice/detail",
+          "/api/invoice/list",
+          "/api/invoice/orders/eligible",
+          "/api/invoice/titles"
+        ],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/invoice/detail",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/invoice/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/invoice/orders/eligible",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/invoice/titles",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/invoice/index.js:241"
+      }
+    },
+    {
+      "id": "subpackageMember/invoice/index.wxml:34:bindinput:input:8",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1263114,7 +1263043,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "input",
-        "line": 33,
+        "line": 34,
         "selectorHint": ".invoice-input",
         "visibleCondition": null,
         "disabledCondition": "{{writing || titlePending}}",
@@ -1263208,7 +1263137,7 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:36:bindinput:input:9",
+      "id": "subpackageMember/invoice/index.wxml:37:bindinput:input:9",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1263231,7 +1263160,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "input",
-        "line": 36,
+        "line": 37,
         "selectorHint": ".invoice-input",
         "visibleCondition": null,
         "disabledCondition": "{{writing || titlePending}}",
@@ -1263325,7 +1263254,78 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:39:bindchange:defaultTitle:10",
+      "id": "subpackageMember/invoice/index.wxml:4:bind:back:onBack:0",
+      "route": "subpackageMember/invoice/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/invoice/index.wxml",
+        "js": "subpackageMember/invoice/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-nav-bar",
+        "event": "bind:back",
+        "handler": "onBack",
+        "line": 4,
+        "selectorHint": "cy-nav-bar[bind:back]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/member/index/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/invoice/index.js:306"
+      }
+    },
+    {
+      "id": "subpackageMember/invoice/index.wxml:40:bindchange:defaultTitle:10",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1263348,7 +1263348,7 @@
         "tag": "switch",
         "event": "bindchange",
         "handler": "defaultTitle",
-        "line": 39,
+        "line": 40,
         "selectorHint": "switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": "{{writing || titlePending}}",
@@ -1263442,7 +1263442,7 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:41:bindtap:saveTitle:11",
+      "id": "subpackageMember/invoice/index.wxml:42:bindtap:saveTitle:11",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1263465,7 +1263465,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "saveTitle",
-        "line": 41,
+        "line": 42,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{titlePending}}",
@@ -1263570,7 +1263570,7 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:42:bindtap:closeEditor:12",
+      "id": "subpackageMember/invoice/index.wxml:43:bindtap:closeEditor:12",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1263593,7 +1263593,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "closeEditor",
-        "line": 42,
+        "line": 43,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{writing}}",
@@ -1263637,7 +1263637,7 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:63:bindtap:refreshDetail:13",
+      "id": "subpackageMember/invoice/index.wxml:64:bindtap:refreshDetail:13",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1263660,7 +1263660,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "refreshDetail",
-        "line": 63,
+        "line": 64,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{writing}}",
@@ -1263754,7 +1263754,7 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:64:bindtap:cancel:14",
+      "id": "subpackageMember/invoice/index.wxml:65:bindtap:cancel:14",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1263777,7 +1263777,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "cancel",
-        "line": 64,
+        "line": 65,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{detail.status === 'SUBMITTED'}}",
         "disabledCondition": "{{cancelPending}}",
@@ -1263883,7 +1263883,7 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:65:bindtap:closeDetail:15",
+      "id": "subpackageMember/invoice/index.wxml:66:bindtap:closeDetail:15",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1263906,7 +1263906,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "closeDetail",
-        "line": 65,
+        "line": 66,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{writing}}",
@@ -1263950,124 +1263950,7 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:7:bind:cta:login:1",
-      "route": "subpackageMember/invoice/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageMember/invoice/index.wxml",
-        "js": "subpackageMember/invoice/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-empty",
-        "event": "bind:cta",
-        "handler": "login",
-        "line": 7,
-        "selectorHint": "cy-empty[bind:cta]",
-        "visibleCondition": "{{login}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "event-contract",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/merchant/ledger/index?view=redemptions"
-        ],
-        "apis": [
-          "/api/invoice/detail",
-          "/api/invoice/list",
-          "/api/invoice/orders/eligible",
-          "/api/invoice/titles",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/invoice/detail",
-          "/api/invoice/list",
-          "/api/invoice/orders/eligible",
-          "/api/invoice/titles"
-        ],
-        "auxiliaryApis": [
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/invoice/detail",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/invoice/list",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/invoice/orders/eligible",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/invoice/titles",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageMember/invoice/index.js:97"
-      }
-    },
-    {
-      "id": "subpackageMember/invoice/index.wxml:75:bindtap:pickTitle:16",
+      "id": "subpackageMember/invoice/index.wxml:76:bindtap:pickTitle:16",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1264090,7 +1263973,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickTitle",
-        "line": 75,
+        "line": 76,
         "selectorHint": ".invoice-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1264184,7 +1264067,124 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:82:bindtap:pickOrder:17",
+      "id": "subpackageMember/invoice/index.wxml:8:bind:cta:login:1",
+      "route": "subpackageMember/invoice/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/invoice/index.wxml",
+        "js": "subpackageMember/invoice/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-empty",
+        "event": "bind:cta",
+        "handler": "login",
+        "line": 8,
+        "selectorHint": "cy-empty[bind:cta]",
+        "visibleCondition": "{{login}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/ledger/index?view=redemptions"
+        ],
+        "apis": [
+          "/api/invoice/detail",
+          "/api/invoice/list",
+          "/api/invoice/orders/eligible",
+          "/api/invoice/titles",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/invoice/detail",
+          "/api/invoice/list",
+          "/api/invoice/orders/eligible",
+          "/api/invoice/titles"
+        ],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/invoice/detail",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/invoice/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/invoice/orders/eligible",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/invoice/titles",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/invoice/index.js:97"
+      }
+    },
+    {
+      "id": "subpackageMember/invoice/index.wxml:83:bindtap:pickOrder:17",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1264207,12 +1264207,12 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickOrder",
-        "line": 82,
+        "line": 83,
         "selectorHint": ".invoice-card",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "{{item.orderTitle}}，{{item.amount || '--'}}元",
+        "ariaLabelExpression": "{{item.orderTitle}}，{{money.amount(item.amount)}}",
         "ariaRole": "checkbox",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -1264301,7 +1264301,7 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:87:bindtap:apply:18",
+      "id": "subpackageMember/invoice/index.wxml:88:bindtap:apply:18",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1264324,7 +1264324,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "apply",
-        "line": 87,
+        "line": 88,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{pending || !selectedTitle || !selectedCount}}",
@@ -1264429,7 +1264429,7 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:88:bindtap:reload:19",
+      "id": "subpackageMember/invoice/index.wxml:89:bindtap:reload:19",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1264452,7 +1264452,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "reload",
-        "line": 88,
+        "line": 89,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{writing}}",
@@ -1264546,7 +1264546,7 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:95:bindtap:editTitle:20",
+      "id": "subpackageMember/invoice/index.wxml:96:bindtap:editTitle:20",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1264569,7 +1264569,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "editTitle",
-        "line": 95,
+        "line": 96,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{writing || titlePending}}",
@@ -1264664,7 +1264664,7 @@
       }
     },
     {
-      "id": "subpackageMember/invoice/index.wxml:96:bindtap:loadTitles:21",
+      "id": "subpackageMember/invoice/index.wxml:97:bindtap:loadTitles:21",
       "route": "subpackageMember/invoice/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1264687,7 +1264687,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "loadTitles",
-        "line": 96,
+        "line": 97,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{writing}}",

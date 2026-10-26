@@ -60,6 +60,7 @@ function harness(file, method, transport, request, sharedStorage) {
       { show: o => messages.push(o.content) }, () => ({}), () => false, () => {}, { merchantPageRestore() {}, merchantPageShow() {} }, workflow, storage,
       verification.classifyVerificationOutcome, () => {});
   const owner = { ...methodObject, clearGroupCodeTimer() {}, resetGameStationSummaries() {}, _invalidateParticipationCancellation() {},
+    setData(patch) { Object.assign(this.data, patch); },
     data: { reducedMotion: false, myAvatar: '', myNickname: '', pointsSheet: {}, id: '' },
     _profileAttached: true, _syncProfileReadIdentity: () => true, initializeProfile() {}, _syncCommunityProfile() {},
     refreshCoopPublisherAccess() {}, enterConsole() {}, _syncCancellationAccount() {} };
@@ -265,8 +266,10 @@ test('待办仅保存原owner与业务键摘要，使用既有SHA256合同', () 
 for (const [file, method] of entries) test(file + ' 真实hide/show不释放UNKNOWN，重建仍保留', () => {
   const storage = durableStorage(); const h = harness(file, method, false, undefined, storage);
   h.invoke(); h.requests[0].success({ code: 202 });
+  const pending = JSON.stringify(storage.values);
   if (h.owner.pageHide) h.owner.pageHide();
   assert.equal(typeof h.owner.pageShow, 'function'); h.owner.pageShow(); h.invoke();
+  assert.equal(JSON.stringify(storage.values), pending, 'hide/show must preserve the original UNKNOWN record');
   assert.equal(h.requests.length, 1); h.dispose();
   const next = harness(file, method, false, undefined, storage); next.invoke(); assert.equal(next.requests.length, 0);
 });

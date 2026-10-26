@@ -290,3 +290,13 @@ test('page component declarations and WXML actions resolve to real files and exe
   }
   for (const match of xml.matchAll(/\b(?:bind|catch)(?::[\w]+|[\w]+)="(\w+)"/g)) assert.equal(typeof h.page[match[1]], 'function', match[1]);
 });
+
+test('score recovery uses player-facing copy while keeping uncertainty explicit', () => {
+  const js = fs.readFileSync(pagePath, 'utf8');
+  const xml = fs.readFileSync(pagePath.replace(/\.js$/, '.wxml'), 'utf8');
+  assert.doesNotMatch(js + xml, /回执|服务端/);
+  const h = harness(); h.read(); h.page.sync(); h.confirm(); h.writes()[0].fail({ errMsg: 'network' });
+  assert.equal(h.page.data.pending.kind, 'SYNC');
+  assert.match(h.page.data.notice, /仍无法确认本次同步是否完成.*请勿重复同步/);
+  h.page.sync(); assert.equal(h.writes().length, 1);
+});

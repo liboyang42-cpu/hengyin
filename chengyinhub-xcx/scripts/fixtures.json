@@ -12305,6 +12305,24 @@
   "dropped": [],
   "switchKeys": []
  },
+ "D12a": {
+  "data": null,
+  "dropped": [],
+  "switchKeys": []
+ },
+ "D12b": {
+  "data": {
+   "login": true,
+   "unavailable": false
+  },
+  "dropped": [],
+  "switchKeys": []
+ },
+ "D12c": {
+  "data": null,
+  "dropped": [],
+  "switchKeys": []
+ },
  "D13": {
   "data": {
    "list": [

@@ -98,7 +98,7 @@ function projectCard(raw, topicId) {
     const attributes = raw.attributes.map(row => attribute(row, partial)).filter(Boolean);
     const definitionNote = partial ? '本局属性使用开始时的配置；部分展示信息未记录'
       : raw.definitionSource === 'LEGACY_LIVE' ? '旧局未保存完整配置，当前展示可能随主题更新'
-      : raw.created ? '属性以服务端当前记录为准' : '以下为服务端模板初值，尚未创建角色';
+      : raw.created ? '属性以当前已保存的记录为准' : '以下为角色模板的初始属性，尚未创建角色';
     if (new Set(attributes.map(row => row.stateKey)).size !== attributes.length) return null;
     return { topicId: exactId(raw.topicId), created: raw.created, running: raw.running,
       attributes, definitionNote, rpg: rpgView(raw.rpg) };

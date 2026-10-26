@@ -1,3 +1,4 @@
+<wxs src="../../utils/wxs/money.wxs" module="money" />
 <view class="theme-dark invoice-page">
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar custom-back bind:back="onBack" />
@@ -50,13 +51,13 @@
           <text class="invoice-note" selectable>申请编号：{{detail.applicationNo}}</text>
           <text class="invoice-value">{{detail.titleName}}</text>
           <text class="invoice-note" wx:if="{{detail.taxNoMasked}}">税号：{{detail.taxNoMasked}}</text>
-          <text class="invoice-value">合计 ¥{{detail.totalAmount}} · {{detail.orderCount || 0}} 笔订单</text>
+          <text class="invoice-value">合计 {{money.amount(detail.totalAmount)}} · {{detail.orderCount || 0}} 笔订单</text>
           <text class="invoice-note" wx:if="{{detail.invoiceNo}}" selectable>发票号：{{detail.invoiceNo}}</text>
           <text class="invoice-note" wx:if="{{detail.rejectReason}}">驳回原因：{{detail.rejectReason}}</text>
           <text class="invoice-note" wx:if="{{detail.issuedAt}}">开具时间：{{detail.issuedAt}}</text>
           <view class="invoice-line" wx:for="{{detail.orders}}" wx:key="orderId">
             <text class="invoice-value">{{item.orderTitle}} {{item.ticketName}}</text>
-            <text class="invoice-note" selectable>订单 {{item.orderId}} · ¥{{item.amount}}</text>
+            <text class="invoice-note" selectable>订单 {{item.orderId}} · {{money.amount(item.amount)}}</text>
           </view>
           <text class="invoice-note" wx:if="{{cancelPending}}">撤回结果待确认，请刷新详情核对，勿重复撤回。</text>
           <view class="invoice-actions">
@@ -72,16 +73,16 @@
         <block wx:else>
           <text class="invoice-title">选择发票抬头</text>
           <cy-empty wx:if="{{!titles.length}}" title="暂无发票抬头" sub="请先在抬头管理中新增。" />
-          <view wx:for="{{titles}}" wx:key="id" class="invoice-card invoice-choice {{selectedTitle === item.id ? 'invoice-choice--selected' : ''}}" data-id="{{item.id}}" bindtap="pickTitle" aria-role="radio" aria-checked="{{selectedTitle === item.id}}" aria-disabled="{{pending || writing}}" aria-label="{{item.titleName}}">
+          <view wx:for="{{titles}}" wx:key="id" class="invoice-card invoice-choice {{selectedTitle === item.id ? 'invoice-choice--selected' : ''}}" data-id="{{item.id}}" bindtap="pickTitle" hover-class="{{pending || writing ? 'none' : 'invoice-choice--pressed'}}" aria-role="radio" aria-checked="{{selectedTitle === item.id}}" aria-disabled="{{pending || writing}}" aria-label="{{item.titleName}}">
             <text class="invoice-value">{{selectedTitle === item.id ? '已选 · ' : ''}}{{item.titleName}}{{item.isDefault ? ' · 默认' : ''}}</text>
             <text class="invoice-note" wx:if="{{item.taxNoMasked}}">{{item.taxNoMasked}}</text>
           </view>
           <text class="invoice-title">选择订单 · 已选 {{selectedCount || 0}} 笔</text>
-          <text class="invoice-note">仅显示本人已支付、未退款、未开票订单，一次最多50笔。金额以提交后回执为准。</text>
+          <text class="invoice-note">仅显示本人已支付、未退款、未开票订单，一次最多50笔。金额以提交后的申请详情为准。</text>
           <cy-empty wx:if="{{!orders.length}}" title="暂无可开票订单" />
-          <view wx:for="{{orders}}" wx:key="orderId" class="invoice-card invoice-choice {{item.selected ? 'invoice-choice--selected' : ''}}" data-id="{{item.orderId}}" bindtap="pickOrder" aria-role="checkbox" aria-checked="{{item.selected}}" aria-disabled="{{pending || writing}}" aria-label="{{item.orderTitle}}，{{item.amount || '--'}}元">
+          <view wx:for="{{orders}}" wx:key="orderId" class="invoice-card invoice-choice {{item.selected ? 'invoice-choice--selected' : ''}}" data-id="{{item.orderId}}" bindtap="pickOrder" hover-class="{{pending || writing ? 'none' : 'invoice-choice--pressed'}}" aria-role="checkbox" aria-checked="{{item.selected}}" aria-disabled="{{pending || writing}}" aria-label="{{item.orderTitle}}，{{money.amount(item.amount)}}">
             <text class="invoice-value">{{item.selected ? '已选 · ' : ''}}{{item.orderTitle}} {{item.ticketName}}</text>
-            <text class="invoice-note">¥{{item.amount}} · {{item.paymentTime}}</text>
+            <text class="invoice-note">{{money.amount(item.amount)}} · {{item.paymentTime}}</text>
             <text class="invoice-note" selectable>订单 {{item.orderId}}</text>
           </view>
           <cy-btn variant="primary" loading="{{writing}}" disabled="{{pending || !selectedTitle || !selectedCount}}" bindtap="apply">提交发票申请</cy-btn>
@@ -110,7 +111,7 @@
         <cy-btn variant="ghost" loading="{{recovering}}" disabled="{{writing}}" bindtap="loadRecords">刷新申请记录</cy-btn>
         <cy-empty wx:if="{{!records.length && !recovering}}" title="暂无发票申请" sub="待确认申请暂未出现时，请继续核对原请求。" />
         <view wx:for="{{records}}" wx:key="id" class="invoice-card">
-          <text class="invoice-title">{{item.statusText}} · ¥{{item.totalAmount}}</text>
+          <text class="invoice-title">{{item.statusText}} · {{money.amount(item.totalAmount)}}</text>
           <text class="invoice-value">{{item.titleName}}</text>
           <text class="invoice-note">{{item.applicationNo}}</text>
           <cy-btn variant="secondary" size="sm" data-id="{{item.id}}" bindtap="openDetail">查看详情</cy-btn>

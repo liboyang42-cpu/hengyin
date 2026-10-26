@@ -217,7 +217,7 @@ Page({
     this.mutate('apply', { titleId, orderIds }, 'apply', (value, requestId) => {
       const row = invoice.application(value);
       if (row.requestId !== requestId || typeof value.replayed !== 'boolean'
-          || row.orders.length !== orderIds.length || !orderIds.every(id => row.orders.some(order => order.orderId === id))) throw Error('原请求回执不匹配');
+          || row.orders.length !== orderIds.length || !orderIds.every(id => row.orders.some(order => order.orderId === id))) throw Error('查询结果与原申请不一致');
       return row;
     }, row => {
       this.clearContext(row.requestId);

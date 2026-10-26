@@ -122,7 +122,7 @@ Page({
     if (this._recovering || this.data.busy || !this._pending || !this._pending.length) return;
     const pending = this._pending[0];
     if (pending.kind === 'SYNC' || !pending.requestId) {
-      this.setData({ notice: '同步结果待确认；已刷新计分。此接口没有原请求回执，请勿重复同步，无法确认时联系平台处理。' }); return;
+      this.setData({ notice: '同步结果待确认；已刷新计分，但仍无法确认本次同步是否完成。请勿重复同步，无法确认时联系平台处理。' }); return;
     }
     const capture = this.capture(), sessionId = this.data.score && this.data.score.sessionId;
     if (!sessionId) return;
@@ -130,7 +130,7 @@ Page({
     const unknown = () => {
       if (!this.current(capture)) return;
       this._recovering = false;
-      this.setData({ notice: '操作结果仍待确认；未查到回执不能证明未提交，请勿重复操作。' });
+      this.setData({ notice: '操作结果仍待确认；暂未查到记录不代表提交失败，请勿重复操作。' });
     };
     app.sendRequest({ url: BASE + '/receipt', method: 'GET', data: { kind: pending.kind, sessionId, idempotencyKey: pending.requestId }, hideLoading: true,
       success: response => {
@@ -141,7 +141,7 @@ Page({
             || !this._workflow.confirmRequest(pending.key, pending.requestId)) { unknown(); return; }
         this._pending.shift();
         this.setData({ pending: this._pending[0] || null, form: '', reason: '', entryId: '', nodeId: '',
-          notice: pending.kind === 'SETTLE' ? '已读回本局结算回执' : '已读回原请求记录，处理进度以列表为准' });
+          notice: pending.kind === 'SETTLE' ? '已查到本局结算结果' : '已查到原申请记录，处理进度以列表为准' });
         if (this._pending.length) this.recover();
         else this.load();
       }, fail: (body, status) => {
@@ -195,7 +195,7 @@ Page({
     const capture = this.capture();
     this._confirming = true;
     const titles = { SYNC: '同步已通过任务', SETTLE: '结算本局成绩', APPEAL: '提交计分申诉', DISPUTE: '提交成绩争议' };
-    modal.show({ title: titles[kind], content: kind === 'SETTLE' ? '按服务端本局成绩结算，积分与探索值以结算回执为准。'
+    modal.show({ title: titles[kind], content: kind === 'SETTLE' ? '按本局已记录的成绩结算，积分与探索值以结算结果为准。'
       : kind === 'SYNC' ? '将本局已通过任务同步入账，已结算的对局不再入账。' : '提交后进入平台复核，提交成功不代表已采纳。\n' + data.reason,
     confirmText: '确认提交', cancelText: '取消', success: result => {
       this._confirming = false;
@@ -228,7 +228,7 @@ Page({
       if (!this.current(capture)) return;
       this.setData({ busy: false });
       if (result.status === 'success') {
-        this.setData({ form: '', reason: '', entryId: '', nodeId: '', notice: kind === 'SETTLE' ? '已取得本局结算回执' : kind === 'SYNC' ? '任务同步已确认' : '已提交复核，请等待处理' });
+        this.setData({ form: '', reason: '', entryId: '', nodeId: '', notice: kind === 'SETTLE' ? '已取得本局结算结果' : kind === 'SYNC' ? '任务同步已确认' : '已提交复核，请等待处理' });
         this.load();
       } else if (result.status === 'failed') {
         const state = view.failure(result.response, result.httpStatus);

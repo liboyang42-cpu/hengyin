@@ -322,3 +322,21 @@ test('WXML actions reference real Page methods and registered cy components with
   for (const match of styles.matchAll(/var\((--[\w-]+)/g)) assert.ok(tokens.includes(match[1] + ':'), match[1]);
   assert.doesNotMatch(styles, /#[0-9a-f]{3,8}\b|\d+rpx/i);
 });
+
+test('invoice choices have disabled-aware press feedback and shared empty-safe money display', () => {
+  const xml = fs.readFileSync(PAGE.replace(/\.js$/, '.wxml'), 'utf8');
+  const css = fs.readFileSync(PAGE.replace(/\.js$/, '.wxss'), 'utf8');
+  for (const handler of ['pickTitle', 'pickOrder']) {
+    const control = [...xml.matchAll(/<view\b[^>]*>/g)].find(row => row[0].includes('bindtap="' + handler + '"'))[0];
+    assert.ok(control.includes("hover-class=\"{{pending || writing ? 'none' : 'invoice-choice--pressed'}}\""));
+  }
+  assert.match(css, /\.invoice-choice--pressed\s*\{\s*opacity: 0\.92;/);
+  assert.doesNotMatch(xml, /¥\{\{/);
+  assert.match(xml, /<wxs src="\.\.\/\.\.\/utils\/wxs\/money\.wxs" module="money" \/>/);
+  for (const field of ['detail.totalAmount', 'item.amount', 'item.totalAmount']) assert.ok(xml.includes('money.amount(' + field + ')'));
+  const money = { exports: {} };
+  new Function('module', fs.readFileSync(path.join(ROOT, 'utils/wxs/money.wxs'), 'utf8'))(money);
+  assert.equal(money.exports.amount(null), '—');
+  assert.equal(money.exports.amount(0), '¥0');
+  assert.equal(money.exports.amount('12.34'), '¥12.34');
+});
