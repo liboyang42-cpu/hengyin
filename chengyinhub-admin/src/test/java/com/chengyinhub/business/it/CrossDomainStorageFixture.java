@@ -80,6 +80,7 @@ final class CrossDomainStorageFixture implements AutoCloseable {
     long poisonId, healthyId;
     Reference payment;
     volatile Map<String, Object> subscriptionRead = Map.of();
+    volatile Map<String, Object> photoPrepareFailure = Map.of("phase", "NOT_OBSERVED");
     // mysql-8.0.45 trx0i_s.cc: can_cache_be_updated requires STRICTLY >100ms since end_read.
     static final long TRX_CACHE_MIN_IDLE_NANOS = TimeUnit.MILLISECONDS.toNanos(100);
     private long lastTrxCacheReadEndedNanos = System.nanoTime();
@@ -534,6 +535,50 @@ final class CrossDomainStorageFixture implements AutoCloseable {
     PhotoCheckIntentCommand command(int number) {
         return new PhotoCheckIntentCommand(MEMBER, 100L + number, 0L, 80L, 11L, 80L, null, null, 1, 7, 1,
                 "default", "t19-action-" + number, String.format("%064x", number), "media-asset:42", "controlled requirement", "e".repeat(64));
+    }
+    PhotoCheckIntentView preparePhoto(PhotoCheckIntentService service, PhotoCheckIntentCommand command) {
+        String[] phase = {"TX_BEGIN"};
+        try {
+            return tx.execute(status -> {
+                phase[0] = "PHOTO_PREPARE";
+                return service.prepare(command);
+            });
+        } catch (RuntimeException failure) {
+            photoPrepareFailure = photoPrepareFailure(phase[0], failure);
+            throw failure; // Preserve the original exception, cause, rollback and non-success outcome.
+        }
+    }
+    /** Fixed diagnostic vocabulary only; never exception text, SQL, identity or configuration values. */
+    static Map<String,Object> photoPrepareFailure(String phase, Throwable failure) {
+        Set<String> reviewedTypes = Set.of("java.lang.IllegalStateException", "java.lang.IllegalArgumentException",
+                "java.sql.SQLException", "java.sql.SQLTimeoutException", "java.sql.SQLTransientConnectionException",
+                "java.sql.SQLNonTransientConnectionException", "java.sql.SQLIntegrityConstraintViolationException",
+                "java.sql.SQLSyntaxErrorException", "java.sql.SQLTransactionRollbackException",
+                "org.springframework.transaction.CannotCreateTransactionException",
+                "org.springframework.jdbc.CannotGetJdbcConnectionException",
+                "org.springframework.dao.DataAccessResourceFailureException",
+                "org.springframework.dao.TransientDataAccessResourceException",
+                "org.springframework.dao.CannotAcquireLockException", "org.springframework.dao.QueryTimeoutException",
+                "org.mybatis.spring.MyBatisSystemException", "com.chengyinhub.common.exception.ServiceException");
+        Set<String> reviewedStates = Set.of("08001", "08003", "08006", "08S01", "23000", "40001", "42000", "42S02", "HY000", "HYT00", "HYT01");
+        Set<Integer> reviewedCodes = Set.of(0, 1040, 1045, 1049, 1054, 1062, 1146, 1205, 1213, 1317, 2003, 2006, 2013);
+        Set<Throwable> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+        Set<String> types = new TreeSet<>();
+        List<Map<String,Object>> sql = new ArrayList<>();
+        Throwable current = failure;
+        for (int depth = 0; current != null && depth < 8 && seen.add(current); depth++, current = current.getCause()) {
+            String type = current.getClass().getName();
+            types.add(reviewedTypes.contains(type) ? type : "UNKNOWN_TYPE");
+            if (current instanceof java.sql.SQLException database) {
+                for (int chained = 0; database != null && chained < 4; chained++, database = database.getNextException()) {
+                    String state = database.getSQLState(); int code = database.getErrorCode();
+                    sql.add(Map.of("sqlState", state != null && reviewedStates.contains(state) ? state : "UNKNOWN",
+                            "vendorCode", reviewedCodes.contains(code) ? Integer.toString(code) : "UNKNOWN"));
+                }
+            }
+        }
+        return Map.of("phase", Set.of("TX_BEGIN", "PHOTO_PREPARE").contains(phase) ? phase : "UNKNOWN",
+                "exceptionTypes", List.copyOf(types), "sql", List.copyOf(sql));
     }
     String field(long intent, String column) {
         assertTrue(Set.of("nonce", "reservation", "state", "provider_state").contains(column));

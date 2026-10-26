@@ -139,7 +139,7 @@ class CrossDomainCombinedLoadMySqlIT {
                 List<Future<PhotoCheckIntentView>> pending = new ArrayList<>();
                 for (int i = 0; i < 4; i++) {
                     var service = i < 2 ? left : right; var command = storage.command(i + 2); commands.add(command);
-                    var intent = storage.tx.execute(tx -> service.prepare(command)); assertNotNull(intent); original.add(intent);
+                    var intent = storage.preparePhoto(service, command); assertNotNull(intent); original.add(intent);
                     pending.add(transport.callers.submit(() -> service.executeOnce(CrossDomainStorageFixture.MEMBER, intent.intentId(), command.requestFingerprint())));
                 }
                 assertTrue(transport.aiEntered.await(5, TimeUnit.SECONDS));
@@ -284,7 +284,11 @@ class CrossDomainCombinedLoadMySqlIT {
                 catch (Throwable cleanup) { if (primary != null) primary.addSuppressed(cleanup); else throw cleanup; }
               }
             }
-        } catch (Throwable failure) { primary = failure; evidence.put("result", "FAIL_OR_UNKNOWN"); throw failure; }
+        } catch (Throwable failure) {
+            primary = failure; evidence.put("result", "FAIL_OR_UNKNOWN");
+            evidence.put("photoPreparationFailure", storage.photoPrepareFailure);
+            throw failure;
+        }
         finally {
             Throwable cleanupFailure = null;
             foreground.shutdownNow(); delivery.shutdownNow();
