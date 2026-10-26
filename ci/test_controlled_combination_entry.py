@@ -68,6 +68,7 @@ class ControlledCombinationEntryControls(unittest.TestCase):
         budget = budget_controls_source.CombinedBudgetControls().subject_report()
         budget.update(sourceSha=receipt['sourceSha'], runId=report['runId'], attempt=report['runAttempt'],
                       database=receipt['database'])
+        budget['mysqlBootstrap'].update({key: budget[key] for key in ('sourceSha', 'runId', 'attempt', 'class')})
         budget['source']['artifactJarSha256'] = receipt['jarSha256']
         budget['javaProcesses'][1]['namespacePid'] = report['javaPid']
         (directory / 'combined-http-budget.json').write_text(json.dumps(budget))
@@ -103,6 +104,29 @@ class ControlledCombinationEntryControls(unittest.TestCase):
                     target.write_text(json.dumps(value))
                 with self.subTest(mutation=mutation), self.assertRaises(ValueError):
                     entry.scoped_summary([path], 'a' * 40, 'controlled-combination')
+
+    def test_no_receipt_cli_writes_failed_scope_without_borrowing_old_classes_or_cleanup(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); receipts = root / 'receipts'; receipts.mkdir()
+            output = root / 'summary.json'
+            args = ['entry', 'summarize', '--receipts', str(receipts), '--source', 'a' * 40,
+                    '--scope', 'controlled-combination', '--output', str(output)]
+            with mock.patch('sys.argv', args), self.assertRaises(ValueError):
+                entry.cli()
+            result = json.loads(output.read_text())
+            self.assertEqual('FAIL_HTTP_FIXTURE_ONLY', result['state'])
+            self.assertEqual([SUITE], result['missingClasses']); self.assertEqual([], result['receipts'])
+            self.assertEqual('NO_VERIFIED_HTTP_RECEIPT', result['executionEvidence'])
+            self.assertFalse(result['cleanupAllVerified']); self.assertNotIn('tests', result)
+            self.assertFalse(result['wholeSystemCapacityAccepted']); self.assertFalse(result['q4q8Complete'])
+            self.assertFalse(result['businessAccepted']); self.assertFalse(result['migrationAccepted'])
+            output.unlink()
+            _, receipt = controls_source.ControlledCombinationControls().fixture()
+            receipt['classes'] = ['GenericGameplayHttpE2eIT']
+            (receipts / 'receipt.json').write_text(json.dumps(receipt))
+            with mock.patch('sys.argv', args), self.assertRaises(ValueError):
+                entry.cli()
+            self.assertFalse(output.exists())
 
     def test_explicit_partial_summary_never_borrows_original_three_suites(self):
         with tempfile.TemporaryDirectory() as directory, mock.patch.dict(os.environ, GITHUB_RUN_ID='123', GITHUB_RUN_ATTEMPT='2'):

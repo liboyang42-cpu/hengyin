@@ -43,6 +43,14 @@ public final class PaymentCallbackInboxStubs
     public static IWxPaymentCallbackInboxService passThrough(PlatformTransactionManager transactionManager,
             com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService verifiedFacts)
     {
+        return passThrough(transactionManager, verifiedFacts, null);
+    }
+
+    /** Optional test-only failure observation; mutation, rollback and false-result semantics remain unchanged. */
+    public static IWxPaymentCallbackInboxService passThrough(PlatformTransactionManager transactionManager,
+            com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService verifiedFacts,
+            java.util.function.Consumer<RuntimeException> failureObserver)
+    {
         IWxPaymentCallbackInboxService inbox = mock(IWxPaymentCallbackInboxService.class);
         Map<String, WxPaymentCallbackInbox> rows = new ConcurrentHashMap<>();
         Map<String, com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference> references = new ConcurrentHashMap<>();
@@ -77,6 +85,7 @@ public final class PaymentCallbackInboxStubs
             }
             catch (RuntimeException failed)
             {
+                if (failureObserver != null) failureObserver.accept(failed);
                 return false;
             }
         });

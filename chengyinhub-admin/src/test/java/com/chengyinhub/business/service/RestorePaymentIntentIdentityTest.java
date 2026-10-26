@@ -54,4 +54,45 @@ class RestorePaymentIntentIdentityTest {
                 () -> RestoreBusinessReconciliationFixture.frozenAttempt(row, order(), "ORIGINAL_ALIAS"));
         }
     }
+
+    @Test
+    void callbackReasonMustBeFromTheExactOriginalAlarmEnvelope() {
+        var alarm = org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.AlarmService.class);
+        alarm.alarmThrottled("payment.callback.registration", "支付回调报名处理失败", "order=ORIGINAL reason=amount_mismatch result=FAIL");
+        assertEquals(RestoreBusinessReconciliationFixture.CallbackReason.AMOUNT_MISMATCH,
+                RestoreBusinessReconciliationFixture.observedCallbackReason(alarm, "ORIGINAL"));
+        assertEquals(RestoreBusinessReconciliationFixture.CallbackReason.UNKNOWN,
+                RestoreBusinessReconciliationFixture.observedCallbackReason(alarm, "OTHER"));
+        org.mockito.Mockito.clearInvocations(alarm);
+        alarm.alarmThrottled("payment.callback.registration", "支付回调报名处理失败", "order=ORIGINAL reason=PRIVATE_SECRET_CANARY result=FAIL");
+        alarm.alarmThrottled("foreign", "支付回调报名处理失败", "order=ORIGINAL reason=amount_mismatch result=FAIL");
+        assertEquals(RestoreBusinessReconciliationFixture.CallbackReason.UNKNOWN,
+                RestoreBusinessReconciliationFixture.observedCallbackReason(alarm, "ORIGINAL"));
+    }
+
+    @Test
+    void callbackDiagnosticPreservesMutationCauseWithoutPublishingPayloadOrArbitraryReturnValue() {
+        var failure = new RestoreBusinessReconciliationFixture.CallbackRejected("PRIVATE_SECRET_CANARY",
+            RestoreBusinessReconciliationFixture.CallbackReason.MUTATION_EXCEPTION, new NullPointerException("PRIVATE_SECRET_CANARY"));
+        var observed = RestoreChildDiagnostics.describe(failure, RestoreChildDiagnostics.Stage.AFTER_BACKUP,
+            Map.of("GITHUB_SHA", "a".repeat(40), "CHENGYIN_RESTORE_SCOPE", "b".repeat(32),
+                   "CHENGYIN_RESTORE_BOOT", "c".repeat(32), "CHENGYIN_RESTORE_COHORT", "payment-gap"));
+        assertEquals(Map.of("result", "OTHER", "reason", "MUTATION_EXCEPTION"), observed.get("callback"));
+        assertEquals(java.util.List.of("java.lang.IllegalStateException", "java.lang.NullPointerException"), observed.get("causeTypes"));
+        assertFalse(com.alibaba.fastjson2.JSON.toJSONString(observed).contains("PRIVATE"));
+    }
+
+    @Test
+    void activityUsesOnlyExactExistingCanonicalTablesWithoutFabricatingTheirShape() throws Exception {
+        String base = java.nio.file.Files.readString(java.nio.file.Path.of("../sql/base_schema_20260818.sql"));
+        for (String table : java.util.List.of("settlement_claim", "settlement_detail", "settlement_rule")) {
+            String ddl = RestoreBusinessReconciliationFixture.canonicalActivityTable(base, table);
+            assertTrue(ddl.startsWith("CREATE TABLE `" + table + "` ("));
+            assertTrue(base.contains(ddl)); assertTrue(ddl.endsWith(";"));
+        }
+        assertThrows(IllegalStateException.class,
+            () -> RestoreBusinessReconciliationFixture.canonicalActivityTable(base, "ums_member"));
+        assertThrows(IllegalStateException.class,
+            () -> RestoreBusinessReconciliationFixture.canonicalActivityTable("truncated", "settlement_claim"));
+    }
 }

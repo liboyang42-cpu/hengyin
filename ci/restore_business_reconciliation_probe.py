@@ -9,7 +9,7 @@ from __future__ import annotations
 import argparse
 import configparser
 import datetime as dt
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 import hashlib
 import importlib.util
 import json
@@ -30,9 +30,11 @@ MYSQL_IMAGE = 'mysql:8.0.45@sha256:4af1f8815716546f5b12410f7621f37f93db8dd11a184
 CASES = {'historical_paid', 'late_success', 'lost_success', 'not_sent', 'unknown'}
 TABLES = ('cms_registration', 'wx_pay_order_intent', 'wx_verified_payment_fact',
           'cms_registration_payment_fact', 'ums_member', 'ums_member_points_detail',
-          'ums_member_balance_detail', 'refund_application', 'cms_registration_scan')
+          'ums_member_balance_detail', 'refund_application', 'cms_registration_scan',
+          'cms_activity', 'oms_ticket', 'settlement_rule', 'settlement_claim', 'settlement_detail')
 HIGH_IDS = {'cms_registration': 'id',
-            'wx_verified_payment_fact': 'id', 'ums_member_points_detail': 'id'}
+            'wx_verified_payment_fact': 'id', 'ums_member_points_detail': 'id',
+            'settlement_rule': 'id', 'settlement_claim': 'id', 'settlement_detail': 'id'}
 CHILD_STAGES = {'ADMISSION', 'SOURCE_IDENTITY', 'SOURCE_SCHEMA', 'SOURCE_RESET', 'SOURCE_ASSEMBLY',
                 'HISTORICAL_PAYMENT', 'SOURCE_TIMELINE', 'BACKUP_BOUNDARY', 'AFTER_BACKUP', 'FAULT_BOUNDARY', 'OWNER_OBSERVATION'}
 CHILD_CAUSES = {'UNKNOWN', 'java.lang.IllegalArgumentException', 'java.lang.IllegalStateException',
@@ -51,8 +53,19 @@ CHILD_ORIGINS = {CHILD, 'com.chengyinhub.business.service.RegistrationFundsMybat
     'com.chengyinhub.business.service.impl.RestoreWithdrawalReconciliationFixture',
     'com.chengyinhub.business.service.impl.RestoreRefundReconciliationFixture',
     'com.chengyinhub.business.service.impl.RefundRetryAndRemainderMySqlIT',
+    'com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl',
+    'com.chengyinhub.business.service.impl.SettlementEntryServiceImpl',
+    'com.chengyinhub.business.service.impl.SettlementClaimServiceImpl',
+    'com.chengyinhub.business.service.impl.RegistrationTopicFence',
+    'com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService',
+    'com.chengyinhub.business.service.PaymentCallbackInboxStubs',
     'com.chengyinhub.business.service.impl.FundsRecoveryProcessProbe$Store',
     'com.chengyinhub.business.service.ai.RestoreVoiceReconciliationFixture'}
+CALLBACK_REASONS = {'UNKNOWN', 'MUTATION_EXCEPTION', 'PAYLOAD_MISSING', 'REQUIRED_FIELD_MISSING', 'CALLBACK_INSIDE_TRANSACTION',
+    'VERIFIED_FACT_MISSING_OR_CONFLICTING', 'AMOUNT_MISMATCH', 'INBOX_IDENTITY_CONFLICT', 'VERIFIED_CASH_RECOVERY_NOT_COMPLETED',
+    'CALLBACK_NOT_COMPLETED', 'PAYMENT_STATE_CONFLICT', 'PAYMENT_ATTEMPT_CONFLICT', 'VERIFIED_ORIGINAL_ORDER_MISMATCH',
+    'CLOSED_REGISTRATION_ORIGINAL_PAYMENT_RECOVERY_REQUIRED', 'TOPIC_CLOSED_ORIGINAL_PAYMENT_RECOVERY_REQUIRED',
+    'ORDER_DISAPPEARED', 'FAILURE_STATE_CONFLICT', 'REFUND_REQUIRES_VERIFIED_ORIGINAL_REFUND'}
 
 
 class ChildBoundaryFailure(ValueError):
@@ -89,7 +102,8 @@ def child_failure(path, expected):
             return evidence
         require(len(rows) == 1 and len(rows[0]) <= 8192, 'one bounded typed failure required')
         row = json.loads(rows[0])
-        require(set(row) == {'protocol', 'stage', 'sourceSha', 'scope', 'boot', 'cohort', 'causeTypes', 'sqlState', 'sqlErrorCode', 'origin'},
+        base_keys = {'protocol', 'stage', 'sourceSha', 'scope', 'boot', 'cohort', 'causeTypes', 'sqlState', 'sqlErrorCode', 'origin'}
+        require(set(row) in (base_keys, base_keys | {'callback'}),
                 'typed failure shape differs')
         require(row['protocol'] == 'RESTORE_CHILD_FAILURE_V1' and row['stage'] in CHILD_STAGES
                 and all(row[key] == expected[key] for key in ('sourceSha', 'scope', 'boot', 'cohort')),
@@ -104,6 +118,14 @@ def child_failure(path, expected):
         require(origin is None or (type(origin) is dict and set(origin) == {'class', 'line'}
                 and type(origin['class']) is str and origin['class'] in CHILD_ORIGINS
                 and type(origin['line']) is int and 0 < origin['line'] <= 100000), 'unreviewed source origin')
+        if 'callback' in row:
+            callback = row['callback']
+            require(expected['childClass'] == CHILD and expected['cohort'] == 'payment-gap'
+                    and row['stage'] in ('HISTORICAL_PAYMENT', 'AFTER_BACKUP')
+                    and type(callback) is dict and set(callback) == {'result', 'reason'}
+                    and type(callback['result']) is str and callback['result'] in ('FAIL', 'NULL', 'OTHER')
+                    and type(callback['reason']) is str and callback['reason'] in CALLBACK_REASONS,
+                    'unreviewed callback rejection category')
         evidence.update(diagnosticState='TYPED_FAILURE', javaFailure=row)
     except BaseException:
         evidence['diagnosticState'] = 'UNREADABLE_OR_UNTRUSTED'
@@ -406,12 +428,54 @@ def reconcile(backup, fault, restored, provider_before, provider_after):
             require(any(r['id'] == frozen['biz_id'] and r['registration_no'] == frozen['business_out_trade_no']
                         for r in dictionaries(snap, 'cms_registration')), 'orphan original payment intent')
         require(not dictionaries(snap, 'ums_member_balance_detail') and not dictionaries(snap, 'refund_application'), 'fixture touched unowned cash/refund boundary')
+        activity_receivables(snap)
     return {'drill': 'PAYMENT_RESTORE_DIFFERENCES_OBSERVED', 'candidateState': 'BLOCKED',
             'dispatchRelease': False, 'differences': differences, 'highWaterRisks': risks, 'intentAttemptHighWater': intent_water,
             'allDomainsRecoveryFence': 'NOT_IMPLEMENTED_BY_THIS_SOURCE',
             'notCovered': ['live-provider verification or money', 'refund/transfer/provider-task production reconciliation',
                            'safe missing-intent backfill', 'production-wide recovery epoch/dispatch fence',
                            'two-person recovery release', 'acceptable RPO/RTO threshold']}
+
+
+def activity_receivables(snapshot):
+    """Read only the original pending activity components; this never creates, pays or repairs a claim."""
+    claims = dictionaries(snapshot, 'settlement_claim'); details = dictionaries(snapshot, 'settlement_detail')
+    paid = [r for r in dictionaries(snapshot, 'cms_registration')
+            if r['owner_type'] == '2' and r['payment_status'] == r['registration_status'] == '2']
+    expected_details = 0
+    for order in paid:
+        activities = [r for r in dictionaries(snapshot, 'cms_activity') if r['id'] == order['owner_id']]
+        require(len(activities) == 1, 'original paid activity missing')
+        merchant = activities[0]['member_id']; gross = Decimal(order['payable_amount'])
+        platform = (gross * Decimal(order['fee_platform_rate'])).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        expected = {'merchant': (merchant, gross - platform)}
+        if platform > 0: expected['platform'] = ('0', platform)
+        original = [r for r in details if r['source_type'] == 'activity' and r['source_id'] == order['id']]
+        require(len(original) == len(expected) and {r['receiver_type'] for r in original} == set(expected),
+                'original activity receivable roster differs')
+        for detail in original:
+            receiver, amount = expected[detail['receiver_type']]
+            require(detail['receiver_id'] == receiver and detail['merchant_id'] == merchant
+                    and detail['batch_id'] == '0' and detail['status'] == '0'
+                    and detail['entry_kind'] == detail['event_key'] == 'ORIGIN'
+                    and Decimal(detail['commission_amount']) == 0
+                    and Decimal(detail['gross_amount']) == Decimal(detail['settlement_amount']) == amount
+                    and detail['idempotency_key'] == 'activity:' + order['id'] + ':' + detail['receiver_type'] + ':' + receiver,
+                    'original activity receivable identity/money differs')
+            owned = [r for r in claims if r['id'] == detail['claim_id']]
+            require(len(owned) == 1, 'original activity claim missing')
+            claim = owned[0]
+            require(claim['commercial_context_type'] == 'ACTIVITY' and claim['commercial_context_id'] == order['owner_id']
+                    and claim['fulfillment_type'] == 'REGISTRATION' and claim['fulfillment_id'] == order['id']
+                    and claim['beneficiary_role'] == detail['receiver_type'].upper() and claim['beneficiary_id'] == receiver
+                    and claim['service_unit'] == 'MERCHANT_PARTICIPATION' and claim['settlement_route'] == 'REGISTRATION_SPLIT'
+                    and claim['source_contract_type'] == 'DIRECT_REGISTRATION' and claim['source_contract_id'] == order['id']
+                    and claim['status'] == 'ACTIVE', 'original activity claim binding differs')
+        require(sum((Decimal(r['settlement_amount']) for r in original), Decimal(0)) == gross,
+                'original activity receivable cash does not conserve')
+        expected_details += len(expected)
+    require(len(details) == len(claims) == expected_details
+            and len({r['claim_id'] for r in details}) == len(details), 'orphan or duplicate activity economic effect')
 
 
 def wait_phase(child, phase, deadline):

@@ -478,11 +478,14 @@ def cli():
             result = scoped_summary(paths, a.source, a.scope)
         except (ValueError, RuntimeError):
             if a.scope == 'controlled-combination':
-                if len(paths) != 1 or receipt_identity(json.loads(paths[0].read_text()), a.source)['classes'] != [COMBINATION_SUITE]:
-                    raise ValueError('Controlled combination excludes missing/foreign receipts') from None
+                if paths and (len(paths) != 1 or receipt_identity(json.loads(paths[0].read_text()), a.source)['classes'] != [COMBINATION_SUITE]):
+                    raise ValueError('Controlled combination excludes foreign/duplicate receipts') from None
                 result = failure_summary(paths, a.source)
                 result.update(scope='PARTIAL_CONTROLLED_COMBINATION_SCOPE', completeHttpSuiteAccepted=False,
-                              wholeSystemCapacityAccepted=False, q4q8Complete=False, missingClasses=[])
+                              wholeSystemCapacityAccepted=False, q4q8Complete=False,
+                              missingClasses=[] if paths else [COMBINATION_SUITE])
+                if not paths:
+                    result.update(executionEvidence='NO_VERIFIED_HTTP_RECEIPT', cleanupAllVerified=False)
                 a.output.parent.mkdir(parents=True, exist_ok=True)
                 a.output.write_text(json.dumps(result, indent=2) + '\n')
                 raise ValueError('Controlled combination did not pass its scoped verifier') from None

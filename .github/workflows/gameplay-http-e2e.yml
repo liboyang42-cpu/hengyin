@@ -89,6 +89,12 @@ jobs:
           fi
       - name: Start pinned private MySQL on loopback
         run: |
+          if [[ "$CHENGYIN_HTTP_E2E_TESTS" == CrossDomainCombinedLoadMySqlIT ]]; then
+            trap 'original=$?; trap - ERR; python3 -I ci/combined_http_budget.py bootstrap-failure "$original" || true; exit "$original"' ERR
+            trap 'trap - ERR; python3 -I ci/combined_http_budget.py bootstrap-failure 130 || true; exit 130' INT
+            trap 'trap - ERR; python3 -I ci/combined_http_budget.py bootstrap-failure 143 || true; exit 143' TERM HUP
+            python3 -I ci/combined_http_budget.py bootstrap-init
+          fi
           password="$(openssl rand -hex 24)"
           echo "::add-mask::$password"
           echo "CHENGYIN_MYBATIS_IT_PASSWORD=$password" >> "$GITHUB_ENV"
@@ -96,6 +102,7 @@ jobs:
           name="cy-http-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${CHENGYIN_HTTP_E2E_TESTS,,}"
           echo "HTTP_MYSQL_CONTAINER=$name" >> "$GITHUB_ENV"
           if [[ "$CHENGYIN_HTTP_E2E_TESTS" == CrossDomainCombinedLoadMySqlIT ]]; then
+            export HTTP_MYSQL_CONTAINER="$name" CHENGYIN_MYBATIS_IT_PASSWORD="$password"
             for image in \
               maven:3.9.11-eclipse-temurin-21@sha256:6fdc855a6ed81d288ca7ca37ac6ff5e9308b612485c0801d70b25a858c83d237 \
               redis:7.4-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499; do
@@ -103,9 +110,11 @@ jobs:
             done
             network="cy-http-budget-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
             echo "HTTP_BUDGET_NETWORK=$network" >> "$GITHUB_ENV"
+            export HTTP_BUDGET_NETWORK="$network"
             network_cid="$(docker network create --internal \
               --label "chengyin.http.run=$GITHUB_RUN_ID" --label "chengyin.http.attempt=$GITHUB_RUN_ATTEMPT" \
               --label "chengyin.http.source=$SOURCE_SHA" --label "chengyin.http.class=$CHENGYIN_HTTP_E2E_TESTS" "$network")"
+            export HTTP_BUDGET_NETWORK_ID="$network_cid"
             echo "HTTP_BUDGET_NETWORK_ID=$network_cid" >> "$GITHUB_ENV"
             mysql_cid="$(docker run -d --name "$name" --network "$network" \
               --memory=1g --memory-swap=1g --cpus=1 --pids-limit=256 --tmpfs /var/lib/mysql:rw,size=768m \
@@ -114,6 +123,7 @@ jobs:
               -e MYSQL_ROOT_PASSWORD -e MYSQL_ROOT_HOST=% -p 127.0.0.1:33080:3306 \
               mysql:8.0.45@sha256:4af1f8815716546f5b12410f7621f37f93db8dd11a184706ef59111930b8c2ff \
               --default-time-zone=+08:00)"
+            export HTTP_MYSQL_CID="$mysql_cid"
             echo "HTTP_MYSQL_CID=$mysql_cid" >> "$GITHUB_ENV"
           else
           docker run -d --name "$name" --label "chengyin.http.run=$GITHUB_RUN_ID" \
@@ -122,12 +132,17 @@ jobs:
             --default-time-zone=+08:00
           fi
           export MYSQL_PWD="$password"
+          if [[ "$CHENGYIN_HTTP_E2E_TESTS" == CrossDomainCombinedLoadMySqlIT ]]; then
+            python3 -I ci/combined_http_budget.py bootstrap-ready
+            trap - ERR INT TERM HUP
+          else
           ready=0
           for attempt in {1..90}; do
             if mysql --no-defaults --protocol=TCP -h127.0.0.1 -P33080 -uroot --execute='SELECT 1' >/dev/null 2>&1; then ready=1; break; fi
             sleep 1
           done
           test "$ready" = 1
+          fi
       - name: Run original class and exact XML plus cleanup readbacks
         run: bash chengyinhub-admin/src/test/tools/generic-gameplay-http-e2e.sh
       - name: Remove only this owned MySQL container

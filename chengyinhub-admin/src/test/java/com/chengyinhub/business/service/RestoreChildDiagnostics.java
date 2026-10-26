@@ -20,6 +20,12 @@ public final class RestoreChildDiagnostics {
         "com.chengyinhub.business.service.impl.RestoreWithdrawalReconciliationFixture",
         "com.chengyinhub.business.service.impl.RestoreRefundReconciliationFixture",
         "com.chengyinhub.business.service.impl.RefundRetryAndRemainderMySqlIT",
+        "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl",
+        "com.chengyinhub.business.service.impl.SettlementEntryServiceImpl",
+        "com.chengyinhub.business.service.impl.SettlementClaimServiceImpl",
+        "com.chengyinhub.business.service.impl.RegistrationTopicFence",
+        "com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService",
+        "com.chengyinhub.business.service.PaymentCallbackInboxStubs",
         "com.chengyinhub.business.service.impl.FundsRecoveryProcessProbe$Store",
         "com.chengyinhub.business.service.ai.RestoreVoiceReconciliationFixture");
     private static final Set<String> SQL_STATES = Set.of("08001", "08003", "08004", "08006", "08S01", "28000", "42000",
@@ -50,11 +56,16 @@ public final class RestoreChildDiagnostics {
         String cohort = env.get("CHENGYIN_RESTORE_COHORT");
         result.put("cohort", Set.of("payment-gap", "withdrawal-complete", "withdrawal-gap", "refund-complete",
                 "refund-gap", "voice-complete", "voice-gap").contains(cohort == null ? "" : cohort) ? cohort : "UNKNOWN");
+        if (failure instanceof RestoreBusinessReconciliationFixture.CallbackRejected callback) {
+            result.put("callback", Map.of("result", callback.outcome, "reason", callback.reason.name()));
+        }
         var types = new ArrayList<String>();
         Set<Throwable> seen = Collections.newSetFromMap(new IdentityHashMap<Throwable, Boolean>());
         String state = null; Integer code = null; Map<String, Object> origin = null;
         for (Throwable current = failure; current != null && types.size() < 8 && seen.add(current); current = current.getCause()) {
-            String type = current.getClass().getName(); types.add(TYPES.contains(type) ? type : "UNKNOWN");
+            String type = current instanceof RestoreBusinessReconciliationFixture.CallbackRejected
+                    ? "java.lang.IllegalStateException" : current.getClass().getName();
+            types.add(TYPES.contains(type) ? type : "UNKNOWN");
             for (StackTraceElement frame : current.getStackTrace()) {
                 if (ORIGINS.contains(frame.getClassName()) && !"require".equals(frame.getMethodName())
                         && frame.getLineNumber() > 0 && frame.getLineNumber() <= 100000) {

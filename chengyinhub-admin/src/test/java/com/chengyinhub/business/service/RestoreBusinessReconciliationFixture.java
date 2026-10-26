@@ -40,6 +40,8 @@ public final class RestoreBusinessReconciliationFixture {
     private ICmsRegistrationService registrations;
     private WechatVerifiedPaymentFactService facts;
     private WechatPaymentIntentStore intents;
+    private com.chengyinhub.business.service.impl.AlarmService callbackAlarm;
+    private final java.util.concurrent.atomic.AtomicReference<RuntimeException> mutationFailure = new java.util.concurrent.atomic.AtomicReference<>();
     private long sequence;
     private String previous = "0".repeat(64);
 
@@ -110,6 +112,12 @@ public final class RestoreBusinessReconciliationFixture {
         db = new JdbcTemplate(source);
         registrations = (ICmsRegistrationService) ReflectionTestUtils.getField(original, "registrationService");
         facts = (WechatVerifiedPaymentFactService) ReflectionTestUtils.getField(original, "verifiedFacts");
+        wireActivityPayment(source);
+        Object target = ReflectionTestUtils.getField(original, "registrationTarget");
+        callbackAlarm = (com.chengyinhub.business.service.impl.AlarmService) ReflectionTestUtils.getField(target, "alarmService");
+        ReflectionTestUtils.setField(target, "wxPaymentCallbackInboxService", PaymentCallbackInboxStubs.passThrough(
+                (org.springframework.transaction.PlatformTransactionManager) ReflectionTestUtils.getField(original, "transactionManager"),
+                facts, mutationFailure::set));
         var owner = new JdbcWechatPaymentOrderOwner();
         ReflectionTestUtils.setField(owner, "paymentIntentJdbc", db);
         intents = new WechatPaymentIntentStore();
@@ -143,9 +151,11 @@ public final class RestoreBusinessReconciliationFixture {
         event(lost, "SUBMIT"); event(lost, "SUCCESS");
         applySuccess(lost); // Entire original registration, intent, verified fact and reward are lost on restore.
         int effects = db.queryForObject("SELECT COUNT(*) FROM ums_member_points_detail", Integer.class);
+        var paidRows = economicRows();
         applySuccess(lost);
         require(effects == db.queryForObject("SELECT COUNT(*) FROM ums_member_points_detail", Integer.class),
                 "Original callback replay must not add another reward");
+        require(paidRows.equals(economicRows()), "Original callback replay changed committed financial rows");
         require(!TransactionSynchronizationManager.isActualTransactionActive(), "Fault boundary cannot hold transaction locks");
     }
 
@@ -216,7 +226,151 @@ public final class RestoreBusinessReconciliationFixture {
         callback.put("verified_fact_id", Long.toString(ref.id())); callback.put("verified_fact_hash", ref.hash());
         callback.put("wx_out_trade_no", paid.wxOutTradeNo()); callback.put("mchid", MERCHANT); callback.put("appid", APP);
         callback.put("trade_type", "JSAPI"); callback.put("currency", "CNY");
-        require("SUCCESS".equals(registrations.handleWechatPayCallback(callback)), "Original financial business callback refused");
+        if ("lost_success".equals(command.get("case")) && reference == null) {
+            // The verified provider original already exists. Rejected projections may not consume it or change money/rights.
+            var before = economicRows();
+            for (String field : java.util.List.of("appid", "total", "verified_fact_hash", "wx_out_trade_no")) {
+                var rejected = new LinkedHashMap<>(callback);
+                rejected.put(field, switch (field) {
+                    case "total" -> Long.toString(paid.totalFen() + 1);
+                    case "verified_fact_hash" -> "0".repeat(64).equals(ref.hash()) ? "1".repeat(64) : "0".repeat(64);
+                    default -> "MISMATCHED_ORIGINAL";
+                });
+                String result = observedCallback(rejected);
+                if (!"FAIL".equals(result) || mutationFailure.get() != null
+                        || callbackReason(paid.businessOutTradeNo()) != CallbackReason.VERIFIED_FACT_MISSING_OR_CONFLICTING)
+                    throw new CallbackRejected(result, callbackReason(paid.businessOutTradeNo()), mutationFailure.get());
+                require(before.equals(economicRows()), "Rejected original callback changed financial rows");
+            }
+        }
+        var walletBalances = db.queryForList("SELECT id,balance FROM ums_member ORDER BY id");
+        String result = observedCallback(callback);
+        try {
+            require("SUCCESS".equals(result), "Original financial business callback refused");
+        } catch (IllegalStateException refused) {
+            throw new CallbackRejected(result, callbackReason(paid.businessOutTradeNo()),
+                    mutationFailure.get() == null ? refused : mutationFailure.get());
+        }
+        CmsRegistration committed = registrations.selectCmsRegistrationById(((Number) command.get("bizId")).longValue());
+        require(committed != null && Integer.valueOf(2).equals(committed.getPaymentStatus())
+                && Integer.valueOf(2).equals(committed.getRegistrationStatus())
+                && paid.transactionId().equals(committed.getTransactionId()), "Original paid status/transaction did not commit");
+        require(db.queryForObject("SELECT COUNT(*) FROM cms_registration_payment_fact WHERE registration_id=? AND payment_fact_id=? AND payment_fact_hash=?",
+                Integer.class, committed.getId(), ref.id(), ref.hash()) == 1, "Original payment consumption did not commit");
+        require(walletBalances.equals(db.queryForList("SELECT id,balance FROM ums_member ORDER BY id")),
+                "Original WeChat callback changed wallet balances");
+        if (Long.valueOf(2L).equals(committed.getOwnerType())) {
+            require(db.queryForObject("SELECT COUNT(*) FROM settlement_detail WHERE source_type='activity' AND source_id=? AND status=0",
+                    Integer.class, committed.getId()) == 2, "Original activity receivable components did not commit");
+            require(db.queryForObject("SELECT COALESCE(SUM(settlement_amount),0) FROM settlement_detail WHERE source_type='activity' AND source_id=?",
+                    BigDecimal.class, committed.getId()).compareTo(committed.getPayableAmount()) == 0,
+                    "Original activity receivable components do not conserve cash");
+        }
+    }
+
+    private String observedCallback(Map<String, String> callback) {
+        require(!TransactionSynchronizationManager.isActualTransactionActive(), "Original callback must begin outside business transaction");
+        mutationFailure.set(null); org.mockito.Mockito.clearInvocations(callbackAlarm);
+        return registrations.handleWechatPayCallback(callback);
+    }
+
+    enum CallbackReason { UNKNOWN, MUTATION_EXCEPTION, PAYLOAD_MISSING, REQUIRED_FIELD_MISSING, CALLBACK_INSIDE_TRANSACTION,
+        VERIFIED_FACT_MISSING_OR_CONFLICTING, AMOUNT_MISMATCH, INBOX_IDENTITY_CONFLICT, VERIFIED_CASH_RECOVERY_NOT_COMPLETED,
+        CALLBACK_NOT_COMPLETED, PAYMENT_STATE_CONFLICT, PAYMENT_ATTEMPT_CONFLICT, VERIFIED_ORIGINAL_ORDER_MISMATCH,
+        CLOSED_REGISTRATION_ORIGINAL_PAYMENT_RECOVERY_REQUIRED, TOPIC_CLOSED_ORIGINAL_PAYMENT_RECOVERY_REQUIRED,
+        ORDER_DISAPPEARED, FAILURE_STATE_CONFLICT, REFUND_REQUIRES_VERIFIED_ORIGINAL_REFUND }
+
+    private CallbackReason callbackReason(String originalNo) {
+        CallbackReason reason = observedCallbackReason(callbackAlarm, originalNo);
+        return reason == CallbackReason.UNKNOWN && mutationFailure.get() != null ? CallbackReason.MUTATION_EXCEPTION : reason;
+    }
+
+    static CallbackReason observedCallbackReason(com.chengyinhub.business.service.impl.AlarmService alarm, String originalNo) {
+        CallbackReason reason = CallbackReason.UNKNOWN;
+        for (var invocation : org.mockito.Mockito.mockingDetails(alarm).getInvocations()) {
+            Object[] args = invocation.getArguments();
+            if (!"alarmThrottled".equals(invocation.getMethod().getName()) || args.length != 3
+                    || !"payment.callback.registration".equals(args[0]) || !"支付回调报名处理失败".equals(args[1])
+                    || !(args[2] instanceof String value)) continue;
+            // Match a whole fixed envelope; never parse/echo arbitrary order, exception, SQL or payload text.
+            for (var candidate : CallbackReason.values()) {
+                String suffix = " reason=" + candidate.name().toLowerCase(java.util.Locale.ROOT) + " result=FAIL";
+                if (value.equals("order=" + originalNo + suffix)) reason = candidate;
+            }
+        }
+        return reason;
+    }
+
+    static final class CallbackRejected extends IllegalStateException {
+        final CallbackReason reason;
+        final String outcome;
+        CallbackRejected(String result, CallbackReason reason, RuntimeException cause) {
+            super("Original financial business callback refused", cause);
+            this.reason = reason;
+            this.outcome = result == null ? "NULL" : "FAIL".equals(result) ? "FAIL" : "OTHER";
+        }
+    }
+
+    private Map<String, java.util.List<String>> economicRows() {
+        require(!TransactionSynchronizationManager.isActualTransactionActive(), "Committed financial readback must be outside transaction");
+        var result = new LinkedHashMap<String, java.util.List<String>>();
+        for (String table : java.util.List.of("cms_registration", "wx_pay_order_intent", "wx_verified_payment_fact",
+                "cms_registration_payment_fact", "ums_member", "ums_member_points_detail", "ums_member_balance_detail",
+                "refund_application", "cms_registration_scan", "cms_activity", "oms_ticket", "settlement_rule",
+                "settlement_claim", "settlement_detail")) {
+            result.put(table, db.queryForList("SELECT * FROM `" + table + "`").stream()
+                .map(row -> JSON.toJSONString(new java.util.TreeMap<>(row), com.alibaba.fastjson2.JSONWriter.Feature.WriteMapNullValue))
+                .sorted().toList());
+        }
+        return result;
+    }
+
+    static String canonicalActivityTable(String base, String table) {
+        require(java.util.Set.of("settlement_claim", "settlement_detail", "settlement_rule").contains(table), "Fixed activity tables only");
+        int from = base.indexOf("CREATE TABLE `" + table + "` (");
+        int close = base.indexOf("\n) ENGINE", from);
+        int end = base.indexOf(';', close);
+        require(from >= 0 && close > from && end > close, "Canonical activity payment DDL missing");
+        return base.substring(from, end + 1);
+    }
+
+    private void wireActivityPayment(javax.sql.DataSource source) throws Exception {
+        String base = Files.readString(Path.of("../sql/base_schema_20260818.sql"));
+        for (String table : java.util.List.of("settlement_claim", "settlement_detail", "settlement_rule"))
+            db.execute(canonicalActivityTable(base, table));
+        Object registrationTarget = ReflectionTestUtils.getField(original, "registrationTarget");
+        var pricing = ((ISettlementRuleService) ReflectionTestUtils.getField(registrationTarget, "settlementRuleService"))
+                .getActiveRule(0L, "activity");
+        require(pricing != null && pricing.getPlatformCommissionRate() != null, "Original activity pricing rule missing");
+        BigDecimal rate = pricing.getPlatformCommissionRate();
+        require(rate.signum() >= 0 && rate.compareTo(BigDecimal.ONE) <= 0, "Original activity pricing rule invalid");
+        db.update("INSERT INTO settlement_rule(merchant_id,biz_type,rule_name,platform_commission_rate,merchant_rate,creator_rate,inviter_rate,status,del_flag) VALUES(0,'activity','original funds fixture',?,?,0,0,1,0)",
+                rate, BigDecimal.ONE.subtract(rate));
+        var factory = new org.mybatis.spring.SqlSessionFactoryBean(); factory.setDataSource(source);
+        factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
+        factory.setMapperLocations(new org.springframework.core.io.ClassPathResource("mapper/business/SettlementClaimMapper.xml"),
+                new org.springframework.core.io.ClassPathResource("mapper/business/SettlementDetailMapper.xml"),
+                new org.springframework.core.io.ClassPathResource("mapper/business/SettlementRuleMapper.xml"));
+        var sql = new org.mybatis.spring.SqlSessionTemplate(factory.getObject());
+        var rules = new com.chengyinhub.business.service.impl.SettlementRuleServiceImpl();
+        ReflectionTestUtils.setField(rules, "settlementRuleMapper", sql.getMapper(com.chengyinhub.business.mapper.SettlementRuleMapper.class));
+        var claims = new com.chengyinhub.business.service.impl.SettlementClaimServiceImpl(
+                sql.getMapper(com.chengyinhub.business.mapper.SettlementClaimMapper.class));
+        var entries = new com.chengyinhub.business.service.impl.SettlementEntryServiceImpl();
+        ReflectionTestUtils.setField(entries, "settlementDetailMapper", sql.getMapper(com.chengyinhub.business.mapper.SettlementDetailMapper.class));
+        ReflectionTestUtils.setField(entries, "settlementRuleService", rules);
+        ReflectionTestUtils.setField(entries, "settlementClaimService", transactional(claims, ISettlementClaimService.class));
+        ReflectionTestUtils.setField(entries, "cmsActivityMapper", ReflectionTestUtils.getField(registrationTarget, "cmsActivityMapper"));
+        ReflectionTestUtils.setField(entries, "cmsTopicMapper", ReflectionTestUtils.getField(registrationTarget, "cmsTopicMapper"));
+        ReflectionTestUtils.setField(registrationTarget, "settlementEntryService", transactional(entries, ISettlementEntryService.class));
+    }
+
+    private Object transactional(Object target, Class<?> port) {
+        var proxy = new org.springframework.aop.framework.ProxyFactory(target); proxy.setInterfaces(port);
+        proxy.addAdvice(new org.springframework.transaction.interceptor.TransactionInterceptor(
+            (org.springframework.transaction.PlatformTransactionManager) ReflectionTestUtils.getField(original, "transactionManager"),
+            new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource()));
+        return proxy.getProxy();
     }
 
     private synchronized void event(Map<String, Object> command, String state) throws Exception {

@@ -34,7 +34,10 @@ def scenario():
         identities = list(commands.values())[:5 if lost else 4]
         paid = [commands['historical_paid']] + ([commands['lost_success']] if lost else [])
         registrations = [dict(id=c['bizId'], registration_no=c['businessNo'], wechat_payment_amount='100.00',
-                              payment_status=2 if c in paid else 1) for c in identities]
+                              payable_amount='100.00', fee_platform_rate='0.1234', member_id=7,
+                              owner_type=1 if c['case'] == 'historical_paid' else 2,
+                              owner_id=99 if c['case'] == 'historical_paid' else 55,
+                              registration_status=2 if c in paid else 1, payment_status=2 if c in paid else 1) for c in identities]
         frozen = [dict(mchid=c['mchid'], appid=c['appid'], biz_type='REGISTRATION', biz_id=c['bizId'],
                        attempt_no=c['attemptNo'], request_hash=c['fingerprint'], out_trade_no=c['wxNo'],
                        business_out_trade_no=c['businessNo'], trade_type='JSAPI', currency=c['currency'],
@@ -49,12 +52,30 @@ def scenario():
                    dict(id=2, member_id=7, current_points='110.00', change_points='5.00', after_points='115.00', event_type=3, event_id=11)]
         if lost:
             entries.append(dict(id=3, member_id=7, current_points='115.00', change_points='5.00', after_points='120.00', event_type=3, event_id=15))
+        claims, details = [], []
+        if lost:
+            for i, (role, receiver, amount) in enumerate((('merchant', 1, '87.66'), ('platform', 0, '12.34'))):
+                claims.append(dict(id=4 + i, commercial_context_type='ACTIVITY', commercial_context_id=55,
+                    fulfillment_type='REGISTRATION', fulfillment_id=15, beneficiary_role=role.upper(), beneficiary_id=receiver,
+                    service_unit='MERCHANT_PARTICIPATION', settlement_route='REGISTRATION_SPLIT',
+                    source_contract_type='DIRECT_REGISTRATION', source_contract_id=15, status='ACTIVE'))
+                details.append(dict(id=1 + i, claim_id=4 + i, batch_id=0, merchant_id=1, source_type='activity', source_id=15,
+                    receiver_type=role, receiver_id=receiver, gross_amount=amount, commission_amount='0.00',
+                    settlement_amount=amount, status=0, entry_kind='ORIGIN', event_key='ORIGIN',
+                    idempotency_key='activity:15:' + role + ':' + str(receiver)))
         contents = {'cms_registration': registrations, 'wx_pay_order_intent': frozen, 'wx_verified_payment_fact': facts,
                     'cms_registration_payment_fact': receipts, 'ums_member': [dict(id=7, point=120 if lost else 115)],
                     'ums_member_points_detail': entries, 'ums_member_balance_detail': [], 'refund_application': [],
-                    'cms_registration_scan': []}
+                    'cms_registration_scan': [], 'cms_activity': [dict(id=55, member_id=1)],
+                    'oms_ticket': [dict(id=9, owner_type=2, owner_id=55, remaining_inventory=6 if lost else 7)],
+                    'settlement_rule': [dict(id=8, merchant_id=0, biz_type='activity', platform_commission_rate='0.1234',
+                        merchant_rate='0.8766', creator_rate='0.0000', inviter_rate='0.0000', status=1, del_flag=0)],
+                    'settlement_claim': claims, 'settlement_detail': details}
+        water = {t: {'max': 15 if lost else 14, 'next': 16 if lost else 15} for t in p.HIGH_IDS}
+        water.update(settlement_claim={'max': 5 if lost else 0, 'next': 6 if lost else 4},
+                     settlement_detail={'max': 2 if lost else 0, 'next': 3 if lost else 1}, settlement_rule={'max': 8, 'next': 9})
         return {'tables': {t: table(rows) for t, rows in contents.items()},
-                'highWater': {t: {'max': 15 if lost else 14, 'next': 16 if lost else 15} for t in p.HIGH_IDS}}
+                'highWater': water}
     before = {'records': [{'original': 'prefix'}]}
     after = {'records': before['records'] + [{'late': 'controlled'}], 'commands': commands,
              'states': {'historical_paid': 'SUCCESS', 'late_success': 'SUCCESS', 'lost_success': 'SUCCESS',
@@ -153,7 +174,8 @@ class CompositeIntentControls(unittest.TestCase):
         self.assertNotIn('AUTO_INCREMENT', ddl)
         self.assertIn('wx_pay_order_intent', p.TABLES)
         self.assertEqual({'cms_registration': 'id', 'wx_verified_payment_fact': 'id',
-                          'ums_member_points_detail': 'id'}, p.HIGH_IDS)
+                          'ums_member_points_detail': 'id', 'settlement_claim': 'id',
+                          'settlement_detail': 'id', 'settlement_rule': 'id'}, p.HIGH_IDS)
 
     def test_real_composite_identity_survives_restore_and_lost_attempt_stays_blocked(self):
         values = scenario(); result = p.reconcile(*values)
@@ -193,7 +215,7 @@ class CompositeIntentControls(unittest.TestCase):
             observed = p.capture(tool, object())
         self.assertEqual(source['tables']['wx_pay_order_intent'], observed['tables']['wx_pay_order_intent'])
         self.assertEqual(set(p.HIGH_IDS), set(observed['highWater']))
-        self.assertEqual(3, tool.mysql.call_count)
+        self.assertEqual(6, tool.mysql.call_count)
         for call in tool.mysql.call_args_list:
             self.assertIn('MAX(`id`)', call.args[1]); self.assertNotIn('wx_pay_order_intent', call.args[1])
 
@@ -210,6 +232,33 @@ class CompositeIntentControls(unittest.TestCase):
                 command = dict(scenario()[4]['commands']['historical_paid'], **{field: replacement})
                 path = Path(temp) / 'journal'; writer.write(path, [(command, 'SUBMIT')])
                 with self.assertRaisesRegex(ValueError, 'legacy'): p.journal(path, 'a' * 32)
+
+
+class ActivityPaymentSourceControls(unittest.TestCase):
+    def test_original_activity_cash_and_claims_commit_only_in_fault_and_stay_absent_after_restore(self):
+        backup, fault, restored, before, after = scenario()
+        result = p.reconcile(backup, fault, restored, before, after)
+        for snap in (backup, restored):
+            self.assertEqual([], p.dictionaries(snap, 'settlement_claim'))
+            self.assertEqual([], p.dictionaries(snap, 'settlement_detail'))
+        self.assertEqual(2, len(p.dictionaries(fault, 'settlement_claim')))
+        self.assertEqual(2, len(p.dictionaries(fault, 'settlement_detail')))
+        self.assertTrue(any(r['table'] == 'settlement_claim' for r in result['highWaterRisks']))
+        self.assertTrue(any(r['table'] == 'settlement_detail' for r in result['highWaterRisks']))
+        self.assertEqual('BLOCKED', result['candidateState']); self.assertIs(False, result['dispatchRelease'])
+        self.assertEqual('UNKNOWN_MISSING_WHOLE_ORIGINAL_MANUAL_BLOCK',
+            next(r['status'] for r in result['differences'] if r['case'] == 'lost_success'))
+
+    def test_wrong_activity_cash_claim_actor_or_duplicate_side_effect_is_rejected(self):
+        for table_name, field, value in [('settlement_detail', 'settlement_amount', '99.00'),
+                ('settlement_detail', 'receiver_id', 999), ('settlement_detail', 'claim_id', 999),
+                ('settlement_detail', 'status', 1), ('settlement_claim', 'fulfillment_id', 999),
+                ('settlement_claim', 'commercial_context_id', 99), ('settlement_claim', 'beneficiary_role', 'CREATOR')]:
+            values = scenario(); replace(values[1], table_name, field, value)
+            with self.subTest(field=field, table=table_name), self.assertRaises(ValueError): p.reconcile(*values)
+        values = scenario(); values[1]['tables']['settlement_detail']['rows'].append(
+            list(values[1]['tables']['settlement_detail']['rows'][0]))
+        with self.assertRaises(ValueError): p.reconcile(*values)
 
 
 class ResourceTransportControls(unittest.TestCase):
@@ -292,6 +341,19 @@ class ChildExitControls(unittest.TestCase):
         self.assertEqual(self.typed(), evidence['javaFailure'])
         self.assertEqual((len(raw), p.sha(raw)), (evidence['stderrBytes'], evidence['stderrSha256']))
         self.assertNotIn('PRIVATE', json.dumps(evidence)); self.assertNotIn('sql/defaults', json.dumps(evidence))
+
+    def test_callback_diagnostic_is_a_fixed_optional_category_never_a_payload_or_new_acceptance(self):
+        row = dict(self.typed(), stage='AFTER_BACKUP', callback={'result': 'FAIL', 'reason': 'MUTATION_EXCEPTION'})
+        raw = b'RESTORE_CHILD_FAILURE_V1:' + json.dumps(row).encode() + b'\n'
+        observed = self.capture(raw)
+        self.assertEqual('TYPED_FAILURE', observed['diagnosticState'])
+        self.assertEqual(row['callback'], observed['javaFailure']['callback'])
+        for callback in ({'result': 'PRIVATE_SECRET_CANARY', 'reason': 'UNKNOWN'},
+                         {'result': 'FAIL', 'reason': 'PRIVATE_SECRET_CANARY'},
+                         {'result': 'FAIL', 'reason': 'UNKNOWN', 'payload': 'PRIVATE_SECRET_CANARY'}):
+            bad = self.capture(b'RESTORE_CHILD_FAILURE_V1:' + json.dumps(dict(self.typed(), stage='AFTER_BACKUP', callback=callback)).encode() + b'\n')
+            self.assertEqual('UNREADABLE_OR_UNTRUSTED', bad['diagnosticState'])
+            self.assertNotIn('PRIVATE', json.dumps(bad)); self.assertNotIn('javaFailure', bad)
 
     def test_wrong_boot_scope_unknown_type_payload_or_duplicate_marker_is_not_public_evidence(self):
         for key, value in [('boot', 'f' * 32), ('scope', 'f' * 32), ('sourceSha', 'f' * 40),
