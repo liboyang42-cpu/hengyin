@@ -35,6 +35,8 @@ public class CombinedSurefireRuntimeProbeTest {
         assertFalse(Files.isSymbolicLink(directory));Files.createDirectories(directory,
                 PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------")));
         assertEquals(directory,directory.toRealPath());
+        assertEquals(Files.getOwner(basedir), Files.getOwner(directory));
+        Files.setPosixFilePermissions(directory, PosixFilePermissions.fromString("rwx------"));
         var runtime=new LinkedHashMap<String,Object>();
         runtime.put("launcher",jar(launcher,"org/junit/platform/junit-platform-launcher","junit-platform-launcher"));
         runtime.put("engine",jar(engine,"org/junit/jupiter/junit-jupiter-engine","junit-jupiter-engine"));
@@ -60,9 +62,49 @@ public class CombinedSurefireRuntimeProbeTest {
             assertNotNull(input);proof.put("testClassSha256",sha(input.readAllBytes()));
         }
         proof.put("runtime",runtime);proof.put("businessExecuted",false);
+        proof.put("testClasspath", captureTestClasspath(directory, phase,
+                System.getProperty("surefire.test.class.path"), basedir.getParent(), Path.of("/cache/repository")));
         Path file=directory.resolve(phase.toLowerCase(java.util.Locale.ROOT)+".json");
         Files.createFile(file,PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")));
         Files.write(file,new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsBytes(proof),StandardOpenOption.WRITE);
+    }
+
+    static Map<String,Object> captureTestClasspath(Path directory, String phase, String classpath,
+                                                   Path reactorRoot, Path cacheRoot) throws Exception {
+        assertTrue("ONLINE".equals(phase) || "OFFLINE".equals(phase));
+        assertNotNull(classpath);
+        byte[] bytes = classpath.getBytes(StandardCharsets.UTF_8);
+        assertTrue(bytes.length > 0 && bytes.length < 1024 * 1024, "Bounded original test classpath required");
+        assertTrue(classpath.indexOf('\n') < 0 && classpath.indexOf('\r') < 0 && classpath.indexOf('\0') < 0);
+        assertTrue(reactorRoot.isAbsolute() && reactorRoot.equals(reactorRoot.toRealPath()));
+        assertTrue(cacheRoot.isAbsolute() && cacheRoot.equals(cacheRoot.toRealPath()));
+        assertEquals(reactorRoot.resolve("chengyinhub-admin/target/provider-runtime"), directory);
+        assertTrue(Files.isDirectory(directory) && directory.equals(directory.toRealPath()));
+        assertEquals(PosixFilePermissions.fromString("rwx------"), Files.getPosixFilePermissions(directory));
+        assertEquals(Files.getOwner(reactorRoot), Files.getOwner(directory));
+        String[] entries = classpath.split(java.util.regex.Pattern.quote(java.io.File.pathSeparator), -1);
+        var observed = new java.util.HashSet<Path>();
+        for (String entry : entries) {
+            assertFalse(entry.isEmpty(), "No implicit current-directory entry");
+            Path path = Path.of(entry);
+            assertTrue(path.isAbsolute() && path.equals(path.normalize()) && path.equals(path.toRealPath()));
+            assertTrue(Files.isRegularFile(path) || Files.isDirectory(path));
+            boolean owned = path.startsWith(cacheRoot);
+            for (String module : java.util.List.of("chengyinhub-admin", "chengyinhub-framework", "chengyinhub-system",
+                    "chengyinhub-quartz", "chengyinhub-generator", "chengyinhub-common"))
+                owned |= path.startsWith(reactorRoot.resolve(module).resolve("target"));
+            assertTrue(owned, "Only original cache and reactor target classpath entries");
+            observed.add(path);
+        }
+        assertTrue(observed.contains(reactorRoot.resolve("chengyinhub-admin/target/classes"))
+                && observed.contains(reactorRoot.resolve("chengyinhub-admin/target/test-classes")));
+        String name = phase.toLowerCase(java.util.Locale.ROOT) + ".classpath";
+        Path file = directory.resolve(name);
+        Files.createFile(file, PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")));
+        Files.write(file, bytes, StandardOpenOption.WRITE);
+        assertEquals(PosixFilePermissions.fromString("rw-------"), Files.getPosixFilePermissions(file));
+        assertTrue(java.util.Arrays.equals(bytes, Files.readAllBytes(file)), "Exact original UTF-8 bytes must round trip");
+        return Map.of("fileName", name, "sha256", sha(bytes), "byteLength", bytes.length, "entryCount", entries.length);
     }
 
     private static Map<String,String> jar(Class<?> type,String relative,String artifact) throws Exception {

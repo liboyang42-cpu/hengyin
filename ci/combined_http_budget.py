@@ -63,13 +63,21 @@ CONFIGURATION_METHODS = ('boundedPoolOverridesBothIncompatibleInheritedFloorsWit
                          'protectedFactDigestPreservesJdbcScalarAndTimeFacts',
                          'protectedFactDigestRetainsQueryAndSerializationFailures',
                          'photoNeverReadRetainsConnectionAcrossIndependentTransaction',
-                         'photoPrepareFailureProjectionKeepsOnlyReviewedCodesAndCause')
-RUNTIME_MAVEN_OPTIONS = '-Xms16m -Xmx128m -XX:MaxDirectMemorySize=16m -XX:ReservedCodeCacheSize=32m -XX:+UseSerialGC -Djava.io.tmpdir=/tmp -Duser.home=/tmp/home'
-SUREFIRE_MEMORY_ARGUMENTS = '-Xms16m -Xmx384m -XX:MaxDirectMemorySize=64m -XX:ReservedCodeCacheSize=64m -XX:+UseSerialGC'
+                         'photoPrepareFailureProjectionKeepsOnlyReviewedCodesAndCause',
+                         'precompiledContentSecurityFixtureKeepsOriginalChecksAndRejectsUnprovenOutputs',
+                         'providerClasspathCapturePreservesExactBytesAndRejectsUnownedEntries')
+# Candidate for root's fixed-JVM policy decision: keep all original allocations and lifecycle,
+# but avoid C2 compilation/profiling work in BOTH concurrently resident runtime JVMs.
+# The package/compiler owner still uses its original 512 MiB configuration.
+RUNTIME_MAVEN_OPTIONS = '-Xms16m -Xmx128m -XX:MaxDirectMemorySize=16m -XX:ReservedCodeCacheSize=32m -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -Djava.io.tmpdir=/tmp -Duser.home=/tmp/home'
+SUREFIRE_MEMORY_ARGUMENTS = '-Xms16m -Xmx384m -XX:MaxDirectMemorySize=64m -XX:ReservedCodeCacheSize=64m -XX:+UseSerialGC -XX:TieredStopAtLevel=1'
 SCHEDULER_MEMORY_ARGUMENTS = '-Xmx64m'
 SCHEDULER_PROBE = 'com.chengyinhub.quartz.util.SchedulerFenceProcessProbe'
 SUREFIRE_FORK_ARGUMENTS = SUREFIRE_MEMORY_ARGUMENTS+' -Djava.security.manager=allow --add-opens=java.base/java.lang=ALL-UNNAMED -Djava.io.tmpdir=/tmp -Djava.awt.headless=true'
 TEST_PROFILE = 'combined-http-fixture-closure'
+CONTENT_SECURITY_SOURCE = 'scripts/e2e/E2eWxContentSecurityStub.java.stub'
+CONTENT_SECURITY_SOURCE_SHA256 = '4b4bb11e6bd4a211fc07164f90f9310d34a0bf6cad3e2eb415722d4d2c9a66af'
+CONTENT_SECURITY_CLASS = 'com/chengyinhub/e2e/E2eWxContentSecurityStub.class'
 TEST_SOURCES = (
     'com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java',
     'com/chengyinhub/business/it/CombinedCoreHttpWorkload.java',
@@ -192,13 +200,15 @@ SAFE_RESOURCE_CODES = frozenset({'FIXED_COMMAND_FAILED','FIXED_HOSTED_CLASS_ONLY
     'MYSQL_PROCESS_REPLACED_BEFORE_PORT_PROOF','PORT_PROBE_NAMESPACE_CHANGED','NAMESPACE_PROBE_POSTIMAGE_CHANGED',
     'ACTUAL_NAMESPACE_BIND_PROOF_REQUIRED','PRIVATE_APP_IDENTITY_OR_ROOTFS_CHANGED','FIXED_OFFLINE_MAVEN_COMMAND_CHANGED',
     'UNCLASSIFIED_RESOURCE_FAILURE','CONFIGURATION_UNIT_PROOF_REQUIRED','CONFIGURATION_UNIT_XML_REQUIRED',
-    'FIXED_JVM_MEMORY_ARGUMENTS_REQUIRED'})
+    'FIXED_JVM_MEMORY_ARGUMENTS_REQUIRED','PROVIDER_EXACT_CLASSPATH_REQUIRED',
+    'CONTROLLED_CONTENT_SECURITY_PROOF_REQUIRED','CONTROLLED_CONTENT_SECURITY_COMPILE_FAILED'})
 CACHE_SUBSTAGES=frozenset({'SOURCE_INPUTS','LOCAL_ENGINE','PINNED_IMAGE','CREATE_INPUTS','CREATE',
     'OWNER_TOOLCHAIN','MOUNT_ENV','START','CGROUP','WAIT_EXIT','MAVEN_EXIT','CORE_IDENTITY',
-    'MANIFEST','PROVIDER_RUNTIME','CONFIGURATION_UNIT','PRIVATE_LOG','CLEANUP','TERMINAL'})
+    'MANIFEST','PROVIDER_RUNTIME','CONFIGURATION_UNIT','CONTENT_SECURITY','PRIVATE_LOG','CLEANUP','TERMINAL'})
 CACHE_FAILURE_FUNCTIONS=frozenset({'warm_cache','cache_inputs','cache_manifest','cache_process_state',
     'cache_terminal','cache_offline_probe_exit','fixed_test_compilation_inputs','reset_fixed_test_outputs',
     'fixed_test_compilation_outputs','provider_runtime_proof','configuration_unit_proof','exact_test_xml','read_owned_test_xml',
+    'provider_classpath_proof','controlled_content_proof','compile_controlled_content',
     'command','inspect','validate_owner','validate_container','read_cgroup','validate_cgroup_limits'})
 CACHE_GOALS={
     'maven-resources-plugin':{'resources','testResources'},'maven-compiler-plugin':{'compile','testCompile'},
@@ -242,7 +252,7 @@ def reset_fixed_test_outputs():
     # Only the original admin test output and testCompile state; never production classes/JARs,
     # the dependency cache, source resources, public evidence or any other owner's module.
     target=ROOT/'chengyinhub-admin/target'
-    paths=[target/suffix for suffix in ('test-classes','generated-test-sources','maven-status/maven-compiler-plugin/testCompile','provider-runtime')]
+    paths=[target/suffix for suffix in ('test-classes','generated-test-sources','maven-status/maven-compiler-plugin/testCompile','provider-runtime','controlled-content-security')]
     for path in paths:
         for current in (path,*path.parents):
             if current==ROOT:break
@@ -389,7 +399,7 @@ def preparation_test_evidence(report,inputs,expected,state,obj,phase):
     unknown={'purpose':'PREPARATION_JUNIT_DIAGNOSTIC_ONLY','state':'UNKNOWN','businessAccepted':False}
     try:
         require(report.get('mavenExitObserved') is True and type(report.get('mavenExit')) is int
-                and 0<report['mavenExit']<256 and phase=='ONLINE_PROVIDER_RUNTIME' and report.get('phase')==phase,
+                and 0<report['mavenExit']<256 and phase in ('ONLINE_PROVIDER_RUNTIME','ONLINE_CONFIGURATION_UNITS') and report.get('phase')==phase,
                 'PREPARATION_EVIDENCE_UNPROVEN')
         identity_gate(os.environ);bound=identity(os.environ)
         require({key:report.get(key) for key in bound}==bound,'PREPARATION_EVIDENCE_UNPROVEN')
@@ -407,6 +417,7 @@ def preparation_test_evidence(report,inputs,expected,state,obj,phase):
                 and expected is not None and fixed_test_compilation_outputs(inputs)==expected,'PREPARATION_EVIDENCE_UNPROVEN')
         bindings=[]
         for test_class,source_path,methods,key in preparation_report_specs():
+            if (test_class==PROVIDER_PROBE)!=(phase=='ONLINE_PROVIDER_RUNTIME'):continue
             source=ROOT/'chengyinhub-admin/src/test/java'/source_path
             compiled=ROOT/'chengyinhub-admin/target/test-classes'/(test_class.replace('.','/')+'.class')
             require(source.is_file() and not source.is_symlink() and source.resolve()==source
@@ -449,6 +460,105 @@ def configuration_unit_proof(compilation):
                 'testClassSha256':digest(photo_class),**photo_xml}}
 
 
+def provider_classpath_proof(cache,phase,proof):
+    # The complete original Surefire property, never a cache scan or reconstructed classpath.
+    require(phase in ('ONLINE','OFFLINE'),'PROVIDER_EXACT_CLASSPATH_REQUIRED')
+    directory=ROOT/'chengyinhub-admin/target/provider-runtime';path=directory/(phase.lower()+'.classpath')
+    require(directory.is_dir() and not directory.is_symlink() and directory.resolve()==directory
+            and directory.stat().st_mode & 0o777==0o700 and path.is_file() and not path.is_symlink()
+            and path.resolve()==path and path.stat().st_uid==os.getuid() and path.stat().st_mode & 0o777==0o600
+            and 0<path.stat().st_size<1024*1024,'PROVIDER_EXACT_CLASSPATH_REQUIRED')
+    with path.open('rb') as stream:raw=stream.read(1024*1024)
+    require(0<len(raw)<1024*1024,'PROVIDER_EXACT_CLASSPATH_REQUIRED')
+    text=raw.decode('utf-8');entries=text.split(':')
+    expected={'fileName':phase.lower()+'.classpath','sha256':hashlib.sha256(raw).hexdigest(),'byteLength':len(raw),'entryCount':len(entries)}
+    require(proof.get('testClasspath')==expected and entries
+            and not any(value in text for value in ('\0','\r','\n')),'PROVIDER_EXACT_CLASSPATH_REQUIRED')
+    resolved=[]
+    for entry in entries:
+        local=Path(entry)
+        require(entry and local.is_absolute() and str(local)==entry,'PROVIDER_EXACT_CLASSPATH_REQUIRED')
+        if local.is_relative_to('/cache/repository'):
+            mapped=cache/local.relative_to('/cache/repository')
+        else:
+            require(any(local.is_relative_to(ROOT/module/'target') for module in MODULES),'PROVIDER_EXACT_CLASSPATH_REQUIRED');mapped=local
+        require(not mapped.is_symlink() and mapped.resolve()==mapped and (mapped.is_dir() or mapped.is_file()),'PROVIDER_EXACT_CLASSPATH_REQUIRED')
+        resolved.append(entry)
+    require({str(ROOT/'chengyinhub-admin/target/classes'),str(ROOT/'chengyinhub-admin/target/test-classes')}
+            <=set(resolved),'PROVIDER_EXACT_CLASSPATH_REQUIRED')
+    return expected
+
+
+def controlled_content_proof():
+    code='CONTROLLED_CONTENT_SECURITY_PROOF_REQUIRED'
+    root=ROOT/'chengyinhub-admin/target/controlled-content-security'
+    source=ROOT/CONTENT_SECURITY_SOURCE;compiled=root/'classes'/CONTENT_SECURITY_CLASS;proof=root/'proof.properties'
+    require(root.is_dir() and not root.is_symlink() and root.resolve()==root,code)
+    require(source.is_file() and not source.is_symlink() and source.resolve()==source and source.stat().st_size==2059
+            and digest(source)==CONTENT_SECURITY_SOURCE_SHA256,code)
+    allowed={compiled,proof};directories=set(compiled.parents)-set(root.parents)
+    for path in root.rglob('*'):
+        require(not path.is_symlink() and path.resolve()==path
+                and ((path.is_file() and path in allowed) or (path.is_dir() and path in directories)),code)
+    require(all(path.is_file() and not path.is_symlink() and path.resolve()==path for path in allowed)
+            and 4<compiled.stat().st_size<=1024*1024 and compiled.read_bytes()[:4]==b'\xca\xfe\xba\xbe'
+            and proof.stat().st_size<=1024,code)
+    text=proof.read_text(encoding='utf-8');lines=text.splitlines()
+    require(len(lines)==3 and '\r' not in text
+            and all(re.fullmatch(r'(?:sourceSha|sourceSha256|classSha256)=[0-9a-f]+',line) for line in lines),code)
+    values=dict(line.split('=',1) for line in lines)
+    require(len(values)==3 and values=={'sourceSha':os.environ['SOURCE_SHA'],'sourceSha256':digest(source),'classSha256':digest(compiled)},code)
+    return {'purpose':'SAME_SOURCE_PRECOMPILED_CONTENT_SECURITY','sourceSha':os.environ['SOURCE_SHA'],
+            'sourceSha256':digest(source),'classSha256':digest(compiled),'proofSha256':digest(proof)}
+
+
+def compile_controlled_content(cid,cache,deadline):
+    # Called once at the fixed boundary, after the original ONLINE Maven/fork returned zero.
+    code='CONTROLLED_CONTENT_SECURITY_PROOF_REQUIRED';directory=ROOT/'chengyinhub-admin/target/provider-runtime'
+    online=directory/'online.json';xml=directory/'online.xml'
+    require(online.is_file() and not online.is_symlink() and online.resolve()==online
+            and not online.stat().st_mode & 0o077 and online.stat().st_size<32768,code)
+    record=json.loads(online.read_text());expected_class=ROOT/'chengyinhub-admin/target/test-classes'/(PROVIDER_PROBE.replace('.','/')+'.class')
+    require({key:record.get(key) for key in ('sourceSha','runId','attempt')}==
+            {key:identity(os.environ)[key] for key in ('sourceSha','runId','attempt')}
+            and record.get('phase')=='ONLINE' and record.get('javaFeature')==21
+            and record.get('forkedBooter') is True and record.get('businessExecuted') is False
+            and record.get('testClassSha256')==digest(expected_class),code)
+    exact_test_xml(xml,PROVIDER_PROBE,('bootsActualProjectPlatformRuntime',),'PROVIDER_RUNTIME_XML_REQUIRED')
+    classpath=provider_classpath_proof(cache,'ONLINE',record)
+    source=ROOT/CONTENT_SECURITY_SOURCE;root=ROOT/'chengyinhub-admin/target/controlled-content-security'
+    require(source.is_file() and not source.is_symlink() and source.resolve()==source
+            and source.stat().st_size==2059 and digest(source)==CONTENT_SECURITY_SOURCE_SHA256
+            and not root.exists() and not root.is_symlink()
+            and root.parent.resolve()==root.parent,code)
+    before=digest(source);classes=root/'classes';classes.mkdir(parents=True,mode=0o700)
+    # No interpolation of raw classpath, credentials or source bytes. Same pinned JDK, fixed source,
+    # original proc:none; the short compiler JVM exits before OFFLINE Maven or the business fork.
+    script=('umask 077; scratch=/tmp/cy-controlled-content-security-source; '
+            '[ ! -e "$scratch" ] && [ ! -L "$scratch" ] || exit 98; mkdir "$scratch" || exit 98; '
+            'cp -- "$1" "$scratch/E2eWxContentSecurityStub.java" || exit 98; '
+            'classpath=$(cat -- "$2") || exit 98; '
+            'javac -J-Xmx128m -proc:none -classpath "$classpath" -d "$3" "$scratch/E2eWxContentSecurityStub.java"; status=$?; '
+            'rm -f -- "$scratch/E2eWxContentSecurityStub.java"; rmdir "$scratch" || exit 98; '
+            'printf "%s\\n" "$status" >/tmp/cy-cache.javac.exit')
+    remaining=deadline-time.monotonic();require(remaining>0,'CACHE_EXECUTION_DEADLINE')
+    command(DOCKER+['exec',cid,'/bin/bash','-c',script,'--',str(source),str(directory/'online.classpath'),str(classes)],timeout=remaining)
+    raw=command(DOCKER+['exec',cid,'cat','/tmp/cy-cache.javac.exit']).decode().strip()
+    require(re.fullmatch('[0-9]{1,3}',raw) and int(raw)<256,code)
+    result={'purpose':'PREPARATION_COMPILER_ONLY','exitObserved':True,'exit':int(raw),'testClasspath':classpath}
+    if int(raw)==0:
+        compiled=classes/CONTENT_SECURITY_CLASS
+        require(digest(source)==before and compiled.is_file() and not compiled.is_symlink() and compiled.resolve()==compiled,code)
+        proof=root/'proof.properties'
+        with proof.open('x',encoding='utf-8') as stream:
+            proof.chmod(0o600);stream.write('sourceSha='+os.environ['SOURCE_SHA']+'\nsourceSha256='+before+'\nclassSha256='+digest(compiled)+'\n')
+        result['proof']=controlled_content_proof()
+    # Release only this owner's fixed shell boundary. A real javac failure remains a failure;
+    # it is not recorded as a Maven exit or converted into a successful cache receipt.
+    command(DOCKER+['exec',cid,'/bin/bash','-c','printf "%s\\n" "$1" >/tmp/cy-cache.content.exit','--',raw])
+    return result
+
+
 def provider_runtime_proof(cache):
     """A real fork/test in preparation, not business acceptance or guessed runtime artifact coordinates."""
     directory=ROOT/'chengyinhub-admin/target/provider-runtime'
@@ -470,7 +580,7 @@ def provider_runtime_proof(cache):
         proof=json.loads(path.read_text())
         exact_test_xml(xml,PROVIDER_PROBE,('bootsActualProjectPlatformRuntime',),'PROVIDER_RUNTIME_XML_REQUIRED')
         require(set(proof)=={'sourceSha','runId','attempt','phase','javaFeature','pid','parentPid','startedAt','forkedBooter',
-                'commandSha256','testClassSha256','runtime','businessExecuted'}
+                'commandSha256','testClassSha256','runtime','businessExecuted','testClasspath'}
                 and proof['sourceSha']==os.environ['SOURCE_SHA'] and proof['phase']==phase
                 and proof['runId']==os.environ['GITHUB_RUN_ID'] and proof['attempt']==os.environ['GITHUB_RUN_ATTEMPT']
                 and proof['javaFeature']==21 and proof['forkedBooter'] is True and proof['businessExecuted'] is False
@@ -488,10 +598,13 @@ def provider_runtime_proof(cache):
             require(jar.is_file() and not jar.is_symlink() and jar.resolve().is_relative_to(cache.resolve())
                     and digest(jar)==record['sha256'],'PROVIDER_RUNTIME_CLASSPATH_CHANGED')
         boots.append((proof['pid'],proof['startedAt']))
-        rows[phase.lower()]={'xmlSha256':digest(xml),'proofSha256':digest(path),
+        classpath=provider_classpath_proof(cache,phase,proof)
+        rows[phase.lower()]={'xmlSha256':digest(xml),'proofSha256':digest(path),'testClasspath':classpath,
             'testClassSha256':proof['testClassSha256'],'runtime':proof['runtime'],
             'forkIdentitySha256':hashlib.sha256(json.dumps(boots[-1],separators=(',',':')).encode()).hexdigest()}
-    require(boots[0]!=boots[1] and rows['online']['runtime']==rows['offline']['runtime'],'PROVIDER_RUNTIME_CLASSPATH_CHANGED')
+    require(boots[0]!=boots[1] and rows['online']['runtime']==rows['offline']['runtime']
+            and {key:value for key,value in rows['online']['testClasspath'].items() if key!='fileName'}==
+                {key:value for key,value in rows['offline']['testClasspath'].items() if key!='fileName'},'PROVIDER_RUNTIME_CLASSPATH_CHANGED')
     return {'purpose':'PREPARATION_PROVIDER_RUNTIME_ONLY','businessExecuted':False,**rows}
 
 
@@ -596,18 +709,29 @@ def fixed_cache_command():
     configuration_report='chengyinhub-admin/target/surefire-reports/TEST-'+CONFIGURATION_UNIT+'.xml'
     photo_report='chengyinhub-admin/target/surefire-reports/TEST-'+PHOTO_UNIT+'.xml'
     for stage,phase,offline in (('ONLINE_PROVIDER_RUNTIME','ONLINE',False),('OFFLINE_PROVIDER_RUNTIME','OFFLINE',True)):
-        selection=PROVIDER_PROBE if offline else PROVIDER_PROBE+','+CONFIGURATION_UNIT+','+PHOTO_UNIT
+        selection=PROVIDER_PROBE
         args=common+(['-o'] if offline else [])+['-P'+TEST_PROFILE,'-pl','chengyinhub-admin','-am','test',
             '-DargLine='+SUREFIRE_FORK_ARGUMENTS+' -Dcombined.provider.phase='+phase,
             '-Dtest='+selection,'-DforkCount=1','-DreuseForks=true','-DfailIfNoTests=false','-Dsurefire.failIfNoSpecifiedTests=false']
         remove="rm -f '"+report+"'"+(" '"+configuration_report+"' '"+photo_report+"'" if not offline else '')
         encoded+='; printf "%s\\n" "'+stage+'" >/tmp/cy-cache.phase; '+remove+'; '+\
             "MAVEN_OPTS='"+RUNTIME_MAVEN_OPTIONS+"' "+\
-            ' '.join("'"+value+"'" for value in ['mvn']+args)+' || exit $?; '+\
+            ' '.join("'"+value+"'" for value in ['mvn']+args)+'; status=$?; '+\
+            'printf "%s\\n" "$status" >/tmp/cy-cache.runtime-maven.exit; [ "$status" -eq 0 ] || exit "$status"; '+\
             "cp '"+report+"' 'chengyinhub-admin/target/provider-runtime/"+phase.lower()+".xml' || exit $?; "+\
             "chmod 600 'chengyinhub-admin/target/provider-runtime/"+phase.lower()+".xml' || exit $?"
         if not offline:
-            encoded+="; cp '"+configuration_report+"' 'chengyinhub-admin/target/provider-runtime/configuration.xml' || exit $?; "+\
+            encoded+='; printf "%s\\n" "CONTENT_SECURITY_COMPILE" >/tmp/cy-cache.phase; '+\
+                     'while [ ! -f /tmp/cy-cache.content.exit ]; do sleep .1; done; '+\
+                     'status=$(cat /tmp/cy-cache.content.exit) || exit 98; [ "$status" -eq 0 ] || exit "$status"'
+            unit_args=common+['-P'+TEST_PROFILE,'-pl','chengyinhub-admin','-am','test',
+                '-DargLine='+SUREFIRE_FORK_ARGUMENTS,'-Dtest='+CONFIGURATION_UNIT+','+PHOTO_UNIT,
+                '-DforkCount=1','-DreuseForks=true','-DfailIfNoTests=false','-Dsurefire.failIfNoSpecifiedTests=false']
+            encoded+='; printf "%s\\n" "ONLINE_CONFIGURATION_UNITS" >/tmp/cy-cache.phase; '+\
+                     "rm -f '"+configuration_report+"' '"+photo_report+"'; MAVEN_OPTS='"+RUNTIME_MAVEN_OPTIONS+"' "+\
+                     ' '.join("'"+value+"'" for value in ['mvn']+unit_args)+'; status=$?; '+\
+                     'printf "%s\\n" "$status" >/tmp/cy-cache.runtime-maven.exit; [ "$status" -eq 0 ] || exit "$status"; '+\
+                     "cp '"+configuration_report+"' 'chengyinhub-admin/target/provider-runtime/configuration.xml' || exit $?; "+\
                      "chmod 600 'chengyinhub-admin/target/provider-runtime/configuration.xml' || exit $?; "+\
                      "cp '"+photo_report+"' 'chengyinhub-admin/target/provider-runtime/photo-service.xml' || exit $?; "+\
                      "chmod 600 'chengyinhub-admin/target/provider-runtime/photo-service.xml' || exit $?"
@@ -728,13 +852,30 @@ def warm_cache():
             status=command(DOCKER+['exec',cid,'/bin/bash','-c','if [ -f /tmp/cy-cache.exit ]; then cat /tmp/cy-cache.exit; fi']).decode().strip()
             if status:
                 require(re.fullmatch('[0-9]{1,3}',status) and int(status)<256,'ACTUAL_MAVEN_EXIT_REQUIRED');break
+            phase=command(DOCKER+['exec',cid,'/bin/bash','-c','if [ -f /tmp/cy-cache.phase ]; then cat /tmp/cy-cache.phase; fi']).decode().strip()
+            if phase=='CONTENT_SECURITY_COMPILE' and 'controlledContentSecurityCompiler' not in report:
+                substage='CONTENT_SECURITY'
+                previous=command(DOCKER+['exec',cid,'cat','/tmp/cy-cache.runtime-maven.exit']).decode().strip()
+                require(previous=='0','ACTUAL_MAVEN_EXIT_REQUIRED')
+                report['mavenExitObserved']=True;report['mavenExit']=0
+                require(cache_inputs()==report['pomSha256'] and fixed_test_compilation_inputs()==compilation,'COMPILED_POSTIMAGE_DRIFT')
+                snapshot=fixed_test_compilation_outputs(compilation)
+                report['controlledContentSecurityCompiler']=compile_controlled_content(cid,cache,deadline)
+                require(fixed_test_compilation_outputs(compilation)==snapshot,'COMPILED_POSTIMAGE_DRIFT')
+                publish();substage='WAIT_EXIT'
             time.sleep(.5)
-        substage='MAVEN_EXIT';report['originalExit']=report['mavenExit']=int(status);report['mavenExitObserved']=True
+        substage='MAVEN_EXIT';report['originalExit']=int(status)
+        compiler=report.get('controlledContentSecurityCompiler')
+        if compiler is None or compiler.get('exit')==0:
+            report['mavenExit']=int(status);report['mavenExitObserved']=True
         report['offlinePackageProbeExit']=cache_offline_probe_exit(cid)
         report['cgroup']=read_cgroup(obj['State']['Pid'],cid)
         require(int(report['cgroup']['memoryEvents'].get('oom_kill','-1'))==0,'ACTUAL_CGROUP_CHILD_OOM_KILL')
         substage='CORE_IDENTITY';core=command(DOCKER+['exec',cid,'sha256sum','/usr/share/maven/lib/maven-core-'+CORE_VERSION+'.jar']).decode().split()[0]
         require(re.fullmatch('[0-9a-f]{64}',core),'FIXED_CACHE_TOOLCHAIN_REQUIRED');report['mavenCoreSha256']=core
+        if compiler is not None:
+            substage='CONTENT_SECURITY'
+            require(compiler.get('exitObserved') is True and compiler.get('exit')==0,'CONTROLLED_CONTENT_SECURITY_COMPILE_FAILED')
         if report['mavenExit']!=0:
             # Freeze the current compile postimage for diagnostics only. Never replace the original
             # Maven failure with a missing/invalid compile receipt or promote this to an acceptance proof.
@@ -747,6 +888,9 @@ def warm_cache():
         substage='MANIFEST'
         require(fixed_test_compilation_inputs()==compilation,'COMPILED_POSTIMAGE_DRIFT')
         report['testCompilation']=fixed_test_compilation_outputs(compilation)
+        substage='CONTENT_SECURITY';report['controlledContentSecurity']=controlled_content_proof()
+        require(compiler is not None and compiler.get('exitObserved') is True and compiler.get('exit')==0
+                and compiler.get('proof')==report['controlledContentSecurity'],'CONTROLLED_CONTENT_SECURITY_PROOF_REQUIRED')
         substage='PROVIDER_RUNTIME';report['providerRuntime']=provider_runtime_proof(cache)
         substage='CONFIGURATION_UNIT';report['configurationUnit']=configuration_unit_proof(report['testCompilation'])
         substage='MANIFEST'
@@ -771,7 +915,7 @@ def warm_cache():
                 if obj['State']['Running']:
                     phase=command(DOCKER+['exec',slot['cid'],'cat','/tmp/cy-cache.phase']).decode().strip()
                     report['phase']=phase if phase in ('OFFLINE_PACKAGE_PROBE','ONLINE_PACKAGE','ORIGINAL_PROVIDER_GET',
-                            'ONLINE_PROVIDER_RUNTIME','OFFLINE_PROVIDER_RUNTIME','OFFLINE_TEST_PREFLIGHT') else 'UNKNOWN'
+                            'ONLINE_PROVIDER_RUNTIME','CONTENT_SECURITY_COMPILE','ONLINE_CONFIGURATION_UNITS','OFFLINE_PROVIDER_RUNTIME','OFFLINE_TEST_PREFLIGHT') else 'UNKNOWN'
                     if report['offlinePackageProbeExit'] is None and not report['mavenExitObserved']:
                         report['offlinePackageProbeExit']=cache_offline_probe_exit(slot['cid'],required=False)
         except Exception as failure:report['failures'].append(cache_failure(failure,'CACHE_PRIVATE_LOG','PRIVATE_LOG'))
@@ -784,7 +928,7 @@ def warm_cache():
                 require(obj['State']['Running'],'CACHE_PROCESS_EXIT_BEFORE_RECEIPT')
                 phase=command(DOCKER+['exec',slot['cid'],'cat','/tmp/cy-cache.phase']).decode().strip()
                 if phase in ('OFFLINE_PACKAGE_PROBE','ONLINE_PACKAGE','ORIGINAL_PROVIDER_GET',
-                             'ONLINE_PROVIDER_RUNTIME','OFFLINE_PROVIDER_RUNTIME','OFFLINE_TEST_PREFLIGHT'):report['phase']=phase
+                             'ONLINE_PROVIDER_RUNTIME','ONLINE_CONFIGURATION_UNITS','OFFLINE_PROVIDER_RUNTIME','OFFLINE_TEST_PREFLIGHT'):report['phase']=phase
                 report['preparationTests']=preparation_test_evidence(report,compilation,failed_postimage,state,obj,phase)
             except Exception:
                 report['preparationTests']={'purpose':'PREPARATION_JUNIT_DIAGNOSTIC_ONLY','state':'UNKNOWN',
@@ -815,6 +959,11 @@ def verified_cache(cache):
             and report.get('testCompilation')==fixed_test_compilation_outputs(fixed_test_compilation_inputs())
             and report.get('providerRuntime')==provider_runtime_proof(cache)
             and report.get('configurationUnit')==configuration_unit_proof(report['testCompilation'])
+            and report.get('controlledContentSecurity')==controlled_content_proof()
+            and report.get('controlledContentSecurityCompiler',{}).get('exitObserved') is True
+            and report['controlledContentSecurityCompiler'].get('exit')==0
+            and report['controlledContentSecurityCompiler'].get('proof')==report['controlledContentSecurity']
+            and report['controlledContentSecurityCompiler'].get('testClasspath')==report['providerRuntime']['online']['testClasspath']
             and report.get('cleanup',{}).get('result')=='EXACT_CID_REMOVED_AND_ABSENT'
             and report['cleanup'].get('terminal',{}).get('OOMKilled') is False
             and report['cleanup'].get('terminal',{}).get('ExitCode') in (0,143)
@@ -823,7 +972,7 @@ def verified_cache(cache):
             and report.get('budget',{}).get('memory')==report['budget'].get('memorySwap')==MEMORY
             and report['budget'].get('nanoCpus')==1000000000 and report['budget'].get('pids')==256,'OFFLINE_CACHE_PREFLIGHT_REQUIRED')
     validate_cgroup_limits(report['cgroup']['limits'])
-    return {key:report[key] for key in ('image','imageId','mavenVersion','mavenCoreSha256','settingsSha256','cache')} | {'reportSha256':digest(CACHE_REPORT)}
+    return {key:report[key] for key in ('image','imageId','mavenVersion','mavenCoreSha256','settingsSha256','cache','controlledContentSecurity')} | {'reportSha256':digest(CACHE_REPORT)}
 
 
 def cache_stop_signal(number,_frame):
@@ -1344,6 +1493,7 @@ def source_manifest():
         for artifact in jars:
             require(not artifact.is_symlink(),'SYMLINK_REACTOR_ARTIFACT');artifacts[str(artifact.relative_to(ROOT))]=digest(artifact)
     return {'classTrees':trees,'reactorJars':artifacts,'selectedClassSha256':digest(selected),'gitPropertiesSha256':digest(props),'artifactJarSha256':digest(jar),
+            'controlledContentSecurity':controlled_content_proof(),
             'testCompilation':fixed_test_compilation_outputs(fixed_test_compilation_inputs()),
             'freshSchemaReportSha256':digest(OUT/'fresh-schema.json'),
             'execution':'ORIGINAL_SUREFIRE_TEST_CLASSPATH_NOT_PACKAGED_APPLICATION_JAR'}
@@ -1583,15 +1733,21 @@ def jvm_memory_binding(argv,role):
     else:return None # No memory-profile acceptance claim for another descendant; original cgroup guards remain.
     prefixes=('-Xms','-Xmx','-XX:InitialHeapSize=','-XX:MaxHeapSize=','-XX:MaxRAM=',
               '-XX:MaxRAMPercentage=','-XX:InitialRAMPercentage=','-XX:MinRAMPercentage=',
-              '-XX:MaxDirectMemorySize=','-XX:ReservedCodeCacheSize=')
+              '-XX:MaxDirectMemorySize=','-XX:ReservedCodeCacheSize=',
+              '-XX:TieredStopAtLevel=','-XX:CompilationMode=')
     collectors=tuple('-XX:'+sign+name for sign in ('+','-') for name in
                      ('UseSerialGC','UseG1GC','UseParallelGC','UseZGC','UseShenandoahGC','UseEpsilonGC'))
-    selected=lambda values:[value for value in values if value.startswith(prefixes) or value in collectors]
+    compilation=('-XX:+TieredCompilation','-XX:-TieredCompilation','-Xint','-Xcomp',
+                 '-XX:+UseCompiler','-XX:-UseCompiler','-XX:+ProfileInterpreter','-XX:-ProfileInterpreter',
+                 '-XX:+UseJVMCICompiler','-XX:-UseJVMCICompiler')
+    selected=lambda values:[value for value in values if value.startswith(prefixes) or value in collectors or value in compilation]
     require(selected(argv)==selected(options.split()),'FIXED_JVM_MEMORY_ARGUMENTS_REQUIRED')
     return {'profile':profile,'maxHeapBytes':heap*1024**2,
             'maxDirectMemoryBytes':direct*1024**2 if direct is not None else None,
             'reservedCodeCacheBytes':code*1024**2 if code is not None else None,
-            'collector':'SerialGC' if profile!='SCHEDULER_PROBE' else 'DEFAULT_UNATTESTED'}
+            'collector':'SerialGC' if profile!='SCHEDULER_PROBE' else 'DEFAULT_UNATTESTED',
+            'tieredStopAtLevel':1 if profile!='SCHEDULER_PROBE' else None,
+            'compilationMode':'C1_SIMPLE' if profile!='SCHEDULER_PROBE' else 'DEFAULT_UNATTESTED'}
 
 
 def process_memory(status):
@@ -1674,6 +1830,8 @@ def validate_app_inputs(obj,path,state):
     require(obj['Config']['Entrypoint'] == ['/bin/bash'] and obj['Config']['Cmd'] == fixed_maven_command(),'FIXED_OFFLINE_MAVEN_COMMAND_CHANGED')
     expected = {(str(ROOT),str(ROOT),False),(state['cache'],'/cache/repository',False),(str(path/'launch'),'/budget',False)}
     expected.update((str(ROOT/module/'target'),str(ROOT/module/'target'),True) for module in MODULES)
+    content=ROOT/'chengyinhub-admin/target/controlled-content-security'
+    expected.add((str(content),str(content),False))
     binds = {(m['Source'],m['Destination'],m['RW']) for m in obj['Mounts'] if m['Type']=='bind'}
     require(binds == expected and all(m['Type']=='bind' or (m['Type']=='tmpfs' and m['Destination']=='/tmp')
             for m in obj['Mounts']), 'PRIVATE_MOUNT_BOUNDARY_CHANGED')
@@ -1707,6 +1865,8 @@ def run_owned_app(path,state):
     for module in MODULES:
         target = ROOT/module/'target'; require(target.is_dir() and not target.is_symlink(),'ORIGINAL_TARGET_REQUIRED')
         mounts.append((target,target,'readonly=false'))
+    require(controlled_content_proof()==state['cacheProof']['controlledContentSecurity'],'CONTROLLED_CONTENT_SECURITY_PROOF_REQUIRED')
+    content=ROOT/'chengyinhub-admin/target/controlled-content-security';mounts.append((content,content,'readonly'))
     state['phase']='APP_CREATE';save(path,state)
     state['executionSubstage']='APP_CREATE'
     cid = create_slot(path,state,'app',JDK,fixed_maven_command(),mounts,path/'private.env')
@@ -1910,6 +2070,12 @@ def check_subject(report, subject_identity, java_pid, jar_sha256):
             require(process.get('jvmMemory')==jvm_memory_binding(options.split(),process['role']),
                     'FIXED_JVM_MEMORY_ARGUMENTS_REQUIRED')
     cache_proof=report.get('cacheProof',{})
+    content=cache_proof.get('controlledContentSecurity',{})
+    require(content==report.get('source',{}).get('controlledContentSecurity')
+            and set(content)=={'purpose','sourceSha','sourceSha256','classSha256','proofSha256'}
+            and content['purpose']=='SAME_SOURCE_PRECOMPILED_CONTENT_SECURITY' and content['sourceSha']==subject_identity['sourceSha']
+            and all(re.fullmatch('[0-9a-f]{64}',content.get(key,'')) for key in ('sourceSha256','classSha256','proofSha256')),
+            'CONTROLLED_CONTENT_SECURITY_PROOF_REQUIRED')
     require(cache_proof.get('image')==JDK and cache_proof.get('mavenVersion')==CORE_VERSION
             and cache_proof.get('imageId')==report['slots']['app']['budget'].get('imageId')
             and cache_proof.get('settingsSha256')==hashlib.sha256(EMPTY_SETTINGS.encode()).hexdigest()

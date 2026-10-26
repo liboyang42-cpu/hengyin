@@ -65,7 +65,8 @@ class CombinedBudgetControls(unittest.TestCase):
         obj={'HostConfig':{'ReadonlyRootfs':True},'Config':{'User':str(os.getuid())+':'+str(os.getgid()),
              'Entrypoint':['/bin/bash'],'Cmd':B.fixed_maven_command()},'Mounts':[]}
         for source,target,rw in [(str(B.ROOT),str(B.ROOT),False),('/existing/repository','/cache/repository',False),
-                                 (str(path/'launch'),'/budget',False)]+[(str(B.ROOT/m/'target'),str(B.ROOT/m/'target'),True) for m in B.MODULES]:
+                                 (str(path/'launch'),'/budget',False),
+                                 (str(B.ROOT/'chengyinhub-admin/target/controlled-content-security'),str(B.ROOT/'chengyinhub-admin/target/controlled-content-security'),False)]+[(str(B.ROOT/m/'target'),str(B.ROOT/m/'target'),True) for m in B.MODULES]:
             obj['Mounts'].append({'Source':source,'Destination':target,'RW':rw,'Type':'bind'})
         obj['Config']['Env']=[k+'='+v for k,v in {**state['jdkEnvironment'],**B.child_environment(self.env())}.items()]
         with patch.dict(os.environ,self.env(),clear=True):
@@ -181,7 +182,7 @@ class CombinedBudgetControls(unittest.TestCase):
 
     def subject_report(self):
         report=self.cleanup_report()
-        report.update(result='FIXED_COMBINED_BUDGET_PROCESS_PROVEN',source={'artifactJarSha256':'f'*64},
+        report.update(result='FIXED_COMBINED_BUDGET_PROCESS_PROVEN',source={'artifactJarSha256':'f'*64,'controlledContentSecurity':self.content_receipt()},
                       originalExit=0,mavenExit=0,appExit={'ExitCode':0,'OOMKilled':False,'Running':False,'Pid':0},
                       database=self.env()['CHENGYIN_HTTP_E2E_DATABASE'])
         limits={'memory.max':str(B.MEMORY),'memory.swap.max':'0','cpu.max':'100000 100000','pids.max':'256'}
@@ -194,7 +195,7 @@ class CombinedBudgetControls(unittest.TestCase):
                     'imageId':'sha256:'+'d'*64,'memory':memory,'memorySwap':memory,'nanoCpus':1000000000,'pids':256}
         report['cacheProof']={'image':B.JDK,'imageId':'sha256:'+'d'*64,'mavenVersion':'3.9.11','mavenCoreSha256':'c'*64,
                              'settingsSha256':B.hashlib.sha256(B.EMPTY_SETTINGS.encode()).hexdigest(),
-                             'cache':{'files':1,'bytes':1,'sha256':'e'*64},'reportSha256':'a'*64}
+                             'cache':{'files':1,'bytes':1,'sha256':'e'*64},'reportSha256':'a'*64,'controlledContentSecurity':self.content_receipt()}
         report['mysql'].update(image=B.MYSQL,memory=B.MEMORY,memorySwap=B.MEMORY,nanoCpus=1000000000,pids=256)
         report['mysqlBootstrap']={**B.identity(self.env()),'result':'READY','originalExit':0,'reportSha256':'a'*64,
                 'hostPath':{'result':'ORIGINAL_OWNED_MYSQL_RELAY','mysqlCid':'2'*64,'hostEndpoint':'127.0.0.1:33080','closedAfterReadiness':True},
@@ -594,11 +595,21 @@ class CombinedBudgetControls(unittest.TestCase):
 
     def provider_receipt(self):
         return {'purpose':'PREPARATION_PROVIDER_RUNTIME_ONLY','businessExecuted':False,
-                'online':{'proofSha256':'1'*64},'offline':{'proofSha256':'2'*64}}
+                'online':{'proofSha256':'1'*64,'testClasspath':{'fileName':'online.classpath','sha256':'1'*64,'byteLength':40,'entryCount':2}},
+                'offline':{'proofSha256':'2'*64,'testClasspath':{'fileName':'offline.classpath','sha256':'1'*64,'byteLength':40,'entryCount':2}}}
+
+    def content_receipt(self):
+        # Synthetic protocol binding only, not a generated compiler artifact.
+        return {'purpose':'SAME_SOURCE_PRECOMPILED_CONTENT_SECURITY','sourceSha':self.env()['SOURCE_SHA'],
+                'sourceSha256':'3'*64,'classSha256':'4'*64,'proofSha256':'5'*64}
+
+    def compiler_receipt(self):
+        return {'purpose':'PREPARATION_COMPILER_ONLY','exitObserved':True,'exit':0,
+                'testClasspath':self.provider_receipt()['online']['testClasspath'],'proof':self.content_receipt()}
 
     def configuration_receipt(self):
         # Transport binding only. Real fixed XML/source/class controls are below.
-        return {'purpose':'CONFIG_ASSEMBLY_ONLY','businessExecuted':False,'tests':9,'failures':0,'errors':0,'skipped':0,
+        return {'purpose':'CONFIG_ASSEMBLY_ONLY','businessExecuted':False,'tests':11,'failures':0,'errors':0,'skipped':0,
                 'xmlSha256':'3'*64,'sourceSha256':'4'*64,'testClassSha256':'5'*64}
 
     def cache_receipt(self):
@@ -609,6 +620,7 @@ class CombinedBudgetControls(unittest.TestCase):
                 'testCompilation':self.compilation_receipt(),
                 'providerRuntime':self.provider_receipt(),
                 'configurationUnit':self.configuration_receipt(),
+                'controlledContentSecurity':self.content_receipt(),'controlledContentSecurityCompiler':self.compiler_receipt(),
                 'pomSha256':{'pom.xml':'f'*64},'budget':{'memory':B.MEMORY,'memorySwap':B.MEMORY,'nanoCpus':1000000000,'pids':256},
                 'cgroup':{'limits':{'memory.max':str(B.MEMORY),'memory.swap.max':'0','cpu.max':'100000 100000','pids.max':'256'}},
                 'cleanup':{'result':'EXACT_CID_REMOVED_AND_ABSENT','terminal':{'OOMKilled':False,'ExitCode':143}}}
@@ -622,6 +634,7 @@ class CombinedBudgetControls(unittest.TestCase):
                  patch.object(B,'fixed_test_compilation_outputs',return_value=changes.get('compilation',self.compilation_receipt())),\
                  patch.object(B,'provider_runtime_proof',return_value=changes.get('provider',self.provider_receipt())),\
                  patch.object(B,'configuration_unit_proof',return_value=changes.get('configuration',self.configuration_receipt())),\
+                 patch.object(B,'controlled_content_proof',return_value=changes.get('content',self.content_receipt())),\
                  patch.object(B,'cache_manifest',return_value=changes.get('cache',self.subject_report()['cacheProof']['cache'])):
                 return B.verified_cache(Path(directory))
 
@@ -720,14 +733,14 @@ class CombinedBudgetControls(unittest.TestCase):
 
     def warm_transport_control(self,exit_code=0,foreign=False,write_fails=False,
                                failure_point=None,terminal_exit=143,no_plugin=False,probe_exit=0,
-                               preparation_phase='OFFLINE_TEST_PREFLIGHT',log_error=False):
+                               preparation_phase='OFFLINE_TEST_PREFLIGHT',log_error=False,compiler_exit=0):
         # Transport/file protocol doubles only: not Maven/Java execution or dependency acceptance evidence.
         reports=[];mutations=[];obj={};image_id='sha256:'+'d'*64
         with tempfile.TemporaryDirectory() as directory,contextlib.ExitStack() as own_cleanup:
             owned=B.private_directory(Path(B.command(['mktemp','-d','/tmp/cy-http-budget.XXXXXXXX']).decode().strip()))
             own_cleanup.callback(lambda:B.shutil.rmtree(B.private_directory(owned)) if owned.exists() else None)
             private=str(owned);root=Path(directory);cache=root/'home/.m2/repository';cache.mkdir(parents=True)
-            allocations=[];inspections=[];ticks=[]
+            allocations=[];inspections=[];ticks=[];content_compiled=[False]
             (cache/'synthetic-control.jar').write_bytes(b'not an actual dependency')
             def native(argv,**kwargs):
                 if 'logs' in argv:
@@ -758,7 +771,10 @@ class CombinedBudgetControls(unittest.TestCase):
                                State={'Running':True,'Pid':17,'ExitCode':0,'OOMKilled':False})
                     return cid.encode()
                 if 'sha256sum' in argv:return ('c'*64+'  fixed-core.jar\n').encode()
-                if argv[-1]=='/tmp/cy-cache.phase':return preparation_phase.encode()
+                if '/tmp/cy-cache.phase' in argv[-1]:return (preparation_phase if content_compiled[0] or exit_code else 'CONTENT_SECURITY_COMPILE').encode()
+                if argv[-1]=='/tmp/cy-cache.runtime-maven.exit':return b'0'
+                if 'exec' in argv and '/tmp/cy-cache.exit' in argv[-1] and exit_code==0 and not content_compiled[0]:return b''
+                if 'exec' in argv and '/tmp/cy-cache.exit' in argv[-1] and content_compiled[0] and compiler_exit:return str(compiler_exit).encode()
                 if 'exec' in argv and '/tmp/cy-cache.offline.exit' in argv[-1]:
                     return b'' if probe_exit is None else str(probe_exit).encode()
                 if 'exec' in argv:return b'PRIVATE_BAD_RECEIPT' if failure_point=='INVALID_RECEIPT' else str(exit_code).encode()
@@ -776,6 +792,10 @@ class CombinedBudgetControls(unittest.TestCase):
             def clock():
                 ticks.append(1)
                 return B.LIMIT_SECONDS if failure_point=='DEADLINE' and len(ticks)>1 else 0
+            def compile_content(*args):
+                content_compiled[0]=True;receipt=self.compiler_receipt();receipt['exit']=compiler_exit
+                if compiler_exit:receipt.pop('proof')
+                return receipt
             with patch.dict(os.environ,self.env(),clear=True),patch.object(B,'ROOT',root),patch.object(B,'PUBLIC',root/'public'),\
                  patch.object(B.Path,'home',return_value=root/'home'),\
                  patch.object(B,'cache_inputs',return_value={'pom.xml':'f'*64}),patch.object(B,'inspect',side_effect=inspect),\
@@ -783,6 +803,8 @@ class CombinedBudgetControls(unittest.TestCase):
                  patch.object(B,'fixed_test_compilation_outputs',return_value=self.compilation_receipt()),\
                  patch.object(B,'provider_runtime_proof',return_value=self.provider_receipt()),\
                  patch.object(B,'configuration_unit_proof',return_value=self.configuration_receipt()),\
+                 patch.object(B,'controlled_content_proof',return_value=self.content_receipt()),\
+                 patch.object(B,'compile_controlled_content',side_effect=compile_content),\
                  patch.object(B,'command',side_effect=command),patch.object(B.subprocess,'run',side_effect=native),\
                  patch.object(B.time,'monotonic',side_effect=clock),\
                  patch.object(B,'absent'),patch.object(B,'read_cgroup',return_value={'limits':self.cache_receipt()['cgroup']['limits'],'memoryEvents':{'oom_kill':'0'}}),\
@@ -997,12 +1019,13 @@ class CombinedBudgetControls(unittest.TestCase):
             preserved=[]
             for relative in ('classes/main.class','original.jar','http-e2e/public/receipt.json','maven-status/maven-compiler-plugin/compile/state'):
                 path=target/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('preserve');preserved.append(path)
-            for relative in ('test-classes/stale.class','generated-test-sources/stale/Other.java','maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst','provider-runtime/old.json'):
+            for relative in ('test-classes/stale.class','generated-test-sources/stale/Other.java','maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst','provider-runtime/old.json','controlled-content-security/classes/old.class'):
                 path=target/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('stale')
             B.reset_fixed_test_outputs()
             self.assertFalse((target/'test-classes').exists());self.assertFalse((target/'maven-status/maven-compiler-plugin/testCompile').exists())
             self.assertFalse((target/'generated-test-sources').exists())
             self.assertFalse((target/'provider-runtime').exists())
+            self.assertFalse((target/'controlled-content-security').exists())
             self.assertTrue(all(p.read_text()=='preserve' for p in preserved))
             (target/'test-classes').symlink_to(target/'classes',target_is_directory=True)
             with self.assertRaisesRegex(ValueError,'STALE_TEST_OUTPUT_BOUNDARY_CHANGED'):B.reset_fixed_test_outputs()
@@ -1093,16 +1116,22 @@ class CombinedBudgetControls(unittest.TestCase):
                   'api':('org/junit/jupiter/junit-jupiter-api','junit-jupiter-api'),
                   'mockito':('org/mockito/mockito-core','mockito-core')}
         runtime={}
+        classpath=[str(root/'chengyinhub-admin/target/test-classes'),str(root/'chengyinhub-admin/target/classes')]
+        (root/'chengyinhub-admin/target/classes').mkdir(exist_ok=True)
         for key,(relative,artifact) in families.items():
             jar=cache/relative/'1.0.0'/(artifact+'-1.0.0.jar');jar.parent.mkdir(parents=True)
             jar.write_bytes(('synthetic '+key+' artifact, not a dependency').encode())
             runtime[key]={'version':'1.0.0','sha256':B.digest(jar)}
+            classpath.append(str(Path('/cache/repository')/jar.relative_to(cache)))
+        cp=':'.join(classpath).encode()
         for i,phase in enumerate(('ONLINE','OFFLINE')):
             proof={'sourceSha':self.env()['SOURCE_SHA'],'runId':self.env()['GITHUB_RUN_ID'],'attempt':self.env()['GITHUB_RUN_ATTEMPT'],
                 'phase':phase,'javaFeature':21,
                 'pid':100+i,'parentPid':90+i,'startedAt':'2026-01-01T00:00:0'+str(i)+'Z',
                 'forkedBooter':True,'commandSha256':'b'*64,'testClassSha256':B.digest(probe),
-                'runtime':runtime,'businessExecuted':False}
+                'runtime':runtime,'businessExecuted':False,
+                'testClasspath':{'fileName':phase.lower()+'.classpath','sha256':B.hashlib.sha256(cp).hexdigest(),'byteLength':len(cp),'entryCount':len(classpath)}}
+            cp_file=directory/(phase.lower()+'.classpath');cp_file.write_bytes(cp);cp_file.chmod(0o600)
             file=directory/(phase.lower()+'.json');file.write_text(json.dumps(proof));file.chmod(0o600)
             xml=directory/(phase.lower()+'.xml')
             xml.write_text('<testsuite name="'+B.PROVIDER_PROBE+'" tests="1" failures="0" errors="0" skipped="0">'
@@ -1116,8 +1145,8 @@ class CombinedBudgetControls(unittest.TestCase):
         self.assertEqual(shell.count('-Dtest='+B.PROVIDER_PROBE),2)
         self.assertIn('ONLINE_PROVIDER_RUNTIME',shell);self.assertIn('OFFLINE_PROVIDER_RUNTIME',shell)
         self.assertIn('-Dcombined.provider.phase=ONLINE',shell);self.assertIn('-Dcombined.provider.phase=OFFLINE',shell)
-        self.assertEqual(shell.count(B.SUREFIRE_FORK_ARGUMENTS),2)
-        self.assertEqual(shell.count('-DforkCount=1'),2);self.assertEqual(shell.count('-DreuseForks=true'),2)
+        self.assertEqual(shell.count(B.SUREFIRE_FORK_ARGUMENTS),3)
+        self.assertEqual(shell.count('-DforkCount=1'),3);self.assertEqual(shell.count('-DreuseForks=true'),3)
         self.assertIn('-Dtest='+B.CLASS,actual);self.assertIn('-DargLine='+B.SUREFIRE_FORK_ARGUMENTS,actual)
         self.assertIn('-o',actual);self.assertNotIn('-DskipTests',actual);self.assertNotIn('-Dmaven.test.skip=true',actual)
         self.assertEqual(B.LIMIT_SECONDS,1200);self.assertEqual(B.MEMORY,1073741824)
@@ -1416,9 +1445,13 @@ class CombinedBudgetControls(unittest.TestCase):
 
     def test_configuration_unit_runs_once_online_without_replacing_either_provider_fork_or_business(self):
         shell=B.fixed_cache_command()[1]
-        online=shell.split('"ONLINE_PROVIDER_RUNTIME"',1)[1].split('"OFFLINE_PROVIDER_RUNTIME"',1)[0]
+        online=shell.split('"ONLINE_PROVIDER_RUNTIME"',1)[1].split('"CONTENT_SECURITY_COMPILE"',1)[0]
+        units=shell.split('"ONLINE_CONFIGURATION_UNITS"',1)[1].split('"OFFLINE_PROVIDER_RUNTIME"',1)[0]
         offline=shell.split('"OFFLINE_PROVIDER_RUNTIME"',1)[1].split('"OFFLINE_TEST_PREFLIGHT"',1)[0]
-        self.assertIn("'-Dtest="+B.PROVIDER_PROBE+','+B.CONFIGURATION_UNIT+','+B.PHOTO_UNIT+"'",online)
+        self.assertIn("'-Dtest="+B.PROVIDER_PROBE+"'",online)
+        self.assertNotIn("'-Dtest="+B.CONFIGURATION_UNIT,online)
+        self.assertIn("'-Dtest="+B.CONFIGURATION_UNIT+','+B.PHOTO_UNIT+"'",units)
+        self.assertNotIn(B.PROVIDER_PROBE,units)
         self.assertIn("'-Dtest="+B.PROVIDER_PROBE+"'",offline);self.assertNotIn(B.CONFIGURATION_UNIT,offline)
         self.assertIn('rm -f',online);self.assertIn('TEST-'+B.CONFIGURATION_UNIT+'.xml',online)
         self.assertIn('provider-runtime/configuration.xml',online)
@@ -1436,7 +1469,7 @@ class CombinedBudgetControls(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),patch.object(B,'ROOT',Path(directory)):
             xml,source,test_class,compilation=self.configuration_scope(Path(directory));proof=B.configuration_unit_proof(compilation)
             self.assertEqual(proof['purpose'],'CONFIG_ASSEMBLY_ONLY');self.assertIs(proof['businessExecuted'],False)
-            self.assertEqual({key:proof[key] for key in ('tests','failures','errors','skipped')},{'tests':9,'failures':0,'errors':0,'skipped':0})
+            self.assertEqual({key:proof[key] for key in ('tests','failures','errors','skipped')},{'tests':11,'failures':0,'errors':0,'skipped':0})
             self.assertEqual(proof['methods'],list(B.CONFIGURATION_METHODS));self.assertEqual(proof['xmlSha256'],B.digest(xml))
             self.assertEqual(proof['sourceSha256'],B.digest(source));self.assertEqual(proof['testClassSha256'],B.digest(test_class))
             self.assertEqual(proof['sourceSha'],self.env()['SOURCE_SHA']);self.assertEqual(proof['runId'],self.env()['GITHUB_RUN_ID'])
@@ -1512,8 +1545,8 @@ class CombinedBudgetControls(unittest.TestCase):
     def test_runtime_memory_profiles_are_identical_in_warm_probes_and_actual_consumers(self):
         shell=B.fixed_cache_command()[1];child=B.child_environment(self.env())
         self.assertEqual(child['MAVEN_OPTS'],B.RUNTIME_MAVEN_OPTIONS)
-        self.assertEqual(shell.count("MAVEN_OPTS='"+B.RUNTIME_MAVEN_OPTIONS+"'"),2)
-        self.assertEqual(shell.count(B.SUREFIRE_FORK_ARGUMENTS),2)
+        self.assertEqual(shell.count("MAVEN_OPTS='"+B.RUNTIME_MAVEN_OPTIONS+"'"),3)
+        self.assertEqual(shell.count(B.SUREFIRE_FORK_ARGUMENTS),3)
         self.assertIn('-DargLine='+B.SUREFIRE_FORK_ARGUMENTS,B.fixed_maven_command())
         for role,options,heap,direct,code in (('MAVEN',B.RUNTIME_MAVEN_OPTIONS,128,16,32),
                 ('SUREFIRE',B.SUREFIRE_MEMORY_ARGUMENTS,384,64,64)):
@@ -1582,9 +1615,11 @@ class CombinedBudgetControls(unittest.TestCase):
                          'combinationIdentityFileRejectsExistingAndPendingFilesBeforeSql'))
         self.assertEqual(B.CONFIGURATION_METHODS[5:7],('protectedFactDigestPreservesJdbcScalarAndTimeFacts',
                          'protectedFactDigestRetainsQueryAndSerializationFailures'))
-        self.assertEqual(B.CONFIGURATION_METHODS[7:],('photoNeverReadRetainsConnectionAcrossIndependentTransaction',
+        self.assertEqual(B.CONFIGURATION_METHODS[7:9],('photoNeverReadRetainsConnectionAcrossIndependentTransaction',
                          'photoPrepareFailureProjectionKeepsOnlyReviewedCodesAndCause'))
-        self.assertEqual(len(B.CONFIGURATION_METHODS),9)
+        self.assertEqual(B.CONFIGURATION_METHODS[9:],('precompiledContentSecurityFixtureKeepsOriginalChecksAndRejectsUnprovenOutputs',
+                         'providerClasspathCapturePreservesExactBytesAndRejectsUnownedEntries'))
+        self.assertEqual(len(B.CONFIGURATION_METHODS),11)
         self.assertEqual(len(B.PHOTO_METHODS),23)
 
 
@@ -1621,7 +1656,7 @@ class CombinedBudgetControls(unittest.TestCase):
             Env=[key+'='+value for key,value in {'SOURCE_SHA':self.env()['SOURCE_SHA'],'GITHUB_SHA':self.env()['SOURCE_SHA'],
                 'GITHUB_RUN_ID':self.env()['GITHUB_RUN_ID'],'GITHUB_RUN_ATTEMPT':self.env()['GITHUB_RUN_ATTEMPT']}.items()])
         state={'nonce':'nonce','slots':{'app':{'cid':obj['Id'],'name':'own-app'}}}
-        report={**B.identity(self.env()),'phase':'ONLINE_PROVIDER_RUNTIME','mavenExitObserved':True,'mavenExit':1,
+        report={**B.identity(self.env()),'phase':'ONLINE_CONFIGURATION_UNITS','mavenExitObserved':True,'mavenExit':1,
             'originalExit':1,'result':'NOT_ACCEPTED','imageId':obj['Image'],'mavenCoreSha256':'c'*64,'pomSha256':{'pom.xml':'f'*64},
             'budget':B.validate_container(obj,'own-app',B.JDK,B.labels(self.env(),'nonce'),B.MEMORY,'bridge',obj['Id']),
             'firstFailure':{'phase':'PINNED_CACHE_PREPARATION','type':'ValueError','reasonCode':'OFFLINE_CACHE_PREFLIGHT_FAILED'}}
@@ -1646,10 +1681,10 @@ class CombinedBudgetControls(unittest.TestCase):
             self.assertEqual(proof['purpose'],'PREPARATION_JUNIT_DIAGNOSTIC_ONLY');self.assertEqual(proof['mavenExit'],1)
             self.assertEqual(len(proof['compilationSha256']),64)
             rows={row['testClass']:row for row in proof['suites']};failed=rows[B.CONFIGURATION_UNIT]
-            self.assertEqual(failed['counts'],{'tests':9,'failures':1,'errors':0,'skipped':0,'retries':0})
+            self.assertEqual(failed['counts'],{'tests':11,'failures':1,'errors':0,'skipped':0,'retries':0})
             self.assertEqual(failed['nonPassing'],[{'method':B.CONFIGURATION_METHODS[0],'kind':'FAILURE',
                 'type':'org.opentest4j.AssertionFailedError','origin':{'class':B.CONFIGURATION_UNIT,'method':B.CONFIGURATION_METHODS[0],'line':12}}])
-            self.assertEqual(rows[B.PROVIDER_PROBE]['nonPassing'],[]);self.assertEqual(rows[B.PHOTO_UNIT]['nonPassing'],[])
+            self.assertEqual(set(rows),{B.CONFIGURATION_UNIT,B.PHOTO_UNIT});self.assertEqual(rows[B.PHOTO_UNIT]['nonPassing'],[])
             self.assertEqual(scope[0],before)
             for private in ('PRIVATE_VALUE','PRIVATE_MESSAGE','PRIVATE_SQL','PRIVATE_TOKEN','PRIVATE_STDOUT',directory):
                 self.assertNotIn(private,json.dumps(proof))
@@ -1660,6 +1695,14 @@ class CombinedBudgetControls(unittest.TestCase):
             photo=next(row for row in self.preparation_scan(scope)['suites'] if row['testClass']==B.PHOTO_UNIT)
             self.assertEqual(photo['counts']['errors'],1);self.assertEqual(photo['counts']['failures'],0)
             self.assertEqual(photo['nonPassing'][0]['kind'],'ERROR');self.assertEqual(photo['nonPassing'][0]['origin']['line'],13)
+            scope[0]['phase']='ONLINE_PROVIDER_RUNTIME'
+            self.preparation_xml(Path(directory),B.PROVIDER_PROBE,('bootsActualProjectPlatformRuntime',),
+                {'bootsActualProjectPlatformRuntime':[('failure','java.lang.AssertionError',
+                    '\tat '+B.PROVIDER_PROBE+'.bootsActualProjectPlatformRuntime(CombinedSurefireRuntimeProbeTest.java:14)')]})
+            online=self.preparation_scan(scope);self.assertEqual(online['state'],'OBSERVED')
+            self.assertEqual([row['testClass'] for row in online['suites']],[B.PROVIDER_PROBE])
+            self.assertEqual(online['suites'][0]['counts'],{'tests':1,'failures':1,'errors':0,'skipped':0,'retries':0})
+            self.assertEqual(online['suites'][0]['nonPassing'][0]['origin']['line'],14)
 
     def test_missing_bad_mixed_and_unreviewed_preparation_reports_remain_unknown_without_raw_content(self):
         for kind in ('missing','symlink','doctype','malformed','oversize','mixed','foreign-case','unknown-method','duplicate','counts','writable'):
@@ -1743,6 +1786,215 @@ class CombinedBudgetControls(unittest.TestCase):
         self.assertEqual(report['originalExit'],1);self.assertEqual(report['mavenExit'],1);self.assertEqual(report['result'],'NOT_ACCEPTED')
         self.assertEqual(report['preparationTests']['state'],'UNKNOWN');self.assertIsInstance(failure,ValueError)
         self.assertNotIn('PRIVATE_LOG_VALUE',json.dumps(report));self.assertTrue(private)
+
+
+    def test_fixed_c1_policy_reaches_both_real_probe_forks_and_the_original_business_consumer(self):
+        # Command/source control only. This does not execute a JVM or establish the OOM cause.
+        shell=B.fixed_cache_command()[1];actual=B.fixed_maven_command();child=B.child_environment(self.env())
+        self.assertEqual(B.RUNTIME_MAVEN_OPTIONS.count('-XX:TieredStopAtLevel=1'),1)
+        self.assertEqual(B.SUREFIRE_MEMORY_ARGUMENTS.count('-XX:TieredStopAtLevel=1'),1)
+        self.assertEqual(shell.count("MAVEN_OPTS='"+B.RUNTIME_MAVEN_OPTIONS+"'"),3)
+        self.assertEqual(shell.count(B.SUREFIRE_FORK_ARGUMENTS),3)
+        self.assertEqual(child['MAVEN_OPTS'],B.RUNTIME_MAVEN_OPTIONS)
+        self.assertIn('-DargLine='+B.SUREFIRE_FORK_ARGUMENTS,actual)
+        self.assertIn('test',actual);self.assertIn('-am',actual);self.assertIn('-Dtest='+B.CLASS,actual)
+        self.assertNotIn('-DskipTests',actual);self.assertNotIn('-Dmaven.test.skip=true',actual)
+        self.assertEqual(shell.count('-Dtest='+B.PROVIDER_PROBE),2)
+        self.assertIn("'-Dtest="+B.PROVIDER_PROBE+"'",shell)
+        self.assertIn("'-Dtest="+B.CONFIGURATION_UNIT+','+B.PHOTO_UNIT+"'",shell)
+        self.assertEqual(len(B.CONFIGURATION_METHODS),11);self.assertEqual(len(B.PHOTO_METHODS),23)
+        self.assertEqual(len(B.TEST_SOURCES),21);self.assertEqual(len(B.REQUIRED_TEST_CLASSES)+3,40)
+        self.assertEqual(B.MEMORY,1073741824);self.assertEqual(B.LIMIT_SECONDS,1200)
+        for role,options,heap,direct,code in (('MAVEN',B.RUNTIME_MAVEN_OPTIONS,128,16,32),
+                ('SUREFIRE',B.SUREFIRE_MEMORY_ARGUMENTS,384,64,64)):
+            proof=B.jvm_memory_binding(options.split(),role)
+            self.assertEqual(proof['tieredStopAtLevel'],1);self.assertEqual(proof['compilationMode'],'C1_SIMPLE')
+            self.assertEqual(proof['maxHeapBytes'],heap*1024**2)
+            self.assertEqual(proof['maxDirectMemoryBytes'],direct*1024**2)
+            self.assertEqual(proof['reservedCodeCacheBytes'],code*1024**2);self.assertEqual(proof['collector'],'SerialGC')
+
+    def test_c1_policy_rejects_missing_duplicate_disabled_or_overridden_compilation_flags(self):
+        overrides=('-XX:TieredStopAtLevel=4','-XX:TieredStopAtLevel=1','-XX:-TieredCompilation',
+                   '-XX:+TieredCompilation','-XX:CompilationMode=high-only','-Xint','-Xcomp',
+                   '-XX:-UseCompiler','-XX:+UseCompiler','-XX:+ProfileInterpreter','-XX:-ProfileInterpreter',
+                   '-XX:+UseJVMCICompiler','-XX:-UseJVMCICompiler')
+        for role,options in (('MAVEN',B.RUNTIME_MAVEN_OPTIONS),('SUREFIRE',B.SUREFIRE_MEMORY_ARGUMENTS)):
+            missing=[value for value in options.split() if value!='-XX:TieredStopAtLevel=1']
+            with self.subTest(role=role,kind='missing'),self.assertRaisesRegex(ValueError,'FIXED_JVM_MEMORY_ARGUMENTS_REQUIRED'):
+                B.jvm_memory_binding(missing,role)
+            for override in overrides:
+                with self.subTest(role=role,override=override),self.assertRaisesRegex(ValueError,'FIXED_JVM_MEMORY_ARGUMENTS_REQUIRED'):
+                    B.jvm_memory_binding(options.split()+[override],role)
+        scheduler=B.SCHEDULER_MEMORY_ARGUMENTS.split()+['-cp','unchanged',B.SCHEDULER_PROBE]
+        proof=B.jvm_memory_binding(scheduler,'DESCENDANT_JVM')
+        self.assertEqual(B.SCHEDULER_MEMORY_ARGUMENTS,'-Xmx64m')
+        self.assertIsNone(proof['tieredStopAtLevel']);self.assertEqual(proof['compilationMode'],'DEFAULT_UNATTESTED')
+        with self.assertRaisesRegex(ValueError,'FIXED_JVM_MEMORY_ARGUMENTS_REQUIRED'):
+            B.jvm_memory_binding(scheduler+['-XX:TieredStopAtLevel=1'],'DESCENDANT_JVM')
+
+    def test_subject_requires_current_observed_c1_policy_and_oom_still_rejects_all_other_good_evidence(self):
+        report=self.subject_report();expected=B.identity(self.env())
+        B.check_subject(report,expected,41,'f'*64)
+        for role in ('MAVEN','SUREFIRE'):
+            for field,value in (('tieredStopAtLevel',None),('tieredStopAtLevel',4),('compilationMode','DEFAULT_UNATTESTED')):
+                changed=copy.deepcopy(report);process=next(row for row in changed['javaProcesses'] if row['role']==role)
+                process['jvmMemory'][field]=value
+                with self.subTest(role=role,field=field,value=value),self.assertRaisesRegex(ValueError,'FIXED_JVM_MEMORY_ARGUMENTS_REQUIRED'):
+                    B.check_subject(changed,expected,41,'f'*64)
+        state,cleaned,port=self.outcome();state['cgroupMemoryEvents']['oom_kill']='1'
+        self.assertFalse(B.accepted_outcome(state,0,[],cleaned,port))
+
+
+    def content_fixture(self,root):
+        # Synthetic class bytes/property protocol only; never compilation or business proof.
+        source=root/B.CONTENT_SECURITY_SOURCE;source.parent.mkdir(parents=True,exist_ok=True)
+        source.write_bytes((Path(__file__).resolve().parents[1]/B.CONTENT_SECURITY_SOURCE).read_bytes())
+        directory=root/'chengyinhub-admin/target/controlled-content-security'
+        compiled=directory/'classes'/B.CONTENT_SECURITY_CLASS;compiled.parent.mkdir(parents=True);compiled.write_bytes(b'\xca\xfe\xba\xbeSYNTHETIC_CLASS')
+        proof=directory/'proof.properties'
+        proof.write_text('sourceSha='+self.env()['SOURCE_SHA']+'\nsourceSha256='+B.digest(source)+'\nclassSha256='+B.digest(compiled)+'\n');proof.chmod(0o600)
+        return directory,source,compiled,proof
+
+    def test_exact_provider_classpath_is_complete_phase_bound_and_never_reconstructed_or_published(self):
+        with tempfile.TemporaryDirectory() as name,patch.object(B,'ROOT',Path(name)),patch.dict(os.environ,self.env(),clear=True):
+            directory,cache=self.provider_scope(Path(name));proof=B.provider_runtime_proof(cache)
+            for phase in ('online','offline'):
+                raw=(directory/(phase+'.classpath')).read_bytes();row=proof[phase]['testClasspath']
+                self.assertEqual(row['sha256'],B.hashlib.sha256(raw).hexdigest())
+                self.assertEqual(row['byteLength'],len(raw));self.assertEqual(row['entryCount'],len(raw.decode().split(':')))
+                self.assertNotIn(raw.decode(),json.dumps(proof));self.assertNotIn(name,json.dumps(proof))
+            self.assertEqual({key:value for key,value in proof['online']['testClasspath'].items() if key!='fileName'},
+                             {key:value for key,value in proof['offline']['testClasspath'].items() if key!='fileName'})
+
+    def test_provider_classpath_missing_drift_empty_remote_foreign_alias_and_symlink_all_reject(self):
+        for kind in ('missing','symlink','mode','hash','empty','remote','foreign','alias','missing-main','offline-drift'):
+            with self.subTest(kind=kind),tempfile.TemporaryDirectory() as name,patch.object(B,'ROOT',Path(name)),patch.dict(os.environ,self.env(),clear=True):
+                root=Path(name);directory,cache=self.provider_scope(root);path=directory/'online.classpath'
+                if kind=='missing':path.unlink()
+                elif kind=='symlink':
+                    raw=path.read_bytes();path.unlink();other=root/'private';other.write_bytes(raw);path.symlink_to(other)
+                elif kind=='mode':path.chmod(0o644)
+                else:
+                    raw=path.read_text()
+                    if kind=='hash':path.write_text(raw+':PRIVATE_VALUE')
+                    else:
+                        if kind=='empty':raw+=':'
+                        if kind=='remote':raw='https://PRIVATE_VALUE:'+raw
+                        if kind=='foreign':raw='/PRIVATE_VALUE:'+raw
+                        if kind=='alias':raw=raw.replace('/target/classes','/target/../target/classes')
+                        if kind=='missing-main':raw=':'.join(value for value in raw.split(':') if value!=str(root/'chengyinhub-admin/target/classes'))
+                        if kind=='offline-drift':path=directory/'offline.classpath';raw=raw+':'+raw.split(':')[0]
+                        path.write_text(raw);record_path=path.with_suffix('.json');record=json.loads(record_path.read_text())
+                        record['testClasspath']={'fileName':path.name,'sha256':B.digest(path),'byteLength':path.stat().st_size,'entryCount':len(raw.split(':'))}
+                        record_path.write_text(json.dumps(record))
+                with self.assertRaises(ValueError):B.provider_runtime_proof(cache)
+
+    def test_controlled_content_proof_rejects_stale_or_foreign_source_class_extra_output_and_symlink(self):
+        for kind in ('valid','missing-proof','old-source','source','class','extra','generated','symlink','duplicate-key'):
+            with self.subTest(kind=kind),tempfile.TemporaryDirectory() as name,patch.object(B,'ROOT',Path(name)),patch.dict(os.environ,self.env(),clear=True):
+                directory,source,compiled,proof=self.content_fixture(Path(name))
+                if kind=='valid':
+                    result=B.controlled_content_proof();self.assertEqual(result['sourceSha'],self.env()['SOURCE_SHA'])
+                    self.assertEqual(result['classSha256'],B.digest(compiled));self.assertNotIn(name,json.dumps(result));continue
+                if kind=='missing-proof':proof.unlink()
+                if kind=='old-source':proof.write_text(proof.read_text().replace(self.env()['SOURCE_SHA'],'0'*40))
+                if kind=='source':source.write_text('changed original')
+                if kind=='class':compiled.write_bytes(b'\xca\xfe\xba\xbeCHANGED')
+                if kind=='extra':(directory/'classes/Extra.class').write_bytes(b'EXTRA')
+                if kind=='generated':(directory/'Generated.java').write_text('unexpected generated source')
+                if kind=='symlink':
+                    raw=compiled.read_bytes();compiled.unlink();other=Path(name)/'private';other.write_bytes(raw);compiled.symlink_to(other)
+                if kind=='duplicate-key':proof.write_text(proof.read_text()+'sourceSha=PRIVATE_VALUE\n')
+                with self.assertRaisesRegex(ValueError,'CONTROLLED_CONTENT_SECURITY_PROOF_REQUIRED'):B.controlled_content_proof()
+
+    def test_preparation_compiler_uses_exact_online_classpath_and_separate_observed_exit(self):
+        for compiler_exit in (0,1):
+            with self.subTest(exit=compiler_exit),tempfile.TemporaryDirectory() as name,patch.object(B,'ROOT',Path(name)),patch.dict(os.environ,self.env(),clear=True):
+                root=Path(name);directory,cache=self.provider_scope(root);source=root/B.CONTENT_SECURITY_SOURCE
+                source.parent.mkdir(parents=True)
+                source.write_bytes((Path(__file__).resolve().parents[1]/B.CONTENT_SECURITY_SOURCE).read_bytes());calls=[]
+                def transport(argv,**kwargs):
+                    calls.append(argv)
+                    if '-c' in argv and 'javac -J-Xmx128m -proc:none' in argv[argv.index('-c')+1]:
+                        self.assertEqual(argv[-3:],[str(source),str(directory/'online.classpath'),str(root/'chengyinhub-admin/target/controlled-content-security/classes')])
+                        if compiler_exit==0:
+                            compiled=Path(argv[-1])/B.CONTENT_SECURITY_CLASS;compiled.parent.mkdir(parents=True,exist_ok=True);compiled.write_bytes(b'\xca\xfe\xba\xbeSYNTHETIC')
+                    if argv[-1]=='/tmp/cy-cache.javac.exit':return str(compiler_exit).encode()
+                    return b''
+                with patch.object(B,'command',side_effect=transport),patch.object(B.time,'monotonic',return_value=0):
+                    result=B.compile_controlled_content('1'*64,cache,1200)
+                self.assertEqual(result['exit'],compiler_exit);self.assertIs(result['exitObserved'],True)
+                self.assertEqual(calls[-1][-1],str(compiler_exit));self.assertEqual(result['purpose'],'PREPARATION_COMPILER_ONLY')
+                if compiler_exit==0:self.assertEqual(result['proof'],B.controlled_content_proof())
+                else:
+                    self.assertNotIn('proof',result)
+                    self.assertFalse((root/'chengyinhub-admin/target/controlled-content-security/proof.properties').exists())
+
+    def test_javac_failure_preserves_online_maven_zero_and_cannot_sign_preflight_or_skip_cleanup(self):
+        reports,mutations,failure,private=self.warm_transport_control(compiler_exit=1)
+        report=reports[-1];self.assertEqual(report['originalExit'],1)
+        self.assertIs(report['mavenExitObserved'],True);self.assertEqual(report['mavenExit'],0)
+        self.assertEqual(report['controlledContentSecurityCompiler']['exit'],1)
+        self.assertEqual(report['firstFailure']['reasonCode'],'CONTROLLED_CONTENT_SECURITY_COMPILE_FAILED')
+        self.assertEqual(report['result'],'NOT_ACCEPTED');self.assertEqual(mutations,['stop','remove'])
+        self.assertTrue(private);self.assertIsInstance(failure,ValueError)
+
+    def test_precompiled_binding_is_required_by_cache_and_final_subject_without_weakening_other_proofs(self):
+        for kind in ('missing','class','source','compiler','classpath'):
+            report=self.cache_receipt()
+            if kind=='missing':report.pop('controlledContentSecurity')
+            if kind=='class':report['controlledContentSecurity']['classSha256']='0'*64
+            if kind=='source':report['controlledContentSecurity']['sourceSha']='0'*40
+            if kind=='compiler':report['controlledContentSecurityCompiler']['exit']=1
+            if kind=='classpath':report['controlledContentSecurityCompiler']['testClasspath']['sha256']='0'*64
+            with self.subTest(kind=kind),self.assertRaisesRegex(ValueError,'OFFLINE_CACHE_PREFLIGHT_REQUIRED'):self.check_cache_receipt(report)
+        report=self.subject_report();report['source']['controlledContentSecurity']['classSha256']='0'*64
+        with self.assertRaisesRegex(ValueError,'CONTROLLED_CONTENT_SECURITY_PROOF_REQUIRED'):
+            B.check_subject(report,B.identity(self.env()),41,'f'*64)
+
+    def test_content_consumer_mount_is_readonly_and_compile_boundary_keeps_original_stage_roster(self):
+        shell=B.fixed_cache_command()[1]
+        self.assertLess(shell.index('ONLINE_PROVIDER_RUNTIME'),shell.index('CONTENT_SECURITY_COMPILE'))
+        self.assertLess(shell.index('CONTENT_SECURITY_COMPILE'),shell.index('OFFLINE_PROVIDER_RUNTIME'))
+        self.assertEqual(shell.count('-Dtest='+B.PROVIDER_PROBE),2);self.assertEqual(shell.count(B.SUREFIRE_FORK_ARGUMENTS),3)
+        self.assertNotIn('javac',B.fixed_maven_command()[1]);self.assertIn('test',B.fixed_maven_command())
+        path=Path('/tmp/cy-http-budget.abcdefgh');state={'cache':'/existing/repository','jdkEnvironment':{}}
+        content=str(B.ROOT/'chengyinhub-admin/target/controlled-content-security')
+        rows=[(str(B.ROOT),str(B.ROOT),False),('/existing/repository','/cache/repository',False),(str(path/'launch'),'/budget',False),
+              (content,content,False)]+[(str(B.ROOT/module/'target'),str(B.ROOT/module/'target'),True) for module in B.MODULES]
+        obj={'HostConfig':{'ReadonlyRootfs':True},'Config':{'User':str(os.getuid())+':'+str(os.getgid()),
+             'Entrypoint':['/bin/bash'],'Cmd':B.fixed_maven_command(),'Env':[key+'='+value for key,value in B.child_environment(self.env()).items()]},
+             'Mounts':[{'Source':source,'Destination':target,'RW':rw,'Type':'bind'} for source,target,rw in rows]}
+        with patch.dict(os.environ,self.env(),clear=True):
+            B.validate_app_inputs(obj,path,state)
+            for missing in (False,True):
+                changed=copy.deepcopy(obj)
+                if missing:changed['Mounts']=[row for row in changed['Mounts'] if row['Destination']!=content]
+                else:next(row for row in changed['Mounts'] if row['Destination']==content)['RW']=True
+                with self.assertRaisesRegex(ValueError,'PRIVATE_MOUNT_BOUNDARY_CHANGED'):B.validate_app_inputs(changed,path,state)
+
+
+    def test_original_source_manifest_keeps_full_reactor_trees_and_also_detects_controlled_class_drift(self):
+        # Synthetic source/JAR/class protocol inputs only, not javac or application evidence.
+        with tempfile.TemporaryDirectory() as name,patch.object(B,'ROOT',Path(name)),patch.dict(os.environ,self.env(),clear=True):
+            root=Path(name);self.preparation_scope(root);directory,source,compiled,proof=self.content_fixture(root)
+            for module in B.MODULES:
+                target=root/module/'target';classes=target/'classes';classes.mkdir(parents=True,exist_ok=True)
+                (classes/'Original.class').write_bytes(b'SYNTHETIC_ORIGINAL_MAIN_CLASS')
+                jar=target/('chengyinhub-admin.jar' if module=='chengyinhub-admin' else module+'.jar')
+                with B.zipfile.ZipFile(jar,'w') as archive:
+                    archive.writestr('BOOT-INF/classes/git.properties','git.commit.id='+self.env()['SOURCE_SHA']+'\n')
+            props=root/'chengyinhub-admin/target/classes/git.properties';props.write_text('git.commit.id='+self.env()['SOURCE_SHA']+'\n')
+            out=root/'chengyinhub-admin/target/http-e2e';out.mkdir();(out/'fresh-schema.json').write_text('synthetic scope')
+            with patch.object(B,'OUT',out),patch.object(B,'command',return_value=self.env()['SOURCE_SHA'].encode()),\
+                 patch.object(B.subprocess,'run',return_value=SimpleNamespace(returncode=0)):
+                before=B.source_manifest();self.assertEqual(before,B.source_manifest())
+                compiled.write_bytes(b'\xca\xfe\xba\xbeCHANGED')
+                with self.assertRaisesRegex(ValueError,'CONTROLLED_CONTENT_SECURITY_PROOF_REQUIRED'):B.source_manifest()
+                proof.write_text('sourceSha='+self.env()['SOURCE_SHA']+'\nsourceSha256='+B.digest(source)+'\nclassSha256='+B.digest(compiled)+'\n')
+                changed=B.source_manifest()
+                self.assertEqual(before['classTrees'],changed['classTrees']);self.assertEqual(before['reactorJars'],changed['reactorJars'])
+                self.assertNotEqual(before['controlledContentSecurity'],changed['controlledContentSecurity']);self.assertNotEqual(before,changed)
 
 
 if __name__=='__main__':unittest.main()
