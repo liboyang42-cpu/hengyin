@@ -1014,11 +1014,19 @@ class FailureDiagnosticTest(unittest.TestCase):
     def test_actual_finalize_projects_runtime_coordinate_without_accepting_missing_xml(self):
         with tempfile.TemporaryDirectory() as directory:
             root = pathlib.Path(directory); public = root / 'public'; schema = root / 'schema.json'
-            schema.write_text('{"mode":"SUCCEEDED"}')
+            identity = {'sourceSha': 'a' * 40, 'profile': 'github-hosted',
+                        'classes': ['GenericGameplayHttpE2eIT'], 'database': 'cy_e2e_w1_http_123_456'}
+            schema.write_text(json.dumps({'mode': 'SUCCEEDED', 'database': identity['database']}))
+            public.mkdir()
+            # Model verify's pending failure receipt; finalize must preserve every refusal flag.
+            (public / 'receipt.json').write_text(json.dumps({**identity, 'state': 'PENDING_CLEANUP',
+                                                            'businessAccepted': False, 'xmlVerified': False}))
             (root / 'run.log').write_text(
                 'Cannot access central (https://repo.maven.apache.org/maven2) in offline mode and the artifact '
                 'org.junit.platform:junit-platform-launcher:jar:6.0.3 has not been downloaded from it before.')
-            env = dict(os.environ, CHENGYIN_HTTP_E2E_SCHEMA_REPORT=str(schema),
+            env = dict(os.environ, SOURCE_SHA=identity['sourceSha'], CHENGYIN_HTTP_E2E_PROFILE=identity['profile'],
+                       CHENGYIN_HTTP_E2E_TESTS=identity['classes'][0], CHENGYIN_HTTP_E2E_DATABASE=identity['database'],
+                       CHENGYIN_HTTP_E2E_SCHEMA_REPORT=str(schema),
                        CHENGYIN_HTTP_E2E_STAGE='xml-verify', CHENGYIN_HTTP_E2E_ORIGINAL_EXIT='1')
             run = subprocess.run([sys.executable, str(ROOT / 'ci/test_http_e2e_entry.py'), 'finalize',
                                   '--output', str(public), '--java-exit', '1',
@@ -1031,6 +1039,7 @@ class FailureDiagnosticTest(unittest.TestCase):
             receipt = json.loads((public / 'receipt.json').read_text())
             self.assertEqual('FAIL', receipt['state'])
             self.assertFalse(receipt['businessAccepted']); self.assertFalse(receipt['xmlVerified'])
+            self.assertEqual(identity, receipt_identity(receipt))
 
     def test_hosted_online_vps_offline_and_existing_finalize_maven_failure(self):
         shell = (TOOLS / 'generic-gameplay-http-e2e.sh').read_text()
