@@ -1,0 +1,20 @@
+owner	currentSourceAndLines	retainedWorkingSetOrAccess	measurementBoundary
+MAVEN	ci/combined_http_budget.py:67,1352-1366,1660-1668	Xms16m Xmx128m Direct16m Code32m SerialGC; original offline reactor test	limits and flags are not heap used/native RSS attribution
+MAVEN models	pom.xml:330-338; Maven3.9.11 ReactorReader:79-160	all six current projects/models/POMs and test resolution	model/realm live bytes UNKNOWN
+MAVEN plugins	pom.xml:343-368; admin/pom.xml:100-178; DefaultPluginRealmCache:134-196	original resources/compiler/dependency-agent/git/Surefire lifecycle realms	plugin realm retention possible; actual committed size UNKNOWN
+MAVEN cache	ci/combined_http_budget.py:805,1675-1687	full reviewed immutable dependency repository; no model-only mini cache or host settings	jar/plugin source retained; cache file pages not equal summed process RSS
+SUREFIRE	ci/combined_http_budget.py:68-71,1667; SurefireMojo3.5.6:43-55	Xms16m Xmx384m Direct64m Code64m SerialGC; fork1/reuse; original agent and manifest	VM/metaspace/code cache committed/heap used/threadstack bytes UNKNOWN
+Spring HTTP context	CrossDomainCombinedLoadMySqlIT.java:31-53	one declared Boot context; calls Generic initializer only, RANDOM_PORT and real filter/SQL	actual context creation count UNKNOWN; no second Generic testcase context inferred
+runtime compiler	GenericGameplayHttpE2eIT.java:456-486; ToolProvider.java:43-62	one fixed stub source compiled inside Surefire; temporary source/class directory deleted	2059 Git source bytes; generated class/compiler memory UNKNOWN
+Spring resources	GenericGameplayHttpE2eIT.java:442-453; MyBatisConfig.java:116-130	original full resources/MyBatis graph and actual primary beans	all resources retained; per-resource retained size UNKNOWN
+manual economic fixture	CrossDomainStorageFixture.java:136-152,155-260	second original Druid pool limited3, SqlSessionFactory and explicit14mapper resources; original schema	separate purpose from HTTP main context; not a removable duplicate success mock
+core HTTP clients	CombinedCoreHttpWorkload.java:23-25	bounded workers6/queue6 plus one deadline scheduler, original240HTTP	configured numbers, not all concurrently started/observed threads
+provider transport	CrossDomainTransportStage.java:25-49,55-95	original16MiB repeated base64 payload, caller pool8/queue8, provider pool4/queue4, two real HttpServers	payload stays original; string/UTF8/transient/native peak UNKNOWN
+notification fixture	CrossDomainStorageFixture.java:220-243	one subscription server and one single-thread executor, original held poison gate	no removal/serialization of original isolation window
+later controlled providers	CombinedControlledProviders.java:20-34,64-79	one explicit local server, worker4/queue4, original three protocol routes	constructed later in case; no evidence that this point executed in OOM run
+HTTP shared pools	HttpUtils.java:71-76	HTTP core8/max32/queue128 and disconnect core1/max4/queue64	configured bounds only; each actual native stack size/commit UNKNOWN
+application async pools	ThreadPoolConfig.java:21-55; application.yml:36-41	original executor core50/max200 and scheduled core50, Tomcat min20/max200	do not sum maxima or assume all are prestarted; actual consumer threads UNKNOWN
+scheduler child	CrossDomainSchedulerStage.java:81-104	original exact-combination Xmx64m; original authentication/leadership/kill proof	unchanged; absent sampled role is not proof it never forked or caused current OOM
+port witness	ci/combined_http_budget.py:1802-1820	original owned-app namespace Java32m probe	cleanup overlap is possible; cannot assume it is the failure-time resident cause
+file mounts	ci/combined_http_budget.py:1379-1391,1675-1687,1706-1711	RO checkout/cache/budget; six original RW target bind mounts; app tmpfs256m ceiling	no entire target/JAR copy; host target backing and resident pages UNKNOWN
+identity/classpath	ci/combined_http_budget.py:1320-1350; CrossDomainCombinedLoadMySqlIT.java:316-355	21 source inputs, original40minimum and all outputs, six JARs plus original14 runtime class proofs	compiled class/JAR sizes not Git source sizes; no pruning or stale reuse

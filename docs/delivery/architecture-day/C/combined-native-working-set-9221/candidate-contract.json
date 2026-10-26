@@ -1,0 +1,71 @@
+{
+  "parentSourceSha": "92210eab634d81a8d4c1c550d37fd9e3dacb65f0",
+  "status": "STATIC_SOURCE_ONLY_NOT_RUN",
+  "actualOomAttribution": "UNKNOWN",
+  "runtimeEvidenceIncluded": false,
+  "ownedScope": "docs/delivery/architecture-day/C/combined-native-working-set-9221/",
+  "originalCompilationInputs": 21,
+  "originalMinimumClasses": 40,
+  "originalRuntimeClassIdentities": 14,
+  "resourceBudgetChanges": [],
+  "runtimeParameterChangesApplied": [],
+  "candidate": {
+    "status": "NEEDS_ROOT_DECISION_NOT_APPLIED_NOT_STANDALONE",
+    "consumerPatch": "precompiled-security-consumer.review.patch",
+    "scopeSelector": "CHENGYIN_HTTP_E2E_TESTS exactly CrossDomainCombinedLoadMySqlIT",
+    "producerOwner": "B/root existing fixed cache preparation",
+    "testClasspathCapture": {
+      "existingSource": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CombinedSurefireRuntimeProbeTest.java",
+      "existingMethod": "bootsActualProjectPlatformRuntime",
+      "currentlyPersisted": false,
+      "requiredPrivatePhaseFiles": ["target/provider-runtime/online.classpath", "target/provider-runtime/offline.classpath"],
+      "value": "original System.getProperty(surefire.test.class.path), never reconstruct by scanning cache",
+      "requirements": [
+        "capture only in original ONLINE/OFFLINE controlled phase; ordinary suite branch unchanged",
+        "exclusive regular file, no symlink, 0600, bounded length; never artifact or public stdout",
+        "require nonempty ordered local paths under exact /cache/repository or original reactor target roots",
+        "reuse existing canonical namespace path and SHA checks; online/offline classpath equality and hash proof",
+        "bind the capture, fixed compiler input and generated output in preparation proof and verified_cache"
+      ]
+    },
+    "producerOrder": [
+      "retain original pinned full-reactor package and all source/profile/provider/config/photo gates",
+      "strictly remove only prior fixed target/controlled-content-security output; refuse foreign/symlink ownership",
+      "copy only original scripts/e2e/E2eWxContentSecurityStub.java.stub to task-owned E2eWxContentSecurityStub.java",
+      "use same pinned JDK and prepared complete test classpath; original javac options -proc:none -classpath <verified original classpath> -d <fixed classes directory>; fixed source only",
+      "require exit zero and exactly original named generated class; no adoption of stale class",
+      "persist exact sourceSha/sourceSha256/classSha256 into fixed proof.properties after compile",
+      "bind proof and generated class hashes in source_manifest before and after actual runtime; keep all original class trees/JARs/resources/14identity proofs"
+    ],
+    "fixedOutputRoot": "chengyinhub-admin/target/controlled-content-security",
+    "fixedClassRelativePath": "classes/com/chengyinhub/e2e/E2eWxContentSecurityStub.class",
+    "fixedProof": "proof.properties",
+    "proofKeys": ["sourceSha", "sourceSha256", "classSha256"],
+    "neverAddToDefaultScanClasspath": true,
+    "noRuntimeCompilationFallback": true,
+    "noNewDependencyOrCompilerVersion": true,
+    "sourceInputsAndOriginalMinimumUnchanged": true,
+    "expectedBenefit": "remove this one runtime javac invocation, not a quantified or guaranteed OOM fix",
+    "requiredFutureSourceControls": [
+      "missing/foreign source/proof/class hash rejects without runtime javac fallback",
+      "parent-loaded or wrong CodeSource class rejects",
+      "fixed producer rejects previous/symlink/extra generated output and failed compiler exit",
+      "prepared artifact/proof postimage drift rejects at runtime finalization",
+      "non-combination scope keeps original runtime compilation and all original security assertions"
+    ]
+  },
+  "tieredStopAtLevelOne": {
+    "implementationOwner": "B; do not duplicate its pending source",
+    "referenceDefault": 4,
+    "referenceAllowedLevels": [0, 1, 2, 3, 4],
+    "levelOne": "C1 simple, not interpreter-only",
+    "totalCompilerThreadReductionGuaranteed": false,
+    "nativeRssBoundProvided": false,
+    "runtimeThroughputAndMemoryBenefit": "UNKNOWN"
+  },
+  "unobservedMemoryCategories": [
+    "simultaneous process snapshots", "heap used/committed", "metaspace committed", "class space committed",
+    "code cache committed", "compiler arenas", "thread stack commit", "direct/native malloc",
+    "tmpfs actual resident pages", "filecache ownership/shared-page attribution", "peak total breakdown"
+  ]
+}

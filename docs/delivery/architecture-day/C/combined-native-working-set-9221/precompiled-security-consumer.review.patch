@@ -1,0 +1,46 @@
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GenericGameplayHttpE2eIT.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GenericGameplayHttpE2eIT.java
+@@ -457,8 +457,42 @@
+         Path root = Paths.get("").toAbsolutePath();
+         while (root != null && !Files.exists(root.resolve("scripts/e2e/E2eWxContentSecurityStub.java.stub"))) root = root.getParent();
+         assertNotNull(root, "Reviewed content-security fixture must exist");
+-        assertNotNull(ToolProvider.getSystemJavaCompiler(), "Content-security fixture requires a JDK");
+         try {
++            if ("CrossDomainCombinedLoadMySqlIT".equals(System.getenv("CHENGYIN_HTTP_E2E_TESTS"))) {
++                // Requires the fixed preparation producer and source_manifest proof reviewed together.
++                // Do not apply this consumer alone or fall back to runtime compilation on missing proof.
++                Path prepared = root.resolve("chengyinhub-admin/target/controlled-content-security");
++                Path classes = prepared.resolve("classes");
++                Path classFile = classes.resolve("com/chengyinhub/e2e/E2eWxContentSecurityStub.class");
++                Path proofFile = prepared.resolve("proof.properties");
++                assertTrue(Files.isRegularFile(proofFile) && !Files.isSymbolicLink(proofFile));
++                assertTrue(Files.isRegularFile(classFile) && !Files.isSymbolicLink(classFile));
++                assertEquals(classes.toAbsolutePath().normalize(), classes.toRealPath());
++                java.util.Properties proof = new java.util.Properties();
++                try (var input = Files.newInputStream(proofFile)) { proof.load(input); }
++                assertEquals(java.util.Set.of("sourceSha", "sourceSha256", "classSha256"), proof.stringPropertyNames());
++                assertEquals(System.getenv("SOURCE_SHA"), proof.getProperty("sourceSha"));
++                for (String field : java.util.List.of("sourceSha256", "classSha256"))
++                    assertTrue(proof.getProperty(field, "").matches("[0-9a-f]{64}"));
++                assertEquals(proof.getProperty("sourceSha256"), java.util.HexFormat.of().formatHex(
++                        java.security.MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(
++                                root.resolve("scripts/e2e/E2eWxContentSecurityStub.java.stub")))));
++                assertEquals(proof.getProperty("classSha256"), java.util.HexFormat.of().formatHex(
++                        java.security.MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(classFile))));
++                try (URLClassLoader loader = new URLClassLoader(new URL[]{classes.toUri().toURL()},
++                        GenericGameplayHttpE2eIT.class.getClassLoader())) {
++                    Class<?> stub = loader.loadClass("com.chengyinhub.e2e.E2eWxContentSecurityStub");
++                    assertSame(loader, stub.getClassLoader());
++                    assertEquals(classes.toUri().toURL(), stub.getProtectionDomain().getCodeSource().getLocation());
++                    org.springframework.beans.factory.support.RootBeanDefinition definition =
++                            new org.springframework.beans.factory.support.RootBeanDefinition(stub);
++                    definition.setPrimary(true);
++                    ((org.springframework.beans.factory.support.BeanDefinitionRegistry) application.getBeanFactory())
++                            .registerBeanDefinition("httpE2eWxContentSecurityStub", definition);
++                }
++                return;
++            }
++            assertNotNull(ToolProvider.getSystemJavaCompiler(), "Content-security fixture requires a JDK");
+             Path scratch = Files.createTempDirectory("cy-http-content-security-");
+             try {
+                 Path source = scratch.resolve("E2eWxContentSecurityStub.java");
