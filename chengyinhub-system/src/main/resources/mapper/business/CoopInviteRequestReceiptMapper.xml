@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CoopInviteRequestReceiptMapper">
+    <resultMap id="Receipt" type="com.chengyinhub.business.domain.CoopInviteRequestReceipt">
+        <result property="id" column="id"/>
+        <result property="principalMemberId" column="principal_member_id"/>
+        <result property="requestId" column="request_id"/>
+        <result property="fingerprintVersion" column="fingerprint_version"/>
+        <result property="fingerprint" column="fingerprint"/>
+        <result property="fromType" column="from_type"/>
+        <result property="fromId" column="from_id"/>
+        <result property="fromOwnerMemberId" column="from_owner_member_id"/>
+        <result property="toOwnerMemberId" column="to_owner_member_id"/>
+        <result property="scope" column="scope"/>
+        <result property="inviteType" column="invite_type"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="toType" column="to_type"/>
+        <result property="toId" column="to_id"/>
+        <result property="inviteId" column="invite_id"/>
+    </resultMap>
+    <sql id="columns">id, principal_member_id, request_id, fingerprint_version, fingerprint, from_type, from_id, from_owner_member_id, to_owner_member_id, scope, invite_type, topic_id, to_type, to_id, invite_id</sql>
+    <select id="selectByRequest" resultMap="Receipt">
+        SELECT <include refid="columns"/> FROM coop_invite_request_receipt
+        WHERE principal_member_id=#{principalMemberId} AND request_id=#{requestId}
+    </select>
+    <select id="selectByRequestForUpdate" resultMap="Receipt">
+        SELECT <include refid="columns"/> FROM coop_invite_request_receipt
+        WHERE principal_member_id=#{principalMemberId} AND request_id=#{requestId} FOR UPDATE
+    </select>
+    <select id="selectTopicInvitesForUpdate" resultType="com.chengyinhub.business.domain.CoopInvite">
+        SELECT id, invite_type AS inviteType, to_type AS toType, to_id AS toId, node_id AS nodeId, status
+        FROM coop_invite WHERE topic_id=#{topicId} AND del_flag=0 AND
+        (status=1 OR (status=0 AND (expire_time IS NULL OR expire_time &gt; #{now})
+            AND (create_time IS NULL OR create_time &gt; DATE_SUB(#{now}, INTERVAL 48 HOUR))))
+        ORDER BY id FOR UPDATE
+    </select>
+    <insert id="insertReceipt" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO coop_invite_request_receipt (principal_member_id, request_id, fingerprint_version, fingerprint, from_type, from_id, from_owner_member_id, to_owner_member_id, scope, invite_type, topic_id, to_type, to_id)
+        VALUES (#{principalMemberId}, #{requestId}, #{fingerprintVersion}, #{fingerprint}, #{fromType}, #{fromId}, #{fromOwnerMemberId}, #{toOwnerMemberId}, #{scope}, #{inviteType}, #{topicId}, #{toType}, #{toId})
+    </insert>
+    <update id="bindInvite">
+        UPDATE coop_invite_request_receipt SET invite_id=#{inviteId}
+        WHERE id=#{id} AND invite_id IS NULL
+    </update>
+    <select id="selectPage" resultMap="Receipt">
+        SELECT <include refid="columns"/> FROM coop_invite_request_receipt
+        WHERE principal_member_id=#{principalMemberId}
+        <if test="before != null">AND id &lt; #{before}</if>
+        ORDER BY id DESC LIMIT #{limit}
+    </select>
+</mapper>

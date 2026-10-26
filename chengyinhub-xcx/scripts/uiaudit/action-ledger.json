@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5144,
+  "controlCount": 5151,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -143536,6 +143536,15 @@
           ]
         },
         {
+          "route": "pages/coop/invite/index",
+          "segments": [
+            {
+              "selector": "cy-empty",
+              "index": 4
+            }
+          ]
+        },
+        {
           "route": "pages/coop/list/index",
           "segments": [
             {
@@ -143776,6 +143785,23 @@
             {
               "selector": "cy-empty",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#coop-invite",
+              "index": 0
+            },
+            {
+              "selector": "cy-empty",
+              "index": 0
             }
           ]
         },
@@ -146179,6 +146205,23 @@
         {
           "route": "pages/topic/pricing/partner/index",
           "segments": [
+            {
+              "selector": "cy-empty",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#coop-invite",
+              "index": 0
+            },
             {
               "selector": "cy-empty",
               "index": 0
@@ -859640,7 +859683,7 @@
       }
     },
     {
-      "id": "pages/coop/invite/index.wxml:102:bind:cta:retryTargets:16",
+      "id": "pages/coop/invite/index.wxml:100:bind:cta:retryTargets:18",
       "route": "pages/coop/invite/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -859663,1654 +859706,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "retryTargets",
-        "line": 102,
-        "selectorHint": "cy-empty[bind:cta]",
-        "visibleCondition": "{{!merchants.length}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "event-contract",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/club/merchants",
-          "/api/config/features",
-          "/api/login/code",
-          "/api/merchant/clubs",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/club/merchants",
-          "/api/config/features",
-          "/api/merchant/clubs"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/club/merchants",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/merchant/clubs",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:486"
-      }
-    },
-    {
-      "id": "pages/coop/invite/index.wxml:106:bindtap:goNearby:17",
-      "route": "pages/coop/invite/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/invite/index.wxml",
-        "js": "pages/coop/invite/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "goNearby",
-        "line": 106,
-        "selectorHint": ".nearby-row",
-        "visibleCondition": "{{activeType !== 1 && !presetTarget}}",
-        "disabledCondition": null,
-        "ariaLabel": "查看附近商家，含未入驻商家可电话联系",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/coop/nearby/index"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:539"
-      }
-    },
-    {
-      "id": "pages/coop/invite/index.wxml:11:bind:cta:onLogin:0",
-      "route": "pages/coop/invite/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/invite/index.wxml",
-        "js": "pages/coop/invite/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-empty",
-        "event": "bind:cta",
-        "handler": "onLogin",
-        "line": 11,
-        "selectorHint": "cy-empty[bind:cta]",
-        "visibleCondition": "{{topicsState === 'login' || targetsState === 'login'}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "event-contract",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:340"
-      }
-    },
-    {
-      "id": "pages/coop/invite/index.wxml:113:bindtap:sendInvite:18",
-      "route": "pages/coop/invite/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/invite/index.wxml",
-        "js": "pages/coop/invite/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {
-        "cancelled": "requestSubscribeMessage"
-      },
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "sendInvite",
-        "line": 113,
-        "selectorHint": ".cta-btn",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "发送协作邀约",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": "{{submitting || !topicId || topicClosed || topicsState !== 'ready' || targetsState !== 'ready' || (shareMode === 2 && !fixedFee)}}",
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "external",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [
-        "requestSubscribeMessage"
-      ],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "cancelled"
-      ],
-      "requiredPlatforms": [
-        "ios",
-        "android"
-      ],
-      "externalGate": "real-device-required",
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:488"
-      }
-    },
-    {
-      "id": "pages/coop/invite/index.wxml:116:bind:close:closeInviteModal:19",
-      "route": "pages/coop/invite/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/invite/index.wxml",
-        "js": "pages/coop/invite/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-sheet",
-        "event": "bind:close",
-        "handler": "closeInviteModal",
-        "line": 116,
-        "selectorHint": "#inviteConfirmSheet",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:537"
-      }
-    },
-    {
-      "id": "pages/coop/invite/index.wxml:127:bindinput:onMessageInput:20",
-      "route": "pages/coop/invite/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/invite/index.wxml",
-        "js": "pages/coop/invite/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "textarea",
-        "event": "bindinput",
-        "handler": "onMessageInput",
-        "line": 127,
-        "selectorHint": ".iv-message-input",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:411"
-      }
-    },
-    {
-      "id": "pages/coop/invite/index.wxml:130:bindtap:goEditTopic:21",
-      "route": "pages/coop/invite/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/invite/index.wxml",
-        "js": "pages/coop/invite/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "goEditTopic",
-        "line": 130,
-        "selectorHint": ".iv-edit-exit",
-        "visibleCondition": "{{sendResult && topicId && !sendRecruitClosed}}",
-        "disabledCondition": null,
-        "ariaLabel": "去编辑主题的票价与内容",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/publish/fabu/index?id="
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:550"
-      }
-    },
-    {
-      "id": "pages/coop/invite/index.wxml:131:bindtap:confirmInvite:22",
-      "route": "pages/coop/invite/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/invite/index.wxml",
-        "js": "pages/coop/invite/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "confirmInvite",
-        "line": 131,
-        "selectorHint": ".iv-send",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "确认发送协作邀约",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": "{{submitting}}",
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/merchant/ledger/index?view=redemptions",
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/coop/invite",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/config/features",
-          "/api/coop/invite"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/coop/invite",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:557"
-      }
-    },
-    {
-      "id": "pages/coop/invite/index.wxml:141:bind:close:onResultSheetClose:23",
-      "route": "pages/coop/invite/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/invite/index.wxml",
-        "js": "pages/coop/invite/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-result-sheet",
-        "event": "bind:close",
-        "handler": "onResultSheetClose",
-        "line": 141,
-        "selectorHint": "cy-result-sheet[bind:close]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "event-contract",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/coop/list/index?tab=sent"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:739"
-      }
-    },
-    {
-      "id": "pages/coop/invite/index.wxml:18:bindtap:checkUnknownInvites:1",
-      "route": "pages/coop/invite/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/invite/index.wxml",
-        "js": "pages/coop/invite/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "checkUnknownInvites",
-        "line": 18,
-        "selectorHint": ".inline-retry",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "查看已发出邀请",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/coop/list/index?tab=sent"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:273"
-      }
-    },
-    {
-      "id": "pages/coop/invite/index.wxml:25:bindtap:retryTopics:2",
-      "route": "pages/coop/invite/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/invite/index.wxml",
-        "js": "pages/coop/invite/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "text",
-        "event": "bindtap",
-        "handler": "retryTopics",
-        "line": 25,
-        "selectorHint": ".inline-retry",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "重试刷新主题",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "tap",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
-          "/api/topic/list"
-        ],
-        "primaryApis": [
-          "/api/config/features",
-          "/api/topic/list"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/topic/list",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:485"
-      }
-    },
-    {
-      "id": "pages/coop/invite/index.wxml:33:bind:retry:retryTopics:3",
-      "route": "pages/coop/invite/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/invite/index.wxml",
-        "js": "pages/coop/invite/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-error",
-        "event": "bind:retry",
-        "handler": "retryTopics",
-        "line": 33,
-        "selectorHint": ".error-kind--{{topicsErrorKind}}",
-        "visibleCondition": "{{topicsState === 'permission'}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "event-contract",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
-          "/api/topic/list"
-        ],
-        "primaryApis": [
-          "/api/config/features",
-          "/api/topic/list"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/topic/list",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:485"
-      }
-    },
-    {
-      "id": "pages/coop/invite/index.wxml:35:bind:change:onTopicChange:5",
-      "route": "pages/coop/invite/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/invite/index.wxml",
-        "js": "pages/coop/invite/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-dropdown",
-        "event": "bind:change",
-        "handler": "onTopicChange",
-        "line": 35,
-        "selectorHint": "cy-dropdown[bind:change]",
-        "visibleCondition": "{{myTopics.length}}",
-        "disabledCondition": null,
-        "ariaLabel": "选择关联主题",
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:403"
-      }
-    },
-    {
-      "id": "pages/coop/invite/index.wxml:38:bind:cta:goCreateTopic:6",
-      "route": "pages/coop/invite/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/invite/index.wxml",
-        "js": "pages/coop/invite/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-empty",
-        "event": "bind:cta",
-        "handler": "goCreateTopic",
-        "line": 38,
-        "selectorHint": "cy-empty[bind:cta]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "event-contract",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/publish/fabu/index"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:544"
-      }
-    },
-    {
-      "id": "pages/coop/invite/index.wxml:48:bindtap:switchShareMode:7",
-      "route": "pages/coop/invite/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/invite/index.wxml",
-        "js": "pages/coop/invite/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "switchShareMode",
-        "line": 48,
-        "selectorHint": ".terms-option",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "引流合作，不产生现金结算",
-        "ariaLabelExpression": null,
-        "ariaRole": "radio",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": "{{shareMode === 0}}"
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:308"
-      }
-    },
-    {
-      "id": "pages/coop/invite/index.wxml:52:bindtap:switchShareMode:8",
-      "route": "pages/coop/invite/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/invite/index.wxml",
-        "js": "pages/coop/invite/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "switchShareMode",
-        "line": 52,
-        "selectorHint": ".terms-option",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "{{feeName}}",
-        "ariaRole": "radio",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": "{{shareMode === 2}}"
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:308"
-      }
-    },
-    {
-      "id": "pages/coop/invite/index.wxml:59:bindinput:onFeeInput:9",
-      "route": "pages/coop/invite/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/invite/index.wxml",
-        "js": "pages/coop/invite/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "input",
-        "event": "bindinput",
-        "handler": "onFeeInput",
-        "line": 59,
-        "selectorHint": ".fee-input",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "填写合作费用",
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:314"
-      }
-    },
-    {
-      "id": "pages/coop/invite/index.wxml:68:bindtap:retryTargets:10",
-      "route": "pages/coop/invite/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/invite/index.wxml",
-        "js": "pages/coop/invite/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "text",
-        "event": "bindtap",
-        "handler": "retryTargets",
-        "line": 68,
-        "selectorHint": ".inline-retry",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "重试刷新合作对象",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "tap",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/club/merchants",
-          "/api/config/features",
-          "/api/login/code",
-          "/api/merchant/clubs",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/club/merchants",
-          "/api/config/features",
-          "/api/merchant/clubs"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/club/merchants",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/merchant/clubs",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:486"
-      }
-    },
-    {
-      "id": "pages/coop/invite/index.wxml:71:bind:retry:retryTargets:11",
-      "route": "pages/coop/invite/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/invite/index.wxml",
-        "js": "pages/coop/invite/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-error",
-        "event": "bind:retry",
-        "handler": "retryTargets",
-        "line": 71,
-        "selectorHint": ".error-kind--{{targetsErrorKind}}",
-        "visibleCondition": "{{targetsState === 'permission'}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "event-contract",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/club/merchants",
-          "/api/config/features",
-          "/api/login/code",
-          "/api/merchant/clubs",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/club/merchants",
-          "/api/config/features",
-          "/api/merchant/clubs"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/club/merchants",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/merchant/clubs",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:486"
-      }
-    },
-    {
-      "id": "pages/coop/invite/index.wxml:83:bindtap:toggleTarget:13",
-      "route": "pages/coop/invite/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/invite/index.wxml",
-        "js": "pages/coop/invite/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "toggleTarget",
-        "line": 83,
-        "selectorHint": ".target",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "选择俱乐部：{{item.name}}",
-        "ariaRole": "checkbox",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": "{{!!selectedMap[item.id]}}"
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:293"
-      }
-    },
-    {
-      "id": "pages/coop/invite/index.wxml:92:bind:cta:retryTargets:14",
-      "route": "pages/coop/invite/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/coop/invite/index.wxml",
-        "js": "pages/coop/invite/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-empty",
-        "event": "bind:cta",
-        "handler": "retryTargets",
-        "line": 92,
+        "line": 100,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": "{{!clubs.length}}",
         "disabledCondition": null,
@@ -861400,11 +859796,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:486"
+        "staticSource": "pages/coop/invite/index.js:541"
       }
     },
     {
-      "id": "pages/coop/invite/index.wxml:96:bindtap:toggleTarget:15",
+      "id": "pages/coop/invite/index.wxml:104:bindtap:toggleTarget:19",
       "route": "pages/coop/invite/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -861427,7 +859823,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleTarget",
-        "line": 96,
+        "line": 104,
         "selectorHint": ".target",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -861467,7 +859863,2126 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite/index.js:293"
+        "staticSource": "pages/coop/invite/index.js:348"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:11:bind:cta:onLogin:0",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-empty",
+        "event": "bind:cta",
+        "handler": "onLogin",
+        "line": 11,
+        "selectorHint": "cy-empty[bind:cta]",
+        "visibleCondition": "{{topicsState === 'login' || targetsState === 'login'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:395"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:110:bind:cta:retryTargets:20",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-empty",
+        "event": "bind:cta",
+        "handler": "retryTargets",
+        "line": 110,
+        "selectorHint": "cy-empty[bind:cta]",
+        "visibleCondition": "{{!merchants.length}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/club/merchants",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/clubs",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/club/merchants",
+          "/api/config/features",
+          "/api/merchant/clubs"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/club/merchants",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/clubs",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:541"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:114:bindtap:goNearby:21",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goNearby",
+        "line": 114,
+        "selectorHint": ".nearby-row",
+        "visibleCondition": "{{activeType !== 1 && !presetTarget}}",
+        "disabledCondition": null,
+        "ariaLabel": "查看附近商家，含未入驻商家可电话联系",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/coop/nearby/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:594"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:121:bindtap:sendInvite:22",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {
+        "cancelled": "requestSubscribeMessage"
+      },
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "sendInvite",
+        "line": 121,
+        "selectorHint": ".cta-btn",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "发送协作邀约",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": "{{submitting || !topicId || topicClosed || topicsState !== 'ready' || targetsState !== 'ready' || (shareMode === 2 && !fixedFee)}}",
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [
+        "requestSubscribeMessage"
+      ],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "cancelled"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:543"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:124:bind:close:closeInviteModal:23",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-sheet",
+        "event": "bind:close",
+        "handler": "closeInviteModal",
+        "line": 124,
+        "selectorHint": "#inviteConfirmSheet",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:592"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:135:bindinput:onMessageInput:24",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "textarea",
+        "event": "bindinput",
+        "handler": "onMessageInput",
+        "line": 135,
+        "selectorHint": ".iv-message-input",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:466"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:138:bindtap:goEditTopic:25",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goEditTopic",
+        "line": 138,
+        "selectorHint": ".iv-edit-exit",
+        "visibleCondition": "{{sendResult && topicId && !sendRecruitClosed}}",
+        "disabledCondition": null,
+        "ariaLabel": "去编辑主题的票价与内容",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/publish/fabu/index?id="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:605"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:139:bindtap:confirmInvite:26",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "confirmInvite",
+        "line": 139,
+        "selectorHint": ".iv-send",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "确认发送协作邀约",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": "{{submitting}}",
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/ledger/index?view=redemptions",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/coop/invite",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/coop/invite"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/invite",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:612"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:149:bind:close:onResultSheetClose:27",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-result-sheet",
+        "event": "bind:close",
+        "handler": "onResultSheetClose",
+        "line": 149,
+        "selectorHint": "cy-result-sheet[bind:close]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/coop/list/index?tab=sent"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:784"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:17:bindtap:queryOriginalInvite:1",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "queryOriginalInvite",
+        "line": 17,
+        "selectorHint": ".inline-retry",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "查询该邀请原请求",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/ledger/index?view=redemptions",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/coop/invite/request",
+          "/api/coop/invite/requests",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/coop/invite/request",
+          "/api/coop/invite/requests"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/invite/request",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/invite/requests",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:314"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:18:bindtap:checkUnknownInvites:2",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "checkUnknownInvites",
+        "line": 18,
+        "selectorHint": ".inline-retry",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "查看已发出邀请",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/coop/list/index?tab=sent"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:329"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:22:bindtap:discoverOriginalInvites:3",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "discoverOriginalInvites",
+        "line": 22,
+        "selectorHint": ".inline-retry",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "查找当前账号原邀请请求",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/ledger/index?view=redemptions",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/coop/invite/request",
+          "/api/coop/invite/requests",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/coop/invite/request",
+          "/api/coop/invite/requests"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/invite/request",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/invite/requests",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:324"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:23:bindtap:queryOriginalInvite:4",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "queryOriginalInvite",
+        "line": 23,
+        "selectorHint": ".inline-retry",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "查询所选对象的原邀请请求",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/ledger/index?view=redemptions",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/coop/invite/request",
+          "/api/coop/invite/requests",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/coop/invite/request",
+          "/api/coop/invite/requests"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/invite/request",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/invite/requests",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:314"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:26:bindtap:moreOriginalInvites:5",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "moreOriginalInvites",
+        "line": 26,
+        "selectorHint": ".inline-retry",
+        "visibleCondition": "{{receiptHasMore}}",
+        "disabledCondition": null,
+        "ariaLabel": "加载更多原邀请请求",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/ledger/index?view=redemptions",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/coop/invite/request",
+          "/api/coop/invite/requests",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/coop/invite/request",
+          "/api/coop/invite/requests"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/invite/request",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/invite/requests",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:328"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:33:bindtap:retryTopics:6",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "text",
+        "event": "bindtap",
+        "handler": "retryTopics",
+        "line": 33,
+        "selectorHint": ".inline-retry",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "重试刷新主题",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info",
+          "/api/topic/list"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/topic/list"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/topic/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:540"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:41:bind:retry:retryTopics:7",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-error",
+        "event": "bind:retry",
+        "handler": "retryTopics",
+        "line": 41,
+        "selectorHint": ".error-kind--{{topicsErrorKind}}",
+        "visibleCondition": "{{topicsState === 'permission'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info",
+          "/api/topic/list"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/topic/list"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/topic/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:540"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:43:bind:change:onTopicChange:9",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-dropdown",
+        "event": "bind:change",
+        "handler": "onTopicChange",
+        "line": 43,
+        "selectorHint": "cy-dropdown[bind:change]",
+        "visibleCondition": "{{myTopics.length}}",
+        "disabledCondition": null,
+        "ariaLabel": "选择关联主题",
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:458"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:46:bind:cta:goCreateTopic:10",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-empty",
+        "event": "bind:cta",
+        "handler": "goCreateTopic",
+        "line": 46,
+        "selectorHint": "cy-empty[bind:cta]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/publish/fabu/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:599"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:56:bindtap:switchShareMode:11",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "switchShareMode",
+        "line": 56,
+        "selectorHint": ".terms-option",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "引流合作，不产生现金结算",
+        "ariaLabelExpression": null,
+        "ariaRole": "radio",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": "{{shareMode === 0}}"
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:363"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:60:bindtap:switchShareMode:12",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "switchShareMode",
+        "line": 60,
+        "selectorHint": ".terms-option",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{feeName}}",
+        "ariaRole": "radio",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": "{{shareMode === 2}}"
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:363"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:67:bindinput:onFeeInput:13",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "input",
+        "event": "bindinput",
+        "handler": "onFeeInput",
+        "line": 67,
+        "selectorHint": ".fee-input",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "填写合作费用",
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:369"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:76:bindtap:retryTargets:14",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "text",
+        "event": "bindtap",
+        "handler": "retryTargets",
+        "line": 76,
+        "selectorHint": ".inline-retry",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "重试刷新合作对象",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/club/merchants",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/clubs",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/club/merchants",
+          "/api/config/features",
+          "/api/merchant/clubs"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/club/merchants",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/clubs",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:541"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:79:bind:retry:retryTargets:15",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-error",
+        "event": "bind:retry",
+        "handler": "retryTargets",
+        "line": 79,
+        "selectorHint": ".error-kind--{{targetsErrorKind}}",
+        "visibleCondition": "{{targetsState === 'permission'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/club/merchants",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/clubs",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/club/merchants",
+          "/api/config/features",
+          "/api/merchant/clubs"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/club/merchants",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/clubs",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:541"
+      }
+    },
+    {
+      "id": "pages/coop/invite/index.wxml:91:bindtap:toggleTarget:17",
+      "route": "pages/coop/invite/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite/index.wxml",
+        "js": "pages/coop/invite/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "toggleTarget",
+        "line": 91,
+        "selectorHint": ".target",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "选择俱乐部：{{item.name}}",
+        "ariaRole": "checkbox",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": "{{!!selectedMap[item.id]}}"
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite/index.js:348"
       }
     },
     {
@@ -1219581,7 +1220096,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:103"
+        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:174"
       }
     },
     {
@@ -1219679,11 +1220194,455 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:109"
+        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:180"
       }
     },
     {
-      "id": "subpackageMember/components/cy/coop-invite-sheet/index.wxml:26:bindinput:onMessage:4",
+      "id": "subpackageMember/components/cy/coop-invite-sheet/index.wxml:27:bindtap:queryOriginalInvite:4",
+      "route": "component:subpackageMember/components/cy/coop-invite-sheet/index",
+      "hostRoutes": [
+        "pages/member/index/index",
+        "pages/userinfo/userinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#coop-invite",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#coop-invite",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/coop-invite-sheet/index.wxml",
+        "js": "subpackageMember/components/cy/coop-invite-sheet/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "queryOriginalInvite",
+        "line": 27,
+        "selectorHint": ".invite__hint",
+        "visibleCondition": "{{selectedId}}",
+        "disabledCondition": null,
+        "ariaLabel": "查询原邀请请求",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/ledger/index?view=redemptions",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/coop/invite/request",
+          "/api/coop/invite/requests",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/coop/invite/request",
+          "/api/coop/invite/requests"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/invite/request",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/invite/requests",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:108"
+      }
+    },
+    {
+      "id": "subpackageMember/components/cy/coop-invite-sheet/index.wxml:28:bindtap:discoverOriginalInvites:5",
+      "route": "component:subpackageMember/components/cy/coop-invite-sheet/index",
+      "hostRoutes": [
+        "pages/member/index/index",
+        "pages/userinfo/userinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#coop-invite",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#coop-invite",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/coop-invite-sheet/index.wxml",
+        "js": "subpackageMember/components/cy/coop-invite-sheet/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "discoverOriginalInvites",
+        "line": 28,
+        "selectorHint": ".invite__hint",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "查找当前账号原邀请请求",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/ledger/index?view=redemptions",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/coop/invite/request",
+          "/api/coop/invite/requests",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/coop/invite/request",
+          "/api/coop/invite/requests"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/invite/request",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/invite/requests",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:116"
+      }
+    },
+    {
+      "id": "subpackageMember/components/cy/coop-invite-sheet/index.wxml:31:bindtap:moreOriginalInvites:6",
+      "route": "component:subpackageMember/components/cy/coop-invite-sheet/index",
+      "hostRoutes": [
+        "pages/member/index/index",
+        "pages/userinfo/userinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#coop-invite",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#coop-invite",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/coop-invite-sheet/index.wxml",
+        "js": "subpackageMember/components/cy/coop-invite-sheet/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "moreOriginalInvites",
+        "line": 31,
+        "selectorHint": ".invite__hint",
+        "visibleCondition": "{{receiptHasMore}}",
+        "disabledCondition": null,
+        "ariaLabel": "加载更多原邀请请求",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/ledger/index?view=redemptions",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/coop/invite/request",
+          "/api/coop/invite/requests",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/coop/invite/request",
+          "/api/coop/invite/requests"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/invite/request",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/invite/requests",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:119"
+      }
+    },
+    {
+      "id": "subpackageMember/components/cy/coop-invite-sheet/index.wxml:33:bindinput:onMessage:7",
       "route": "component:subpackageMember/components/cy/coop-invite-sheet/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1219736,7 +1220695,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onMessage",
-        "line": 26,
+        "line": 33,
         "selectorHint": ".invite__message",
         "visibleCondition": null,
         "disabledCondition": "{{submitting}}",
@@ -1219776,11 +1220735,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:107"
+        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:178"
       }
     },
     {
-      "id": "subpackageMember/components/cy/coop-invite-sheet/index.wxml:27:bindtap:retry:5",
+      "id": "subpackageMember/components/cy/coop-invite-sheet/index.wxml:34:bindtap:retry:8",
       "route": "component:subpackageMember/components/cy/coop-invite-sheet/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1219833,7 +1220792,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "retry",
-        "line": 27,
+        "line": 34,
         "selectorHint": "text[bindtap]",
         "visibleCondition": "{{!chapters.length}}",
         "disabledCondition": null,
@@ -1219923,11 +1220882,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:108"
+        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:179"
       }
     },
     {
-      "id": "subpackageMember/components/cy/coop-invite-sheet/index.wxml:30:bindtap:send:6",
+      "id": "subpackageMember/components/cy/coop-invite-sheet/index.wxml:37:bindtap:send:9",
       "route": "component:subpackageMember/components/cy/coop-invite-sheet/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1219982,10 +1220941,10 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "send",
-        "line": 30,
+        "line": 37,
         "selectorHint": ".invite__send",
         "visibleCondition": null,
-        "disabledCondition": "{{!selectedChapterId || chaptersLoading}}",
+        "disabledCondition": "{{!selectedChapterId || chaptersLoading || unknown}}",
         "ariaLabel": "发送邀约",
         "ariaLabelExpression": null,
         "ariaRole": null,
@@ -1220011,6 +1220970,7 @@
       "successCapabilities": [],
       "targets": {
         "routes": [
+          "pages/merchant/ledger/index?view=redemptions",
           "pages/privacy/index"
         ],
         "apis": [
@@ -1220078,7 +1221038,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:110"
+        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:181"
       }
     },
     {
@@ -1220217,7 +1221177,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:75"
+        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:144"
       }
     },
     {
@@ -1220356,7 +1221316,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:76"
+        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:145"
       }
     },
     {

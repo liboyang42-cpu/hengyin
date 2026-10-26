@@ -23,6 +23,12 @@ public interface ICoopInviteService {
 
     public int insertCoopInvite(CoopInvite coopInvite);
 
+    /** Keyed creation only: the callback contains first-create API/content checks, never replay checks. */
+    com.chengyinhub.business.domain.dto.CoopInviteRequestResult createOrReplayInvite(
+            Long principalMemberId, CoopInvite invite, Runnable beforeCreate);
+    com.chengyinhub.business.domain.dto.CoopInviteRequestResult findInviteRequest(Long principalMemberId, String requestId);
+    java.util.Map<String, Object> listInviteRequests(Long principalMemberId, Long before, int limit);
+
     /** 官方白名单账号批量向商家发承接邀约，返回新邀约 ID。 */
     public List<Long> createOfficialMerchantInvites(Long officialMemberId,
             com.chengyinhub.business.domain.dto.OfficialMerchantInviteRequest request);

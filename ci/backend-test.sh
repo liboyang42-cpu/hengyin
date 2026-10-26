@@ -43,6 +43,8 @@ MYBATIS_ITS=(
   ClubLeaderboardContributionMyBatisIT
   ComplaintPickerOwnerType3RealDbIT
   CoopMapperMyBatisIT
+  CoopInviteOriginalRequestMySqlIT
+  ClubPostLikeAuthorizationMySqlIT
   MemberPrivacyMyBatisIT
   MerchantGeoSortMyBatisIT
   NpcChatRetentionMyBatisIT

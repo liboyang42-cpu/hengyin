@@ -23,7 +23,7 @@ function loadInvitePage(options = {}) {
   global.wx = { showToast() {}, setNavigationBarColor() {}, navigateTo(o) { navigations.push(o.url) }, redirectTo(o) { navigations.push(o.url) },
     setStorageSync(key, value) { if (options.storageFailure === true || options.storageFailure === 'write') throw Error('fixture storage failure'); storage.set(key, JSON.parse(JSON.stringify(value))) },
     getStorageSync(key) { if (options.storageFailure === true || options.storageFailure === 'read') throw Error('fixture storage failure'); return storage.get(key) || '' },
-    removeStorageSync(key) { storage.delete(key) } }
+    removeStorageSync(key) { if (options.removeFailure) throw Error('remove failed'); storage.delete(key) } }
   if (options.transport) {
     const { createRequestClient } = require('../../utils/transport/request-client.js')
     const client = createRequestClient({ wxRequest(request) { wire.push(request); return { abort() {} } },
@@ -251,7 +251,7 @@ test('部分失败后只保留失败对象，重试不会重复发送成功项',
     env.page.confirmInvite()
     assert.equal(env.requests.length, 1)
     assert.equal(JSON.parse(env.requests[0].data).toId, 11)
-    env.requests[0].success({ code: '200', data: { inviteId: 501 } })
+    okInvite(env.requests[0])
     assert.equal(env.requests.length, 2, '第二条只能在第一条明确回执后发，必须串行')
     assert.equal(JSON.parse(env.requests[1].data).toId, 22)
     env.requests[1].success({ code: '400', msg: '容量不足' })
@@ -381,7 +381,7 @@ test('发送成功关掉结果面板后进协作邀请的「我发出的」', ()
 })
 
 // W3: real persistent helper, account-scoped digest rows and the production transport.
-const okInvite = request => request.success({ code: 200, data: { inviteId: 501 } })
+const okInvite = request => request.success({ code: 200, data: { inviteId: '501', requestId: JSON.parse(request.data).requestId, replayed: false } })
 const prepare = (env, targets = [{ toId: 11, name: '甲店' }]) => {
   env.page.data.topicId = 9
   env.page._setSelected(targets)
@@ -575,7 +575,7 @@ for (const ending of ['success', 'http403', 'http503', 'http408', 'network', 'ex
       else {
         if (ending === 'external') env.app._authorization = 'fixture-external'
         const statusCode = ending.startsWith('http') ? Number(ending.slice(4)) : 200
-        retry.success({ statusCode, data: { code: statusCode, data: { inviteId: 501 } } })
+        retry.success({ statusCode, data: { code: statusCode, data: { inviteId: '501', requestId: JSON.parse(retry.data).requestId, replayed: false } } })
       }
       retry.complete({})
       assert.equal(env.page.data.submitting, false)
@@ -600,4 +600,178 @@ test('W3 部分成功后离页只保留未发送对象，已成功和在途UNKNO
     okInvite(env.requests[2])
     assert.equal(env.page.data.resultSheet.kind, 'fail', '旧UNKNOWN仍独立保留，不整批报成功')
   } finally { env.restore() }
+})
+
+const requestReceipt = (request, extra = {}) => {
+  const p = JSON.parse(request.data)
+  return { state: 'CREATED', requestId: p.requestId, inviteId: '9223372036854775807',
+    inviteType: p.inviteType, topicId: String(p.topicId).replace(/^0+/, ''), toType: p.toType,
+    toId: String(p.toId).replace(/^0+/, ''), scope: p.inviteType === 0 && p.scope === 'MERCHANT' ? 'MERCHANT' : '', ...extra }
+}
+const queryTarget = env => env.page.queryOriginalInvite({ currentTarget: { dataset: { toid: 11 } } })
+
+test('W4 POST前持久原请求号；丢响应后精确GET解原锁，一次POST且重复回调不再提交', () => {
+  const env = prepare(loadInvitePage())
+  try {
+    env.page.data.message = '原文'
+    env.page.confirmInvite()
+    const post = env.requests[0], payload = JSON.parse(post.data), row = [...env.storage.values()][0]
+    assert.equal(payload.requestId, row.attemptId)
+    assert.equal(row.requestIdentityVersion, 1)
+    env.page.data.message = '后来修改'
+    assert.equal(JSON.parse(post.data).message, '原文')
+    post.fail({}); queryTarget(env)
+    const get = env.requests[1]
+    assert.equal(get.method, 'GET'); assert.equal(get.url, '/api/coop/invite/request')
+    assert.equal(get.data.requestId, payload.requestId)
+    get.success({ code: 200, data: requestReceipt(post) })
+    assert.equal(env.storage.size, 0); assert.equal(env.page.data.unknownTargets.length, 0)
+    assert.match(env.page.data.sendReceipt, /9223372036854775807/)
+    get.fail({}); post.success({ code: 200, data: { inviteId: '88', requestId: payload.requestId, replayed: false } })
+    env.page._setSelected([{ toId: 11, name: '甲店' }]); env.page.confirmInvite()
+    assert.equal(env.requests.filter(r => r.method === 'POST').length, 1)
+  } finally { env.restore() }
+})
+
+for (const bad of [
+  { state: 'NOT_FOUND' }, { state: 'UNAVAILABLE' }, { state: 'CREATED', inviteId: 9007199254740992 },
+  { state: 'CREATED', inviteId: '9223372036854775808' }, { state: 'CREATED', toId: '12' },
+  { state: 'CREATED', topicId: '10' }, { state: 'CREATED', scope: 'MERCHANT' },
+  { state: 'CREATED', requestId: 'wrong-key' }, { state: 'CREATED', inviteType: 0, toType: 'merchant' },
+]) test('W4负向或错配精确回读不结算 ' + JSON.stringify(bad), () => {
+  const env = prepare(loadInvitePage())
+  try {
+    env.page.confirmInvite(); const post = env.requests[0]; post.fail({})
+    const original = JSON.stringify([...env.storage])
+    queryTarget(env)
+    let receipt = requestReceipt(post, bad)
+    if (bad.state !== 'CREATED') receipt = { state: bad.state, requestId: JSON.parse(post.data).requestId }
+    env.requests[1].success({ code: 200, data: receipt })
+    assert.equal(JSON.stringify([...env.storage]), original)
+    assert.equal(env.page.data.unknownTargets.length, 1)
+    env.page._setSelected([{ toId: 11, name: '甲店' }]); env.page.confirmInvite()
+    assert.equal(env.requests.filter(r => r.method === 'POST').length, 1)
+  } finally { env.restore() }
+})
+
+for (const ending of ['403', 'network', 'account', 'token', 'topic', 'hide']) test('W4查询 ' + ending + ' 不解锁或回填旧上下文', () => {
+  const env = prepare(loadInvitePage())
+  try {
+    env.page.confirmInvite(); const post = env.requests[0]; post.fail({}); queryTarget(env)
+    const get = env.requests[1], original = JSON.stringify([...env.storage])
+    if (ending === 'account') env.app._memberId = 8
+    if (ending === 'token') env.app._authorization = 'another-token'
+    if (ending === 'topic') env.page.data.topicId = 10
+    if (ending === 'hide') env.page.onHide()
+    const before = JSON.stringify(env.page.data)
+    if (ending === '403') get.successStatusAbnormal({ code: 403 }, 403)
+    else if (ending === 'network') get.fail({})
+    else get.success({ code: 200, data: requestReceipt(post) })
+    assert.equal(JSON.stringify([...env.storage]), original)
+    if (!['403', 'network'].includes(ending)) assert.equal(JSON.stringify(env.page.data), before)
+    assert.equal(env.requests.filter(r => r.method === 'POST').length, 1)
+  } finally { env.restore() }
+})
+
+test('W4重新进入可直接查原请求，旧无绑定UNKNOWN仅人工核对，存储故障不发GET或POST', () => {
+  const storage = new Map(); let env = prepare(loadInvitePage({ storage }))
+  let post
+  try {
+    env.page.confirmInvite(); post = env.requests[0]; post.fail({}); env.restore()
+    env = prepare(loadInvitePage({ storage })); queryTarget(env)
+    assert.equal(env.requests.length, 1); assert.equal(env.requests[0].method, 'GET')
+    env.requests[0].success({ code: 200, data: requestReceipt(post) }); assert.equal(storage.size, 0)
+    env.restore(); env = prepare(loadInvitePage({ storage })); env.page.confirmInvite(); env.requests[0].fail({})
+    for (const row of storage.values()) delete row.requestIdentityVersion
+    queryTarget(env); assert.equal(env.requests.length, 1); assert.match(env.page.data.receiptError, /旧.*人工核对/)
+    env.page._setSelected([{ toId: 11, name: '甲店' }]); env.page.confirmInvite()
+    assert.equal(env.requests.length, 1); assert.equal(storage.size, 1)
+  } finally { env.restore() }
+  const broken = prepare(loadInvitePage({ storageFailure: 'read' }))
+  try { queryTarget(broken); assert.equal(broken.requests.length, 0); assert.match(broken.page.data.receiptError, /无法读取/) }
+  finally { broken.restore() }
+})
+
+test('W4同key409不可误当明确失败，不清原记录或允许新POST', () => {
+  const env = prepare(loadInvitePage())
+  try {
+    env.page.confirmInvite(); env.requests[0].success({ code: 409, msg: 'COOP_REQUEST_CONFLICT' })
+    assert.equal(env.storage.size, 1); assert.equal(env.page.data.unknownTargets.length, 1)
+    env.page._setSelected([{ toId: 11, name: '甲店' }]); env.page.confirmInvite()
+    assert.equal(env.requests.length, 1)
+  } finally { env.restore() }
+})
+
+test('W4跨设备枚举显式分页，全部UNAVAILABLE仍沿原游标前进；匹配当前主题的已创建回执阻止重邀', () => {
+  const env = prepare(loadInvitePage())
+  try {
+    env.page.discoverOriginalInvites(); const first = env.requests[0]
+    assert.equal(first.method, 'GET'); assert.equal(first.url, '/api/coop/invite/requests')
+    assert.deepEqual(first.data, { limit: 20 })
+    first.success({ code: 200, data: { rows: [{ state: 'UNAVAILABLE', requestId: 'other' }], nextCursor: '100', hasMore: true } })
+    assert.equal(env.requests.length, 1, '没有自动扫描下一页')
+    env.page.moreOriginalInvites(); const second = env.requests[1]
+    assert.deepEqual(second.data, { limit: 20, before: '100' })
+    second.success({ code: 200, data: { rows: [{ state: 'CREATED', requestId: 'device-two', inviteId: '90',
+      inviteType: 1, topicId: '9', toType: 'club', toId: '11', scope: '' }], nextCursor: null, hasMore: false } })
+    assert.match(env.page.data.sendReceipt, /邀请 #90/); assert.equal(env.page.data.selected.length, 0)
+    env.page._setSelected([{ toId: 11, name: '甲店' }]); env.page.confirmInvite(); env.page.moreOriginalInvites()
+    assert.equal(env.requests.length, 2); assert.equal(env.storage.size, 0)
+  } finally { env.restore() }
+})
+
+for (const cursor of ['100', '101', '00099', 99]) test('W4错乱分页游标不处理同页正向回执 ' + cursor, () => {
+  const env = prepare(loadInvitePage())
+  try {
+    env.page.confirmInvite(); const post = env.requests[0]; post.fail({})
+    env.page.discoverOriginalInvites()
+    env.requests[1].success({ code: 200, data: { rows: [], nextCursor: '100', hasMore: true } })
+    env.page.moreOriginalInvites()
+    env.requests[2].success({ code: 200, data: { rows: [requestReceipt(post)], nextCursor: cursor, hasMore: true } })
+    assert.equal(env.storage.size, 1); assert.equal(env.page.data.unknownTargets.length, 1)
+    assert.match(env.page.data.receiptError, /分页/)
+  } finally { env.restore() }
+})
+
+test('W4正向回执遇本机删除故障保留待确认，不放行下一次POST', () => {
+ const options = {}, env = prepare(loadInvitePage(options))
+ try {
+  env.page.confirmInvite(); const post = env.requests[0]; post.fail({}); options.removeFailure = true
+  queryTarget(env); env.requests[1].success({ code: 200, data: requestReceipt(post) })
+  assert.equal(env.storage.size, 1); assert.equal(env.page.data.unknownTargets.length, 1)
+  assert.match(env.page.data.receiptError, /仍待确认/)
+  env.page._setSelected([{ toId: 11, name: '甲店' }]); env.page.confirmInvite()
+  assert.equal(env.requests.filter(r => r.method === 'POST').length, 1)
+ } finally { env.restore() }
+})
+
+for (const patch of [{ inviteId: 9007199254740992 }, { inviteId: '9223372036854775808' }, { requestId: 'different' }, { replayed: undefined }]) {
+ test('W4 POST不完整或不精确的keyed成功回包保留UNKNOWN '+JSON.stringify(patch), () => {
+  const env = prepare(loadInvitePage())
+  try {
+   env.page.confirmInvite(); const post = env.requests[0]
+   post.success({ code: 200, data: { inviteId: '1', requestId: JSON.parse(post.data).requestId, replayed: false, ...patch } })
+   assert.equal(env.storage.size, 1); assert.equal(env.page.data.unknownTargets.length, 1)
+  } finally { env.restore() }
+ })
+}
+test('W4只读调用同步异常结束loading并保留UNKNOWN', () => {
+ const env = prepare(loadInvitePage())
+ try {
+  env.page.confirmInvite(); env.requests[0].fail({}); env.app.sendRequest = () => { throw Error('fixture') }
+  queryTarget(env); assert.equal(env.page.data.receiptLoading, false); assert.match(env.page.data.receiptError, /暂无法查询/)
+  assert.equal(env.storage.size, 1); assert.equal(env.page.data.unknownTargets.length, 1)
+ } finally { env.restore() }
+})
+
+for (const code of ['2e2', '4e2', ' 200', '0200']) test('W4畸形状态码不按成功或明确失败清待办 '+code, () => {
+ const env = prepare(loadInvitePage())
+ try {
+  env.page.confirmInvite(); const post = env.requests[0]
+  post.success({ code, data: { inviteId: '1', requestId: JSON.parse(post.data).requestId, replayed: false } })
+  assert.equal(env.storage.size, 1); assert.equal(env.page.data.unknownTargets.length, 1)
+  queryTarget(env); env.requests[1].success({ code, data: requestReceipt(post) })
+  assert.equal(env.storage.size, 1); assert.equal(env.page.data.unknownTargets.length, 1)
+  assert.match(env.page.data.receiptError, /暂无法查询/)
+ } finally { env.restore() }
 })

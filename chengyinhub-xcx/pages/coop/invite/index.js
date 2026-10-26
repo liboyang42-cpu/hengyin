@@ -13,6 +13,7 @@ const { isRecordList } = require('../../../utils/response-shape.js');
 const { toTimestamp, chinaParts } = require('../../../utils/datetime.js');
 const { parseInviteId } = require('../../../utils/coop-invite-view.js');
 const { createVerificationWorkflow } = require('../../../utils/verification-readback.js');
+const inviteRequest = require('../../../utils/coop-invite-request.js');
 const RECRUIT_CLOSED_TEXT = '主题不在招商期，暂不能发起邀约';
 
 // 主题日期的短标签:后端下发不带时区的中国时间串,统一锚上海日历再取月日。
@@ -151,6 +152,7 @@ Page({
     sendResult: '',
     sendReceipt: '',
     unknownTargets: [],
+    receiptRows: [], receiptLoading: false, receiptError: '', receiptHasMore: false,
     // 创作者侧不提供分成选择；普通 /invite 服务端也会重建为非官方路径。
     shareMode: 0,
     shareRate: null,
@@ -242,6 +244,10 @@ Page({
   },
 
   _stopInviteWrites() {
+    if (this._receiptReader) this._receiptReader.destroy();
+    this._receiptReader = null;
+    this._confirmedInvites = {};
+    if (!this._unloaded) this.setData({ receiptRows: [], receiptLoading: false, receiptError: '', receiptHasMore: false });
     this._submitEpoch = (this._submitEpoch || 0) + 1;
     this._submitting = false;
     if (this._inviteWriteWorkflow) this._inviteWriteWorkflow.destroy();
@@ -259,20 +265,69 @@ Page({
   },
   _inviteWorkflow() {
     if (!this._inviteWriteWorkflow) this._inviteWriteWorkflow = createVerificationWorkflow({
-      storage: wx, getOwner: () => memberId(app),
+      storage: wx, getOwner: () => memberId(app), requestIdentity: true,
     });
     return this._inviteWriteWorkflow;
   },
   _inviteWriteKey(target) {
-    // No message, fee or other terms enter the persistent recovery record.
-    return memberId(app) + ':coop-invite:' + JSON.stringify([
-      this.data.activeType, this.data.activeType === 0 ? this.data.operationScope : '',
-      parseInviteId(this.data.topicId), parseInviteId(target.toId),
-    ]);
+    return inviteRequest.writeKey(memberId(app), this._invitePayload(target.toId));
   },
+  _requestReadback() {
+    if (!this._receiptReader) {
+      const scope = this._submitScope(), epoch = this._submitEpoch, authorization = app.getAuthorization && app.getAuthorization();
+      this._receiptReader = inviteRequest.createReadback({
+        current: () => !this._unloaded && !this._hidden && scope === this._submitScope() && epoch === this._submitEpoch
+          && authorization === (app.getAuthorization && app.getAuthorization()),
+        requestExact: request => app.sendRequest({
+          url: '/api/coop/invite/request', method: 'GET', data: request.data,
+          hideLoading: true, autoErrorToast: false, success: request.success,
+          fail: request.fail, successStatusAbnormal: request.successStatusAbnormal,
+        }),
+        requestList: request => app.sendRequest({
+          url: '/api/coop/invite/requests', method: 'GET', data: request.data,
+          hideLoading: true, autoErrorToast: false, success: request.success,
+          fail: request.fail, successStatusAbnormal: request.successStatusAbnormal,
+        }),
+        change: patch => this.setData({
+          receiptLoading: patch.receiptLoading === undefined ? this.data.receiptLoading : patch.receiptLoading,
+          receiptError: patch.receiptError === undefined ? this.data.receiptError : patch.receiptError,
+          receiptRows: patch.receiptRows === undefined ? this.data.receiptRows : patch.receiptRows,
+          receiptHasMore: patch.receiptHasMore === undefined ? this.data.receiptHasMore : patch.receiptHasMore,
+        }),
+        received: row => {
+          if (row.state !== 'CREATED' || !inviteRequest.matches(row, this._invitePayload(row.toId))) return;
+          const key = this._inviteWriteKey({ toId: row.toId });
+          let pending;
+          try { pending = this._inviteWorkflow().pendingRequest(key); }
+          catch (error) { return '本机待办无法读取，原结果仍待确认'; }
+          if (pending && (pending.legacy || pending.requestId !== row.requestId || !this._inviteWorkflow().confirmRequest(key, row.requestId))) return '本机原请求仍待确认，请勿重复发送';
+          this._confirmedInvites = this._confirmedInvites || {};
+          this._confirmedInvites[key] = row;
+          this._setSelected(this.data.selected.filter(t => parseInviteId(t.toId) !== row.toId));
+          this.setData({ unknownTargets: this.data.unknownTargets.filter(t => parseInviteId(t.toId) !== row.toId),
+            sendReceipt: '原请求已创建邀请 #' + row.inviteId + '，等待对方确认' });
+        },
+      });
+    }
+    return this._receiptReader;
+  },
+  queryOriginalInvite(e) {
+    if (this._submitting || this._unloaded || this._hidden || this._dataIdentity !== identityKey()) return;
+    const target = this.data.unknownTargets.concat(this.data.selected).find(t => parseInviteId(t.toId) === parseInviteId(e.currentTarget.dataset.toid));
+    if (!target) return;
+    try {
+      const pending = this._inviteWorkflow().pendingRequest(this._inviteWriteKey(target));
+      if (!pending || pending.legacy) { this.setData({ receiptError: '旧待确认记录没有原请求号，请保留记录人工核对，勿重复发送' }); return; }
+      this._requestReadback().exact(pending.requestId);
+    } catch (error) { this.setData({ receiptError: '本机待办无法读取，请勿重复发送' }); }
+  },
+  discoverOriginalInvites() {
+    if (this._submitting || !memberId(app) || this._dataIdentity !== identityKey()) return;
+    this._requestReadback().list();
+  },
+  moreOriginalInvites() { if (!this._submitting) this._requestReadback().more(); },
   checkUnknownInvites() {
     if (this._unloaded || this._hidden || this._dataIdentity !== identityKey()) return;
-    // The list has no client request correlation. Opening it never clears UNKNOWN.
     this._navigateTo('/pages/coop/list/index?tab=sent');
   },
 
@@ -361,7 +416,7 @@ Page({
       that._stopRefreshWhenSettled();
       return true;
     };
-    const fail = function (value) {
+    function onTopicsFailure(value) {
       if (that._recoverReadSession(value, epoch, 'topics')) return;
       if (!settle()) return;
       const kind = failureKind(value);
@@ -374,14 +429,14 @@ Page({
       } else {
         that.setData({ myTopics: [], topicsState: kind === 'permission' ? 'permission' : 'error', topicsRefreshing: false, topicsErrorKind: kind, topicsErrorText: text });
       }
-    };
+    }
     app.sendRequest({
       hideLoading: true, silentError: true, url: '/api/topic/list', method: 'POST',
       // CU-M-29:让后端按本页的邀约方向回填 inviteWindowOpen(与写闸同一判据),选的时候就能看出哪条不在招商期
       data: { is_my: 1, scope: this.data.operationScope, invite_target: this.data.activeType === 1 ? 'club' : 'merchant' },
       success(res) {
         if (res.code != '200' || !res.data || !isNamedRecordList(res.data.rows, 'id')) {
-          fail(res);
+          onTopicsFailure(res);
           return;
         }
         if (!settle()) return;
@@ -395,8 +450,8 @@ Page({
           topicsState: 'ready', topicsRefreshing: false, topicsErrorKind: '', topicsErrorText: '',
         });
       },
-      fail(value) { fail(value); },
-      successStatusAbnormal(res, status) { fail({ code: failureStatus(res, status), msg: res && res.msg }); },
+      fail(value) { onTopicsFailure(value); },
+      successStatusAbnormal(res, status) { onTopicsFailure({ code: failureStatus(res, status), msg: res && res.msg }); },
     });
   },
 
@@ -434,7 +489,7 @@ Page({
       that._stopRefreshWhenSettled();
       return true;
     };
-    const fail = function (value) {
+    function onTargetsFailure(value) {
       if (that._recoverReadSession(value, epoch, 'targets')) return;
       if (!settle()) return;
       const kind = failureKind(value);
@@ -449,7 +504,7 @@ Page({
       } else {
         that.setData({ merchants: [], targetsState: kind === 'permission' ? 'permission' : 'error', targetsRefreshing: false, targetsErrorKind: kind, targetsErrorText: text });
       }
-    };
+    }
     if (this.data.activeType === 1) {
       // 后端 /api/merchant/clubs 是 @RequestBody 端点,必须发 JSON;缺 header 会被当 urlencoded 导致列表加载不出
       // (@RequestBody(required=false) 不豁免:Content-Type 存在即走转换器,照样 415)
@@ -457,13 +512,13 @@ Page({
         hideLoading: true, silentError: true, url: '/api/merchant/clubs', method: 'POST',
         data: JSON.stringify({}), header: { 'Content-Type': 'application/json' },
         success(res) {
-          if (res.code != '200' || !isNamedRecordList(res.data, 'id')) { fail(res); return; }
+          if (res.code != '200' || !isNamedRecordList(res.data, 'id')) { onTargetsFailure(res); return; }
           if (!settle()) return;
           that._targetsLoadedScope = scope;
           that.setData({ clubs: res.data, targetsState: 'ready', targetsRefreshing: false, targetsErrorKind: '', targetsErrorText: '' });
         },
-        fail(value) { fail(value); },
-      successStatusAbnormal(res, status) { fail({ code: failureStatus(res, status), msg: res && res.msg }); },
+        fail(value) { onTargetsFailure(value); },
+      successStatusAbnormal(res, status) { onTargetsFailure({ code: failureStatus(res, status), msg: res && res.msg }); },
       });
     } else {
       // 后端 /api/club/merchants 是 @RequestBody 端点,必须发 JSON;缺 header 会被当 urlencoded 导致列表加载不出
@@ -471,13 +526,13 @@ Page({
         hideLoading: true, silentError: true, url: '/api/club/merchants', method: 'POST',
         data: JSON.stringify({}), header: { 'Content-Type': 'application/json' },
         success(res) {
-          if (res.code != '200' || !isNamedRecordList(res.data, 'memberId')) { fail(res); return; }
+          if (res.code != '200' || !isNamedRecordList(res.data, 'memberId')) { onTargetsFailure(res); return; }
           if (!settle()) return;
           that._targetsLoadedScope = scope;
           that.setData({ merchants: res.data, targetsState: 'ready', targetsRefreshing: false, targetsErrorKind: '', targetsErrorText: '' });
         },
-        fail(value) { fail(value); },
-      successStatusAbnormal(res, status) { fail({ code: failureStatus(res, status), msg: res && res.msg }); },
+        fail(value) { onTargetsFailure(value); },
+      successStatusAbnormal(res, status) { onTargetsFailure({ code: failureStatus(res, status), msg: res && res.msg }); },
       });
     }
   },
@@ -566,13 +621,15 @@ Page({
     if (!parseInviteId(this.data.topicId) || this.data.selected.some(t => !parseInviteId(t.toId))) {
       toast('请重新选择主题和对象'); return;
     }
+    const confirmed = this._confirmedInvites || {};
+    this._setSelected(this.data.selected.filter(t => !confirmed[this._inviteWriteKey(t)]));
     const seen = {};
     const targets = this.data.selected.filter(target => {
       const id = parseInviteId(target.toId);
       if (seen[id]) return false;
       seen[id] = true; return true;
     }).map(target => Object.assign({}, target, {
-      payload: JSON.stringify(this._invitePayload(target.toId)), key: this._inviteWriteKey(target),
+      payload: this._invitePayload(target.toId), key: this._inviteWriteKey(target),
     }));
     if (!targets.length) return;
     const that = this;
@@ -586,6 +643,8 @@ Page({
         unknownTargets.push({ toId: target.toId, name: target.name });
       }
     };
+    if (this._receiptReader) this._receiptReader.destroy();
+    this._receiptReader = null;
     const workflow = this._inviteWorkflow();
     const submitScope = this._submitScope();
     const submitEpoch = (this._submitEpoch || 0) + 1;
@@ -602,26 +661,12 @@ Page({
       if (!isCurrent()) return;
       if (i >= targets.length) return finish();
       const target = targets[i];
-      const accepted = workflow.run(target.key, function (done) {
+      const accepted = workflow.run(target.key, function (done, identity) {
         that._inviteWritingTarget = { toId: target.toId, name: target.name };
-        function classify(res, httpStatus) {
-          const status = Number(httpStatus), code = Number(res && res.code);
-          const unknown = { status: 'unknown' };
-          if (res && res.reason === 'sessionChanged') return unknown;
-          if (status && status !== 200) return status >= 400 && status < 500 && status !== 408
-            ? { status: 'failed', response: res } : unknown;
-          if (code === 200 && res.data && /^[1-9]\d*$/.test(String(res.data.inviteId))) {
-            return { status: 'success', response: res };
-          }
-          // Generic business 500 does not prove rollback. This rejection is emitted before INSERT.
-          if (code >= 400 && code < 500 && code !== 408
-              || code === 500 && /^招商写入已关闭/.test(String(res && res.msg || ''))) {
-            return { status: 'failed', response: res };
-          }
-          return unknown;
-        }
+        const payload = JSON.stringify(Object.assign({}, target.payload, { requestId: identity.requestId }));
+        const classify = (res, status) => isCurrent() ? inviteRequest.classify(res, status, identity.requestId) : { status: 'unknown' };
         return app.sendRequest({
-          url: '/api/coop/invite', method: 'POST', data: target.payload, autoErrorToast: false,
+          url: '/api/coop/invite', method: 'POST', data: payload, autoErrorToast: false,
           header: { 'Content-Type': 'application/json' },
           success(res) { done(classify(res, 200)); },
           fail(res, status) { done(status ? classify(res, status) : { status: 'unknown' }); },

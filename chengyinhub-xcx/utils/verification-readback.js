@@ -102,13 +102,15 @@ function createVerificationWorkflow(options) {
     if (!row || typeof row !== 'object' || Array.isArray(row) || row.version !== 1 || row.state !== 'UNKNOWN'
         || row.ownerDigest !== meta.ownerDigest || row.targetDigest !== meta.targetDigest
         || typeof row.attemptId !== 'string' || !/^[a-z0-9_-]{16,96}$/.test(row.attemptId)
+        || row.requestIdentityVersion !== undefined && row.requestIdentityVersion !== 1
         || !Number.isSafeInteger(row.createdAt) || row.createdAt <= 0) throw Error('unreadable');
     return row;
   }
   function removeOriginal(meta, row) {
     try {
       const current = read(meta);
-      if (!current || current.attemptId !== row.attemptId) return false;
+      if (!current || current.attemptId !== row.attemptId
+          || current.requestIdentityVersion !== row.requestIdentityVersion) return false;
       storage.removeStorageSync(meta.key);
       return missing(storage.getStorageSync(meta.key));
     } catch (error) { return false; }
@@ -118,9 +120,31 @@ function createVerificationWorkflow(options) {
     // 终态提示已由 callback 处理；true 不表示已经发出了 POST。
     return true;
   }
+  function requestIdentity(row) {
+    return { requestId: row.requestIdentityVersion === 1 ? row.attemptId : null,
+      legacyRequest: row.requestIdentityVersion !== 1 };
+  }
+  function withIdentity(result, row) {
+    return options.requestIdentity === true ? Object.assign({}, result, requestIdentity(row)) : result;
+  }
   return {
     isBusy: key => workflow.isBusy(key),
     hold: key => workflow.hold(key),
+    pendingRequest(key) {
+      if (destroyed || options.requestIdentity !== true) return null;
+      const row = read(metadata(key));
+      return row ? { requestId: requestIdentity(row).requestId, legacy: row.requestIdentityVersion !== 1 } : null;
+    },
+    // 调用方须先核对服务端原 requestId 的已创建回执；负向/列表快照不允许调用。
+    confirmRequest(key, requestId) {
+      if (destroyed || options.requestIdentity !== true || typeof requestId !== 'string') return false;
+      try {
+        const meta = metadata(key), row = read(meta);
+        if (!row || row.requestIdentityVersion !== 1 || row.attemptId !== requestId || !removeOriginal(meta, row)) return false;
+        workflow.reset(key);
+        return true;
+      } catch (error) { return false; }
+    },
     run(key, start, callback) {
       if (destroyed) return false;
       let meta, row;
@@ -128,7 +152,7 @@ function createVerificationWorkflow(options) {
       catch (error) { return blocked(callback, '无法读取核销待办，本次未提交，请检查本机存储及登录状态'); }
       if (row) {
         workflow.hold(key);
-        callback(Object.assign(unknownResult(), { recovered: true }));
+        callback(withIdentity(Object.assign(unknownResult(), { recovered: true }), row));
         return true;
       }
       // POST 前按原账号+入口/原码目标摘要占住待办；即使此刻被系统杀死也不能重放。
@@ -137,6 +161,7 @@ function createVerificationWorkflow(options) {
         attemptId: 'vr_' + Date.now().toString(36) + '_' + verificationSequence.toString(36) + '_' + Math.random().toString(36).slice(2),
         createdAt: Date.now() };
       row.attemptId = row.attemptId.padEnd(32, '0');
+      if (options.requestIdentity === true) row.requestIdentityVersion = 1;
       try {
         storage.setStorageSync(meta.key, row);
         const stored = read(meta);
@@ -159,9 +184,9 @@ function createVerificationWorkflow(options) {
           if (result.status === 'success' || result.status === 'failed') removeOriginal(meta, row);
           done(result);
         }
-        try { return start(finish); }
+        try { return start(finish, options.requestIdentity === true ? { requestId: row.attemptId } : undefined); }
         catch (error) { finish(unknownResult()); return null; }
-      }, function (result) { closed = true; callback(result); });
+      }, function (result) { closed = true; callback(withIdentity(result, row)); });
       if (!accepted && !entered) removeOriginal(meta, row);
       return accepted;
     },
