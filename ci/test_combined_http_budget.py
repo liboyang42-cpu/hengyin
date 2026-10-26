@@ -646,6 +646,37 @@ class CombinedBudgetControls(unittest.TestCase):
             self.assertEqual(B.safe_plugin_resolution('Plugin '+coordinate+' or one of its dependencies could not be resolved: PRIVATE'),{})
         self.assertEqual(B.safe_plugin_resolution('PluginResolutionException PRIVATE offline mode'),{})
 
+    def test_hyphenated_reviewed_group_keeps_exact_group_version_and_suffix_boundaries(self):
+        coordinate='io.github.git-commit-id:git-commit-id-maven-plugin:5.0.0'
+        suffix=' or one of its dependencies could not be resolved:'
+        expected={'plugin':'io.github.git-commit-id:git-commit-id-maven-plugin','pluginVersion':'5.0.0','pluginPhase':'RESOLUTION_BEFORE_GOAL'}
+        self.assertEqual(B.safe_plugin_resolution('\x1b[31mPlugin '+coordinate+suffix+' PRIVATE_TOKEN\x1b[0m'),expected)
+        for altered in (
+                coordinate.replace('io.github.git-commit-id','io.github.git_commit_id'),
+                coordinate.replace('io.github.git-commit-id','io.github.git-commit-id-foreign'),
+                coordinate.replace('io.github.git-commit-id','xio.github.git-commit-id'),
+                coordinate.replace('io.github.git-commit-id','a'*101),
+                coordinate.replace('5.0.0','5.0.0-PRIVATE_TOKEN'),
+                coordinate.replace('5.0.0','5.0.0:extra')):
+            self.assertEqual(B.safe_plugin_resolution('Plugin '+altered+suffix+' PRIVATE_TOKEN'),{})
+        self.assertEqual(B.safe_plugin_resolution('Plugin '+coordinate+'X'+suffix),{})
+        self.assertEqual(B.safe_plugin_resolution('Plugin '+coordinate+' or one of its dependencies could not be resolvedX: PRIVATE_TOKEN'),{})
+        self.assertNotIn('PRIVATE_TOKEN',json.dumps(expected))
+
+    def test_shared_diagnostic_consumes_hyphenated_group_without_exporting_private_cause(self):
+        spec=importlib.util.spec_from_file_location('hyphenated_plugin_diagnostic',B.ROOT/'ci/test_http_e2e_entry.py')
+        owner=importlib.util.module_from_spec(spec);spec.loader.exec_module(owner)
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/'run.log'
+            suffix='Cannot access central in offline mode\nhttps://cwiki.apache.org/confluence/display/MAVEN/PluginResolutionException'
+            path.write_text('Plugin io.github.git-commit-id:git-commit-id-maven-plugin:5.0.0 or one of its dependencies could not be resolved: PRIVATE_TOKEN\n'+suffix)
+            result=owner.safe_maven_failure(path)
+            self.assertEqual(result,{'category':'offline-resolution','helpException':'PluginResolutionException',
+                                    'plugin':'io.github.git-commit-id:git-commit-id-maven-plugin','pluginVersion':'5.0.0','pluginPhase':'RESOLUTION_BEFORE_GOAL'})
+            self.assertNotIn('PRIVATE_TOKEN',json.dumps(result));self.assertNotIn('goal',result)
+            path.write_text(suffix)
+            self.assertEqual(owner.safe_maven_failure(path),{'category':'offline-resolution','helpException':'PluginResolutionException'})
+
     def test_shared_diagnostic_preserves_missing_plugin_unknown_and_no_goal_resolution(self):
         spec=importlib.util.spec_from_file_location('cache_diagnostic_entry',B.ROOT/'ci/test_http_e2e_entry.py')
         owner=importlib.util.module_from_spec(spec);spec.loader.exec_module(owner)

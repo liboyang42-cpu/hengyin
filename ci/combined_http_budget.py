@@ -88,7 +88,7 @@ def safe_plugin_resolution(text):
     """Only exact reviewed plugin coordinates in Maven's standard resolution error, never its cause."""
     result={}
     text=re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]','',text[-1024*1024:])
-    matches=re.findall(r'\bPlugin ([a-z][a-z0-9_.]{0,99}):([a-z][a-z0-9-]{0,79}):([0-9][A-Za-z0-9_.-]{0,39}) or one of its dependencies could not be resolved:',text)
+    matches=re.findall(r'\bPlugin ([a-z][a-z0-9_.-]{0,99}):([a-z][a-z0-9-]{0,79}):([0-9][A-Za-z0-9_.-]{0,39}) or one of its dependencies could not be resolved:',text)
     for group,artifact,version in reversed(matches):
         key=group+':'+artifact
         if version in REVIEWED_PLUGINS.get(key,set()):
