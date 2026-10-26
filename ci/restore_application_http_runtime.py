@@ -32,6 +32,23 @@ LOG_EXCEPTION_TYPES = ('org.springframework.beans.factory.BeanCreationException'
         'com.mysql.cj.jdbc.exceptions.CommunicationsException', 'java.lang.IllegalStateException',
         'java.lang.IllegalArgumentException', 'java.lang.NoSuchMethodError')
 REASON_CODES = {
+    "fixed 1500-second restore application budget": "APP_LIFECYCLE_BUDGET_EXHAUSTED",
+    "fixed boot matrix": "APP_BOOT_MATRIX_REJECTED",
+    "one isolated source seed": "APP_SEED_ADMISSION_REJECTED",
+    "exact current app owner changed": "APP_OWNER_REJECTED",
+    "original stopped application evidence changed": "APP_STOP_HISTORY_REJECTED",
+    "original private application log changed": "APP_PRIVATE_LOG_REJECTED",
+    "DB identity changed": "APP_DB_IDENTITY_REJECTED",
+    "reuse original tracing preparation": "APP_TRACE_PREPARATION_REJECTED",
+    "original app isolation/budget": "APP_ISOLATION_REJECTED",
+    "real env mode missing": "APP_MODE_ENV_REJECTED",
+    "exclusive private application log": "APP_LOG_PATH_REJECTED",
+    "private symlink forbidden": "APP_PRIVATE_PATH_REJECTED",
+    "complete application logs unavailable": "APP_LOG_CAPTURE_REJECTED",
+    "complete application logs exceed private evidence bound": "APP_LOG_SIZE_REJECTED",
+    "every original app log required before private erasure": "APP_LOG_ROSTER_REJECTED",
+    "exact original log CID": "APP_LOG_OWNER_REJECTED",
+    "exact original stopped CID": "APP_LOG_OWNER_REJECTED",
     'real CAPTCHA required': 'CAPTCHA_CONTRACT_REJECTED',
     'original private CAPTCHA oracle': 'CAPTCHA_ORACLE_REJECTED',
     'real admin login/filter required': 'ADMIN_LOGIN_REJECTED',
@@ -136,7 +153,7 @@ class ApplicationSlot:
         self.deadline=time.monotonic()+1500
         self.cid=None;self.boots=[];self.removed=[];self.owned=[];self.process=None
         self.launch=None;self.pending_process=None;self.ready_for_current_launch=False;self.startup_observation=None
-        self.stop_history=[]
+        self.stop_history=[];self.start_transition=None
         self.source=self.auth.mysql_endpoint(name,suffix='mysql')
         self.target=self.auth.mysql_endpoint(name,suffix='restore-mysql')
         require(self.source['id']!=self.target['id'] and self.source['networkId']==self.target['networkId'], 'distinct same-network DBs')
@@ -389,6 +406,7 @@ class ApplicationSlot:
         if self.cid is None:
             result={'result':'NO_CURRENT_CID_OBSERVATION','startAbsenceProven':False}
             if self.stop_history:result['lastStoppedEvidence']=self.stop_history[-1]
+            if getattr(self,'start_transition',None) is not None:result['startTransition']=dict(self.start_transition)
             return result
         obj=self.inspect(self.cid)
         require(obj['Id']==self.cid and obj['Name']=='/'+self.name+'-app'
@@ -400,6 +418,7 @@ class ApplicationSlot:
         result={'result':'EXACT_APP_OBSERVED','cid':self.cid,
                 'state':{key:state[key] for key in ('Running','OOMKilled','Restarting','Pid','ExitCode')}}
         if self.stop_history:result['lastStoppedEvidence']=self.stop_history[-1]
+        if getattr(self,'start_transition',None) is not None:result['startTransition']=dict(self.start_transition)
         if getattr(self,'launch',None) is not None:
             observed=self.read_startup_observation()
             if observed is not None:result['childStartup']=observed
@@ -412,26 +431,41 @@ class ApplicationSlot:
         return result
 
     def start(self,side,mode,uuid,seed=False):
-        self.budget();require(side in ('source','target') and mode in ('true','invalid','','false'),'fixed boot matrix')
+        self.start_transition={'stage':'BUDGET','side':side if side in ('source','target') else 'UNCLASSIFIED',
+                'mode':mode if mode in ('false','true','invalid','') else 'UNCLASSIFIED',
+                'previousCid':self.cid,'previousBootId':self.boots[-1]['bootId'] if self.boots else None,
+                'previousRemovalConfirmed':False,'newCid':None}
+        self.budget()
+        self.start_transition['stage']='ADMISSION'
+        require(side in ('source','target') and mode in ('true','invalid','','false'),'fixed boot matrix')
         require(not seed or (side=='source' and mode=='false' and not self.boots),'one isolated source seed')
+        self.start_transition['stage']='PREVIOUS_STOP_AND_LOG'
         self.stop()
+        self.start_transition['stage']='PREVIOUS_REMOVAL_CONFIRMED'
+        self.start_transition['previousRemovalConfirmed']=(
+                self.start_transition['previousCid'] is not None and self.start_transition['previousCid'] in self.removed)
         self.process=None;self.pending_process=None;self.launch=None
         self.ready_for_current_launch=False;self.startup_observation=None
         if hasattr(self,'stop_proof_kind'):del self.stop_proof_kind
         if hasattr(self,'stopped'):del self.stopped
+        self.start_transition['stage']='DATABASE_IDENTITY'
         endpoint=self.source if side=='source' else self.target
         require(self.auth.mysql_endpoint(self.name,suffix='mysql' if side=='source' else 'restore-mysql')==endpoint,'DB identity changed')
         config={'sourceSha':os.environ['GITHUB_SHA'],'schema':self.schema,'scope':self.name[8:],
                 'jarSha256':self.jar_hash,'classManifestSha256':self.manifest_hash,
                 'jdbcUrl':'jdbc:mysql://'+endpoint['ip']+':3306/'+self.schema+'?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC',
                 'redisHost':self.redis_ip,'tokenSecret':self.token_secret,'serverUuid':uuid,'restoreMode':mode,'seed':seed}
+        self.start_transition['stage']='CONFIGURATION'
         write_private(self.root/'config.json',config)
+        self.start_transition['stage']='READY_STATUS_RESET'
         (self.root/'ready.json').unlink(missing_ok=True)
         (self.root/'startup.json').unlink(missing_ok=True)
         trace='network-'+str(len(self.boots))+'.trace';strace=shutil.which('strace')
+        self.start_transition['stage']='TRACE_PREPARATION'
         require(strace and (self.out/'trace-libs').is_dir(),'reuse original tracing preparation')
         # Original immutable app image/network/strace/memory/user/JAR/config. Only the test child and
         # per-process real environment differ. JVM -D properties do not replace System.getenv; no external port.
+        self.start_transition['stage']='DOCKER_CREATE'
         raw=self.auth.command(self.auth.DOCKER+['run','-d','--name',self.name+'-app','--label','chengyin.auth-recovery='+self.name,
                 '--network',self.name,'--dns','127.0.0.1','--memory=1g','--memory-swap=1g','--cpus=1',
                 '--read-only','--tmpfs','/tmp:rw,size=256m','--cap-drop','ALL','--cap-add','SYS_PTRACE',
@@ -448,6 +482,8 @@ class ApplicationSlot:
                 '-cp','/application.jar','org.springframework.boot.loader.launch.PropertiesLauncher'],timeout=120)
         self.cid=raw.decode().strip();require(re.fullmatch('[0-9a-f]{64}',self.cid),'exact created app CID')
         self.owned.append(self.cid)
+        self.start_transition['stage']='CREATED_IDENTITY'
+        self.start_transition['newCid']=self.cid
         self.launch={**{key:config[key] for key in ('sourceSha','jarSha256','schema','restoreMode','serverUuid')},
                      'cid':self.cid,'configSha256':hashlib.sha256((self.root/'config.json').read_bytes()).hexdigest()}
         obj=self.inspect(self.name+'-app')
@@ -458,6 +494,7 @@ class ApplicationSlot:
                 and obj['NetworkSettings']['Networks'][self.name]['NetworkID']==self.source['networkId']
                 and not obj['HostConfig'].get('PortBindings'),'original app isolation/budget')
         require('CHENGYIN_RESTORE_MODE='+mode in obj['Config']['Env'],'real env mode missing')
+        self.start_transition['stage']='READINESS'
         self.wait_for_ready()
         boot=json.loads((self.root/'ready.json').read_text())
         require(boot['sourceSha']==os.environ['GITHUB_SHA'] and boot['jarSha256']==self.jar_hash
@@ -468,7 +505,9 @@ class ApplicationSlot:
                 and self.startup_observation['bootId']==boot['bootId'],'actual child boot identity')
         boot.update({'appCid':self.cid,'side':side,'trace':trace,'mysqlIp':endpoint['ip']})
         self.process=self.running_child_identity(boot,self.inspect(self.cid))
-        self.boots.append(boot);self.ready_for_current_launch=True;return boot
+        self.boots.append(boot);self.ready_for_current_launch=True
+        self.start_transition['stage']='READY'
+        return boot
 
     def verify_network(self):
         boot=self.boots[-1]

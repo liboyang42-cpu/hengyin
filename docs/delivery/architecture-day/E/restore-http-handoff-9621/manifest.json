@@ -1,0 +1,72 @@
+{
+  "repository": "liboyang42-cpu/hengyin",
+  "parent": "9621da223f18cbddfdb7973e613fa406f8afaa54",
+  "parent_tree": "1f42e78b0b2d14fb0634ee29e9411dc41deabf3b",
+  "code_files": 3,
+  "delivery_files": 3,
+  "files": [
+    {
+      "path": "ci/restore_application_http_runtime.py",
+      "preimage_git_blob_sha1": "7e4e90e0770631518f823f69789946ae5d1f11c5",
+      "postimage_git_blob_sha1": "edf657dad0de3af0a1d2bae7a9d41f7791d6c929",
+      "preimage_sha256": "a53427527561512b76afec6b36faadc6e4c0bfe84bd15625b916c8b2ee41fdfa",
+      "postimage_sha256": "dce6c9d577cc1ba7da938d72aaf35a81647b291e2f7a817f81b2714928f8613e",
+      "postimage_bytes": 36250
+    },
+    {
+      "path": "ci/restore_application_http_probe.py",
+      "preimage_git_blob_sha1": "3b7c05c0c6166ed34fa838d7a2631c23f5a1e3e7",
+      "postimage_git_blob_sha1": "707e56621690e2c3765eb009fd93ec865deaf8c2",
+      "preimage_sha256": "96f26c8b575717d6e26f8a2561f84829b9aa21936b62c45da106f98f3a3d075f",
+      "postimage_sha256": "bfb633ac6b93f3d29bd0fb0b1cf10e6cb1a48cb7fb1685fad7c695d556792c55",
+      "postimage_bytes": 71561
+    },
+    {
+      "path": "ci/test_restore_application_http_probe.py",
+      "preimage_git_blob_sha1": "568c5c4d8355ef7248721af37c8e74ce36dd0a7f",
+      "postimage_git_blob_sha1": "6a51ed38712d5744662591ef966beb773ac358b3",
+      "preimage_sha256": "8fe3905fd1aa728faffccad070ead4c00145e96d352ba00fe077aaf9e778b95b",
+      "postimage_sha256": "435d1ac2d585e0cb1fc42b1986f76b95e025a427c002e8b1d3d042cb6f8ce84e",
+      "postimage_bytes": 105741
+    }
+  ],
+  "code_patch_bytes": 34926,
+  "code_patch_sha256": "89d411b1944f1ee5c8493bcc62305a224ed1d359bb98be225e246546097eff89",
+  "readme_sha256": "98e1c59b6906e2cfe4900ad0a6ed858e0ebfb462551b142fb0da3f32ca983b08",
+  "new_python_control_methods": 8,
+  "original_cases_and_assertions": "retained; sourceframe privacy fixture invokes the dedicated snapshot caller rather than generic query; original exception/privacy assertions retained",
+  "source_changes": [
+    "One complete post-stop snapshot supplies original full-table report and three allocator fields; no equality or table is dropped",
+    "Finite start-transition stages and reviewed literal reason codes; original guards/budgets unchanged",
+    "Real reviewed outer source frame skips generic require/budget/value helpers",
+    "Direct controls invoke original slot methods for all five mode handoffs and failure preservation"
+  ],
+  "checks": {
+    "preimage_blob_identity": "MATCH",
+    "code_patch_apply_check": "CLEAN",
+    "diff_whitespace": "NO_DIAGNOSTICS",
+    "finite_secret_pattern_scan": "NO_MATCHES",
+    "full_gitleaks_scan": "NOT_RUN"
+  },
+  "tests": "NOT_RUN",
+  "parse_import_checks": "NOT_RUN",
+  "compile": "NOT_RUN",
+  "java_db_http_docker_ci": "NOT_RUN",
+  "java_modified": false,
+  "canonical_tool_modified": false,
+  "shared_helper_modified": false,
+  "new_dependencies": false,
+  "production_policy_modified": false,
+  "source_limits": [
+    "1500s total/180s ready/45s Quartz unchanged",
+    "Original20s stop/0or143/137-OOM rejection unchanged",
+    "Five distinct completed modes and original authorization/economic/fact/WAIT/replay/current allocator/log/absence checks unchanged",
+    "Static source and patch metadata only; no internal runtime status, receipts or logs included"
+  ],
+  "limitations": [
+    "No actual new handoff or complete restore execution proof",
+    "Controlled transport/child bytes do not prove real JVM/DB/HTTP or economic acceptance",
+    "No attribution of any prior execution failure to budget or other guard",
+    "Root must perform complete secret scan and same-source approved verification"
+  ]
+}

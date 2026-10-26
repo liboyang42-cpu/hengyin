@@ -52,6 +52,7 @@ FACT_REASON_CODES={
     'wire V1 and terminal original submission linkage':'ORIGINAL_SUBMIT_LINK_REJECTED',
 }
 SAFE_REASON_CODES.update(FACT_REASON_CODES.values())
+SAFE_REASON_CODES.update(["APP_LIFECYCLE_BUDGET_EXHAUSTED","APP_BOOT_MATRIX_REJECTED","APP_SEED_ADMISSION_REJECTED","APP_OWNER_REJECTED","APP_STOP_HISTORY_REJECTED","APP_PRIVATE_LOG_REJECTED","APP_DB_IDENTITY_REJECTED","APP_TRACE_PREPARATION_REJECTED","APP_ISOLATION_REJECTED","APP_MODE_ENV_REJECTED","APP_LOG_PATH_REJECTED","APP_PRIVATE_PATH_REJECTED","APP_LOG_CAPTURE_REJECTED","APP_LOG_SIZE_REJECTED","APP_LOG_ROSTER_REJECTED","APP_LOG_OWNER_REJECTED"])
 CANONICAL_TOOL_SHA256='fead7bfce99af5aadeb15b696190fade40109f37d25233aa401116d10ea1279c'
 COMPARE_TABLE_LIMIT=32
 ALLOWED_MUTABLE={'sys_oper_log','sys_job_log','sys_logininfor'}
@@ -82,7 +83,10 @@ def owned_source_frame(failure):
             resolved=str(Path(frame.tb_frame.f_code.co_filename).resolve())
             if resolved in allowed:
                 path=ROOT/allowed[resolved];raw=path.read_bytes()
-                if 0<frame.tb_lineno<=len(raw.splitlines()):
+                skipped=({'require','budget','write_private'} if allowed[resolved].endswith('_runtime.py') else
+                         {'require','good','refused','typed','query','canonical','sha','load','checkpoint',
+                          'failure_diagnostic','owned_source_frame','__init__','<listcomp>','<genexpr>'})
+                if frame.tb_frame.f_code.co_name not in skipped and 0<frame.tb_lineno<=len(raw.splitlines()):
                     selected={'path':allowed[resolved],'line':frame.tb_lineno,
                               'sourceSha256':sha(raw),'scope':'OWNED_SOURCE_ONLY'}
         except (OSError,ValueError):pass
@@ -501,6 +505,15 @@ def source_quiescent_snapshot(slot, auth, port, schema, report, path):
     return snapshot(auth,port,schema,slot.boots[-1]['serverUuid'])
 
 
+def completed_held_rows(auth,port,schema,expected_uuid,stable):
+    # The app has already passed its ready-stop fence. One complete post-stop read supplies the
+    # original full-table report AND all three allocator fields at the same observation point.
+    completed=snapshot(auth,port,schema,expected_uuid)
+    return {'protectedRowsAfter':public_snapshot(completed),
+            'callbackReplayHighWaters':{table:{'before':stable[table]['nextId'],
+                                             'after':completed[table]['nextId']} for table in LATE_TABLES}}
+
+
 def run(name,schema,out,credentials):
     runtime=load('restore_http_application_slot','ci/restore_application_http_runtime.py');runtime.gate(os.environ)
     out=Path(out).resolve();slot=runtime.ApplicationSlot(name,schema,out,credentials);auth=slot.auth
@@ -706,10 +719,10 @@ def run(name,schema,out,credentials):
                 checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_NETWORK_STOP')
                 slot.verify_network();slot.stop(remove=False)
                 progress['completedStages'].append('EXACT_NETWORK_AND_READY_STOP')
+                completed_rows=completed_held_rows(auth,tp,schema,identities['target']['uuid'],stable)
                 report['boots'].append({k:boot[k] for k in ('bootId','javaPid','sourceSha','jarSha256','serverUuid','schema','restoreMode','guardHeld','schedulerStarted','appCid','side')})
-                report['checks'].append({'protectedRowsBefore':public_snapshot(mark),'protectedRowsAfter':public_snapshot(snapshot(auth,tp,schema,identities['target']['uuid'])),
+                report['checks'].append({'protectedRowsBefore':public_snapshot(mark),**completed_rows,
                                          'providerJournalSha256':sha(original_provider_bytes),
-                                         'callbackReplayHighWaters':{table:{'before':stable[table]['nextId'],'after':snapshot(auth,tp,schema,identities['target']['uuid'])[table]['nextId']} for table in LATE_TABLES},
                                          'case':'held-full-http-and-actual-wake','mode':mode,'owners':actual,
                                          'lateCallback':'FACT_AND_WAIT_INBOX_PRESERVED_NO_ECONOMIC_CONSUME','newDispatches':0})
             require(len({b['bootId'] for b in slot.boots})==5,'five distinct real application processes')
@@ -747,6 +760,7 @@ def run(name,schema,out,credentials):
         if hasattr(slot,'last_http'):report['lastHttpObservation']=slot.last_http
         report['ownedAppCids']=slot.owned;report['removedAppCids']=slot.removed
         report['applicationStopHistory']=slot.stop_history
+        if getattr(slot,'start_transition',None) is not None:report['applicationStartTransition']=dict(slot.start_transition)
         report['productionDispatchRelease']=False
         report['allDispatchDomainsFenced']='NOT_CLAIMED_SPECIFIC_REAL_OWNERS_ONLY'
         if report.get('applicationStop')!='UNKNOWN':

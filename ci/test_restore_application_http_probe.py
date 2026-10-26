@@ -1,6 +1,6 @@
 """Direct control SOURCE. Intentionally NOT_RUN in the source-construction task."""
 import copy
-from contextlib import nullcontext
+from contextlib import nullcontext, contextmanager
 from decimal import Decimal
 import importlib.util
 import json
@@ -9,6 +9,7 @@ from pathlib import Path
 import tempfile
 from types import SimpleNamespace
 import unittest
+import uuid
 from unittest.mock import patch
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -1227,10 +1228,11 @@ class RestoreHttpHeldProtocolControls(unittest.TestCase):
             description=(('n',),)
             def execute(self,*args):pass
             def fetchall(self):raise KeyError('private-SQL-token-key-canary')
+            def fetchone(self):raise KeyError('private-SQL-token-key-canary')
         class Database:
             def cursor(self):return nullcontext(Cursor())
         auth=SimpleNamespace(database=lambda *args:nullcontext(Database()))
-        try:P.query(auth,3306,'owned','SELECT controlled')
+        try:P.snapshot(auth,3306,'owned','11111111-1111-1111-1111-111111111111')
         except KeyError as failure:
             diagnostic=P.failure_diagnostic(failure,'RESTORED_HELD_WORKLOAD','HELD_QUARTZ_OBSERVE')
         else:self.fail('original KeyError was swallowed')
@@ -1240,6 +1242,7 @@ class RestoreHttpHeldProtocolControls(unittest.TestCase):
         self.assertEqual(frame['sourceSha256'],P.sha((ROOT/frame['path']).read_bytes()))
         self.assertNotIn('private-SQL-token-key-canary',json.dumps(diagnostic))
         self.assertNotIn('SELECT controlled',json.dumps(diagnostic));self.assertNotIn(str(ROOT),json.dumps(diagnostic))
+        self.assertNotIn('SET SESSION ',json.dumps(diagnostic));self.assertNotIn('SELECT @@SESSION',json.dumps(diagnostic))
 
     def test_three_real_ready_observations_never_replace_five_completed_original_workloads(self):
         fixture=RestoreHttpFailureLifecycleControls();report=fixture.success_report()
@@ -1270,6 +1273,260 @@ class RestoreHttpHeldProtocolControls(unittest.TestCase):
                     'HELD_QUARTZ_OBSERVE')['reasonCode'],'HTTP_OPERATION_REJECTED')
             self.assertNotIn('private',json.dumps(P.failure_diagnostic(caught.exception,
                     'RESTORED_HELD_WORKLOAD','HELD_QUARTZ_OBSERVE')))
+
+
+
+class RestoreHttpMultiBootHandoffControls(unittest.TestCase):
+    """Original slot methods on controlled Docker/proc/child bytes only; no JVM/DB/network runs."""
+    class Driver:
+        def __init__(self,directory):
+            self.slot,_,_,_=RestoreHttpGracefulStopControls().running_slot(directory)
+            slot=self.slot
+            slot.cid=None;slot.boots=[];slot.owned=[];slot.removed=[];slot.stop_history=[]
+            slot.process=None;slot.pending_process=None;slot.launch=None
+            slot.ready_for_current_launch=False;slot.startup_observation=None;slot.start_transition=None
+            slot.source={'id':'1'*64,'ip':'172.20.0.2','networkId':'5'*64}
+            slot.target={'id':'2'*64,'ip':'172.20.0.3','networkId':'5'*64}
+            slot.redis_ip='172.20.0.4';slot.token_secret='controlled'
+            slot.classes=slot.root/'classes';slot.classes.mkdir()
+            slot.out=slot.root/'out';(slot.out/'trace-libs').mkdir(parents=True)
+            slot.deadline=1500
+            self.now=0;self.objects={};self.current=None;self.events=[];self.configs=[];self.endpoint_fault=False
+            self.ready_fault=False;self.fail_log=False;self.fail_remove=False
+            original_auth=module('restore_http_multiboot_original_absence','authenticated_redis_recovery_probe.py')
+            slot.auth=SimpleNamespace(DOCKER=['docker'],command=self.command,
+                    mysql_endpoint=self.endpoint,require_absent=original_auth.require_absent)
+            # Restore real slot methods replaced only by the old single-stop fixture.
+            del slot.inspect;del slot.absence;del slot.read_complete_application_log
+
+        def endpoint(self,name,suffix):
+            if name!=self.slot.name or suffix not in ('mysql','restore-mysql'):raise AssertionError('foreign controlled DB endpoint')
+            result=dict(self.slot.source if suffix=='mysql' else self.slot.target)
+            if self.endpoint_fault:result['id']='9'*64
+            return result
+
+        def command(self,argv,**kwargs):
+            slot=self.slot
+            if argv[:2]==['docker','inspect']:
+                target=argv[2]
+                cid=self.current if target==slot.name+'-app' else target
+                if cid not in self.objects:raise AssertionError('unknown controlled CID')
+                return json.dumps([self.objects[cid]]).encode()
+            if argv[:2]==['docker','run']:
+                if self.current is not None:raise AssertionError('previous original slot not removed')
+                self.assert_old_files_absent()
+                config=json.loads((slot.root/'config.json').read_text());self.configs.append(copy.deepcopy(config))
+                index=len(self.configs);cid=format(100+index,'064x')
+                mode=config['restoreMode'];env=[argv[i+1] for i,part in enumerate(argv[:-1]) if part=='-e']
+                if 'CHENGYIN_RESTORE_MODE='+mode not in env:raise AssertionError('real mode environment missing')
+                command=argv[argv.index(R.JDK)+1:]
+                obj={'Id':cid,'Name':'/'+slot.name+'-app',
+                     'Config':{'Image':R.JDK,'Entrypoint':['/trace/strace'],'Cmd':command,
+                               'Labels':{'chengyin.auth-recovery':slot.name},'Env':env},
+                     'HostConfig':{'Memory':1073741824,'NanoCpus':1000000000,'PortBindings':{}},
+                     'NetworkSettings':{'Networks':{slot.name:{'NetworkID':'5'*64}}},
+                     'State':{'Running':True,'OOMKilled':False,'Restarting':False,'Pid':1000+index,'ExitCode':0}}
+                self.objects[cid]=obj;self.current=cid
+                boot_id=str(uuid.UUID(int=index))
+                ready={key:config[key] for key in ('sourceSha','jarSha256','schema','restoreMode','serverUuid')}
+                ready.update(bootId=boot_id,javaPid=1,guardHeld=mode!='false',schedulerStarted=True,port=8080)
+                startup={key:config[key] for key in ('sourceSha','jarSha256','classManifestSha256','scope','schema','restoreMode')}
+                startup.update(bootId=boot_id,javaPid=1,stage='READY',status='READY',reasonCode='NONE',failureType='NONE')
+                if self.ready_fault:ready['bootId']=str(uuid.UUID(int=999))
+                R.write_private(slot.root/'ready.json',ready);R.write_private(slot.root/'startup.json',startup)
+                self.events.append(('create',cid,mode));return cid.encode()
+            if argv[:2]==['docker','exec']:
+                if argv[2]!=self.current or argv[3:]!=['cat','/proc/1/cmdline','/proc/1/stat']:
+                    raise AssertionError('unexpected proc target')
+                return RestoreHttpGracefulStopControls.proc_bytes(str(2000+len(self.configs)).encode())
+            if argv[:2]==['docker','stop']:
+                if argv!=['docker','stop','--time','20',self.current] or kwargs.get('timeout')!=30:
+                    raise AssertionError('original stop budget changed')
+                self.objects[self.current]['State'].update(Running=False,Pid=0,ExitCode=143)
+                self.events.append(('stop',self.current));return b'controlled-stop'
+            if argv[:2]==['docker','rm']:
+                cid=argv[2]
+                if self.fail_remove:raise RuntimeError('controlled exact removal unavailable')
+                if cid!=self.current or not slot.stop_history or slot.stop_history[-1]['cid']!=cid:
+                    raise AssertionError('capture must precede original removal')
+                slot.verify_private_log(slot.stop_history[-1])
+                self.events.append(('remove',cid));del self.objects[cid];self.current=None
+                return b'controlled-remove'
+            raise AssertionError('unexpected Docker command')
+
+        def assert_old_files_absent(self):
+            if (self.slot.root/'ready.json').exists() or (self.slot.root/'startup.json').exists():
+                raise AssertionError('old ready/startup was reused before new create')
+
+        def subprocess(self,argv,**kwargs):
+            if argv[:3]==['docker','container','inspect']:
+                target=argv[-1];self.events.append(('absence',target))
+                if self.current is None:
+                    return SimpleNamespace(returncode=1,stderr=('Error: No such container: '+target).encode())
+                return SimpleNamespace(returncode=0,stderr=b'')
+            if argv[:2]==['docker','logs']:
+                cid=argv[-1]
+                if cid not in self.objects:raise AssertionError('foreign log CID')
+                self.events.append(('log',cid))
+                if self.fail_log:return SimpleNamespace(returncode=1,stdout=b'',stderr=b'controlled failure')
+                return SimpleNamespace(returncode=0,stdout=b'Application run failed private-controlled-log',stderr=b'controlled-stderr')
+            raise AssertionError('unexpected subprocess')
+
+        @contextmanager
+        def active(self):
+            with patch.dict(R.os.environ,{'GITHUB_SHA':'a'*40}),patch.object(R.time,'monotonic',side_effect=lambda:self.now),patch.object(
+                    R.time,'sleep',side_effect=AssertionError('unexpected readiness wait')),patch.object(
+                    R.shutil,'which',return_value='/controlled/strace'),patch.object(R.subprocess,'run',side_effect=self.subprocess):
+                yield self
+
+        def begin(self,side,mode,seed=False):
+            value='11111111-1111-1111-1111-111111111111' if side=='source' else '22222222-2222-2222-2222-222222222222'
+            return self.slot.start(side,mode,value,seed=seed)
+
+        def first_three(self):
+            self.begin('source','false',True);self.slot.stop(remove=False)
+            self.begin('target','false');self.slot.stop(remove=False)
+            self.begin('target','true');self.slot.stop(remove=False)
+
+    def test_all_five_original_modes_reuse_exact_slot_and_keep_each_log_before_removal(self):
+        with tempfile.TemporaryDirectory() as directory:
+            driver=self.Driver(directory);slot=driver.slot
+            with driver.active():
+                for index,(side,mode) in enumerate((('source','false'),('target','false'),('target','true'),
+                                                     ('target','invalid'),('target',''))):
+                    boot=driver.begin(side,mode,index==0)
+                    self.assertEqual(boot['restoreMode'],mode);self.assertIs(boot['guardHeld'],mode!='false')
+                    self.assertEqual(slot.start_transition['stage'],'READY')
+                    slot.stop(remove=False)
+                slot.verify_all_stopped_logs()
+            self.assertEqual([row['restoreMode'] for row in slot.boots],['false','false','true','invalid',''])
+            self.assertEqual(len({row['appCid'] for row in slot.boots}),5)
+            self.assertEqual(slot.removed,slot.owned[:-1]);self.assertEqual(slot.cid,slot.owned[-1])
+            self.assertEqual(len(slot.stop_history),5)
+            self.assertEqual([row['restoreMode'] for row in driver.configs],['false','false','true','invalid',''])
+            self.assertEqual([row['seed'] for row in driver.configs],[True,False,False,False,False])
+            for cid in slot.removed:
+                first_log=next(i for i,event in enumerate(driver.events) if event==('log',cid))
+                removed=next(i for i,event in enumerate(driver.events) if event==('remove',cid))
+                self.assertLess(first_log,removed)
+            self.assertEqual(slot.stopped['exitCode'],143)
+            self.assertEqual(slot.start_transition['mode'],'')
+            self.assertNotIn('private-controlled-log',json.dumps(slot.stop_history))
+
+    def test_expired_original_budget_before_invalid_mode_preserves_previous_true_and_has_outer_guard_frame(self):
+        with tempfile.TemporaryDirectory() as directory:
+            driver=self.Driver(directory);slot=driver.slot
+            with driver.active():
+                driver.first_three();previous=slot.cid;prior_events=list(driver.events)
+                driver.now=1500
+                with self.assertRaises(ValueError) as caught:driver.begin('target','invalid')
+                diagnostic=P.failure_diagnostic(caught.exception,'RESTORED_HELD_APPLICATION_START','APPLICATION_SLOT_START')
+                summary=slot.diagnostic_summary()
+            self.assertEqual(driver.events[:len(prior_events)],prior_events)
+            self.assertEqual(len([event for event in driver.events if event[0]=='create']),3)
+            self.assertEqual(slot.cid,previous);self.assertEqual(slot.start_transition['stage'],'BUDGET')
+            self.assertEqual(slot.start_transition['mode'],'invalid')
+            self.assertEqual(diagnostic['reasonCode'],'APP_LIFECYCLE_BUDGET_EXHAUSTED')
+            frame=diagnostic['sourceFrame'];self.assertEqual(frame['path'],'ci/restore_application_http_runtime.py')
+            lines=(ROOT/frame['path']).read_text().splitlines()
+            self.assertEqual(lines[frame['line']-1].strip(),'self.budget()')
+            self.assertEqual(summary['startTransition']['stage'],'BUDGET')
+            self.assertEqual(summary['lastStoppedEvidence']['cid'],previous)
+            self.assertEqual(len(slot.boots),3);self.assertEqual(slot.stopped['exitCode'],143)
+
+    def test_prior_log_or_identity_drift_stops_handoff_without_foreign_removal_or_new_boot(self):
+        for kind in ('log','config','ready','identity'):
+            with self.subTest(kind=kind),tempfile.TemporaryDirectory() as directory:
+                driver=self.Driver(directory);slot=driver.slot
+                with driver.active():
+                    driver.first_three();previous=slot.cid
+                    if kind=='log':slot.private_log_path(previous).write_bytes(b'changed private log')
+                    elif kind=='config':(slot.root/'config.json').write_text('{}')
+                    elif kind=='ready':(slot.root/'ready.json').write_text('{}')
+                    else:slot.process={**slot.process,'startTicks':'999'}
+                    with self.assertRaises(ValueError):driver.begin('target','invalid')
+                self.assertEqual(slot.cid,previous);self.assertEqual(len(slot.boots),3)
+                self.assertEqual(slot.removed,slot.owned[:2]);self.assertEqual(len(driver.configs),3)
+                self.assertEqual(slot.start_transition['stage'],'PREVIOUS_STOP_AND_LOG')
+
+    def test_endpoint_change_or_stale_config_next_keeps_stopped_history_and_cannot_create_invalid_boot(self):
+        for kind in ('endpoint','config-next'):
+            with self.subTest(kind=kind),tempfile.TemporaryDirectory() as directory:
+                driver=self.Driver(directory);slot=driver.slot
+                with driver.active():
+                    driver.first_three();previous=slot.cid
+                    if kind=='endpoint':driver.endpoint_fault=True
+                    else:(slot.root/'config.json.next').write_text('private-failed-write-canary')
+                    with self.assertRaises(ValueError if kind=='endpoint' else FileExistsError) as caught:
+                        driver.begin('target','invalid')
+                    diagnostic=P.failure_diagnostic(caught.exception,'RESTORED_HELD_APPLICATION_START','APPLICATION_SLOT_START')
+                    summary=slot.diagnostic_summary();slot.verify_all_stopped_logs()
+                self.assertIsNone(slot.cid);self.assertIn(previous,slot.removed);self.assertEqual(len(slot.boots),3)
+                self.assertEqual(len(driver.configs),3);self.assertTrue(slot.start_transition['previousRemovalConfirmed'])
+                self.assertEqual(slot.start_transition['stage'],'DATABASE_IDENTITY' if kind=='endpoint' else 'CONFIGURATION')
+                self.assertEqual(summary['lastStoppedEvidence']['cid'],previous)
+                self.assertNotIn('private-failed-write-canary',json.dumps(diagnostic))
+
+    def test_failed_invalid_or_empty_ready_never_becomes_a_completed_boot_or_quiescent_snapshot(self):
+        for mode in ('invalid',''):
+            with self.subTest(mode=mode),tempfile.TemporaryDirectory() as directory:
+                driver=self.Driver(directory);slot=driver.slot
+                with driver.active():
+                    driver.first_three();driver.ready_fault=True
+                    with self.assertRaises(ValueError):driver.begin('target',mode)
+                    new_cid=slot.cid;self.assertEqual(slot.start_transition['mode'],mode)
+                    self.assertEqual(slot.start_transition['stage'],'READINESS')
+                    self.assertEqual(len(slot.boots),3);self.assertFalse(slot.ready_for_current_launch)
+                    slot.stop(remove=False)
+                    self.assertEqual(slot.stop_history[-1]['cid'],new_cid)
+                    self.assertEqual(slot.stop_history[-1]['proofKind'],'PRE_READY_JVM_EXIT_CONFIRMED')
+                    slot.runtime_report_write=lambda *args:None
+                    with patch.object(P,'snapshot') as read:
+                        with self.assertRaisesRegex(ValueError,'must be ready'):
+                            P.source_quiescent_snapshot(slot,object(),3306,'owned',{'result':'NOT_COMPLETED'},Path('unused'))
+                    read.assert_not_called()
+                self.assertEqual(len(slot.stop_history),4);self.assertEqual(slot.stopped['exitCode'],143)
+
+    def test_remove_failure_retains_original_cid_capture_and_cannot_advance_to_invalid_mode(self):
+        with tempfile.TemporaryDirectory() as directory:
+            driver=self.Driver(directory);slot=driver.slot
+            with driver.active():
+                driver.first_three();previous=slot.cid;driver.fail_remove=True
+                with self.assertRaises(RuntimeError):driver.begin('target','invalid')
+                slot.verify_all_stopped_logs()
+            self.assertEqual(slot.cid,previous);self.assertEqual(slot.start_transition['stage'],'PREVIOUS_STOP_AND_LOG')
+            self.assertEqual(len(slot.boots),3);self.assertEqual(slot.removed,slot.owned[:2])
+            self.assertEqual(slot.stop_history[-1]['cid'],previous)
+            self.assertEqual(len([event for event in driver.events if event[0]=='create']),3)
+
+    def test_one_post_stop_full_snapshot_supplies_same_protected_rows_and_all_original_allocators(self):
+        _,stable,_=late();completed=copy.deepcopy(stable)
+        completed['wx_verified_payment_fact']['nextId']=7
+        completed['wx_payment_callback_inbox']['nextId']=8
+        original=copy.deepcopy(completed);auth=object()
+        expected_uuid='22222222-2222-2222-2222-222222222222'
+        with patch.object(P,'snapshot',return_value=completed) as read:
+            result=P.completed_held_rows(auth,3307,'owned',expected_uuid,stable)
+        read.assert_called_once_with(auth,3307,'owned',expected_uuid)
+        self.assertEqual(result['protectedRowsAfter'],P.public_snapshot(completed))
+        self.assertEqual(set(result['callbackReplayHighWaters']),P.LATE_TABLES)
+        for table in P.LATE_TABLES:
+            self.assertEqual(result['callbackReplayHighWaters'][table],
+                    {'before':stable[table]['nextId'],'after':completed[table]['nextId']})
+        self.assertEqual(completed,original)
+        with patch.object(P,'snapshot',return_value={}) as read:
+            with self.assertRaises(KeyError):P.completed_held_rows(auth,3307,'owned',expected_uuid,stable)
+        read.assert_called_once()
+
+    def test_http_value_helper_frame_is_skipped_for_the_actual_reviewed_evidence_caller(self):
+        boot,_=RestoreHttpHeldProtocolControls().envelope()
+        with self.assertRaises(ValueError) as caught:
+            P.evidence_payload((200,{'code':503,'msg':'private-body-canary'}),boot)
+        diagnostic=P.failure_diagnostic(caught.exception,'RESTORED_HELD_WORKLOAD','HELD_QUARTZ_OBSERVE')
+        self.assertEqual(diagnostic['reasonCode'],'HTTP_OPERATION_REJECTED')
+        frame=diagnostic['sourceFrame'];self.assertEqual(frame['path'],'ci/restore_application_http_probe.py')
+        self.assertEqual((ROOT/frame['path']).read_text().splitlines()[frame['line']-1].strip(),'value=good(response)')
+        self.assertNotIn('private-body-canary',json.dumps(diagnostic))
 
 
 if __name__=='__main__':unittest.main()
