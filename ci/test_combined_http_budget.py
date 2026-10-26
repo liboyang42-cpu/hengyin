@@ -796,19 +796,25 @@ class CombinedBudgetControls(unittest.TestCase):
                 content_compiled[0]=True;receipt=self.compiler_receipt();receipt['exit']=compiler_exit
                 if compiler_exit:receipt.pop('proof')
                 return receipt
-            with patch.dict(os.environ,self.env(),clear=True),patch.object(B,'ROOT',root),patch.object(B,'PUBLIC',root/'public'),\
-                 patch.object(B.Path,'home',return_value=root/'home'),\
-                 patch.object(B,'cache_inputs',return_value={'pom.xml':'f'*64}),patch.object(B,'inspect',side_effect=inspect),\
-                 patch.object(B,'fixed_test_compilation_inputs',return_value={k:v for k,v in self.compilation_receipt().items() if k!='classes'}),\
-                 patch.object(B,'fixed_test_compilation_outputs',return_value=self.compilation_receipt()),\
-                 patch.object(B,'provider_runtime_proof',return_value=self.provider_receipt()),\
-                 patch.object(B,'configuration_unit_proof',return_value=self.configuration_receipt()),\
-                 patch.object(B,'controlled_content_proof',return_value=self.content_receipt()),\
-                 patch.object(B,'compile_controlled_content',side_effect=compile_content),\
-                 patch.object(B,'command',side_effect=command),patch.object(B.subprocess,'run',side_effect=native),\
-                 patch.object(B.time,'monotonic',side_effect=clock),\
-                 patch.object(B,'absent'),patch.object(B,'read_cgroup',return_value={'limits':self.cache_receipt()['cgroup']['limits'],'memoryEvents':{'oom_kill':'0'}}),\
-                 patch.object(B,'write',side_effect=publish):
+            with contextlib.ExitStack() as patches:
+                patches.enter_context(patch.dict(os.environ,self.env(),clear=True))
+                patches.enter_context(patch.object(B,'ROOT',root))
+                patches.enter_context(patch.object(B,'PUBLIC',root/'public'))
+                patches.enter_context(patch.object(B.Path,'home',return_value=root/'home'))
+                patches.enter_context(patch.object(B,'cache_inputs',return_value={'pom.xml':'f'*64}))
+                patches.enter_context(patch.object(B,'inspect',side_effect=inspect))
+                patches.enter_context(patch.object(B,'fixed_test_compilation_inputs',return_value={k:v for k,v in self.compilation_receipt().items() if k!='classes'}))
+                patches.enter_context(patch.object(B,'fixed_test_compilation_outputs',return_value=self.compilation_receipt()))
+                patches.enter_context(patch.object(B,'provider_runtime_proof',return_value=self.provider_receipt()))
+                patches.enter_context(patch.object(B,'configuration_unit_proof',return_value=self.configuration_receipt()))
+                patches.enter_context(patch.object(B,'controlled_content_proof',return_value=self.content_receipt()))
+                patches.enter_context(patch.object(B,'compile_controlled_content',side_effect=compile_content))
+                patches.enter_context(patch.object(B,'command',side_effect=command))
+                patches.enter_context(patch.object(B.subprocess,'run',side_effect=native))
+                patches.enter_context(patch.object(B.time,'monotonic',side_effect=clock))
+                patches.enter_context(patch.object(B,'absent'))
+                patches.enter_context(patch.object(B,'read_cgroup',return_value={'limits':self.cache_receipt()['cgroup']['limits'],'memoryEvents':{'oom_kill':'0'}}))
+                patches.enter_context(patch.object(B,'write',side_effect=publish))
                 failure=None
                 try:B.warm_cache()
                 except Exception as error:failure=error
