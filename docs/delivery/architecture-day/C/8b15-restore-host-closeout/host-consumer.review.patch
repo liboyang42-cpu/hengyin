@@ -1,0 +1,21 @@
+--- a/ci/restore_business_reconciliation_host.py
++++ b/ci/restore_business_reconciliation_host.py
+@@ -435,6 +435,18 @@
+             self.first_failure['primaryReasonCode'] = reason if reason in (
+                 'CHILD_EOF_BEFORE_BOUNDARY', 'CHILD_EXIT_BEFORE_BOUNDARY', 'CHILD_OUTPUT_BUDGET',
+                 'CHILD_BOUNDARY_TIMEOUT', 'UNKNOWN_PRIVATE_FAILURE') else 'UNKNOWN'
++            if receipt.get('hostFailure') is not None:
++                try:
++                    require(receipt.get('probeSourceSha256') == hashlib.sha256(PROBE.read_bytes()).hexdigest(),
++                            'host diagnostic source differs')
++                    spec = importlib.util.spec_from_file_location('restore_original_host_diagnostic', PROBE)
++                    helper = importlib.util.module_from_spec(spec); spec.loader.exec_module(helper)
++                    diagnostic = helper.safe_host_failure(receipt['hostFailure'])
++                    require(diagnostic is not None and diagnostic['reasonCode'] == reason, 'invalid fixed host diagnostic')
++                    self.first_failure['hostFailure'] = diagnostic
++                    self.first_failure['primaryReasonCode'] = diagnostic['reasonCode']
++                except BaseException:
++                    self.first_failure['hostFailureDiagnostic'] = 'UNKNOWN'
+             self.first_failure['reconciliationSha256'] = hashlib.sha256((self.output / 'reconciliation.json').read_bytes()).hexdigest()
+
+     def finalization_recorded(self, original_exit):

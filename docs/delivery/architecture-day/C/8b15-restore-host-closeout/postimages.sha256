@@ -1,0 +1,5 @@
+e2128f2a8e8c969f75f645a05ed042d14abd8d31cc871bee606c4d52d4fa52c5  ci/restore_business_reconciliation_probe.py
+9415aee0f0e44b0ad4f63ca00285957e8bbdef2d5ec3f597146fde51e796be7c  ci/test_restore_business_reconciliation_probe.py
+01c3ab1edc210582e38de3f49bf5a10efb31ddd9f72e5307204ebb568f0061c7  docs/delivery/architecture-day/C/8b15-restore-host-closeout/README.md
+5cc9a8855ffd223116e238bea65bd9667c36a7e0cc2f41c6a286b9e21e15556d  docs/delivery/architecture-day/C/8b15-restore-host-closeout/host-consumer.review.patch
+8db45c046ff9ff89b53a9de241ac680f3ca60f30d870703ab24fc1cea559004e  docs/delivery/architecture-day/C/8b15-restore-host-closeout/shared-postimages.sha256
