@@ -1,0 +1,644 @@
+diff --git a/ci/restore_application_http_runtime.py b/ci/restore_application_http_runtime.py
+index edf657dad0de3af0a1d2bae7a9d41f7791d6c929..8ecb196860605913fe272cc78ae1f25d14b5f2cf 100644
+--- a/ci/restore_application_http_runtime.py
++++ b/ci/restore_application_http_runtime.py
+@@ -266,6 +266,66 @@ class ApplicationSlot:
+         self.startup_observation=dict(value)
+         return dict(value)
+ 
++    def read_callback_observation(self):
++        path=self.root/'callback-diagnostic.json'
++        if not path.exists():return None
++        require(path.is_file() and not path.is_symlink(),'actual child boot identity')
++        with path.open('rb') as stream:raw=stream.read(4097)
++        require(len(raw)<=4096,'actual child boot identity')
++        value=json.loads(raw)
++        keys={'sourceSha','jarSha256','classManifestSha256','scope','schema','serverUuid','bootId','javaPid',
++              'operation','sequence','status','stage','reasonCode','outcome','causeTypes','origin','sqlState','sqlErrorCode'}
++        stages={'ADMISSION','ORIGINAL_INPUT','PROVIDER_JOURNAL','RECEIPT_READ','FACT_LOOKUP','FACT_SAVE',
++                'REFERENCE_VERIFY','RECEIPT_SAVE','REGISTRATION_CALLBACK','RESPONSE'}
++        reasons={'NONE','HELD_REQUIRED','OUTER_TRANSACTION','ORIGINAL_CONTEXT','PROVIDER_IDENTITY',
++                 'RECEIPT_INVALID','REFERENCE_CONFLICT','UNCLASSIFIED_FAILURE'}
++        types={'FACT_CONFLICT','INBOX_CONFLICT','DATA_ACCESS','ILLEGAL_STATE','UNSATISFIED_DEPENDENCY',
++               'BEAN_CREATION','SQL','IO','SCHEDULER','INTERRUPTED','OTHER'}
++        origins={'com.chengyinhub.business.it.RestoreHttpApplicationChild',
++                 'com.chengyinhub.business.it.RestoreHttpApplicationChild$FixtureEndpoints',
++                 'com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService',
++                 'com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl',
++                 'com.chengyinhub.business.service.impl.WxPaymentCallbackInboxServiceImpl'}
++        require(isinstance(value,dict) and set(value)==keys and self.ready_for_current_launch and self.boots
++                and self.cid==self.boots[-1]['appCid']==self.launch['cid']
++                and all(value.get(key)==self.launch.get(key) for key in ('sourceSha','jarSha256','schema','serverUuid'))
++                and value['classManifestSha256']==self.manifest_hash and value['scope']==self.name[8:]
++                and value['bootId']==self.boots[-1]['bootId'] and type(value['javaPid']) is int and value['javaPid']==1
++                and value['operation']=='VERIFIED_CALLBACK' and type(value['sequence']) is int and value['sequence']>0
++                and value['status'] in ('ENTERED','RETURNED','THREW') and value['stage'] in stages
++                and value['reasonCode'] in reasons and value['outcome'] in ('NONE','FAIL','SUCCESS','OTHER')
++                and isinstance(value['causeTypes'],list) and len(value['causeTypes'])<=8
++                and all(kind in types for kind in value['causeTypes']),'actual child boot identity')
++        origin=value['origin']
++        require(origin is None or (isinstance(origin,dict) and set(origin)=={'class','line'}
++                and origin['class'] in origins and type(origin['line']) is int and 0<origin['line']<=100000),
++                'actual child boot identity')
++        require((value['sqlState'] is None and value['sqlErrorCode'] is None) or (
++                value['sqlState'] in {'08001','08003','08004','08006','08S01','28000','42000','42S01','42S02',
++                '42S21','42S22','23000','22001','22003','HY000','HY001','HYT00','HYT01','40001'}
++                and type(value['sqlErrorCode']) is int and 0<=value['sqlErrorCode']<=65535),
++                'actual child boot identity')
++        require((value['status']=='THREW' and value['reasonCode']!='NONE' and value['causeTypes'])
++                or (value['status']!='THREW' and value['reasonCode']=='NONE' and not value['causeTypes']),
++                'actual child boot identity')
++        return value
++
++    def callback_observation(self):
++        # Diagnostic only. Neither a stale prior success nor a parse error becomes an ACK.
++        try:
++            value=self.read_callback_observation()
++            return {'result':'VERIFIED','value':value} if value is not None else {'result':'MISSING'}
++        except (OSError,ValueError,KeyError,TypeError,AttributeError):
++            return {'result':'UNKNOWN','reason':'PRIVATE_OBSERVATION_REJECTED'}
++
++    def record_callback_observation(self,before):
++        after=self.callback_observation()
++        fresh=('UNKNOWN' if before['result']=='UNKNOWN' or after['result']=='UNKNOWN' else
++               after['result']=='VERIFIED' and (before['result']=='MISSING'
++               or after['value']['sequence']>before['value']['sequence']))
++        self.last_callback_observation={'route':'/__restore_http/verified-callback',
++                'newControllerExecution':fresh,'after':after}
++
+     def wait_for_ready(self):
+         until=time.monotonic()+180
+         while time.monotonic()<until:
+@@ -460,6 +520,8 @@ class ApplicationSlot:
+         self.start_transition['stage']='READY_STATUS_RESET'
+         (self.root/'ready.json').unlink(missing_ok=True)
+         (self.root/'startup.json').unlink(missing_ok=True)
++        (self.root/'callback-diagnostic.json').unlink(missing_ok=True)
++        (self.root/'callback-diagnostic.next').unlink(missing_ok=True)
+         trace='network-'+str(len(self.boots))+'.trace';strace=shutil.which('strace')
+         self.start_transition['stage']='TRACE_PREPARATION'
+         require(strace and (self.out/'trace-libs').is_dir(),'reuse original tracing preparation')
+@@ -527,8 +589,13 @@ class ApplicationSlot:
+             text+='header = "Content-Type: '+('application/x-www-form-urlencoded' if form else 'application/json')+'"\n'
+             data=urllib.parse.urlencode(payload) if form else json.dumps(payload)
+             text+='data = '+json.dumps(data)+'\n'
+-        raw=self.auth.command(self.auth.DOCKER+['exec','-i',self.cid,'curl','--noproxy','*','--silent','--show-error',
+-                '--max-time','45','--write-out','\n%{http_code}','--config','-'],text.encode(),timeout=50).decode()
++        tracked=base=='/__restore_http/verified-callback'
++        before=self.callback_observation() if tracked else None
++        try:
++            raw=self.auth.command(self.auth.DOCKER+['exec','-i',self.cid,'curl','--noproxy','*','--silent','--show-error',
++                    '--max-time','45','--write-out','\n%{http_code}','--config','-'],text.encode(),timeout=50).decode()
++        finally:
++            if tracked:self.record_callback_observation(before)
+         try:
+             body,status=raw.rsplit('\n',1);status=int(status)
+         except ValueError as failure:
+diff --git a/ci/restore_application_http_probe.py b/ci/restore_application_http_probe.py
+index 707e56621690e2c3765eb009fd93ec865deaf8c2..4a32d7b3840a6c7afe90e91c8a78f49d7831a576 100644
+--- a/ci/restore_application_http_probe.py
++++ b/ci/restore_application_http_probe.py
+@@ -758,6 +758,7 @@ def run(name,schema,out,credentials):
+             report['applicationDiagnostic']={'result':'UNKNOWN',
+                     'failure':failure_diagnostic(diagnostic,report['phase'],report.get('substage'))}
+         if hasattr(slot,'last_http'):report['lastHttpObservation']=slot.last_http
++        if hasattr(slot,'last_callback_observation'):report['lastCallbackObservation']=slot.last_callback_observation
+         report['ownedAppCids']=slot.owned;report['removedAppCids']=slot.removed
+         report['applicationStopHistory']=slot.stop_history
+         if getattr(slot,'start_transition',None) is not None:report['applicationStartTransition']=dict(slot.start_transition)
+diff --git a/ci/test_restore_application_http_probe.py b/ci/test_restore_application_http_probe.py
+index 41da982cc2a8e3a84a84dd9cac8835120936aba7..77e6cadd854c14ee14b4cd172aba97400c8047e9 100644
+--- a/ci/test_restore_application_http_probe.py
++++ b/ci/test_restore_application_http_probe.py
+@@ -1355,7 +1355,7 @@ class RestoreHttpMultiBootHandoffControls(unittest.TestCase):
+             raise AssertionError('unexpected Docker command')
+ 
+         def assert_old_files_absent(self):
+-            if (self.slot.root/'ready.json').exists() or (self.slot.root/'startup.json').exists():
++            if any((self.slot.root/name).exists() for name in ('ready.json','startup.json','callback-diagnostic.json','callback-diagnostic.next')):
+                 raise AssertionError('old ready/startup was reused before new create')
+ 
+         def subprocess(self,argv,**kwargs):
+@@ -1532,4 +1532,125 @@ class RestoreHttpMultiBootHandoffControls(unittest.TestCase):
+         self.assertNotIn('private-body-canary',json.dumps(diagnostic))
+ 
+ 
++
++class RestoreHttpCallbackReplayObservationControls(unittest.TestCase):
++    """Actual runtime observer/HTTP parser with controlled child document and curl bytes only."""
++    def slot(self,directory):
++        slot,_,_,_=RestoreHttpGracefulStopControls().running_slot(directory)
++        slot.budget=lambda:None
++        return slot
++
++    def document(self,slot,sequence=1,status='THREW',stage='REGISTRATION_CALLBACK'):
++        value={key:slot.launch[key] for key in ('sourceSha','jarSha256','schema','serverUuid')}
++        value.update(classManifestSha256=slot.manifest_hash,scope=slot.name[8:],
++                bootId=slot.boots[-1]['bootId'],javaPid=1,operation='VERIFIED_CALLBACK',sequence=sequence,
++                status=status,stage=stage,reasonCode='UNCLASSIFIED_FAILURE' if status=='THREW' else 'NONE',
++                outcome='FAIL' if status=='RETURNED' else 'NONE',
++                causeTypes=['DATA_ACCESS','SQL'] if status=='THREW' else [],
++                origin={'class':'com.chengyinhub.business.service.impl.WxPaymentCallbackInboxServiceImpl','line':123}
++                       if status=='THREW' else None,
++                sqlState='23000' if status=='THREW' else None,sqlErrorCode=1062 if status=='THREW' else None)
++        (slot.root/'callback-diagnostic.json').write_text(json.dumps(value))
++        return value
++
++    def test_real_bounded_document_binds_original_boot_scope_and_fixed_stage_type_fields(self):
++        with tempfile.TemporaryDirectory() as directory:
++            slot=self.slot(directory);value=self.document(slot)
++            self.assertEqual(slot.read_callback_observation(),value)
++            self.assertEqual(value['stage'],'REGISTRATION_CALLBACK')
++            self.assertEqual(value['reasonCode'],'UNCLASSIFIED_FAILURE')
++            self.assertEqual(value['sqlState'],'23000');self.assertEqual(value['sqlErrorCode'],1062)
++            self.assertNotIn('message',value);self.assertNotIn('stack',value);self.assertNotIn('cause',value)
++
++    def test_foreign_unbounded_unclassified_raw_or_wrong_scalar_document_is_unknown_not_a_business_result(self):
++        for kind in ('source','jar','schema','uuid','boot','sequence','pid','stage','type','reason','origin','sql','raw','size','symlink'):
++            with self.subTest(kind=kind),tempfile.TemporaryDirectory() as directory:
++                slot=self.slot(directory);value=self.document(slot)
++                if kind=='source':value['sourceSha']='b'*40
++                elif kind=='jar':value['jarSha256']='b'*64
++                elif kind=='schema':value['schema']='foreign'
++                elif kind=='uuid':value['serverUuid']='foreign'
++                elif kind=='boot':value['bootId']='foreign'
++                elif kind=='sequence':value['sequence']=True
++                elif kind=='pid':value['javaPid']=True
++                elif kind=='stage':value['stage']='private-stage-canary'
++                elif kind=='type':value['causeTypes']=['private-type-canary']
++                elif kind=='reason':value['reasonCode']='private-reason-canary'
++                elif kind=='origin':value['origin']={'class':'private-class-canary','line':1}
++                elif kind=='sql':value['sqlState']='private-SQL-canary'
++                elif kind=='raw':value['message']='private-payload-canary'
++                path=slot.root/'callback-diagnostic.json';path.write_text(json.dumps(value))
++                if kind=='size':path.write_text('x'*4097)
++                elif kind=='symlink':path.unlink();path.symlink_to(slot.root/'config.json')
++                result=slot.callback_observation()
++                self.assertEqual(result,{'result':'UNKNOWN','reason':'PRIVATE_OBSERVATION_REJECTED'})
++                self.assertNotIn('private-',json.dumps(result))
++
++    def test_received_business500_stays_failure_and_fresh_controller_cause_is_observed_without_rawbody(self):
++        with tempfile.TemporaryDirectory() as directory:
++            slot=self.slot(directory)
++            def transport(*args,**kwargs):
++                self.document(slot,2)
++                return b'{"code":500,"msg":"private-response-canary"}\n200'
++            slot.auth.command=transport
++            response=slot.http('/__restore_http/verified-callback','controlled',{})
++            self.assertEqual((response[0],response[1]['code']),(200,500))
++            with self.assertRaises(ValueError) as caught:P.good(response)
++            self.assertEqual(caught.exception.restore_reason_code,'HTTP_OPERATION_REJECTED')
++            observed=slot.last_callback_observation
++            self.assertIs(observed['newControllerExecution'],True)
++            self.assertEqual(observed['after']['value']['stage'],'REGISTRATION_CALLBACK')
++            self.assertEqual(observed['after']['value']['causeTypes'],['DATA_ACCESS','SQL'])
++            self.assertNotIn('private-response-canary',json.dumps(slot.last_http)+json.dumps(observed))
++
++    def test_unchanged_prior_returned_diagnostic_cannot_explain_new_business500(self):
++        with tempfile.TemporaryDirectory() as directory:
++            slot=self.slot(directory);self.document(slot,1,'RETURNED','RESPONSE')
++            slot.auth.command=lambda *args,**kwargs:b'{"code":500}\n200'
++            response=slot.http('/__restore_http/verified-callback','controlled',{})
++            self.assertIs(slot.last_callback_observation['newControllerExecution'],False)
++            self.assertEqual(slot.last_callback_observation['after']['value']['status'],'RETURNED')
++            with self.assertRaises(ValueError):P.good(response)
++
++    def test_transport_exception_is_preserved_while_entered_controller_is_never_an_ack(self):
++        with tempfile.TemporaryDirectory() as directory:
++            slot=self.slot(directory);original=RuntimeError('private-transport-canary')
++            def transport(*args,**kwargs):
++                self.document(slot,1,'ENTERED','REGISTRATION_CALLBACK');raise original
++            slot.auth.command=transport
++            with self.assertRaises(RuntimeError) as caught:slot.http('/__restore_http/verified-callback','controlled',{})
++            self.assertIs(caught.exception,original)
++            self.assertIs(slot.last_callback_observation['newControllerExecution'],True)
++            self.assertEqual(slot.last_callback_observation['after']['value']['status'],'ENTERED')
++            self.assertEqual(slot.last_http['result'],'ATTEMPTED')
++            self.assertNotIn('private-transport-canary',json.dumps(slot.last_callback_observation))
++
++    def test_unreadable_prior_observation_keeps_correlation_unknown_even_if_current_document_is_valid(self):
++        with tempfile.TemporaryDirectory() as directory:
++            slot=self.slot(directory);(slot.root/'callback-diagnostic.json').write_text('private-truncated-canary')
++            def transport(*args,**kwargs):
++                self.document(slot,2)
++                return b'{"code":500}\n200'
++            slot.auth.command=transport
++            response=slot.http('/__restore_http/verified-callback','controlled',{})
++            self.assertEqual(slot.last_callback_observation['newControllerExecution'],'UNKNOWN')
++            with self.assertRaises(ValueError):P.good(response)
++            self.assertNotIn('private-truncated-canary',json.dumps(slot.last_callback_observation))
++
++    def test_new_boot_resets_only_old_diagnostic_files_and_preserves_the_original_reference(self):
++        with tempfile.TemporaryDirectory() as directory:
++            driver=RestoreHttpMultiBootHandoffControls.Driver(directory);slot=driver.slot
++            with driver.active():
++                driver.first_three()
++                receipt=slot.root/'callback-reference.json';receipt.write_bytes(b'controlled-original-reference')
++                (slot.root/'callback-diagnostic.json').write_bytes(b'old-observation')
++                (slot.root/'callback-diagnostic.next').write_bytes(b'old-partial-observation')
++                driver.begin('target','invalid')
++                self.assertFalse((slot.root/'callback-diagnostic.json').exists())
++                self.assertFalse((slot.root/'callback-diagnostic.next').exists())
++                self.assertEqual(receipt.read_bytes(),b'controlled-original-reference')
++                self.assertEqual(slot.start_transition['stage'],'READY')
++                slot.stop(remove=False);slot.verify_all_stopped_logs()
++
++
+ if __name__=='__main__':unittest.main()
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java
+index 58b81ebc1b404c916d2397b4d7b90f5a764ee07b..3a3cedf7233e5537b35db3d18e58f4c88b4a45fa 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java
+@@ -330,25 +330,188 @@ public final class RestoreHttpApplicationChild {
+             throw new AssertionError("restore wake must throw original Blocked");
+         }
+         @PostMapping("/verified-callback") public AjaxResult callback() throws Exception {
+-            require(RestoreDispatchGuard.isRestoreMode(),"late fixture facts never normal-boot admission");
+-            JsonNode ids=identities();String no=ids.path("registrationNo").asText(), transaction=ids.path("transactionId").asText();
+-            WechatVerifiedPaymentFact fact=new WechatVerifiedPaymentFact(WechatVerifiedPaymentFact.Kind.PAYMENT,
+-                    "restore-http-mch","restore-http-app",no,no,no,transaction,transaction,"JSAPI","CNY",100,100,
+-                    Instant.parse(ids.path("successAt").asText()),null,"SUCCESS");
+-            // Controlled external evidence survives restore independently. No SDK success or signature is claimed.
+-            Path provider=PRIVATE.resolve("provider-facts.jsonl");
+-            if(!Files.exists(provider))append("provider-facts.jsonl",Map.of("kind","CONTROLLED_HISTORICAL_PAYMENT_SUCCESS",
+-                    "sourceSha",config.path("sourceSha").asText(),"identityHash",fact.factHash()));
+-            else require(JSON.readTree(Files.readString(provider).strip()).path("identityHash").asText().equals(fact.factHash()),"same original provider fact");
+-            var reference=facts.recordVerified(fact);
+-            Map<String,String> result=new HashMap<>();
+-            result.put("out_trade_no",no);result.put("wx_out_trade_no",no);result.put("transaction_id",transaction);
+-            result.put("mchid",fact.mchid());result.put("appid",fact.appid());result.put("trade_type","JSAPI");
+-            result.put("currency","CNY");result.put("total","100");result.put("trade_state","SUCCESS");
+-            result.put("verified_fact_id",Long.toString(reference.id()));result.put("verified_fact_hash",reference.hash());
+-            String original=registrations.handleWechatPayCallback(result);
+-            return AjaxResult.success(Map.of("originalOutcome",original,"factId",reference.id(),"factHash",reference.hash()));
++            CallbackAttempt attempt=new CallbackAttempt(config);
++            try {
++                publishCallback(attempt,"ENTERED",null);
++                attempt.check(RestoreDispatchGuard.isRestoreMode(),CallbackReason.HELD_REQUIRED);
++                attempt.check(!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive(),
++                        CallbackReason.OUTER_TRANSACTION);
++                attempt.stage=CallbackStage.ORIGINAL_INPUT;
++                JsonNode ids=identities();
++                attempt.check(ids.path("registrationId").isIntegralNumber() && ids.path("registrationId").canConvertToLong()
++                        && ids.path("registrationId").asLong()>0,CallbackReason.ORIGINAL_CONTEXT);
++                String no=ids.path("registrationNo").asText(),transaction=ids.path("transactionId").asText();
++                WechatVerifiedPaymentFact fact=new WechatVerifiedPaymentFact(WechatVerifiedPaymentFact.Kind.PAYMENT,
++                        "restore-http-mch","restore-http-app",no,no,no,transaction,transaction,"JSAPI","CNY",100,100,
++                        Instant.parse(ids.path("successAt").asText()),null,"SUCCESS");
++                fact.requireValid();
++                var reference=originalCallbackReference(PRIVATE,config,ids.path("registrationId").asLong(),fact,facts,attempt);
++                attempt.stage=CallbackStage.REGISTRATION_CALLBACK;
++                String original=callOriginalRegistration(registrations,fact,reference);
++                attempt.stage=CallbackStage.RESPONSE;
++                attempt.outcome=Set.of("FAIL","SUCCESS").contains(original==null?"":original)?original:"OTHER";
++                AjaxResult response=AjaxResult.success(Map.of("originalOutcome",original,"factId",reference.id(),"factHash",reference.hash()));
++                publishCallback(attempt,"RETURNED",null);
++                return response;
++            } catch(Exception | Error failure) {
++                try {publishCallback(attempt,"THREW",failure);}
++                catch(Exception diagnostic) {failure.addSuppressed(diagnostic);}
++                throw failure;
++            }
++        }
++    }
++
++    enum CallbackStage { ADMISSION, ORIGINAL_INPUT, PROVIDER_JOURNAL, RECEIPT_READ, FACT_LOOKUP,
++        FACT_SAVE, REFERENCE_VERIFY, RECEIPT_SAVE, REGISTRATION_CALLBACK, RESPONSE }
++    enum CallbackReason { NONE, HELD_REQUIRED, OUTER_TRANSACTION, ORIGINAL_CONTEXT, PROVIDER_IDENTITY,
++        RECEIPT_INVALID, REFERENCE_CONFLICT, UNCLASSIFIED_FAILURE }
++    static final Object CALLBACK_IDENTITY_LOCK=new Object();
++    static final java.util.concurrent.atomic.AtomicLong CALLBACK_SEQUENCE=new java.util.concurrent.atomic.AtomicLong();
++    static final class CallbackRejected extends IllegalStateException {
++        final CallbackReason reason;
++        CallbackRejected(CallbackReason reason) {super("original callback fixture contract rejected");this.reason=reason;}
++    }
++    static final class CallbackAttempt {
++        final JsonNode binding;final long sequence=CALLBACK_SEQUENCE.incrementAndGet();
++        CallbackStage stage=CallbackStage.ADMISSION;String outcome="NONE";
++        CallbackAttempt(JsonNode binding) {this.binding=binding.deepCopy();}
++        void check(boolean value,CallbackReason reason) {if(!value)throw new CallbackRejected(reason);}
++    }
++
++    static WechatVerifiedPaymentFact.Reference originalCallbackReference(Path directory,JsonNode binding,long registrationId,
++            WechatVerifiedPaymentFact original,WechatVerifiedPaymentFactService facts,CallbackAttempt attempt) throws Exception {
++        // One process writes this private identity at a time. No provider call or business callback
++        // is under this lock; the actual fact owner still owns its independent SQL transaction.
++        synchronized(CALLBACK_IDENTITY_LOCK) {
++            attempt.check(!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive(),
++                    CallbackReason.OUTER_TRANSACTION);
++            original.requireValid();
++            attempt.stage=CallbackStage.PROVIDER_JOURNAL;
++            Path provider=directory.resolve("provider-facts.jsonl");
++            if(!Files.exists(provider)) {
++                // First received controlled external evidence; no model/payment SDK invocation.
++                append(directory,"provider-facts.jsonl",Map.of("kind","CONTROLLED_HISTORICAL_PAYMENT_SUCCESS",
++                        "sourceSha",binding.path("sourceSha").asText(),"identityHash",original.factHash()));
++            } else {
++                JsonNode received=readCallbackPrivate(provider);
++                attempt.check(original.factHash().equals(received.path("identityHash").asText())
++                        && binding.path("sourceSha").asText().equals(received.path("sourceSha").asText()),
++                        CallbackReason.PROVIDER_IDENTITY);
++            }
++            Path receipt=directory.resolve("callback-reference.json");
++            WechatVerifiedPaymentFact.Reference reference;
++            if(Files.exists(receipt)) {
++                attempt.stage=CallbackStage.RECEIPT_READ;
++                JsonNode saved=readCallbackPrivate(receipt);
++                attempt.check(saved.isObject() && saved.size()==8
++                        && sameCallbackBinding(saved,binding,registrationId,original)
++                        && saved.path("factId").isIntegralNumber() && saved.path("factId").canConvertToLong()
++                        && saved.path("factId").asLong()>0
++                        && saved.path("factHash").asText().matches("[0-9a-f]{64}"),CallbackReason.RECEIPT_INVALID);
++                reference=new WechatVerifiedPaymentFact.Reference(saved.path("factId").asLong(),saved.path("factHash").asText());
++            } else {
++                attempt.stage=CallbackStage.FACT_LOOKUP;
++                var existing=facts.findPaymentSuccess(original.mchid(),original.wxOutTradeNo(),original.transactionId());
++                if(existing!=null) {
++                    attempt.check(original.canonicalFacts().equals(existing.facts().canonicalFacts())
++                            && original.factHash().equals(existing.reference().hash()),CallbackReason.REFERENCE_CONFLICT);
++                    reference=existing.reference();
++                } else {
++                    attempt.stage=CallbackStage.FACT_SAVE;
++                    reference=facts.recordVerified(original); // Save the already-received original fact, never resend a provider.
++                }
++            }
++            attempt.stage=CallbackStage.REFERENCE_VERIFY;
++            var stored=facts.requireVerified(reference);
++            attempt.check(stored.reference().equals(reference) && original.factHash().equals(reference.hash())
++                    && original.canonicalFacts().equals(stored.facts().canonicalFacts()),CallbackReason.REFERENCE_CONFLICT);
++            if(!Files.exists(receipt)) {
++                attempt.stage=CallbackStage.RECEIPT_SAVE;
++                write(receipt,JSON.createObjectNode().put("sourceSha",binding.path("sourceSha").asText())
++                        .put("jarSha256",binding.path("jarSha256").asText()).put("schema",binding.path("schema").asText())
++                        .put("serverUuid",binding.path("serverUuid").asText()).put("registrationId",registrationId)
++                        .put("originalFactHash",original.factHash()).put("factId",reference.id()).put("factHash",reference.hash()));
++            }
++            return reference;
++        }
++    }
++
++    static boolean sameCallbackBinding(JsonNode saved,JsonNode binding,long registrationId,WechatVerifiedPaymentFact original) {
++        for(String field:List.of("sourceSha","jarSha256","schema","serverUuid"))
++            if(!binding.path(field).asText().equals(saved.path(field).asText()))return false;
++        return saved.path("registrationId").isIntegralNumber() && saved.path("registrationId").canConvertToLong()
++                && saved.path("registrationId").asLong()==registrationId
++                && original.factHash().equals(saved.path("originalFactHash").asText());
++    }
++
++    static JsonNode readCallbackPrivate(Path file) throws Exception {
++        require(Files.isRegularFile(file) && !Files.isSymbolicLink(file),"original callback private identity");
++        try(var input=Files.newInputStream(file)) {
++            byte[] bytes=input.readNBytes(4097);require(bytes.length<=4096,"bounded original callback identity");
++            return JSON.reader().with(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_TRAILING_TOKENS).readTree(bytes);
++        }
++    }
++
++    static String callOriginalRegistration(ICmsRegistrationService registrations,WechatVerifiedPaymentFact fact,
++            WechatVerifiedPaymentFact.Reference reference) {
++        Map<String,String> result=new HashMap<>();
++        result.put("out_trade_no",fact.businessOutTradeNo());result.put("wx_out_trade_no",fact.wxOutTradeNo());
++        result.put("transaction_id",fact.transactionId());result.put("mchid",fact.mchid());result.put("appid",fact.appid());
++        result.put("trade_type",fact.tradeType());result.put("currency",fact.currency());
++        result.put("total",Long.toString(fact.totalFen()));result.put("trade_state","SUCCESS");
++        result.put("verified_fact_id",Long.toString(reference.id()));result.put("verified_fact_hash",reference.hash());
++        return registrations.handleWechatPayCallback(result); // Every delivery, including replay; no cached outcome.
++    }
++
++    static ObjectNode callbackDocument(CallbackAttempt attempt,String status,Throwable failure) {
++        require(Set.of("ENTERED","RETURNED","THREW").contains(status),"fixed callback diagnostic status");
++        var value=JSON.createObjectNode();
++        for(String field:List.of("sourceSha","jarSha256","classManifestSha256","scope","schema","serverUuid"))
++            value.put(field,attempt.binding.path(field).asText());
++        value.put("bootId",BOOT).put("javaPid",ProcessHandle.current().pid()).put("operation","VERIFIED_CALLBACK")
++                .put("sequence",attempt.sequence).put("status",status).put("stage",attempt.stage.name())
++                .put("reasonCode",failure==null?"NONE":failure instanceof CallbackRejected rejected?rejected.reason.name():"UNCLASSIFIED_FAILURE")
++                .put("outcome",attempt.outcome);
++        var types=value.putArray("causeTypes");
++        Set<Throwable> seen=Collections.newSetFromMap(new IdentityHashMap<>());
++        Set<String> origins=Set.of(RestoreHttpApplicationChild.class.getName(),FixtureEndpoints.class.getName(),
++                WechatVerifiedPaymentFactService.class.getName(),
++                "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl",
++                "com.chengyinhub.business.service.impl.WxPaymentCallbackInboxServiceImpl");
++        Integer sqlCode=null;String sqlState=null;ObjectNode origin=null;
++        for(Throwable current=failure;current!=null && types.size()<8 && seen.add(current);current=current.getCause()) {
++            String type=current instanceof WechatVerifiedPaymentFactService.ConflictException?"FACT_CONFLICT"
++                    :current instanceof com.chengyinhub.business.service.IWxPaymentCallbackInboxService.IdentityConflictException?"INBOX_CONFLICT"
++                    :current instanceof org.springframework.dao.DataAccessException?"DATA_ACCESS":startupFailureType(current);
++            types.add(type);
++            if(origin==null)for(StackTraceElement frame:current.getStackTrace())
++                if(origins.contains(frame.getClassName()) && !Set.of("require","check").contains(frame.getMethodName())
++                        && frame.getLineNumber()>0 && frame.getLineNumber()<=100000) {
++                    origin=JSON.createObjectNode().put("class",frame.getClassName()).put("line",frame.getLineNumber());break;
++                }
++            if(current instanceof java.sql.SQLException sql && sqlState==null
++                    && Set.of("08001","08003","08004","08006","08S01","28000","42000","42S01","42S02","42S21","42S22",
++                              "23000","22001","22003","HY000","HY001","HYT00","HYT01","40001").contains(sql.getSQLState()==null?"":sql.getSQLState())
++                    && sql.getErrorCode()>=0 && sql.getErrorCode()<=65535) {
++                sqlState=sql.getSQLState();sqlCode=sql.getErrorCode();
++            }
++        }
++        value.set("origin",origin==null?com.fasterxml.jackson.databind.node.NullNode.getInstance():origin);
++        if(sqlState==null)value.putNull("sqlState");else value.put("sqlState",sqlState);
++        if(sqlCode==null)value.putNull("sqlErrorCode");else value.put("sqlErrorCode",sqlCode);
++        return value;
++    }
++
++    static void publishCallback(CallbackAttempt attempt,String status,Throwable failure) throws Exception {
++        Path file=PRIVATE.resolve("callback-diagnostic.json"),next=PRIVATE.resolve("callback-diagnostic.next");
++        require(!Files.isSymbolicLink(file) && !Files.exists(next),"exclusive callback diagnostic");
++        byte[] bytes=JSON.writeValueAsBytes(callbackDocument(attempt,status,failure));
++        require(bytes.length<=4096,"bounded callback diagnostic");
++        try(FileChannel channel=FileChannel.open(next,StandardOpenOption.CREATE_NEW,StandardOpenOption.WRITE)) {
++            Files.setPosixFilePermissions(next,PosixFilePermissions.fromString("rw-------"));
++            ByteBuffer buffer=ByteBuffer.wrap(bytes);while(buffer.hasRemaining())channel.write(buffer);channel.force(true);
+         }
++        Files.move(next,file,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
+     }
+ 
+     /** Observes original entry/exception without short-circuiting its guard or making a response. */
+@@ -456,8 +619,9 @@ public final class RestoreHttpApplicationChild {
+         try {append("provider-attempts.jsonl",Map.of("bootId",BOOT,"symbol",symbol));}
+         catch(Exception failure){throw new IllegalStateException("private provider evidence unavailable",failure);}
+     }
+-    static synchronized void append(String name,Object value) throws Exception {
+-        Path path=PRIVATE.resolve(name);require(Set.of("events.jsonl","provider-facts.jsonl","provider-attempts.jsonl").contains(name),"fixed journal");
++    static synchronized void append(String name,Object value) throws Exception {append(PRIVATE,name,value);}
++    static synchronized void append(Path directory,String name,Object value) throws Exception {
++        Path path=directory.resolve(name);require(Set.of("events.jsonl","provider-facts.jsonl","provider-attempts.jsonl").contains(name),"fixed journal");
+         try(FileChannel file=FileChannel.open(path,StandardOpenOption.CREATE,StandardOpenOption.WRITE,StandardOpenOption.APPEND)) {
+             Files.setPosixFilePermissions(path,PosixFilePermissions.fromString("rw-------"));
+             require(file.size()<8L*1024*1024,"bounded private observation journal");
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpCallbackReplayTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpCallbackReplayTest.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..a69e9a41e5e5eb58cdacf806e5f1412f4a234567
+--- /dev/null
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpCallbackReplayTest.java
+@@ -0,0 +1,168 @@
++package com.chengyinhub.business.it;
++
++import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;
++import com.chengyinhub.business.service.ICmsRegistrationService;
++import com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService;
++import com.fasterxml.jackson.databind.JsonNode;
++import com.fasterxml.jackson.databind.node.ObjectNode;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.io.TempDir;
++import org.mockito.ArgumentCaptor;
++import org.springframework.dao.DataIntegrityViolationException;
++
++import java.nio.file.Files;
++import java.nio.file.Path;
++import java.sql.SQLIntegrityConstraintViolationException;
++import java.time.Instant;
++import java.util.List;
++import java.util.Map;
++
++import static org.junit.jupiter.api.Assertions.*;
++import static org.mockito.ArgumentMatchers.any;
++import static org.mockito.Mockito.*;
++
++/** Direct identity/dispatch SOURCE controls; service doubles do not prove MySQL or economic effects. */
++class RestoreHttpCallbackReplayTest {
++    @TempDir Path directory;
++
++    private ObjectNode binding() {
++        return RestoreHttpApplicationChild.JSON.createObjectNode().put("sourceSha","a".repeat(40))
++                .put("jarSha256","b".repeat(64)).put("classManifestSha256","c".repeat(64))
++                .put("scope","d".repeat(32)).put("schema","cy_e2e_auth_"+"d".repeat(32))
++                .put("serverUuid","11111111-1111-1111-1111-111111111111").put("restoreMode","true");
++    }
++    private WechatVerifiedPaymentFact original() {
++        return new WechatVerifiedPaymentFact(WechatVerifiedPaymentFact.Kind.PAYMENT,
++                "restore-http-mch","restore-http-app","RH_ORIGINAL","RH_ORIGINAL","RH_ORIGINAL",
++                "RH_TX_ORIGINAL","RH_TX_ORIGINAL","JSAPI","CNY",100,100,
++                Instant.parse("2026-01-01T00:00:00Z"),null,"SUCCESS");
++    }
++    private WechatVerifiedPaymentFactService facts(WechatVerifiedPaymentFact fact) {
++        var service=mock(WechatVerifiedPaymentFactService.class);
++        var reference=new WechatVerifiedPaymentFact.Reference(71,fact.factHash());
++        when(service.recordVerified(fact)).thenReturn(reference);
++        when(service.requireVerified(reference)).thenReturn(new WechatVerifiedPaymentFactService.Stored(reference,fact));
++        return service;
++    }
++    private WechatVerifiedPaymentFact.Reference resolve(ObjectNode binding,WechatVerifiedPaymentFact fact,
++            WechatVerifiedPaymentFactService service) throws Exception {
++        return RestoreHttpApplicationChild.originalCallbackReference(directory,binding,8,fact,service,
++                new RestoreHttpApplicationChild.CallbackAttempt(binding));
++    }
++
++    @Test void allThreeHeldBootBindingsReuseOneCommittedReferenceButDispatchEveryDelivery() throws Exception {
++        var fact=original();var service=facts(fact);var binding=binding();
++        var registrations=mock(ICmsRegistrationService.class);
++        when(registrations.handleWechatPayCallback(any())).thenReturn("FAIL");
++        for(String mode:List.of("true","invalid","")) {
++            binding.put("restoreMode",mode);
++            for(int replay=0;replay<2;replay++) {
++                var reference=resolve(binding,fact,service);
++                assertEquals(71,reference.id());assertEquals(fact.factHash(),reference.hash());
++                assertEquals("FAIL",RestoreHttpApplicationChild.callOriginalRegistration(registrations,fact,reference));
++            }
++        }
++        verify(service,times(1)).recordVerified(fact);
++        verify(service,times(1)).findPaymentSuccess(fact.mchid(),fact.wxOutTradeNo(),fact.transactionId());
++        verify(service,times(6)).requireVerified(new WechatVerifiedPaymentFact.Reference(71,fact.factHash()));
++        ArgumentCaptor<Map<String,String>> payload=ArgumentCaptor.forClass(Map.class);
++        verify(registrations,times(6)).handleWechatPayCallback(payload.capture());
++        for(var value:payload.getAllValues()) {
++            assertEquals("71",value.get("verified_fact_id"));assertEquals(fact.factHash(),value.get("verified_fact_hash"));
++            assertEquals("100",value.get("total"));assertEquals("SUCCESS",value.get("trade_state"));
++            assertEquals(fact.businessOutTradeNo(),value.get("out_trade_no"));
++            assertEquals(fact.wxOutTradeNo(),value.get("wx_out_trade_no"));
++            assertEquals(fact.transactionId(),value.get("transaction_id"));
++        }
++        assertEquals(1,Files.readAllLines(directory.resolve("provider-facts.jsonl")).size());
++        JsonNode receipt=RestoreHttpApplicationChild.readCallbackPrivate(directory.resolve("callback-reference.json"));
++        assertEquals(8,receipt.size());assertEquals(71,receipt.path("factId").asLong());
++        assertFalse(receipt.has("restoreMode"));assertFalse(receipt.has("bootId"));
++    }
++
++    @Test void committedFactWithoutPrivateReceiptIsRecoveredByOriginalIdentityWithoutASecondInsert() throws Exception {
++        var fact=original();var service=facts(fact);var reference=new WechatVerifiedPaymentFact.Reference(71,fact.factHash());
++        when(service.findPaymentSuccess(fact.mchid(),fact.wxOutTradeNo(),fact.transactionId()))
++                .thenReturn(new WechatVerifiedPaymentFactService.Stored(reference,fact));
++        assertEquals(reference,resolve(binding(),fact,service));
++        verify(service,never()).recordVerified(any());verify(service).requireVerified(reference);
++        assertTrue(Files.isRegularFile(directory.resolve("callback-reference.json")));
++    }
++
++    @Test void savedReferenceMissingFromStoreThrowsAndNeverCreatesAnotherFactOrDispatches() throws Exception {
++        var fact=original();var service=facts(fact);resolve(binding(),fact,service);
++        byte[] before=Files.readAllBytes(directory.resolve("callback-reference.json"));
++        var missing=new IllegalStateException("private-missing-reference-canary");
++        when(service.requireVerified(new WechatVerifiedPaymentFact.Reference(71,fact.factHash()))).thenThrow(missing);
++        var failure=assertThrows(IllegalStateException.class,() -> resolve(binding(),fact,service));
++        assertSame(missing,failure);verify(service,times(1)).recordVerified(fact);
++        verify(service,times(1)).findPaymentSuccess(fact.mchid(),fact.wxOutTradeNo(),fact.transactionId());
++        assertArrayEquals(before,Files.readAllBytes(directory.resolve("callback-reference.json")));
++    }
++
++    @Test void foreignReceiptBindingOrMalformedPrivateIdentityIsNotReplanned() throws Exception {
++        var fact=original();var service=facts(fact);var originalBinding=binding();resolve(originalBinding,fact,service);
++        for(String field:List.of("sourceSha","jarSha256","schema","serverUuid")) {
++            var changed=originalBinding.deepCopy();changed.put(field,"foreign");
++            var failure=assertThrows(RestoreHttpApplicationChild.CallbackRejected.class,() -> resolve(changed,fact,service));
++            assertEquals(field.equals("sourceSha") ? RestoreHttpApplicationChild.CallbackReason.PROVIDER_IDENTITY
++                    : RestoreHttpApplicationChild.CallbackReason.RECEIPT_INVALID,failure.reason);
++        }
++        Files.writeString(directory.resolve("callback-reference.json"),"{}");
++        assertThrows(RestoreHttpApplicationChild.CallbackRejected.class,() -> resolve(originalBinding,fact,service));
++        verify(service,times(1)).recordVerified(fact);
++    }
++
++    @Test void conflictingCommittedFactIsRejectedBeforeReceiptOrRegistrationDispatch() {
++        var fact=original();var service=facts(fact);
++        var wrong=new WechatVerifiedPaymentFact.Reference(72,"e".repeat(64));
++        when(service.findPaymentSuccess(fact.mchid(),fact.wxOutTradeNo(),fact.transactionId()))
++                .thenReturn(new WechatVerifiedPaymentFactService.Stored(wrong,fact));
++        var failure=assertThrows(RestoreHttpApplicationChild.CallbackRejected.class,() -> resolve(binding(),fact,service));
++        assertEquals(RestoreHttpApplicationChild.CallbackReason.REFERENCE_CONFLICT,failure.reason);
++        verify(service,never()).recordVerified(any());verify(service,never()).requireVerified(any());
++        assertFalse(Files.exists(directory.resolve("callback-reference.json")));
++    }
++
++    @Test void originalRegistrationFailureEscapesUnchangedAndIsNotReplacedWithCachedFail() {
++        var fact=original();var reference=new WechatVerifiedPaymentFact.Reference(71,fact.factHash());
++        var registrations=mock(ICmsRegistrationService.class);
++        var original=new IllegalStateException("private-callback-error-canary");
++        when(registrations.handleWechatPayCallback(any())).thenThrow(original);
++        assertSame(original,assertThrows(IllegalStateException.class,
++                () -> RestoreHttpApplicationChild.callOriginalRegistration(registrations,fact,reference)));
++        verify(registrations,times(1)).handleWechatPayCallback(any());
++    }
++
++    @Test void activeOuterTransactionIsRejectedBeforeFactLookupOrReceiptWrite() {
++        var fact=original();var service=facts(fact);
++        boolean previous=org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive();
++        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
++        try {
++            var failure=assertThrows(RestoreHttpApplicationChild.CallbackRejected.class,() -> resolve(binding(),fact,service));
++            assertEquals(RestoreHttpApplicationChild.CallbackReason.OUTER_TRANSACTION,failure.reason);
++            verifyNoInteractions(service);
++            assertFalse(Files.exists(directory.resolve("callback-reference.json")));
++        } finally {
++            org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(previous);
++        }
++    }
++
++    @Test void stageAndTypedCauseProjectionNeverSerializesMessagesSqlPathsOrArbitraryFrames() throws Exception {
++        var attempt=new RestoreHttpApplicationChild.CallbackAttempt(binding());
++        attempt.stage=RestoreHttpApplicationChild.CallbackStage.REGISTRATION_CALLBACK;
++        var sql=new SQLIntegrityConstraintViolationException("private-SQL-canary","23000",1062);
++        sql.setStackTrace(new StackTraceElement[]{new StackTraceElement(
++                "com.chengyinhub.business.service.impl.WxPaymentCallbackInboxServiceImpl",
++                "registerVerified","private-source-path",123)});
++        var failure=new DataIntegrityViolationException("private-body-canary",sql);
++        var value=RestoreHttpApplicationChild.callbackDocument(attempt,"THREW",failure);
++        assertEquals("REGISTRATION_CALLBACK",value.path("stage").asText());
++        assertEquals("UNCLASSIFIED_FAILURE",value.path("reasonCode").asText());
++        assertEquals("DATA_ACCESS",value.path("causeTypes").get(0).asText());
++        assertEquals("23000",value.path("sqlState").asText());assertEquals(1062,value.path("sqlErrorCode").asInt());
++        assertEquals(123,value.path("origin").path("line").asInt());
++        assertFalse(value.toString().contains("private"));
++        assertTrue(RestoreHttpApplicationChild.JSON.writeValueAsBytes(value).length<=4096);
++    }
++}

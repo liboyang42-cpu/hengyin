@@ -330,25 +330,188 @@ public final class RestoreHttpApplicationChild {
             throw new AssertionError("restore wake must throw original Blocked");
         }
         @PostMapping("/verified-callback") public AjaxResult callback() throws Exception {
-            require(RestoreDispatchGuard.isRestoreMode(),"late fixture facts never normal-boot admission");
-            JsonNode ids=identities();String no=ids.path("registrationNo").asText(), transaction=ids.path("transactionId").asText();
-            WechatVerifiedPaymentFact fact=new WechatVerifiedPaymentFact(WechatVerifiedPaymentFact.Kind.PAYMENT,
-                    "restore-http-mch","restore-http-app",no,no,no,transaction,transaction,"JSAPI","CNY",100,100,
-                    Instant.parse(ids.path("successAt").asText()),null,"SUCCESS");
-            // Controlled external evidence survives restore independently. No SDK success or signature is claimed.
-            Path provider=PRIVATE.resolve("provider-facts.jsonl");
-            if(!Files.exists(provider))append("provider-facts.jsonl",Map.of("kind","CONTROLLED_HISTORICAL_PAYMENT_SUCCESS",
-                    "sourceSha",config.path("sourceSha").asText(),"identityHash",fact.factHash()));
-            else require(JSON.readTree(Files.readString(provider).strip()).path("identityHash").asText().equals(fact.factHash()),"same original provider fact");
-            var reference=facts.recordVerified(fact);
-            Map<String,String> result=new HashMap<>();
-            result.put("out_trade_no",no);result.put("wx_out_trade_no",no);result.put("transaction_id",transaction);
-            result.put("mchid",fact.mchid());result.put("appid",fact.appid());result.put("trade_type","JSAPI");
-            result.put("currency","CNY");result.put("total","100");result.put("trade_state","SUCCESS");
-            result.put("verified_fact_id",Long.toString(reference.id()));result.put("verified_fact_hash",reference.hash());
-            String original=registrations.handleWechatPayCallback(result);
-            return AjaxResult.success(Map.of("originalOutcome",original,"factId",reference.id(),"factHash",reference.hash()));
+            CallbackAttempt attempt=new CallbackAttempt(config);
+            try {
+                publishCallback(attempt,"ENTERED",null);
+                attempt.check(RestoreDispatchGuard.isRestoreMode(),CallbackReason.HELD_REQUIRED);
+                attempt.check(!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive(),
+                        CallbackReason.OUTER_TRANSACTION);
+                attempt.stage=CallbackStage.ORIGINAL_INPUT;
+                JsonNode ids=identities();
+                attempt.check(ids.path("registrationId").isIntegralNumber() && ids.path("registrationId").canConvertToLong()
+                        && ids.path("registrationId").asLong()>0,CallbackReason.ORIGINAL_CONTEXT);
+                String no=ids.path("registrationNo").asText(),transaction=ids.path("transactionId").asText();
+                WechatVerifiedPaymentFact fact=new WechatVerifiedPaymentFact(WechatVerifiedPaymentFact.Kind.PAYMENT,
+                        "restore-http-mch","restore-http-app",no,no,no,transaction,transaction,"JSAPI","CNY",100,100,
+                        Instant.parse(ids.path("successAt").asText()),null,"SUCCESS");
+                fact.requireValid();
+                var reference=originalCallbackReference(PRIVATE,config,ids.path("registrationId").asLong(),fact,facts,attempt);
+                attempt.stage=CallbackStage.REGISTRATION_CALLBACK;
+                String original=callOriginalRegistration(registrations,fact,reference);
+                attempt.stage=CallbackStage.RESPONSE;
+                attempt.outcome=Set.of("FAIL","SUCCESS").contains(original==null?"":original)?original:"OTHER";
+                AjaxResult response=AjaxResult.success(Map.of("originalOutcome",original,"factId",reference.id(),"factHash",reference.hash()));
+                publishCallback(attempt,"RETURNED",null);
+                return response;
+            } catch(Exception | Error failure) {
+                try {publishCallback(attempt,"THREW",failure);}
+                catch(Exception diagnostic) {failure.addSuppressed(diagnostic);}
+                throw failure;
+            }
         }
+    }
+
+    enum CallbackStage { ADMISSION, ORIGINAL_INPUT, PROVIDER_JOURNAL, RECEIPT_READ, FACT_LOOKUP,
+        FACT_SAVE, REFERENCE_VERIFY, RECEIPT_SAVE, REGISTRATION_CALLBACK, RESPONSE }
+    enum CallbackReason { NONE, HELD_REQUIRED, OUTER_TRANSACTION, ORIGINAL_CONTEXT, PROVIDER_IDENTITY,
+        RECEIPT_INVALID, REFERENCE_CONFLICT, UNCLASSIFIED_FAILURE }
+    static final Object CALLBACK_IDENTITY_LOCK=new Object();
+    static final java.util.concurrent.atomic.AtomicLong CALLBACK_SEQUENCE=new java.util.concurrent.atomic.AtomicLong();
+    static final class CallbackRejected extends IllegalStateException {
+        final CallbackReason reason;
+        CallbackRejected(CallbackReason reason) {super("original callback fixture contract rejected");this.reason=reason;}
+    }
+    static final class CallbackAttempt {
+        final JsonNode binding;final long sequence=CALLBACK_SEQUENCE.incrementAndGet();
+        CallbackStage stage=CallbackStage.ADMISSION;String outcome="NONE";
+        CallbackAttempt(JsonNode binding) {this.binding=binding.deepCopy();}
+        void check(boolean value,CallbackReason reason) {if(!value)throw new CallbackRejected(reason);}
+    }
+
+    static WechatVerifiedPaymentFact.Reference originalCallbackReference(Path directory,JsonNode binding,long registrationId,
+            WechatVerifiedPaymentFact original,WechatVerifiedPaymentFactService facts,CallbackAttempt attempt) throws Exception {
+        // One process writes this private identity at a time. No provider call or business callback
+        // is under this lock; the actual fact owner still owns its independent SQL transaction.
+        synchronized(CALLBACK_IDENTITY_LOCK) {
+            attempt.check(!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive(),
+                    CallbackReason.OUTER_TRANSACTION);
+            original.requireValid();
+            attempt.stage=CallbackStage.PROVIDER_JOURNAL;
+            Path provider=directory.resolve("provider-facts.jsonl");
+            if(!Files.exists(provider)) {
+                // First received controlled external evidence; no model/payment SDK invocation.
+                append(directory,"provider-facts.jsonl",Map.of("kind","CONTROLLED_HISTORICAL_PAYMENT_SUCCESS",
+                        "sourceSha",binding.path("sourceSha").asText(),"identityHash",original.factHash()));
+            } else {
+                JsonNode received=readCallbackPrivate(provider);
+                attempt.check(original.factHash().equals(received.path("identityHash").asText())
+                        && binding.path("sourceSha").asText().equals(received.path("sourceSha").asText()),
+                        CallbackReason.PROVIDER_IDENTITY);
+            }
+            Path receipt=directory.resolve("callback-reference.json");
+            WechatVerifiedPaymentFact.Reference reference;
+            if(Files.exists(receipt)) {
+                attempt.stage=CallbackStage.RECEIPT_READ;
+                JsonNode saved=readCallbackPrivate(receipt);
+                attempt.check(saved.isObject() && saved.size()==8
+                        && sameCallbackBinding(saved,binding,registrationId,original)
+                        && saved.path("factId").isIntegralNumber() && saved.path("factId").canConvertToLong()
+                        && saved.path("factId").asLong()>0
+                        && saved.path("factHash").asText().matches("[0-9a-f]{64}"),CallbackReason.RECEIPT_INVALID);
+                reference=new WechatVerifiedPaymentFact.Reference(saved.path("factId").asLong(),saved.path("factHash").asText());
+            } else {
+                attempt.stage=CallbackStage.FACT_LOOKUP;
+                var existing=facts.findPaymentSuccess(original.mchid(),original.wxOutTradeNo(),original.transactionId());
+                if(existing!=null) {
+                    attempt.check(original.canonicalFacts().equals(existing.facts().canonicalFacts())
+                            && original.factHash().equals(existing.reference().hash()),CallbackReason.REFERENCE_CONFLICT);
+                    reference=existing.reference();
+                } else {
+                    attempt.stage=CallbackStage.FACT_SAVE;
+                    reference=facts.recordVerified(original); // Save the already-received original fact, never resend a provider.
+                }
+            }
+            attempt.stage=CallbackStage.REFERENCE_VERIFY;
+            var stored=facts.requireVerified(reference);
+            attempt.check(stored.reference().equals(reference) && original.factHash().equals(reference.hash())
+                    && original.canonicalFacts().equals(stored.facts().canonicalFacts()),CallbackReason.REFERENCE_CONFLICT);
+            if(!Files.exists(receipt)) {
+                attempt.stage=CallbackStage.RECEIPT_SAVE;
+                write(receipt,JSON.createObjectNode().put("sourceSha",binding.path("sourceSha").asText())
+                        .put("jarSha256",binding.path("jarSha256").asText()).put("schema",binding.path("schema").asText())
+                        .put("serverUuid",binding.path("serverUuid").asText()).put("registrationId",registrationId)
+                        .put("originalFactHash",original.factHash()).put("factId",reference.id()).put("factHash",reference.hash()));
+            }
+            return reference;
+        }
+    }
+
+    static boolean sameCallbackBinding(JsonNode saved,JsonNode binding,long registrationId,WechatVerifiedPaymentFact original) {
+        for(String field:List.of("sourceSha","jarSha256","schema","serverUuid"))
+            if(!binding.path(field).asText().equals(saved.path(field).asText()))return false;
+        return saved.path("registrationId").isIntegralNumber() && saved.path("registrationId").canConvertToLong()
+                && saved.path("registrationId").asLong()==registrationId
+                && original.factHash().equals(saved.path("originalFactHash").asText());
+    }
+
+    static JsonNode readCallbackPrivate(Path file) throws Exception {
+        require(Files.isRegularFile(file) && !Files.isSymbolicLink(file),"original callback private identity");
+        try(var input=Files.newInputStream(file)) {
+            byte[] bytes=input.readNBytes(4097);require(bytes.length<=4096,"bounded original callback identity");
+            return JSON.reader().with(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_TRAILING_TOKENS).readTree(bytes);
+        }
+    }
+
+    static String callOriginalRegistration(ICmsRegistrationService registrations,WechatVerifiedPaymentFact fact,
+            WechatVerifiedPaymentFact.Reference reference) {
+        Map<String,String> result=new HashMap<>();
+        result.put("out_trade_no",fact.businessOutTradeNo());result.put("wx_out_trade_no",fact.wxOutTradeNo());
+        result.put("transaction_id",fact.transactionId());result.put("mchid",fact.mchid());result.put("appid",fact.appid());
+        result.put("trade_type",fact.tradeType());result.put("currency",fact.currency());
+        result.put("total",Long.toString(fact.totalFen()));result.put("trade_state","SUCCESS");
+        result.put("verified_fact_id",Long.toString(reference.id()));result.put("verified_fact_hash",reference.hash());
+        return registrations.handleWechatPayCallback(result); // Every delivery, including replay; no cached outcome.
+    }
+
+    static ObjectNode callbackDocument(CallbackAttempt attempt,String status,Throwable failure) {
+        require(Set.of("ENTERED","RETURNED","THREW").contains(status),"fixed callback diagnostic status");
+        var value=JSON.createObjectNode();
+        for(String field:List.of("sourceSha","jarSha256","classManifestSha256","scope","schema","serverUuid"))
+            value.put(field,attempt.binding.path(field).asText());
+        value.put("bootId",BOOT).put("javaPid",ProcessHandle.current().pid()).put("operation","VERIFIED_CALLBACK")
+                .put("sequence",attempt.sequence).put("status",status).put("stage",attempt.stage.name())
+                .put("reasonCode",failure==null?"NONE":failure instanceof CallbackRejected rejected?rejected.reason.name():"UNCLASSIFIED_FAILURE")
+                .put("outcome",attempt.outcome);
+        var types=value.putArray("causeTypes");
+        Set<Throwable> seen=Collections.newSetFromMap(new IdentityHashMap<>());
+        Set<String> origins=Set.of(RestoreHttpApplicationChild.class.getName(),FixtureEndpoints.class.getName(),
+                WechatVerifiedPaymentFactService.class.getName(),
+                "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl",
+                "com.chengyinhub.business.service.impl.WxPaymentCallbackInboxServiceImpl");
+        Integer sqlCode=null;String sqlState=null;ObjectNode origin=null;
+        for(Throwable current=failure;current!=null && types.size()<8 && seen.add(current);current=current.getCause()) {
+            String type=current instanceof WechatVerifiedPaymentFactService.ConflictException?"FACT_CONFLICT"
+                    :current instanceof com.chengyinhub.business.service.IWxPaymentCallbackInboxService.IdentityConflictException?"INBOX_CONFLICT"
+                    :current instanceof org.springframework.dao.DataAccessException?"DATA_ACCESS":startupFailureType(current);
+            types.add(type);
+            if(origin==null)for(StackTraceElement frame:current.getStackTrace())
+                if(origins.contains(frame.getClassName()) && !Set.of("require","check").contains(frame.getMethodName())
+                        && frame.getLineNumber()>0 && frame.getLineNumber()<=100000) {
+                    origin=JSON.createObjectNode().put("class",frame.getClassName()).put("line",frame.getLineNumber());break;
+                }
+            if(current instanceof java.sql.SQLException sql && sqlState==null
+                    && Set.of("08001","08003","08004","08006","08S01","28000","42000","42S01","42S02","42S21","42S22",
+                              "23000","22001","22003","HY000","HY001","HYT00","HYT01","40001").contains(sql.getSQLState()==null?"":sql.getSQLState())
+                    && sql.getErrorCode()>=0 && sql.getErrorCode()<=65535) {
+                sqlState=sql.getSQLState();sqlCode=sql.getErrorCode();
+            }
+        }
+        value.set("origin",origin==null?com.fasterxml.jackson.databind.node.NullNode.getInstance():origin);
+        if(sqlState==null)value.putNull("sqlState");else value.put("sqlState",sqlState);
+        if(sqlCode==null)value.putNull("sqlErrorCode");else value.put("sqlErrorCode",sqlCode);
+        return value;
+    }
+
+    static void publishCallback(CallbackAttempt attempt,String status,Throwable failure) throws Exception {
+        Path file=PRIVATE.resolve("callback-diagnostic.json"),next=PRIVATE.resolve("callback-diagnostic.next");
+        require(!Files.isSymbolicLink(file) && !Files.exists(next),"exclusive callback diagnostic");
+        byte[] bytes=JSON.writeValueAsBytes(callbackDocument(attempt,status,failure));
+        require(bytes.length<=4096,"bounded callback diagnostic");
+        try(FileChannel channel=FileChannel.open(next,StandardOpenOption.CREATE_NEW,StandardOpenOption.WRITE)) {
+            Files.setPosixFilePermissions(next,PosixFilePermissions.fromString("rw-------"));
+            ByteBuffer buffer=ByteBuffer.wrap(bytes);while(buffer.hasRemaining())channel.write(buffer);channel.force(true);
+        }
+        Files.move(next,file,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
     }
 
     /** Observes original entry/exception without short-circuiting its guard or making a response. */
@@ -456,8 +619,9 @@ public final class RestoreHttpApplicationChild {
         try {append("provider-attempts.jsonl",Map.of("bootId",BOOT,"symbol",symbol));}
         catch(Exception failure){throw new IllegalStateException("private provider evidence unavailable",failure);}
     }
-    static synchronized void append(String name,Object value) throws Exception {
-        Path path=PRIVATE.resolve(name);require(Set.of("events.jsonl","provider-facts.jsonl","provider-attempts.jsonl").contains(name),"fixed journal");
+    static synchronized void append(String name,Object value) throws Exception {append(PRIVATE,name,value);}
+    static synchronized void append(Path directory,String name,Object value) throws Exception {
+        Path path=directory.resolve(name);require(Set.of("events.jsonl","provider-facts.jsonl","provider-attempts.jsonl").contains(name),"fixed journal");
         try(FileChannel file=FileChannel.open(path,StandardOpenOption.CREATE,StandardOpenOption.WRITE,StandardOpenOption.APPEND)) {
             Files.setPosixFilePermissions(path,PosixFilePermissions.fromString("rw-------"));
             require(file.size()<8L*1024*1024,"bounded private observation journal");

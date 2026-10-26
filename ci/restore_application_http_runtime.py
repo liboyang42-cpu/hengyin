@@ -266,6 +266,66 @@ class ApplicationSlot:
         self.startup_observation=dict(value)
         return dict(value)
 
+    def read_callback_observation(self):
+        path=self.root/'callback-diagnostic.json'
+        if not path.exists():return None
+        require(path.is_file() and not path.is_symlink(),'actual child boot identity')
+        with path.open('rb') as stream:raw=stream.read(4097)
+        require(len(raw)<=4096,'actual child boot identity')
+        value=json.loads(raw)
+        keys={'sourceSha','jarSha256','classManifestSha256','scope','schema','serverUuid','bootId','javaPid',
+              'operation','sequence','status','stage','reasonCode','outcome','causeTypes','origin','sqlState','sqlErrorCode'}
+        stages={'ADMISSION','ORIGINAL_INPUT','PROVIDER_JOURNAL','RECEIPT_READ','FACT_LOOKUP','FACT_SAVE',
+                'REFERENCE_VERIFY','RECEIPT_SAVE','REGISTRATION_CALLBACK','RESPONSE'}
+        reasons={'NONE','HELD_REQUIRED','OUTER_TRANSACTION','ORIGINAL_CONTEXT','PROVIDER_IDENTITY',
+                 'RECEIPT_INVALID','REFERENCE_CONFLICT','UNCLASSIFIED_FAILURE'}
+        types={'FACT_CONFLICT','INBOX_CONFLICT','DATA_ACCESS','ILLEGAL_STATE','UNSATISFIED_DEPENDENCY',
+               'BEAN_CREATION','SQL','IO','SCHEDULER','INTERRUPTED','OTHER'}
+        origins={'com.chengyinhub.business.it.RestoreHttpApplicationChild',
+                 'com.chengyinhub.business.it.RestoreHttpApplicationChild$FixtureEndpoints',
+                 'com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService',
+                 'com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl',
+                 'com.chengyinhub.business.service.impl.WxPaymentCallbackInboxServiceImpl'}
+        require(isinstance(value,dict) and set(value)==keys and self.ready_for_current_launch and self.boots
+                and self.cid==self.boots[-1]['appCid']==self.launch['cid']
+                and all(value.get(key)==self.launch.get(key) for key in ('sourceSha','jarSha256','schema','serverUuid'))
+                and value['classManifestSha256']==self.manifest_hash and value['scope']==self.name[8:]
+                and value['bootId']==self.boots[-1]['bootId'] and type(value['javaPid']) is int and value['javaPid']==1
+                and value['operation']=='VERIFIED_CALLBACK' and type(value['sequence']) is int and value['sequence']>0
+                and value['status'] in ('ENTERED','RETURNED','THREW') and value['stage'] in stages
+                and value['reasonCode'] in reasons and value['outcome'] in ('NONE','FAIL','SUCCESS','OTHER')
+                and isinstance(value['causeTypes'],list) and len(value['causeTypes'])<=8
+                and all(kind in types for kind in value['causeTypes']),'actual child boot identity')
+        origin=value['origin']
+        require(origin is None or (isinstance(origin,dict) and set(origin)=={'class','line'}
+                and origin['class'] in origins and type(origin['line']) is int and 0<origin['line']<=100000),
+                'actual child boot identity')
+        require((value['sqlState'] is None and value['sqlErrorCode'] is None) or (
+                value['sqlState'] in {'08001','08003','08004','08006','08S01','28000','42000','42S01','42S02',
+                '42S21','42S22','23000','22001','22003','HY000','HY001','HYT00','HYT01','40001'}
+                and type(value['sqlErrorCode']) is int and 0<=value['sqlErrorCode']<=65535),
+                'actual child boot identity')
+        require((value['status']=='THREW' and value['reasonCode']!='NONE' and value['causeTypes'])
+                or (value['status']!='THREW' and value['reasonCode']=='NONE' and not value['causeTypes']),
+                'actual child boot identity')
+        return value
+
+    def callback_observation(self):
+        # Diagnostic only. Neither a stale prior success nor a parse error becomes an ACK.
+        try:
+            value=self.read_callback_observation()
+            return {'result':'VERIFIED','value':value} if value is not None else {'result':'MISSING'}
+        except (OSError,ValueError,KeyError,TypeError,AttributeError):
+            return {'result':'UNKNOWN','reason':'PRIVATE_OBSERVATION_REJECTED'}
+
+    def record_callback_observation(self,before):
+        after=self.callback_observation()
+        fresh=('UNKNOWN' if before['result']=='UNKNOWN' or after['result']=='UNKNOWN' else
+               after['result']=='VERIFIED' and (before['result']=='MISSING'
+               or after['value']['sequence']>before['value']['sequence']))
+        self.last_callback_observation={'route':'/__restore_http/verified-callback',
+                'newControllerExecution':fresh,'after':after}
+
     def wait_for_ready(self):
         until=time.monotonic()+180
         while time.monotonic()<until:
@@ -460,6 +520,8 @@ class ApplicationSlot:
         self.start_transition['stage']='READY_STATUS_RESET'
         (self.root/'ready.json').unlink(missing_ok=True)
         (self.root/'startup.json').unlink(missing_ok=True)
+        (self.root/'callback-diagnostic.json').unlink(missing_ok=True)
+        (self.root/'callback-diagnostic.next').unlink(missing_ok=True)
         trace='network-'+str(len(self.boots))+'.trace';strace=shutil.which('strace')
         self.start_transition['stage']='TRACE_PREPARATION'
         require(strace and (self.out/'trace-libs').is_dir(),'reuse original tracing preparation')
@@ -527,8 +589,13 @@ class ApplicationSlot:
             text+='header = "Content-Type: '+('application/x-www-form-urlencoded' if form else 'application/json')+'"\n'
             data=urllib.parse.urlencode(payload) if form else json.dumps(payload)
             text+='data = '+json.dumps(data)+'\n'
-        raw=self.auth.command(self.auth.DOCKER+['exec','-i',self.cid,'curl','--noproxy','*','--silent','--show-error',
-                '--max-time','45','--write-out','\n%{http_code}','--config','-'],text.encode(),timeout=50).decode()
+        tracked=base=='/__restore_http/verified-callback'
+        before=self.callback_observation() if tracked else None
+        try:
+            raw=self.auth.command(self.auth.DOCKER+['exec','-i',self.cid,'curl','--noproxy','*','--silent','--show-error',
+                    '--max-time','45','--write-out','\n%{http_code}','--config','-'],text.encode(),timeout=50).decode()
+        finally:
+            if tracked:self.record_callback_observation(before)
         try:
             body,status=raw.rsplit('\n',1);status=int(status)
         except ValueError as failure:

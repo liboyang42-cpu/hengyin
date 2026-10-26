@@ -1,0 +1,46 @@
+{
+  "parent": "c0355527bd2082ea957b08fd684a4a8887470858",
+  "codeFileCount": 5,
+  "newJavaControlCases": 8,
+  "newPythonControlCases": 7,
+  "verification": "NOT_RUN",
+  "patchBytes": 46776,
+  "patchSha256": "ba9f1ab2036165cbf6eb4064178d2fb23a442b891287b274777711aa2ba90403",
+  "files": [
+    {
+      "path": "ci/restore_application_http_runtime.py",
+      "beforeBlob": "edf657dad0de3af0a1d2bae7a9d41f7791d6c929",
+      "afterBlob": "8ecb196860605913fe272cc78ae1f25d14b5f2cf",
+      "bytes": 41169,
+      "sha256": "2e84198aba10c0737c00af98b4877888956329d5415332f743f80b66d57be666"
+    },
+    {
+      "path": "ci/restore_application_http_probe.py",
+      "beforeBlob": "707e56621690e2c3765eb009fd93ec865deaf8c2",
+      "afterBlob": "4a32d7b3840a6c7afe90e91c8a78f49d7831a576",
+      "bytes": 71679,
+      "sha256": "ecbef910537c92dbf8a02a484c3f37bc20d595a2fe8fdef4ea9c4946e5ed5fd0"
+    },
+    {
+      "path": "ci/test_restore_application_http_probe.py",
+      "beforeBlob": "41da982cc2a8e3a84a84dd9cac8835120936aba7",
+      "afterBlob": "77e6cadd854c14ee14b4cd172aba97400c8047e9",
+      "bytes": 114217,
+      "sha256": "811c1b2011cb3125601c41fc9892fe98d50c5a4136d40a86e1eab4e10a12b043"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java",
+      "beforeBlob": "58b81ebc1b404c916d2397b4d7b90f5a764ee07b",
+      "afterBlob": "3a3cedf7233e5537b35db3d18e58f4c88b4a45fa",
+      "bytes": 48403,
+      "sha256": "59de4c7c01344507e2557ab2ed617cb212351c6552743ddb405361e7179eee30"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpCallbackReplayTest.java",
+      "beforeBlob": null,
+      "afterBlob": "a69e9a41e5e5eb58cdacf806e5f1412f4a234567",
+      "bytes": 11106,
+      "sha256": "746d8def89b8f9a9df365902c116e0962223b93ba1f48ee6ff4e5a423d984965"
+    }
+  ]
+}
