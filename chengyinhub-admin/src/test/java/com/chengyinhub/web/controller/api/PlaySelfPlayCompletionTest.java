@@ -7,7 +7,6 @@ import com.chengyinhub.business.service.IPlayerNodeProgressService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,17 +51,17 @@ class PlaySelfPlayCompletionTest {
         nodeService = mock(ICmsTopicNodeService.class);
 
         controller = new ApiPlayProgressController();
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
+        PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
+        PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
         // [P0-17] 通关口径分流会调 resolveMode(查主题 product_type)与 perkLedgerService。
         // 本类测的是 ① / ② 的 done 探针收窄,主题返 null ⇒ resolveMode 兜底 LINEAR_ORIENTEERING
         // ⇒ 走 done>=total 老口径,正是本类要测的路径。
-        ReflectionTestUtils.setField(controller, "cmsTopicService",
+        PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.ICmsTopicService.class));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "perkLedgerService",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.IPerkLedgerService.class));
         // resolveMode 的 fallback 链会走到 firstTicketMode(查票 mode);返空 ⇒ 兜底 LINEAR_ORIENTEERING。
-        ReflectionTestUtils.setField(controller, "omsTicketService",
+        PlayNodeAccessTestFixtures.setField(controller, "omsTicketService",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.IOmsTicketService.class));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "pointsAwardService",
                 mock(com.chengyinhub.business.service.IPointsAwardService.class));

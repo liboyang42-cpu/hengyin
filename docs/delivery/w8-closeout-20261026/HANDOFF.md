@@ -35,3 +35,9 @@ CI 最终 FAILURE。密钥扫描、依赖扫描、迁移目录检查和后台 E2
 发票未配置主体和处理范围时不可处理；守卫申诉通过仅允许仍有效原局现场重核，不直接完成或发奖。
 未执行生产迁移、部署、真实支付或通知。MySQL、真实角色、设备和渠道仍需独立验收。
 后端使用已批准VPS或GitHub-hosted CI，不在本机运行Java。VPS构建保持1536MiB/1CPU/预算锁，临时Maven堆1024MiB。
+
+## 第一轮 CI 修复（仍为草稿，未全绿）
+
+接收 6 个 Java 测试夹具文件和 9 个 CI/前端文件修复，逐包 SHA256 和基线内容已核验。227 项 Java 定向复测：33 失败、3 错误、0 跳过；编译通过。云端六文件 JavaScript 定向结果 75 通过，复用原证据，未重复跑。API 门禁仍缺 sensor/result 映射，其他失败继续处理。
+
+repair-round-1.json 给出本轮增量文件哈希；vps-fixture-failures.json 给出定向失败。source-files.json 和 verification/test-targets.json 保留首轮 2d7c5df 源码清单，不能把其旧哈希当作修复后的哈希。首轮 CI 结果也仅绑定 2d7c5df；本轮尚未重跑完整 CI。

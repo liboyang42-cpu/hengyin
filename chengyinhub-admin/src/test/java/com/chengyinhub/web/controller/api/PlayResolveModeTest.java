@@ -7,7 +7,6 @@ import com.chengyinhub.business.service.IOmsTicketService;
 import com.chengyinhub.common.constant.PlayMode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,8 +44,8 @@ class PlayResolveModeTest {
         topicSvc = mock(ICmsTopicService.class);
         ticketSvc = mock(IOmsTicketService.class);
         controller = new ApiPlayProgressController();
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicSvc);
-        ReflectionTestUtils.setField(controller, "omsTicketService", ticketSvc);
+        PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicSvc);
+        PlayNodeAccessTestFixtures.setField(controller, "omsTicketService", ticketSvc);
         when(ticketSvc.selectOmsTicketList(any())).thenReturn(Collections.<OmsTicket>emptyList());
     }
 

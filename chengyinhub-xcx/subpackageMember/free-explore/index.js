@@ -57,7 +57,7 @@ Page({
     return true;
   },
   request(path, method, data, done) {
-    this.apiRequest('/api/free-explore/bundle/' + path, method, data, done);
+    this.apiRequest(path, method, data, done);
   },
   apiRequest(url, method, data, done) {
     const epoch = this._epoch; let settled = false;
@@ -76,7 +76,7 @@ Page({
     if (!this.ready() || this.data.loading) return;
     if (!this._registrationId) { this.loadEntry(); return; }
     this.setData({ loading: true });
-    this.request('order', 'GET', { registrationId: this._registrationId }, (ok, res) => {
+    this.request('/api/free-explore/bundle/order', 'GET', { registrationId: this._registrationId }, (ok, res) => {
       this.setData({ loading: false });
       if (!ok) { this.setData({ error: res && res.msg || '权益加载失败，请重试；待确认操作不会清除' }); return; }
       try {
@@ -95,7 +95,7 @@ Page({
   loadEntry() {
     const receipt = !!this._purchaseRequestId;
     this.setData({ loading: true });
-    this.request(receipt ? 'order/receipt' : 'catalog', 'GET', receipt ? { requestId: this._purchaseRequestId } : { topicId: this._topicId }, (ok, res) => {
+    this.request(receipt ? '/api/free-explore/bundle/order/receipt' : '/api/free-explore/bundle/catalog', 'GET', receipt ? { requestId: this._purchaseRequestId } : { topicId: this._topicId }, (ok, res) => {
       this.setData({ loading: false });
       if (!ok) { this.setData({ error: res && res.msg || '回读失败，请稍后重试' }); return; }
       try {
@@ -187,7 +187,7 @@ Page({
   loadQuote() {
     if (!this.ready() || !this._registrationId) return;
     this.setData({ quote: null });
-    this.request('order/refund-quote', 'GET', { registrationId: this._registrationId }, (ok, res) => {
+    this.request('/api/free-explore/bundle/order/refund-quote', 'GET', { registrationId: this._registrationId }, (ok, res) => {
       if (!ok) { this.setData({ error: res && res.msg || '退款试算失败' }); return; }
       try { this.setData({ quote: bundle.quote(res.data) }); } catch (error) { this.setData({ error: error.message }); }
     });
@@ -199,7 +199,7 @@ Page({
     if (!row) return;
     const useWaiver = event.currentTarget.dataset.waiver === true || event.currentTarget.dataset.waiver === 'true';
     const epoch = this._epoch; this._confirming = true;
-    this.request('reservation/' + id + '/cancel-quote', 'GET', { useWaiver }, (ok, res) => {
+    this.request('/api/free-explore/bundle/reservation/' + id + '/cancel-quote', 'GET', { useWaiver }, (ok, res) => {
       if (!ok) { this._confirming = false; this.setData({ error: res && res.msg || '取消试算失败，未发送取消' }); return; }
       let quote;
       try { quote = bundle.cancellationQuote(res.data, this._owner, this._registrationId, id, useWaiver); }
@@ -215,7 +215,7 @@ Page({
             expectedOutcome: quote.expectedOutcome, requestId: 'cancel-' + id + '-' + Date.now() };
           try { wx.setStorageSync(this.key(), pending); } catch (error) { this.setData({ error: '无法保存恢复记录，未发送取消请求' }); return; }
           this.setData({ pending, writing: true, notice: '正在确认取消结果', error: '' });
-          this.request('reservation/' + id + '/cancel', 'POST', { useWaiver, expectedOutcome: quote.expectedOutcome }, (ok, res) => {
+          this.request('/api/free-explore/bundle/reservation/' + id + '/cancel', 'POST', { useWaiver, expectedOutcome: quote.expectedOutcome }, (ok, res) => {
             this.setData({ writing: false });
             if (ok) {
               try {
@@ -237,7 +237,7 @@ Page({
     if (!this.data.detail || !this.data.detail.units.some(item => item.id === unitId)) return;
     this.setData({ exitOptions: null });
     const sequence = this._exitSequence = (this._exitSequence || 0) + 1;
-    this.request('exit-options', 'GET', { registrationId: this._registrationId, unitId }, (ok, res) => {
+    this.request('/api/free-explore/bundle/exit-options', 'GET', { registrationId: this._registrationId, unitId }, (ok, res) => {
       if (sequence !== this._exitSequence) return;
       if (!ok) { this.setData({ error: res && res.msg || '换店方案回读失败' }); return; }
       try { this.setData({ exitOptions: bundle.exitOptions(res.data, this._owner, this._registrationId, unitId) }); }
@@ -259,7 +259,7 @@ Page({
           targetOfferId: targetId, idempotencyKey: 'fx-swap-' + Date.now() + '-' + Math.random().toString(36).slice(2, 14) };
         try { wx.setStorageSync(this.swapKey(), pending); } catch (error) { this.setData({ error: '无法保存换店恢复记录，未发送请求' }); return; }
         this.setData({ swapPending: pending, writing: true, error: '' });
-        this.request('exit-decision', 'POST', { unitId: pending.unitId, decision: 'SWAP_CONSENTED', targetOfferId: targetId,
+        this.request('/api/free-explore/bundle/exit-decision', 'POST', { unitId: pending.unitId, decision: 'SWAP_CONSENTED', targetOfferId: targetId,
           idempotencyKey: pending.idempotencyKey }, (ok, res) => {
           this.setData({ writing: false });
           const row = res && res.data;

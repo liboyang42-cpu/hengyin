@@ -47,7 +47,7 @@ function createReader(app, platform) {
         if (error) reject(error); else resolve(value)
       }
       try {
-        app.sendRequest({ url: '/api/roam/passport/' + path, method: 'GET', data,
+        app.sendRequest({ url: path, method: 'GET', data,
           hideLoading: true, autoErrorToast: false,
           success: res => res && String(res.code) === '200' ? finish(res.data) : finish(null, Object.assign(new Error('服务端记录暂时无法读取'), { notFound: res && String(res.code) === '404' })),
           fail: () => finish(null, new Error('服务端记录暂时无法读取')),
@@ -65,7 +65,7 @@ function createReader(app, platform) {
     },
     async page(before) {
       if (before && exactSessionId(before) !== before) throw new Error('游标无效')
-      const raw = await request('history', before ? { before, limit: 30 } : { limit: 30 })
+      const raw = await request('/api/roam/passport/history', before ? { before, limit: 30 } : { limit: 30 })
       if (!raw || !Array.isArray(raw.items) || raw.items.length > 30 || typeof raw.hasMore !== 'boolean') throw new Error('历史分页无效')
       const rows = raw.items.map(fact)
       let last = before || null
@@ -77,13 +77,13 @@ function createReader(app, platform) {
       return { rows, nextBefore: raw.hasMore ? last : null }
     },
     async summary() {
-      const raw = await request('summary', {})
+      const raw = await request('/api/roam/passport/summary', {})
       if (!raw || raw.trips == null) throw new Error('护照统计无效')
       return { trips: count(raw.trips), distanceM: count(raw.distanceM), days: count(raw.days), shops: count(raw.shops) }
     },
     async record(id) {
       if (exactSessionId(id) !== id) throw new Error('记录编号无效')
-      const row = fact(await request('record', { sessionId: id }))
+      const row = fact(await request('/api/roam/passport/record', { sessionId: id }))
       if (row.sessionId !== id) throw new Error('记录身份不一致')
       let local = []
       try { local = this.local() } catch (_) { /* Remote facts do not depend on local storage. */ }

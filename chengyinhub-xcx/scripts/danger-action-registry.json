@@ -152,10 +152,11 @@
     },
     {
       "endpoint": "/api/merchant/reviews/reply/delete",
-      "file": "pages/merchant/reviews/index.js",
+      "file": "pages/merchant/reviews/reply-recovery.js",
       "irreversible": true,
       "confirmKey": "merchant.review.reply.delete",
-      "reason": "被覆盖的公开回复内容无法找回(这条评价会回到待回复,可以重新回复,但旧文案回不来)"
+      "reason": "被覆盖的公开回复内容无法找回(这条评价会回到待回复,可以重新回复,但旧文案回不来)",
+      "confirmFile": "pages/merchant/reviews/index.js"
     },
     {
       "endpoint": "/api/activity/delete",
@@ -386,34 +387,11 @@
       "reason": "玩法配置删除后无法找回；已有模板删除确认"
     },
     {
-      "endpoint": "/api/team/withdraw",
-      "file": "subpackageRoam/nearby/index.js",
-      "irreversible": false,
-      "confirmKey": null,
-      "reason": "仅撤回本人的待处理组队申请，可重新申请；后端限定PENDING状态，不影响已加入队伍"
-    },
-    {
       "endpoint": "/api/ai/npc/chat/data/delete",
       "file": "subpackageMember/components/cy/npc-chat/index.js",
       "irreversible": true,
       "confirmKey": "ai.npc.chatData.delete",
       "reason": "服务端硬删该账号全部 NPC 对话记录,无法恢复"
-    },
-    {
-      "endpoint": "/api/team/withdraw",
-      "file": "subpackageRoam/my-teams/index.js",
-      "irreversible": false,
-      "confirmKey": null,
-      "reason": "我的队伍页撤回本人待处理申请（先弹确认），与地图同一端点；可重新申请，后端限定PENDING状态，不影响已加入队伍"
-    },
-    {
-      "endpoint": "/api/team/handle",
-      "file": "subpackageRoam/nearby/index.js",
-      "trigger": "payload",
-      "decision": "approved=false",
-      "irreversible": true,
-      "confirmKey": "team.reject",
-      "reason": "2026-10-15 地图队长卡拒绝申请:服务端把申请置为 REJECTED,对方不能再申请这支队伍(apply 判 REJECTED 拒绝),身份顺位回不来 ⇒ 不可逆档。「同意」不走确认。"
     }
   ]
 }

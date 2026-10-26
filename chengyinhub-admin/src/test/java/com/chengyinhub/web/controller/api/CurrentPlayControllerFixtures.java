@@ -8,7 +8,6 @@ import com.chengyinhub.business.service.ICmsRegistrationService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.springframework.test.util.ReflectionTestUtils;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
@@ -26,18 +25,18 @@ final class CurrentPlayControllerFixtures {
     private CurrentPlayControllerFixtures() { }
 
     static void install(Object controller) {
-        if (ReflectionTestUtils.getField(controller, "currentPlayActivityMapper") == null) {
+        if (PlayNodeAccessTestFixtures.getField(controller, "currentPlayActivityMapper") == null) {
             CmsActivityMapper activityMapper = mock(CmsActivityMapper.class);
             when(activityMapper.selectCmsActivityByIdForUpdate(anyLong())).thenAnswer(call -> {
-                // 调用时取控制器当前 service：用例方法可能在 setUp 之后换掉 service 夹具。
-                ICmsActivityService activities = (ICmsActivityService) ReflectionTestUtils.getField(controller, "cmsActivityService");
+                // 调用时取应用层夹具的当前 service：用例可能在 setUp 后替换事实。
+                ICmsActivityService activities = (ICmsActivityService) PlayNodeAccessTestFixtures.getField(controller, "cmsActivityService");
                 return activities == null ? null : activities.selectCmsActivityById(call.<Long>getArgument(0));
             });
-            ReflectionTestUtils.setField(controller, "currentPlayActivityMapper", activityMapper);
+            PlayNodeAccessTestFixtures.setField(controller, "currentPlayActivityMapper", activityMapper);
         }
-        CmsRegistrationMapper existing = (CmsRegistrationMapper) ReflectionTestUtils.getField(controller, "cmsRegistrationMapper");
+        CmsRegistrationMapper existing = (CmsRegistrationMapper) PlayNodeAccessTestFixtures.getField(controller, "cmsRegistrationMapper");
         if (existing == null) {
-            ReflectionTestUtils.setField(controller, "cmsRegistrationMapper",
+            PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationMapper",
                     delegate(mock(CmsRegistrationMapper.class), controller));
         } else {
             // 测试自带的 mapper mock：只补两条锁读委托；用例方法里后写的同名 stub 仍优先。
@@ -50,7 +49,7 @@ final class CurrentPlayControllerFixtures {
         when(mapper.selectCmsRegistrationList(any(CmsRegistration.class))).thenAnswer(call -> {
             CmsRegistration probe = call.getArgument(0);
             ICmsRegistrationService registrations =
-                    (ICmsRegistrationService) ReflectionTestUtils.getField(controller, "cmsRegistrationService");
+                    (ICmsRegistrationService) PlayNodeAccessTestFixtures.getField(controller, "cmsRegistrationService");
             List<CmsRegistration> rows = registrations == null ? null : registrations.selectCmsRegistrationList(probe);
             lastRows.clear();
             if (rows != null) for (CmsRegistration row : rows) if (row != null) lastRows.add(asQueried(row, probe));

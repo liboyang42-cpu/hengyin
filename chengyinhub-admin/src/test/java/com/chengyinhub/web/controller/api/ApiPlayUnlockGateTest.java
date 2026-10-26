@@ -6,7 +6,6 @@ import com.chengyinhub.business.service.ICmsTopicNodeService;
 import com.chengyinhub.business.service.IPlayerNodeProgressService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -41,8 +40,8 @@ class ApiPlayUnlockGateTest {
         controller = new ApiPlayProgressController();
         progressService = mock(IPlayerNodeProgressService.class);
         nodeService = mock(ICmsTopicNodeService.class);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
+        PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
+        PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
 
         CmsTopicNode prev = new CmsTopicNode();
         prev.setId(PREV_NODE);

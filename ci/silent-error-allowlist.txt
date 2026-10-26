@@ -86,7 +86,7 @@ chengyinhub-xcx/pages/roam/index.js 5  # UNREVIEWED_BASELINE_20260818:7 存量�
 chengyinhub-xcx/pages/roam/index.js 2  # 2026-09-10 附近还在走的人:位置心跳的上行 _reportPresence(30 s 一次)与下行 _fetchRunners(45 s 一次)。两条都是背景轮询,失败下一轮自然重来;真失效的表现是自己从别人地图上消失(服务端 5 分钟收不到即摘掉)、或附近显示没人,不是弹一个框 —— 页面里也没有可给的重试动作。
 chengyinhub-xcx/pages/roam/index.js 2  # 2026-09-11 原型 f-topic/f-city 与 f-hangout:点主题针时拉一次主题详情(拉不到就退回原来那张商家白卡,fail 里有明确退路,不静默吞掉);附近有人在组局是 120 s 一次的背景轮询,拉不到保持上一张不闪 —— 地图上没有局本来就是常态,这一层报错会把「本来就没人组局」说成「出问题了」,页面里也没有可给的重试动作。
 chengyinhub-xcx/pages/roam/index.js 2  # 2026-09-21 漫游入口地图活动层与队伍层:两路失败汇总到 entryLoadError 并提供重新加载；拖图会后台刷新，关闭通用 toast 避免与页内错误态重复报错。
-chengyinhub-xcx/subpackageRoam/my-teams/index.js 4  # 2026-10-14 我的队伍页:/api/team/my 与 /api/team/my-applications 两条读取失败由页内 mt-err「点按重试」承接(两条都失败才显示,只拿到一条就先显示那一条);附近招募 /api/team/nearby 失败同样落到页内 mt-err 重试;撤回申请失败用 resolveTeamError 的具体文案 cyToast 一次 —— 不关自动 toast 就是双弹。
+chengyinhub-xcx/subpackageRoam/my-teams/index.js 3  # 2026-10-14 我的队伍页:/api/team/my 与 /api/team/my-applications 两条读取失败由页内 mt-err「点按重试」承接(两条都失败才显示,只拿到一条就先显示那一条);附近招募 /api/team/nearby 失败同样落到页内 mt-err 重试；撤回已迁移 teamRecovery，登记仅覆盖这三处读取。
 chengyinhub-xcx/subpackageRoam/nearby/index.js 2  # 2026-09-11 原型 h-place:①拉附近别人打过卡的地方,跟着地图中心走的背景读取,读不到就这一次列表为空,拖一下图就会再拉(弹错等于每拖一下弹一个框);②拉「谁在这儿打过卡」的头像与人数,半屏的名字与地址已经先渲染出来了,补不上就只显示名字。
 chengyinhub-xcx/pages/square/list/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
 chengyinhub-xcx/pages/talent/list/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
@@ -178,7 +178,7 @@ chengyinhub-xcx/subpackageMember/signup/index.js 1  # /api/team/my 拉「我的�
 # ── 2026-09-15 集成总线第二段:地图组队 P 方案 + 合作收发件箱带来的新增静默调用 ──
 # 共同判据:这几页失败时都**自己画错误**(失败半屏 / 内联错误行 / 列表错误态),
 # silentError 只压 request-client 的全局 toast,不是把错误吞掉。逐处核过调用点,不是按文件批量放行。
-chengyinhub-xcx/subpackageRoam/nearby/index.js 4  # 2026-09-15 地图组队 P1–P6 新增 4 处:/api/team/nearby 与 /api/roam/hangout/nearby 是随手势重拉的背景请求,失败落 loadError 内联条 + 重试、地图本体不动;_post 统一提交口(申请/撤回/审批)与 /api/team/applications 失败走 _showFail(resolveTeamError) 的零按钮失败半屏并按 errorCode 出原因 —— 再叠 toast 会把同一件事报两遍
+chengyinhub-xcx/subpackageRoam/nearby/index.js 3  # 2026-09-15 地图组队 P1–P6 现存 3 处:/api/team/nearby 与 /api/roam/hangout/nearby 是随手势重拉的背景请求,失败落 loadError 内联条 + 重试、地图本体不动;提交已迁移 teamRecovery；/api/team/applications 失败走 _showFail(resolveTeamError) 的零按钮失败半屏并按 errorCode 出原因 —— 再叠 toast 会把同一件事报两遍
 chengyinhub-xcx/pages/coop/list/index.js 2  # 2026-09-15 收发件箱改造新增 2 处:/api/coop/pool/received 与 /api/coop/pool/mine。两路各自 took() 收敛,一路失败只标红那一路并保留另一路旧快照(不整页清空),页面给 applyErrorText + 重试
 chengyinhub-xcx/pages/coop/list/index.js 1  # 2026-09-16 承接报名聚合(/api/coop/candidates/received):失败只标红「承接报名」这一块并保留旧快照,页内 receivedRegErrorText + 重试承接,不吞错
 chengyinhub-xcx/pages/coop/invite-detail/index.js 3  # 2026-09-15 合作操作区新增 3 处:/api/coop/contact、/api/coop/perks/attach、/api/coop/review/save。三处提交前清空 actionError、fail 里回写,由卡内错误行承接;不本地假设成功,提交后重新问服务端要状态
@@ -244,3 +244,5 @@ chengyinhub-xcx/pages/shezhi/components/post-governance/index.js 2  # 2026-10-22
 chengyinhub-xcx/utils/predict-entry.js 1  # 2026-10-23 PR #508 业主第四轮:消息页「竞猜待答」入口只在有待答时出现。身份已先确认是可结算竞猜的商家,待答列表读失败时照样显示入口(fail-open),不让 48 小时期限的提醒悄悄消失;失败已有可见兜底(入口仍在、点进 predict 页有整页错误态),每次进消息页都弹通道 toast 是噪音
 chengyinhub-xcx/subpackageRoam/nearby/index.js 3  # 2026-10-25 官方地点卡展开:节点补读与评价列表是背景读取,卡片已先用地图数据渲染,读不到只少相册/玩法块或评价区(挑战页会重读同一节点并给错误页与重试);发布评价失败由 done() 自己 toast 后端原因,不再叠通用 toast。
 chengyinhub-xcx/pages/play/poi-challenge/index.js 2  # 2026-10-25 地点挑战页:节点读取失败落 cy-error 错误页 + 重试;提交 /complete 的拒绝原因由答题卡反馈或 toast 显示,未知结果 toast「结果还没确认」,不叠通用 toast。
+
+chengyinhub-xcx/subpackageA/pages/myproject/index.js 1  # W8 原申诉回执读取：失败/不匹配写 auditSheet.appealError 并保留原请求号及冻结输入供重试；离页换号回包被 same 拦截，避免通用 toast 污染新页面。
