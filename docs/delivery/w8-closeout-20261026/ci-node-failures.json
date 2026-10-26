@@ -1,0 +1,1212 @@
+{
+  "testedCommit": "2d7c5dfd99339ed24d43a97819c59e850e2fa275",
+  "run": 40374590684,
+  "failures": [
+    {
+      "jobId": "121754540875",
+      "test": "not ok 170 - 客服会话请求成功、失败和重入时均保留正确的页面状态",
+      "location": "chengyinhub-ui/tests/unit/cy-empty-state-contract.test.js:67:1",
+      "error": "'Cannot use import statement outside a module'"
+    },
+    {
+      "jobId": "121754540875",
+      "test": "not ok 254 - 旧客服入口只兼容转发，不在旧地址读取会话",
+      "location": "chengyinhub-ui/tests/unit/im-migration-contract.test.js:59:1",
+      "error": "'Cannot use import statement outside a module'"
+    },
+    {
+      "jobId": "121754540875",
+      "test": "not ok 255 - 切换客服会话时，较早消息回包不会覆盖新会话，失败不伪装成空消息",
+      "location": "chengyinhub-ui/tests/unit/im-migration-contract.test.js:75:1",
+      "error": "'Cannot use import statement outside a module'"
+    },
+    {
+      "jobId": "121754540875",
+      "test": "not ok 256 - 客服会话不直接执行全局封禁，发送失败可见且旧会话回包不污染新草稿",
+      "location": "chengyinhub-ui/tests/unit/im-migration-contract.test.js:107:1",
+      "error": "'Cannot use import statement outside a module'"
+    },
+    {
+      "jobId": "121754540875",
+      "test": "not ok 319 - 新增商家节点类型仍复用审核快照与通过驳回动作",
+      "location": "chengyinhub-ui/tests/unit/official-merchant-audit-contract.test.js:60:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754540875",
+      "test": "not ok 391 - 路由回填筛选后,请求参数确实带上 platformTakeover=1 与 takeoverOrder=1",
+      "location": "chengyinhub-ui/tests/unit/refund-platform-takeover-contract.test.js:63:1",
+      "error": "'Cannot use import statement outside a module'"
+    },
+    {
+      "jobId": "121754540875",
+      "test": "not ok 392 - 畸形参数失败关闭:只认 1/0 与排序 1,其余回落到「全部/默认排序」",
+      "location": "chengyinhub-ui/tests/unit/refund-platform-takeover-contract.test.js:70:1",
+      "error": "'Cannot use import statement outside a module'"
+    },
+    {
+      "jobId": "121754540875",
+      "test": "not ok 393 - 已生效的筛选在筛选条上可见可移除",
+      "location": "chengyinhub-ui/tests/unit/refund-platform-takeover-contract.test.js:83:1",
+      "error": "'Cannot use import statement outside a module'"
+    },
+    {
+      "jobId": "121754540875",
+      "test": "not ok 394 - 详情抽屉对已转平台的单补一条事实,普通单不加噪音",
+      "location": "chengyinhub-ui/tests/unit/refund-platform-takeover-contract.test.js:95:1",
+      "error": "'Cannot use import statement outside a module'"
+    },
+    {
+      "jobId": "121754540875",
+      "test": "not ok 395 - v4 退款主台 sourceLabel/reviewLabel/reviewTone 原型键 fail-closed",
+      "location": "chengyinhub-ui/tests/unit/refund-prototype-key-contract.test.js:50:1",
+      "error": "'Cannot use import statement outside a module'"
+    },
+    {
+      "jobId": "121754540875",
+      "test": "not ok 399 - R9-19 打款结果永远按后端 payoutStatus 解释, 不被审核状态覆盖",
+      "location": "chengyinhub-ui/tests/unit/refund-rejected-payout-label-contract.test.js:27:1",
+      "error": "'Cannot use import statement outside a module'"
+    },
+    {
+      "jobId": "121754540875",
+      "test": "not ok 400 - R9-19 矛盾组合并列标出「状态冲突 · 需核查」, 正常组合不误报",
+      "location": "chengyinhub-ui/tests/unit/refund-rejected-payout-label-contract.test.js:41:1",
+      "error": "'Cannot use import statement outside a module'"
+    },
+    {
+      "jobId": "121754540875",
+      "test": "not ok 404 - 主退款台把渠道成功与人工凭证复核拆开，后者不计入到账",
+      "location": "chengyinhub-ui/tests/unit/refund-workbench-contract.test.js:66:1",
+      "error": "'Cannot use import statement outside a module'"
+    },
+    {
+      "jobId": "121754540875",
+      "test": "not ok 411 - canonical 退款列表兼容旧筛选分页 query，并拒绝用错误权限加载另一条队列",
+      "location": "chengyinhub-ui/tests/unit/refund-workbench-contract.test.js:239:1",
+      "error": "'Cannot use import statement outside a module'"
+    },
+    {
+      "jobId": "121754540875",
+      "test": "not ok 412 - 只有人工复核权限的账号不能借 canonical 路由读取普通退款清单",
+      "location": "chengyinhub-ui/tests/unit/refund-workbench-contract.test.js:284:1",
+      "error": "'Cannot use import statement outside a module'"
+    },
+    {
+      "jobId": "121754541210",
+      "test": "not ok 25 - 申请动作弹可选留言输入(≤200),提交时才带上 message;取消不发请求",
+      "location": "chengyinhub-xcx/tests/unit/apply-message-contract.test.js:33:1",
+      "error": "'取消不能发申请'"
+    },
+    {
+      "jobId": "121754541210",
+      "test": "not ok 47 - BL-246 活动点与主题点共用标记,onShow 兜底清锁后可再跳",
+      "location": "chengyinhub-xcx/tests/unit/bl-246-nearby-marker-nav-guard.test.js:65:1",
+      "error": "'app.getUserID is not a function'"
+    },
+    {
+      "jobId": "121754541210",
+      "test": "not ok 456 - ★后端必须下发 gameDone —— 没有它答题就没有权威回读",
+      "location": "chengyinhub-xcx/tests/unit/play-proof-receipt-contract.test.js:203:1",
+      "error": "'/api/play/nodes 不下发 gameDone 时，前端只能靠重发写请求去试探结果'"
+    },
+    {
+      "jobId": "121754541210",
+      "test": "not ok 462 - 游玩页卸载会清除所有会在销毁后写 UI 的命名 timeout",
+      "location": "chengyinhub-xcx/tests/unit/play-timer-cleanup.test.js:26:1",
+      "error": "'this.setData is not a function'"
+    },
+    {
+      "jobId": "121754541210",
+      "test": "not ok 463 - 游玩页卸载会停掉章节旁白音频与故事流两个 timer(故事流没关就离页时)",
+      "location": "chengyinhub-xcx/tests/unit/play-timer-cleanup.test.js:50:1",
+      "error": "'this.setData is not a function'"
+    },
+    {
+      "jobId": "121754541210",
+      "test": "not ok 585 - 单次漫游详情保留合法零值，并把未知统计显示为待确认而不是伪造零",
+      "location": "chengyinhub-xcx/tests/unit/remaining-scene-state-contract.test.js:318:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541224",
+      "test": "not ok 12 - 队伍详情进入邀请页后，加入成功返回原详情，不再堆出第二张详情页",
+      "location": "chengyinhub-xcx/tests/unit/all-page-back-stack-contract.test.js:171:1",
+      "error": "'exactId is not defined'"
+    },
+    {
+      "jobId": "121754541224",
+      "test": "not ok 200 - 全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新增调用必须先入矩阵",
+      "location": "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js:309:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541224",
+      "test": "not ok 225 - 偏好题组与新生活 OS GET 都绑定当前会员及其游玩/完成事实",
+      "location": "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js:456:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541224",
+      "test": "not ok 226 - 排行榜 GET 绑定当前会员及本场报名支付或自玩通行证",
+      "location": "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js:479:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541224",
+      "test": "not ok 266 - equal revision UNKNOWN requires explicit saved-version adoption before another update",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c02-26.test.js:82:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541224",
+      "test": "not ok 267 - keeping local draft with equal revision retains UNKNOWN and local text",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c02-26.test.js:98:1",
+      "error": "\"Cannot read properties of undefined (reading 'success')\""
+    },
+    {
+      "jobId": "121754541224",
+      "test": "not ok 269 - equal revision adoption callback cannot clear another account draft",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c02-26.test.js:117:1",
+      "error": "\"Cannot read properties of undefined (reading 'success')\""
+    },
+    {
+      "jobId": "121754541224",
+      "test": "not ok 748 - SC-TPL-OLD-BACKEND 旧服务端 adopt-draft 404:明确提示需更新服务,不回退建普通草稿",
+      "location": "chengyinhub-xcx/tests/unit/v4-tpl-old-backend.test.js:113:3",
+      "error": "\"Cannot read properties of undefined (reading 'success')\""
+    },
+    {
+      "jobId": "121754541224",
+      "test": "not ok 749 - SC-TPL-OLD-BACKEND 旧服务端 adopt-draft 405:明确提示需更新服务,不回退建普通草稿",
+      "location": "chengyinhub-xcx/tests/unit/v4-tpl-old-backend.test.js:113:3",
+      "error": "\"Cannot read properties of undefined (reading 'success')\""
+    },
+    {
+      "jobId": "121754541224",
+      "test": "not ok 750 - SC-TPL-OLD-BACKEND 采用结果未知(网络断开/超时(无状态码)):先回草稿列表核对,不盲重试、不另建草稿",
+      "location": "chengyinhub-xcx/tests/unit/v4-tpl-old-backend.test.js:135:3",
+      "error": "\"Cannot read properties of undefined (reading 'success')\""
+    },
+    {
+      "jobId": "121754541224",
+      "test": "not ok 751 - SC-TPL-OLD-BACKEND 采用结果未知(服务端 502 回包丢失):先回草稿列表核对,不盲重试、不另建草稿",
+      "location": "chengyinhub-xcx/tests/unit/v4-tpl-old-backend.test.js:135:3",
+      "error": "\"Cannot read properties of undefined (reading 'success')\""
+    },
+    {
+      "jobId": "121754541224",
+      "test": "not ok 752 - SC-TPL-OLD-BACKEND 采用结果未知(200 但回包缺草稿 id):先回草稿列表核对,不盲重试、不另建草稿",
+      "location": "chengyinhub-xcx/tests/unit/v4-tpl-old-backend.test.js:135:3",
+      "error": "\"Cannot read properties of undefined (reading 'success')\""
+    },
+    {
+      "jobId": "121754541224",
+      "test": "not ok 753 - SC-TPL-OLD-BACKEND 对照:采用成功拿到草稿 id 后,保存只更新该本人草稿",
+      "location": "chengyinhub-xcx/tests/unit/v4-tpl-old-backend.test.js:154:1",
+      "error": "\"Cannot read properties of undefined (reading 'success')\""
+    },
+    {
+      "jobId": "121754541228",
+      "test": "not ok 499 - shared projection admission rejects stale direct-entry state",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-31.test.js:5:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541228",
+      "test": "not ok 500 - explicit-zero provenance survives same object while unknown legacy zero is not invented",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-31.test.js:6:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541228",
+      "test": "not ok 840 - R9-42 历史列表:老记录的字符串里程不再显示为缺失,0 显示 0",
+      "location": "chengyinhub-xcx/tests/unit/roam-history-repair.test.js:62:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541228",
+      "test": "not ok 841 - R9-42 本次漫游详情:字符串里程显示为真实值,未知按 UI-04 显示 0",
+      "location": "chengyinhub-xcx/tests/unit/roam-history-repair.test.js:86:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541228",
+      "test": "not ok 888 - CU-M-66 结果页收下 sortType 但不把它映射成 sort_type(「最近」即默认序)",
+      "location": "chengyinhub-xcx/tests/unit/search-sort-and-hot-words-contract.test.js:89:1",
+      "error": "'结果页必须发起活动搜索'"
+    },
+    {
+      "jobId": "121754541245",
+      "test": "not ok 787 - 仅定位到达:vm0/vm5 节点只调用到达接口 /api/play/arrive,不调用任何完成/核验接口",
+      "location": "chengyinhub-xcx/tests/unit/v4-scan-cancel.test.js:148:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541250",
+      "test": "not ok 344 - same-session old route projection cannot regress version or trigger rebuild",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-30.test.js:5:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541250",
+      "test": "not ok 345 - unknown legacy version cannot replace known same-session projection: undefined",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-30.test.js:6:48",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541250",
+      "test": "not ok 346 - unknown legacy version cannot replace known same-session projection: null",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-30.test.js:6:48",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541250",
+      "test": "not ok 347 - unknown legacy version cannot replace known same-session projection:",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-30.test.js:6:48",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541250",
+      "test": "not ok 348 - unknown legacy version cannot replace known same-session projection: false",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-30.test.js:6:48",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541250",
+      "test": "not ok 351 - explicit zero establishes a floor without treating unknown version as zero",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-30.test.js:9:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 127 - 集合按钮单独说明用途，明确同意后才采本次GCJ02坐标并提交",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:30:1",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 128 - 取消说明、拒定位和SDK缺失均不提交签到",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:41:1",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 129 - 非法SDK坐标不POST：null/null",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:52:3",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 130 - 非法SDK坐标不POST：NaN/121",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:52:3",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 131 - 非法SDK坐标不POST：31/Infinity",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:52:3",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 132 - 非法SDK坐标不POST：91/121",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:52:3",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 133 - 非法SDK坐标不POST：31/181",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:52:3",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 134 - 非法SDK坐标不POST：31/121",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:52:3",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 135 - dialog晚回包在member后不能提交或刷新旧场次",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:58:3",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 136 - dialog晚回包在token后不能提交或刷新旧场次",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:58:3",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 137 - dialog晚回包在activity后不能提交或刷新旧场次",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:58:3",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 138 - dialog晚回包在hide后不能提交或刷新旧场次",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:58:3",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 139 - dialog晚回包在unload后不能提交或刷新旧场次",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:58:3",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 140 - location晚回包在member后不能提交或刷新旧场次",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:58:3",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 141 - location晚回包在token后不能提交或刷新旧场次",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:58:3",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 142 - location晚回包在activity后不能提交或刷新旧场次",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:58:3",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 143 - location晚回包在hide后不能提交或刷新旧场次",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:58:3",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 144 - location晚回包在unload后不能提交或刷新旧场次",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:58:3",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 145 - response晚回包在member后不能提交或刷新旧场次",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:58:3",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 146 - response晚回包在token后不能提交或刷新旧场次",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:58:3",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 147 - response晚回包在activity后不能提交或刷新旧场次",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:58:3",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 148 - response晚回包在hide后不能提交或刷新旧场次",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:58:3",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 149 - response晚回包在unload后不能提交或刷新旧场次",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:58:3",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 150 - 重复点击只产生一个在途用途确认，业务拒绝不可显示成功或刷新到场事实",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:75:1",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 151 - 网络失败明确结束在途状态，不伪造成功",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:81:1",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 152 - 访客、演示身份、预览、mock和未指定场次不启动定位",
+      "location": "chengyinhub-xcx/tests/unit/club-gather-arrival.test.js:86:1",
+      "error": "\"Cannot read properties of undefined (reading 'authorization')\""
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 265 - older board read cannot replace latest board or cross session",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-39.test.js:6:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 450 - 七个成功时刻都走 motion.haptic 且传了减动效偏好,没有裸 vibrateShort",
+      "location": "chengyinhub-xcx/tests/unit/p1-feedback-wiring-contract.test.js:64:1",
+      "error": "'pages/activity/official-detail/index.js 找不到「报名成功」'"
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 457 - 动态评论列表的关注图标必须真正绑定动作并回读服务端终态",
+      "location": "chengyinhub-xcx/tests/unit/p1-feedback-wiring-contract.test.js:181:1",
+      "error": "'只有刷新当前评论行的服务端权威终态后才能回写并报成功'"
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 469 - 通用到达请求响应丢失立刻权威读回，不留可重写的网络重试",
+      "location": "chengyinhub-xcx/tests/unit/play-generic-flow.test.js:105:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541273",
+      "test": "not ok 472 - 通用拍照未知只回读，保留照片与输入，不显示重新上传且不重写",
+      "location": "chengyinhub-xcx/tests/unit/play-generic-flow.test.js:134:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541280",
+      "test": "not ok 184 - C 写入口先过写前登录闸: pages/activity/official-detail/index.js doSignup",
+      "location": "chengyinhub-xcx/tests/unit/guest-browse-login-on-write.test.js:186:3",
+      "error": "'doSignup 第一行必须是写前登录闸,登录后恢复的是同一个函数'"
+    },
+    {
+      "jobId": "121754541280",
+      "test": "not ok 317 - 生产 JS 不许新增 wx.showToast / showLoading / hideLoading / showModal(唯一出口 utils/toast.js、loading.js、modal.js)",
+      "location": "chengyinhub-xcx/tests/unit/no-system-toast-contract.test.js:41:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541280",
+      "test": "not ok 356 - 六种节点完成入口先同步伏笔，再用同步后的版本提交",
+      "location": "chengyinhub-xcx/tests/unit/play-journey-request.test.js:57:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541280",
+      "test": "not ok 603 - V6b CX-11：保存在途时再点保存不发第二个请求，回包后才能再存",
+      "location": "chengyinhub-xcx/tests/unit/v6b-template-edit-save-singleflight.test.js:57:1",
+      "error": "\"Cannot read properties of undefined (reading 'success')\""
+    },
+    {
+      "jobId": "121754541291",
+      "test": "not ok 21 - update UNKNOWN retains original ID and local edits after server read; only explicit server adoption unlocks",
+      "location": "chengyinhub-xcx/tests/unit/b02-publish-write-unknown.test.js:167:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541291",
+      "test": "not ok 404 - 待决策时被系统返回退掉 ⇒ 授权 Promise 必须被结算,不得永久挂起",
+      "location": "chengyinhub-xcx/tests/unit/privacy-gate-no-hang-contract.test.js:53:1",
+      "error": "'unexpected require: ../../utils/user-character.js'"
+    },
+    {
+      "jobId": "121754541291",
+      "test": "not ok 405 - 不在待决策态时退页不产生多余的结算",
+      "location": "chengyinhub-xcx/tests/unit/privacy-gate-no-hang-contract.test.js:66:1",
+      "error": "'unexpected require: ../../utils/user-character.js'"
+    },
+    {
+      "jobId": "121754541291",
+      "test": "not ok 406 - 负控:拿掉 onUnload 的兜底后,这条契约必须判红",
+      "location": "chengyinhub-xcx/tests/unit/privacy-gate-no-hang-contract.test.js:74:1",
+      "error": "'unexpected require: ../../utils/user-character.js'"
+    },
+    {
+      "jobId": "121754541291",
+      "test": "not ok 514 - BL-41: 页面接线——护照 tab 拉取、失败静默、单场直达详情",
+      "location": "chengyinhub-xcx/tests/unit/roam-official-active-bl41.test.js:30:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541291",
+      "test": "not ok 585 - 标题盘点:注册页面与当前规范基线可回读",
+      "location": "chengyinhub-xcx/tests/unit/title-system-owner-contract.test.js:320:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541291",
+      "test": "not ok 587 - 负控:myinvite 源码摘掉 page-title 时真实盘点必须判红",
+      "location": "chengyinhub-xcx/tests/unit/title-system-owner-contract.test.js:334:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541302",
+      "test": "not ok 537 - 全仓不得再出现原生 <picker>:枚举走 cy-dropdown,日期/时间走 cy-date-field",
+      "location": "chengyinhub-xcx/tests/unit/picker-unification-contract.test.js:43:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541302",
+      "test": "not ok 563 - 三个 RequestBody 写入口发 JSON，并保留基础路线幂等上下文",
+      "location": "chengyinhub-xcx/tests/unit/play-request-recovery.test.js:80:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541302",
+      "test": "not ok 570 - 5-3 注入③:/api/play/checkin 返回 500 时玩家看到明确错误",
+      "location": "chengyinhub-xcx/tests/unit/play-request-recovery.test.js:216:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541302",
+      "test": "not ok 572 - 偏好题整组提交在途防连点，并把服务端结果与待确认标签交给真实结果卡",
+      "location": "chengyinhub-xcx/tests/unit/play-request-recovery.test.js:258:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541302",
+      "test": "not ok 574 - G4已确认标签可以在G5显式沿用；没有标签时仍保留现场替代题提交资格",
+      "location": "chengyinhub-xcx/tests/unit/play-request-recovery.test.js:296:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541302",
+      "test": "not ok 584 - 不相关节点的成功响应不能清除另一类待确认写锁",
+      "location": "chengyinhub-xcx/tests/unit/play-request-recovery.test.js:562:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541302",
+      "test": "not ok 694 - RunCard 点击发出完整的 roam-session open 事件，不丢毫秒 ts",
+      "location": "chengyinhub-xcx/tests/unit/roam-scene-port-contract.test.js:138:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541329",
+      "test": "not ok 227 - 末日寒冬：主题与所有模板由服务端详情回填后无改动保存不丢通用配置",
+      "location": "chengyinhub-xcx/tests/unit/gameplay-reskin-publish-roundtrip.test.js:90:3",
+      "error": "'主题保存请求必须发出：{\"editLoaded\":true,\"editingTopicId\":100,\"formData\":{\"name\":\"末日寒冬\",\"chapters\":7,\"productType\":1},\"toasts\":[{\"title\":\"节点 9001：这种玩法不能用作归零挑战，或已设置扣费、次数或效果\",\"icon\":\"none\",\"duration\":2000,\"mask\":false}]}'"
+    },
+    {
+      "jobId": "121754541329",
+      "test": "not ok 228 - 末日寒冬：页面 handler 的主题换名和数值编辑只改变目标字段",
+      "location": "chengyinhub-xcx/tests/unit/gameplay-reskin-publish-roundtrip.test.js:104:3",
+      "error": "'主题保存请求必须发出：{\"editLoaded\":true,\"editingTopicId\":100,\"formData\":{\"name\":\"末日寒冬\",\"chapters\":7,\"productType\":1},\"toasts\":[{\"title\":\"节点 9001：这种玩法不能用作归零挑战，或已设置扣费、次数或效果\",\"icon\":\"none\",\"duration\":2000,\"mask\":false}]}'"
+    },
+    {
+      "jobId": "121754541329",
+      "test": "not ok 229 - 末日寒冬：模式切换复制重映射资源绑定并提示重选节点规则，可完整提交",
+      "location": "chengyinhub-xcx/tests/unit/gameplay-reskin-publish-roundtrip.test.js:123:3",
+      "error": "'主题保存请求必须发出：{\"editLoaded\":true,\"editingTopicId\":100,\"formData\":{\"name\":\"末日寒冬\",\"chapters\":7,\"productType\":1},\"toasts\":[{\"title\":\"节点 9001：这种玩法不能用作归零挑战，或已设置扣费、次数或效果\",\"icon\":\"none\",\"duration\":2000,\"mask\":false}]}'"
+    },
+    {
+      "jobId": "121754541329",
+      "test": "not ok 230 - 末日寒冬：多节点玩法另存副本带完整高级配置并只重绑本站",
+      "location": "chengyinhub-xcx/tests/unit/gameplay-reskin-publish-roundtrip.test.js:172:3",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541329",
+      "test": "not ok 233 - 末日热浪：主题与所有模板由服务端详情回填后无改动保存不丢通用配置",
+      "location": "chengyinhub-xcx/tests/unit/gameplay-reskin-publish-roundtrip.test.js:90:3",
+      "error": "'主题保存请求必须发出：{\"editLoaded\":true,\"editingTopicId\":101,\"formData\":{\"name\":\"末日热浪\",\"chapters\":7,\"productType\":1},\"toasts\":[{\"title\":\"节点 9001：这种玩法不能用作归零挑战，或已设置扣费、次数或效果\",\"icon\":\"none\",\"duration\":2000,\"mask\":false}]}'"
+    },
+    {
+      "jobId": "121754541329",
+      "test": "not ok 234 - 末日热浪：页面 handler 的主题换名和数值编辑只改变目标字段",
+      "location": "chengyinhub-xcx/tests/unit/gameplay-reskin-publish-roundtrip.test.js:104:3",
+      "error": "'主题保存请求必须发出：{\"editLoaded\":true,\"editingTopicId\":101,\"formData\":{\"name\":\"末日热浪\",\"chapters\":7,\"productType\":1},\"toasts\":[{\"title\":\"节点 9001：这种玩法不能用作归零挑战，或已设置扣费、次数或效果\",\"icon\":\"none\",\"duration\":2000,\"mask\":false}]}'"
+    },
+    {
+      "jobId": "121754541329",
+      "test": "not ok 235 - 末日热浪：模式切换复制重映射资源绑定并提示重选节点规则，可完整提交",
+      "location": "chengyinhub-xcx/tests/unit/gameplay-reskin-publish-roundtrip.test.js:123:3",
+      "error": "'主题保存请求必须发出：{\"editLoaded\":true,\"editingTopicId\":101,\"formData\":{\"name\":\"末日热浪\",\"chapters\":7,\"productType\":1},\"toasts\":[{\"title\":\"节点 9001：这种玩法不能用作归零挑战，或已设置扣费、次数或效果\",\"icon\":\"none\",\"duration\":2000,\"mask\":false}]}'"
+    },
+    {
+      "jobId": "121754541329",
+      "test": "not ok 236 - 末日热浪：多节点玩法另存副本带完整高级配置并只重绑本站",
+      "location": "chengyinhub-xcx/tests/unit/gameplay-reskin-publish-roundtrip.test.js:172:3",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541329",
+      "test": "not ok 239 - 丧尸末日：主题与所有模板由服务端详情回填后无改动保存不丢通用配置",
+      "location": "chengyinhub-xcx/tests/unit/gameplay-reskin-publish-roundtrip.test.js:90:3",
+      "error": "'主题保存请求必须发出：{\"editLoaded\":true,\"editingTopicId\":102,\"formData\":{\"name\":\"丧尸末日\",\"chapters\":7,\"productType\":1},\"toasts\":[{\"title\":\"节点 9001：这种玩法不能用作归零挑战，或已设置扣费、次数或效果\",\"icon\":\"none\",\"duration\":2000,\"mask\":false}]}'"
+    },
+    {
+      "jobId": "121754541329",
+      "test": "not ok 240 - 丧尸末日：页面 handler 的主题换名和数值编辑只改变目标字段",
+      "location": "chengyinhub-xcx/tests/unit/gameplay-reskin-publish-roundtrip.test.js:104:3",
+      "error": "'主题保存请求必须发出：{\"editLoaded\":true,\"editingTopicId\":102,\"formData\":{\"name\":\"丧尸末日\",\"chapters\":7,\"productType\":1},\"toasts\":[{\"title\":\"节点 9001：这种玩法不能用作归零挑战，或已设置扣费、次数或效果\",\"icon\":\"none\",\"duration\":2000,\"mask\":false}]}'"
+    },
+    {
+      "jobId": "121754541329",
+      "test": "not ok 241 - 丧尸末日：模式切换复制重映射资源绑定并提示重选节点规则，可完整提交",
+      "location": "chengyinhub-xcx/tests/unit/gameplay-reskin-publish-roundtrip.test.js:123:3",
+      "error": "'主题保存请求必须发出：{\"editLoaded\":true,\"editingTopicId\":102,\"formData\":{\"name\":\"丧尸末日\",\"chapters\":7,\"productType\":1},\"toasts\":[{\"title\":\"节点 9001：这种玩法不能用作归零挑战，或已设置扣费、次数或效果\",\"icon\":\"none\",\"duration\":2000,\"mask\":false}]}'"
+    },
+    {
+      "jobId": "121754541329",
+      "test": "not ok 242 - 丧尸末日：多节点玩法另存副本带完整高级配置并只重绑本站",
+      "location": "chengyinhub-xcx/tests/unit/gameplay-reskin-publish-roundtrip.test.js:172:3",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541329",
+      "test": "not ok 245 - 三主题后端首次保存夹具由实际页面复制 handlers 生成",
+      "location": "chengyinhub-xcx/tests/unit/gameplay-reskin-publish-roundtrip.test.js:219:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541329",
+      "test": "not ok 285 - submitPhoto cannot send after thought wait changes scope",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-26.test.js:23:69",
+      "error": "'storage.getStorageSync is not a function'"
+    },
+    {
+      "jobId": "121754541329",
+      "test": "not ok 286 - submitGame cannot send after thought wait changes scope",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-26.test.js:23:69",
+      "error": "'storage.getStorageSync is not a function'"
+    },
+    {
+      "jobId": "121754541329",
+      "test": "not ok 287 - revealAnswer cannot send after thought wait changes scope",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-26.test.js:23:69",
+      "error": "'storage.getStorageSync is not a function'"
+    },
+    {
+      "jobId": "121754541329",
+      "test": "not ok 288 - old photo response cannot finish replacement game or release its write lock",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-26.test.js:29:1",
+      "error": "'storage.getStorageSync is not a function'"
+    },
+    {
+      "jobId": "121754541329",
+      "test": "not ok 59 - tests/unit/roam-go-pending-reset.test.js",
+      "location": "chengyinhub-xcx/tests/unit/roam-go-pending-reset.test.js:1:1",
+      "error": "'test failed'"
+    },
+    {
+      "jobId": "121754541335",
+      "test": "not ok 28 - BL-80 GET /api/official/broadcast/{id}/stats:白名单+发布者本人,返回 reached/clicked",
+      "location": "chengyinhub-xcx/tests/unit/batch4-api-contract.test.js:72:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541351",
+      "test": "not ok 129 - §3.3 开关一律走 cy-switch,不许用原生 <switch>",
+      "location": "chengyinhub-xcx/tests/unit/ds-规范真源-gate.test.js:96:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541351",
+      "test": "not ok 359 - 会触发隐私授权的页面必须挂 cy-privacy-gate,否则整页被隐私页盖住",
+      "location": "chengyinhub-xcx/tests/unit/privacy-gate-coverage-contract.test.js:55:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541351",
+      "test": "not ok 545 - 所有小程序 WXML 当前均没有孤立条件分支",
+      "location": "chengyinhub-xcx/tests/unit/wxml-conditional-lint.test.js:46:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541362",
+      "test": "not ok 6 - 真实反引号模板 URL 动作保留读写分类与分支，不因去污降成 state",
+      "location": "chengyinhub-xcx/tests/unit/action-ledger-handler-sources.test.js:84:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541362",
+      "test": "not ok 32 - F13 已确认的工程术语不再出现在用户可见文案",
+      "location": "chengyinhub-xcx/tests/unit/audit-f01-f17-contract.test.js:79:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541362",
+      "test": "not ok 529 - 可点却无按压反馈的元素只减不增",
+      "location": "chengyinhub-xcx/tests/unit/press-feedback-coverage-contract.test.js:190:1",
+      "error": "'可点无按压反馈 58 处 > 棘轮 51：新增了按下去没有回应的元素'"
+    },
+    {
+      "jobId": "121754541362",
+      "test": "not ok 530 - 剩余缺口只剩弹窗挡板，且逐文件锁死",
+      "location": "chengyinhub-xcx/tests/unit/press-feedback-coverage-contract.test.js:203:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541362",
+      "test": "not ok 533 - 负控：新增一个裸可点元素必须判红",
+      "location": "chengyinhub-xcx/tests/unit/press-feedback-coverage-contract.test.js:232:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541362",
+      "test": "not ok 535 - 挡板豁免不能被滥用：登记在册的必须真是吞冒泡的 noop",
+      "location": "chengyinhub-xcx/tests/unit/press-feedback-coverage-contract.test.js:257:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541423",
+      "test": "not ok 5 - ★判过的回包带着卡:session 事件把 objectCard 原样抛给页面",
+      "location": "chengyinhub-xcx/tests/unit/advanced-game-object-card-relay.test.js:56:1",
+      "error": "'没有抛 session 事件'"
+    },
+    {
+      "jobId": "121754541423",
+      "test": "not ok 6 - 回包没带卡(老模板 / 没判过 / 回读):objectCard 为 null,不是 undefined",
+      "location": "chengyinhub-xcx/tests/unit/advanced-game-object-card-relay.test.js:64:1",
+      "error": "\"Cannot read properties of undefined (reading 'detail')\""
+    },
+    {
+      "jobId": "121754541423",
+      "test": "not ok 7 - ★提交被服务端拒(非 200):抛 actionfail,带上动作名",
+      "location": "chengyinhub-xcx/tests/unit/advanced-game-object-card-relay.test.js:70:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541423",
+      "test": "not ok 8 - 状态已更新:回读完也抛 actionfail(这一步没提交)",
+      "location": "chengyinhub-xcx/tests/unit/advanced-game-object-card-relay.test.js:76:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541423",
+      "test": "not ok 9 - 响应丢失后回读:没写进去 → actionfail;回读也失败 → actionfail",
+      "location": "chengyinhub-xcx/tests/unit/advanced-game-object-card-relay.test.js:83:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541423",
+      "test": "not ok 11 - 迟到成功动作回执不回退快照，保留有效成功及当次卡片",
+      "location": "chengyinhub-xcx/tests/unit/advanced-game-object-card-relay.test.js:103:3",
+      "error": "'finish is not a function'"
+    },
+    {
+      "jobId": "121754541423",
+      "test": "not ok 12 - 迟到成功动作回执不回退快照，保留有效成功且不制造卡片",
+      "location": "chengyinhub-xcx/tests/unit/advanced-game-object-card-relay.test.js:103:3",
+      "error": "'finish is not a function'"
+    },
+    {
+      "jobId": "121754541423",
+      "test": "not ok 51 - P0: square/detail gives no-id, loading, error and empty data distinct visible exits",
+      "location": "chengyinhub-xcx/tests/unit/c01-home-search-state-contract.test.js:238:1",
+      "error": "'未为 C01 页面契约提供 require stub: ../../../utils/user-character.js'"
+    },
+    {
+      "jobId": "121754541423",
+      "test": "not ok 52 - square/detail 的更多入口先打开操作菜单，再由菜单进入举报确认",
+      "location": "chengyinhub-xcx/tests/unit/c01-home-search-state-contract.test.js:276:1",
+      "error": "'未为 C01 页面契约提供 require stub: ../../../utils/user-character.js'"
+    },
+    {
+      "jobId": "121754541423",
+      "test": "not ok 53 - square/detail 关注评论者只在服务端回读确认后报成功，回读失败保留旧列表",
+      "location": "chengyinhub-xcx/tests/unit/c01-home-search-state-contract.test.js:290:1",
+      "error": "'未为 C01 页面契约提供 require stub: ../../../utils/user-character.js'"
+    },
+    {
+      "jobId": "121754541423",
+      "test": "not ok 277 - thought wait cannot send old arrive under a new activity",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-24.test.js:14:43",
+      "error": "'storage.getStorageSync is not a function'"
+    },
+    {
+      "jobId": "121754541423",
+      "test": "not ok 278 - thought wait cannot send old checkin under a new activity",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-24.test.js:14:43",
+      "error": "'storage.getStorageSync is not a function'"
+    },
+    {
+      "jobId": "121754541423",
+      "test": "not ok 279 - thought sync keeps the original action ID and registration while using current same-session version",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-24.test.js:23:1",
+      "error": "'storage.getStorageSync is not a function'"
+    },
+    {
+      "jobId": "121754541423",
+      "test": "not ok 280 - old arrival callback cannot clear the replacement arrival lock or complete its old node",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-24.test.js:34:1",
+      "error": "'storage.getStorageSync is not a function'"
+    },
+    {
+      "jobId": "121754541448",
+      "test": "not ok 14 - 真实点击与组件事件合同分母分开，非 tap 不得伪装按钮点击",
+      "location": "chengyinhub-xcx/tests/unit/action-ledger.test.js:302:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541448",
+      "test": "not ok 26 - 写操作与动态 URL 合同不能降级成普通读取",
+      "location": "chengyinhub-xcx/tests/unit/action-ledger.test.js:1027:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541448",
+      "test": "not ok 32 - 按钮台账不把定位回调的 reveal 或 GET ending 冒充当前点击的第二次写入",
+      "location": "chengyinhub-xcx/tests/unit/action-ledger.test.js:1214:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541448",
+      "test": "not ok 37 - 合并后可达动作 variant 全部进入台账且 handler 真源可定位",
+      "location": "chengyinhub-xcx/tests/unit/action-ledger.test.js:1326:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541448",
+      "test": "not ok 40 - release 前重建 inventory，漏掉新增/修改控件必须变红",
+      "location": "chengyinhub-xcx/tests/unit/action-ledger.test.js:1726:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541448",
+      "test": "not ok 446 - 「小瘾说」钩子取 hookText,后端必须真下发这个字段",
+      "location": "chengyinhub-xcx/tests/unit/play-free-explore-detail-contract.test.js:48:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541448",
+      "test": "not ok 591 - route-matrix 生成物必须与当前 app.json 和 scene 扫描逐字一致",
+      "location": "chengyinhub-xcx/tests/unit/route-matrix-freshness.test.js:15:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541534",
+      "test": "not ok 124 - 所有已声明组件的 WXSS 均符合微信组件选择器限制",
+      "location": "chengyinhub-xcx/tests/unit/component-wxss-selector-lint.test.js:17:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541534",
+      "test": "not ok 159 - 服务端草稿发布前落盘 UNKNOWN；丢回包后重进只查原主题，确认已发布不再保存或发布",
+      "location": "chengyinhub-xcx/tests/unit/fabu-server-draft.test.js:295:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541534",
+      "test": "not ok 163 - UNKNOWN后改写本机稿，回读确认原版本已发布时不丢后续修改",
+      "location": "chengyinhub-xcx/tests/unit/fabu-server-draft.test.js:380:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541534",
+      "test": "not ok 166 - UNKNOWN原号回读审核拒绝：明确失败并保留修改，不能误称提交审核或自动重发",
+      "location": "chengyinhub-xcx/tests/unit/fabu-server-draft.test.js:431:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541534",
+      "test": "not ok 167 - 缺失或异主题发布回执先按原号回读，确认前不清稿且不能凭空认成功",
+      "location": "chengyinhub-xcx/tests/unit/fabu-server-draft.test.js:457:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541534",
+      "test": "not ok 170 - 发布已确认但新修改遇存储故障：不假称已本机保存，不清旧稿，保留内存和离开警告",
+      "location": "chengyinhub-xcx/tests/unit/fabu-server-draft.test.js:521:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541534",
+      "test": "not ok 327 - no packaged runtime source references an excluded file or image prefix",
+      "location": "chengyinhub-xcx/tests/unit/package-exclusions-contract.test.js:131:1",
+      "error": "'pages/merchant/components/desk/index.wxml: Unexpected token (1:12)'"
+    },
+    {
+      "jobId": "121754541534",
+      "test": "not ok 468 - 拍板17 足迹正文组件收到快照就直接渲染(不读本机),并收起分享按钮",
+      "location": "chengyinhub-xcx/tests/unit/roam-share-snapshot.test.js:200:1",
+      "error": "'别人的足迹不给「分享足迹卡」按钮'"
+    },
+    {
+      "jobId": "121754541534",
+      "test": "not ok 512 - 后端契约:hasGame 覆盖答题、App 传感器与滤镜拍照,未进店不下发题面;答题带进店硬闸与条件更新首完",
+      "location": "chengyinhub-xcx/tests/unit/shop-day-game-sheet-contract.test.js:88:1",
+      "error": "'找不到后端 hasGame 判定'"
+    },
+    {
+      "jobId": "121754541534",
+      "test": "not ok 513 - mutation 负控:hasGame 漏掉滤镜拍照时契约确实变红",
+      "location": "chengyinhub-xcx/tests/unit/shop-day-game-sheet-contract.test.js:121:1",
+      "error": "'找不到后端 hasGame 判定'"
+    },
+    {
+      "jobId": "121754541579",
+      "test": "not ok 278 - 全部生产 WXML 不再以字符、emoji 或独立文字 + 充当可见图标",
+      "location": "chengyinhub-xcx/tests/unit/global-real-icon-contract.test.js:39:1",
+      "error": "'pages/publish/components/attribute-binding-editor/index.wxml 仍含字符或 emoji 伪图标'"
+    },
+    {
+      "jobId": "121754541579",
+      "test": "not ok 475 - 我的发布严格区分 0 与 unknown，未知状态、对象、方式和范围不伪装成空值",
+      "location": "chengyinhub-xcx/tests/unit/official-pages-state-contract.test.js:141:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541965",
+      "test": "not ok 18 - 页面接线:申请成功把手里的 applyExpireTime 回填进卡片,foot 立刻说真实剩余时间",
+      "location": "chengyinhub-xcx/tests/unit/apply-expire-contract.test.js:90:1",
+      "error": "'必须请求 POST /api/team/apply'"
+    },
+    {
+      "jobId": "121754541965",
+      "test": "not ok 27 - BL-87 GET /api/audit/{taskId}/detail:仅提交人本人,403/404 文案,申请人视图字段",
+      "location": "chengyinhub-xcx/tests/unit/batch5-api-contract.test.js:58:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541965",
+      "test": "not ok 159 - 站点矩阵不拦无通用工具的旧主题；公共采用回读后再按真实配置拦绑定",
+      "location": "chengyinhub-xcx/tests/unit/gameplay-support-matrix-ui.test.js:182:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541965",
+      "test": "not ok 273 - 全仓 84 个 cy-page-title 页面：共享标题统一提供上 space-5 / 下 space-2",
+      "location": "chengyinhub-xcx/tests/unit/nav-page-title-spacing-contract.test.js:479:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541965",
+      "test": "not ok 318 - page cleanup audit covers the manifest and retains unresolved external and cross-page contracts",
+      "location": "chengyinhub-xcx/tests/unit/page-cleanup-audit.test.js:9:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541965",
+      "test": "not ok 328 - play pause and completion release only its tracker and listener while roam continues",
+      "location": "chengyinhub-xcx/tests/unit/play-location-sharing-lifecycle.test.js:34:1",
+      "error": "'this._capturePlayLoginContext is not a function'"
+    },
+    {
+      "jobId": "121754541965",
+      "test": "not ok 329 - completing the only active play stops location immediately and repeatedly finishing is harmless",
+      "location": "chengyinhub-xcx/tests/unit/play-location-sharing-lifecycle.test.js:60:1",
+      "error": "'this._capturePlayLoginContext is not a function'"
+    },
+    {
+      "jobId": "121754541965",
+      "test": "not ok 501 - 搜索同关键词重试保留旧结果，部分失败只显示局部错误",
+      "location": "chengyinhub-xcx/tests/unit/uiux-player-state-adoption-contract.test.js:141:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541965",
+      "test": "not ok 502 - 搜索部分分类失败且其余分类为空时必须显示未完成错误，不能谎报全站无结果",
+      "location": "chengyinhub-xcx/tests/unit/uiux-player-state-adoption-contract.test.js:157:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754541965",
+      "test": "not ok 504 - 搜索新关键词用 epoch 拒绝旧请求迟到回写",
+      "location": "chengyinhub-xcx/tests/unit/uiux-player-state-adoption-contract.test.js:185:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 9 - clear contract matches actual Page success, business refusal, network failure and local refusal readback",
+      "location": "chengyinhub-xcx/tests/unit/action-ledger-module-targets.test.js:146:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 12 - invoice dispatch keeps each action write and readback without sibling writes",
+      "location": "chengyinhub-xcx/tests/unit/action-ledger-module-targets.test.js:191:2",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 69 - 附近页 主题半屏「去看看」连点只跳一次;onShow 兜底清锁",
+      "location": "chengyinhub-xcx/tests/unit/bl240-nearby-route-nav-guard.test.js:73:1",
+      "error": "'app.getUserID is not a function'"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 330 - 全仓 wx:for 必须都带 wx:key(缺了会让每次追加整列表重建)",
+      "location": "chengyinhub-xcx/tests/unit/list-render-perf-contract.test.js:42:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 340 - old check response never clears a newer intent",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-16.test.js:17:1",
+      "error": "\"Cannot read properties of undefined (reading 'success')\""
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 341 - old settle recovery also remains bound to the original check",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-16.test.js:31:1",
+      "error": "\"Cannot read properties of undefined (reading 'success')\""
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 342 - closing and reopening the same check never resends its still-pending operation",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-16.test.js:44:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 343 - opening thought wait cannot submit original chapter in replacement session",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-36.test.js:5:1",
+      "error": "'storage.getStorageSync is not a function'"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 344 - old opening response neither closes current chapter nor releases replacement intent",
+      "location": "chengyinhub-xcx/tests/unit/longrun-own-c01-36.test.js:6:1",
+      "error": "'storage.getStorageSync is not a function'"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 348 - runtime references resolve after relocation without new cross-subpackage leaf dependencies",
+      "location": "chengyinhub-xcx/tests/unit/mainpkg-leaves-contract.test.js:122:1",
+      "error": "'Unexpected token (1:12)'"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 446 - 相册审核：HOLD→APPROVED 查看原资产后才沿正常路径提交",
+      "location": "chengyinhub-xcx/tests/unit/play-r5-album-feedback.test.js:154:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 454 - 相册：真实组件→分发器→认证上传→SUBMIT_ALBUM，只提交玩家证据",
+      "location": "chengyinhub-xcx/tests/unit/play-r5-album-feedback.test.js:226:1",
+      "error": "\"Cannot read properties of undefined (reading 'data')\""
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 456 - 相册：服务端拒绝不完成，原上传证据原幂等键重发且不重新上传",
+      "location": "chengyinhub-xcx/tests/unit/play-r5-album-feedback.test.js:259:1",
+      "error": "\"Cannot read properties of undefined (reading 'success')\""
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 457 - 相册：原证据被拒后可重新选择照片，不被重试按钮锁住",
+      "location": "chengyinhub-xcx/tests/unit/play-r5-album-feedback.test.js:274:1",
+      "error": "\"Cannot read properties of undefined (reading 'success')\""
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 458 - 相册：共享会话未知结果沿既有通道重放本人原命令，禁止再传照片",
+      "location": "chengyinhub-xcx/tests/unit/play-r5-album-feedback.test.js:284:1",
+      "error": "\"Cannot read properties of undefined (reading 'fail')\""
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 461 - 反馈：fullscreen/pending 的真实Page写入与继续门控",
+      "location": "chengyinhub-xcx/tests/unit/play-r5-album-feedback.test.js:324:5",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 465 - 反馈：inline/pending 的真实Page写入与继续门控",
+      "location": "chengyinhub-xcx/tests/unit/play-r5-album-feedback.test.js:324:5",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 474 - 旧分支：原优先级、选项、限时与ready行为不受R5规则影响",
+      "location": "chengyinhub-xcx/tests/unit/play-r5-album-feedback.test.js:400:1",
+      "error": "\"Cannot read properties of undefined (reading 'data')\""
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 476 - 反馈：真实组件打开入口重入 PASS 保留反馈与权威写权限",
+      "location": "chengyinhub-xcx/tests/unit/play-r5-album-feedback.test.js:421:3",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 477 - 反馈：真实组件打开入口重入 FAIL 保留反馈与权威写权限",
+      "location": "chengyinhub-xcx/tests/unit/play-r5-album-feedback.test.js:421:3",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 479 - 相册 X019：网络失败保留同一张图重传，上传成功后只提交一次",
+      "location": "chengyinhub-xcx/tests/unit/play-r5-album-feedback.test.js:444:1",
+      "error": "|-"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 586 - 个人模板编辑深链缺明确编辑权限时返回只读详情，加载前后都不能保存",
+      "location": "chengyinhub-xcx/tests/unit/r9-04-own-template-resume-contract.test.js:119:1",
+      "error": "\"Cannot read properties of undefined (reading 'success')\""
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 588 - 商家公开详情应用后采用和作者回读仍使用商家作用域",
+      "location": "chengyinhub-xcx/tests/unit/r9-04-own-template-resume-contract.test.js:153:1",
+      "error": "\"Cannot read properties of undefined (reading 'url')\""
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 589 - RED 锚点:编辑页带 scope=my 时查个人草稿接口,不再查公共库",
+      "location": "chengyinhub-xcx/tests/unit/r9-04-own-template-resume-contract.test.js:174:1",
+      "error": "'onLoad 必须发起模板详情请求'"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 590 - 公共库应用仍查 /api/template/info,不受 my 分支影响",
+      "location": "chengyinhub-xcx/tests/unit/r9-04-own-template-resume-contract.test.js:184:1",
+      "error": "\"Cannot read properties of undefined (reading 'url')\""
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 592 - 续编:个人草稿保存草稿时仍带原 id 走 /api/template/draft",
+      "location": "chengyinhub-xcx/tests/unit/r9-04-own-template-resume-contract.test.js:204:1",
+      "error": "\"Cannot read properties of undefined (reading 'success')\""
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 593 - 商家草稿列表、详情、继续编辑与保存返回完整保留作用域；个人入口不转商家",
+      "location": "chengyinhub-xcx/tests/unit/r9-04-own-template-resume-contract.test.js:220:1",
+      "error": "\"Cannot read properties of undefined (reading 'data')\""
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 680 - 真实caller/runtime回读形态可通过固定合同：retained",
+      "location": "chengyinhub-xcx/tests/unit/roam-revocation-evidence.test.js:166:3",
+      "error": "'this._capturePlayLoginContext is not a function'"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 681 - 真实caller/runtime回读形态可通过固定合同：bg-restart",
+      "location": "chengyinhub-xcx/tests/unit/roam-revocation-evidence.test.js:166:3",
+      "error": "'this._capturePlayLoginContext is not a function'"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 682 - 真实caller/runtime回读形态可通过固定合同：fg-restart",
+      "location": "chengyinhub-xcx/tests/unit/roam-revocation-evidence.test.js:166:3",
+      "error": "'this._capturePlayLoginContext is not a function'"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 683 - 真实BG拒绝→FG成功和两者都拒绝匹配各自capability错误枝",
+      "location": "chengyinhub-xcx/tests/unit/roam-revocation-evidence.test.js:168:1",
+      "error": "'this._capturePlayLoginContext is not a function'"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 685 - 审计未确认时独立play的真实许可和持有仍必须保留",
+      "location": "chengyinhub-xcx/tests/unit/roam-revocation-evidence.test.js:192:1",
+      "error": "'this._capturePlayLoginContext is not a function'"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 687 - GPS成功坐标门保留：stop无坐标合法，BG/FG缺坐标和伪造拒绝为成功判红",
+      "location": "chengyinhub-xcx/tests/unit/roam-revocation-evidence.test.js:217:1",
+      "error": "'this._capturePlayLoginContext is not a function'"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 689 - 独立play许可/owner原始capture缺失或GPS在SDK终态之前都不能冒充恢复",
+      "location": "chengyinhub-xcx/tests/unit/roam-revocation-evidence.test.js:238:1",
+      "error": "'this._capturePlayLoginContext is not a function'"
+    },
+    {
+      "jobId": "121754542136",
+      "test": "not ok 691 - peer实证FG-only和获独立许可的旧pending代际正常保留，不伪造BG拒绝/补停",
+      "location": "chengyinhub-xcx/tests/unit/roam-revocation-evidence.test.js:258:1",
+      "error": "'this._capturePlayLoginContext is not a function'"
+    }
+  ]
+}
