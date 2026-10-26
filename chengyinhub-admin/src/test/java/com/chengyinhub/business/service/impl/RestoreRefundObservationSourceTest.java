@@ -2,18 +2,83 @@ package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.RefundApplication;
 import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;
+import com.chengyinhub.business.service.RestoreProviderJournal;
 import com.wechat.pay.java.service.refund.model.Status;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.mock;
 
 /** Source-boundary unit controls. Explicit typed fixture values are not SQL/provider verification evidence. */
 class RestoreRefundObservationSourceTest {
     private static final String REFUND_NO = "RF99";
+
+    @Test
+    void sameJournalOriginalSurvivesLinkedHashMapAndParsedJsonObjectWithoutRewritingBytes(@TempDir Path directory) throws Exception {
+        Fixture f = new Fixture();
+        Path file = Files.createFile(directory.resolve("original.jsonl"));
+        RestoreProviderJournal journal = journalAt(file);
+        journal.append("REFUND", "original_refund", "SUBMIT", "ACCEPTED", f.retained);
+        journal.append("REFUND", "original_refund", "RESULT", "UNKNOWN", f.retained);
+        byte[] before = Files.readAllBytes(file);
+
+        // Exercise the real reader: its first map is LinkedHashMap; subsequent parsed maps are JSONObject.
+        Map<String, Object> original = journal.original("REFUND", "original_refund");
+        RestoreRefundReconciliationFixture.requireOriginalRefund(f.payment, f.refund, original, REFUND_NO);
+        assertEquals("UNKNOWN", journal.state("REFUND", "original_refund"));
+        assertArrayEquals(before, Files.readAllBytes(file));
+        assertThrows(IllegalStateException.class, () -> RestoreRefundReconciliationFixture.originalRefundResponse(
+                f.payment, f.refund, original, REFUND_NO, journal.state("REFUND", "original_refund")));
+
+        // Same immutable original, later external outcome. Only the existing caller may query/persist it.
+        journal.append("REFUND", "original_refund", "RESULT", "SUCCESS", f.retained);
+        byte[] after = Files.readAllBytes(file);
+        Map<String, Object> late = journal.original("REFUND", "original_refund");
+        var response = RestoreRefundReconciliationFixture.originalRefundResponse(
+                f.payment, f.refund, late, REFUND_NO, journal.state("REFUND", "original_refund"));
+        assertEquals("provider-original-71", response.getRefundId());
+        assertEquals(2000L, response.getAmount().getRefund().longValue());
+        assertArrayEquals(after, Files.readAllBytes(file));
+        assertThrows(IllegalStateException.class, () -> RestoreRefundReconciliationFixture.retainedRefundCallback(
+                f.payment, f.refund, late, null), "journal SUCCESS alone is not a persisted refund fact");
+    }
+
+    @Test
+    void journalStillRejectsAChangedOriginalInsteadOfSortingAwayTheConflict(@TempDir Path directory) throws Exception {
+        Fixture f = new Fixture();
+        Path file = Files.createFile(directory.resolve("conflict.jsonl"));
+        RestoreProviderJournal journal = journalAt(file);
+        journal.append("REFUND", "original_refund", "SUBMIT", "ACCEPTED", f.retained);
+        var changed = new LinkedHashMap<>(f.retained);
+        changed.put("providerRefundId", "provider-other");
+        journal.append("REFUND", "original_refund", "RESULT", "SUCCESS", changed);
+        byte[] before = Files.readAllBytes(file);
+
+        assertThrows(IllegalStateException.class, () -> journal.original("REFUND", "original_refund"));
+
+        assertArrayEquals(before, Files.readAllBytes(file));
+        assertEquals("provider-original-71", f.retained.get("providerRefundId"));
+        assertEquals(REFUND_NO, f.refund.getRefundNo());
+        assertEquals(new BigDecimal("20.00"), f.refund.getRefundAmount());
+    }
+
+    /** Unit-owned file only. Constructor/environment admission is outside this direct reader control. */
+    private static RestoreProviderJournal journalAt(Path file) {
+        RestoreProviderJournal journal = mock(RestoreProviderJournal.class, CALLS_REAL_METHODS);
+        ReflectionTestUtils.setField(journal, "path", file);
+        ReflectionTestUtils.setField(journal, "scope", "a".repeat(32));
+        ReflectionTestUtils.setField(journal, "cohort", "refund-gap");
+        return journal;
+    }
 
     @Test
     void lateSuccessUsesTheRetainedPaymentAndProviderOriginalInsteadOfCurrentDefaults() {

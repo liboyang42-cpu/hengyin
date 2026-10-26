@@ -1,0 +1,14 @@
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RestoreProviderJournal.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RestoreProviderJournal.java
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RestoreProviderJournal.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RestoreProviderJournal.java
+@@ -49,8 +49,8 @@ public final class RestoreProviderJournal {
+             if(domain.equals(row.getString("domain")) && name.equals(row.getString("case"))) {
+                 var identity=row.getJSONObject("identity");
+                 if(first==null) first=new LinkedHashMap<>(identity);
+-                else require(JSON.toJSONString(first,JSONWriter.Feature.MapSortField).equals(
+-                        JSON.toJSONString(identity,JSONWriter.Feature.MapSortField)), "original provider identity changed");
++                else require(JSON.toJSONString(first,JSONWriter.Feature.SortMapEntriesByKeys).equals(
++                        JSON.toJSONString(identity,JSONWriter.Feature.SortMapEntriesByKeys)), "original provider identity changed");
+             }
+         }
+         require(first!=null,"provider original missing; never infer NOT_SENT"); return first;
