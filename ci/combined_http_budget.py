@@ -25,6 +25,8 @@ import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 CLASS = 'CrossDomainCombinedLoadMySqlIT'
+PROVIDER_PROBE = 'com.chengyinhub.business.it.CombinedSurefireRuntimeProbeTest'
+SUREFIRE_FORK_ARGUMENTS = '-Xmx512m -Djava.security.manager=allow --add-opens=java.base/java.lang=ALL-UNNAMED -Djava.io.tmpdir=/tmp -Djava.awt.headless=true'
 TEST_PROFILE = 'combined-http-fixture-closure'
 TEST_SOURCES = (
     'com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java',
@@ -45,6 +47,7 @@ TEST_SOURCES = (
     'com/chengyinhub/business/service/impl/WechatPayTestWiring.java',
     'com/chengyinhub/quartz/util/CrossDomainSchedulerStage.java',
     'com/chengyinhub/quartz/util/SchedulerFenceProcessProbe.java',
+    'com/chengyinhub/business/it/CombinedSurefireRuntimeProbeTest.java',
 )
 REQUIRED_TEST_CLASSES = (
     'com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT',
@@ -133,13 +136,14 @@ SAFE_RESOURCE_CODES = frozenset({'FIXED_COMMAND_FAILED','FIXED_HOSTED_CLASS_ONLY
     'CACHE_OFFLINE_PACKAGE_PROBE_EXIT_REQUIRED','FIXED_TEST_COMPILATION_PROFILE_REQUIRED',
     'FIXED_TEST_COMPILATION_SOURCE_REQUIRED','FIXED_TEST_COMPILATION_OUTPUT_REQUIRED',
     'STALE_TEST_OUTPUT_BOUNDARY_CHANGED','UNREVIEWED_TEST_COMPILATION_SOURCE',
-    'UNREVIEWED_TEST_COMPILATION_OUTPUT'})
+    'UNREVIEWED_TEST_COMPILATION_OUTPUT','PROVIDER_RUNTIME_PROOF_REQUIRED','PROVIDER_RUNTIME_XML_REQUIRED',
+    'PROVIDER_RUNTIME_CLASSPATH_CHANGED'})
 CACHE_SUBSTAGES=frozenset({'SOURCE_INPUTS','LOCAL_ENGINE','PINNED_IMAGE','CREATE_INPUTS','CREATE',
     'OWNER_TOOLCHAIN','MOUNT_ENV','START','CGROUP','WAIT_EXIT','MAVEN_EXIT','CORE_IDENTITY',
-    'MANIFEST','PRIVATE_LOG','CLEANUP','TERMINAL'})
+    'MANIFEST','PROVIDER_RUNTIME','PRIVATE_LOG','CLEANUP','TERMINAL'})
 CACHE_FAILURE_FUNCTIONS=frozenset({'warm_cache','cache_inputs','cache_manifest','cache_process_state',
     'cache_terminal','cache_offline_probe_exit','fixed_test_compilation_inputs','reset_fixed_test_outputs',
-    'fixed_test_compilation_outputs','command','inspect','validate_owner','validate_container','read_cgroup','validate_cgroup_limits'})
+    'fixed_test_compilation_outputs','provider_runtime_proof','command','inspect','validate_owner','validate_container','read_cgroup','validate_cgroup_limits'})
 CACHE_GOALS={
     'maven-resources-plugin':{'resources','testResources'},'maven-compiler-plugin':{'compile','testCompile'},
     'maven-surefire-plugin':{'test'},'maven-jar-plugin':{'jar'},'maven-install-plugin':{'install'},
@@ -182,7 +186,7 @@ def reset_fixed_test_outputs():
     # Only the original admin test output and testCompile state; never production classes/JARs,
     # the dependency cache, source resources, public evidence or any other owner's module.
     target=ROOT/'chengyinhub-admin/target'
-    paths=[target/suffix for suffix in ('test-classes','generated-test-sources','maven-status/maven-compiler-plugin/testCompile')]
+    paths=[target/suffix for suffix in ('test-classes','generated-test-sources','maven-status/maven-compiler-plugin/testCompile','provider-runtime')]
     for path in paths:
         for current in (path,*path.parents):
             if current==ROOT:break
@@ -219,8 +223,64 @@ def fixed_test_compilation_outputs(inputs):
         require(relative in all_classes and path.is_file() and not path.is_symlink() and path.resolve().is_relative_to(output.resolve()),
                 'FIXED_TEST_COMPILATION_OUTPUT_REQUIRED')
         classes[relative]=all_classes[relative]
+    probe=PROVIDER_PROBE.replace('.','/')+'.class'
+    require(probe in all_classes,'FIXED_TEST_COMPILATION_OUTPUT_REQUIRED')
     return {**inputs,'compilerInputs':sorted(TEST_SOURCES),'classes':classes,
+            'providerProbeClassSha256':all_classes[probe],
             'classTree':{'classes':len(all_classes),'sha256':hashlib.sha256(json.dumps(list(all_classes.items()),separators=(',',':')).encode()).hexdigest()}}
+
+
+def provider_runtime_proof(cache):
+    """A real fork/test in preparation, not business acceptance or guessed runtime artifact coordinates."""
+    directory=ROOT/'chengyinhub-admin/target/provider-runtime'
+    require(directory.is_dir() and not directory.is_symlink() and directory.resolve()==directory
+            and not directory.stat().st_mode & 0o077,'PROVIDER_RUNTIME_PROOF_REQUIRED')
+    artifacts={'launcher':('org/junit/platform/junit-platform-launcher','junit-platform-launcher'),
+               'engine':('org/junit/jupiter/junit-jupiter-engine','junit-jupiter-engine'),
+               'platformEngine':('org/junit/platform/junit-platform-engine','junit-platform-engine'),
+               'api':('org/junit/jupiter/junit-jupiter-api','junit-jupiter-api'),
+               'mockito':('org/mockito/mockito-core','mockito-core')}
+    expected_class=ROOT/'chengyinhub-admin/target/test-classes'/(PROVIDER_PROBE.replace('.','/')+'.class')
+    require(expected_class.is_file() and not expected_class.is_symlink(),'PROVIDER_RUNTIME_PROOF_REQUIRED')
+    rows={};boots=[]
+    for phase in ('ONLINE','OFFLINE'):
+        path=directory/(phase.lower()+'.json');xml=directory/(phase.lower()+'.xml')
+        for file,limit in ((path,32768),(xml,2*1024*1024)):
+            require(file.is_file() and not file.is_symlink() and file.resolve().parent==directory
+                    and not file.stat().st_mode & 0o077 and file.stat().st_size<limit,'PROVIDER_RUNTIME_PROOF_REQUIRED')
+        proof=json.loads(path.read_text());raw=xml.read_bytes()
+        require(b'<!DOCTYPE' not in raw and b'<!ENTITY' not in raw,'PROVIDER_RUNTIME_XML_REQUIRED')
+        try:suite=ET.fromstring(raw)
+        except ET.ParseError:raise ValueError('PROVIDER_RUNTIME_XML_REQUIRED') from None
+        cases=suite.findall('testcase')
+        require(suite.tag=='testsuite' and suite.get('name')==PROVIDER_PROBE and suite.get('tests')=='1'
+                and all(suite.get(key)=='0' for key in ('failures','errors','skipped')) and len(cases)==1
+                and cases[0].get('classname')==PROVIDER_PROBE and cases[0].get('name')=='bootsActualProjectPlatformRuntime'
+                and not any(cases[0].find(kind) is not None for kind in ('failure','error','skipped')),'PROVIDER_RUNTIME_XML_REQUIRED')
+        require(set(proof)=={'sourceSha','runId','attempt','phase','javaFeature','pid','parentPid','startedAt','forkedBooter',
+                'commandSha256','testClassSha256','runtime','businessExecuted'}
+                and proof['sourceSha']==os.environ['SOURCE_SHA'] and proof['phase']==phase
+                and proof['runId']==os.environ['GITHUB_RUN_ID'] and proof['attempt']==os.environ['GITHUB_RUN_ATTEMPT']
+                and proof['javaFeature']==21 and proof['forkedBooter'] is True and proof['businessExecuted'] is False
+                and all(type(proof[key]) is int and proof[key]>0 for key in ('pid','parentPid'))
+                and proof['pid']!=proof['parentPid']
+                and re.fullmatch(r'[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.]+Z',proof['startedAt'])
+                and re.fullmatch('[0-9a-f]{64}',proof['commandSha256'])
+                and proof['testClassSha256']==digest(expected_class) and set(proof['runtime'])==set(artifacts),
+                'PROVIDER_RUNTIME_PROOF_REQUIRED')
+        for key,(relative,artifact) in artifacts.items():
+            record=proof['runtime'][key]
+            require(set(record)=={'version','sha256'} and re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+',record['version'])
+                    and re.fullmatch('[0-9a-f]{64}',record['sha256']),'PROVIDER_RUNTIME_PROOF_REQUIRED')
+            jar=cache/relative/record['version']/(artifact+'-'+record['version']+'.jar')
+            require(jar.is_file() and not jar.is_symlink() and jar.resolve().is_relative_to(cache.resolve())
+                    and digest(jar)==record['sha256'],'PROVIDER_RUNTIME_CLASSPATH_CHANGED')
+        boots.append((proof['pid'],proof['startedAt']))
+        rows[phase.lower()]={'xmlSha256':digest(xml),'proofSha256':digest(path),
+            'testClassSha256':proof['testClassSha256'],'runtime':proof['runtime'],
+            'forkIdentitySha256':hashlib.sha256(json.dumps(boots[-1],separators=(',',':')).encode()).hexdigest()}
+    require(boots[0]!=boots[1] and rows['online']['runtime']==rows['offline']['runtime'],'PROVIDER_RUNTIME_CLASSPATH_CHANGED')
+    return {'purpose':'PREPARATION_PROVIDER_RUNTIME_ONLY','businessExecuted':False,**rows}
 
 
 def require(ok, code):
@@ -318,7 +378,20 @@ def fixed_cache_command():
             'else exit "$probe"; fi; fi; '
     encoded+='; '.join('printf "%s\\n" "'+stage+'" >/tmp/cy-cache.phase; '+
                      ' '.join("'"+value+"'" for value in ['mvn']+goal)+' || exit $?'
-                     for stage,goal in zip(('ORIGINAL_PROVIDER_GET','OFFLINE_TEST_PREFLIGHT'),goals[1:]))
+                     for stage,goal in zip(('ORIGINAL_PROVIDER_GET',),goals[1:2]))
+    # Real provider selection and fork, not skipTests. Same reactor/profile/test classpath, no business.
+    report='chengyinhub-admin/target/surefire-reports/TEST-'+PROVIDER_PROBE+'.xml'
+    for stage,phase,offline in (('ONLINE_PROVIDER_RUNTIME','ONLINE',False),('OFFLINE_PROVIDER_RUNTIME','OFFLINE',True)):
+        args=common+(['-o'] if offline else [])+['-P'+TEST_PROFILE,'-pl','chengyinhub-admin','-am','test',
+            '-DargLine='+SUREFIRE_FORK_ARGUMENTS+' -Dcombined.provider.phase='+phase,
+            '-Dtest='+PROVIDER_PROBE,'-DforkCount=1','-DreuseForks=true','-DfailIfNoTests=false','-Dsurefire.failIfNoSpecifiedTests=false']
+        encoded+='; printf "%s\\n" "'+stage+'" >/tmp/cy-cache.phase; rm -f \''+report+'\'; '+\
+            "MAVEN_OPTS='-Xmx128m -Djava.io.tmpdir=/tmp -Duser.home=/tmp/home' "+\
+            ' '.join("'"+value+"'" for value in ['mvn']+args)+' || exit $?; '+\
+            "cp '"+report+"' 'chengyinhub-admin/target/provider-runtime/"+phase.lower()+".xml' || exit $?; "+\
+            "chmod 600 'chengyinhub-admin/target/provider-runtime/"+phase.lower()+".xml' || exit $?"
+    encoded+='; printf "%s\\n" "OFFLINE_TEST_PREFLIGHT" >/tmp/cy-cache.phase; '+\
+        ' '.join("'"+value+"'" for value in ['mvn']+goals[2])+' || exit $?'
     return ['-c','mkdir -p /tmp/home /tmp/m2 || exit 98; '
             'child=; trap \'[ -z "$child" ] || kill -TERM "$child" 2>/dev/null; exit 143\' TERM INT HUP; '
             '('+encoded+') & child=$!; wait "$child"; status=$?; child=; '
@@ -406,7 +479,8 @@ def warm_cache():
             require(not target.is_symlink(),'ORIGINAL_TARGET_REQUIRED');mounts.append((target,target,'readonly=false'))
         for source,target,mode in mounts:args+=['--mount','type=bind,src='+str(source)+',dst='+str(target)+','+mode]
         env={'HOME':'/tmp/home','MAVEN_CONFIG':'/tmp/m2','MAVEN_OPTS':'-Xmx512m -Djava.io.tmpdir=/tmp -Duser.home=/tmp/home',
-             'SOURCE_SHA':os.environ['SOURCE_SHA'],'GITHUB_SHA':os.environ['SOURCE_SHA']}
+             'SOURCE_SHA':os.environ['SOURCE_SHA'],'GITHUB_SHA':os.environ['SOURCE_SHA'],
+             'GITHUB_RUN_ID':os.environ['GITHUB_RUN_ID'],'GITHUB_RUN_ATTEMPT':os.environ['GITHUB_RUN_ATTEMPT']}
         for key,value in env.items():args+=['--env',key+'='+value]
         substage='CREATE';cid=command(args+[JDK]+fixed_cache_command(),timeout=30).decode().strip()
         require(re.fullmatch('[0-9a-f]{64}',cid) and (private/'app.cid').read_text().strip()==cid,'CREATED_CID_NOT_PROVEN')
@@ -444,6 +518,8 @@ def warm_cache():
         substage='MANIFEST'
         require(fixed_test_compilation_inputs()==compilation,'COMPILED_POSTIMAGE_DRIFT')
         report['testCompilation']=fixed_test_compilation_outputs(compilation)
+        substage='PROVIDER_RUNTIME';report['providerRuntime']=provider_runtime_proof(cache)
+        substage='MANIFEST'
         report['cache']=cache_manifest(cache);require(cache_inputs()==report['pomSha256'],'COMPILED_POSTIMAGE_DRIFT')
     except Exception as failure:
         first=failure;report['firstFailure']=cache_failure(failure,'PINNED_CACHE_PREPARATION',substage)
@@ -464,7 +540,8 @@ def warm_cache():
                     report['pluginFailure']=safe_plugin_resolution(tail);report['lastReviewedMavenGoal']=safe_cache_progress(tail)
                 if obj['State']['Running']:
                     phase=command(DOCKER+['exec',slot['cid'],'cat','/tmp/cy-cache.phase']).decode().strip()
-                    report['phase']=phase if phase in ('OFFLINE_PACKAGE_PROBE','ONLINE_PACKAGE','ORIGINAL_PROVIDER_GET','OFFLINE_TEST_PREFLIGHT') else 'UNKNOWN'
+                    report['phase']=phase if phase in ('OFFLINE_PACKAGE_PROBE','ONLINE_PACKAGE','ORIGINAL_PROVIDER_GET',
+                            'ONLINE_PROVIDER_RUNTIME','OFFLINE_PROVIDER_RUNTIME','OFFLINE_TEST_PREFLIGHT') else 'UNKNOWN'
                     if report['offlinePackageProbeExit'] is None and not report['mavenExitObserved']:
                         report['offlinePackageProbeExit']=cache_offline_probe_exit(slot['cid'],required=False)
         except Exception as failure:report['failures'].append(cache_failure(failure,'CACHE_PRIVATE_LOG','PRIVATE_LOG'))
@@ -492,6 +569,7 @@ def verified_cache(cache):
             and report.get('settingsSha256')==hashlib.sha256(EMPTY_SETTINGS.encode()).hexdigest()
             and report.get('pomSha256')==cache_inputs() and report.get('cache')==cache_manifest(cache)
             and report.get('testCompilation')==fixed_test_compilation_outputs(fixed_test_compilation_inputs())
+            and report.get('providerRuntime')==provider_runtime_proof(cache)
             and report.get('cleanup',{}).get('result')=='EXACT_CID_REMOVED_AND_ABSENT'
             and report['cleanup'].get('terminal',{}).get('OOMKilled') is False
             and report['cleanup'].get('terminal',{}).get('ExitCode') in (0,143)
@@ -1219,7 +1297,7 @@ def fixed_maven_command():
             'for i in {1..1200}; do [ -f /budget/stop ] && break; sleep .1; done; exit "$status"','--',
             '-o','-q','--settings','/budget/settings.xml','--global-settings','/budget/settings.xml',
             '-Dmaven.repo.local=/cache/repository','-P'+TEST_PROFILE,'-pl','chengyinhub-admin','-am','test',
-            '-DargLine=-Xmx512m -Djava.security.manager=allow --add-opens=java.base/java.lang=ALL-UNNAMED -Djava.io.tmpdir=/tmp -Djava.awt.headless=true',
+            '-DargLine='+SUREFIRE_FORK_ARGUMENTS,
             '-Dtest='+CLASS,'-DforkCount=1','-DreuseForks=true','-DfailIfNoTests=false','-Dsurefire.failIfNoSpecifiedTests=false']
 
 

@@ -451,6 +451,32 @@ def safe_maven_failure(log_path):
         spec = importlib.util.spec_from_file_location('http_offline_plugin_diagnostic', ROOT / 'ci/combined_http_budget.py')
         owner = importlib.util.module_from_spec(spec); spec.loader.exec_module(owner)
         result.update(owner.safe_plugin_resolution(text))
+    # Only public releases pinned by this source's Boot/JUnit BOM and Surefire.
+    reviewed_runtime = {
+        'org.junit.platform:junit-platform-commons:1.12.2',
+        'org.junit.platform:junit-platform-engine:1.12.2',
+        'org.junit.platform:junit-platform-launcher:1.12.2',
+        'org.junit.platform:junit-platform-commons:6.0.3',
+        'org.junit.platform:junit-platform-engine:6.0.3',
+        'org.junit.platform:junit-platform-launcher:6.0.3',
+        'org.junit.jupiter:junit-jupiter-api:6.0.3',
+        'org.junit.jupiter:junit-jupiter-engine:6.0.3',
+        'org.junit.jupiter:junit-jupiter-params:6.0.3',
+        'org.apache.maven.surefire:surefire-junit-platform:3.5.6',
+        'org.apiguardian:apiguardian-api:1.1.2',
+        'org.jspecify:jspecify:1.0.0',
+        'org.opentest4j:opentest4j:1.3.0',
+    }
+    missing = set()
+    pattern = (r'Cannot access central \(https://repo\.maven\.apache\.org/maven2/?\) in offline mode and the artifact '
+               r'([a-z][a-z0-9_.]{0,99}):([a-z][a-z0-9-]{0,79}):jar:([0-9][0-9.]{0,20}) '
+               r'has not been downloaded from it before\.')
+    for group, artifact, version in re.findall(pattern, text):
+        coordinate = group + ':' + artifact + ':' + version
+        if coordinate in reviewed_runtime:
+            missing.add(coordinate)
+    if missing:
+        result['missingRuntimeArtifacts'] = sorted(missing)
     if 'offline mode' in text and ('Cannot access ' in text or 'has not been downloaded' in text):
         result['category'] = 'offline-resolution'
     elif any(marker in text for marker in ('Failed to load ApplicationContext', 'Error occurred in starting fork',
@@ -945,6 +971,66 @@ class FailureDiagnosticTest(unittest.TestCase):
             self.assertNotIn('goal', safe_maven_failure(log))
             log.unlink()
             self.assertEqual({'category': 'unknown'}, safe_maven_failure(log))
+
+    def test_missing_runtime_projection_keeps_only_reviewed_public_coordinates(self):
+        marker = 'SYNTHETIC_PRIVATE_NEVER_PUBLISH'
+        prefix = 'Cannot access central (https://repo.maven.apache.org/maven2) in offline mode and the artifact '
+        suffix = ' has not been downloaded from it before.'
+        with tempfile.TemporaryDirectory() as directory:
+            log = pathlib.Path(directory) / 'run.log'
+            log.write_text('\n'.join(prefix + coordinate + suffix for coordinate in (
+                'org.junit.platform:junit-platform-launcher:jar:6.0.3',
+                'org.apache.maven.surefire:surefire-junit-platform:jar:3.5.6',
+                'org.junit.platform:junit-platform-engine:jar:1.12.2',
+                'org.apiguardian:apiguardian-api:jar:1.1.2',
+                'org.junit.platform:junit-platform-launcher:jar:6.0.3')) + '\npassword=' + marker)
+            result = safe_maven_failure(log)
+            self.assertEqual('offline-resolution', result['category'])
+            self.assertEqual(['org.apache.maven.surefire:surefire-junit-platform:3.5.6',
+                              'org.apiguardian:apiguardian-api:1.1.2',
+                              'org.junit.platform:junit-platform-engine:1.12.2',
+                              'org.junit.platform:junit-platform-launcher:6.0.3'], result['missingRuntimeArtifacts'])
+            self.assertNotIn(marker, json.dumps(result))
+            self.assertNotIn('https://', json.dumps(result))
+
+    def test_missing_runtime_projection_refuses_foreign_versions_repositories_and_messages(self):
+        marker = 'SYNTHETIC_PRIVATE_NEVER_PUBLISH'
+        original = ('Cannot access central (https://repo.maven.apache.org/maven2) in offline mode and the artifact '
+                    'org.junit.platform:junit-platform-launcher:jar:6.0.3 has not been downloaded from it before.')
+        with tempfile.TemporaryDirectory() as directory:
+            log = pathlib.Path(directory) / 'run.log'
+            for message in (original.replace('6.0.3', '6.0.4'), original.replace('6.0.3', '6.0.3-' + marker),
+                            original.replace('org.junit.platform', 'private.' + marker),
+                            original.replace('junit-platform-launcher', 'private-artifact'),
+                            original.replace('repo.maven.apache.org/maven2', marker + '.example/private'),
+                            original.replace(':jar:', ':pom:'), original.replace(':jar:', ':jar:tests:'),
+                            'PRIVATE ' + marker + ' org.junit.platform:junit-platform-launcher:jar:6.0.3'):
+                with self.subTest(message=message):
+                    log.write_text(message)
+                    result = safe_maven_failure(log)
+                    self.assertNotIn('missingRuntimeArtifacts', result)
+                    self.assertNotIn(marker, json.dumps(result))
+
+    def test_actual_finalize_projects_runtime_coordinate_without_accepting_missing_xml(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory); public = root / 'public'; schema = root / 'schema.json'
+            schema.write_text('{"mode":"SUCCEEDED"}')
+            (root / 'run.log').write_text(
+                'Cannot access central (https://repo.maven.apache.org/maven2) in offline mode and the artifact '
+                'org.junit.platform:junit-platform-launcher:jar:6.0.3 has not been downloaded from it before.')
+            env = dict(os.environ, CHENGYIN_HTTP_E2E_SCHEMA_REPORT=str(schema),
+                       CHENGYIN_HTTP_E2E_STAGE='xml-verify', CHENGYIN_HTTP_E2E_ORIGINAL_EXIT='1')
+            run = subprocess.run([sys.executable, str(ROOT / 'ci/test_http_e2e_entry.py'), 'finalize',
+                                  '--output', str(public), '--java-exit', '1',
+                                  '--mysql-clean', 'true', '--redis-clean', 'true'],
+                                 env=env, text=True, capture_output=True, timeout=10)
+            self.assertNotEqual(0, run.returncode)
+            diagnostic = json.loads((public / 'diagnostic.json').read_text())
+            self.assertEqual(['org.junit.platform:junit-platform-launcher:6.0.3'],
+                             diagnostic['mavenFailure']['missingRuntimeArtifacts'])
+            receipt = json.loads((public / 'receipt.json').read_text())
+            self.assertEqual('FAIL', receipt['state'])
+            self.assertFalse(receipt['businessAccepted']); self.assertFalse(receipt['xmlVerified'])
 
     def test_hosted_online_vps_offline_and_existing_finalize_maven_failure(self):
         shell = (TOOLS / 'generic-gameplay-http-e2e.sh').read_text()

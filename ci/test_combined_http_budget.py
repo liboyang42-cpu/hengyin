@@ -590,12 +590,17 @@ class CombinedBudgetControls(unittest.TestCase):
         return {'profile':B.TEST_PROFILE,'sources':{'com/chengyinhub/business/it/'+B.CLASS+'.java':'d'*64},
                 'classes':{'com/chengyinhub/business/it/'+B.CLASS+'.class':'e'*64}}
 
+    def provider_receipt(self):
+        return {'purpose':'PREPARATION_PROVIDER_RUNTIME_ONLY','businessExecuted':False,
+                'online':{'proofSha256':'1'*64},'offline':{'proofSha256':'2'*64}}
+
     def cache_receipt(self):
         proof=self.subject_report()['cacheProof']
         return {**B.identity(self.env()),**{k:v for k,v in proof.items() if k!='reportSha256'},
                 'result':'PINNED_OFFLINE_TEST_PREFLIGHT_PROVEN','originalExit':0,'failures':[],
                 'mavenExitObserved':True,'mavenExit':0,'offlinePackageProbeExit':0,
                 'testCompilation':self.compilation_receipt(),
+                'providerRuntime':self.provider_receipt(),
                 'pomSha256':{'pom.xml':'f'*64},'budget':{'memory':B.MEMORY,'memorySwap':B.MEMORY,'nanoCpus':1000000000,'pids':256},
                 'cgroup':{'limits':{'memory.max':str(B.MEMORY),'memory.swap.max':'0','cpu.max':'100000 100000','pids.max':'256'}},
                 'cleanup':{'result':'EXACT_CID_REMOVED_AND_ABSENT','terminal':{'OOMKilled':False,'ExitCode':143}}}
@@ -607,6 +612,7 @@ class CombinedBudgetControls(unittest.TestCase):
                  patch.object(B,'cache_inputs',return_value=changes.get('poms',{'pom.xml':'f'*64})),\
                  patch.object(B,'fixed_test_compilation_inputs',return_value={k:v for k,v in self.compilation_receipt().items() if k!='classes'}),\
                  patch.object(B,'fixed_test_compilation_outputs',return_value=changes.get('compilation',self.compilation_receipt())),\
+                 patch.object(B,'provider_runtime_proof',return_value=changes.get('provider',self.provider_receipt())),\
                  patch.object(B,'cache_manifest',return_value=changes.get('cache',self.subject_report()['cacheProof']['cache'])):
                 return B.verified_cache(Path(directory))
 
@@ -764,6 +770,7 @@ class CombinedBudgetControls(unittest.TestCase):
                  patch.object(B,'cache_inputs',return_value={'pom.xml':'f'*64}),patch.object(B,'inspect',side_effect=inspect),\
                  patch.object(B,'fixed_test_compilation_inputs',return_value={k:v for k,v in self.compilation_receipt().items() if k!='classes'}),\
                  patch.object(B,'fixed_test_compilation_outputs',return_value=self.compilation_receipt()),\
+                 patch.object(B,'provider_runtime_proof',return_value=self.provider_receipt()),\
                  patch.object(B,'command',side_effect=command),patch.object(B.subprocess,'run',side_effect=native),\
                  patch.object(B.time,'monotonic',side_effect=clock),\
                  patch.object(B,'absent'),patch.object(B,'read_cgroup',return_value={'limits':self.cache_receipt()['cgroup']['limits'],'memoryEvents':{'oom_kill':'0'}}),\
@@ -978,11 +985,12 @@ class CombinedBudgetControls(unittest.TestCase):
             preserved=[]
             for relative in ('classes/main.class','original.jar','http-e2e/public/receipt.json','maven-status/maven-compiler-plugin/compile/state'):
                 path=target/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('preserve');preserved.append(path)
-            for relative in ('test-classes/stale.class','generated-test-sources/stale/Other.java','maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst'):
+            for relative in ('test-classes/stale.class','generated-test-sources/stale/Other.java','maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst','provider-runtime/old.json'):
                 path=target/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('stale')
             B.reset_fixed_test_outputs()
             self.assertFalse((target/'test-classes').exists());self.assertFalse((target/'maven-status/maven-compiler-plugin/testCompile').exists())
             self.assertFalse((target/'generated-test-sources').exists())
+            self.assertFalse((target/'provider-runtime').exists())
             self.assertTrue(all(p.read_text()=='preserve' for p in preserved))
             (target/'test-classes').symlink_to(target/'classes',target_is_directory=True)
             with self.assertRaisesRegex(ValueError,'STALE_TEST_OUTPUT_BOUNDARY_CHANGED'):B.reset_fixed_test_outputs()
@@ -1001,6 +1009,7 @@ class CombinedBudgetControls(unittest.TestCase):
             for name in classes:
                 path=root/'chengyinhub-admin/target/test-classes'/(name.replace('.','/')+'.class')
                 path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(b'synthetic class-control bytes; not javac evidence')
+            self.provider_class(root)
             self.compiler_input_status(root)
             proof=B.fixed_test_compilation_outputs(inputs);self.assertEqual(len(proof['classes']),len(classes))
             required=root/'chengyinhub-admin/target/test-classes/com/chengyinhub/business/it/CombinedControlledProviders$1.class'
@@ -1011,7 +1020,7 @@ class CombinedBudgetControls(unittest.TestCase):
 
     def test_package_preflight_and_real_test_share_one_profile_and_drifted_compilation_cannot_reuse_cache(self):
         shell=B.fixed_cache_command()[1];args=B.fixed_maven_command()
-        self.assertEqual(shell.count('-P'+B.TEST_PROFILE),2);self.assertIn('-P'+B.TEST_PROFILE,args)
+        self.assertEqual(shell.count('-P'+B.TEST_PROFILE),4);self.assertIn('-P'+B.TEST_PROFILE,args)
         self.assertIn('-o',args);self.assertNotIn('-DskipTests',args);self.assertNotIn('-Dmaven.test.skip=true',args)
         changed=self.compilation_receipt();changed['classes'][next(iter(changed['classes']))]='0'*64
         with self.assertRaisesRegex(ValueError,'OFFLINE_CACHE_PREFLIGHT_REQUIRED'):
@@ -1031,11 +1040,12 @@ class CombinedBudgetControls(unittest.TestCase):
             for name in B.REQUIRED_TEST_CLASSES:
                 path=output/(name.replace('.','/')+'.class');path.parent.mkdir(parents=True,exist_ok=True)
                 path.write_bytes(b'synthetic protocol control, not javac evidence')
+            self.provider_class(root)
             self.compiler_input_status(root)
             extra=output/'com/chengyinhub/business/it/GenericGameplayHttpE2eIT$99.class';extra.write_bytes(b'keep anonymous output')
             proof=B.fixed_test_compilation_outputs(inputs)
-            self.assertEqual(len(proof['classes']),37);self.assertEqual(len(proof['sources']),18)
-            self.assertEqual(proof['classTree']['classes'],38)
+            self.assertEqual(len(proof['classes']),37);self.assertEqual(len(proof['sources'])-1,18)
+            self.assertEqual(proof['classTree']['classes'],39)
             self.assertEqual(proof['compilerInputs'],sorted(B.TEST_SOURCES));self.assertTrue(extra.exists())
             for name in B.REQUIRED_TEST_CLASSES:
                 path=output/(name.replace('.','/')+'.class');saved=path.read_bytes();path.unlink()
@@ -1051,6 +1061,97 @@ class CombinedBudgetControls(unittest.TestCase):
             generated=root/'chengyinhub-admin/target/generated-test-sources/Unreviewed.java'
             generated.parent.mkdir(parents=True,exist_ok=True);generated.write_text('// unknown processor source')
             with self.assertRaisesRegex(ValueError,'UNREVIEWED_TEST_COMPILATION_SOURCE'):B.fixed_test_compilation_outputs(inputs)
+
+    def provider_class(self,root):
+        path=root/'chengyinhub-admin/target/test-classes'/(B.PROVIDER_PROBE.replace('.','/')+'.class')
+        path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(b'synthetic provider class control, not javac evidence')
+        return path
+
+    def provider_scope(self,root):
+        # All rows/JARs here are synthetic protocol inputs. This never runs Maven, Java or a provider.
+        directory=root/'chengyinhub-admin/target/provider-runtime';directory.mkdir(parents=True,mode=0o700)
+        cache=root/'cache';cache.mkdir();probe=self.provider_class(root)
+        families={'launcher':('org/junit/platform/junit-platform-launcher','junit-platform-launcher'),
+                  'engine':('org/junit/jupiter/junit-jupiter-engine','junit-jupiter-engine'),
+                  'platformEngine':('org/junit/platform/junit-platform-engine','junit-platform-engine'),
+                  'api':('org/junit/jupiter/junit-jupiter-api','junit-jupiter-api'),
+                  'mockito':('org/mockito/mockito-core','mockito-core')}
+        runtime={}
+        for key,(relative,artifact) in families.items():
+            jar=cache/relative/'1.0.0'/(artifact+'-1.0.0.jar');jar.parent.mkdir(parents=True)
+            jar.write_bytes(('synthetic '+key+' artifact, not a dependency').encode())
+            runtime[key]={'version':'1.0.0','sha256':B.digest(jar)}
+        for i,phase in enumerate(('ONLINE','OFFLINE')):
+            proof={'sourceSha':self.env()['SOURCE_SHA'],'runId':self.env()['GITHUB_RUN_ID'],'attempt':self.env()['GITHUB_RUN_ATTEMPT'],
+                'phase':phase,'javaFeature':21,
+                'pid':100+i,'parentPid':90+i,'startedAt':'2026-01-01T00:00:0'+str(i)+'Z',
+                'forkedBooter':True,'commandSha256':'b'*64,'testClassSha256':B.digest(probe),
+                'runtime':runtime,'businessExecuted':False}
+            file=directory/(phase.lower()+'.json');file.write_text(json.dumps(proof));file.chmod(0o600)
+            xml=directory/(phase.lower()+'.xml')
+            xml.write_text('<testsuite name="'+B.PROVIDER_PROBE+'" tests="1" failures="0" errors="0" skipped="0">'
+                '<properties><property name="PRIVATE_TOKEN" value="PRIVATE_TOKEN"/></properties>'
+                '<testcase classname="'+B.PROVIDER_PROBE+'" name="bootsActualProjectPlatformRuntime"/></testsuite>')
+            xml.chmod(0o600)
+        return directory,cache
+
+    def test_provider_runtime_preflight_boots_real_forks_without_skipping_the_original_business_test(self):
+        shell=B.fixed_cache_command()[1];actual=B.fixed_maven_command()
+        self.assertEqual(shell.count('-Dtest='+B.PROVIDER_PROBE),2)
+        self.assertIn('ONLINE_PROVIDER_RUNTIME',shell);self.assertIn('OFFLINE_PROVIDER_RUNTIME',shell)
+        self.assertIn('-Dcombined.provider.phase=ONLINE',shell);self.assertIn('-Dcombined.provider.phase=OFFLINE',shell)
+        self.assertEqual(shell.count(B.SUREFIRE_FORK_ARGUMENTS),2)
+        self.assertEqual(shell.count('-DforkCount=1'),2);self.assertEqual(shell.count('-DreuseForks=true'),2)
+        self.assertIn('-Dtest='+B.CLASS,actual);self.assertIn('-DargLine='+B.SUREFIRE_FORK_ARGUMENTS,actual)
+        self.assertIn('-o',actual);self.assertNotIn('-DskipTests',actual);self.assertNotIn('-Dmaven.test.skip=true',actual)
+        self.assertEqual(B.LIMIT_SECONDS,1200);self.assertEqual(B.MEMORY,1073741824)
+
+    def test_provider_xml_fork_and_runtime_identity_are_required_without_exporting_xml_properties(self):
+        with tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),patch.object(B,'ROOT',Path(directory)):
+            root=Path(directory);_,cache=self.provider_scope(root);proof=B.provider_runtime_proof(cache)
+            self.assertEqual(proof['purpose'],'PREPARATION_PROVIDER_RUNTIME_ONLY');self.assertIs(proof['businessExecuted'],False)
+            self.assertEqual(proof['online']['runtime'],proof['offline']['runtime'])
+            self.assertEqual(len(proof['online']['runtime']),5)
+            self.assertNotEqual(proof['online']['forkIdentitySha256'],proof['offline']['forkIdentitySha256'])
+            self.assertNotIn('PRIVATE_TOKEN',json.dumps(proof));self.assertNotIn(str(root),json.dumps(proof))
+
+    def test_missing_skipped_failed_or_wrong_probe_xml_never_proves_runtime_closure(self):
+        for kind in ('missing','skipped','failed','case','method','doctype'):
+            with self.subTest(kind=kind),tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),patch.object(B,'ROOT',Path(directory)):
+                root=Path(directory);private,cache=self.provider_scope(root);xml=private/'offline.xml'
+                if kind=='missing':xml.unlink()
+                else:
+                    content=xml.read_text()
+                    if kind=='skipped':content=content.replace('skipped="0"','skipped="1"')
+                    if kind=='failed':content=content.replace('failures="0"','failures="1"')
+                    if kind=='case':content=content.replace('classname="'+B.PROVIDER_PROBE+'"','classname="Other"')
+                    if kind=='method':content=content.replace('bootsActualProjectPlatformRuntime','Other')
+                    if kind=='doctype':content='<!DOCTYPE testsuite>'+content
+                    xml.write_text(content)
+                with self.assertRaises(ValueError):B.provider_runtime_proof(cache)
+
+    def test_foreign_source_or_runtime_artifact_and_reused_fork_receipt_cannot_warm_cache(self):
+        for field in ('sourceSha','runId','attempt','phase','pid','forkedBooter','businessExecuted','runtime','duplicateBoot'):
+            with self.subTest(field=field),tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),patch.object(B,'ROOT',Path(directory)):
+                root=Path(directory);private,cache=self.provider_scope(root);path=private/'offline.json';proof=json.loads(path.read_text())
+                if field=='sourceSha':proof[field]='0'*40
+                if field in ('runId','attempt'):proof[field]='999999'
+                if field=='phase':proof[field]='ONLINE'
+                if field=='pid':proof[field]=proof['parentPid']
+                if field=='forkedBooter':proof[field]=False
+                if field=='businessExecuted':proof[field]=True
+                if field=='runtime':proof[field]['launcher']['sha256']='0'*64
+                if field=='duplicateBoot':
+                    online=json.loads((private/'online.json').read_text());proof['pid']=online['pid'];proof['startedAt']=online['startedAt']
+                path.write_text(json.dumps(proof))
+                with self.assertRaises(ValueError):B.provider_runtime_proof(cache)
+
+    def test_skip_only_or_changed_provider_runtime_proof_cannot_reuse_the_cache_receipt(self):
+        report=self.cache_receipt();report.pop('providerRuntime')
+        with self.assertRaisesRegex(ValueError,'OFFLINE_CACHE_PREFLIGHT_REQUIRED'):self.check_cache_receipt(report)
+        changed=self.provider_receipt();changed['offline']['proofSha256']='0'*64
+        with self.assertRaisesRegex(ValueError,'OFFLINE_CACHE_PREFLIGHT_REQUIRED'):
+            self.check_cache_receipt(self.cache_receipt(),provider=changed)
 
 
 if __name__=='__main__':unittest.main()
