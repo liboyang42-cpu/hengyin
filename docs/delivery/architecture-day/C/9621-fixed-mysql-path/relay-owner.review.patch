@@ -1,0 +1,35 @@
+--- a/ci/authenticated_redis_recovery_probe.py
++++ b/ci/authenticated_redis_recovery_probe.py
+@@ -203,8 +203,17 @@
+
+
+ @contextlib.contextmanager
+-def _owned_mysql_relay(expected, current_endpoint):
++def _owned_mysql_relay(expected, current_endpoint, *, loopback_port=0):
+     """Internal reuse seam: caller proves one original MySQL endpoint, never a CLI target/port option."""
++    require(type(loopback_port) is int and loopback_port in (0, 33080), 'unreviewed relay listener')
++    if loopback_port:
++        require(os.environ.get('GITHUB_ACTIONS') == 'true' and os.environ.get('RUNNER_ENVIRONMENT') == 'github-hosted'
++                and os.environ.get('GITHUB_REPOSITORY') == 'liboyang42-cpu/hengyin'
++                and os.environ.get('GITHUB_EVENT_NAME') == 'workflow_dispatch'
++                and os.environ.get('HTTP_SCOPE') == 'controlled-combination'
++                and os.environ.get('CHENGYIN_HTTP_E2E_TESTS') == 'CrossDomainCombinedLoadMySqlIT'
++                and re.fullmatch('[0-9a-f]{40}', os.environ.get('SOURCE_SHA', '')),
++                'fixed combined relay requires original manual owned scope')
+     require(current_endpoint() == expected, 'MySQL relay identity changed before bind')
+     closing = threading.Event()
+     sockets = set()
+@@ -245,7 +254,12 @@
+                 if upstream:
+                     upstream.close()
+
+-    server = socketserver.ThreadingTCPServer(('127.0.0.1', 0), Handler)
++    class RelayServer(socketserver.ThreadingTCPServer):
++        # Only the new exact fixed-port caller reuses closed TCP TIME_WAIT tuples. This does not
++        # enable SO_REUSEPORT, adopt a live listener, or change the original ephemeral-port owner.
++        allow_reuse_address = loopback_port == 33080
++
++    server = RelayServer(('127.0.0.1', loopback_port), Handler)
+     thread = threading.Thread(target=server.serve_forever, kwargs={'poll_interval': 0.1})
+     thread.start()
+     phase_error = None

@@ -1,0 +1,6 @@
+77d3c703dc48fed093633d3b2f7dd91a2de38194bc4c987f43ccbd0616428db3  ci/combined_http_budget.py
+f86a7abbcf1083fbe4b0cf6f924030632138e9a1f25c5a2a17e69f45279ee2bf  ci/test_combined_http_budget.py
+c156a23e39ae328f5ee17568233132136f1a486908473d61386dce118dae4c6e  docs/delivery/architecture-day/C/9621-fixed-mysql-path/README.md
+3b65b2f0488712dde00aa47b82e48f1c005725cac60bcfce7a8431b79ac6b09b  docs/delivery/architecture-day/C/9621-fixed-mysql-path/workflow.review.patch
+943c0bd1956e45a20ab291f5843d17a1723f75bbde2b80fa96b11816aa606bba  docs/delivery/architecture-day/C/9621-fixed-mysql-path/relay-owner.review.patch
+2dcba7c0e22696bb3c4ba07c702ed9853d8f66d3198930bf1ec5d747e207731f  docs/delivery/architecture-day/C/9621-fixed-mysql-path/shared-postimages.sha256
