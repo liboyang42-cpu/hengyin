@@ -465,7 +465,9 @@ class CombinedContextConfigurationTest {
         Path tests = Files.createDirectories(root.resolve("chengyinhub-admin/target/test-classes"));
         Path cache = Files.createDirectory(directory.resolve("classpath-cache"));
         Path artifact = Files.writeString(cache.resolve("controlled.jar"), "not-executed-path-control");
-        String cp = String.join(java.io.File.pathSeparator, tests.toString(), artifact.toString(), main.toString(), artifact.toString());
+        String separator = java.io.File.pathSeparator;
+        String entries = String.join(separator, tests.toString(), artifact.toString(), main.toString(), artifact.toString());
+        String cp = entries + separator; // Exact pinned Surefire formatter, including its one terminator.
         byte[] bytes = cp.getBytes(StandardCharsets.UTF_8);
         for (String phase : List.of("ONLINE", "OFFLINE")) {
             var proof = CombinedSurefireRuntimeProbeTest.captureTestClasspath(output, phase, cp, root, cache);
@@ -479,12 +481,18 @@ class CombinedContextConfigurationTest {
                 () -> CombinedSurefireRuntimeProbeTest.captureTestClasspath(output, "ONLINE", cp, root, cache));
         Path foreign = Files.writeString(directory.resolve("foreign.jar"), "foreign");
         Path link = cache.resolve("linked.jar"); Files.createSymbolicLink(link, artifact);
-        for (String invalid : List.of("", ":" + cp, cp + ":", "relative.jar", "file:/unowned.jar", cp + "\n", cp + "\0",
-                "x".repeat(1024 * 1024), foreign.toString(), link.toString(), root.resolve("chengyinhub-admin/target/classes/../classes").toString()))
+        assertThrows(AssertionError.class,
+                () -> CombinedSurefireRuntimeProbeTest.captureTestClasspath(output, "ONLINE", null, root, cache));
+        for (String invalid : List.of("", separator, entries, separator + cp, cp + separator,
+                tests + separator + separator + artifact + separator + main + separator,
+                "relative.jar" + separator, "file:/unowned.jar" + separator, cp + "\n" + separator,
+                cp + "\r" + separator, cp + "\0" + separator, "x".repeat(1024 * 1024) + separator,
+                foreign + separator, link + separator,
+                root.resolve("chengyinhub-admin/target/classes/../classes") + separator))
             assertThrows(AssertionError.class,
                     () -> CombinedSurefireRuntimeProbeTest.captureTestClasspath(output, "ONLINE", invalid, root, cache));
         assertThrows(java.nio.file.NoSuchFileException.class, () -> CombinedSurefireRuntimeProbeTest.captureTestClasspath(
-                output, "ONLINE", cache.resolve("missing.jar").toString(), root, cache));
+                output, "ONLINE", cache.resolve("missing.jar") + separator, root, cache));
         assertThrows(AssertionError.class, () -> CombinedSurefireRuntimeProbeTest.captureTestClasspath(output, "OTHER", cp, root, cache));
         assertArrayEquals(bytes, Files.readAllBytes(output.resolve("online.classpath")));
         assertArrayEquals(bytes, Files.readAllBytes(output.resolve("offline.classpath")));
