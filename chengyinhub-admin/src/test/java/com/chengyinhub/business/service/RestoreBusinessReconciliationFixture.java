@@ -40,6 +40,7 @@ public final class RestoreBusinessReconciliationFixture {
     private ICmsRegistrationService registrations;
     private WechatVerifiedPaymentFactService facts;
     private WechatPaymentIntentStore intents;
+    private ISettlementEntryService activityEntries;
     private com.chengyinhub.business.service.impl.AlarmService callbackAlarm;
     private final java.util.concurrent.atomic.AtomicReference<RuntimeException> mutationFailure = new java.util.concurrent.atomic.AtomicReference<>();
     private long sequence;
@@ -167,6 +168,7 @@ public final class RestoreBusinessReconciliationFixture {
         var result = orders.createOrReplay(7L, request);
         require(!result.isReplayed() && result.getRegistrations().size() == 1, "One fresh original required");
         CmsRegistration registration = registrations.beginPaymentAttempt(result.getPrimary().getId(), 7L);
+        requireOriginalActivityCash(registration, originalActivity(registration.getOwnerId()));
         int fen = registration.getWechatPaymentAmount().movePointRight(2).intValueExact();
         // The production permanent-identity owner commits REQUIRES_NEW. No test INSERT of a SUBMIT_INTENT.
         String wxNo = ReflectionTestUtils.invokeMethod(intents, "freezePaymentIntent", registration.getRegistrationNo(),
@@ -260,12 +262,60 @@ public final class RestoreBusinessReconciliationFixture {
         require(walletBalances.equals(db.queryForList("SELECT id,balance FROM ums_member ORDER BY id")),
                 "Original WeChat callback changed wallet balances");
         if (Long.valueOf(2L).equals(committed.getOwnerType())) {
-            require(db.queryForObject("SELECT COUNT(*) FROM settlement_detail WHERE source_type='activity' AND source_id=? AND status=0",
+            requireOriginalActivityCash(committed, originalActivity(committed.getOwnerId()));
+            // recordPaidRegistration uses registration as the detail source; ACTIVITY belongs to the claim context.
+            require(db.queryForObject("SELECT COUNT(*) FROM settlement_detail WHERE source_type='registration' AND source_id=? AND status=0",
                     Integer.class, committed.getId()) == 2, "Original activity receivable components did not commit");
-            require(db.queryForObject("SELECT COALESCE(SUM(settlement_amount),0) FROM settlement_detail WHERE source_type='activity' AND source_id=?",
+            require(db.queryForObject("SELECT COALESCE(SUM(settlement_amount),0) FROM settlement_detail WHERE source_type='registration' AND source_id=?",
                     BigDecimal.class, committed.getId()).compareTo(committed.getPayableAmount()) == 0,
                     "Original activity receivable components do not conserve cash");
+            if ("lost_success".equals(command.get("case")) && reference == null)
+                assertActivityAccrualGuards(committed);
         }
+    }
+
+    private com.chengyinhub.business.domain.CmsActivity originalActivity(Long id) {
+        Object target = ReflectionTestUtils.getField(original, "registrationTarget");
+        return ((com.chengyinhub.business.mapper.CmsActivityMapper) ReflectionTestUtils.getField(target, "cmsActivityMapper"))
+                .selectCmsActivityById(id);
+    }
+
+    static void requireOriginalActivityCash(CmsRegistration order, com.chengyinhub.business.domain.CmsActivity activity) {
+        require(order != null && order.getId() != null && Long.valueOf(7).equals(order.getMemberId())
+                && Long.valueOf(2).equals(order.getOwnerType()) && Long.valueOf(55).equals(order.getOwnerId())
+                && Long.valueOf(9).equals(order.getTicketId())
+                && Integer.valueOf(com.chengyinhub.common.constant.PurchaseKind.GUIDED_TICKET).equals(order.getPurchaseKind())
+                && order.getPayableAmount() != null && order.getPayableAmount().signum() > 0
+                && order.getWechatPaymentAmount() != null
+                && order.getWechatPaymentAmount().compareTo(order.getPayableAmount()) == 0
+                && order.getFeePlatformRate() != null && order.getFeePlatformRate().signum() > 0
+                && order.getFeePlatformRate().compareTo(BigDecimal.ONE) < 0
+                && activity != null && Long.valueOf(55).equals(activity.getId())
+                && Long.valueOf(1).equals(activity.getMemberId()) && activity.getTopicId() == null
+                && Long.valueOf(1).equals(activity.getStatus()) && Long.valueOf(1).equals(activity.getPublishStatus())
+                && Integer.valueOf(0).equals(activity.getDelFlag()),
+                "Fixed original ordinary activity cash source differs");
+    }
+
+    private void assertActivityAccrualGuards(CmsRegistration paid) {
+        var before = economicRows();
+        // These are input projections, never UPDATEs to the original order, intent or provider fact.
+        // Exercise the real entry proxy and its real activity mapper; no replacement success/no-op entry.
+        for (int guard = 0; guard < 3; guard++) {
+            var excluded = new CmsRegistration(); org.springframework.beans.BeanUtils.copyProperties(paid, excluded);
+            if (guard == 0) excluded.setOwnerType(1L);
+            if (guard == 1) excluded.setPurchaseKind(com.chengyinhub.common.constant.PurchaseKind.EXPLORE_PASS);
+            if (guard == 2) excluded.setOwnerId(Long.MAX_VALUE);
+            require(activityEntries.recordOnPayment(excluded) == 0, "Ineligible activity entry accrued cash");
+            require(before.equals(economicRows()), "Ineligible activity entry changed financial rows");
+        }
+        var missingRate = new CmsRegistration(); org.springframework.beans.BeanUtils.copyProperties(paid, missingRate);
+        missingRate.setFeePlatformRate(null);
+        boolean rejected = false;
+        try { activityEntries.recordOnPayment(missingRate); }
+        catch (IllegalStateException expected) { rejected = true; }
+        require(rejected, "Cash without frozen rate was admitted");
+        require(before.equals(economicRows()), "Rejected cash entry changed financial rows");
     }
 
     private String observedCallback(Map<String, String> callback) {
@@ -362,7 +412,8 @@ public final class RestoreBusinessReconciliationFixture {
         ReflectionTestUtils.setField(entries, "settlementClaimService", transactional(claims, ISettlementClaimService.class));
         ReflectionTestUtils.setField(entries, "cmsActivityMapper", ReflectionTestUtils.getField(registrationTarget, "cmsActivityMapper"));
         ReflectionTestUtils.setField(entries, "cmsTopicMapper", ReflectionTestUtils.getField(registrationTarget, "cmsTopicMapper"));
-        ReflectionTestUtils.setField(registrationTarget, "settlementEntryService", transactional(entries, ISettlementEntryService.class));
+        activityEntries = (ISettlementEntryService) transactional(entries, ISettlementEntryService.class);
+        ReflectionTestUtils.setField(registrationTarget, "settlementEntryService", activityEntries);
     }
 
     private Object transactional(Object target, Class<?> port) {

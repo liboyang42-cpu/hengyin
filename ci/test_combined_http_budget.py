@@ -1,5 +1,6 @@
 """Pure budget-owner control SOURCE; NOT_RUN. No Java, Docker, database or network calls."""
 import copy
+import contextlib
 import importlib.util
 import json
 import os
@@ -191,6 +192,7 @@ class CombinedBudgetControls(unittest.TestCase):
                     'memory':memory,'memorySwap':memory,'nanoCpus':1000000000,'pids':256}
         report['mysql'].update(image=B.MYSQL,memory=B.MEMORY,memorySwap=B.MEMORY,nanoCpus=1000000000,pids=256)
         report['mysqlBootstrap']={**B.identity(self.env()),'result':'READY','originalExit':0,'reportSha256':'a'*64,
+                'hostPath':{'result':'ORIGINAL_OWNED_MYSQL_RELAY','mysqlCid':'2'*64,'hostEndpoint':'127.0.0.1:33080','closedAfterReadiness':True},
                 'readiness':{'result':'BOTH_LOOPBACK_TCP_IDENTITIES_VERIFIED','cid':'2'*64,
                     'serverUuid':'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','version':'8.0.45',
                     'hostEndpoint':'127.0.0.1:33080','executionEndpoint':'127.0.0.1:3306'}}
@@ -239,11 +241,14 @@ class CombinedBudgetControls(unittest.TestCase):
         env=self.resource_env()
         return {'Id':'2'*64,'Name':env['HTTP_BUDGET_NETWORK'],'Labels':B.labels(env),'Internal':False,'Containers':{}}
 
-    def cleanup_control(self,obj=None,net=None,write_fails=False,diagnostic_fails=False,lost_ids=False):
+    def cleanup_control(self,obj=None,net=None,write_fails=False,diagnostic_fails=False,lost_ids=False,network_exit=0):
         # Native owner transport doubles only; no application service or business response is mocked.
         obj=obj or self.mysql_object();net=net or self.network_object();reports=[];mutations=[]
         env=self.resource_env();env.pop('B_PAYMENT_FACT_DDL_APPROVED');env.pop('CHENGYIN_AI_REDIS_IT_DATABASE')
-        def object_read(kind,target):return obj if kind=='container' else net
+        def object_read(kind,target,observations=None):return obj if kind=='container' else net
+        def native(argv,**kwargs):
+            mutations.append(argv)
+            return SimpleNamespace(returncode=network_exit,stdout=b'',stderr=b'opaque daemon message' if network_exit else b'')
         def command(argv,**kwargs):
             if argv[B.DOCKER.__len__():][:2]==['network','inspect']:return json.dumps([net]).encode()
             mutations.append(argv);return b''
@@ -256,6 +261,7 @@ class CombinedBudgetControls(unittest.TestCase):
         with tempfile.TemporaryDirectory() as name,patch.dict(os.environ,env,clear=True),\
              patch.object(B,'PUBLIC',Path(name)),patch.object(B,'object_or_absent',side_effect=object_read),\
              patch.object(B,'inspect',return_value=obj),patch.object(B,'command',side_effect=command),\
+             patch.object(B.subprocess,'run',side_effect=native),\
              patch.object(B,'absent'),patch.object(B,'read_bootstrap',return_value=original),\
              patch.object(B,'write',side_effect=publish),patch.object(B,'gate',side_effect=AssertionError('business gate forbidden in cleanup')),\
              patch.object(B,'mysql_diagnostic',side_effect=OSError('private diagnostic failed') if diagnostic_fails else None,
@@ -344,7 +350,11 @@ class CombinedBudgetControls(unittest.TestCase):
         self.assertEqual(len(observed),2)
         for argv,kwargs in calls:
             self.assertNotIn('b'*48,' '.join(argv));self.assertIn(('b'*48).encode(),kwargs['input'])
-            self.assertIn('--defaults-file=/dev/stdin',argv);self.assertIn('--no-login-paths',argv)
+            self.assertIn('--defaults-file=/dev/stdin',argv);self.assertNotIn('--no-login-paths',argv)
+            self.assertEqual(kwargs['env']['MYSQL_TEST_LOGIN_FILE'],'/dev/null')
+            self.assertNotIn('MYSQL_PWD',kwargs['env']);self.assertNotIn('MYSQL_HOME',kwargs['env'])
+        self.assertIn('MYSQL_TEST_LOGIN_FILE=/dev/null',calls[0][0])
+        self.assertIn('--port=3306',calls[0][0]);self.assertIn('--port=33080',calls[1][0])
 
     def test_mismatched_tcp_endpoints_cannot_be_ready(self):
         env=self.resource_env()
@@ -387,6 +397,178 @@ class CombinedBudgetControls(unittest.TestCase):
         self.assertIsNone(failure)
         self.assertEqual(set(reports[-1]['recoveredIdentityFields']),{'HTTP_MYSQL_CID','HTTP_BUDGET_NETWORK_ID'})
         self.assertEqual(mutations,[B.DOCKER+['rm','-f','1'*64],B.DOCKER+['network','rm','2'*64]])
+
+    def test_fixed_client_environment_cannot_read_original_login_file_or_password_env(self):
+        with patch.dict(os.environ,{'MYSQL_TEST_LOGIN_FILE':'/private/login','MYSQL_PWD':'private-pass','MYSQL_HOME':'/private/conf'},clear=True):
+            env=B.mysql_client_environment()
+        self.assertEqual(env,{'MYSQL_TEST_LOGIN_FILE':'/dev/null'})
+        self.assertNotIn('--no-login-paths',B.mysql_client_arguments())
+        self.assertEqual(B.mysql_client_arguments()[1],'--defaults-file=/dev/stdin')
+
+    def test_namespace_not_ready_never_claims_host_ready_or_opens_relay(self):
+        calls=[]
+        def response(argv,**kwargs):calls.append(argv);return SimpleNamespace(returncode=2,stdout=b'',stderr=b'unknown option')
+        with tempfile.TemporaryDirectory() as name,patch.dict(os.environ,self.resource_env(),clear=True),\
+             patch.object(B,'mysql_private_directory',return_value=Path(name)),patch.object(B.subprocess,'run',side_effect=response):
+            before=unittest.mock.Mock()
+            observed,proof=B.mysql_ready_probe('1'*64,B.time.monotonic()+90,before)
+        before.assert_not_called();self.assertEqual(len(calls),1);self.assertIsNone(proof)
+        self.assertEqual(observed['host'],{'result':'WAITING_FOR_NAMESPACE_TCP'})
+        self.assertEqual(observed['namespace']['stderrCategory'],'CLIENT_OPTION_REJECTED')
+
+    def test_successful_namespace_tcp_enters_original_host_path_before_host_query(self):
+        stages=[]
+        good=b'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa\t8.0.45\t3306\n'
+        def response(argv,**kwargs):stages.append('namespace' if argv[:2]==B.DOCKER[:2] else 'host');return SimpleNamespace(returncode=0,stdout=good,stderr=b'')
+        with tempfile.TemporaryDirectory() as name,patch.dict(os.environ,self.resource_env(),clear=True),\
+             patch.object(B,'mysql_private_directory',return_value=Path(name)),patch.object(B.subprocess,'run',side_effect=response):
+            _,proof=B.mysql_ready_probe('1'*64,B.time.monotonic()+90,lambda:stages.append('enter-owned-relay'))
+        self.assertEqual(stages,['namespace','enter-owned-relay','host'])
+        self.assertEqual(proof['cid'],'1'*64)
+
+    def test_post_boot_identity_reads_use_same_supported_client_on_both_addresses(self):
+        calls=[];good=b'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa\t8.0.45\t3306\n'
+        def response(argv,**kwargs):calls.append((argv,kwargs));return SimpleNamespace(returncode=0,stdout=good,stderr=b'')
+        with patch.dict(os.environ,self.resource_env(),clear=True),patch.object(B.subprocess,'run',side_effect=response):
+            proof=B.mysql_address_proof('1'*64)
+        self.assertEqual(proof['hostEndpoint'],'127.0.0.1:33080');self.assertEqual(proof['executionEndpoint'],'127.0.0.1:3306')
+        self.assertEqual(len(calls),2)
+        for argv,kwargs in calls:
+            self.assertNotIn('--no-login-paths',argv);self.assertNotIn('b'*48,' '.join(argv))
+            self.assertIn(('b'*48).encode(),kwargs['input']);self.assertEqual(kwargs['env']['MYSQL_TEST_LOGIN_FILE'],'/dev/null')
+
+    def test_original_relay_core_receives_fixed_port_and_live_exact_endpoint_callback(self):
+        endpoint={'id':'1'*64,'networkId':'2'*64,'ip':'172.20.0.3','pid':41};calls=[]
+        @contextlib.contextmanager
+        def relay(expected,current,*,loopback_port):
+            self.assertEqual(expected,endpoint);self.assertEqual(current(),endpoint)
+            calls.append(loopback_port);yield SimpleNamespace(server_address=('127.0.0.1',33080))
+            self.assertEqual(current(),endpoint);calls.append('closed')
+        with patch.dict(os.environ,self.resource_env(),clear=True),patch.object(B,'mysql_relay_endpoint',return_value=endpoint),\
+             patch.object(B,'original_auth_owner',return_value=SimpleNamespace(_owned_mysql_relay=relay)):
+            with B.mysql_host_path() as proof:self.assertEqual(proof['mysqlCid'],'1'*64)
+        self.assertEqual(calls,[33080,'closed'])
+
+    def test_relay_endpoint_requires_same_owned_bridge_subnet_and_live_process(self):
+        env=self.resource_env();obj=self.mysql_object();obj['State'].update(Running=True,Pid=41,OOMKilled=False)
+        obj['NetworkSettings']['Networks']={env['HTTP_BUDGET_NETWORK']:{'IPAddress':'172.20.0.3'}}
+        net=self.network_object();net.update(Driver='bridge',Internal=True,Options={},IPAM={'Config':[{'Subnet':'172.20.0.0/24'}]})
+        with patch.dict(os.environ,env,clear=True),patch.object(B,'backing_mysql',return_value=(obj,{'networkId':'2'*64})),\
+             patch.object(B,'command',side_effect=lambda *a,**k:json.dumps([net]).encode()):
+            self.assertEqual(B.mysql_relay_endpoint(),{'id':'1'*64,'networkId':'2'*64,'ip':'172.20.0.3','pid':41})
+            obj['State']['Pid']=0
+            with self.assertRaisesRegex(ValueError,'OWNED_INTERNAL_NETWORK_REQUIRED'):B.mysql_relay_endpoint()
+            obj['State']['Pid']=41;net['Options']['com.docker.network.bridge.gateway_mode_ipv4']='isolated'
+            with self.assertRaisesRegex(ValueError,'OWNED_INTERNAL_NETWORK_REQUIRED'):B.mysql_relay_endpoint()
+            net['Options']={};obj['NetworkSettings']['Networks'][env['HTTP_BUDGET_NETWORK']]['IPAddress']='172.21.0.3'
+            with self.assertRaisesRegex(ValueError,'OWNED_INTERNAL_NETWORK_REQUIRED'):B.mysql_relay_endpoint()
+
+    def test_foreign_or_changed_endpoint_cannot_reach_original_relay(self):
+        with patch.dict(os.environ,self.resource_env(),clear=True),\
+             patch.object(B,'mysql_relay_endpoint',side_effect=ValueError('BACKING_MYSQL_FOREIGN')),patch.object(B,'original_auth_owner') as owner:
+            with self.assertRaisesRegex(ValueError,'BACKING_MYSQL_FOREIGN'):
+                with B.mysql_host_path():self.fail('foreign target entered relay')
+        owner.assert_not_called()
+
+    def host_path_control(self,exit_code=0,wrong_uuid=False,close_fails=False,write_fails=False):
+        bootstrap=self.subject_report()['mysqlBootstrap'];bootstrap['readiness']['cid']='1'*64
+        events=[];writes=[]
+        @contextlib.contextmanager
+        def relay():
+            events.append('relay-open');yield {'mysqlCid':'1'*64}
+            events.append('relay-close')
+            if close_fails:raise ValueError('private raw message must not be published')
+        address={key:value for key,value in bootstrap['readiness'].items() if key!='result'}
+        if wrong_uuid:address['serverUuid']='cccccccc-cccc-cccc-cccc-cccccccccccc'
+        def execute(argv,**kwargs):
+            self.assertEqual(argv,['bash',str(B.ROOT/'chengyinhub-admin/src/test/tools/generic-gameplay-http-e2e.sh')])
+            self.assertEqual(kwargs['env']['MYSQL_TEST_LOGIN_FILE'],'/dev/null')
+            events.append('original-schema-test-cleanup-shell');return SimpleNamespace(returncode=exit_code)
+        def publish(path,value):
+            writes.append(copy.deepcopy(value))
+            if write_fails:raise OSError('private evidence write error')
+        with patch.dict(os.environ,self.resource_env(),clear=True),patch.object(B,'require_mysql_bootstrap',return_value=bootstrap),\
+             patch.object(B,'mysql_host_path',side_effect=relay),patch.object(B,'mysql_address_proof',return_value=address),\
+             patch.object(B.subprocess,'run',side_effect=execute),patch.object(B,'write',side_effect=publish):
+            failure=None;status=None
+            try:status=B.run_host_path()
+            except Exception as error:failure=error
+        return events,writes,status,failure
+
+    def test_original_schema_test_cleanup_all_stay_within_one_bound_host_path(self):
+        events,writes,status,failure=self.host_path_control()
+        self.assertEqual(events,['relay-open','original-schema-test-cleanup-shell','relay-close'])
+        self.assertIsNone(failure);self.assertEqual(status,0)
+        self.assertEqual(writes[-1]['result'],'ORIGINAL_SHELL_AND_HOST_PATH_CLOSED')
+        self.assertFalse(writes[-1]['q4q8Complete'])
+
+    def test_changed_uuid_never_runs_original_business_shell(self):
+        events,writes,_,failure=self.host_path_control(wrong_uuid=True)
+        self.assertIsInstance(failure,ValueError);self.assertNotIn('original-schema-test-cleanup-shell',events)
+        self.assertEqual(writes[-1]['result'],'NOT_ACCEPTED')
+
+    def test_original_nonzero_survives_late_relay_cleanup_failure(self):
+        _,writes,status,failure=self.host_path_control(exit_code=7,close_fails=True)
+        self.assertIsNone(failure);self.assertEqual(status,7);self.assertEqual(writes[-1]['originalExit'],7)
+        self.assertEqual(writes[-1]['result'],'NOT_ACCEPTED');self.assertNotIn('private raw',json.dumps(writes))
+
+    def test_host_path_evidence_failure_preserves_original_nonzero_and_does_not_green_zero(self):
+        _,_,status,failure=self.host_path_control(exit_code=7,write_fails=True)
+        self.assertIsNone(failure);self.assertEqual(status,7)
+        _,_,status,failure=self.host_path_control(exit_code=0,write_fails=True)
+        self.assertIsNone(status);self.assertIsInstance(failure,OSError)
+
+    def test_exact_native_network_not_found_and_legacy_container_absence(self):
+        for kind,target,message in [('network','2'*64,'Error response from daemon: network '+'2'*64+' not found'),
+                                    ('network','owned-net','Error: No such network: owned-net'),
+                                    ('container','1'*64,'Error response from daemon: No such container: '+'1'*64)]:
+            result=SimpleNamespace(returncode=1,stdout=b'[]\n',stderr=(message+'\n').encode())
+            self.assertTrue(B.exact_absence(kind,target,result))
+            with patch.object(B.subprocess,'run',return_value=result):
+                self.assertIsNone(B.object_or_absent(kind,target));B.absent(kind,target)
+
+    def test_wrong_target_daemon_error_and_generic_not_found_remain_unknown(self):
+        for code,out,error in [(1,b'[]',b'Error response from daemon: network other-id not found'),
+                               (1,b'[]',b'permission denied: network owned-net not found'),
+                               (1,b'[]',b'Error response from daemon: network owned-net not found\nconnection failed'),
+                               (1,b'[]',b'Cannot connect to the Docker daemon'),
+                               (0,b'[]',b'Error response from daemon: network owned-net not found'),
+                               (1,b'[{}]',b'Error response from daemon: network owned-net not found')]:
+            result=SimpleNamespace(returncode=code,stdout=out,stderr=error)
+            self.assertFalse(B.exact_absence('network','owned-net',result))
+            with patch.object(B.subprocess,'run',return_value=result):
+                with self.assertRaisesRegex(ValueError,'ABSENCE_NOT_INDEPENDENTLY_PROVEN'):B.absent('network','owned-net')
+
+    def test_network_remove_error_keeps_native_stage_and_original_first_failure(self):
+        reports,_,failure,_=self.cleanup_control(network_exit=1)
+        self.assertIsInstance(failure,ValueError);last=reports[-1]
+        self.assertEqual(last['result'],'UNKNOWN');self.assertIsNone(last['networkAbsent'])
+        self.assertEqual(last['failures'][-1]['phase'],'NETWORK_REMOVE')
+        self.assertEqual(last['nativeOperations'][-1],{'operation':'NETWORK_REMOVE','exit':1,'category':'UNCLASSIFIED_NATIVE_FAILURE'})
+        self.assertEqual(last['originalExit'],1);self.assertEqual(last['firstFailure']['reasonCode'],'MYSQL_TCP_READY_BUDGET_EXHAUSTED')
+
+    def test_abi_does_not_accept_missing_or_foreign_host_transport_binding(self):
+        for transport in ({},{'result':'ORIGINAL_OWNED_MYSQL_RELAY','mysqlCid':'4'*64,'hostEndpoint':'127.0.0.1:33080','closedAfterReadiness':True}):
+            report=self.subject_report();report['mysqlBootstrap']['hostPath']=transport
+            with self.assertRaisesRegex(ValueError,'BOOTSTRAP_NOT_VERIFIED'):B.check_subject(report,B.identity(self.env()),41,'f'*64)
+
+    def test_shared_relay_fixed_port_extension_rejects_arbitrary_port_and_wrong_scope_before_socket(self):
+        owner=B.original_auth_owner()
+        for value in (True,-1,3306,33081):
+            with self.assertRaisesRegex(RuntimeError,'unreviewed relay listener'):
+                with owner._owned_mysql_relay({},lambda:self.fail('endpoint read before port gate'),loopback_port=value):
+                    self.fail('unexpected listener')
+        env=self.env();env['HTTP_SCOPE']='all-three'
+        with patch.dict(os.environ,env,clear=True):
+            with self.assertRaisesRegex(RuntimeError,'fixed combined relay requires original manual owned scope'):
+                with owner._owned_mysql_relay({},lambda:self.fail('endpoint read before scope gate'),loopback_port=33080):
+                    self.fail('unexpected listener')
+
+    def test_original_ephemeral_relay_scope_is_unchanged_and_identity_still_precedes_bind(self):
+        owner=B.original_auth_owner()
+        with patch.dict(os.environ,{},clear=True):
+            with self.assertRaisesRegex(RuntimeError,'MySQL relay identity changed before bind'):
+                with owner._owned_mysql_relay({'id':'original'},lambda:{'id':'changed'}):self.fail('changed target bound')
 
 
 if __name__=='__main__':unittest.main()

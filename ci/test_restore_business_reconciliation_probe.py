@@ -37,6 +37,7 @@ def scenario():
                               payable_amount='100.00', fee_platform_rate='0.1234', member_id=7,
                               owner_type=1 if c['case'] == 'historical_paid' else 2,
                               owner_id=99 if c['case'] == 'historical_paid' else 55,
+                              ticket_id=9, purchase_kind=1,
                               registration_status=2 if c in paid else 1, payment_status=2 if c in paid else 1) for c in identities]
         frozen = [dict(mchid=c['mchid'], appid=c['appid'], biz_type='REGISTRATION', biz_id=c['bizId'],
                        attempt_no=c['attemptNo'], request_hash=c['fingerprint'], out_trade_no=c['wxNo'],
@@ -59,14 +60,15 @@ def scenario():
                     fulfillment_type='REGISTRATION', fulfillment_id=15, beneficiary_role=role.upper(), beneficiary_id=receiver,
                     service_unit='MERCHANT_PARTICIPATION', settlement_route='REGISTRATION_SPLIT',
                     source_contract_type='DIRECT_REGISTRATION', source_contract_id=15, status='ACTIVE'))
-                details.append(dict(id=1 + i, claim_id=4 + i, batch_id=0, merchant_id=1, source_type='activity', source_id=15,
+                details.append(dict(id=1 + i, claim_id=4 + i, batch_id=0, merchant_id=1, source_type='registration', source_id=15,
                     receiver_type=role, receiver_id=receiver, gross_amount=amount, commission_amount='0.00',
                     settlement_amount=amount, status=0, entry_kind='ORIGIN', event_key='ORIGIN',
-                    idempotency_key='activity:15:' + role + ':' + str(receiver)))
+                    idempotency_key='registration:15:' + role + ':' + str(receiver)))
         contents = {'cms_registration': registrations, 'wx_pay_order_intent': frozen, 'wx_verified_payment_fact': facts,
                     'cms_registration_payment_fact': receipts, 'ums_member': [dict(id=7, point=120 if lost else 115)],
                     'ums_member_points_detail': entries, 'ums_member_balance_detail': [], 'refund_application': [],
-                    'cms_registration_scan': [], 'cms_activity': [dict(id=55, member_id=1)],
+                    'cms_registration_scan': [], 'cms_activity': [dict(id=55, member_id=1, topic_id=None,
+                        status=1, publish_status=1, del_flag=0)],
                     'oms_ticket': [dict(id=9, owner_type=2, owner_id=55, remaining_inventory=6 if lost else 7)],
                     'settlement_rule': [dict(id=8, merchant_id=0, biz_type='activity', platform_commission_rate='0.1234',
                         merchant_rate='0.8766', creator_rate='0.0000', inviter_rate='0.0000', status=1, del_flag=0)],
@@ -235,6 +237,28 @@ class CompositeIntentControls(unittest.TestCase):
 
 
 class ActivityPaymentSourceControls(unittest.TestCase):
+    def test_registration_detail_source_and_activity_claim_context_are_distinct_original_identities(self):
+        values = scenario()
+        p.activity_receivables(values[1])
+        details = p.dictionaries(values[1], 'settlement_detail')
+        claims = p.dictionaries(values[1], 'settlement_claim')
+        self.assertEqual({'registration'}, {r['source_type'] for r in details})
+        self.assertEqual({'ACTIVITY'}, {r['commercial_context_type'] for r in claims})
+        for field, wrong in [('source_type', 'activity'), ('idempotency_key', 'activity:15:merchant:1')]:
+            rejected = scenario(); replace(rejected[1], 'settlement_detail', field, wrong)
+            with self.subTest(field=field), self.assertRaises(ValueError): p.reconcile(*rejected)
+
+    def test_paid_explore_missing_ticket_or_nonordinary_activity_cannot_masquerade_as_this_cash_fixture(self):
+        for name, field, wrong in [('cms_registration', 'purchase_kind', 3),
+                ('cms_registration', 'ticket_id', 0), ('cms_activity', 'topic_id', 99),
+                ('cms_activity', 'status', 0), ('cms_activity', 'publish_status', 0), ('cms_activity', 'del_flag', 1)]:
+            values = scenario()
+            entry = values[1]['tables'][name]
+            # The paid ACTIVITY is the last registration, not the historical TOPIC in row zero.
+            index = -1 if name == 'cms_registration' else 0
+            entry['rows'][index][[c[0] for c in entry['columns']].index(field)] = str(wrong)
+            with self.subTest(field=field), self.assertRaises(ValueError): p.reconcile(*values)
+
     def test_original_activity_cash_and_claims_commit_only_in_fault_and_stay_absent_after_restore(self):
         backup, fault, restored, before, after = scenario()
         result = p.reconcile(backup, fault, restored, before, after)

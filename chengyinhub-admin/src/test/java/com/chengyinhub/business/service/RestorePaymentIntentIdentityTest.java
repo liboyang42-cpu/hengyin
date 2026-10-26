@@ -95,4 +95,48 @@ class RestorePaymentIntentIdentityTest {
         assertThrows(IllegalStateException.class,
             () -> RestoreBusinessReconciliationFixture.canonicalActivityTable("truncated", "settlement_claim"));
     }
+
+    private CmsRegistration ordinaryActivityOrder() {
+        var order = order(); order.setMemberId(7L); order.setOwnerType(2L); order.setOwnerId(55L);
+        order.setTicketId(9L); order.setPurchaseKind(com.chengyinhub.common.constant.PurchaseKind.GUIDED_TICKET);
+        order.setPayableAmount(new BigDecimal("100.00")); order.setFeePlatformRate(new BigDecimal("0.1234"));
+        return order;
+    }
+
+    private com.chengyinhub.business.domain.CmsActivity ordinaryActivity() {
+        var activity = new com.chengyinhub.business.domain.CmsActivity();
+        activity.setId(55L); activity.setMemberId(1L); activity.setStatus(1L);
+        activity.setPublishStatus(1L); activity.setDelFlag(0); return activity;
+    }
+
+    @Test
+    void originalOrdinaryActivityCashIsAdmittedWithoutConvertingItToTopicOrExplore() {
+        var order = ordinaryActivityOrder(); var activity = ordinaryActivity();
+        assertDoesNotThrow(() -> RestoreBusinessReconciliationFixture.requireOriginalActivityCash(order, activity));
+        assertEquals(Long.valueOf(2), order.getOwnerType()); assertNull(activity.getTopicId());
+        assertEquals(Integer.valueOf(1), order.getPurchaseKind());
+    }
+
+    @Test
+    void wrongOriginalActorOwnerKindMoneyOrActivityStatusCannotStandInForTheCashFixture() {
+        for (int mismatch = 0; mismatch < 10; mismatch++) {
+            var order = ordinaryActivityOrder(); var activity = ordinaryActivity();
+            switch (mismatch) {
+                case 0 -> order.setMemberId(8L);
+                case 1 -> order.setOwnerType(1L);
+                case 2 -> order.setTicketId(null);
+                case 3 -> order.setPurchaseKind(com.chengyinhub.common.constant.PurchaseKind.EXPLORE_PASS);
+                case 4 -> order.setFeePlatformRate(null);
+                case 5 -> order.setWechatPaymentAmount(new BigDecimal("99.99"));
+                case 6 -> activity.setMemberId(8L);
+                case 7 -> activity.setTopicId(99L);
+                case 8 -> activity.setPublishStatus(0L);
+                case 9 -> activity.setDelFlag(1);
+            }
+            assertThrows(IllegalStateException.class,
+                () -> RestoreBusinessReconciliationFixture.requireOriginalActivityCash(order, activity));
+        }
+        assertThrows(IllegalStateException.class,
+            () -> RestoreBusinessReconciliationFixture.requireOriginalActivityCash(ordinaryActivityOrder(), null));
+    }
 }

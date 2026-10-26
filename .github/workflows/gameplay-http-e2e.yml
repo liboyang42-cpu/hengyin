@@ -120,7 +120,7 @@ jobs:
               --memory=1g --memory-swap=1g --cpus=1 --pids-limit=256 --tmpfs /var/lib/mysql:rw,size=768m \
               --label "chengyin.http.run=$GITHUB_RUN_ID" --label "chengyin.http.attempt=$GITHUB_RUN_ATTEMPT" \
               --label "chengyin.http.source=$SOURCE_SHA" --label "chengyin.http.class=$CHENGYIN_HTTP_E2E_TESTS" \
-              -e MYSQL_ROOT_PASSWORD -e MYSQL_ROOT_HOST=% -p 127.0.0.1:33080:3306 \
+              -e MYSQL_ROOT_PASSWORD -e MYSQL_ROOT_HOST=% \
               mysql:8.0.45@sha256:4af1f8815716546f5b12410f7621f37f93db8dd11a184706ef59111930b8c2ff \
               --default-time-zone=+08:00)"
             export HTTP_MYSQL_CID="$mysql_cid"
@@ -144,7 +144,12 @@ jobs:
           test "$ready" = 1
           fi
       - name: Run original class and exact XML plus cleanup readbacks
-        run: bash chengyinhub-admin/src/test/tools/generic-gameplay-http-e2e.sh
+        run: |
+          if [[ "$CHENGYIN_HTTP_E2E_TESTS" == CrossDomainCombinedLoadMySqlIT ]]; then
+            python3 -I ci/combined_http_budget.py run-host-path
+          else
+            bash chengyinhub-admin/src/test/tools/generic-gameplay-http-e2e.sh
+          fi
       - name: Remove only this owned MySQL container
         if: always()
         run: |

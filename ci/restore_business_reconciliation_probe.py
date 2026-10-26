@@ -438,7 +438,7 @@ def reconcile(backup, fault, restored, provider_before, provider_after):
 
 
 def activity_receivables(snapshot):
-    """Read only the original pending activity components; this never creates, pays or repairs a claim."""
+    """ACTIVITY claim context, registration detail source: read originals without paying or repairing them."""
     claims = dictionaries(snapshot, 'settlement_claim'); details = dictionaries(snapshot, 'settlement_detail')
     paid = [r for r in dictionaries(snapshot, 'cms_registration')
             if r['owner_type'] == '2' and r['payment_status'] == r['registration_status'] == '2']
@@ -446,11 +446,15 @@ def activity_receivables(snapshot):
     for order in paid:
         activities = [r for r in dictionaries(snapshot, 'cms_activity') if r['id'] == order['owner_id']]
         require(len(activities) == 1, 'original paid activity missing')
+        require(order['purchase_kind'] == '1' and order['ticket_id'] == '9'
+                and activities[0]['topic_id'] is None and activities[0]['status'] == '1'
+                and activities[0]['publish_status'] == '1' and activities[0]['del_flag'] == '0',
+                'fixed ordinary activity cash source differs')
         merchant = activities[0]['member_id']; gross = Decimal(order['payable_amount'])
         platform = (gross * Decimal(order['fee_platform_rate'])).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         expected = {'merchant': (merchant, gross - platform)}
         if platform > 0: expected['platform'] = ('0', platform)
-        original = [r for r in details if r['source_type'] == 'activity' and r['source_id'] == order['id']]
+        original = [r for r in details if r['source_type'] == 'registration' and r['source_id'] == order['id']]
         require(len(original) == len(expected) and {r['receiver_type'] for r in original} == set(expected),
                 'original activity receivable roster differs')
         for detail in original:
@@ -460,7 +464,7 @@ def activity_receivables(snapshot):
                     and detail['entry_kind'] == detail['event_key'] == 'ORIGIN'
                     and Decimal(detail['commission_amount']) == 0
                     and Decimal(detail['gross_amount']) == Decimal(detail['settlement_amount']) == amount
-                    and detail['idempotency_key'] == 'activity:' + order['id'] + ':' + detail['receiver_type'] + ':' + receiver,
+                    and detail['idempotency_key'] == 'registration:' + order['id'] + ':' + detail['receiver_type'] + ':' + receiver,
                     'original activity receivable identity/money differs')
             owned = [r for r in claims if r['id'] == detail['claim_id']]
             require(len(owned) == 1, 'original activity claim missing')

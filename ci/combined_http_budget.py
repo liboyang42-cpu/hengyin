@@ -5,8 +5,11 @@ Only the reviewed hosted script calls this adapter. The original workflow owns M
 the original fresh-schema and HTTP XML/cleanup verifier remain authoritative for business results.
 """
 import argparse
+import contextlib
 import datetime
 import hashlib
+import importlib.util
+import ipaddress
 import json
 import os
 from pathlib import Path
@@ -84,12 +87,35 @@ def mysql_names(env):
             'cy-http-budget-'+env['GITHUB_RUN_ID']+'-'+env['GITHUB_RUN_ATTEMPT'])
 
 
-def object_or_absent(kind,target):
+def exact_absence(kind,target,result):
+    """One native inspect, one exact original target; never substring 'not found'."""
+    require(kind in ('container','network') and isinstance(target,str) and
+            re.fullmatch('[A-Za-z0-9][A-Za-z0-9_.-]*',target),'DOCKER_INSPECTION_UNKNOWN')
+    escaped=re.escape(target)
+    patterns=[r'Error: No such '+kind+r': '+escaped]
+    if kind=='container':
+        patterns += [r'Error: No such object: '+escaped,r'Error response from daemon: No such container: '+escaped]
+    else:patterns += [r'Error response from daemon: network '+escaped+r' not found']
+    return (result.returncode==1 and re.fullmatch('|'.join(patterns),result.stderr.decode(errors='replace').strip()) is not None
+            and result.stdout.strip() in (b'',b'[]'))
+
+
+def native_operation(kind,target,result):
+    # Safe result classification: no stdout/stderr or untrusted daemon message enters the public report.
+    text=result.stderr.decode(errors='replace').lower()
+    category=('OK' if result.returncode==0 else 'EXACT_NATIVE_TARGET_ABSENT' if exact_absence(kind,target,result)
+              else 'DOCKER_UNAVAILABLE' if 'cannot connect to the docker daemon' in text
+              else 'ACTIVE_ENDPOINTS' if 'has active endpoints' in text
+              else 'PERMISSION_REJECTED' if 'permission denied' in text
+              else 'UNCLASSIFIED_NATIVE_FAILURE')
+    return {'exit':result.returncode,'category':category}
+
+
+def object_or_absent(kind,target,observations=None):
     result=subprocess.run(DOCKER+[kind,'inspect',target],capture_output=True,timeout=15)
+    if observations is not None:observations.append({'operation':'INSPECT','kind':kind,**native_operation(kind,target,result)})
     if result.returncode:
-        text=result.stderr.decode(errors='replace').lower()
-        require(('no such '+('network' if kind=='network' else 'container')) in text
-                or (kind=='container' and 'no such object' in text),'DOCKER_INSPECTION_UNKNOWN')
+        require(exact_absence(kind,target,result),'DOCKER_INSPECTION_UNKNOWN')
         return None
     value=json.loads(result.stdout);require(len(value)==1,'DOCKER_INSPECTION_UNKNOWN');return value[0]
 
@@ -110,17 +136,70 @@ def owned_mysql(env):
     return obj
 
 
-def owned_network(env):
+def owned_network(env,observations=None):
     _,name=mysql_names(env)
     require(env.get('HTTP_BUDGET_NETWORK')==name and re.fullmatch('[0-9a-f]{64}',env.get('HTTP_BUDGET_NETWORK_ID','')),
             'NETWORK_IDENTITY_REQUIRED')
-    obj=object_or_absent('network',env['HTTP_BUDGET_NETWORK_ID'])
+    obj=object_or_absent('network',env['HTTP_BUDGET_NETWORK_ID'],observations)
     if obj is None:
-        absent('network',name);return None
+        absent('network',name,observations);return None
     require(obj['Id']==env['HTTP_BUDGET_NETWORK_ID'] and obj['Name']==name
             and all(obj.get('Labels',{}).get(k)==v for k,v in labels(env).items()),'FOREIGN_NETWORK')
     require(json.loads(command(DOCKER+['network','inspect',name]))[0]['Id']==obj['Id'],'FOREIGN_NETWORK')
     return obj
+
+
+def original_auth_owner():
+    """Load the existing transport owner by fixed reviewed source path; no profile/URL/plugin selector."""
+    spec=importlib.util.spec_from_file_location('combined_original_auth_transport',ROOT/'ci/authenticated_redis_recovery_probe.py')
+    owner=importlib.util.module_from_spec(spec);spec.loader.exec_module(owner)
+    return owner
+
+
+def mysql_relay_endpoint():
+    obj,proof=backing_mysql(os.environ)
+    network=json.loads(command(DOCKER+['network','inspect',proof['networkId']]))[0]
+    require(network['Id']==proof['networkId'] and network['Driver']=='bridge'
+            and network.get('Options',{}).get('com.docker.network.bridge.gateway_mode_ipv4','nat')!='isolated',
+            'OWNED_INTERNAL_NETWORK_REQUIRED')
+    attachment=obj['NetworkSettings']['Networks'][mysql_names(os.environ)[1]]
+    address=ipaddress.ip_address(attachment['IPAddress'])
+    require(address.version==4 and address.is_private and not address.is_loopback
+            and any(address in ipaddress.ip_network(c['Subnet']) for c in network['IPAM']['Config'] if ':' not in c['Subnet'])
+            and obj['State']['Pid']>0 and not obj['State'].get('Paused') and not obj['State'].get('Restarting')
+            and not obj['State'].get('OOMKilled'),'OWNED_INTERNAL_NETWORK_REQUIRED')
+    return {'id':obj['Id'],'networkId':proof['networkId'],'ip':str(address),'pid':obj['State']['Pid']}
+
+
+@contextlib.contextmanager
+def mysql_host_path():
+    identity_gate(os.environ)
+    expected=mysql_relay_endpoint()
+    owner=original_auth_owner()
+    # The original owner rechecks the full CID/network/IP/PID before bind, every connection, and after use;
+    # it closes and joins its exact sockets/threads. The shared review.patch adds only this fixed bind port.
+    with owner._owned_mysql_relay(expected,mysql_relay_endpoint,loopback_port=33080) as server:
+        require(server.server_address==('127.0.0.1',33080),'ORIGINAL_LOOPBACK_MYSQL_REQUIRED')
+        yield {'result':'ORIGINAL_OWNED_MYSQL_RELAY','hostEndpoint':'127.0.0.1:33080',
+               'mysqlCid':expected['id'],'networkId':expected['networkId'],'mysqlPid':expected['pid']}
+
+
+def mysql_client_environment():
+    env=dict(os.environ)
+    for key in ('MYSQL_PWD','MYSQL_HOME','MYSQL_TEST_LOGIN_FILE'):env.pop(key,None)
+    env['MYSQL_TEST_LOGIN_FILE']='/dev/null'
+    return env
+
+
+def mysql_client_arguments():
+    # 8.0.45 supports MYSQL_TEST_LOGIN_FILE, not the 8.2+ --no-login-paths switch.
+    return ['mysql','--defaults-file=/dev/stdin','--protocol=TCP','--host=127.0.0.1','--user=root',
+            '--connect-timeout=1','--batch','--skip-column-names','--execute','SELECT @@server_uuid,VERSION(),@@port']
+
+
+def namespace_mysql_arguments(cid,arguments):
+    return DOCKER+['exec','-i','--env','MYSQL_TEST_LOGIN_FILE=/dev/null','--env','MYSQL_PWD=',
+                   '--env','MYSQL_HOME=',cid]+arguments+['--port=3306']
 
 
 def mysql_proof(obj,network_id):
@@ -165,7 +244,7 @@ def mysql_diagnostic(obj):
             'additionalNetworkCount':len(set(runtime)-{declared}),
             'hostBudget':{key:obj['HostConfig'].get(key) for key in ('Memory','MemorySwap','NanoCpus','PidsLimit')},
             'mysqlTmpfs':{'present':'/var/lib/mysql' in tmpfs,'matchesConfigured768m':tmpfs.get('/var/lib/mysql')=='rw,size=768m'},
-            'loopbackBindingMatches':obj['HostConfig'].get('PortBindings')=={'3306/tcp':[{'HostIp':'127.0.0.1','HostPort':'33080'}]},
+            'noDockerPublishedPorts':not obj['HostConfig'].get('PortBindings'),
             'rootCause':'UNDETERMINED_REQUIRES_OBSERVED_DIAGNOSTICS'}
     try:
         private=mysql_private_directory();log=private/'mysql.log'
@@ -216,9 +295,13 @@ def require_mysql_bootstrap():
     report=read_bootstrap()
     require(report.get('result')=='READY' and report.get('originalExit')==0 and not report.get('firstFailure')
             and report.get('readiness',{}).get('result')=='BOTH_LOOPBACK_TCP_IDENTITIES_VERIFIED'
-            and report['readiness'].get('cid')==os.environ.get('HTTP_MYSQL_CID'),'BOOTSTRAP_NOT_VERIFIED')
+            and report['readiness'].get('cid')==os.environ.get('HTTP_MYSQL_CID')
+            and report.get('hostPath',{}).get('result')=='ORIGINAL_OWNED_MYSQL_RELAY'
+            and report['hostPath'].get('mysqlCid')==report['readiness']['cid']
+            and report['hostPath'].get('hostEndpoint')=='127.0.0.1:33080'
+            and report['hostPath'].get('closedAfterReadiness') is True,'BOOTSTRAP_NOT_VERIFIED')
     return {'sourceSha':report['sourceSha'],'runId':report['runId'],'attempt':report['attempt'],'class':report['class'],
-            'result':report['result'],'originalExit':report['originalExit'],'readiness':report['readiness'],
+            'result':report['result'],'originalExit':report['originalExit'],'readiness':report['readiness'],'hostPath':report['hostPath'],
             'reportSha256':digest(BOOTSTRAP_REPORT)}
 
 
@@ -262,18 +345,22 @@ def bootstrap_failure(original_exit):
     write(BOOTSTRAP_REPORT,report)
 
 
-def mysql_ready_probe(cid,deadline):
+def mysql_ready_probe(cid,deadline,before_host=None):
     require(re.fullmatch('[0-9a-f]{48}',os.environ.get('CHENGYIN_MYBATIS_IT_PASSWORD',''))
             and os.environ.get('CHENGYIN_MYBATIS_IT_USER')=='root','ORIGINAL_SYNTHETIC_MYSQL_CREDENTIAL_REQUIRED')
     config=('[client]\npassword='+os.environ['CHENGYIN_MYBATIS_IT_PASSWORD']+'\n').encode()
-    base=['mysql','--defaults-file=/dev/stdin','--no-login-paths','--protocol=TCP','--host=127.0.0.1','--user=root',
-          '--connect-timeout=1','--batch','--skip-column-names','--execute','SELECT @@server_uuid,VERSION(),@@port']
+    base=mysql_client_arguments()
     answers={};observed={};private=mysql_private_directory()
-    for side,args in (('host',base+['--port=33080']),('namespace',DOCKER+['exec','-i',cid]+base+['--port=3306'])):
+    # Do not open the original relay until MySQL is really accepting namespace TCP; expected init
+    # connection-refused retries must not poison the relay owner's successful-phase invariant.
+    for side,args in (('namespace',namespace_mysql_arguments(cid,base)),('host',base+['--port=33080'])):
+        if side=='host' and 'namespace' not in answers:
+            observed[side]={'result':'WAITING_FOR_NAMESPACE_TCP'};continue
+        if side=='host' and before_host is not None:before_host()
         remaining=deadline-time.monotonic()
         if remaining<=0: observed[side]={'result':'DEADLINE_EXHAUSTED'};continue
         try:
-            result=subprocess.run(args,input=config,capture_output=True,timeout=min(3,remaining))
+            result=subprocess.run(args,input=config,capture_output=True,timeout=min(3,remaining),env=mysql_client_environment())
             observed[side]={'exit':result.returncode,'stderrCategory':classify_mysql_stderr(result.stderr)}
             code=re.search(rb'\bERROR\s+([0-9]{3,5})\b',result.stderr)
             if code:observed[side]['mysqlClientCode']=int(code[1])
@@ -291,11 +378,15 @@ def mysql_ready_probe(cid,deadline):
 
 def bootstrap_ready():
     report=read_bootstrap();deadline=time.monotonic()+90;report['phase']='MYSQL_TCP_READINESS';report['probes']=[]
+    host_path=contextlib.ExitStack();host_proof=None
+    def before_host():
+        nonlocal host_proof
+        if host_proof is None:host_proof=host_path.enter_context(mysql_host_path());report['hostPath']=host_proof
     try:
         identity_gate(os.environ)
         for attempt in range(1,91):
             obj,proof=backing_mysql(os.environ);report['mysql']=proof
-            observed,address=mysql_ready_probe(obj['Id'],deadline)
+            observed,address=mysql_ready_probe(obj['Id'],deadline,before_host)
             report['probes'].append({'attempt':attempt,'elapsedSeconds':90-max(0,deadline-time.monotonic()),'endpoints':observed})
             if address is not None:
                 require(time.monotonic()<=deadline,'MYSQL_TCP_READY_BUDGET_EXHAUSTED')
@@ -306,6 +397,7 @@ def bootstrap_ready():
                 report['diagnostic']={'state':safe_mysql_state(current)}
                 try:report['diagnostic']=mysql_diagnostic(current)
                 except Exception as capture:report['captureFailure']=resource_failure(capture,'MYSQL_READY_DIAGNOSTIC')
+                host_path.close();report['hostPath']['closedAfterReadiness']=True
                 write(BOOTSTRAP_REPORT,report);return 0
             write(BOOTSTRAP_REPORT,report)
             remaining=deadline-time.monotonic()
@@ -325,6 +417,38 @@ def bootstrap_ready():
         write(BOOTSTRAP_REPORT,report)
         print('Combined MySQL bootstrap: '+json.dumps(report['firstFailure'],sort_keys=True),file=__import__('sys').stderr)
         return 1
+    finally:
+        # No listener/relay survives a workflow step. Errors remain failures, never a fallback endpoint.
+        host_path.close()
+
+
+def run_host_path():
+    identity_gate(os.environ);bootstrap=require_mysql_bootstrap()
+    report={**resource_envelope(os.environ),'result':'NOT_COMPLETED','originalExit':None}
+    def publish():
+        try:write(PUBLIC/'combined-http-host-path.json',report)
+        except Exception as failure:
+            print('Combined host path evidence: '+json.dumps(resource_failure(failure,'HOST_PATH_EVIDENCE_WRITE'),sort_keys=True),
+                  file=__import__('sys').stderr)
+            if report['originalExit'] in (None,0):raise
+    try:
+        with mysql_host_path() as transport:
+            report['transport']=transport
+            require(transport['mysqlCid']==bootstrap['readiness']['cid'],'BOOTSTRAP_NOT_VERIFIED')
+            require(mysql_address_proof(transport['mysqlCid'])=={key:value for key,value in bootstrap['readiness'].items() if key!='result'},
+                    'BOOTSTRAP_NOT_VERIFIED')
+            env=dict(os.environ,MYSQL_TEST_LOGIN_FILE='/dev/null');env.pop('MYSQL_HOME',None)
+            result=subprocess.run(['bash',str(ROOT/'chengyinhub-admin/src/test/tools/generic-gameplay-http-e2e.sh')],env=env)
+            # Original fixed shell keeps creation/test/finalize/schema cleanup inside this same path.
+            report['originalExit']=result.returncode if result.returncode>=0 else 128-result.returncode
+        report['result']='ORIGINAL_SHELL_AND_HOST_PATH_CLOSED' if report['originalExit']==0 else 'ORIGINAL_SHELL_FAILED'
+        publish()
+        return report['originalExit']
+    except Exception as failure:
+        report.update(result='NOT_ACCEPTED',failure=resource_failure(failure,'FIXED_HOST_PATH'))
+        publish()
+        if report['originalExit'] not in (None,0):return report['originalExit']
+        raise
 
 
 def identity_gate(env):
@@ -368,11 +492,11 @@ def inspect(target):
     return value[0]
 
 
-def absent(kind, target):
+def absent(kind, target, observations=None):
     result = subprocess.run(DOCKER + [kind, 'inspect', target], capture_output=True, timeout=15)
-    text = result.stderr.decode(errors='replace').lower()
-    require(result.returncode != 0 and ('no such '+('network' if kind == 'network' else 'container') in text
-            or (kind == 'container' and 'no such object' in text)), 'ABSENCE_NOT_INDEPENDENTLY_PROVEN')
+    if observations is not None:observations.append({'operation':'ABSENCE_INSPECT','kind':kind,**native_operation(kind,target,result)})
+    require(exact_absence(kind,target,result),'ABSENCE_NOT_INDEPENDENTLY_PROVEN')
+    return {'exit':result.returncode,'category':'EXACT_NATIVE_TARGET_ABSENT'}
 
 
 def validate_container(obj, name, image, expected_labels, memory, network, cid=None):
@@ -407,7 +531,7 @@ def backing_mysql(env, cleanup=False):
     if not cleanup:
         require(host['Memory'] == MEMORY and host['MemorySwap'] == MEMORY and host['NanoCpus'] == 1000000000
                 and host['PidsLimit'] == 256 and not host.get('Privileged'), 'BACKING_MYSQL_BUDGET_MISMATCH')
-        require(host.get('PortBindings') == {'3306/tcp':[{'HostIp':'127.0.0.1','HostPort':'33080'}]}
+        require(not host.get('PortBindings')
                 and set(obj['NetworkSettings']['Networks']) == {network_name}, 'BACKING_LOOPBACK_SCOPE_CHANGED')
         require(host.get('Tmpfs',{}).get('/var/lib/mysql')=='rw,size=768m'
                 and not any(m.get('Type')=='volume' for m in obj.get('Mounts',[])),'BACKING_MYSQL_EXACT_EPHEMERAL_STORAGE_REQUIRED')
@@ -715,10 +839,13 @@ def run(path):
 def mysql_address_proof(cid):
     # Password only on private stdin, never argv/env artifact. Both addresses query the SAME server.
     config = ('[client]\npassword='+os.environ['CHENGYIN_MYBATIS_IT_PASSWORD']+'\n').encode()
-    args = ['mysql','--defaults-file=/dev/stdin','--no-login-paths','--protocol=TCP','--host=127.0.0.1','--user=root',
-            '--batch','--skip-column-names','--execute','SELECT @@server_uuid,VERSION(),@@port']
-    host = command(args+['--port=33080'],data=config).decode().strip().split('\t')
-    namespace = command(DOCKER+['exec','-i',cid]+args+['--port=3306'],data=config).decode().strip().split('\t')
+    args=mysql_client_arguments()
+    responses=[]
+    for argv in (args+['--port=33080'],namespace_mysql_arguments(cid,args)):
+        result=subprocess.run(argv,input=config,capture_output=True,timeout=20,env=mysql_client_environment())
+        require(result.returncode==0,'MYSQL_TCP_IDENTITY_MISMATCH')
+        responses.append(result.stdout.decode().strip().split('\t'))
+    host,namespace=responses
     require(host == namespace and len(host)==3 and re.fullmatch('[0-9a-f-]{36}',host[0])
             and host[1].split('-')[0]=='8.0.45' and host[2]=='3306','SAME_MYSQL_UUID_BOTH_ADDRESSES_REQUIRED')
     return {'cid':cid,'serverUuid':host[0],'version':host[1],'hostEndpoint':'127.0.0.1:33080','executionEndpoint':'127.0.0.1:3306'}
@@ -849,6 +976,10 @@ def check_subject(report, subject_identity, java_pid, jar_sha256):
             and bootstrap.get('readiness',{}).get('result')=='BOTH_LOOPBACK_TCP_IDENTITIES_VERIFIED'
             and bootstrap['readiness'].get('cid')==mysql['cid']
             and re.fullmatch('[0-9a-f]{64}',bootstrap.get('reportSha256','')),'BOOTSTRAP_NOT_VERIFIED')
+    require(bootstrap.get('hostPath',{}).get('result')=='ORIGINAL_OWNED_MYSQL_RELAY'
+            and bootstrap['hostPath'].get('mysqlCid')==mysql['cid']
+            and bootstrap['hostPath'].get('hostEndpoint')=='127.0.0.1:33080'
+            and bootstrap['hostPath'].get('closedAfterReadiness') is True,'BOOTSTRAP_NOT_VERIFIED')
     require(all(report.get('mysqlAddressProof',{}).get(key)==bootstrap['readiness'].get(key) for key in
                 ('cid','serverUuid','version','hostEndpoint','executionEndpoint'))
             and re.fullmatch('[0-9a-f-]{36}',bootstrap['readiness'].get('serverUuid','')),'BOOTSTRAP_NOT_VERIFIED')
@@ -921,7 +1052,7 @@ def require_final_budget(receipt_directory, subject_identity, java_pid, jar_sha2
 def cleanup_mysql():
     PUBLIC.mkdir(parents=True,exist_ok=True)
     report={**resource_envelope(os.environ),'result':'UNKNOWN','phase':'CLEANUP_IDENTITY',
-            'mysqlAbsent':None,'networkAbsent':None,'failures':[],'originalExit':None}
+            'mysqlAbsent':None,'networkAbsent':None,'failures':[],'nativeOperations':[],'originalExit':None}
     path=PUBLIC/'combined-http-storage-cleanup.json'
     def publish():
         try:write(path,report)
@@ -973,18 +1104,27 @@ def cleanup_mysql():
                 if current is not None:command(DOCKER+['rm','-f',current['Id']])
                 absent('container',obj['Id']);absent('container',name);report['mysqlAbsent']=True
     except Exception as failure:report['failures'].append(resource_failure(failure,report['phase']))
-    report['phase']='NETWORK_CLEANUP';publish()
+    report['phase']='NETWORK_OWNER_READ';publish()
     try:
         if not cleanup_env.get('HTTP_BUDGET_NETWORK_ID'):
-            _,name=mysql_names(cleanup_env);absent('network',name)
+            report['phase']='NETWORK_ABSENCE_NAME';publish()
+            _,name=mysql_names(cleanup_env);absent('network',name,report['nativeOperations'])
             report['networkIdentity']='NO_ACTUAL_ID_NAME_INDEPENDENTLY_ABSENT'
         else:
-            net=owned_network(cleanup_env)
+            net=owned_network(cleanup_env,report['nativeOperations'])
             if net is not None:
                 require(not net.get('Containers'),'NETWORK_NOT_EXACT_OR_NOT_EMPTY')
-                command(DOCKER+['network','rm',net['Id']]);absent('network',net['Id']);absent('network',net['Name'])
+                report['phase']='NETWORK_REMOVE';publish()
+                # Recheck the original network immediately before deletion; no endpoint is adopted or detached.
+                current=owned_network(cleanup_env,report['nativeOperations'])
+                require(current is not None and not current.get('Containers'),'NETWORK_NOT_EXACT_OR_NOT_EMPTY')
+                result=subprocess.run(DOCKER+['network','rm',net['Id']],capture_output=True,timeout=20)
+                report['nativeOperations'].append({'operation':'NETWORK_REMOVE',**native_operation('network',net['Id'],result)})
+                publish();require(result.returncode==0,'FIXED_COMMAND_FAILED')
+                report['phase']='NETWORK_ABSENCE_CID';publish();absent('network',net['Id'],report['nativeOperations'])
+                report['phase']='NETWORK_ABSENCE_NAME';publish();absent('network',net['Name'],report['nativeOperations'])
         report['networkAbsent']=True
-    except Exception as failure:report['failures'].append(resource_failure(failure,'NETWORK_CLEANUP'))
+    except Exception as failure:report['failures'].append(resource_failure(failure,report['phase']))
     complete=report['mysqlAbsent'] is True and report['networkAbsent'] is True and not report['failures']
     report['phase']='RESOURCE_CLEANUP_TERMINAL';report['result']='EXACT_OWN_STORAGE_REMOVED' if complete else 'UNKNOWN'
     publish()
@@ -996,9 +1136,11 @@ def cleanup_mysql():
 def main():
     os.umask(0o077)
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('phase',choices=('prepare','run','finalize','cleanup-mysql','bootstrap-init','bootstrap-ready','bootstrap-failure'))
+    parser.add_argument('phase',choices=('prepare','run','finalize','cleanup-mysql','bootstrap-init','bootstrap-ready','bootstrap-failure','run-host-path'))
     parser.add_argument('private',nargs='?',type=Path);parser.add_argument('original_exit',nargs='?',type=int)
     args=parser.parse_args()
+    if args.phase=='run-host-path':
+        require(args.private is None and args.original_exit is None,'FIXED_BOOTSTRAP_ARGS');return run_host_path()
     if args.phase in ('bootstrap-init','bootstrap-ready'):
         require(args.private is None and args.original_exit is None,'FIXED_BOOTSTRAP_ARGS')
         if args.phase=='bootstrap-init':bootstrap_init();return 0
@@ -1025,6 +1167,6 @@ if __name__=='__main__':
             print('Combined HTTP budget failure evidence: UNKNOWN',file=__import__('sys').stderr)
         # Never publish exception text, inspect payload, argv, environment or raw SQL/logs.
         phase=__import__('sys').argv[1] if len(__import__('sys').argv)>1 and __import__('sys').argv[1] in (
-                'prepare','run','finalize','cleanup-mysql','bootstrap-init','bootstrap-ready','bootstrap-failure') else 'FIXED_ARGUMENTS'
+                'prepare','run','finalize','cleanup-mysql','bootstrap-init','bootstrap-ready','bootstrap-failure','run-host-path') else 'FIXED_ARGUMENTS'
         print('Combined HTTP budget failed: '+json.dumps(resource_failure(failure,phase),sort_keys=True),file=__import__('sys').stderr)
         raise SystemExit(2)
