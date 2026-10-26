@@ -299,7 +299,7 @@ class CoopInviteOriginalRequestMySqlIT {
         });
         when(merchants.selectMmsMerchantById(8L)).thenReturn(owner);
         UmsMemberMapper members = mock(UmsMemberMapper.class);
-        UmsMember employee = new UmsMember(); employee.setId(9L); employee.setStatus(1L);
+        UmsMember employee = new UmsMember(); employee.setId(9L); employee.setStatus(1L); employee.setDelFlag(0);
         when(members.selectUmsMemberById(9L)).thenReturn(employee);
         ReflectionTestUtils.setField(access, "merchantService", merchants);
         ReflectionTestUtils.setField(access, "merchantOperatorMapper", operators);

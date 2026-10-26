@@ -53,7 +53,7 @@ function createReadback(options) {
       if (error) { options.change({ receiptLoading: false, receiptError: error }); return; }
       const decoded = requestId === null ? data.rows.map(receipt) : [receipt(data)];
       const valid = decoded.every(Boolean) && (requestId === null || decoded[0].requestId === requestId);
-      if (!valid) { options.change({ receiptLoading: false, receiptError: '原请求回执无法确认，请勿重复发送' }); return; }
+      if (!valid) { options.change({ receiptLoading: false, receiptError: '发送结果无法确认，请勿重复发送' }); return; }
       if (requestId === null) {
         const next = data.nextCursor;
         if (typeof data.hasMore !== 'boolean' || !(next === null || exactId(next)) || data.hasMore && next === null
@@ -70,7 +70,7 @@ function createReadback(options) {
         if (index < 0) rows.push(row); else rows[index] = row;
       });
       options.change({ receiptLoading: false, receiptRows: rows.slice(), receiptHasMore: hasMore,
-        receiptError: settlementError || (rows.length ? '' : '暂无原请求回执；这不能证明邀请未发送，请勿重复发送') });
+        receiptError: settlementError || (rows.length ? '' : '未查到本次发送记录；仍可能已经发出，请勿重复发送') });
     }
     const data = requestId === null ? Object.assign({ limit: 20 }, before ? { before } : {}) : { requestId };
     const request = { data,

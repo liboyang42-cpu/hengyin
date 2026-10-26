@@ -26,6 +26,11 @@ const PLAY_PROGRESS_CONTROLLER = path.resolve(
 // optional = 后端允许匿名，但登录时会按 uid 返回个人态，所以仍使用默认认证；
 // required = 后端 anyRequest().authenticated()，绝不能 auth:false。
 const MATRIX = [
+  // 原发送结果只读恢复：本人请求回执，且服务端再次校验当前发布主体/岗位；两端均保留默认认证。
+  ['pages/coop/invite/index.js', "url: '/api/coop/invite/request'", 'required', 'member/merchant-operator/club-owner', 'self-account'],
+  ['pages/coop/invite/index.js', "url: '/api/coop/invite/requests'", 'required', 'member/merchant-operator/club-owner', 'self-account'],
+  ['subpackageMember/components/cy/coop-invite-sheet/index.js', "url: '/api/coop/invite/request'", 'required', 'member/merchant-operator/club-owner', 'self-account'],
+  ['subpackageMember/components/cy/coop-invite-sheet/index.js', "url: '/api/coop/invite/requests'", 'required', 'member/merchant-operator/club-owner', 'self-account'],
   ['subpackageRoam/nearby/index.js', "url, method: 'GET', auth: false", 'static', 'visitor/member', 'public-profile-gallery'],
   ['subpackageMember/components/cy/scene-roam-poi-detail/index.js', "url: '/profile/' + key.replace", 'static', 'visitor/member', 'public-profile-gallery'],
   // 实际作者页面的受控requestOwnMedia不属于req简写；五个caller逐个归真实本人资产。
@@ -328,7 +333,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-23 v13 动效落地(PR #528):主题页 NPC 资料 / 附近队伍 / 站点 + 地图页据点四处直接 GET,71 → 75(权限档见 MATRIX 同日注释)。
   // 2026-10-24 地点详情和地图新增两处已公开 /profile/** 相册元数据 GET。
   // 2026-10-25 官方地点卡片 + 地点挑战页各一处 GET /api/city/nodes/{id}(已入 MATRIX),77 → 79。
-  assert.equal(directCount, 79, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 上述两端各新增单笔与分页 GET，共四处，79 → 83。
+  assert.equal(directCount, 83, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。
