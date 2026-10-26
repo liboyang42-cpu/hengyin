@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-26T18:03:36.535751+00:00",
+  "updatedAt": "2026-10-26T18:09:57.585455+00:00",
   "publicBase": "921d172199f3ffe224206ee05af031c87df62b87",
   "integratedTreeBeforeCompileFix": "3e0ea26924ae8105c0197fd94436870cf6d9ed35",
   "sourceTreeAfterCompileFix": "d9e5aac6b628f0aa947f297f56fa1bfe33b1812f",
@@ -86,18 +86,28 @@
     "Do not interpret source integration or green CI as device/provider/business acceptance."
   ],
   "verification": {
-    "compile": "RECHECK_RUNNING_AFTER_7_TEST_FILE_FIX",
+    "compile": "PASS",
     "offlineUnitClasses": 228,
     "mysqlClasses": 31,
     "mysql": "NOT_RUN",
     "sourceSecretScan": "PASS; gitleaks redacted scan, zero findings",
-    "unit": "NOT_RUN",
+    "unit": "FAIL",
     "diagnostic": "compile-errors.txt",
     "environmentFix": "Temporary Maven heap 1024 MiB within approved 1536 MiB container; default 384 MiB heap exhausted. No resource-cap bypass.",
-    "priorCompile": "TEST_COMPILE_FAILED; compile-errors.txt is historical before repair"
+    "priorCompile": "TEST_COMPILE_FAILED; compile-errors.txt is historical before repair",
+    "adminUnitSummary": {
+      "tests": 2360,
+      "failures": 17,
+      "errors": 240,
+      "skipped": 0
+    },
+    "ci": "IN_PROGRESS_WITH_FAILED_JOBS"
   },
-  "push": "USER_APPROVED_DRAFT_EXCEPTION; publication in progress",
+  "push": "PUSHED_AS_DRAFT_PR",
   "draft": true,
   "mergeAllowed": false,
-  "deploymentAllowed": false
+  "deploymentAllowed": false,
+  "pr": "https://github.com/liboyang42-cpu/hengyin/pull/625",
+  "testedCommit": "2d7c5dfd99339ed24d43a97819c59e850e2fa275",
+  "ciUrl": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40374590684"
 }

@@ -1,3 +1,7 @@
+# Current result: DRAFT PR #625 — NOT READY TO MERGE
+
+Published commit: 2d7c5dfd99339ed24d43a97819c59e850e2fa275. Approved-VPS compile PASS; admin selected tests: 2360 run, 17 failures, 240 errors, zero skipped. Many errors are stale Controller reflection injection after application-layer migration; preserve assertions while repairing fixtures. CI run 40374590684 has failed jobs and is still running. These are known failures, not acceptance. Later paragraphs retain earlier diagnostic history.
+
 # DRAFT PR — NOT READY TO MERGE OR DEPLOY
 
 User explicitly authorized this closeout-only draft exception before compile/unit gates pass. Source preservation is not acceptance. The seven test-file repair is included; the recheck is running. compile-errors.txt records the previous candidate failure, not an assertion that the repaired candidate passed or failed.
