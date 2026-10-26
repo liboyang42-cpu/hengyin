@@ -1164,7 +1164,7 @@ class CombinedBudgetControls(unittest.TestCase):
             jar.write_bytes(('synthetic '+key+' artifact, not a dependency').encode())
             runtime[key]={'version':'1.0.0','sha256':B.digest(jar)}
             classpath.append(str(Path('/cache/repository')/jar.relative_to(cache)))
-        cp=':'.join(classpath).encode()
+        cp=(':'.join(classpath)+':').encode()
         for i,phase in enumerate(('ONLINE','OFFLINE')):
             proof={'sourceSha':self.env()['SOURCE_SHA'],'runId':self.env()['GITHUB_RUN_ID'],'attempt':self.env()['GITHUB_RUN_ATTEMPT'],
                 'phase':phase,'javaFeature':21,
@@ -1908,14 +1908,35 @@ class CombinedBudgetControls(unittest.TestCase):
             directory,cache=self.provider_scope(Path(name));proof=B.provider_runtime_proof(cache)
             for phase in ('online','offline'):
                 raw=(directory/(phase+'.classpath')).read_bytes();row=proof[phase]['testClasspath']
+                self.assertEqual(set(row),{'fileName','sha256','byteLength','entryCount'})
                 self.assertEqual(row['sha256'],B.hashlib.sha256(raw).hexdigest())
-                self.assertEqual(row['byteLength'],len(raw));self.assertEqual(row['entryCount'],len(raw.decode().split(':')))
+                self.assertEqual(row['byteLength'],len(raw));self.assertEqual(row['entryCount'],len(raw.decode()[:-1].split(':')))
+                record=json.loads((directory/(phase+'.json')).read_text())
+                actual,verified_raw,execution=B.provider_classpath_proof(cache,phase.upper(),record)
+                self.assertEqual(actual,row);self.assertEqual(verified_raw,raw)
+                self.assertTrue(raw.endswith(b':'));self.assertFalse(raw.endswith(b'::'))
+                self.assertEqual(execution.encode(),raw[:-1]);self.assertTrue(all(execution.split(':')))
                 self.assertNotIn(raw.decode(),json.dumps(proof));self.assertNotIn(name,json.dumps(proof))
             self.assertEqual({key:value for key,value in proof['online']['testClasspath'].items() if key!='fileName'},
                              {key:value for key,value in proof['offline']['testClasspath'].items() if key!='fileName'})
+            # Preserve original order and repeated real entries; only the formatter's final ':' is removed.
+            original=(directory/'online.classpath').read_bytes();entries=original[:-1].decode().split(':')
+            repeated=(':'.join([entries[-1],*entries,entries[0]])+':').encode()
+            for phase in ('online','offline'):
+                (directory/(phase+'.classpath')).write_bytes(repeated)
+                record_path=directory/(phase+'.json');record=json.loads(record_path.read_text())
+                record['testClasspath'].update(sha256=B.hashlib.sha256(repeated).hexdigest(),byteLength=len(repeated),entryCount=len(entries)+2)
+                record_path.write_text(json.dumps(record))
+                _,verified_raw,execution=B.provider_classpath_proof(cache,phase.upper(),record)
+                self.assertEqual(verified_raw,repeated);self.assertEqual(execution.split(':'),[entries[-1],*entries,entries[0]])
+            repeated_proof=B.provider_runtime_proof(cache)
+            self.assertEqual(repeated_proof['online']['testClasspath']['entryCount'],len(entries)+2)
+            self.assertNotIn(name,json.dumps(repeated_proof))
 
     def test_provider_classpath_missing_drift_empty_remote_foreign_alias_and_symlink_all_reject(self):
-        for kind in ('missing','symlink','mode','hash','empty','remote','foreign','alias','missing-main','offline-drift'):
+        for kind in ('missing','symlink','mode','hash','empty','missing-terminator','only-terminator','leading-empty','internal-empty',
+                     'null','linefeed','carriage-return','invalid-utf8','null-proof','entry-count-includes-terminator',
+                     'remote','foreign','alias','missing-main','offline-drift'):
             with self.subTest(kind=kind),tempfile.TemporaryDirectory() as name,patch.object(B,'ROOT',Path(name)),patch.dict(os.environ,self.env(),clear=True):
                 root=Path(name);directory,cache=self.provider_scope(root);path=directory/'online.classpath'
                 if kind=='missing':path.unlink()
@@ -1927,13 +1948,22 @@ class CombinedBudgetControls(unittest.TestCase):
                     if kind=='hash':path.write_text(raw+':PRIVATE_VALUE')
                     else:
                         if kind=='empty':raw+=':'
+                        if kind=='missing-terminator':raw=raw[:-1]
+                        if kind=='only-terminator':raw=':'
+                        if kind=='leading-empty':raw=':'+raw
+                        if kind=='internal-empty':raw=raw.replace(':','::',1)
+                        if kind=='null':raw=raw[:-1]+'\0:'
+                        if kind=='linefeed':raw+='\n'
+                        if kind=='carriage-return':raw+='\r'
                         if kind=='remote':raw='https://PRIVATE_VALUE:'+raw
                         if kind=='foreign':raw='/PRIVATE_VALUE:'+raw
                         if kind=='alias':raw=raw.replace('/target/classes','/target/../target/classes')
-                        if kind=='missing-main':raw=':'.join(value for value in raw.split(':') if value!=str(root/'chengyinhub-admin/target/classes'))
-                        if kind=='offline-drift':path=directory/'offline.classpath';raw=raw+':'+raw.split(':')[0]
-                        path.write_text(raw);record_path=path.with_suffix('.json');record=json.loads(record_path.read_text())
-                        record['testClasspath']={'fileName':path.name,'sha256':B.digest(path),'byteLength':path.stat().st_size,'entryCount':len(raw.split(':'))}
+                        if kind=='missing-main':raw=':'.join(value for value in raw[:-1].split(':') if value!=str(root/'chengyinhub-admin/target/classes'))+':'
+                        if kind=='offline-drift':path=directory/'offline.classpath';raw=raw[:-1]+':'+raw.split(':')[0]+':'
+                        path.write_bytes(raw.encode()+(b'\xff' if kind=='invalid-utf8' else b''));record_path=path.with_suffix('.json');record=json.loads(record_path.read_text())
+                        record['testClasspath']={'fileName':path.name,'sha256':B.digest(path),'byteLength':path.stat().st_size,'entryCount':sum(bool(value) for value in raw.split(':'))}
+                        if kind=='null-proof':record['testClasspath']=None
+                        if kind=='entry-count-includes-terminator':record['testClasspath']['entryCount']+=1
                         record_path.write_text(json.dumps(record))
                 with self.assertRaises(ValueError):B.provider_runtime_proof(cache)
 
@@ -1964,7 +1994,10 @@ class CombinedBudgetControls(unittest.TestCase):
                 def transport(argv,**kwargs):
                     calls.append(argv)
                     if '-c' in argv and 'javac -J-Xmx128m -proc:none' in argv[argv.index('-c')+1]:
-                        self.assertEqual(argv[-3:],[str(source),str(directory/'online.classpath'),str(root/'chengyinhub-admin/target/controlled-content-security/classes')])
+                        raw=(directory/'online.classpath').read_bytes()
+                        self.assertEqual(argv[-3:],[str(source),raw[:-1].decode(),str(root/'chengyinhub-admin/target/controlled-content-security/classes')])
+                        self.assertIn('-classpath "$2"',argv[argv.index('-c')+1])
+                        self.assertNotIn('$(cat',argv[argv.index('-c')+1]);self.assertTrue(all(argv[-2].split(':')))
                         if compiler_exit==0:
                             compiled=Path(argv[-1])/B.CONTENT_SECURITY_CLASS;compiled.parent.mkdir(parents=True,exist_ok=True);compiled.write_bytes(b'\xca\xfe\xba\xbeSYNTHETIC')
                     if argv[-1]=='/tmp/cy-cache.javac.exit':return str(compiler_exit).encode()
@@ -1972,6 +2005,8 @@ class CombinedBudgetControls(unittest.TestCase):
                 with patch.object(B,'command',side_effect=transport),patch.object(B.time,'monotonic',return_value=0):
                     result=B.compile_controlled_content('1'*64,cache,1200)
                 self.assertEqual(result['exit'],compiler_exit);self.assertIs(result['exitObserved'],True)
+                self.assertEqual(result['testClasspath']['sha256'],B.digest(directory/'online.classpath'))
+                self.assertEqual(result['testClasspath']['byteLength'],len((directory/'online.classpath').read_bytes()))
                 self.assertEqual(calls[-1][-1],str(compiler_exit));self.assertEqual(result['purpose'],'PREPARATION_COMPILER_ONLY')
                 if compiler_exit==0:self.assertEqual(result['proof'],B.controlled_content_proof())
                 else:

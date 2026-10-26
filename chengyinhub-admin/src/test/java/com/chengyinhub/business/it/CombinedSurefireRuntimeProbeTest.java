@@ -82,7 +82,12 @@ public class CombinedSurefireRuntimeProbeTest {
         assertTrue(Files.isDirectory(directory) && directory.equals(directory.toRealPath()));
         assertEquals(PosixFilePermissions.fromString("rwx------"), Files.getPosixFilePermissions(directory));
         assertEquals(Files.getOwner(reactorRoot), Files.getOwner(directory));
-        String[] entries = classpath.split(java.util.regex.Pattern.quote(java.io.File.pathSeparator), -1);
+        // Surefire 3.5.6 Classpath.writeToSystemProperty appends one separator per element.
+        // Keep those original bytes in the proof; decode exactly its final formatter separator.
+        String separator = java.io.File.pathSeparator;
+        assertTrue(classpath.endsWith(separator), "Pinned Surefire classpath terminator required");
+        String[] entries = classpath.substring(0, classpath.length() - separator.length())
+                .split(java.util.regex.Pattern.quote(separator), -1);
         var observed = new java.util.HashSet<Path>();
         for (String entry : entries) {
             assertFalse(entry.isEmpty(), "No implicit current-directory entry");

@@ -470,10 +470,14 @@ def provider_classpath_proof(cache,phase,proof):
             and 0<path.stat().st_size<1024*1024,'PROVIDER_EXACT_CLASSPATH_REQUIRED')
     with path.open('rb') as stream:raw=stream.read(1024*1024)
     require(0<len(raw)<1024*1024,'PROVIDER_EXACT_CLASSPATH_REQUIRED')
-    text=raw.decode('utf-8');entries=text.split(':')
+    # Surefire 3.5.6 Classpath.writeToSystemProperty appends one separator per element.
+    # Keep its complete bytes for proof; remove exactly that one formatter terminator.
+    text=raw.decode('utf-8')
+    require(text.endswith(':') and not any(value in text for value in ('\0','\r','\n')),
+            'PROVIDER_EXACT_CLASSPATH_REQUIRED')
+    execution=text[:-1];entries=execution.split(':')
     expected={'fileName':phase.lower()+'.classpath','sha256':hashlib.sha256(raw).hexdigest(),'byteLength':len(raw),'entryCount':len(entries)}
-    require(proof.get('testClasspath')==expected and entries
-            and not any(value in text for value in ('\0','\r','\n')),'PROVIDER_EXACT_CLASSPATH_REQUIRED')
+    require(proof.get('testClasspath')==expected and all(entries),'PROVIDER_EXACT_CLASSPATH_REQUIRED')
     resolved=[]
     for entry in entries:
         local=Path(entry)
@@ -486,7 +490,7 @@ def provider_classpath_proof(cache,phase,proof):
         resolved.append(entry)
     require({str(ROOT/'chengyinhub-admin/target/classes'),str(ROOT/'chengyinhub-admin/target/test-classes')}
             <=set(resolved),'PROVIDER_EXACT_CLASSPATH_REQUIRED')
-    return expected
+    return expected,raw,execution
 
 
 def controlled_content_proof():
@@ -525,7 +529,7 @@ def compile_controlled_content(cid,cache,deadline):
             and record.get('forkedBooter') is True and record.get('businessExecuted') is False
             and record.get('testClassSha256')==digest(expected_class),code)
     exact_test_xml(xml,PROVIDER_PROBE,('bootsActualProjectPlatformRuntime',),'PROVIDER_RUNTIME_XML_REQUIRED')
-    classpath=provider_classpath_proof(cache,'ONLINE',record)
+    classpath,_,execution_classpath=provider_classpath_proof(cache,'ONLINE',record)
     source=ROOT/CONTENT_SECURITY_SOURCE;root=ROOT/'chengyinhub-admin/target/controlled-content-security'
     require(source.is_file() and not source.is_symlink() and source.resolve()==source
             and source.stat().st_size==2059 and digest(source)==CONTENT_SECURITY_SOURCE_SHA256
@@ -537,12 +541,11 @@ def compile_controlled_content(cid,cache,deadline):
     script=('umask 077; scratch=/tmp/cy-controlled-content-security-source; '
             '[ ! -e "$scratch" ] && [ ! -L "$scratch" ] || exit 98; mkdir "$scratch" || exit 98; '
             'cp -- "$1" "$scratch/E2eWxContentSecurityStub.java" || exit 98; '
-            'classpath=$(cat -- "$2") || exit 98; '
-            'javac -J-Xmx128m -proc:none -classpath "$classpath" -d "$3" "$scratch/E2eWxContentSecurityStub.java"; status=$?; '
+            'javac -J-Xmx128m -proc:none -classpath "$2" -d "$3" "$scratch/E2eWxContentSecurityStub.java"; status=$?; '
             'rm -f -- "$scratch/E2eWxContentSecurityStub.java"; rmdir "$scratch" || exit 98; '
             'printf "%s\\n" "$status" >/tmp/cy-cache.javac.exit')
     remaining=deadline-time.monotonic();require(remaining>0,'CACHE_EXECUTION_DEADLINE')
-    command(DOCKER+['exec',cid,'/bin/bash','-c',script,'--',str(source),str(directory/'online.classpath'),str(classes)],timeout=remaining)
+    command(DOCKER+['exec',cid,'/bin/bash','-c',script,'--',str(source),execution_classpath,str(classes)],timeout=remaining)
     raw=command(DOCKER+['exec',cid,'cat','/tmp/cy-cache.javac.exit']).decode().strip()
     require(re.fullmatch('[0-9]{1,3}',raw) and int(raw)<256,code)
     result={'purpose':'PREPARATION_COMPILER_ONLY','exitObserved':True,'exit':int(raw),'testClasspath':classpath}
@@ -598,7 +601,7 @@ def provider_runtime_proof(cache):
             require(jar.is_file() and not jar.is_symlink() and jar.resolve().is_relative_to(cache.resolve())
                     and digest(jar)==record['sha256'],'PROVIDER_RUNTIME_CLASSPATH_CHANGED')
         boots.append((proof['pid'],proof['startedAt']))
-        classpath=provider_classpath_proof(cache,phase,proof)
+        classpath,_,_=provider_classpath_proof(cache,phase,proof)
         rows[phase.lower()]={'xmlSha256':digest(xml),'proofSha256':digest(path),'testClasspath':classpath,
             'testClassSha256':proof['testClassSha256'],'runtime':proof['runtime'],
             'forkIdentitySha256':hashlib.sha256(json.dumps(boots[-1],separators=(',',':')).encode()).hexdigest()}
