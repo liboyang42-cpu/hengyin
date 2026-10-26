@@ -179,11 +179,17 @@ class RestoreHttpDirectControls(unittest.TestCase):
     def test_child_uses_actual_services_and_preserves_real_quartz(self):
         source=(ROOT/'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java').read_text()
         for literal in ('RuoYiApplication.class','loginByMember','registrations.handleWechatPayCallback(result)',
-                        'facts.recordVerified(fact)','notices.enqueueOfficial','wake.dispatchInNewTransaction',
+                        'facts.recordVerified(original)','notices.enqueueOfficial','wake.dispatchInNewTransaction',
                         '--chengyin.jobs.enabled=true','--spring.quartz.auto-startup=true',
                         '--spring.quartz.wait-for-jobs-to-complete-on-shutdown=true',
                         'factory.getConfiguration().addInterceptor(new MapperObservations())','file.force(true)'):
             self.assertIn(literal,source)
+        self.assertIn('originalCallbackReference(PRIVATE,config,ids.path("registrationId").asLong(),fact,facts,attempt)',source)
+        reference_owner=source[source.index('    static WechatVerifiedPaymentFact.Reference originalCallbackReference('):
+                               source.index('    static boolean sameCallbackBinding(')]
+        self.assertIn('facts.recordVerified(original)',reference_owner)
+        self.assertIn('var stored=facts.requireVerified(reference)',reference_owner)
+        self.assertIn('String original=callOriginalRegistration(registrations,fact,reference)',source)
         self.assertNotIn('Mockito',source)
         self.assertNotIn('setAuthentication',source)
         self.assertIn('call.proceed()',source)
