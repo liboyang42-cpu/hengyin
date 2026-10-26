@@ -1102,4 +1102,174 @@ class RestoreHttpCurrentAllocatorControls(unittest.TestCase):
                 self.assertIn('TYPED_ROWS_DIFFER',report['canonicalRestoreComparison']['tables'][0]['categories'])
 
 
+
+class RestoreHttpHeldProtocolControls(unittest.TestCase):
+    """Protocol/direct-owner controls only. No server, scheduler, DB or economic fact is executed."""
+    def envelope(self,mode='true'):
+        boot={'bootId':'boot','guardHeld':True,'restoreMode':mode,
+              'serverUuid':'11111111-1111-1111-1111-111111111111','schema':'cy_e2e_auth_'+'a'*32}
+        data={'bootId':boot['bootId'],'held':True,'serverUuid':boot['serverUuid'],'schema':boot['schema'],
+              'events':events(),'verifiedFacts':[],'inbox':[]}
+        return boot,(200,{'code':200,'msg':'original operation','data':data})
+
+    def jobs(self):
+        return {'beforeStartNotifyTask.run()':101,'committedOfficialNoticeTask.deliverPending()':102}
+
+    def test_good_keeps_full_original_envelope_and_never_implicitly_unwraps_or_requires_data(self):
+        boot,response=self.envelope()
+        self.assertIs(P.good(response),response[1])
+        self.assertIs(P.evidence_payload(response,boot),response[1]['data'])
+        self.assertIs(P.good((200,{'code':200})).get('data'),None)
+        _,_,callback=late()
+        self.assertIs(P.callback_envelope(P.good((200,callback))),callback)
+        self.assertEqual(callback['data']['factId'],1)
+
+    def test_each_original_held_mode_keeps_owner_quartz_wait_fact_replay_and_identity_guards(self):
+        self.assertEqual(P.HELD_MODES,('true','invalid',''))
+        for mode in P.HELD_MODES:
+            with self.subTest(mode=mode):
+                boot,response=self.envelope(mode)
+                data=P.evidence_payload(response,boot);self.assertTrue(P.assert_owner_events(data['events'],boot['bootId']))
+                jobs=P.held_jobs({'jobs':self.jobs()})
+                logs=[{'invoke_target':target,'status':'0'} for target in jobs]
+                P.assert_quartz_completion(logs,0,jobs)
+                observation=P.held_observation(data,logs,boot,0,jobs)
+                self.assertEqual(observation['mode'],mode);self.assertEqual(observation['completedTargetCount'],2)
+                before,after,callback=late()
+                value=P.callback_envelope(P.good((200,callback)))
+                P.assert_late_callback(before,after,value,8)
+                data['verifiedFacts']=[{'id':1,'fact_hash':'a'*64}]
+                data['inbox']=[{'id':1,'biz_id':8,'state':0}]
+                readback=P.evidence_payload(response,boot)
+                self.assertEqual(readback['verifiedFacts'][0]['id'],value['data']['factId'])
+                self.assertEqual(readback['verifiedFacts'][0]['fact_hash'],value['data']['factHash'])
+                self.assertEqual(readback['inbox'][0]['state'],0)
+                P.assert_callback_replay(after,copy.deepcopy(after))
+                self.assertEqual(P.callback_envelope(P.good((200,copy.deepcopy(callback)))),callback)
+
+    def test_missing_layer_or_tree_bean_shape_is_rejected_with_fixed_presence_types_not_keyerror_defaults(self):
+        for kind in ('missing-data','double-data','missing-events','tree-event','events-object'):
+            with self.subTest(kind=kind):
+                boot,response=self.envelope();body=response[1];data=body['data']
+                if kind=='missing-data':del body['data']
+                elif kind=='double-data':body['data']={'data':data}
+                elif kind=='missing-events':del data['events']
+                elif kind=='tree-event':data['events']=[{'nodeType':'OBJECT','private-token-key':'private-canary-value'}]
+                else:data['events']={}
+                with self.assertRaises(P.FixtureContractRejected) as caught:P.evidence_payload(response,boot)
+                diagnostic=P.failure_diagnostic(caught.exception,'RESTORED_HELD_WORKLOAD','HELD_QUARTZ_OBSERVE')
+                self.assertEqual(diagnostic['reasonCode'],'HTTP_EVIDENCE_CONTRACT_REJECTED')
+                self.assertNotIn('private-token-key',json.dumps(diagnostic))
+                self.assertNotIn('private-canary-value',json.dumps(diagnostic))
+                if kind=='tree-event':
+                    self.assertEqual(diagnostic['contract']['recordIndex'],0)
+                    fields={row['field']:row for row in diagnostic['contract']['fields']}
+                    self.assertFalse(fields['bootId']['present']);self.assertEqual(fields['bootId']['type'],'MISSING')
+
+    def test_foreign_boot_mode_schema_or_uuid_cannot_supply_another_instances_evidence(self):
+        for key,value in (('bootId','foreign-boot'),('held',False),('schema','foreign-schema'),('serverUuid','foreign-uuid')):
+            with self.subTest(key=key):
+                boot,response=self.envelope();response[1]['data'][key]=value
+                with patch.object(P,'event_records') as consume:
+                    with self.assertRaises(P.FixtureContractRejected) as caught:P.evidence_payload(response,boot)
+                consume.assert_not_called()
+                self.assertFalse(caught.exception.observation['identityMatches'][key])
+                if isinstance(value,str):self.assertNotIn(value,json.dumps(caught.exception.observation))
+
+    def test_callback_requires_original_typed_fact_identity_and_retains_fail_outcome_rule(self):
+        for key,value in (('factId',None),('factId',True),('factId','1'),('factHash','private-hash-canary')):
+            with self.subTest(key=key,value=value):
+                _,_,callback=late();callback['data'][key]=value
+                with self.assertRaises(P.FixtureContractRejected):P.callback_envelope(P.good((200,callback)))
+        before,after,callback=late();callback['data']['originalOutcome']='SUCCESS'
+        P.callback_envelope(callback) # Shape is distinct from the original paused business result.
+        with self.assertRaisesRegex(ValueError,'original callback must remain paused'):
+            P.assert_late_callback(before,after,callback,8)
+
+    def test_event_contract_does_not_replace_original_blocked_owner_and_pending_selector_guards(self):
+        value=events();value[1]['blocked']=False;value[1]['errorType']='java.lang.IllegalStateException'
+        self.assertIs(P.event_records(value),value)
+        with self.assertRaisesRegex(ValueError,'actual owner did not throw real Blocked'):P.assert_owner_events(value,'boot')
+        value=events()+[{'bootId':'boot','symbol':'com.chengyinhub.business.mapper.CommittedOfficialNoticeWxMapper.selectPendingPage',
+                         'stage':'SQL','held':True}]
+        with self.assertRaisesRegex(ValueError,'notice recovery guard did not pause'):P.assert_owner_events(value,'boot')
+        value=events();value[1]['blocked']='true'
+        with self.assertRaises(P.FixtureContractRejected):P.assert_owner_events(value,'boot')
+        value=events()+[{'bootId':'boot','symbol':'com.example.Mapper.insert!selectKey','stage':'SQL','held':True}]
+        self.assertIs(P.event_records(value),value)
+        proven=P.assert_owner_events(value,'boot')
+        self.assertEqual(len(proven),6);self.assertNotIn('com.example.Mapper.insert!selectKey',[row['symbol'] for row in proven])
+
+    def test_quartz_ack_or_failure_duplicate_target_or_stale_rows_do_not_prove_two_real_completions(self):
+        jobs=self.jobs();success=[{'invoke_target':target,'status':'0'} for target in jobs]
+        P.assert_quartz_completion(success,0,jobs)
+        for rows,baseline in (([],0),(success,2),([success[0],success[0]],0),
+                              ([{**row,'status':'1'} for row in success],0)):
+            with self.subTest(rows=rows,baseline=baseline):
+                with self.assertRaisesRegex(ValueError,'real persisted Quartz task completion proof'):
+                    P.assert_quartz_completion(rows,baseline,jobs)
+        for rows in ([{'status':'0'}],[{'invoke_target':'beforeStartNotifyTask.run()','status':0}]):
+            with self.assertRaises(P.FixtureContractRejected):P.assert_quartz_completion(rows,0,jobs)
+
+    def test_private_seed_job_ids_must_match_the_two_actual_original_targets_without_defaults(self):
+        value={'jobs':self.jobs()};self.assertIs(P.held_jobs(value),value['jobs'])
+        for kind in ('missing','duplicate-id','wrong-target','boolean-id'):
+            invalid={'jobs':self.jobs()}
+            if kind=='missing':del invalid['jobs']
+            elif kind=='duplicate-id':invalid['jobs']['beforeStartNotifyTask.run()']=102
+            elif kind=='wrong-target':invalid['jobs']['private-target-canary']=invalid['jobs'].pop('beforeStartNotifyTask.run()')
+            else:invalid['jobs']['beforeStartNotifyTask.run()']=True
+            with self.assertRaises(P.FixtureContractRejected) as caught:P.held_jobs(invalid)
+            self.assertNotIn('private-target-canary',json.dumps(caught.exception.observation))
+
+    def test_unclassified_keyerror_keeps_only_real_reviewed_source_frame_not_key_message_or_private_path(self):
+        class Cursor:
+            description=(('n',),)
+            def execute(self,*args):pass
+            def fetchall(self):raise KeyError('private-SQL-token-key-canary')
+        class Database:
+            def cursor(self):return nullcontext(Cursor())
+        auth=SimpleNamespace(database=lambda *args:nullcontext(Database()))
+        try:P.query(auth,3306,'owned','SELECT controlled')
+        except KeyError as failure:
+            diagnostic=P.failure_diagnostic(failure,'RESTORED_HELD_WORKLOAD','HELD_QUARTZ_OBSERVE')
+        else:self.fail('original KeyError was swallowed')
+        self.assertEqual(diagnostic['type'],'KeyError');self.assertEqual(diagnostic['reasonCode'],'UNCLASSIFIED_FAILURE')
+        frame=diagnostic['sourceFrame']
+        self.assertEqual(frame['path'],'ci/restore_application_http_probe.py');self.assertGreater(frame['line'],0)
+        self.assertEqual(frame['sourceSha256'],P.sha((ROOT/frame['path']).read_bytes()))
+        self.assertNotIn('private-SQL-token-key-canary',json.dumps(diagnostic))
+        self.assertNotIn('SELECT controlled',json.dumps(diagnostic));self.assertNotIn(str(ROOT),json.dumps(diagnostic))
+
+    def test_three_real_ready_observations_never_replace_five_completed_original_workloads(self):
+        fixture=RestoreHttpFailureLifecycleControls();report=fixture.success_report()
+        report['readyBootObservations']=(report['completeBoots']+report['boots'])[:3]
+        report['completeBoots']=[];report['boots']=[]
+        with self.assertRaisesRegex(ValueError,'five independent original app boots'):
+            P.assert_successful_lifecycle(report)
+
+    def test_verified_fact_and_inbox_column_names_and_scalar_types_remain_strict(self):
+        for kind in ('fact-column','fact-id-bool','fact-hash-bytes','inbox-column','inbox-state-bool'):
+            boot,response=self.envelope();data=response[1]['data']
+            data['verifiedFacts']=[{'id':1,'fact_hash':'a'*64}];data['inbox']=[{'id':1,'biz_id':8,'state':0}]
+            if kind=='fact-column':data['verifiedFacts'][0]['hash']=data['verifiedFacts'][0].pop('fact_hash')
+            elif kind=='fact-id-bool':data['verifiedFacts'][0]['id']=True
+            elif kind=='fact-hash-bytes':data['verifiedFacts'][0]['fact_hash']=b'private-hash'
+            elif kind=='inbox-column':del data['inbox'][0]['biz_id']
+            else:data['inbox'][0]['state']=False
+            with self.subTest(kind=kind):
+                with self.assertRaises(P.FixtureContractRejected):P.evidence_payload(response,boot)
+
+    def test_received_http200_or_missing_data_is_not_successful_evidence_and_does_not_echo_error_text(self):
+        boot,_=self.envelope()
+        for response in ((200,{'code':500,'msg':'private-server-body'}),
+                         (403,{'code':403,'msg':'private-authorization-body'}),
+                         (200,{'code':True,'data':{}}),(200,['private-unexpected-array'])):
+            with self.assertRaises(ValueError) as caught:P.evidence_payload(response,boot)
+            self.assertEqual(P.failure_diagnostic(caught.exception,'RESTORED_HELD_WORKLOAD',
+                    'HELD_QUARTZ_OBSERVE')['reasonCode'],'HTTP_OPERATION_REJECTED')
+            self.assertNotIn('private',json.dumps(P.failure_diagnostic(caught.exception,
+                    'RESTORED_HELD_WORKLOAD','HELD_QUARTZ_OBSERVE')))
+
+
 if __name__=='__main__':unittest.main()

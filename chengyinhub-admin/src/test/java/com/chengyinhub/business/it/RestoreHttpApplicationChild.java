@@ -59,7 +59,7 @@ public final class RestoreHttpApplicationChild {
     static ConfigurableApplicationContext application;
 
     enum StartupStage { ADMISSION, SOURCE_IDENTITY, JAR_IDENTITY, ENVIRONMENT_GUARD, SPRING_RUN,
-        MYBATIS_OBSERVERS, DATASOURCE_IDENTITY, QUARTZ_PROPERTIES, QUARTZ_FACTORY,
+        HTTP_JSON_CONTRACT, MYBATIS_OBSERVERS, DATASOURCE_IDENTITY, QUARTZ_PROPERTIES, QUARTZ_FACTORY,
         SCHEDULER_LEADERSHIP, ORIGINAL_IDENTITIES, READY_PUBLISH, READY }
     enum StartupReason { NONE, ASSERTION_REJECTED, SCHEDULER_LEADERSHIP_TIMEOUT, UNCLASSIFIED_FAILURE }
     static volatile StartupStage startupStage = StartupStage.ADMISSION;
@@ -104,6 +104,7 @@ public final class RestoreHttpApplicationChild {
         app.setAdditionalProfiles(PROFILE);
         application = app.run("--spring.config.location=file:/fixture/application.properties",
                 "--server.address=127.0.0.1", "--server.port=8080", "--spring.messages.basename=i18n/messages",
+                "--spring.http.converters.preferred-json-mapper=jackson2",
                 "--spring.datasource.druid.master.url=" + config.path("jdbcUrl").asText(),
                 "--spring.datasource.druid.master.username=startup_probe",
                 "--spring.datasource.druid.master.password=synthetic-local-only",
@@ -114,6 +115,11 @@ public final class RestoreHttpApplicationChild {
                 "--spring.quartz.wait-for-jobs-to-complete-on-shutdown=true",
                 "--withdrawal.fast-withdraw.enabled=true",
                 "--wx.pay.appid=restore-http-app", "--wx.pay.merchant-id=restore-http-mch");
+        startupCheckpoint(StartupStage.HTTP_JSON_CONTRACT);
+        startupRequire("jackson2".equals(application.getEnvironment()
+                .getProperty("spring.http.converters.preferred-json-mapper")), "original production JSON mapper");
+        assertHttpJsonConverters(application.getBean(
+                org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.class).getMessageConverters());
         startupCheckpoint(StartupStage.MYBATIS_OBSERVERS);
         var factories=application.getBeansOfType(org.apache.ibatis.session.SqlSessionFactory.class);
         startupRequire(!factories.isEmpty(),"real MyBatis factories required");
@@ -159,6 +165,14 @@ public final class RestoreHttpApplicationChild {
         public org.springframework.boot.quartz.autoconfigure.SchedulerFactoryBeanCustomizer restoreHttpQuartzShutdown() {
             return factory -> factory.setWaitForJobsToCompleteOnShutdown(true);
         }
+    }
+
+    static void assertHttpJsonConverters(java.util.List<org.springframework.http.converter.HttpMessageConverter<?>> converters) {
+        var selected=converters.stream().filter(converter ->
+                converter.canWrite(AjaxResult.class,org.springframework.http.MediaType.APPLICATION_JSON))
+                .findFirst().orElseThrow(() -> new StartupRejected("actual JSON converter unavailable",StartupReason.ASSERTION_REJECTED));
+        startupRequire(selected instanceof org.springframework.http.converter.json.MappingJackson2HttpMessageConverter,
+                "actual JSON converter must retain original production jackson2");
     }
 
     static void assertQuartzFactory(ConfigurableApplicationContext context, org.quartz.Scheduler scheduler) {
@@ -416,9 +430,27 @@ public final class RestoreHttpApplicationChild {
         }
     }
     static JsonNode identities() throws Exception {return JSON.readTree(Files.readAllBytes(PRIVATE.resolve("identities.json")));}
-    static List<JsonNode> events() throws Exception {
-        Path path=PRIVATE.resolve("events.jsonl");if(!Files.exists(path))return List.of();
-        List<JsonNode> rows=new ArrayList<>();for(String line:Files.readAllLines(path))rows.add(JSON.readTree(line));return rows;
+    static List<Map<String,Object>> events() throws Exception {return events(PRIVATE.resolve("events.jsonl"));}
+    static List<Map<String,Object>> events(Path path) throws Exception {
+        if(!Files.exists(path))return List.of();
+        List<Map<String,Object>> rows=new ArrayList<>();
+        for(String line:Files.readAllLines(path)) {
+            // Jackson2 trees are private journal/parser values, not a cross-converter HTTP DTO.
+            Map<String,Object> row=JSON.readValue(line,new com.fasterxml.jackson.core.type.TypeReference<Map<String,Object>>() {});
+            require(row!=null && row.get("stage") instanceof String,"original event stage");
+            String stage=(String)row.get("stage");
+            Set<String> expected=stage.equals("THROW") ? Set.of("bootId","symbol","stage","held","errorType","blocked")
+                    : Set.of("bootId","symbol","stage","held");
+            require(Set.of("ENTER","RETURN","THROW","SQL").contains(stage) && row.keySet().equals(expected)
+                    && row.get("bootId") instanceof String && ((String)row.get("bootId")).matches("[A-Za-z0-9_-]{1,80}")
+                    && row.get("symbol") instanceof String && ((String)row.get("symbol")).matches("[A-Za-z_$][A-Za-z0-9_.$!#:-]{0,1023}")
+                    && row.get("held") instanceof Boolean,"original event fields");
+            if(stage.equals("THROW"))require(row.get("errorType") instanceof String
+                    && ((String)row.get("errorType")).matches("[A-Za-z_$][A-Za-z0-9_.$]{0,255}")
+                    && row.get("blocked") instanceof Boolean,"original event exception classification");
+            rows.add(row); // Same actual journal row, no default fields, skipped records or synthetic results.
+        }
+        return rows;
     }
     static void providerAttempt(String symbol) {
         try {append("provider-attempts.jsonl",Map.of("bootId",BOOT,"symbol",symbol));}

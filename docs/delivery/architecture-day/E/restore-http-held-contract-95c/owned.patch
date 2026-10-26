@@ -1,0 +1,709 @@
+diff --git a/ci/restore_application_http_runtime.py b/ci/restore_application_http_runtime.py
+index cdbd2458f87e83c4c905c574c3b1965fa9803393..7e4e90e0770631518f823f69789946ae5d1f11c5 100644
+--- a/ci/restore_application_http_runtime.py
++++ b/ci/restore_application_http_runtime.py
+@@ -44,7 +44,7 @@ REASON_CODES = {
+ 
+ 
+ STARTUP_STAGES={'ADMISSION','SOURCE_IDENTITY','JAR_IDENTITY','ENVIRONMENT_GUARD','SPRING_RUN',
+-                'MYBATIS_OBSERVERS','DATASOURCE_IDENTITY','QUARTZ_PROPERTIES','QUARTZ_FACTORY',
++                'HTTP_JSON_CONTRACT','MYBATIS_OBSERVERS','DATASOURCE_IDENTITY','QUARTZ_PROPERTIES','QUARTZ_FACTORY',
+                 'SCHEDULER_LEADERSHIP','ORIGINAL_IDENTITIES','READY_PUBLISH','READY'}
+ STARTUP_REASONS={'NONE','ASSERTION_REJECTED','SCHEDULER_LEADERSHIP_TIMEOUT','UNCLASSIFIED_FAILURE'}
+ STARTUP_FAILURE_TYPES={'NONE','ILLEGAL_STATE','UNSATISFIED_DEPENDENCY','BEAN_CREATION','SQL','IO',
+diff --git a/ci/restore_application_http_probe.py b/ci/restore_application_http_probe.py
+index 6a280a2c9500ee9df1f57ea560331d0e0737d125..3b7c05c0c6166ed34fa838d7a2631c23f5a1e3e7 100644
+--- a/ci/restore_application_http_probe.py
++++ b/ci/restore_application_http_probe.py
+@@ -31,9 +31,13 @@ SUBSTAGES={'APPLICATION_SLOT_START','APPLICATION_READY','READ_ORIGINAL_IDENTITIE
+         'READ_ORIGINAL_PROVIDER','COMPLETE_FACTS_SQL','ORIGINAL_CHAPTER_RECEIPT','NETWORK_PROOF',
+         'SOURCE_QUIESCENT_STOP','QUIESCENT_SQL_SNAPSHOT','CANONICAL_BACKUP','EMPTY_TARGET_CREATE',
+         'CANONICAL_RESTORE','RESTORED_SQL_COMPARE','TARGET_RUNTIME_USER','NORMAL_ORIGINAL_READBACK',
+-        'HELD_OWNER_WORKLOAD','APPLICATION_STOP','PRIVATE_CLEANUP'}
++        'HELD_OWNER_WORKLOAD','HELD_BASELINE_SQL','HELD_RECEIPT_READBACK','HELD_FOREIGN_REFUSAL',
++        'HELD_BLOCKED_CHAPTER','HELD_BLOCKED_MONEY','HELD_NOTICE_PENDING','HELD_QUARTZ_REQUEST',
++        'HELD_QUARTZ_OBSERVE','HELD_LATE_CALLBACK','HELD_LATE_READBACK','HELD_REPLAY',
++        'HELD_PROVIDER_FENCE','HELD_NETWORK_STOP','APPLICATION_STOP','PRIVATE_CLEANUP'}
+ SAFE_REASON_CODES={'INVARIANT_REJECTED','UNCLASSIFIED_FAILURE','HTTP_OPERATION_REJECTED',
+         'CAPTCHA_CONTRACT_REJECTED','CAPTCHA_ORACLE_REJECTED','ADMIN_LOGIN_REJECTED',
++        'HTTP_EVIDENCE_CONTRACT_REJECTED','HTTP_CALLBACK_CONTRACT_REJECTED','FIXTURE_CONTRACT_REJECTED',
+         'APP_STOP_EXIT_NOT_CONFIRMED','APP_EXITED_BEFORE_READY','APP_READINESS_TIMEOUT',
+         'APP_BOOT_IDENTITY_REJECTED','APP_CHILD_STARTUP_REJECTED','HTTP_STATUS_MALFORMED','HTTP_RESPONSE_NOT_JSON','HTTP_RESPONSE_NOT_OBJECT'}
+ FACT_REASON_CODES={
+@@ -68,14 +72,152 @@ def require(value,reason):
+         failure.restore_reason_code=FACT_REASON_CODES.get(reason,'INVARIANT_REJECTED');raise failure
+ 
+ 
++def owned_source_frame(failure):
++    # Fixed reviewed files only. No traceback formatting, function/locals/KeyError args or private path.
++    allowed={str((ROOT/relative).resolve()):relative for relative in
++             ('ci/restore_application_http_probe.py','ci/restore_application_http_runtime.py')}
++    selected=None;frame=failure.__traceback__;count=0
++    while frame is not None and count<32:
++        try:
++            resolved=str(Path(frame.tb_frame.f_code.co_filename).resolve())
++            if resolved in allowed:
++                path=ROOT/allowed[resolved];raw=path.read_bytes()
++                if 0<frame.tb_lineno<=len(raw.splitlines()):
++                    selected={'path':allowed[resolved],'line':frame.tb_lineno,
++                              'sourceSha256':sha(raw),'scope':'OWNED_SOURCE_ONLY'}
++        except (OSError,ValueError):pass
++        frame=frame.tb_next;count+=1
++    if selected is not None:selected['searchTruncated']=frame is not None
++    return selected
++
++
+ def failure_diagnostic(failure,phase,substage):
+     # Neither str(failure) nor its cause/traceback is public evidence.
+     kind=type(failure).__name__
+     code=getattr(failure,'restore_reason_code','UNCLASSIFIED_FAILURE')
+-    return {'phase':phase if phase in RUN_PHASES else 'PRE_APPLICATION_PREPARATION',
++    value={'phase':phase if phase in RUN_PHASES else 'PRE_APPLICATION_PREPARATION',
+             'substage':substage if substage in SUBSTAGES else 'UNCLASSIFIED_SUBSTAGE',
+             'type':kind if re.fullmatch('[A-Za-z_][A-Za-z0-9_]{0,95}',kind) else 'UnclassifiedError',
+             'reasonCode':code if code in SAFE_REASON_CODES else 'UNCLASSIFIED_FAILURE'}
++    frame=owned_source_frame(failure)
++    if frame is not None:value['sourceFrame']=frame
++    if isinstance(failure,FixtureContractRejected):value['contract']=failure.observation
++    return value
++
++
++class FixtureContractRejected(ValueError):
++    def __init__(self,contract,container,fields,index=None,bindings=None):
++        allowed_fields={'code','data','bootId','held','serverUuid','schema','events','verifiedFacts','inbox',
++                        'symbol','stage','errorType','blocked','id','fact_hash','biz_id','state',
++                        'originalOutcome','factId','factHash','invoke_target','status',
++                        'beforeStartNotifyTask.run()','committedOfficialNoticeTask.deliverPending()'}
++        require(contract in {'CALLBACK','JOBS','EVENTS','EVENT_RECORD','EVIDENCE_ENVELOPE','EVIDENCE_DATA',
++                             'EVIDENCE_IDENTITY','VERIFIED_FACT_ROW','INBOX_ROW','QUARTZ_LOG_ROW'}
++                and set(fields)<=allowed_fields,'fixed fixture contract diagnostic only')
++        super().__init__('original fixture response contract rejected')
++        self.restore_reason_code=('HTTP_CALLBACK_CONTRACT_REJECTED' if contract=='CALLBACK'
++                else 'FIXTURE_CONTRACT_REJECTED' if contract=='JOBS' else 'HTTP_EVIDENCE_CONTRACT_REJECTED')
++        kinds={type(None):'NULL',bool:'BOOLEAN',int:'INTEGER',float:'FLOAT',str:'STRING',dict:'OBJECT',list:'ARRAY'}
++        mapping=container if isinstance(container,dict) else {}
++        self.observation={'kind':contract,'containerType':kinds.get(type(container),'OTHER'),
++                'fields':[{'field':field,'present':field in mapping,
++                           'type':kinds.get(type(mapping[field]),'OTHER') if field in mapping else 'MISSING'}
++                          for field in fields],
++                'otherKeyCount':len(set(mapping)-set(fields))}
++        if index is not None:self.observation['recordIndex']=index
++        if bindings is not None:self.observation['identityMatches']=bindings
++
++
++def event_records(rows):
++    base=('bootId','symbol','stage','held')
++    if not isinstance(rows,list):raise FixtureContractRejected('EVENTS',rows,base)
++    for index,row in enumerate(rows):
++        stage=row.get('stage') if isinstance(row,dict) else None
++        fields=base+('errorType','blocked') if stage=='THROW' else base
++        valid=(isinstance(row,dict) and set(row)==set(fields)
++                and isinstance(row['bootId'],str) and re.fullmatch('[A-Za-z0-9_-]{1,80}',row['bootId'])
++                and isinstance(row['symbol'],str) and re.fullmatch('[A-Za-z_$][A-Za-z0-9_.$!#:-]{0,1023}',row['symbol'])
++                and stage in ('ENTER','RETURN','THROW','SQL') and type(row['held']) is bool)
++        if valid and stage=='THROW':
++            valid=(isinstance(row['errorType'],str) and re.fullmatch('[A-Za-z_$][A-Za-z0-9_.$]{0,255}',row['errorType'])
++                   and type(row['blocked']) is bool)
++        if not valid:raise FixtureContractRejected('EVENT_RECORD',row,fields,index)
++    return rows
++
++
++def evidence_payload(response,boot):
++    value=good(response)
++    if not isinstance(value.get('data'),dict):raise FixtureContractRejected('EVIDENCE_ENVELOPE',value,('code','data'))
++    data=value['data'];fields=('bootId','held','serverUuid','schema','events','verifiedFacts','inbox')
++    valid=(set(data)==set(fields) and isinstance(data['bootId'],str) and type(data['held']) is bool
++            and isinstance(data['serverUuid'],str) and isinstance(data['schema'],str)
++            and isinstance(data['verifiedFacts'],list) and isinstance(data['inbox'],list))
++    if not valid:raise FixtureContractRejected('EVIDENCE_DATA',data,fields)
++    matches={'bootId':data['bootId']==boot['bootId'],'held':data['held'] is boot['guardHeld'],
++             'serverUuid':data['serverUuid']==boot['serverUuid'],'schema':data['schema']==boot['schema']}
++    if not all(matches.values()):raise FixtureContractRejected('EVIDENCE_IDENTITY',data,fields,bindings=matches)
++    event_records(data['events'])
++    for index,row in enumerate(data['verifiedFacts']):
++        names=('id','fact_hash')
++        if not (isinstance(row,dict) and set(row)==set(names) and type(row['id']) is int and row['id']>0
++                and isinstance(row['fact_hash'],str) and re.fullmatch('[0-9a-f]{64}',row['fact_hash'])):
++            raise FixtureContractRejected('VERIFIED_FACT_ROW',row,names,index)
++    for index,row in enumerate(data['inbox']):
++        names=('id','biz_id','state')
++        if not (isinstance(row,dict) and set(row)==set(names) and type(row['id']) is int and row['id']>0
++                and type(row['biz_id']) is int and row['biz_id']>0 and type(row['state']) is int):
++            raise FixtureContractRejected('INBOX_ROW',row,names,index)
++    return data
++
++
++def callback_envelope(value):
++    names=('originalOutcome','factId','factHash')
++    if not isinstance(value,dict) or not isinstance(value.get('data'),dict):
++        raise FixtureContractRejected('CALLBACK',value,('code','data'))
++    data=value['data']
++    if not (set(data)==set(names) and isinstance(data['originalOutcome'],str)
++            and type(data['factId']) is int and data['factId']>0
++            and isinstance(data['factHash'],str) and re.fullmatch('[0-9a-f]{64}',data['factHash'])):
++        raise FixtureContractRejected('CALLBACK',data,names)
++    return value
++
++
++def quartz_log_rows(rows):
++    fields=('invoke_target','status')
++    if not isinstance(rows,list):raise FixtureContractRejected('QUARTZ_LOG_ROW',rows,fields)
++    for index,row in enumerate(rows):
++        if not (isinstance(row,dict) and set(row)==set(fields)
++                and isinstance(row['invoke_target'],str) and row['status'] in ('0','1')):
++            raise FixtureContractRejected('QUARTZ_LOG_ROW',row,fields,index)
++    return rows
++
++
++def assert_quartz_completion(rows,baseline,jobs):
++    quartz_log_rows(rows)
++    require(len(rows)>=baseline+2 and all(any(row['invoke_target']==target and row['status']=='0'
++            for row in rows[baseline:]) for target in jobs),'real persisted Quartz task completion proof')
++
++
++def held_observation(data,rows,boot,baseline,jobs):
++    # Real validated journal/log readbacks only; these counts never replace original owner assertions.
++    current=[row for row in data['events'] if row['bootId']==boot['bootId']]
++    return {'bootId':boot['bootId'],'mode':boot['restoreMode'],'eventCount':len(data['events']),
++            'currentBootStageCounts':{stage:sum(row['stage']==stage for row in current)
++                    for stage in ('ENTER','RETURN','THROW','SQL')},
++            'verifiedFactCount':len(data['verifiedFacts']),'inboxCount':len(data['inbox']),
++            'quartzBaselineCount':baseline,'quartzObservedCount':len(rows),
++            'requestedTargets':len(jobs),'completedTargetCount':sum(any(
++                    row['invoke_target']==target and row['status']=='0' for row in rows[baseline:]) for target in jobs)}
++
++
++def held_jobs(ids):
++    targets=('beforeStartNotifyTask.run()','committedOfficialNoticeTask.deliverPending()')
++    jobs=ids.get('jobs') if isinstance(ids,dict) else None
++    if not (isinstance(jobs,dict) and set(jobs)==set(targets)
++            and all(type(jobs[target]) is int and jobs[target]>0 for target in targets)
++            and len(set(jobs.values()))==2):
++        raise FixtureContractRejected('JOBS',jobs,targets)
++    return jobs
+ 
+ 
+ def checkpoint(slot,report,path,phase,substage):
+@@ -267,6 +409,7 @@ def verify_restored_snapshot(before,after,slot,auth,source_port,target_port,sche
+ 
+ 
+ def assert_late_callback(before,after,callback,registration):
++    callback_envelope(callback)
+     require(callback.get('code')==200 and callback.get('data',{}).get('originalOutcome')=='FAIL','original callback must remain paused, never fake ACK')
+     # Only independent verified fact + its original WAIT inbox + immutable link can be appended.
+     assert_equal(before,after,LATE_TABLES)
+@@ -296,6 +439,8 @@ def assert_callback_replay(before,after):
+ 
+ 
+ def assert_owner_events(events,boot):
++    event_records(events)
++    proven=set()
+     current=[row for row in events if row['bootId']==boot]
+     for symbol in ('CashWithdrawServiceImpl.withdraw','RefundServiceImpl.saveBackOfficeRefund',
+                    'CommittedBusinessNotice.dispatchInNewTransaction'):
+@@ -304,18 +449,21 @@ def assert_owner_events(events,boot):
+         require(any(r['stage']=='THROW' and r.get('blocked') is True
+                     and r.get('errorType')=='com.chengyinhub.common.config.RestoreDispatchGuard$Blocked'
+                     for r in rows),'actual owner did not throw real Blocked: '+symbol)
++        proven.add(symbol)
+     for symbol in ('BeforeStartNotifyTask.run','CommittedOfficialNoticeTask.deliverPending','CommittedOfficialNoticeService.reconcilePending'):
+         rows=[r for r in current if r['symbol']==symbol]
+         require(any(r['stage']=='ENTER' and r['held'] is True for r in rows)
+                 and any(r['stage']=='RETURN' and r['held'] is True for r in rows),'real Quartz/notice wake not observed: '+symbol)
++        proven.add(symbol)
+     require(not any(r['symbol']=='TeamGroupServiceImpl.notifyBeforeStartBatch' for r in current),'before-start guard did not pause the real sweep')
+     require(not any(r['stage']=='SQL' and r['symbol'].endswith(('CommittedOfficialNoticeWxMapper.maxPendingId','CommittedOfficialNoticeWxMapper.selectPendingPage')) for r in current),'notice recovery guard did not pause the real pending selector')
+-    return [{'symbol':symbol,'entered':True} for symbol in sorted({r['symbol'] for r in current})]
++    return [{'symbol':symbol,'entered':True} for symbol in sorted(proven)]
+ 
+ 
+ def good(response):
+     status,value=response
+-    if not (status==200 and value.get('code')==200):
++    if not (type(status) is int and status==200 and isinstance(value,dict)
++            and type(value.get('code')) is int and value['code']==200):
+         failure=ValueError('real HTTP operation not successful')
+         failure.restore_reason_code='HTTP_OPERATION_REJECTED';raise failure
+     return value
+@@ -483,16 +631,29 @@ def run(name,schema,out,credentials):
+             for mode in HELD_MODES:
+                 boot=start_application(slot,report,report_path,'RESTORED_HELD_APPLICATION_START','target',mode,identities['target']['uuid'])
+                 checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_OWNER_WORKLOAD')
++                jobs=held_jobs(ids)
++                progress={'bootId':boot['bootId'],'mode':mode,'completedStages':[]}
++                report.setdefault('heldWorkloads',[]).append(progress)
++                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_BASELINE_SQL')
+                 mark=snapshot(auth,tp,schema,identities['target']['uuid'])
++                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_RECEIPT_READBACK')
+                 require(good(slot.http(receipt_path,a))==original_receipt,'held original receipt unreadable')
++                progress['completedStages'].append('ORIGINAL_RECEIPT_READBACK')
++                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_FOREIGN_REFUSAL')
+                 denied=slot.http(receipt_path,b);refused(denied);require(not denied[1].get('data'),'other actor received original receipt')
+                 refused(slot.http('/__restore_http/evidence',b))
+                 assert_equal(mark,snapshot(auth,tp,schema,identities['target']['uuid']))
++                progress['completedStages'].append('FOREIGN_READ_REFUSED_ZERO_EFFECT')
++                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_BLOCKED_CHAPTER')
+                 changed=dict(ids['chapter'],targetChapterId=ids['chapter']['targetChapterId']+1)
+                 refused(slot.http('/api/club/lead/unlock-chapter',a,changed,form=True));assert_equal(mark,snapshot(auth,tp,schema,identities['target']['uuid']))
++                progress['completedStages'].append('CHANGED_CHAPTER_REFUSED_ZERO_EFFECT')
++                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_BLOCKED_MONEY')
+                 refused(slot.http('/api/wallet/withdraw',a,{'amount':'30.00'}))
+                 refused(slot.http('/business/refund',admin,{'registrationId':ids['registrationId'],'refundAmount':'1.00'}))
+                 assert_equal(mark,snapshot(auth,tp,schema,identities['target']['uuid']))
++                progress['completedStages'].append('WITHDRAW_REFUND_REFUSED_ZERO_EFFECT')
++                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_NOTICE_PENDING')
+                 # Actual durable notice intent is committed before attempting the original blocked wake.
+                 refused(slot.http('/__restore_http/notice',admin,{}))
+                 pending=snapshot(auth,tp,schema,identities['target']['uuid'])
+@@ -500,34 +661,51 @@ def run(name,schema,out,credentials):
+                 require(len(notice)==1 and notice[0]['wx_state']=='PENDING','real eligible original pending notice required')
+                 with auth.database(tp,schema) as db,db.cursor() as cur:
+                     cur.execute('SELECT COUNT(*) FROM sys_job_log');logs=cur.fetchone()[0]
+-                for job in ids['jobs'].values():good(slot.http('/monitor/job/run',admin,{'jobId':job},method='PUT'))
++                progress['completedStages'].append('ORIGINAL_NOTICE_PENDING')
++                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_QUARTZ_REQUEST')
++                for job in jobs.values():good(slot.http('/monitor/job/run',admin,{'jobId':job},method='PUT'))
++                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_QUARTZ_OBSERVE')
++                evidence=None
+                 until=time.monotonic()+45
+                 while time.monotonic()<until:
+-                    evidence=good(slot.http('/__restore_http/evidence',admin))['data']
++                    evidence=evidence_payload(slot.http('/__restore_http/evidence',admin),boot)
+                     entered={r['symbol'] for r in evidence['events'] if r['bootId']==boot['bootId'] and r['stage']=='RETURN'}
+-                    observed_logs=query(auth,tp,schema,'SELECT invoke_target,status FROM sys_job_log ORDER BY job_log_id')
++                    observed_logs=quartz_log_rows(query(auth,tp,schema,'SELECT invoke_target,status FROM sys_job_log ORDER BY job_log_id'))
++                    report['heldObservation']=held_observation(evidence,observed_logs,boot,logs,jobs)
+                     if ({'BeforeStartNotifyTask.run','CommittedOfficialNoticeTask.deliverPending','CommittedOfficialNoticeService.reconcilePending'}<=entered
+-                            and len(observed_logs)>=logs+2 and all(any(r['invoke_target']==target and r['status']=='0' for r in observed_logs[logs:]) for target in ids['jobs'])):break
++                            and len(observed_logs)>=logs+2 and all(any(r['invoke_target']==target and r['status']=='0' for r in observed_logs[logs:]) for target in jobs)):break
+                     time.sleep(.2)
++                require(evidence is not None,'real Quartz window produced no validated evidence response')
+                 actual=assert_owner_events(evidence['events'],boot['bootId'])
+                 assert_equal(pending,snapshot(auth,tp,schema,identities['target']['uuid']))
+-                observed_logs=query(auth,tp,schema,'SELECT invoke_target,status FROM sys_job_log ORDER BY job_log_id')
+-                require(len(observed_logs)>=logs+2 and all(any(r['invoke_target']==target and r['status']=='0' for r in observed_logs[logs:])
+-                        for target in ids['jobs']),'real persisted Quartz task completion proof')
++                observed_logs=quartz_log_rows(query(auth,tp,schema,'SELECT invoke_target,status FROM sys_job_log ORDER BY job_log_id'))
++                report['heldObservation']=held_observation(evidence,observed_logs,boot,logs,jobs)
++                assert_quartz_completion(observed_logs,logs,jobs)
++                progress['completedStages'].append('REAL_QUARTZ_OWNERS_AND_LOGS')
++                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_LATE_CALLBACK')
+                 prior=snapshot(auth,tp,schema,identities['target']['uuid'])
+-                callback=good(slot.http('/__restore_http/verified-callback',admin,{}))
++                callback=callback_envelope(good(slot.http('/__restore_http/verified-callback',admin,{})))
+                 assert_late_callback(prior,snapshot(auth,tp,schema,identities['target']['uuid']),callback,ids['registrationId'])
+-                readback=good(slot.http('/__restore_http/evidence',admin))['data']
++                progress['completedStages'].append('ORIGINAL_FACT_AND_WAIT_INBOX')
++                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_LATE_READBACK')
++                readback=evidence_payload(slot.http('/__restore_http/evidence',admin),boot)
+                 require(readback['verifiedFacts']==[{'id':callback['data']['factId'],'fact_hash':callback['data']['factHash']}]
+                         and len(readback['inbox'])==1 and readback['inbox'][0]['biz_id']==ids['registrationId']
+                         and readback['inbox'][0]['state']==0,'HTTP authenticated original fact and WAIT inbox readback')
++                progress['completedStages'].append('AUTHENTICATED_ORIGINAL_FACT_READBACK')
++                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_REPLAY')
+                 stable=snapshot(auth,tp,schema,identities['target']['uuid'])
+-                callback_replay=good(slot.http('/__restore_http/verified-callback',admin,{}))
++                callback_replay=callback_envelope(good(slot.http('/__restore_http/verified-callback',admin,{})))
+                 require(callback_replay==callback,'same original verified callback identity')
+                 assert_callback_replay(stable,snapshot(auth,tp,schema,identities['target']['uuid']))
++                progress['completedStages'].append('EXACT_ORIGINAL_CALLBACK_REPLAY')
++                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_PROVIDER_FENCE')
+                 require((slot.root/'withdrawal-provider.json').read_bytes()==original_provider_bytes,'provider original record changed')
+                 require(not (slot.root/'provider-attempts.jsonl').exists(),'controlled transport fence was entered; not a production guard proof')
++                progress['completedStages'].append('ORIGINAL_PROVIDER_UNCHANGED_ZERO_SEND')
++                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_NETWORK_STOP')
+                 slot.verify_network();slot.stop(remove=False)
++                progress['completedStages'].append('EXACT_NETWORK_AND_READY_STOP')
+                 report['boots'].append({k:boot[k] for k in ('bootId','javaPid','sourceSha','jarSha256','serverUuid','schema','restoreMode','guardHeld','schedulerStarted','appCid','side')})
+                 report['checks'].append({'protectedRowsBefore':public_snapshot(mark),'protectedRowsAfter':public_snapshot(snapshot(auth,tp,schema,identities['target']['uuid'])),
+                                          'providerJournalSha256':sha(original_provider_bytes),
+diff --git a/ci/test_restore_application_http_probe.py b/ci/test_restore_application_http_probe.py
+index 018924eeb316172a503dd9c90aa80cd25f7820ab..568c5c4d8355ef7248721af37c8e74ce36dd0a7f 100644
+--- a/ci/test_restore_application_http_probe.py
++++ b/ci/test_restore_application_http_probe.py
+@@ -1102,4 +1102,174 @@ class RestoreHttpCurrentAllocatorControls(unittest.TestCase):
+                 self.assertIn('TYPED_ROWS_DIFFER',report['canonicalRestoreComparison']['tables'][0]['categories'])
+ 
+ 
++
++class RestoreHttpHeldProtocolControls(unittest.TestCase):
++    """Protocol/direct-owner controls only. No server, scheduler, DB or economic fact is executed."""
++    def envelope(self,mode='true'):
++        boot={'bootId':'boot','guardHeld':True,'restoreMode':mode,
++              'serverUuid':'11111111-1111-1111-1111-111111111111','schema':'cy_e2e_auth_'+'a'*32}
++        data={'bootId':boot['bootId'],'held':True,'serverUuid':boot['serverUuid'],'schema':boot['schema'],
++              'events':events(),'verifiedFacts':[],'inbox':[]}
++        return boot,(200,{'code':200,'msg':'original operation','data':data})
++
++    def jobs(self):
++        return {'beforeStartNotifyTask.run()':101,'committedOfficialNoticeTask.deliverPending()':102}
++
++    def test_good_keeps_full_original_envelope_and_never_implicitly_unwraps_or_requires_data(self):
++        boot,response=self.envelope()
++        self.assertIs(P.good(response),response[1])
++        self.assertIs(P.evidence_payload(response,boot),response[1]['data'])
++        self.assertIs(P.good((200,{'code':200})).get('data'),None)
++        _,_,callback=late()
++        self.assertIs(P.callback_envelope(P.good((200,callback))),callback)
++        self.assertEqual(callback['data']['factId'],1)
++
++    def test_each_original_held_mode_keeps_owner_quartz_wait_fact_replay_and_identity_guards(self):
++        self.assertEqual(P.HELD_MODES,('true','invalid',''))
++        for mode in P.HELD_MODES:
++            with self.subTest(mode=mode):
++                boot,response=self.envelope(mode)
++                data=P.evidence_payload(response,boot);self.assertTrue(P.assert_owner_events(data['events'],boot['bootId']))
++                jobs=P.held_jobs({'jobs':self.jobs()})
++                logs=[{'invoke_target':target,'status':'0'} for target in jobs]
++                P.assert_quartz_completion(logs,0,jobs)
++                observation=P.held_observation(data,logs,boot,0,jobs)
++                self.assertEqual(observation['mode'],mode);self.assertEqual(observation['completedTargetCount'],2)
++                before,after,callback=late()
++                value=P.callback_envelope(P.good((200,callback)))
++                P.assert_late_callback(before,after,value,8)
++                data['verifiedFacts']=[{'id':1,'fact_hash':'a'*64}]
++                data['inbox']=[{'id':1,'biz_id':8,'state':0}]
++                readback=P.evidence_payload(response,boot)
++                self.assertEqual(readback['verifiedFacts'][0]['id'],value['data']['factId'])
++                self.assertEqual(readback['verifiedFacts'][0]['fact_hash'],value['data']['factHash'])
++                self.assertEqual(readback['inbox'][0]['state'],0)
++                P.assert_callback_replay(after,copy.deepcopy(after))
++                self.assertEqual(P.callback_envelope(P.good((200,copy.deepcopy(callback)))),callback)
++
++    def test_missing_layer_or_tree_bean_shape_is_rejected_with_fixed_presence_types_not_keyerror_defaults(self):
++        for kind in ('missing-data','double-data','missing-events','tree-event','events-object'):
++            with self.subTest(kind=kind):
++                boot,response=self.envelope();body=response[1];data=body['data']
++                if kind=='missing-data':del body['data']
++                elif kind=='double-data':body['data']={'data':data}
++                elif kind=='missing-events':del data['events']
++                elif kind=='tree-event':data['events']=[{'nodeType':'OBJECT','private-token-key':'private-canary-value'}]
++                else:data['events']={}
++                with self.assertRaises(P.FixtureContractRejected) as caught:P.evidence_payload(response,boot)
++                diagnostic=P.failure_diagnostic(caught.exception,'RESTORED_HELD_WORKLOAD','HELD_QUARTZ_OBSERVE')
++                self.assertEqual(diagnostic['reasonCode'],'HTTP_EVIDENCE_CONTRACT_REJECTED')
++                self.assertNotIn('private-token-key',json.dumps(diagnostic))
++                self.assertNotIn('private-canary-value',json.dumps(diagnostic))
++                if kind=='tree-event':
++                    self.assertEqual(diagnostic['contract']['recordIndex'],0)
++                    fields={row['field']:row for row in diagnostic['contract']['fields']}
++                    self.assertFalse(fields['bootId']['present']);self.assertEqual(fields['bootId']['type'],'MISSING')
++
++    def test_foreign_boot_mode_schema_or_uuid_cannot_supply_another_instances_evidence(self):
++        for key,value in (('bootId','foreign-boot'),('held',False),('schema','foreign-schema'),('serverUuid','foreign-uuid')):
++            with self.subTest(key=key):
++                boot,response=self.envelope();response[1]['data'][key]=value
++                with patch.object(P,'event_records') as consume:
++                    with self.assertRaises(P.FixtureContractRejected) as caught:P.evidence_payload(response,boot)
++                consume.assert_not_called()
++                self.assertFalse(caught.exception.observation['identityMatches'][key])
++                if isinstance(value,str):self.assertNotIn(value,json.dumps(caught.exception.observation))
++
++    def test_callback_requires_original_typed_fact_identity_and_retains_fail_outcome_rule(self):
++        for key,value in (('factId',None),('factId',True),('factId','1'),('factHash','private-hash-canary')):
++            with self.subTest(key=key,value=value):
++                _,_,callback=late();callback['data'][key]=value
++                with self.assertRaises(P.FixtureContractRejected):P.callback_envelope(P.good((200,callback)))
++        before,after,callback=late();callback['data']['originalOutcome']='SUCCESS'
++        P.callback_envelope(callback) # Shape is distinct from the original paused business result.
++        with self.assertRaisesRegex(ValueError,'original callback must remain paused'):
++            P.assert_late_callback(before,after,callback,8)
++
++    def test_event_contract_does_not_replace_original_blocked_owner_and_pending_selector_guards(self):
++        value=events();value[1]['blocked']=False;value[1]['errorType']='java.lang.IllegalStateException'
++        self.assertIs(P.event_records(value),value)
++        with self.assertRaisesRegex(ValueError,'actual owner did not throw real Blocked'):P.assert_owner_events(value,'boot')
++        value=events()+[{'bootId':'boot','symbol':'com.chengyinhub.business.mapper.CommittedOfficialNoticeWxMapper.selectPendingPage',
++                         'stage':'SQL','held':True}]
++        with self.assertRaisesRegex(ValueError,'notice recovery guard did not pause'):P.assert_owner_events(value,'boot')
++        value=events();value[1]['blocked']='true'
++        with self.assertRaises(P.FixtureContractRejected):P.assert_owner_events(value,'boot')
++        value=events()+[{'bootId':'boot','symbol':'com.example.Mapper.insert!selectKey','stage':'SQL','held':True}]
++        self.assertIs(P.event_records(value),value)
++        proven=P.assert_owner_events(value,'boot')
++        self.assertEqual(len(proven),6);self.assertNotIn('com.example.Mapper.insert!selectKey',[row['symbol'] for row in proven])
++
++    def test_quartz_ack_or_failure_duplicate_target_or_stale_rows_do_not_prove_two_real_completions(self):
++        jobs=self.jobs();success=[{'invoke_target':target,'status':'0'} for target in jobs]
++        P.assert_quartz_completion(success,0,jobs)
++        for rows,baseline in (([],0),(success,2),([success[0],success[0]],0),
++                              ([{**row,'status':'1'} for row in success],0)):
++            with self.subTest(rows=rows,baseline=baseline):
++                with self.assertRaisesRegex(ValueError,'real persisted Quartz task completion proof'):
++                    P.assert_quartz_completion(rows,baseline,jobs)
++        for rows in ([{'status':'0'}],[{'invoke_target':'beforeStartNotifyTask.run()','status':0}]):
++            with self.assertRaises(P.FixtureContractRejected):P.assert_quartz_completion(rows,0,jobs)
++
++    def test_private_seed_job_ids_must_match_the_two_actual_original_targets_without_defaults(self):
++        value={'jobs':self.jobs()};self.assertIs(P.held_jobs(value),value['jobs'])
++        for kind in ('missing','duplicate-id','wrong-target','boolean-id'):
++            invalid={'jobs':self.jobs()}
++            if kind=='missing':del invalid['jobs']
++            elif kind=='duplicate-id':invalid['jobs']['beforeStartNotifyTask.run()']=102
++            elif kind=='wrong-target':invalid['jobs']['private-target-canary']=invalid['jobs'].pop('beforeStartNotifyTask.run()')
++            else:invalid['jobs']['beforeStartNotifyTask.run()']=True
++            with self.assertRaises(P.FixtureContractRejected) as caught:P.held_jobs(invalid)
++            self.assertNotIn('private-target-canary',json.dumps(caught.exception.observation))
++
++    def test_unclassified_keyerror_keeps_only_real_reviewed_source_frame_not_key_message_or_private_path(self):
++        class Cursor:
++            description=(('n',),)
++            def execute(self,*args):pass
++            def fetchall(self):raise KeyError('private-SQL-token-key-canary')
++        class Database:
++            def cursor(self):return nullcontext(Cursor())
++        auth=SimpleNamespace(database=lambda *args:nullcontext(Database()))
++        try:P.query(auth,3306,'owned','SELECT controlled')
++        except KeyError as failure:
++            diagnostic=P.failure_diagnostic(failure,'RESTORED_HELD_WORKLOAD','HELD_QUARTZ_OBSERVE')
++        else:self.fail('original KeyError was swallowed')
++        self.assertEqual(diagnostic['type'],'KeyError');self.assertEqual(diagnostic['reasonCode'],'UNCLASSIFIED_FAILURE')
++        frame=diagnostic['sourceFrame']
++        self.assertEqual(frame['path'],'ci/restore_application_http_probe.py');self.assertGreater(frame['line'],0)
++        self.assertEqual(frame['sourceSha256'],P.sha((ROOT/frame['path']).read_bytes()))
++        self.assertNotIn('private-SQL-token-key-canary',json.dumps(diagnostic))
++        self.assertNotIn('SELECT controlled',json.dumps(diagnostic));self.assertNotIn(str(ROOT),json.dumps(diagnostic))
++
++    def test_three_real_ready_observations_never_replace_five_completed_original_workloads(self):
++        fixture=RestoreHttpFailureLifecycleControls();report=fixture.success_report()
++        report['readyBootObservations']=(report['completeBoots']+report['boots'])[:3]
++        report['completeBoots']=[];report['boots']=[]
++        with self.assertRaisesRegex(ValueError,'five independent original app boots'):
++            P.assert_successful_lifecycle(report)
++
++    def test_verified_fact_and_inbox_column_names_and_scalar_types_remain_strict(self):
++        for kind in ('fact-column','fact-id-bool','fact-hash-bytes','inbox-column','inbox-state-bool'):
++            boot,response=self.envelope();data=response[1]['data']
++            data['verifiedFacts']=[{'id':1,'fact_hash':'a'*64}];data['inbox']=[{'id':1,'biz_id':8,'state':0}]
++            if kind=='fact-column':data['verifiedFacts'][0]['hash']=data['verifiedFacts'][0].pop('fact_hash')
++            elif kind=='fact-id-bool':data['verifiedFacts'][0]['id']=True
++            elif kind=='fact-hash-bytes':data['verifiedFacts'][0]['fact_hash']=b'private-hash'
++            elif kind=='inbox-column':del data['inbox'][0]['biz_id']
++            else:data['inbox'][0]['state']=False
++            with self.subTest(kind=kind):
++                with self.assertRaises(P.FixtureContractRejected):P.evidence_payload(response,boot)
++
++    def test_received_http200_or_missing_data_is_not_successful_evidence_and_does_not_echo_error_text(self):
++        boot,_=self.envelope()
++        for response in ((200,{'code':500,'msg':'private-server-body'}),
++                         (403,{'code':403,'msg':'private-authorization-body'}),
++                         (200,{'code':True,'data':{}}),(200,['private-unexpected-array'])):
++            with self.assertRaises(ValueError) as caught:P.evidence_payload(response,boot)
++            self.assertEqual(P.failure_diagnostic(caught.exception,'RESTORED_HELD_WORKLOAD',
++                    'HELD_QUARTZ_OBSERVE')['reasonCode'],'HTTP_OPERATION_REJECTED')
++            self.assertNotIn('private',json.dumps(P.failure_diagnostic(caught.exception,
++                    'RESTORED_HELD_WORKLOAD','HELD_QUARTZ_OBSERVE')))
++
++
+ if __name__=='__main__':unittest.main()
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java
+index e6872d8ffe394b2cd8d27a125e6bca22a62b2d4e..58b81ebc1b404c916d2397b4d7b90f5a764ee07b 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java
+@@ -59,7 +59,7 @@ public final class RestoreHttpApplicationChild {
+     static ConfigurableApplicationContext application;
+ 
+     enum StartupStage { ADMISSION, SOURCE_IDENTITY, JAR_IDENTITY, ENVIRONMENT_GUARD, SPRING_RUN,
+-        MYBATIS_OBSERVERS, DATASOURCE_IDENTITY, QUARTZ_PROPERTIES, QUARTZ_FACTORY,
++        HTTP_JSON_CONTRACT, MYBATIS_OBSERVERS, DATASOURCE_IDENTITY, QUARTZ_PROPERTIES, QUARTZ_FACTORY,
+         SCHEDULER_LEADERSHIP, ORIGINAL_IDENTITIES, READY_PUBLISH, READY }
+     enum StartupReason { NONE, ASSERTION_REJECTED, SCHEDULER_LEADERSHIP_TIMEOUT, UNCLASSIFIED_FAILURE }
+     static volatile StartupStage startupStage = StartupStage.ADMISSION;
+@@ -104,6 +104,7 @@ public final class RestoreHttpApplicationChild {
+         app.setAdditionalProfiles(PROFILE);
+         application = app.run("--spring.config.location=file:/fixture/application.properties",
+                 "--server.address=127.0.0.1", "--server.port=8080", "--spring.messages.basename=i18n/messages",
++                "--spring.http.converters.preferred-json-mapper=jackson2",
+                 "--spring.datasource.druid.master.url=" + config.path("jdbcUrl").asText(),
+                 "--spring.datasource.druid.master.username=startup_probe",
+                 "--spring.datasource.druid.master.password=synthetic-local-only",
+@@ -114,6 +115,11 @@ public final class RestoreHttpApplicationChild {
+                 "--spring.quartz.wait-for-jobs-to-complete-on-shutdown=true",
+                 "--withdrawal.fast-withdraw.enabled=true",
+                 "--wx.pay.appid=restore-http-app", "--wx.pay.merchant-id=restore-http-mch");
++        startupCheckpoint(StartupStage.HTTP_JSON_CONTRACT);
++        startupRequire("jackson2".equals(application.getEnvironment()
++                .getProperty("spring.http.converters.preferred-json-mapper")), "original production JSON mapper");
++        assertHttpJsonConverters(application.getBean(
++                org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.class).getMessageConverters());
+         startupCheckpoint(StartupStage.MYBATIS_OBSERVERS);
+         var factories=application.getBeansOfType(org.apache.ibatis.session.SqlSessionFactory.class);
+         startupRequire(!factories.isEmpty(),"real MyBatis factories required");
+@@ -161,6 +167,14 @@ public final class RestoreHttpApplicationChild {
+         }
+     }
+ 
++    static void assertHttpJsonConverters(java.util.List<org.springframework.http.converter.HttpMessageConverter<?>> converters) {
++        var selected=converters.stream().filter(converter ->
++                converter.canWrite(AjaxResult.class,org.springframework.http.MediaType.APPLICATION_JSON))
++                .findFirst().orElseThrow(() -> new StartupRejected("actual JSON converter unavailable",StartupReason.ASSERTION_REJECTED));
++        startupRequire(selected instanceof org.springframework.http.converter.json.MappingJackson2HttpMessageConverter,
++                "actual JSON converter must retain original production jackson2");
++    }
++
+     static void assertQuartzFactory(ConfigurableApplicationContext context, org.quartz.Scheduler scheduler) {
+         var factories=context.getBeansOfType(org.springframework.scheduling.quartz.SchedulerFactoryBean.class);
+         startupRequire(factories.values().stream().anyMatch(factory -> factory.getScheduler() == scheduler
+@@ -416,9 +430,27 @@ public final class RestoreHttpApplicationChild {
+         }
+     }
+     static JsonNode identities() throws Exception {return JSON.readTree(Files.readAllBytes(PRIVATE.resolve("identities.json")));}
+-    static List<JsonNode> events() throws Exception {
+-        Path path=PRIVATE.resolve("events.jsonl");if(!Files.exists(path))return List.of();
+-        List<JsonNode> rows=new ArrayList<>();for(String line:Files.readAllLines(path))rows.add(JSON.readTree(line));return rows;
++    static List<Map<String,Object>> events() throws Exception {return events(PRIVATE.resolve("events.jsonl"));}
++    static List<Map<String,Object>> events(Path path) throws Exception {
++        if(!Files.exists(path))return List.of();
++        List<Map<String,Object>> rows=new ArrayList<>();
++        for(String line:Files.readAllLines(path)) {
++            // Jackson2 trees are private journal/parser values, not a cross-converter HTTP DTO.
++            Map<String,Object> row=JSON.readValue(line,new com.fasterxml.jackson.core.type.TypeReference<Map<String,Object>>() {});
++            require(row!=null && row.get("stage") instanceof String,"original event stage");
++            String stage=(String)row.get("stage");
++            Set<String> expected=stage.equals("THROW") ? Set.of("bootId","symbol","stage","held","errorType","blocked")
++                    : Set.of("bootId","symbol","stage","held");
++            require(Set.of("ENTER","RETURN","THROW","SQL").contains(stage) && row.keySet().equals(expected)
++                    && row.get("bootId") instanceof String && ((String)row.get("bootId")).matches("[A-Za-z0-9_-]{1,80}")
++                    && row.get("symbol") instanceof String && ((String)row.get("symbol")).matches("[A-Za-z_$][A-Za-z0-9_.$!#:-]{0,1023}")
++                    && row.get("held") instanceof Boolean,"original event fields");
++            if(stage.equals("THROW"))require(row.get("errorType") instanceof String
++                    && ((String)row.get("errorType")).matches("[A-Za-z_$][A-Za-z0-9_.$]{0,255}")
++                    && row.get("blocked") instanceof Boolean,"original event exception classification");
++            rows.add(row); // Same actual journal row, no default fields, skipped records or synthetic results.
++        }
++        return rows;
+     }
+     static void providerAttempt(String symbol) {
+         try {append("provider-attempts.jsonl",Map.of("bootId",BOOT,"symbol",symbol));}
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpEvidenceContractTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpEvidenceContractTest.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..71ff44e92bba17dfad077c4ea1166de653a7fa07
+--- /dev/null
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpEvidenceContractTest.java
+@@ -0,0 +1,126 @@
++package com.chengyinhub.business.it;
++
++import com.chengyinhub.common.core.domain.AjaxResult;
++import com.fasterxml.jackson.databind.JsonNode;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.io.TempDir;
++import org.springframework.http.MediaType;
++import org.springframework.http.converter.HttpMessageConverter;
++import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
++import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
++import org.springframework.http.converter.StringHttpMessageConverter;
++import org.springframework.mock.http.MockHttpOutputMessage;
++
++import java.nio.file.Files;
++import java.nio.file.Path;
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Map;
++
++import static org.junit.jupiter.api.Assertions.*;
++
++/** SOURCE only: actual journal parser and Spring JSON writers. No app/DB/provider/HTTP is started. */
++class RestoreHttpEvidenceContractTest {
++    @TempDir Path directory;
++
++    private List<Map<String,Object>> journal() {
++        List<Map<String,Object>> rows=new ArrayList<>();
++        for(String stage:List.of("ENTER","RETURN","SQL"))
++            rows.add(Map.of("bootId","actual-journal-boot","symbol",stage.equals("SQL") ? "com.example.Mapper.insert!selectKey" : "ActualOwner.method","stage",stage,"held",true));
++        rows.add(Map.of("bootId","actual-journal-boot","symbol","ActualOwner.method","stage","THROW","held",true,
++                "errorType","com.chengyinhub.common.config.RestoreDispatchGuard$Blocked","blocked",true));
++        return rows;
++    }
++
++    private Path writeJournal(List<Map<String,Object>> rows) throws Exception {
++        Path file=directory.resolve("actual-events.jsonl");
++        StringBuilder text=new StringBuilder();
++        for(var row:rows)text.append(RestoreHttpApplicationChild.JSON.writeValueAsString(row)).append("\n");
++        Files.writeString(file,text.toString());
++        return file;
++    }
++
++    private JsonNode wire(HttpMessageConverter<Object> converter,Object value) throws Exception {
++        var output=new MockHttpOutputMessage();
++        converter.write(value,MediaType.APPLICATION_JSON,output);
++        return RestoreHttpApplicationChild.JSON.readTree(output.getBodyAsBytes());
++    }
++
++    @Test void realJournalRowsRemainPlainValuesAndRoundTripWithBothActualSpringJsonConverters() throws Exception {
++        var original=journal();
++        var rows=RestoreHttpApplicationChild.events(writeJournal(original));
++        assertEquals(original,rows);assertEquals(4,rows.size());
++        var value=AjaxResult.success(Map.of("bootId","actual-journal-boot","held",true,
++                "serverUuid","11111111-1111-1111-1111-111111111111","schema","owned","events",rows,
++                "verifiedFacts",List.of(),"inbox",List.of()));
++        for(var converter:List.<HttpMessageConverter<Object>>of(
++                new MappingJackson2HttpMessageConverter(),new JacksonJsonHttpMessageConverter())) {
++            JsonNode body=wire(converter,value);
++            assertEquals(200,body.path("code").asInt());
++            assertEquals(7,body.path("data").size());assertEquals(4,body.path("data").path("events").size());
++            for(int i=0;i<rows.size();i++)
++                assertEquals(RestoreHttpApplicationChild.JSON.valueToTree(original.get(i)),
++                        body.path("data").path("events").get(i));
++            assertTrue(body.path("data").path("events").get(3).path("blocked").asBoolean());
++            assertEquals("com.chengyinhub.common.config.RestoreDispatchGuard$Blocked",
++                    body.path("data").path("events").get(3).path("errorType").asText());
++        }
++    }
++
++    @Test void selectedActualMvcJsonConverterMustMatchOriginalProductionPreference() {
++        assertDoesNotThrow(() -> RestoreHttpApplicationChild.assertHttpJsonConverters(
++                List.of(new StringHttpMessageConverter(),new MappingJackson2HttpMessageConverter(),
++                        new JacksonJsonHttpMessageConverter())));
++        var wrong=assertThrows(RestoreHttpApplicationChild.StartupRejected.class,
++                () -> RestoreHttpApplicationChild.assertHttpJsonConverters(
++                        List.of(new StringHttpMessageConverter(),new JacksonJsonHttpMessageConverter(),
++                                new MappingJackson2HttpMessageConverter())));
++        assertEquals(RestoreHttpApplicationChild.StartupReason.ASSERTION_REJECTED,wrong.reason);
++        assertThrows(RestoreHttpApplicationChild.StartupRejected.class,
++                () -> RestoreHttpApplicationChild.assertHttpJsonConverters(List.of(new StringHttpMessageConverter())));
++    }
++
++    @Test void malformedMissingOrUnexpectedJournalFieldsAreRejectedWithoutSkippingOrManufacturingRows() throws Exception {
++        var valid=journal().getFirst();
++        for(String kind:List.of("missing","extra","held-type","stage","symbol")) {
++            var row=new java.util.HashMap<String,Object>(valid);
++            switch(kind) {
++                case "missing" -> row.remove("bootId");
++                case "extra" -> row.put("private-canary","private-SQL-token-canary");
++                case "held-type" -> row.put("held",1);
++                case "stage" -> row.put("stage","UNKNOWN");
++                default -> row.put("symbol","private SQL/value");
++            }
++            Path file=writeJournal(List.of(valid,row));
++            var failure=assertThrows(IllegalStateException.class,() -> RestoreHttpApplicationChild.events(file));
++            assertTrue(failure.getMessage().startsWith("original event"));
++            assertFalse(failure.getMessage().contains("private"));
++        }
++        Path file=directory.resolve("null-event.jsonl");Files.writeString(file,"null\n");
++        assertThrows(IllegalStateException.class,() -> RestoreHttpApplicationChild.events(file));
++    }
++
++    @Test void throwClassificationFieldsAreRequiredAndPreservedAsRealBooleans() throws Exception {
++        var valid=journal().getLast();
++        for(String kind:List.of("blocked","errorType","blocked-type")) {
++            var row=new java.util.HashMap<String,Object>(valid);
++            if(kind.equals("blocked-type"))row.put("blocked","true");else row.remove(kind);
++            Path file=writeJournal(List.of(row));
++            assertThrows(IllegalStateException.class,() -> RestoreHttpApplicationChild.events(file));
++        }
++        assertEquals(valid,RestoreHttpApplicationChild.events(writeJournal(List.of(valid))).getFirst());
++    }
++
++    @Test void callbackEnvelopeKeepsOriginalFactIdentityAndSingleDataLayerUnderBothJsonWriters() throws Exception {
++        var original=Map.of("originalOutcome","FAIL","factId",71L,"factHash","a".repeat(64));
++        for(var converter:List.<HttpMessageConverter<Object>>of(
++                new MappingJackson2HttpMessageConverter(),new JacksonJsonHttpMessageConverter())) {
++            JsonNode body=wire(converter,AjaxResult.success(original));
++            assertEquals(200,body.path("code").asInt());
++            assertEquals(3,body.path("data").size());assertFalse(body.path("data").has("data"));
++            assertEquals("FAIL",body.path("data").path("originalOutcome").asText());
++            assertEquals(71L,body.path("data").path("factId").asLong());
++            assertEquals("a".repeat(64),body.path("data").path("factHash").asText());
++        }
++    }
++}

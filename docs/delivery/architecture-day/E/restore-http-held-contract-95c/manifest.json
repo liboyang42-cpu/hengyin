@@ -1,0 +1,97 @@
+{
+  "repository": "liboyang42-cpu/hengyin",
+  "parent": "95c153fb763ce332adaad99e6a096abe48b9a466",
+  "parent_tree": "b083ee7f967e214702cafbc9d9ffb434aac43416",
+  "code_files": 5,
+  "delivery_files": 3,
+  "files": [
+    {
+      "path": "ci/restore_application_http_runtime.py",
+      "preimage_git_blob_sha1": "cdbd2458f87e83c4c905c574c3b1965fa9803393",
+      "postimage_git_blob_sha1": "7e4e90e0770631518f823f69789946ae5d1f11c5",
+      "preimage_sha256": "710b0fb3560f9bdbe391b66670485b11f375cd4ddc785bea67955784893a4fc5",
+      "postimage_sha256": "a53427527561512b76afec6b36faadc6e4c0bfe84bd15625b916c8b2ee41fdfa",
+      "postimage_bytes": 33580
+    },
+    {
+      "path": "ci/restore_application_http_probe.py",
+      "preimage_git_blob_sha1": "6a280a2c9500ee9df1f57ea560331d0e0737d125",
+      "postimage_git_blob_sha1": "3b7c05c0c6166ed34fa838d7a2631c23f5a1e3e7",
+      "preimage_sha256": "b7a056f2772a4c09b047485be2e508e764e2b33a9c5ca84afcc639e9dccefa08",
+      "postimage_sha256": "96f26c8b575717d6e26f8a2561f84829b9aa21936b62c45da106f98f3a3d075f",
+      "postimage_bytes": 70229
+    },
+    {
+      "path": "ci/test_restore_application_http_probe.py",
+      "preimage_git_blob_sha1": "018924eeb316172a503dd9c90aa80cd25f7820ab",
+      "postimage_git_blob_sha1": "568c5c4d8355ef7248721af37c8e74ce36dd0a7f",
+      "preimage_sha256": "a8daf4c235b675c9ee2320a46a0f2bf4839d58785aeca8bd44853fbaa7d3d861",
+      "postimage_sha256": "8fe3905fd1aa728faffccad070ead4c00145e96d352ba00fe077aaf9e778b95b",
+      "postimage_bytes": 87398
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java",
+      "preimage_git_blob_sha1": "e6872d8ffe394b2cd8d27a125e6bca22a62b2d4e",
+      "postimage_git_blob_sha1": "58b81ebc1b404c916d2397b4d7b90f5a764ee07b",
+      "preimage_sha256": "f0e7b3283e2aa71e3fb9595bc1c8de099f1d2fe8309a0932b47d9dc22ec86500",
+      "postimage_sha256": "0683bd5ffedddc6ae7528f93f32f1b5e29a7a06daef8cc56ec05e3e44d531c91",
+      "postimage_bytes": 36568
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpEvidenceContractTest.java",
+      "preimage_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "71ff44e92bba17dfad077c4ea1166de653a7fa07",
+      "preimage_sha256": null,
+      "postimage_sha256": "c97d352e0bca76ba9972b90203d0f17cb86b03fe352b0fbaedc0af5213d8701e",
+      "postimage_bytes": 7321
+    }
+  ],
+  "code_patch_bytes": 50824,
+  "code_patch_sha256": "3c5016a5ad955f7fbac257cb1310e43675bc04efbde1f80ca999ee3b468e52a5",
+  "readme_sha256": "8d5ed8cc02b5af2b058d861b16a1552f0bac5295452d86c01f3585203d2c24e5",
+  "new_python_control_methods": 12,
+  "new_java_test_methods": 5,
+  "old_cases_and_assertions": "retained; existing StartupContractTest and canonical/log implementation unchanged except new fixed startup stage; original Quartz completion predicate extracted without weakening",
+  "historical_missing_key_and_frame": "UNKNOWN: original artifact only contained KeyError class and final evidence HTTP200",
+  "confirmed_source_seams": [
+    "Production explicit jackson2 preference omitted from test-only replacement configuration",
+    "Jackson2 JsonNode event journal crosses a default Boot4 JSON-converter boundary",
+    "good returns original complete envelope; actual consumer must validate single data layer and typed event fields"
+  ],
+  "changes": [
+    "Restore original test-only mapper choice and assert actual selected MVC JSON converter before ready",
+    "Parse same actual journal into strict plain JDK maps retaining every original field and rejecting malformed rows",
+    "Strict evidence/callback/jobs/Quartz-record consumer contracts with no empty/default fallback",
+    "Fixed safe presence/type diagnostics and real relative owned Python frame/line/source hash only",
+    "Finite held progress and actual observation counts; unchanged original assertions and45s observation",
+    "Report only six verified owners, not SQL-only mapper observations as owner ENTER"
+  ],
+  "checks": {
+    "preimage_blob_identity": "MATCH",
+    "code_patch_apply_check": "CLEAN",
+    "diff_whitespace": "NO_DIAGNOSTICS",
+    "finite_secret_pattern_scan": "NO_MATCHES",
+    "full_gitleaks_scan": "NOT_RUN"
+  },
+  "tests": "NOT_RUN",
+  "parse_import_checks": "NOT_RUN",
+  "compile": "NOT_RUN",
+  "java_db_http_docker_ci": "NOT_RUN",
+  "canonical_tool_modified": false,
+  "production_source_modified": false,
+  "permissions_money_policy_modified": false,
+  "new_dependencies": false,
+  "limits": [
+    "No five-boot acceptance claim from three ready observations",
+    "Original true/invalid/empty held modes and five distinct completed boots retained",
+    "Original real Spring/security/MVC/Quartz/mapper/Reference consumer, actor, receipt, zero economic effect, WAIT, high waters and provider identity retained",
+    "Original20s stop/0or143/137 rejection/private complete logs/exact absence retained",
+    "All-domain fence remains NOT_CLAIMED_SPECIFIC_REAL_OWNERS_ONLY"
+  ],
+  "limitations": [
+    "No runtime evidence assigning historical KeyError to a particular key or selected converter",
+    "Direct journal/converter and Python protocol controls are not full HTTP/MySQL/Quartz acceptance",
+    "Root must perform complete scan and same-source approved verification",
+    "No production RPO/RTO/UAT or provider release"
+  ]
+}

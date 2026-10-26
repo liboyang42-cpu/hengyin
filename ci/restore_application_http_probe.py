@@ -31,9 +31,13 @@ SUBSTAGES={'APPLICATION_SLOT_START','APPLICATION_READY','READ_ORIGINAL_IDENTITIE
         'READ_ORIGINAL_PROVIDER','COMPLETE_FACTS_SQL','ORIGINAL_CHAPTER_RECEIPT','NETWORK_PROOF',
         'SOURCE_QUIESCENT_STOP','QUIESCENT_SQL_SNAPSHOT','CANONICAL_BACKUP','EMPTY_TARGET_CREATE',
         'CANONICAL_RESTORE','RESTORED_SQL_COMPARE','TARGET_RUNTIME_USER','NORMAL_ORIGINAL_READBACK',
-        'HELD_OWNER_WORKLOAD','APPLICATION_STOP','PRIVATE_CLEANUP'}
+        'HELD_OWNER_WORKLOAD','HELD_BASELINE_SQL','HELD_RECEIPT_READBACK','HELD_FOREIGN_REFUSAL',
+        'HELD_BLOCKED_CHAPTER','HELD_BLOCKED_MONEY','HELD_NOTICE_PENDING','HELD_QUARTZ_REQUEST',
+        'HELD_QUARTZ_OBSERVE','HELD_LATE_CALLBACK','HELD_LATE_READBACK','HELD_REPLAY',
+        'HELD_PROVIDER_FENCE','HELD_NETWORK_STOP','APPLICATION_STOP','PRIVATE_CLEANUP'}
 SAFE_REASON_CODES={'INVARIANT_REJECTED','UNCLASSIFIED_FAILURE','HTTP_OPERATION_REJECTED',
         'CAPTCHA_CONTRACT_REJECTED','CAPTCHA_ORACLE_REJECTED','ADMIN_LOGIN_REJECTED',
+        'HTTP_EVIDENCE_CONTRACT_REJECTED','HTTP_CALLBACK_CONTRACT_REJECTED','FIXTURE_CONTRACT_REJECTED',
         'APP_STOP_EXIT_NOT_CONFIRMED','APP_EXITED_BEFORE_READY','APP_READINESS_TIMEOUT',
         'APP_BOOT_IDENTITY_REJECTED','APP_CHILD_STARTUP_REJECTED','HTTP_STATUS_MALFORMED','HTTP_RESPONSE_NOT_JSON','HTTP_RESPONSE_NOT_OBJECT'}
 FACT_REASON_CODES={
@@ -68,14 +72,152 @@ def require(value,reason):
         failure.restore_reason_code=FACT_REASON_CODES.get(reason,'INVARIANT_REJECTED');raise failure
 
 
+def owned_source_frame(failure):
+    # Fixed reviewed files only. No traceback formatting, function/locals/KeyError args or private path.
+    allowed={str((ROOT/relative).resolve()):relative for relative in
+             ('ci/restore_application_http_probe.py','ci/restore_application_http_runtime.py')}
+    selected=None;frame=failure.__traceback__;count=0
+    while frame is not None and count<32:
+        try:
+            resolved=str(Path(frame.tb_frame.f_code.co_filename).resolve())
+            if resolved in allowed:
+                path=ROOT/allowed[resolved];raw=path.read_bytes()
+                if 0<frame.tb_lineno<=len(raw.splitlines()):
+                    selected={'path':allowed[resolved],'line':frame.tb_lineno,
+                              'sourceSha256':sha(raw),'scope':'OWNED_SOURCE_ONLY'}
+        except (OSError,ValueError):pass
+        frame=frame.tb_next;count+=1
+    if selected is not None:selected['searchTruncated']=frame is not None
+    return selected
+
+
 def failure_diagnostic(failure,phase,substage):
     # Neither str(failure) nor its cause/traceback is public evidence.
     kind=type(failure).__name__
     code=getattr(failure,'restore_reason_code','UNCLASSIFIED_FAILURE')
-    return {'phase':phase if phase in RUN_PHASES else 'PRE_APPLICATION_PREPARATION',
+    value={'phase':phase if phase in RUN_PHASES else 'PRE_APPLICATION_PREPARATION',
             'substage':substage if substage in SUBSTAGES else 'UNCLASSIFIED_SUBSTAGE',
             'type':kind if re.fullmatch('[A-Za-z_][A-Za-z0-9_]{0,95}',kind) else 'UnclassifiedError',
             'reasonCode':code if code in SAFE_REASON_CODES else 'UNCLASSIFIED_FAILURE'}
+    frame=owned_source_frame(failure)
+    if frame is not None:value['sourceFrame']=frame
+    if isinstance(failure,FixtureContractRejected):value['contract']=failure.observation
+    return value
+
+
+class FixtureContractRejected(ValueError):
+    def __init__(self,contract,container,fields,index=None,bindings=None):
+        allowed_fields={'code','data','bootId','held','serverUuid','schema','events','verifiedFacts','inbox',
+                        'symbol','stage','errorType','blocked','id','fact_hash','biz_id','state',
+                        'originalOutcome','factId','factHash','invoke_target','status',
+                        'beforeStartNotifyTask.run()','committedOfficialNoticeTask.deliverPending()'}
+        require(contract in {'CALLBACK','JOBS','EVENTS','EVENT_RECORD','EVIDENCE_ENVELOPE','EVIDENCE_DATA',
+                             'EVIDENCE_IDENTITY','VERIFIED_FACT_ROW','INBOX_ROW','QUARTZ_LOG_ROW'}
+                and set(fields)<=allowed_fields,'fixed fixture contract diagnostic only')
+        super().__init__('original fixture response contract rejected')
+        self.restore_reason_code=('HTTP_CALLBACK_CONTRACT_REJECTED' if contract=='CALLBACK'
+                else 'FIXTURE_CONTRACT_REJECTED' if contract=='JOBS' else 'HTTP_EVIDENCE_CONTRACT_REJECTED')
+        kinds={type(None):'NULL',bool:'BOOLEAN',int:'INTEGER',float:'FLOAT',str:'STRING',dict:'OBJECT',list:'ARRAY'}
+        mapping=container if isinstance(container,dict) else {}
+        self.observation={'kind':contract,'containerType':kinds.get(type(container),'OTHER'),
+                'fields':[{'field':field,'present':field in mapping,
+                           'type':kinds.get(type(mapping[field]),'OTHER') if field in mapping else 'MISSING'}
+                          for field in fields],
+                'otherKeyCount':len(set(mapping)-set(fields))}
+        if index is not None:self.observation['recordIndex']=index
+        if bindings is not None:self.observation['identityMatches']=bindings
+
+
+def event_records(rows):
+    base=('bootId','symbol','stage','held')
+    if not isinstance(rows,list):raise FixtureContractRejected('EVENTS',rows,base)
+    for index,row in enumerate(rows):
+        stage=row.get('stage') if isinstance(row,dict) else None
+        fields=base+('errorType','blocked') if stage=='THROW' else base
+        valid=(isinstance(row,dict) and set(row)==set(fields)
+                and isinstance(row['bootId'],str) and re.fullmatch('[A-Za-z0-9_-]{1,80}',row['bootId'])
+                and isinstance(row['symbol'],str) and re.fullmatch('[A-Za-z_$][A-Za-z0-9_.$!#:-]{0,1023}',row['symbol'])
+                and stage in ('ENTER','RETURN','THROW','SQL') and type(row['held']) is bool)
+        if valid and stage=='THROW':
+            valid=(isinstance(row['errorType'],str) and re.fullmatch('[A-Za-z_$][A-Za-z0-9_.$]{0,255}',row['errorType'])
+                   and type(row['blocked']) is bool)
+        if not valid:raise FixtureContractRejected('EVENT_RECORD',row,fields,index)
+    return rows
+
+
+def evidence_payload(response,boot):
+    value=good(response)
+    if not isinstance(value.get('data'),dict):raise FixtureContractRejected('EVIDENCE_ENVELOPE',value,('code','data'))
+    data=value['data'];fields=('bootId','held','serverUuid','schema','events','verifiedFacts','inbox')
+    valid=(set(data)==set(fields) and isinstance(data['bootId'],str) and type(data['held']) is bool
+            and isinstance(data['serverUuid'],str) and isinstance(data['schema'],str)
+            and isinstance(data['verifiedFacts'],list) and isinstance(data['inbox'],list))
+    if not valid:raise FixtureContractRejected('EVIDENCE_DATA',data,fields)
+    matches={'bootId':data['bootId']==boot['bootId'],'held':data['held'] is boot['guardHeld'],
+             'serverUuid':data['serverUuid']==boot['serverUuid'],'schema':data['schema']==boot['schema']}
+    if not all(matches.values()):raise FixtureContractRejected('EVIDENCE_IDENTITY',data,fields,bindings=matches)
+    event_records(data['events'])
+    for index,row in enumerate(data['verifiedFacts']):
+        names=('id','fact_hash')
+        if not (isinstance(row,dict) and set(row)==set(names) and type(row['id']) is int and row['id']>0
+                and isinstance(row['fact_hash'],str) and re.fullmatch('[0-9a-f]{64}',row['fact_hash'])):
+            raise FixtureContractRejected('VERIFIED_FACT_ROW',row,names,index)
+    for index,row in enumerate(data['inbox']):
+        names=('id','biz_id','state')
+        if not (isinstance(row,dict) and set(row)==set(names) and type(row['id']) is int and row['id']>0
+                and type(row['biz_id']) is int and row['biz_id']>0 and type(row['state']) is int):
+            raise FixtureContractRejected('INBOX_ROW',row,names,index)
+    return data
+
+
+def callback_envelope(value):
+    names=('originalOutcome','factId','factHash')
+    if not isinstance(value,dict) or not isinstance(value.get('data'),dict):
+        raise FixtureContractRejected('CALLBACK',value,('code','data'))
+    data=value['data']
+    if not (set(data)==set(names) and isinstance(data['originalOutcome'],str)
+            and type(data['factId']) is int and data['factId']>0
+            and isinstance(data['factHash'],str) and re.fullmatch('[0-9a-f]{64}',data['factHash'])):
+        raise FixtureContractRejected('CALLBACK',data,names)
+    return value
+
+
+def quartz_log_rows(rows):
+    fields=('invoke_target','status')
+    if not isinstance(rows,list):raise FixtureContractRejected('QUARTZ_LOG_ROW',rows,fields)
+    for index,row in enumerate(rows):
+        if not (isinstance(row,dict) and set(row)==set(fields)
+                and isinstance(row['invoke_target'],str) and row['status'] in ('0','1')):
+            raise FixtureContractRejected('QUARTZ_LOG_ROW',row,fields,index)
+    return rows
+
+
+def assert_quartz_completion(rows,baseline,jobs):
+    quartz_log_rows(rows)
+    require(len(rows)>=baseline+2 and all(any(row['invoke_target']==target and row['status']=='0'
+            for row in rows[baseline:]) for target in jobs),'real persisted Quartz task completion proof')
+
+
+def held_observation(data,rows,boot,baseline,jobs):
+    # Real validated journal/log readbacks only; these counts never replace original owner assertions.
+    current=[row for row in data['events'] if row['bootId']==boot['bootId']]
+    return {'bootId':boot['bootId'],'mode':boot['restoreMode'],'eventCount':len(data['events']),
+            'currentBootStageCounts':{stage:sum(row['stage']==stage for row in current)
+                    for stage in ('ENTER','RETURN','THROW','SQL')},
+            'verifiedFactCount':len(data['verifiedFacts']),'inboxCount':len(data['inbox']),
+            'quartzBaselineCount':baseline,'quartzObservedCount':len(rows),
+            'requestedTargets':len(jobs),'completedTargetCount':sum(any(
+                    row['invoke_target']==target and row['status']=='0' for row in rows[baseline:]) for target in jobs)}
+
+
+def held_jobs(ids):
+    targets=('beforeStartNotifyTask.run()','committedOfficialNoticeTask.deliverPending()')
+    jobs=ids.get('jobs') if isinstance(ids,dict) else None
+    if not (isinstance(jobs,dict) and set(jobs)==set(targets)
+            and all(type(jobs[target]) is int and jobs[target]>0 for target in targets)
+            and len(set(jobs.values()))==2):
+        raise FixtureContractRejected('JOBS',jobs,targets)
+    return jobs
 
 
 def checkpoint(slot,report,path,phase,substage):
@@ -267,6 +409,7 @@ def verify_restored_snapshot(before,after,slot,auth,source_port,target_port,sche
 
 
 def assert_late_callback(before,after,callback,registration):
+    callback_envelope(callback)
     require(callback.get('code')==200 and callback.get('data',{}).get('originalOutcome')=='FAIL','original callback must remain paused, never fake ACK')
     # Only independent verified fact + its original WAIT inbox + immutable link can be appended.
     assert_equal(before,after,LATE_TABLES)
@@ -296,6 +439,8 @@ def assert_callback_replay(before,after):
 
 
 def assert_owner_events(events,boot):
+    event_records(events)
+    proven=set()
     current=[row for row in events if row['bootId']==boot]
     for symbol in ('CashWithdrawServiceImpl.withdraw','RefundServiceImpl.saveBackOfficeRefund',
                    'CommittedBusinessNotice.dispatchInNewTransaction'):
@@ -304,18 +449,21 @@ def assert_owner_events(events,boot):
         require(any(r['stage']=='THROW' and r.get('blocked') is True
                     and r.get('errorType')=='com.chengyinhub.common.config.RestoreDispatchGuard$Blocked'
                     for r in rows),'actual owner did not throw real Blocked: '+symbol)
+        proven.add(symbol)
     for symbol in ('BeforeStartNotifyTask.run','CommittedOfficialNoticeTask.deliverPending','CommittedOfficialNoticeService.reconcilePending'):
         rows=[r for r in current if r['symbol']==symbol]
         require(any(r['stage']=='ENTER' and r['held'] is True for r in rows)
                 and any(r['stage']=='RETURN' and r['held'] is True for r in rows),'real Quartz/notice wake not observed: '+symbol)
+        proven.add(symbol)
     require(not any(r['symbol']=='TeamGroupServiceImpl.notifyBeforeStartBatch' for r in current),'before-start guard did not pause the real sweep')
     require(not any(r['stage']=='SQL' and r['symbol'].endswith(('CommittedOfficialNoticeWxMapper.maxPendingId','CommittedOfficialNoticeWxMapper.selectPendingPage')) for r in current),'notice recovery guard did not pause the real pending selector')
-    return [{'symbol':symbol,'entered':True} for symbol in sorted({r['symbol'] for r in current})]
+    return [{'symbol':symbol,'entered':True} for symbol in sorted(proven)]
 
 
 def good(response):
     status,value=response
-    if not (status==200 and value.get('code')==200):
+    if not (type(status) is int and status==200 and isinstance(value,dict)
+            and type(value.get('code')) is int and value['code']==200):
         failure=ValueError('real HTTP operation not successful')
         failure.restore_reason_code='HTTP_OPERATION_REJECTED';raise failure
     return value
@@ -483,16 +631,29 @@ def run(name,schema,out,credentials):
             for mode in HELD_MODES:
                 boot=start_application(slot,report,report_path,'RESTORED_HELD_APPLICATION_START','target',mode,identities['target']['uuid'])
                 checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_OWNER_WORKLOAD')
+                jobs=held_jobs(ids)
+                progress={'bootId':boot['bootId'],'mode':mode,'completedStages':[]}
+                report.setdefault('heldWorkloads',[]).append(progress)
+                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_BASELINE_SQL')
                 mark=snapshot(auth,tp,schema,identities['target']['uuid'])
+                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_RECEIPT_READBACK')
                 require(good(slot.http(receipt_path,a))==original_receipt,'held original receipt unreadable')
+                progress['completedStages'].append('ORIGINAL_RECEIPT_READBACK')
+                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_FOREIGN_REFUSAL')
                 denied=slot.http(receipt_path,b);refused(denied);require(not denied[1].get('data'),'other actor received original receipt')
                 refused(slot.http('/__restore_http/evidence',b))
                 assert_equal(mark,snapshot(auth,tp,schema,identities['target']['uuid']))
+                progress['completedStages'].append('FOREIGN_READ_REFUSED_ZERO_EFFECT')
+                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_BLOCKED_CHAPTER')
                 changed=dict(ids['chapter'],targetChapterId=ids['chapter']['targetChapterId']+1)
                 refused(slot.http('/api/club/lead/unlock-chapter',a,changed,form=True));assert_equal(mark,snapshot(auth,tp,schema,identities['target']['uuid']))
+                progress['completedStages'].append('CHANGED_CHAPTER_REFUSED_ZERO_EFFECT')
+                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_BLOCKED_MONEY')
                 refused(slot.http('/api/wallet/withdraw',a,{'amount':'30.00'}))
                 refused(slot.http('/business/refund',admin,{'registrationId':ids['registrationId'],'refundAmount':'1.00'}))
                 assert_equal(mark,snapshot(auth,tp,schema,identities['target']['uuid']))
+                progress['completedStages'].append('WITHDRAW_REFUND_REFUSED_ZERO_EFFECT')
+                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_NOTICE_PENDING')
                 # Actual durable notice intent is committed before attempting the original blocked wake.
                 refused(slot.http('/__restore_http/notice',admin,{}))
                 pending=snapshot(auth,tp,schema,identities['target']['uuid'])
@@ -500,34 +661,51 @@ def run(name,schema,out,credentials):
                 require(len(notice)==1 and notice[0]['wx_state']=='PENDING','real eligible original pending notice required')
                 with auth.database(tp,schema) as db,db.cursor() as cur:
                     cur.execute('SELECT COUNT(*) FROM sys_job_log');logs=cur.fetchone()[0]
-                for job in ids['jobs'].values():good(slot.http('/monitor/job/run',admin,{'jobId':job},method='PUT'))
+                progress['completedStages'].append('ORIGINAL_NOTICE_PENDING')
+                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_QUARTZ_REQUEST')
+                for job in jobs.values():good(slot.http('/monitor/job/run',admin,{'jobId':job},method='PUT'))
+                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_QUARTZ_OBSERVE')
+                evidence=None
                 until=time.monotonic()+45
                 while time.monotonic()<until:
-                    evidence=good(slot.http('/__restore_http/evidence',admin))['data']
+                    evidence=evidence_payload(slot.http('/__restore_http/evidence',admin),boot)
                     entered={r['symbol'] for r in evidence['events'] if r['bootId']==boot['bootId'] and r['stage']=='RETURN'}
-                    observed_logs=query(auth,tp,schema,'SELECT invoke_target,status FROM sys_job_log ORDER BY job_log_id')
+                    observed_logs=quartz_log_rows(query(auth,tp,schema,'SELECT invoke_target,status FROM sys_job_log ORDER BY job_log_id'))
+                    report['heldObservation']=held_observation(evidence,observed_logs,boot,logs,jobs)
                     if ({'BeforeStartNotifyTask.run','CommittedOfficialNoticeTask.deliverPending','CommittedOfficialNoticeService.reconcilePending'}<=entered
-                            and len(observed_logs)>=logs+2 and all(any(r['invoke_target']==target and r['status']=='0' for r in observed_logs[logs:]) for target in ids['jobs'])):break
+                            and len(observed_logs)>=logs+2 and all(any(r['invoke_target']==target and r['status']=='0' for r in observed_logs[logs:]) for target in jobs)):break
                     time.sleep(.2)
+                require(evidence is not None,'real Quartz window produced no validated evidence response')
                 actual=assert_owner_events(evidence['events'],boot['bootId'])
                 assert_equal(pending,snapshot(auth,tp,schema,identities['target']['uuid']))
-                observed_logs=query(auth,tp,schema,'SELECT invoke_target,status FROM sys_job_log ORDER BY job_log_id')
-                require(len(observed_logs)>=logs+2 and all(any(r['invoke_target']==target and r['status']=='0' for r in observed_logs[logs:])
-                        for target in ids['jobs']),'real persisted Quartz task completion proof')
+                observed_logs=quartz_log_rows(query(auth,tp,schema,'SELECT invoke_target,status FROM sys_job_log ORDER BY job_log_id'))
+                report['heldObservation']=held_observation(evidence,observed_logs,boot,logs,jobs)
+                assert_quartz_completion(observed_logs,logs,jobs)
+                progress['completedStages'].append('REAL_QUARTZ_OWNERS_AND_LOGS')
+                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_LATE_CALLBACK')
                 prior=snapshot(auth,tp,schema,identities['target']['uuid'])
-                callback=good(slot.http('/__restore_http/verified-callback',admin,{}))
+                callback=callback_envelope(good(slot.http('/__restore_http/verified-callback',admin,{})))
                 assert_late_callback(prior,snapshot(auth,tp,schema,identities['target']['uuid']),callback,ids['registrationId'])
-                readback=good(slot.http('/__restore_http/evidence',admin))['data']
+                progress['completedStages'].append('ORIGINAL_FACT_AND_WAIT_INBOX')
+                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_LATE_READBACK')
+                readback=evidence_payload(slot.http('/__restore_http/evidence',admin),boot)
                 require(readback['verifiedFacts']==[{'id':callback['data']['factId'],'fact_hash':callback['data']['factHash']}]
                         and len(readback['inbox'])==1 and readback['inbox'][0]['biz_id']==ids['registrationId']
                         and readback['inbox'][0]['state']==0,'HTTP authenticated original fact and WAIT inbox readback')
+                progress['completedStages'].append('AUTHENTICATED_ORIGINAL_FACT_READBACK')
+                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_REPLAY')
                 stable=snapshot(auth,tp,schema,identities['target']['uuid'])
-                callback_replay=good(slot.http('/__restore_http/verified-callback',admin,{}))
+                callback_replay=callback_envelope(good(slot.http('/__restore_http/verified-callback',admin,{})))
                 require(callback_replay==callback,'same original verified callback identity')
                 assert_callback_replay(stable,snapshot(auth,tp,schema,identities['target']['uuid']))
+                progress['completedStages'].append('EXACT_ORIGINAL_CALLBACK_REPLAY')
+                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_PROVIDER_FENCE')
                 require((slot.root/'withdrawal-provider.json').read_bytes()==original_provider_bytes,'provider original record changed')
                 require(not (slot.root/'provider-attempts.jsonl').exists(),'controlled transport fence was entered; not a production guard proof')
+                progress['completedStages'].append('ORIGINAL_PROVIDER_UNCHANGED_ZERO_SEND')
+                checkpoint(slot,report,report_path,'RESTORED_HELD_WORKLOAD','HELD_NETWORK_STOP')
                 slot.verify_network();slot.stop(remove=False)
+                progress['completedStages'].append('EXACT_NETWORK_AND_READY_STOP')
                 report['boots'].append({k:boot[k] for k in ('bootId','javaPid','sourceSha','jarSha256','serverUuid','schema','restoreMode','guardHeld','schedulerStarted','appCid','side')})
                 report['checks'].append({'protectedRowsBefore':public_snapshot(mark),'protectedRowsAfter':public_snapshot(snapshot(auth,tp,schema,identities['target']['uuid'])),
                                          'providerJournalSha256':sha(original_provider_bytes),
