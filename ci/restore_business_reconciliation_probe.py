@@ -31,7 +31,7 @@ CASES = {'historical_paid', 'late_success', 'lost_success', 'not_sent', 'unknown
 TABLES = ('cms_registration', 'wx_pay_order_intent', 'wx_verified_payment_fact',
           'cms_registration_payment_fact', 'ums_member', 'ums_member_points_detail',
           'ums_member_balance_detail', 'refund_application', 'cms_registration_scan')
-HIGH_IDS = {'cms_registration': 'id', 'wx_pay_order_intent': 'id',
+HIGH_IDS = {'cms_registration': 'id',
             'wx_verified_payment_fact': 'id', 'ums_member_points_detail': 'id'}
 CHILD_STAGES = {'ADMISSION', 'SOURCE_IDENTITY', 'SOURCE_SCHEMA', 'SOURCE_RESET', 'SOURCE_ASSEMBLY',
                 'HISTORICAL_PAYMENT', 'SOURCE_TIMELINE', 'BACKUP_BOUNDARY', 'AFTER_BACKUP', 'FAULT_BOUNDARY', 'OWNER_OBSERVATION'}
@@ -238,18 +238,25 @@ def journal(path, scope):
         require(row['sequence'] == number and row['previous'] == previous, 'provider journal gap/truncation')
         previous = outer['sha256']
         command = row['command']; case = command['case']; state = row['state']
+        require(set(command) == {'case', 'scope', 'domain', 'bizId', 'attemptNo', 'businessNo', 'wxNo',
+                'fingerprint', 'totalFen', 'providerId', 'mchid', 'appid', 'currency', 'origin'},
+                'original composite payment command shape differs')
         require(case in CASES and command['scope'] == scope and command['domain'] == 'REGISTRATION', 'foreign provider identity')
         require(command['mchid'] == 'mch-funds-it' and command['appid'] == 'wx-funds-it'
                 and command['currency'] == 'CNY' and type(command['totalFen']) is int and command['totalFen'] > 0,
                 'provider original money/authority invalid')
         require(type(command['bizId']) is int and command['bizId'] > 0, 'original business ID missing')
         if case == 'historical_paid':
-            require(command['fingerprint'] is None and command['intentId'] is None
+            require(command['fingerprint'] is None and command['attemptNo'] is None
                     and command['origin'] == 'HISTORICAL_MASTER_ONLY:T20260724PAY:original-funds-fixture'
-                    and command['bizId'] == 11 and command['businessNo'] == 'T20260724PAY', 'legacy origin cannot be inferred')
+                    and command['bizId'] == 11 and command['businessNo'] == command['wxNo'] == 'T20260724PAY', 'legacy origin cannot be inferred')
         else:
-            require(command['origin'] == 'FROZEN_ORIGINAL' and type(command['intentId']) is int
-                    and command['intentId'] > 0 and re.fullmatch('[a-f0-9]{64}', command['fingerprint']), 'frozen original missing')
+            require(command['origin'] == 'FROZEN_ORIGINAL' and type(command['attemptNo']) is int
+                    and 0 < command['attemptNo'] <= 2147483647
+                    and type(command['fingerprint']) is str
+                    and re.fullmatch('[a-f0-9]{64}', command['fingerprint']), 'frozen original missing')
+        require(all(type(command[key]) is str and re.fullmatch('[A-Za-z0-9_-]{1,64}', command[key])
+                    for key in ('businessNo', 'wxNo', 'providerId')), 'original payment number missing')
         require(case not in commands or commands[case] == command, 'provider original identity/amount changed')
         require(state in allowed.get(states.get(case), set()), 'duplicate submit or invalid provider transition')
         instant = dt.datetime.fromisoformat(row['at'].replace('Z', '+00:00'))
@@ -323,16 +330,22 @@ def reconcile(backup, fault, restored, provider_before, provider_after):
                         and paid['business_out_trade_no'] == c['businessNo'] and paid['wx_out_trade_no'] == c['wxNo']
                         and paid['transaction_id'] == c['providerId'] and paid['intent_request_hash'] == c['fingerprint'],
                         'provider original money/identity not consumed exactly')
-        frozen = [r for r in dictionaries(restored, 'wx_pay_order_intent') if r['biz_id'] == str(c['bizId'])]
-        source_frozen = [r for r in dictionaries(fault, 'wx_pay_order_intent') if r['biz_id'] == str(c['bizId'])]
+        frozen = [r for r in dictionaries(restored, 'wx_pay_order_intent')
+                  if r['biz_type'] == 'REGISTRATION' and r['biz_id'] == str(c['bizId'])]
+        source_frozen = [r for r in dictionaries(fault, 'wx_pay_order_intent')
+                         if r['biz_type'] == 'REGISTRATION' and r['biz_id'] == str(c['bizId'])]
         if case != 'historical_paid':
             require(len(source_frozen) == 1, 'missing original source frozen identity')
-            f = source_frozen[0]
-            require(f['id'] == str(c['intentId']) and f['request_hash'] == c['fingerprint']
-                    and f['out_trade_no'] == c['wxNo'] and f['business_out_trade_no'] == c['businessNo']
-                    and int(f['total_fen']) == c['totalFen'], 'original frozen request/amount differs')
+            for f in source_frozen + frozen:
+                require(f['mchid'] == c['mchid'] and f['out_trade_no'] == c['wxNo']
+                        and f['request_hash'] == c['fingerprint'] and f['business_out_trade_no'] == c['businessNo']
+                        and f['appid'] == c['appid'] and f['trade_type'] == 'JSAPI' and f['currency'] == c['currency']
+                        and int(f['attempt_no']) == c['attemptNo'] and int(f['total_fen']) == c['totalFen']
+                        and f['closed_confirmed_at'] is None, 'original frozen request/amount differs')
         if case == 'historical_paid':
-            require(len(local) == len(consumed) == 1 and not frozen and local[0]['payment_status'] == '2', 'historical paid fact lost/rewritten')
+            require(len(local) == len(consumed) == 1 and not frozen and not source_frozen
+                    and c['attemptNo'] is None and c['fingerprint'] is None
+                    and local[0]['payment_status'] == '2', 'historical paid fact lost/rewritten')
             status = 'ORIGINAL_SUCCESS_RETAINED'
         elif case == 'lost_success':
             require(not local and not frozen and not consumed and len(source_consumed) == 1
@@ -343,7 +356,7 @@ def reconcile(backup, fault, restored, provider_before, provider_after):
             status = {'late_success': 'EXTERNAL_SUCCESS_LOCAL_UNAPPLIED_MANUAL_BLOCK',
                       'unknown': 'UNKNOWN_RETAIN_ORIGINAL_NO_RESEND',
                       'not_sent': 'CONTROLLED_NOT_SENT_RETAIN_ORIGINAL_NO_AUTOMATIC_DISPATCH'}[case]
-        differences.append({'case': case, 'bizId': c['bizId'], 'intentId': c['intentId'],
+        differences.append({'case': case, 'bizId': c['bizId'], 'mchid': c['mchid'], 'attemptNo': c['attemptNo'],
                             'businessNo': c['businessNo'], 'wxNo': c['wxNo'],
                             'fingerprint': c['fingerprint'], 'totalFen': c['totalFen'], 'status': status})
     risks = []
@@ -355,6 +368,19 @@ def reconcile(backup, fault, restored, provider_before, provider_after):
                           'status': 'POSSIBLE_ID_REUSE_DO_NOT_ALLOCATE'})
     # A checked backup's sequence value is NOT permission to allocate lost externally used numbers.
     require(any(r['table'] == 'cms_registration' for r in risks), 'lost-ID high-water risk not observed')
+    # This table has no AUTO_INCREMENT/id. Its retained per-business attempt sequence is the real reuse boundary.
+    intent_water = []
+    identity_fields = ('mchid', 'biz_type', 'biz_id', 'business_out_trade_no')
+    source_intents = dictionaries(fault, 'wx_pay_order_intent')
+    restored_intents = dictionaries(restored, 'wx_pay_order_intent')
+    for identity in sorted({tuple(row[key] for key in identity_fields) for row in source_intents}):
+        old = [row for row in source_intents if tuple(row[key] for key in identity_fields) == identity]
+        retained = [row for row in restored_intents if tuple(row[key] for key in identity_fields) == identity]
+        high = dict(zip(identity_fields, identity), preFaultAttemptMax=max(int(row['attempt_no']) for row in old),
+                    restoreAttemptMax=max((int(row['attempt_no']) for row in retained), default=0))
+        intent_water.append(high)
+        if high['restoreAttemptMax'] < high['preFaultAttemptMax']:
+            risks.append(dict(high, table='wx_pay_order_intent', status='POSSIBLE_ORIGINAL_ATTEMPT_REUSE_DO_NOT_ALLOCATE'))
     for snap in (backup, fault, restored):
         for receipt in dictionaries(snap, 'cms_registration_payment_fact'):
             originals = [r for r in dictionaries(snap, 'wx_verified_payment_fact') if r['id'] == receipt['payment_fact_id']]
@@ -381,7 +407,7 @@ def reconcile(backup, fault, restored, provider_before, provider_after):
                         for r in dictionaries(snap, 'cms_registration')), 'orphan original payment intent')
         require(not dictionaries(snap, 'ums_member_balance_detail') and not dictionaries(snap, 'refund_application'), 'fixture touched unowned cash/refund boundary')
     return {'drill': 'PAYMENT_RESTORE_DIFFERENCES_OBSERVED', 'candidateState': 'BLOCKED',
-            'dispatchRelease': False, 'differences': differences, 'highWaterRisks': risks,
+            'dispatchRelease': False, 'differences': differences, 'highWaterRisks': risks, 'intentAttemptHighWater': intent_water,
             'allDomainsRecoveryFence': 'NOT_IMPLEMENTED_BY_THIS_SOURCE',
             'notCovered': ['live-provider verification or money', 'refund/transfer/provider-task production reconciliation',
                            'safe missing-intent backfill', 'production-wide recovery epoch/dispatch fence',

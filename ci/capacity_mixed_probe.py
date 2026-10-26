@@ -327,6 +327,205 @@ def distribution(records, duration):
     }
 
 
+def controlled_combination_summary(report, receipt, source, run_id, attempt, jar_sha):
+    """Project one fixed new HTTP suite AFTER the existing exact XML/cleanup verifier.
+
+    No launcher, resource owner, mutable scope registry or whole-capacity verdict. The caller
+    must first validate_final(receipt, source); these checks also prevent accidental foreign
+    receipt aggregation. JSON flags alone are never execution/JAR/physical-isolation proof.
+    """
+    suite = 'CrossDomainCombinedLoadMySqlIT'
+    require(re.fullmatch(r'[0-9a-f]{40}', source or '') is not None
+            and re.fullmatch(r'[0-9a-f]{64}', jar_sha or '') is not None,
+            'complete combination source/JAR identity required')
+    require(isinstance(run_id, str) and re.fullmatch(r'[1-9][0-9]*', run_id)
+            and isinstance(attempt, str) and re.fullmatch(r'[1-9][0-9]*', attempt),
+            'actual positive run/attempt required')
+    require(type(report.get('javaPid')) is int and report['javaPid'] > 0, 'actual test JVM identity required')
+    require(report.get('format') == 'CONTROLLED_COMBINATION_V1'
+            and report.get('result') == 'OBSERVED_REPRESENTATIVE_COMBINATION'
+            and report.get('sourceSha') == source and report.get('runId') == run_id
+            and report.get('runAttempt') == attempt and report.get('jarSha256') == jar_sha,
+            'combination execution identity/result mismatch')
+    require(receipt.get('classes') == [suite] and receipt.get('sourceSha') == source and receipt.get('profile') == 'github-hosted'
+            and receipt.get('state') == 'PASS' and receipt.get('javaExit') == 0
+            and type(receipt.get('javaExit')) is int and receipt.get('tests') == 1
+            and type(receipt.get('tests')) is int and receipt.get('xmlVerified') is True
+            and receipt.get('fixtureReportVerified') is True
+            and receipt.get('database') == report.get('schema')
+            and receipt.get('cleanup') == {'mysqlAbsent': True, 'redisStoppedAndPortFree': True}
+            and all(value is True for value in receipt['cleanup'].values()),
+            'combination needs its own strict same-source XML/fixture/cleanup receipt')
+    require(report.get('wholeSystemCapacityAccepted') is False and report.get('q4q8Complete') is False
+            and report.get('economicAssertionsVerified') is True and report.get('innerOwnedCleanupVerified') is True,
+            'combination cannot self-promote capacity or omit economic assertions')
+    require(isinstance(report.get('schema'), str)
+            and re.fullmatch(r'cy_e2e_w1_http_[0-9_]+', report['schema'])
+            and isinstance(report.get('economicSchema'), str)
+            and re.fullmatch(r'cy_wp14_[0-9a-f]{32}', report['economicSchema'])
+            and report['schema'] != report['economicSchema']
+            and re.fullmatch(r'[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}', report.get('serverUuid', '')),
+            'original separate schema/native-server binding missing')
+    waves, extra = report.get('coreWaves'), report.get('additionalReadWindows')
+    require(isinstance(waves, list) and len(waves) == 3
+            and isinstance(extra, list) and len(extra) == 4, 'fixed three curves/four fault windows required')
+    all_records, stages, write_ids = [], [], []
+
+    def curve(raw, concurrency, writes):
+        require(isinstance(raw, dict) and raw.get('configuredConcurrency') == concurrency
+                and type(raw.get('configuredConcurrency')) is int
+                and raw.get('requestsRecorded') == 24 and type(raw.get('requestsRecorded')) is int and isinstance(raw.get('records'), list)
+                and len(raw['records']) == 24, 'fixed measured curve denominator differs')
+        records = raw['records']
+        kinds = ('command',) if writes else ('replay', 'receipt', 'foreign')
+        for item in records:
+            require(isinstance(item, dict) and set(item) == {'kind', 'intentSha256', 'category', 'elapsedSeconds'}
+                    and item['kind'] in kinds and re.fullmatch(r'[0-9a-f]{64}', item['intentSha256'])
+                    and item['category'] == ('LEGAL_AUTH_REJECTION' if item['kind'] == 'foreign' else 'SUCCESS')
+                    and type(item['elapsedSeconds']) in (int, float)
+                    and math.isfinite(item['elapsedSeconds']) and item['elapsedSeconds'] >= 0,
+                    'unknown/foreign observation cannot become a successful curve')
+        require(len({item['intentSha256'] for item in records}) == 24, 'duplicate or omitted original intent')
+        if not writes:
+            require(all(sum(item['kind'] == kind for item in records) == 8 for kind in kinds),
+                    'read/replay/foreign denominator differs')
+        duration = raw.get('durationSeconds')
+        require(type(duration) in (int, float) and math.isfinite(duration) and 0 < duration <= 45,
+                'fixed observation bound exceeded; no retry authorization')
+        stages.append(distribution(records, duration)); all_records.extend(records)
+        return {item['intentSha256'] for item in records}
+
+    for index, wave in enumerate(waves):
+        require(isinstance(wave, dict) and wave.get('concurrency') == CONCURRENCY[index]
+                and type(wave.get('concurrency')) is int and wave.get('newIntents') == 24 and type(wave.get('newIntents')) is int
+                and wave.get('factsVerified') is True, 'missing original CAS/receipt assertions')
+        ids = curve(wave.get('write'), CONCURRENCY[index], True)
+        require(curve(wave.get('readReplayForeign'), CONCURRENCY[index], False) == ids,
+                'readback replaced original intent identities')
+        write_ids.append(ids)
+    require(len(set.union(*write_ids)) == 72, 'new commands are not 72 unique original intents')
+    for row, phase in zip(extra, ('MAP_HTTP_HELD', 'DISCONNECT', 'BAD_RESPONSE', 'RECOVERED')):
+        require(isinstance(row, dict) and row.get('phase') == phase and row.get('factsVerified') is True,
+                'missing fixed provider window/original zero-change assertion')
+        require(curve(row.get('curve'), 6, False) == write_ids[0], 'fault window replaced original commands')
+    require(report.get('coreHttpExpected') == len(all_records) == 240, 'actual sent-response denominator differs')
+    return {'sourceSha': source, 'runId': run_id, 'runAttempt': attempt, 'jarSha256': jar_sha,
+            'javaPid': report.get('javaPid'),
+            'verdict': 'OBSERVED_REPRESENTATIVE_COMBINATION_ONLY', 'curves': stages,
+            'scope': 'PARTIAL_CONTROLLED_COMBINATION_SCOPE', 'completeHttpSuiteAccepted': False,
+            'classes': {suite: 1}, 'tests': 1,
+            'requestPopulation': '240 explicit logical HTTP invocations, one validated response each; wire retries not independently counted',
+            'throughputPopulation': 'sum of measured closed-loop curve durations, not setup/wall time or production RPS',
+            'total': distribution(all_records, sum(row['durationSeconds'] for row in stages)),
+            'wholeSystemCapacityAccepted': False, 'q4q8Complete': False,
+            'physicalProfile': 'UNKNOWN_REQUIRES_ORIGINAL_OWNER_CAPS_AND_NETWORK_READBACK',
+            'notCovered': ['productionProviders', 'providerPerformanceSlo', 'allGameplayFamilies',
+                           'fullPackagedAppBudgetPlacement', 'routeCacheEvictionAndLongProvider',
+                           'runtimeInstanceTakeover'],
+            'fixtureScope': 'new fixed HTTP + original strict economic fixture; not old mixed/HTTP acceptance'}
+
+
+def controlled_combination_projection(report, receipt, source, run_id, attempt, jar_sha):
+    """Finite public fields, never a raw XML/JSON/stdout dump."""
+    controlled_combination_summary(report, receipt, source, run_id, attempt, jar_sha)
+    safe = {key: report[key] for key in ('format', 'result', 'sourceSha', 'runId', 'runAttempt', 'jarSha256',
+            'schema', 'economicSchema', 'serverUuid', 'coreHttpExpected', 'economicAssertionsVerified', 'innerOwnedCleanupVerified',
+            'wholeSystemCapacityAccepted', 'q4q8Complete')}
+    require(isinstance(report.get('sourceTree'), str) and re.fullmatch(r'[0-9a-f]{40}', report['sourceTree']),
+            'actual source tree missing')
+    expected_classes = {'com.chengyinhub.RuoYiApplication', 'com.chengyinhub.web.controller.api.ApiClubLeadController'} | {
+        'com.chengyinhub.business.it.' + name for name in ('CrossDomainCombinedLoadMySqlIT', 'CombinedCoreHttpWorkload',
+            'CombinedControlledProviders', 'GameplayProcessRecoveryChild', 'CrossDomainStorageFixture', 'CrossDomainTransportStage')}
+    expected_classes |= {'com.chengyinhub.quartz.util.CrossDomainSchedulerStage',
+                         'com.chengyinhub.business.service.impl.CrossDomainSubscriptionProvider'}
+    expected_classes |= {'com.chengyinhub.business.it.' + name for name in ('CombinedControlledProviders$1',
+                          'CombinedControlledProviders$Mode', 'CombinedCoreHttpWorkload$HttpStatusFailure',
+                          'CrossDomainCombinedLoadMySqlIT$Initializer')}
+    classes = report.get('actualClassSha256')
+    require(isinstance(classes, dict) and set(classes) == expected_classes
+            and all(isinstance(value, str) and re.fullmatch(r'[0-9a-f]{64}', value) for value in classes.values()),
+            'actual original/new class bytes missing')
+    safe.update(sourceTree=report['sourceTree'], actualClassSha256=classes)
+    require(type(report.get('javaPid')) is int and report['javaPid'] > 0, 'actual test JVM identity missing')
+    safe['javaPid'] = report['javaPid']
+    runtime = report.get('runtimeObservations')
+    require(isinstance(runtime, dict) and type(runtime.get('javaMaxHeapBytes')) is int and runtime['javaMaxHeapBytes'] > 0
+            and isinstance(runtime.get('cgroupMemory'), str)
+            and re.fullmatch(r'(?:UNKNOWN|max|[1-9][0-9]*)', runtime['cgroupMemory'])
+            and isinstance(runtime.get('cgroupCpu'), str)
+            and re.fullmatch(r'(?:UNKNOWN|(?:max|[1-9][0-9]*) [1-9][0-9]*)', runtime['cgroupCpu']),
+            'runtime observations are measurements/UNKNOWN, never inferred resource admission')
+    safe['runtimeObservations'] = {key: runtime[key] for key in ('javaMaxHeapBytes', 'cgroupMemory', 'cgroupCpu')}
+    require(report.get('poolCaps') == {'application': 3, 'economicFixture': 3, 'domainPoolMaximumSum': 6},
+            'separate domain pool budgets changed')
+    safe['poolCaps'] = report['poolCaps']
+    retained = report.get('retainedUnknownIds')
+    require(isinstance(retained, list) and len(retained) == 6
+            and all(type(value) is int and value > 0 for value in retained) and len(set(retained)) == 6,
+            'six original UNKNOWN identities required')
+    safe['retainedUnknownIds'] = retained
+    fact = report.get('economicFactEvidence')
+    require(isinstance(fact, dict) and set(fact) == {'order', 'orderId', 'totalFen', 'currency', 'verifiedFactId',
+            'verifiedFactHash', 'stableEffectSha256', 'proofSource'} and fact['order'] == 'TPLTM_T19_ORIGINAL'
+            and type(fact['orderId']) is int and fact['orderId'] == 8
+            and type(fact['totalFen']) is int and fact['totalFen'] == 1990 and fact['currency'] == 'CNY'
+            and type(fact['verifiedFactId']) is int and fact['verifiedFactId'] > 0
+            and all(isinstance(fact[key], str) and re.fullmatch(r'[0-9a-f]{64}', fact[key])
+                    for key in ('verifiedFactHash', 'stableEffectSha256'))
+            and fact['proofSource'] == 'CONTROLLED_ORIGINAL_FIXTURE_NOT_PROVIDER_SIGNATURE',
+            'original exact fixture fact/effect identity missing')
+    safe['economicFactEvidence'] = fact
+    def curve(raw):
+        return {key: raw[key] for key in ('records', 'durationSeconds', 'configuredConcurrency', 'requestsRecorded')}
+    safe['coreWaves'] = [{'concurrency': wave['concurrency'], 'newIntents': 24, 'factsVerified': True,
+                          'write': curve(wave['write']), 'readReplayForeign': curve(wave['readReplayForeign'])}
+                         for wave in report['coreWaves']]
+    safe['additionalReadWindows'] = [{'phase': row['phase'], 'factsVerified': True, 'curve': curve(row['curve'])}
+                                     for row in report['additionalReadWindows']]
+    samples = report.get('samples')
+    require(isinstance(samples, list) and 3 <= len(samples) <= 16, 'bounded actual measurements required')
+    sample_fields = ('monotonicNanos', 'heapUsedBytes', 'heapMaxBytes', 'applicationActiveConnections',
+                     'applicationIdleConnections', 'fixtureActiveConnections', 'fixtureIdleConnections',
+                     'httpActive', 'httpQueued', 'cleanupActive', 'cleanupQueued', 'physicalConnectionsInTwoSchemas')
+    safe['samples'] = []
+    for sample in samples:
+        require(isinstance(sample, dict) and sample.get('phase') in ('BEFORE', 'HELD', 'RECOVERED')
+                and all(type(sample.get(key)) is int and sample[key] >= 0 for key in sample_fields),
+                'invalid finite JVM/pool/executor measurement')
+        cpu = sample.get('processCpuNanos')
+        require(cpu == 'UNKNOWN' or type(cpu) is int and cpu >= 0, 'invalid CPU sample')
+        safe['samples'].append({**{key: sample[key] for key in sample_fields},
+                                'phase': sample['phase'], 'processCpuNanos': cpu})
+    require({row['phase'] for row in safe['samples']} == {'BEFORE', 'HELD', 'RECOVERED'},
+            'before/held/recovered measurement missing')
+    # The test's actual provider counters are finite, safe numeric observations, not body text.
+    observations = report.get('observations')
+    require(isinstance(observations, list), 'original provider observations required')
+    held = [row for row in observations if isinstance(row, dict) and row.get('phase') == 'HELD_COMBINATION']
+    require(len(held) == 1 and all(type(held[0].get(key)) is type(value) and held[0].get(key) == value for key, value in {
+        'coreHttpRequests': 144, 'callbackResult': 'SUCCESS', 'wrongAmountZeroEffects': True,
+        'singleGrant': True, 'schedulerEffects': 1, 'schedulerAttempts': 3,
+        'aiPhysicalHandlersHeld': 4, 'mapPhysicalSlotsHeld': 4, 'notificationHandlerHeld': True}.items()),
+        'missing fixed held-window/economic/scheduler observation')
+    safe['observations'] = [{key: held[0][key] for key in ('phase', 'coreHttpRequests', 'callbackResult',
+        'wrongAmountZeroEffects', 'singleGrant', 'schedulerEffects', 'schedulerAttempts', 'aiPhysicalHandlersHeld',
+        'mapPhysicalSlotsHeld', 'notificationHandlerHeld')}]
+    for index, (phase, state) in enumerate((('DISCONNECT', 'UNKNOWN'), ('BAD_RESPONSE', 'UNKNOWN'), ('RECOVERED', 'RECEIVED'))):
+        rows = [row for row in observations if isinstance(row, dict) and row.get('phase') == phase]
+        require(len(rows) == 1 and rows[0].get('providerState') == state, 'missing exact provider result window')
+        row = rows[0]; counters = row.get('providerCounters')
+        require(isinstance(counters, dict) and set(counters) == {'aiPosts', 'mapGets', 'noticePosts', 'activeHandlers',
+                'peakHandlers', 'workerLimit', 'queueLimit'} and all(type(value) is int and value >= 0 for value in counters.values())
+                and counters['workerLimit'] == counters['queueLimit'] == 4 and counters['peakHandlers'] <= 4
+                and counters['activeHandlers'] == 0 and counters['aiPosts'] == counters['noticePosts'] == index + 1
+                and 4 + index + 1 <= counters['mapGets'] <= 4 + 4 * (index + 1),
+                'provider budget/counter observation invalid')
+        require(all(type(row.get(key)) is int and row[key] > 0 for key in ('intentId', 'noticeId')),
+                'original fixture identities missing')
+        safe['observations'].append({key: row[key] for key in ('phase', 'providerState', 'intentId', 'noticeId', 'providerCounters')})
+    return safe
+
+
 def assert_fault_overlap(blocked, redis_paused):
     require(type(blocked) is int and blocked == 3 and redis_paused is True,
             "three physical application SQL waits plus owned Redis pause required")

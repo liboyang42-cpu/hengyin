@@ -24,7 +24,7 @@ def scenario():
     commands = {}
     for number, case in enumerate(('historical_paid', 'late_success', 'not_sent', 'unknown', 'lost_success'), 11):
         commands[case] = {'case': case, 'scope': 'a' * 32, 'domain': 'REGISTRATION', 'bizId': number,
-                          'intentId': None if number == 11 else number - 11,
+                          'attemptNo': None if number == 11 else 1,
                           'businessNo': 'T20260724PAY' if number == 11 else 'ORDER' + str(number),
                           'wxNo': 'T20260724PAY' if number == 11 else 'WX' + str(number),
                           'fingerprint': None if number == 11 else 'b' * 64, 'totalFen': 10000,
@@ -35,8 +35,10 @@ def scenario():
         paid = [commands['historical_paid']] + ([commands['lost_success']] if lost else [])
         registrations = [dict(id=c['bizId'], registration_no=c['businessNo'], wechat_payment_amount='100.00',
                               payment_status=2 if c in paid else 1) for c in identities]
-        frozen = [dict(id=c['intentId'], biz_id=c['bizId'], request_hash=c['fingerprint'], out_trade_no=c['wxNo'],
-                       business_out_trade_no=c['businessNo'], total_fen=c['totalFen']) for c in identities if c['intentId']]
+        frozen = [dict(mchid=c['mchid'], appid=c['appid'], biz_type='REGISTRATION', biz_id=c['bizId'],
+                       attempt_no=c['attemptNo'], request_hash=c['fingerprint'], out_trade_no=c['wxNo'],
+                       business_out_trade_no=c['businessNo'], trade_type='JSAPI', currency=c['currency'],
+                       total_fen=c['totalFen'], closed_confirmed_at=None) for c in identities if c['attemptNo'] is not None]
         facts = [dict(id=i + 1, fact_hash='f' * 64, transaction_id=c['providerId'], fact_kind='PAYMENT',
                       mchid=c['mchid'], appid=c['appid'], currency=c['currency'], total_fen=c['totalFen'],
                       business_out_trade_no=c['businessNo'], wx_out_trade_no=c['wxNo'],
@@ -141,6 +143,73 @@ class ReconciliationControls(unittest.TestCase):
     def test_partial_case_roster_cannot_pass(self):
         values = scenario(); del values[4]['commands']['unknown']
         with self.assertRaisesRegex(ValueError, 'five'): p.reconcile(*values)
+
+
+class CompositeIntentControls(unittest.TestCase):
+    def test_canonical_key_and_allocator_roster_have_no_invented_intent_id(self):
+        ddl = (p.ROOT / 'chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql').read_text()
+        self.assertIn('PRIMARY KEY (mchid, out_trade_no)', ddl)
+        self.assertNotRegex(ddl, r'(?m)^\s*id\s+')
+        self.assertNotIn('AUTO_INCREMENT', ddl)
+        self.assertIn('wx_pay_order_intent', p.TABLES)
+        self.assertEqual({'cms_registration': 'id', 'wx_verified_payment_fact': 'id',
+                          'ums_member_points_detail': 'id'}, p.HIGH_IDS)
+
+    def test_real_composite_identity_survives_restore_and_lost_attempt_stays_blocked(self):
+        values = scenario(); result = p.reconcile(*values)
+        for command in values[4]['commands'].values(): self.assertNotIn('intentId', command)
+        for snap in values[:3]:
+            for row in p.dictionaries(snap, 'wx_pay_order_intent'): self.assertNotIn('id', row)
+            self.assertNotIn('wx_pay_order_intent', snap['highWater'])
+        for difference in result['differences']:
+            command = values[4]['commands'][difference['case']]
+            self.assertNotIn('intentId', difference)
+            for key in ('mchid', 'wxNo', 'businessNo', 'bizId', 'fingerprint', 'attemptNo', 'totalFen'):
+                self.assertEqual(command[key], difference[key])
+        lost = values[4]['commands']['lost_success']
+        risks = [r for r in result['highWaterRisks'] if r['table'] == 'wx_pay_order_intent']
+        self.assertEqual(1, len(risks)); risk = risks[0]
+        self.assertEqual((lost['mchid'], str(lost['bizId']), lost['businessNo'], 1, 0),
+            tuple(risk[k] for k in ('mchid', 'biz_id', 'business_out_trade_no', 'preFaultAttemptMax', 'restoreAttemptMax')))
+        self.assertEqual('POSSIBLE_ORIGINAL_ATTEMPT_REUSE_DO_NOT_ALLOCATE', risk['status'])
+        self.assertTrue(any(r['table'] == 'cms_registration' for r in result['highWaterRisks']))
+        self.assertEqual('BLOCKED', result['candidateState']); self.assertIs(False, result['dispatchRelease'])
+
+    def test_each_frozen_component_must_match_even_when_backup_and_restore_share_the_bad_row(self):
+        for field, replacement in [('mchid', 'other-merchant'), ('appid', 'other-app'), ('out_trade_no', 'OTHER_ALIAS'),
+                ('business_out_trade_no', 'OTHER_ORDER'), ('biz_type', 'COMMERCE'), ('biz_id', 999),
+                ('attempt_no', 2), ('request_hash', 'c' * 64), ('trade_type', 'APP'), ('currency', 'USD'),
+                ('total_fen', 10001), ('closed_confirmed_at', '2026-10-25T00:00:00Z')]:
+            values = scenario()
+            for snap in values[:3]: replace(snap, 'wx_pay_order_intent', field, replacement)
+            with self.subTest(field=field), self.assertRaises(ValueError): p.reconcile(*values)
+
+    def test_capture_keeps_typed_intent_rows_but_only_queries_real_numeric_allocators(self):
+        from unittest import mock
+        source = scenario()[0]
+        tool = mock.Mock(); tool.quoted.side_effect = lambda name: '`' + name + '`'
+        tool.mysql.return_value = '[15,16]'
+        with patch.object(p, 'table_rows', side_effect=lambda unused, args, name: source['tables'][name]):
+            observed = p.capture(tool, object())
+        self.assertEqual(source['tables']['wx_pay_order_intent'], observed['tables']['wx_pay_order_intent'])
+        self.assertEqual(set(p.HIGH_IDS), set(observed['highWater']))
+        self.assertEqual(3, tool.mysql.call_count)
+        for call in tool.mysql.call_args_list:
+            self.assertIn('MAX(`id`)', call.args[1]); self.assertNotIn('wx_pay_order_intent', call.args[1])
+
+    def test_journal_requires_original_attempt_and_rejects_fake_id_or_historical_backfill(self):
+        writer = JournalControls()
+        for field, replacement in [('attemptNo', None), ('attemptNo', True), ('attemptNo', 0),
+                ('attemptNo', -1), ('attemptNo', 2147483648), ('intentId', 12)]:
+            with self.subTest(field=field, value=replacement), tempfile.TemporaryDirectory() as temp:
+                command = dict(scenario()[4]['commands']['late_success'], **{field: replacement})
+                path = Path(temp) / 'journal'; writer.write(path, [(command, 'SUBMIT')])
+                with self.assertRaises(ValueError): p.journal(path, 'a' * 32)
+        for field, replacement in [('attemptNo', 1), ('wxNo', 'NEW_ALIAS')]:
+            with self.subTest(historical=field), tempfile.TemporaryDirectory() as temp:
+                command = dict(scenario()[4]['commands']['historical_paid'], **{field: replacement})
+                path = Path(temp) / 'journal'; writer.write(path, [(command, 'SUBMIT')])
+                with self.assertRaisesRegex(ValueError, 'legacy'): p.journal(path, 'a' * 32)
 
 
 class ResourceTransportControls(unittest.TestCase):

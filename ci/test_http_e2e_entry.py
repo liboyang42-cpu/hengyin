@@ -19,6 +19,11 @@ TOOLS = ROOT / 'chengyinhub-admin/src/test/tools'
 EXPECTED = {'GenericGameplayHttpE2eIT': 26, 'FreezeGameHttpE2eIT': 8,
             'FreezeReuseThemeHttpE2eIT': 2}
 PACKAGE = 'com.chengyinhub.business.it.'
+COMBINATION_SUITE = 'CrossDomainCombinedLoadMySqlIT'
+
+
+def reviewed_count(simple):
+    return 1 if simple == COMBINATION_SUITE else EXPECTED[simple]
 FIXED_HTTP_MESSAGE_SOURCES = {
     'chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java': {
         '该玩法不属于当前共享局': 'ADVANCED_SHARED_SCOPE_MISMATCH',
@@ -124,6 +129,8 @@ def suppressed_source_context(text):
 
 def selection(value):
     names = value.split(',')
+    if names == [COMBINATION_SUITE]:
+        return names
     if not names or len(names) != len(set(names)) or any(n not in EXPECTED for n in names):
         raise ValueError('Select only the exact reviewed HTTP classes, without duplicates')
     return names
@@ -132,7 +139,8 @@ def selection(value):
 def reviewed_case_identities(simple):
     source = (ROOT / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it' / (simple + '.java')).read_text()
     plain = re.findall(r'(?m)^\s*@Test(?:\s+@Order\([1-9][0-9]*\))?\s+void\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*\(\s*\)', source)
-    plain_count = {'GenericGameplayHttpE2eIT': 15, 'FreezeGameHttpE2eIT': 8, 'FreezeReuseThemeHttpE2eIT': 2}
+    plain_count = {'GenericGameplayHttpE2eIT': 15, 'FreezeGameHttpE2eIT': 8, 'FreezeReuseThemeHttpE2eIT': 2,
+                   COMBINATION_SUITE: 1}
     if len(plain) != plain_count[simple] or len(set(plain)) != len(plain):
         raise ValueError('Reviewed ordinary HTTP test declarations changed')
     aliases = {name: name for name in plain}
@@ -158,7 +166,7 @@ def reviewed_case_identities(simple):
             aliases[canonical] = canonical
             if kind == 'String':
                 aliases[method + '(java.lang.String)[' + str(index) + ']'] = canonical
-    if len(set(aliases.values())) != EXPECTED[simple]:
+    if len(set(aliases.values())) != reviewed_count(simple):
         raise ValueError('Reviewed expanded HTTP count changed')
     return aliases
 
@@ -166,7 +174,7 @@ def reviewed_case_identities(simple):
 def verified_xml(path, simple):
     root = ET.parse(path).getroot()
     cases = root.findall('testcase')
-    expected = EXPECTED[simple]
+    expected = reviewed_count(simple)
     if root.tag != 'testsuite' or root.get('name') != PACKAGE + simple:
         raise ValueError('Unexpected suite identity')
     if int(root.get('tests', '-1')) != expected or len(cases) != expected:
@@ -220,7 +228,7 @@ def validate_final(receipt, source=None):
         raise ValueError('Missing genuine completed fixture report')
     if receipt.get('state') != 'PASS' or receipt.get('javaExit') != 0:
         raise ValueError('Java/verification did not pass')
-    if receipt.get('tests') != sum(EXPECTED[n] for n in names) or receipt.get('xmlVerified') is not True:
+    if receipt.get('tests') != sum(reviewed_count(n) for n in names) or receipt.get('xmlVerified') is not True:
         raise ValueError('Missing actual exact-count XML proof')
     if receipt.get('cleanup') != {'mysqlAbsent': True, 'redisStoppedAndPortFree': True}:
         raise ValueError('Missing independent cleanup proof')
@@ -253,9 +261,41 @@ def generic_diagnostic_receipt(paths, source):
     return receipt
 
 
+def verify_combination_budget(directory, report, receipt, *, after_storage_cleanup):
+    spec = importlib.util.spec_from_file_location('http_combination_budget', ROOT / 'ci/combined_http_budget.py')
+    budget = importlib.util.module_from_spec(spec); spec.loader.exec_module(budget)
+    verify = budget.require_final_budget if after_storage_cleanup else budget.require_subject_budget
+    verify(directory, {'sourceSha': receipt['sourceSha'], 'runId': report['runId'],
+                       'attempt': report['runAttempt'], 'class': COMBINATION_SUITE},
+           report['javaPid'], receipt['jarSha256'], receipt['database'])
+
+
 def scoped_summary(paths, source, scope):
     if scope == 'all-three':
         return summarize(paths, source)
+    if scope == 'controlled-combination':
+        if len(paths) != 1:
+            raise ValueError('Controlled combination requires one own exact receipt')
+        receipt = json.loads(paths[0].read_text())
+        if receipt_identity(receipt, source)['classes'] != [COMBINATION_SUITE]:
+            raise ValueError('Controlled combination excludes old/foreign HTTP receipts')
+        validate_final(receipt, source)
+        if receipt.get('combinationEvidence') != 'VERIFIED_SCOPED_OBSERVATION_ONLY':
+            raise ValueError('Missing controlled observation verification')
+        try:
+            report = json.loads((paths[0].parent / 'controlled-combination.json').read_text())
+            spec = importlib.util.spec_from_file_location('http_combination_capacity', ROOT / 'ci/capacity_mixed_probe.py')
+            capacity = importlib.util.module_from_spec(spec); spec.loader.exec_module(capacity)
+            safe = capacity.controlled_combination_projection(report, receipt, source, os.environ.get('GITHUB_RUN_ID'),
+                                                               os.environ.get('GITHUB_RUN_ATTEMPT'), receipt.get('jarSha256'))
+            verify_combination_budget(paths[0].parent, safe, receipt, after_storage_cleanup=True)
+            result = capacity.controlled_combination_summary(safe, receipt, source, os.environ.get('GITHUB_RUN_ID'),
+                                                           os.environ.get('GITHUB_RUN_ATTEMPT'), receipt.get('jarSha256'))
+            result.update(physicalProfile='FIXED_TEST_PROCESS_AND_OWNED_RESOURCES_PROVEN',
+                          subjectBudgetVerified=True, backingStorageCleanupVerified=True)
+            return result
+        except (OSError, ValueError, TypeError, RuntimeError, KeyError):
+            raise ValueError('Missing or invalid controlled same-run observation') from None
     if scope != 'generic-only':
         raise ValueError('Unknown HTTP diagnostic scope')
     receipt = generic_diagnostic_receipt(paths, source)
@@ -316,7 +356,7 @@ def failure_summary(paths, source):
 
 def reviewed_case_call_frame(simple, canonical, trace, source):
     # Only the existing reviewed Java test layout; unfamiliar layout stays unlocated.
-    if simple not in EXPECTED or canonical not in set(reviewed_case_identities(simple).values()):
+    if (simple not in EXPECTED and simple != COMBINATION_SUITE) or canonical not in set(reviewed_case_identities(simple).values()):
         return None
     method = canonical.split('(', 1)[0]
     declarations = list(re.finditer(r'(?m)^([ \t]+)(?:@Test(?:\s+@Order\([1-9][0-9]*\))?\s+)?void\s+'
@@ -430,13 +470,22 @@ def cli():
     f.add_argument('--redis-clean', choices=('true', 'false'), required=True)
     s = sub.add_parser('summarize'); s.add_argument('--receipts', type=pathlib.Path, required=True)
     s.add_argument('--source', required=True); s.add_argument('--output', type=pathlib.Path, required=True)
-    s.add_argument('--scope', choices=('all-three', 'generic-only'), default='all-three')
+    s.add_argument('--scope', choices=('all-three', 'generic-only', 'controlled-combination'), default='all-three')
     a = p.parse_args()
     if a.command == 'summarize':
         paths = list(a.receipts.rglob('receipt.json'))
         try:
             result = scoped_summary(paths, a.source, a.scope)
-        except ValueError:
+        except (ValueError, RuntimeError):
+            if a.scope == 'controlled-combination':
+                if len(paths) != 1 or receipt_identity(json.loads(paths[0].read_text()), a.source)['classes'] != [COMBINATION_SUITE]:
+                    raise ValueError('Controlled combination excludes missing/foreign receipts') from None
+                result = failure_summary(paths, a.source)
+                result.update(scope='PARTIAL_CONTROLLED_COMBINATION_SCOPE', completeHttpSuiteAccepted=False,
+                              wholeSystemCapacityAccepted=False, q4q8Complete=False, missingClasses=[])
+                a.output.parent.mkdir(parents=True, exist_ok=True)
+                a.output.write_text(json.dumps(result, indent=2) + '\n')
+                raise ValueError('Controlled combination did not pass its scoped verifier') from None
             if a.scope == 'generic-only':
                 generic_diagnostic_receipt(paths, a.source)
             result = failure_summary(paths, a.source)
@@ -452,6 +501,9 @@ def cli():
     if a.command == 'verify':
         identity = execution_identity(a.classes)
         names = identity['classes']
+        if names == [COMBINATION_SUITE]:
+            # Only this selected scope's derived file; never publish an earlier run's observation.
+            (a.output / 'controlled-combination.json').unlink(missing_ok=True)
         receipt = {**identity,
                    'state': 'PENDING_CLEANUP', 'xmlVerified': False, 'publicXmlDerivedSanitized': True, 'originalXml': {}, 'migrationAccepted': False,
                    'businessAccepted': False}
@@ -485,7 +537,7 @@ def cli():
                                 source = (source_dir / (n + '.java')).read_text()
                                 known_cases = reviewed_case_identities(n)
                                 source_lines = {name + '.java': len((source_dir / (name + '.java')).read_text().splitlines())
-                                                for name in EXPECTED}
+                                                for name in (*EXPECTED, COMBINATION_SUITE, 'CombinedCoreHttpWorkload', 'CombinedControlledProviders')}
                                 cases = failed.findall('testcase')
                                 failure.update(testcaseCount=len(cases), uniqueMethodCount=len({case.get('name') for case in cases}),
                                                failureNodeCount=sum(len(case.findall('failure')) for case in cases),
@@ -538,7 +590,7 @@ def cli():
                                     values = list(case_contexts.values())
                                     failure['sourceContext'] = (values[0] if len(values) == len(case_categories)
                                                                 and all(value == values[0] for value in values) else 'UNKNOWN')
-                                failure['failedMethods'] = list(dict.fromkeys(methods))[:EXPECTED[n]]
+                                failure['failedMethods'] = list(dict.fromkeys(methods))[:reviewed_count(n)]
                                 failure['responseCodes'] = sorted(codes)
                                 failure['caseMessageCategories'] = {case: sorted(categories) for case, categories in sorted(case_categories.items())}
                                 failure['messageCategories'] = sorted(set().union(*case_categories.values()) or {'UNKNOWN'})
@@ -550,7 +602,7 @@ def cli():
                 raw = original.read_bytes()
                 receipt['originalXml'][n] = {'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest()}
                 ET.ElementTree(safe).write(a.output / ('TEST-' + PACKAGE + n + '.xml'), encoding='utf-8', xml_declaration=True)
-            receipt.update(tests=sum(EXPECTED[n] for n in names), xmlVerified=True)
+            receipt.update(tests=sum(reviewed_count(n) for n in names), xmlVerified=True)
         finally:
             dest.write_text(json.dumps(receipt, indent=2) + '\n')
     else:
@@ -579,6 +631,28 @@ def cli():
                 validate_final(receipt)
             except ValueError:
                 receipt['state'] = 'FAIL'
+        if receipt['state'] == 'PASS' and receipt.get('classes') == [COMBINATION_SUITE]:
+            try:
+                spec = importlib.util.spec_from_file_location('http_combination_capacity', ROOT / 'ci/capacity_mixed_probe.py')
+                capacity = importlib.util.module_from_spec(spec); spec.loader.exec_module(capacity)
+                jar = ROOT / 'chengyinhub-admin/target/chengyinhub-admin.jar'
+                receipt['jarSha256'] = capacity.file_digest(jar)['sha256']
+                original = ROOT / 'chengyinhub-admin/target/surefire-reports' / ('TEST-' + PACKAGE + COMBINATION_SUITE + '.xml')
+                if original.stat().st_size > 32 * 1024 * 1024 or capacity.file_digest(original)['sha256'] != receipt['originalXml'][COMBINATION_SUITE]['sha256']:
+                    raise ValueError('Original controlled XML changed or exceeds fixed bound')
+                lines = [line[len('CONTROLLED_COMBINATION_OBSERVATIONS '):]
+                         for output in ET.parse(original).getroot().iter('system-out')
+                         for line in (output.text or '').splitlines()
+                         if line.startswith('CONTROLLED_COMBINATION_OBSERVATIONS ')]
+                if len(lines) != 1 or len(lines[0].encode()) > 128 * 1024:
+                    raise ValueError('Missing unique bounded controlled observation')
+                safe = capacity.controlled_combination_projection(json.loads(lines[0]), receipt, receipt['sourceSha'],
+                        os.environ.get('GITHUB_RUN_ID'), os.environ.get('GITHUB_RUN_ATTEMPT'), receipt['jarSha256'])
+                verify_combination_budget(a.output, safe, receipt, after_storage_cleanup=False)
+                (a.output / 'controlled-combination.json').write_text(json.dumps(safe, sort_keys=True) + '\n')
+                receipt['combinationEvidence'] = 'VERIFIED_SCOPED_OBSERVATION_ONLY'
+            except (OSError, ValueError, RuntimeError, TypeError, KeyError, ET.ParseError):
+                receipt['state'] = 'FAIL'; receipt['combinationEvidence'] = 'MISSING_OR_INVALID'
         dest.write_text(json.dumps(receipt, indent=2) + '\n')
         if receipt['state'] != 'PASS':
             diagnostic = safe_diagnostic(pathlib.Path(os.environ.get('CHENGYIN_HTTP_E2E_SCHEMA_REPORT', '')),
@@ -598,7 +672,7 @@ def cli():
 
 class HttpReceiptTest(unittest.TestCase):
     def sample(self, simple='FreezeReuseThemeHttpE2eIT'):
-        root = ET.Element('testsuite', name=PACKAGE + simple, tests=str(EXPECTED[simple]), failures='0', errors='0', skipped='0')
+        root = ET.Element('testsuite', name=PACKAGE + simple, tests=str(reviewed_count(simple)), failures='0', errors='0', skipped='0')
         for name in sorted(set(reviewed_case_identities(simple).values())):
             ET.SubElement(root, 'testcase', classname=PACKAGE + simple, name=name)
         return root
@@ -748,7 +822,7 @@ class HttpReceiptTest(unittest.TestCase):
         self.assertIn('  workflow_dispatch:',workflow);self.assertNotIn('  push:',workflow)
         self.assertIn('contents: read',workflow);self.assertNotIn('secrets.',workflow)
         self.assertIn('max-parallel: 20',workflow);self.assertIn('timeout-minutes: 45',workflow)
-        self.assertIn('test_class: ${{ fromJSON(inputs.http_scope == \'generic-only\' && \'["GenericGameplayHttpE2eIT"]\' || \'["GenericGameplayHttpE2eIT", "FreezeGameHttpE2eIT", "FreezeReuseThemeHttpE2eIT"]\') }}',workflow)
+        self.assertIn('test_class: ${{ fromJSON(inputs.http_scope == \'controlled-combination\' && \'["CrossDomainCombinedLoadMySqlIT"]\' || inputs.http_scope == \'generic-only\' && \'["GenericGameplayHttpE2eIT"]\' || \'["GenericGameplayHttpE2eIT", "FreezeGameHttpE2eIT", "FreezeReuseThemeHttpE2eIT"]\') }}',workflow)
         self.assertIn('runs-on: ubuntu-latest',workflow);self.assertNotIn('CHENGYIN_VPS_TEST_RUN:',workflow)
         self.assertIn('mysql:8.0.45@sha256:4af1f8815716546f5b12410f7621f37f93db8dd11a184706ef59111930b8c2ff',workflow)
         self.assertIn('-p 127.0.0.1:33080:3306',workflow)
@@ -1223,7 +1297,7 @@ class MixedSummaryAndCaseFrameTest(unittest.TestCase):
     def passed(self, simple):
         return {'classes': [simple], 'sourceSha': 'a' * 40, 'profile': 'github-hosted',
                 'database': 'cy_e2e_w1_http_123_456', 'state': 'PASS', 'javaExit': 0,
-                'fixtureReportVerified': True, 'xmlVerified': True, 'tests': EXPECTED[simple],
+                'fixtureReportVerified': True, 'xmlVerified': True, 'tests': reviewed_count(simple),
                 'cleanup': {'mysqlAbsent': True, 'redisStoppedAndPortFree': True}}
 
     def test_mixed_two_strict_pass_and_one_fail_preserves_each_state_but_summary_cli_fails(self):
@@ -1426,16 +1500,16 @@ class SourceContextAndPartialScopeTest(unittest.TestCase):
     def test_workflow_choice_is_fixed_default_all_three_and_unknown_scope_stops_before_setup(self):
         workflow = (ROOT / '.github/workflows/gameplay-http-e2e.yml').read_text()
         self.assertRegex(workflow, r'http_scope:\n        description:[^\n]+\n        required: true\n        type: choice\n        default: all-three\n        options:\n          - all-three\n          - generic-only')
-        matrix = re.search(r"test_class: \$\{\{ fromJSON\(inputs.http_scope == 'generic-only' && '([^']+)' \|\| '([^']+)'\) \}\}", workflow)
+        matrix = re.search(r"test_class: \$\{\{ fromJSON\(inputs.http_scope == 'controlled-combination' && '([^']+)' \|\| inputs.http_scope == 'generic-only' && '([^']+)' \|\| '([^']+)'\) \}\}", workflow)
         self.assertIsNotNone(matrix)
-        self.assertEqual(['GenericGameplayHttpE2eIT'], json.loads(matrix[1])); self.assertEqual(list(EXPECTED), json.loads(matrix[2]))
+        self.assertEqual([COMBINATION_SUITE], json.loads(matrix[1])); self.assertEqual(['GenericGameplayHttpE2eIT'], json.loads(matrix[2])); self.assertEqual(list(EXPECTED), json.loads(matrix[3]))
         self.assertEqual(2, workflow.count("HTTP_SCOPE: ${{ inputs.http_scope || 'all-three' }}"))
         self.assertIn('--scope "$HTTP_SCOPE"', workflow)
         validation = workflow.split('      - name: Validate exact source input\n        run: |\n', 1)[1].split('      - uses:', 1)[0]
-        for scope in ['all-three', 'generic-only', self.marker, 'FreezeGameHttpE2eIT', '']:
+        for scope in ['all-three', 'generic-only', 'controlled-combination', self.marker, 'FreezeGameHttpE2eIT', '']:
             run = subprocess.run(['bash', '-c', validation], env=dict(os.environ, SOURCE_SHA='a' * 40, HTTP_SCOPE=scope),
                                  capture_output=True, text=True, timeout=5)
-            self.assertEqual(0 if scope in ('all-three', 'generic-only') else 2, run.returncode)
+            self.assertEqual(0 if scope in ('all-three', 'generic-only', 'controlled-combination') else 2, run.returncode)
         called = workflow.split('  workflow_call:', 1)[1].split('permissions:', 1)[0]
         self.assertNotIn('http_scope:', called)  # Existing reusable caller remains default full HTTP36.
 

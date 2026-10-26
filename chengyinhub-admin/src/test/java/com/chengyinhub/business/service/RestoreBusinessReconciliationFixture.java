@@ -163,9 +163,30 @@ public final class RestoreBusinessReconciliationFixture {
                 MERCHANT, APP, "JSAPI", "CNY", fen, "fixture-openid", "恢复隔离夹具", "https://notify.invalid/fixture",
                 (Runnable) () -> { /* This new test-owned order has no prior controlled-provider entry. */ });
         var frozen = db.queryForMap("SELECT * FROM wx_pay_order_intent WHERE mchid=? AND out_trade_no=?", MERCHANT, wxNo);
+        int attempt = frozenAttempt(frozen, registration, wxNo);
         var command = command(name, registration, wxNo, (String) frozen.get("request_hash"));
-        command.put("intentId", ((Number) frozen.get("id")).longValue());
+        command.put("attemptNo", attempt);
         commands.put(name, command);
+    }
+
+    static int frozenAttempt(Map<String, Object> frozen, CmsRegistration registration, String wxNo) {
+        // Canonical PK is (mchid,out_trade_no); never substitute a business ID or invent a surrogate intent ID.
+        require(MERCHANT.equals(frozen.get("mchid")) && APP.equals(frozen.get("appid"))
+                && wxNo.equals(frozen.get("out_trade_no"))
+                && registration.getRegistrationNo().equals(frozen.get("business_out_trade_no"))
+                && "REGISTRATION".equals(frozen.get("biz_type"))
+                && frozen.get("biz_id") instanceof Number biz
+                && new BigDecimal(biz.toString()).longValueExact() == registration.getId()
+                && "JSAPI".equals(frozen.get("trade_type")) && "CNY".equals(frozen.get("currency"))
+                && frozen.get("total_fen") instanceof Number amount
+                && new BigDecimal(amount.toString()).longValueExact() == registration.getWechatPaymentAmount().movePointRight(2).longValueExact()
+                && frozen.get("request_hash") instanceof String hash && hash.matches("[a-f0-9]{64}")
+                && frozen.containsKey("closed_confirmed_at") && frozen.get("closed_confirmed_at") == null,
+                "Original frozen payment identity differs");
+        require(frozen.get("attempt_no") instanceof Number, "Original frozen attempt missing");
+        int attempt = new BigDecimal(frozen.get("attempt_no").toString()).intValueExact();
+        require(attempt > 0, "Original frozen attempt invalid");
+        return attempt;
     }
 
     private Map<String, Object> command(String name, CmsRegistration row, String wxNo, String hash) {
@@ -173,7 +194,7 @@ public final class RestoreBusinessReconciliationFixture {
         command.put("case", name); command.put("scope", scope); command.put("domain", "REGISTRATION");
         command.put("bizId", row.getId()); command.put("businessNo", row.getRegistrationNo());
         command.put("wxNo", wxNo == null ? row.getRegistrationNo() : wxNo);
-        command.put("fingerprint", hash); command.put("intentId", null);
+        command.put("fingerprint", hash); command.put("attemptNo", null);
         command.put("origin", hash == null ? "HISTORICAL_MASTER_ONLY:T20260724PAY:original-funds-fixture" : "FROZEN_ORIGINAL");
         command.put("mchid", MERCHANT); command.put("appid", APP); command.put("currency", "CNY");
         command.put("totalFen", row.getWechatPaymentAmount().movePointRight(2).longValueExact());

@@ -35,6 +35,7 @@ import java.lang.reflect.Proxy;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.security.MessageDigest;
 import java.sql.PreparedStatement;
@@ -96,6 +97,27 @@ public final class GameplayProcessRecoveryChild {
     }
 
     private static void seed(ConfigurableApplicationContext context, JdbcTemplate jdbc, Path file) throws Exception {
+        write(file, seedRows(context, jdbc, config.path("capacityItems").asInt()));
+    }
+
+    static JsonNode seedCombination(ConfigurableApplicationContext context, JdbcTemplate jdbc, Path file) throws Exception {
+        Path parent = file.toAbsolutePath().getParent().toRealPath();
+        require(parent.startsWith(Path.of(System.getProperty("java.io.tmpdir")).toRealPath())
+                && parent.equals(file.toAbsolutePath().getParent()) && !Files.isSymbolicLink(file)
+                && file.getFileName().toString().equals("identities.json") && !Files.exists(file), "owned new temp identity file required");
+        Path pending = parent.resolve("identities.json.new");
+        require(!Files.exists(pending) && !Files.isSymbolicLink(pending), "owned pending identity must be absent");
+        ObjectNode identities = seedRows(context, jdbc, 72);
+        try {
+            Files.write(pending, JSON.writeValueAsBytes(identities), StandardOpenOption.CREATE_NEW);
+            Files.setPosixFilePermissions(pending, PosixFilePermissions.fromString("rw-------"));
+            Files.move(pending, file, StandardCopyOption.ATOMIC_MOVE);
+            JsonNode readback = JSON.readTree(Files.readAllBytes(file));
+            require(identities.equals(readback), "controlled identity readback mismatch"); return readback;
+        } finally { Files.deleteIfExists(pending); }
+    }
+
+    private static ObjectNode seedRows(ConfigurableApplicationContext context, JdbcTemplate jdbc, int capacityItems) throws Exception {
         require(jdbc.queryForObject("SELECT COUNT(*) FROM club_lead_state", Integer.class) == 0, "fixture is not fresh");
         require(jdbc.queryForObject("SELECT COUNT(*) FROM game_command_receipt", Integer.class) == 0, "receipt store is not fresh");
         ObjectNode identities = JSON.createObjectNode();
@@ -126,7 +148,6 @@ public final class GameplayProcessRecoveryChild {
         }
         long club = insert(jdbc, "INSERT INTO club(member_id,name,del_flag) VALUES(?, 'process-recovery-fixture',0)", actors[0]);
         java.util.List<String> cases = new java.util.ArrayList<>(java.util.List.of("BEFORE_TX", "COMMITTED_NO_REPLY", "ACKED"));
-        int capacityItems = config.path("capacityItems").asInt();
         require(capacityItems == 0 || capacityItems == 72, "fixed workload budget required");
         for (int i = 0; i < capacityItems; i++) cases.add(String.format(java.util.Locale.ROOT, "CAPACITY_%02d", i));
         for (String phase : cases) {
@@ -140,7 +161,7 @@ public final class GameplayProcessRecoveryChild {
             identities.putObject(phase).put("activityId", activity).put("commandId", "process-" + UUID.randomUUID())
                     .put("expectedChapterId", first).put("targetChapterId", second).put("thirdChapterId", third);
         }
-        write(file, identities);
+        return identities;
     }
 
     private static long insert(JdbcTemplate jdbc, String sql, Object... values) {
