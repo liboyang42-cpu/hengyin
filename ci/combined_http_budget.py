@@ -198,7 +198,7 @@ CACHE_SUBSTAGES=frozenset({'SOURCE_INPUTS','LOCAL_ENGINE','PINNED_IMAGE','CREATE
     'MANIFEST','PROVIDER_RUNTIME','CONFIGURATION_UNIT','PRIVATE_LOG','CLEANUP','TERMINAL'})
 CACHE_FAILURE_FUNCTIONS=frozenset({'warm_cache','cache_inputs','cache_manifest','cache_process_state',
     'cache_terminal','cache_offline_probe_exit','fixed_test_compilation_inputs','reset_fixed_test_outputs',
-    'fixed_test_compilation_outputs','provider_runtime_proof','configuration_unit_proof','exact_test_xml',
+    'fixed_test_compilation_outputs','provider_runtime_proof','configuration_unit_proof','exact_test_xml','read_owned_test_xml',
     'command','inspect','validate_owner','validate_container','read_cgroup','validate_cgroup_limits'})
 CACHE_GOALS={
     'maven-resources-plugin':{'resources','testResources'},'maven-compiler-plugin':{'compile','testCompile'},
@@ -292,13 +292,22 @@ def fixed_test_compilation_outputs(inputs):
             'classTree':{'classes':len(all_classes),'sha256':hashlib.sha256(json.dumps(list(all_classes.items()),separators=(',',':')).encode()).hexdigest()}}
 
 
-def exact_test_xml(path,test_class,methods,code):
-    # Fixed internal callers only. Never export XML properties, output or arbitrary method names.
+def read_owned_test_xml(path,private,code):
+    # Raw Surefire reports are owner-created 0644; copied acceptance proofs remain strictly private.
     require(path.is_file() and not path.is_symlink() and path.resolve()==path
-            and not path.stat().st_mode & 0o077 and path.stat().st_size<2*1024*1024,code)
-    raw=path.read_bytes();require(b'<!DOCTYPE' not in raw and b'<!ENTITY' not in raw,code)
+            and path.stat().st_size<2*1024*1024,code)
+    require(not path.stat().st_mode & (0o077 if private else 0o022)
+            and (private or path.stat().st_uid==os.getuid()),code)
+    with path.open('rb') as stream:raw=stream.read(2*1024*1024)
+    require(len(raw)<2*1024*1024 and b'<!DOCTYPE' not in raw and b'<!ENTITY' not in raw,code)
     try:suite=ET.fromstring(raw)
     except ET.ParseError:raise ValueError(code) from None
+    return raw,suite
+
+
+def exact_test_xml(path,test_class,methods,code):
+    # Fixed internal callers only. Never export XML properties, output or arbitrary method names.
+    raw,suite=read_owned_test_xml(path,True,code)
     cases=suite.findall('testcase');names=[case.get('name') for case in cases]
     require(suite.tag=='testsuite' and suite.get('name')==test_class and suite.get('tests')==str(len(methods))
             and all(suite.get(key)=='0' for key in ('failures','errors','skipped'))
@@ -308,6 +317,111 @@ def exact_test_xml(path,test_class,methods,code):
             and not any(element.tag in ('failure','error','skipped','rerunFailure','rerunError','flakyFailure','flakyError')
                         for element in suite.iter()),code)
     return {'tests':len(methods),'failures':0,'errors':0,'skipped':0,'xmlSha256':hashlib.sha256(raw).hexdigest()}
+
+
+PREPARATION_FAILURE_TYPES=frozenset({'java.lang.AssertionError','java.lang.NullPointerException',
+    'java.lang.IllegalStateException','java.lang.IllegalArgumentException','java.lang.SecurityException',
+    'java.lang.UnsupportedOperationException','java.lang.ClassCastException','java.lang.RuntimeException',
+    'java.sql.SQLException','java.sql.SQLSyntaxErrorException','java.sql.SQLTransientConnectionException',
+    'org.opentest4j.AssertionFailedError','org.opentest4j.MultipleFailuresError',
+    'org.springframework.transaction.IllegalTransactionStateException',
+    'org.mockito.exceptions.verification.WantedButNotInvoked','org.mockito.exceptions.verification.NeverWantedButInvoked',
+    'org.mockito.exceptions.verification.TooManyActualInvocations','org.mockito.exceptions.verification.NoInteractionsWanted',
+    'org.mockito.exceptions.misusing.UnnecessaryStubbingException','org.mockito.exceptions.misusing.PotentialStubbingProblem',
+    'org.mockito.exceptions.misusing.InvalidUseOfMatchersException','org.mockito.exceptions.base.MockitoException'})
+
+
+def preparation_report_specs():
+    # Exactly the ONLINE selection; no caller-provided suite, source path, class or method filter.
+    return ((PROVIDER_PROBE,PROVIDER_PROBE.replace('.','/')+'.java',('bootsActualProjectPlatformRuntime',),'providerProbeClassSha256'),
+            (CONFIGURATION_UNIT,CONFIGURATION_SOURCE,CONFIGURATION_METHODS,'configurationTestClassSha256'),
+            (PHOTO_UNIT,PHOTO_SOURCE,PHOTO_METHODS,'photoServiceTestClassSha256'))
+
+
+def preparation_suite_evidence(test_class,methods,source_lines):
+    row={'testClass':test_class,'state':'UNKNOWN'}
+    path=ROOT/'chengyinhub-admin/target/surefire-reports'/('TEST-'+test_class+'.xml')
+    try:raw,suite=read_owned_test_xml(path,False,'PREPARATION_REPORT_UNPROVEN')
+    except Exception:return {**row,'unavailableReason':'MISSING_UNSAFE_OR_MALFORMED_REPORT'}
+    try:
+        require(suite.tag=='testsuite' and suite.get('name')==test_class
+                and suite.get('tests')==str(len(methods)),'PREPARATION_REPORT_UNPROVEN')
+        cases=suite.findall('testcase');names=[case.get('name') for case in cases]
+        require(len(cases)==len(methods) and len(set(names))==len(methods) and set(names)==set(methods)
+                and len(list(suite.iter('testcase')))==len(cases) and len(list(suite.iter('testsuite')))==1
+                and all(case.get('classname')==test_class for case in cases)
+                and all(child.tag in ('properties','testcase','system-out','system-err') for child in suite),
+                'PREPARATION_REPORT_UNPROVEN')
+        counts={'tests':len(methods),'failures':0,'errors':0,'skipped':0,'retries':0};outcomes=[]
+        terminal={'failure':'FAILURE','error':'ERROR','skipped':'SKIPPED'}
+        retry={'rerunFailure','rerunError','flakyFailure','flakyError'}
+        def detail(node,method):
+            value={'type':node.get('type') if node.get('type') in PREPARATION_FAILURE_TYPES else 'UNKNOWN'}
+            pattern=r'^\s*at '+re.escape(test_class)+r'\.'+re.escape(method)+r'\('+re.escape(test_class.rsplit('.',1)[1])+r'\.java:([0-9]{1,7})\)\s*$'
+            for line in (node.text or '').splitlines():
+                found=re.fullmatch(pattern,line)
+                if found and 1<=int(found[1])<=source_lines:
+                    value['origin']={'class':test_class,'method':method,'line':int(found[1])};break
+            return value
+        for case in cases:
+            method=case.get('name');ends=[node for node in case if node.tag in terminal]
+            retries=[node for node in case if node.tag in retry]
+            require(len(ends)<=1 and len(retries)<=16
+                    and all(node.tag in (*terminal,*retry,'system-out','system-err') for node in case),
+                    'PREPARATION_REPORT_UNPROVEN')
+            if ends:
+                node=ends[0];key={'failure':'failures','error':'errors','skipped':'skipped'}[node.tag];counts[key]+=1
+                outcome={'method':method,'kind':terminal[node.tag]}
+                if node.tag!='skipped':outcome.update(detail(node,method))
+                outcomes.append(outcome)
+            if retries:
+                counts['retries']+=len(retries);items=[detail(node,method) for node in retries]
+                outcome={'method':method,'kind':'RETRY','attempts':len(retries),'types':sorted({item['type'] for item in items})}
+                origin=next((item['origin'] for item in items if 'origin' in item),None)
+                if origin is not None:outcome['origin']=origin
+                outcomes.append(outcome)
+        require(all(suite.get(key)==str(counts[key]) for key in ('failures','errors','skipped')),'PREPARATION_REPORT_UNPROVEN')
+        return {**row,'state':'OBSERVED','xmlSha256':hashlib.sha256(raw).hexdigest(),'counts':counts,'nonPassing':outcomes}
+    except Exception:return {**row,'unavailableReason':'UNREVIEWED_OR_INCONSISTENT_REPORT'}
+
+
+def preparation_test_evidence(report,inputs,expected,state,obj,phase):
+    unknown={'purpose':'PREPARATION_JUNIT_DIAGNOSTIC_ONLY','state':'UNKNOWN','businessAccepted':False}
+    try:
+        require(report.get('mavenExitObserved') is True and type(report.get('mavenExit')) is int
+                and 0<report['mavenExit']<256 and phase=='ONLINE_PROVIDER_RUNTIME' and report.get('phase')==phase,
+                'PREPARATION_EVIDENCE_UNPROVEN')
+        identity_gate(os.environ);bound=identity(os.environ)
+        require({key:report.get(key) for key in bound}==bound,'PREPARATION_EVIDENCE_UNPROVEN')
+        slot=state['slots']['app']
+        owner=validate_container(obj,slot['name'],JDK,labels(os.environ,state['nonce']),MEMORY,'bridge',slot['cid'])
+        require(owner==report['budget'] and obj['Image']==report['imageId']
+                and obj['Config']['Cmd']==fixed_cache_command() and obj['Config']['Entrypoint']==['/bin/bash']
+                and obj['Config']['User']==str(os.getuid())+':'+str(os.getgid())
+                and obj['State']['Running'] is True and obj['State']['Pid']>0,'PREPARATION_EVIDENCE_UNPROVEN')
+        environment=dict(value.split('=',1) for value in obj['Config']['Env'])
+        require(all(environment.get(key)==value for key,value in
+                {'SOURCE_SHA':bound['sourceSha'],'GITHUB_SHA':bound['sourceSha'],'GITHUB_RUN_ID':bound['runId'],'GITHUB_RUN_ATTEMPT':bound['attempt']}.items())
+                and re.fullmatch('[0-9a-f]{64}',report.get('mavenCoreSha256','')),'PREPARATION_EVIDENCE_UNPROVEN')
+        require(cache_inputs()==report['pomSha256'] and fixed_test_compilation_inputs()==inputs
+                and expected is not None and fixed_test_compilation_outputs(inputs)==expected,'PREPARATION_EVIDENCE_UNPROVEN')
+        bindings=[]
+        for test_class,source_path,methods,key in preparation_report_specs():
+            source=ROOT/'chengyinhub-admin/src/test/java'/source_path
+            compiled=ROOT/'chengyinhub-admin/target/test-classes'/(test_class.replace('.','/')+'.class')
+            require(source.is_file() and not source.is_symlink() and source.resolve()==source
+                    and compiled.is_file() and not compiled.is_symlink() and compiled.resolve()==compiled
+                    and inputs['sources'].get(source_path)==digest(source) and expected.get(key)==digest(compiled),
+                    'PREPARATION_EVIDENCE_UNPROVEN')
+            bindings.append((test_class,methods,len(source.read_text().splitlines()),digest(source),digest(compiled)))
+    except Exception:return {**unknown,'unavailableReason':'EXIT_STAGE_SOURCE_OR_COMPILE_IDENTITY_UNPROVEN'}
+    suites=[{**preparation_suite_evidence(test_class,methods,lines),'sourceSha256':source_hash,'testClassSha256':class_hash}
+            for test_class,methods,lines,source_hash,class_hash in bindings]
+    observed=sum(row['state']=='OBSERVED' for row in suites)
+    return {**unknown,**bound,'state':'OBSERVED' if observed==len(suites) else ('PARTIAL_OR_UNKNOWN' if observed else 'UNKNOWN'),
+            'phase':phase,'mavenExitObserved':True,'mavenExit':report['mavenExit'],
+            'compilationSha256':hashlib.sha256(json.dumps(expected,sort_keys=True,separators=(',',':')).encode()).hexdigest(),
+            'suites':suites}
 
 
 def configuration_unit_proof(compilation):
@@ -556,7 +670,7 @@ def warm_cache():
     report={**resource_envelope(os.environ),'result':'NOT_COMPLETED','originalExit':None,'failures':[],
             'preparationOnly':True,'mavenExitObserved':False,'mavenExit':None,'offlinePackageProbeExit':None,
             'mavenVersion':CORE_VERSION,'image':JDK,'settingsSha256':hashlib.sha256(EMPTY_SETTINGS.encode()).hexdigest()}
-    state={'nonce':uuid.uuid4().hex,'slots':{}};first=None;cleaned=None
+    state={'nonce':uuid.uuid4().hex,'slots':{}};first=None;cleaned=None;failed_postimage=None
     substage='SOURCE_INPUTS'
     def publish():
         try:write(CACHE_REPORT,report)
@@ -621,6 +735,14 @@ def warm_cache():
         require(int(report['cgroup']['memoryEvents'].get('oom_kill','-1'))==0,'ACTUAL_CGROUP_CHILD_OOM_KILL')
         substage='CORE_IDENTITY';core=command(DOCKER+['exec',cid,'sha256sum','/usr/share/maven/lib/maven-core-'+CORE_VERSION+'.jar']).decode().split()[0]
         require(re.fullmatch('[0-9a-f]{64}',core),'FIXED_CACHE_TOOLCHAIN_REQUIRED');report['mavenCoreSha256']=core
+        if report['mavenExit']!=0:
+            # Freeze the current compile postimage for diagnostics only. Never replace the original
+            # Maven failure with a missing/invalid compile receipt or promote this to an acceptance proof.
+            try:
+                require(cache_inputs()==report['pomSha256'] and fixed_test_compilation_inputs()==compilation,
+                        'COMPILED_POSTIMAGE_DRIFT')
+                failed_postimage=fixed_test_compilation_outputs(compilation)
+            except Exception:failed_postimage=None
         substage='MAVEN_EXIT';require(report['originalExit']==0,'OFFLINE_CACHE_PREFLIGHT_FAILED')
         substage='MANIFEST'
         require(fixed_test_compilation_inputs()==compilation,'COMPILED_POSTIMAGE_DRIFT')
@@ -653,6 +775,20 @@ def warm_cache():
                     if report['offlinePackageProbeExit'] is None and not report['mavenExitObserved']:
                         report['offlinePackageProbeExit']=cache_offline_probe_exit(slot['cid'],required=False)
         except Exception as failure:report['failures'].append(cache_failure(failure,'CACHE_PRIVATE_LOG','PRIVATE_LOG'))
+        if first is not None and report.get('mavenExitObserved') is True and type(report.get('mavenExit')) is int and report['mavenExit']>0:
+            # Independent of raw-log capture. Read fixed host reports while the exact owner still
+            # exists, before cleanup; any diagnostic error remains UNKNOWN and changes no gate.
+            try:
+                slot=state['slots']['app'];obj=inspect(slot['cid'])
+                validate_owner(obj,slot['name'],JDK,labels(os.environ,state['nonce']),slot['cid'])
+                require(obj['State']['Running'],'CACHE_PROCESS_EXIT_BEFORE_RECEIPT')
+                phase=command(DOCKER+['exec',slot['cid'],'cat','/tmp/cy-cache.phase']).decode().strip()
+                if phase in ('OFFLINE_PACKAGE_PROBE','ONLINE_PACKAGE','ORIGINAL_PROVIDER_GET',
+                             'ONLINE_PROVIDER_RUNTIME','OFFLINE_PROVIDER_RUNTIME','OFFLINE_TEST_PREFLIGHT'):report['phase']=phase
+                report['preparationTests']=preparation_test_evidence(report,compilation,failed_postimage,state,obj,phase)
+            except Exception:
+                report['preparationTests']={'purpose':'PREPARATION_JUNIT_DIAGNOSTIC_ONLY','state':'UNKNOWN',
+                    'businessAccepted':False,'unavailableReason':'EXIT_STAGE_SOURCE_OR_COMPILE_IDENTITY_UNPROVEN'}
         try:
             cleaned=cleanup_slot(private,state,'app');report['cleanup']=cleaned
         except Exception as failure:report['failures'].append(cache_failure(failure,'CACHE_CONTAINER_CLEANUP','CLEANUP'))

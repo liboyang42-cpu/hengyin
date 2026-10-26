@@ -719,7 +719,8 @@ class CombinedBudgetControls(unittest.TestCase):
             self.assertEqual(owner.safe_maven_failure(path),{'category':'offline-resolution','helpException':'PluginResolutionException'})
 
     def warm_transport_control(self,exit_code=0,foreign=False,write_fails=False,
-                               failure_point=None,terminal_exit=143,no_plugin=False,probe_exit=0):
+                               failure_point=None,terminal_exit=143,no_plugin=False,probe_exit=0,
+                               preparation_phase='OFFLINE_TEST_PREFLIGHT',log_error=False):
         # Transport/file protocol doubles only: not Maven/Java execution or dependency acceptance evidence.
         reports=[];mutations=[];obj={};image_id='sha256:'+'d'*64
         with tempfile.TemporaryDirectory() as directory,contextlib.ExitStack() as own_cleanup:
@@ -730,6 +731,7 @@ class CombinedBudgetControls(unittest.TestCase):
             (cache/'synthetic-control.jar').write_bytes(b'not an actual dependency')
             def native(argv,**kwargs):
                 if 'logs' in argv:
+                    if log_error:raise OSError('PRIVATE_LOG_VALUE')
                     kwargs['stdout'].write(b'Plugin org.apache.maven.plugins:maven-resources-plugin:3.3.1 or one of its dependencies could not be resolved: PRIVATE\n' if exit_code and not no_plugin else b'SYNTHETIC_TRANSPORT_CONTROL_ONLY')
                 return SimpleNamespace(returncode=0,stdout=b'',stderr=b'')
             def command(argv,**kwargs):
@@ -756,7 +758,7 @@ class CombinedBudgetControls(unittest.TestCase):
                                State={'Running':True,'Pid':17,'ExitCode':0,'OOMKilled':False})
                     return cid.encode()
                 if 'sha256sum' in argv:return ('c'*64+'  fixed-core.jar\n').encode()
-                if argv[-1]=='/tmp/cy-cache.phase':return b'OFFLINE_TEST_PREFLIGHT'
+                if argv[-1]=='/tmp/cy-cache.phase':return preparation_phase.encode()
                 if 'exec' in argv and '/tmp/cy-cache.offline.exit' in argv[-1]:
                     return b'' if probe_exit is None else str(probe_exit).encode()
                 if 'exec' in argv:return b'PRIVATE_BAD_RECEIPT' if failure_point=='INVALID_RECEIPT' else str(exit_code).encode()
@@ -1584,6 +1586,163 @@ class CombinedBudgetControls(unittest.TestCase):
                          'photoPrepareFailureProjectionKeepsOnlyReviewedCodesAndCause'))
         self.assertEqual(len(B.CONFIGURATION_METHODS),9)
         self.assertEqual(len(B.PHOTO_METHODS),23)
+
+
+    def preparation_xml(self,root,test_class,methods,outcomes=None):
+        # Synthetic JUnit transport shape, not execution evidence. Private text must never project.
+        outcomes=outcomes or {};counts={'failures':0,'errors':0,'skipped':0}
+        for nodes in outcomes.values():
+            for tag,kind,text in nodes:
+                if tag in ('failure','error','skipped'):counts[{'failure':'failures','error':'errors','skipped':'skipped'}[tag]]+=1
+        suite=B.ET.Element('testsuite',name=test_class,tests=str(len(methods)),**{key:str(value) for key,value in counts.items()})
+        props=B.ET.SubElement(suite,'properties');B.ET.SubElement(props,'property',name='PRIVATE_ENV',value='PRIVATE_VALUE')
+        for method in methods:
+            case=B.ET.SubElement(suite,'testcase',classname=test_class,name=method)
+            for tag,kind,text in outcomes.get(method,[]):
+                node=B.ET.SubElement(case,tag,type=kind,message='PRIVATE_MESSAGE SQL URL private-id')
+                node.text=text
+        B.ET.SubElement(suite,'system-out').text='PRIVATE_STDOUT'
+        path=root/'chengyinhub-admin/target/surefire-reports'/('TEST-'+test_class+'.xml')
+        path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(B.ET.tostring(suite));path.chmod(0o644)
+        return path
+
+    def preparation_scope(self,root):
+        self.compilation_sources(root)
+        for test_class,source_path,methods,key in B.preparation_report_specs():
+            source=root/'chengyinhub-admin/src/test/java'/source_path
+            source.write_text('// Synthetic public source line, not a javac/VM claim\n'*40)
+        for name in B.REQUIRED_TEST_CLASSES:
+            path=root/'chengyinhub-admin/target/test-classes'/(name.replace('.','/')+'.class')
+            path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(b'synthetic original class')
+        self.provider_class(root);self.compiler_input_status(root)
+        inputs=B.fixed_test_compilation_inputs();expected=B.fixed_test_compilation_outputs(inputs)
+        obj=self.obj();obj['HostConfig']['NetworkMode']='bridge';obj['State'].update(Running=True,Pid=17)
+        obj['Config'].update(Cmd=B.fixed_cache_command(),Entrypoint=['/bin/bash'],User=str(os.getuid())+':'+str(os.getgid()),
+            Env=[key+'='+value for key,value in {'SOURCE_SHA':self.env()['SOURCE_SHA'],'GITHUB_SHA':self.env()['SOURCE_SHA'],
+                'GITHUB_RUN_ID':self.env()['GITHUB_RUN_ID'],'GITHUB_RUN_ATTEMPT':self.env()['GITHUB_RUN_ATTEMPT']}.items()])
+        state={'nonce':'nonce','slots':{'app':{'cid':obj['Id'],'name':'own-app'}}}
+        report={**B.identity(self.env()),'phase':'ONLINE_PROVIDER_RUNTIME','mavenExitObserved':True,'mavenExit':1,
+            'originalExit':1,'result':'NOT_ACCEPTED','imageId':obj['Image'],'mavenCoreSha256':'c'*64,'pomSha256':{'pom.xml':'f'*64},
+            'budget':B.validate_container(obj,'own-app',B.JDK,B.labels(self.env(),'nonce'),B.MEMORY,'bridge',obj['Id']),
+            'firstFailure':{'phase':'PINNED_CACHE_PREPARATION','type':'ValueError','reasonCode':'OFFLINE_CACHE_PREFLIGHT_FAILED'}}
+        files={}
+        for test_class,source_path,methods,key in B.preparation_report_specs():
+            outcomes={}
+            if test_class==B.CONFIGURATION_UNIT:
+                text='org.opentest4j.AssertionFailedError: PRIVATE_VALUE\n\tat '+test_class+'.'+methods[0]+'('+test_class.rsplit('.',1)[1]+'.java:12)\nPRIVATE_SQL PRIVATE_TOKEN'
+                outcomes={methods[0]:[('failure','org.opentest4j.AssertionFailedError',text)]}
+            files[test_class]=self.preparation_xml(root,test_class,methods,outcomes)
+        return report,inputs,expected,state,obj,files
+
+    def preparation_scan(self,scope):
+        report,inputs,expected,state,obj,files=scope
+        with patch.object(B,'cache_inputs',return_value={'pom.xml':'f'*64}):
+            return B.preparation_test_evidence(report,inputs,expected,state,obj,report['phase'])
+
+    def test_preparation_failure_projection_binds_compilation_and_exports_only_fixed_failure_facts(self):
+        with tempfile.TemporaryDirectory() as directory,patch.object(B,'ROOT',Path(directory)),patch.dict(os.environ,self.env(),clear=True):
+            scope=self.preparation_scope(Path(directory));before=copy.deepcopy(scope[0]);proof=self.preparation_scan(scope)
+            self.assertEqual(proof['state'],'OBSERVED');self.assertIs(proof['businessAccepted'],False)
+            self.assertEqual(proof['purpose'],'PREPARATION_JUNIT_DIAGNOSTIC_ONLY');self.assertEqual(proof['mavenExit'],1)
+            self.assertEqual(len(proof['compilationSha256']),64)
+            rows={row['testClass']:row for row in proof['suites']};failed=rows[B.CONFIGURATION_UNIT]
+            self.assertEqual(failed['counts'],{'tests':9,'failures':1,'errors':0,'skipped':0,'retries':0})
+            self.assertEqual(failed['nonPassing'],[{'method':B.CONFIGURATION_METHODS[0],'kind':'FAILURE',
+                'type':'org.opentest4j.AssertionFailedError','origin':{'class':B.CONFIGURATION_UNIT,'method':B.CONFIGURATION_METHODS[0],'line':12}}])
+            self.assertEqual(rows[B.PROVIDER_PROBE]['nonPassing'],[]);self.assertEqual(rows[B.PHOTO_UNIT]['nonPassing'],[])
+            self.assertEqual(scope[0],before)
+            for private in ('PRIVATE_VALUE','PRIVATE_MESSAGE','PRIVATE_SQL','PRIVATE_TOKEN','PRIVATE_STDOUT',directory):
+                self.assertNotIn(private,json.dumps(proof))
+            # A separate synthetic ERROR stays ERROR; passing siblings never acquire a failure.
+            method=B.PHOTO_METHODS[2]
+            self.preparation_xml(Path(directory),B.PHOTO_UNIT,B.PHOTO_METHODS,{method:[('error','java.lang.IllegalStateException',
+                '\tat '+B.PHOTO_UNIT+'.'+method+'(PhotoCheckIntentServiceTest.java:13)\nPRIVATE_SQL')]})
+            photo=next(row for row in self.preparation_scan(scope)['suites'] if row['testClass']==B.PHOTO_UNIT)
+            self.assertEqual(photo['counts']['errors'],1);self.assertEqual(photo['counts']['failures'],0)
+            self.assertEqual(photo['nonPassing'][0]['kind'],'ERROR');self.assertEqual(photo['nonPassing'][0]['origin']['line'],13)
+
+    def test_missing_bad_mixed_and_unreviewed_preparation_reports_remain_unknown_without_raw_content(self):
+        for kind in ('missing','symlink','doctype','malformed','oversize','mixed','foreign-case','unknown-method','duplicate','counts','writable'):
+            with self.subTest(kind=kind),tempfile.TemporaryDirectory() as directory,patch.object(B,'ROOT',Path(directory)),patch.dict(os.environ,self.env(),clear=True):
+                scope=self.preparation_scope(Path(directory));path=scope[-1][B.CONFIGURATION_UNIT];raw=path.read_text()
+                if kind=='missing':path.unlink()
+                elif kind=='symlink':
+                    path.unlink();foreign=Path(directory)/'foreign.xml';foreign.write_text('PRIVATE_VALUE');path.symlink_to(foreign)
+                elif kind=='writable':path.chmod(0o666)
+                else:
+                    if kind=='doctype':raw='<!DOCTYPE testsuite [<!ENTITY secret SYSTEM "file:///PRIVATE_VALUE">]>'+raw
+                    if kind=='malformed':raw='<PRIVATE_VALUE'
+                    if kind=='oversize':raw='PRIVATE_VALUE'+'x'*(2*1024*1024)
+                    if kind=='mixed':raw=raw.replace('</testsuite>','<testsuite name="PRIVATE_VALUE"/></testsuite>')
+                    if kind=='foreign-case':raw=raw.replace('classname="'+B.CONFIGURATION_UNIT+'"','classname="PRIVATE_VALUE"',1)
+                    if kind=='unknown-method':raw=raw.replace(B.CONFIGURATION_METHODS[0],'PRIVATE_VALUE')
+                    if kind=='duplicate':raw=raw.replace(B.CONFIGURATION_METHODS[1],B.CONFIGURATION_METHODS[0])
+                    if kind=='counts':raw=raw.replace('failures="1"','failures="2"')
+                    path.write_text(raw)
+                proof=self.preparation_scan(scope);row=next(row for row in proof['suites'] if row['testClass']==B.CONFIGURATION_UNIT)
+                self.assertEqual(row['state'],'UNKNOWN');self.assertNotIn('nonPassing',row)
+                self.assertEqual(proof['state'],'PARTIAL_OR_UNKNOWN');self.assertNotIn('PRIVATE_VALUE',json.dumps(proof))
+
+    def test_foreign_source_class_compile_snapshot_owner_or_phase_cannot_project_preparation_failures(self):
+        for kind in ('sourceSha','runId','attempt','source','class','missing-class','snapshot','owner','budget','command','phase','unobserved','zero','env'):
+            with self.subTest(kind=kind),tempfile.TemporaryDirectory() as directory,patch.object(B,'ROOT',Path(directory)),patch.dict(os.environ,self.env(),clear=True):
+                report,inputs,expected,state,obj,files=scope=self.preparation_scope(Path(directory))
+                if kind in ('sourceSha','runId','attempt'):report[kind]='PRIVATE_VALUE'
+                if kind=='source':(Path(directory)/'chengyinhub-admin/src/test/java'/B.PHOTO_SOURCE).write_text('changed')
+                compiled=Path(directory)/'chengyinhub-admin/target/test-classes'/(B.PHOTO_UNIT.replace('.','/')+'.class')
+                if kind=='class':compiled.write_bytes(b'changed')
+                if kind=='missing-class':compiled.unlink()
+                if kind=='snapshot':expected['photoServiceTestClassSha256']='0'*64
+                if kind=='owner':obj['Config']['Labels']['chengyin.http.source']='PRIVATE_VALUE'
+                if kind=='budget':obj['HostConfig']['Memory']=B.MEMORY*2
+                if kind=='command':obj['Config']['Cmd'].append('PRIVATE_VALUE')
+                if kind=='phase':report['phase']='OFFLINE_PROVIDER_RUNTIME'
+                if kind=='unobserved':report['mavenExitObserved']=False
+                if kind=='zero':report['mavenExit']=0
+                if kind=='env':obj['Config']['Env'].append('SOURCE_SHA=PRIVATE_VALUE')
+                proof=self.preparation_scan(scope);self.assertEqual(proof['state'],'UNKNOWN')
+                self.assertNotIn('suites',proof);self.assertNotIn('PRIVATE_VALUE',json.dumps(proof))
+
+    def test_skips_retries_and_all_pass_units_never_fabricate_a_failure_or_business_acceptance(self):
+        with tempfile.TemporaryDirectory() as directory,patch.object(B,'ROOT',Path(directory)),patch.dict(os.environ,self.env(),clear=True):
+            scope=self.preparation_scope(Path(directory));root=Path(directory)
+            self.preparation_xml(root,B.CONFIGURATION_UNIT,B.CONFIGURATION_METHODS)
+            self.preparation_xml(root,B.PHOTO_UNIT,B.PHOTO_METHODS,{B.PHOTO_METHODS[0]:[('skipped','PRIVATE_TYPE','PRIVATE_SKIP')],
+                B.PHOTO_METHODS[1]:[('flakyFailure','java.lang.NullPointerException','PRIVATE_RETRY')]})
+            proof=self.preparation_scan(scope);photo=next(row for row in proof['suites'] if row['testClass']==B.PHOTO_UNIT)
+            self.assertEqual(photo['counts'],{'tests':23,'failures':0,'errors':0,'skipped':1,'retries':1})
+            self.assertEqual({row['kind'] for row in photo['nonPassing']},{'SKIPPED','RETRY'})
+            self.assertTrue(all(row['kind'] not in ('FAILURE','ERROR') for row in photo['nonPassing']))
+            self.assertEqual(proof['mavenExit'],1);self.assertIs(proof['businessAccepted'],False)
+            self.assertNotIn('PRIVATE_',json.dumps(proof));self.assertEqual(scope[0]['result'],'NOT_ACCEPTED')
+
+    def test_exception_types_and_reported_frames_are_exact_whitelists_not_message_projection(self):
+        for kind in ('type','other-method','line-range','file'):
+            with self.subTest(kind=kind),tempfile.TemporaryDirectory() as directory,patch.object(B,'ROOT',Path(directory)),patch.dict(os.environ,self.env(),clear=True):
+                scope=self.preparation_scope(Path(directory));path=scope[-1][B.CONFIGURATION_UNIT];raw=path.read_text()
+                if kind=='type':raw=raw.replace('type="org.opentest4j.AssertionFailedError"','type="PRIVATE_TYPE"')
+                if kind=='other-method':raw=raw.replace('.'+B.CONFIGURATION_METHODS[0]+'(','.'+B.CONFIGURATION_METHODS[1]+'(')
+                if kind=='line-range':raw=raw.replace('.java:12)','.java:99999)')
+                if kind=='file':raw=raw.replace('CombinedContextConfigurationTest.java:12','PRIVATE_FILE.java:12')
+                path.write_text(raw);proof=self.preparation_scan(scope)
+                row=next(row for row in proof['suites'] if row['testClass']==B.CONFIGURATION_UNIT)['nonPassing'][0]
+                if kind=='type':self.assertEqual(row['type'],'UNKNOWN')
+                else:self.assertNotIn('origin',row)
+                self.assertNotIn('PRIVATE_',json.dumps(proof))
+
+    def test_failed_preparation_finally_collects_before_cleanup_even_when_raw_log_capture_fails(self):
+        scan=B.preparation_test_evidence;cleanup=B.cleanup_slot;events=[]
+        def observe(*args):
+            events.append('SCAN');self.assertIs(args[0]['mavenExitObserved'],True);self.assertEqual(args[0]['mavenExit'],1)
+            return scan(*args) # The transport fixture has no real compiler/class proof, so this remains UNKNOWN.
+        def remove(*args):events.append('CLEANUP');return cleanup(*args)
+        with patch.object(B,'preparation_test_evidence',side_effect=observe),patch.object(B,'cleanup_slot',side_effect=remove):
+            reports,mutations,failure,private=self.warm_transport_control(exit_code=1,preparation_phase='ONLINE_PROVIDER_RUNTIME',log_error=True)
+        report=reports[-1];self.assertEqual(events,['SCAN','CLEANUP']);self.assertEqual(mutations,['stop','remove'])
+        self.assertEqual(report['firstFailure']['reasonCode'],'OFFLINE_CACHE_PREFLIGHT_FAILED')
+        self.assertEqual(report['originalExit'],1);self.assertEqual(report['mavenExit'],1);self.assertEqual(report['result'],'NOT_ACCEPTED')
+        self.assertEqual(report['preparationTests']['state'],'UNKNOWN');self.assertIsInstance(failure,ValueError)
+        self.assertNotIn('PRIVATE_LOG_VALUE',json.dumps(report));self.assertTrue(private)
 
 
 if __name__=='__main__':unittest.main()
