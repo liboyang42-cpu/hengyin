@@ -1,0 +1,63 @@
+{
+  "sourceParent": "0969e2a4890be4969a2cdbc476715673a45f0161",
+  "productionBase": "92210eab634d81a8d4c1c550d37fd9e3dacb65f0",
+  "status": "SOURCE_ONLY_NOT_RUN",
+  "javaSources": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GenericGameplayHttpE2eIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CombinedSurefireRuntimeProbeTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CombinedContextConfigurationTest.java"
+  ],
+  "additionalSourceInputs": [],
+  "newTypes": [],
+  "configurationOriginalMethodsPreserved": 9,
+  "configurationMethodCount": 11,
+  "configurationRequiresPreparedArtifact": false,
+  "positiveConsumerSemanticCheck": "actual same application ContextRefreshedEvent invokes existing assertContentSecurityFixture; not fake unit success",
+  "configurationAdditionalMethods": [
+    "precompiledContentSecurityFixtureKeepsOriginalChecksAndRejectsUnprovenOutputs",
+    "providerClasspathCapturePreservesExactBytesAndRejectsUnownedEntries"
+  ],
+  "providerOriginalMethod": "bootsActualProjectPlatformRuntime",
+  "providerProofNewField": "testClasspath",
+  "providerProofNestedKeys": ["fileName", "sha256", "byteLength", "entryCount"],
+  "classpathFiles": ["target/provider-runtime/online.classpath", "target/provider-runtime/offline.classpath"],
+  "classpathEncoding": "UTF-8 exact original property, no appended newline",
+  "classpathByteLength": "0 < n < 1048576",
+  "classpathOrderAndDuplicates": "preserved",
+  "classpathDirectoryMode": "0700",
+  "classpathFileMode": "0600 exclusive creation; existing/symlink refuses",
+  "privateClasspathArtifactAllowed": false,
+  "stubSource": "scripts/e2e/E2eWxContentSecurityStub.java.stub",
+  "stubSourceBytes": 2059,
+  "stubSourceSha256": "4b4bb11e6bd4a211fc07164f90f9310d34a0bf6cad3e2eb415722d4d2c9a66af",
+  "stubClass": "com.chengyinhub.e2e.E2eWxContentSecurityStub",
+  "stubOutputRoot": "chengyinhub-admin/target/controlled-content-security",
+  "stubClassOutput": "classes/com/chengyinhub/e2e/E2eWxContentSecurityStub.class",
+  "stubProof": "proof.properties",
+  "stubProofFields": ["sourceSha", "sourceSha256", "classSha256"],
+  "stubProofFormat": "three unique nonempty key=hex lines, any key order, no comments/blank/extra/duplicate keys; <=1024 bytes",
+  "stubClassFormatBoundBytes": "0 < n <= 1048576",
+  "stubExpectedDescendants": [
+    "classes", "classes/com", "classes/com/chengyinhub", "classes/com/chengyinhub/e2e",
+    "classes/com/chengyinhub/e2e/E2eWxContentSecurityStub.class", "proof.properties"
+  ],
+  "scope": "CHENGYIN_HTTP_E2E_TESTS exactly CrossDomainCombinedLoadMySqlIT",
+  "beanName": "httpE2eWxContentSecurityStub",
+  "runtimeCompileFallback": false,
+  "defaultGenericRuntimeCompilePathUnchanged": true,
+  "fixedCompilerOptions": ["-proc:none", "-classpath", "<verified original complete test cp>", "-d", "<fixed classes dir>", "<original source copy>"],
+  "integrationOrder": ["ONLINE provider", "fixed stub compile/proof", "Config11 and Photo23", "OFFLINE provider", "actual original combination"],
+  "bRootOnlyHooks": [
+    "fixed_cache_command separate original ONLINE selection from Config11+Photo23",
+    "provider_runtime_proof strict new nested testClasspath and two private files",
+    "fixed generated output fresh ownership / compiler real exit / source and class hashes",
+    "cache report and verified_cache bind proof + original cp ordered path/hash sources",
+    "source_manifest retain all old fields and additionally bind stub/proof before and after runtime",
+    "configuration exact11 method registration and corresponding Python negative controls"
+  ],
+  "originalCompileInputs": 21,
+  "originalMinimumClasses": 40,
+  "originalRuntimeIdentities": 14,
+  "businessCasesAndHttpCountUnchanged": true,
+  "runtimeAcceptanceClaimed": false
+}

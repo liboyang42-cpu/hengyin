@@ -18,6 +18,7 @@ import java.util.LinkedHashMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Locale;
+import java.util.HexFormat;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.Map;
 import java.util.List;
@@ -407,6 +408,109 @@ class CombinedContextConfigurationTest {
                         Map.of("sqlState", "23000", "vendorCode", "1062"))), safe);
         Map<String,Object> unknownType = CrossDomainStorageFixture.photoPrepareFailure("PHOTO_PREPARE", new java.io.IOException("secret"));
         assertEquals(Map.of("phase", "PHOTO_PREPARE", "exceptionTypes", List.of("UNKNOWN_TYPE"), "sql", List.of()), unknownType);
+    }
+
+    @Test
+    void precompiledContentSecurityFixtureKeepsOriginalChecksAndRejectsUnprovenOutputs() throws Exception {
+        // Self-contained file controls: an existing wrong type is never accepted as a success stub.
+        // The actual prepared stub's positive semantics run on the real context refresh, not here.
+        String source = "a".repeat(40);
+        Path root = copiedPreparedSecurity("positive");
+        assertEquals(root.resolve("chengyinhub-admin/target/controlled-content-security/classes"),
+                ReflectionTestUtils.invokeMethod(GenericGameplayHttpE2eIT.class,
+                        "preparedContentSecurityClasses", root, source));
+        try (var application = new GenericApplicationContext()) {
+            assertThrows(NoClassDefFoundError.class, () -> ReflectionTestUtils.invokeMethod(GenericGameplayHttpE2eIT.class,
+                    "registerPreparedContentSecurityFixture", application, root, source));
+            assertEquals(0, application.getBeanFactory().getBeanDefinitionCount(), "Matching hashes do not authorize another class identity");
+        }
+        for (String mode : List.of("missing-proof", "missing-class", "wrong-source", "source-drift", "class-drift",
+                "duplicate-proof", "extra-proof-field", "extra-output", "symlink-output")) {
+            Path invalid = copiedPreparedSecurity(mode);
+            Path prepared = invalid.resolve("chengyinhub-admin/target/controlled-content-security");
+            Path proof = prepared.resolve("proof.properties");
+            Path compiled = prepared.resolve("classes/com/chengyinhub/e2e/E2eWxContentSecurityStub.class");
+            String expectedSource = source;
+            switch (mode) {
+                case "missing-proof" -> Files.delete(proof);
+                case "missing-class" -> Files.delete(compiled);
+                case "wrong-source" -> expectedSource = "0".repeat(40);
+                case "source-drift" -> Files.writeString(invalid.resolve("scripts/e2e/E2eWxContentSecurityStub.java.stub"), "drift");
+                case "class-drift" -> Files.write(compiled, new byte[]{0, 1, 2});
+                case "duplicate-proof" -> Files.writeString(proof, "sourceSha=" + source + "\nsourceSha=" + source + "\nclassSha256=" + "a".repeat(64) + "\n");
+                case "extra-proof-field" -> Files.writeString(proof, "private=must-not-be-accepted\n", StandardOpenOption.APPEND);
+                case "extra-output" -> Files.writeString(prepared.resolve("extra.class"), "unreviewed");
+                case "symlink-output" -> {
+                    Path original = invalid.resolve("original.class"); Files.move(compiled, original);
+                    Files.createSymbolicLink(compiled, original);
+                }
+                default -> throw new AssertionError(mode);
+            }
+            String identity = expectedSource;
+            try (var application = new GenericApplicationContext()) {
+                assertThrows(AssertionError.class, () -> ReflectionTestUtils.invokeMethod(GenericGameplayHttpE2eIT.class,
+                        "registerPreparedContentSecurityFixture", application, invalid, identity), mode);
+                assertEquals(0, application.getBeanFactory().getBeanDefinitionCount(), "Refusal must not register a substitute bean");
+            }
+        }
+    }
+
+    @Test
+    void providerClasspathCapturePreservesExactBytesAndRejectsUnownedEntries() throws Exception {
+        // Local path/metadata controls only; placeholder file is never loaded as an artifact.
+        Path root = Files.createDirectory(directory.resolve("classpath-root"));
+        Path output = Files.createDirectories(root.resolve("chengyinhub-admin/target/provider-runtime"));
+        Files.setPosixFilePermissions(output, PosixFilePermissions.fromString("rwx------"));
+        Path main = Files.createDirectories(root.resolve("chengyinhub-admin/target/classes"));
+        Path tests = Files.createDirectories(root.resolve("chengyinhub-admin/target/test-classes"));
+        Path cache = Files.createDirectory(directory.resolve("classpath-cache"));
+        Path artifact = Files.writeString(cache.resolve("controlled.jar"), "not-executed-path-control");
+        String cp = String.join(java.io.File.pathSeparator, tests.toString(), artifact.toString(), main.toString(), artifact.toString());
+        byte[] bytes = cp.getBytes(StandardCharsets.UTF_8);
+        for (String phase : List.of("ONLINE", "OFFLINE")) {
+            var proof = CombinedSurefireRuntimeProbeTest.captureTestClasspath(output, phase, cp, root, cache);
+            String file = phase.toLowerCase(Locale.ROOT) + ".classpath";
+            assertEquals(Map.of("fileName", file, "sha256", HexFormat.of().formatHex(
+                    java.security.MessageDigest.getInstance("SHA-256").digest(bytes)), "byteLength", bytes.length, "entryCount", 4), proof);
+            assertArrayEquals(bytes, Files.readAllBytes(output.resolve(file)));
+            assertEquals(PosixFilePermissions.fromString("rw-------"), Files.getPosixFilePermissions(output.resolve(file)));
+        }
+        assertThrows(java.nio.file.FileAlreadyExistsException.class,
+                () -> CombinedSurefireRuntimeProbeTest.captureTestClasspath(output, "ONLINE", cp, root, cache));
+        Path foreign = Files.writeString(directory.resolve("foreign.jar"), "foreign");
+        Path link = cache.resolve("linked.jar"); Files.createSymbolicLink(link, artifact);
+        for (String invalid : List.of("", ":" + cp, cp + ":", "relative.jar", "file:/unowned.jar", cp + "\n", cp + "\0",
+                "x".repeat(1024 * 1024), foreign.toString(), link.toString(), root.resolve("chengyinhub-admin/target/classes/../classes").toString()))
+            assertThrows(AssertionError.class,
+                    () -> CombinedSurefireRuntimeProbeTest.captureTestClasspath(output, "ONLINE", invalid, root, cache));
+        assertThrows(java.nio.file.NoSuchFileException.class, () -> CombinedSurefireRuntimeProbeTest.captureTestClasspath(
+                output, "ONLINE", cache.resolve("missing.jar").toString(), root, cache));
+        assertThrows(AssertionError.class, () -> CombinedSurefireRuntimeProbeTest.captureTestClasspath(output, "OTHER", cp, root, cache));
+        assertArrayEquals(bytes, Files.readAllBytes(output.resolve("online.classpath")));
+        assertArrayEquals(bytes, Files.readAllBytes(output.resolve("offline.classpath")));
+        try (var files = Files.list(output)) { assertEquals(2L, files.count(), "No invalid capture may create another output"); }
+    }
+
+    private Path copiedPreparedSecurity(String label) throws Exception {
+        Path repository = P0AcceptanceSchema.repoRoot().toRealPath();
+        Path root = Files.createDirectory(directory.resolve("security-" + label));
+        Path source = root.resolve("scripts/e2e/E2eWxContentSecurityStub.java.stub");
+        Files.createDirectories(source.getParent());
+        Files.copy(repository.resolve("scripts/e2e/E2eWxContentSecurityStub.java.stub"), source);
+        Path target = root.resolve("chengyinhub-admin/target/controlled-content-security");
+        Path classes = target.resolve("classes/com/chengyinhub/e2e"); Files.createDirectories(classes);
+        byte[] wrongType;
+        try (var input = CombinedContextConfigurationTest.class.getResourceAsStream("CombinedContextConfigurationTest.class")) {
+            assertNotNull(input); wrongType = input.readAllBytes();
+        }
+        Files.write(classes.resolve("E2eWxContentSecurityStub.class"), wrongType);
+        String sourceHash = HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(source)));
+        String classHash = HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(wrongType));
+        Files.writeString(target.resolve("proof.properties"), "sourceSha=" + "a".repeat(40)
+                + "\nsourceSha256=" + sourceHash + "\nclassSha256=" + classHash + "\n");
+        for (Path file : List.of(source, classes.resolve("E2eWxContentSecurityStub.class"), target.resolve("proof.properties")))
+            Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("rw-------"));
+        return root;
     }
 
     private static ConfigurableApplicationContext combinationSeedContext(JdbcTemplate jdbc, long base) {

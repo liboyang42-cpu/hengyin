@@ -457,6 +457,10 @@ class GenericGameplayHttpE2eIT {
         Path root = Paths.get("").toAbsolutePath();
         while (root != null && !Files.exists(root.resolve("scripts/e2e/E2eWxContentSecurityStub.java.stub"))) root = root.getParent();
         assertNotNull(root, "Reviewed content-security fixture must exist");
+        if ("CrossDomainCombinedLoadMySqlIT".equals(System.getenv("CHENGYIN_HTTP_E2E_TESTS"))) {
+            registerPreparedContentSecurityFixture(application, root.toAbsolutePath().normalize(), System.getenv("SOURCE_SHA"));
+            return; // Missing/bad proof must fail; never fall back to runtime compilation.
+        }
         assertNotNull(ToolProvider.getSystemJavaCompiler(), "Content-security fixture requires a JDK");
         try {
             Path scratch = Files.createTempDirectory("cy-http-content-security-");
@@ -483,6 +487,76 @@ class GenericGameplayHttpE2eIT {
         } catch (Exception failure) {
             throw new IllegalStateException("Reviewed content-security fixture could not be registered", failure);
         }
+    }
+
+    private static void registerPreparedContentSecurityFixture(ConfigurableApplicationContext application,
+                                                                Path root, String sourceSha) {
+        try {
+            Path classes = preparedContentSecurityClasses(root, sourceSha);
+            try (URLClassLoader loader = new URLClassLoader(new URL[]{classes.toUri().toURL()},
+                    GenericGameplayHttpE2eIT.class.getClassLoader())) {
+                Class<?> stub = loader.loadClass("com.chengyinhub.e2e.E2eWxContentSecurityStub");
+                assertSame(loader, stub.getClassLoader());
+                assertEquals(classes.toUri().toURL(), stub.getProtectionDomain().getCodeSource().getLocation());
+                assertEquals(com.chengyinhub.business.service.impl.WxContentSecurityServiceImpl.class, stub.getSuperclass());
+                org.springframework.beans.factory.support.RootBeanDefinition definition =
+                        new org.springframework.beans.factory.support.RootBeanDefinition(stub);
+                definition.setPrimary(true);
+                ((org.springframework.beans.factory.support.BeanDefinitionRegistry) application.getBeanFactory())
+                        .registerBeanDefinition("httpE2eWxContentSecurityStub", definition);
+                application.addApplicationListener(event -> {
+                    if (event instanceof org.springframework.context.event.ContextRefreshedEvent refreshed
+                            && refreshed.getApplicationContext() == application)
+                        assertContentSecurityFixture(application);
+                });
+            }
+        } catch (Exception failure) {
+            throw new IllegalStateException("Prepared content-security fixture could not be registered", failure);
+        }
+    }
+
+    private static Path preparedContentSecurityClasses(Path root, String sourceSha) throws Exception {
+            assertNotNull(sourceSha); assertTrue(sourceSha.matches("[0-9a-f]{40}"));
+            assertTrue(root.isAbsolute() && root.equals(root.toRealPath()));
+            Path source = root.resolve("scripts/e2e/E2eWxContentSecurityStub.java.stub");
+            assertTrue(Files.isRegularFile(source) && !Files.isSymbolicLink(source));
+            assertEquals(2059L, Files.size(source));
+            String sourceHash = java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(Files.readAllBytes(source)));
+            assertEquals("4b4bb11e6bd4a211fc07164f90f9310d34a0bf6cad3e2eb415722d4d2c9a66af", sourceHash);
+            Path prepared = root.resolve("chengyinhub-admin/target/controlled-content-security");
+            assertTrue(Files.isDirectory(prepared) && prepared.equals(prepared.toRealPath()));
+            java.util.Set<String> expected = java.util.Set.of("classes", "classes/com", "classes/com/chengyinhub",
+                    "classes/com/chengyinhub/e2e", "classes/com/chengyinhub/e2e/E2eWxContentSecurityStub.class", "proof.properties");
+            try (var files = Files.walk(prepared)) {
+                var observed = files.filter(path -> !path.equals(prepared)).limit(expected.size() + 1L).toList();
+                assertEquals(expected.size(), observed.size(), "Only the fixed generated class and proof may be consumed");
+                var names = new java.util.HashSet<String>();
+                for (Path path : observed) {
+                    assertTrue(!Files.isSymbolicLink(path) && path.equals(path.toRealPath()));
+                    names.add(prepared.relativize(path).toString().replace(java.io.File.separatorChar, '/'));
+                }
+                assertEquals(expected, names);
+            }
+            Path proofFile = prepared.resolve("proof.properties");
+            assertTrue(Files.size(proofFile) > 0 && Files.size(proofFile) <= 1024);
+            var lines = Files.readAllLines(proofFile, StandardCharsets.UTF_8);
+            assertEquals(3, lines.size(), "No comments, duplicate fields or extra proof data");
+            var proof = new java.util.HashMap<String,String>();
+            for (String line : lines) {
+                assertTrue(line.matches("(?:sourceSha|sourceSha256|classSha256)=[0-9a-f]{40}(?:[0-9a-f]{24})?"));
+                String[] pair = line.split("=", 2);
+                assertNull(proof.put(pair[0], pair[1]), "Duplicate proof field");
+            }
+            assertEquals(java.util.Set.of("sourceSha", "sourceSha256", "classSha256"), proof.keySet());
+            assertEquals(sourceSha, proof.get("sourceSha")); assertEquals(sourceHash, proof.get("sourceSha256"));
+            assertTrue(proof.get("classSha256").matches("[0-9a-f]{64}"));
+            Path classes = prepared.resolve("classes");
+            Path classFile = classes.resolve("com/chengyinhub/e2e/E2eWxContentSecurityStub.class");
+            assertTrue(Files.isRegularFile(classFile) && Files.size(classFile) > 0 && Files.size(classFile) <= 1024 * 1024);
+            assertEquals(proof.get("classSha256"), java.util.HexFormat.of().formatHex(
+                    java.security.MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(classFile))));
+            return classes;
     }
 
     static void assertContentSecurityFixture(ConfigurableApplicationContext application) {
