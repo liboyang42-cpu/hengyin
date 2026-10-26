@@ -4574,24 +4574,33 @@ Page({
   /* 拿到一张原图之后的去处:裁剪 → 落盘 → 进探店照片或本次足迹。
      取景卡与(历史上的)原生选图器共用这一段,所以单独抽出来。 */
   _acceptPhoto(raw) {
+    const scope = this._roamReadScope();
+    const sessionId = this._roamSid, sessionKey = this._clientSessionKey;
+    const visit = this.data.visit;
+    const address = this.data.currentAddress || '漫游打卡';
+    const current = () => scope() && !this._unloaded && sessionId === this._roamSid
+      && sessionKey === this._clientSessionKey && visit === this.data.visit;
     // 打卡照走自由比例裁剪(与全站上传同一套裁剪页);取消 = 放弃这张,不静默存原图
-    getApp().cropAll([raw], 'free').then((out) => {
+    return Promise.resolve().then(() => {
+      if (current()) return getApp().cropAll([raw], 'free');
+    }).then((out) => {
+      if (!current()) return;
       const path = out && out[0];
       if (!path) return;
-      persistPhoto(wx, path).then((photo) => {
-        if (!photo.path) return;
-        if (this.data.visit.active) {
+      return persistPhoto(wx, path).then((photo) => {
+        if (!current() || !photo.path) return;
+        if (visit.active) {
           const candidates = (this.data.visit.photos || []).concat(photo);
           const photos = retainRecentPhotos(candidates);
           const dropped = droppedSavedPhotos(candidates);
           releaseSavedPhotos(wx, dropped);
           this.setData({ 'visit.photos': photos });
         } else {
-          this._appendSessionPhoto(photo, this.data.currentAddress || '漫游打卡');
+          this._appendSessionPhoto(photo, address);
         }
         cyToast(photo.persisted ? (this.data.visit.active ? '探店照片已保存' : '照片已保存') : '照片仅本次可用');
       });
-    });
+    }).catch(() => { if (current()) cyToast('照片未保存，请重试'); });
   },
 
   endRoamSession() {
