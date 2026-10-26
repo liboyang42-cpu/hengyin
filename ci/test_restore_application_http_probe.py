@@ -1014,10 +1014,13 @@ class RestoreHttpCurrentAllocatorControls(unittest.TestCase):
         owner=self
         class Auth:
             sessions=[];ignore_set=False;actual_uuid=owner.uuid;actual_schema=owner.schema
-            expiry_override=None;current=211;cached=2
+            expiry_override=None;current=211;cached=2;actual_autocommit=1
+            table_names=None;rows={};row_error=None;fail_table=None
             @classmethod
-            def database(cls,port,schema):
-                session=SimpleNamespace(id=len(cls.sessions),expiry=86400,schema=schema,events=[])
+            @contextmanager
+            def database(cls,port,schema,autocommit=True):
+                session=SimpleNamespace(id=len(cls.sessions),expiry=86400,schema=schema,events=[],
+                                        requested_autocommit=autocommit,closed=False)
                 class Cursor:
                     description=(('id',),)
                     def execute(self,sql,args=None):
@@ -1031,18 +1034,28 @@ class RestoreHttpCurrentAllocatorControls(unittest.TestCase):
                             owner.assertEqual(args,(owner.schema,))
                             self.description=(('TABLE_NAME',),('AUTO_INCREMENT',))
                             self.metadata=True
+                        elif sql=='SELECT @@SESSION.autocommit':
+                            self.identity=(cls.actual_autocommit,)
                         else:
                             owner.assertTrue(sql.startswith('SELECT * FROM '));owner.assertIsNone(args)
-                            self.description=(('id',),);self.metadata=False
+                            name=sql[len('SELECT * FROM `'):-1]
+                            if name==cls.fail_table:raise cls.row_error
+                            rows=cls.rows.get(name,[])
+                            columns=tuple(rows[0]) if rows else ('id',)
+                            self.description=tuple((column,) for column in columns)
+                            self.values=tuple(tuple(row[column] for column in columns) for row in rows)
+                            self.metadata=False
                     def fetchone(self):return self.identity
                     def fetchall(self):
                         if getattr(self,'metadata',False):
                             return tuple((name,(cls.current if session.expiry==0 else cls.cached)
-                                    if name=='member_cash_withdraw' else None) for name in sorted(P.REQUIRED_TABLES))
-                        return ()
+                                    if name=='member_cash_withdraw' else None)
+                                    for name in sorted(P.REQUIRED_TABLES if cls.table_names is None else cls.table_names))
+                        return self.values
                 session.cursor=lambda:nullcontext(Cursor())
                 cls.sessions.append(session)
-                return nullcontext(session)
+                try:yield session
+                finally:session.closed=True
         return Auth
 
     def test_set_effective_zero_identity_and_metadata_use_one_exact_connection(self):
@@ -1237,7 +1250,7 @@ class RestoreHttpHeldProtocolControls(unittest.TestCase):
             def fetchone(self):raise KeyError('private-SQL-token-key-canary')
         class Database:
             def cursor(self):return nullcontext(Cursor())
-        auth=SimpleNamespace(database=lambda *args:nullcontext(Database()))
+        auth=SimpleNamespace(database=lambda *args,**kwargs:nullcontext(Database()))
         try:P.snapshot(auth,3306,'owned','11111111-1111-1111-1111-111111111111')
         except KeyError as failure:
             diagnostic=P.failure_diagnostic(failure,'RESTORED_HELD_WORKLOAD','HELD_QUARTZ_OBSERVE')
@@ -1657,6 +1670,122 @@ class RestoreHttpCallbackReplayObservationControls(unittest.TestCase):
                 self.assertEqual(receipt.read_bytes(),b'controlled-original-reference')
                 self.assertEqual(slot.start_transition['stage'],'READY')
                 slot.stop(remove=False);slot.verify_all_stopped_logs()
+
+
+class RestoreHttpLifecycleBudgetCostControls(unittest.TestCase):
+    """SOURCE controls on original sampler/checkpoint/budget methods; no MySQL or timing claim."""
+    schema=RestoreHttpCurrentAllocatorControls.schema
+    uuid=RestoreHttpCurrentAllocatorControls.uuid
+
+    def test_complete_418_table_observation_uses_one_new_autocommit_connection_and_all_original_rows(self):
+        auth=RestoreHttpCurrentAllocatorControls().driver()
+        protected=set(P.REQUIRED_TABLES)
+        protected.update('restore_fixture_table_'+str(index).zfill(4) for index in range(418-len(protected)))
+        auth.table_names=protected|P.ALLOWED_MUTABLE
+        auth.rows={'ums_member':[{'id':2,'balance':Decimal('2.00'),'binary':b'\x00\xff'},
+                                  {'id':1,'balance':Decimal('1.00'),'binary':b'\x01'}]}
+        observed=P.snapshot(auth,3306,self.schema,self.uuid)
+        self.assertEqual(len(auth.sessions),1);session=auth.sessions[0]
+        self.assertIs(session.requested_autocommit,True);self.assertTrue(session.closed)
+        self.assertEqual(set(observed),protected);self.assertEqual(len(observed),418)
+        reads=[sql for sql,_ in session.events if sql.startswith('SELECT * FROM ')]
+        self.assertEqual(len(reads),418)
+        self.assertEqual(set(reads),{'SELECT * FROM `'+name+'`' for name in protected})
+        self.assertEqual(observed['ums_member']['rows'],
+                sorted([{key:P.typed(value) for key,value in row.items()} for row in auth.rows['ums_member']],key=P.canonical))
+        self.assertEqual(observed['member_cash_withdraw']['nextId'],211)
+        self.assertEqual(session.events[0][0],'SET SESSION information_schema_stats_expiry=0')
+        self.assertIn(('SELECT @@SESSION.autocommit',None),session.events)
+        self.assertFalse(any(sql.startswith(('START TRANSACTION','BEGIN','SET GLOBAL','ANALYZE','UPDATE','INSERT','ALTER'))
+                for sql,_ in session.events))
+
+    def test_each_independent_phase_reopens_and_observes_changed_rows_high_water_and_table_set(self):
+        auth=RestoreHttpCurrentAllocatorControls().driver()
+        auth.rows={'ums_member':[{'id':1,'balance':Decimal('70.00')}]}
+        first=P.snapshot(auth,3306,self.schema,self.uuid)
+        auth.rows={'ums_member':[{'id':1,'balance':Decimal('69.00')}]};auth.current=212
+        second=P.snapshot(auth,3306,self.schema,self.uuid)
+        self.assertEqual(len(auth.sessions),2);self.assertTrue(all(session.closed for session in auth.sessions))
+        self.assertEqual(first['member_cash_withdraw']['nextId'],211)
+        self.assertEqual(second['member_cash_withdraw']['nextId'],212)
+        self.assertNotEqual(first['ums_member']['rows'],second['ums_member']['rows'])
+        with self.assertRaisesRegex(ValueError,'protected rows or ID high water changed'):P.assert_equal(first,second)
+        auth.table_names=P.REQUIRED_TABLES|{'new_actual_table'}
+        third=P.snapshot(auth,3306,self.schema,self.uuid)
+        self.assertEqual(len(auth.sessions),3)
+        with self.assertRaisesRegex(ValueError,'table set drift'):P.assert_equal(second,third)
+
+    def test_session_autocommit_must_be_effective_integer_one_before_any_row_read(self):
+        for value in (0,False,True,'1',None):
+            with self.subTest(value=value):
+                auth=RestoreHttpCurrentAllocatorControls().driver();auth.actual_autocommit=value
+                with self.assertRaisesRegex(ValueError,'require session autocommit'):
+                    P.snapshot(auth,3306,self.schema,self.uuid)
+                self.assertEqual(len(auth.sessions),1);self.assertTrue(auth.sessions[0].closed)
+                self.assertFalse(any(sql.startswith('SELECT * FROM ') for sql,_ in auth.sessions[0].events))
+
+    def test_mid_observation_failure_closes_connection_and_never_returns_or_reuses_partial_snapshot(self):
+        auth=RestoreHttpCurrentAllocatorControls().driver();failure=RuntimeError('private-row-read-canary')
+        auth.fail_table='ums_member';auth.row_error=failure
+        with self.assertRaises(RuntimeError) as caught:P.snapshot(auth,3306,self.schema,self.uuid)
+        self.assertIs(caught.exception,failure);self.assertTrue(auth.sessions[0].closed)
+        auth.fail_table=None;auth.current=213
+        recovered=P.snapshot(auth,3306,self.schema,self.uuid)
+        self.assertEqual(len(auth.sessions),2);self.assertTrue(auth.sessions[1].closed)
+        self.assertEqual(recovered['member_cash_withdraw']['nextId'],213)
+
+    def test_normal_report_uses_exact_checked_complete_readback_once_without_replacing_later_observations(self):
+        _,original,_=late()
+        with tempfile.TemporaryDirectory() as directory:
+            slot=SimpleNamespace(root=Path(directory));provider=b'original-provider-record'
+            (slot.root/'withdrawal-provider.json').write_bytes(provider)
+            with patch.object(P,'snapshot',return_value=copy.deepcopy(original)) as read:
+                result=P.normal_readback_rows(slot,object(),3307,self.schema,self.uuid,original,provider)
+            self.assertEqual(read.call_count,1);self.assertEqual(result,P.public_snapshot(original))
+            changed=copy.deepcopy(original);changed['ums_member']['nextId']+=1
+            with patch.object(P,'snapshot',return_value=changed) as read:
+                with self.assertRaisesRegex(ValueError,'effect/high-water change'):
+                    P.normal_readback_rows(slot,object(),3307,self.schema,self.uuid,original,provider)
+            self.assertEqual(read.call_count,1)
+            (slot.root/'withdrawal-provider.json').write_bytes(b'changed-provider')
+            with patch.object(P,'snapshot',return_value=copy.deepcopy(original)):
+                with self.assertRaisesRegex(ValueError,'repeated provider submit/query'):
+                    P.normal_readback_rows(slot,object(),3307,self.schema,self.uuid,original,provider)
+
+    def test_relative_phase_measurements_keep_original_deadline_and_fixed_source_stage_names(self):
+        report={};slot=SimpleNamespace(deadline=1500,owned=['source'],runtime_report_write=lambda *args:None)
+        with patch.object(P.time,'monotonic',side_effect=[10,310,760]):
+            P.checkpoint(slot,report,Path('unused'),'CANONICAL_BACKUP_RESTORE','CANONICAL_BACKUP')
+            slot.owned.append('normal')
+            P.checkpoint(slot,report,Path('unused'),'CANONICAL_BACKUP_RESTORE','CANONICAL_RESTORE')
+            P.observe_phase_timing(slot,report,'RESTORED_HELD_APPLICATION_START','APPLICATION_SLOT_START')
+        self.assertEqual(slot.deadline,1500)
+        self.assertEqual(report['phaseElapsed'],[
+            {'phase':'CANONICAL_BACKUP_RESTORE','substage':'CANONICAL_BACKUP','createdBootCount':1,'elapsedMillis':300000},
+            {'phase':'CANONICAL_BACKUP_RESTORE','substage':'CANONICAL_RESTORE','createdBootCount':2,'elapsedMillis':450000}])
+        self.assertEqual(report['lifecycleTiming'],{'budgetSeconds':1500,'elapsedMillis':760000,'remainingMillis':740000})
+        self.assertNotIn('private',json.dumps(report))
+
+    def test_phase_measurements_are_bounded_and_do_not_claim_an_unobserved_boot_ready_or_complete(self):
+        report={'boots':[],'completeBoots':[]};slot=SimpleNamespace(deadline=1500,owned=[])
+        with patch.object(P.time,'monotonic',return_value=100):
+            for _ in range(131):
+                P.observe_phase_timing(slot,report,'RESTORED_HELD_APPLICATION_START','APPLICATION_SLOT_START')
+        self.assertEqual(len(report['phaseElapsed']),128);self.assertIs(report['phaseElapsedTruncated'],True)
+        self.assertEqual(report['boots'],[]);self.assertEqual(report['completeBoots'],[])
+        self.assertEqual(slot.deadline,1500)
+
+    def test_original_global_budget_still_rejects_at_deadline_and_retains_finite_remaining_evidence(self):
+        slot=object.__new__(R.ApplicationSlot);slot.deadline=1600
+        with patch.object(R.time,'monotonic',return_value=1599):slot.budget()
+        self.assertEqual(slot.lifecycle_budget_observation,
+                {'budgetSeconds':1500,'elapsedMillis':1499000,'remainingMillis':1000})
+        with patch.object(R.time,'monotonic',return_value=1600):
+            with self.assertRaises(ValueError) as caught:slot.budget()
+        self.assertEqual(caught.exception.restore_reason_code,'APP_LIFECYCLE_BUDGET_EXHAUSTED')
+        self.assertEqual(slot.lifecycle_budget_observation,
+                {'budgetSeconds':1500,'elapsedMillis':1500000,'remainingMillis':0})
+        self.assertEqual(slot.deadline,1600)
 
 
 if __name__=='__main__':unittest.main()

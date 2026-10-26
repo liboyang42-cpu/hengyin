@@ -1,0 +1,31 @@
+{
+  "parent": "8b150cba25938a10cef8583b51454b6c3a40c864",
+  "codeFileCount": 3,
+  "newControlSourceCases": 8,
+  "verification": "NOT_RUN",
+  "patchBytes": 23396,
+  "patchSha256": "75b64f5fad88e864d26e6dc9b9c247b62a97933fc2cc99b8683a26adda61b2d7",
+  "files": [
+    {
+      "path": "ci/restore_application_http_runtime.py",
+      "beforeBlob": "8ecb196860605913fe272cc78ae1f25d14b5f2cf",
+      "afterBlob": "6b3acbe163a57b00ac70dba1d99d24e0f9353a51",
+      "bytes": 41403,
+      "sha256": "0c44d8370ffcd4ff7f507d7125aaf9e28611b886fca4c37efdf663883b21ed03"
+    },
+    {
+      "path": "ci/restore_application_http_probe.py",
+      "beforeBlob": "4a32d7b3840a6c7afe90e91c8a78f49d7831a576",
+      "afterBlob": "c43b6ee57f68ab9083274d21f87cd498d6aeda6e",
+      "bytes": 74246,
+      "sha256": "530a675e57476c8fa183457164a3c6228d3650cf09c6243494cb151f39b67cb4"
+    },
+    {
+      "path": "ci/test_restore_application_http_probe.py",
+      "beforeBlob": "e9ad1fbe4aeefb79e16fa2201afbcd3ba88244fe",
+      "afterBlob": "8bcf856d067850a419ddba034eeecdde8ca805d9",
+      "bytes": 124228,
+      "sha256": "3435500c547f68d71befb90705d623959ecc25411d327649e030662432ff7d4f"
+    }
+  ]
+}

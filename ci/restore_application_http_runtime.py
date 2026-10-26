@@ -175,7 +175,11 @@ class ApplicationSlot:
         self.manifest_hash=hashlib.sha256(json.dumps(self.class_hashes,sort_keys=True).encode()).hexdigest()
 
     def budget(self):
-        require(time.monotonic()<self.deadline,'fixed 1500-second restore application budget')
+        tick=time.monotonic()
+        self.lifecycle_budget_observation={'budgetSeconds':1500,
+                'elapsedMillis':max(0,int((tick-(self.deadline-1500))*1000)),
+                'remainingMillis':max(0,int((self.deadline-tick)*1000))}
+        require(tick<self.deadline,'fixed 1500-second restore application budget')
 
     def inspect(self,target):
         return json.loads(self.auth.command(self.auth.DOCKER+['inspect',target],timeout=10))[0]
