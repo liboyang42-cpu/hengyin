@@ -1,0 +1,10 @@
+--- a/ci/test_controlled_combination_entry.py
++++ b/ci/test_controlled_combination_entry.py
+@@ -68,6 +68,7 @@
+         budget = budget_controls_source.CombinedBudgetControls().subject_report()
+         budget.update(sourceSha=receipt['sourceSha'], runId=report['runId'], attempt=report['runAttempt'],
+                       database=receipt['database'])
++        budget['mysqlBootstrap'].update({key: budget[key] for key in ('sourceSha', 'runId', 'attempt', 'class')})
+         budget['source']['artifactJarSha256'] = receipt['jarSha256']
+         budget['javaProcesses'][1]['namespacePid'] = report['javaPid']
+         (directory / 'combined-http-budget.json').write_text(json.dumps(budget))

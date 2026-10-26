@@ -190,6 +190,11 @@ class CombinedBudgetControls(unittest.TestCase):
             report['slots'][role]['budget']={'cid':report['slots'][role]['cid'],'image':image,
                     'memory':memory,'memorySwap':memory,'nanoCpus':1000000000,'pids':256}
         report['mysql'].update(image=B.MYSQL,memory=B.MEMORY,memorySwap=B.MEMORY,nanoCpus=1000000000,pids=256)
+        report['mysqlBootstrap']={**B.identity(self.env()),'result':'READY','originalExit':0,'reportSha256':'a'*64,
+                'readiness':{'result':'BOTH_LOOPBACK_TCP_IDENTITIES_VERIFIED','cid':'2'*64,
+                    'serverUuid':'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','version':'8.0.45',
+                    'hostEndpoint':'127.0.0.1:33080','executionEndpoint':'127.0.0.1:3306'}}
+        report['mysqlAddressProof']={key:value for key,value in report['mysqlBootstrap']['readiness'].items() if key!='result'}
         return report
 
     def test_subject_finalize_does_not_demand_outer_storage_proof_before_it_exists(self):
@@ -215,4 +220,173 @@ class CombinedBudgetControls(unittest.TestCase):
             (directory/'combined-http-storage-cleanup.json').write_text(json.dumps(storage))
             with self.assertRaisesRegex(ValueError,'EXACT_BACKING_STORAGE_CLEANUP_REQUIRED'):
                 B.require_final_budget(directory,B.identity(self.env()),41,'f'*64,report['database'])
+    def resource_env(self):
+        env=self.env();name,network=B.mysql_names(env)
+        env.update(HTTP_MYSQL_CONTAINER=name,HTTP_MYSQL_CID='1'*64,
+                   HTTP_BUDGET_NETWORK=network,HTTP_BUDGET_NETWORK_ID='2'*64)
+        return env
+
+    def mysql_object(self):
+        env=self.resource_env()
+        return {'Id':'1'*64,'Name':'/'+env['HTTP_MYSQL_CONTAINER'],'Image':'sha256:'+'d'*64,
+                'Config':{'Image':B.MYSQL,'Labels':B.labels(env)},
+                'HostConfig':{'NetworkMode':env['HTTP_BUDGET_NETWORK'],'Memory':B.MEMORY,'MemorySwap':B.MEMORY,
+                              'NanoCpus':1000000000,'PidsLimit':256},
+                'State':{'Status':'exited','Running':False,'OOMKilled':True,'ExitCode':137,'Pid':0},
+                'NetworkSettings':{'Networks':{}}}
+
+    def network_object(self):
+        env=self.resource_env()
+        return {'Id':'2'*64,'Name':env['HTTP_BUDGET_NETWORK'],'Labels':B.labels(env),'Internal':False,'Containers':{}}
+
+    def cleanup_control(self,obj=None,net=None,write_fails=False,diagnostic_fails=False,lost_ids=False):
+        # Native owner transport doubles only; no application service or business response is mocked.
+        obj=obj or self.mysql_object();net=net or self.network_object();reports=[];mutations=[]
+        env=self.resource_env();env.pop('B_PAYMENT_FACT_DDL_APPROVED');env.pop('CHENGYIN_AI_REDIS_IT_DATABASE')
+        def object_read(kind,target):return obj if kind=='container' else net
+        def command(argv,**kwargs):
+            if argv[B.DOCKER.__len__():][:2]==['network','inspect']:return json.dumps([net]).encode()
+            mutations.append(argv);return b''
+        def publish(path,value):
+            reports.append(copy.deepcopy(value))
+            if write_fails:raise OSError('private write failure must not become public text')
+        original={**B.identity(env),'originalExit':1,'firstFailure':{'phase':'MYSQL_TCP_READINESS','type':'ValueError','reasonCode':'MYSQL_TCP_READY_BUDGET_EXHAUSTED'}}
+        if lost_ids:
+            original.update(mysql={'cid':env.pop('HTTP_MYSQL_CID'),'networkId':env.pop('HTTP_BUDGET_NETWORK_ID')})
+        with tempfile.TemporaryDirectory() as name,patch.dict(os.environ,env,clear=True),\
+             patch.object(B,'PUBLIC',Path(name)),patch.object(B,'object_or_absent',side_effect=object_read),\
+             patch.object(B,'inspect',return_value=obj),patch.object(B,'command',side_effect=command),\
+             patch.object(B,'absent'),patch.object(B,'read_bootstrap',return_value=original),\
+             patch.object(B,'write',side_effect=publish),patch.object(B,'gate',side_effect=AssertionError('business gate forbidden in cleanup')),\
+             patch.object(B,'mysql_diagnostic',side_effect=OSError('private diagnostic failed') if diagnostic_fails else None,
+                          return_value={'state':B.safe_mysql_state(obj)}) as diagnostic:
+            failure=None
+            try:B.cleanup_mysql()
+            except Exception as error:failure=error
+        return reports,mutations,failure,diagnostic.call_count
+
+    def test_stopped_oom_object_and_missing_live_endpoint_do_not_block_own_cleanup(self):
+        obj=self.mysql_object();obj['HostConfig']['Memory']=0
+        reports,mutations,failure,_=self.cleanup_control(obj=obj)
+        self.assertIsNone(failure)
+        self.assertEqual(mutations,[B.DOCKER+['rm','-f','1'*64],B.DOCKER+['network','rm','2'*64]])
+        result=reports[-1];self.assertEqual(result['result'],'EXACT_OWN_STORAGE_REMOVED')
+        self.assertTrue(result['mysqlAbsent']);self.assertTrue(result['networkAbsent'])
+        self.assertEqual(result['beforeCleanup']['OOMKilled'],True)
+        self.assertEqual(result['originalExit'],1)
+        self.assertEqual(result['firstFailure']['reasonCode'],'MYSQL_TCP_READY_BUDGET_EXHAUSTED')
+        self.assertFalse(result['q4q8Complete'])
+
+    def test_wrong_owner_is_neither_logged_nor_removed(self):
+        obj=self.mysql_object();net=self.network_object()
+        obj['Config']['Labels']['chengyin.http.source']='f'*40;net['Labels']['chengyin.http.source']='f'*40
+        reports,mutations,failure,diagnostics=self.cleanup_control(obj=obj,net=net)
+        self.assertIsInstance(failure,ValueError);self.assertEqual(mutations,[]);self.assertEqual(diagnostics,0)
+        self.assertIsNone(reports[-1]['mysqlAbsent']);self.assertIsNone(reports[-1]['networkAbsent'])
+
+    def test_write_failure_cannot_prevent_exact_native_cleanup_or_turn_green(self):
+        _,mutations,failure,_=self.cleanup_control(write_fails=True)
+        self.assertEqual(mutations,[B.DOCKER+['rm','-f','1'*64],B.DOCKER+['network','rm','2'*64]])
+        self.assertIsInstance(failure,ValueError)
+
+    def test_private_diagnostic_failure_does_not_prevent_owned_resource_removal(self):
+        reports,mutations,failure,_=self.cleanup_control(diagnostic_fails=True)
+        self.assertIsNone(failure);self.assertEqual(len(mutations),2)
+        self.assertEqual(reports[-1]['diagnostic']['result'],'UNKNOWN')
+
+    def test_attached_unidentified_container_prevents_network_deletion(self):
+        net=self.network_object();net['Containers']={'3'*64:{'Name':'not-attested'}}
+        reports,mutations,failure,_=self.cleanup_control(net=net)
+        self.assertIsInstance(failure,ValueError)
+        self.assertEqual(mutations,[B.DOCKER+['rm','-f','1'*64]])
+        self.assertTrue(reports[-1]['mysqlAbsent']);self.assertIsNone(reports[-1]['networkAbsent'])
+
+    def test_missing_actual_mysql_cid_is_not_adopted_from_a_foreign_name(self):
+        env=self.resource_env();env.pop('HTTP_MYSQL_CID')
+        with patch.dict(os.environ,env,clear=True),patch.object(B,'object_or_absent') as read:
+            with self.assertRaisesRegex(ValueError,'FIXED_BACKING_IDENTITY_REQUIRED'):B.owned_mysql(env)
+        read.assert_not_called()
+
+    def test_owner_accepts_only_declared_network_name_or_exact_known_id(self):
+        env=self.resource_env();obj=self.mysql_object();obj['HostConfig']['NetworkMode']='2'*64
+        with patch.object(B,'object_or_absent',return_value=obj),patch.object(B,'inspect',return_value=obj):
+            self.assertIs(B.owned_mysql(env),obj)
+            obj['HostConfig']['NetworkMode']='host'
+            with self.assertRaisesRegex(ValueError,'BACKING_NETWORK_CONFIG_CHANGED'):B.owned_mysql(env)
+
+    def test_daemon_failure_is_not_an_empty_resource_object(self):
+        with patch.object(B.subprocess,'run',return_value=SimpleNamespace(returncode=1,stderr=b'Cannot connect to Docker daemon')):
+            with self.assertRaisesRegex(ValueError,'DOCKER_INSPECTION_UNKNOWN'):B.object_or_absent('container','1'*64)
+
+    def test_stderr_and_exception_diagnostics_never_publish_secret_text(self):
+        private=b'ERROR 1045 Access denied for secret-user password=secret-value SQL=raw-body'
+        self.assertEqual(B.classify_mysql_stderr(private),'AUTHENTICATION_REJECTED')
+        diagnostic=B.resource_failure(ValueError('secret-value SQL=raw-body'),'MYSQL_TCP_READINESS')
+        self.assertEqual(diagnostic['reasonCode'],'UNCLASSIFIED_RESOURCE_FAILURE')
+        self.assertNotIn('secret',json.dumps(diagnostic));self.assertNotIn('SQL',json.dumps(diagnostic['reasonCode']))
+
+    def test_safe_state_excludes_runtime_error_and_health_raw_output(self):
+        obj=self.mysql_object();obj['State'].update(Error='secret-token argv raw',Health={'Status':'unhealthy','FailingStreak':2,
+                                                                                     'Log':[{'Output':'secret SQL password'}]})
+        state=B.safe_mysql_state(obj)
+        self.assertTrue(state['OOMKilled']);self.assertEqual(state['ExitCode'],137)
+        self.assertEqual(state['health'],{'status':'unhealthy','failingStreak':2})
+        self.assertNotIn('secret',json.dumps(state));self.assertNotIn('Output',json.dumps(state))
+
+    def test_tcp_probe_requires_same_uuid_and_keeps_password_only_on_stdin(self):
+        env=self.resource_env();calls=[]
+        good=b'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa\t8.0.45\t3306\n'
+        def response(argv,**kwargs):calls.append((argv,kwargs));return SimpleNamespace(returncode=0,stdout=good,stderr=b'')
+        with tempfile.TemporaryDirectory() as name,patch.dict(os.environ,env,clear=True),\
+             patch.object(B,'mysql_private_directory',return_value=Path(name)),patch.object(B.subprocess,'run',side_effect=response):
+            observed,proof=B.mysql_ready_probe('1'*64,B.time.monotonic()+90)
+        self.assertEqual(proof['serverUuid'],'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+        self.assertEqual(len(observed),2)
+        for argv,kwargs in calls:
+            self.assertNotIn('b'*48,' '.join(argv));self.assertIn(('b'*48).encode(),kwargs['input'])
+            self.assertIn('--defaults-file=/dev/stdin',argv);self.assertIn('--no-login-paths',argv)
+
+    def test_mismatched_tcp_endpoints_cannot_be_ready(self):
+        env=self.resource_env()
+        replies=[SimpleNamespace(returncode=0,stdout=(letter*8+'-'+letter*4+'-'+letter*4+'-'+letter*4+'-'+letter*12+'\t8.0.45\t3306\n').encode(),stderr=b'') for letter in ('a','c')]
+        with tempfile.TemporaryDirectory() as name,patch.dict(os.environ,env,clear=True),\
+             patch.object(B,'mysql_private_directory',return_value=Path(name)),patch.object(B.subprocess,'run',side_effect=replies):
+            _,proof=B.mysql_ready_probe('1'*64,B.time.monotonic()+90)
+        self.assertIsNone(proof)
+
+    def test_ready_budget_cannot_accept_late_success_or_invent_business_execution(self):
+        env=self.resource_env();report={**B.identity(env),'result':'NOT_COMPLETED'};writes=[]
+        with patch.dict(os.environ,env,clear=True),patch.object(B,'read_bootstrap',return_value=report),\
+             patch.object(B.time,'monotonic',side_effect=[0,91,92]),patch.object(B,'backing_mysql',return_value=(self.mysql_object(),{'cid':'1'*64})),\
+             patch.object(B,'mysql_ready_probe',return_value=({}, {'cid':'1'*64})),patch.object(B,'owned_mysql',return_value=self.mysql_object()),\
+             patch.object(B,'mysql_diagnostic',return_value={'state':{'Running':False}}),patch.object(B,'write',side_effect=lambda p,v:writes.append(copy.deepcopy(v))):
+            self.assertEqual(B.bootstrap_ready(),1)
+        self.assertEqual(writes[-1]['result'],'NOT_READY');self.assertEqual(writes[-1]['originalExit'],1)
+        self.assertEqual(writes[-1]['firstFailure']['reasonCode'],'MYSQL_TCP_READY_BUDGET_EXHAUSTED')
+
+    def test_application_prepare_cannot_use_unknown_bootstrap(self):
+        with patch.object(B,'read_bootstrap',return_value={**B.identity(self.env()),'result':'NOT_READY','originalExit':1,
+                                                          'readiness':{'result':'UNKNOWN'}}):
+            with self.assertRaisesRegex(ValueError,'BOOTSTRAP_NOT_VERIFIED'):B.require_mysql_bootstrap()
+
+    def test_failure_exit_is_persisted_before_optional_private_forensics(self):
+        env=self.resource_env();writes=[];original={**B.identity(env),'result':'READY','originalExit':0}
+        def private_capture(obj):
+            self.assertTrue(any(row.get('originalExit')==143 and row.get('firstFailure') for row in writes))
+            raise OSError('private forensic error must not erase original termination')
+        with patch.dict(os.environ,env,clear=True),patch.object(B,'read_bootstrap',return_value=original),\
+             patch.object(B,'owned_network',return_value=self.network_object()),patch.object(B,'owned_mysql',return_value=self.mysql_object()),\
+             patch.object(B,'mysql_diagnostic',side_effect=private_capture),patch.object(B,'write',side_effect=lambda p,v:writes.append(copy.deepcopy(v))):
+            B.bootstrap_failure(143)
+        self.assertEqual(writes[-1]['originalExit'],143);self.assertEqual(writes[-1]['result'],'NOT_READY')
+        self.assertEqual(writes[-1]['firstFailure']['reasonCode'],'SHELL_BOOTSTRAP_FAILED')
+        self.assertEqual(writes[-1]['captureFailure']['type'],'OSError')
+
+    def test_lost_env_ids_are_recovered_only_as_rechecked_actual_owner_ids(self):
+        reports,mutations,failure,_=self.cleanup_control(lost_ids=True)
+        self.assertIsNone(failure)
+        self.assertEqual(set(reports[-1]['recoveredIdentityFields']),{'HTTP_MYSQL_CID','HTTP_BUDGET_NETWORK_ID'})
+        self.assertEqual(mutations,[B.DOCKER+['rm','-f','1'*64],B.DOCKER+['network','rm','2'*64]])
+
+
 if __name__=='__main__':unittest.main()
