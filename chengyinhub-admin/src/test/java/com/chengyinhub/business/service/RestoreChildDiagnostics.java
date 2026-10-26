@@ -59,11 +59,15 @@ public final class RestoreChildDiagnostics {
         if (failure instanceof RestoreBusinessReconciliationFixture.CallbackRejected callback) {
             result.put("callback", Map.of("result", callback.outcome, "reason", callback.reason.name()));
         }
+        if (failure instanceof com.chengyinhub.business.service.ai.RestoreVoiceReconciliationFixture.VoiceFixtureFailure voice) {
+            result.put("voice", voice.observation());
+        }
         var types = new ArrayList<String>();
         Set<Throwable> seen = Collections.newSetFromMap(new IdentityHashMap<Throwable, Boolean>());
         String state = null; Integer code = null; Map<String, Object> origin = null;
         for (Throwable current = failure; current != null && types.size() < 8 && seen.add(current); current = current.getCause()) {
             String type = current instanceof RestoreBusinessReconciliationFixture.CallbackRejected
+                    || current instanceof com.chengyinhub.business.service.ai.RestoreVoiceReconciliationFixture.VoiceFixtureFailure
                     ? "java.lang.IllegalStateException" : current.getClass().getName();
             types.add(TYPES.contains(type) ? type : "UNKNOWN");
             for (StackTraceElement frame : current.getStackTrace()) {

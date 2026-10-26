@@ -538,6 +538,17 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
+      - name: Verify selected recovery and isolation protocol controls
+        if: github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected'
+        run: |
+          python3 -m unittest -v \
+            ci/test_restore_business_reconciliation_probe.py \
+            ci/test_restore_application_http_probe.py \
+            ci/test_combined_http_budget.py \
+            ci/test_authenticated_redis_recovery_probe.py \
+            ci/test_controlled_combination_probe.py \
+            ci/test_controlled_combination_entry.py \
+            ci/test_http_e2e_entry.py
       - name: Build and test backend
         run: |
           python3 -m unittest ci/test_wechat_registration_ci_contract.py

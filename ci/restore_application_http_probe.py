@@ -758,6 +758,7 @@ def run(name,schema,out,credentials):
             report['applicationDiagnostic']={'result':'UNKNOWN',
                     'failure':failure_diagnostic(diagnostic,report['phase'],report.get('substage'))}
         if hasattr(slot,'last_http'):report['lastHttpObservation']=slot.last_http
+        if hasattr(slot,'last_callback_observation'):report['lastCallbackObservation']=slot.last_callback_observation
         report['ownedAppCids']=slot.owned;report['removedAppCids']=slot.removed
         report['applicationStopHistory']=slot.stop_history
         if getattr(slot,'start_transition',None) is not None:report['applicationStartTransition']=dict(slot.start_transition)

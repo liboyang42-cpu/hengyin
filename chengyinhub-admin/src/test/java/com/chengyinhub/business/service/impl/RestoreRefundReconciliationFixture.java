@@ -7,6 +7,12 @@ import com.chengyinhub.business.mapper.*;
 import com.chengyinhub.business.service.*;
 import com.chengyinhub.business.service.support.RegistrationPaymentConsumptionReadService;
 import com.chengyinhub.common.config.RestoreDispatchGuard;
+import com.wechat.pay.java.service.payments.jsapi.JsapiService;
+import com.wechat.pay.java.service.payments.model.Transaction;
+import com.wechat.pay.java.service.payments.model.TransactionAmount;
+import com.wechat.pay.java.service.refund.model.Amount;
+import com.wechat.pay.java.service.refund.model.Refund;
+import com.wechat.pay.java.service.refund.model.Status;
 import java.io.*;
 import java.math.BigDecimal;
 import java.nio.file.*;
@@ -37,6 +43,8 @@ public final class RestoreRefundReconciliationFixture {
     private final RefundApplicationMapper mapper;
     private final String phase;
     private final boolean gap;
+    private int originalQueries;
+    private Throwable originalQueryFailure;
     private RestoreRefundReconciliationFixture() throws Exception {
         String scope=System.getenv("CHENGYIN_RESTORE_SCOPE");require(scope!=null&&scope.matches("[a-f0-9]{32}"),"owned scope");
         require("github-hosted".equals(System.getenv("RUNNER_ENVIRONMENT"))&&"true".equals(System.getenv("CHENGYIN_CI_RESTORE_BUSINESS")),"hosted admission");
@@ -89,13 +97,17 @@ public final class RestoreRefundReconciliationFixture {
             return RefundRequestResult.UNKNOWN;
         });
         when(provider.queryRefundFacts(any(WechatVerifiedPaymentFact.Reference.class),anyString())).thenAnswer(call->{
-            String no=call.getArgument(1);var identity=identity(no);var retained=external.original("REFUND","original_refund");
-            require(com.alibaba.fastjson2.JSON.toJSONString(identity,com.alibaba.fastjson2.JSONWriter.Feature.MapSortField).equals(
-                    com.alibaba.fastjson2.JSON.toJSONString(retained,com.alibaba.fastjson2.JSONWriter.Feature.MapSortField)),"original refund binding");
-            String state=external.state("REFUND","original_refund");external.append("REFUND","original_refund","QUERY",state,identity);
-            if(!"SUCCESS".equals(state))return Map.of("outRefundNo",no,"status","UNKNOWN");
-            if(facts.findRefundSuccess("merchant",no,"WX-"+no)!=null)return retainedCallback(mapper.selectByRefundNo(no));
-            return ARefundFactFixture.bindSuccess(facts,Map.of("outRefundNo",no,"outTradeNo","REG99","status","SUCCESS","refund","2000","total","6800","currency","CNY"),"TX99");
+            try {
+                WechatVerifiedPaymentFact.Reference payment=call.getArgument(0);
+                String no=call.getArgument(1);var retained=external.original("REFUND","original_refund");
+                var paid=facts.requireVerified(payment);
+                requireOriginalRefund(paid,mapper.selectByRefundNo(no),retained,no);
+                String state=external.state("REFUND","original_refund");
+                external.append("REFUND","original_refund","QUERY",state,retained);originalQueries++;
+                if(!"SUCCESS".equals(state))return Map.of("outRefundNo",no,"status","UNKNOWN");
+                if(findRetainedRefund(retained)!=null)return retainedCallback(mapper.selectByRefundNo(no));
+                return observeOriginalRefund(paid,retained,no,state);
+            }catch(Exception unavailable){originalQueryFailure=unavailable;throw unavailable;}
         });
         payout=new RefundPayoutServiceImpl();set(payout,"refundApplicationMapper",mapper);set(payout,"cmsRegistrationMapper",sql.getMapper(CmsRegistrationMapper.class));
         set(payout,"refundService",refunds);set(payout,"wechatPayService",provider);set(payout,"payoutTransactions",tx);
@@ -106,11 +118,80 @@ public final class RestoreRefundReconciliationFixture {
     private Map<String,Object> identity(String no) {
         var row=db.queryForMap("SELECT id,source_id,refund_no,refund_amount FROM refund_application WHERE refund_no=?",no);
         var receipt=db.queryForMap("SELECT payment_fact_id,payment_fact_hash,registration_no,transaction_id FROM cms_registration_payment_fact WHERE registration_id=99");
+        var paid=facts.requireVerified(new WechatVerifiedPaymentFact.Reference(((Number)receipt.get("payment_fact_id")).longValue(),(String)receipt.get("payment_fact_hash"))).facts();
         var value=new LinkedHashMap<String,Object>();value.put("refundId",((Number)row.get("id")).longValue());value.put("registrationId",99);
-        value.put("refundNo",no);value.put("businessNo","REG99");value.put("refundFen",new BigDecimal(row.get("refund_amount").toString()).movePointRight(2).longValueExact());
+        value.put("refundNo",no);value.put("businessNo",paid.businessOutTradeNo());value.put("refundFen",new BigDecimal(row.get("refund_amount").toString()).movePointRight(2).longValueExact());
         value.put("paymentFactId",((Number)receipt.get("payment_fact_id")).longValue());value.put("paymentFactHash",receipt.get("payment_fact_hash"));value.put("paymentTransactionId",receipt.get("transaction_id"));
-        value.put("providerRefundId","WX-"+no);value.put("mchid","merchant");value.put("appid","wx-original");value.put("currency","CNY");value.put("totalFen",6800);
+        value.put("providerRefundId","WX-"+no);value.put("mchid",paid.mchid());value.put("appid",paid.appid());value.put("currency",paid.currency());value.put("totalFen",paid.totalFen());
         return value;
+    }
+    /** The controlled provider journal is outside the backup. It is not itself a local verified fact. */
+    static void requireOriginalRefund(WechatVerifiedPaymentFactService.Stored paid,RefundApplication refund,
+            Map<String,Object> retained,String requestedNo) {
+        require(paid!=null&&refund!=null,"original refund and payment must exist");
+        var payment=paid.facts();payment.requireValid();
+        require(payment.kind()==WechatVerifiedPaymentFact.Kind.PAYMENT
+                &&paid.reference().hash().equals(payment.factHash()),"original payment provenance");
+        require(refund.getId()!=null&&refund.getId()>0&&refund.getSourceId()!=null&&refund.getSourceId()>0&&refund.getRefundAmount()!=null
+                &&"registration".equals(refund.getSourceType())
+                &&requestedNo!=null&&requestedNo.equals(refund.getRefundNo())&&requestedNo.equals(retained.get("refundNo"))
+                &&refund.getId()==originalLong(retained,"refundId")&&refund.getSourceId()==originalLong(retained,"registrationId")
+                &&refund.getRefundAmount().movePointRight(2).longValueExact()==originalLong(retained,"refundFen"),"original refund identity/amount");
+        require(paid.reference().id()==originalLong(retained,"paymentFactId")
+                &&paid.reference().hash().equals(retained.get("paymentFactHash"))
+                &&payment.businessOutTradeNo().equals(retained.get("businessNo"))
+                &&payment.transactionId().equals(retained.get("paymentTransactionId"))
+                &&payment.mchid().equals(retained.get("mchid"))&&payment.appid().equals(retained.get("appid"))
+                &&payment.currency().equals(retained.get("currency"))&&payment.totalFen()==originalLong(retained,"totalFen"),"original payment/refund binding");
+        require(retained.get("providerRefundId") instanceof String id&&id.matches("[A-Za-z0-9_-]{1,64}")
+                &&originalLong(retained,"refundFen")>0&&originalLong(retained,"refundFen")<=payment.totalFen(),"original provider refund identity");
+    }
+    private static long originalLong(Map<String,Object> retained,String key) {
+        Object value=retained.get(key);require(value instanceof Number,"original numeric identity required");
+        return new BigDecimal(value.toString()).longValueExact();
+    }
+    /** SDK boundary fixture only: no success without the independently retained RESULT=SUCCESS. */
+    static Refund originalRefundResponse(WechatVerifiedPaymentFactService.Stored paid,RefundApplication refund,
+            Map<String,Object> retained,String requestedNo,String state) {
+        requireOriginalRefund(paid,refund,retained,requestedNo);
+        require("SUCCESS".equals(state),"UNKNOWN is not an original success observation");
+        var response=new Refund();response.setOutRefundNo(requestedNo);response.setRefundId((String)retained.get("providerRefundId"));
+        response.setOutTradeNo(paid.facts().wxOutTradeNo());response.setTransactionId(paid.facts().transactionId());
+        response.setStatus(Status.SUCCESS);response.setSuccessTime(WechatVerifiedFactTestSupport.SUCCESS_TIME);
+        var amount=new Amount();amount.setCurrency(paid.facts().currency());amount.setTotal(paid.facts().totalFen());amount.setRefund(originalLong(retained,"refundFen"));response.setAmount(amount);
+        return response;
+    }
+    private Map<String,String> observeOriginalRefund(WechatVerifiedPaymentFactService.Stored paid,
+            Map<String,Object> retained,String no,String state) {
+        Refund response=originalRefundResponse(paid,mapper.selectByRefundNo(no),retained,no,state);
+        var payments=mock(JsapiService.class);
+        when(payments.queryOrderByOutTradeNo(any())).thenAnswer(call->{
+            com.wechat.pay.java.service.payments.jsapi.model.QueryOrderByOutTradeNoRequest request=call.getArgument(0);
+            require(!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive(),"original SDK query outside business transaction");
+            require(paid.facts().mchid().equals(request.getMchid())&&paid.facts().wxOutTradeNo().equals(request.getOutTradeNo()),"original payment SDK query");
+            var original=new Transaction();original.setMchid(paid.facts().mchid());original.setAppid(paid.facts().appid());
+            original.setOutTradeNo(paid.facts().wxOutTradeNo());original.setTransactionId(paid.facts().transactionId());
+            original.setTradeType(Transaction.TradeTypeEnum.valueOf(paid.facts().tradeType()));original.setTradeState(Transaction.TradeStateEnum.REFUND);
+            original.setSuccessTime(paid.facts().successAt().toString());var total=new TransactionAmount();total.setTotal(Math.toIntExact(paid.facts().totalFen()));total.setCurrency(paid.facts().currency());original.setAmount(total);return original;
+        });
+        var refundSdk=mock(com.wechat.pay.java.service.refund.RefundService.class);
+        when(refundSdk.queryByOutRefundNo(any())).thenAnswer(call->{
+            com.wechat.pay.java.service.refund.model.QueryByOutRefundNoRequest request=call.getArgument(0);
+            require(!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive(),"original refund SDK query outside business transaction");
+            require(no.equals(request.getOutRefundNo()),"original refund SDK query");return response;
+        });
+        var gateway=WechatVerifiedFactTestSupport.realPaymentGuards(source,paid.facts().mchid(),facts);
+        WechatVerifiedFactTestSupport.bind(gateway,payments,refundSdk,paid.facts().mchid());
+        Map<String,String> observed=gateway.queryRefundFacts(paid.reference(),no);
+        verify(payments).queryOrderByOutTradeNo(any());verify(refundSdk).queryByOutRefundNo(any());verifyNoMoreInteractions(payments,refundSdk);
+        require(observed!=null&&"SUCCESS".equals(observed.get("status")),"original gateway observation unavailable; keep gap held");
+        var stored=findRetainedRefund(retained);require(stored!=null,"original gateway observation must commit before callback replay");
+        require(stored.reference().id()==Long.parseLong(observed.get("verified_fact_id"))
+                &&stored.reference().hash().equals(observed.get("verified_fact_hash")),"original observation reference readback");
+        return observed;
+    }
+    private WechatVerifiedPaymentFactService.Stored findRetainedRefund(Map<String,Object> retained) {
+        return facts.findRefundSuccess((String)retained.get("mchid"),(String)retained.get("refundNo"),(String)retained.get("providerRefundId"));
     }
     public static void main(String[] args)throws Exception{
         try {
@@ -129,6 +210,9 @@ public final class RestoreRefundReconciliationFixture {
             if(!gap) {
                 Map<String,String> result=ReflectionTestUtils.invokeMethod(original,"facts",mapper.selectRefundApplicationById(request.getId()));
                 require(refunds.handleRefundNotify(result),"real verified original refund callback commits");
+            }else {
+                require(findRetainedRefund(external.original("REFUND","original_refund"))==null,"gap backup must not contain a local refund success");
+                require("UNKNOWN".equals(external.state("REFUND","original_refund")),"gap success must arrive only after backup");
             }
             signal("BACKUP_READY");
             try(var input=new BufferedReader(new InputStreamReader(System.in))) {
@@ -153,6 +237,10 @@ public final class RestoreRefundReconciliationFixture {
         // Original terminal payout and verified callback replay remain legal; cannot enter provider a second time.
         if(!gap || restoring) {
             payout.payoutAfterReview(existing.getId());
+            if(gap&&restoring) {
+                if(originalQueryFailure!=null)throw new IllegalStateException("original refund observation unavailable; gap remains held",originalQueryFailure);
+                require(originalQueries>0,"gap owner must query its original payment reference before replay");
+            }
             boolean ack=refunds.handleRefundNotify(retainedCallback(existing));
             require(ack==!restoring,"actual callback must pause after registration during restore, normal boot replays DONE");
         }
@@ -161,10 +249,26 @@ public final class RestoreRefundReconciliationFixture {
         evidence.put("blockedMethods",restoring?List.of("RefundServiceImpl.saveBackOfficeRefund","WechatPaymentSdkGateway.submitRefund"):List.of());
         RestoreProviderJournal.evidence(evidence);
     }
-    private Map<String,String> retainedCallback(RefundApplication original) {
-        var stored=facts.findRefundSuccess("merchant",original.getRefundNo(),"WX-"+original.getRefundNo());
+    private Map<String,String> retainedCallback(RefundApplication original) throws Exception {
+        var retained=external.original("REFUND","original_refund");
+        var payment=facts.requireVerified(new WechatVerifiedPaymentFact.Reference(originalLong(retained,"paymentFactId"),(String)retained.get("paymentFactHash")));
+        requireOriginalRefund(payment,original,retained,original.getRefundNo());
+        var stored=findRetainedRefund(retained);
+        return retainedRefundCallback(payment,original,retained,stored);
+    }
+    static Map<String,String> retainedRefundCallback(WechatVerifiedPaymentFactService.Stored payment,RefundApplication original,
+            Map<String,Object> retained,WechatVerifiedPaymentFactService.Stored stored) {
+        requireOriginalRefund(payment,original,retained,original.getRefundNo());
         require(stored!=null,"read original persisted refund fact; never recreate it for replay");
-        var fact=stored.facts();var value=new LinkedHashMap<String,String>();
+        var fact=stored.facts();fact.requireValid();
+        require(fact.kind()==WechatVerifiedPaymentFact.Kind.REFUND&&stored.reference().hash().equals(fact.factHash())
+                &&fact.mchid().equals(retained.get("mchid"))&&fact.appid().equals(retained.get("appid"))
+                &&fact.merchantEventNo().equals(retained.get("refundNo"))&&fact.providerId().equals(retained.get("providerRefundId"))
+                &&fact.businessOutTradeNo().equals(payment.facts().businessOutTradeNo())&&fact.wxOutTradeNo().equals(payment.facts().wxOutTradeNo())
+                &&fact.transactionId().equals(payment.facts().transactionId())&&fact.tradeType().equals(payment.facts().tradeType())
+                &&fact.currency().equals(payment.facts().currency())&&fact.amountFen()==originalLong(retained,"refundFen")
+                &&fact.totalFen()==payment.facts().totalFen()&&Objects.equals(fact.intentRequestHash(),payment.facts().intentRequestHash()),"retained refund fact is not the original observation");
+        var value=new LinkedHashMap<String,String>();
         value.put("outRefundNo",fact.merchantEventNo());value.put("outTradeNo",fact.businessOutTradeNo());value.put("status","SUCCESS");
         value.put("refund",Long.toString(fact.amountFen()));value.put("total",Long.toString(fact.totalFen()));value.put("currency",fact.currency());
         value.put("mchid",fact.mchid());value.put("appid",fact.appid());value.put("tradeType",fact.tradeType());value.put("transactionId",fact.transactionId());

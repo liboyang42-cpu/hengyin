@@ -393,6 +393,32 @@ class ChildExitControls(unittest.TestCase):
         self.assertEqual('UNREADABLE_OR_UNTRUSTED', self.capture(marker + marker)['diagnosticState'])
         self.assertEqual('EXCEEDS_FIXED_BUDGET', self.capture(b'x' * 1048577)['diagnosticState'])
 
+    def test_voice_observation_is_fixed_enum_only_and_bound_to_original_child_phase(self):
+        identity = dict(self.identity(), cohort='voice-complete', phase='SOURCE',
+                        childClass='com.chengyinhub.business.service.ai.RestoreVoiceReconciliationFixture')
+        voice = dict(operation='SOURCE_KNOWN', expected='READY', intentState='PENDING',
+                     profileState='PENDING', selection='SELECTED', providerStep='QUERY_JOURNAL')
+        with patch.object(self, 'identity', return_value=identity):
+            row = dict(self.typed(), stage='SOURCE_TIMELINE', voice=voice, causeTypes=['java.lang.IllegalStateException'],
+                       sqlState=None, sqlErrorCode=None, origin={'class':identity['childClass'], 'line':99})
+            def capture(value):
+                return self.capture(b'RESTORE_CHILD_FAILURE_V1:' + json.dumps(value).encode() + b'\n')
+            observed = capture(row)
+            self.assertEqual('TYPED_FAILURE', observed['diagnosticState'])
+            self.assertEqual(voice, observed['javaFailure']['voice'])
+            for key in voice:
+                bad = dict(row, voice=dict(voice, **{key:'PRIVATE_SECRET_CANARY'}))
+                result = capture(bad)
+                self.assertEqual('UNREADABLE_OR_UNTRUSTED', result['diagnosticState']); self.assertNotIn('PRIVATE', json.dumps(result))
+            for bad in (dict(row, voice=dict(voice, payload='PRIVATE_SECRET_CANARY')),
+                        dict(row, callback={'result':'FAIL','reason':'UNKNOWN'}),
+                        dict(row, stage='SOURCE_SCHEMA')):
+                self.assertEqual('UNREADABLE_OR_UNTRUSTED', capture(bad)['diagnosticState'])
+            with patch.object(self, 'identity', return_value=dict(identity, childClass=p.CHILD)):
+                self.assertEqual('UNREADABLE_OR_UNTRUSTED', capture(row)['diagnosticState'])
+            with patch.object(self, 'identity', return_value=dict(identity, phase='NORMAL_READBACK')):
+                self.assertEqual('UNREADABLE_OR_UNTRUSTED', capture(row)['diagnosticState'])
+
     def test_unknown_raw_exit_is_unknown_and_only_exact_fixed_launcher_header_is_classified(self):
         self.assertEqual('NO_TYPED_FAILURE', self.capture(b'PRIVATE_SECRET_CANARY')['diagnosticState'])
         raw = ('Error: Could not find or load main class ' + p.CHILD + '\nPRIVATE_SECRET_CANARY').encode()

@@ -72,6 +72,7 @@ public final class RestoreWithdrawalReconciliationFixture {
         var provider=mock(IWechatPayService.class);
         when(provider.transferToBalance(any(CashWithdrawTransferIntent.class))).thenAnswer(call->{
             CashWithdrawTransferIntent intent=call.getArgument(0);store.validateRequest(intent);
+            require(Long.valueOf(member).equals(store.cash.selectById(intent.withdrawalId()).getMemberId()),"original provider actor");
             String name=name(intent.memberId()==null?member:intent.memberId());
             external.append("WITHDRAWAL",name,"SUBMIT","ACCEPTED",identity(intent));
             external.append("WITHDRAWAL",name,"RESULT",name.contains("unknown")?"UNKNOWN":"SUCCESS",identity(intent));
@@ -80,13 +81,29 @@ public final class RestoreWithdrawalReconciliationFixture {
         when(provider.queryTransferResult(any(CashWithdrawTransferIntent.class))).thenAnswer(call->{
             CashWithdrawTransferIntent intent=call.getArgument(0); store.validateRequest(intent);
             String name=name(member); var original=external.original("WITHDRAWAL",name);
-            require(Objects.equals(original.get("wireHash"),FundsRecoveryProcessProbe.wireHash(intent)),"original provider wire");
+            requireSameProviderIdentity(identity(intent),original);
             String state=external.state("WITHDRAWAL",name);
             external.append("WITHDRAWAL",name,"QUERY",state,identity(intent));
             return "SUCCESS".equals(state)?FundsRecoveryProcessProbe.terminal(intent,"SUCCESS"):Map.of("result","UNKNOWN");
         });
-        ReflectionTestUtils.setField(AopTestUtils.getTargetObject(service),"wechatPayService",provider);
-        return service;
+        return bindProvider(service,provider);
+    }
+
+    static ICashWithdrawService bindProvider(ICashWithdrawService service,IWechatPayService provider) {
+        require(service!=null && provider!=null && org.springframework.aop.support.AopUtils.isAopProxy(service),"original transactional owner required");
+        // Keep generic unwrapping separate from setField's Object/Class overloads. An inline invocation
+        // can infer Class and cast the real service before reflection even inspects its existing field.
+        Object target=AopTestUtils.getUltimateTargetObject(service);
+        require(target instanceof CashWithdrawServiceImpl,"original cash owner required");
+        ReflectionTestUtils.setField(target,"wechatPayService",provider);
+        require(ReflectionTestUtils.getField(target,"wechatPayService")==provider,"typed provider binding not installed");
+        return service; // Retain ALL original advice/transaction boundaries; never return the unwrapped target.
+    }
+
+    static void requireSameProviderIdentity(Map<String,Object> expected,Map<String,Object> recorded) {
+        require(expected!=null && recorded!=null && com.alibaba.fastjson2.JSON.toJSONString(expected,
+                com.alibaba.fastjson2.JSONWriter.Feature.MapSortField).equals(com.alibaba.fastjson2.JSON.toJSONString(recorded,
+                com.alibaba.fastjson2.JSONWriter.Feature.MapSortField)),"original provider identity");
     }
     private String name(long member) {return switch((int)member){case 61->"ledger_success";case 62->"master_success";case 63->"ledger_unknown";case 64->"lost_ledger_success";default->throw new IllegalArgumentException("fixed actor");};}
     private Map<String,Object> identity(CashWithdrawTransferIntent intent) {

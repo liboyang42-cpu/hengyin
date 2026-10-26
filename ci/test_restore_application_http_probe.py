@@ -1355,7 +1355,7 @@ class RestoreHttpMultiBootHandoffControls(unittest.TestCase):
             raise AssertionError('unexpected Docker command')
 
         def assert_old_files_absent(self):
-            if (self.slot.root/'ready.json').exists() or (self.slot.root/'startup.json').exists():
+            if any((self.slot.root/name).exists() for name in ('ready.json','startup.json','callback-diagnostic.json','callback-diagnostic.next')):
                 raise AssertionError('old ready/startup was reused before new create')
 
         def subprocess(self,argv,**kwargs):
@@ -1530,6 +1530,127 @@ class RestoreHttpMultiBootHandoffControls(unittest.TestCase):
         frame=diagnostic['sourceFrame'];self.assertEqual(frame['path'],'ci/restore_application_http_probe.py')
         self.assertEqual((ROOT/frame['path']).read_text().splitlines()[frame['line']-1].strip(),'value=good(response)')
         self.assertNotIn('private-body-canary',json.dumps(diagnostic))
+
+
+
+class RestoreHttpCallbackReplayObservationControls(unittest.TestCase):
+    """Actual runtime observer/HTTP parser with controlled child document and curl bytes only."""
+    def slot(self,directory):
+        slot,_,_,_=RestoreHttpGracefulStopControls().running_slot(directory)
+        slot.budget=lambda:None
+        return slot
+
+    def document(self,slot,sequence=1,status='THREW',stage='REGISTRATION_CALLBACK'):
+        value={key:slot.launch[key] for key in ('sourceSha','jarSha256','schema','serverUuid')}
+        value.update(classManifestSha256=slot.manifest_hash,scope=slot.name[8:],
+                bootId=slot.boots[-1]['bootId'],javaPid=1,operation='VERIFIED_CALLBACK',sequence=sequence,
+                status=status,stage=stage,reasonCode='UNCLASSIFIED_FAILURE' if status=='THREW' else 'NONE',
+                outcome='FAIL' if status=='RETURNED' else 'NONE',
+                causeTypes=['DATA_ACCESS','SQL'] if status=='THREW' else [],
+                origin={'class':'com.chengyinhub.business.service.impl.WxPaymentCallbackInboxServiceImpl','line':123}
+                       if status=='THREW' else None,
+                sqlState='23000' if status=='THREW' else None,sqlErrorCode=1062 if status=='THREW' else None)
+        (slot.root/'callback-diagnostic.json').write_text(json.dumps(value))
+        return value
+
+    def test_real_bounded_document_binds_original_boot_scope_and_fixed_stage_type_fields(self):
+        with tempfile.TemporaryDirectory() as directory:
+            slot=self.slot(directory);value=self.document(slot)
+            self.assertEqual(slot.read_callback_observation(),value)
+            self.assertEqual(value['stage'],'REGISTRATION_CALLBACK')
+            self.assertEqual(value['reasonCode'],'UNCLASSIFIED_FAILURE')
+            self.assertEqual(value['sqlState'],'23000');self.assertEqual(value['sqlErrorCode'],1062)
+            self.assertNotIn('message',value);self.assertNotIn('stack',value);self.assertNotIn('cause',value)
+
+    def test_foreign_unbounded_unclassified_raw_or_wrong_scalar_document_is_unknown_not_a_business_result(self):
+        for kind in ('source','jar','schema','uuid','boot','sequence','pid','stage','type','reason','origin','sql','raw','size','symlink'):
+            with self.subTest(kind=kind),tempfile.TemporaryDirectory() as directory:
+                slot=self.slot(directory);value=self.document(slot)
+                if kind=='source':value['sourceSha']='b'*40
+                elif kind=='jar':value['jarSha256']='b'*64
+                elif kind=='schema':value['schema']='foreign'
+                elif kind=='uuid':value['serverUuid']='foreign'
+                elif kind=='boot':value['bootId']='foreign'
+                elif kind=='sequence':value['sequence']=True
+                elif kind=='pid':value['javaPid']=True
+                elif kind=='stage':value['stage']='private-stage-canary'
+                elif kind=='type':value['causeTypes']=['private-type-canary']
+                elif kind=='reason':value['reasonCode']='private-reason-canary'
+                elif kind=='origin':value['origin']={'class':'private-class-canary','line':1}
+                elif kind=='sql':value['sqlState']='private-SQL-canary'
+                elif kind=='raw':value['message']='private-payload-canary'
+                path=slot.root/'callback-diagnostic.json';path.write_text(json.dumps(value))
+                if kind=='size':path.write_text('x'*4097)
+                elif kind=='symlink':path.unlink();path.symlink_to(slot.root/'config.json')
+                result=slot.callback_observation()
+                self.assertEqual(result,{'result':'UNKNOWN','reason':'PRIVATE_OBSERVATION_REJECTED'})
+                self.assertNotIn('private-',json.dumps(result))
+
+    def test_received_business500_stays_failure_and_fresh_controller_cause_is_observed_without_rawbody(self):
+        with tempfile.TemporaryDirectory() as directory:
+            slot=self.slot(directory)
+            def transport(*args,**kwargs):
+                self.document(slot,2)
+                return b'{"code":500,"msg":"private-response-canary"}\n200'
+            slot.auth.command=transport
+            response=slot.http('/__restore_http/verified-callback','controlled',{})
+            self.assertEqual((response[0],response[1]['code']),(200,500))
+            with self.assertRaises(ValueError) as caught:P.good(response)
+            self.assertEqual(caught.exception.restore_reason_code,'HTTP_OPERATION_REJECTED')
+            observed=slot.last_callback_observation
+            self.assertIs(observed['newControllerExecution'],True)
+            self.assertEqual(observed['after']['value']['stage'],'REGISTRATION_CALLBACK')
+            self.assertEqual(observed['after']['value']['causeTypes'],['DATA_ACCESS','SQL'])
+            self.assertNotIn('private-response-canary',json.dumps(slot.last_http)+json.dumps(observed))
+
+    def test_unchanged_prior_returned_diagnostic_cannot_explain_new_business500(self):
+        with tempfile.TemporaryDirectory() as directory:
+            slot=self.slot(directory);self.document(slot,1,'RETURNED','RESPONSE')
+            slot.auth.command=lambda *args,**kwargs:b'{"code":500}\n200'
+            response=slot.http('/__restore_http/verified-callback','controlled',{})
+            self.assertIs(slot.last_callback_observation['newControllerExecution'],False)
+            self.assertEqual(slot.last_callback_observation['after']['value']['status'],'RETURNED')
+            with self.assertRaises(ValueError):P.good(response)
+
+    def test_transport_exception_is_preserved_while_entered_controller_is_never_an_ack(self):
+        with tempfile.TemporaryDirectory() as directory:
+            slot=self.slot(directory);original=RuntimeError('private-transport-canary')
+            def transport(*args,**kwargs):
+                self.document(slot,1,'ENTERED','REGISTRATION_CALLBACK');raise original
+            slot.auth.command=transport
+            with self.assertRaises(RuntimeError) as caught:slot.http('/__restore_http/verified-callback','controlled',{})
+            self.assertIs(caught.exception,original)
+            self.assertIs(slot.last_callback_observation['newControllerExecution'],True)
+            self.assertEqual(slot.last_callback_observation['after']['value']['status'],'ENTERED')
+            self.assertEqual(slot.last_http['result'],'ATTEMPTED')
+            self.assertNotIn('private-transport-canary',json.dumps(slot.last_callback_observation))
+
+    def test_unreadable_prior_observation_keeps_correlation_unknown_even_if_current_document_is_valid(self):
+        with tempfile.TemporaryDirectory() as directory:
+            slot=self.slot(directory);(slot.root/'callback-diagnostic.json').write_text('private-truncated-canary')
+            def transport(*args,**kwargs):
+                self.document(slot,2)
+                return b'{"code":500}\n200'
+            slot.auth.command=transport
+            response=slot.http('/__restore_http/verified-callback','controlled',{})
+            self.assertEqual(slot.last_callback_observation['newControllerExecution'],'UNKNOWN')
+            with self.assertRaises(ValueError):P.good(response)
+            self.assertNotIn('private-truncated-canary',json.dumps(slot.last_callback_observation))
+
+    def test_new_boot_resets_only_old_diagnostic_files_and_preserves_the_original_reference(self):
+        with tempfile.TemporaryDirectory() as directory:
+            driver=RestoreHttpMultiBootHandoffControls.Driver(directory);slot=driver.slot
+            with driver.active():
+                driver.first_three()
+                receipt=slot.root/'callback-reference.json';receipt.write_bytes(b'controlled-original-reference')
+                (slot.root/'callback-diagnostic.json').write_bytes(b'old-observation')
+                (slot.root/'callback-diagnostic.next').write_bytes(b'old-partial-observation')
+                driver.begin('target','invalid')
+                self.assertFalse((slot.root/'callback-diagnostic.json').exists())
+                self.assertFalse((slot.root/'callback-diagnostic.next').exists())
+                self.assertEqual(receipt.read_bytes(),b'controlled-original-reference')
+                self.assertEqual(slot.start_transition['stage'],'READY')
+                slot.stop(remove=False);slot.verify_all_stopped_logs()
 
 
 if __name__=='__main__':unittest.main()

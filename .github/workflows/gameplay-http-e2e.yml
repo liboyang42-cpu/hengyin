@@ -81,9 +81,8 @@ jobs:
       - name: Resolve candidate test dependencies before offline execution
         run: |
           if [ "$HTTP_SCOPE" = controlled-combination ]; then
-            mvn -B -q -pl chengyinhub-admin -am package -DskipTests
-            # -DskipTests does not resolve Surefire's dynamically selected existing provider.
-            mvn -B -q -N org.apache.maven.plugins:maven-dependency-plugin:3.10.0:get -Dartifact=org.apache.maven.surefire:surefire-junit-platform:3.5.6 -Dtransitive=true
+            # Original package/get and offline preflight use the execution image/core/settings/cache.
+            python3 -I ci/combined_http_budget.py warm-cache
           else
             mvn -B -q -pl chengyinhub-admin -am test -DskipTests
           fi

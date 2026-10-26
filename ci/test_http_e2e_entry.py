@@ -447,6 +447,10 @@ def safe_maven_failure(log_path):
                         'copy-dependencies', 'resolve'}:
                 result['goal'] = goal
             break
+    if 'plugin' not in result:
+        spec = importlib.util.spec_from_file_location('http_offline_plugin_diagnostic', ROOT / 'ci/combined_http_budget.py')
+        owner = importlib.util.module_from_spec(spec); spec.loader.exec_module(owner)
+        result.update(owner.safe_plugin_resolution(text))
     if 'offline mode' in text and ('Cannot access ' in text or 'has not been downloaded' in text):
         result['category'] = 'offline-resolution'
     elif any(marker in text for marker in ('Failed to load ApplicationContext', 'Error occurred in starting fork',

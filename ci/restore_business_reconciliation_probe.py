@@ -103,7 +103,7 @@ def child_failure(path, expected):
         require(len(rows) == 1 and len(rows[0]) <= 8192, 'one bounded typed failure required')
         row = json.loads(rows[0])
         base_keys = {'protocol', 'stage', 'sourceSha', 'scope', 'boot', 'cohort', 'causeTypes', 'sqlState', 'sqlErrorCode', 'origin'}
-        require(set(row) in (base_keys, base_keys | {'callback'}),
+        require(set(row) in (base_keys, base_keys | {'callback'}, base_keys | {'voice'}),
                 'typed failure shape differs')
         require(row['protocol'] == 'RESTORE_CHILD_FAILURE_V1' and row['stage'] in CHILD_STAGES
                 and all(row[key] == expected[key] for key in ('sourceSha', 'scope', 'boot', 'cohort')),
@@ -126,6 +126,30 @@ def child_failure(path, expected):
                     and type(callback['result']) is str and callback['result'] in ('FAIL', 'NULL', 'OTHER')
                     and type(callback['reason']) is str and callback['reason'] in CALLBACK_REASONS,
                     'unreviewed callback rejection category')
+        if 'voice' in row:
+            voice = row['voice']
+            require(expected['childClass'] == 'com.chengyinhub.business.service.ai.RestoreVoiceReconciliationFixture'
+                    and expected['cohort'] in ('voice-complete', 'voice-gap')
+                    and type(voice) is dict and set(voice) == {
+                        'operation', 'expected', 'intentState', 'profileState', 'selection', 'providerStep'},
+                    'unreviewed voice observation shape')
+            allowed = {
+                'operation': ('SOURCE_KNOWN', 'SOURCE_UNKNOWN', 'OWNER_KNOWN', 'NORMAL_REPLAY', 'OWNER_UNKNOWN'),
+                'expected': ('READY', 'UNKNOWN'),
+                'intentState': ('PREPARED', 'IN_FLIGHT', 'UNKNOWN', 'NOT_SENT', 'PENDING', 'READY', 'MISSING', 'UNREVIEWED'),
+                'profileState': ('EMPTY', 'PENDING', 'READY', 'FAILED', 'MISSING', 'UNREVIEWED'),
+                'selection': ('SELECTED', 'SUPERSEDED', 'MISSING'),
+                'providerStep': ('NONE', 'INPUT', 'SUBMIT_ROW', 'SUBMIT_JOURNAL', 'QUERY_ROW', 'QUERY_JOURNAL'),
+            }
+            require(all(type(voice[key]) is str and voice[key] in values for key, values in allowed.items()),
+                    'unreviewed voice observation enum')
+            source = voice['operation'].startswith('SOURCE_')
+            require((source and expected.get('phase') == 'SOURCE' and row['stage'] == 'SOURCE_TIMELINE')
+                    or (not source and expected.get('phase') in ('RESTORED_OWNER', 'RESTORED_INVALID_OWNER',
+                        'RESTORED_EMPTY_OWNER', 'NORMAL_READBACK') and row['stage'] == 'OWNER_OBSERVATION'),
+                    'voice observation phase mismatch')
+            require(voice['operation'] != 'NORMAL_REPLAY' or expected.get('phase') == 'NORMAL_READBACK',
+                    'normal voice replay belongs to normal readback only')
         evidence.update(diagnosticState='TYPED_FAILURE', javaFailure=row)
     except BaseException:
         evidence['diagnosticState'] = 'UNREADABLE_OR_UNTRUSTED'

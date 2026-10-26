@@ -189,7 +189,10 @@ class CombinedBudgetControls(unittest.TestCase):
                                  {'role':'SUREFIRE','namespacePid':41,'cgroup':{'limits':limits}}]
         for role,image,memory in (('app',B.JDK,B.MEMORY),('redis',B.REDIS,67108864)):
             report['slots'][role]['budget']={'cid':report['slots'][role]['cid'],'image':image,
-                    'memory':memory,'memorySwap':memory,'nanoCpus':1000000000,'pids':256}
+                    'imageId':'sha256:'+'d'*64,'memory':memory,'memorySwap':memory,'nanoCpus':1000000000,'pids':256}
+        report['cacheProof']={'image':B.JDK,'imageId':'sha256:'+'d'*64,'mavenVersion':'3.9.11','mavenCoreSha256':'c'*64,
+                             'settingsSha256':B.hashlib.sha256(B.EMPTY_SETTINGS.encode()).hexdigest(),
+                             'cache':{'files':1,'bytes':1,'sha256':'e'*64},'reportSha256':'a'*64}
         report['mysql'].update(image=B.MYSQL,memory=B.MEMORY,memorySwap=B.MEMORY,nanoCpus=1000000000,pids=256)
         report['mysqlBootstrap']={**B.identity(self.env()),'result':'READY','originalExit':0,'reportSha256':'a'*64,
                 'hostPath':{'result':'ORIGINAL_OWNED_MYSQL_RELAY','mysqlCid':'2'*64,'hostEndpoint':'127.0.0.1:33080','closedAfterReadiness':True},
@@ -569,6 +572,198 @@ class CombinedBudgetControls(unittest.TestCase):
         with patch.dict(os.environ,{},clear=True):
             with self.assertRaisesRegex(RuntimeError,'MySQL relay identity changed before bind'):
                 with owner._owned_mysql_relay({'id':'original'},lambda:{'id':'changed'}):self.fail('changed target bound')
+
+    def test_cache_warmup_and_execution_use_same_core_repository_and_empty_settings(self):
+        warm=B.fixed_cache_command()[1];execution=B.fixed_maven_command()
+        self.assertEqual(B.CORE_VERSION,'3.9.11');self.assertIn('maven:3.9.11-eclipse-temurin-21@sha256:',B.JDK)
+        for flag in ('--settings','--global-settings','-Dmaven.repo.local=/cache/repository'):
+            self.assertIn(flag,warm);self.assertIn(flag,execution)
+        self.assertIn("'package' '-DskipTests'",warm);self.assertIn("'-o'",warm)
+        self.assertIn('OFFLINE_TEST_PREFLIGHT',warm);self.assertIn('ORIGINAL_PROVIDER_GET',warm)
+        self.assertIn('org.apache.maven.plugins:maven-dependency-plugin:3.10.0:get',warm)
+        self.assertIn('org.apache.maven.surefire:surefire-junit-platform:3.5.6',warm)
+        self.assertIn('-o',execution);self.assertNotIn('-DskipTests',execution);self.assertNotIn('-Dmaven.test.skip=true',execution)
+        self.assertEqual(B.EMPTY_SETTINGS,'<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"/>\n')
+
+    def cache_receipt(self):
+        proof=self.subject_report()['cacheProof']
+        return {**B.identity(self.env()),**{k:v for k,v in proof.items() if k!='reportSha256'},
+                'result':'PINNED_OFFLINE_TEST_PREFLIGHT_PROVEN','originalExit':0,'failures':[],
+                'pomSha256':{'pom.xml':'f'*64},'budget':{'memory':B.MEMORY,'memorySwap':B.MEMORY,'nanoCpus':1000000000,'pids':256},
+                'cgroup':{'limits':{'memory.max':str(B.MEMORY),'memory.swap.max':'0','cpu.max':'100000 100000','pids.max':'256'}},
+                'cleanup':{'result':'EXACT_CID_REMOVED_AND_ABSENT','terminal':{'OOMKilled':False,'ExitCode':143}}}
+
+    def check_cache_receipt(self,report,**changes):
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/'cache.json';path.write_text(json.dumps(report))
+            with patch.dict(os.environ,self.env(),clear=True),patch.object(B,'CACHE_REPORT',path),\
+                 patch.object(B,'cache_inputs',return_value=changes.get('poms',{'pom.xml':'f'*64})),\
+                 patch.object(B,'cache_manifest',return_value=changes.get('cache',self.subject_report()['cacheProof']['cache'])):
+                return B.verified_cache(Path(directory))
+
+    def test_preparation_receipt_binds_source_core_settings_poms_cache_and_cleanup(self):
+        result=self.check_cache_receipt(self.cache_receipt())
+        self.assertEqual(result['mavenVersion'],'3.9.11');self.assertEqual(result['image'],B.JDK)
+        self.assertEqual(len(result['reportSha256']),64)
+        for key,value in [('sourceSha','b'*40),('runId','99'),('attempt','9'),('class','GenericGameplayHttpE2eIT'),
+                          ('mavenVersion','3.9.12'),('image','maven:latest'),('settingsSha256','0'*64),
+                          ('originalExit',1),('result','NOT_ACCEPTED')]:
+            report=self.cache_receipt();report[key]=value
+            with self.assertRaisesRegex(ValueError,'OFFLINE_CACHE_PREFLIGHT_REQUIRED'):self.check_cache_receipt(report)
+        report=self.cache_receipt();report['cleanup']['terminal']['OOMKilled']=True
+        with self.assertRaisesRegex(ValueError,'OFFLINE_CACHE_PREFLIGHT_REQUIRED'):self.check_cache_receipt(report)
+
+    def test_changed_pom_or_repository_tracking_metadata_cannot_reuse_preflight(self):
+        with self.assertRaisesRegex(ValueError,'OFFLINE_CACHE_PREFLIGHT_REQUIRED'):
+            self.check_cache_receipt(self.cache_receipt(),poms={'pom.xml':'0'*64})
+        with self.assertRaisesRegex(ValueError,'OFFLINE_CACHE_PREFLIGHT_REQUIRED'):
+            self.check_cache_receipt(self.cache_receipt(),cache={'files':1,'bytes':1,'sha256':'0'*64})
+
+    def test_cache_manifest_includes_repository_tracking_and_rejects_symlinks(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);(root/'artifact.jar').write_bytes(b'synthetic control artifact')
+            tracking=root/'_remote.repositories';tracking.write_text('artifact.jar>central=\n')
+            original=B.cache_manifest(root);self.assertEqual(original['files'],2)
+            tracking.write_text('artifact.jar>foreign=\n')
+            self.assertNotEqual(original['sha256'],B.cache_manifest(root)['sha256'])
+            (root/'link').symlink_to(root/'artifact.jar')
+            with self.assertRaisesRegex(ValueError,'SYMLINK_OFFLINE_CACHE_FORBIDDEN'):B.cache_manifest(root)
+
+    def test_application_budget_rejects_missing_or_other_toolchain_cache_proof(self):
+        for key,value in [('mavenVersion','3.9.12'),('imageId','sha256:'+'0'*64),('settingsSha256','0'*64)]:
+            report=self.subject_report();report['cacheProof'][key]=value
+            with self.assertRaisesRegex(ValueError,'OFFLINE_CACHE_PREFLIGHT_REQUIRED'):B.check_subject(report,B.identity(self.env()),41,'f'*64)
+        report=self.subject_report();report.pop('cacheProof')
+        with self.assertRaisesRegex(ValueError,'OFFLINE_CACHE_PREFLIGHT_REQUIRED'):B.check_subject(report,B.identity(self.env()),41,'f'*64)
+
+    def test_standard_plugin_resolution_projects_only_exact_reviewed_coordinates(self):
+        for coordinate,versions in B.REVIEWED_PLUGINS.items():
+            for version in versions:
+                text='Plugin '+coordinate+':'+version+' or one of its dependencies could not be resolved: password=PRIVATE argv=PRIVATE'
+                self.assertEqual(B.safe_plugin_resolution(text),{'plugin':coordinate,'pluginVersion':version,'pluginPhase':'RESOLUTION_BEFORE_GOAL'})
+        for coordinate in ('unknown.group:plugin:1.0','org.apache.maven.plugins:maven-resources-plugin:1-PRIVATE',
+                           'org.apache.maven.plugins:maven-resources-plugin:3.3.1-PRIVATE'):
+            self.assertEqual(B.safe_plugin_resolution('Plugin '+coordinate+' or one of its dependencies could not be resolved: PRIVATE'),{})
+        self.assertEqual(B.safe_plugin_resolution('PluginResolutionException PRIVATE offline mode'),{})
+
+    def test_shared_diagnostic_preserves_missing_plugin_unknown_and_no_goal_resolution(self):
+        spec=importlib.util.spec_from_file_location('cache_diagnostic_entry',B.ROOT/'ci/test_http_e2e_entry.py')
+        owner=importlib.util.module_from_spec(spec);spec.loader.exec_module(owner)
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/'run.log'
+            suffix='Cannot access central in offline mode\nhttps://cwiki.apache.org/confluence/display/MAVEN/PluginResolutionException'
+            path.write_text('Plugin org.apache.maven.plugins:maven-resources-plugin:3.3.1 or one of its dependencies could not be resolved: PRIVATE\n'+suffix)
+            result=owner.safe_maven_failure(path)
+            self.assertEqual(result,{'category':'offline-resolution','helpException':'PluginResolutionException',
+                                    'plugin':'org.apache.maven.plugins:maven-resources-plugin','pluginVersion':'3.3.1','pluginPhase':'RESOLUTION_BEFORE_GOAL'})
+            self.assertNotIn('PRIVATE',json.dumps(result));self.assertNotIn('goal',result)
+            path.write_text(suffix)
+            self.assertEqual(owner.safe_maven_failure(path),{'category':'offline-resolution','helpException':'PluginResolutionException'})
+
+    def warm_transport_control(self,exit_code=0,foreign=False,write_fails=False):
+        # Transport/file protocol doubles only: not Maven/Java execution or dependency acceptance evidence.
+        reports=[];mutations=[];obj={};image_id='sha256:'+'d'*64
+        with tempfile.TemporaryDirectory() as directory,contextlib.ExitStack() as own_cleanup:
+            owned=B.private_directory(Path(B.command(['mktemp','-d','/tmp/cy-http-budget.XXXXXXXX']).decode().strip()))
+            own_cleanup.callback(lambda:B.shutil.rmtree(B.private_directory(owned)) if owned.exists() else None)
+            private=str(owned);root=Path(directory);cache=root/'home/.m2/repository';cache.mkdir(parents=True)
+            allocations=[]
+            (cache/'synthetic-control.jar').write_bytes(b'not an actual dependency')
+            def native(argv,**kwargs):
+                if 'logs' in argv:
+                    kwargs['stdout'].write(b'Plugin org.apache.maven.plugins:maven-resources-plugin:3.3.1 or one of its dependencies could not be resolved: PRIVATE\n' if exit_code else b'SYNTHETIC_TRANSPORT_CONTROL_ONLY')
+                return SimpleNamespace(returncode=0,stdout=b'',stderr=b'')
+            def command(argv,**kwargs):
+                if argv==['mktemp','-d','/tmp/cy-http-budget.XXXXXXXX']:
+                    allocations.append(argv);return (private+'\n').encode()
+                if argv[-1]=='{{.Endpoints.docker.Host}}':return b'unix:///var/run/docker.sock'
+                if 'image' in argv and 'inspect' in argv:return json.dumps([{'Id':image_id,'Config':{'Env':[]}}]).encode()
+                if 'create' in argv:
+                    name=argv[argv.index('--name')+1];cid='1'*64
+                    Path(argv[argv.index('--cidfile')+1]).write_text(cid)
+                    labels=dict(argv[i+1].split('=',1) for i,x in enumerate(argv) if x=='--label')
+                    if foreign:labels['chengyin.http.source']='f'*40
+                    env=[argv[i+1] for i,x in enumerate(argv) if x=='--env']
+                    mounts=[]
+                    for i,x in enumerate(argv):
+                        if x!='--mount':continue
+                        pieces=argv[i+1].split(',');values=dict(v.split('=',1) for v in pieces if '=' in v)
+                        mounts.append({'Type':'bind','Source':values['src'],'Destination':values['dst'],'RW':'readonly' not in pieces})
+                    obj.update(Id=cid,Name='/'+name,Image=image_id,
+                               Config={'Image':B.JDK,'Labels':labels,'Cmd':B.fixed_cache_command(),'Env':env,
+                                       'Entrypoint':['/bin/bash'],'User':str(os.getuid())+':'+str(os.getgid())},Mounts=mounts,
+                               HostConfig={'Memory':B.MEMORY,'MemorySwap':B.MEMORY,'NanoCpus':1000000000,'PidsLimit':256,
+                                           'CapDrop':['ALL'],'NetworkMode':'bridge','ReadonlyRootfs':True},
+                               State={'Running':True,'Pid':17,'ExitCode':0,'OOMKilled':False})
+                    return cid.encode()
+                if 'sha256sum' in argv:return ('c'*64+'  fixed-core.jar\n').encode()
+                if argv[-1]=='/tmp/cy-cache.phase':return b'OFFLINE_TEST_PREFLIGHT'
+                if 'exec' in argv:return str(exit_code).encode()
+                if 'stop' in argv:obj['State'].update(Running=False,Pid=0,ExitCode=143);mutations.append('stop')
+                if 'rm' in argv:mutations.append('remove')
+                return b''
+            def publish(path,value):
+                reports.append(copy.deepcopy(value))
+                if write_fails:raise OSError('PRIVATE evidence write problem')
+            with patch.dict(os.environ,self.env(),clear=True),patch.object(B,'ROOT',root),patch.object(B,'PUBLIC',root/'public'),\
+                 patch.object(B.Path,'home',return_value=root/'home'),\
+                 patch.object(B,'cache_inputs',return_value={'pom.xml':'f'*64}),patch.object(B,'inspect',side_effect=lambda x:obj),\
+                 patch.object(B,'command',side_effect=command),patch.object(B.subprocess,'run',side_effect=native),\
+                 patch.object(B,'absent'),patch.object(B,'read_cgroup',return_value={'limits':self.cache_receipt()['cgroup']['limits'],'memoryEvents':{'oom_kill':'0'}}),\
+                 patch.object(B,'write',side_effect=publish):
+                failure=None
+                try:B.warm_cache()
+                except Exception as error:failure=error
+            self.assertEqual(allocations,[['mktemp','-d','/tmp/cy-http-budget.XXXXXXXX']])
+            return reports,mutations,failure,owned.exists()
+
+    def test_warm_transport_attests_same_image_core_settings_budget_and_exact_cleanup(self):
+        reports,mutations,failure,private_exists=self.warm_transport_control()
+        self.assertIsNone(failure);self.assertEqual(mutations,['stop','remove']);self.assertFalse(private_exists)
+        report=reports[-1];self.assertEqual(report['result'],'PINNED_OFFLINE_TEST_PREFLIGHT_PROVEN')
+        self.assertEqual(report['mavenCoreSha256'],'c'*64);self.assertEqual(report['budget']['memory'],B.MEMORY)
+        self.assertTrue(report['preparationOnly']);self.assertFalse(report['wholeSystemCapacityAccepted'])
+
+    def test_warm_nonzero_preserves_plugin_failure_and_private_journal_after_exact_cleanup(self):
+        reports,mutations,failure,private_exists=self.warm_transport_control(exit_code=1)
+        self.assertIsInstance(failure,ValueError);self.assertEqual(mutations,['stop','remove']);self.assertTrue(private_exists)
+        report=reports[-1];self.assertEqual(report['result'],'NOT_ACCEPTED');self.assertEqual(report['originalExit'],1)
+        self.assertEqual(report['pluginFailure']['plugin'],'org.apache.maven.plugins:maven-resources-plugin')
+        self.assertNotIn('PRIVATE',json.dumps(report))
+
+    def test_warm_foreign_owner_never_stops_or_removes_and_cannot_sign_cache(self):
+        reports,mutations,failure,_=self.warm_transport_control(foreign=True)
+        self.assertIsInstance(failure,ValueError);self.assertEqual(mutations,[])
+        self.assertEqual(reports[-1]['result'],'NOT_ACCEPTED')
+
+    def test_warm_evidence_write_failure_still_cleans_exact_owner_and_stays_failed(self):
+        reports,mutations,failure,_=self.warm_transport_control(write_fails=True)
+        self.assertIsInstance(failure,ValueError);self.assertEqual(mutations,['stop','remove'])
+        self.assertEqual(reports[-1]['result'],'NOT_ACCEPTED')
+
+    def test_cache_stop_signal_is_a_typed_nonzero_unwind_not_a_success_or_process_kill(self):
+        for number,code in ((B.signal.SIGINT,130),(B.signal.SIGTERM,143),(B.signal.SIGHUP,129)):
+            with self.assertRaises(InterruptedError) as raised:B.cache_stop_signal(number,None)
+            self.assertEqual(raised.exception.errno,code)
+
+    def test_private_allocator_failure_precedes_cache_or_container_creation(self):
+        with tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),\
+             patch.object(B,'PUBLIC',Path(directory)),patch.object(B,'command',side_effect=ValueError('FIXED_COMMAND_FAILED')) as create,\
+             patch.object(B.Path,'home') as home,patch.object(B,'cache_inputs') as inputs,\
+             patch.object(B,'inspect') as inspect,patch.object(B,'cleanup_slot') as cleanup:
+            with self.assertRaisesRegex(ValueError,'FIXED_COMMAND_FAILED'):B.warm_cache()
+        create.assert_called_once_with(['mktemp','-d','/tmp/cy-http-budget.XXXXXXXX'])
+        home.assert_not_called();inputs.assert_not_called();inspect.assert_not_called();cleanup.assert_not_called()
+
+    def test_bad_allocator_result_cannot_relax_original_private_path_fence(self):
+        for path in ('/tmp/cy-http-budget.bad_name','/elsewhere/cy-http-budget.Ab12Cd34'):
+            with tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),\
+                 patch.object(B,'PUBLIC',Path(directory)),patch.object(B,'command',return_value=(path+'\n').encode()) as create,\
+                 patch.object(B.Path,'home') as home,patch.object(B,'cache_inputs') as inputs,\
+                 patch.object(B,'inspect') as inspect,patch.object(B,'cleanup_slot') as cleanup:
+                with self.assertRaisesRegex(ValueError,'EXACT_PRIVATE_DIRECTORY_REQUIRED'):B.warm_cache()
+            create.assert_called_once_with(['mktemp','-d','/tmp/cy-http-budget.XXXXXXXX'])
+            home.assert_not_called();inputs.assert_not_called();inspect.assert_not_called();cleanup.assert_not_called()
 
 
 if __name__=='__main__':unittest.main()
