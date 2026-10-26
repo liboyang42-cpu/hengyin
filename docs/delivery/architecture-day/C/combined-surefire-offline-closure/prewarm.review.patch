@@ -1,0 +1,31 @@
+diff --git a/ci/combined_http_budget.py b/ci/combined_http_budget.py
+--- a/ci/combined_http_budget.py
++++ b/ci/combined_http_budget.py
+@@ -299,9 +299,11 @@ def fixed_cache_command():
+     # Same package in the pinned owner: prefer the existing offline closure, never trust a prior JAR.
+     # skipTests belongs only to preparation/preflight. The original real test command never gains it.
+     goals=[common+['-P'+TEST_PROFILE,'-pl','chengyinhub-admin','-am','package','-DskipTests'],
+            common+['-N','org.apache.maven.plugins:maven-dependency-plugin:3.10.0:get',
+                    '-Dartifact=org.apache.maven.surefire:surefire-junit-platform:3.5.6','-Dtransitive=true'],
++           common+['-N','org.apache.maven.plugins:maven-dependency-plugin:3.10.0:get',
++                   '-Dartifact=org.junit.platform:junit-platform-launcher:6.0.3','-Dtransitive=true'],
+            common+['-o','-P'+TEST_PROFILE,'-pl','chengyinhub-admin','-am','test','-DskipTests','-Dtest='+CLASS,
+                    '-DfailIfNoTests=false','-Dsurefire.failIfNoSpecifiedTests=false']]
+     # Structured argv are passed to a fixed shell without interpolation of source/env/credentials.
+     package='package=('+ ' '.join("'"+value+"'" for value in ['mvn']+goals[0])+'); '
+@@ -318,7 +320,7 @@ def fixed_cache_command():
+             'else exit "$probe"; fi; fi; '
+     encoded+='; '.join('printf "%s\\n" "'+stage+'" >/tmp/cy-cache.phase; '+
+                      ' '.join("'"+value+"'" for value in ['mvn']+goal)+' || exit $?'
+-                     for stage,goal in zip(('ORIGINAL_PROVIDER_GET','OFFLINE_TEST_PREFLIGHT'),goals[1:]))
++                     for stage,goal in zip(('ORIGINAL_PROVIDER_GET','PROJECT_PLATFORM_LAUNCHER_GET','OFFLINE_TEST_PREFLIGHT'),goals[1:]))
+     return ['-c','mkdir -p /tmp/home /tmp/m2 || exit 98; '
+             'child=; trap \'[ -z "$child" ] || kill -TERM "$child" 2>/dev/null; exit 143\' TERM INT HUP; '
+             '('+encoded+') & child=$!; wait "$child"; status=$?; child=; '
+@@ -465,5 +467,5 @@ def warm_cache():
+                 if obj['State']['Running']:
+                     phase=command(DOCKER+['exec',slot['cid'],'cat','/tmp/cy-cache.phase']).decode().strip()
+-                    report['phase']=phase if phase in ('OFFLINE_PACKAGE_PROBE','ONLINE_PACKAGE','ORIGINAL_PROVIDER_GET','OFFLINE_TEST_PREFLIGHT') else 'UNKNOWN'
++                    report['phase']=phase if phase in ('OFFLINE_PACKAGE_PROBE','ONLINE_PACKAGE','ORIGINAL_PROVIDER_GET','PROJECT_PLATFORM_LAUNCHER_GET','OFFLINE_TEST_PREFLIGHT') else 'UNKNOWN'
+                     if report['offlinePackageProbeExit'] is None and not report['mavenExitObserved']:
+                         report['offlinePackageProbeExit']=cache_offline_probe_exit(slot['cid'],required=False)

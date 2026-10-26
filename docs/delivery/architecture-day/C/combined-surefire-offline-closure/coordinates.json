@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "parentSourceSha": "a20a38f08fa3a04b793f9e9de7ae881dd95fbb19",
+  "state": "SOURCE_ONLY_NOT_RUN",
+  "fixedClass": "CrossDomainCombinedLoadMySqlIT",
+  "fixedProfile": "combined-http-fixture-closure",
+  "actualPriorMissingCoordinate": "UNKNOWN",
+  "versions": {
+    "java": "21",
+    "mavenSurefirePlugin": "3.5.6",
+    "mavenDependencyPlugin": "3.10.0",
+    "springBootDependencies": "4.1.1",
+    "projectJunitBom": "6.0.3",
+    "projectJupiterApiEngineParams": "6.0.3",
+    "projectPlatformCommonsEngine": "6.0.3",
+    "expectedAlignedPlatformLauncher": "6.0.3",
+    "providerOwnJunitBom": "5.12.2",
+    "providerOwnPlatformEngineLauncher": "1.12.2",
+    "effectiveResolvedClasspathObserved": false
+  },
+  "versionSources": [
+    {"source": "pom.xml:19-21,116-123,363-367", "fact": "Java21, imported Boot4.1.1 BOM, Surefire3.5.6"},
+    {"source": "chengyinhub-admin/pom.xml:81-96,103-120", "fact": "Boot webmvc/restclient test starters, dependency-plugin3.10.0, existing Mockito startup agent; no added JUnit plugin dependency"},
+    {"source": "spring-boot-dependencies-4.1.1.pom:121,3386-3392", "fact": "junit-jupiter.version6.0.3 and imported org.junit:junit-bom"},
+    {"source": "spring-boot-starter-webmvc-test-4.1.1.pom:50-54;spring-boot-starter-restclient-test-4.1.1.pom:56-60", "fact": "Both depend on original spring-boot-starter-test4.1.1"},
+    {"source": "spring-boot-starter-test-4.1.1.pom:98-103;junit-jupiter-6.0.3.pom:75-93;junit-bom-6.0.3.pom:68-110", "fact": "Jupiter aggregate6.0.3 includes engine at runtime and API/params; project Platform artifacts are6.0.3"},
+    {"source": "surefire-3.5.6/pom.xml:23-27,111;maven-parent-47.pom:1007-1013;junit-bom-5.12.2.pom:103-115", "fact": "Provider parent overrides versions.junit5 to5.12.2; its inherited BOM resolves provider Platform engine/launcher to1.12.2; this is not the project BOM"}
+  ],
+  "resolverRules": [
+    {"officialSource": "AbstractSurefireMojo.java:2322-2332,3103-3105", "rule": "Platform applies when no junit-platform-runner and a platform marker exists. Marker prefers plugin artifact org.junit.platform:junit-platform-engine, otherwise project org.junit.platform:junit-platform-commons. Use marker.getBaseVersion, not plugin version or a guessed Jupiter-to-Platform mapping"},
+    {"officialSource": "AbstractSurefireMojo.java:3122-3136", "rule": "Provider root org.apache.maven.surefire:surefire-junit-platform version comes from getBooterArtifact().getBaseVersion; resolve its runtime closure and explicit plugin dependencies"},
+    {"officialSource": "AbstractSurefireMojo.java:3138-3168", "rule": "If explicit plugin deps contain Platform engine, merge them. Otherwise, only API-present/engine-absent adds Jupiter engine matching API version. Vintage is conditional on JUnit4 present, no Vintage, and non-null engineVersion from that API-only branch; do not unconditionally add Vintage"},
+    {"officialSource": "AbstractSurefireMojo.java:3170-3173,3202-3223", "rule": "Remove provider map keys already supplied by test deps; still unconditionally resolve junit-platform-launcher at marker baseVersion with runtime transitive dependencies, replacing overlapping provider map keys. Removal of a map key is not a promise the subsequent resolve will be skipped"},
+    {"officialSource": "SurefireDependencyResolver.java:135-163,185-210", "rule": "Aether resolves runtime dependency closure; no arbitrary artifact/profile/repository input is needed"}
+  ],
+  "prewarmRoots": [
+    {"coordinate": "org.apache.maven.surefire:surefire-junit-platform:3.5.6", "transitive": true, "action": "KEEP_EXISTING_GET", "purpose": "Provider own closure including its original Platform1.12.2; do not replace or upgrade it"},
+    {"coordinate": "org.junit.platform:junit-platform-launcher:6.0.3", "transitive": true, "action": "ADD_FIXED_GET_IN_SAME_CACHE_OWNER", "purpose": "Source-proven aligned resolve requested by Surefire under current project BOM; not a diagnosis of prior missing artifact"}
+  ],
+  "alignedLauncherPublishedRuntimeClosure": [
+    "org.junit.platform:junit-platform-launcher:6.0.3",
+    "org.junit.platform:junit-platform-engine:6.0.3",
+    "org.junit.platform:junit-platform-commons:6.0.3",
+    "org.apiguardian:apiguardian-api:1.1.2",
+    "org.jspecify:jspecify:1.0.0",
+    "org.opentest4j:opentest4j:1.3.0"
+  ],
+  "closureEvidence": "junit-platform-launcher-6.0.3.pom:75-94; junit-platform-engine-6.0.3.pom:75-99; junit-platform-commons-6.0.3.pom:75-87. Use original resolver for JARs AND POM/parent/BOM descriptors and repository metadata; this finite published JAR graph is not permission to manually populate cache files or skip original cache hashing",
+  "existingPreflight": {
+    "source": "ci/combined_http_budget.py:297-321",
+    "skipTests": true,
+    "doesCover": ["Full production reactor package", "Original18-source test compile profile and37 required classes", "Normal lifecycle/plugin realm resolution encountered before skip", "Explicit provider-get transitive closure"],
+    "doesNotCover": ["Surefire provider selection", "Project-aligned launcher resolve", "Dynamic engine fallback branches", "Surefire booter/fork initialization at execution", "JUnit discovery or business test execution"],
+    "officialEarlyReturn": "AbstractSurefireMojo.java:955-959; SurefireMojo.java:559-562",
+    "providerBootstrapVerified": false,
+    "businessTestsExecuted": false
+  },
+  "reviewPatch": "prewarm.review.patch",
+  "owner": "B/root applies actual helper changes; C only owns this directory",
+  "suggestedReceiptTruthFields": {
+    "resolutionRoots": ["org.apache.maven.surefire:surefire-junit-platform:3.5.6", "org.junit.platform:junit-platform-launcher:6.0.3"],
+    "projectPlatformVersionSource": "SOURCE_BOM_DERIVED_NOT_EXECUTED_DEPENDENCY_TREE",
+    "providerBootstrapVerified": false,
+    "actualSurefireForkVerified": false
+  },
+  "retainedExecution": "Original offline/internal-network/read-only-cache fixed class/profile with real Surefire JVM, exact original case/XML/receipt/source/JAR/cgroup and independent cleanup. These become true only from actual execution evidence, never from get or skipTests success",
+  "forbidden": ["Add or change project/plugin dependencies", "Change any version", "Force another provider", "Use skipTests as provider boot proof", "Use a nonexistent dry-run flag", "Select a nonexistent test to pretend provider was initialized", "Enable execution networking or mutable cache", "Publish arbitrary raw Maven stderr or coordinates", "Guess the prior missing coordinate", "Relax XML/JVM/class count or cleanup gates"],
+  "notRun": ["Maven", "Java", "DB", "Docker", "test execution", "JSON/XML parsing", "CI"],
+  "businessAccepted": false
+}
