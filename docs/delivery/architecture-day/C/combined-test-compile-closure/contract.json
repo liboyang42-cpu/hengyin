@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "parentSourceSha": "ead7abc3ad98ceb66829e2a9bd65c5a0c04e0962",
+  "state": "STATIC_SOURCE_CLOSURE_NOT_RUN",
+  "fixedClass": "CrossDomainCombinedLoadMySqlIT",
+  "fixedScope": "controlled-combination",
+  "adminTestSourceRoot": "chengyinhub-admin/src/test/java",
+  "testIncludesFile": "test-includes.list",
+  "sourceEdgesFile": "source-edges.tsv",
+  "requiredTestClassesFile": "required-test-classes.list",
+  "sourceHashesFile": "source-sha256.txt",
+  "testJavaSources": 18,
+  "requiredStableTestBinaryNames": 37,
+  "requiredClassPolicy": {
+    "testOutputRoot": "chengyinhub-admin/target/test-classes",
+    "mapping": "binary name dots to slash plus .class; preserve literal $",
+    "missingOrSymlink": "REJECT",
+    "anonymousNumberPolicy": "Only CombinedControlledProviders$1 is enumerated because the real consumer explicitly loads that exact literal; do not guess other compiler-assigned numbers",
+    "allOutputsFromIncludedSources": "KEEP all named, anonymous, local and compiler-generated outputs from the same fresh compilation; the stable required list is a minimum, not an output-pruning list",
+    "priorTargets": "No old admin test-classes, generated-test-sources or compiler testCompile state may supply the proposed closure. B owns exact task-owned cleanup and fresh input/output proof",
+    "unlistedImplicitSource": "Not permission to expand silently: if javac input/output evidence discovers another source, stop and reconcile this source manifest before acceptance",
+    "runtimeClassGeneration": "JDK proxies, Spring/CGLIB and Mockito generated classes remain normal runtime outputs; their byte names are not invented as build-time paths"
+  },
+  "profileProposal": {
+    "id": "controlled-combination-test-closure",
+    "owner": "B/root only",
+    "location": "chengyinhub-admin/pom.xml only",
+    "activation": "Explicit -Pcontrolled-combination-test-closure for this fixed class only; no default, property, environment or PR activation",
+    "parameter": "maven-compiler-plugin:3.15.0 TestCompilerMojo.testIncludes",
+    "parameterForm": "POM configuration/testIncludes/testInclude relative to the admin test source root",
+    "userProperty": null,
+    "inheritedProductionConfiguration": "Keep release=21, parameters=true, encoding and all production compilation/resource/package behavior",
+    "otherReactorModules": "All existing main and test compilation/package behavior unchanged",
+    "callSites": [
+      "ci/combined_http_budget.py:160 fixed_cache_command package shared by offline probe and permitted online repair",
+      "ci/combined_http_budget.py:163 fixed_cache_command offline test preflight",
+      "ci/combined_http_budget.py:1075 fixed_maven_command actual offline test"
+    ],
+    "unchangedCall": "ci/combined_http_budget.py:161-162 original -N dependency-plugin:get provider resolution needs no test-source profile",
+    "forbiddenSubstitutes": ["-Dtest as compiler filter", "invented -DtestIncludes property", "maven.test.skip", "compile only entry .java", "reuse old compiled helper", "forkCount=0", "skip actual selected test", "filter main sources/resources", "change real class hash set or source_manifest to accept missing code"]
+  },
+  "productionReactor": [
+    "chengyinhub-admin", "chengyinhub-framework", "chengyinhub-system",
+    "chengyinhub-quartz", "chengyinhub-generator", "chengyinhub-common"
+  ],
+  "identityConsumers": [
+    {"source": "ci/combined_http_budget.py:852-880", "meaning": "Full SHA in checkout/classes/git.properties/Boot JAR; selected test class; actual combined classes plus test-classes tree and JAR hashes for each production module; no requirement to include every unrelated admin test"},
+    {"source": "ci/combined_http_budget.py:1097-1133", "meaning": "Read-only source/cache; exact source_manifest before and after; original offline Maven/Surefire PID and budget proof; class output cannot drift during real run"},
+    {"source": "ci/combined_http_budget.py:1008-1034", "meaning": "Original Surefire booter includes admin target/test-classes plus target/classes; local cache/module target paths only; original Mockito startup agent"},
+    {"source": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java:300-340", "meaning": "Actual RuoYiApplication and ApiClubLeadController class bytes equal this same-source packaged JAR; actual top-level and explicit nested hashes preserved"},
+    {"source": "ci/capacity_mixed_probe.py:436-447", "meaning": "Exact original 14 actualClassSha256 keys remain unchanged; 37 stable compile-closure checks are additional missing-code rejection, not a replacement report or wider accepted payload"}
+  ],
+  "runtimeBoundaries": [
+    {"source": "GenericGameplayHttpE2eIT.java:456-484", "kind": "JDK_COMPILER_FIXED_STUB", "path": "scripts/e2e/E2eWxContentSecurityStub.java.stub", "loadClass": "com.chengyinhub.e2e.E2eWxContentSecurityStub", "policy": "Keep exact repository file and original runtime compiler/test classpath; this is not a testIncludes .java file"},
+    {"source": "CrossDomainSchedulerStage.java:89-106", "kind": "REAL_CHILD_JVM", "main": "com.chengyinhub.quartz.util.SchedulerFenceProcessProbe", "policy": "Keep original surefire.test.class.path and Java21 launcher; do not replace child with same-JVM call"},
+    {"source": "WechatVerifiedFactTestSupport.java:159-164", "kind": "PRODUCTION_REFLECTION", "class": "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway$VerifiedProviderClients", "policy": "Keep full production system main output; not another test source"},
+    {"source": "CrossDomainCombinedLoadMySqlIT.java:331-337", "kind": "EXACT_LITERAL_TEST_REFLECTION", "policy": "The four literal names are all retained in required-test-classes.list"},
+    {"source": "RuoYiApplication.java:12;GenericGameplayHttpE2eIT.java:451-452;MyBatisConfig.java:40-128", "kind": "SPRING_SCAN_AND_MYBATIS_RESOURCE_SCAN", "policy": "Keep full production outputs and resources; do not infer production closure from Java imports. Unrelated test-class scan influence is UNKNOWN until same-source startup/bean and original behavior checks; no claim of already-proved runtime equivalence"},
+    {"source": "GameplayProcessRecoveryChild.java:51,194-212", "kind": "PROFILED_TEST_CONFIGURATION", "profile": "gameplay-process-recovery-only", "policy": "Compile whole source but do not activate recovery-only MVC observers in controlled-combination"}
+  ],
+  "resourceContract": {
+    "fixtureResources": "runtime-resources.list",
+    "fixtureResourceEvidence": "CrossDomainStorageFixture.java:106-146;P0AcceptanceSchema.java:28-84;WechatVerifiedFactTestSupport.java:218",
+    "copyPolicy": "Keep ALL existing main resources and test resources. The finite list documents direct consumers, not a replacement resources includes allowlist",
+    "springMapperLocations": "classpath*:mapper/**/*Mapper.xml",
+    "springTypeAliases": "com.chengyinhub.**.domain",
+    "springMapperEvidence": "chengyinhub-admin/src/main/resources/application.yml:153-155;chengyinhub-framework/src/main/java/com/chengyinhub/framework/config/MyBatisConfig.java:119-128",
+    "freshSchema": "Original generic-gameplay-fresh-schema.py build_plan and original baseline/migration dependency manifests unchanged; do not substitute the smaller independent economic schema",
+    "filesystem": "Preserve the original readonly repository root and working directory for canonical SQL, stub source, git/tree identity and fresh-schema helpers"
+  },
+  "notRun": ["effective-POM", "testCompile", "Maven", "Java", "JUnit", "Node", "Python controls or JSON parsing", "MySQL", "Redis", "Docker", "HTTP workload", "CI"],
+  "unknown": ["Actual post-profile compiler inputs/outputs and time within the unchanged budget", "Actual implicit compiler source discovery outside the reviewed finite closure", "Any unrelated test-class contribution through unrestricted Spring classpath scanning", "Runtime provider/bean discovery and classpath behavior after finite test compilation", "Specific source/class/resource responsible for the prior deadline"],
+  "businessAccepted": false,
+  "wholeSystemCapacityAccepted": false,
+  "q4q8Complete": false
+}
