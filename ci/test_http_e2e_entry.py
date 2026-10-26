@@ -490,6 +490,74 @@ def safe_maven_failure(log_path):
     return result
 
 
+def fixed_startup_exception_types(text):
+    # Only public framework/JDK exception names, never cause messages or bean values.
+    reviewed = {
+        'org.springframework.beans.factory.BeanCreationException',
+        'org.springframework.beans.factory.UnsatisfiedDependencyException',
+        'org.springframework.beans.factory.NoSuchBeanDefinitionException',
+        'org.springframework.beans.factory.NoUniqueBeanDefinitionException',
+        'java.lang.IllegalStateException', 'java.lang.IllegalArgumentException',
+        'java.lang.NumberFormatException', 'java.lang.SecurityException', 'java.lang.UnsupportedOperationException',
+        'java.lang.ExceptionInInitializerError', 'java.sql.SQLException',
+        'org.springframework.context.ApplicationContextException',
+        'java.lang.ClassNotFoundException', 'java.lang.NoClassDefFoundError', 'java.lang.NoSuchMethodError',
+        'java.net.BindException', 'java.sql.SQLSyntaxErrorException',
+        'java.sql.SQLInvalidAuthorizationSpecException', 'java.sql.SQLNonTransientConnectionException',
+    }
+    names = re.findall(r'(?m)^[ \t]*(?:Caused by: |Suppressed: )?([A-Za-z][A-Za-z0-9_.$]{0,199})(?=:|$)',
+                       text[-65536:])
+    return sorted(set(names) & reviewed)
+
+
+def fixed_startup_source_frames(text):
+    # Exact C-reviewed source signatures are location hints, never a claim about the deepest cause.
+    reviewed = {
+        ("com.chengyinhub.business.it.GenericGameplayHttpE2eIT$LocalInitializer", "initialize", "GenericGameplayHttpE2eIT.java"): ("GENERIC_INITIALIZER", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GenericGameplayHttpE2eIT.java", 1243),
+        ("com.chengyinhub.business.it.GenericGameplayHttpE2eIT", "assertFixtureMapperColumns", "GenericGameplayHttpE2eIT.java"): ("SCHEMA_COLUMN_PREFLIGHT", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GenericGameplayHttpE2eIT.java", 1243),
+        ("com.chengyinhub.business.it.GenericGameplayHttpE2eIT", "registerContentSecurityFixture", "GenericGameplayHttpE2eIT.java"): ("DYNAMIC_CONTENT_STUB", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GenericGameplayHttpE2eIT.java", 1243),
+        ("com.chengyinhub.business.it.GenericGameplayHttpE2eIT$ReviewedMediaFixture", "configure", "GenericGameplayHttpE2eIT.java"): ("MEDIA_FIXTURE_SETTINGS", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GenericGameplayHttpE2eIT.java", 1243),
+        ("com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT$Initializer", "configureBoundedPool", "CrossDomainCombinedLoadMySqlIT.java"): ("BOUNDED_POOL_PROPERTIES", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java", 411),
+        ("com.chengyinhub.framework.config.DruidConfig", "masterDataSource", "DruidConfig.java"): ("MASTER_DATASOURCE_FACTORY", "chengyinhub-framework/src/main/java/com/chengyinhub/framework/config/DruidConfig.java", 126),
+        ("com.chengyinhub.framework.config.properties.DruidProperties", "dataSource", "DruidProperties.java"): ("DRUID_PROPERTY_ASSEMBLY", "chengyinhub-framework/src/main/java/com/chengyinhub/framework/config/properties/DruidProperties.java", 89),
+        ("com.alibaba.druid.pool.DruidDataSource", "init", "DruidDataSource.java"): ("DRUID_POOL_INIT", None, 3666),
+        ("com.chengyinhub.framework.config.MyBatisConfig", "sqlSessionFactory", "MyBatisConfig.java"): ("MYBATIS_FACTORY", "chengyinhub-framework/src/main/java/com/chengyinhub/framework/config/MyBatisConfig.java", 132),
+        ("com.chengyinhub.framework.config.RedisConfig", "redisTemplate", "RedisConfig.java"): ("REDIS_TEMPLATE_FACTORY", "chengyinhub-framework/src/main/java/com/chengyinhub/framework/config/RedisConfig.java", 69),
+        ("com.chengyinhub.business.service.ai.LlmClientConfig", "aiHttpAdmission", "LlmClientConfig.java"): ("AI_ADMISSION_FACTORY", "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java", 88),
+        ("com.chengyinhub.business.service.ai.LlmClientConfig", "visionLlmClient", "LlmClientConfig.java"): ("VISION_CLIENT_FACTORY", "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java", 88),
+        ("com.chengyinhub.business.service.ai.PhotoCheckIntentService", "<init>", "PhotoCheckIntentService.java"): ("PHOTO_INTENT_CONSTRUCTOR", "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java", 234),
+        ("com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT", "realCommandsRemainIsolatedAcrossHeldProvidersAndOriginalEconomicRecovery", "CrossDomainCombinedLoadMySqlIT.java"): ("CASE_BODY", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java", 411),
+        ("com.chengyinhub.business.it.CrossDomainStorageFixture", "open", "CrossDomainStorageFixture.java"): ("INDEPENDENT_ECONOMIC_ASSEMBLY", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainStorageFixture.java", 577),
+        ("com.chengyinhub.business.it.CombinedControlledProviders", "<init>", "CombinedControlledProviders.java"): ("CONTROLLED_PROVIDER_CASE_ASSEMBLY", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CombinedControlledProviders.java", 120),
+    }
+    result = []; bounds = {}
+    for owner, method, filename, line in re.findall(
+            r'(?m)^[ \t]*at ([A-Za-z_][A-Za-z0-9_.$]*)\.([A-Za-z_$<>][A-Za-z0-9_$<>]*)\(([A-Za-z_$][A-Za-z0-9_$]*\.java):([1-9][0-9]{0,5})\)',
+            text[-65536:]):
+        key = (owner, method, filename)
+        if key not in reviewed:
+            continue
+        phase, source, maximum = reviewed[key]
+        if source:
+            try:
+                path = ROOT / source
+                if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(ROOT.resolve()):
+                    continue
+                if source not in bounds:
+                    bounds[source] = len(path.read_text().splitlines())
+                maximum = bounds[source]
+            except OSError:
+                continue
+        if int(line) > maximum:
+            continue
+        frame = {'phase': phase, 'sourceFrame': filename + ':' + line}
+        if frame not in result:
+            result.append(frame)
+        if len(result) == 8:
+            break
+    return result
+
+
 def safe_execution_failure(path):
     """Project the original budget owner's fixed cause only for this exact execution."""
     try:
@@ -609,6 +677,7 @@ def cli():
                                                retryNodeCount=sum(len(case.findall(tag)) for case in cases
                                                                   for tag in ('rerunFailure', 'rerunError', 'flakyFailure', 'flakyError')))
                                 methods, codes, case_categories, case_frames, case_calls, case_contexts = [], set(), {}, {}, {}, {}
+                                case_exception_types = {}; case_startup_frames = {}
                                 for case in cases:
                                     errors = case.findall('failure') + case.findall('error')
                                     method = case.get('name', '')
@@ -621,6 +690,13 @@ def cli():
                                             previous = case_contexts.get(known_cases[method], context)
                                             case_contexts[known_cases[method]] = context if previous == context else 'UNKNOWN'
                                         for error in errors:
+                                            types = fixed_startup_exception_types(error.get('type', '') + '\n' + (error.text or ''))
+                                            if types:
+                                                case_exception_types.setdefault(known_cases[method], set()).update(types)
+                                            for frame in fixed_startup_source_frames(error.text or ''):
+                                                frames = case_startup_frames.setdefault(known_cases[method], [])
+                                                if frame not in frames and len(frames) < 8:
+                                                    frames.append(frame)
                                             text = error.get('message', '') + '\n' + (error.text or '')
                                             categories.update(fixed_http_failure_categories(text))
                                             codes.update(int(code) for code in re.findall(r'"code"\s*:\s*([1-5][0-9]{2}|601)(?=\s*[,}])', text))
@@ -646,6 +722,11 @@ def cli():
                                                     if len(frames) >= 2:
                                                         failure['callerFrame'] = frames[1]
                                                 break
+                                if case_exception_types:
+                                    failure['caseStartupExceptionTypes'] = {method: sorted(types)
+                                                                          for method, types in sorted(case_exception_types.items())}
+                                if case_startup_frames:
+                                    failure['caseStartupSourceFrames'] = dict(sorted(case_startup_frames.items()))
                                 failure['caseSourceFrames'] = dict(sorted(case_frames.items()))
                                 if case_calls:
                                     failure['caseCallFrames'] = dict(sorted(case_calls.items()))
@@ -1074,6 +1155,84 @@ class FailureDiagnosticTest(unittest.TestCase):
             self.assertEqual('FAIL', receipt['state'])
             self.assertFalse(receipt['businessAccepted']); self.assertFalse(receipt['xmlVerified'])
             self.assertEqual(identity, receipt_identity(receipt))
+
+    def test_startup_exception_projection_keeps_only_fixed_public_cause_headers(self):
+        text = ('java.lang.IllegalStateException: PRIVATE_CONTEXT\n'
+                'Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: PRIVATE_BEAN\n'
+                '\tCaused by: org.springframework.beans.factory.NoSuchBeanDefinitionException: PRIVATE_TYPE\n'
+                'Suppressed: java.lang.IllegalArgumentException: PRIVATE_VALUE\n'
+                'Caused by: org.springframework.beans.factory.NoSuchBeanDefinitionException: PRIVATE_AGAIN')
+        self.assertEqual(['java.lang.IllegalArgumentException', 'java.lang.IllegalStateException',
+                          'org.springframework.beans.factory.NoSuchBeanDefinitionException',
+                          'org.springframework.beans.factory.UnsatisfiedDependencyException'],
+                         fixed_startup_exception_types(text))
+        self.assertNotIn('PRIVATE', json.dumps(fixed_startup_exception_types(text)))
+
+    def test_startup_exception_projection_rejects_messages_frames_custom_types_and_unbounded_prefix(self):
+        for text in ('private.SECRET.Exception: PRIVATE', 'message org.springframework.beans.factory.BeanCreationException',
+                     ' at org.springframework.beans.factory.BeanCreationException.method(SECRET.java:1)',
+                     'Caused by: org.springframework.beans.factory.BeanCreationExceptionSECRET: PRIVATE',
+                     'Caused by: org.springframework.beans.factory.BeanCreationException: PRIVATE' + '\n' + 'x' * 65537):
+            with self.subTest(text=text[:100]):
+                self.assertEqual([], fixed_startup_exception_types(text))
+
+    def test_fixed_context_frames_bind_exact_source_signatures_and_keep_case_assembly_distinct(self):
+        text = ('\tat com.chengyinhub.framework.config.DruidConfig.masterDataSource(DruidConfig.java:37)\n'
+                '\tat com.alibaba.druid.pool.DruidDataSource.init(DruidDataSource.java:721)\n'
+                '\tat com.chengyinhub.business.it.CrossDomainStorageFixture.open(CrossDomainStorageFixture.java:150)\n'
+                'PRIVATE_VALUE SQL password=PRIVATE_VALUE')
+        self.assertEqual([{'phase': 'MASTER_DATASOURCE_FACTORY', 'sourceFrame': 'DruidConfig.java:37'},
+                          {'phase': 'DRUID_POOL_INIT', 'sourceFrame': 'DruidDataSource.java:721'},
+                          {'phase': 'INDEPENDENT_ECONOMIC_ASSEMBLY', 'sourceFrame': 'CrossDomainStorageFixture.java:150'}],
+                         fixed_startup_source_frames(text))
+        self.assertNotIn('PRIVATE', json.dumps(fixed_startup_source_frames(text)))
+
+    def test_unknown_generated_wrong_file_method_or_line_context_frames_are_not_normalized(self):
+        valid = 'at com.chengyinhub.framework.config.DruidConfig.masterDataSource(DruidConfig.java:37)'
+        for text in (valid.replace('DruidConfig.masterDataSource', 'DruidConfig$$SpringCGLIB$$0.masterDataSource'),
+                     valid.replace('.masterDataSource(', '.unknownMethod('), valid.replace('(DruidConfig.java:', '(PRIVATE.java:'),
+                     valid.replace(':37)', ':0)'), valid.replace(':37)', ':999999)'),
+                     'message ' + valid, 'at private.SECRET.method(SECRET.java:1)'):
+            with self.subTest(text=text):
+                self.assertEqual([], fixed_startup_source_frames(text))
+
+    def test_actual_xml_failure_exports_fixed_startup_types_without_private_exception_body(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory); reports = root / 'reports'; reports.mkdir(); public = root / 'public'
+            simple = 'GenericGameplayHttpE2eIT'
+            methods = sorted(set(reviewed_case_identities(simple).values()))
+            self.assertEqual(reviewed_count(simple), len(methods))
+            suite = ET.Element('testsuite', name=PACKAGE + simple, tests=str(len(methods)),
+                               failures='0', errors='1', skipped='0')
+            for method in methods:
+                ET.SubElement(suite, 'testcase', classname=PACKAGE + simple, name=method)
+            error = ET.SubElement(suite.find('testcase'), 'error', type='java.lang.IllegalStateException',
+                                  message='PRIVATE_STARTUP_MESSAGE')
+            error.text = ('Caused by: org.springframework.beans.factory.NoSuchBeanDefinitionException: PRIVATE_BEAN_OR_SQL\n'
+                          '\tat com.chengyinhub.framework.config.DruidConfig.masterDataSource(DruidConfig.java:37)')
+            ET.ElementTree(suite).write(reports / ('TEST-' + PACKAGE + simple + '.xml'))
+            schema = root / 'schema.json'; database = 'cy_e2e_w1_http_123_456'
+            files = [{'path': 'sql/synthetic-protocol-fixture.sql'} for _ in range(101)]
+            schema.write_text(json.dumps({'mode': 'SUCCEEDED', 'database': database, 'files': files,
+                                          'completed': [item['path'] for item in files]}))
+            env = dict(os.environ, SOURCE_SHA='a' * 40, CHENGYIN_HTTP_E2E_PROFILE='github-hosted',
+                       CHENGYIN_HTTP_E2E_DATABASE=database, CHENGYIN_HTTP_E2E_SCHEMA_REPORT=str(schema))
+            run = subprocess.run([sys.executable, str(ROOT / 'ci/test_http_e2e_entry.py'), 'verify',
+                                  '--classes', simple, '--reports', str(reports), '--output', str(public)],
+                                 env=env, text=True, capture_output=True, timeout=10)
+            self.assertNotEqual(0, run.returncode)
+            failure = json.loads((public / 'xml-failure.json').read_text())
+            self.assertEqual({methods[0]: ['java.lang.IllegalStateException',
+                                          'org.springframework.beans.factory.NoSuchBeanDefinitionException']},
+                             failure['caseStartupExceptionTypes'])
+            self.assertEqual({methods[0]: [{'phase': 'MASTER_DATASOURCE_FACTORY', 'sourceFrame': 'DruidConfig.java:37'}]},
+                             failure['caseStartupSourceFrames'])
+            self.assertEqual(('FAILED_VERIFICATION', 1, 0, 0),
+                             (failure['state'], failure['errors'], failure['failures'], failure['skipped']))
+            receipt = json.loads((public / 'receipt.json').read_text())
+            self.assertFalse(receipt['xmlVerified']); self.assertFalse(receipt['businessAccepted'])
+            self.assertNotIn('PRIVATE', json.dumps(failure) + run.stdout + run.stderr)
+            self.assertFalse((public / ('TEST-' + PACKAGE + simple + '.xml')).exists())
 
     def test_budget_execution_failure_projects_fixed_cause_and_excludes_private_payload(self):
         env = {'SOURCE_SHA': 'a' * 40, 'GITHUB_RUN_ID': '123', 'GITHUB_RUN_ATTEMPT': '1',

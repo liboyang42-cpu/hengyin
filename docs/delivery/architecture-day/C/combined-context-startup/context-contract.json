@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "parentSourceSha": "f3c231e43b62ac7b7c9725fa533da05099fa48bd",
+  "state": "SOURCE_ONLY_NOT_RUN",
+  "actualPriorStartupCause": "UNKNOWN_NO_RAW_EXCEPTION_EVIDENCE",
+  "sourceHashes": "source-sha256.txt",
+  "application": {
+    "entry": "com.chengyinhub.RuoYiApplication",
+    "test": "com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT",
+    "initializer": "com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT$Initializer",
+    "delegatedInitializer": "com.chengyinhub.business.it.GenericGameplayHttpE2eIT$LocalInitializer",
+    "webEnvironment": "RANDOM_PORT",
+    "defaultProfileSource": "chengyinhub-admin/src/main/resources/application.yml spring.profiles.active=druid",
+    "recoveryOnlyProfile": "gameplay-process-recovery-only MUST NOT be activated",
+    "overridePolicy": "Keep original explicit primary stub with distinct bean name; no allow-bean-definition-overriding/circular-reference/bean-disable workaround",
+    "compiledInputs": "Original combined-http-fixture-closure19 inputs remain unchanged. CombinedSurefireRuntimeProbeTest proves provider bootstrap only, not Spring startup. New direct configuration unit source is outside that selected business class profile"
+  },
+  "provenSourceMismatch": {
+    "source": "CrossDomainCombinedLoadMySqlIT.java original43-50;application-druid.yml:20-24;DruidProperties.java:15-22,54-59",
+    "originalCombinationOverrides": {"maxActive": 3},
+    "inheritedDruidValues": {"initialSize": 5, "minIdle": 10},
+    "primaryDruidVersion": "1.2.28",
+    "primaryChecks": "DruidDataSource.java:718-727 rejects maxActive<minIdle or initialSize>maxActive; setter checks depend on initialization state, so do not claim the exact thrown frame without runtime evidence",
+    "fix": {"initialSize": 0, "minIdle": 0, "maxActive": 3, "maxWait": 5000, "socketTimeout": 5000},
+    "scope": "Only combination initializer; no production config or shared Generic initializer change",
+    "realCaseReadback": "Assert original masterDataSource maxActive=3 plus initialSize=0/minIdle=0 before independent economic fixture setup",
+    "actualFailureAttributedToThisMismatch": false
+  },
+  "beans": [
+    {"name": "masterDataSource", "declaredType": "javax.sql.DataSource", "actualRequiredType": "com.alibaba.druid.pool.DruidDataSource", "owner": "com.chengyinhub.framework.config.DruidConfig#masterDataSource", "source": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/config/DruidConfig.java:34-40", "dependencies": ["com.chengyinhub.framework.config.properties.DruidProperties"], "keys": ["spring.datasource.druid.master", "spring.datasource.druid.initialSize", "spring.datasource.druid.minIdle", "spring.datasource.druid.maxActive", "spring.datasource.druid.maxWait", "spring.datasource.druid.socketTimeout"]},
+    {"name": "dynamicDataSource", "declaredType": "com.chengyinhub.framework.datasource.DynamicDataSource", "primary": true, "owner": "com.chengyinhub.framework.config.DruidConfig#dataSource", "source": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/config/DruidConfig.java:52-61", "dependencies": ["masterDataSource"], "keys": ["spring.datasource.druid.slave.enabled"]},
+    {"name": "sqlSessionFactory", "declaredType": "org.apache.ibatis.session.SqlSessionFactory", "owner": "com.chengyinhub.framework.config.MyBatisConfig#sqlSessionFactory", "source": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/config/MyBatisConfig.java:116-130", "dependencies": ["javax.sql.DataSource"], "keys": ["mybatis.typeAliasesPackage", "mybatis.mapperLocations", "mybatis.configLocation"]},
+    {"name": "redisTemplate", "declaredType": "org.springframework.data.redis.core.RedisTemplate", "owner": "com.chengyinhub.framework.config.RedisConfig#redisTemplate", "source": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/config/RedisConfig.java:24-44", "dependencies": ["org.springframework.data.redis.connection.RedisConnectionFactory"], "keys": ["spring.data.redis.host", "spring.data.redis.port", "spring.data.redis.database", "spring.data.redis.password"], "connectionFactoryActualBeanName": "UNKNOWN_UNTIL_AUTO_CONFIGURATION_READBACK"},
+    {"name": "httpE2eWxContentSecurityStub", "declaredType": "com.chengyinhub.e2e.E2eWxContentSecurityStub", "primary": true, "owner": "com.chengyinhub.business.it.GenericGameplayHttpE2eIT#registerContentSecurityFixture", "source": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GenericGameplayHttpE2eIT.java:456-484", "resources": ["scripts/e2e/E2eWxContentSecurityStub.java.stub"], "superclass": "com.chengyinhub.business.service.impl.WxContentSecurityServiceImpl", "keys": ["wx.sec-check.enabled", "wx.mini.secret"]},
+    {"name": "aiHttpAdmission", "declaredType": "com.chengyinhub.business.service.ai.AiHttpAdmission", "owner": "com.chengyinhub.business.service.ai.LlmClientConfig#aiHttpAdmission", "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java:23-35", "dependencies": ["com.chengyinhub.common.config.AiModelConfig", "com.chengyinhub.business.service.ai.VisionModelConfig", "com.chengyinhub.common.config.AiProviderProperties", "com.chengyinhub.common.config.AiVoiceConfig"]},
+    {"name": "qwenLlmClient", "declaredType": "com.chengyinhub.business.service.ai.LlmClient", "owner": "com.chengyinhub.business.service.ai.LlmClientConfig#qwenLlmClient", "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java:44-49", "dependencies": ["com.chengyinhub.common.config.AiModelConfig", "aiHttpAdmission"]},
+    {"name": "deepseekLlmClient", "declaredType": "com.chengyinhub.business.service.ai.LlmClient", "owner": "com.chengyinhub.business.service.ai.LlmClientConfig#deepseekLlmClient", "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java:51-56", "dependencies": ["com.chengyinhub.common.config.AiModelConfig", "aiHttpAdmission"]},
+    {"name": "visionLlmClient", "declaredType": "com.chengyinhub.business.service.ai.LlmClient", "owner": "com.chengyinhub.business.service.ai.LlmClientConfig#visionLlmClient", "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java:62-67", "dependencies": ["com.chengyinhub.business.service.ai.VisionModelConfig", "aiHttpAdmission"]},
+    {"name": "minimaxLlmClient", "declaredType": "com.chengyinhub.business.service.ai.LlmClient", "owner": "com.chengyinhub.business.service.ai.LlmClientConfig#minimaxLlmClient", "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java:69-86", "dependencies": ["com.chengyinhub.common.config.AiProviderProperties", "aiHttpAdmission"], "condition": "Original method returns original disabled placeholder when provider absent/disabled; no test-specific branch added"},
+    {"name": "photoCheckIntentService", "nameSource": "Existing @Service default name, not an observed runtime registry", "declaredType": "com.chengyinhub.business.service.ai.PhotoCheckIntentService", "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java:22-41", "dependencies": ["com.chengyinhub.business.mapper.PhotoCheckIntentMapper", "com.chengyinhub.business.service.ai.AiGatewayService", "com.chengyinhub.business.service.ai.PhotoCheckVisionService", "com.chengyinhub.business.service.ConsentGuard", "com.chengyinhub.business.service.support.AppMediaReferenceGuard", "org.springframework.transaction.PlatformTransactionManager"], "transactionManagerActualBeanName": "UNKNOWN_UNTIL_AUTO_CONFIGURATION_READBACK"}
+  ],
+  "resourcesAndKeys": {
+    "productionResources": "Keep all original production resources and classpath*:mapper/**/*Mapper.xml, com.chengyinhub.**.domain aliases and mybatis/mybatis-config.xml; no narrowed resource scan",
+    "genericPreflight": "GenericGameplayHttpE2eIT.java:379-388,414-429 requires original fresh-schema report, schema owner and three exact column probes; never bypass",
+    "credentials": "Original generated secrets/credentials stay private; this inventory exports configuration KEY NAMES only, never their runtime values",
+    "keys": ["server.address", "server.port", "token.secret", "coupon.qr-secret", "chengyin.pii.key", "withdrawal.pii.key", "wx.pay.enabled", "wx.pay.api-v3-key", "wx.sec-check.enabled", "spring.quartz.auto-startup", "spring.devtools.restart.enabled", "chengyin.jobs.enabled", "CHENGYIN_OSS_ENDPOINT", "CHENGYIN_OSS_BUCKET_NAME", "CHENGYIN_OSS_ACCESS_KEY_ID", "CHENGYIN_OSS_ACCESS_KEY_SECRET", "ai.model.provider", "ai.model.enabled", "ai.model.baseUrl", "ai.model.model", "ai.model.timeoutMs", "ai.vision.enabled", "ai.vision.baseUrl", "ai.vision.model", "ai.vision.timeoutMs", "ai.providers", "ai.voice.enabled", "ai.voice.asrEnabled", "ai.voice.region"],
+    "genericCompatibility": "Retain original spring.redis.* entries and combination spring.data.redis.* entries; only current combination explicitly aligns Boot4 Redis to original owned port/DB15. No shared Generic rewrite"
+  },
+  "notSpringBeans": [
+    {"type": "com.chengyinhub.business.it.CrossDomainStorageFixture", "creation": "case body; separate actual economic SQL/Redis/notification assembly", "source": "CrossDomainCombinedLoadMySqlIT.java original68,89;CrossDomainStorageFixture.java:149-164,518-532"},
+    {"type": "com.chengyinhub.business.it.CombinedControlledProviders", "creation": "case body after application startup; original loopback HTTP handlers and temporary notifier wiring", "source": "CrossDomainCombinedLoadMySqlIT.java original180;CombinedControlledProviders.java:18,33-69,96-103"},
+    {"type": "com.chengyinhub.business.service.ai.PhotoCheckIntentService", "creation": "ALSO manually constructed and proxied by CrossDomainStorageFixture.photo for separate economic pool; not the application bean", "source": "CrossDomainStorageFixture.java:525-532"}
+  ],
+  "projectionContract": {
+    "implementationOwner": "root ci/test_http_e2e_entry.py only; no shared hunk in this candidate",
+    "defaultPhase": "UNKNOWN",
+    "rule": "Project only fixed exception type and exact declared source class/method/file/positive line. A known source frame identifies that stage, not success or a proven deepest cause. Do not derive Bean names, phases or causes from arbitrary message text",
+    "allowedExceptionTypes": ["java.lang.IllegalStateException", "java.lang.IllegalArgumentException", "java.lang.NumberFormatException", "java.lang.SecurityException", "java.lang.UnsupportedOperationException", "java.lang.ClassNotFoundException", "java.lang.NoClassDefFoundError", "java.lang.ExceptionInInitializerError", "java.sql.SQLException", "org.springframework.beans.factory.BeanCreationException", "org.springframework.beans.factory.UnsatisfiedDependencyException", "org.springframework.beans.factory.NoSuchBeanDefinitionException", "org.springframework.beans.factory.NoUniqueBeanDefinitionException", "org.springframework.context.ApplicationContextException"],
+    "frames": [
+      {"class": "com.chengyinhub.business.it.GenericGameplayHttpE2eIT$LocalInitializer", "method": "initialize", "file": "GenericGameplayHttpE2eIT.java", "phase": "GENERIC_INITIALIZER"},
+      {"class": "com.chengyinhub.business.it.GenericGameplayHttpE2eIT", "method": "assertFixtureMapperColumns", "file": "GenericGameplayHttpE2eIT.java", "phase": "SCHEMA_COLUMN_PREFLIGHT"},
+      {"class": "com.chengyinhub.business.it.GenericGameplayHttpE2eIT", "method": "registerContentSecurityFixture", "file": "GenericGameplayHttpE2eIT.java", "phase": "DYNAMIC_CONTENT_STUB"},
+      {"class": "com.chengyinhub.business.it.GenericGameplayHttpE2eIT$ReviewedMediaFixture", "method": "configure", "file": "GenericGameplayHttpE2eIT.java", "phase": "MEDIA_FIXTURE_SETTINGS"},
+      {"class": "com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT$Initializer", "method": "configureBoundedPool", "file": "CrossDomainCombinedLoadMySqlIT.java", "phase": "BOUNDED_POOL_PROPERTIES"},
+      {"class": "com.chengyinhub.framework.config.DruidConfig", "method": "masterDataSource", "file": "DruidConfig.java", "phase": "MASTER_DATASOURCE_FACTORY"},
+      {"class": "com.chengyinhub.framework.config.properties.DruidProperties", "method": "dataSource", "file": "DruidProperties.java", "phase": "DRUID_PROPERTY_ASSEMBLY"},
+      {"class": "com.alibaba.druid.pool.DruidDataSource", "method": "init", "file": "DruidDataSource.java", "phase": "DRUID_POOL_INIT"},
+      {"class": "com.chengyinhub.framework.config.MyBatisConfig", "method": "sqlSessionFactory", "file": "MyBatisConfig.java", "phase": "MYBATIS_FACTORY"},
+      {"class": "com.chengyinhub.framework.config.RedisConfig", "method": "redisTemplate", "file": "RedisConfig.java", "phase": "REDIS_TEMPLATE_FACTORY"},
+      {"class": "com.chengyinhub.business.service.ai.LlmClientConfig", "method": "aiHttpAdmission", "file": "LlmClientConfig.java", "phase": "AI_ADMISSION_FACTORY"},
+      {"class": "com.chengyinhub.business.service.ai.LlmClientConfig", "method": "visionLlmClient", "file": "LlmClientConfig.java", "phase": "VISION_CLIENT_FACTORY"},
+      {"class": "com.chengyinhub.business.service.ai.PhotoCheckIntentService", "method": "<init>", "file": "PhotoCheckIntentService.java", "phase": "PHOTO_INTENT_CONSTRUCTOR"},
+      {"class": "com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT", "method": "realCommandsRemainIsolatedAcrossHeldProvidersAndOriginalEconomicRecovery", "file": "CrossDomainCombinedLoadMySqlIT.java", "phase": "CASE_BODY"},
+      {"class": "com.chengyinhub.business.it.CrossDomainStorageFixture", "method": "open", "file": "CrossDomainStorageFixture.java", "phase": "INDEPENDENT_ECONOMIC_ASSEMBLY"},
+      {"class": "com.chengyinhub.business.it.CombinedControlledProviders", "method": "<init>", "file": "CombinedControlledProviders.java", "phase": "CONTROLLED_PROVIDER_CASE_ASSEMBLY"}
+    ],
+    "limitsProposal": {"frames": 8, "chainTypes": 8},
+    "neverExport": ["exception messages", "SQL", "Bean dependency string containing runtime input", "environment values", "URI", "argv", "payload", "locals", "credentials"],
+    "unknownClassOrFrame": "UNKNOWN; do not allow arbitrary package prefixes or normalize unknown generated classes into success"
+  },
+  "directTests": {"source": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CombinedContextConfigurationTest.java", "tests": 2, "scope": "Original conflicting property-source reproduction and real DruidProperties/dataSource assembly with zero connections; no web/SQL/Redis/provider startup claim"},
+  "retained": ["Original sole combined business test and all assertions", "240HTTP and original economic/UNKNOWN/provider cases", "maxActive3 and150sec case budget", "Original19 selected compile inputs", "original Generic/Freeze methods and providers", "actor/scope/credentials/real gateways", "booter/cache/offline/network/cleanup gates"],
+  "notRun": ["tests", "parse/import", "Maven/compiler", "Java", "DB/Redis", "Docker", "HTTP workload", "CI"],
+  "businessAccepted": false
+}

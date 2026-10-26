@@ -212,6 +212,7 @@
                                         <testInclude>com/chengyinhub/quartz/util/CrossDomainSchedulerStage.java</testInclude>
                                         <testInclude>com/chengyinhub/quartz/util/SchedulerFenceProcessProbe.java</testInclude>
                                         <testInclude>com/chengyinhub/business/it/CombinedSurefireRuntimeProbeTest.java</testInclude>
+                                        <testInclude>com/chengyinhub/business/it/CombinedContextConfigurationTest.java</testInclude>
                                     </testIncludes>
                                 </configuration>
                             </execution>

@@ -1,0 +1,5 @@
+14ae15aff6efb47f0e0f711533700475688152e1bba087fe88ada761ff702ec2  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java
+51ba77b57ec6340cdd8e00b741a40d702f9033b4c5d60221aba5671595cf46a3  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CombinedContextConfigurationTest.java
+8c0505c52962191282edb4303f804eb1be119abc89cae9e0df3b989b88598941  docs/delivery/architecture-day/C/combined-context-startup/README.md
+accacd04b8fd60f9440440a3d2596098c7ab156ab03a883da35e30dd52869c85  docs/delivery/architecture-day/C/combined-context-startup/context-contract.json
+afded7657510b30fb4422081c104fd14ebcc784c4cef7f2332646a573a2a1f05  docs/delivery/architecture-day/C/combined-context-startup/source-sha256.txt

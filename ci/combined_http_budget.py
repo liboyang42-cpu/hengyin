@@ -26,6 +26,10 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 CLASS = 'CrossDomainCombinedLoadMySqlIT'
 PROVIDER_PROBE = 'com.chengyinhub.business.it.CombinedSurefireRuntimeProbeTest'
+CONFIGURATION_UNIT = 'com.chengyinhub.business.it.CombinedContextConfigurationTest'
+CONFIGURATION_SOURCE = 'com/chengyinhub/business/it/CombinedContextConfigurationTest.java'
+CONFIGURATION_METHODS = ('boundedPoolOverridesBothIncompatibleInheritedFloorsWithoutChangingOtherOwners',
+                         'originalDruidPropertiesAssemblesAValidUninitializedThreeConnectionPool')
 SUREFIRE_FORK_ARGUMENTS = '-Xmx512m -Djava.security.manager=allow --add-opens=java.base/java.lang=ALL-UNNAMED -Djava.io.tmpdir=/tmp -Djava.awt.headless=true'
 TEST_PROFILE = 'combined-http-fixture-closure'
 TEST_SOURCES = (
@@ -48,6 +52,7 @@ TEST_SOURCES = (
     'com/chengyinhub/quartz/util/CrossDomainSchedulerStage.java',
     'com/chengyinhub/quartz/util/SchedulerFenceProcessProbe.java',
     'com/chengyinhub/business/it/CombinedSurefireRuntimeProbeTest.java',
+    CONFIGURATION_SOURCE,
 )
 REQUIRED_TEST_CLASSES = (
     'com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT',
@@ -147,13 +152,14 @@ SAFE_RESOURCE_CODES = frozenset({'FIXED_COMMAND_FAILED','FIXED_HOSTED_CLASS_ONLY
     'REAL_MAVEN_AND_JUNIT_PID_PROOF_REQUIRED','MYSQL_ADDRESS_OR_UUID_DRIFT','ORIGINAL_EXECUTION_NAMESPACE_NOT_LIVE',
     'MYSQL_PROCESS_REPLACED_BEFORE_PORT_PROOF','PORT_PROBE_NAMESPACE_CHANGED','NAMESPACE_PROBE_POSTIMAGE_CHANGED',
     'ACTUAL_NAMESPACE_BIND_PROOF_REQUIRED','PRIVATE_APP_IDENTITY_OR_ROOTFS_CHANGED','FIXED_OFFLINE_MAVEN_COMMAND_CHANGED',
-    'UNCLASSIFIED_RESOURCE_FAILURE'})
+    'UNCLASSIFIED_RESOURCE_FAILURE','CONFIGURATION_UNIT_PROOF_REQUIRED','CONFIGURATION_UNIT_XML_REQUIRED'})
 CACHE_SUBSTAGES=frozenset({'SOURCE_INPUTS','LOCAL_ENGINE','PINNED_IMAGE','CREATE_INPUTS','CREATE',
     'OWNER_TOOLCHAIN','MOUNT_ENV','START','CGROUP','WAIT_EXIT','MAVEN_EXIT','CORE_IDENTITY',
-    'MANIFEST','PROVIDER_RUNTIME','PRIVATE_LOG','CLEANUP','TERMINAL'})
+    'MANIFEST','PROVIDER_RUNTIME','CONFIGURATION_UNIT','PRIVATE_LOG','CLEANUP','TERMINAL'})
 CACHE_FAILURE_FUNCTIONS=frozenset({'warm_cache','cache_inputs','cache_manifest','cache_process_state',
     'cache_terminal','cache_offline_probe_exit','fixed_test_compilation_inputs','reset_fixed_test_outputs',
-    'fixed_test_compilation_outputs','provider_runtime_proof','command','inspect','validate_owner','validate_container','read_cgroup','validate_cgroup_limits'})
+    'fixed_test_compilation_outputs','provider_runtime_proof','configuration_unit_proof','exact_test_xml',
+    'command','inspect','validate_owner','validate_container','read_cgroup','validate_cgroup_limits'})
 CACHE_GOALS={
     'maven-resources-plugin':{'resources','testResources'},'maven-compiler-plugin':{'compile','testCompile'},
     'maven-surefire-plugin':{'test'},'maven-jar-plugin':{'jar'},'maven-install-plugin':{'install'},
@@ -235,9 +241,46 @@ def fixed_test_compilation_outputs(inputs):
         classes[relative]=all_classes[relative]
     probe=PROVIDER_PROBE.replace('.','/')+'.class'
     require(probe in all_classes,'FIXED_TEST_COMPILATION_OUTPUT_REQUIRED')
+    configuration=CONFIGURATION_UNIT.replace('.','/')+'.class'
+    require(configuration in all_classes,'FIXED_TEST_COMPILATION_OUTPUT_REQUIRED')
     return {**inputs,'compilerInputs':sorted(TEST_SOURCES),'classes':classes,
             'providerProbeClassSha256':all_classes[probe],
+            'configurationTestClassSha256':all_classes[configuration],
             'classTree':{'classes':len(all_classes),'sha256':hashlib.sha256(json.dumps(list(all_classes.items()),separators=(',',':')).encode()).hexdigest()}}
+
+
+def exact_test_xml(path,test_class,methods,code):
+    # Fixed internal callers only. Never export XML properties, output or arbitrary method names.
+    require(path.is_file() and not path.is_symlink() and path.resolve()==path
+            and not path.stat().st_mode & 0o077 and path.stat().st_size<2*1024*1024,code)
+    raw=path.read_bytes();require(b'<!DOCTYPE' not in raw and b'<!ENTITY' not in raw,code)
+    try:suite=ET.fromstring(raw)
+    except ET.ParseError:raise ValueError(code) from None
+    cases=suite.findall('testcase');names=[case.get('name') for case in cases]
+    require(suite.tag=='testsuite' and suite.get('name')==test_class and suite.get('tests')==str(len(methods))
+            and all(suite.get(key)=='0' for key in ('failures','errors','skipped'))
+            and len(cases)==len(methods) and len(set(names))==len(methods) and set(names)==set(methods)
+            and len(list(suite.iter('testcase')))==len(cases)
+            and all(case.get('classname')==test_class for case in cases)
+            and not any(element.tag in ('failure','error','skipped','rerunFailure','rerunError','flakyFailure','flakyError')
+                        for element in suite.iter()),code)
+    return {'tests':len(methods),'failures':0,'errors':0,'skipped':0,'xmlSha256':hashlib.sha256(raw).hexdigest()}
+
+
+def configuration_unit_proof(compilation):
+    directory=ROOT/'chengyinhub-admin/target/provider-runtime'
+    require(directory.is_dir() and not directory.is_symlink() and directory.resolve()==directory
+            and not directory.stat().st_mode & 0o077,'CONFIGURATION_UNIT_PROOF_REQUIRED')
+    source=ROOT/'chengyinhub-admin/src/test/java'/CONFIGURATION_SOURCE
+    test_class=ROOT/'chengyinhub-admin/target/test-classes'/(CONFIGURATION_UNIT.replace('.','/')+'.class')
+    require(all(path.is_file() and not path.is_symlink() and path.resolve()==path for path in (source,test_class))
+            and compilation['sources'].get(CONFIGURATION_SOURCE)==digest(source)
+            and compilation.get('configurationTestClassSha256')==digest(test_class),'CONFIGURATION_UNIT_PROOF_REQUIRED')
+    xml=exact_test_xml(directory/'configuration.xml',CONFIGURATION_UNIT,CONFIGURATION_METHODS,'CONFIGURATION_UNIT_XML_REQUIRED')
+    return {'purpose':'CONFIG_ASSEMBLY_ONLY','businessExecuted':False,
+            'sourceSha':os.environ['SOURCE_SHA'],'runId':os.environ['GITHUB_RUN_ID'],'attempt':os.environ['GITHUB_RUN_ATTEMPT'],
+            'testClass':CONFIGURATION_UNIT,'methods':list(CONFIGURATION_METHODS),
+            'sourceSha256':digest(source),'testClassSha256':digest(test_class),**xml}
 
 
 def provider_runtime_proof(cache):
@@ -258,15 +301,8 @@ def provider_runtime_proof(cache):
         for file,limit in ((path,32768),(xml,2*1024*1024)):
             require(file.is_file() and not file.is_symlink() and file.resolve().parent==directory
                     and not file.stat().st_mode & 0o077 and file.stat().st_size<limit,'PROVIDER_RUNTIME_PROOF_REQUIRED')
-        proof=json.loads(path.read_text());raw=xml.read_bytes()
-        require(b'<!DOCTYPE' not in raw and b'<!ENTITY' not in raw,'PROVIDER_RUNTIME_XML_REQUIRED')
-        try:suite=ET.fromstring(raw)
-        except ET.ParseError:raise ValueError('PROVIDER_RUNTIME_XML_REQUIRED') from None
-        cases=suite.findall('testcase')
-        require(suite.tag=='testsuite' and suite.get('name')==PROVIDER_PROBE and suite.get('tests')=='1'
-                and all(suite.get(key)=='0' for key in ('failures','errors','skipped')) and len(cases)==1
-                and cases[0].get('classname')==PROVIDER_PROBE and cases[0].get('name')=='bootsActualProjectPlatformRuntime'
-                and not any(cases[0].find(kind) is not None for kind in ('failure','error','skipped')),'PROVIDER_RUNTIME_XML_REQUIRED')
+        proof=json.loads(path.read_text())
+        exact_test_xml(xml,PROVIDER_PROBE,('bootsActualProjectPlatformRuntime',),'PROVIDER_RUNTIME_XML_REQUIRED')
         require(set(proof)=={'sourceSha','runId','attempt','phase','javaFeature','pid','parentPid','startedAt','forkedBooter',
                 'commandSha256','testClassSha256','runtime','businessExecuted'}
                 and proof['sourceSha']==os.environ['SOURCE_SHA'] and proof['phase']==phase
@@ -391,15 +427,21 @@ def fixed_cache_command():
                      for stage,goal in zip(('ORIGINAL_PROVIDER_GET',),goals[1:2]))
     # Real provider selection and fork, not skipTests. Same reactor/profile/test classpath, no business.
     report='chengyinhub-admin/target/surefire-reports/TEST-'+PROVIDER_PROBE+'.xml'
+    configuration_report='chengyinhub-admin/target/surefire-reports/TEST-'+CONFIGURATION_UNIT+'.xml'
     for stage,phase,offline in (('ONLINE_PROVIDER_RUNTIME','ONLINE',False),('OFFLINE_PROVIDER_RUNTIME','OFFLINE',True)):
+        selection=PROVIDER_PROBE if offline else PROVIDER_PROBE+','+CONFIGURATION_UNIT
         args=common+(['-o'] if offline else [])+['-P'+TEST_PROFILE,'-pl','chengyinhub-admin','-am','test',
             '-DargLine='+SUREFIRE_FORK_ARGUMENTS+' -Dcombined.provider.phase='+phase,
-            '-Dtest='+PROVIDER_PROBE,'-DforkCount=1','-DreuseForks=true','-DfailIfNoTests=false','-Dsurefire.failIfNoSpecifiedTests=false']
-        encoded+='; printf "%s\\n" "'+stage+'" >/tmp/cy-cache.phase; rm -f \''+report+'\'; '+\
+            '-Dtest='+selection,'-DforkCount=1','-DreuseForks=true','-DfailIfNoTests=false','-Dsurefire.failIfNoSpecifiedTests=false']
+        remove="rm -f '"+report+"'"+(" '"+configuration_report+"'" if not offline else '')
+        encoded+='; printf "%s\\n" "'+stage+'" >/tmp/cy-cache.phase; '+remove+'; '+\
             "MAVEN_OPTS='-Xmx128m -Djava.io.tmpdir=/tmp -Duser.home=/tmp/home' "+\
             ' '.join("'"+value+"'" for value in ['mvn']+args)+' || exit $?; '+\
             "cp '"+report+"' 'chengyinhub-admin/target/provider-runtime/"+phase.lower()+".xml' || exit $?; "+\
             "chmod 600 'chengyinhub-admin/target/provider-runtime/"+phase.lower()+".xml' || exit $?"
+        if not offline:
+            encoded+="; cp '"+configuration_report+"' 'chengyinhub-admin/target/provider-runtime/configuration.xml' || exit $?; "+\
+                     "chmod 600 'chengyinhub-admin/target/provider-runtime/configuration.xml' || exit $?"
     encoded+='; printf "%s\\n" "OFFLINE_TEST_PREFLIGHT" >/tmp/cy-cache.phase; '+\
         ' '.join("'"+value+"'" for value in ['mvn']+goals[2])+' || exit $?'
     return ['-c','mkdir -p /tmp/home /tmp/m2 || exit 98; '
@@ -529,6 +571,7 @@ def warm_cache():
         require(fixed_test_compilation_inputs()==compilation,'COMPILED_POSTIMAGE_DRIFT')
         report['testCompilation']=fixed_test_compilation_outputs(compilation)
         substage='PROVIDER_RUNTIME';report['providerRuntime']=provider_runtime_proof(cache)
+        substage='CONFIGURATION_UNIT';report['configurationUnit']=configuration_unit_proof(report['testCompilation'])
         substage='MANIFEST'
         report['cache']=cache_manifest(cache);require(cache_inputs()==report['pomSha256'],'COMPILED_POSTIMAGE_DRIFT')
     except Exception as failure:
@@ -580,6 +623,7 @@ def verified_cache(cache):
             and report.get('pomSha256')==cache_inputs() and report.get('cache')==cache_manifest(cache)
             and report.get('testCompilation')==fixed_test_compilation_outputs(fixed_test_compilation_inputs())
             and report.get('providerRuntime')==provider_runtime_proof(cache)
+            and report.get('configurationUnit')==configuration_unit_proof(report['testCompilation'])
             and report.get('cleanup',{}).get('result')=='EXACT_CID_REMOVED_AND_ABSENT'
             and report['cleanup'].get('terminal',{}).get('OOMKilled') is False
             and report['cleanup'].get('terminal',{}).get('ExitCode') in (0,143)

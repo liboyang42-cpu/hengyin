@@ -43,11 +43,20 @@ class CrossDomainCombinedLoadMySqlIT {
     public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
         @Override public void initialize(ConfigurableApplicationContext application) {
             new GenericGameplayHttpE2eIT.LocalInitializer().initialize(application);
+            configureBoundedPool(application);
             TestPropertySourceUtils.addInlinedPropertiesToEnvironment(application,
-                    "spring.datasource.druid.maxActive=3", "spring.datasource.druid.maxWait=5000",
-                    "spring.datasource.druid.socketTimeout=5000", "chengyin.jobs.enabled=false",
+                    "chengyin.jobs.enabled=false",
                     "spring.data.redis.host=127.0.0.1", "spring.data.redis.port=" + System.getenv("CHENGYIN_HTTP_E2E_REDIS_PORT"),
                     "spring.data.redis.database=15", "spring.data.redis.password=");
+        }
+
+        static void configureBoundedPool(ConfigurableApplicationContext application) {
+            // The original druid profile has initialSize=5/minIdle=10. Both must fit the
+            // fixed three-connection cap before the real datasource is initialized.
+            TestPropertySourceUtils.addInlinedPropertiesToEnvironment(application,
+                    "spring.datasource.druid.initialSize=0", "spring.datasource.druid.minIdle=0",
+                    "spring.datasource.druid.maxActive=3", "spring.datasource.druid.maxWait=5000",
+                    "spring.datasource.druid.socketTimeout=5000");
         }
     }
 
@@ -86,6 +95,7 @@ class CrossDomainCombinedLoadMySqlIT {
             evidence.putAll(identity(coreSchema, serverUuid));
             var appPool = context.getBean("masterDataSource", DruidDataSource.class);
             assertEquals(3, appPool.getMaxActive());
+            assertEquals(0, appPool.getInitialSize()); assertEquals(0, appPool.getMinIdle());
             storage.open(); storage.pool.setMaxActive(3); // narrow the existing fixture's 12 cap, never enlarge it
             assertEquals(serverUuid, storage.serverUuid); assertNotEquals(coreSchema, storage.schema);
             assertEquals(System.getenv("CHENGYIN_HTTP_E2E_REDIS_PORT"), System.getenv("CHENGYIN_AI_REDIS_IT_PORT"));
