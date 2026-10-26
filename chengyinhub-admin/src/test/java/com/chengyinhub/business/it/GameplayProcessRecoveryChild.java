@@ -109,11 +109,14 @@ public final class GameplayProcessRecoveryChild {
         require(!Files.exists(pending) && !Files.isSymbolicLink(pending), "owned pending identity must be absent");
         ObjectNode identities = seedRows(context, jdbc, 72);
         try {
-            Files.write(pending, JSON.writeValueAsBytes(identities), StandardOpenOption.CREATE_NEW);
+            // Freeze JSON bytes: a parsed small integer need not retain its original Jackson node width.
+            byte[] frozenIdentityBytes = JSON.writeValueAsBytes(identities);
+            Files.write(pending, frozenIdentityBytes, StandardOpenOption.CREATE_NEW);
             Files.setPosixFilePermissions(pending, PosixFilePermissions.fromString("rw-------"));
             Files.move(pending, file, StandardCopyOption.ATOMIC_MOVE);
-            JsonNode readback = JSON.readTree(Files.readAllBytes(file));
-            require(identities.equals(readback), "controlled identity readback mismatch"); return readback;
+            byte[] storedIdentityBytes = Files.readAllBytes(file);
+            require(MessageDigest.isEqual(frozenIdentityBytes, storedIdentityBytes), "controlled identity readback mismatch");
+            return JSON.readTree(storedIdentityBytes);
         } finally { Files.deleteIfExists(pending); }
     }
 

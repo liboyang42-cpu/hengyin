@@ -526,6 +526,9 @@ def fixed_startup_source_frames(text):
         ("com.chengyinhub.business.service.ai.LlmClientConfig", "aiHttpAdmission", "LlmClientConfig.java"): ("AI_ADMISSION_FACTORY", "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java", 88),
         ("com.chengyinhub.business.service.ai.LlmClientConfig", "visionLlmClient", "LlmClientConfig.java"): ("VISION_CLIENT_FACTORY", "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java", 88),
         ("com.chengyinhub.business.service.ai.PhotoCheckIntentService", "<init>", "PhotoCheckIntentService.java"): ("PHOTO_INTENT_CONSTRUCTOR", "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java", 234),
+        ("com.chengyinhub.business.it.GameplayProcessRecoveryChild", "seedCombination", "GameplayProcessRecoveryChild.java"): ("COMBINATION_IDENTITY_SEED", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GameplayProcessRecoveryChild.java", 237),
+        ("com.chengyinhub.business.it.GameplayProcessRecoveryChild", "seedRows", "GameplayProcessRecoveryChild.java"): ("ORIGINAL_ACTOR_AND_GAME_ROWS", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GameplayProcessRecoveryChild.java", 237),
+        ("com.chengyinhub.business.it.GameplayProcessRecoveryChild", "require", "GameplayProcessRecoveryChild.java"): ("ORIGINAL_FIXTURE_REQUIRE", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GameplayProcessRecoveryChild.java", 237),
         ("com.chengyinhub.business.it.CrossDomainCombinedLoadMySqlIT", "realCommandsRemainIsolatedAcrossHeldProvidersAndOriginalEconomicRecovery", "CrossDomainCombinedLoadMySqlIT.java"): ("CASE_BODY", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java", 411),
         ("com.chengyinhub.business.it.CrossDomainStorageFixture", "open", "CrossDomainStorageFixture.java"): ("INDEPENDENT_ECONOMIC_ASSEMBLY", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainStorageFixture.java", 577),
         ("com.chengyinhub.business.it.CombinedControlledProviders", "<init>", "CombinedControlledProviders.java"): ("CONTROLLED_PROVIDER_CASE_ASSEMBLY", "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CombinedControlledProviders.java", 120),
@@ -1182,10 +1185,12 @@ class FailureDiagnosticTest(unittest.TestCase):
         text = ('\tat com.chengyinhub.framework.config.DruidConfig.masterDataSource(DruidConfig.java:37)\n'
                 '\tat com.alibaba.druid.pool.DruidDataSource.init(DruidDataSource.java:721)\n'
                 '\tat com.chengyinhub.business.it.CrossDomainStorageFixture.open(CrossDomainStorageFixture.java:150)\n'
+                '\tat com.chengyinhub.business.it.GameplayProcessRecoveryChild.seedCombination(GameplayProcessRecoveryChild.java:116)\n'
                 'PRIVATE_VALUE SQL password=PRIVATE_VALUE')
         self.assertEqual([{'phase': 'MASTER_DATASOURCE_FACTORY', 'sourceFrame': 'DruidConfig.java:37'},
                           {'phase': 'DRUID_POOL_INIT', 'sourceFrame': 'DruidDataSource.java:721'},
-                          {'phase': 'INDEPENDENT_ECONOMIC_ASSEMBLY', 'sourceFrame': 'CrossDomainStorageFixture.java:150'}],
+                          {'phase': 'INDEPENDENT_ECONOMIC_ASSEMBLY', 'sourceFrame': 'CrossDomainStorageFixture.java:150'},
+                          {'phase': 'COMBINATION_IDENTITY_SEED', 'sourceFrame': 'GameplayProcessRecoveryChild.java:116'}],
                          fixed_startup_source_frames(text))
         self.assertNotIn('PRIVATE', json.dumps(fixed_startup_source_frames(text)))
 

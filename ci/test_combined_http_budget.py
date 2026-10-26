@@ -598,7 +598,7 @@ class CombinedBudgetControls(unittest.TestCase):
 
     def configuration_receipt(self):
         # Transport binding only. Real fixed XML/source/class controls are below.
-        return {'purpose':'CONFIG_ASSEMBLY_ONLY','businessExecuted':False,'tests':3,'failures':0,'errors':0,'skipped':0,
+        return {'purpose':'CONFIG_ASSEMBLY_ONLY','businessExecuted':False,'tests':5,'failures':0,'errors':0,'skipped':0,
                 'xmlSha256':'3'*64,'sourceSha256':'4'*64,'testClassSha256':'5'*64}
 
     def cache_receipt(self):
@@ -1398,7 +1398,7 @@ class CombinedBudgetControls(unittest.TestCase):
         compilation={'sources':{B.CONFIGURATION_SOURCE:B.digest(source)},'configurationTestClassSha256':B.digest(test_class)}
         directory=root/'chengyinhub-admin/target/provider-runtime';directory.mkdir(mode=0o700)
         xml=directory/'configuration.xml'
-        xml.write_text('<testsuite name="'+B.CONFIGURATION_UNIT+'" tests="3" failures="0" errors="0" skipped="0">'
+        xml.write_text('<testsuite name="'+B.CONFIGURATION_UNIT+'" tests="5" failures="0" errors="0" skipped="0">'
             '<properties><property name="PRIVATE_VALUE" value="PRIVATE_VALUE"/></properties>'+
             ''.join('<testcase classname="'+B.CONFIGURATION_UNIT+'" name="'+method+'"/>' for method in B.CONFIGURATION_METHODS)+'</testsuite>')
         xml.chmod(0o600);return xml,source,test_class,compilation
@@ -1423,13 +1423,13 @@ class CombinedBudgetControls(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),patch.object(B,'ROOT',Path(directory)):
             xml,source,test_class,compilation=self.configuration_scope(Path(directory));proof=B.configuration_unit_proof(compilation)
             self.assertEqual(proof['purpose'],'CONFIG_ASSEMBLY_ONLY');self.assertIs(proof['businessExecuted'],False)
-            self.assertEqual({key:proof[key] for key in ('tests','failures','errors','skipped')},{'tests':3,'failures':0,'errors':0,'skipped':0})
+            self.assertEqual({key:proof[key] for key in ('tests','failures','errors','skipped')},{'tests':5,'failures':0,'errors':0,'skipped':0})
             self.assertEqual(proof['methods'],list(B.CONFIGURATION_METHODS));self.assertEqual(proof['xmlSha256'],B.digest(xml))
             self.assertEqual(proof['sourceSha256'],B.digest(source));self.assertEqual(proof['testClassSha256'],B.digest(test_class))
             self.assertEqual(proof['sourceSha'],self.env()['SOURCE_SHA']);self.assertEqual(proof['runId'],self.env()['GITHUB_RUN_ID'])
             self.assertEqual(proof['attempt'],self.env()['GITHUB_RUN_ATTEMPT'])
             self.assertNotIn('PRIVATE_VALUE',json.dumps(proof));self.assertNotIn(directory,json.dumps(proof))
-        for kind in ('missing','count','old-two','duplicate','case','method','failure','error','skip','retry','doctype','source','class','mode'):
+        for kind in ('missing','count','old-two','old-three','duplicate','case','method','failure','error','skip','retry','doctype','source','class','mode'):
             with self.subTest(kind=kind),tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),patch.object(B,'ROOT',Path(directory)):
                 xml,source,test_class,compilation=self.configuration_scope(Path(directory));raw=xml.read_text()
                 if kind=='missing':xml.unlink()
@@ -1437,9 +1437,12 @@ class CombinedBudgetControls(unittest.TestCase):
                 elif kind=='class':test_class.write_bytes(b'changed class')
                 elif kind=='mode':xml.chmod(0o644)
                 else:
-                    if kind=='count':raw=raw.replace('tests="3"','tests="2"')
-                    if kind=='old-two':
-                        raw=raw.replace('tests="3"','tests="2"').replace('<testcase classname="'+B.CONFIGURATION_UNIT+'" name="'+B.CONFIGURATION_METHODS[2]+'"/>','')
+                    if kind=='count':raw=raw.replace('tests="5"','tests="4"')
+                    if kind in ('old-two','old-three'):
+                        retained=2 if kind=='old-two' else 3
+                        raw=raw.replace('tests="5"','tests="'+str(retained)+'"')
+                        for method in B.CONFIGURATION_METHODS[retained:]:
+                            raw=raw.replace('<testcase classname="'+B.CONFIGURATION_UNIT+'" name="'+method+'"/>','')
                     if kind=='duplicate':raw=raw.replace(B.CONFIGURATION_METHODS[1],B.CONFIGURATION_METHODS[0])
                     if kind=='case':raw=raw.replace('classname="'+B.CONFIGURATION_UNIT+'"','classname="Other"')
                     if kind=='method':raw=raw.replace(B.CONFIGURATION_METHODS[0],'Other')
@@ -1540,7 +1543,9 @@ class CombinedBudgetControls(unittest.TestCase):
         self.assertEqual(B.CONFIGURATION_METHODS[:2],('boundedPoolOverridesBothIncompatibleInheritedFloorsWithoutChangingOtherOwners',
                          'originalDruidPropertiesAssemblesAValidUninitializedThreeConnectionPool'))
         self.assertEqual(B.CONFIGURATION_METHODS[2:3],('schedulerChildHeapIsFixedOnlyForOriginalCombinedScope',))
-        self.assertEqual(len(B.CONFIGURATION_METHODS),3)
+        self.assertEqual(B.CONFIGURATION_METHODS[3:],('combinationIdentityFileRetainsFrozenBytesAcrossIntegerNodeWidths',
+                         'combinationIdentityFileRejectsExistingAndPendingFilesBeforeSql'))
+        self.assertEqual(len(B.CONFIGURATION_METHODS),5)
 
 
 if __name__=='__main__':unittest.main()
