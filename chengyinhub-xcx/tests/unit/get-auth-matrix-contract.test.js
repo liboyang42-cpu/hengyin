@@ -26,6 +26,9 @@ const PLAY_PROGRESS_CONTROLLER = path.resolve(
 // optional = 后端允许匿名，但登录时会按 uid 返回个人态，所以仍使用默认认证；
 // required = 后端 anyRequest().authenticated()，绝不能 auth:false。
 const MATRIX = [
+  // Team board reads retain authenticated access; detail additionally enforces active team membership.
+  ['pages/team/detail/index.js', "url: '/api/orient/team/detail'", 'required', 'member', 'active-team-member'],
+  ['pages/team/detail/index.js', "url: '/api/orient/team/ranking'", 'required', 'member', 'global-authenticated-read'],
   ['subpackageMember/orient-score/index.js', "url: '/api/play/orient/session/current'", 'required', 'member', 'self-account'],
   ['subpackageMember/orient-score/index.js', "url: BASE + '/session/'", 'required', 'member', 'self-account'],
   ['subpackageMember/orient-score/index.js', "url: BASE + '/receipt'", 'required', 'member', 'self-account'],
@@ -211,7 +214,7 @@ const VALID_SCOPES = new Set([
   'self-merchant-game-entry', 'club-owned-activity',
   'owned-merchant-resource', 'self-marketing-consent',
   'share-token-snapshot', 'owned-merchant-or-club-receivable', 'owned-media-asset',
-  'controlled-event-operator', 'public-profile-gallery',
+  'controlled-event-operator', 'public-profile-gallery', 'active-team-member',
 ]);
 
 function productionJsFiles(dir) {
@@ -339,7 +342,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-25 官方地点卡片 + 地点挑战页各一处 GET /api/city/nodes/{id}(已入 MATRIX),77 → 79。
   // 上述两端各新增单笔与分页 GET，共四处，79 → 83。
   // 本人角色卡及计分会话列表、明细、回执增加四处认证 GET，83 → 87。
-  assert.equal(directCount, 87, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // Existing team detail adds two authenticated board reads, 87 → 89.
+  assert.equal(directCount, 89, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

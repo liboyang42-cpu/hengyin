@@ -1,6 +1,13 @@
 const cyToast = require('../../../utils/toast.js');
 const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
+const { exactId, reader, sameReader } = require('../../../utils/user-character.js');
 const app = getApp();
+
+// Preserve numeric IDs for existing callers, but never round a Long string.
+const requestId = value => {
+  const id = exactId(value);
+  return id && Number.isSafeInteger(Number(id)) ? Number(id) : id;
+};
 
 const STATUS_TEXT = ['招募中', '已满员', '进行中', '已结束', '已解散'];
 
@@ -8,6 +15,12 @@ Page({
   data: {
     statusBarHeight: app.globalData.statusBarHeight,
     navBarHeight: app.globalData.navBarHeight,
+    board: null,
+    boardState: '',
+    boardMessage: '',
+    boardRanks: [],
+    rankingState: '',
+    rankingMessage: '',
     team: null,
     members: [],
     joined: false,
@@ -28,7 +41,10 @@ Page({
   },
 
   onLoad(options) {
-    this.teamId = String(options.teamId || '');
+    this._hidden = false;
+    this._disposed = false;
+    this._resetReads();
+    this.teamId = exactId(options.teamId);
     if (!this.teamId) {
       this.setData({
         loading: false,
@@ -40,7 +56,26 @@ Page({
       });
     }
   },
-  onShow() { if (this.teamId) this.load(); },
+  onShow() { this._hidden = false; if (this.teamId) this.load(); },
+  onHide() { this._hidden = true; this._resetReads(); },
+  onUnload() { this._disposed = true; this._resetReads(); },
+
+  _resetReads() {
+    this._readEpoch = (this._readEpoch || 0) + 1;
+    this._teamLoading = false;
+    this.setData({ board: null, boardState: '', boardMessage: '', boardRanks: [], rankingState: '', rankingMessage: '' });
+  },
+  _readCurrent(context) {
+    if (this._hidden || this._disposed || context.epoch !== this._readEpoch
+        || context.teamId !== this.teamId) return false;
+    if (!sameReader(app, context.reader)) {
+      this._resetReads();
+      this.setData({ team: null, members: [], joined: false, leader: false, loading: false,
+        error: '账号状态已变化，请重新加载队伍', errorAction: '重新加载' });
+      return false;
+    }
+    return true;
+  },
   onPullDownRefresh() { this.load(true); },
   openReport() { this.setData({ reportTeamId: this.teamId, reportShow: true }); },
   closeReport() { this.setData({ reportShow: false }); },
@@ -52,7 +87,17 @@ Page({
       this.onLoad({});
       return;
     }
-    if (this._teamLoading) return;
+    if (this._hidden || this._disposed) return;
+    if (this._readContext && (!sameReader(app, this._readContext.reader) || this._readContext.teamId !== this.teamId)) {
+      this._resetReads();
+      this.setData({ team: null, members: [], joined: false, leader: false });
+    }
+    if (this._teamLoading) { if (fromPull) wx.stopPullDownRefresh(); return; }
+    this._resetReads();
+    const context = { epoch: this._readEpoch, teamId: this.teamId, reader: reader(app) };
+    this._readContext = context;
+    let settled = false;
+    const current = () => !settled && this._readCurrent(context);
     this._teamLoading = true;
     const hasTeam = !!this.data.team;
     this.setData({
@@ -64,12 +109,14 @@ Page({
     });
     app.sendRequest({
       url: '/api/team/info', method: 'POST', hideLoading: true, autoErrorToast: false,
-      data: JSON.stringify({ teamId: Number(this.teamId) }),
+      data: JSON.stringify({ teamId: this.teamId }),
       header: { 'Content-Type': 'application/json' },
       success(res) {
+        if (!current()) return;
+        settled = true;
         that._teamLoading = false;
         if (fromPull) wx.stopPullDownRefresh();
-        if (res.code == '200' && res.data && res.data.team) {
+        if (res && res.code == '200' && res.data && res.data.team && exactId(res.data.team.id) === context.teamId) {
           const team = res.data.team;
           that.setData({
             loading: false,
@@ -84,6 +131,7 @@ Page({
             error: '',
             errorSub: ''
           });
+          that._loadBoard(context, team, res.data.joined === true);
         } else {
           // PR10 F-W1-12:未登录(无会话 / 401)的按钮是「登录」(走 retryLogin),不是只会再撞一次的「重新加载」。
           const needLogin = isLoginRequired(app, res);
@@ -95,11 +143,15 @@ Page({
             error: authDenied ? '登录后查看队伍' : hasTeam ? '队伍状态暂未更新' : '队伍暂时不可用',
             errorKind: authDenied ? 'no-permission' : 'data',
             errorSub: authDenied ? '请重新登录后再打开这支队伍' : app.getRequestErrorMessage(res, hasTeam ? '已保留上次确认的队伍信息' : '请稍后重新加载'),
+            boardState: needLogin ? 'login' : 'error',
+            boardMessage: '队伍成员资格暂未确认，请重新加载',
             errorAction: needLogin ? '登录' : '重新加载'
           });
         }
       },
       fail(res, statusCode) {
+        if (!current()) return;
+        settled = true;
         that._teamLoading = false;
         if (fromPull) wx.stopPullDownRefresh();
         // PR10 F-W1-12:静默重登失败回到这里(401),或根本没有会话 ⇒ 登录引导,不按网络失败留白
@@ -110,6 +162,7 @@ Page({
             error: '登录后查看队伍',
             errorKind: 'no-permission',
             errorSub: '',
+            boardState: 'login', boardMessage: '请重新登录后查看定向进度',
             errorAction: '登录'
           });
           return;
@@ -117,6 +170,7 @@ Page({
         that.setData({
           loading: false,
           refreshing: false,
+          boardState: 'error', boardMessage: '队伍成员资格暂未确认，请重新加载',
           error: hasTeam ? '队伍状态暂未更新' : '网络没连上',
           errorKind: 'network',
           errorSub: hasTeam ? '已保留上次确认的队伍信息' : '检查网络连接后重试',
@@ -124,6 +178,111 @@ Page({
         });
       }
     });
+  },
+
+  _boardFailure(res, status) {
+    const code = res && res.errorCode;
+    if (code === 'ORIENT_DISABLED') return ['disabled', '定向队伍看板暂未开放'];
+    if (code === 'ORIENT_NOT_ORIENTEERING') return ['not-orient', '此队伍不适用定向进度'];
+    if (code === 'ORIENT_TEAM_NOT_MEMBER') return ['not-member', '仅当前队伍成员可查看定向进度'];
+    if (code === 'ORIENT_LOGIN_REQUIRED' || isLoginRequired(app, res, status)) return ['login', '请重新登录后查看定向进度'];
+    return ['error', '定向队伍数据暂不可用，请重新加载'];
+  },
+  _loadBoard(context, team, joined) {
+    if (!joined) {
+      this.setData({ boardState: 'not-member', boardMessage: '仅当前队伍成员可查看定向进度' });
+      return;
+    }
+    if (!context.reader.id || !context.reader.token) {
+      this.setData({ boardState: 'login', boardMessage: '请重新登录后查看定向进度' });
+      return;
+    }
+    const ownerId = exactId(team.ownerId);
+    const ownerType = team.ownerType;
+    if (!ownerId || ![1, 2, '1', '2'].includes(ownerType)) {
+      this.setData({ boardState: 'error', boardMessage: '队伍关联信息不完整，请重新加载' });
+      return;
+    }
+    this.setData({ boardState: 'loading' });
+    let settled = false;
+    const finish = () => {
+      if (settled || !this._readCurrent(context)) return false;
+      settled = true;
+      return true;
+    };
+    const reject = (res, status) => {
+      const [state, message] = this._boardFailure(res, status);
+      this.setData({ board: null, boardState: state, boardMessage: message, boardRanks: [], rankingState: '' });
+    };
+    app.sendRequest({
+      url: '/api/orient/team/detail', method: 'GET', data: { teamId: context.teamId },
+      hideLoading: true, autoErrorToast: false,
+      success: res => {
+        if (!finish()) return;
+        if (!res || res.code != '200') { reject(res); return; }
+        const d = res.data;
+        const count = n => Number.isSafeInteger(n) && n >= 0;
+        if (!d || !d.team || exactId(d.team.teamId) !== context.teamId
+            || exactId(d.team.ownerId) !== ownerId || String(d.team.ownerType) !== String(ownerType)
+            || !d.threshold || !count(d.threshold.required) || !count(d.threshold.activeCount)
+            || typeof d.threshold.ratio !== 'number' || !Number.isFinite(d.threshold.ratio)
+            || d.threshold.ratio < 0 || d.threshold.ratio > 1
+            || !d.summary || !count(d.summary.teamDoneCount) || !count(d.summary.totalTasks)
+            || !Array.isArray(d.tasks) || !Array.isArray(d.members)
+            || d.tasks.some(t => !t || !exactId(t.taskId) || !count(t.completedCount) || typeof t.teamDone !== 'boolean')
+            || d.members.some(m => !m || !exactId(m.memberId) || !Array.isArray(m.doneTaskIds) || m.doneTaskIds.some(id => !exactId(id)))) {
+          reject(null); return;
+        }
+        // Only project server completion facts; never infer team completion from member counts.
+        const tasks = d.tasks.map(t => ({ taskId: exactId(t.taskId), name: t.name || '未命名任务',
+          completedCount: t.completedCount, teamDone: t.teamDone,
+          members: d.members.map(m => ({ memberId: exactId(m.memberId), name: m.name || '城瘾玩家',
+            done: m.doneTaskIds.some(id => exactId(id) === exactId(t.taskId)) })) }));
+        this.setData({ boardState: 'ready', boardMessage: '',
+          board: { threshold: { required: d.threshold.required, activeCount: d.threshold.activeCount, ratio: d.threshold.ratio },
+            summary: { teamDoneCount: d.summary.teamDoneCount, totalTasks: d.summary.totalTasks }, tasks } });
+        this._loadRanking(context, ownerType, ownerId);
+      },
+      fail: (res, status) => { if (finish()) reject(res, status); }
+    });
+  },
+  _loadRanking(context, ownerType, ownerId) {
+    this.setData({ rankingState: 'loading', rankingMessage: '', boardRanks: [] });
+    let settled = false;
+    const finish = () => {
+      if (settled || !this._readCurrent(context)) return false;
+      settled = true;
+      return true;
+    };
+    const reject = (res, status) => {
+      const [state, message] = this._boardFailure(res, status);
+      if (state === 'error') {
+        this.setData({ rankingState: state, rankingMessage: message, boardRanks: [] });
+      } else {
+        this.setData({ rankingState: state, rankingMessage: message, boardRanks: [],
+          board: null, boardState: state, boardMessage: message });
+      }
+    };
+    app.sendRequest({
+      url: '/api/orient/team/ranking', method: 'GET', data: { ownerType, ownerId },
+      hideLoading: true, autoErrorToast: false,
+      success: res => {
+        if (!finish()) return;
+        if (!res || res.code != '200') { reject(res); return; }
+        const rows = res.data;
+        if (!Array.isArray(rows) || rows.some(r => !r || !exactId(r.teamId)
+            || !Number.isSafeInteger(r.rank) || r.rank < 1
+            || !Number.isSafeInteger(r.teamDoneCount) || r.teamDoneCount < 0
+            || !Number.isSafeInteger(r.totalTasks) || r.totalTasks < 0)) { reject(null); return; }
+        this.setData({ rankingState: 'ready', boardRanks: rows.map(r => ({ teamId: exactId(r.teamId),
+          title: r.title || '玩家队伍', rank: r.rank, teamDoneCount: r.teamDoneCount, totalTasks: r.totalTasks, mine: r.mine === true })) });
+      },
+      fail: (res, status) => { if (finish()) reject(res, status); }
+    });
+  },
+  retryBoard() {
+    if (this.data.boardState === 'login') { retryLogin(this, app, function () { this.load(); }); return; }
+    this.load();
   },
 
   onErrorAction() {
@@ -153,7 +312,7 @@ Page({
     this.setData({ joinModeSaving: true, joinModePublic: nextMode === 2 });
     app.sendRequest({
       url: '/api/team/join-mode', method: 'POST', hideLoading: true,
-      data: JSON.stringify({ teamId: Number(this.teamId), joinMode: nextMode }),
+      data: JSON.stringify({ teamId: requestId(this.teamId), joinMode: nextMode }),
       header: { 'Content-Type': 'application/json' },
       success(res) {
         that._joinModeSaving = false;
@@ -205,7 +364,7 @@ Page({
 
   kick(e) {
     const dc = this.selectComponent && this.selectComponent('#dcKick');
-    if (dc) dc.open('team.kick', { name: e.currentTarget.dataset.name || '这名队员', id: Number(e.currentTarget.dataset.id) });
+    if (dc) dc.open('team.kick', { name: e.currentTarget.dataset.name || '这名队员', id: requestId(e.currentTarget.dataset.id) });
   },
 
   disband() {
@@ -216,15 +375,16 @@ Page({
   // 三段式第二段:一个危险动作一个确认组件实例、一个确认回调。
   // 不做「一个 onDangerConfirm 按 key 派发」—— 那会让一个控件同时写三个接口,
   // 动作台账(scripts/uiaudit)没法把控件和它真正写的那个接口对上。
-  onConfirmQuit() { this.action('/api/team/quit', { teamId: Number(this.teamId) }, '#dcQuit'); },
-  onConfirmKick(e) { this.action('/api/team/kick', { teamId: Number(this.teamId), memberId: e.detail.params.id }, '#dcKick'); },
-  onConfirmDisband() { this.action('/api/team/disband', { teamId: Number(this.teamId) }, '#dcDisband'); },
+  onConfirmQuit() { this.action('/api/team/quit', { teamId: requestId(this.teamId) }, '#dcQuit'); },
+  onConfirmKick(e) { this.action('/api/team/kick', { teamId: requestId(this.teamId), memberId: e.detail.params.id }, '#dcKick'); },
+  onConfirmDisband() { this.action('/api/team/disband', { teamId: requestId(this.teamId) }, '#dcDisband'); },
 
   /** 解散的更轻替代:改成只退出,队伍留给最早加入的队员(Revolut 185 的 Freeze 位)。 */
   onDisbandAlt() { this.quit(); },
 
   action(url, data, dcId) {
     const that = this;
+    if (!exactId(data.teamId) || (data.memberId != null && !exactId(data.memberId))) return;
     const dc = this.selectComponent && this.selectComponent(dcId);
     if (dc) dc.busyOn();
     app.sendRequest({

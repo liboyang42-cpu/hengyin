@@ -72,6 +72,13 @@
       </view>
       <view class="jc__exhaust" wx:if="{{receipt.exhausted}}">力竭了，先找地方休整</view>
     </block>
+    <view class="jc__mods" wx:if="{{receipt && landed && receipt.breakdownRows.length}}" aria-label="检定明细">
+      <view class="jc__mods-k">检定明细</view>
+      <view class="jc__mod" wx:for="{{receipt.breakdownRows}}" wx:key="index">
+        <text class="jc__mod-l">{{item.label}}</text>
+        <text class="jc__mod-v">{{item.value}}</text>
+      </view>
+    </view>
   </view>
 
   <!-- 底部动作:题面「按住摇骰」;结果屏「重掷 + 结算」;结算屏「继续」。失败也推进,没有锁死的态 -->

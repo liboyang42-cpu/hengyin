@@ -4,3 +4,8 @@ button.team-action { margin: 0; padding: 0; line-height: normal; }
 button.team-action::after { border: 0; }
 .team-actions + .team-card { margin-top: var(--cy-space-4); } /* 邀请队友与「公开招募」卡之间留白 */
 .team-report { text-align: center; text-decoration: underline; padding: var(--cy-space-3) 0; }
+
+.team-board-task { margin-top: var(--cy-space-3); padding-top: var(--cy-space-3); border-top: 1rpx solid var(--cy-border-line); }
+.team-board-member { display: flex; justify-content: space-between; gap: var(--cy-space-3); margin-top: var(--cy-space-2); color: var(--cy-text-secondary); font-size: var(--cy-font-label); }
+.team-board-member text:first-child { min-width: 0; overflow-wrap: anywhere; }
+.team-board-member text:last-child { flex-shrink: 0; }
