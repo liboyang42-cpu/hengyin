@@ -32,6 +32,9 @@ import static org.mockito.Mockito.*;
 
 /** Property, real datasource and child command assembly only; no web, SQL, Redis or provider proof. */
 class CombinedContextConfigurationTest {
+    @TempDir
+    Path directory;
+
     @Test
     void boundedPoolOverridesBothIncompatibleInheritedFloorsWithoutChangingOtherOwners() {
         try (var application = inheritedDruidContext()) {
@@ -92,7 +95,7 @@ class CombinedContextConfigurationTest {
     }
 
     @Test
-    void combinationIdentityFileRetainsFrozenBytesAcrossIntegerNodeWidths(@TempDir Path directory) throws Exception {
+    void combinationIdentityFileRetainsFrozenBytesAcrossIntegerNodeWidths() throws Exception {
         // File/serialization control only: the SQL, member and login boundaries are explicit doubles.
         // IDs include small longs and values beyond both int and JavaScript's exact integer range.
         for (long base : new long[]{1L, 9_007_199_254_740_993L}) {
@@ -164,7 +167,7 @@ class CombinedContextConfigurationTest {
     }
 
     @Test
-    void combinationIdentityFileRejectsExistingAndPendingFilesBeforeSql(@TempDir Path directory) throws Exception {
+    void combinationIdentityFileRejectsExistingAndPendingFilesBeforeSql() throws Exception {
         for (boolean pending : new boolean[]{false, true}) {
             Path owned = Files.createDirectory(directory.resolve(pending ? "pending" : "existing"));
             Path file = owned.resolve("identities.json");
