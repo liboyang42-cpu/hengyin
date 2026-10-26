@@ -1128866,7 +1128866,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5493"
+        "staticSource": "pages/roam/index.js:5502"
       }
     },
     {
@@ -1129557,7 +1129557,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5777"
+        "staticSource": "pages/roam/index.js:5786"
       }
     },
     {
@@ -1129627,7 +1129627,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5654"
+        "staticSource": "pages/roam/index.js:5663"
       }
     },
     {
@@ -1129733,7 +1129733,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4652"
+        "staticSource": "pages/roam/index.js:4661"
       }
     },
     {
@@ -1129811,7 +1129811,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4640"
+        "staticSource": "pages/roam/index.js:4649"
       }
     },
     {
@@ -1130248,7 +1130248,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4942"
+        "staticSource": "pages/roam/index.js:4951"
       }
     },
     {
@@ -1130326,7 +1130326,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4942"
+        "staticSource": "pages/roam/index.js:4951"
       }
     },
     {
@@ -1130404,7 +1130404,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4942"
+        "staticSource": "pages/roam/index.js:4951"
       }
     },
     {
@@ -1131897,7 +1131897,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4977"
+        "staticSource": "pages/roam/index.js:4986"
       }
     },
     {
@@ -1133390,7 +1133390,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4977"
+        "staticSource": "pages/roam/index.js:4986"
       }
     },
     {
@@ -1134883,7 +1134883,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4977"
+        "staticSource": "pages/roam/index.js:4986"
       }
     },
     {
@@ -1136376,7 +1136376,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4977"
+        "staticSource": "pages/roam/index.js:4986"
       }
     },
     {
@@ -1137025,7 +1137025,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5557"
+        "staticSource": "pages/roam/index.js:5566"
       }
     },
     {
@@ -1137103,7 +1137103,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5564"
+        "staticSource": "pages/roam/index.js:5573"
       }
     },
     {
@@ -1137400,7 +1137400,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5697"
+        "staticSource": "pages/roam/index.js:5706"
       }
     },
     {
@@ -1137467,7 +1137467,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5771"
+        "staticSource": "pages/roam/index.js:5780"
       }
     },
     {
@@ -1137784,7 +1137784,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5762"
+        "staticSource": "pages/roam/index.js:5771"
       }
     },
     {
@@ -1138494,7 +1138494,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5763"
+        "staticSource": "pages/roam/index.js:5772"
       }
     },
     {
@@ -1138876,7 +1138876,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5762"
+        "staticSource": "pages/roam/index.js:5771"
       }
     },
     {
@@ -1140055,7 +1140055,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5788"
+        "staticSource": "pages/roam/index.js:5797"
       }
     },
     {
@@ -1140189,7 +1140189,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5796"
+        "staticSource": "pages/roam/index.js:5805"
       }
     },
     {
@@ -1140577,7 +1140577,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5788"
+        "staticSource": "pages/roam/index.js:5797"
       }
     },
     {
@@ -1141402,7 +1141402,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5513"
+        "staticSource": "pages/roam/index.js:5522"
       }
     },
     {
@@ -1141469,7 +1141469,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5476"
+        "staticSource": "pages/roam/index.js:5485"
       }
     },
     {
@@ -1141856,7 +1141856,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5647"
+        "staticSource": "pages/roam/index.js:5656"
       }
     },
     {
@@ -1142372,7 +1142372,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5764"
+        "staticSource": "pages/roam/index.js:5773"
       }
     },
     {
@@ -1142596,7 +1142596,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5764"
+        "staticSource": "pages/roam/index.js:5773"
       }
     },
     {
@@ -1142718,10 +1142718,21 @@
         "routes": [
           "pages/crop/index"
         ],
-        "apis": [],
+        "apis": [
+          "/api/role/info"
+        ],
         "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
       "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
@@ -1142866,7 +1142877,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5764"
+        "staticSource": "pages/roam/index.js:5773"
       }
     },
     {
@@ -1143790,7 +1143801,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5528"
+        "staticSource": "pages/roam/index.js:5537"
       }
     },
     {
@@ -1143862,7 +1143873,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5801"
+        "staticSource": "pages/roam/index.js:5810"
       }
     },
     {
@@ -1143979,7 +1143990,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5553"
+        "staticSource": "pages/roam/index.js:5562"
       }
     },
     {
@@ -1144116,7 +1144127,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5625"
+        "staticSource": "pages/roam/index.js:5634"
       }
     },
     {
@@ -1144222,7 +1144233,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5529"
+        "staticSource": "pages/roam/index.js:5538"
       }
     },
     {
@@ -1144293,7 +1144304,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5616"
+        "staticSource": "pages/roam/index.js:5625"
       }
     },
     {
@@ -1144399,7 +1144410,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5531"
+        "staticSource": "pages/roam/index.js:5540"
       }
     },
     {
@@ -1144505,7 +1144516,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5508"
+        "staticSource": "pages/roam/index.js:5517"
       }
     },
     {
@@ -1144611,7 +1144622,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5532"
+        "staticSource": "pages/roam/index.js:5541"
       }
     },
     {
@@ -1144854,7 +1144865,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5613"
+        "staticSource": "pages/roam/index.js:5622"
       }
     },
     {
@@ -1145007,7 +1145018,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4597"
+        "staticSource": "pages/roam/index.js:4606"
       }
     },
     {
@@ -1145074,7 +1145085,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5634"
+        "staticSource": "pages/roam/index.js:5643"
       }
     },
     {
@@ -1145397,7 +1145408,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5634"
+        "staticSource": "pages/roam/index.js:5643"
       }
     },
     {
@@ -1145517,7 +1145528,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5635"
+        "staticSource": "pages/roam/index.js:5644"
       }
     },
     {
@@ -1145584,7 +1145595,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5816"
+        "staticSource": "pages/roam/index.js:5825"
       }
     },
     {
@@ -1146130,7 +1146141,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5589"
+        "staticSource": "pages/roam/index.js:5598"
       }
     },
     {
@@ -1146446,7 +1146457,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5633"
+        "staticSource": "pages/roam/index.js:5642"
       }
     },
     {
@@ -1148452,7 +1148463,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4834"
+        "staticSource": "pages/roam/index.js:4843"
       }
     },
     {
@@ -1151470,7 +1151481,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5530"
+        "staticSource": "pages/roam/index.js:5539"
       }
     },
     {
@@ -1152084,7 +1152095,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5676"
+        "staticSource": "pages/roam/index.js:5685"
       }
     },
     {
@@ -1152406,7 +1152417,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5493"
+        "staticSource": "pages/roam/index.js:5502"
       }
     },
     {
@@ -1152937,7 +1152948,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4757"
+        "staticSource": "pages/roam/index.js:4766"
       }
     },
     {
@@ -1153054,7 +1153065,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4815"
+        "staticSource": "pages/roam/index.js:4824"
       }
     },
     {
@@ -1153160,7 +1153171,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5388"
+        "staticSource": "pages/roam/index.js:5397"
       }
     },
     {
@@ -1253670,7 +1253681,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:338"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:341"
       }
     },
     {
@@ -1253855,7 +1253866,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:129"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:132"
       }
     },
     {
@@ -1253992,7 +1254003,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:339"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:342"
       }
     },
     {
@@ -1254119,7 +1254130,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:564"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:567"
       }
     },
     {
@@ -1254247,7 +1254258,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:725"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:728"
       }
     },
     {
@@ -1254374,7 +1254385,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:735"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:738"
       }
     },
     {
@@ -1254501,7 +1254512,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:735"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:738"
       }
     },
     {
@@ -1254743,7 +1254754,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:557"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:560"
       }
     },
     {
@@ -1254914,7 +1254925,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:343"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:346"
       }
     },
     {
@@ -1255085,7 +1255096,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:343"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:346"
       }
     },
     {
@@ -1255222,7 +1255233,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:376"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:379"
       }
     },
     {
@@ -1255350,7 +1255361,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:732"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:735"
       }
     },
     {
@@ -1255487,7 +1255498,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:376"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:379"
       }
     },
     {
@@ -1255614,7 +1255625,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:565"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:568"
       }
     },
     {
@@ -1255783,7 +1255794,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:577"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:580"
       }
     },
     {
@@ -1255980,7 +1255991,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:594"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:597"
       }
     },
     {
@@ -1256107,7 +1256118,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:593"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:596"
       }
     },
     {
@@ -1256234,7 +1256245,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:592"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:595"
       }
     },
     {
@@ -1256428,7 +1256439,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:611"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:614"
       }
     },
     {
@@ -1256565,7 +1256576,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:376"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:379"
       }
     },
     {
@@ -1256732,7 +1256743,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:450"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:453"
       }
     },
     {
@@ -1256902,7 +1256913,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:450"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:453"
       }
     },
     {
@@ -1257075,7 +1257086,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:450"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:453"
       }
     },
     {
@@ -1257393,7 +1257404,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:450"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:453"
       }
     },
     {
@@ -1257565,7 +1257576,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:450"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:453"
       }
     },
     {
@@ -1257692,7 +1257703,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:152"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:155"
       }
     },
     {
@@ -1257934,7 +1257945,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:144"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:147"
       }
     },
     {
@@ -1258061,7 +1258072,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:152"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:155"
       }
     },
     {
@@ -1258308,7 +1258319,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:429"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:432"
       }
     },
     {
