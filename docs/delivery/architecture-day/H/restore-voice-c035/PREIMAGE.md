@@ -1,0 +1,23 @@
+# c035 源码原像（非运行报告）
+
+Parent c0355527bd2082ea957b08fd684a4a8887470858
+Tree 8341bde4a097ab915d59333ab07333a291290f28
+
+Owned：
+- RestoreVoiceReconciliationFixture.java：4cbeb6d15e34e5714fba85e8898b8cca182e5066
+- RestoreVoiceReconciliationFixtureTest.java：新增文件。
+
+窄共享 review base Git blobs：
+- RestoreChildDiagnostics.java：ed37c3fc188a4bf71b97201c5a0220cff6498e31
+- ci/restore_business_reconciliation_probe.py：7b329e409a6b43bfb785a6b196e49e52d4a7b511
+- ci/test_restore_business_reconciliation_probe.py：7264dbcf1195e860500d320acfa5e46b37c24e33
+
+只读实际依赖：
+- NpcVoiceEnrollmentService.java：2b4d380a2697dfe275b4981796998c7e4cad03f4
+- VoiceCloneClient.java：745cf4edb8dac828aff722919242a2c0f97af04a
+- NpcVoiceEnrollmentMapper.xml：6f6a73ed695aa2ba14356319bc8b70dc760ea149
+- RestoreProviderJournal.java：d73d845b94b622eddb59a4d423861aa8f41700ea
+- NpcVoiceEnrollmentMySqlIT.java：0c54a37d515e81c3c1348b92a21000e37819b2aa
+- NpcVoiceEnrollmentServiceTest.java：2abf9e514fca07be9a4c0410d4aea977510c1a44
+
+实际提交只包含 owned 两文件和本目录静态 SOURCE 交付；共享原路径未直接修改。

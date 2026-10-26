@@ -1,0 +1,101 @@
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RestoreChildDiagnostics.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RestoreChildDiagnostics.java
+index ed37c3f..0749ef3 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RestoreChildDiagnostics.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RestoreChildDiagnostics.java
+@@ -59,11 +59,15 @@ public final class RestoreChildDiagnostics {
+         if (failure instanceof RestoreBusinessReconciliationFixture.CallbackRejected callback) {
+             result.put("callback", Map.of("result", callback.outcome, "reason", callback.reason.name()));
+         }
++        if (failure instanceof com.chengyinhub.business.service.ai.RestoreVoiceReconciliationFixture.VoiceFixtureFailure voice) {
++            result.put("voice", voice.observation());
++        }
+         var types = new ArrayList<String>();
+         Set<Throwable> seen = Collections.newSetFromMap(new IdentityHashMap<Throwable, Boolean>());
+         String state = null; Integer code = null; Map<String, Object> origin = null;
+         for (Throwable current = failure; current != null && types.size() < 8 && seen.add(current); current = current.getCause()) {
+             String type = current instanceof RestoreBusinessReconciliationFixture.CallbackRejected
++                    || current instanceof com.chengyinhub.business.service.ai.RestoreVoiceReconciliationFixture.VoiceFixtureFailure
+                     ? "java.lang.IllegalStateException" : current.getClass().getName();
+             types.add(TYPES.contains(type) ? type : "UNKNOWN");
+             for (StackTraceElement frame : current.getStackTrace()) {
+diff --git a/ci/restore_business_reconciliation_probe.py b/ci/restore_business_reconciliation_probe.py
+index 7b329e4..ab5da73 100644
+--- a/ci/restore_business_reconciliation_probe.py
++++ b/ci/restore_business_reconciliation_probe.py
+@@ -103,7 +103,7 @@ def child_failure(path, expected):
+         require(len(rows) == 1 and len(rows[0]) <= 8192, 'one bounded typed failure required')
+         row = json.loads(rows[0])
+         base_keys = {'protocol', 'stage', 'sourceSha', 'scope', 'boot', 'cohort', 'causeTypes', 'sqlState', 'sqlErrorCode', 'origin'}
+-        require(set(row) in (base_keys, base_keys | {'callback'}),
++        require(set(row) in (base_keys, base_keys | {'callback'}, base_keys | {'voice'}),
+                 'typed failure shape differs')
+         require(row['protocol'] == 'RESTORE_CHILD_FAILURE_V1' and row['stage'] in CHILD_STAGES
+                 and all(row[key] == expected[key] for key in ('sourceSha', 'scope', 'boot', 'cohort')),
+@@ -126,6 +126,30 @@ def child_failure(path, expected):
+                     and type(callback['result']) is str and callback['result'] in ('FAIL', 'NULL', 'OTHER')
+                     and type(callback['reason']) is str and callback['reason'] in CALLBACK_REASONS,
+                     'unreviewed callback rejection category')
++        if 'voice' in row:
++            voice = row['voice']
++            require(expected['childClass'] == 'com.chengyinhub.business.service.ai.RestoreVoiceReconciliationFixture'
++                    and expected['cohort'] in ('voice-complete', 'voice-gap')
++                    and type(voice) is dict and set(voice) == {
++                        'operation', 'expected', 'intentState', 'profileState', 'selection', 'providerStep'},
++                    'unreviewed voice observation shape')
++            allowed = {
++                'operation': ('SOURCE_KNOWN', 'SOURCE_UNKNOWN', 'OWNER_KNOWN', 'NORMAL_REPLAY', 'OWNER_UNKNOWN'),
++                'expected': ('READY', 'UNKNOWN'),
++                'intentState': ('PREPARED', 'IN_FLIGHT', 'UNKNOWN', 'NOT_SENT', 'PENDING', 'READY', 'MISSING', 'UNREVIEWED'),
++                'profileState': ('EMPTY', 'PENDING', 'READY', 'FAILED', 'MISSING', 'UNREVIEWED'),
++                'selection': ('SELECTED', 'SUPERSEDED', 'MISSING'),
++                'providerStep': ('NONE', 'INPUT', 'SUBMIT_ROW', 'SUBMIT_JOURNAL', 'QUERY_ROW', 'QUERY_JOURNAL'),
++            }
++            require(all(type(voice[key]) is str and voice[key] in values for key, values in allowed.items()),
++                    'unreviewed voice observation enum')
++            source = voice['operation'].startswith('SOURCE_')
++            require((source and expected.get('phase') == 'SOURCE' and row['stage'] == 'SOURCE_TIMELINE')
++                    or (not source and expected.get('phase') in ('RESTORED_OWNER', 'RESTORED_INVALID_OWNER',
++                        'RESTORED_EMPTY_OWNER', 'NORMAL_READBACK') and row['stage'] == 'OWNER_OBSERVATION'),
++                    'voice observation phase mismatch')
++            require(voice['operation'] != 'NORMAL_REPLAY' or expected.get('phase') == 'NORMAL_READBACK',
++                    'normal voice replay belongs to normal readback only')
+         evidence.update(diagnosticState='TYPED_FAILURE', javaFailure=row)
+     except BaseException:
+         evidence['diagnosticState'] = 'UNREADABLE_OR_UNTRUSTED'
+diff --git a/ci/test_restore_business_reconciliation_probe.py b/ci/test_restore_business_reconciliation_probe.py
+index 7264dbc..141952e 100644
+--- a/ci/test_restore_business_reconciliation_probe.py
++++ b/ci/test_restore_business_reconciliation_probe.py
+@@ -393,6 +393,32 @@ class ChildExitControls(unittest.TestCase):
+         self.assertEqual('UNREADABLE_OR_UNTRUSTED', self.capture(marker + marker)['diagnosticState'])
+         self.assertEqual('EXCEEDS_FIXED_BUDGET', self.capture(b'x' * 1048577)['diagnosticState'])
+ 
++    def test_voice_observation_is_fixed_enum_only_and_bound_to_original_child_phase(self):
++        identity = dict(self.identity(), cohort='voice-complete', phase='SOURCE',
++                        childClass='com.chengyinhub.business.service.ai.RestoreVoiceReconciliationFixture')
++        voice = dict(operation='SOURCE_KNOWN', expected='READY', intentState='PENDING',
++                     profileState='PENDING', selection='SELECTED', providerStep='QUERY_JOURNAL')
++        with patch.object(self, 'identity', return_value=identity):
++            row = dict(self.typed(), stage='SOURCE_TIMELINE', voice=voice, causeTypes=['java.lang.IllegalStateException'],
++                       sqlState=None, sqlErrorCode=None, origin={'class':identity['childClass'], 'line':99})
++            def capture(value):
++                return self.capture(b'RESTORE_CHILD_FAILURE_V1:' + json.dumps(value).encode() + b'\n')
++            observed = capture(row)
++            self.assertEqual('TYPED_FAILURE', observed['diagnosticState'])
++            self.assertEqual(voice, observed['javaFailure']['voice'])
++            for key in voice:
++                bad = dict(row, voice=dict(voice, **{key:'PRIVATE_SECRET_CANARY'}))
++                result = capture(bad)
++                self.assertEqual('UNREADABLE_OR_UNTRUSTED', result['diagnosticState']); self.assertNotIn('PRIVATE', json.dumps(result))
++            for bad in (dict(row, voice=dict(voice, payload='PRIVATE_SECRET_CANARY')),
++                        dict(row, callback={'result':'FAIL','reason':'UNKNOWN'}),
++                        dict(row, stage='SOURCE_SCHEMA')):
++                self.assertEqual('UNREADABLE_OR_UNTRUSTED', capture(bad)['diagnosticState'])
++            with patch.object(self, 'identity', return_value=dict(identity, childClass=p.CHILD)):
++                self.assertEqual('UNREADABLE_OR_UNTRUSTED', capture(row)['diagnosticState'])
++            with patch.object(self, 'identity', return_value=dict(identity, phase='NORMAL_READBACK')):
++                self.assertEqual('UNREADABLE_OR_UNTRUSTED', capture(row)['diagnosticState'])
++
+     def test_unknown_raw_exit_is_unknown_and_only_exact_fixed_launcher_header_is_classified(self):
+         self.assertEqual('NO_TYPED_FAILURE', self.capture(b'PRIVATE_SECRET_CANARY')['diagnosticState'])
+         raw = ('Error: Could not find or load main class ' + p.CHILD + '\nPRIVATE_SECRET_CANARY').encode()
