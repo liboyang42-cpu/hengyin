@@ -499,7 +499,7 @@ def fixed_startup_exception_types(text):
         'org.springframework.beans.factory.NoUniqueBeanDefinitionException',
         'java.lang.IllegalStateException', 'java.lang.IllegalArgumentException',
         'java.lang.NumberFormatException', 'java.lang.SecurityException', 'java.lang.UnsupportedOperationException',
-        'java.lang.ExceptionInInitializerError', 'java.sql.SQLException',
+        'java.lang.ExceptionInInitializerError', 'java.lang.OutOfMemoryError', 'java.sql.SQLException',
         'org.springframework.context.ApplicationContextException',
         'java.lang.ClassNotFoundException', 'java.lang.NoClassDefFoundError', 'java.lang.NoSuchMethodError',
         'java.net.BindException', 'java.sql.SQLSyntaxErrorException',
@@ -1167,6 +1167,8 @@ class FailureDiagnosticTest(unittest.TestCase):
                           'org.springframework.beans.factory.UnsatisfiedDependencyException'],
                          fixed_startup_exception_types(text))
         self.assertNotIn('PRIVATE', json.dumps(fixed_startup_exception_types(text)))
+        self.assertEqual(['java.lang.OutOfMemoryError'], fixed_startup_exception_types(
+            'Caused by: java.lang.OutOfMemoryError: PRIVATE_HEAP_OR_DIRECT_MEMORY_DETAIL'))
 
     def test_startup_exception_projection_rejects_messages_frames_custom_types_and_unbounded_prefix(self):
         for text in ('private.SECRET.Exception: PRIVATE', 'message org.springframework.beans.factory.BeanCreationException',

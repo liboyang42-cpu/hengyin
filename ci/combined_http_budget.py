@@ -29,8 +29,13 @@ PROVIDER_PROBE = 'com.chengyinhub.business.it.CombinedSurefireRuntimeProbeTest'
 CONFIGURATION_UNIT = 'com.chengyinhub.business.it.CombinedContextConfigurationTest'
 CONFIGURATION_SOURCE = 'com/chengyinhub/business/it/CombinedContextConfigurationTest.java'
 CONFIGURATION_METHODS = ('boundedPoolOverridesBothIncompatibleInheritedFloorsWithoutChangingOtherOwners',
-                         'originalDruidPropertiesAssemblesAValidUninitializedThreeConnectionPool')
-SUREFIRE_FORK_ARGUMENTS = '-Xmx512m -Djava.security.manager=allow --add-opens=java.base/java.lang=ALL-UNNAMED -Djava.io.tmpdir=/tmp -Djava.awt.headless=true'
+                         'originalDruidPropertiesAssemblesAValidUninitializedThreeConnectionPool',
+                         'schedulerChildHeapIsFixedOnlyForOriginalCombinedScope')
+RUNTIME_MAVEN_OPTIONS = '-Xms16m -Xmx128m -XX:MaxDirectMemorySize=16m -XX:ReservedCodeCacheSize=32m -XX:+UseSerialGC -Djava.io.tmpdir=/tmp -Duser.home=/tmp/home'
+SUREFIRE_MEMORY_ARGUMENTS = '-Xms16m -Xmx384m -XX:MaxDirectMemorySize=64m -XX:ReservedCodeCacheSize=64m -XX:+UseSerialGC'
+SCHEDULER_MEMORY_ARGUMENTS = '-Xmx64m'
+SCHEDULER_PROBE = 'com.chengyinhub.quartz.util.SchedulerFenceProcessProbe'
+SUREFIRE_FORK_ARGUMENTS = SUREFIRE_MEMORY_ARGUMENTS+' -Djava.security.manager=allow --add-opens=java.base/java.lang=ALL-UNNAMED -Djava.io.tmpdir=/tmp -Djava.awt.headless=true'
 TEST_PROFILE = 'combined-http-fixture-closure'
 TEST_SOURCES = (
     'com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java',
@@ -152,7 +157,8 @@ SAFE_RESOURCE_CODES = frozenset({'FIXED_COMMAND_FAILED','FIXED_HOSTED_CLASS_ONLY
     'REAL_MAVEN_AND_JUNIT_PID_PROOF_REQUIRED','MYSQL_ADDRESS_OR_UUID_DRIFT','ORIGINAL_EXECUTION_NAMESPACE_NOT_LIVE',
     'MYSQL_PROCESS_REPLACED_BEFORE_PORT_PROOF','PORT_PROBE_NAMESPACE_CHANGED','NAMESPACE_PROBE_POSTIMAGE_CHANGED',
     'ACTUAL_NAMESPACE_BIND_PROOF_REQUIRED','PRIVATE_APP_IDENTITY_OR_ROOTFS_CHANGED','FIXED_OFFLINE_MAVEN_COMMAND_CHANGED',
-    'UNCLASSIFIED_RESOURCE_FAILURE','CONFIGURATION_UNIT_PROOF_REQUIRED','CONFIGURATION_UNIT_XML_REQUIRED'})
+    'UNCLASSIFIED_RESOURCE_FAILURE','CONFIGURATION_UNIT_PROOF_REQUIRED','CONFIGURATION_UNIT_XML_REQUIRED',
+    'FIXED_JVM_MEMORY_ARGUMENTS_REQUIRED'})
 CACHE_SUBSTAGES=frozenset({'SOURCE_INPUTS','LOCAL_ENGINE','PINNED_IMAGE','CREATE_INPUTS','CREATE',
     'OWNER_TOOLCHAIN','MOUNT_ENV','START','CGROUP','WAIT_EXIT','MAVEN_EXIT','CORE_IDENTITY',
     'MANIFEST','PROVIDER_RUNTIME','CONFIGURATION_UNIT','PRIVATE_LOG','CLEANUP','TERMINAL'})
@@ -435,7 +441,7 @@ def fixed_cache_command():
             '-Dtest='+selection,'-DforkCount=1','-DreuseForks=true','-DfailIfNoTests=false','-Dsurefire.failIfNoSpecifiedTests=false']
         remove="rm -f '"+report+"'"+(" '"+configuration_report+"'" if not offline else '')
         encoded+='; printf "%s\\n" "'+stage+'" >/tmp/cy-cache.phase; '+remove+'; '+\
-            "MAVEN_OPTS='-Xmx128m -Djava.io.tmpdir=/tmp -Duser.home=/tmp/home' "+\
+            "MAVEN_OPTS='"+RUNTIME_MAVEN_OPTIONS+"' "+\
             ' '.join("'"+value+"'" for value in ['mvn']+args)+' || exit $?; '+\
             "cp '"+report+"' 'chengyinhub-admin/target/provider-runtime/"+phase.lower()+".xml' || exit $?; "+\
             "chmod 600 'chengyinhub-admin/target/provider-runtime/"+phase.lower()+".xml' || exit $?"
@@ -1170,7 +1176,7 @@ def child_environment(env):
                  CHENGYIN_HTTP_E2E_REDIS_PORT=env['CHENGYIN_HTTP_E2E_REDIS_PORT'],CHENGYIN_AI_REDIS_IT_PORT=env['CHENGYIN_HTTP_E2E_REDIS_PORT'],
                  SERVER_ADDRESS='127.0.0.1',TZ='Asia/Shanghai',HOME='/tmp/home',MAVEN_CONFIG='/tmp/m2',
                  GITHUB_SHA=env['SOURCE_SHA'],
-                 MAVEN_OPTS='-Xmx128m -Djava.io.tmpdir=/tmp -Duser.home=/tmp/home')
+                 MAVEN_OPTS=RUNTIME_MAVEN_OPTIONS)
     require(all('\n' not in value and '\r' not in value and '\0' not in value for value in child.values()), 'INVALID_PRIVATE_ENV')
     return child
 
@@ -1262,6 +1268,28 @@ def prepare(path):
     require(ready,'PRIVATE_BOUNDED_REDIS_NOT_READY'); state['phase']='PREPARED';save(path,state)
 
 
+def cgroup_memory_usage(root):
+    # Bounded latest observation only. file includes shmem; these counters are not additive attribution.
+    result={'currentBytes':None,'peakBytes':None,'stat':{key:None for key in
+            ('anon','file','shmem','kernel','kernel_stack','pagetables','sock')}}
+    for filename,key in (('memory.current','currentBytes'),('memory.peak','peakBytes')):
+        try:
+            with (root/filename).open() as stream:raw=stream.read(26)
+            value=raw.strip()
+            if len(raw)<26 and len(value)<=24 and value.isdigit():result[key]=int(value)
+        except (OSError,UnicodeError):pass # Optional observation; mandatory limits/OOM events are never suppressed.
+    try:
+        with (root/'memory.stat').open() as stream:text=stream.read(65537)
+        if len(text)<=65536:
+            for line in text.splitlines():
+                values=line.split()
+                if len(values)==2 and values[0] in result['stat'] and len(values[1])<=24 and values[1].isdigit():result['stat'][values[0]]=int(values[1])
+    except (OSError,UnicodeError):pass
+    result['state']='OBSERVED' if all(value is not None for value in
+            (result['currentBytes'],result['peakBytes'],*result['stat'].values())) else 'PARTIAL_OR_UNKNOWN'
+    return result
+
+
 def read_cgroup(pid, cid):
     text = Path('/proc',str(pid),'cgroup').read_text()
     lines = text.splitlines(); require(len(lines) == 1 and lines[0].startswith('0::/'), 'CGROUP_V2_REQUIRED')
@@ -1272,7 +1300,8 @@ def read_cgroup(pid, cid):
     validate_cgroup_limits(limits)
     events = dict(line.split() for line in (root/'memory.events').read_text().splitlines())
     require('oom_kill' in events and all(value.isdigit() for value in events.values()),'ACTUAL_OOM_COUNTER_REQUIRED')
-    return {'pathSha256':hashlib.sha256(relative.encode()).hexdigest(),'limits':limits,'memoryEvents':events}
+    return {'pathSha256':hashlib.sha256(relative.encode()).hexdigest(),'limits':limits,'memoryEvents':events,
+            'memoryUsage':cgroup_memory_usage(root)}
 
 
 def validate_cgroup_limits(limits):
@@ -1286,10 +1315,10 @@ def validate_cgroup_limits(limits):
 EXECUTION_SUBSTAGES=frozenset({'BACKING_IDENTITY','SOURCE_MANIFEST','MYSQL_ADDRESS','APP_CREATE','APP_LIMITS',
     'APP_INPUTS','NETWORK_NAMESPACE','APP_RELEASE','APP_INSPECT','APP_OWNER','APP_LIVE','DEADLINE',
     'JAVA_SAMPLE','JAVA_CGROUP','MYSQL_PROCESS','PROCESS_LIST','JAVA_PROC','JAVA_PROC_CGROUP',
-    'JAVA_NAMESPACE_PID','SUREFIRE_BOOTER_BINDING','MAVEN_COMMAND','CGROUP_OOM','MAVEN_STATUS',
+    'JAVA_NAMESPACE_PID','SUREFIRE_BOOTER_BINDING','JVM_MEMORY_ARGUMENTS','MAVEN_COMMAND','CGROUP_OOM','MAVEN_STATUS',
     'MAVEN_STATUS_VALUE','PRIVATE_LOG','POSTIMAGE','CACHE_RECHECK','REQUIRED_JVM_ROLES','APP_OOM',
     'FINAL_MYSQL_ADDRESS','NAMESPACE_PORT_PROOF'})
-EXECUTION_FAILURE_FUNCTIONS=frozenset({'run_owned_app','sample_java','booter_binding','read_cgroup',
+EXECUTION_FAILURE_FUNCTIONS=frozenset({'run_owned_app','sample_java','booter_binding','jvm_memory_binding','read_cgroup',
     'validate_cgroup_limits','validate_container','validate_owner','validate_app_inputs','inspect','command',
     'source_manifest','verified_cache','mysql_address_proof','backing_mysql','create_slot','namespace_port_proof'})
 
@@ -1360,11 +1389,44 @@ def booter_binding(argv, cache):
             'resolvedClasspathSha256':hashlib.sha256(json.dumps(resolved,separators=(',',':')).encode()).hexdigest()}
 
 
+def jvm_memory_binding(argv,role):
+    if role=='MAVEN':options=RUNTIME_MAVEN_OPTIONS;heap,direct,code=128,16,32;profile='MAVEN_RUNTIME'
+    elif role=='SUREFIRE':options=SUREFIRE_MEMORY_ARGUMENTS;heap,direct,code=384,64,64;profile='SUREFIRE_RUNTIME'
+    elif role=='DESCENDANT_JVM' and SCHEDULER_PROBE in argv:
+        require(argv.count(SCHEDULER_PROBE)==1,'FIXED_JVM_MEMORY_ARGUMENTS_REQUIRED')
+        options=SCHEDULER_MEMORY_ARGUMENTS;heap,direct,code=64,None,None;profile='SCHEDULER_PROBE'
+    else:return None # No memory-profile acceptance claim for another descendant; original cgroup guards remain.
+    prefixes=('-Xms','-Xmx','-XX:InitialHeapSize=','-XX:MaxHeapSize=','-XX:MaxRAM=',
+              '-XX:MaxRAMPercentage=','-XX:InitialRAMPercentage=','-XX:MinRAMPercentage=',
+              '-XX:MaxDirectMemorySize=','-XX:ReservedCodeCacheSize=')
+    collectors=tuple('-XX:'+sign+name for sign in ('+','-') for name in
+                     ('UseSerialGC','UseG1GC','UseParallelGC','UseZGC','UseShenandoahGC','UseEpsilonGC'))
+    selected=lambda values:[value for value in values if value.startswith(prefixes) or value in collectors]
+    require(selected(argv)==selected(options.split()),'FIXED_JVM_MEMORY_ARGUMENTS_REQUIRED')
+    return {'profile':profile,'maxHeapBytes':heap*1024**2,
+            'maxDirectMemoryBytes':direct*1024**2 if direct is not None else None,
+            'reservedCodeCacheBytes':code*1024**2 if code is not None else None,
+            'collector':'SerialGC' if profile!='SCHEDULER_PROBE' else 'DEFAULT_UNATTESTED'}
+
+
+def process_memory(status):
+    # Optional fixed counters only, not an inference of heap/native attribution or successful execution.
+    result={}
+    for field,key in (('VmRSS','rssBytes'),('RssAnon','anonymousBytes'),('RssFile','fileBytes'),
+                      ('RssShmem','sharedMemoryBytes'),('VmSwap','swapBytes')):
+        found=re.findall(r'^'+field+r':\s*([0-9]+) kB\s*$',status,re.MULTILINE)
+        result[key]=int(found[0])*1024 if len(found)==1 and len(found[0])<=24 else None
+    found=re.findall(r'^Threads:\s*([0-9]+)\s*$',status,re.MULTILINE)
+    result['threads']=int(found[0]) if len(found)==1 and len(found[0])<=24 else None
+    return result
+
+
 def sample_java(state, obj):
     state['executionSubstage']='JAVA_CGROUP'
     cid = obj['Id']; init = obj['State']['Pid']; require(init > 0,'ACTUAL_APP_HOST_PID_REQUIRED')
     base = read_cgroup(init,cid)
     state['cgroupMemoryEvents'] = base['memoryEvents']
+    state['cgroupMemoryUsage']=base.get('memoryUsage',{'state':'UNKNOWN'})
     # Shared network namespace must still belong to the same current MySQL process.
     state['executionSubstage']='MYSQL_PROCESS';mysql = inspect(state['mysql']['cid'])
     require(mysql['State']['Running'] and mysql['State']['Pid'] == state['mysqlHostPid'], 'MYSQL_PROCESS_REPLACED')
@@ -1381,21 +1443,30 @@ def sample_java(state, obj):
             state['executionSubstage']='JAVA_PROC_CGROUP'
             cg = read_cgroup(pid,cid); require(cg['pathSha256'] == base['pathSha256'] and cg['limits']==base['limits'],'FORK_ESCAPED_FIXED_BUDGET')
             state['executionSubstage']='JAVA_NAMESPACE_PID'
-            namespace_pids = next(x.split()[1:] for x in (proc/'status').read_text().splitlines() if x.startswith('NSpid:'))
+            status=(proc/'status').read_text()
+            namespace_pids = next(x.split()[1:] for x in status.splitlines() if x.startswith('NSpid:'))
             require(namespace_pids and int(namespace_pids[0]) == pid,'ACTUAL_NAMESPACE_PID_REQUIRED')
             role = 'MAVEN' if any('org.codehaus.plexus.classworlds.launcher.Launcher' == x for x in argv) else (
                     'SUREFIRE' if any('surefirebooter-' in x and x.endswith('.jar') for x in argv) else 'DESCENDANT_JVM')
             candidate={'hostPid':pid,'parentHostPid':int(fields[1]),'namespacePid':int(namespace_pids[-1]),'startTicks':start,
                        'role':role,'argvSha256':hashlib.sha256(raw).hexdigest(),'cgroup':cg}
             state['executionSubstage']='SUREFIRE_BOOTER_BINDING' if role=='SUREFIRE' else 'MAVEN_COMMAND'
-            try:binding = booter_binding(argv,Path(state['cache'])) if role == 'SUREFIRE' else {}
+            try:
+                binding = booter_binding(argv,Path(state['cache'])) if role == 'SUREFIRE' else {}
+                state['executionSubstage']='JVM_MEMORY_ARGUMENTS';memory=jvm_memory_binding(argv,role)
+                if memory is not None:binding['jvmMemory']=memory
             except Exception:
                 state.setdefault('rejectedJavaCandidate',{**candidate,'accepted':False})
                 raise # An observed candidate is not an accepted fork and supplies no success evidence.
             if role == 'MAVEN': require('-Dtest='+CLASS in argv,'FIXED_CLASS_NOT_ON_ACTUAL_MAVEN_PROCESS')
-            proof = {**candidate,**binding}
+            measured=process_memory(status)
+            proof = {**candidate,**binding,'memory':measured,'peakObservedRssBytes':measured['rssBytes']}
             key = (pid,start)
-            if not any((x['hostPid'],x['startTicks']) == key for x in state['javaProcesses']): state['javaProcesses'].append(proof)
+            previous=next((x for x in state['javaProcesses'] if (x['hostPid'],x['startTicks'])==key),None)
+            if previous is None:state['javaProcesses'].append(proof)
+            else:
+                values=[value for value in (previous.get('peakObservedRssBytes'),measured['rssBytes']) if value is not None]
+                previous.update(memory=measured,peakObservedRssBytes=max(values) if values else None)
         except FileNotFoundError:
             # A process can exit between top/proc reads. It supplies no identity proof.
             continue
@@ -1610,6 +1681,7 @@ def finalize(path, original_exit):
               'networkNamespaceSha256':state.get('networkNamespaceSha256'),
               'launchProof':state.get('launchProof'),
               'cgroupMemoryEvents':state.get('cgroupMemoryEvents'),
+              'cgroupMemoryUsage':state.get('cgroupMemoryUsage'),
               'wholeSystemCapacityAccepted':False,'q4q8Complete':False}
     write(PUBLIC/'combined-http-budget.json',report)
     require(successful,'ORIGINAL_EXIT_OR_BUDGET_OR_CLEANUP_NOT_ACCEPTED')
@@ -1646,7 +1718,12 @@ def check_subject(report, subject_identity, java_pid, jar_sha256):
         require(re.fullmatch('[0-9a-f]{64}',slot.get('cid','')) and proof.get('cid')==slot['cid']
                 and proof.get('image')==image and proof.get('memory')==proof.get('memorySwap')==memory
                 and proof.get('nanoCpus')==1000000000 and proof.get('pids')==256,'SUBJECT_RESOURCE_PROOF_MISMATCH')
-    for process in report['javaProcesses']: validate_cgroup_limits(process['cgroup']['limits'])
+    for process in report['javaProcesses']:
+        validate_cgroup_limits(process['cgroup']['limits'])
+        if process['role'] in ('MAVEN','SUREFIRE'):
+            options=RUNTIME_MAVEN_OPTIONS if process['role']=='MAVEN' else SUREFIRE_MEMORY_ARGUMENTS
+            require(process.get('jvmMemory')==jvm_memory_binding(options.split(),process['role']),
+                    'FIXED_JVM_MEMORY_ARGUMENTS_REQUIRED')
     cache_proof=report.get('cacheProof',{})
     require(cache_proof.get('image')==JDK and cache_proof.get('mavenVersion')==CORE_VERSION
             and cache_proof.get('imageId')==report['slots']['app']['budget'].get('imageId')

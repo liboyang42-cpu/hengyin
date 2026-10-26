@@ -77,6 +77,15 @@ public final class CrossDomainSchedulerStage implements AutoCloseable {
         try(MySqlSessionLock.Lease lease=MySqlSessionLock.acquire(source,kind,target,3)) {assertNotNull(lease);}
         assertNull(owner(kind,target));
     }
+    public static List<String> childArguments(String scope) {
+        String cp=System.getProperty("surefire.test.class.path",System.getProperty("java.class.path"));assertNotNull(cp);assertFalse(cp.isBlank());
+        List<String> arguments=new ArrayList<>(List.of(Path.of(System.getProperty("java.home"),"bin","java").toString(),
+                "-cp",cp,SchedulerFenceProcessProbe.class.getName()));
+        // Bound this test child explicitly; heap is still only part of the shared container budget.
+        if("CrossDomainCombinedLoadMySqlIT".equals(scope))arguments.add(1,"-Xmx64m");
+        return List.copyOf(arguments);
+    }
+
     private final class Child implements AutoCloseable {
         final Process process;
         final long ownedPid;
@@ -87,8 +96,7 @@ public final class CrossDomainSchedulerStage implements AutoCloseable {
         String canonical;
         boolean authenticated,expectedKill,closed;
         Child(String alias) throws Exception {
-            String cp=System.getProperty("surefire.test.class.path",System.getProperty("java.class.path"));assertNotNull(cp);assertFalse(cp.isBlank());
-            ProcessBuilder launch=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin","java").toString(),"-cp",cp,SchedulerFenceProcessProbe.class.getName());
+            ProcessBuilder launch=new ProcessBuilder(childArguments(System.getenv("CHENGYIN_HTTP_E2E_TESTS")));
             launch.redirectErrorStream(true);launch.environment().clear();
             launch.environment().putAll(Map.of("RUNNER_ENVIRONMENT","github-hosted","WP14_URL",url,"WP14_SCHEMA",schema,"WP14_ORIGINAL",original,
                     "WP14_ALIAS",alias,"CHENGYIN_MYBATIS_IT_USER",user,"CHENGYIN_MYBATIS_IT_PASSWORD",password));

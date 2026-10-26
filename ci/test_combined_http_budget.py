@@ -185,8 +185,10 @@ class CombinedBudgetControls(unittest.TestCase):
                       originalExit=0,mavenExit=0,appExit={'ExitCode':0,'OOMKilled':False,'Running':False,'Pid':0},
                       database=self.env()['CHENGYIN_HTTP_E2E_DATABASE'])
         limits={'memory.max':str(B.MEMORY),'memory.swap.max':'0','cpu.max':'100000 100000','pids.max':'256'}
-        report['javaProcesses']=[{'role':'MAVEN','namespacePid':2,'cgroup':{'limits':limits}},
-                                 {'role':'SUREFIRE','namespacePid':41,'cgroup':{'limits':limits}}]
+        report['javaProcesses']=[{'role':'MAVEN','namespacePid':2,'cgroup':{'limits':limits},
+                'jvmMemory':B.jvm_memory_binding(B.RUNTIME_MAVEN_OPTIONS.split(),'MAVEN')},
+                {'role':'SUREFIRE','namespacePid':41,'cgroup':{'limits':limits},
+                'jvmMemory':B.jvm_memory_binding(B.SUREFIRE_MEMORY_ARGUMENTS.split(),'SUREFIRE')}]
         for role,image,memory in (('app',B.JDK,B.MEMORY),('redis',B.REDIS,67108864)):
             report['slots'][role]['budget']={'cid':report['slots'][role]['cid'],'image':image,
                     'imageId':'sha256:'+'d'*64,'memory':memory,'memorySwap':memory,'nanoCpus':1000000000,'pids':256}
@@ -596,7 +598,7 @@ class CombinedBudgetControls(unittest.TestCase):
 
     def configuration_receipt(self):
         # Transport binding only. Real fixed XML/source/class controls are below.
-        return {'purpose':'CONFIG_ASSEMBLY_ONLY','businessExecuted':False,'tests':2,'failures':0,'errors':0,'skipped':0,
+        return {'purpose':'CONFIG_ASSEMBLY_ONLY','businessExecuted':False,'tests':3,'failures':0,'errors':0,'skipped':0,
                 'xmlSha256':'3'*64,'sourceSha256':'4'*64,'testClassSha256':'5'*64}
 
     def cache_receipt(self):
@@ -1176,7 +1178,7 @@ class CombinedBudgetControls(unittest.TestCase):
         local=[target/'test-classes',target/'classes',Path('/cache/repository')/relative]
         entries=[B.urllib.parse.quote(os.path.relpath(path,booter.parent),safe='/') for path in local]
         self.write_booter(booter,entries)
-        argv=['java','-javaagent:/cache/repository/'+relative,'-jar',str(booter)]
+        argv=['java','-javaagent:/cache/repository/'+relative]+B.SUREFIRE_FORK_ARGUMENTS.split()+['-jar',str(booter)]
         return root,cache,booter,argv,entries
 
     def write_booter(self,path,entries,main='org.apache.maven.surefire.booter.ForkedBooter'):
@@ -1396,7 +1398,7 @@ class CombinedBudgetControls(unittest.TestCase):
         compilation={'sources':{B.CONFIGURATION_SOURCE:B.digest(source)},'configurationTestClassSha256':B.digest(test_class)}
         directory=root/'chengyinhub-admin/target/provider-runtime';directory.mkdir(mode=0o700)
         xml=directory/'configuration.xml'
-        xml.write_text('<testsuite name="'+B.CONFIGURATION_UNIT+'" tests="2" failures="0" errors="0" skipped="0">'
+        xml.write_text('<testsuite name="'+B.CONFIGURATION_UNIT+'" tests="3" failures="0" errors="0" skipped="0">'
             '<properties><property name="PRIVATE_VALUE" value="PRIVATE_VALUE"/></properties>'+
             ''.join('<testcase classname="'+B.CONFIGURATION_UNIT+'" name="'+method+'"/>' for method in B.CONFIGURATION_METHODS)+'</testsuite>')
         xml.chmod(0o600);return xml,source,test_class,compilation
@@ -1421,13 +1423,13 @@ class CombinedBudgetControls(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),patch.object(B,'ROOT',Path(directory)):
             xml,source,test_class,compilation=self.configuration_scope(Path(directory));proof=B.configuration_unit_proof(compilation)
             self.assertEqual(proof['purpose'],'CONFIG_ASSEMBLY_ONLY');self.assertIs(proof['businessExecuted'],False)
-            self.assertEqual({key:proof[key] for key in ('tests','failures','errors','skipped')},{'tests':2,'failures':0,'errors':0,'skipped':0})
+            self.assertEqual({key:proof[key] for key in ('tests','failures','errors','skipped')},{'tests':3,'failures':0,'errors':0,'skipped':0})
             self.assertEqual(proof['methods'],list(B.CONFIGURATION_METHODS));self.assertEqual(proof['xmlSha256'],B.digest(xml))
             self.assertEqual(proof['sourceSha256'],B.digest(source));self.assertEqual(proof['testClassSha256'],B.digest(test_class))
             self.assertEqual(proof['sourceSha'],self.env()['SOURCE_SHA']);self.assertEqual(proof['runId'],self.env()['GITHUB_RUN_ID'])
             self.assertEqual(proof['attempt'],self.env()['GITHUB_RUN_ATTEMPT'])
             self.assertNotIn('PRIVATE_VALUE',json.dumps(proof));self.assertNotIn(directory,json.dumps(proof))
-        for kind in ('missing','count','duplicate','case','method','failure','error','skip','retry','doctype','source','class','mode'):
+        for kind in ('missing','count','old-two','duplicate','case','method','failure','error','skip','retry','doctype','source','class','mode'):
             with self.subTest(kind=kind),tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),patch.object(B,'ROOT',Path(directory)):
                 xml,source,test_class,compilation=self.configuration_scope(Path(directory));raw=xml.read_text()
                 if kind=='missing':xml.unlink()
@@ -1435,7 +1437,9 @@ class CombinedBudgetControls(unittest.TestCase):
                 elif kind=='class':test_class.write_bytes(b'changed class')
                 elif kind=='mode':xml.chmod(0o644)
                 else:
-                    if kind=='count':raw=raw.replace('tests="2"','tests="1"')
+                    if kind=='count':raw=raw.replace('tests="3"','tests="2"')
+                    if kind=='old-two':
+                        raw=raw.replace('tests="3"','tests="2"').replace('<testcase classname="'+B.CONFIGURATION_UNIT+'" name="'+B.CONFIGURATION_METHODS[2]+'"/>','')
                     if kind=='duplicate':raw=raw.replace(B.CONFIGURATION_METHODS[1],B.CONFIGURATION_METHODS[0])
                     if kind=='case':raw=raw.replace('classname="'+B.CONFIGURATION_UNIT+'"','classname="Other"')
                     if kind=='method':raw=raw.replace(B.CONFIGURATION_METHODS[0],'Other')
@@ -1465,6 +1469,78 @@ class CombinedBudgetControls(unittest.TestCase):
             changed=self.configuration_receipt();changed[key]='changed'
             with self.subTest(key=key),self.assertRaisesRegex(ValueError,'OFFLINE_CACHE_PREFLIGHT_REQUIRED'):
                 self.check_cache_receipt(self.cache_receipt(),configuration=changed)
+
+
+    def test_runtime_memory_profiles_are_identical_in_warm_probes_and_actual_consumers(self):
+        shell=B.fixed_cache_command()[1];child=B.child_environment(self.env())
+        self.assertEqual(child['MAVEN_OPTS'],B.RUNTIME_MAVEN_OPTIONS)
+        self.assertEqual(shell.count("MAVEN_OPTS='"+B.RUNTIME_MAVEN_OPTIONS+"'"),2)
+        self.assertEqual(shell.count(B.SUREFIRE_FORK_ARGUMENTS),2)
+        self.assertIn('-DargLine='+B.SUREFIRE_FORK_ARGUMENTS,B.fixed_maven_command())
+        for role,options,heap,direct,code in (('MAVEN',B.RUNTIME_MAVEN_OPTIONS,128,16,32),
+                ('SUREFIRE',B.SUREFIRE_MEMORY_ARGUMENTS,384,64,64)):
+            proof=B.jvm_memory_binding(options.split(),role)
+            self.assertEqual(proof['maxHeapBytes'],heap*1024**2);self.assertEqual(proof['maxDirectMemoryBytes'],direct*1024**2)
+            self.assertEqual(proof['reservedCodeCacheBytes'],code*1024**2);self.assertEqual(proof['collector'],'SerialGC')
+        self.assertEqual(B.LIMIT_SECONDS,1200);self.assertEqual(B.MEMORY,1073741824)
+        self.assertIn('-o',B.fixed_maven_command());self.assertIn('-Dtest='+B.CLASS,B.fixed_maven_command())
+        self.assertEqual(len(B.TEST_SOURCES),20);self.assertEqual(len(B.REQUIRED_TEST_CLASSES),37)
+
+    def test_missing_duplicate_or_conflicting_jvm_allocations_are_rejected_before_acceptance(self):
+        for role,options in (('MAVEN',B.RUNTIME_MAVEN_OPTIONS),('SUREFIRE',B.SUREFIRE_MEMORY_ARGUMENTS),
+                            ('DESCENDANT_JVM',B.SCHEDULER_MEMORY_ARGUMENTS)):
+            original=options.split()+([B.SCHEDULER_PROBE] if role=='DESCENDANT_JVM' else [])
+            self.assertIsNotNone(B.jvm_memory_binding(original,role))
+            kinds=('heap','missing-direct','duplicate','collector','percentage') if role!='DESCENDANT_JVM' else ('heap','unexpected-direct','duplicate','collector','percentage')
+            for kind in kinds:
+                argv=list(original)
+                if kind=='heap':argv=[('-Xmx1024m' if value.startswith('-Xmx') else value) for value in argv]
+                if kind=='missing-direct':argv=[value for value in argv if not value.startswith('-XX:MaxDirectMemorySize=')]
+                if kind=='unexpected-direct':argv.append('-XX:MaxDirectMemorySize=128m')
+                if kind=='duplicate':argv.append(next(value for value in argv if value.startswith('-Xmx')))
+                if kind=='collector':argv.append('-XX:+UseG1GC')
+                if kind=='percentage':argv.append('-XX:MaxRAMPercentage=90')
+                with self.subTest(role=role,kind=kind),self.assertRaisesRegex(ValueError,'FIXED_JVM_MEMORY_ARGUMENTS_REQUIRED'):
+                    B.jvm_memory_binding(argv,role)
+        self.assertIsNone(B.jvm_memory_binding(['java','UnreviewedDescendant'],'DESCENDANT_JVM'))
+
+    def test_scope_memory_counters_are_bounded_private_and_do_not_override_oom_rejection(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);(root/'memory.current').write_text('12345\n');(root/'memory.peak').write_text('45678\n')
+            (root/'memory.stat').write_text('anon 10\nfile 20\nshmem 5\nkernel 4\nkernel_stack 3\npagetables 2\nsock 1\nPRIVATE_VALUE 999\n')
+            proof=B.cgroup_memory_usage(root);self.assertEqual(proof['state'],'OBSERVED')
+            self.assertEqual(proof['currentBytes'],12345);self.assertEqual(proof['peakBytes'],45678)
+            self.assertEqual(proof['stat']['file'],20);self.assertEqual(proof['stat']['shmem'],5)
+            self.assertNotIn('PRIVATE_VALUE',json.dumps(proof))
+            (root/'memory.peak').unlink();self.assertEqual(B.cgroup_memory_usage(root)['state'],'PARTIAL_OR_UNKNOWN')
+        measured=B.process_memory('NSpid:\t100\t2\nVmRSS:\t10 kB\nRssAnon:\t6 kB\nRssFile:\t3 kB\nRssShmem:\t1 kB\nVmSwap:\t0 kB\nThreads:\t7\nPRIVATE_VALUE: secret\n')
+        self.assertEqual(measured['rssBytes'],10240);self.assertEqual(measured['threads'],7)
+        self.assertNotIn('PRIVATE_VALUE',json.dumps(measured));self.assertIsNone(B.process_memory('')['rssBytes'])
+        state,cleaned,port=self.outcome();state['cgroupMemoryEvents']['oom_kill']='1'
+        state['cgroupMemoryUsage']={'currentBytes':0,'state':'OBSERVED'}
+        self.assertFalse(B.accepted_outcome(state,0,[],cleaned,port))
+
+    def test_subject_requires_the_same_fixed_memory_profiles_as_the_observed_runtime(self):
+        report=self.subject_report();expected=B.identity(self.env())
+        B.check_subject(report,expected,41,'f'*64)
+        for role in ('MAVEN','SUREFIRE'):
+            for kind in ('missing','changed'):
+                wrong=copy.deepcopy(report);process=next(row for row in wrong['javaProcesses'] if row['role']==role)
+                if kind=='missing':process.pop('jvmMemory')
+                else:process['jvmMemory']['maxHeapBytes']=B.MEMORY*2
+                with self.subTest(role=role,kind=kind),self.assertRaisesRegex(ValueError,'FIXED_JVM_MEMORY_ARGUMENTS_REQUIRED'):
+                    B.check_subject(wrong,expected,41,'f'*64)
+
+    def test_scheduler_heap_binding_and_third_configuration_method_preserve_original_two_methods(self):
+        self.assertEqual(B.SCHEDULER_MEMORY_ARGUMENTS,'-Xmx64m')
+        argv=B.SCHEDULER_MEMORY_ARGUMENTS.split()+['-cp','unchanged-classpath',B.SCHEDULER_PROBE]
+        proof=B.jvm_memory_binding(argv,'DESCENDANT_JVM');self.assertEqual(proof['maxHeapBytes'],64*1024**2)
+        self.assertIsNone(proof['maxDirectMemoryBytes']);self.assertIsNone(proof['reservedCodeCacheBytes'])
+        self.assertEqual(proof['collector'],'DEFAULT_UNATTESTED')
+        self.assertEqual(B.CONFIGURATION_METHODS[:2],('boundedPoolOverridesBothIncompatibleInheritedFloorsWithoutChangingOtherOwners',
+                         'originalDruidPropertiesAssemblesAValidUninitializedThreeConnectionPool'))
+        self.assertEqual(B.CONFIGURATION_METHODS[2:3],('schedulerChildHeapIsFixedOnlyForOriginalCombinedScope',))
+        self.assertEqual(len(B.CONFIGURATION_METHODS),3)
 
 
 if __name__=='__main__':unittest.main()

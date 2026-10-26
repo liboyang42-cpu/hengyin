@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "parentSourceSha": "8efbea982aff88e22b1158c2bb0b551555b16d57",
+  "state": "STATIC_SOURCE_ONLY_NOT_RUN",
+  "priorRuntimeArtifacts": "NOT_COPIED_OR_PUBLISHED",
+  "dominantMemoryCause": "UNKNOWN",
+  "originalAppBudget": {"memoryBytes": 1073741824, "swapBytes": 0, "cpu": 1, "pids": 256, "tmpfsMaxBytes": 268435456},
+  "sourceBoundProcesses": [
+    {"role": "CACHE_PACKAGE_MAVEN", "phase": "PREPARATION_SEPARATE_OWNER", "xmxMiB": 512, "source": "combined_http_budget.py:533;fixed_cache_command", "claim": "Not the actual workload parent JVM setting"},
+    {"role": "CACHE_PROVIDER_PROBE_MAVEN", "phase": "PREPARATION_SEPARATE_OWNER", "xmxMiB": 128, "source": "combined_http_budget.py:438", "claim": "Earlier runtime probes do not cover the full Spring workload"},
+    {"role": "WORKLOAD_MAVEN", "phase": "APP", "xmxMiB": 128, "source": "combined_http_budget.py:1161-1173,1404-1412", "argv": "Original mvn -o -q with fixed settings/profile/reactor/test and original Mockito/argLine wiring"},
+    {"role": "WORKLOAD_SUREFIRE", "phase": "APP", "xmxMiB": 512, "source": "combined_http_budget.py:33,1411;admin pom.xml:119", "argv": "Original java JVM args plus Mockito agent and -jar original target/surefire booter, original args; no new wrapper"},
+    {"role": "SCHEDULER_CHILD", "phase": "CASE_BODY_IF_REACHED", "maxSimultaneouslyLiveInSourceFlow": 2, "createdOverSuccessfulWholeFlow": 3, "xmxMiB": null, "source": "CrossDomainSchedulerStage.java:27-29,48-54,89-95", "argv": ["<java.home>/bin/java", "-cp", "<original surefire.test.class.path>", "com.chengyinhub.quartz.util.SchedulerFenceProcessProbe"], "environment": "Original environment.clear and exact fixture credentials retained; MAVEN_OPTS is not inherited or interpreted as a child Java heap option", "actualPhaseReached": "UNKNOWN"},
+    {"role": "NAMESPACE_PORT_WITNESS", "phase": "FINALIZE", "xmxMiB": 32, "source": "combined_http_budget.py:1546-1564,1581-1588", "argv": ["java", "-Xmx32m", "/budget/CombinedHttpNamespacePortProbe.java", "<original validated Redis port>"], "overlap": "Failure cleanup does not require observed Maven exit, so do not assume no workload JVM can overlap this exec"},
+    {"role": "CONTENT_STUB_JAVAC", "phase": "SPRING_INITIALIZER", "separateJvm": false, "source": "GenericGameplayHttpE2eIT.java:456-484", "claim": "ToolProvider compiler runs inside Surefire; compiler heap/metaspace/native allocations are not a third independent JVM heap"},
+    {"role": "GIT_AND_SHELL", "phase": "APP_CONTROL_AND_CASE_IDENTITY", "source": "combined_http_budget.py:1404-1408;CrossDomainCombinedLoadMySqlIT.java:328-335", "claim": "Original shell/wait and bounded git process use the same task resources; no source proof of zero native memory"}
+  ],
+  "sourceHeapArithmetic": {
+    "mavenPlusSurefireMaxHeapMiB": 640,
+    "rssOrWorkingSetGuarantee": false,
+    "unboundedDefaultChildren": "Each child has its own JVM ergonomics over the same visible cgroup; it does not receive a divided share of memory merely because other JVMs exist",
+    "jdk21Reference": "gc_globals.hpp MaxRAMPercentage25.0/MinRAMPercentage50.0/InitialRAMPercentage1.5625; arguments.cpp:1578-1599 applies conditions/rounding/allocatable limits. Exact child MaxHeapSize was NOT observed and is not asserted to be256MiB",
+    "actualHeapUsedOrCommitted": "UNKNOWN"
+  },
+  "memoryCategories": [
+    {"category": "Java heaps", "sourceBound": "Only explicit -Xmx settings above", "actualPeak": "UNKNOWN", "warning": "Maximum/reserved/committed/used are different; no equation Xmx=RSS"},
+    {"category": "Metaspace/class metadata", "sourceBound": "No explicit MaxMetaspaceSize in fixed workload argv; JDK21 reference default max_uintx", "actualPeak": "UNKNOWN", "warning": "Whole Spring app and in-process compiler load classes; do not assign a fabricated byte estimate"},
+    {"category": "JIT/code cache", "sourceBound": "No explicit ReservedCodeCacheSize; JDK default is platform-dependent", "actualPeak": "UNKNOWN", "warning": "Reserved virtual range is not committed resident memory"},
+    {"category": "User thread stacks and native arenas/direct buffers", "sourceBound": "No explicit global per-process native cap; source pool limits are not actual thread count", "actualPeak": "UNKNOWN", "warning": "Do not multiply a guessed stack size by every configured core/max slot or count stack reservation as RSS"},
+    {"category": "tmpfs and shared memory", "sourceBound": "Original /tmp filesystem limit256MiB", "actualPeak": "UNKNOWN", "warning": "Limit is not preallocation; pages count when instantiated; no-swap means no assumed swap escape"},
+    {"category": "File/page cache and mapped JARs", "sourceBound": "Original source/cache/target mounts and actual accessed files", "actualPeak": "UNKNOWN", "warning": "Read-only is an integrity rule, not exemption from cgroup memory accounting. Shared-page ownership cannot be inferred from mount flags or Git file bytes"},
+    {"category": "Kernel/pagetables/socket buffers", "sourceBound": "Original cgroup and process/task limits", "actualPeak": "UNKNOWN", "warning": "memory.stat subcategories overlap: file includes tmpfs/shared memory; kernel includes kernel_stack/pagetables/etc; never blindly sum all counters"}
+  ],
+  "configuredThreadPoolsNotObservedCounts": [
+    {"source": "CrossDomainCombinedLoadMySqlIT.java:72-75", "pools": "foreground2/queue2, delivery1/queue1"},
+    {"source": "CombinedCoreHttpWorkload.java:23-25", "pools": "workers6/queue6, deadline scheduler1"},
+    {"source": "CrossDomainTransportStage.java:40-41,93-95", "pools": "callers8/queue8, providers4/queue4"},
+    {"source": "CombinedControlledProviders.java:21-22", "pools": "workers4/queue4"},
+    {"source": "HttpUtils.java:71-76", "pools": "HTTP core8/max32/queue128, disconnect core1/max4/queue64"},
+    {"source": "ThreadPoolConfig.java:21-27,32-53", "pools": "original task executor core50/max200/queue1000 and scheduler core50; no claim that all threads exist at once"},
+    {"source": "SchedulerFenceProcessProbe.java:77-78", "pools": "per live child scheduled1 and workers2 plus normal JVM/driver threads"}
+  ],
+  "retainedLargePayload": {"source": "CrossDomainTransportStage.java:24-30,99-125,161", "repeatedBase64CharactersExcludingDataUrlPrefix": 16777216, "bodyByteLimit": 17825792, "producerAllocationSources": ["OpenAiCompatibleLlmClient.java:171-181 body.toJSONString", "HttpUtils.java:174 UTF-8 byte[]", "HttpUtils.java:313-334 worker captures body", "HttpUtils.java:511-520 ByteArrayEntity uses original body"], "policy": "Preserve original physical-write and fault assertions. Receiver is already streaming; String backing storage, client JSON/byte copies and lifetimes are not measured. Do not shrink the image, concurrency or cases as a memory workaround"},
+  "files": {
+    "accessMatrix": "file-access.tsv",
+    "publicGitResourceSizes": "resource-git-index.tsv",
+    "publicGitFixtureSizes": "fixture-git-index.tsv",
+    "sourceHashes": "source-sha256.txt",
+    "compiledClassJarAndCacheSizes": "UNKNOWN_NOT_TRACKED_IN_PUBLIC_GIT",
+    "sizeMeaning": "Git blob bytes and identity only, not built output size, RSS, resident cache or live allocation",
+    "copyFinding": "Current prepare copies only the fixed namespace Java source into the private launch directory. Six target directories and packaged JAR/cache are bind mounts; no full target/JAR copy to /tmp exists in this base",
+    "readOnlyCaution": "Production classes/resources/JAR are runtime read inputs but the original Maven test lifecycle still runs resources/compiler/git metadata phases. Do not remount all target/classes or test-classes read-only without proving those original writer consumers; current writable target proof is part of the ABI",
+    "preserve": "Full original production reactor, JAR/class/resource bytes, SQL/source identity, exact profile20 sources/39 minimum, complete current manifest and cache. No second mini-JAR or classpath pruning"
+  },
+  "candidateNotAcceptedFix": {
+    "patch": "scheduler-child-heap.review.patch",
+    "scope": "Only original CHENGYIN_HTTP_E2E_TESTS exact CrossDomainCombinedLoadMySqlIT; standalone scheduler scope keeps argv unchanged",
+    "candidateChildXmxMiB": 64,
+    "selectionBasis": "Explicit finite heap partition for a test-only non-Boot coordinator child; current constructor lacks any heap partition.64MiB is an unmeasured candidate, not a derived minimum or measured requirement",
+    "nominalMaxHeapsMiB": {"mavenPlusSurefireAndTwoCandidateChildren": 768, "includingPossibleCleanupWitnessOverlap": 800},
+    "notAProof": "Remaining224/256MiB arithmetic is not native/file/tmpfs headroom proof. Candidate can still fail and must not be increased by silently raising the1GiB budget or weakening original assertions",
+    "unchanged": ["Original child main/classpath/source/READY/PID/hash", "Original two-live-child/three-total handoff and kill sequence", "Original SQL locks/receipt/economic assertions", "Original environment.clear and credentials", "Original timeout/failure/nonzero/exact cleanup", "Main Maven128MiB and Surefire512MiB flags"]
+  },
+  "notRecommendedWithoutEvidence": ["Guess and cap metaspace/code cache/stacks to make a run green", "Increase1GiB/CPU/pids/timeout", "Set forkCount0 or eliminate child JVMs", "Reduce HTTP240/concurrency/fault payload", "Disable Spring beans/real gateways", "Copy whole targets or JARs into tmpfs", "Assume file cache is zero because read-only", "Treat host-side Python digest heap as the app JVM heap"],
+  "notRun": ["tests", "parse/import", "Maven/compiler", "Java", "DB/Redis", "Docker", "HTTP workload", "CI"],
+  "businessAccepted": false,
+  "capacityAccepted": false
+}

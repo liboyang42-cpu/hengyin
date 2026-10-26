@@ -3,13 +3,17 @@ package com.chengyinhub.business.it;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.chengyinhub.framework.config.properties.DruidProperties;
 import java.util.Map;
+import java.util.List;
+import java.nio.file.Path;
+import com.chengyinhub.quartz.util.CrossDomainSchedulerStage;
+import com.chengyinhub.quartz.util.SchedulerFenceProcessProbe;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 import static org.junit.jupiter.api.Assertions.*;
 
-/** Property/real datasource assembly only; no Spring web startup, SQL, Redis or provider proof. */
+/** Property, real datasource and child command assembly only; no web, SQL, Redis or provider proof. */
 class CombinedContextConfigurationTest {
     @Test
     void boundedPoolOverridesBothIncompatibleInheritedFloorsWithoutChangingOtherOwners() {
@@ -55,6 +59,19 @@ class CombinedContextConfigurationTest {
             assertFalse(pool.isInited(), "Assembly control must not open a database connection");
             assertEquals(0, pool.getActiveCount()); assertEquals(0, pool.getPoolingCount());
         }
+    }
+
+    @Test
+    void schedulerChildHeapIsFixedOnlyForOriginalCombinedScope() {
+        String java=Path.of(System.getProperty("java.home"),"bin","java").toString();
+        String cp=System.getProperty("surefire.test.class.path",System.getProperty("java.class.path"));
+        String main=SchedulerFenceProcessProbe.class.getName();
+        assertEquals(List.of(java,"-Xmx64m","-cp",cp,main),
+                CrossDomainSchedulerStage.childArguments("CrossDomainCombinedLoadMySqlIT"));
+        for(String scope:new String[]{null,"","CrossDomainFaultIsolationMySqlIT",
+                " CrossDomainCombinedLoadMySqlIT","CrossDomainCombinedLoadMySqlIT -Xmx1024m",
+                "crossdomaincombinedloadmysqlit"})
+            assertEquals(List.of(java,"-cp",cp,main),CrossDomainSchedulerStage.childArguments(scope));
     }
 
     private static GenericApplicationContext inheritedDruidContext() {
