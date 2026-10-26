@@ -288,7 +288,7 @@ class ApiPlayDelistedCompletedRetryContractTest
     {
         PreferenceSubmitRequest request = new PreferenceSubmitRequest();
         request.setActivityId(String.valueOf(ACTIVITY));
-        return controller.submitPreference(NODE, request);
+        return BasicPlayCommandFixtures.submitPreference(controller, NODE, request);
     }
 
     private AjaxResult sensor()
@@ -300,7 +300,7 @@ class ApiPlayDelistedCompletedRetryContractTest
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("heldSec", 12);
         request.setPayload(payload);
-        return controller.sensorResult(request);
+        return BasicPlayCommandFixtures.sensorResult(controller, request);
     }
 
     private AjaxResult arrive()

@@ -1,0 +1,139 @@
+{
+  "parentCommit": "8bfe4f765053a67e3013d74fe6e157201a86fbcc",
+  "packages": {
+    "guard": {
+      "patchBytes": 1227,
+      "patchSHA256": "7d641fbd42e875be694a8d7685287e1c695894c949ea18211871d8f49b0a193b",
+      "gzipBytes": 466,
+      "gzipSHA256": "5577c8a68bf809e9a97bd8faf40a7f86e55b56d314613b9d855a1b0287890759",
+      "files": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/audit/GuardArrivalEvidenceReaderImpl.java",
+          "beforeSHA256": "faec8810462d1227ba080a24ef24784b328cdc8c417ce90f8bceeac7f226068b",
+          "afterSHA256": "4a597edb2191c828ab2f9264faaff8bb3268501fced127c5ef6aaa04fe8eb10e",
+          "afterBytes": 7282
+        }
+      ]
+    },
+    "funds": {
+      "patchBytes": 2331,
+      "patchSHA256": "d525e5c8fbc7fc125220183570e69d5a9491dae2b06f596fd2ac396e7721612c",
+      "gzipBytes": 1174,
+      "gzipSHA256": "acaa4b43b21a4f28c4eef454da8f4115a5d8b83c132f4c47c6f360e3d6a0a5b9",
+      "files": [
+        {
+          "path": "ci/funds_it_gate.py",
+          "beforeSHA256": "8706f922a87b7466b4d06bf933b0928d79bd3b18c837e6994f913e7c3e8689ce",
+          "afterSHA256": "3a51d03a34c8ebfae9b65659fa77d6ddf2e033adab158e753d6559000324bb45",
+          "afterBytes": 39183
+        },
+        {
+          "path": "ci/test_funds_it_gate.py",
+          "beforeSHA256": "0f657a68cb21486192dda855573740513ebc1456c71fd09ad35bc0d6fa8ab386",
+          "afterSHA256": "078055656a3f8824984f0c752cfea9a4f096a87430ce694ce9caee3afd6780b7",
+          "afterBytes": 35585
+        }
+      ]
+    },
+    "fixture": {
+      "patchBytes": 49015,
+      "patchSHA256": "97e0b6078a4a81a68fee3d5afb951688e38c141e9fcf83a771a0f22b1cca55cc",
+      "gzipBytes": 9446,
+      "gzipSHA256": "58cd918ca07638cdbfeaf4781f4ab7703b5fdc06f4453eb26ea0c3a655893c8a",
+      "files": [
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/BasicPlayCommandFixtures.java",
+          "beforeSHA256": "bc4ed0a7d45baf10beb2a0efae2df31479336280ddda4b855f3bf82ac4b70d05",
+          "afterSHA256": "11281f0665d4dfdb7dda830567b5d473b68f32641e4a324a584336d053c7aa2f",
+          "afterBytes": 12036
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java",
+          "beforeSHA256": "b9695663219d129145bc84e61d6dbff62b4d444654cc5fa969aa5bdd89c7970d",
+          "afterSHA256": "ec98b6437b08c936510a6f5f8a9d2a61db34732b95ac1317d7890c216d31c4ef",
+          "afterBytes": 38741
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java",
+          "beforeSHA256": "4f6eb71e9da8a8e72c1be17cca9c0383dcb550222ebfd4c3e430c7565d74c648",
+          "afterSHA256": "99e794801c39074dc058c29032154e286a9a5f1d37baba2dcbac1baaf7b99e74",
+          "afterBytes": 26231
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryNodesContractTest.java",
+          "beforeSHA256": "f45f8fdef1a637fc8203727ced6b815eb655574e247edc6abfc5ba2ae81e9631",
+          "afterSHA256": "2eb31998f6c0a750421e6e7dd3de71a72d358a336edfffe220a2e86dc620fd99",
+          "afterBytes": 18383
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayLeadAdmissionFailureTest.java",
+          "beforeSHA256": "834d577578483a56f1e4a279315a9cfeadea416c1506b8d994eae4c3396346bb",
+          "afterSHA256": "781ad9fa0bca03f1b9fc476208882fdff07df657a34c7ce7d11c82ddf49b8d09",
+          "afterBytes": 20064
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/JourneyPublishFreezeTest.java",
+          "beforeSHA256": "68b91041b01785f44b1bcf607f89864ab44117a004a490ff0e22fc75fd7e9b09",
+          "afterSHA256": "cae15ef67aaa74ca9ff78da1d262bfe8a2d73bd13338835cd29fca38850f97cb",
+          "afterBytes": 25224
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayRouteConflictHttpContractTest.java",
+          "beforeSHA256": "9b3c98aa07c8c56ef36af6b233d4fb7331092c3444270a9361c67ed7a9e7dec1",
+          "afterSHA256": "cb53508b0b146d110adb78e67f83e6be7905d1e85a05756d79bde26ddc19a51a",
+          "afterBytes": 16009
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java",
+          "beforeSHA256": "7adab5086ed09896a546070251f95dfa5fd1bff047794618bd138b540f6d18e4",
+          "afterSHA256": "cd6a5ef7893a13cdc773742f4fc38b636156794cd796624c2da90fa45c293f99",
+          "afterBytes": 53482
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCheckinLiveCodeTest.java",
+          "beforeSHA256": "4267862bb709ab54186a6cc6eab9d1002870d9c78ea90c62688cf9e181d0fbd8",
+          "afterSHA256": "6f55383c246082571a9d82e91fb9a0ec73fd0548cb7c4e3416479f47ea5ca394",
+          "afterBytes": 15494
+        },
+        {
+          "path": "chengyinhub-xcx/pages/play/index.js",
+          "beforeSHA256": "edb5f556207920bf204f7e686e50394378f46e5cdf74a7293e4d336ecd7282e6",
+          "afterSHA256": "5a9d48923642636f351c22fe17bbce06c3708b292d19d8e338b0a4ba590007b2",
+          "afterBytes": 463707
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/architecture-day-c-intent.test.js",
+          "beforeSHA256": "5d85a508c8c932674933bcfb3ebd2f1f0ffe6ebbdfe4623104783c3175705189",
+          "afterSHA256": "496cc9c22a59588043695259b0e8934a1fef9b6030dde46e9ce7c0be8c10ab86",
+          "afterBytes": 9775
+        },
+        {
+          "path": "chengyinhub-ui/tests/unit/im-migration-contract.test.js",
+          "beforeSHA256": "de45a720f24feb1b1432e6c96e1fbdd6590e76c9ea47420c503bf5e30853c6fa",
+          "afterSHA256": "a0b6fefe93676795bb5facfe86412f08a02f5bf82f6e5fd4268eac9d40c6304d",
+          "afterBytes": 7252
+        },
+        {
+          "path": "chengyinhub-ui/tests/unit/cy-empty-state-contract.test.js",
+          "beforeSHA256": "f082a31aa88ad616388047994c5a019948e1927f2ef4f9970fccfdd97e07469a",
+          "afterSHA256": "2b2ef519a116a9769f5d4ec7c59356e89e04e2e518be682926e6ecca6923d01d",
+          "afterBytes": 6358
+        },
+        {
+          "path": "chengyinhub-ui/tests/unit/official-merchant-audit-contract.test.js",
+          "beforeSHA256": "89891f2e5250977de9029ac895e7cffe8524e6a87a1245cfa37f666a660b828d",
+          "afterSHA256": "c5f14243ac1478be37bf27408d14cbbf9dd762a72c920c2bc2d9510cc4258aea",
+          "afterBytes": 3408
+        }
+      ]
+    }
+  },
+  "validation": {
+    "fundsPythonSelftest": "45 PASS; including loopback socket tests; no Java or database execution",
+    "cloudDirectedJs": "24 PASS; reused evidence",
+    "secretScan": "PASS; zero findings",
+    "java": "PENDING_GITHUB_CI",
+    "startup": "PENDING_GITHUB_CI"
+  },
+  "draft": true
+}

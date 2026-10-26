@@ -157,11 +157,13 @@ class ApiPlayRouteConflictHttpContractTest {
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
         CurrentPlayControllerFixtures.install(controller);
+        BasicPlayCommandFixtures.scope(controller, TOPIC);
+        BasicPlayCommandFixtures.routeVersion(controller, ACTIVITY, TOPIC, 0);
     }
 
     @Test
     void routeVersionConflictIsHttp200WithBodyCode409() throws Exception {
-        when(runtimeService.advance(anyLong(), anyLong(), anyLong(), anyInt(), anyString(), anyString(),
+        when(runtimeService.advanceOriginal(anyLong(), anyLong(), anyLong(), eq(99L), anyInt(), anyString(), anyString(),
                 any(NodeOutcome.class)))
                 .thenThrow(new ServiceException("路线状态已更新，请刷新后重试", HttpStatus.CONFLICT));
 
@@ -169,7 +171,7 @@ class ApiPlayRouteConflictHttpContractTest {
                         .param("activityId", String.valueOf(ACTIVITY))
                         .param("code", "CHECKIN")
                         .param("nodeId", String.valueOf(NODE))
-                        .param("routeSessionId", "0")
+                        .param("routeSessionId", "99")
                         .param("routeActionId", "client-action")
                         .param("expectedRouteVersion", "0"))
                 .andExpect(status().isOk())
@@ -184,7 +186,7 @@ class ApiPlayRouteConflictHttpContractTest {
         current.setVersion(4);
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("routeState", current);
-        when(runtimeService.advance(anyLong(), anyLong(), anyLong(), anyInt(), anyString(), anyString(),
+        when(runtimeService.advanceOriginal(anyLong(), anyLong(), anyLong(), eq(99L), anyInt(), anyString(), anyString(),
                 any(NodeOutcome.class)))
                 .thenThrow(new ServiceException("路线状态已更新，请刷新后重试", HttpStatus.CONFLICT).setData(data));
 
@@ -192,7 +194,7 @@ class ApiPlayRouteConflictHttpContractTest {
                         .param("activityId", String.valueOf(ACTIVITY))
                         .param("code", "CHECKIN")
                         .param("nodeId", String.valueOf(NODE))
-                        .param("routeSessionId", "0")
+                        .param("routeSessionId", "99")
                         .param("routeActionId", "client-action")
                         .param("expectedRouteVersion", "0"))
                 .andExpect(status().isOk())
@@ -202,7 +204,7 @@ class ApiPlayRouteConflictHttpContractTest {
 
     @Test
     void nonConflictCompletionErrorStaysHttp200Without409() throws Exception {
-        when(runtimeService.advance(anyLong(), anyLong(), anyLong(), anyInt(), anyString(), anyString(),
+        when(runtimeService.advanceOriginal(anyLong(), anyLong(), anyLong(), eq(99L), anyInt(), anyString(), anyString(),
                 any(NodeOutcome.class)))
                 .thenThrow(new IllegalStateException("节点当前不可用"));
 
@@ -210,7 +212,7 @@ class ApiPlayRouteConflictHttpContractTest {
                         .param("activityId", String.valueOf(ACTIVITY))
                         .param("code", "CHECKIN")
                         .param("nodeId", String.valueOf(NODE))
-                        .param("routeSessionId", "0")
+                        .param("routeSessionId", "99")
                         .param("routeActionId", "client-action")
                         .param("expectedRouteVersion", "0"))
                 .andExpect(status().isOk())
@@ -252,7 +254,7 @@ class ApiPlayRouteConflictHttpContractTest {
         mockMvc.perform(post("/api/play/checkin")
                         .param("activityId", String.valueOf(ACTIVITY)).param("code", "CHECKIN")
                         .param("nodeId", String.valueOf(NODE))
-                        .param("routeSessionId", "0")
+                        .param("routeSessionId", "99")
                         .param("routeActionId", "paused-route-action")
                         .param("expectedRouteVersion", "0"))
                 .andExpect(status().isOk())

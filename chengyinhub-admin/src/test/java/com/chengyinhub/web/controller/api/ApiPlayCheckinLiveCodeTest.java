@@ -84,6 +84,7 @@ class ApiPlayCheckinLiveCodeTest {
         CurrentPlayControllerFixtures.delegate(registrationMapper, controller); // C包新使用资格走当前锁读
         when(registrationMapper.markFirstSuccessfulScan(any(),any(),any(),any(),any())).thenReturn(1);
         com.chengyinhub.business.domain.CmsTopic topic=new com.chengyinhub.business.domain.CmsTopic();topic.setId(44L);topic.setProductType(1);when(topics.selectCmsTopicById(44L)).thenReturn(topic);
+        when(routes.queryNodeContentSnapshot(PLAYER,44L,43L,NODE)).thenReturn(new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode().put("runtimeInstance","shared-fixture").put("authorityEpoch",4));
         when(runtime.routeSessionStatus(43L)).thenReturn("RUNNING");when(routes.canPlay(any(),any(),any(),any(),any())).thenReturn(true);
         when(runtime.sharedRouteSnapshot(PLAYER,44L,43L,NODE)).thenReturn(new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode().put("teamId",88).put("runtimeInstance","shared-fixture").put("authorityEpoch",4));
         com.chengyinhub.business.domain.GameSession original = new com.chengyinhub.business.domain.GameSession(); original.setId(70L); original.setRevision(2);

@@ -118,7 +118,7 @@ class ApiPlaySensorResultTest {
 
     @Test
     void vm7WithoutTrustedProofCannotCompleteOrGrantRewards() {
-        AjaxResult result = controller.sensorResult(request("still", payload("heldSec", 12)));
+        AjaxResult result = BasicPlayCommandFixtures.sensorResult(controller, request("still", payload("heldSec", 12)));
         assertEquals(500, result.get("code"));
         assertEquals("传感器可信证明缺失，暂不能完成挑战", result.get("msg"));
         verify(progressService, never()).insertPlayerNodeProgress(any());
@@ -135,7 +135,7 @@ class ApiPlaySensorResultTest {
     void sensorResultCannotBypassNodeUnlock() {
         node.setUnlockAfterNodeId(NODE - 1);
 
-        AjaxResult result = controller.sensorResult(request("still", payload("heldSec", 12)));
+        AjaxResult result = BasicPlayCommandFixtures.sensorResult(controller, request("still", payload("heldSec", 12)));
 
         assertEquals(500, result.get("code"));
         assertEquals("本关尚未解锁,先完成前置关卡", result.get("msg"));
@@ -155,7 +155,7 @@ class ApiPlaySensorResultTest {
         content.putObject("templatePresentation");
         when(route.nodeAnswers(MEMBER,TOPIC,ACTIVITY,NODE)).thenReturn(content);
         node.setTemplateId(null);template.setSensorType("later-author-type");
-        AjaxResult result=controller.sensorResult(request("still",payload("heldSec",12)));
+        AjaxResult result=BasicPlayCommandFixtures.sensorResult(controller, request("still",payload("heldSec",12)));
         assertEquals(500,result.get("code"));assertEquals("传感器可信证明缺失，暂不能完成挑战",result.get("msg"));
         verify(templateService,never()).selectCmsMemberTemplateById(any());
         verify(progressService,never()).insertPlayerNodeProgress(any());
@@ -503,8 +503,8 @@ class ApiPlaySensorResultTest {
         template.setSensorType("filter_shot");
         template.setSensorConfig("{\"filterStyle\":\"night_vision\"}");
 
-        assertEquals(500, controller.sensorResult(request("filter_shot", payload("heldSec", 12))).get("code"));
-        assertEquals(500, controller.sensorResult(request("still", payload("heldSec", 12))).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.sensorResult(controller, request("filter_shot", payload("heldSec", 12))).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.sensorResult(controller, request("still", payload("heldSec", 12))).get("code"));
         verify(progressService, never()).insertPlayerNodeProgress(any());
     }
 
@@ -513,7 +513,7 @@ class ApiPlaySensorResultTest {
         topic.setProductType(PlayMode.FREE_COLLECT);
         node.setMerchantMemberId(MEMBER + 1);
         when(proof.hasArrived(MEMBER, ACTIVITY, NODE)).thenReturn(false);
-        AjaxResult result = controller.sensorResult(request("still", payload("heldSec", 12)));
+        AjaxResult result = BasicPlayCommandFixtures.sensorResult(controller, request("still", payload("heldSec", 12)));
         assertEquals(500, result.get("code"));
         assertEquals("先扫店内静态码进店，再开始任务", result.get("msg"));
         verify(progressService, never()).insertPlayerNodeProgress(any());
@@ -523,17 +523,17 @@ class ApiPlaySensorResultTest {
     void contextsAndConfiguredThresholdFailClosed() {
         SensorResultRequest both = request("still", payload("heldSec", 12));
         both.setTopicId(TOPIC);
-        assertEquals(500, controller.sensorResult(both).get("code"));
-        assertEquals(500, controller.sensorResult(request("still", payload("heldSec", 9))).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.sensorResult(controller, both).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.sensorResult(controller, request("still", payload("heldSec", 9))).get("code"));
         verify(progressService, never()).insertPlayerNodeProgress(any());
     }
 
     @Test
     void missingOrWrongRuntimeSensorConfigFailsClosed() {
         template.setSensorConfig("{}");
-        assertEquals(500, controller.sensorResult(request("still", payload("heldSec", 12))).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.sensorResult(controller, request("still", payload("heldSec", 12))).get("code"));
         template.setSensorConfig("{\"durationSec\":\"10\"}");
-        assertEquals(500, controller.sensorResult(request("still", payload("heldSec", 12))).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.sensorResult(controller, request("still", payload("heldSec", 12))).get("code"));
         verify(progressService, never()).insertPlayerNodeProgress(any());
     }
 
@@ -546,8 +546,8 @@ class ApiPlaySensorResultTest {
         Map<String, Object> zero = payload("steps", 100);
         zero.put("durationSec", 0);
 
-        assertEquals(500, controller.sensorResult(request("steps", missing)).get("code"));
-        assertEquals(500, controller.sensorResult(request("steps", zero)).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.sensorResult(controller, request("steps", missing)).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.sensorResult(controller, request("steps", zero)).get("code"));
         verify(progressService, never()).insertPlayerNodeProgress(any());
     }
 
@@ -558,7 +558,7 @@ class ApiPlaySensorResultTest {
         Map<String, Object> payload = payload("steps", 100);
         payload.put("durationSec", 301);
 
-        AjaxResult result = controller.sensorResult(request("steps", payload));
+        AjaxResult result = BasicPlayCommandFixtures.sensorResult(controller, request("steps", payload));
 
         assertEquals(500, result.get("code"));
         verify(progressService, never()).insertPlayerNodeProgress(any());
@@ -571,7 +571,7 @@ class ApiPlaySensorResultTest {
         Map<String, Object> payload = payload("steps", 100);
         payload.put("durationSec", 300);
 
-        AjaxResult result = controller.sensorResult(request("steps", payload));
+        AjaxResult result = BasicPlayCommandFixtures.sensorResult(controller, request("steps", payload));
 
         assertEquals(500, result.get("code"));
         assertEquals("传感器可信证明缺失，暂不能完成挑战", result.get("msg"));
@@ -582,32 +582,32 @@ class ApiPlaySensorResultTest {
     void contextVmRegistrationOwnershipTimeAndPredecessorGatesFailClosed() {
         SensorResultRequest missing = request("still", payload("heldSec", 12));
         missing.setActivityId(null);
-        assertEquals(500, controller.sensorResult(missing).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.sensorResult(controller, missing).get("code"));
 
         template.setValidationMethod(3);
-        assertEquals(500, controller.sensorResult(request("still", payload("heldSec", 12))).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.sensorResult(controller, request("still", payload("heldSec", 12))).get("code"));
         template.setValidationMethod(ValidationMethod.APP_SENSOR);
 
         when(registrations.selectCmsRegistrationList(any())).thenReturn(Collections.emptyList());
-        assertEquals(500, controller.sensorResult(request("still", payload("heldSec", 12))).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.sensorResult(controller, request("still", payload("heldSec", 12))).get("code"));
         CmsRegistration registration = new CmsRegistration();
         registration.setMemberId(MEMBER); registration.setOwnerType(2L); registration.setOwnerId(ACTIVITY);
         registration.setRegistrationStatus(2);
         when(registrations.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(registration));
 
         activity.setTopicId(TOPIC + 1);
-        assertEquals(500, controller.sensorResult(request("still", payload("heldSec", 12))).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.sensorResult(controller, request("still", payload("heldSec", 12))).get("code"));
         activity.setTopicId(TOPIC);
 
         activity.setStartDate(new java.util.Date(System.currentTimeMillis() + 60000));
-        assertEquals(500, controller.sensorResult(request("still", payload("heldSec", 12))).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.sensorResult(controller, request("still", payload("heldSec", 12))).get("code"));
         activity.setStartDate(null);
 
         CmsTopicNode previous = new CmsTopicNode(); previous.setId(NODE - 1); previous.setSortId(1L);
         node.setSortId(2L);
         when(nodeService.selectCmsTopicNodeList(any())).thenReturn(java.util.Arrays.asList(previous, node));
         doReturn(Collections.emptyList()).when(progressService).selectPlayerNodeProgressList(any());
-        assertEquals(500, controller.sensorResult(request("still", payload("heldSec", 12))).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.sensorResult(controller, request("still", payload("heldSec", 12))).get("code"));
 
         verify(progressService, never()).insertPlayerNodeProgress(any());
     }
@@ -618,7 +618,7 @@ class ApiPlaySensorResultTest {
         doReturn(Collections.singletonList(done)).when(progressService).selectPlayerNodeProgressList(any());
         when(progressService.insertPlayerNodeProgress(any())).thenThrow(new DuplicateKeyException("uk_progress"));
 
-        AjaxResult result = controller.sensorResult(request("still", payload("heldSec", 12)));
+        AjaxResult result = BasicPlayCommandFixtures.sensorResult(controller, request("still", payload("heldSec", 12)));
 
         assertEquals(200, result.get("code"));
         verify(redis, never()).setIfAbsent(anyString(), any(), anyInt(), any());
@@ -629,7 +629,7 @@ class ApiPlaySensorResultTest {
     void uncompletedReplayCannotBypassTrustedProofWithRateWindowState() {
         when(redis.setIfAbsent(anyString(), any(), eq(2), any())).thenReturn(false);
         when(redis.getCacheObject(anyString())).thenReturn("still|12");
-        AjaxResult result = controller.sensorResult(request("still", payload("heldSec", 12)));
+        AjaxResult result = BasicPlayCommandFixtures.sensorResult(controller, request("still", payload("heldSec", 12)));
 
         assertEquals(500, result.get("code"));
         assertEquals("传感器可信证明缺失，暂不能完成挑战", result.get("msg"));
@@ -641,7 +641,7 @@ class ApiPlaySensorResultTest {
         when(redis.setIfAbsent(anyString(), any(), eq(2), any())).thenReturn(false);
         when(redis.getCacheObject(anyString())).thenReturn("still|11");
 
-        assertEquals(500, controller.sensorResult(request("still", payload("heldSec", 12))).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.sensorResult(controller, request("still", payload("heldSec", 12))).get("code"));
         verify(progressService, never()).insertPlayerNodeProgress(any());
     }
 

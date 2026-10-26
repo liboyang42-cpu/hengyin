@@ -137,7 +137,7 @@ class PlayLeadAdmissionFailureTest {
     @Test void sensorFaultNeverAcquiresSensorOrAwards() {
         SensorResultRequest request = new SensorResultRequest(); request.setActivityId(500L); request.setNodeId(401L);
         request.setRouteActionId("lead-sensor"); request.setExpectedRouteVersion(0);
-        reject(() -> controller.sensorResult(request));
+        reject(() -> BasicPlayCommandFixtures.sensorResult(controller, request));
         verifyNoInteractions(routes);
     }
     @Test void preferenceReadFaultReturnsNoPreferencePayload() {
@@ -147,7 +147,7 @@ class PlayLeadAdmissionFailureTest {
     @Test void preferenceSubmitFaultNeverCallsPreferenceMutation() {
         PreferenceSubmitRequest request = new PreferenceSubmitRequest(); request.setActivityId("500"); request.setChoices(Map.of("one", "A"));
         request.setRouteActionId("lead-preference"); request.setExpectedRouteVersion(0);
-        reject(() -> controller.submitPreference(401L, request));
+        reject(() -> BasicPlayCommandFixtures.submitPreference(controller, 401L, request));
         verifyNoInteractions(routes);
     }
 
@@ -165,11 +165,11 @@ class PlayLeadAdmissionFailureTest {
         doReturn(null).when(leads).selectByActivity(500L);
         template.setValidationMethod(ValidationMethod.PREFERENCE_GROUP);
         PreferenceSubmitRequest request = preferenceRequest();
-        when(preferences.submit(eq(7L), eq(300L), eq(500L), eq(401L), same(template), same(request), any()))
+        when(preferences.submit(eq(7L), eq(300L), eq(500L), eq(401L), same(template), same(request), eq("default"), any()))
                 .thenReturn(Map.of("needsTiebreak", false));
-        assertEquals(200, controller.submitPreference(401L, request).get("code"));
+        assertEquals(200, BasicPlayCommandFixtures.submitPreference(controller, 401L, request).get("code"));
         verify(routes).canPlay(7L, 300L, 500L, 401L, "lead-preference");
-        verify(preferences).submit(eq(7L), eq(300L), eq(500L), eq(401L), same(template), same(request), any());
+        verify(preferences).submit(eq(7L), eq(300L), eq(500L), eq(401L), same(template), same(request), eq("default"), any());
         assertEquals("lead-preference", request.getRouteActionId());
         assertEquals(Integer.valueOf(0), request.getExpectedRouteVersion());
         assertEquals(Map.of("one", "A"), request.getChoices());
@@ -179,7 +179,7 @@ class PlayLeadAdmissionFailureTest {
         ServiceException forbidden = new ServiceException("无权读取本场带领状态", 403);
         doThrow(forbidden).when(leads).selectByActivity(500L);
         assertSame(forbidden, assertThrowsExactly(ServiceException.class, () -> controller.preference(401L, "500", null)));
-        assertSame(forbidden, assertThrowsExactly(ServiceException.class, () -> controller.submitPreference(401L, preferenceRequest())));
+        assertSame(forbidden, assertThrowsExactly(ServiceException.class, () -> BasicPlayCommandFixtures.submitPreference(controller, 401L, preferenceRequest())));
         assertEquals(Integer.valueOf(403), forbidden.getCode());
         verify(leads, times(2)).selectByActivity(500L);
         verifyNoInteractions(routes, preferences, progress, points, ledger, attempts);
@@ -191,7 +191,7 @@ class PlayLeadAdmissionFailureTest {
         node.setUnlockAfterNodeId(400L); // Would read progress and refuse at the former first gate.
         doReturn(false).when(routes).canPlay(anyLong(), anyLong(), anyLong(), anyLong(), nullable(String.class));
         assertEquals("队伍集合中,等队长开始行程", controller.preference(401L, "500", null).get("msg"));
-        assertEquals("队伍集合中,等队长开始行程", controller.submitPreference(401L, preferenceRequest()).get("msg"));
+        assertEquals("队伍集合中,等队长开始行程", BasicPlayCommandFixtures.submitPreference(controller, 401L, preferenceRequest()).get("msg"));
         verify(leads, times(2)).selectByActivity(500L);
         verifyNoInteractions(routes, progress, preferences);
     }
@@ -199,7 +199,7 @@ class PlayLeadAdmissionFailureTest {
     @Test void preferenceNodeOwnershipRefusalStillPrecedesLeadAndRouteForBothHttpMethods() {
         node.setTopicId(301L);
         assertEquals("该节点不属于本次活动", controller.preference(401L, "500", null).get("msg"));
-        assertEquals("该节点不属于本次活动", controller.submitPreference(401L, preferenceRequest()).get("msg"));
+        assertEquals("该节点不属于本次活动", BasicPlayCommandFixtures.submitPreference(controller, 401L, preferenceRequest()).get("msg"));
         verifyNoInteractions(leads, routes, preferences);
     }
 
@@ -208,7 +208,9 @@ class PlayLeadAdmissionFailureTest {
         doReturn(gathering).when(leads).selectByActivity(500L);
         SensorResultRequest request = new SensorResultRequest(); request.setActivityId(500L); request.setNodeId(401L);
         request.setRouteActionId("sensor-original"); request.setExpectedRouteVersion(4);
-        var response = controller.sensorResult(request);
+        BasicPlayCommandFixtures.frozenRun(controller, 500L, 300L, 401L, 4,
+                new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(template));
+        var response = BasicPlayCommandFixtures.sensorResult(controller, request);
         assertEquals(500, response.get("code"));
         assertEquals("队伍集合中,等队长开始行程", response.get("msg"));
         assertFalse(response.containsKey("intentTerminal"));
@@ -222,16 +224,26 @@ class PlayLeadAdmissionFailureTest {
         template.setValidationMethod(ValidationMethod.APP_SENSOR);
         SensorResultRequest request = new SensorResultRequest(); request.setActivityId(500L); request.setNodeId(401L);
         request.setRouteActionId("sensor-original"); request.setExpectedRouteVersion(4);
+        BasicPlayCommandFixtures.frozenRun(controller, 500L, 300L, 401L, 4,
+                new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(template));
         request.setSensorType("still"); request.setPayload(Map.of("heldSec", 12));
-        when(sensors.validateAndAcquire(eq(7L), eq(500L), same(node), same(template), eq("still"), same(request.getPayload())))
+        when(sensors.validateAndAcquire(eq(7L), eq(500L), same(node), argThat(t -> t != null && java.util.Objects.equals(t.getId(), template.getId())
+                        && java.util.Objects.equals(t.getValidationMethod(), template.getValidationMethod())
+                        && java.util.Objects.equals(t.getSensorType(), template.getSensorType())
+                        && java.util.Objects.equals(t.getSensorConfig(), template.getSensorConfig())), eq("still"), same(request.getPayload())))
                 .thenReturn("传感器可信证明缺失，暂不能完成挑战");
-        var response = controller.sensorResult(request);
+        var response = BasicPlayCommandFixtures.sensorResult(controller, request);
         assertEquals(500, response.get("code"));
         assertEquals("传感器可信证明缺失，暂不能完成挑战", response.get("msg"));
         var order = inOrder(leads, routes, sensors);
         order.verify(leads).selectByActivity(500L);
         order.verify(routes).canPlay(7L, 300L, 500L, 401L, "sensor-original");
-        order.verify(sensors).validateAndAcquire(7L, 500L, node, template, "still", request.getPayload());
+        var frozen = org.mockito.ArgumentCaptor.forClass(CmsMemberTemplate.class);
+        order.verify(sensors).validateAndAcquire(eq(7L), eq(500L), same(node), frozen.capture(), eq("still"), same(request.getPayload()));
+        assertEquals(template.getId(), frozen.getValue().getId());
+        assertEquals(template.getValidationMethod(), frozen.getValue().getValidationMethod());
+        assertEquals(template.getSensorType(), frozen.getValue().getSensorType());
+        assertEquals(template.getSensorConfig(), frozen.getValue().getSensorConfig());
         assertEquals("sensor-original", request.getRouteActionId());
         assertEquals(Integer.valueOf(4), request.getExpectedRouteVersion());
         assertEquals(Map.of("heldSec", 12), request.getPayload());

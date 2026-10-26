@@ -41,3 +41,9 @@ CI 最终 FAILURE。密钥扫描、依赖扫描、迁移目录检查和后台 E2
 接收 6 个 Java 测试夹具文件和 9 个 CI/前端文件修复，逐包 SHA256 和基线内容已核验。227 项 Java 定向复测：33 失败、3 错误、0 跳过；编译通过。云端六文件 JavaScript 定向结果 75 通过，复用原证据，未重复跑。API 门禁仍缺 sensor/result 映射，其他失败继续处理。
 
 repair-round-1.json 给出本轮增量文件哈希；vps-fixture-failures.json 给出定向失败。source-files.json 和 verification/test-targets.json 保留首轮 2d7c5df 源码清单，不能把其旧哈希当作修复后的哈希。首轮 CI 结果也仅绑定 2d7c5df；本轮尚未重跑完整 CI。
+
+## 第二轮修复：仍为草稿，等待新 SHA 验证
+
+接收17文件：真实审计入口延迟注入以解除启动环、资金计数20/98同步、sensor-result真实路径和Java/前端夹具。原资格/回执验证保留，未开启循环依赖开关。资金Python门禁45项全部通过；云端JS24项通过。Java及实际启动待新CI，照片审核与旧快照合同冲突仍保留原断言。
+
+repair-round-2.json 是本轮增量证据；current-source-files.json 绑定父提交8bfe4f76的633路径，结合第二轮增量读取。additional-ci-diagnostics.json、backend-repair-round-1-failures.txt、static-repair-round-1-failures.txt 记录上轮未解问题，不等于本轮结果。

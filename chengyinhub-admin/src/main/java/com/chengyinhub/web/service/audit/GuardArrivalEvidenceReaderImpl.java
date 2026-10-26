@@ -28,8 +28,11 @@ public class GuardArrivalEvidenceReaderImpl implements GuardArrivalEvidenceReade
     private final com.chengyinhub.business.service.IGameSessionRuntimeService shared;
     private final com.chengyinhub.web.service.play.PlayBasicIntentApplication basicIntents;
 
+    // Resolve the real transactional entry only when validating a personal appeal.
+    // Eager construction closes AuditTask -> reader -> basic intent -> activity -> AuditTask.
     public GuardArrivalEvidenceReaderImpl(PlayArriveGuardLogMapper logs, GameSessionRuntimeMapper commands,
                                          TopicRouteSessionMapper routes,
+                                         @org.springframework.context.annotation.Lazy
                                          com.chengyinhub.web.service.play.PlayBasicIntentApplication basicIntents,
                                          com.chengyinhub.business.service.IGameSessionRuntimeService shared) {
         this.logs = logs; this.commands = commands; this.routes = routes; this.basicIntents = basicIntents; this.shared = shared;

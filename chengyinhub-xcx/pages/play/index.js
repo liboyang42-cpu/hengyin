@@ -214,7 +214,7 @@ function uuid4() {
 }
 
 function req(url, method, data, header, silentError) {
-  const basic = method === 'POST' && (['/api/play/answer', '/api/play/checkin', '/api/play/arrive', '/api/play/photo', '/api/play/puzzle/reveal', '/api/play/sensor/result'].includes(url) || /^\/api\/play\/preference\/[1-9][0-9]*\/submit$/.test(url));
+  const basic = method === 'POST' && (['/api/play/answer', '/api/play/checkin', '/api/play/arrive', '/api/play/photo', '/api/play/puzzle/reveal', '/api/play/sensor-result'].includes(url) || /^\/api\/play\/preference\/[1-9][0-9]*\/submit$/.test(url));
   if (basic && data && typeof data._intentCurrent === 'function' && !data._intentCurrent()) return Promise.resolve({ obsolete: true });
   if (basic && data && data._intentOwner != null && data._intentOwner !== String((app.getUserID && app.getUserID()) || '')) return Promise.resolve({ obsolete: true });
   if (basic && data && data.receiptOnly) {
@@ -238,7 +238,7 @@ function req(url, method, data, header, silentError) {
       if (url === '/api/play/arrive') return req('/api/play/arrive', 'POST', data, header, silentError);
       if (url === '/api/play/photo') return req('/api/play/photo', 'POST', data, header, silentError);
       if (url === '/api/play/puzzle/reveal') return req('/api/play/puzzle/reveal', 'POST', data, header, silentError);
-      if (url === '/api/play/sensor/result') return req('/api/play/sensor/result', 'POST', data, header, silentError);
+      if (url === '/api/play/sensor-result') return req('/api/play/sensor-result', 'POST', data, header, silentError);
       return req('/api/play/preference/' + data.nodeId + '/submit', 'POST', data, header, silentError);
     });
   }
@@ -787,7 +787,7 @@ Page({
     if (url === '/api/play/arrive') return req('/api/play/arrive', 'POST', payload);
     if (url === '/api/play/photo') return req('/api/play/photo', 'POST', payload);
     if (url === '/api/play/puzzle/reveal') return req('/api/play/puzzle/reveal', 'POST', payload);
-    if (url === '/api/play/sensor/result') return req('/api/play/sensor/result', 'POST', payload);
+    if (url === '/api/play/sensor-result') return req('/api/play/sensor-result', 'POST', payload);
     if (/^\/api\/play\/preference\/[1-9][0-9]*\/submit$/.test(url)) return req('/api/play/preference/' + payload.nodeId + '/submit', 'POST', payload, { 'content-type': 'application/json' });
     return Promise.resolve({ code: 500, msg: '无法确认本次操作，请重新进入' });
   },

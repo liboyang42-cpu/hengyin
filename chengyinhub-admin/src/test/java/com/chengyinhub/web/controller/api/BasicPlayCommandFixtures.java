@@ -61,6 +61,16 @@ final class BasicPlayCommandFixtures {
         when(routes.selectAccessibleByIdForUpdate(99L, controller.getAppUserId())).thenReturn(session);
     }
 
+    static void frozenRun(ApiPlayProgressController c, Long activity, Long topic, Long node,
+            int version, com.fasterxml.jackson.databind.JsonNode answer) {
+        routeVersion(c, activity, topic, version);
+        TopicRouteSessionMapper routes = (TopicRouteSessionMapper) PlayNodeAccessTestFixtures.getField(c, "playCommandRouteMapper");
+        TopicRouteSession session = routes.selectCurrentByOwner(activity, topic, c.getAppUserId());
+        var snapshot = new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+        snapshot.putObject("nodeAnswers").set(node.toString(), answer.deepCopy());
+        session.setConfigSnapshotJson(snapshot.toString());
+    }
+
     private static Map<?, ?> context(ApiPlayProgressController controller, String activity, String topic, String node) {
         install(controller);
         long activityId = activity == null || activity.isBlank() ? 0 : Long.parseLong(activity);
@@ -128,6 +138,29 @@ final class BasicPlayCommandFixtures {
     static AjaxResult revealPuzzle(ApiPlayProgressController c, String a, String n, String t, String action, Integer expected) {
         Map<?, ?> x = context(c, a, t, n);
         return c.revealPuzzle(a, n, t, id(action), version(x, expected), session(x), runtime(x), epoch(x));
+    }
+
+    // Populate only absent client identity. Explicit stale versions/IDs remain negative controls.
+    static void identity(ApiPlayProgressController c, com.chengyinhub.business.domain.dto.SensorResultRequest request) {
+        Map<?, ?> x = context(c, request.getActivityId() == null ? null : request.getActivityId().toString(),
+                request.getTopicId() == null ? null : request.getTopicId().toString(), request.getNodeId().toString());
+        request.setRouteActionId(id(request.getRouteActionId()));
+        request.setExpectedRouteVersion(version(x, request.getExpectedRouteVersion()));
+        if (request.getRouteSessionId() == null) {
+            request.setRouteSessionId(session(x)); request.setRuntimeInstance(runtime(x)); request.setAuthorityEpoch(epoch(x));
+        }
+    }
+    static AjaxResult sensorResult(ApiPlayProgressController c, com.chengyinhub.business.domain.dto.SensorResultRequest request) {
+        identity(c, request); return c.sensorResult(request);
+    }
+    static AjaxResult submitPreference(ApiPlayProgressController c, Long node, com.chengyinhub.business.domain.dto.PreferenceSubmitRequest request) {
+        Map<?, ?> x = context(c, request.getActivityId(), request.getTopicId(), node.toString());
+        request.setRouteActionId(id(request.getRouteActionId()));
+        request.setExpectedRouteVersion(version(x, request.getExpectedRouteVersion()));
+        if (request.getRouteSessionId() == null) {
+            request.setRouteSessionId(session(x)); request.setRuntimeInstance(runtime(x)); request.setAuthorityEpoch(epoch(x));
+        }
+        return c.submitPreference(node, request);
     }
 
 }

@@ -353,7 +353,7 @@ class ApiPlayHistoryNodesContractTest
         request.setNodeId(DELISTED_DONE);
         request.setSensorType("still");
         request.setPayload(Collections.singletonMap("heldSec", 12));
-        AjaxResult sensor = controller.sensorResult(request);
+        AjaxResult sensor = BasicPlayCommandFixtures.sensorResult(controller, request);
         assertEquals(500, sensor.get("code"));
         assertEquals("该站已下架，暂时无法完成", sensor.get("msg"));
 

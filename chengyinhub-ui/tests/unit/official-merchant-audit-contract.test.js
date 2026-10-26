@@ -62,5 +62,6 @@ test('新增商家节点类型仍复用审核快照与通过驳回动作', () =>
   assert.match(source, /openReview\(detailTask, 1\)/)
   assert.match(source, /openReview\(detailTask, 2\)/)
   assert.match(source, /const review = this\.reviewBizType === 'MEDIA_ASSET' \? reviewMediaAsset : reviewAuditTask/)
-  assert.match(source, /return review\(this\.reviewForm\)/)
+  assert.match(source, /const payload = this\.reviewPayload\(\)/)
+  assert.match(source, /return review\(payload\)/)
 })

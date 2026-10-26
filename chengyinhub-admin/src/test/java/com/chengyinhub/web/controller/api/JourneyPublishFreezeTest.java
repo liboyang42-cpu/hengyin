@@ -197,6 +197,7 @@ class JourneyPublishFreezeTest {
 
         when(routeMapper.selectByOwner(anyLong(), eq(TOPIC), eq(MEMBER), eq("default")))
                 .thenAnswer(inv -> stored[0]);
+        when(routeMapper.selectAccessibleByIdForUpdate(99L, MEMBER)).thenAnswer(inv -> stored[0]);
         when(routeMapper.selectMemberTopicSessions(MEMBER, TOPIC)).thenAnswer(inv -> java.util.Collections.singletonList(stored[0]));
         when(routeMapper.insertSession(any(TopicRouteSession.class))).thenAnswer(inv -> {
             TopicRouteSession value = inv.getArgument(0);

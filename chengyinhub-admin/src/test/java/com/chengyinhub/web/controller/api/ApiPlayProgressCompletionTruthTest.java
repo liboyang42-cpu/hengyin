@@ -111,6 +111,8 @@ class ApiPlayProgressCompletionTruthTest
         progressionService = mock(IPlayerProgressionService.class);
 
         controller = spy(new ApiPlayProgressController());
+        PlayNodeAccessTestFixtures.setField(controller, "puzzlePlayService",
+                mock(com.chengyinhub.business.service.IPuzzlePlayService.class));
         doReturn(PLAYER).when(controller).getAppUserId();
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
@@ -348,6 +350,7 @@ class ApiPlayProgressCompletionTruthTest
         when(runtime.nodeAnswers(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"validationMethod\":5}"));when(runtime.canPlay(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString())).thenReturn(true);when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
         when(runtime.nodeArrivalConfig(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"longitude\":\"121.47\",\"latitude\":\"31.23\"}"));when(runtime.recordPlayerArrival(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString(),eq(0),eq("GPS"))).thenReturn(Collections.singletonMap("version",1));
         assertEquals(500,BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "NaN", "31.23", null, null, null, "10").get("code"));assertEquals(500,BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "120", "30", null, null, null, "10").get("code"));
+        BasicPlayCommandFixtures.frozenRun(controller,ACTIVITY,TOPIC,NODE,0,json.readTree("{\"validationMethod\":5}"));
         Map<String,Object> command=Map.of("routeActionId","gps-current-proof","expectedRouteVersion",0);
         AjaxResult result=BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "121.47", "31.23", null, (String)command.get("routeActionId"), (Integer)command.get("expectedRouteVersion"), "10");assertEquals(200,result.get("code"));assertEquals(Boolean.FALSE,((Map<?,?>)result.get("data")).get("done"));
         verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,(String)command.get("routeActionId"),(Integer)command.get("expectedRouteVersion"),"GPS");verify(progressService,never()).insertPlayerNodeProgress(any());verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
@@ -361,6 +364,7 @@ class ApiPlayProgressCompletionTruthTest
         when(runtime.canPlay(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString())).thenReturn(true);
         when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
         when(runtime.recordPlayerArrival(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString(),eq(0))).thenReturn(Collections.singletonMap("version",1));
+        BasicPlayCommandFixtures.frozenRun(controller,ACTIVITY,TOPIC,NODE,0,new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode());
         Map<String,Object> command=Map.of("routeActionId","scan-current-proof","expectedRouteVersion",0);
         AjaxResult result=BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CODE, null, (String)command.get("routeActionId"), (Integer)command.get("expectedRouteVersion"), null, String.valueOf(NODE));
         assertEquals(200,result.get("code"));assertEquals(Boolean.FALSE,((Map<?,?>)result.get("data")).get("done"));
@@ -383,6 +387,10 @@ class ApiPlayProgressCompletionTruthTest
         state.setRouteMode("LINEAR"); state.setStatus("ACTIVE");
         state.setOpening(Collections.singletonMap("complete", false));
         when(runtime.state(PLAYER, TOPIC, ACTIVITY)).thenReturn(state);
+        BasicPlayCommandFixtures.frozenRun(controller,ACTIVITY,TOPIC,NODE,0,new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode());
+        var coordinator = mock(com.chengyinhub.web.service.TopicRouteCompletionCoordinator.class);
+        when(coordinator.advanceOriginal(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),eq(99L),anyString(),eq(0),any(),isNull(),isNull())).thenReturn(state);
+        PlayNodeAccessTestFixtures.setField(controller,"topicRouteCompletionCoordinator",coordinator);
         AjaxResult result = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
         assertEquals(200, result.get("code"));
         assertEquals(Boolean.FALSE, ((Map<?, ?>) result.get("data")).get("completed"));
@@ -506,14 +514,14 @@ class ApiPlayProgressCompletionTruthTest
         com.chengyinhub.business.domain.route.TopicRouteState state =
                 new com.chengyinhub.business.domain.route.TopicRouteState();
         state.setRouteMode("LINEAR"); state.setStatus("ACTIVE");
-        when(coordinator.advance(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),eq("answer-1"),eq(2),
+        when(coordinator.advanceOriginal(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),eq(99L),eq("answer-1"),eq(2),
                 eq("player-node-progress:901"),isNull(),isNull())).thenReturn(state);
-        BasicPlayCommandFixtures.routeVersion(controller, ACTIVITY, TOPIC, 2);
+        BasicPlayCommandFixtures.frozenRun(controller,ACTIVITY,TOPIC,NODE,2,new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode().put("validationMethod",1).put("questionAnswer","答案"));
         AjaxResult result = BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "答案", null, "answer-1", 2);
         assertEquals(200, result.get("code"));
         assertEquals("答对了！", result.get("msg"));
         assertEquals("暗号正确，隐藏奖励已解锁", tpl.getFeedbackText());
-        verify(coordinator).advance(PLAYER,TOPIC,ACTIVITY,NODE,"answer-1",2,"player-node-progress:901",null,null);
+        verify(coordinator).advanceOriginal(PLAYER,TOPIC,ACTIVITY,NODE,99L,"answer-1",2,"player-node-progress:901",null,null);
         verify(proofService,never()).hasArrived(anyLong(),anyLong(),anyLong());
     }
 
@@ -681,12 +689,13 @@ class ApiPlayProgressCompletionTruthTest
         com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();
         when(runtime.nodeAnswers(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"validationMethod\":1,\"questionAnswer\":\"Ａ B\"}"));
         PlayerNodeProgress proof=new PlayerNodeProgress();proof.setStatus(0);when(proofService.markArrived(PLAYER,ACTIVITY,node)).thenReturn(proof);
+        BasicPlayCommandFixtures.frozenRun(controller,ACTIVITY,TOPIC,NODE,0,json.readTree("{\"validationMethod\":1,\"questionAnswer\":\"Ａ B\"}"));
         AjaxResult wrong=BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "changed", null);assertEquals(500,wrong.get("code"));verify(runtime,never()).recordPlayerArrival(anyLong(),anyLong(),anyLong(),anyLong(),any(),any(),anyString());
         Map<String,Object> command=Map.of("routeActionId","answer-current-proof","expectedRouteVersion",0);
         AjaxResult text=BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "ab", null, (String)command.get("routeActionId"), (Integer)command.get("expectedRouteVersion"));assertEquals(200,text.get("code"));verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,(String)command.get("routeActionId"),(Integer)command.get("expectedRouteVersion"),"ANSWER");
         when(runtime.nodeAnswers(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"validationMethod\":3,\"correctAnswer\":\"C\"}"));
         when(runtime.canPlay(PLAYER,TOPIC,ACTIVITY,NODE,"pick-proof")).thenReturn(true);
-        BasicPlayCommandFixtures.routeVersion(controller, ACTIVITY, TOPIC, 3);
+        BasicPlayCommandFixtures.frozenRun(controller,ACTIVITY,TOPIC,NODE,3,json.readTree("{\"validationMethod\":3,\"correctAnswer\":\"C\"}"));
         AjaxResult pick=BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "c", null, "pick-proof", 3);assertEquals(200,pick.get("code"));verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,"pick-proof",3,"ANSWER");verify(progressService,never()).insertPlayerNodeProgress(any());verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
     }
 
@@ -701,6 +710,7 @@ class ApiPlayProgressCompletionTruthTest
         content.putObject("nodePresentation").put("id",NODE).put("topicId",TOPIC).put("templateId",9L);
         content.putObject("templatePresentation").put("questionName","original-question");
         when(runtime.nodeAnswers(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(content);
+        BasicPlayCommandFixtures.frozenRun(controller,ACTIVITY,TOPIC,NODE,0,content);
         PlayerNodeProgress proof=new PlayerNodeProgress();proof.setStatus(0);when(proofService.markArrived(PLAYER,ACTIVITY,node)).thenReturn(proof);
         assertEquals(200,BasicPlayCommandFixtures.answer(controller,String.valueOf(ACTIVITY),String.valueOf(NODE),
                 "original-answer",null,"frozen-unbound",0).get("code"));

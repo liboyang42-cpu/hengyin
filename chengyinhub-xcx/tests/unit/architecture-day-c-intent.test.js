@@ -139,7 +139,7 @@ test('页面清理不能让同局未确认命令换号或改输入', () => {
 for (const [kind, url, input] of [
   ['photo', '/api/play/photo', { picUrl: 'original-photo' }],
   ['puzzleReveal', '/api/play/puzzle/reveal', {}],
-  ['sensor', '/api/play/sensor/result', { heldMs: 1234 }],
+  ['sensor', '/api/play/sensor-result', { heldMs: 1234 }],
   ['preference', '/api/play/preference/11/submit', { choices: ['original'] }],
 ]) test(kind + ': 原共享局身份贯穿写入，UNKNOWN 重启仅原号 GET', async () => {
   const disk = storage(), requests = [];
