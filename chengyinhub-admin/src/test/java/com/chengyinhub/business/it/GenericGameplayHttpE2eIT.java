@@ -28,6 +28,7 @@ import com.chengyinhub.framework.web.service.AppLoginService;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 import java.net.URL;
 import java.net.URLClassLoader;
 import javax.tools.ToolProvider;
