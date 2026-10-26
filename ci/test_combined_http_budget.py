@@ -673,7 +673,10 @@ class CombinedBudgetControls(unittest.TestCase):
         for key,value in [('mavenVersion','3.9.12'),('imageId','sha256:'+'0'*64),('settingsSha256','0'*64)]:
             report=self.subject_report();report['cacheProof'][key]=value
             with self.assertRaisesRegex(ValueError,'OFFLINE_CACHE_PREFLIGHT_REQUIRED'):B.check_subject(report,B.identity(self.env()),41,'f'*64)
-        report=self.subject_report();report.pop('cacheProof')
+        report=self.subject_report()
+        # Keep the independent legal stub prerequisite while removing ALL legacy offline/core proof.
+        # Otherwise this scenario only retests missing controlled-content evidence before its target gate.
+        report['cacheProof']={'controlledContentSecurity':report['cacheProof']['controlledContentSecurity']}
         with self.assertRaisesRegex(ValueError,'OFFLINE_CACHE_PREFLIGHT_REQUIRED'):B.check_subject(report,B.identity(self.env()),41,'f'*64)
 
     def test_standard_plugin_resolution_projects_only_exact_reviewed_coordinates(self):
@@ -771,13 +774,18 @@ class CombinedBudgetControls(unittest.TestCase):
                                State={'Running':True,'Pid':17,'ExitCode':0,'OOMKilled':False})
                     return cid.encode()
                 if 'sha256sum' in argv:return ('c'*64+'  fixed-core.jar\n').encode()
-                if '/tmp/cy-cache.phase' in argv[-1]:return (preparation_phase if content_compiled[0] or exit_code else 'CONTENT_SECURITY_COMPILE').encode()
+                if '/tmp/cy-cache.phase' in argv[-1]:
+                    if failure_point=='INVALID_RECEIPT':return b'' # No earlier proven runtime stage in this scenario.
+                    return (preparation_phase if content_compiled[0] or exit_code else 'CONTENT_SECURITY_COMPILE').encode()
                 if argv[-1]=='/tmp/cy-cache.runtime-maven.exit':return b'0'
-                if 'exec' in argv and '/tmp/cy-cache.exit' in argv[-1] and exit_code==0 and not content_compiled[0]:return b''
-                if 'exec' in argv and '/tmp/cy-cache.exit' in argv[-1] and content_compiled[0] and compiler_exit:return str(compiler_exit).encode()
+                if 'exec' in argv and '/tmp/cy-cache.exit' in argv[-1]:
+                    if failure_point=='INVALID_RECEIPT' or (failure_point=='INVALID_AFTER_CONTENT' and content_compiled[0]):
+                        return b'PRIVATE_BAD_RECEIPT'
+                    if exit_code==0 and not content_compiled[0]:return b''
+                    if content_compiled[0] and compiler_exit:return str(compiler_exit).encode()
                 if 'exec' in argv and '/tmp/cy-cache.offline.exit' in argv[-1]:
                     return b'' if probe_exit is None else str(probe_exit).encode()
-                if 'exec' in argv:return b'PRIVATE_BAD_RECEIPT' if failure_point=='INVALID_RECEIPT' else str(exit_code).encode()
+                if 'exec' in argv:return str(exit_code).encode()
                 if 'stop' in argv:obj['State'].update(Running=False,Pid=0,ExitCode=terminal_exit);mutations.append('stop')
                 if 'rm' in argv:mutations.append('remove')
                 return b''
@@ -905,7 +913,19 @@ class CombinedBudgetControls(unittest.TestCase):
         report=reports[-1];self.assertIsInstance(failure,ValueError);self.assertEqual(mutations,['stop','remove'])
         self.assertEqual(report['firstFailure']['reasonCode'],'ACTUAL_MAVEN_EXIT_REQUIRED')
         self.assertFalse(report['mavenExitObserved']);self.assertIsNone(report['mavenExit'])
+        self.assertEqual(report['phase'],'UNKNOWN')
+        self.assertNotIn('controlledContentSecurityCompiler',report)
         self.assertNotIn('PRIVATE_BAD_RECEIPT',json.dumps(report));self.assertEqual(report['result'],'NOT_ACCEPTED')
+        # A later malformed final receipt must not erase the independently observed ONLINE zero,
+        # nor turn the malformed bytes into a new Maven/compiler exit or a successful preflight.
+        reports,mutations,failure,_=self.warm_transport_control(failure_point='INVALID_AFTER_CONTENT')
+        report=reports[-1];self.assertIsInstance(failure,ValueError);self.assertEqual(mutations,['stop','remove'])
+        self.assertEqual(report['firstFailure']['reasonCode'],'ACTUAL_MAVEN_EXIT_REQUIRED')
+        self.assertIs(report['mavenExitObserved'],True);self.assertEqual(report['mavenExit'],0)
+        self.assertEqual(report['controlledContentSecurityCompiler']['exit'],0)
+        self.assertIs(report['controlledContentSecurityCompiler']['exitObserved'],True)
+        self.assertEqual(report['originalExit'],2);self.assertEqual(report['result'],'NOT_ACCEPTED')
+        self.assertNotIn('PRIVATE_BAD_RECEIPT',json.dumps(report))
 
     def test_maven_nonzero_without_plugin_stays_known_exit_and_unknown_plugin_after_forced_cleanup(self):
         reports,mutations,failure,_=self.warm_transport_control(exit_code=1,terminal_exit=137,no_plugin=True)
@@ -1061,7 +1081,21 @@ class CombinedBudgetControls(unittest.TestCase):
 
     def test_package_preflight_and_real_test_share_one_profile_and_drifted_compilation_cannot_reuse_cache(self):
         shell=B.fixed_cache_command()[1];args=B.fixed_maven_command()
-        self.assertEqual(shell.count('-P'+B.TEST_PROFILE),4);self.assertIn('-P'+B.TEST_PROFILE,args)
+        # Five fixed profile-bearing command templates. The original package array is reused
+        # by its offline probe/conditional online repair; dependency:get is not test compilation.
+        calls=(('PACKAGE',shell.split('package=(',1)[1].split(');',1)[0]),
+               ('ONLINE_PROVIDER_RUNTIME',shell.split('"ONLINE_PROVIDER_RUNTIME"',1)[1].split('"CONTENT_SECURITY_COMPILE"',1)[0]),
+               ('ONLINE_CONFIGURATION_UNITS',shell.split('"ONLINE_CONFIGURATION_UNITS"',1)[1].split('"OFFLINE_PROVIDER_RUNTIME"',1)[0]),
+               ('OFFLINE_PROVIDER_RUNTIME',shell.split('"OFFLINE_PROVIDER_RUNTIME"',1)[1].split('"OFFLINE_TEST_PREFLIGHT"',1)[0]),
+               ('OFFLINE_TEST_PREFLIGHT',shell.split('"OFFLINE_TEST_PREFLIGHT"',1)[1]))
+        self.assertEqual(tuple(stage for stage,_ in calls),('PACKAGE','ONLINE_PROVIDER_RUNTIME','ONLINE_CONFIGURATION_UNITS',
+                                                         'OFFLINE_PROVIDER_RUNTIME','OFFLINE_TEST_PREFLIGHT'))
+        for stage,command in calls:
+            with self.subTest(stage=stage):
+                self.assertEqual(command.count("'-P"+B.TEST_PROFILE+"'"),1)
+                self.assertIn("'-pl' 'chengyinhub-admin' '-am'",command)
+        self.assertEqual(shell.count('-P'+B.TEST_PROFILE),len(calls));self.assertIn('-P'+B.TEST_PROFILE,args)
+        self.assertEqual(args.count('-P'+B.TEST_PROFILE),1)
         self.assertIn('-o',args);self.assertNotIn('-DskipTests',args);self.assertNotIn('-Dmaven.test.skip=true',args)
         changed=self.compilation_receipt();changed['classes'][next(iter(changed['classes']))]='0'*64
         with self.assertRaisesRegex(ValueError,'OFFLINE_CACHE_PREFLIGHT_REQUIRED'):
@@ -1440,7 +1474,7 @@ class CombinedBudgetControls(unittest.TestCase):
                      'configurationTestClassSha256':B.digest(test_class),'photoServiceTestClassSha256':B.digest(photo_class)}
         directory=root/'chengyinhub-admin/target/provider-runtime';directory.mkdir(mode=0o700)
         xml=directory/'configuration.xml'
-        xml.write_text('<testsuite name="'+B.CONFIGURATION_UNIT+'" tests="9" failures="0" errors="0" skipped="0">'
+        xml.write_text('<testsuite name="'+B.CONFIGURATION_UNIT+'" tests="'+str(len(B.CONFIGURATION_METHODS))+'" failures="0" errors="0" skipped="0">'
             '<properties><property name="PRIVATE_VALUE" value="PRIVATE_VALUE"/></properties>'+
             ''.join('<testcase classname="'+B.CONFIGURATION_UNIT+'" name="'+method+'"/>' for method in B.CONFIGURATION_METHODS)+'</testsuite>')
         photo_xml=directory/'photo-service.xml'
@@ -1460,10 +1494,16 @@ class CombinedBudgetControls(unittest.TestCase):
         self.assertNotIn(B.PROVIDER_PROBE,units)
         self.assertIn("'-Dtest="+B.PROVIDER_PROBE+"'",offline);self.assertNotIn(B.CONFIGURATION_UNIT,offline)
         self.assertIn('rm -f',online);self.assertIn('TEST-'+B.CONFIGURATION_UNIT+'.xml',online)
-        self.assertIn('provider-runtime/configuration.xml',online)
-        self.assertIn('provider-runtime/photo-service.xml',online);self.assertNotIn(B.PHOTO_UNIT,offline)
+        self.assertIn('rm -f',units);self.assertIn('TEST-'+B.CONFIGURATION_UNIT+'.xml',units)
+        self.assertIn('provider-runtime/configuration.xml',units)
+        self.assertIn('provider-runtime/photo-service.xml',units);self.assertNotIn(B.PHOTO_UNIT,offline)
+        self.assertNotIn('provider-runtime/configuration.xml',online);self.assertNotIn('provider-runtime/photo-service.xml',online)
+        self.assertNotIn('provider-runtime/configuration.xml',offline);self.assertNotIn('provider-runtime/photo-service.xml',offline)
+        for test_class,output in ((B.CONFIGURATION_UNIT,'configuration.xml'),(B.PHOTO_UNIT,'photo-service.xml')):
+            copy="cp 'chengyinhub-admin/target/surefire-reports/TEST-"+test_class+".xml' 'chengyinhub-admin/target/provider-runtime/"+output+"'"
+            self.assertEqual(shell.count(copy),1);self.assertIn(copy,units)
         self.assertIn(B.PHOTO_SOURCE,B.TEST_SOURCES)
-        for phase in (online,offline):
+        for phase in (online,units,offline):
             self.assertNotIn('-DskipTests',phase);self.assertNotIn('-Dmaven.test.skip=true',phase)
             self.assertIn('-DforkCount=1',phase);self.assertIn('-DreuseForks=true',phase)
         self.assertIn('-Dtest='+B.CLASS,B.fixed_maven_command())
@@ -1486,7 +1526,7 @@ class CombinedBudgetControls(unittest.TestCase):
             self.assertEqual(photo['methods'],list(B.PHOTO_METHODS));self.assertEqual(photo['tests'],len(B.PHOTO_METHODS))
             self.assertEqual(photo['sourceSha256'],B.digest(Path(directory)/'chengyinhub-admin/src/test/java'/B.PHOTO_SOURCE))
             self.assertEqual(photo['testClassSha256'],compilation['photoServiceTestClassSha256'])
-        for kind in ('missing','count','old-two','old-three','old-five','old-seven','duplicate','case','method','failure','error','skip','retry','doctype','source','class','mode'):
+        for kind in ('missing','count','old-two','old-three','old-five','old-seven','old-nine','duplicate','case','method','failure','error','skip','retry','doctype','source','class','mode'):
             with self.subTest(kind=kind),tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),patch.object(B,'ROOT',Path(directory)):
                 xml,source,test_class,compilation=self.configuration_scope(Path(directory));raw=xml.read_text()
                 if kind=='missing':xml.unlink()
@@ -1494,10 +1534,11 @@ class CombinedBudgetControls(unittest.TestCase):
                 elif kind=='class':test_class.write_bytes(b'changed class')
                 elif kind=='mode':xml.chmod(0o644)
                 else:
-                    if kind=='count':raw=raw.replace('tests="9"','tests="8"')
-                    if kind in ('old-two','old-three','old-five','old-seven'):
-                        retained={'old-two':2,'old-three':3,'old-five':5,'old-seven':7}[kind]
-                        raw=raw.replace('tests="9"','tests="'+str(retained)+'"')
+                    current='tests="'+str(len(B.CONFIGURATION_METHODS))+'"'
+                    if kind=='count':raw=raw.replace(current,'tests="'+str(len(B.CONFIGURATION_METHODS)-1)+'"')
+                    if kind in ('old-two','old-three','old-five','old-seven','old-nine'):
+                        retained={'old-two':2,'old-three':3,'old-five':5,'old-seven':7,'old-nine':9}[kind]
+                        raw=raw.replace(current,'tests="'+str(retained)+'"')
                         for method in B.CONFIGURATION_METHODS[retained:]:
                             raw=raw.replace('<testcase classname="'+B.CONFIGURATION_UNIT+'" name="'+method+'"/>','')
                     if kind=='duplicate':raw=raw.replace(B.CONFIGURATION_METHODS[1],B.CONFIGURATION_METHODS[0])
