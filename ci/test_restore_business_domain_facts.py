@@ -1,5 +1,6 @@
 """New T20 SOURCE controls. Synthetic reader inputs never substitute for hosted restore receipts."""
 import copy
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -62,14 +63,15 @@ def refund():
 
 
 def voice(unknown=False):
-    values=[dict(id=1,request_id='request-original',npc_id=555,actor_member_id=88,scope_type=2,scope_id=31,profile_version=3,
-                 sample_sha256='s'*64,sample_reference='media-asset:73',state='READY',voice_id='fixture-original-voice-555')]
+    sample_hash=hashlib.sha256(b'media-asset:73').hexdigest()
+    values=[dict(id=1,request_id='sample:'+sample_hash,npc_id=555,actor_member_id=88,scope_type=2,scope_id=31,profile_version=3,
+                 sample_sha256=sample_hash,sample_reference='media-asset:73',state='READY',voice_id='fixture-original-voice-555')]
     identity={k:values[0][k] for k in ('id','request_id','npc_id','actor_member_id','scope_type','scope_id','profile_version','sample_sha256','sample_reference')}
     identity['voiceId']=values[0]['voice_id'];originals={'known_voice':identity};states={'known_voice':'READY'}
     identity['profile_version']=1
     if unknown:
-        value=dict(values[0],id=2,request_id='unknown-original',npc_id=556,state='UNKNOWN',voice_id=None,profile_version=1);values.append(value)
-        original=dict(identity,id=2,request_id='unknown-original',npc_id=556,voiceId=None);originals['unknown_voice']=original;states['unknown_voice']='UNKNOWN'
+        value=dict(values[0],id=2,npc_id=556,state='UNKNOWN',voice_id=None,profile_version=1);values.append(value)
+        original=dict(identity,id=2,npc_id=556,voiceId=None);originals['unknown_voice']=original;states['unknown_voice']='UNKNOWN'
     profiles=[dict(id=v['npc_id'],voice_version=v['profile_version'],voice_id=v['voice_id']) for v in values]
     snapshot={'tables':{'npc_profile':table(profiles),'npc_voice_enrollment_intent':table(values)},
               'highWater':{'npc_voice_enrollment_intent':{'max':len(values),'next':len(values)+1}}}
@@ -307,6 +309,92 @@ class ExternalNamespaceControls(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'duplicate external'):d.journal(file,'a'*32,'withdrawal-complete')
             file.write_text('truncated')
             with self.assertRaisesRegex(ValueError,'incomplete'):d.journal(file,'a'*32,'withdrawal-complete')
+
+
+class VoiceCompositeIdentityControls(unittest.TestCase):
+    """Real SOURCE shape; synthetic snapshots do not replace the hosted restore."""
+    def test_two_npcs_share_original_sample_request_but_unknown_never_becomes_normal(self):
+        snapshot,provider=voice(True)
+        known=provider['originals']['known_voice'];unknown=provider['originals']['unknown_voice']
+        self.assertEqual(known['request_id'],unknown['request_id'])
+        self.assertNotEqual(known['npc_id'],unknown['npc_id'])
+        candidates=[r for r in d.rows(snapshot,'npc_voice_enrollment_intent') if r['request_id']==unknown['request_id']]
+        self.assertEqual(2,len(candidates))
+        # This is the exact former predicate: both legitimate source rows made
+        # a globally keyed reader reject before any owner boot.
+        with self.assertRaisesRegex(ValueError,'original voice request ID missing'):
+            d.require(len(candidates)==1,'original voice request ID missing')
+        frozen=copy.deepcopy((snapshot,provider))
+        result=evaluate('voice-gap',(snapshot,provider))
+        self.assertEqual([dict(case='unknown_voice',reason='PROVIDER_ORIGINAL_UNQUERYABLE_MANUAL',originalId='2')],result['differences'])
+        self.assertFalse(result['normalBootEligible']);self.assertFalse(result['dispatchRelease'])
+        self.assertEqual('BLOCKED',result['candidateState']);self.assertEqual(frozen,(snapshot,provider))
+
+    def test_missing_unknown_cannot_borrow_known_row_with_same_request(self):
+        snapshot,provider=voice(True)
+        snapshot['tables']['npc_voice_enrollment_intent']['rows'].pop()
+        with self.assertRaisesRegex(ValueError,'original voice request ID missing'):
+            evaluate('voice-gap',(snapshot,provider))
+
+    def test_wrong_npc_or_request_is_not_an_original_match(self):
+        for column,value in (('npc_id','557'),('request_id','foreign-original-request')):
+            with self.subTest(column=column):
+                snapshot,provider=voice(True)
+                names=[c[0] for c in snapshot['tables']['npc_voice_enrollment_intent']['columns']]
+                snapshot['tables']['npc_voice_enrollment_intent']['rows'][1][names.index(column)]=value
+                with self.assertRaisesRegex(ValueError,'original voice request ID missing'):
+                    evaluate('voice-gap',(snapshot,provider))
+
+    def test_duplicate_same_composite_identity_still_fails_exactly_one(self):
+        snapshot,provider=voice(True)
+        snapshot['tables']['npc_voice_enrollment_intent']['rows'].append(
+            copy.deepcopy(snapshot['tables']['npc_voice_enrollment_intent']['rows'][1]))
+        with self.assertRaisesRegex(ValueError,'original voice request ID missing'):
+            evaluate('voice-gap',(snapshot,provider))
+
+    def test_match_does_not_erase_original_id_actor_scope_sample_or_state(self):
+        for column,value in (('id','99'),('actor_member_id','99'),('scope_type','4'),('scope_id','32'),
+                             ('sample_sha256','f'*64),('sample_reference','media-asset:74'),('state','READY')):
+            with self.subTest(column=column):
+                snapshot,provider=voice(True)
+                names=[c[0] for c in snapshot['tables']['npc_voice_enrollment_intent']['columns']]
+                snapshot['tables']['npc_voice_enrollment_intent']['rows'][1][names.index(column)]=value
+                with self.assertRaises(ValueError):evaluate('voice-gap',(snapshot,provider))
+
+    def test_actual_journal_roundtrip_retains_both_npc_scoped_originals(self):
+        snapshot,provider=voice(True)
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/'provider.jsonl';previous='0'*64
+            with path.open('w') as stream:
+                for number,event in enumerate(provider['records'],1):
+                    row=dict(event,sequence=number,previous=previous,scope='a'*32,cohort='voice-gap')
+                    payload=json.dumps(row);previous=hashlib.sha256(payload.encode()).hexdigest()
+                    stream.write(json.dumps(dict(payload=payload,sha256=previous))+'\n')
+            path.chmod(0o600)
+            parsed=d.journal(path,'a'*32,'voice-gap')
+            self.assertEqual(provider['originals'],parsed['originals'])
+            self.assertEqual(1,parsed['originals']['known_voice']['profile_version'])
+            self.assertEqual(1,parsed['originals']['unknown_voice']['profile_version'])
+            result=evaluate('voice-gap',(snapshot,parsed))
+            self.assertFalse(result['factsComplete']);self.assertFalse(result['normalBootEligible'])
+
+    def test_source_contract_is_npc_scoped_before_backup_not_a_lost_new_action(self):
+        root=HERE.parent
+        source=(root/'chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/NpcVoiceEnrollmentService.java').read_text()
+        self.assertIn('String identity = requestId == null ? "sample:" + hash : requestId;',source)
+        self.assertIn('intents.find(npcId, identity.substring(7)) : intents.findRequest(npcId, identity)',source)
+        xml=ET.parse(root/'chengyinhub-system/src/main/resources/mapper/business/NpcVoiceEnrollmentMapper.xml')
+        for name in ('find','findRequest'):
+            self.assertIn('npc_id=#{npcId}',xml.find("select[@id='"+name+"']").text)
+        migration=(root/'chengyinhub-admin/sql/migration_npc_voice_confirmed_attempt_20261024.sql').read_text()
+        self.assertIn('ADD UNIQUE KEY uk_nvei_request(npc_id,request_id)',migration)
+        fixture=(root/'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/RestoreVoiceReconciliationFixture.java').read_text()
+        self.assertIn('owner.enroll(88L,2,31L,npc,"media-asset:73",',fixture)
+        self.assertIn('value.put(key,row.get(key))',fixture)
+        self.assertLess(fixture.index('external.append("VOICE",name,"SUBMIT","IN_FLIGHT",original)'),
+                        fixture.index('external.append("VOICE",name,"RESULT",npc==555?"READY":"UNKNOWN",original)'))
+        run=fixture.split('private void run()throws Exception {',1)[1]
+        self.assertLess(run.index('requireOriginalProjection(556,IntentState.UNKNOWN,unknown);'),run.index('signal("BACKUP_READY")'))
 
 
 class ProductionVersionContractControls(unittest.TestCase):

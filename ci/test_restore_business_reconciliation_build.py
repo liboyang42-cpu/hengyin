@@ -160,6 +160,25 @@ class RestoreBuildControls(unittest.TestCase):
                      self.subTest(value=value), self.assertRaises(ValueError):
                     build.main()
 
+    def test_voice_diagnostic_runs_only_impacted_unit_and_controls_before_pack(self):
+        workflow = (build.ROOT / '.github/workflows/isolated-restore-business-reconciliation.yml').read_text()
+        producer, consumers = workflow.split('  isolated-restore-business-reconciliation:\n', 1)
+        branch = producer.split('          if [[ "$RESTORE_SCOPE" = voice-gap-diagnostic ]]; then\n', 1)[1]
+        voice, remainder = branch.split('          else\n', 1)
+        self.assertIn('mvn -B -pl chengyinhub-admin -Dtest=RestoreVoiceReconciliationFixtureTest test', voice)
+        self.assertIn('python3 -I ci/assert_it_ran.py chengyinhub-admin/target/surefire-reports RestoreVoiceReconciliationFixtureTest', voice)
+        self.assertNotIn('RestoreRefundObservationSourceTest', voice)
+        self.assertIn('RestoreRefundObservationSourceTest', remainder.split('          fi\n', 1)[0])
+        self.assertIn('TEST-com.chengyinhub.business.service.ai.RestoreVoiceReconciliationFixtureTest.xml', producer)
+        unrelated = producer.split('          if [[ "$RESTORE_SCOPE" != voice-gap-diagnostic ]]; then\n', 1)[1].split('          fi\n', 1)[0]
+        for module in ('test_combined_http_budget', 'test_restore_application_http_probe', 'test_http_e2e_entry'):
+            self.assertIn('python3 -B ci/' + module + '.py', unrelated)
+        for module in ('test_restore_business_reconciliation_probe', 'test_restore_business_domain_facts',
+                       'test_restore_business_reconciliation_host', 'test_restore_business_reconciliation_build'):
+            self.assertIn('python3 -B ci/' + module + '.py', producer.split('          if [[ "$RESTORE_SCOPE" != voice-gap-diagnostic ]]; then\n', 1)[0])
+        self.assertEqual(1, producer.count('mvn -B -pl chengyinhub-admin -am -DskipTests install'))
+        self.assertNotIn('mvn ', consumers)
+
 
 class RestoreManualRouterControls(unittest.TestCase):
     def sources(self):
@@ -231,32 +250,33 @@ class RestoreManualRouterControls(unittest.TestCase):
         caller, callee = self.sources()
         parent = self.admission(caller, 'Validate source and exclusive mode', '\n  jar:\n')
         child = self.admission(callee, 'Validate caller source before checkout', '\n      - uses:')
-        for http, restore, success in [('false', 'false', False), ('true', 'false', False),
-                                       ('false', 'true', True), ('true', 'true', False)]:
-            with self.subTest(http=http, restore=restore):
-                self.assertEqual(success, self.invoke(parent, RESTORE_SCOPE='payment-gap-diagnostic',
-                    RUN_HTTP_FIXTURES=http, RUN_RESTORE_FIXTURES=restore) == 0)
-        self.assertEqual(0, self.invoke(child, RESTORE_SCOPE='payment-gap-diagnostic'))
+        for scope in ('payment-gap-diagnostic', 'voice-gap-diagnostic'):
+            for http, restore, success in [('false', 'false', False), ('true', 'false', False),
+                                           ('false', 'true', True), ('true', 'true', False)]:
+                with self.subTest(scope=scope, http=http, restore=restore):
+                    self.assertEqual(success, self.invoke(parent, RESTORE_SCOPE=scope,
+                        RUN_HTTP_FIXTURES=http, RUN_RESTORE_FIXTURES=restore) == 0)
+            self.assertEqual(0, self.invoke(child, RESTORE_SCOPE=scope))
         for invalid in ('', 'payment-gap', 'voice-gap', 'all', 'full-seven,voice-gap', 'foreign'):
             with self.subTest(scope=invalid):
                 self.assertNotEqual(0, self.invoke(parent, RESTORE_SCOPE=invalid, RUN_RESTORE_FIXTURES='true'))
                 self.assertNotEqual(0, self.invoke(child, RESTORE_SCOPE=invalid))
         for source in (caller, callee):
-            self.assertRegex(source, r'restore_scope:\n        description:[^\n]+\n        required: false\n        type: choice\n        default: full-seven\n        options:\n          - full-seven\n          - payment-gap-diagnostic')
+            self.assertRegex(source, r'restore_scope:\n        description:[^\n]+\n        required: false\n        type: choice\n        default: full-seven\n        options:\n          - full-seven\n          - payment-gap-diagnostic\n          - voice-gap-diagnostic')
         self.assertIn('      restore_scope: ${{ inputs.restore_scope }}\n', caller)
         called = callee.split('  workflow_call:', 1)[1].split('permissions:', 1)[0]
         self.assertRegex(called, r'restore_scope:\n        description:[^\n]+\n        required: false\n        type: string\n        default: full-seven')
 
     def test_diagnostic_job_names_and_summary_fence_never_claim_full_seven_acceptance(self):
         caller, callee = self.sources()
-        self.assertIn("name: ${{ inputs.restore_scope == 'payment-gap-diagnostic' && 'DIAGNOSTIC_PARTIAL payment-gap restore' || 'Run seven isolated restore cohorts' }}", caller)
-        self.assertIn("name: ${{ inputs.restore_scope == 'payment-gap-diagnostic' && 'DIAGNOSTIC_PARTIAL payment-gap' || format('Restore {0}', matrix.cohort) }}", callee)
+        self.assertIn("name: ${{ inputs.restore_scope != 'full-seven' && format('DIAGNOSTIC_PARTIAL {0} restore', inputs.restore_scope) || 'Run seven isolated restore cohorts' }}", caller)
+        self.assertIn("name: ${{ inputs.restore_scope != 'full-seven' && format('DIAGNOSTIC_PARTIAL {0}', matrix.cohort) || format('Restore {0}', matrix.cohort) }}", callee)
         consumer, summary = callee.split('  restore-business-summary:\n', 1)
         self.assertIn("    if: ${{ always() && inputs.restore_scope == 'full-seven' }}\n", summary)
         self.assertNotIn('--summarize', consumer)
         self.assertEqual(1, summary.count('python3 -I ci/restore_business_reconciliation_host.py --summarize'))
         marker = consumer.split('      - name: Mark DIAGNOSTIC_PARTIAL scope without a full verdict\n', 1)[1]
-        self.assertIn("if: ${{ always() && inputs.restore_scope == 'payment-gap-diagnostic' }}", marker)
+        self.assertIn("if: ${{ always() && inputs.restore_scope != 'full-seven' }}", marker)
         self.assertIn('NOT_FULL:', marker)
         self.assertIn('seven-receipt/three-positive verifier were not run', marker)
         self.assertIn('"$GITHUB_STEP_SUMMARY"', marker)

@@ -8,13 +8,14 @@ on:
         required: true
         type: string
       restore_scope:
-        description: Full seven cohorts or fixed payment-gap DIAGNOSTIC_PARTIAL only
+        description: Full seven cohorts or fixed payment-gap/voice-gap DIAGNOSTIC_PARTIAL only
         required: false
         type: choice
         default: full-seven
         options:
           - full-seven
           - payment-gap-diagnostic
+          - voice-gap-diagnostic
   workflow_call:
     inputs:
       source_sha:
@@ -22,7 +23,7 @@ on:
         required: true
         type: string
       restore_scope:
-        description: full-seven or payment-gap-diagnostic (DIAGNOSTIC_PARTIAL)
+        description: full-seven or fixed payment-gap-diagnostic/voice-gap-diagnostic (DIAGNOSTIC_PARTIAL)
         required: false
         type: string
         default: full-seven
@@ -49,7 +50,7 @@ jobs:
           [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
           test "$SOURCE_SHA" = "$GITHUB_SHA"
           test "$SOURCE_SHA" = "$WORKFLOW_SHA"
-          case "$RESTORE_SCOPE" in full-seven|payment-gap-diagnostic) ;; *) exit 2 ;; esac
+          case "$RESTORE_SCOPE" in full-seven|payment-gap-diagnostic|voice-gap-diagnostic) ;; *) exit 2 ;; esac
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
@@ -64,23 +65,30 @@ jobs:
           python3 -B ci/test_restore_business_domain_facts.py
           python3 -B ci/test_restore_business_reconciliation_host.py
           python3 -B ci/test_restore_business_reconciliation_build.py
-          python3 -B ci/test_combined_http_budget.py
-          python3 -B ci/test_restore_application_http_probe.py
-          python3 -B ci/test_http_e2e_entry.py
+          if [[ "$RESTORE_SCOPE" != voice-gap-diagnostic ]]; then
+            python3 -B ci/test_combined_http_budget.py
+            python3 -B ci/test_restore_application_http_probe.py
+            python3 -B ci/test_http_e2e_entry.py
+          fi
       - name: Compile one exact candidate and copy only its existing test dependencies
         id: build
         run: |
           mvn -B -pl chengyinhub-admin -am -DskipTests install
           mvn -B -pl chengyinhub-admin dependency:copy-dependencies -DincludeScope=test "-DoutputDirectory=$GITHUB_WORKSPACE/chengyinhub-admin/target/restore-lib" -Dmdep.useRepositoryLayout=true
-          mvn -B -pl chengyinhub-admin -Dtest=RestoreRefundObservationSourceTest test
-          python3 -I ci/assert_it_ran.py chengyinhub-admin/target/surefire-reports RestoreRefundObservationSourceTest
+          if [[ "$RESTORE_SCOPE" = voice-gap-diagnostic ]]; then
+            mvn -B -pl chengyinhub-admin -Dtest=RestoreVoiceReconciliationFixtureTest test
+            python3 -I ci/assert_it_ran.py chengyinhub-admin/target/surefire-reports RestoreVoiceReconciliationFixtureTest
+          else
+            mvn -B -pl chengyinhub-admin -Dtest=RestoreRefundObservationSourceTest test
+            python3 -I ci/assert_it_ran.py chengyinhub-admin/target/surefire-reports RestoreRefundObservationSourceTest
+          fi
           python3 -I ci/restore_business_reconciliation_build.py pack
-      - name: Preserve changed journal unit evidence
+      - name: Preserve changed source unit evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: restore-business-source-unit-${{ github.run_attempt }}
-          path: chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.RestoreRefundObservationSourceTest.xml
+          path: ${{ inputs.restore_scope == 'voice-gap-diagnostic' && 'chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.ai.RestoreVoiceReconciliationFixtureTest.xml' || 'chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.RestoreRefundObservationSourceTest.xml' }}
           if-no-files-found: warn
           retention-days: 1
       - uses: actions/upload-artifact@v4
@@ -91,7 +99,7 @@ jobs:
           retention-days: 1
           include-hidden-files: true
   isolated-restore-business-reconciliation:
-    name: ${{ inputs.restore_scope == 'payment-gap-diagnostic' && 'DIAGNOSTIC_PARTIAL payment-gap' || format('Restore {0}', matrix.cohort) }}
+    name: ${{ inputs.restore_scope != 'full-seven' && format('DIAGNOSTIC_PARTIAL {0}', matrix.cohort) || format('Restore {0}', matrix.cohort) }}
     needs: restore-source-build
     runs-on: ubuntu-24.04
     timeout-minutes: 45
@@ -99,7 +107,7 @@ jobs:
       fail-fast: false
       max-parallel: 20
       matrix:
-        cohort: ${{ fromJSON(inputs.restore_scope == 'payment-gap-diagnostic' && '["payment-gap"]' || '["payment-gap","withdrawal-complete","withdrawal-gap","refund-complete","refund-gap","voice-complete","voice-gap"]') }}
+        cohort: ${{ fromJSON(inputs.restore_scope == 'payment-gap-diagnostic' && '["payment-gap"]' || inputs.restore_scope == 'voice-gap-diagnostic' && '["voice-gap"]' || '["payment-gap","withdrawal-complete","withdrawal-gap","refund-complete","refund-gap","voice-complete","voice-gap"]') }}
     env:
       CHENGYIN_CI_RESTORE_BUSINESS: 'true'
       CHENGYIN_RESTORE_BUSINESS_COHORT: ${{ matrix.cohort }}
@@ -123,9 +131,9 @@ jobs:
         id: restore
         run: python3 -I ci/restore_business_reconciliation_host.py
       - name: Mark DIAGNOSTIC_PARTIAL scope without a full verdict
-        if: ${{ always() && inputs.restore_scope == 'payment-gap-diagnostic' }}
+        if: ${{ always() && inputs.restore_scope != 'full-seven' }}
         run: |
-          printf '%s\n' '## DIAGNOSTIC_PARTIAL — payment-gap only' 'NOT_FULL: six other cohorts and the seven-receipt/three-positive verifier were not run. No full recovery or production release verdict.' >> "$GITHUB_STEP_SUMMARY"
+          printf '%s\n' "## DIAGNOSTIC_PARTIAL — $RESTORE_SCOPE only" 'NOT_FULL: six other cohorts and the seven-receipt/three-positive verifier were not run. No full recovery or production release verdict.' >> "$GITHUB_STEP_SUMMARY"
       - name: Preserve only scoped public JSON receipts
         if: ${{ always() && steps.restore.outcome != 'skipped' }}
         uses: actions/upload-artifact@v4

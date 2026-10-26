@@ -217,7 +217,11 @@ def evaluate(cohort, backup, fault, restored, provider_before, provider_after):
         require(set(provider_after['originals'])==expected and provider_after['submits']=={c:1 for c in expected},'one create per original voice')
         for case in expected:
             identity=provider_after['originals'][case]
-            local=[r for r in rows(restored,'npc_voice_enrollment_intent') if r['request_id']==identity['request_id']]
+            # Original Mapper/uk_nvei_request identity is (npc_id, request_id).
+            # Two NPCs using the same canonical sample legitimately share the
+            # sample:<sha256> request label; it is not a global request key.
+            local=[r for r in rows(restored,'npc_voice_enrollment_intent')
+                   if r['npc_id']==str(identity['npc_id']) and r['request_id']==identity['request_id']]
             require(len(local)==1,'original voice request ID missing'); r=local[0]
             for key in ('id','npc_id','actor_member_id','scope_type','scope_id'):
                 require(r[key]==str(identity[key]),'original voice owner/version changed')

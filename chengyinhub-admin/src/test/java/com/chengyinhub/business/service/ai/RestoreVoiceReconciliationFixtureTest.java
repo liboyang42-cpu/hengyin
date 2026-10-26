@@ -58,6 +58,35 @@ class RestoreVoiceReconciliationFixtureTest {
         result.put("profile_version",value.getProfileVersion());result.put("state",value.getState());result.put("voice_id",value.getVoiceId());return result;
     }
 
+    @Test void sameSampleAcrossTwoNpcsRetainsOneRequestLabelAndTwoScopedOriginals()throws Exception {
+        // The existing model has one mapper/profile per NPC. Exercise the real
+        // owner twice; this is key-generation/journal evidence, not MySQL proof.
+        Harness known=new Harness(555),unknown=new Harness(556);
+        NpcProfile ready=known.enroll(),unresolved=unknown.enroll();
+        known.provider.requireState(RestoreVoiceReconciliationFixture.Operation.SOURCE_KNOWN,
+                RestoreVoiceReconciliationFixture.IntentState.READY,ready,"original known result");
+        unknown.provider.requireState(RestoreVoiceReconciliationFixture.Operation.SOURCE_UNKNOWN,
+                RestoreVoiceReconciliationFixture.IntentState.UNKNOWN,unresolved,"original unknown result");
+        String original="sample:"+NpcVoiceEnrollmentService.fingerprint("media-asset:73");
+        assertEquals(original,ready.getVoiceRequestId());assertEquals(original,unresolved.getVoiceRequestId());
+        Map<String,Object> first=known.events.get(0).identity(),second=unknown.events.get(0).identity();
+        assertInstanceOf(String.class,first.get("request_id"));assertInstanceOf(String.class,second.get("request_id"));
+        assertEquals(first.get("request_id"),second.get("request_id"));
+        assertEquals(555L,((Number)first.get("npc_id")).longValue());
+        assertEquals(556L,((Number)second.get("npc_id")).longValue());
+        assertEquals(1L,((Number)first.get("profile_version")).longValue());
+        assertEquals(1L,((Number)second.get("profile_version")).longValue());
+        assertEquals(3L,known.owner.row().getProfileVersion().longValue());
+        assertEquals(1L,unknown.owner.row().getProfileVersion().longValue());
+        assertEquals(List.of("SUBMIT","RESULT","QUERY"),known.events.stream().map(Event::operation).toList());
+        assertEquals(List.of("SUBMIT","RESULT"),unknown.events.stream().map(Event::operation).toList());
+        assertNull(unknown.owner.row().getVoiceId());
+        assertEquals("VOICE_PROVIDER_OUTCOME_UNKNOWN",unknown.owner.row().getReasonCode());
+        assertEquals(1,known.provider.submits());assertEquals(1,known.provider.queries());
+        assertEquals(1,unknown.provider.submits());assertEquals(0,unknown.provider.queries());
+        verify(unknown.owner.provider,never()).isReady(anyString());
+    }
+
     @Test void knownVoiceUsesCommittedClaimThenCommittedOriginalIdAndFreshNormalOwnerNeverDispatches()throws Exception {
         Harness f=new Harness(555);NpcProfile result=f.enroll();
         f.provider.requireState(RestoreVoiceReconciliationFixture.Operation.SOURCE_KNOWN,RestoreVoiceReconciliationFixture.IntentState.READY,result,"original provider-ready persisted");

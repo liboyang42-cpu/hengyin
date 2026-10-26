@@ -177,8 +177,10 @@ class RestoreHostControls(unittest.TestCase):
     def test_each_actual_cohort_has_one_fixed_matrix_job_and_unique_artifact_identity(self):
         source = (host.ROOT / '.github/workflows/isolated-restore-business-reconciliation.yml').read_text()
         matrix = source.split("        cohort: ${{ fromJSON(inputs.restore_scope == 'payment-gap-diagnostic' && '", 1)[1].split("') }}", 1)[0]
-        diagnostic, full = matrix.split("' || '", 1)
+        diagnostic, remaining = matrix.split("' || inputs.restore_scope == 'voice-gap-diagnostic' && '", 1)
+        voice, full = remaining.split("' || '", 1)
         self.assertEqual(['payment-gap'], json.loads(diagnostic))
+        self.assertEqual(['voice-gap'], json.loads(voice))
         actual = json.loads(full)
         self.assertEqual(list(host.COHORTS), actual)
         self.assertEqual(7, len(set(actual)))

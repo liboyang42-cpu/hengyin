@@ -19,18 +19,19 @@ on:
         type: boolean
         default: false
       run_restore_fixtures:
-        description: 同提交隔离恢复：默认七项，显式诊断仅 payment-gap；与 HTTP 互斥且只构建一次 JAR
+        description: 同提交隔离恢复：默认七项，显式诊断仅 payment-gap 或 voice-gap；与 HTTP 互斥且只构建一次 JAR
         required: false
         type: boolean
         default: false
       restore_scope:
-        description: full-seven 完整验收或 payment-gap-diagnostic（DIAGNOSTIC_PARTIAL，非完整通过）
+        description: full-seven 完整验收或固定 payment-gap/voice-gap-diagnostic（DIAGNOSTIC_PARTIAL，非完整通过）
         required: false
         type: choice
         default: full-seven
         options:
           - full-seven
           - payment-gap-diagnostic
+          - voice-gap-diagnostic
 
 permissions:
   contents: read
@@ -63,7 +64,7 @@ jobs:
           esac
           case "$RESTORE_SCOPE" in
             full-seven) ;;
-            payment-gap-diagnostic)
+            payment-gap-diagnostic|voice-gap-diagnostic)
               test "$RUN_RESTORE_FIXTURES" = true
               test "$RUN_HTTP_FIXTURES" = false ;;
             *) echo "Unknown fixed restore scope" >&2; exit 2 ;;
@@ -121,7 +122,7 @@ jobs:
     with:
       source_sha: ${{ inputs.source_sha }}
   restore-fixtures:
-    name: ${{ inputs.restore_scope == 'payment-gap-diagnostic' && 'DIAGNOSTIC_PARTIAL payment-gap restore' || 'Run seven isolated restore cohorts' }}
+    name: ${{ inputs.restore_scope != 'full-seven' && format('DIAGNOSTIC_PARTIAL {0} restore', inputs.restore_scope) || 'Run seven isolated restore cohorts' }}
     needs: admission
     if: github.repository == 'liboyang42-cpu/hengyin' && github.event_name == 'workflow_dispatch' && inputs.run_restore_fixtures && !inputs.run_http_fixtures
     uses: ./.github/workflows/isolated-restore-business-reconciliation.yml
