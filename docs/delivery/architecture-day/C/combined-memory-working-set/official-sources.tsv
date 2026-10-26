@@ -1,0 +1,8 @@
+source	sha256	primaryURL
+HotSpot-globals.hpp	4086671f2cd1ccc47564c96113fdb93f6b9c86e95c2fb55c82ffc9b3165e4de0	https://raw.githubusercontent.com/openjdk/jdk21u/jdk-21.0.8-ga/src/hotspot/share/runtime/globals.hpp
+HotSpot-arguments.cpp	6ff878437e9fc2c43b9f65119d3b18da644939bb64521f16ddf2086fc156592d	https://raw.githubusercontent.com/openjdk/jdk21u/jdk-21.0.8-ga/src/hotspot/share/runtime/arguments.cpp
+HotSpot-gc_globals.hpp	0778e1a1921b9e5dd4bf0340210a2036b92ea246f46e458c2508319027f3cd8b	https://raw.githubusercontent.com/openjdk/jdk21u/jdk-21.0.8-ga/src/hotspot/share/gc/shared/gc_globals.hpp
+HotSpot-globals_linux.hpp	c5ec3c83694aa8ef996e71a00cfe48dfa3b4054a29f5c6222d7bb1d6ef45645b	https://raw.githubusercontent.com/openjdk/jdk21u/jdk-21.0.8-ga/src/hotspot/os/linux/globals_linux.hpp
+HotSpot-cgroupV2Subsystem_linux.cpp	da56271295a2c02c74b28eae5d5522509a42f8ee8b907995131fe377dbd2dc07	https://raw.githubusercontent.com/openjdk/jdk21u/jdk-21.0.8-ga/src/hotspot/os/linux/cgroupV2Subsystem_linux.cpp
+Linux-cgroup-v2.rst	ad3bd37498a57cc249326fd5c2d609669b32611fe69d126df3c3abec1539f572	https://raw.githubusercontent.com/torvalds/linux/v6.12/Documentation/admin-guide/cgroup-v2.rst
+Linux-tmpfs.rst	4a77df00d304074013268830815f135ae672762e2f104b7244d1ad3d65c24e3f	https://raw.githubusercontent.com/torvalds/linux/v6.12/Documentation/filesystems/tmpfs.rst
