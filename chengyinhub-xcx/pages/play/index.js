@@ -5343,7 +5343,16 @@ Page({
       this._guardAppealScope = scope;
       this._guardAppeal = guardAppeal.create({ storage: wx, owner, session,
         current: () => this._isPlayAccountCurrent() && this._sessionKey() === session && this._guardAppealScope === scope,
-        send: (url, method, body) => req(url, method, body, { 'content-type': 'application/json' }, true),
+        // 守卫申诉只用三条固定接口；按字面量分派，U1 可逐条核对后端映射。
+        send: (url, method, body) => {
+          const header = { 'content-type': 'application/json' };
+          switch (url) {
+            case '/api/audit/guard/reference': return req('/api/audit/guard/reference', method, body, header, true);
+            case '/api/audit/guard/appeal/receipt': return req('/api/audit/guard/appeal/receipt', method, body, header, true);
+            case '/api/audit/guard/appeal': return req('/api/audit/guard/appeal', method, body, header, true);
+          }
+          throw new Error('Unknown guard appeal endpoint');
+        },
         changed: view => this.setData({ guardAppealView: view }), keyFactory: uuid4 });
     }
     return this._guardAppeal;

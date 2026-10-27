@@ -725,7 +725,7 @@ Page({
       if (JSON.stringify(wx.getStorageSync(key)) !== JSON.stringify(draft)) throw Error('草稿未保存');
       this.setData({ 'auditSheet.draftReason': draft.reason, 'auditSheet.pending': draft.pending, 'auditSheet.appealCommand': draft.command });
       return true;
-    } catch (e) { toast('申诉草稿保存失败，请恢复存储后重试'); return false; }
+    } catch (e) { toast('申诉草稿保存失败，请重试'); return false; }
   },
 
   addAuditAttachment() {

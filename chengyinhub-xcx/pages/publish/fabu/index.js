@@ -7376,7 +7376,7 @@ Page({
   // 拦住存草稿会成死结;发布仍过这道闸,后端校验照旧。
   _buildSubmitPayload(options) {
     if (Object.keys(this._routeRuleDrafts || {}).length) {
-      if (!(options && options.quiet)) cyToast('有未完成的条件与效果，请在对应节点的下一站中完成配置');
+      if (!(options && options.quiet)) cyToast('有条件与效果未完成，请先补全');
       return null;
     }
     const draft = !!(options && options.draft);
