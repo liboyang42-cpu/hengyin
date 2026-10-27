@@ -4262,7 +4262,13 @@ Page({
     const first = visibleNodes.find((n) => n.lat && n.lng) || nodes.find((n) => n.lat && n.lng) || {};
     const target = activeTargetId != null && this._nodeById(activeTargetId);
     const targetState = getPlayMapState(activeTargetId != null ? 'target' : 'candidate');
+    /* computeNext 给的是精简卡片(没有坐标),「导航过去」要坐标:从整节点补上。
+       以前 openNextStopNav 拿不到 lat/lng 一律静默 return —— 按钮一直在,点了什么都不发生(2026-10-27 生产实测)。 */
+    const nextFull = rawNextNode && this._nodeById(rawNextNode.nodeId);
     const nextNode = rawNextNode && Object.assign({}, rawNextNode, {
+      lat: nextFull ? nextFull.lat : rawNextNode.lat,
+      lng: nextFull ? nextFull.lng : rawNextNode.lng,
+      address: (nextFull && nextFull.address) || rawNextNode.address || '',
       mapStateLabel: targetState.cardLabel,
       mapA11yLabel: targetState.readerLabel,
     });
