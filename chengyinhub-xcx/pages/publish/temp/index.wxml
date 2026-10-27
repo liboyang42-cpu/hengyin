@@ -53,7 +53,7 @@
     <view class="cg-load-state__hint">加载中</view>
   </view>
   <view class="cg-load-state" wx:elif="{{loadError}}">
-    <view wx:if="{{loadErrorIsOperation}}" bindtap="inspectAdoptionTemplates" aria-role="button" aria-label="查看我的玩法">查看我的玩法</view>
+    <view wx:if="{{loadErrorIsOperation}}" bindtap="inspectAdoptionTemplates" aria-role="button" aria-label="查看我的玩法" hover-class="cy-pressed" hover-stay-time="80">查看我的玩法</view>
     <cy-error load-failure="{{!loadErrorIsOperation && !loadErrorIsAccess}}" title="{{loadErrorIsOperation ? '采用尚未确认' : loadErrorIsAccess ? '当前请求无法读取玩法' : '玩法详情加载失败'}}" sub="{{loadError}}" retry="重新加载" bind:retry="retryGetData" />
   </view>
 

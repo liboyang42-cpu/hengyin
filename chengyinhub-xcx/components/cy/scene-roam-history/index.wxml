@@ -3,7 +3,7 @@
 <view wx:elif="{{state === 'loading'}}" class="history-loading" aria-role="status">正在读取漫游记录…</view>
 <view wx:else class="hs">
   <view wx:if="{{remoteLoading}}" aria-role="status">正在读取漫游记录…</view>
-  <view wx:if="{{remoteError}}" bindtap="retry" aria-role="button">漫游记录读取失败，当前仅显示已读取记录。点此重试</view>
+  <view wx:if="{{remoteError}}" bindtap="retry" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">漫游记录读取失败，当前仅显示已读取记录。点此重试</view>
   <view wx:if="{{localWarning}}">本机补充记录暂时无法读取</view>
   <view class="hs-sum" wx:if="{{summary.trips}}">
     <text>已读取{{ summary.trips || 0 }}次漫游</text>
@@ -47,7 +47,7 @@
          与事实相反,CTA 也不该是「出发第一次漫游」。判据在组件:本机 recovery 记录仍在。 -->
     <cy-empty wx:if="{{!remoteLoading && !remoteError && !list.length && inProgress}}" fill size="lg" class="fill-slot" kind="not-started" title="正在漫游中" sub="结束后收录" cta="回到地图" bind:cta="closeToRoam" />
     <cy-empty wx:elif="{{!remoteLoading && !remoteError && !list.length}}" fill size="lg" class="fill-slot" kind="empty" title="还没有漫游记录" sub="" cta="出发第一次漫游" bind:cta="closeToRoam" />
-    <view wx:if="{{hasMore && !remoteLoading}}" bindtap="loadMore" aria-role="button">加载更多漫游记录</view>
+    <view wx:if="{{hasMore && !remoteLoading}}" bindtap="loadMore" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">加载更多漫游记录</view>
     <view wx:if="{{list.length}}" style="height:80rpx"></view>
   </view>
 </view>
