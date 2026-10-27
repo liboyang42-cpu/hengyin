@@ -10,7 +10,7 @@ Component({
     completionEnabled: { type: Boolean, value: false },
     done: { type: Boolean, value: false },
     uploaded: { type: Boolean, value: false },
-    // '' | 'retry'（重传同一张）| 'review_pending'（查看/重试原资产审核）| 'reselect'（重新选图）
+    // '' | 'retry'（重传同一张）| 'review_pending'（查看/重试原资产审核）| 'rejected'（审核未通过，重新选图）| 'reselect'（重新选图）
     uploadFailure: { type: String, value: '' },
   },
   data: { cur: 0 },

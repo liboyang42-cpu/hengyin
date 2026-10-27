@@ -58,11 +58,13 @@ function submitAlbum(page, action, detail, toast) {
         page.setData({ 'playKit.kit.uploaded': true, 'playKit.kit.uploadFailure': '' });
       },
       onUploadFailed(failure) {
-        const pending = failure && failure.status === 'review_pending'
+        // 审核已拒绝不是「审核中」：原图不再沿用，只能重新选图。
+        const rejected = failure && failure.status === 'review_pending' && failure.rejected === true;
+        const pending = !rejected && failure && failure.status === 'review_pending'
           && /^[1-9][0-9]{0,18}$/.test(String(failure.assetId || ''));
         const retry = failure && failure.retryable === true;
         page._albumRetry = pending || retry ? { sessionId: kit.sessionId, version: kit.version, photo } : null;
-        page.setData({ 'playKit.kit.uploadFailure': pending ? 'review_pending' : retry ? 'retry' : 'reselect' });
+        page.setData({ 'playKit.kit.uploadFailure': rejected ? 'rejected' : pending ? 'review_pending' : retry ? 'retry' : 'reselect' });
       },
     });
     return;

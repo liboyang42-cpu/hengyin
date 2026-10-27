@@ -954394,7 +954394,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-album/index.wxml:11:bindtap:onCta:1",
+      "id": "pages/play/components/playkit-album/index.wxml:12:bindtap:onCta:1",
       "route": "component:pages/play/components/playkit-album/index",
       "hostRoutes": [
         "pages/play/index",
@@ -954485,12 +954485,12 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCta",
-        "line": 11,
+        "line": 12,
         "selectorHint": "view[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "{{uploadFailure === 'review_pending' ? '查看/重试审核，批准后提交相册' : uploadFailure === 'retry' ? '重试上传这张照片' : uploaded ? '重新提交照片' : '拍照或选择照片'}}",
+        "ariaLabelExpression": "{{uploadFailure === 'review_pending' ? '查看/重试审核，批准后提交相册' : uploadFailure === 'retry' ? '重试上传这张照片' : uploaded ? '重新提交照片' : uploadFailure === 'rejected' ? '重新选择照片' : '拍照或选择照片'}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -954541,7 +954541,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-album/index.wxml:12:bindtap:choosePhoto:2",
+      "id": "pages/play/components/playkit-album/index.wxml:13:bindtap:choosePhoto:2",
       "route": "component:pages/play/components/playkit-album/index",
       "hostRoutes": [
         "pages/play/index",
@@ -954632,7 +954632,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "choosePhoto",
-        "line": 12,
+        "line": 13,
         "selectorHint": "view[bindtap]",
         "visibleCondition": "{{uploaded || uploadFailure === 'retry'}}",
         "disabledCondition": null,
@@ -954688,7 +954688,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-album/index.wxml:14:bindtap:close:3",
+      "id": "pages/play/components/playkit-album/index.wxml:15:bindtap:close:3",
       "route": "component:pages/play/components/playkit-album/index",
       "hostRoutes": [
         "pages/play/index",
@@ -954776,7 +954776,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "close",
-        "line": 14,
+        "line": 15,
         "selectorHint": ".album__back",
         "visibleCondition": null,
         "disabledCondition": null,
