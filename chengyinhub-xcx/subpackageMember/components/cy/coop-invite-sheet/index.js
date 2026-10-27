@@ -58,7 +58,7 @@ Component({
     stopRecovery() {
       if (this._workflow) this._workflow.destroy();
       if (this._reader) this._reader.destroy();
-      this._workflow = this._reader = null;
+      this._workflow = this._reader = this._resumable = null;
       this._confirmed = {};
     },
     workflow() {
@@ -92,7 +92,7 @@ Component({
             receiptHasMore: patch.receiptHasMore === undefined ? this.data.receiptHasMore : patch.receiptHasMore,
           }),
           received: row => {
-            if (!inviteRequest.matches(row, payload)) return;
+            if (!inviteRequest.matches(row, payload)) return this.settleOriginal(row, key);
             let pending;
             try { pending = this.workflow().pendingRequest(key); }
             catch (error) { return '本机待办无法读取，原结果仍待确认'; }
@@ -104,6 +104,23 @@ Component({
         });
       }
       return this._reader;
+    },
+    // 精确回读本机原请求号：NOT_FOUND ⇒ 允许沿用同一请求号再发（服务端按请求号去重）；
+    // UNAVAILABLE ⇒ 原请求已受理（回执存在）但当前账号不可查看结果，展示后清除本机待办。
+    settleOriginal(row, key) {
+      if (row.state !== 'NOT_FOUND' && row.state !== 'UNAVAILABLE') return;
+      let pending;
+      try { pending = this.workflow().pendingRequest(key); } catch (error) { return; }
+      if (!pending || pending.legacy || pending.requestId !== row.requestId) return;
+      if (row.state === 'NOT_FOUND') {
+        this._resumable = { key, requestId: row.requestId };
+        this.setData({ unknown: false, error: '未查到原请求，可再次发送；沿用原请求号，不会重复创建' });
+        return;
+      }
+      if (!this.workflow().confirmRequest(key, row.requestId)) return '本机原请求仍待确认，请勿重复发送';
+      this._confirmed[key] = true;
+      this._sent = true;
+      this.setData({ unknown: false, error: '原请求已受理，但当前账号无法查看结果，请到邀约记录核对' });
     },
     queryOriginalInvite() {
       if (this.data.submitting || !this.current(this._epoch) || this.data.inviteType !== 1) return;
@@ -197,7 +214,9 @@ Component({
       if (club) {
         const key = this.requestKey(), frozen = Object.assign({}, payload);
         const current = () => this.current(epoch) && key === this.requestKey();
-        this.workflow().run(key, (done, identity) => {
+        const resume = this._resumable && this._resumable.key === key ? this._resumable : null;
+        this._resumable = null;
+        const start = (done, identity) => {
           const body = JSON.stringify(Object.assign({}, frozen, { requestId: identity.requestId }));
           return app.sendRequest({ url: '/api/coop/invite', method: 'POST',
             header: { 'Content-Type': 'application/json' }, data: body, autoErrorToast: false,
@@ -205,7 +224,8 @@ Component({
             fail: (res, status) => done(current() && status ? inviteRequest.classify(res, status, identity.requestId) : { status: 'unknown' }),
             successStatusAbnormal: (res, status) => done(current() ? inviteRequest.classify(res, status, identity.requestId) : { status: 'unknown' }),
           });
-        }, result => {
+        };
+        const settle = result => {
           if (!current()) return;
           if (result.status === 'success') {
             this._sent = true; this.setData({ submitting: false, unknown: false });
@@ -215,7 +235,11 @@ Component({
             error: result.status === 'unknown' ? '发送结果待确认，请查询原请求，勿重复发送'
               : result.status === 'blocked' ? '本次未提交，请检查本机待办、存储和登录后主动再试'
                 : result.response && result.response.msg || '邀约未发送，请重试' });
-        });
+        };
+        if (!resume) this.workflow().run(key, start, settle);
+        else if (!this.workflow().resumeRequest(key, resume.requestId, start, settle)) {
+          this.setData({ submitting: false, unknown: true, error: '本次未提交，请重新查询原请求后再试' });
+        }
         return;
       }
       app.sendRequest({

@@ -133,7 +133,39 @@ test('W4 sheet持久号早于POST，冻结输入；超时后精确查询仅一�
   assert.equal(s.storage.size, 0); assert.equal(s.c.data.unknown, false); assert.equal(s.c._sent, true);
   get.fail({}); post.fail({}); s.c.send(); assert.equal(s.requests.length, 0); assert.equal(s.events.length, 0);
 });
-for (const ending of ['NOT_FOUND', 'UNAVAILABLE', 'wrongkey', 'wrongtopic', 'wrongtarget', 'unsafe', '403', 'network']) {
+test('W8 sheet精确回读NOT_FOUND后沿用原请求号重发一次，成功即解原锁', () => {
+  const s = ready(); s.c.send(); const post = s.requests.shift(); post.fail({});
+  const original = JSON.parse(post.data).requestId;
+  s.c.queryOriginalInvite(); s.requests.shift().success({ code: 200, data: { state: 'NOT_FOUND', requestId: original } });
+  assert.equal(s.c.data.unknown, false, 'NOT_FOUND 不再永久禁用发送');
+  assert.equal(s.storage.size, 1, 'NOT_FOUND 不清本机原请求');
+  s.c.send(); const resend = s.requests.shift();
+  assert.equal(resend.method, 'POST'); assert.equal(JSON.parse(resend.data).requestId, original, '沿用原请求号');
+  assert.equal(s.storage.size, 1);
+  resend.fail({}); assert.equal(s.c.data.unknown, true); assert.equal(s.storage.size, 1);
+  s.c.send(); assert.equal(s.requests.length, 0, '重发结果未知仍须先回读');
+  s.c.queryOriginalInvite(); s.requests.shift().success({ code: 200, data: { state: 'NOT_FOUND', requestId: original } });
+  s.c.send(); const again = s.requests.shift(); assert.equal(JSON.parse(again.data).requestId, original);
+  again.success({ code: 200, data: { ...receiptFor(again), replayed: false } });
+  assert.equal(s.storage.size, 0); assert.equal(s.c._sent, true); assert.equal(s.events.at(-1).name, 'sent');
+  s.c.send(); assert.equal(s.requests.length, 0);
+});
+test('W8 sheet精确回读UNAVAILABLE视为已受理：展示结果并清本机原锁，不再重发', () => {
+  const s = ready(); s.c.send(); const post = s.requests.shift(); post.fail({});
+  s.c.queryOriginalInvite();
+  s.requests.shift().success({ code: 200, data: { state: 'UNAVAILABLE', requestId: JSON.parse(post.data).requestId } });
+  assert.equal(s.storage.size, 0); assert.equal(s.c.data.unknown, false); assert.equal(s.c._sent, true);
+  assert.match(s.c.data.error, /已受理/);
+  s.c.send(); assert.equal(s.requests.length, 0);
+});
+test('W8 sheet他人请求号的NOT_FOUND/UNAVAILABLE不解本机原锁', () => {
+  const s = ready(); s.c.send(); s.requests.shift().fail({});
+  s.c.discoverOriginalInvites();
+  s.requests.shift().success({ code: 200, data: { rows: [{ state: 'UNAVAILABLE', requestId: 'other' }], nextCursor: null, hasMore: false } });
+  assert.equal(s.storage.size, 1); assert.equal(s.c.data.unknown, true); assert.ok(!s.c._resumable);
+  s.c.send(); assert.equal(s.requests.length, 0);
+});
+for (const ending of ['wrongkey', 'wrongtopic', 'wrongtarget', 'unsafe', '403', 'network']) {
  test('W4 sheet负向/错配/异常查询继续锁住 ' + ending, () => {
   const s = ready(); s.c.send(); const post = s.requests.shift(); post.fail({}); s.c.queryOriginalInvite();
   const get = s.requests.shift(), before = JSON.stringify([...s.storage]);
@@ -142,7 +174,6 @@ for (const ending of ['NOT_FOUND', 'UNAVAILABLE', 'wrongkey', 'wrongtopic', 'wro
   if (ending === 'wrongtopic') receipt.topicId = '2';
   if (ending === 'wrongtarget') receipt.toId = '9';
   if (ending === 'unsafe') receipt.inviteId = 9007199254740992;
-  if (['NOT_FOUND', 'UNAVAILABLE'].includes(ending)) receipt = { state: ending, requestId: receipt.requestId };
   if (ending === '403') get.successStatusAbnormal({ code: 403 }, 403);
   else if (ending === 'network') get.fail({});
   else get.success({ code: 200, data: receipt });
