@@ -42,6 +42,8 @@ Component(withNativeBackGuard({
   options: { multipleSlots: true },
   behaviors: [reducedMotionBehavior, exitMotion(250), morphEntrance({ shellSelector: '.sh__panel' })],
   properties: {
+    // G-2:页面已有自己的 page-container 覆盖这个弹层时传 false 让位(一页只能有一个容器)
+    backGuard: { type: Boolean, value: true },
     stacked: { type: Boolean, value: false },
     closeIcon: {type:String,value:'close-sm'},
     closeIconSize: {type:Number,value:44},

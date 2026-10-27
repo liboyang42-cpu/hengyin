@@ -12,6 +12,8 @@ Component(withNativeBackGuard({
   options: { multipleSlots: true },
   behaviors: [reducedMotionBehavior, exitMotion(140)],
   properties: {
+    // G-2:页面已有自己的 page-container 覆盖这个弹层时传 false 让位(一页只能有一个容器)
+    backGuard: { type: Boolean, value: true },
     show:        { type: Boolean, value: false },
     title:       { type: String,  value: '' },
     content:     { type: String,  value: '' },   // 纯文本正文;富内容用 slot

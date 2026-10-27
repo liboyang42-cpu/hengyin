@@ -20,6 +20,8 @@ Component(withNativeBackGuard({
   options: { multipleSlots: true },
   behaviors: [exitMotion(250)],
   properties: {
+    // G-2:页面已有自己的 page-container 覆盖这个弹层时传 false 让位(一页只能有一个容器)
+    backGuard: { type: Boolean, value: true },
     show: { type: Boolean, value: false },
     // full(T3) | half(T1) | page(G-1:无遮罩无把手,导航栏 + 大标题,返回 = 原生返回)
     variant: { type: String, value: 'full' },

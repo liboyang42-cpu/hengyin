@@ -95,10 +95,10 @@ function chain(a, b) {
  */
 function withNativeBackGuard(definition, onBack) {
   const def = Object.assign({}, definition)
-  def.properties = Object.assign({}, def.properties, {
-    // 页面已有自己的 page-container 覆盖这个弹层时传 false 让位(一页只能有一个容器)
+  // 组件应在自己的 properties 里显式声明 backGuard(属性契约门禁按源码静态核对);没声明时这里补上
+  def.properties = Object.assign({
     backGuard: { type: Boolean, value: true },
-  })
+  }, def.properties)
   def.data = Object.assign({}, def.data, { _backGuard: false })
   def.observers = Object.assign({}, def.observers, {
     'show, backGuard'(show, enabled) {
