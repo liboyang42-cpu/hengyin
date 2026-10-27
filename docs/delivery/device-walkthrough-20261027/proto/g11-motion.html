@@ -1,0 +1,906 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>动效三则</title>
+<style>
+:root{
+  --bg-page:#000000; --bg-surface:#0A0A0B; --bg-subtle:#141416; --bg-elevated:#1C1C1E;
+  --text-1:#F8F8F8; --text-2:#B7B7B7; --text-3:#919191; --text-inv:#0A0A0A;
+  --border:rgba(255,255,255,.08); --brand:#F8F8F8; --brand-soft:rgba(248,248,248,.12);
+  --success:#22C55E; --warning:#D58300; --danger:#E5484D;
+  --r-md:12px; --r-lg:16px; --r-pill:999px;
+  --mono:"SF Mono","DIN Alternate",ui-monospace,Menlo,monospace;
+  --ease-out:cubic-bezier(.22,.61,.36,1); --ease-standard:cubic-bezier(.4,0,.2,1); --ease-spring:cubic-bezier(.2,1.4,.5,1);
+  --doc-bg:#0b0b0c; --panel-bg:#121214; --panel-line:rgba(255,255,255,.1);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--doc-bg);color:var(--text-1);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+.wrap{display:flex;gap:28px;justify-content:center;align-items:flex-start;padding:24px 16px 48px;flex-wrap:wrap}
+.panel{order:-1;width:380px;max-width:100%;background:var(--panel-bg);border:1px solid var(--panel-line);border-radius:16px;padding:18px 18px 20px;font-size:13px;line-height:1.6;color:var(--text-2)}
+.panel h1{font-size:17px;color:var(--text-1);margin:0 0 4px}
+.panel h2{font-size:13px;color:var(--text-1);margin:16px 0 6px}
+.panel p{margin:4px 0}
+.panel .tag{display:inline-block;font-family:var(--mono);font-size:11px;padding:1px 6px;border-radius:6px;background:var(--brand-soft);color:var(--text-1);margin-right:4px}
+.panel .warn{border-left:2px solid var(--warning);padding:4px 0 4px 10px;color:var(--text-2);margin:8px 0}
+.seg{display:flex;gap:4px;background:var(--bg-subtle);padding:3px;border-radius:10px;margin:6px 0}
+.seg button{flex:1;border:0;background:transparent;color:var(--text-2);padding:7px 4px;border-radius:8px;font-size:12.5px}
+.seg button.on{background:var(--brand);color:var(--text-inv);font-weight:600}
+.row{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.btn{border:1px solid var(--panel-line);background:var(--bg-elevated);color:var(--text-1);padding:7px 12px;border-radius:999px;font-size:12.5px}
+.btn.on{background:var(--brand);color:var(--text-inv);border-color:var(--brand);font-weight:600}
+.btn.primary{background:var(--brand);color:var(--text-inv);font-weight:600;border-color:var(--brand)}
+table.spec{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:4px}
+table.spec th,table.spec td{text-align:left;padding:5px 4px;border-bottom:1px solid var(--panel-line);vertical-align:top}
+table.spec th{color:var(--text-3);font-weight:500}
+table.spec td.n{font-family:var(--mono);color:var(--text-1);white-space:nowrap}
+table.spec td.c{font-family:var(--mono);font-size:10.5px;color:var(--text-2);word-break:break-all}
+.demo-notes{display:none}.demo-notes.on{display:block}
+ul.tight{margin:4px 0;padding-left:18px}
+
+/* ===== 手机框 ===== */
+.phone-holder{flex:none}
+.phone{position:relative;width:375px;height:812px;border-radius:44px;overflow:hidden;background:#000;box-shadow:0 0 0 10px #1a1a1c,0 0 0 11px #2a2a2e,0 30px 80px rgba(0,0,0,.6);isolation:isolate;user-select:none;-webkit-user-select:none;touch-action:pan-y}
+.sb{position:absolute;left:0;right:0;top:0;height:44px;z-index:95;display:flex;align-items:center;justify-content:space-between;padding:0 24px 0 34px;font-size:15px;font-weight:600;color:#fff;pointer-events:none}
+.sb .ic{display:flex;gap:6px;align-items:center}
+.capsule{position:absolute;top:50px;right:7px;width:87px;height:32px;border-radius:16px;z-index:96;display:flex;align-items:center;background:rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.35);color:#fff}
+.capsule button{flex:1;height:100%;border:0;background:transparent;display:flex;align-items:center;justify-content:center;padding:0;color:#fff}
+.capsule i{width:1px;height:18px;background:rgba(255,255,255,.35)}
+.demo{position:absolute;inset:0;display:none}
+.demo.on{display:block}
+.toast{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);z-index:99;background:rgba(40,40,44,.96);color:#fff;font-size:14px;padding:10px 16px;border-radius:12px;max-width:260px;text-align:center;opacity:0;pointer-events:none;transition:opacity 150ms var(--ease-out)}
+.toast.on{opacity:1}
+.navbar{position:absolute;left:0;right:0;top:44px;height:44px;z-index:60;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.navbar .title{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:17px;font-weight:600;color:var(--text-1);white-space:nowrap}
+.navback{position:absolute;left:4px;top:0;width:44px;height:44px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;pointer-events:auto;color:#fff;padding:0}
+svg.lu{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:83px;padding-bottom:34px;display:flex;background:rgba(10,10,11,.96);border-top:1px solid var(--border);z-index:20}
+.tabbar button{flex:1;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10px;color:var(--text-3)}
+.tabbar button.on{color:var(--text-1)}
+.tabbar svg.lu{width:22px;height:22px}
+
+/* ===== 演示 a:我的 → 优惠券 ===== */
+.page{position:absolute;inset:0;background:var(--bg-page);overflow:hidden;will-change:transform}
+.page .scroll{position:absolute;inset:88px 0 0;overflow-y:auto;scrollbar-width:none}
+.page .scroll::-webkit-scrollbar{display:none}
+.dim{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:30}
+#pgCoupon{transform:translateX(100%);box-shadow:-1px 0 0 rgba(255,255,255,.06),-18px 0 40px rgba(0,0,0,.7);z-index:40}
+.me-head{display:flex;align-items:center;gap:14px;padding:12px 16px 4px}
+.ava{width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#5b5b66,#24242a 70%);flex:none}
+.me-name{font-size:20px;font-weight:700;color:var(--text-1)}
+.me-sub{font-size:12px;color:var(--text-3);margin-top:2px}
+.me-stats{display:flex;margin:16px 16px 0;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 0}
+.me-stats div{flex:1;text-align:center}
+.me-stats b{display:block;font-family:var(--mono);font-size:20px;color:var(--text-1);font-weight:600}
+.me-stats span{font-size:11px;color:var(--text-3)}
+.sec-tit{font-size:16px;font-weight:700;color:var(--text-1);margin:22px 16px 6px}
+.list{margin:0 16px;padding:2px 14px;background:var(--bg-surface);border-radius:var(--r-lg);border:1px solid var(--border)}
+.li{display:flex;align-items:center;gap:10px;padding:13px 0;border-bottom:1px solid var(--border);width:100%;border-left:0;border-right:0;border-top:0;background:transparent;color:var(--text-1);font-size:15px;text-align:left}
+.li:last-child{border-bottom:0}
+.li .dot{width:24px;height:24px;border-radius:50%;background:var(--brand-soft);display:flex;align-items:center;justify-content:center;flex:none;color:var(--text-1)}
+.li .dot svg.lu{width:14px;height:14px}
+.li .t{flex:1}
+.li .arr{color:var(--text-3)}
+.li.lock{color:var(--text-3)}
+.big-title{font-size:28px;font-weight:700;padding:4px 16px 2px;color:var(--text-1)}
+.big-sub{font-size:13px;color:var(--text-3);padding:0 16px 12px}
+.wtabs{display:flex;gap:4px;padding:4px 16px 12px}
+.wtabs button{flex:1;height:32px;border:0;border-radius:999px;background:transparent;color:var(--text-2);font-size:13px}
+.wtabs button.on{background:var(--brand);color:var(--text-inv);font-weight:600}
+.wcard{display:block;width:calc(100% - 32px);margin:0 16px 12px;padding:14px;border-radius:var(--r-lg);background:var(--bg-subtle);border:1px solid transparent;text-align:left;color:var(--text-1)}
+.wcard.usable{border-color:rgba(255,255,255,.18)}
+.wcard .h{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.wcard .nm{font-size:15px;font-weight:700}
+.badge{font-size:11px;padding:2px 8px;border-radius:999px;background:rgba(34,197,94,.16);color:#4ADE80;flex:none}
+.badge.gray{background:var(--brand-soft);color:var(--text-3)}
+.wcard .d{font-size:12px;color:var(--text-2);margin-top:8px}
+.wcard .f{display:flex;justify-content:space-between;font-size:12px;color:var(--text-2);margin-top:8px}
+.wcard .f b{color:var(--text-1);font-weight:600;display:inline-flex;align-items:center;gap:2px}
+.wcard .f svg.lu{width:14px;height:14px}
+.edge-hint{position:absolute;left:0;top:88px;bottom:0;width:22px;z-index:45;cursor:grab}
+
+/* ===== 演示 b:邀请好友 ===== */
+#demoB{background:var(--bg-page)}
+.inv{position:absolute;left:16px;right:16px;top:104px;background:var(--bg-surface);border:1px solid var(--border);border-radius:20px;padding:28px 24px 22px;display:flex;flex-direction:column;align-items:center}
+.qr-frame{position:relative;width:260px;height:260px;border-radius:6px;background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.qr-frame.fail{background:var(--bg-subtle);box-shadow:inset 0 0 0 1px var(--border)}
+#qrSvg{width:100%;height:100%;display:block}
+#qrSvg rect.m,#qrSvg g.fp,#qrSvg g.logo{transform-box:fill-box;transform-origin:center}
+.shine{position:absolute;inset:-20%;pointer-events:none;background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.0) 42%,rgba(255,255,255,.75) 50%,rgba(255,255,255,0) 58%,transparent 62%);mix-blend-mode:screen;opacity:0;transform:translateX(-110%)}
+.shine-dark{position:absolute;inset:-20%;pointer-events:none;background:linear-gradient(105deg,transparent 40%,rgba(120,140,255,.22) 50%,transparent 60%);opacity:0;transform:translateX(-110%)}
+.qr-fail{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px;text-align:center}
+.qr-frame.fail .qr-fail{display:flex}
+.qr-frame.fail #qrSvg{visibility:hidden}
+.qr-fail .ic{width:44px;height:44px;border-radius:50%;background:var(--brand-soft);display:flex;align-items:center;justify-content:center;color:var(--text-2)}
+.qr-fail .t{font-size:15px;font-weight:600;color:var(--text-1)}
+.qr-fail .s{font-size:12px;color:var(--text-3)}
+.regen{margin-top:6px;height:36px;padding:0 18px;border:0;border-radius:999px;background:var(--brand);color:var(--text-inv);font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.regen svg.lu{width:16px;height:16px}
+.spin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(10,10,10,.25);border-top-color:#0A0A0A;display:none}
+.regen.busy .spin{display:inline-block}
+.regen.busy svg.lu{display:none}
+.inv-copy{text-align:center;margin-top:22px}
+.inv-copy .t{font-size:18px;font-weight:700;color:var(--text-1)}
+.inv-copy .s{font-size:13px;color:var(--text-3);margin-top:6px}
+.inv-hint{font-size:11.5px;color:var(--text-3);margin-top:10px}
+.share-btn{width:100%;height:48px;border:0;border-radius:var(--r-md);background:var(--brand);color:var(--text-inv);font-size:16px;font-weight:600;margin-top:20px}
+
+/* ===== 演示 c:漫游 ===== */
+#demoC{background:#111}
+.rh{position:absolute;inset:0;background:#111;overflow:hidden}
+.rh-title{position:absolute;left:23px;top:50px;height:34.5px;display:flex;align-items:center;font-size:27px;font-weight:700;letter-spacing:-1px;color:var(--text-1);z-index:3}
+.rh-tabs{position:absolute;left:23px;top:100px;display:flex;gap:27px;z-index:3}
+.rh-tabs button{border:0;background:transparent;padding:0 0 9.5px;font-size:15.5px;color:#8E8E93}
+.rh-tabs button.on{color:#fff;font-weight:600}
+.rh-tabs .u{position:absolute;left:0;bottom:0;width:61.5px;height:2px;border-radius:1px;background:#fff}
+.rh-stage{position:absolute;left:0;right:0;top:136px;bottom:83px}
+.rh-stage .mapbg{position:absolute;inset:0;opacity:.32}
+.rh-stage .shade{position:absolute;inset:-1px 0 0;background:linear-gradient(90deg,#111 0%,rgba(17,17,17,.7) 8%,transparent 26%,transparent 74%,rgba(17,17,17,.7) 92%,#111 100%),linear-gradient(180deg,#111 0%,rgba(17,17,17,.6) 20%,transparent 34%,transparent 62%,rgba(17,17,17,.9) 78%,#111 100%)}
+.cards{position:absolute;left:0;right:0;top:144px;height:100px;z-index:4;overflow:hidden}
+.cards-track{display:flex;padding-left:23px;gap:11.5px}
+.tcard{flex:none;width:298px;height:100px;border:0;padding:0;border-radius:11.5px;background:#fff;color:#141414;display:flex;overflow:hidden;text-align:left}
+.tstub{position:relative;flex:none;width:92px;padding:11px 10px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start}
+.tstub::after{content:'';position:absolute;top:0;bottom:0;right:-6px;width:12px;background:radial-gradient(circle at 6px 8px,#111 4px,transparent 4.5px) 0 0/12px 16px repeat-y}
+.tstub.g{background:#5DBE6E}.tstub.b{background:#5B8FE0}.tstub.o{background:#DD9447}
+.tstub svg.lu{width:32px;height:32px;color:#141414;stroke-width:2}
+.tcode{font-family:Menlo,Consolas,monospace;font-size:10px;letter-spacing:1px;color:#141414}
+.ttear{flex:none;width:0;border-left:1.5px dashed rgba(0,0,0,.28)}
+.tbody{flex:1;min-width:0;padding:11px 14px 11px 16px;display:flex;flex-direction:column;justify-content:center;gap:3px}
+.tbody .t{font-size:18px;font-weight:800;letter-spacing:.5px}
+.tbody .s{font-size:12.5px;color:#4A463F}
+.tbody .l{margin-top:4px;font-size:9.5px;letter-spacing:1.5px;color:#6E695F;font-family:Menlo,Consolas,monospace}
+.rdots{position:absolute;left:0;right:0;top:256px;display:flex;justify-content:center;gap:5px;z-index:4}
+.rdots i{width:6px;height:6px;border-radius:3px;background:#48484A}
+.rdots i.on{width:17.5px;background:#fff}
+.peek{position:absolute;left:0;right:0;bottom:95px;z-index:4}
+.peek-h{font-size:16.5px;font-weight:700;color:var(--text-1);padding:0 23px 9.5px}
+.peek-row{display:flex;gap:11.5px;padding-left:23px;overflow:hidden}
+.ecard{flex:none;width:240px;height:117px;border:0;border-radius:13.5px;position:relative;overflow:hidden;text-align:left;padding:0}
+.ecard .sh{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(0,0,0,.8))}
+.ecard .cp{position:absolute;left:11.5px;right:11.5px;bottom:9.5px;color:#fff}
+.ecard .tg{display:inline-block;padding:2px 6.5px;border-radius:6px;font-size:10.5px;font-weight:700;color:#000;margin-bottom:4px}
+.ecard .tt{font-size:14.5px;font-weight:700;display:block}
+.ecard .mt{font-size:11.5px;color:rgba(255,255,255,.7)}
+/* 地图层 */
+.rmap{position:absolute;inset:0;z-index:30;background:#0E1013;visibility:hidden;overflow:hidden}
+.rmap.show{visibility:visible}
+#mapArt{position:absolute;inset:0;width:100%;height:100%}
+.fog{position:absolute;inset:0;background:rgba(8,9,11,.94);pointer-events:none}
+.vign{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 80% at 50% 42%,rgba(0,0,0,0) 52%,rgba(0,0,0,.3) 100%)}
+.me{position:absolute;left:187.5px;top:374px;width:0;height:0;z-index:5}
+.me .core{position:absolute;left:-9px;top:-9px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(34,197,94,.9),0 2px 10px rgba(0,0,0,.6)}
+.me .ring{position:absolute;left:-40px;top:-40px;width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.5),transparent 70%);opacity:0}
+.msearch{position:absolute;left:16px;right:16px;top:96px;height:44px;border-radius:12px;background:#fff;color:#6B6B6B;display:flex;align-items:center;gap:8px;padding:0 14px;font-size:15px;z-index:8;border:0;text-align:left}
+.msearch svg.lu{width:18px;height:18px;color:#404040}
+.pcard{position:absolute;left:11.5px;right:11.5px;bottom:125px;height:123px;border-radius:19px;padding:14.5px 19px 15.5px;background:rgba(8,10,13,.56);backdrop-filter:blur(22px) saturate(1.15);-webkit-backdrop-filter:blur(22px) saturate(1.15);border:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;justify-content:space-between;z-index:8}
+.pcard .hd{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:700;color:#fff}
+.pcard .hd svg.lu{width:19px;height:19px;color:#7A8496}
+.pcard .g{display:flex;justify-content:space-between;align-items:flex-end}
+.pstat b{display:block;font-family:var(--mono);font-size:26px;font-weight:600;color:#fff;line-height:1.1}
+.pstat span{font-size:11px;color:#99A1AF}
+.pstat.mid{text-align:center}.pstat.end{text-align:right}
+.pbar{position:absolute;left:0;right:0;bottom:19px;height:96px;display:flex;align-items:center;justify-content:center;gap:61.5px;z-index:8}
+.pact{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:6.5px;padding:0}
+.pact .ic{width:54px;height:54px;border-radius:50%;background:#fff;color:#1A1A1A;display:flex;align-items:center;justify-content:center}
+.pact.main .ic{width:61.5px;height:61.5px;background:#F97316;color:#fff}
+.pact .lb{font-size:10.5px;color:#99A1AF}
+.pact.main .lb{color:#F97316;font-weight:700}
+/* 撕票 & 圆形揭开 */
+.tear-layer{position:absolute;inset:0;z-index:25;pointer-events:none}
+.tear-layer .tb,.tear-layer .ts{position:absolute;overflow:hidden}
+.tear-layer .tb{background:#fff;border-radius:0 11.5px 11.5px 0}
+/* 现状开场(示意) */
+.cur{position:absolute;inset:0;z-index:50;overflow:hidden;display:none}
+.cur.show{display:block}
+.cur .wipe{position:absolute;left:-40%;top:110%;width:180%;height:260px;border-radius:999px;background:#825cff;transform:rotate(-38deg)}
+.cur .stage{position:absolute;inset:0;background:#000;border-radius:48% 48% 0 0/18% 18% 0 0;transform:translateY(100%);overflow:hidden}
+.cur .rib{position:absolute;left:-18%;width:136%;height:62px;border-radius:999px;box-shadow:0 14px 18px rgba(0,0,0,.64);opacity:0}
+.cur .rib.p{top:16%;background:linear-gradient(90deg,#4c2abe,#825cff,#6940dd)}
+.cur .rib.c{bottom:22%;background:linear-gradient(90deg,#087b9e,#25c7ee,#128fb7)}
+.cur .hero{position:absolute;left:30px;right:30px;top:43%;text-align:center;opacity:0}
+.cur .hero b{display:block;font-size:38px;font-weight:800;letter-spacing:-2px;color:#fff}
+.cur .hero span{display:block;margin-top:12px;font-size:13px;letter-spacing:.18em;color:rgba(255,255,255,.64)}
+.cur .ready{position:absolute;left:50%;bottom:36px;transform:translate(-50%,12px);font-size:11px;letter-spacing:.22em;color:rgba(255,255,255,.52);opacity:0;white-space:nowrap}
+.cur .note{position:absolute;left:0;right:0;top:110px;text-align:center;font-size:11px;color:rgba(255,255,255,.4)}
+
+@media (max-width:420px){
+  .wrap{padding:16px 16px 40px;gap:20px}
+  .panel{order:1;width:100%}
+}
+@media (prefers-reduced-motion: reduce){
+  .toast{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="phone-holder" id="holder">
+    <div class="phone" id="phone">
+      <div class="sb"><span>9:41</span><span class="ic">
+        <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#fff"/><rect x="5" y="5.5" width="3" height="6.5" rx="1" fill="#fff"/><rect x="10" y="3" width="3" height="9" rx="1" fill="#fff"/><rect x="15" y="0" width="3" height="12" rx="1" fill="#fff"/></svg>
+        <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 11.5 5.6 9a3.4 3.4 0 0 1 4.8 0L8 11.5Zm-4.2-4.2-1.5-1.5a8 8 0 0 1 11.4 0l-1.5 1.5a5.9 5.9 0 0 0-8.4 0ZM0 3.5 1.5 2a11.3 11.3 0 0 1 13 0L16 3.5a13.4 13.4 0 0 0-16 0Z" fill="#fff"/></svg>
+        <svg width="26" height="12" viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11" rx="3.2" fill="none" stroke="#fff" opacity=".4"/><rect x="2" y="2" width="19" height="8" rx="2" fill="#fff"/><rect x="24" y="4" width="1.6" height="4" rx=".8" fill="#fff" opacity=".4"/></svg>
+      </span></div>
+      <div class="capsule">
+        <button data-act="capsule" data-arg="more" aria-label="更多"><svg width="20" height="6" viewBox="0 0 20 6"><circle cx="3" cy="3" r="2.2" fill="#fff"/><circle cx="10" cy="3" r="2.8" fill="#fff"/><circle cx="17" cy="3" r="2.2" fill="#fff"/></svg></button>
+        <i></i>
+        <button data-act="capsule" data-arg="close" aria-label="关闭"><svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7.4" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="9" cy="9" r="2.6" fill="#fff"/></svg></button>
+      </div>
+
+      <!-- ===== 演示 a ===== -->
+      <section class="demo on" id="demoA">
+        <div class="page" id="pgMine">
+          <div class="scroll">
+            <div class="me-head"><div class="ava"></div><div><div class="me-name">城市漫游者</div><div class="me-sub">ID 100001 · 示例城市</div></div></div>
+            <div class="me-stats"><div><b>0</b><span>我的资产</span></div><div><b>12</b><span>足迹</span></div><div><b>3</b><span>勋章</span></div></div>
+            <div class="sec-tit">当前权益</div>
+            <div class="list">
+              <button class="li" data-act="benefit" data-arg="自由漫游"><span class="dot"><svg class="lu" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><span class="t">自由漫游与点亮城市</span></button>
+              <button class="li" data-act="benefit" data-arg="报名俱乐部活动"><span class="dot"><svg class="lu" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><span class="t">报名俱乐部活动</span></button>
+              <button class="li lock" data-act="benefit" data-arg="发布主题（成为主理人后解锁）"><span class="dot"><svg class="lu" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><span class="t">发布主题</span></button>
+            </div>
+            <div class="sec-tit">探索与更多</div>
+            <div class="list">
+              <button class="li" data-act="open-coupons"><span class="dot"><svg class="lu" viewBox="0 0 24 24"><path d="M3 9a2 2 0 0 0 0 6v3a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-3a2 2 0 0 0 0-6V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1Z"/><path d="M13 5v2M13 17v2M13 11v2"/></svg></span><span class="t">我的优惠券</span><svg class="lu arr" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+              <button class="li" data-act="open-invite"><span class="dot"><svg class="lu" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></span><span class="t">邀请好友</span><svg class="lu arr" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+            </div>
+            <div style="height:120px"></div>
+          </div>
+          <nav class="tabbar">
+            <button data-act="tab" data-arg="首页"><svg class="lu" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z"/></svg>首页</button>
+            <button data-act="tab" data-arg="漫游"><svg class="lu" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5Z"/></svg>漫游</button>
+            <button data-act="tab" data-arg="发布"><svg class="lu" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg>发布</button>
+            <button data-act="tab" data-arg="俱乐部"><svg class="lu" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></svg>俱乐部</button>
+            <button class="on" data-act="tab" data-arg="我的"><svg class="lu" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>我的</button>
+          </nav>
+          <div class="dim" id="dimMine"></div>
+        </div>
+
+        <div class="page" id="pgCoupon">
+          <div class="scroll" id="couponScroll">
+            <div class="big-title" id="bigTitle">优惠券</div>
+            <div class="big-sub">可用于主题、节点与到店核销</div>
+            <div class="wtabs" id="wtabs">
+              <button class="on" data-act="wallet-tab" data-arg="0">全部</button>
+              <button data-act="wallet-tab" data-arg="1">待使用</button>
+              <button data-act="wallet-tab" data-arg="2">已使用</button>
+              <button data-act="wallet-tab" data-arg="3">已过期</button>
+            </div>
+            <div id="wlist">
+              <button class="wcard usable" data-act="coupon"><div class="h"><span class="nm">示例咖啡馆 · 满 50 减 10</span><span class="badge">可使用</span></div><div class="d">到店消费时出示核销码</div><div class="f"><span>11.01 – 11.30</span><b>出示核销码<svg class="lu" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></b></div></button>
+              <button class="wcard usable" data-act="coupon"><div class="h"><span class="nm">示例书店 · 9 折</span><span class="badge">可使用</span></div><div class="d">主题「城市角落」通关奖励</div><div class="f"><span>10.20 – 12.31</span><b>出示核销码<svg class="lu" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></b></div></button>
+              <button class="wcard" data-act="coupon"><div class="h"><span class="nm">示例面包房 · 新客礼</span><span class="badge gray">未开始</span></div><div class="d">11 月 5 日起可用</div><div class="f"><span>11.05 – 11.20</span><b>查看可用时间<svg class="lu" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></b></div></button>
+              <button class="wcard" data-act="coupon"><div class="h"><span class="nm">示例茶室 · 满 80 减 15</span><span class="badge gray">已使用</span></div><div class="d">已于 10.18 核销</div><div class="f"><span>10.01 – 10.31</span><b>查看可用时间<svg class="lu" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></b></div></button>
+              <div style="height:300px"></div>
+            </div>
+          </div>
+          <div class="edge-hint" id="edgeA" title="从左边缘向右拖动 = 侧滑返回"></div>
+        </div>
+
+        <div class="navbar">
+          <button class="navback" id="navBackA" data-act="nav-back" aria-label="返回" style="opacity:0;pointer-events:none"><svg class="lu" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+          <span class="title" id="navT1">我的</span>
+          <span class="title" id="navT2" style="opacity:0">优惠券</span>
+        </div>
+      </section>
+
+      <!-- ===== 演示 b ===== -->
+      <section class="demo" id="demoB">
+        <div class="navbar">
+          <button class="navback" data-act="nav-back-b" aria-label="返回"><svg class="lu" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+          <span class="title">邀请好友</span>
+        </div>
+        <div class="inv" id="invCard">
+          <div class="qr-frame" id="qrFrame">
+            <svg id="qrSvg" viewBox="-2 -2 29 29" shape-rendering="crispEdges" aria-label="邀请小程序码（示意）"></svg>
+            <div class="shine" id="qrShine"></div>
+            <div class="qr-fail" id="qrFail">
+              <div class="ic"><svg class="lu" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="m4 4 16 16"/></svg></div>
+              <div class="t">码图加载失败</div>
+              <div class="s">小程序码服务暂时不可用</div>
+              <button class="regen" id="regenBtn" data-act="regen"><svg class="lu" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg><span class="spin"></span><span id="regenTx">重新生成</span></button>
+            </div>
+          </div>
+          <div class="inv-copy" id="invCopy"><div class="t">邀请好友一起探索城市</div><div class="s">分享城瘾给你的好友，一起发现城市里的新玩法。</div></div>
+          <div class="inv-hint" id="invHint">点击二维码预览，长按可保存</div>
+          <button class="share-btn" id="invShare" data-act="share">分享链接</button>
+        </div>
+      </section>
+
+      <!-- ===== 演示 c ===== -->
+      <section class="demo" id="demoC">
+        <div class="rh" id="roamHome">
+          <div class="rh-title">漫游</div>
+          <div class="rh-tabs"><button class="on" data-act="rh-tab" data-arg="开始漫游">开始漫游</button><button data-act="rh-tab" data-arg="漫游护照">漫游护照</button><span class="u"></span></div>
+          <div class="rh-stage"><svg class="mapbg" id="homeMap" viewBox="0 0 375 593" preserveAspectRatio="xMidYMid slice"></svg><div class="shade"></div></div>
+          <div class="cards"><div class="cards-track">
+            <button class="tcard" id="ticket" data-act="roam-start" aria-label="开始漫游">
+              <span class="tstub g" id="tStub"><svg class="lu" viewBox="0 0 24 24"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg><span class="tcode">NO.01</span></span>
+              <span class="ttear"></span>
+              <span class="tbody" id="tBody"><span class="t">开始漫游</span><span class="s">走到哪，雾散到哪</span><span class="l">城瘾 · CITY ROAM</span></span>
+            </button>
+            <button class="tcard" data-act="ticket-other" data-arg="打开地图 · 寻找组队">
+              <span class="tstub b"><svg class="lu" viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15M15 6v15"/></svg><span class="tcode">NO.02</span></span>
+              <span class="ttear"></span>
+              <span class="tbody"><span class="t">打开地图</span><span class="s">寻找组队</span><span class="l">附近正在组队</span></span>
+            </button>
+          </div></div>
+          <div class="rdots"><i class="on"></i><i></i><i></i></div>
+          <div class="peek">
+            <div class="peek-h">附近活动</div>
+            <div class="peek-row">
+              <button class="ecard" data-act="activity" style="background:linear-gradient(135deg,#2b3a55,#16202e)"><span class="sh"></span><span class="cp"><span class="tg" style="background:#5B8FE0">城市定向</span><span class="tt">示例街区夜跑定向</span><span class="mt">周六 19:30 · 1.2km</span></span></button>
+              <button class="ecard" data-act="activity" style="background:linear-gradient(135deg,#2f4a33,#162418)"><span class="sh"></span><span class="cp"><span class="tg" style="background:#5DBE6E">自由探索</span><span class="tt">示例公园寻宝</span><span class="mt">全天 · 2.4km</span></span></button>
+            </div>
+          </div>
+          <nav class="tabbar">
+            <button data-act="tab" data-arg="首页"><svg class="lu" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z"/></svg>首页</button>
+            <button class="on" data-act="tab" data-arg="漫游"><svg class="lu" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5Z"/></svg>漫游</button>
+            <button data-act="tab" data-arg="发布"><svg class="lu" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg>发布</button>
+            <button data-act="tab" data-arg="俱乐部"><svg class="lu" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></svg>俱乐部</button>
+            <button data-act="tab" data-arg="我的"><svg class="lu" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>我的</button>
+          </nav>
+        </div>
+
+        <div class="tear-layer" id="tearLayer"></div>
+
+        <div class="rmap" id="rmap">
+          <svg id="mapArt" viewBox="0 0 375 812"><g id="mapG"></g></svg>
+          <div class="fog" id="fog"></div>
+          <div class="vign"></div>
+          <div class="me" id="me"><div class="ring" id="meRing"></div><div class="core" id="meCore"></div></div>
+          <button class="msearch" id="mSearch" data-act="map-search"><svg class="lu" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>输入地址</button>
+          <div class="pcard" id="pcard">
+            <div class="hd"><span>继续行走，点亮这片街区</span><svg class="lu" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg></div>
+            <div class="g"><div class="pstat"><b>00:00</b><span>用时</span></div><div class="pstat mid"><b>0%</b><span>地盘</span></div><div class="pstat end"><b>0.00</b><span>距离 (公里)</span></div></div>
+          </div>
+          <div class="pbar" id="pbar">
+            <button class="pact" data-act="map-btn" data-arg="更多"><span class="ic"><svg class="lu" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></span><span class="lb">更多</span></button>
+            <button class="pact main" data-act="map-btn" data-arg="暂停（长按 3 秒结束）"><span class="ic"><svg class="lu" viewBox="0 0 24 24"><path d="M9 5v14M15 5v14" stroke-width="2.5"/></svg></span><span class="lb">暂停</span></button>
+            <button class="pact" data-act="map-btn" data-arg="拍照"><span class="ic"><svg class="lu" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13.5" r="3.5"/></svg></span><span class="lb">拍照</span></button>
+          </div>
+        </div>
+
+        <div class="cur" id="curOpen">
+          <div class="wipe" id="curWipe"></div>
+          <div class="stage" id="curStage">
+            <div class="rib p" id="curRibP"></div><div class="rib c" id="curRibC"></div>
+            <div class="note">现状示意：表情散射与 Logo 吃豆略去</div>
+            <div class="hero" id="curHero"><b>出发，去发现</b><span>漫游已开始</span></div>
+            <div class="ready" id="curReady">正在进入附近</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+
+  <aside class="panel" id="panel">
+    <h1>G-11 动效 · 原型</h1>
+    <p><span class="tag">G-11</span><span class="tag">P-59</span><span class="tag">G-6</span><span class="tag">G-1</span> 玩家深色</p>
+    <div class="warn">x.com 无法访问（代理 403），三个参考链接都没能打开，下面是按描述做的等效实现。</div>
+
+    <h2>演示</h2>
+    <div class="seg" id="demoSeg">
+      <button class="on" data-act="demo" data-arg="a">a 页面转场</button>
+      <button data-act="demo" data-arg="b">b 二维码出现</button>
+      <button data-act="demo" data-arg="c">c 开始漫游</button>
+    </div>
+    <div class="row">
+      <button class="btn primary" data-act="replay">重播</button>
+      <button class="btn" id="slowBtn" data-act="slow">慢放 ×0.25</button>
+      <button class="btn" id="rmBtn" data-act="reduce">模拟「减少动态效果」</button>
+    </div>
+    <p id="rmNote" style="font-size:12px;color:var(--text-3)"></p>
+
+    <div class="demo-notes on" id="notesA">
+      <h2>a · 我的 → 优惠券（按 G-1 改成页面，不再是弹层）</h2>
+      <p>点「我的优惠券」进入，点左上返回退出。也可以在优惠券页<b>从左边缘向右拖</b>，跟手侧滑返回；松手时拖过 35% 或速度够快就返回，否则弹回。</p>
+      <ul class="tight">
+        <li>新页从右侧滑入；旧页往左移 24%、缩到 0.96，同时压暗。</li>
+        <li>导航栏标题「我的」淡出左移，返回箭头淡入；大标题「优惠券」跟着页面进来。往下滚过大标题后，导航栏才淡入「优惠券」小标题。</li>
+        <li>列表用现成的 utils/page-motion.js 依次浮上来（每项间隔 33ms）。</li>
+        <li>退出时长比进入短（M3 退场规则，和 sheet 用同一套档位）。</li>
+      </ul>
+    </div>
+    <div class="demo-notes" id="notesB">
+      <h2>b · 邀请好友（P-59 改成页面）+ G-6 失败态</h2>
+      <p>卡片升起，码点从起点向外一圈圈出现，三个定位角先落位，中间 Logo 最后弹出，最后一道高光扫过。</p>
+      <div class="seg" id="originSeg">
+        <button class="on" data-act="qr-origin" data-arg="finder">从三个定位角</button>
+        <button data-act="qr-origin" data-arg="center">从中心</button>
+      </div>
+      <div class="row">
+        <button class="btn" id="failBtn" data-act="qr-fail">失败态：码图加载失败</button>
+      </div>
+      <p>失败态（G-6）：不再留空灰框，改成图标 + 「码图加载失败」+「重新生成」。点重新生成会先转圈，成功后重新播一遍出现动效。真机上 reveal 要等 &lt;image bindload&gt; 之后再触发；码是真实图片，所以「码点涟漪」实际上是用遮罩做的（见下方说明）。</p>
+    </div>
+    <div class="demo-notes" id="notesC">
+      <h2>c · 开始漫游</h2>
+      <div class="seg" id="verSeg">
+        <button class="on" data-act="roam-ver" data-arg="refined">精修（推荐）</button>
+        <button data-act="roam-ver" data-arg="restored">还原</button>
+        <button data-act="roam-ver" data-arg="current">现状</button>
+      </div>
+      <p id="verNote"></p>
+      <h2>「之前的版本」查到了什么</h2>
+      <ul class="tight">
+        <li>公开仓的历史从 10-12 快照（a20fb9b6）才开始。之后每个提交里，开场都是同一套：紫色粗弧切场 → 黑底彩带、表情散射、Logo 吃豆 →「正在进入附近」，固定 4200ms，然后等 650ms 再把地图从远景拉到步行（缩放 14→17，1400ms）。<code>git log -S keyframes</code> 只找到两个整文件导入的提交，开场关键帧本身从没被改过。</li>
+        <li>更早的版本只在旧私有仓 chengyin 里，本容器读不到。</li>
+        <li>index.js 的注释写着「开场只覆盖转场，地图露出来之后仍走<b>原来的</b>远景→步行缩放」。所以「还原」就是去掉 4.2 秒品牌开场，只保留原来的远景→步行缩放和迷雾，原值不动。</li>
+        <li>10-22/23 两个提交（e1bd0e6d 票根样式、9bc8af56 v13 重做漫游首页）改的是入口卡片，不是开场。业主说的「变奇怪」也可能指这次改动，需要确认。</li>
+      </ul>
+    </div>
+
+    <h2>时长与曲线（照抄即可，数值来自 style/tokens.wxss）</h2>
+    <table class="spec"><thead><tr><th>动作</th><th>时长</th><th>曲线 / token</th></tr></thead><tbody id="specBody"></tbody></table>
+    <p style="font-size:12px;color:var(--text-3);margin-top:8px" id="specFoot"></p>
+  </aside>
+</div>
+
+<script>
+/* ========== 基础:token、缓动、调度 ========== */
+const EASE = {
+  out: 'cubic-bezier(.22,.61,.36,1)',        // --cy-ease-out
+  standard: 'cubic-bezier(.4,0,.2,1)',       // --cy-ease-standard
+  spring: 'cubic-bezier(.2,1.4,.5,1)',       // --cy-ease-spring
+  accel: 'cubic-bezier(.4,0,1,1)',           // --cy-ease-accelerate
+  pm: 'cubic-bezier(.2,.82,.2,1)',           // utils/page-motion.js 浮上曲线(既有)
+  zoom: 'cubic-bezier(.33,1,.68,1)',         // _animateZoom 的 1-(1-t)^3 (easeOutCubic)
+  linear: 'linear'
+};
+const D = { press:80, fast:140, standard:220, slow:350, celebrate:600, fadeSwap:200, crossfade:150, spinner:700, sheetFullIn:340, sheetFullOut:280 };
+const $ = id => document.getElementById(id);
+let K = 1;               // 慢放倍数
+let REDUCED = false;     // 减少动态效果
+let GEN = 0;             // 每次重置 +1,旧的动画链自动作废
+let ANIMS = [];
+let DEMO = 'a';
+const sysReduced = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+if (sysReduced && sysReduced.matches) REDUCED = true;
+
+function bezier(str){
+  if (str === 'linear') return t => t;
+  const m = str.match(/cubic-bezier\(([^)]+)\)/); const [x1,y1,x2,y2] = m[1].split(',').map(Number);
+  const cx=3*x1, bx=3*(x2-x1)-cx, ax=1-cx-bx, cy=3*y1, by=3*(y2-y1)-cy, ay=1-cy-by;
+  const sx=u=>((ax*u+bx)*u+cx)*u, sy=u=>((ay*u+by)*u+cy)*u, dx=u=>(3*ax*u+2*bx)*u+cx;
+  return t => { let u=t; for(let i=0;i<8;i++){ const e=sx(u)-t; const d=dx(u); if(Math.abs(e)<1e-5) break; if(Math.abs(d)<1e-6) break; u-=e/d; }
+    if (u<0||u>1){ let lo=0,hi=1; u=t; for(let i=0;i<20;i++){ const x=sx(u); if(x<t) lo=u; else hi=u; u=(lo+hi)/2; } } return sy(u); };
+}
+const EF = {}; Object.keys(EASE).forEach(k => EF[k] = bezier(EASE[k]));
+
+function tween(dur, ease, fn, delay){
+  const g = GEN; delay = delay || 0;
+  return new Promise(res => {
+    const E = EF[ease] || bezier(ease); const t0 = performance.now() + delay*K; const Dd = Math.max(1, dur*K);
+    const step = now => { if (g !== GEN) return res(false); if (now < t0){ requestAnimationFrame(step); return; }
+      const t = Math.min(1, (now - t0)/Dd); fn(E(t), t); if (t < 1) requestAnimationFrame(step); else res(true); };
+    requestAnimationFrame(step);
+  });
+}
+function wait(ms){ const g = GEN; return new Promise(r => setTimeout(() => r(g === GEN), ms*K)); }
+function anim(el, kf, dur, ease, delay, extra){
+  const a = el.animate(kf, Object.assign({ duration: dur*K, delay: (delay||0)*K, easing: EASE[ease] || ease, fill: 'both' }, extra || {}));
+  ANIMS.push(a); return a;
+}
+function resetAll(){ GEN++; ANIMS.forEach(a => { try{ a.cancel(); }catch(e){} }); ANIMS = []; }
+let toastT = 0;
+function toast(msg){ const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 1600); }
+const lerp = (a,b,p) => a + (b-a)*p;
+
+/* ========== 规格表(面板里展示的值与动画读的是同一份) ========== */
+const SPEC = {
+  a: [
+    ['进入:新页从右滑入 100%→0', D.slow, 'ease-out', '--cy-motion-slow / --cy-ease-out'],
+    ['进入:旧页 -24% + 缩到 0.96(视差)', D.slow, 'ease-out', '同上,同一时间轴'],
+    ['进入:旧页压暗 0→40% 黑', D.slow, 'ease-out', '同上'],
+    ['导航标题「我的」淡出 + 左移 12px', D.fadeSwap, 'standard', '--cy-motion-fade-swap / --cy-ease-standard'],
+    ['返回箭头淡入(延迟 60ms)', D.fast, 'ease-out', '--cy-motion-fast'],
+    ['列表依次浮上 15.5px(间隔 33ms,最多 8 项,延迟 120ms)', 320, 'pm', 'utils/page-motion.js 既有值 cubic-bezier(.2,.82,.2,1)'],
+    ['滚过大标题 → 导航栏小标题淡入', D.crossfade, 'linear', '--cy-motion-crossfade'],
+    ['退出:整段反向', D.sheetFullOut, 'standard', '--cy-motion-sheet-full-out(退场短于进场)'],
+    ['侧滑返回松手:剩余距离', '280×剩余比例(≥120)', 'ease-out', '阈值 35% 宽或 >0.5px/ms'],
+    ['减少动态效果:只做透明度切换', D.crossfade, 'linear', '--cy-motion-crossfade(减动效兜底档)']
+  ],
+  b: [
+    ['卡片升起 48px + 缩放 0.96→1 + 淡入', D.slow, 'ease-out', '--cy-motion-slow / --cy-ease-out'],
+    ['码点开始(卡片开始后 200ms)', '—', '—', '与卡片重叠'],
+    ['单个码点 缩放 0.2→1 + 淡入', D.standard, 'spring', '--cy-motion-standard / --cy-ease-spring'],
+    ['码点涟漪总跨度(按到起点的距离分配延迟)', D.celebrate, 'linear', '--cy-motion-celebrate'],
+    ['三个定位角 缩放 0.5→1', D.slow, 'spring', '--cy-motion-slow / --cy-ease-spring'],
+    ['中间 Logo 弹出', D.slow, 'spring', '在涟漪末尾'],
+    ['高光扫过(码点出齐后 80ms)', D.celebrate, 'standard', '--cy-motion-celebrate / --cy-ease-standard'],
+    ['文案、按钮依次淡入上移 8px(间隔 40ms)', D.standard, 'ease-out', '--cy-motion-standard'],
+    ['失败态出现 / 成功后底色切换', D.crossfade, 'linear', '--cy-motion-crossfade'],
+    ['「重新生成」转圈一周', D.spinner, 'linear', '--cy-motion-spinner-cycle'],
+    ['减少动态效果:整码一次淡入,无涟漪无高光', D.crossfade, 'linear', '--cy-motion-crossfade']
+  ],
+  c: {
+    refined: [
+      ['按压票卡', D.press, 'ease-out', '--cy-motion-press'],
+      ['票根沿撕线撕下(旋转 -16°、下落、淡出)', D.slow, 'accel', '--cy-motion-slow / --cy-ease-accelerate'],
+      ['票身展开铺满屏幕(圆角 11.5→0)', D.sheetFullIn, 'standard', '--cy-motion-sheet-full-in / --cy-ease-standard'],
+      ['地图从点按处圆形揭开(延迟 160ms)', D.celebrate, 'standard', '--cy-motion-celebrate'],
+      ['我的位置圆点弹出', D.slow, 'spring', '--cy-ease-spring'],
+      ['远景→步行缩放 + 迷雾散开(还原原值)', 1400, 'zoom', 'SCALE_FAR 14→17,_animateZoom easeOutCubic'],
+      ['定位脉冲(循环)', 2400, 'ease-in-out', '既有 r-go 2.4s'],
+      ['顶部输入地址下滑 16px + 淡入', D.slow, 'ease-out', '缩放开始后 200ms'],
+      ['底部读数卡、三键上移 24px(间隔 60ms)', D.slow, 'ease-out', '缩放开始后 260 / 320ms'],
+      ['总时长约', '≈2.2s', '—', '现状 4200+650+1400 ≈ 6.3s'],
+      ['减少动态效果:直接交叉淡入,迷雾停在终态', D.crossfade, 'linear', 'JS 侧对应 ROAM_OPENING_REDUCED_MS=220']
+    ],
+    restored: [
+      ['首页 → 地图 交叉淡入', D.fadeSwap, 'standard', '--cy-motion-fade-swap'],
+      ['停顿后开始缩放', 650, '—', '现码 _roamZoomTimer 650ms'],
+      ['远景→步行缩放 + 迷雾散开', 1400, 'zoom', 'SCALE_FAR 14→17,12 步 easeOutCubic'],
+      ['顶部 / 底部 HUD', 0, '—', '与地图同时出现,无动画(现码行为)']
+    ],
+    current: [
+      ['紫色粗弧切场', 820, 'cubic-bezier(.7,.02,.25,1)', 'r-openingWipe(ds-ok 原型值)'],
+      ['黑底弧形切入(延迟 610)', 620, 'cubic-bezier(.2,.78,.2,1)', 'r-openingStage'],
+      ['紫/青彩带飞入(延迟 620/700)', 1800, 'cubic-bezier(.16,.78,.2,1)', 'r-openingRibbon*'],
+      ['标题文案入(延迟 1050)', 680, 'cubic-bezier(.2,.82,.2,1)', 'r-openingCopy'],
+      ['「正在进入附近」(延迟 2850)', 420, 'ease', 'r-openingReady'],
+      ['开场整段', 4200, '—', 'ROAM_OPENING_MS'],
+      ['之后停顿 650 + 缩放 1400', 2050, 'zoom', '同还原版']
+    ]
+  }
+};
+const VER_NOTE = {
+  refined: '在「还原」的基础上精修：撕下票根、票身铺满屏幕，地图从点按处圆形揭开，定位点弹出并持续脉冲，迷雾随原来的远景→步行缩放散开，最后顶栏和底栏滑入。大约 2.2 秒，比现状快约 4 秒。',
+  restored: '去掉 4.2 秒的品牌开场（彩带、表情、吃豆），定位成功后直接进地图，停 650ms 后从远景拉到步行（14→17，1400ms）。这些都是现码原值，没有新动效。',
+  current: '现状示意（4.2 秒开场，然后才缩放）。表情散射和 Logo 吃豆没有画出来，只用来对比节奏。'
+};
+let ROAM_VER = 'refined';
+function easeLabel(k){ return EASE[k] ? (k === 'zoom' ? 'easeOutCubic ' + EASE[k] : EASE[k]) : k; }
+function renderSpec(){
+  const rows = DEMO === 'c' ? SPEC.c[ROAM_VER] : SPEC[DEMO];
+  $('specBody').innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td class="n">${typeof r[1] === 'number' ? r[1] + 'ms' : r[1]}</td><td class="c">${easeLabel(r[2])}<br><span style="color:var(--text-3)">${r[3]}</span></td></tr>`).join('');
+  $('specFoot').textContent = (K > 1 ? '当前慢放 ×0.25：实际播放时长 = 表中值 × 4。' : '') + (REDUCED ? '当前为减少动态效果，只播放兜底的透明度切换。' : '');
+  $('verNote').textContent = VER_NOTE[ROAM_VER];
+}
+
+/* ========== 演示 a ========== */
+const A = { p: 0, q: 0, busy: false };
+function applyA(p){
+  A.p = p;
+  const cp = $('pgCoupon'), mp = $('pgMine'), dim = $('dimMine');
+  if (REDUCED){ cp.style.transform = 'none'; cp.style.opacity = p; mp.style.transform = 'none'; dim.style.opacity = 0; return; }
+  cp.style.opacity = 1;
+  cp.style.transform = `translateX(${(1-p)*100}%)`;
+  mp.style.transform = `translateX(${-24*p}%) scale(${1-.04*p})`;
+  dim.style.opacity = .4*p;
+}
+function titlesA(q){ // q:0=我的 1=优惠券页(大标题可见时导航栏不出小标题)
+  A.q = q;
+  const t1 = $('navT1'), back = $('navBackA');
+  t1.style.opacity = 1-q; t1.style.transform = `translate(calc(-50% - ${12*q}px),-50%)`;
+  back.style.opacity = q; back.style.pointerEvents = q > .5 ? 'auto' : 'none';
+}
+function syncSmallTitle(){
+  const show = A.p > .99 && $('couponScroll').scrollTop > 44;
+  const t2 = $('navT2'); const target = show ? 1 : 0;
+  t2.style.transition = REDUCED ? 'none' : `opacity ${D.crossfade*K}ms linear`;
+  t2.style.opacity = target;
+}
+function resetA(){
+  resetAll(); A.busy = false; $('couponScroll').scrollTop = 0; applyA(0); titlesA(0); syncSmallTitle();
+  [...$('wlist').querySelectorAll('.wcard')].forEach(c => { c.style.opacity = ''; c.style.transform = ''; });
+}
+async function pushA(){
+  if (A.busy || A.p > .5) return; A.busy = true;
+  $('couponScroll').scrollTop = 0; syncSmallTitle();
+  if (REDUCED){
+    await tween(D.crossfade, 'linear', e => { applyA(e); titlesA(e); });
+    A.busy = false; return;
+  }
+  const cards = [...$('wlist').querySelectorAll('.wcard')];
+  cards.forEach((c, i) => anim(c, [{opacity:0, transform:'translateY(15.5px)'},{opacity:1, transform:'none'}], 320, 'pm', 120 + Math.min(i,8)*33));
+  const tt = tween(D.fadeSwap, 'standard', e => { $('navT1').style.opacity = 1-e; $('navT1').style.transform = `translate(calc(-50% - ${12*e}px),-50%)`; });
+  const tb = tween(D.fast, 'out', e => { $('navBackA').style.opacity = e; }, 60);
+  await tween(D.slow, 'out', e => applyA(e));
+  await Promise.all([tt, tb]); titlesA(1);
+  A.busy = false;
+}
+async function popA(fromP, fromGesture){
+  if (A.busy && !fromGesture) return; A.busy = true;
+  const p0 = fromP == null ? A.p : fromP; const q0 = A.q;
+  $('navT2').style.transition = 'none'; $('navT2').style.opacity = 0;
+  if (REDUCED){ await tween(D.crossfade, 'linear', e => { applyA(p0*(1-e)); titlesA(q0*(1-e)); }); A.busy = false; return; }
+  const dur = fromGesture ? Math.max(120, D.sheetFullOut * p0) : D.sheetFullOut;
+  const ease = fromGesture ? 'out' : 'standard';
+  await tween(dur, ease, e => { applyA(p0*(1-e)); titlesA(q0*(1-e)); });
+  A.busy = false;
+}
+async function playA(){ resetA(); if (!await wait(300)) return; await pushA(); if (!await wait(1100)) return; popA(); }
+// 侧滑返回
+(function(){
+  let drag = null;
+  const edge = $('edgeA');
+  edge.addEventListener('pointerdown', ev => {
+    if (DEMO !== 'a' || A.p < .99 || A.busy) return;
+    drag = { x: ev.clientX, t: performance.now(), lastX: ev.clientX, lastT: performance.now(), v: 0 };
+    edge.setPointerCapture(ev.pointerId); ev.preventDefault();
+  });
+  edge.addEventListener('pointermove', ev => {
+    if (!drag) return; const z = ZOOM; const dx = Math.max(0, (ev.clientX - drag.x)/z);
+    const now = performance.now(); drag.v = ((ev.clientX - drag.lastX)/z) / Math.max(1, now - drag.lastT); drag.lastX = ev.clientX; drag.lastT = now;
+    const p = 1 - Math.min(1, dx/375); applyA(p); titlesA(p); $('navT2').style.opacity = 0;
+  });
+  const end = ev => {
+    if (!drag) return; const d = drag; drag = null; const p = A.p;
+    if (1 - p > .35 || d.v > .5) popA(p, true);
+    else { A.busy = true; tween(D.fast + 60, 'out', e => { const v = lerp(p, 1, e); applyA(v); titlesA(v); }).then(() => { A.busy = false; syncSmallTitle(); }); }
+  };
+  edge.addEventListener('pointerup', end); edge.addEventListener('pointercancel', end);
+  $('couponScroll').addEventListener('scroll', syncSmallTitle);
+})();
+
+/* ========== 演示 b:二维码 ========== */
+const N = 25;
+function mulberry32(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const QR = { modules: [], finders: [], logo: null, origin: 'finder', failNext: false, failed: false };
+function buildQR(){
+  const rnd = mulberry32(20261027);
+  const reserved = (r,c) => (r<8&&c<8)||(r<8&&c>=N-8)||(r>=N-8&&c<8)||(r>=16&&r<=20&&c>=16&&c<=20)||(r>=9&&r<=15&&c>=9&&c<=15);
+  const svg = $('qrSvg'); const NS = 'http://www.w3.org/2000/svg';
+  let html = '';
+  for (let r=0;r<N;r++) for (let c=0;c<N;c++){
+    let on;
+    if (r===6 && c>=8 && c<=N-9) on = c%2===0;
+    else if (c===6 && r>=8 && r<=N-9) on = r%2===0;
+    else if (reserved(r,c)) continue;
+    else on = rnd() > .5;
+    if (on) html += `<rect class="m" x="${c}" y="${r}" width="1" height="1" data-r="${r}" data-c="${c}" fill="#0A0A0A"/>`;
+  }
+  // 对齐图形
+  html += `<g class="m al" data-r="18" data-c="18"><rect x="16" y="16" width="5" height="5" fill="#0A0A0A"/><rect x="17" y="17" width="3" height="3" fill="#fff"/><rect x="18" y="18" width="1" height="1" fill="#0A0A0A"/></g>`;
+  // 定位角
+  [[0,0],[0,N-7],[N-7,0]].forEach(([r,c]) => {
+    html += `<g class="fp" data-r="${r+3}" data-c="${c+3}"><rect x="${c}" y="${r}" width="7" height="7" rx=".9" fill="#0A0A0A"/><rect x="${c+1}" y="${r+1}" width="5" height="5" rx=".5" fill="#fff"/><rect x="${c+2}" y="${r+2}" width="3" height="3" rx=".5" fill="#0A0A0A"/></g>`;
+  });
+  // 中心 Logo
+  html += `<g class="logo"><rect x="9.6" y="9.6" width="5.8" height="5.8" rx="1.3" fill="#0A0A0A"/><text x="12.5" y="13.95" text-anchor="middle" font-size="3.6" font-weight="800" fill="#fff" font-family="PingFang SC,sans-serif">城</text></g>`;
+  svg.innerHTML = html;
+  QR.modules = [...svg.querySelectorAll('.m')]; QR.finders = [...svg.querySelectorAll('.fp')]; QR.logo = svg.querySelector('.logo');
+}
+function qrDelays(){
+  const centers = QR.origin === 'center' ? [[12,12]] : [[3,3],[3,N-4],[N-4,3]];
+  const dist = el => { const r = +el.dataset.r, c = +el.dataset.c; return Math.min(...centers.map(([a,b]) => Math.hypot(r-a, c-b))); };
+  const all = QR.modules.map(el => [el, dist(el)]); const max = Math.max(...all.map(x => x[1]));
+  return { list: all.map(([el,d]) => [el, d/max*D.celebrate]), dist };
+}
+function setQRVisible(v){ [...QR.modules, ...QR.finders, QR.logo].forEach(el => { el.style.opacity = v ? '' : 0; }); }
+function revealQR(base){
+  const { list, dist } = qrDelays();
+  if (REDUCED){ anim($('qrSvg'), [{opacity:0},{opacity:1}], D.crossfade, 'linear', base); [...QR.modules, ...QR.finders, QR.logo].forEach(el => el.style.opacity = ''); return D.crossfade; }
+  setQRVisible(false);
+  list.forEach(([el, d]) => { el.style.opacity = ''; anim(el, [{opacity:0, transform:'scale(.2)'},{opacity:1, transform:'scale(1)'}], D.standard, 'spring', base + d); });
+  QR.finders.forEach(el => { el.style.opacity = ''; const d = QR.origin === 'center' ? dist(el)/12*D.celebrate*.8 : 0; anim(el, [{opacity:0, transform:'scale(.5)'},{opacity:1, transform:'scale(1)'}], D.slow, 'spring', base + d); });
+  QR.logo.style.opacity = ''; anim(QR.logo, [{opacity:0, transform:'scale(.4)'},{opacity:1, transform:'scale(1)'}], D.slow, 'spring', base + (QR.origin === 'center' ? 0 : D.celebrate - 120));
+  const shineAt = base + D.celebrate + D.standard + 80;
+  anim($('qrShine'), [{opacity:0, transform:'translateX(-110%)'},{opacity:1, transform:'translateX(-40%)', offset:.3},{opacity:1, transform:'translateX(40%)', offset:.7},{opacity:0, transform:'translateX(110%)'}], D.celebrate, 'standard', shineAt);
+  return shineAt + D.celebrate;
+}
+function enterCopyB(base){
+  const els = [$('invCopy'), $('invHint'), $('invShare')];
+  els.forEach((el, i) => REDUCED ? anim(el, [{opacity:0},{opacity:1}], D.crossfade, 'linear', base) : anim(el, [{opacity:0, transform:'translateY(8px)'},{opacity:1, transform:'none'}], D.standard, 'out', base + i*40));
+}
+function setFail(on){
+  QR.failed = on; const f = $('qrFrame'); f.classList.toggle('fail', on);
+  const b = $('regenBtn'); b.classList.remove('busy'); $('regenTx').textContent = '重新生成';
+}
+async function playB(){
+  resetAll(); setFail(false); setQRVisible(true);
+  const card = $('invCard');
+  if (REDUCED) anim(card, [{opacity:0},{opacity:1}], D.crossfade, 'linear');
+  else anim(card, [{opacity:0, transform:'translateY(48px) scale(.96)'},{opacity:1, transform:'none'}], D.slow, 'out');
+  enterCopyB(REDUCED ? 0 : 180);
+  if (QR.failNext){
+    setFail(true);
+    anim($('qrFail'), [{opacity:0},{opacity:1}], D.crossfade, 'linear', REDUCED ? 0 : 200);
+    return;
+  }
+  revealQR(REDUCED ? 0 : 200);
+}
+async function regenB(){
+  const b = $('regenBtn'); if (b.classList.contains('busy')) return;
+  b.classList.add('busy'); $('regenTx').textContent = '正在生成';
+  const spin = b.querySelector('.spin'); const a = anim(spin, [{transform:'rotate(0)'},{transform:'rotate(360deg)'}], D.spinner, 'linear', 0, { iterations: Infinity });
+  if (!await wait(900)) return;
+  a.cancel();
+  const f = $('qrFrame');
+  anim($('qrFail'), [{opacity:1},{opacity:0}], D.crossfade, 'linear');
+  if (!await wait(D.crossfade)) return;
+  setFail(false); $('qrFail').getAnimations().forEach(x => x.cancel());
+  anim(f, [{backgroundColor:'#141416'},{backgroundColor:'#ffffff'}], D.crossfade, 'linear');
+  revealQR(REDUCED ? 0 : 60);
+  toast('已重新生成');
+}
+
+/* ========== 演示 c:开始漫游 ========== */
+function buildMaps(){
+  const rnd = mulberry32(42);
+  const g = [];
+  g.push('<rect x="-400" y="-400" width="1175" height="1612" fill="#0E1013"/>');
+  g.push('<path d="M-400 520 C 0 470, 120 610, 380 560 S 700 500, 780 540 L 780 600 C 700 560, 520 640, 380 620 S 0 540, -400 590 Z" fill="#0F1A24"/>');
+  g.push('<rect x="40" y="170" width="120" height="90" rx="10" fill="#10201A"/><rect x="250" y="650" width="150" height="110" rx="12" fill="#10201A"/>');
+  for (let i=0;i<70;i++){ const x = -380 + rnd()*1120, y = -380 + rnd()*1560; g.push(`<rect x="${x.toFixed(0)}" y="${y.toFixed(0)}" width="${(30+rnd()*60).toFixed(0)}" height="${(24+rnd()*50).toFixed(0)}" rx="3" fill="#14171C"/>`); }
+  for (let i=-6;i<12;i++){ g.push(`<line x1="${i*70-200}" y1="-400" x2="${i*70+40}" y2="1212" stroke="#1C1F25" stroke-width="3"/>`); }
+  for (let i=-6;i<20;i++){ g.push(`<line x1="-400" y1="${i*64}" x2="775" y2="${i*64-120}" stroke="#1C1F25" stroke-width="3"/>`); }
+  g.push('<path d="M-400 300 L 775 230" stroke="#2A2E36" stroke-width="10"/><path d="M120 -400 L 230 1212" stroke="#2A2E36" stroke-width="10"/><path d="M-400 820 L 775 700" stroke="#262A31" stroke-width="7"/>');
+  const s = g.join('');
+  $('mapG').innerHTML = s;
+  $('homeMap').innerHTML = s;
+}
+const ME = { x: 187.5, y: 374 };
+function setFog(r, x, y){
+  const f = $('fog'); x = x == null ? ME.x : x; y = y == null ? ME.y : y;
+  const m = `radial-gradient(circle at ${x}px ${y}px, transparent ${r}px, #000 ${r + 46}px)`;
+  f.style.webkitMaskImage = m; f.style.maskImage = m;
+}
+function setMapScale(s){ $('mapG').setAttribute('transform', `translate(${ME.x} ${ME.y}) scale(${s}) translate(${-ME.x} ${-ME.y})`); }
+const FAR = .45, WALK = 1, FOG_R = 112;
+function resetC(){
+  resetAll();
+  const rm = $('rmap'); rm.classList.remove('show'); rm.style.clipPath = ''; rm.style.opacity = '';
+  $('roamHome').style.opacity = ''; $('ticket').style.visibility = ''; $('ticket').style.transform = '';
+  $('tearLayer').innerHTML = ''; $('curOpen').classList.remove('show');
+  setFog(0); setMapScale(FAR);
+  ['mSearch','pcard','pbar','meCore','meRing'].forEach(id => { $(id).style.opacity = ''; $(id).style.transform = ''; });
+}
+function hudIn(base, animated){
+  const items = [['mSearch', -16, 200], ['pcard', 24, 260], ['pbar', 24, 320]];
+  items.forEach(([id, dy, d]) => {
+    if (!animated) return;
+    anim($(id), [{opacity:0, transform:`translateY(${dy}px)`},{opacity:1, transform:'none'}], D.slow, 'out', base + d);
+  });
+}
+function pulse(base){ return anim($('meRing'), [{transform:'scale(1)', opacity:.5},{transform:'scale(1.35)', opacity:0, offset:.5},{transform:'scale(1)', opacity:.5}], 2400, 'ease-in-out', base, { iterations: Infinity }); }
+async function startRoam(ev){
+  if (DEMO !== 'c') return;
+  if ($('rmap').classList.contains('show')) return;
+  const phone = $('phone').getBoundingClientRect();
+  const card = $('ticket').getBoundingClientRect();
+  const z = ZOOM;
+  const R = { x: (card.left - phone.left)/z, y: (card.top - phone.top)/z, w: card.width/z, h: card.height/z };
+  let tx = R.x + R.w*0.62, ty = R.y + R.h/2;
+  if (ev && ev.clientX) { tx = (ev.clientX - phone.left)/z; ty = (ev.clientY - phone.top)/z; }
+  if (REDUCED){ return startReduced(); }
+  if (ROAM_VER === 'restored') return startRestored();
+  if (ROAM_VER === 'current') return startCurrent();
+  return startRefined(R, tx, ty);
+}
+async function startReduced(){
+  const rm = $('rmap'); setFog(FOG_R); setMapScale(WALK); rm.classList.add('show');
+  anim(rm, [{opacity:0},{opacity:1}], D.crossfade, 'linear');
+}
+async function startRestored(){
+  const rm = $('rmap'); setFog(FOG_R*FAR); setMapScale(FAR); rm.classList.add('show');
+  anim(rm, [{opacity:0},{opacity:1}], D.fadeSwap, 'standard');
+  pulse(0);
+  if (!await wait(650)) return;
+  tween(1400, 'zoom', e => { setMapScale(lerp(FAR, WALK, e)); setFog(lerp(FOG_R*FAR, FOG_R, e)); });
+}
+async function startRefined(R, tx, ty){
+  const g = GEN;
+  // 1 按压
+  await new Promise(r => { const a = anim($('ticket'), [{transform:'scale(1)'},{transform:'scale(.98)'}], D.press, 'out'); a.onfinish = r; });
+  if (g !== GEN) return;
+  // 2 撕票:原卡换成两片克隆
+  const layer = $('tearLayer');
+  const stubW = 92;
+  layer.innerHTML = `<div class="ts" style="left:${R.x}px;top:${R.y}px;width:${stubW}px;height:${R.h}px;border-radius:11.5px 0 0 11.5px;background:#5DBE6E">${$('tStub').innerHTML}</div>` +
+    `<div class="tb" style="left:${R.x + stubW}px;top:${R.y}px;width:${R.w - stubW}px;height:${R.h}px"><div class="tbin" style="position:absolute;inset:0;display:flex">${$('tBody').outerHTML.replace('id="tBody"', '')}</div></div>`;
+  const ts = layer.querySelector('.ts'), tb = layer.querySelector('.tb');
+  ts.style.padding = '11px 10px'; ts.style.display = 'flex'; ts.style.flexDirection = 'column'; ts.style.justifyContent = 'space-between';
+  ts.querySelector('svg').setAttribute('style', 'width:32px;height:32px;color:#141414;stroke-width:2');
+  $('ticket').style.visibility = 'hidden';
+  anim(ts, [{transform:'none', opacity:1},{transform:'translate(-22px,64px) rotate(-16deg)', opacity:0}], D.slow, 'accel', 0, { transformOrigin: '100% 0' });
+  ts.style.transformOrigin = '100% 0';
+  // 票身铺满
+  anim(tb, [
+    { left: (R.x + stubW) + 'px', top: R.y + 'px', width: (R.w - stubW) + 'px', height: R.h + 'px', borderRadius: '0 11.5px 11.5px 0', backgroundColor:'#ffffff' },
+    { left: '0px', top: '0px', width: '375px', height: '812px', borderRadius: '0px', backgroundColor:'#111111' }
+  ], D.sheetFullIn, 'standard', 40);
+  anim(tb.querySelector('.tbin'), [{opacity:1},{opacity:0}], D.fast, 'out');
+  // 3 圆形揭开地图
+  const rm = $('rmap'); setFog(0, tx, ty); setMapScale(FAR); rm.classList.add('show');
+  ['mSearch','pcard','pbar','meCore'].forEach(id => $(id).style.opacity = 0);
+  const maxR = Math.hypot(Math.max(tx, 375 - tx), Math.max(ty, 812 - ty));
+  anim(rm, [{clipPath:`circle(0px at ${tx}px ${ty}px)`},{clipPath:`circle(${maxR}px at ${tx}px ${ty}px)`}], D.celebrate, 'standard', 160);
+  // 迷雾里先在点按处留一个小光圈,随揭开移动到我的位置
+  tween(D.celebrate, 'standard', e => setFog(lerp(10, FOG_R*FAR, e), lerp(tx, ME.x, e), lerp(ty, ME.y, e)), 160);
+  if (!await wait(160 + D.celebrate - 200)) return;
+  // 4 定位点
+  $('meCore').style.opacity = '';
+  anim($('meCore'), [{transform:'scale(0)'},{transform:'scale(1)'}], D.slow, 'spring');
+  pulse(D.slow - 80);
+  if (!await wait(200)) return;
+  layer.innerHTML = '';
+  $('roamHome').style.opacity = 0;
+  // 5 远景→步行缩放 + 迷雾散开(原值)
+  hudIn(0, true);
+  ['mSearch','pcard','pbar'].forEach(id => $(id).style.opacity = '');
+  await tween(1400, 'zoom', e => { setMapScale(lerp(FAR, WALK, e)); setFog(lerp(FOG_R*FAR, FOG_R, e)); });
+}
+async function startCurrent(){
+  const c = $('curOpen'); c.classList.add('show');
+  anim($('curWipe'), [{top:'110%', left:'-40%'},{top:'-18%', left:'8%'}], 820, 'cubic-bezier(.7,.02,.25,1)');
+  anim($('curStage'), [{transform:'translateY(100%)', borderRadius:'48% 48% 0 0/18% 18% 0 0'},{transform:'none', borderRadius:'0'}], 620, 'cubic-bezier(.2,.78,.2,1)', 610);
+  anim($('curRibP'), [{opacity:0, transform:'translate(-210px,-180px) rotate(-8deg) scale(.9)'},{opacity:1, transform:'translate(14px,18px) rotate(-12deg) scale(1)'}], 1800, 'cubic-bezier(.16,.78,.2,1)', 620);
+  anim($('curRibC'), [{opacity:0, transform:'translate(220px,190px) rotate(9deg) scale(.88)'},{opacity:1, transform:'translate(-12px,-8px) rotate(8deg) scale(1)'}], 1800, 'cubic-bezier(.16,.78,.2,1)', 700);
+  anim($('curHero'), [{opacity:0, transform:'translateY(16px) scale(.96)'},{opacity:1, transform:'none'}], 680, 'cubic-bezier(.2,.82,.2,1)', 1050);
+  anim($('curReady'), [{opacity:0, transform:'translate(-50%,12px)'},{opacity:1, transform:'translate(-50%,0)'}], 420, 'ease', 2850);
+  const rm = $('rmap'); setFog(FOG_R*FAR); setMapScale(FAR);
+  if (!await wait(4200)) return;
+  c.classList.remove('show'); rm.classList.add('show'); pulse(0);
+  if (!await wait(650)) return;
+  tween(1400, 'zoom', e => { setMapScale(lerp(FAR, WALK, e)); setFog(lerp(FOG_R*FAR, FOG_R, e)); });
+}
+async function playC(){ resetC(); if (!await wait(500)) return; startRoam(null); }
+
+/* ========== 面板 / 分发 ========== */
+function setDemo(d){
+  DEMO = d;
+  ['a','b','c'].forEach(k => { $('demo' + k.toUpperCase()).classList.toggle('on', k === d); $('notes' + k.toUpperCase()).classList.toggle('on', k === d); });
+  [...$('demoSeg').children].forEach(b => b.classList.toggle('on', b.dataset.arg === d));
+  renderSpec();
+  if (d === 'c') { resetC(); toast('点票卡「开始漫游」，或点「重播」'); } else replay();
+}
+function replay(){ if (DEMO === 'a') playA(); else if (DEMO === 'b') playB(); else playC(); }
+function syncButtons(){
+  $('slowBtn').classList.toggle('on', K > 1);
+  $('rmBtn').classList.toggle('on', REDUCED);
+  $('rmNote').textContent = REDUCED ? ((sysReduced && sysReduced.matches) ? '系统已开启「减少动态效果」，现在只播放兜底的透明度切换。' : '正在模拟「减少动态效果」，只播放兜底的透明度切换。') : '';
+  $('failBtn').classList.toggle('on', QR.failNext);
+}
+const ACT = {
+  demo(el){ setDemo(el.dataset.arg); },
+  replay(){ replay(); toast(K > 1 ? '慢放重播' : '重播'); },
+  slow(){ K = K > 1 ? 1 : 4; syncButtons(); renderSpec(); replay(); },
+  reduce(){ REDUCED = !REDUCED; syncButtons(); renderSpec(); replay(); },
+  capsule(el){ toast(el.dataset.arg === 'more' ? '微信胶囊 · 更多' : '微信胶囊 · 关闭小程序'); },
+  tab(el){ toast('底栏「' + el.dataset.arg + '」（不在本条范围）'); },
+  benefit(el){ toast(el.dataset.arg); },
+  'open-coupons'(){ pushA(); },
+  'open-invite'(){ setDemo('b'); toast('进入「邀请好友」页面（演示 b）'); },
+  'nav-back'(){ popA(); },
+  'wallet-tab'(el){ [...$('wtabs').children].forEach(b => b.classList.toggle('on', b === el)); },
+  coupon(){ toast('出示核销码（另一页，不在本条范围）'); },
+  'nav-back-b'(){ setDemo('a'); toast('返回「我的」'); },
+  share(){ toast('调起微信分享（open-type=share）'); },
+  regen(){ regenB(); },
+  'qr-origin'(el){ QR.origin = el.dataset.arg; [...$('originSeg').children].forEach(b => b.classList.toggle('on', b === el)); playB(); },
+  'qr-fail'(){ QR.failNext = !QR.failNext; syncButtons(); playB(); },
+  'roam-start'(el, ev){ startRoam(ev); },
+  'ticket-other'(el){ toast(el.dataset.arg + '（不在本条范围）'); },
+  'rh-tab'(el){ toast('「' + el.dataset.arg + '」页签（不在本条范围）'); },
+  activity(){ toast('活动详情（不在本条范围）'); },
+  'roam-ver'(el){ ROAM_VER = el.dataset.arg; [...$('verSeg').children].forEach(b => b.classList.toggle('on', b === el)); renderSpec(); if (DEMO === 'c') playC(); },
+  'map-search'(){ toast('输入地址（不在本条范围）'); },
+  'map-btn'(el){ toast(el.dataset.arg); }
+};
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-act]'); if (!el) return;
+  const fn = ACT[el.dataset.act]; if (fn) { ev.preventDefault(); fn(el, ev); }
+});
+if (sysReduced && sysReduced.addEventListener) sysReduced.addEventListener('change', e => { REDUCED = e.matches; syncButtons(); renderSpec(); replay(); });
+
+/* 窄屏把手机等比缩小,避免横向滚动 */
+let ZOOM = 1;
+function fit(){
+  const avail = Math.min(window.innerWidth, document.documentElement.clientWidth) - 32;
+  ZOOM = Math.min(1, avail / 375);
+  const ph = $('phone'); ph.style.zoom = ZOOM === 1 ? '' : ZOOM;
+}
+window.addEventListener('resize', fit);
+
+buildQR(); buildMaps(); fit(); syncButtons(); renderSpec(); resetC(); playA();
+</script>
+</body>
+</html>
