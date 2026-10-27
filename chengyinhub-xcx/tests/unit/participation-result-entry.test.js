@@ -94,7 +94,7 @@ test('missing, mismatched, unsafe and non-owned registration relationships fail 
   for (const info of [topic({ id: '82' }), topic({ memberId: '72' }), topic({ memberId: null }),
     topic({ ownerType: 3 }), topic({ ownerType: true }), topic({ ownerId: '902' }),
     topic({ cmsTopic: null }), topic({ topicId: '902' }), topic({ ownerId: 9007199254740992, cmsTopic: { id: 9007199254740992 } }),
-    activity({ cmsActivity: { id: '89', topicId: '901' } }), activity({ cmsActivity: { id: '88', topicId: null } }),
+    activity({ cmsActivity: { id: '89', topicId: '901' } }),
     activity({ cmsActivity: { id: '88', topicId: '9223372036854775808' } }), activity({ cmsActivity: null }),
     { id: '81', memberId: '71', topicId: '901' }]) {
     const h = mount(); h.boot(); h.respond(info);
@@ -113,6 +113,19 @@ test('missing, mismatched, unsafe and non-owned registration relationships fail 
   const h = mount(); h.boot(); h.respond(topic({ ownerId: 'wrong' }));
   h.component.onErrorAction(); assert.equal(h.requests.length, 2);
   h.respond(topic()); assert.equal(h.component.data.resultEntryError, ''); h.click('我的角色卡');
+});
+
+test('registrations without any theme relation hide both entries without an error card', () => {
+  const plain = extra => ({ id: '81', memberId: '71', ownerType: 2, ownerId: '88', cmsTopic: null, ...extra });
+  for (const info of [plain({ cmsActivity: { id: '88', topicId: null } }), plain({ cmsActivity: { id: '88' } }),
+    plain({ topicId: 0, cmsActivity: { id: '88', topicId: 0 } }), plain({ ownerType: 3, ownerId: '5', cmsActivity: null }),
+    plain({ ownerType: 2, memberId: '72', cmsActivity: { id: '88', topicId: null } })]) {
+    const h = mount(); h.boot(); h.respond(info);
+    assert.equal(h.component.data.loadState, 'ready');
+    assert.equal(h.component.data.resultTopicId, '');
+    assert.equal(h.component.data.resultEntryError, '', 'plain activity detail must not show the red entry error');
+    assert.equal(h.requests.length, 1);
+  }
 });
 
 test('exact Long relationship strings remain exact in score and character URLs', () => {
