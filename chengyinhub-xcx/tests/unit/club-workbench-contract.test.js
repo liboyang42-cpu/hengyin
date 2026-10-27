@@ -25,7 +25,7 @@ test('三个主理人入口统一到俱乐部详情，旧 workbench 路由仅保
     '深链壳不得保留第二套工作台请求')
 })
 
-test('俱乐部详情用第四个 owner-only 管理 tab 承接工作台，页壳保持 C 端深色', () => {
+test('俱乐部详情用第四个 owner-only 管理 tab 承接工作台，玩家页壳保持 C 端深色、商家浅色', () => {
   const page = read('pages/club/detail/index.js')
   const view = read('pages/club/detail/index.wxml')
   const style = read('pages/club/detail/index.wxss')
@@ -39,7 +39,10 @@ test('俱乐部详情用第四个 owner-only 管理 tab 承接工作台，页壳
   assert.match(page, /url:\s*'\/api\/project\/my'/)
   assert.match(page, /url:\s*'\/api\/coop\/list'/)
   assert.match(page, /url:\s*'\/api\/club\/topics'/)
-  assert.doesNotMatch(style, /merchant-light|theme-light|theme-merchant/)
+  // 2026-10-27 M-24 owner(真机走查 m692):商家看俱乐部页用浅色;玩家(含 owner 管理 tab)页壳仍是深色。
+  // 原断言「wxss 不许出现 theme-merchant」随此决定改为:浅色只按商家视角挂,其余一律 theme-dark。
+  assert.match(view.split('\n')[0], /\{\{isMerchantViewer \? 'theme-merchant' : 'theme-dark'\}\}/)
+  assert.doesNotMatch(style, /theme-light/)
 })
 
 test('俱乐部详情与深链壳都不展示收益或分账概览', () => {

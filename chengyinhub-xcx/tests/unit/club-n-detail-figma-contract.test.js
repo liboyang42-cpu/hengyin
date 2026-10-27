@@ -40,10 +40,14 @@ function assertContract(overrides = {}) {
   // 元信息是「图标 + 文字」chip,不是一行 · 拼接的纯文本
   assert.match(rule(wxss, '.profile-meta'), /display:\s*flex/)
   assert.match(rule(wxss, '.profile-meta-chip'), /display:\s*flex/)
-  // 拍板 2026-10-22:元信息固定两行 ——「类型 · N 名成员」/ 入会方式,各带原 chip 图标
-  assert.equal((wxml.match(/class="profile-meta-chip"/g) || []).length, 2, '元信息两行两枚 chip')
-  assert.equal((wxml.match(/class="profile-meta-ico"/g) || []).length, 2, '每枚 chip 必须带图标')
-  assert.match(rule(wxss, '.profile-meta'), /flex-direction:\s*column/, '两行固定换行,不随宽度乱折')
+  // 2026-10-27 P-15/P-17 owner(真机走查 p108):元信息合成一行「类型 · N 名成员 · 入会方式」,
+  // 「退出」在同一行最右侧。取代 2026-10-22「固定两行两枚 chip」的旧断言。
+  assert.equal((wxml.match(/class="profile-meta-chip"/g) || []).length, 1, '元信息合成一枚 chip')
+  assert.equal((wxml.match(/class="profile-meta-ico"/g) || []).length, 1, 'chip 必须带图标')
+  assert.match(rule(wxss, '.profile-meta'), /flex-direction:\s*row/, '元信息一行')
+  assert.match(wxml, /\{\{club\.metaLine\}\} · \{\{club\.joinPolicyText\}\}加入/, '入会方式并进同一行')
+  assert.match(wxml, /class="profile-quit"[^>]*bindtap="onQuit"[^>]*>退出</, '「退出」在元信息行内')
+  assert.match(rule(wxss, '.profile-quit'), /margin-left:\s*auto/, '「退出」靠最右')
 
   // —— 概览:简介直接铺开,标题下不要小标题 ——
   assert.match(wxml, /class="ov-intro"/)
@@ -54,6 +58,12 @@ function assertContract(overrides = {}) {
   assert.match(rule(wxss, '.ov-facts'), /display:\s*flex/)
   assert.equal((wxml.match(/class="ov-fact"/g) || []).length, 3, '主理人 / 等级 / 所在城市 三格')
   assert.match(wxml, /class="ov-fact-value"[\s\S]{0,200}class="ov-fact-label"/, '值在上、标签在下')
+  // 2026-10-27 P-16 owner:三格与「俱乐部勋章」都不要灰色圆角底块;没有等级时整格不出
+  assert.doesNotMatch(rule(wxss, '.ov-fact'), /background|border-radius/, '三格不要灰底圆角块')
+  assert.doesNotMatch(rule(wxss, '.ov-badge-entry'), /background|border-radius/, '俱乐部勋章是普通列表行')
+  assert.match(wxml, /<view class="ov-fact" wx:if="\{\{club\.levelText\}\}">/, '没有等级时不显示这一项')
+  // 2026-10-27 P-19 owner:治理与安全 / 封禁申诉只给主理人和管理员
+  assert.match(wxml, /class="overview-section governance-help-entry" wx:if="\{\{club\.isOwner \|\| club\.viewerIsAdmin\}\}"/, '治理与安全只给主理人和管理员')
 
   // —— MembersHead:「邀请成员 ›」只给主理人/管理员(N5 普通会员那版没有这一行链接)——
   // CU-C-61:载体从 text+aria-role 换成原生 <button open-type="share">,角色判据不变。
@@ -84,17 +94,20 @@ function assertContract(overrides = {}) {
   assert.match(wxml, /goClubAppeal/)
   assert.match(wxml, /reportClub"/)
 
-  // —— 活动 tab:即将举行 / 已结束 两段(282:622 / 282:660)——
-  assert.match(wxml, /即将举行/)
-  assert.match(wxml, /class="ev-sec-head ev-sec-head--second"[\s\S]{0,200}已结束/)
-  assert.match(wxml, /wx:if="\{\{endedTopics\.length\}\}"/, '没有已结束场次时整段不出')
-  assert.match(js, /function splitTopics/)
+  // —— 活动 tab ——
+  // 2026-10-27 P-14 owner(真机走查 p90/p107):不分子 tab、不分「即将举行 / 已结束」两段,
+  // 已结束的不在这里显示,直接一列活动卡。取代 282:622 / 282:660 两段式断言。
+  assert.doesNotMatch(wxml, /endedTopics|ev-sec-head--second/, '已结束的活动不在俱乐部活动列表出现')
+  assert.match(js, /function splitTopics[\s\S]{0,300}upcomingTopics: rows\.filter\(\(t\) => !t\.ended\)/)
 
   // —— 活动卡 N2 20:52:封面通栏 + 状态胶囊叠封面 + 标题/一行元信息 + 三列数字块 ——
   // 2026-09-09 从 281:360 的横卡(左封面 + 右四行)改成稿 N2 的竖卡。
   assert.match(wxml, /<template name="clubEventCard">/)
-  assert.match(wxml, /class="ev-coverslot"[\s\S]{0,300}class="ev-status ev-status--\{\{item\.statusTone\}\}"/,
+  // P-14:标签只写时间 +「已开始 / 未开始」(tagText)
+  assert.match(wxml, /class="ev-coverslot"[\s\S]{0,300}class="ev-status ev-status--\{\{item\.statusTone\}\}">\{\{item\.tagText\}\}/,
     '状态胶囊叠在封面上，不再是右列第一行')
+  assert.match(js, /statusText: '已开始'/)
+  assert.match(js, /statusText: '未开始'/)
   assert.match(wxml, /class="ev-name"[\s\S]{0,200}class="ev-time"[\s\S]{0,400}class="ev-stats"/)
   // 三列数字块:算不出来的那一格整格不出,不用 0 冒充(「0 站」会被读成「这条路线没有节点」)
   for (const key of ['signupText', 'stationText', 'mileageText']) {
@@ -102,17 +115,19 @@ function assertContract(overrides = {}) {
       key + ' 缺失时那一格必须整格不出')
   }
   assert.match(rule(wxss, '.ev-card'), /background:\s*var\(--cy-color-bg-elevated\)/)
-  assert.match(rule(wxss, '.ev-status--live'), /var\(--cy-color-status-success\)/, '进行中 = success')
-  assert.match(rule(wxss, '.ev-status--open'), /var\(--cy-color-status-warning\)/, '招募中 = warning')
+  assert.match(rule(wxss, '.ev-status--live'), /var\(--cy-color-status-success\)/, '已开始 = success')
+  assert.match(rule(wxss, '.ev-status--open'), /var\(--cy-color-status-warning\)/, '未开始 = warning')
   assert.match(js, /function topicStatusOf/)
-  // 稿没画但现码有:出示团码 / 举报活动,留在卡内
+  // 稿没画但现码有:出示团码留在卡内;P-14「举报活动」收进卡片「更多」
   assert.match(wxml, /class="event-group-code"/)
-  assert.match(wxml, /class="event-report"/)
+  assert.match(wxml, /class="ev-more" catchtap="onEventMore"/)
+  assert.doesNotMatch(wxml, /class="event-report"/)
 
   // —— 活动空态 282:478:卡容器内 标题 / 说明 / 主按钮 / 归属提示 ——
   // 2026-09-06 裸文字空态收编:标题 / 说明 / 主按钮 / 归属提示 都由 cy-empty 承载(说明里带归属句,cta 只给主理人)
   assert.match(rule(wxss, '.ev-empty'), /background:\s*var\(--cy-color-bg-elevated\)/)   // 空态仍在卡容器内(282:478)
-  assert.match(wxml, /<cy-empty wx:else class="ev-empty" title="还没有城市路线"[^>]*cta="\{\{club\.isOwner \|\| canManageActivities \? '发布主题' : ''\}\}" bind:cta="onCreateTeam"/)
+  // P-14:空态文案「暂时俱乐部还没有活动」
+  assert.match(wxml, /<cy-empty wx:else class="ev-empty" title="暂时俱乐部还没有活动"[^>]*cta="\{\{club\.isOwner \|\| canManageActivities \? '发布主题' : ''\}\}" bind:cta="onCreateTeam"/)
 
   // —— 发帖入口 285:395:头像 + 昵称 / 提示语 / 工具栏三图标 ——
   assert.match(wxml, /class="post-composer-who"[\s\S]{0,200}class="post-composer-ph"[\s\S]{0,200}class="post-composer-tools"/)
@@ -144,9 +159,10 @@ test('负控:照稿删掉「治理与安全」判红', () => {
   assert.throws(() => assertContract({ wxml: mutated }), /治理与安全/)
 })
 
-test('负控:活动不再分「即将举行 / 已结束」两段时判红', () => {
+// 2026-10-27 P-14:原负控「不再分两段时判红」按 owner 决定翻转 —— 已结束段回潮时判红。
+test('负控:已结束的活动重新出现在活动 tab 时判红', () => {
   const wxml = read('pages/club/detail/index.wxml')
-  const mutated = wxml.replace('wx:if="{{endedTopics.length}}"', 'wx:if="{{false}}"')
-  assert.notEqual(mutated, wxml, '负控锚点失配:已结束段的判据已改写')
-  assert.throws(() => assertContract({ wxml: mutated }), /整段不出/)
+  const mutated = wxml.replace('<cy-empty wx:else class="ev-empty"', '<block wx:if="{{endedTopics.length}}"></block>\n        <cy-empty wx:else class="ev-empty"')
+  assert.notEqual(mutated, wxml, '负控锚点失配:活动空态已改写')
+  assert.throws(() => assertContract({ wxml: mutated }), /已结束的活动不在俱乐部活动列表出现/)
 })

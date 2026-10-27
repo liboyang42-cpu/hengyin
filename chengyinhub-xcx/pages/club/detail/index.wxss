@@ -1,4 +1,5 @@
 @import "../../../style/fade-in.wxss";  /* 减动效兜底要用它的 cy-fade-in(只淡不移) */
+@import "../../../style/merchant-light-scope.wxss";  /* M-24:商家浅色版根节点挂 .theme-merchant */
 /* Strava 风俱乐部主页 — 纯黑顶区 + 炭灰内容区 + 橙色强调 */
 page { background: var(--cy-bg-page); }
 
@@ -13,6 +14,12 @@ page { background: var(--cy-bg-page); }
   --club-glass: rgba(255, 255, 255, 0.12);
   --club-glass-border: var(--cy-border-card);
 }
+/* 2026-10-27 M-24:商家浅色版 —— 本页几处写死的暗色字面量在浅色根下换回语义色 */
+.theme-merchant .club-page {
+  --club-text-muted: var(--cy-color-text-secondary);
+  --club-glass: var(--cy-color-border-subtle);
+}
+.theme-merchant .cover-wrap { background: var(--cy-color-bg-surface-subtle); }
 .club-nav-spacer { width: 100%; }
 
 /* —— 封面 Hero —— */
@@ -146,21 +153,6 @@ page { background: var(--cy-bg-page); }
   justify-content: center;
 }
 .profile-id .profile-share::after { border: 0; }
-.profile-links {
-  display: flex;
-  gap: var(--cy-space-4);
-  margin-top: var(--cy-space-2-5);
-}
-.profile-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--cy-legacy-4);
-  min-height: var(--cy-btn-h);
-  font-size: var(--cy-font-label);
-  font-weight: 500;
-  color: var(--club-text-muted);
-}
-.profile-link-arrow { flex: none; }
 .profile-name {
   /* Figma 93:21:27px Bold 单行省略 */
   font-size: var(--cy-type-page-title);
@@ -176,14 +168,24 @@ page { background: var(--cy-bg-page); }
 /* Figma 93:22 Meta:三枚「图标 19 + 文字 15」chip,gap 20。
    2026-08-26 曾把它压成一行 · 拼接的纯文本并撤掉图标,282:x 那版稿又把图标行留着 —— 以稿为准复原。 */
 .profile-meta {
-  /* 拍板 2026-10-22:固定两行(「类型 · N 名成员」/ 入会方式),不再随宽度任意折行。 */
+  /* 2026-10-27 P-17 owner:合成一行「类型 · N 名成员 · 入会方式」,「退出」靠最右(P-15)。 */
   margin-top: var(--cy-space-2-5);
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--cy-space-1-5);
+  flex-direction: row;
+  align-items: center;
+  gap: var(--cy-space-3);
 }
-.profile-meta-chip { display: flex; align-items: center; gap: var(--cy-space-1-5); min-width: 0; max-width: 100%; }
+.profile-meta-chip { display: flex; align-items: center; gap: var(--cy-space-1-5); min-width: 0; flex: 1; }
+.profile-quit {
+  flex: none;
+  margin-left: auto;
+  min-height: var(--cy-btn-h);
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--cy-font-label);
+  font-weight: 500;
+  color: var(--club-text-muted);
+}
 .profile-meta-ico { flex: none; color: var(--cy-color-text-primary); }
 .profile-meta-text {
   font-size: var(--cy-type-card-title);
@@ -352,8 +354,6 @@ page { background: var(--cy-bg-page); }
   margin-top: var(--cy-space-5);
   margin-bottom: var(--cy-space-4);
 }
-.ev-sec-head--second { margin-top: var(--cy-space-5); }
-.ev-sec-tit { font-size: var(--cy-type-section-title); font-weight: 700; color: var(--cy-color-text-primary); }
 /* 稿里 282:622 / 23:16 / 23:41 这一格是 h-px 的**透明** spacer(get_design_context 无 bg,
    PNG 导出该区整片 RGB(0,0,0))—— 只负责把右侧文字链推到行尾,不画分隔线。 */
 .ev-sec-rule { flex: 1; min-width: 0; height: 1rpx; }
@@ -443,55 +443,30 @@ page { background: var(--cy-bg-page); }
   color: var(--club-accent);
   font-size: var(--cy-font-caption);
 }
-.ev-no-signup {
-  display: flex;
-  align-items: center;
-  align-self: flex-start;
-  margin-top: var(--cy-space-1);
-  padding: 0 var(--cy-space-2);
-  color: var(--club-text-muted);
-  font-size: var(--cy-font-caption);
-}
-.event-report {
+/* 2026-10-27 M-24·M-34:商家在活动卡上看到「邀约承接」(代替报名) */
+.ev-undertake {
   min-height: var(--cy-btn-h);
   box-sizing: border-box;
   display: flex;
   align-items: center;
   align-self: flex-start;
-  margin-top: var(--cy-space-1);
-  padding: 0 var(--cy-space-2);
-  color: var(--cy-color-status-warning);
+  margin-top: var(--cy-space-2);
+  padding: var(--cy-space-1) var(--cy-space-3);
+  border-radius: var(--cy-radius-pill);
+  background: var(--cy-btn-solid-bg);
+  color: var(--cy-btn-solid-fg);
   font-size: var(--cy-font-caption);
+  font-weight: 600;
 }
-.event-view-tabs { display: block; padding: 0 var(--cy-space-4) var(--cy-space-2); }
-.event-calendar { padding: 0 var(--cy-space-4) var(--cy-space-5); }
-.event-calendar-head { display: flex; align-items: center; justify-content: space-between; min-height: var(--cy-btn-h); }
-.event-calendar-title { color: var(--club-text); font-size: var(--cy-font-body); font-weight: 700; }
-.event-calendar-shift {
-  width: var(--cy-btn-h); height: var(--cy-btn-h); display: flex; align-items: center; justify-content: center;
-  border-radius: var(--cy-radius-pill); background: var(--club-surface); color: var(--club-text);
-  font-size: var(--cy-font-title);
-}
-.event-calendar-notice {
-  display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2);
-  padding: var(--cy-space-1) 0; color: var(--club-text-muted); font-size: var(--cy-font-caption);
-}
-.event-calendar-retry { flex-shrink: 0; color: var(--club-text); font-weight: 600; }
-.event-calendar-week, .event-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
-.event-calendar-week { padding: var(--cy-space-1) 0; color: var(--club-text-muted); font-size: var(--cy-font-caption); text-align: center; }
-.event-calendar-day {
-  min-height: 112rpx; /* ds-ok: month cell must hold date plus one event label */
-  padding: var(--cy-space-1) 4rpx; /* ds-ok: seven columns need compact optical inset */
-  border-top: 1rpx solid var(--cy-border-card); color: var(--club-text); overflow: hidden;
-}
-.event-calendar-day.is-outside { opacity: 0.35; }
-.event-calendar-number { display: block; margin-bottom: var(--cy-space-1); text-align: center; font-size: var(--cy-font-caption); }
-.event-calendar-day.has-event .event-calendar-number { color: var(--club-accent); font-weight: 700; }
-.event-calendar-item {
-  margin-top: 4rpx; /* ds-ok: compact labels within fixed calendar cell */
-  padding: 4rpx 6rpx; /* ds-ok: compact labels within seven-column grid */
-  border-radius: var(--cy-radius-sm); background: var(--cy-accent-soft); color: var(--club-text);
-  font-size: var(--cy-font-caption); line-height: 1.25; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;
+/* 2026-10-27 P-14:「举报活动」收进卡片右下「更多」,热区 88rpx */
+.ev-more {
+  width: var(--cy-btn-h);
+  height: var(--cy-btn-h);
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--club-text-muted);
 }
 
 /* 概览 */
@@ -1161,9 +1136,7 @@ page { background: var(--cy-bg-page); }
   gap: var(--cy-space-2-5);
   min-height: 88rpx;
   margin: 0 var(--cy-page-x) var(--cy-space-4);
-  padding: 0 var(--cy-space-3-5);
-  border-radius: var(--cy-radius-lg);
-  background: var(--cy-color-bg-surface-strong);
+  /* 2026-10-27 P-16:普通列表行,不要灰底圆角条 */
   color: var(--cy-color-text-primary);
 }
 .ov-badge-entry-text { flex: 1; min-width: 0; font-size: var(--cy-font-label); font-weight: 600; }
@@ -1175,9 +1148,8 @@ page { background: var(--cy-bg-page); }
   flex-direction: column;
   align-items: center;
   gap: 6rpx; /* ds-ok: Figma gap3 */
-  padding: var(--cy-space-3) var(--cy-space-2-5) var(--cy-space-3) var(--cy-space-3-5);
-  border-radius: var(--cy-radius-lg);
-  background: var(--cy-color-bg-surface-strong);
+  /* 2026-10-27 P-16 owner:去掉灰色圆角底块,一行三列纯文字 */
+  padding: var(--cy-space-1) 0;
 }
 .ov-fact-value {
   max-width: 100%;

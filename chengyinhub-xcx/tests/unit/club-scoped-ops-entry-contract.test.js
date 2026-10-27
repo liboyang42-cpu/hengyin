@@ -25,7 +25,9 @@ test('俱乐部、活动、成员举报与封禁申诉都从公开详情可达�
 
   assert.match(wxml, /catchtap="reportClubMember"[^>]*data-member-id="\{\{item\.memberId\}\}"/)
   assert.match(wxml, /catchtap="reportClub"[\s\S]*?举报俱乐部/)
-  assert.match(wxml, /catchtap="reportTopicActivity"[^>]*data-id="\{\{item\.id\}\}"[\s\S]*?举报活动/)
+  // 2026-10-27 P-14 owner:「举报活动」从卡上的橙色文字链收进卡片「更多」,入口仍可达同一治理流程。
+  assert.match(wxml, /catchtap="onEventMore"[^>]*data-id="\{\{item\.id\}\}"/)
+  assert.match(js, /onEventMore\(e\)[\s\S]*?举报活动[\s\S]*?reportTopicActivity\(/)
   assert.match(wxml, /bindtap="goClubAppeal"[\s\S]*?封禁申诉/)
   assert.match(js, /reportClubMember\(e\)[\s\S]*?mode=report&targetMemberId=/)
   assert.match(js, /reportClub\(\)[\s\S]*?targetType=CLUB[\s\S]*?targetId=/)

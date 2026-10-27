@@ -124,82 +124,10 @@ test('#19 说明文案:只有拿到真实场次才说按场次;其余一律「�
 })
 
 // ---------------------------------------------------------------------------
-// #19 页面行为
+// #19 页面行为:2026-10-27 P-14 owner(真机走查 p90/p107)删掉了俱乐部活动 tab 的月历,
+// 页面上的「进入月历 / 切月 / 场次失败重试 / 月历 WXML」四条用例随功能一并撤走;
+// 上面的纯函数用例(utils/club-event-calendar.js)保留。删除契约见 club-event-calendar.test.js。
 // ---------------------------------------------------------------------------
-
-test('#19 进入月历:先按已加载主题并声明口径,再请求本月场次;响应到达后切到场次', () => {
-  const page = loadClubDetail()
-  page.data.clubId = 7
-  page.data.eventCalendarMonth = '2028-02'
-  page._topics = [{ id: 11, name: '主题A', dateText: '2028-02-03' }]
-
-  page.onEventViewChange({ detail: { key: 'calendar' } })
-
-  assert.equal(page.data.eventCalendarSource, 'topics')
-  assert.equal(page.data.eventCalendarNotice, '月历仅展示已加载主题，场次加载中…')
-  const req = lastRequest('/api/club/calendar/sessions')
-  assert.ok(req, '必须请求按月场次')
-  assert.deepEqual(JSON.parse(req.data), { clubId: 7, month: '2028-02' })
-
-  req.success({ code: 200, data: sessionsPayload() })
-  assert.equal(page.data.eventCalendarSource, 'sessions')
-  assert.equal(page.data.eventCalendarSessionState, 'ready')
-  assert.match(page.data.eventCalendarNotice, /^按本月场次显示/)
-  const feb3 = page.data.eventCalendarCells.find((cell) => cell.dateText === '2028-02-03')
-  assert.equal(feb3.events.length, 0, '拿到场次后不再把主题当场次画进格子')
-})
-
-test('#19 切月:旧月响应迟到不得覆盖新月;新月未到前回到「仅已加载主题」', () => {
-  const page = loadClubDetail()
-  page.data.clubId = 7
-  page.data.eventCalendarMonth = '2028-02'
-  page._topics = []
-  page.onEventViewChange({ detail: { key: 'calendar' } })
-  const february = lastRequest('/api/club/calendar/sessions')
-
-  page.onShiftEventMonth({ currentTarget: { dataset: { delta: 1 } } })
-  const march = lastRequest('/api/club/calendar/sessions')
-  assert.notEqual(march, february)
-  assert.equal(JSON.parse(march.data).month, '2028-03')
-
-  february.success({ code: 200, data: sessionsPayload() })
-  assert.equal(page.data.eventCalendarSource, 'topics', '二月的迟到响应不能画进三月')
-  assert.match(page.data.eventCalendarNotice, /^月历仅展示已加载主题/)
-
-  march.success({ code: 200, data: sessionsPayload({ month: '2028-03', sessions: [], updatedAt: null }) })
-  assert.equal(page.data.eventCalendarSource, 'sessions')
-  assert.equal(page.data.eventCalendarHasEvents, false)
-  assert.equal(page.data.eventCalendarNotice, '按本月场次显示')
-})
-
-test('#19 场次失败:退回已加载主题并声明口径,可重试', () => {
-  const page = loadClubDetail()
-  page.data.clubId = 7
-  page.data.eventCalendarMonth = '2028-02'
-  page._topics = [{ id: 11, name: '主题A', dateText: '2028-02-03' }]
-  page.onEventViewChange({ detail: { key: 'calendar' } })
-  lastRequest('/api/club/calendar/sessions').fail()
-
-  assert.equal(page.data.eventCalendarSessionState, 'error')
-  assert.equal(page.data.eventCalendarSource, 'topics')
-  assert.equal(page.data.eventCalendarNotice, '月历仅展示已加载主题，场次加载失败')
-  const feb3 = page.data.eventCalendarCells.find((cell) => cell.dateText === '2028-02-03')
-  assert.equal(feb3.events.length, 1)
-
-  sandbox.requests = []
-  page.loadCalendarSessions()
-  assert.ok(lastRequest('/api/club/calendar/sessions'), '重试必须重新请求')
-})
-
-test('#19 WXML:月历显示口径说明 + 失败重试;主题口径空态不说「本月暂无活动」', () => {
-  const wxml = fs.readFileSync(CLUB_DETAIL_WXML, 'utf8')
-  assert.match(wxml, /\{\{eventCalendarNotice\}\}/)
-  assert.match(wxml, /catchtap="loadCalendarSessions"/)
-  assert.match(wxml, /wx:key="calendarKey"/)
-  assert.match(wxml, /eventCalendarSource === 'sessions' && !eventCalendarHasEvents[^>]*title="本月暂无场次"/)
-  assert.match(wxml, /title="本月暂无排期"/)
-  assert.doesNotMatch(wxml, /title="本月暂无活动"/, '主题口径不得暗示整月无排期')
-})
 
 // ---------------------------------------------------------------------------
 // #26 期次空态原因

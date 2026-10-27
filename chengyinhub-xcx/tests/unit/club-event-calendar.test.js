@@ -37,14 +37,13 @@ test('月份切换跨年稳定，非法 monthKey 明确拒绝而不是猜当前�
   assert.throws(() => shiftMonth('not-a-month', 1), /月份格式不合法/)
 })
 
-test('俱乐部活动 tab 原位提供列表与月历切换，月历事件仍进入同一活动详情', () => {
+// 2026-10-27 P-14 owner(真机走查 p90/p107):活动不再分「列表 / 月历」,删掉月历,直接一列活动卡。
+// 原断言「原位提供列表与月历切换」按 owner 决定翻成删除契约;上面两条纯函数用例只覆盖 utils,保留。
+test('俱乐部活动 tab 不再有列表/月历切换，也不再挂月历', () => {
   const logic = read('pages/club/detail/index.js')
   const view = read('pages/club/detail/index.wxml')
-  assert.match(logic, /require\('\.\.\/utils\/club-event-calendar\.js'\)/)
-  assert.match(logic, /onEventViewChange\s*\(/)
-  assert.match(logic, /onShiftEventMonth\s*\(/)
-  assert.match(view, /eventViewTabs[\s\S]*bind:change="onEventViewChange"/)
-  assert.match(view, /eventView === 'calendar'/)
-  assert.match(view, /eventCalendarCells/)
-  assert.match(view, /bindtap="goTopic"[\s\S]*data-id="\{\{event\.id\}\}"/)
+  assert.doesNotMatch(logic, /require\('\.\.\/utils\/club-event-calendar\.js'\)/)
+  assert.doesNotMatch(logic, /onEventViewChange\s*\(|onShiftEventMonth\s*\(|loadCalendarSessions\s*\(/)
+  assert.doesNotMatch(view, /eventViewTabs|eventView ===|eventCalendarCells|event-view-tabs/)
+  assert.match(view, /<template wx:for="\{\{upcomingTopics\}\}"[^>]*is="clubEventCard"/)
 })
