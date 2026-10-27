@@ -997,7 +997,10 @@ Page({
       && result.envelope.publishAttempt.status === 'UNKNOWN'
       && !!this.data.editingTopicId
       && String(result.envelope.publishAttempt.topicId || '') === String(this.data.editingTopicId);
-    if (unknownExistingWrite || this._serverDraftAttempt) {
+    // 服务端草稿的未知发布/保存有原号回读核对，不能借冲突选择删除；普通更新没有回读核对，
+    // 仍由下方弹窗让作者明确采用已保存版本后解锁。
+    const serverDraftUnknown = unknownExistingWrite && result.envelope.publishAttempt.kind === 'SERVER_DRAFT';
+    if (serverDraftUnknown || this._serverDraftAttempt) {
       // 使用旧云端版本不是原写入已失败的证据，不能借冲突选择删除未知请求。
       this._applyDraftEnvelope(result.envelope);
       finish();
