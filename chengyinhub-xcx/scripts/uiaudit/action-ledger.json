@@ -896934,11 +896934,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:517"
+        "staticSource": "pages/merchant/components/desk/index.js:521"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:102:bindtap:loadFinance:49",
+      "id": "pages/merchant/components/desk/index.wxml:104:bindtap:loadFinance:49",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -896973,7 +896973,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "loadFinance",
-        "line": 102,
+        "line": 104,
         "selectorHint": ".desk__btn",
         "visibleCondition": "{{access.canReadFinance}}",
         "disabledCondition": null,
@@ -897067,11 +897067,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:420"
+        "staticSource": "pages/merchant/components/desk/index.js:424"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:105:bindtap:loadClaims:50",
+      "id": "pages/merchant/components/desk/index.wxml:107:bindtap:loadClaims:50",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -897106,7 +897106,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "loadClaims",
-        "line": 105,
+        "line": 107,
         "selectorHint": ".desk__btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -897200,11 +897200,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:461"
+        "staticSource": "pages/merchant/components/desk/index.js:465"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:109:bindtap:loadClaims:51",
+      "id": "pages/merchant/components/desk/index.wxml:111:bindtap:loadClaims:51",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -897239,7 +897239,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "loadClaims",
-        "line": 109,
+        "line": 111,
         "selectorHint": ".desk__btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -897333,11 +897333,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:461"
+        "staticSource": "pages/merchant/components/desk/index.js:465"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:117:bindtap:nextClaims:53",
+      "id": "pages/merchant/components/desk/index.wxml:119:bindtap:nextClaims:53",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -897372,7 +897372,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "nextClaims",
-        "line": 117,
+        "line": 119,
         "selectorHint": ".desk__btn",
         "visibleCondition": null,
         "disabledCondition": "{{claims.length < 20 || readStates.claims === 'LOADING'}}",
@@ -897466,11 +897466,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:476"
+        "staticSource": "pages/merchant/components/desk/index.js:480"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:117:bindtap:previousClaims:52",
+      "id": "pages/merchant/components/desk/index.wxml:119:bindtap:previousClaims:52",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -897505,7 +897505,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "previousClaims",
-        "line": 117,
+        "line": 119,
         "selectorHint": ".desk__btn",
         "visibleCondition": null,
         "disabledCondition": "{{claimPage <= 1 || readStates.claims === 'LOADING'}}",
@@ -897599,11 +897599,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:477"
+        "staticSource": "pages/merchant/components/desk/index.js:481"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:120:bindtap:nextFrozen:54",
+      "id": "pages/merchant/components/desk/index.wxml:122:bindtap:nextFrozen:54",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -897638,7 +897638,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "nextFrozen",
-        "line": 120,
+        "line": 122,
         "selectorHint": ".desk__btn",
         "visibleCondition": "{{frozenMore}}",
         "disabledCondition": "{{readStates.frozen === 'LOADING'}}",
@@ -897732,11 +897732,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:431"
+        "staticSource": "pages/merchant/components/desk/index.js:435"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:122:bindtap:loadReviews:55",
+      "id": "pages/merchant/components/desk/index.wxml:124:bindtap:loadReviews:55",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -897771,7 +897771,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "loadReviews",
-        "line": 122,
+        "line": 124,
         "selectorHint": ".desk__btn",
         "visibleCondition": "{{access.canReadVerifyRecords}}",
         "disabledCondition": null,
@@ -897865,11 +897865,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:478"
+        "staticSource": "pages/merchant/components/desk/index.js:482"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:124:bindtap:selectReview:56",
+      "id": "pages/merchant/components/desk/index.wxml:126:bindtap:selectReview:56",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -897904,7 +897904,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "selectReview",
-        "line": 124,
+        "line": 126,
         "selectorHint": ".desk__btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -897998,11 +897998,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:479"
+        "staticSource": "pages/merchant/components/desk/index.js:483"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:128:bindinput:noteInput:57",
+      "id": "pages/merchant/components/desk/index.wxml:130:bindinput:noteInput:57",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -898037,7 +898037,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "noteInput",
-        "line": 128,
+        "line": 130,
         "selectorHint": ".desk__field",
         "visibleCondition": null,
         "disabledCondition": "{{pending || busy}}",
@@ -898077,11 +898077,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:489"
+        "staticSource": "pages/merchant/components/desk/index.js:493"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:128:bindtap:saveEvidence:58",
+      "id": "pages/merchant/components/desk/index.wxml:130:bindtap:saveEvidence:58",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -898116,7 +898116,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "saveEvidence",
-        "line": 128,
+        "line": 130,
         "selectorHint": ".desk__btn",
         "visibleCondition": null,
         "disabledCondition": "{{pending || busy}}",
@@ -898210,11 +898210,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:490"
+        "staticSource": "pages/merchant/components/desk/index.js:494"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:130:bindtap:loadMetrics:59",
+      "id": "pages/merchant/components/desk/index.wxml:132:bindtap:loadMetrics:59",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -898249,7 +898249,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "loadMetrics",
-        "line": 130,
+        "line": 132,
         "selectorHint": ".desk__btn",
         "visibleCondition": "{{access.canReadBasic}}",
         "disabledCondition": null,
@@ -898302,7 +898302,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:458"
+        "staticSource": "pages/merchant/components/desk/index.js:462"
       }
     },
     {
@@ -898394,7 +898394,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:150"
+        "staticSource": "pages/merchant/components/desk/index.js:154"
       }
     },
     {
@@ -898492,7 +898492,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:153"
+        "staticSource": "pages/merchant/components/desk/index.js:157"
       }
     },
     {
@@ -898590,7 +898590,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:153"
+        "staticSource": "pages/merchant/components/desk/index.js:157"
       }
     },
     {
@@ -898688,7 +898688,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:153"
+        "staticSource": "pages/merchant/components/desk/index.js:157"
       }
     },
     {
@@ -898786,7 +898786,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:153"
+        "staticSource": "pages/merchant/components/desk/index.js:157"
       }
     },
     {
@@ -898878,7 +898878,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:163"
+        "staticSource": "pages/merchant/components/desk/index.js:167"
       }
     },
     {
@@ -898957,7 +898957,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:167"
+        "staticSource": "pages/merchant/components/desk/index.js:171"
       }
     },
     {
@@ -899036,7 +899036,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:176"
+        "staticSource": "pages/merchant/components/desk/index.js:180"
       }
     },
     {
@@ -899115,7 +899115,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:182"
+        "staticSource": "pages/merchant/components/desk/index.js:186"
       }
     },
     {
@@ -899207,7 +899207,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:145"
+        "staticSource": "pages/merchant/components/desk/index.js:149"
       }
     },
     {
@@ -899286,7 +899286,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:182"
+        "staticSource": "pages/merchant/components/desk/index.js:186"
       }
     },
     {
@@ -899365,7 +899365,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:182"
+        "staticSource": "pages/merchant/components/desk/index.js:186"
       }
     },
     {
@@ -899498,7 +899498,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:189"
+        "staticSource": "pages/merchant/components/desk/index.js:193"
       }
     },
     {
@@ -899605,7 +899605,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:213"
+        "staticSource": "pages/merchant/components/desk/index.js:217"
       }
     },
     {
@@ -899684,7 +899684,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:203"
+        "staticSource": "pages/merchant/components/desk/index.js:207"
       }
     },
     {
@@ -899776,7 +899776,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:219"
+        "staticSource": "pages/merchant/components/desk/index.js:223"
       }
     },
     {
@@ -899855,7 +899855,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:203"
+        "staticSource": "pages/merchant/components/desk/index.js:207"
       }
     },
     {
@@ -899988,7 +899988,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:227"
+        "staticSource": "pages/merchant/components/desk/index.js:231"
       }
     },
     {
@@ -900080,7 +900080,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:241"
+        "staticSource": "pages/merchant/components/desk/index.js:245"
       }
     },
     {
@@ -900159,7 +900159,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:246"
+        "staticSource": "pages/merchant/components/desk/index.js:250"
       }
     },
     {
@@ -900249,7 +900249,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:252"
+        "staticSource": "pages/merchant/components/desk/index.js:256"
       }
     },
     {
@@ -900328,11 +900328,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:271"
+        "staticSource": "pages/merchant/components/desk/index.js:275"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:52:bindtap:loadProducts:23",
+      "id": "pages/merchant/components/desk/index.wxml:53:bindtap:loadProducts:23",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -900367,181 +900367,10 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "loadProducts",
-        "line": 52,
-        "selectorHint": ".desk__btn",
-        "visibleCondition": "{{access.canManageProjects}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/merchant/ledger/index?view=redemptions"
-        ],
-        "apis": [
-          "/api/role/info"
-        ],
-        "primaryApis": [],
-        "auxiliaryApis": [
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:276"
-      }
-    },
-    {
-      "id": "pages/merchant/components/desk/index.wxml:53:bindtap:newProduct:24",
-      "route": "component:pages/merchant/components/desk/index",
-      "hostRoutes": [
-        "pages/merchant/index/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "cy-merchant-desk",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/merchant/components/desk/index.wxml",
-        "js": "pages/merchant/components/desk/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "button",
-        "event": "bindtap",
-        "handler": "newProduct",
         "line": 53,
         "selectorHint": ".desk__btn",
         "visibleCondition": "{{access.canManageProjects}}",
-        "disabledCondition": "{{pending || busy}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:291"
-      }
-    },
-    {
-      "id": "pages/merchant/components/desk/index.wxml:55:bindtap:selectProduct:25",
-      "route": "component:pages/merchant/components/desk/index",
-      "hostRoutes": [
-        "pages/merchant/index/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "cy-merchant-desk",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/merchant/components/desk/index.wxml",
-        "js": "pages/merchant/components/desk/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "button",
-        "event": "bindtap",
-        "handler": "selectProduct",
-        "line": 55,
-        "selectorHint": ".desk__btn",
-        "visibleCondition": null,
-        "disabledCondition": "{{pending || busy}}",
+        "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": null,
         "ariaRole": null,
@@ -900595,7 +900424,7 @@
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:57:bindinput:productInput:26",
+      "id": "pages/merchant/components/desk/index.wxml:54:bindtap:newProduct:24",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -900627,12 +900456,12 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "input",
-        "event": "bindinput",
-        "handler": "productInput",
-        "line": 57,
-        "selectorHint": ".desk__field",
-        "visibleCondition": null,
+        "tag": "button",
+        "event": "bindtap",
+        "handler": "newProduct",
+        "line": 54,
+        "selectorHint": ".desk__btn",
+        "visibleCondition": "{{access.canManageProjects}}",
         "disabledCondition": "{{pending || busy}}",
         "ariaLabel": null,
         "ariaLabelExpression": null,
@@ -900646,7 +900475,7 @@
         "ariaCheckedExpression": null
       },
       "actionClass": "state",
-      "interactionMode": "event-contract",
+      "interactionMode": "tap",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
@@ -900670,11 +900499,103 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:302"
+        "staticSource": "pages/merchant/components/desk/index.js:295"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:58:bindinput:productInput:27",
+      "id": "pages/merchant/components/desk/index.wxml:56:bindtap:selectProduct:25",
+      "route": "component:pages/merchant/components/desk/index",
+      "hostRoutes": [
+        "pages/merchant/index/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "cy-merchant-desk",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/merchant/components/desk/index.wxml",
+        "js": "pages/merchant/components/desk/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "button",
+        "event": "bindtap",
+        "handler": "selectProduct",
+        "line": 56,
+        "selectorHint": ".desk__btn",
+        "visibleCondition": null,
+        "disabledCondition": "{{pending || busy}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/ledger/index?view=redemptions"
+        ],
+        "apis": [
+          "/api/role/info"
+        ],
+        "primaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/components/desk/index.js:284"
+      }
+    },
+    {
+      "id": "pages/merchant/components/desk/index.wxml:58:bindinput:productInput:26",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -900749,11 +900670,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:302"
+        "staticSource": "pages/merchant/components/desk/index.js:306"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:59:bindinput:productInput:28",
+      "id": "pages/merchant/components/desk/index.wxml:59:bindinput:productInput:27",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -900828,11 +900749,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:302"
+        "staticSource": "pages/merchant/components/desk/index.js:306"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:60:bindinput:productInput:29",
+      "id": "pages/merchant/components/desk/index.wxml:60:bindinput:productInput:28",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -900907,764 +900828,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:302"
+        "staticSource": "pages/merchant/components/desk/index.js:306"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:61:bindtap:saveProduct:30",
-      "route": "component:pages/merchant/components/desk/index",
-      "hostRoutes": [
-        "pages/merchant/index/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "cy-merchant-desk",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/merchant/components/desk/index.wxml",
-        "js": "pages/merchant/components/desk/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "button",
-        "event": "bindtap",
-        "handler": "saveProduct",
-        "line": 61,
-        "selectorHint": ".desk__btn",
-        "visibleCondition": null,
-        "disabledCondition": "{{pending || busy}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/merchant/citynode/index",
-          "pages/merchant/ledger/index?view=redemptions"
-        ],
-        "apis": [
-          "/api/coupon/verification",
-          "/api/registration/scan_dynamic_code",
-          "/api/registration/scan_qr_code",
-          "/api/role/info",
-          "/api/verify/groupcode/redeem"
-        ],
-        "primaryApis": [
-          "/api/coupon/verification",
-          "/api/registration/scan_dynamic_code",
-          "/api/registration/scan_qr_code",
-          "/api/verify/groupcode/redeem"
-        ],
-        "auxiliaryApis": [
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/coupon/verification",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/registration/scan_dynamic_code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/registration/scan_qr_code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/verify/groupcode/redeem",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/verify/groupcode/redeem"
-        ]
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:308"
-      }
-    },
-    {
-      "id": "pages/merchant/components/desk/index.wxml:65:bindtap:editProduct:31",
-      "route": "component:pages/merchant/components/desk/index",
-      "hostRoutes": [
-        "pages/merchant/index/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "cy-merchant-desk",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/merchant/components/desk/index.wxml",
-        "js": "pages/merchant/components/desk/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "button",
-        "event": "bindtap",
-        "handler": "editProduct",
-        "line": 65,
-        "selectorHint": ".desk__btn",
-        "visibleCondition": "{{detail.editable}}",
-        "disabledCondition": "{{pending || busy}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:295"
-      }
-    },
-    {
-      "id": "pages/merchant/components/desk/index.wxml:66:bindtap:requestDelist:32",
-      "route": "component:pages/merchant/components/desk/index",
-      "hostRoutes": [
-        "pages/merchant/index/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "cy-merchant-desk",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/merchant/components/desk/index.wxml",
-        "js": "pages/merchant/components/desk/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "button",
-        "event": "bindtap",
-        "handler": "requestDelist",
-        "line": 66,
-        "selectorHint": ".desk__btn",
-        "visibleCondition": null,
-        "disabledCondition": "{{pending || busy}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:315"
-      }
-    },
-    {
-      "id": "pages/merchant/components/desk/index.wxml:67:bindtap:cancelDelist:34",
-      "route": "component:pages/merchant/components/desk/index",
-      "hostRoutes": [
-        "pages/merchant/index/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "cy-merchant-desk",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/merchant/components/desk/index.wxml",
-        "js": "pages/merchant/components/desk/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "button",
-        "event": "bindtap",
-        "handler": "cancelDelist",
-        "line": 67,
-        "selectorHint": ".desk__btn",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:318"
-      }
-    },
-    {
-      "id": "pages/merchant/components/desk/index.wxml:67:bindtap:confirmDelist:33",
-      "route": "component:pages/merchant/components/desk/index",
-      "hostRoutes": [
-        "pages/merchant/index/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "cy-merchant-desk",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/merchant/components/desk/index.wxml",
-        "js": "pages/merchant/components/desk/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "button",
-        "event": "bindtap",
-        "handler": "confirmDelist",
-        "line": 67,
-        "selectorHint": ".desk__btn",
-        "visibleCondition": null,
-        "disabledCondition": "{{pending || busy}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/merchant/citynode/index",
-          "pages/merchant/ledger/index?view=redemptions"
-        ],
-        "apis": [
-          "/api/coupon/verification",
-          "/api/registration/scan_dynamic_code",
-          "/api/registration/scan_qr_code",
-          "/api/role/info",
-          "/api/verify/groupcode/redeem"
-        ],
-        "primaryApis": [
-          "/api/coupon/verification",
-          "/api/registration/scan_dynamic_code",
-          "/api/registration/scan_qr_code",
-          "/api/verify/groupcode/redeem"
-        ],
-        "auxiliaryApis": [
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/coupon/verification",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/registration/scan_dynamic_code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/registration/scan_qr_code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/verify/groupcode/redeem",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/verify/groupcode/redeem"
-        ]
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:319"
-      }
-    },
-    {
-      "id": "pages/merchant/components/desk/index.wxml:71:bindtap:loadSlots:35",
-      "route": "component:pages/merchant/components/desk/index",
-      "hostRoutes": [
-        "pages/merchant/index/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "cy-merchant-desk",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/merchant/components/desk/index.wxml",
-        "js": "pages/merchant/components/desk/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "button",
-        "event": "bindtap",
-        "handler": "loadSlots",
-        "line": 71,
-        "selectorHint": ".desk__btn",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/merchant/ledger/index?view=redemptions"
-        ],
-        "apis": [
-          "/api/role/info"
-        ],
-        "primaryApis": [],
-        "auxiliaryApis": [
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:353"
-      }
-    },
-    {
-      "id": "pages/merchant/components/desk/index.wxml:72:bindtap:editSku:36",
-      "route": "component:pages/merchant/components/desk/index",
-      "hostRoutes": [
-        "pages/merchant/index/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "cy-merchant-desk",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/merchant/components/desk/index.wxml",
-        "js": "pages/merchant/components/desk/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "button",
-        "event": "bindtap",
-        "handler": "editSku",
-        "line": 72,
-        "selectorHint": ".desk__btn",
-        "visibleCondition": "{{detail.editable}}",
-        "disabledCondition": "{{pending || busy}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:324"
-      }
-    },
-    {
-      "id": "pages/merchant/components/desk/index.wxml:74:bindtap:newSku:37",
-      "route": "component:pages/merchant/components/desk/index",
-      "hostRoutes": [
-        "pages/merchant/index/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "cy-merchant-desk",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/merchant/components/desk/index.wxml",
-        "js": "pages/merchant/components/desk/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "button",
-        "event": "bindtap",
-        "handler": "newSku",
-        "line": 74,
-        "selectorHint": ".desk__btn",
-        "visibleCondition": "{{detail.editable}}",
-        "disabledCondition": "{{pending || busy}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:334"
-      }
-    },
-    {
-      "id": "pages/merchant/components/desk/index.wxml:77:bindinput:skuInput:38",
+      "id": "pages/merchant/components/desk/index.wxml:61:bindinput:productInput:29",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -901698,8 +900866,8 @@
       "control": {
         "tag": "input",
         "event": "bindinput",
-        "handler": "skuInput",
-        "line": 77,
+        "handler": "productInput",
+        "line": 61,
         "selectorHint": ".desk__field",
         "visibleCondition": null,
         "disabledCondition": "{{pending || busy}}",
@@ -901739,11 +900907,764 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:339"
+        "staticSource": "pages/merchant/components/desk/index.js:306"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:78:bindinput:skuInput:39",
+      "id": "pages/merchant/components/desk/index.wxml:62:bindtap:saveProduct:30",
+      "route": "component:pages/merchant/components/desk/index",
+      "hostRoutes": [
+        "pages/merchant/index/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "cy-merchant-desk",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/merchant/components/desk/index.wxml",
+        "js": "pages/merchant/components/desk/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "button",
+        "event": "bindtap",
+        "handler": "saveProduct",
+        "line": 62,
+        "selectorHint": ".desk__btn",
+        "visibleCondition": null,
+        "disabledCondition": "{{pending || busy}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/citynode/index",
+          "pages/merchant/ledger/index?view=redemptions"
+        ],
+        "apis": [
+          "/api/coupon/verification",
+          "/api/registration/scan_dynamic_code",
+          "/api/registration/scan_qr_code",
+          "/api/role/info",
+          "/api/verify/groupcode/redeem"
+        ],
+        "primaryApis": [
+          "/api/coupon/verification",
+          "/api/registration/scan_dynamic_code",
+          "/api/registration/scan_qr_code",
+          "/api/verify/groupcode/redeem"
+        ],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/coupon/verification",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/scan_dynamic_code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/scan_qr_code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/verify/groupcode/redeem",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/verify/groupcode/redeem"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/components/desk/index.js:312"
+      }
+    },
+    {
+      "id": "pages/merchant/components/desk/index.wxml:66:bindtap:editProduct:31",
+      "route": "component:pages/merchant/components/desk/index",
+      "hostRoutes": [
+        "pages/merchant/index/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "cy-merchant-desk",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/merchant/components/desk/index.wxml",
+        "js": "pages/merchant/components/desk/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "button",
+        "event": "bindtap",
+        "handler": "editProduct",
+        "line": 66,
+        "selectorHint": ".desk__btn",
+        "visibleCondition": "{{detail.editable}}",
+        "disabledCondition": "{{pending || busy}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/components/desk/index.js:299"
+      }
+    },
+    {
+      "id": "pages/merchant/components/desk/index.wxml:67:bindtap:requestDelist:32",
+      "route": "component:pages/merchant/components/desk/index",
+      "hostRoutes": [
+        "pages/merchant/index/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "cy-merchant-desk",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/merchant/components/desk/index.wxml",
+        "js": "pages/merchant/components/desk/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "button",
+        "event": "bindtap",
+        "handler": "requestDelist",
+        "line": 67,
+        "selectorHint": ".desk__btn",
+        "visibleCondition": null,
+        "disabledCondition": "{{pending || busy}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/components/desk/index.js:319"
+      }
+    },
+    {
+      "id": "pages/merchant/components/desk/index.wxml:68:bindtap:cancelDelist:34",
+      "route": "component:pages/merchant/components/desk/index",
+      "hostRoutes": [
+        "pages/merchant/index/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "cy-merchant-desk",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/merchant/components/desk/index.wxml",
+        "js": "pages/merchant/components/desk/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "button",
+        "event": "bindtap",
+        "handler": "cancelDelist",
+        "line": 68,
+        "selectorHint": ".desk__btn",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/components/desk/index.js:322"
+      }
+    },
+    {
+      "id": "pages/merchant/components/desk/index.wxml:68:bindtap:confirmDelist:33",
+      "route": "component:pages/merchant/components/desk/index",
+      "hostRoutes": [
+        "pages/merchant/index/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "cy-merchant-desk",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/merchant/components/desk/index.wxml",
+        "js": "pages/merchant/components/desk/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "button",
+        "event": "bindtap",
+        "handler": "confirmDelist",
+        "line": 68,
+        "selectorHint": ".desk__btn",
+        "visibleCondition": null,
+        "disabledCondition": "{{pending || busy}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/citynode/index",
+          "pages/merchant/ledger/index?view=redemptions"
+        ],
+        "apis": [
+          "/api/coupon/verification",
+          "/api/registration/scan_dynamic_code",
+          "/api/registration/scan_qr_code",
+          "/api/role/info",
+          "/api/verify/groupcode/redeem"
+        ],
+        "primaryApis": [
+          "/api/coupon/verification",
+          "/api/registration/scan_dynamic_code",
+          "/api/registration/scan_qr_code",
+          "/api/verify/groupcode/redeem"
+        ],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/coupon/verification",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/scan_dynamic_code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/scan_qr_code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/verify/groupcode/redeem",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/verify/groupcode/redeem"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/components/desk/index.js:323"
+      }
+    },
+    {
+      "id": "pages/merchant/components/desk/index.wxml:72:bindtap:loadSlots:35",
+      "route": "component:pages/merchant/components/desk/index",
+      "hostRoutes": [
+        "pages/merchant/index/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "cy-merchant-desk",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/merchant/components/desk/index.wxml",
+        "js": "pages/merchant/components/desk/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "button",
+        "event": "bindtap",
+        "handler": "loadSlots",
+        "line": 72,
+        "selectorHint": ".desk__btn",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/ledger/index?view=redemptions"
+        ],
+        "apis": [
+          "/api/role/info"
+        ],
+        "primaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/components/desk/index.js:357"
+      }
+    },
+    {
+      "id": "pages/merchant/components/desk/index.wxml:73:bindtap:editSku:36",
+      "route": "component:pages/merchant/components/desk/index",
+      "hostRoutes": [
+        "pages/merchant/index/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "cy-merchant-desk",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/merchant/components/desk/index.wxml",
+        "js": "pages/merchant/components/desk/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "button",
+        "event": "bindtap",
+        "handler": "editSku",
+        "line": 73,
+        "selectorHint": ".desk__btn",
+        "visibleCondition": "{{detail.editable}}",
+        "disabledCondition": "{{pending || busy}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/components/desk/index.js:328"
+      }
+    },
+    {
+      "id": "pages/merchant/components/desk/index.wxml:75:bindtap:newSku:37",
+      "route": "component:pages/merchant/components/desk/index",
+      "hostRoutes": [
+        "pages/merchant/index/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "cy-merchant-desk",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/merchant/components/desk/index.wxml",
+        "js": "pages/merchant/components/desk/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "button",
+        "event": "bindtap",
+        "handler": "newSku",
+        "line": 75,
+        "selectorHint": ".desk__btn",
+        "visibleCondition": "{{detail.editable}}",
+        "disabledCondition": "{{pending || busy}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/components/desk/index.js:338"
+      }
+    },
+    {
+      "id": "pages/merchant/components/desk/index.wxml:78:bindinput:skuInput:38",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -901818,11 +901739,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:339"
+        "staticSource": "pages/merchant/components/desk/index.js:343"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:79:bindinput:skuInput:40",
+      "id": "pages/merchant/components/desk/index.wxml:79:bindinput:skuInput:39",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -901897,90 +901818,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:339"
+        "staticSource": "pages/merchant/components/desk/index.js:343"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:80:bind:change:skuInput:41",
-      "route": "component:pages/merchant/components/desk/index",
-      "hostRoutes": [
-        "pages/merchant/index/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "cy-merchant-desk",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/merchant/components/desk/index.wxml",
-        "js": "pages/merchant/components/desk/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-switch",
-        "event": "bind:change",
-        "handler": "skuInput",
-        "line": 80,
-        "selectorHint": "cy-switch[bind:change]",
-        "visibleCondition": null,
-        "disabledCondition": "{{pending || busy}}",
-        "ariaLabel": "允许预约",
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:339"
-      }
-    },
-    {
-      "id": "pages/merchant/components/desk/index.wxml:81:bindinput:skuInput:42",
+      "id": "pages/merchant/components/desk/index.wxml:80:bindinput:skuInput:40",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -902015,7 +901857,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "skuInput",
-        "line": 81,
+        "line": 80,
         "selectorHint": ".desk__field",
         "visibleCondition": null,
         "disabledCondition": "{{pending || busy}}",
@@ -902055,11 +901897,90 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:339"
+        "staticSource": "pages/merchant/components/desk/index.js:343"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:82:bindinput:skuInput:43",
+      "id": "pages/merchant/components/desk/index.wxml:81:bind:change:skuInput:41",
+      "route": "component:pages/merchant/components/desk/index",
+      "hostRoutes": [
+        "pages/merchant/index/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "cy-merchant-desk",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/merchant/components/desk/index.wxml",
+        "js": "pages/merchant/components/desk/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-switch",
+        "event": "bind:change",
+        "handler": "skuInput",
+        "line": 81,
+        "selectorHint": "cy-switch[bind:change]",
+        "visibleCondition": null,
+        "disabledCondition": "{{pending || busy}}",
+        "ariaLabel": "允许预约",
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/components/desk/index.js:343"
+      }
+    },
+    {
+      "id": "pages/merchant/components/desk/index.wxml:82:bindinput:skuInput:42",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -902134,11 +902055,90 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:339"
+        "staticSource": "pages/merchant/components/desk/index.js:343"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:83:bindtap:saveSku:44",
+      "id": "pages/merchant/components/desk/index.wxml:83:bindinput:skuInput:43",
+      "route": "component:pages/merchant/components/desk/index",
+      "hostRoutes": [
+        "pages/merchant/index/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "cy-merchant-desk",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/merchant/components/desk/index.wxml",
+        "js": "pages/merchant/components/desk/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "input",
+        "event": "bindinput",
+        "handler": "skuInput",
+        "line": 83,
+        "selectorHint": ".desk__field",
+        "visibleCondition": null,
+        "disabledCondition": "{{pending || busy}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/components/desk/index.js:343"
+      }
+    },
+    {
+      "id": "pages/merchant/components/desk/index.wxml:84:bindtap:saveSku:44",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -902173,7 +902173,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "saveSku",
-        "line": 83,
+        "line": 84,
         "selectorHint": ".desk__btn",
         "visibleCondition": null,
         "disabledCondition": "{{pending || busy}}",
@@ -902267,11 +902267,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:345"
+        "staticSource": "pages/merchant/components/desk/index.js:349"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:88:bindtap:nextSlots:45",
+      "id": "pages/merchant/components/desk/index.wxml:89:bindtap:nextSlots:45",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -902306,7 +902306,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "nextSlots",
-        "line": 88,
+        "line": 89,
         "selectorHint": ".desk__btn",
         "visibleCondition": "{{slotMore}}",
         "disabledCondition": "{{readStates.slots === 'LOADING'}}",
@@ -902359,11 +902359,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:359"
+        "staticSource": "pages/merchant/components/desk/index.js:363"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:91:bind:change:reservationDateInput:46",
+      "id": "pages/merchant/components/desk/index.wxml:93:bind:change:reservationDateInput:46",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -902398,7 +902398,7 @@
         "tag": "cy-date-field",
         "event": "bind:change",
         "handler": "reservationDateInput",
-        "line": 91,
+        "line": 93,
         "selectorHint": "cy-date-field[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -902438,11 +902438,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:392"
+        "staticSource": "pages/merchant/components/desk/index.js:396"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:92:bindtap:loadReservations:47",
+      "id": "pages/merchant/components/desk/index.wxml:94:bindtap:loadReservations:47",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -902477,7 +902477,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "loadReservations",
-        "line": 92,
+        "line": 94,
         "selectorHint": ".desk__btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -902530,11 +902530,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:397"
+        "staticSource": "pages/merchant/components/desk/index.js:401"
       }
     },
     {
-      "id": "pages/merchant/components/desk/index.wxml:97:bindtap:loadArrivals:48",
+      "id": "pages/merchant/components/desk/index.wxml:99:bindtap:loadArrivals:48",
       "route": "component:pages/merchant/components/desk/index",
       "hostRoutes": [
         "pages/merchant/index/index"
@@ -902569,7 +902569,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "loadArrivals",
-        "line": 97,
+        "line": 99,
         "selectorHint": ".desk__btn",
         "visibleCondition": "{{access.canReadVerifyRecords}}",
         "disabledCondition": null,
@@ -902622,7 +902622,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/components/desk/index.js:419"
+        "staticSource": "pages/merchant/components/desk/index.js:423"
       }
     },
     {

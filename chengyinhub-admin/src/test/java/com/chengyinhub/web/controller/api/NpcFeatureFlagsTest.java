@@ -104,13 +104,14 @@ class NpcFeatureFlagsTest {
                         "drops", "roamNpcEvent", "roamNpcChat", "roamDemoPois",
                         "finishNearbyRoute", "clubMembership", "communityPostRead",
                         "communityPostWrite", "shopNpcChat", "shopNpcVoice",
-                        "shopNpcVoiceAvailable", "merchantNpcChat")),
+                        "shopNpcVoiceAvailable", "merchantNpcChat", "merchantDeskProducts")),
                 new java.util.TreeSet<>(data.keySet()),
                 "下发键集合必须与小程序/App 的受控功能键逐项一致");
         assertFalse(data.containsKey("selfPlay"), "无人读取的假开关不得再下发(X09)");
         assertFalse(data.containsKey("xpBudget"), "无人读取的假开关不得再下发(X09)");
         assertEquals(false, data.get("merchantNpcChat"), "门店主页对话必须默认关闭");
         assertEquals(false, data.get("clubMembership"), "会员收费功能必须默认关闭");
+        assertEquals(false, data.get("merchantDeskProducts"), "D2:商家工作台商品与履约必须默认关闭");
         assertEquals(true, data.get("finishNearbyRoute"), "配置明确为 true 时必须能开启完赛推荐灰度");
     }
 

@@ -86,19 +86,19 @@ public class ApiMerchantDeskController extends BaseController {
     @Operation(summary = "新建/修改商品(幂等;落为待审核,上架中不可改)")
     @PostMapping("/products/save")
     public AjaxResult saveProduct(@RequestBody(required = false) Map<String, Object> body) {
-        return run(MerchantPermission.PROJECT_MANAGE, access -> merchantDeskService.saveProduct(access, safe(body)));
+        return runProductWrite(access -> merchantDeskService.saveProduct(access, safe(body)));
     }
 
     @Operation(summary = "下架商品(幂等)")
     @PostMapping("/products/delist")
     public AjaxResult delistProduct(@RequestBody(required = false) Map<String, Object> body) {
-        return run(MerchantPermission.PROJECT_MANAGE, access -> merchantDeskService.delistProduct(access, safe(body)));
+        return runProductWrite(access -> merchantDeskService.delistProduct(access, safe(body)));
     }
 
     @Operation(summary = "新建/修改 SKU 与预约容量规则(幂等,乐观锁)")
     @PostMapping("/products/sku/save")
     public AjaxResult saveSku(@RequestBody(required = false) Map<String, Object> body) {
-        return run(MerchantPermission.PROJECT_MANAGE, access -> merchantDeskService.saveSku(access, safe(body)));
+        return runProductWrite(access -> merchantDeskService.saveSku(access, safe(body)));
     }
 
     @Operation(summary = "SKU 时段容量(只读;由 App/后台批量生成)")
@@ -188,6 +188,14 @@ public class ApiMerchantDeskController extends BaseController {
     @PostMapping("/metrics/dictionary")
     public AjaxResult metricDictionary() {
         return run(MerchantPermission.BASIC_READ, access -> MerchantMetricDictionary.view());
+    }
+
+    /** D2:商品与履约写入口在子开关关闭时按工作台标准错误(404 + F4_DISABLED)拒绝,不进服务。 */
+    private AjaxResult runProductWrite(Function<MerchantAccessContext, Object> action) {
+        return run(MerchantPermission.PROJECT_MANAGE, access -> {
+            deskSwitch.requireProductsEnabled();
+            return action.apply(access);
+        });
     }
 
     private AjaxResult run(String permission, Function<MerchantAccessContext, Object> action) {

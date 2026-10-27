@@ -93,6 +93,24 @@ class ApiMerchantDeskControllerTest {
         verify(deskService, never()).receipt(any(), any());
     }
 
+    /** D2:工作台开着、商品与履约子开关缺省关闭时,三个写入口按标准 F4_DISABLED 拒绝且不进服务;打开后放行。 */
+    @Test
+    void productWrites_refuseUntilProductsSwitchOn_evenWithDeskEnabled() {
+        when(config.selectConfigByKey(MerchantDeskSwitch.CONFIG_KEY)).thenReturn("true");
+        MerchantAccessContext access = new MerchantAccessContext(501L, 11L, 501L, MerchantRoleCode.MERCHANT_OWNER);
+        when(accessService.require(501L, MerchantPermission.PROJECT_MANAGE)).thenReturn(access);
+        for (AjaxResult result : java.util.List.of(controller.saveProduct(new HashMap<>()),
+                controller.saveSku(new HashMap<>()), controller.delistProduct(new HashMap<>()))) {
+            assertEquals(404, result.get(AjaxResult.CODE_TAG));
+            assertEquals("F4_DISABLED", result.get("errorCode"));
+        }
+        verifyNoInteractions(deskService);
+        when(config.selectConfigByKey(MerchantDeskSwitch.PRODUCTS_KEY)).thenReturn("true");
+        when(deskService.saveSku(access, java.util.Collections.emptyMap())).thenReturn(Map.of("state", "APPLIED"));
+        assertEquals(200, controller.saveSku(new HashMap<>()).get(AjaxResult.CODE_TAG));
+        verify(deskService).saveSku(access, java.util.Collections.emptyMap());
+    }
+
     @Test
     void notLoggedIn_isRejectedFirst() {
         doReturn(null).when(controller).getAppUserId();

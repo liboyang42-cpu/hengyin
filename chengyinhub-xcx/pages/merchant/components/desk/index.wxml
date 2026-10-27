@@ -49,6 +49,7 @@
     <view wx:if="{{redeemState}}">{{redeemState === 'HANDED_OFF' ? '已交在线入口处理，请勿重复提交' : notice}}</view>
     <button class="desk__btn" wx:if="{{redeemState === 'APPLIED' || redeemState === 'REJECTED'}}" bindtap="nextCandidate">处理下一张凭证</button>
   </view>
+  <block wx:if="{{productsOn}}">
   <button class="desk__btn" wx:if="{{access.canManageProjects}}" bindtap="loadProducts">读取商品</button>
   <button class="desk__btn" wx:if="{{access.canManageProjects}}" bindtap="newProduct" disabled="{{pending || busy}}">新建商品</button>
   <template is="read-status" data="{{field:'products',states:readStates,errors:readErrors}}"/>
@@ -86,6 +87,7 @@
   <view wx:for="{{slots}}" wx:key="slotId">{{item.slotStart}} — {{item.slotEnd}} · 已预约 {{item.capacityReserved}} / 容量 {{item.capacityTotal}} · 状态 {{item.status}}</view>
   <view wx:if="{{slotSkuId}}">{{slotFromDate}}起14天实时容量；跨页期间可能变化，可重新读取核对。</view>
   <button class="desk__btn" wx:if="{{slotMore}}" bindtap="nextSlots" disabled="{{readStates.slots === 'LOADING'}}">继续读取时段</button>
+  </block>
   <view wx:if="{{access.canVerify}}">
     <view class="title">自由探索预约记录</view>
     <cy-date-field mode="date" value="{{reservationDate}}" title="起始日期" bind:change="reservationDateInput"><view>起始日期：{{reservationDate || '今天（北京时间）'}}</view></cy-date-field>

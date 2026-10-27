@@ -6,10 +6,10 @@ const vm = require('node:vm');
 const file = path.resolve(__dirname, '../../pages/merchant/components/desk/index.js');
 const clone = value => JSON.parse(JSON.stringify(value));
 const ID = '9007199254740993';
-function harness(storage = new Map()) {
+function harness(storage = new Map(), features) {
   let definition, user = '501', token = 'session-a';
   const requests = [], timers = [], readTimers = [], events = [], navigation = [];
-  const app = { getUserID: () => user, getAuthorization: () => token,
+  const app = { globalData: { features }, getUserID: () => user, getAuthorization: () => token,
     sendRequest: options => { requests.push(options); return { abort() {} }; } };
   const wx = { navigateTo: options => navigation.push(options), scanCode: options => { wx.scan = options; }, getStorageSync: key => storage.get(key), setStorageSync: (key, value) => storage.set(key, clone(value)), removeStorageSync: key => storage.delete(key) };
   vm.runInNewContext(fs.readFileSync(file, 'utf8'), { Component: value => { definition = value; }, getApp: () => app,
@@ -353,4 +353,17 @@ test('frozen continuation rejects duplicate or forward records without advancing
   h.component.nextFrozen(); assert.equal(h.requests[3].data.afterBatchId, ID);
   h.reply(3, { rows: [{ batchId: '5', periodYm: '2026-11' }], hasMore: false, next: null });
   assert.equal(h.component.data.readStates.frozen, 'ERROR'); assert.equal(h.component.data.frozenMore, true); h.destroy();
+});
+test('D2: product and SKU section is hidden by default and shown only when merchantDeskProducts is on', () => {
+  const off = harness(); assert.equal(off.component.data.productsOn, false);
+  off.component.reloadResult({ action: 'ANCHOR_SAVE' });
+  assert.equal(off.requests.some(r => r.url.endsWith('products')), false, 'switch off never reads the product list'); off.destroy();
+  const on = harness(new Map(), { merchantDeskProducts: true }); assert.equal(on.component.data.productsOn, true); on.destroy();
+  const wxml = fs.readFileSync(path.resolve(__dirname, '../../pages/merchant/components/desk/index.wxml'), 'utf8');
+  const start = wxml.indexOf('<block wx:if="{{productsOn}}">'), end = wxml.indexOf('</block>', start);
+  assert.ok(start > 0 && end > start, 'product section must sit inside the productsOn block');
+  const section = wxml.slice(start, end);
+  for (const tap of ['loadProducts', 'newProduct', 'saveProduct', 'editSku', 'newSku', 'saveSku', 'requestDelist', 'loadSlots'])
+    assert.match(section, new RegExp('bindtap="' + tap + '"'), tap + ' must be inside the gated section');
+  assert.equal(wxml.slice(0, start).includes('bindtap="saveSku"') || wxml.slice(end).includes('bindtap="saveSku"'), false);
 });

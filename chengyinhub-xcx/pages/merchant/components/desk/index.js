@@ -33,7 +33,10 @@ const blank = () => ({ products: [], detail: null, slots: [], slotSkuId: '', slo
   frozen: [], frozenMore: false, claims: [], reviews: [], review: null, metrics: [], product: null, delistConfirm: false, sku: null, note: '',
   reservationDate: '', reservations: [], stores: [], anchor: null, anchorDraft: null, wifiConfirmed: false, wifiText: '',
   codeText: '', ocrText: '', candidates: [], candidate: null, redeemState: '',
-  readStates: {}, readErrors: {}, lastReceipt: null, pending: false, busy: false, requestId: '', notice: '', error: '', route: '', claimPage: 1 });
+  readStates: {}, readErrors: {}, lastReceipt: null, pending: false, busy: false, requestId: '', notice: '', error: '', route: '', claimPage: 1,
+  productsOn: false });
+// D2:商品与履约段受 features.merchantDeskProducts 控制,默认关闭(商城暂停)。
+const productsOn = () => ((app.globalData && app.globalData.features) || {}).merchantDeskProducts === true;
 const rejected = new Set(['F4_DISABLED', 'F4_BAD_REQUEST', 'F4_NOT_OWNER', 'F4_VERSION_CONFLICT',
   'F4_PRODUCT_LIVE_LOCKED', 'F4_REVIEW_CLOSED', 'F4_EVIDENCE_LIMIT', 'F4_STORE_NOT_ACTIVE', 'F4_ANCHOR_TOO_FAR']);
 function receipt(value, requestId, action) {
@@ -70,7 +73,8 @@ Component({
         frozen: [], frozenMore: false, claims: [], reviews: [], review: null, metrics: [], product: null, delistConfirm: false, sku: null, note: '',
         reservationDate: '', reservations: [], stores: [], anchor: null, anchorDraft: null, wifiConfirmed: false, wifiText: '',
         codeText: '', ocrText: '', candidates: [], candidate: null, redeemState: '',
-        readStates: {}, readErrors: {}, lastReceipt: null, pending: false, busy: false, requestId: '', notice: '', error: '', route: '', claimPage: 1 });
+        readStates: {}, readErrors: {}, lastReceipt: null, pending: false, busy: false, requestId: '', notice: '', error: '', route: '', claimPage: 1,
+        productsOn: productsOn() });
       if (!owner) { this.setData({ error: '商家身份尚未确认' }); return; }
       this._key = owner + ':merchant-desk-maintenance';
       this._workflow = createVerificationWorkflow({ storage: wx, getOwner: () => this._owner, requestIdentity: true });
@@ -539,7 +543,7 @@ Component({
       if (['PRODUCT_SAVE', 'PRODUCT_DELIST'].includes(row.action)) this.selectProduct({ currentTarget: { dataset: { id: row.targetId } } });
       if (row.action === 'SKU_SAVE' && (row.productId || this.data.detail)) this.selectProduct({ currentTarget: { dataset: { id: row.productId || this.data.detail.productId } } });
       if (row.action === 'ANCHOR_SAVE') { this.setData({ anchorDraft: null, wifiText: '', wifiConfirmed: false }); this.loadAnchor(); }
-      if (this.properties.access.canManageProjects) this.loadProducts();
+      if (this.properties.access.canManageProjects && this.data.productsOn) this.loadProducts();
       if (this.properties.access.canReadVerifyRecords) this.loadReviews();
     },
   },
