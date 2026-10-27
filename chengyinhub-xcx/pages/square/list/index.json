@@ -1,7 +1,6 @@
 {
   "usingComponents": {
     "tabBar": "/components/tabBar/index",
-    "activity-picker": "/pages/square/components/activity-picker/index",
     "cy-empty": "/components/cy/empty/index",
     "cy-error": "/components/cy/error/index",
     "cy-inline-error": "/components/cy/inline-error/index",
@@ -17,7 +16,6 @@
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index",
-    "cy-result-sheet": "/components/cy/result-sheet/index",
     "cy-option-sheet": "/components/cy/option-sheet/index"
   },
   "navigationBarTitleText": "",

@@ -41,80 +41,22 @@
       </view>
     </scroll-view>
 
+    <!-- 2026-10-27 P-20 owner(真机走查 p109/p110):发帖入口全站统一 —— 这里只留一行入口
+         (头像 + 昵称 + 占位 + 三枚工具图标),点开就是同一个全屏发帖弹窗(带草稿)。
+         原来的行内 textarea 发布框(含页内发布流水)整块撤掉。 -->
     <view class="fabu post compose" wx:if="{{communityPostWrite}}">
-      <view class="compose-row">
-        <image class="compose-avatar" src="{{avatar || '/images/d_profile.png'}}" mode="aspectFill" />
-        <view class="compose-col">
-        <text class="compose-title">{{nickname || '城瘾玩家'}}</text>
-      <textarea
-        class="compose-input post-text"
-        placeholder-class="compose-ph"
-        maxlength="8000"
-        value="{{valCont}}"
-        bindinput="bindTextAreaBlur"
-        bindconfirm="submitFormData"
-        confirm-type="send"
-        aria-label="帖文内容"
-        auto-height
-        placeholder="有什么新鲜好玩的分享吗？" />
-
-      <view class="compose-body">
-          <view class="pic-list flex " wx:if="{{picList.length>0}}">
-            <view class="li" wx:for="{{ picList }}" wx:key="index">
-              <image lazy-load="true" src="{{item}}" mode="widthFix" />
-              <view class="close">
-                <image lazy-load="true" catchtap="delPic" aria-role="button" aria-label="删除这张图片" data-inx="{{index}}" src="/pages/square/images/close3.png" mode="widthFix"  hover-class="cy-pressed" hover-stay-time="80"/>
-              </view>
+      <view class="compose-entry" bindtap="openCompose" aria-role="button" aria-label="发布帖文" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="compose-row">
+          <image class="compose-avatar" src="{{avatar || '/images/d_profile.png'}}" mode="aspectFill" />
+          <view class="compose-col">
+            <text class="compose-title">{{nickname || '城瘾玩家'}}</text>
+            <text class="compose-ph">有什么新鲜好玩的分享吗？</text>
+            <view class="compose-toolbar compose-entry-tools">
+              <cy-icon name="image" size="44" />
+              <cy-icon name="pin" size="44" />
+              <cy-icon name="flag" size="44" />
             </view>
           </view>
-
-          <view class="file-list address" wx:if="{{address!=''}}">
-            <view class="li flex-cb">
-              <view class="icon">
-                <image lazy-load="true" src="/pages/square/images/icon_map5.png" mode="widthFix" />
-              </view>
-              <view class="tit ep1 flex-a compose-chip-txt">{{address}}</view>
-              <view class="close">
-                <image lazy-load="true" catchtap="clearLocation" aria-role="button" aria-label="清除已选地点" src="/pages/square/images/close2.png" mode="widthFix"  hover-class="cy-pressed" hover-stay-time="80"/>
-              </view>
-            </view>
-          </view>
-
-          <view class="file-list activity" wx:if="{{selectedActivity}}">
-            <view class="li flex-cb">
-              <view class="tit ep1 flex-a compose-chip-txt"><cy-icon class="activity-complete-icon" name="star" size="24" /><text>{{selectedActivity.name}} · 完成 {{selectedActivity.doneCount}}/{{selectedActivity.total}}</text></view>
-              <view class="close">
-                <image lazy-load="true" catchtap="clearActivity" aria-role="button" aria-label="清除已选活动" src="/pages/square/images/close2.png" mode="widthFix"  hover-class="cy-pressed" hover-stay-time="80"/>
-              </view>
-            </view>
-          </view>
-
-          <cy-inline-error wx:if="{{submitError}}" kind="{{submitErrorKind}}" title="{{submitError}}" action="重试" bind:action="retrySubmit" />
-          <view class="compose-toolbar flex-cb">
-            <view class="btns flex-ac">
-              <button bindtap="uploadPic" aria-role="button" aria-label="上传图片">
-                <cy-icon name="image" size="44" />
-              </button>
-              <button bindtap="choosePoiForNode" aria-role="button" aria-label="为该节点选点">
-                <cy-icon name="pin" size="44" />
-              </button>
-              <button bindtap="openActivityPicker" aria-role="button" aria-label="选择活动">
-                <cy-icon name="flag" size="44" />
-              </button>
-            </view>
-            <!-- UI-15(2026-09-18 用户定):行内发布区去掉「扩大」icon 和「发布」两个字,
-                 发布动作收成一颗 88rpx 图标钮(arrow-right = 仓内既有「发送」语义 glyph,
-                 见 pages/merchant/reviews 的 icon-send;热区/加载/禁用语义不变)。 -->
-            <view class="compose-submit {{canSubmit && !submitting ? '' : 'compose-submit--off'}}"
-                  bindtap="submitFormData" aria-role="button"
-                  aria-label="{{submitting ? '正在发布帖文' : '发布帖文'}}"
-                  aria-disabled="{{!canSubmit || submitting}}"
-                  hover-class="{{canSubmit && !submitting ? 'cy-pressed' : ''}}" hover-stay-time="80">
-              <cy-icon wx:if="{{submitting}}" name="clock" size="44" />
-              <cy-icon wx:else name="arrow-right" size="44" />
-            </view>
-          </view>
-      </view>
         </view>
       </view>
     </view>
@@ -143,7 +85,6 @@
     <cy-empty class="fill-slot" wx:if="{{communityPostRead && nodata && !list.length && !loadError}}" fill="{{true}}" size="lg" kind="empty" title="广场还很安静" />
   </scroll-view>
 
-  <activity-picker show="{{activityPickerShow}}" bind:select="onActivitySelect" bind:close="onActivityPickerClose" />
 </view>
 
 <!-- H050/H051 帖文操作弹层(三合一:编辑 / 删除 / 举报,危险确认闸在组件内部)。
@@ -156,20 +97,14 @@
      而且不报错、控制台零 error,只是点了没反应(2026-09-03 截图才看出来)。
      挂这一层,压暗露出的底层就是真的广场列表(用户定:「新建帖文是弹窗,草稿就是弹窗叠弹窗」);
      草稿那层长在组件内部,叠在它上面。
-     prefill:把行内 composer 已经写的半截带进去 —— 不带就是静默丢字。
-     edit-post:非空即编辑态(H050),正文/关联来自被点的那一行。 -->
-<cy-post-compose show="{{composeShow}}" prefill="{{composePrefill}}" edit-post="{{composeEdit}}"
+     edit-post:非空即编辑态(H050),正文/关联来自被点的那一行;为空即新建(P-20 入口)。 -->
+<cy-post-compose show="{{composeShow}}" edit-post="{{composeEdit}}"
                  bind:close="onComposeClose" bind:published="onComposePublished" />
 
 <!-- T5 胶囊:点帖文头像时贴着头像开(Figma 339:740)。挂在页面顶层 ——
      它是 fixed 层,塞进帖文卡里会被卡片的 overflow 裁掉。 -->
 <cy-popover show="{{avatarPopShow}}" anchor="{{avatarPopAnchor}}" items="{{avatarPopItems}}"
             bind:pick="onAvatarPopPick" bind:close="onAvatarPopClose" />
-
-<!-- 发帖结果面板。发帖不跳页,收掉就留在广场;页内 cy-inline-error 仍是重试出口。 -->
-<cy-result-sheet show="{{resultSheet.show}}" kind="{{resultSheet.kind}}" title="{{resultSheet.title}}"
-  sub="{{resultSheet.sub}}" meta="{{resultSheet.meta}}" pill="{{resultSheet.pill}}" why="{{resultSheet.why}}"
-  duration="{{resultSheet.duration}}" bind:close="onResultSheetClose" />
 
 <cy-option-sheet show="{{reportReasonShow}}" title="选择举报原因" items="{{reportReasonItems}}"
   confirm-text="提交举报" bind:select="onReportReasonSelect" bind:cancel="onReportReasonCancel" />

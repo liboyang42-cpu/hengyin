@@ -44,7 +44,7 @@
                     aria-label="帖文内容"
                     placeholder="有什么新鲜好玩的分享吗？"
                     placeholder-class="cmp-ph" />
-          <view class="cmp-preview" wx:if="{{picList.length || address || selectedActivity}}">
+          <view class="cmp-preview" wx:if="{{picList.length || address || selectedActivity || (clubId && postRef)}}">
             <view class="cmp-preview-pics" wx:if="{{picList.length}}">
             <view class="cmp-pic" wx:for="{{picList}}" wx:key="index">
               <image class="cmp-pic-img" src="{{item}}" mode="aspectFill" />
@@ -57,6 +57,14 @@
             <cy-icon name="pin" size="28" />
             <text class="cmp-chip-txt ep1">{{address}}</text>
             <view class="cmp-chip-x" catchtap="onClearLocation" aria-role="button" aria-label="清除已选地点" hover-class="cy-pressed" hover-stay-time="80">
+              <cy-icon name="close-sm" size="24" />
+            </view>
+          </view>
+          <!-- 俱乐部模式(P-20):带上的游玩记录,由宿主页选择器选出 -->
+          <view class="cmp-chip" wx:if="{{clubId && postRef}}">
+            <cy-icon name="route" size="28" />
+            <text class="cmp-chip-txt ep1">{{postRef.name}}</text>
+            <view class="cmp-chip-x" catchtap="onClearClubRef" aria-role="button" aria-label="不带这条游玩记录" hover-class="cy-pressed" hover-stay-time="80">
               <cy-icon name="close-sm" size="24" />
             </view>
           </view>
@@ -74,12 +82,21 @@
             <view class="cmp-tool" bindtap="onPickImage" aria-role="button" aria-label="添加图片" hover-class="cy-pressed" hover-stay-time="80">
               <cy-icon name="image" size="44" />
             </view>
-            <view class="cmp-tool" bindtap="onPickLocation" aria-role="button" aria-label="添加地点" hover-class="cy-pressed" hover-stay-time="80">
+            <!-- 俱乐部帖没有地点字段;关联走「带上一次游玩记录」(宿主页选择器) -->
+            <view class="cmp-tool" wx:if="{{!clubId}}" bindtap="onPickLocation" aria-role="button" aria-label="添加地点" hover-class="cy-pressed" hover-stay-time="80">
               <cy-icon name="pin" size="44" />
             </view>
-            <view class="cmp-tool" bindtap="onOpenActivityPicker" aria-role="button" aria-label="选择活动" hover-class="cy-pressed" hover-stay-time="80">
+            <view class="cmp-tool" wx:if="{{!clubId}}" bindtap="onOpenActivityPicker" aria-role="button" aria-label="选择活动" hover-class="cy-pressed" hover-stay-time="80">
               <cy-icon name="flag" size="44" />
             </view>
+            <view class="cmp-tool" wx:else bindtap="onPickClubRef" aria-role="button" aria-label="带上一次游玩记录" hover-class="cy-pressed" hover-stay-time="80">
+              <cy-icon name="route" size="44" />
+            </view>
+          </view>
+          <view class="cmp-announce {{asAnnouncement ? 'cmp-announce--on' : ''}}" wx:if="{{clubId && canAnnounce && !editMode}}" bindtap="onToggleAnnouncement"
+                aria-role="switch" aria-checked="{{asAnnouncement}}" aria-label="作为公告发布" hover-class="cy-pressed" hover-stay-time="80">
+            <text>{{asAnnouncement ? '作为公告发布' : '普通动态'}}</text>
+            <text class="cmp-announce-state">{{asAnnouncement ? '已开启' : '设为公告'}}</text>
           </view>
         </view>
       </view>
