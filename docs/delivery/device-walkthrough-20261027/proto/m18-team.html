@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>经营团队</title>
+<style>
+:root{--ease-out:cubic-bezier(.22,.61,.36,1);--ease-std:cubic-bezier(.4,0,.2,1);--mono:"SF Mono","DIN Alternate",ui-monospace,Menlo,monospace;
+  --desk-bg:#E9EAEC;--desk-ink:#111;--desk-sub:#555;--desk-card:#fff;--desk-line:#ddd}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--desk-bg:#151516;--desk-ink:#eee;--desk-sub:#aaa;--desk-card:#202022;--desk-line:#333}}
+:root[data-theme="dark"]{--desk-bg:#151516;--desk-ink:#eee;--desk-sub:#aaa;--desk-card:#202022;--desk-line:#333}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--desk-bg);color:var(--desk-ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.stage{display:flex;gap:32px;justify-content:center;align-items:flex-start;padding:32px 16px;flex-wrap:wrap}
+.panel{width:340px;max-width:100%;background:var(--desk-card);border:1px solid var(--desk-line);border-radius:16px;padding:18px 18px 20px;font-size:13px;line-height:1.6}
+.panel h1{font-size:17px;margin:0 0 4px}
+.panel h2{font-size:13px;margin:14px 0 6px;color:var(--desk-sub);font-weight:600}
+.panel ul{margin:0;padding-left:18px}
+.panel li{margin:2px 0}
+.panel .tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;background:var(--desk-line);margin-right:4px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{font:inherit;font-size:12px;border:1px solid var(--desk-line);background:transparent;color:var(--desk-ink);border-radius:999px;padding:5px 12px;cursor:pointer}
+.seg button.on{background:var(--desk-ink);color:var(--desk-card);border-color:var(--desk-ink)}
+@media (max-width:420px){.stage{flex-direction:column;align-items:center;padding:16px}.panel{width:100%}}
+
+.phone{position:relative;width:375px;height:812px;max-width:100%;border-radius:44px;overflow:hidden;background:var(--bg-page);color:var(--t1);box-shadow:0 0 0 10px #111,0 30px 60px rgba(0,0,0,.25);flex:none;
+  --bg-page:#F3F4F4;--surface:#FFFFFF;--subtle:#EEEEEE;--t1:#000;--t2:#404040;--t3:#6B6B6B;--line:#E8E8E8;--brand:#0A0A0A;--brand-fg:#fff;--brand-soft:#EAEBEE;--ok:#15803D;--warn:#B45309;--bad:#B91C1C;--mask:rgba(0,0,0,.18)}
+@media (max-width:420px){.phone{box-shadow:0 0 0 6px #111;border-radius:36px}}
+.status{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 26px 0 32px;font-size:15px;font-weight:600}
+.status .sig{display:flex;gap:6px;align-items:center}
+.nav{height:44px;position:relative;display:flex;align-items:center;justify-content:center}
+.nav .back{position:absolute;left:4px;top:4px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:none;border:0;color:var(--t1);cursor:pointer;padding:0}
+.capsule{position:absolute;right:7px;top:6px;width:87px;height:32px;border-radius:16px;background:#fff;border:1px solid #E2E2E2;display:flex;align-items:center;color:#000}
+.capsule span{flex:1;height:100%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;letter-spacing:1px}
+.capsule i{width:1px;height:18px;background:#E2E2E2}
+svg.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* 还原 decor/design.wxss · view==='basic'（门店信息）：390pt 稿 → 19px 外边距 / 15.5px 行内距 / 52px 行高 / 19px 卡圆角 */
+.dc-scroll{position:absolute;top:88px;left:0;right:0;bottom:0;overflow-y:auto;scrollbar-width:none}
+.dc-scroll::-webkit-scrollbar{display:none}
+.dc-content{padding:15.5px 19px 40px;display:flex;flex-direction:column;gap:19px}
+.dc-brand-title{font-size:22px;line-height:32.5px;font-weight:700}
+.dc-group-label{font-size:12px;color:var(--t3);margin:0 4px -11px;display:flex;justify-content:space-between}
+.dc-card{background:var(--surface);border-radius:19px;overflow:hidden;flex-shrink:0}
+.cell{position:relative;display:flex;align-items:center;gap:12px;min-height:52px;padding:8px 15.5px;cursor:pointer;font-size:12.5px;transition:background .12s}
+.cell:active{background:#F5F5F5}
+.cell+.cell::before{content:"";position:absolute;top:0;left:15.5px;right:15.5px;height:.5px;background:var(--line)}
+.cell__title{flex:0 0 96px;color:var(--t1)}
+.cell__title.wide{flex:1}
+.cell__body{flex:1;min-width:0;display:flex;align-items:center;gap:10px}
+.cell__value{flex:1;text-align:right;color:var(--t3);font-size:11.5px;min-width:0}
+.cell__desc{font-size:11px;color:var(--t3);margin-top:2px}
+svg.ic.cell__chev{width:16px;height:16px;color:var(--t3);flex:none;transition:opacity .2s var(--ease-out),width .2s var(--ease-out),margin .2s;opacity:0;width:0;margin-left:-12px}
+.editing .cell.ed .cell__chev,.cell.always .cell__chev{opacity:1;width:16px;margin-left:0}
+.cell.danger .cell__title{color:var(--bad)}
+.av{width:32px;height:32px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:600}
+.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#5B6B7F,#2E3440);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+.name{font-size:13px;color:var(--t1);font-weight:600}
+.role-tag{display:inline-block;font-size:11px;line-height:18px;padding:0 8px;border-radius:999px;background:var(--brand-soft);color:var(--t2)}
+.role-tag.owner{background:var(--brand);color:#fff}
+.plus{width:32px;height:32px;border-radius:50%;background:var(--subtle);display:flex;align-items:center;justify-content:center;flex:none}
+.note{font-size:11.5px;color:var(--t3);line-height:1.6;padding:0 4px;margin-top:-9px}
+.btn{display:block;width:100%;height:48px;border-radius:999px;border:0;background:var(--brand);color:#fff;font:inherit;font-size:16px;font-weight:600;cursor:pointer}
+.btn.sec{background:var(--subtle);color:var(--t1)}
+.btn.danger{background:var(--bad);color:#fff}
+.banner{display:flex;align-items:center;gap:12px;padding:14px 15.5px}
+.banner .main{flex:1;font-size:13px;font-weight:600}
+.txt-act{border:0;background:var(--brand);color:#fff;border-radius:999px;font:inherit;font-size:13px;padding:6px 14px;cursor:pointer}
+.landing{padding:28px 20px;text-align:center}
+.landing b{display:block;font-size:20px;margin:12px 0 8px}
+.landing p{font-size:13px;color:var(--t2);line-height:1.7;margin:0 0 20px}
+
+/* sheets */
+.mask{position:absolute;inset:0;background:var(--mask);opacity:0;pointer-events:none;transition:opacity .25s var(--ease-std);z-index:40}
+.mask.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:20px 20px 0 0;transform:translateY(105%);transition:transform .32s var(--ease-out);z-index:50;max-height:88%;display:flex;flex-direction:column;padding-bottom:26px}
+.sheet.on{transform:none}
+.sheet.as{background:transparent;padding:0 8px 26px}
+.handle{height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+.handle::after{content:"";width:36px;height:5px;border-radius:3px;background:#D4D4D4}
+.sh-head{display:flex;align-items:center;justify-content:center;position:relative;height:40px;flex:none}
+.sh-head b{font-size:17px}
+.sh-x{position:absolute;right:10px;top:4px;width:32px;height:32px;border-radius:50%;border:0;background:var(--subtle);color:var(--t2);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.sh-body{overflow-y:auto;padding:4px 16px 4px;flex:1}
+.as-group{background:var(--surface);border-radius:14px;overflow:hidden}
+.as-title{font-size:12px;color:var(--t3);text-align:center;padding:12px 16px}
+.as-item{display:block;width:100%;height:54px;border:0;border-top:.5px solid var(--line);background:var(--surface);font:inherit;font-size:16px;color:var(--t1);cursor:pointer}
+.as-item.red{color:var(--bad)}
+.as-cancel{margin-top:8px;border-radius:14px;border-top:0;font-weight:600}
+.ropt{display:flex;align-items:center;gap:12px;padding:14px 4px;border-bottom:.5px solid var(--line);cursor:pointer}
+.ropt:last-child{border-bottom:0}
+.ropt .main{flex:1}
+.ropt .t1{font-size:15px;font-weight:600}
+.ropt .t2{font-size:12px;color:var(--t3);margin-top:2px}
+.ropt .cur{font-size:12px;color:var(--t3)}
+.qr{width:168px;height:168px;margin:6px auto 10px;border-radius:16px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+.code{display:flex;align-items:center;justify-content:space-between;background:var(--subtle);border-radius:12px;padding:12px 14px;margin-top:6px}
+.code b{font-family:var(--mono);font-size:18px;letter-spacing:1px}
+.code button{border:0;background:var(--brand);color:#fff;border-radius:999px;font:inherit;font-size:13px;padding:6px 14px;cursor:pointer}
+.center{text-align:center;font-size:12px;color:var(--t3)}
+.conseq{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--t2);padding:8px 0}
+.conseq svg{width:18px;height:18px;color:var(--t3);margin-top:1px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.toast{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%) scale(.96);background:rgba(20,20,20,.88);color:#fff;font-size:14px;padding:10px 16px;border-radius:12px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s var(--ease-out);z-index:90;max-width:80%;text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{transition-duration:0s!important;animation-duration:0s!important}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone" id="phone">
+    <div class="status"><span>9:41</span><span class="sig"><svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="6" rx="1"/><rect x="10" y="2.5" width="3" height="8.5" rx="1"/><rect x="15" y="0" width="3" height="11" rx="1"/></svg><svg width="25" height="12" viewBox="0 0 25 12" fill="none" stroke="currentColor"><rect x="0.5" y="0.5" width="21" height="11" rx="3" opacity=".5"/><rect x="2" y="2" width="16" height="8" rx="1.5" fill="currentColor" stroke="none"/><path d="M23.5 4v4" stroke-width="1.5" stroke-linecap="round" opacity=".5"/></svg></span></div>
+    <div class="nav">
+      <button class="back" data-act="navBack" aria-label="返回"><svg class="ic" viewBox="0 0 24 24" style="width:24px;height:24px"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div class="capsule"><span data-act="capsule" data-arg="more">···</span><i></i><span data-act="capsule" data-arg="close">◎</span></div>
+    </div>
+    <div class="dc-scroll"><div class="dc-content" id="content"></div></div>
+
+    <div class="mask" id="mask" data-act="maskClose"></div>
+
+    <!-- 成员操作（标准 action sheet） -->
+    <div class="sheet as" data-sheet="member">
+      <div class="as-group"><div class="as-title" id="asTitle">玩家 B · 核销员</div>
+        <button class="as-item" data-act="memberRole">调整岗位</button>
+        <button class="as-item red" data-act="memberRemove">移除成员</button>
+      </div>
+      <button class="as-item as-cancel" data-act="closeSheet">取消</button>
+    </div>
+
+    <!-- 岗位选择：调整岗位 / 选择邀请岗位 -->
+    <div class="sheet" data-sheet="role">
+      <div class="handle" data-act="closeSheet"></div>
+      <div class="sh-head"><b id="roleTitle">调整岗位</b><button class="sh-x" data-act="closeSheet" aria-label="关闭"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+      <div class="sh-body" id="roleBody"></div>
+    </div>
+
+    <!-- 邀请码 -->
+    <div class="sheet" data-sheet="invite">
+      <div class="handle" data-act="closeSheet"></div>
+      <div class="sh-head"><b id="invTitle">店长邀请已创建</b><button class="sh-x" data-act="closeSheet" aria-label="关闭"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+      <div class="sh-body">
+        <div class="qr" aria-label="邀请二维码占位"><svg width="132" height="132" viewBox="0 0 33 33" shape-rendering="crispEdges" id="qrSvg"></svg></div>
+        <div class="center" id="invExp">10-28 21:00 前有效 · 仅限 1 人使用</div>
+        <div class="code"><div><div style="font-size:11px;color:var(--t3)">邀请码</div><b id="invCode">CY-7K3P</b></div><button data-act="copyCode">复制</button></div>
+        <div class="row2"><button class="btn sec" data-act="saveQr">保存二维码</button><button class="btn" data-act="shareInvite">分享给微信好友</button></div>
+        <div class="center" style="margin-top:12px">对方接受后获得固定岗位；每个账号同一时间只能加入一个商家团队。</div>
+      </div>
+    </div>
+
+    <!-- 危险确认 -->
+    <div class="sheet" data-sheet="danger">
+      <div class="handle" data-act="closeSheet"></div>
+      <div class="sh-head"><b id="dgTitle">移除成员？</b></div>
+      <div class="sh-body" id="dgBody"></div>
+      <div style="padding:0 16px"><button class="btn danger" data-act="confirmDanger" id="dgBtn">移除成员</button><button class="btn sec" style="margin-top:10px" data-act="closeSheet">取消</button></div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <aside class="panel">
+    <h1>M-18 经营团队</h1>
+    <div><span class="tag">M-18</span><span class="tag">商家浅色</span></div>
+    <h2>视角 / 状态</h2>
+    <div class="seg" id="viewSeg"><button data-act="view" data-arg="owner" class="on">店主</button><button data-act="view" data-arg="staff">店员视角</button><button data-act="view" data-arg="landing">受邀落地页</button><button data-act="view" data-arg="empty">还没有员工</button></div>
+    <div class="seg" style="margin-top:6px"><button data-act="toggleIncoming" id="incBtn">有一条团队邀请待接受</button></div>
+    <h2>相对现状改了什么</h2>
+    <ul>
+      <li>整页改用「门店信息」(decor view='basic') 版式：左上大标题、白色分组卡 + cy-cell 行（左标签 96px、右对齐取值）、卡间距 19px；底部一颗「编辑」按钮。</li>
+      <li><b>阅读态</b>没有箭头、没有操作；点「编辑」后可编辑的行出现箭头，按钮变「完成编辑」。</li>
+      <li>原每行右侧的「改岗 / 移除」两个文字按钮去掉，改为编辑态点成员 → 标准操作列表（调整岗位 / 移除成员 红色）。</li>
+      <li>邀请：「邀请成员」行 → 选岗位 → 邀请码弹层（二维码占位 + 邀请码复制 + 保存二维码 + 分享），并进入「待接受邀请」卡；编辑态可撤销（红色确认）。</li>
+      <li>新增「岗位权限」卡，按岗位列出可用权限（文案沿用 rolePermissionText：项目、核销、客户、营销、财务）。</li>
+      <li>原「详情/收起」开关改为门店卡下方常显一行说明。</li>
+      <li>保留原有全部功能：当前岗位、团队人数、接受邀请横幅、受邀落地页、店员只读视角 + 进入工作台、空团队。</li>
+      <li>弹层打开时点导航栏返回 = 先关弹层（G-2）。</li>
+    </ul>
+  </aside>
+</div>
+
+<script>
+const ic=(p,cls='',st='')=>`<svg class="ic ${cls}" viewBox="0 0 24 24" style="${st}">${p}</svg>`;
+const CHEV='<path d="M9 18l6-6-6-6"/>';
+const ROLES=[
+  {code:'MERCHANT_MANAGER',name:'店长',perm:'项目、核销、客户、营销'},
+  {code:'MERCHANT_CHECKIN',name:'核销员',perm:'核销'},
+  {code:'MERCHANT_MARKETING',name:'运营',perm:'客户、营销'},
+  {code:'MERCHANT_FINANCE',name:'财务',perm:'财务'}];
+const roleName=c=>c==='MERCHANT_OWNER'?'店主':(ROLES.find(r=>r.code===c)||{}).name;
+const COLORS=['#5B6B7F','#7A6A58','#5E7A6B','#6F5E7F','#7F5E5E'];
+const S={view:'owner',editing:false,incoming:false,stack:[],target:null,roleMode:'operator',dangerType:'',
+  ops:[{id:1,nick:'玩家 A',role:'MERCHANT_MANAGER',at:'09-02'},{id:2,nick:'玩家 B',role:'MERCHANT_CHECKIN',at:'09-18'},{id:3,nick:'城市漫游者',role:'MERCHANT_MARKETING',at:'10-06'}],
+  invites:[{id:11,role:'MERCHANT_FINANCE',exp:'10-29 18:00'}]};
+let backupOps=null;
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('on'),1700)}
+const av=(n,i)=>`<span class="av" style="background:${COLORS[i%COLORS.length]}">${n.replace('玩家 ','').slice(0,1)}</span>`;
+
+function render(){
+  const c=document.getElementById('content');c.classList.toggle('editing',S.editing);
+  if(S.view==='landing'){
+    c.innerHTML=`<div class="dc-brand-title">经营团队</div><div class="dc-card landing"><div class="logo" style="margin:0 auto;width:56px;height:56px;font-size:22px">示</div><b>加入经营团队</b><p>「示例咖啡馆」邀请你担任<b style="display:inline;font-size:13px;margin:0">核销员</b>。<br>接受后会获得店主分配的固定岗位；每个账号同一时间只能加入一个商家团队。</p><button class="btn" data-act="acceptInvite">接受邀请</button></div>`;
+    return;
+  }
+  const owner=S.view==='owner'||S.view==='empty';
+  const ops=S.view==='empty'?[]:S.ops, invites=S.view==='empty'?[]:S.invites;
+  let h=`<div class="dc-brand-title">经营团队</div>`;
+  h+=`<div class="dc-card">
+    <div class="cell" data-act="storeCell"><span class="cell__title">门店</span><span class="cell__value" style="display:flex;justify-content:flex-end;align-items:center;gap:8px"><span class="name">示例咖啡馆</span><span class="logo" style="width:28px;height:28px;border-radius:8px;font-size:12px">示</span></span></div>
+    <div class="cell" data-act="selfRole"><span class="cell__title">当前岗位</span><span class="cell__value"><span class="role-tag ${owner?'owner':''}">${owner?'店主':'核销员'}</span></span></div>
+    <div class="cell" data-act="countCell"><span class="cell__title">团队成员</span><span class="cell__value">${ops.length+1} 人${invites.length?` · ${invites.length} 条待接受`:''}</span></div>
+  </div>
+  <div class="note">${owner?'离职后权限立即失效；店主可以随时调整岗位。':'需要调整岗位或离职时，请联系店主处理。'}</div>`;
+  if(S.incoming) h+=`<div class="dc-card banner"><span class="plus">${ic('<path d="M4 4h16v16H4z"/><path d="M4 8l8 5 8-5"/>','','width:16px;height:16px')}</span><span class="main">你还有一条团队邀请</span><button class="txt-act" data-act="acceptIncoming">接受</button></div>`;
+  if(owner){
+    h+=`<div class="dc-group-label"><span>团队成员</span><span>${ops.length+1} 人</span></div><div class="dc-card">
+      <div class="cell"><span class="cell__body">${av('我',4)}<span><div class="name">我</div><div class="cell__desc">店主 · 创建门店</div></span></span><span class="cell__value"><span class="role-tag owner">店主</span></span></div>
+      ${ops.map((o,i)=>`<div class="cell ed" data-act="memberTap" data-arg="${o.id}"><span class="cell__body">${av(o.nick,i)}<span><div class="name">${o.nick}</div><div class="cell__desc">${o.at} 加入</div></span></span><span class="cell__value"><span class="role-tag">${roleName(o.role)}</span></span>${ic(CHEV,'cell__chev')}</div>`).join('')}
+      <div class="cell always" data-act="openInvite"><span class="cell__body"><span class="plus">${ic('<path d="M12 5v14M5 12h14"/>','','width:16px;height:16px')}</span><span class="name">邀请成员</span></span>${ic(CHEV,'cell__chev')}</div>
+    </div>`;
+    if(!ops.length) h+=`<div class="note">还没有员工。邀请店长、核销员、运营或财务一起经营门店。</div>`;
+    if(invites.length) h+=`<div class="dc-group-label"><span>待接受邀请</span><span>${invites.length} 条</span></div><div class="dc-card">${invites.map(v=>`<div class="cell ed" data-act="inviteTap" data-arg="${v.id}"><span class="cell__title">${roleName(v.role)}邀请</span><span class="cell__value">${v.exp} 失效${S.editing?' · 撤销':''}</span>${ic(CHEV,'cell__chev')}</div>`).join('')}</div>`;
+    h+=`<div class="dc-group-label"><span>岗位权限</span></div><div class="dc-card">
+      <div class="cell" data-act="permTap" data-arg="owner"><span class="cell__title">店主</span><span class="cell__value">全部权限 · 管理团队</span></div>
+      ${ROLES.map(r=>`<div class="cell" data-act="permTap" data-arg="${r.code}"><span class="cell__title">${r.name}</span><span class="cell__value">${r.perm}</span></div>`).join('')}</div>`;
+    h+=`<button class="btn" data-act="toggleEdit">${S.editing?'完成编辑':'编辑'}</button>`;
+  }else{
+    h+=`<div class="dc-group-label"><span>你的岗位权限</span></div><div class="dc-card">
+      <div class="cell" data-act="permTap" data-arg="MERCHANT_CHECKIN"><span class="cell__title">岗位</span><span class="cell__value">核销员</span></div>
+      <div class="cell" data-act="permTap" data-arg="MERCHANT_CHECKIN"><span class="cell__title">可用权限</span><span class="cell__value">核销</span></div>
+      <div class="cell" data-act="selfRole"><span class="cell__title">加入时间</span><span class="cell__value">2026-09-18</span></div></div>
+      <div class="note">岗位调整或离职由店主操作，立即生效。</div>
+      <button class="btn" data-act="goWorkbench">进入工作台</button>`;
+  }
+  c.innerHTML=h;
+}
+function openSheet(id){if(S.stack.includes(id))return;const el=document.querySelector(`.sheet[data-sheet="${id}"]`);S.stack.push(id);el.style.zIndex=50+S.stack.length*2;
+  const m=document.getElementById('mask');m.style.zIndex=49+S.stack.length*2;m.classList.add('on');requestAnimationFrame(()=>el.classList.add('on'))}
+function closeTop(){const id=S.stack.pop();if(!id)return false;document.querySelector(`.sheet[data-sheet="${id}"]`).classList.remove('on');
+  const m=document.getElementById('mask');if(!S.stack.length)m.classList.remove('on');else m.style.zIndex=49+S.stack.length*2;return true}
+function closeAll(){while(closeTop());}
+function renderRoles(){
+  const cur=S.roleMode==='operator'&&S.target?S.target.role:'';
+  document.getElementById('roleTitle').textContent=S.roleMode==='operator'?'调整岗位':'选择邀请岗位';
+  document.getElementById('roleBody').innerHTML=ROLES.map(r=>`<div class="ropt" data-act="rolePick" data-arg="${r.code}"><div class="main"><div class="t1">${r.name}</div><div class="t2">${r.perm}</div></div>${cur===r.code?'<span class="cur">当前</span>':ic(CHEV,'','width:16px;height:16px;color:var(--t3)')}</div>`).join('')+'<div style="height:8px"></div>';
+}
+function drawQr(seed){ // 占位图案，不是可扫的码
+  let s=seed,r='';const rnd=()=>{s=(s*9301+49297)%233280;return s/233280};
+  const finder=(x,y)=>`<rect x="${x}" y="${y}" width="7" height="7" fill="#000"/><rect x="${x+1}" y="${y+1}" width="5" height="5" fill="#fff"/><rect x="${x+2}" y="${y+2}" width="3" height="3" fill="#000"/>`;
+  for(let y=0;y<33;y++)for(let x=0;x<33;x++){const inF=(x<8&&y<8)||(x>24&&y<8)||(x<8&&y>24);if(!inF&&rnd()>.55)r+=`<rect x="${x}" y="${y}" width="1" height="1" fill="#000"/>`}
+  document.getElementById('qrSvg').innerHTML=r+finder(0,0)+finder(26,0)+finder(0,26);
+}
+function danger(type,title,lines,btn){S.dangerType=type;document.getElementById('dgTitle').textContent=title;
+  document.getElementById('dgBody').innerHTML=lines.map(l=>`<div class="conseq">${ic(l[0])}<span>${l[1]}</span></div>`).join('');
+  document.getElementById('dgBtn').textContent=btn;openSheet('danger')}
+const ACT={
+  navBack(){ if(closeTop())toast('已先关闭弹层');else if(S.editing){S.editing=false;render();toast('已退出编辑')}else toast('返回上一页（原型）'); },
+  capsule(el){ toast(el.dataset.arg==='more'?'微信胶囊菜单':'关闭小程序（原型）'); },
+  maskClose(){ closeTop(); },
+  closeSheet(){ closeTop(); },
+  toggleEdit(){ S.editing=!S.editing;render();if(!S.editing)toast('已保存'); },
+  storeCell(){ toast(S.editing?'门店名称与 Logo 在「门店信息」里修改':'示例咖啡馆'); },
+  selfRole(){ toast(S.view==='staff'?'岗位由店主分配':'店主拥有全部权限'); },
+  countCell(){ toast('团队成员含店主本人'); },
+  memberTap(el){ if(!S.editing){toast('点底部「编辑」后可调整成员');return}
+    S.target=S.ops.find(o=>String(o.id)===el.dataset.arg);if(!S.target)return;
+    document.getElementById('asTitle').textContent=`${S.target.nick} · ${roleName(S.target.role)}`;openSheet('member'); },
+  memberRole(){ closeTop();if(!S.target||!S.target.nick)return;S.roleMode='operator';renderRoles();openSheet('role'); },
+  memberRemove(){ closeTop();const t=S.target;if(!t||!t.nick)return;
+    danger('operator',`移除「${t.nick}」？`,[['<path d="M12 2l9 4v6c0 5-3.5 9-9 10-5.5-1-9-5-9-10V6z"/><path d="M9 12l2 2 4-4"/>','对方的经营权限立即失效，不能再核销或查看客户'],['<path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5"/>','已完成的核销与订单记录保留'],['<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>','如需恢复，请重新发出邀请']],'移除成员'); },
+  rolePick(el){ const code=el.dataset.arg;
+    if(S.roleMode==='operator'){ if(!S.target){closeTop();return} if(S.target.role===code){toast('已经是这个岗位');return} S.target.role=code;closeTop();render();toast(`已调整为${roleName(code)}`);return }
+    closeTop();const codeStr='CY-'+Math.random().toString(36).slice(2,6).toUpperCase();
+    S.invites.unshift({id:Date.now(),role:code,exp:'10-28 21:00'});
+    document.getElementById('invTitle').textContent=roleName(code)+'邀请已创建';document.getElementById('invCode').textContent=codeStr;
+    drawQr(codeStr.charCodeAt(3)*97+codeStr.charCodeAt(4));render();openSheet('invite'); },
+  openInvite(){ if(S.view==='empty'){S.view='owner';S.ops=[];} S.roleMode='invite';S.target=null;renderRoles();openSheet('role'); },
+  copyCode(){ toast('邀请码已复制'); },
+  saveQr(){ toast('二维码已保存到相册（原型）'); },
+  shareInvite(){ toast('打开微信分享（原型）'); },
+  inviteTap(el){ if(!S.editing){toast('点底部「编辑」后可撤销邀请');return}
+    S.target=S.invites.find(v=>String(v.id)===el.dataset.arg);if(!S.target)return;
+    danger('invite',`撤销${roleName(S.target.role)}邀请？`,[['<path d="M18 6L6 18M6 6l12 12"/>','邀请码与二维码立即失效，对方无法再加入'],['<path d="M12 5v14M5 12h14"/>','需要时可以重新邀请']],'撤销邀请'); },
+  confirmDanger(){ closeTop();if(!S.target)return;
+    if(S.dangerType==='operator'){S.ops=S.ops.filter(o=>o!==S.target);toast('成员已移除，权限立即失效')}
+    else {S.invites=S.invites.filter(v=>v!==S.target);toast('邀请已撤销')}
+    render(); },
+  permTap(el){ const a=el.dataset.arg;toast(a==='owner'?'店主：全部权限，含管理团队':`${roleName(a)}：${ROLES.find(r=>r.code===a).perm}`); },
+  acceptIncoming(){ S.incoming=false;document.getElementById('incBtn').classList.remove('on');render();toast('已接受邀请'); },
+  acceptInvite(){ S.view='staff';setViewBtn();render();toast('已加入「示例咖啡馆」经营团队'); },
+  goWorkbench(){ toast('进入工作台（原型）'); },
+  toggleIncoming(el){ S.incoming=!S.incoming;el.classList.toggle('on',S.incoming);render(); },
+  view(el){ S.view=el.dataset.arg;S.editing=false;closeAll();if(S.view==='owner'&&!S.ops.length)S.ops=backupOps.map(o=>({...o}));setViewBtn();render(); }
+};
+function setViewBtn(){document.querySelectorAll('#viewSeg button').forEach(b=>b.classList.toggle('on',b.dataset.arg===S.view))}
+backupOps=S.ops.map(o=>({...o}));
+document.addEventListener('click',ev=>{const el=ev.target.closest('[data-act]');if(!el)return;const f=ACT[el.dataset.act];if(f)f(el,ev)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeTop()});
+drawQr(42);render();
+</script>
+</body>
+</html>
