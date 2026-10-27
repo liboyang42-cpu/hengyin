@@ -6,6 +6,9 @@
 // 拿不到就返回空串,由页面退回业主的空态插画;不编图。
 
 const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+// SVG data URI 读不到 var();取值与 roam 页 play-elevated 底 / play-accent 绿一致
+const THUMB_BG = '#1C1C1E'   /* ds-ok SVG 缩略图底色,拿不到 CSS 变量 */
+const THUMB_LINE = '#C8F36A' /* ds-ok SVG 轨迹线色,拿不到 CSS 变量 */
 
 // SVG 只含 ASCII,逐字节编码即可(小程序没有 btoa)
 function asciiBase64(text) {
@@ -44,9 +47,9 @@ function latestTrackThumb(sessions) {
   const xy = pts.map((p) => ((p.lng - minLng) * kx * scale + ox).toFixed(1) + ',' + ((maxLat - p.lat) * scale + oy).toFixed(1))
   const end = xy[xy.length - 1].split(',')
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">'
-    + '<rect width="100" height="100" fill="#1C1C1E"/>'
-    + '<polyline points="' + xy.join(' ') + '" fill="none" stroke="#C8F36A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'
-    + '<circle cx="' + end[0] + '" cy="' + end[1] + '" r="4" fill="#C8F36A"/></svg>'
+    + '<rect width="100" height="100" fill="' + THUMB_BG + '"/>'
+    + '<polyline points="' + xy.join(' ') + '" fill="none" stroke="' + THUMB_LINE + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '<circle cx="' + end[0] + '" cy="' + end[1] + '" r="4" fill="' + THUMB_LINE + '"/></svg>'
   return 'data:image/svg+xml;base64,' + asciiBase64(svg)
 }
 

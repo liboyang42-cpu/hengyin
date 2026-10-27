@@ -409,7 +409,7 @@ Page({
     syncOffline: false, syncOfflineText: ROAM_SYNC_OFFLINE_TEXT,
     recoveryCanContinue: false,
     recoveryError: '',
-    recoveryAvailable: false,
+    // 2026-10-27 owner P-27:「已恢复上次漫游」行已删,recoveryAvailable 无人渲染,随之去掉(死字段门禁 U4)
     roamSessionReady: false,
     locErr: false,
     gpsWeak: '',
@@ -1551,7 +1551,7 @@ Page({
     this._roamRecoveryAbandoned = true; this._shopMedalFromServer = false;
     this._recoveryNeedsLookup = this._revealBootstrapUnknown = this._recoveryReadFailed = false;
     this._finishRequested = false; this._revealInFlight = false;
-    this.setData({ recoveryError: '', recoveryAvailable: false, recoveryCanContinue: false, revealWriteUnknown: false });
+    this.setData({ recoveryError: '', recoveryCanContinue: false, revealWriteUnknown: false });
   },
 
   _resetRoamRecoverySession() {
@@ -1600,7 +1600,7 @@ Page({
       medal: { show: false }, discoverReward: { show: false, poi: {} },
       visit: { active: false, checkinOk: false, poi: {}, photos: [] },
       archSegs: [], archPois: [], archEnd: {}, 'share.squarePostUnknown': this._squarePostUnknown,
-      recoveryError: '', recoveryAvailable: false,
+      recoveryError: '',
       recoveryCanContinue: false, revealWriteUnknown: false, roamSessionReady: false });
   },
 
@@ -1610,7 +1610,7 @@ Page({
   },
 
   _recoveryFailure(message) {
-    this.setData({ recoveryError: message, recoveryAvailable: true });
+    this.setData({ recoveryError: message });
     if (this.data.screen === 'arrive') this.setData({ 'finish.settleErr': 'recovery' });
     return false;
   },
@@ -1676,7 +1676,7 @@ Page({
     }
     this._eventId = r.eventId || 0; this._eventMissionCode = r.missionCode || '';
     this._recoveryNeedsLookup = true;
-    this.setData({ recoveryAvailable: true, roamSessionReady: false });
+    this.setData({ roamSessionReady: false });
     if (r.finishRequested) this.setData({ screen: 'arrive', finish: r.finish || {} });
     this.recoverRoam();
     return true;
@@ -2040,7 +2040,7 @@ Page({
     const shopMedal = result.shopMedal && delivered(result.shopMedal.code) ? result.shopMedal : null;
     this.setData({ screen: 'arrive', 'finish.xpAwarded': result.totalXp, 'finish.medal': medal,
       'finish.shopMedal': shopMedal, 'finish.routeStory': result.routeStory || '',
-      'finish.resultIncomplete': !complete, 'finish.settleErr': '', recoveryError: '', recoveryAvailable: false });
+      'finish.resultIncomplete': !complete, 'finish.settleErr': '', recoveryError: '' });
     this._shopMedalFromServer = !!shopMedal;
     const memory = roamMemory(this);
     const archiveState = memory.readSessionState();
