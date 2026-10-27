@@ -156,15 +156,21 @@ test('仅定位到达:vm0/vm5 节点只调用到达接口 /api/play/arrive,不�
       page.watchLocation()
       harness.platform.locationHandlers[0]({ latitude: 31.3, longitude: 120.7, accuracy: 15 })
       await settle()
+      // 基础写入先只读原局身份(GET /api/play/action-context),绑定后才发到达写
+      const context = harness.requests[0]
+      assert.equal(context && context.url, '/api/play/action-context', 'vm' + vm)
+      assert.equal(context.method, 'GET')
+      context.success({ code: 200, data: { routeSessionId: '77', expectedRouteVersion: 0 } })
+      await settle()
       const urls = harness.requests.map((r) => r.url)
-      assert.deepEqual(urls, ['/api/play/arrive'], 'vm' + vm)
+      assert.deepEqual(urls, ['/api/play/action-context', '/api/play/arrive'], 'vm' + vm)
       assert.equal(urls.some((url) => COMPLETION_OR_VERIFY.test(url)), false)
       assert.equal(harness.platform.scans.length, 0, '定位到达不能顺带调起扫码')
-      // 到达回执落地后,本地收尾也不得再补发完成/核验写
-      harness.requests[0].success({ code: 200, data: { nodeId: 501 } })
+      // 到达回执落地后,本地收尾也不得再补发完成/核验写(服务端终态回执带 intentTerminal)
+      harness.requests[1].success({ code: 200, intentTerminal: true, data: { nodeId: 501 } })
       await settle()
       assert.equal(page.data.nodes[0].done, true, 'vm' + vm + ' 回执已走到本地完成收尾(onComplete 未抛错)')
-      const after = harness.requests.slice(1).map((r) => r.url)
+      const after = harness.requests.slice(2).map((r) => r.url)
       assert.equal(after.some((url) => COMPLETION_OR_VERIFY.test(url)), false, 'vm' + vm + ' 回执后补发了: ' + after.join(','))
       // 远处(>50m)的定位点不触发任何写
       const far = loadPage()
