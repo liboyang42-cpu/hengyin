@@ -16,6 +16,8 @@ const { buildActiveSubscriptions } = require('../utils/merchant-subscription-vie
 // 胶囊图标走 cy-tag-sheet 的 Figma 图标表(文件名),不再用 cy-icon 的分类图标名(L11)
 const { tagIconName } = require('../components/cy/tag-sheet/model.js');
 const { isValidMobile } = require('../../../utils/form-state.js');
+const identitySync = require('../../../utils/identity-sync.js');
+const tagLibrary = require('../../../utils/tag-library.js');
 
 // 单字段编辑 sheet 的字段表(§〇.2:单字段/短选择 → 半屏 sheet,正文不留内联 input)。
 // saver 指明这一条存去哪个接口 —— 三个接口的白名单不同,存错地方会静默丢字段。
@@ -108,11 +110,11 @@ function buildIndustryOptions(rows, selectedIds) {
 }
 
 // 特色标签预置词库(空间/体验/人群),与 E5 搜索共用
-const TAG_LIBRARY = {
-  空间: ['老街', '天台', '独立空间', '宠物友好', '夜间开放', '适合拍照'],
-  体验: ['适合单人', '适合情侣', '适合亲子', '适合组队', '雨天可去', '安静'],
-  人群: ['学生党', '上班族', '摄影爱好者', '美食探店', '亲子家庭', '潮流青年']
-};
+// G-8(2026-10-27):特色标签预设改由 utils/tag-library.js 的商家库供给(同词同序,另带图标),这里只取三组
+const TAG_LIBRARY = {};
+tagLibrary.tagSet('merchant').filter(g => ['空间', '体验', '人群'].indexOf(g.group) >= 0)
+  .forEach(g => { TAG_LIBRARY[g.group] = g.tags.map(t => t.label); });
+const tagIconSrc = label => (tagLibrary.decorateTags([label], 'merchant', tagLibrary.MERCHANT_ICON_DIR)[0] || {}).iconSrc || '';
 
 // 品牌故事提示问题(引导商家,不自动生成内容)
 const STORY_HINTS = [
@@ -178,6 +180,7 @@ Page({
     m: null,               // 商家实体
     gallery: [],           // 相册数组(解析自 m.gallery)
     tags: [],              // 已选标签(解析自 m.tags)
+    tagItems: [],          // G-8:已选标签的渲染项 [{label, iconSrc}]
     catNames: '',          // 行业类型名(显示)
 
     // 载入四态(原来只有 loaded 布尔 + m=null,四种情况全渲染成「只有顶栏的空白页」:
@@ -378,6 +381,7 @@ Page({
           m: null,
           gallery: [],
           tags: [],
+          tagItems: [],
           catNames: '',
           coopSummary: '',
         });
@@ -454,6 +458,7 @@ Page({
             brandImages: String(m.derivatives || "").split(",").filter(x => /^(https?:|\/)/.test(x.trim())),
             gallery: gallery,
             tags: tags,
+            tagItems: tagLibrary.decorateTags(tags, 'merchant', tagLibrary.MERCHANT_ICON_DIR),
             catNames: catNames,
 
             loadState: 'ok',
@@ -536,7 +541,8 @@ Page({
       receipt: '店铺资料已保存',
       retry: () => this.saveDecor(stablePatch, onSuccess, onFailure),
       onFailure: () => { if (onFailure) onFailure(); },
-      onSuccess: () => { this.setData({m: Object.assign({}, this.data.m, stablePatch)}); this.refreshGuide(); this.refreshContact(); if (onSuccess) onSuccess(); },
+      // G-5:封面(=店铺主页背景)保存成功即全局广播,我的页/主页/首页一起换
+      onSuccess: () => { this.setData({m: Object.assign({}, this.data.m, stablePatch)}); identitySync.publishIdentity('merchant', stablePatch); this.refreshGuide(); this.refreshContact(); if (onSuccess) onSuccess(); },
       send(success, fail) {
         app.sendRequest({
           hideLoading: true, url: '/api/merchant/decor/save', method: 'POST',
@@ -554,7 +560,8 @@ Page({
       failureText: '品牌资料保存失败',
       receipt: '品牌资料已保存',
       retry: () => this.saveBrand(stablePatch, onSuccess),
-      onSuccess: () => { this.setData({m: Object.assign({}, this.data.m, stablePatch)}); this.refreshGuide(); this.refreshContact(); if (onSuccess) onSuccess(); },
+      // G-5:Logo / 店名保存成功即全局广播(只广播 name/logo/coverImage,其余字段 identity-sync 自己滤掉)
+      onSuccess: () => { this.setData({m: Object.assign({}, this.data.m, stablePatch)}); identitySync.publishIdentity('merchant', stablePatch); this.refreshGuide(); this.refreshContact(); if (onSuccess) onSuccess(); },
       send(success, fail) {
         app.sendRequest({
           hideLoading: true, url: '/api/merchant/update', method: 'POST',
@@ -837,7 +844,9 @@ Page({
       this._endPicking();
       if (this._destroyed || !urls || !urls[0]) return;
       this.applyPickedImage(key, urls[0]);
-    }, 1, {crop: true, cropScale: key === 'logo' ? '1:1' : '5:3',
+    // M-08:Logo 走圆形取景框(导出仍是正方形,展示处裁成圆);M-10:封面显式用 5:3 业务类型 image_5_3
+    }, 1, {crop: true, cropScale: key === 'logo' ? '1:1' : '5:3', cropShape: key === 'logo' ? 'circle' : '',
+      bizType: key === 'logo' ? 'image_1_1' : 'image_5_3',
       onUploadDone: () => { this._endPicking(); return false; }});
   },
   applyPickedImage(key, url) {
@@ -1012,7 +1021,7 @@ Page({
   },
   refreshTagChoices() {
     const library=[].concat(...Object.keys(TAG_LIBRARY).map(k=>TAG_LIBRARY[k]));
-    this.setData({customTagChoices:this.data.tagDraft.filter(t=>library.indexOf(t)<0), tagChoices: Object.keys(TAG_LIBRARY).map(label => ({label, items: TAG_LIBRARY[label].map(value => ({value, checked: this.data.tagDraft.indexOf(value) >= 0}))}))}); },
+    this.setData({customTagChoices:this.data.tagDraft.filter(t=>library.indexOf(t)<0), tagChoices: Object.keys(TAG_LIBRARY).map(label => ({label, items: TAG_LIBRARY[label].map(value => ({value, iconSrc: tagIconSrc(value), checked: this.data.tagDraft.indexOf(value) >= 0}))}))}); },
   toggleTag(e) {
     if (this.data.saving || this.data.refreshing) return;
     const t = e.currentTarget.dataset.t;
@@ -1050,7 +1059,7 @@ Page({
   confirmTags() {
     if (this.data.saving || this.data.refreshing) return;
     const tags = this.data.tagDraft.slice();
-    this.saveDecor({tags: JSON.stringify(tags)}, () => {this._tagSaveFailed = false; this.setData({tags}); this.selectComponent('#tag-menu').close();}, () => {
+    this.saveDecor({tags: JSON.stringify(tags)}, () => {this._tagSaveFailed = false; this.setData({tags, tagItems: tagLibrary.decorateTags(tags, 'merchant', tagLibrary.MERCHANT_ICON_DIR)}); this.selectComponent('#tag-menu').close();}, () => {
       // CU-M-74:失败后钉住草稿,重开面板用眼前这份勾选重建,而不是退回已保存值 ——
       // 否则页顶还挂着「重试保存」,面板里却显示成没选,眼见与待提交内容相反。
       // 钉住直到保存成功;「重试保存」提交的是此刻面板里的勾选(失败后又改过也一样),不是失败那一刻的快照。

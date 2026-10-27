@@ -70,7 +70,8 @@ test('商家合作页:帖子/俱乐部(2026-10-22 起不列商家),俱乐部使�
 test('商家主页:访客(非商家)看商家档案时底部有「发起合作」,主页内打开邀约弹窗', () => {
   const wxml = read('subpackageMember/components/cy/profile/index.wxml')
   // 2026-09-16 拍板 #13:带主题上下文的商家观看者(商家主办去邀商家承接)也渲染这颗 CTA。
-  assert.match(wxml, /isMerchantView && !isSelf && canInviteCoop\}\}" class="pc-coop-bar"/)
+  // 2026-10-27 owner 真机走查 M-19:自己看自己的主页(预览)不出「发起合作」⇒ 条件多一个 !viewingOwn
+  assert.match(wxml, /isMerchantView && !isSelf && !viewingOwn && canInviteCoop\}\}" class="pc-coop-bar"/)
   assert.match(wxml, />发起合作</)
   const js = read('subpackageMember/components/cy/profile/index.js')
   assert.match(js, /coopInviteShow: true/)
