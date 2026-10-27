@@ -100,7 +100,8 @@ Page({
     this._iconFailed = {};
     this._selfIcon = '';
     this._me = null;
-    this.setData(Object.assign({ safeBottom: safeBottom(), hudTop: hudTop(), rangeText: kmText(this._radius), rangeIndex: T.RADII.indexOf(this._radius) }, capsuleRow()));
+    const cap = capsuleRow();
+    this.setData({ safeBottom: safeBottom(), hudTop: hudTop(), rangeText: kmText(this._radius), rangeIndex: T.RADII.indexOf(this._radius), capTop: cap.capTop, capH: cap.capH });
     const that = this; const linkedLat = H.numOrNull(options && options.lat); const linkedLng = H.numOrNull(options && options.lng);
     if (linkedLat != null && linkedLng != null) { const center = { lat: linkedLat, lng: linkedLng }; this.setData({ center, circles: H.buildRangeCircle(center) }); this.refresh(center); this.loadMyTeams(false); return; }
     getCurrentLocation({
