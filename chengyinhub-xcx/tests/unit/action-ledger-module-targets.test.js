@@ -151,7 +151,9 @@ test('clear contract matches actual Page success, business refusal, network fail
     ['success', { code: 200 }, true, true, undefined],
     ['error', { code: 500 }, true, false, 1],
     ['timeout', 'fail', true, false, 1],
-    ['clear-local-failed', { code: 200 }, false, false, undefined],
+    // W8 起清空前先落「待作废」标记(prepareShareRevocation):本机清理失败不发 revoke,但标记保留,
+    // 下次分享前先补作废,不会因清理失败把撤销意图一起丢掉。
+    ['clear-local-failed', { code: 200 }, false, false, 1],
   ]) {
     const harness = clearHarness(reply, localOk)
     assert.equal(await harness.run(), result, branch)
@@ -188,8 +190,9 @@ test('actual revoke helper closure and contract reject an additional snapshot wr
   } finally { fs.rmSync(dir, { recursive: true, force: true }) }
 })
 
+ // W8 起抬头保存改走按原请求号幂等的 /api/invoice/titles/save-request(旧 /titles/save 页面不再调用)。
  test('invoice dispatch keeps each action write and readback without sibling writes', () => {
-  for (const [handler, expected] of [['loadTitles', []], ['loadRecords', []], ['saveTitle', ['/api/invoice/titles/save']], ['apply', ['/api/invoice/apply']], ['cancel', ['/api/invoice/cancel']]]) {
+  for (const [handler, expected] of [['loadTitles', []], ['loadRecords', []], ['saveTitle', ['/api/invoice/titles/save-request']], ['apply', ['/api/invoice/apply']], ['cancel', ['/api/invoice/cancel']]]) {
     const result = targets('subpackageMember/invoice/index.js', handler)
     assert.deepEqual(result.apis.filter(isWriteApi), expected, handler)
     if (handler === 'loadTitles') assert.ok(result.apiContracts.some(api => api.url === '/api/invoice/titles' && api.method === 'POST'))

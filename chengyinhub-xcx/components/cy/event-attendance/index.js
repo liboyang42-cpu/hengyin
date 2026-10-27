@@ -103,8 +103,14 @@ Component({
    wx.makePhoneCall({phoneNumber:phone,fail:()=>{if(current())this.setData({notice:'拨号未完成。可重试或联系备用岗位；平台未受理救援请求。'});}});
   },
   commandAction(e) {
-   const action=e.currentTarget.dataset.action;if(!['query','retry','cancel','acknowledge'].includes(action))return;
-   if(this._current&&this._current()&&this._recovery)this._recovery[action]();
-  }
+   const action=e.currentTarget.dataset.action;
+   if(action==='query')this.queryCommand();else if(action==='retry')this.retryCommand();
+   else if(action==='cancel')this.cancelCommand();else if(action==='acknowledge')this.acknowledgeCommand();
+  },
+  commandReady() { return !!(this._current&&this._current()&&this._recovery); },
+  queryCommand() { if(this.commandReady())this._recovery.query(); },
+  retryCommand() { if(this.commandReady())this._recovery.retry(); },
+  cancelCommand() { if(this.commandReady())this._recovery.cancel(); },
+  acknowledgeCommand() { if(this.commandReady())this._recovery.acknowledge(); }
  }
 });

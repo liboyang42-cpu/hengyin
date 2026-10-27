@@ -33,8 +33,8 @@
  <text class="attendance__text" wx:if="{{notice}}">{{notice}}</text>
  <view wx:if="{{recovery.state || recovery.busy}}">
   <text class="attendance__text">{{recovery.label}}：{{recovery.message}}</text><text class="attendance__text" user-select="true">请求号 {{recovery.requestId}}</text>
-  <block wx:if="{{recovery.state === 'UNKNOWN'}}"><button data-action="query" bindtap="commandAction" disabled="{{recovery.busy}}">查询原结果</button><button data-action="retry" bindtap="commandAction" disabled="{{recovery.busy}}">原请求重试</button><button data-action="cancel" bindtap="commandAction" disabled="{{recovery.busy}}">终止未执行请求</button></block>
-  <button wx:if="{{recovery.state === 'APPLIED' || recovery.state === 'REJECTED' || recovery.state === 'CANCELLED'}}" data-action="acknowledge" bindtap="commandAction">确认归档</button>
+  <block wx:if="{{recovery.state === 'UNKNOWN'}}"><button bindtap="queryCommand" disabled="{{recovery.busy}}">查询原结果</button><button bindtap="retryCommand" disabled="{{recovery.busy}}">原请求重试</button><button bindtap="cancelCommand" disabled="{{recovery.busy}}">终止未执行请求</button></block>
+  <button wx:if="{{recovery.state === 'APPLIED' || recovery.state === 'REJECTED' || recovery.state === 'CANCELLED'}}" bindtap="acknowledgeCommand">确认归档</button>
   <button wx:if="{{recovery.state === 'STORAGE_ERROR'}}" bindtap="open">重新读取原记录</button>
  </view>
  <view wx:if="{{result.data.bib}}"><text class="attendance__text">原核验结果：号码布 {{result.data.bib}} · {{result.data.state}} · {{result.data.checkedAt}}</text></view>

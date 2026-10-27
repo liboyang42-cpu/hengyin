@@ -23,7 +23,6 @@ function write(storage, record) {
 function clear(storage, record) {
   storage.removeStorageSync(key(record.owner, record.scope, String(record.payload.originalTemplateId)));
 }
-module.exports = { id, read, write, clear };
 
 // Shared original-command recovery for the template editor. No retry creates a new request ID.
 function resume(options) {
@@ -73,4 +72,4 @@ function resume(options) {
     if(persist())submit();
   }),fail:()=>fail('来源版本读取失败，尚未发起采用')});
 }
-module.exports.resume=resume;
+module.exports = { id, read, write, clear, resume };
