@@ -102,9 +102,10 @@ page { background: var(--cy-color-bg-page) !important; }
   /* 触控区仍是整行 88rpx;可见的药丸是内层 .tpl-search-pill(64rpx) */
   min-height: var(--cy-btn-h);
   box-sizing: border-box;
-  /* 在黑色顶行内垂直居中,与下方紫面板之间留出间隙(tab 行 align-items:flex-end 会把搜索框压到紫面板上) */
-  align-self: center;
-  margin-bottom: var(--cy-space-2);
+  /* M-02(2026-10-27 真机走查 m677):搜索框与左侧「主题 / 游戏」tab 同一个 88rpx 盒子底对齐,
+     药丸(64rpx)在盒内居中 ⇒ 占位文字与 tab 文字同一条中线。原 align-self:center + 底部 16rpx
+     外边距把整行撑到 104rpx,搜索框居上、tab 贴底,文字差了 16rpx。药丸下方仍留 12rpx 不贴紫面板。 */
+  align-self: flex-end;
 }
 .tpl-search-pill {
   display: flex; align-items: center; gap: var(--cy-space-2);

@@ -95,21 +95,13 @@ test('刷新保留现有精选卡，空回包清空轮播，失败仍保留独�
   assert.equal(page.data.listLoading.recommendedTopicList, false);
 });
 
-test('精选来源使用已注册按钮和本页弹窗，只解释来源及详情现态，不跳偏好页', () => {
-  const { page, dialogs, routes, requests } = loadPage();
-  page.showRecommendationSource();
-  assert.equal(dialogs.length, 1);
-  assert.match(dialogs[0].content, /编辑精选，不是根据个人兴趣生成/);
-  assert.match(dialogs[0].content, /主题详情的当前信息为准/);
-  assert.equal(dialogs[0].confirmText, '知道了');
-  assert.equal(dialogs[0].showCancel, false);
-  assert.equal(dialogs[0].success, undefined);
-  assert.deepEqual(routes, []);
-  assert.deepEqual(requests, []);
-  const json = JSON.parse(read('pages/index/index.json'));
-  assert.equal(json.usingComponents['cy-btn'], '/components/cy/btn/index');
+// 2026-10-27 真机走查 P-02(owner 明确要求删除):编辑精选下的「为什么看到」按钮与其弹窗一起撤掉。
+// 原用例钉的是按钮 + 弹窗文案，随入口退役改为钉「已删除」;编辑精选的来源说明仍由卡片文案承担。
+test('P-02:编辑精选不再有「为什么看到」入口，来源说明留在卡片文案里', () => {
+  const { page } = loadPage();
+  assert.equal(page.showRecommendationSource, undefined);
   const wxml = read('pages/index/index.wxml');
-  assert.match(wxml, /<cy-btn[^>]*bindtap="showRecommendationSource">为什么看到<\/cy-btn>/);
+  assert.doesNotMatch(wxml, /为什么看到|showRecommendationSource/);
   assert.match(wxml, /编辑精选 · 参加条件以详情为准/);
   assert.match(wxml, /<cy-modal-host[^>]*id="cy-modal-host"/);
   assert.match(wxml, /listLoading\.recommendedTopicList && !recoHero/);

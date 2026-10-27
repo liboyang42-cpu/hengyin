@@ -42,6 +42,21 @@ const INTERACTION_ICON_BY_TITLE = {
   'G6｜首选失效怎么办': '/images/interaction-templates/life-first-choice-offline.svg',
 };
 
+// P-11(2026-10-27 真机走查 p84):「游戏」tab 只列商家 / 地点能直接配置的单节点玩法。
+// 判据只用可复核的字段，不按 id 硬编码(种子重跑后 id 会漂):
+//   · pack_type:0 单节点玩法 / 1 剧情包 / 2 店铺 IP 包(migration_template_library_pack_type_20260905)。
+//     剧情包与 IP 包是整套主题内容，不是「挂到一个地点上的一次互动」。缺省按 0,与迁移默认值同口径。
+//   · 标题前缀「G<n>｜」:《生活备份》《今天值得庆祝》两套主题自带的分段游戏
+//     (migration_seed_life_backup_games_20260820 / migration_seed_celebrate_games_20260821),
+//     离开主题就没有上下文，归主题模板(主题 tab 的「配置」直进专业编辑器 publish/fabu)。
+const THEME_SEGMENT_TITLE = /^G\d+｜/;
+function isPlaceGameplay(item) {
+  if (!item || typeof item !== 'object') return false;
+  const packType = item.packType == null || item.packType === '' ? 0 : Number(item.packType);
+  if (packType !== 0) return false;
+  return !THEME_SEGMENT_TITLE.test(String(item.title || '').trim());
+}
+
 Page({
   // 列表缓存与加载标志:只喂 rebuildLists 算 topList/tailList,wxml 零引用 ——
   // 走 setData 会被死数据字段门禁按 A2(只当内部状态)判红,所以放在 data 之外。
@@ -556,12 +571,14 @@ Page({
       // 置顶排序要在整份数据上算,所以一次取全 —— 后端 startPage() 默认只给 10 条。
       // 现存玩法约 27 个,200 有余量;真长到接近这个数要改成分页 + 服务端排序。
       // CU-M-64:带上关键词 —— /api/template/list 的 keyword 就是按 title 模糊(与列表同一口径)。
-      data: { pageNum: 1, pageSize: 200, keyword: this.data.searchKeyword || '' },
+      // P-11:pack_type=0 让服务端只回单节点玩法;下面 isPlaceGameplay 再按同一口径兜一次
+      // (旧 jar 不认这个参数时会回全部)。
+      data: { pageNum: 1, pageSize: 200, keyword: this.data.searchKeyword || '', pack_type: 0 },
       success(res) {
         if (that._gameSeq !== seq) return;
         const rows = res && res.data ? (res.data.rows || res.data) : null;
         if (res.code == '200' && isRecordList(rows)) {
-          that._gameRows = that.decorateGame(rows);
+          that._gameRows = that.decorateGame(rows.filter(isPlaceGameplay));
           that._gameLoaded = true;
           // 回来时用户可能已切去主题 tab:数据照收进缓存,但屏幕状态只归当前 tab 管,
           // 否则会把还没加载的主题 tab 标成已加载,空缓存渲染成假空态。

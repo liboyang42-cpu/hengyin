@@ -2,9 +2,7 @@
   "usingComponents": {
     "tabBar": "/components/tabBar/index",
     "cy-starfield": "/components/cy/starfield/index",
-    "cy-icon": "/components/cy/icon/index",
     "cy-dropdown": "/components/cy/dropdown/index",
-    "cy-btn": "/components/cy/btn/index",
     "cy-tag": "/components/cy/tag/index",
     "cy-error": "/components/cy/error/index",
     "cy-empty": "/components/cy/empty/index",
@@ -14,13 +12,12 @@
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index",
-    "cy-inline-error": "/components/cy/inline-error/index",
-    "cy-roam-resume-bar": "/subpackageRoam/components/scene-roam-resume-bar/index"
-  },
-  "componentPlaceholder": {
-    "cy-roam-resume-bar": "view"
+    "cy-inline-error": "/components/cy/inline-error/index"
   },
   "navigationStyle": "custom",
   "navigationBarTextStyle": "white",
-  "navigationBarTitleText": "首页"
+  "navigationBarTitleText": "首页",
+  "backgroundColor": "#000000",
+  "backgroundColorTop": "#000000",
+  "backgroundColorBottom": "#000000"
 }

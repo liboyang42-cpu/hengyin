@@ -598,7 +598,8 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-24 上线合并(#563 bug 修复 + #508 业主 UI + #554 文案)并 master 后重建实测:2167 → 2173。
   // 2026-10-23 合 master:起名页 templateadd 退役 −1(#565)+ 撤销条「撤销」+1,tap 2173 → 2173(重建实测)。
   // 2026-10-24 官方据点照片与评价：重建实测 local tap +4；不添加业务验收证据。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2183)  /* 2026-10-25 地图底部横滑卡片(点卡 = 点列表行)+1,重建实测 2182 → 2183。 */  /* 2026-10-25 官方地点卡:相册图、小红书行、评分星、发布评价、取景卡等新增 tap,重建实测 2177 → 2182。 */  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  // 2026-10-27 真机走查 L04:首页删「为什么看到」(P-02)与继续探索卡 / 继续漫游条两颗(P-08)等 tap,重建实测 2183 → 2179。
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2179)  /* 2026-10-25 地图底部横滑卡片(点卡 = 点列表行)+1,重建实测 2182 → 2183。 */  /* 2026-10-25 官方地点卡:相册图、小红书行、评分星、发布评价、取景卡等新增 tap,重建实测 2177 → 2182。 */  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -1671,7 +1672,8 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 2026-10-25 官方地点卡片展开详情 + 地图取景卡 + 地点挑战页,重建实测 5114 → 5139。
   // 2026-10-25 地点卡「网上怎么说」引述行(点按复制原文链接)+1,重建实测 5139 → 5140。
   // 2026-10-25 地图底部横滑卡片 +1,重建实测 5140 → 5141。
-  assert.equal(ledger.controlCount, 5141)
+  // 2026-10-27 真机走查 L04:首页删「为什么看到」(P-02)、「继续上次漫游」挂载与「继续探索」卡(P-08),重建实测 5141 → 5137。
+  assert.equal(ledger.controlCount, 5137)
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。
