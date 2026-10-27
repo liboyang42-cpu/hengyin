@@ -3631,8 +3631,8 @@ Page({
     if (isRecordList(data.sysCategoryList) && data.sysCategoryList.length > 0) {
       const selectedIds = data.sysCategoryList.map(item => item.id);
       const selectedNames = data.sysCategoryList.map(item => item.categoryName);
+      // useNum 本页从不展示,不再写进 data(U4 死数据字段门禁)
       this.setData({
-        useNum: data.useNum,
         categoryList: withCategoryIcons(data.sysCategoryList),
         selectedCategoryIds: selectedIds,
         selectedCategoryNames: selectedNames,
