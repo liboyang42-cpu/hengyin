@@ -66,7 +66,8 @@ function harness(noBackground) {
   h.play = { data: { topicId: 31, gpsOk: false, nav: { active: false }, nodes: [], nextNode: null },
     setData: h.roam.setData, rebuild() {} }
   h.play._trackKey = vm.runInNewContext('({' + playSource.match(/  _trackKey\(\) \{[^\n]*\},/)[0] + '})', context)._trackKey
-  for (const name of ['_playMember', '_boundPlayOwner', '_isPlayAccountCurrent', '_sessionParams', '_sessionKey', 'requestPlayLocation', 'watchLocation', '_noteLocAccuracy']) {
+  // W8:账号守卫同时核对登录上下文(令牌+换代),捕获函数是守卫的一部分,同样取真实现。
+  for (const name of ['_playMember', '_boundPlayOwner', '_capturePlayLoginContext', '_isPlayAccountCurrent', '_sessionParams', '_sessionKey', 'requestPlayLocation', 'watchLocation', '_noteLocAccuracy']) {
     const start = playSource.indexOf('  ' + name + '('); const end = playSource.indexOf('\n  },', start)
     h.play[name] = vm.runInNewContext('({' + playSource.slice(start, end + 4).trim() + '})', context)[name]
   }
