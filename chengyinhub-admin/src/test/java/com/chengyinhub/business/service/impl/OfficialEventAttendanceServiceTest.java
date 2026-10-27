@@ -14,6 +14,8 @@ class OfficialEventAttendanceServiceTest {
  @BeforeEach void setup(){
   events=mock(OfficialEventMapper.class);participants=mock(OfficialEventV2Mapper.class);records=mock(OfficialEventAttendanceMapper.class);authority=mock(OfficialEventV2ServiceImpl.class);settings=mock(ISysConfigService.class);
   service=new OfficialEventAttendanceService(events,participants,records,authority,settings);
+  // MyBatis yields null for absent attendance rows; Mockito's default would be an empty map.
+  when(records.config(any())).thenReturn(null);when(records.mine(any(),any())).thenReturn(null);when(records.credential(any(),any())).thenReturn(null);
   event=new OfficialEvent();event.setId(19L);event.setContractVersion(2);event.setStatus(2);event.setSignupStart(new Date(1));event.setActivityEnd(new Date(System.currentTimeMillis()+100000));
   when(events.selectOfficialEventByIdForUpdate(19L)).thenReturn(event);when(events.selectOfficialEventById(19L)).thenReturn(event);
   person=new OfficialEventParticipation();person.setId(42L);person.setMemberId(7L);person.setState("ACTIVE");when(participants.selectParticipation(19L,7L)).thenReturn(person);
