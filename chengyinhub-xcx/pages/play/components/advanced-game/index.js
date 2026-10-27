@@ -265,6 +265,15 @@ Component({
           this.emitActionFail(name, sessionId);
           return false;
         }
+        // Explicit 4xx come from ServiceException inside the @Transactional act: rolled back, nothing written.
+        const status = Number(res.code);
+        if (status >= 400 && status < 500 && status !== 408) {
+          wx.removeStorageSync(pendingKey);
+          this._unknownCommand = null;
+          this.setData({ acting: false, error: safeUserMessage(res, '操作失败，请重试') });
+          this.emitActionFail(name, sessionId);
+          return false;
+        }
         // act can commit before finishPendingCardMint fails. A generic error is not proof of rollback.
         this._unknownAction = name;
         this.enterUnknown(version);
