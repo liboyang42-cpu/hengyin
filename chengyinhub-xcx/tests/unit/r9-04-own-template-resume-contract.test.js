@@ -6,8 +6,8 @@
 //
 // 契约:
 //   · 详情页 goPrimary 必须把 scope=my 带到底;
-//   · publish/temp 在 scope=my 时走 /api/template/myinfo(owner 可读草稿),其余仍走
-//     /api/template/info;
+//   · publish/temp 在 scope=my 时走 /api/template/author-myinfo(owner 可读草稿,大 ID 字符串化),其余仍走
+//     /api/template/author-info;
 //   · scope=my 不污染写链路身份:operationScope 仍只认 MERCHANT,草稿保存仍带原 id 续编。
 const { test, beforeEach } = require('node:test')
 const assert = require('node:assert/strict')
@@ -77,7 +77,7 @@ function loadPage(relative) {
 }
 
 function templateRequest() {
-  return requests.filter((item) => /\/api\/template\/(info|myinfo)$/.test(String(item.url)))[0]
+  return requests.filter((item) => /\/api\/template\/author-(info|myinfo)$/.test(String(item.url)))[0]
 }
 
 beforeEach(() => {
@@ -161,13 +161,18 @@ test('商家公开详情应用后采用和作者回读仍使用商家作用域',
   editor.onLoad(Object.fromEntries(url.searchParams))
   assert.equal(editor.data.isMyScope, false)
   const source = templateRequest()
-  assert.equal(source.url, '/api/template/info')
+  assert.equal(source.url, '/api/template/author-info')
   source.success({ code: 200, data: { id: 62, title: '今日城市签' } })
+  const sourceVersion = requests.find(item => item.url === '/api/template/adoption-source')
+  assert.equal(sourceVersion.data.scope, 'MERCHANT')
+  sourceVersion.success({ code: 200, data: { originalTemplateId: '62', sourceVersion: 'a'.repeat(64) } })
   const adopt = requests.find(item => item.url === '/api/template/adopt-draft')
-  assert.equal(JSON.parse(adopt.data).scope, 'MERCHANT')
-  adopt.success({ code: 200, data: 990067 })
-  const readback = requests.find(item => item.url === '/api/template/myinfo')
-  assert.equal(readback.data.id, 990067)
+  const intent = JSON.parse(adopt.data)
+  assert.equal(intent.scope, 'MERCHANT')
+  adopt.success({ code: 200, data: { requestId: intent.requestId, originalTemplateId: '62',
+    sourceVersion: intent.sourceVersion, status: 'COMPLETED', draftId: '990067' } })
+  const readback = requests.find(item => item.url === '/api/template/adoption-detail')
+  assert.equal(readback.data.requestId, intent.requestId)
   assert.equal(readback.data.scope, 'MERCHANT')
 })
 
@@ -177,18 +182,18 @@ test('RED 锚点:编辑页带 scope=my 时查个人草稿接口,不再查公共�
 
   const request = templateRequest()
   assert.ok(request, 'onLoad 必须发起模板详情请求')
-  assert.equal(request.url, '/api/template/myinfo')
+  assert.equal(request.url, '/api/template/author-myinfo')
   assert.equal(request.data.id, 6029)
 })
 
-test('公共库应用仍查 /api/template/info,不受 my 分支影响', () => {
+test('公共库应用仍查 /api/template/author-info,不受 my 分支影响', () => {
   const page = loadPage('pages/publish/temp/index.js')
   page.onLoad({ id: '12' })
-  assert.equal(templateRequest().url, '/api/template/info')
+  assert.equal(templateRequest().url, '/api/template/author-info')
 
   const merchant = loadPage('pages/publish/temp/index.js')
   merchant.onLoad({ id: '12', scope: 'MERCHANT' })
-  assert.equal(templateRequest().url, '/api/template/info')
+  assert.equal(templateRequest().url, '/api/template/author-info')
 })
 
 test('scope=my 不污染写链路身份:operationScope 仍只认 MERCHANT', () => {
@@ -240,7 +245,7 @@ test('商家草稿列表、详情、继续编辑与保存返回完整保留作�
     editor.onLoad(query(navigations.at(-1).url))
     assert.equal(editor.data.isMyScope, true)
     assert.equal(editor.data.operationScope, scope)
-    const readback = requests.filter(item => item.url === '/api/template/myinfo').at(-1)
+    const readback = requests.filter(item => item.url === '/api/template/author-myinfo').at(-1)
     assert.equal(readback.data.scope || '', scope)
     readback.success({ code: 200, data: { id: 6029, title: '已采用草稿', canEdit: true, originalTemplateId: 16, validationMethod: 1 } })
     editor.validateForm = () => true
@@ -257,7 +262,7 @@ test('商家草稿列表、详情、继续编辑与保存返回完整保留作�
     editor._leaveCreationSuccess('secondaryAction')
     assert.deepEqual(navigations.at(-1), { method: 'reLaunch', url: expected })
     editor._adoptionUnconfirmed = true
-    editor.retryGetData()
+    editor.inspectAdoptionTemplates()
     assert.deepEqual(navigations.at(-1), { method: 'reLaunch', url: expected })
   }
 })

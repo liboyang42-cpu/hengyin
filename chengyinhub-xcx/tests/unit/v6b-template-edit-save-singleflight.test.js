@@ -65,7 +65,7 @@ test('V6b CX-11：保存在途时再点保存不发第二个请求，回包后�
   assert.equal(page.data.submitting, false)
   page.sendData({ id: 6029, status: 0, title: '等归属刷新' }, '/api/template/draft', 'draft')
   assert.equal(drafts().length, 1, '新草稿归属尚未确认时不能继续写')
-  const confirmation = requests.find(r => r.url === '/api/template/myinfo')
+  const confirmation = requests.find(r => r.url === '/api/template/author-myinfo')
   confirmation.success({ code: 200, data: { id: 6029, title: '第一次', canEdit: true } })
   page.sendData({ id: 6029, status: 0, title: '第三次' }, '/api/template/draft', 'draft')
   assert.equal(drafts().length, 2)
