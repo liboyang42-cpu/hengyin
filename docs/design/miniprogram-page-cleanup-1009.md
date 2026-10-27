@@ -181,6 +181,7 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/userinfo/userinfo` | 否 | `chengyinhub-admin/sql/migration_merchant_npc_menu_20260824.sql:116` | KEEP |
 | `pages/mylike/mylike` | 否 | `chengyinhub-xcx/pages/shezhi/shezhi.js:154` | KEEP |
 | `pages/crop/index` | 否 | `chengyinhub-xcx/app.js:470` | KEEP |
+| `subpackageMember/free-explore/index` | 否 | `chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js:188` | KEEP |
 | `subpackageMember/character/index` | 否 | `chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js:148` | KEEP |
 | `subpackageMember/orient-score/index` | 否 | `chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js:148` | KEEP |
 | `subpackageMember/invoice/index` | 否 | `chengyinhub-xcx/pages/shezhi/shezhi.js:218` | KEEP |
