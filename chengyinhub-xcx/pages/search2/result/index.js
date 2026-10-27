@@ -102,7 +102,9 @@ Page({
     const preserveExisting = this._resultOwner === owner && this._resultQueryKey === queryKey
       && (this.data.resultGroups || []).some((group) => (group.items || []).length > 0);
     const previousGroups = {};
-    if (preserveExisting) (this.data.resultGroups || []).forEach((group) => { if (!['topic', 'activity', 'post'].includes(group.type)) previousGroups[group.type] = group.items || []; });
+    // 合并搜索的主题/活动/帖文刷新时整体替换(已删除结果与城市不残留);原接口路径六类都保留上一次成功内容。
+    const contentType = (type) => useUnified && ['topic', 'activity', 'post'].includes(type);
+    if (preserveExisting) (this.data.resultGroups || []).forEach((group) => { if (!contentType(group.type)) previousGroups[group.type] = group.items || []; });
     const seq = (this._searchSeq || 0) + 1;
     this._searchSeq = seq;
     this._resultOwner = owner;
@@ -122,7 +124,7 @@ Page({
 
     if (preserveExisting) {
       this.setData({ searchLoading: true, showSearchSkeleton: false, searchError: '',
-        resultGroups: (this.data.resultGroups || []).filter(group => !['topic', 'activity', 'post'].includes(group.type)) });
+        resultGroups: (this.data.resultGroups || []).filter(group => !contentType(group.type)) });
       this.updateVisibleResults();
     } else {
       this.setData({ searchLoading: true, showSearchSkeleton: false, searchError: '', activeResultType: 'all', resultTabs: DEFAULT_RESULT_TABS, resultGroups: [], visibleResults: [] });
