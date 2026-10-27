@@ -36,7 +36,8 @@
       <view class="shzlbox_li_left_name">手机号</view>
       <view class="shzlbox_li_left_txt {{userInfo.phone ? '' : 'is-empty'}}">{{phoneMasked || '未绑定'}}</view>
     </view>
-    <button wx:if="{{!userInfo.phone}}" class="shzlbox_li_right shzlbox_bind" open-type="getPhoneNumber" bindgetphonenumber="getPhoneNumber" aria-label="绑定手机号" hover-class="cy-pressed" hover-stay-time="80">
+    <!-- P-56(2026-10-27):已绑定也给修改图标,点开走微信手机号授权换绑(同一 getPhoneNumber → /api/getwxbindphone) -->
+    <button class="shzlbox_li_right shzlbox_bind" open-type="getPhoneNumber" bindgetphonenumber="getPhoneNumber" aria-label="{{userInfo.phone ? '更换手机号' : '绑定手机号'}}" hover-class="cy-pressed" hover-stay-time="80">
       <image lazy-load="true" src="/pages/gerenziliao/images/d_bianji2.png" mode="widthFix" />
     </button>
   </view>

@@ -118,17 +118,20 @@ page {
   height: 112rpx;
   border-radius: 50%;
   background: var(--cy-bg-card);
-  border: 2rpx solid var(--cy-border-line);
+  /* M-27(2026-10-27):商家头像不要描边 */
 }
 
 /* 收入区:固定高度撑出问候行与快捷钮之间的整段留白(原 96+…+200 ≈ 650rpx,
  * 按钮位置不动),数字组 flex 居中 ⇒ 永远在标题与按钮正中间。 */
 .rv-revenue-zone {
   position: relative;
-  min-height: 650rpx; /* ds-ok: 650rpx 首屏构图定位值,无对应 spacing token */
+  /* M-27(2026-10-27):「累计收入」上方空了一大块 —— 原 650rpx 竖向居中把数字推到半屏;
+     收成 360rpx,内容贴上缘排(问候行与收入之间只留 hero-top 自带的间距)。 */
+  min-height: 360rpx; /* ds-ok: 首屏构图定位值,无对应 spacing token */
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
+  padding-top: var(--cy-space-4);
 }
 
 .rv-revenue-label {

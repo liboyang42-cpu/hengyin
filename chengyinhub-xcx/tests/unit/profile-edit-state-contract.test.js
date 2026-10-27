@@ -49,6 +49,8 @@ function loadPage() {
       if (request === '../../utils/form-state.js') return require('../../utils/form-state.js')
       if (request === './nickname-check.js') return require('../../pages/gerenziliao/nickname-check.js')
       if (request === '../../utils/profile-review.js') return require('../../utils/profile-review.js')
+      // 2026-10-27 L08 G-5:资料保存成功广播身份变化(纯内存模块,用真身)
+      if (request === '../../utils/identity-sync.js') return require('../../utils/identity-sync.js')
       throw new Error(`unexpected require: ${request}`)
     },
     wx: {

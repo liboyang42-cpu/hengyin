@@ -25,7 +25,19 @@ function isOpenOrder(row, phoneNow) {
   return Number(row.verificationStatus) !== 1;
 }
 
-// 已付款未核销:进行中(含不可退款)=待核销→出示核销码;未开始=待开始→查看
+// P-48(owner 2026-10-27):卡上只说「是什么主题」—— 玩法类型(1 城市定向 / 2 自由探索,活动统一「活动」)· 具体类别。
+// 认不出的段落不显示,不编;两段都没有时交空串,由模板退回档期。
+function kindTextOf(row, source) {
+  const productType = Number(source.productType != null ? source.productType : source.mode);
+  const type = row.cmsActivity ? '活动' : (productType === 1 ? '城市定向' : (productType === 2 ? '自由探索' : ''));
+  const cats = Array.isArray(source.sysCategoryList) ? source.sysCategoryList : [];
+  const hit = cats.filter(function (c) { return c && typeof c.categoryName === 'string' && c.categoryName.trim(); })[0];
+  const category = hit ? hit.categoryName.trim() : (typeof source.categoryName === 'string' ? source.categoryName.trim() : '');
+  return [type, category].filter(Boolean).join(' · ');
+}
+
+// 已付款未核销:进行中(含不可退款)=待核销;未开始=待开始。
+// P-48:票数与「出示核销码」按钮已按 owner 要求去掉(核销码在订单/票夹里出示),卡片只留状态章、标题、主题信息。
 function shapeOrderPreview(row, resolveImg, phoneNow) {
   const state = summarizeOrderState(row, orderClockNow(row, phoneNow));
   const source = row.cmsActivity || row.cmsTopic || {};
@@ -34,7 +46,6 @@ function shapeOrderPreview(row, resolveImg, phoneNow) {
   const toVerify = state.key !== 'not_started';
   const start = dateText(source.startDate || source.startTime);
   const end = dateText(source.endDate || source.endTime);
-  const num = Number(row.orderNum);
   return {
     id: row.id,
     title: source.name || row.topicName || '探索订单',
@@ -42,8 +53,7 @@ function shapeOrderPreview(row, resolveImg, phoneNow) {
     statusText: toVerify ? '待核销' : '待开始',
     statusTone: toVerify ? 'verify' : 'wait',
     timeText: start && end && start !== end ? start + ' – ' + end : (start || end),
-    ticketText: num > 0 ? num + ' 张票' : '',
-    actionText: toVerify ? '出示核销码' : '查看',
+    kindText: kindTextOf(row, source),
   };
 }
 

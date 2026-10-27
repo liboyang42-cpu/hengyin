@@ -33,7 +33,9 @@ test('余额走 money.amount 的既有空值口径，不另起一套判断', () 
   const wxml = read(WXML);
   assert.match(wxml, /<wxs src="\.\.\/\.\.\/\.\.\/\.\.\/utils\/wxs\/money\.wxs" module="money" \/>/,
     'profile 必须引入 money.wxs');
-  assert.match(wxml, /class="pc-asset__value[^>]*>\{\{money\.amount\(balanceText\)\}\}</,
+  // 2026-10-27 owner 真机走查 P-49(实施文档 0.3):余额「没有就是 0」,不再渲「—」——
+  // 仍走 money.amount,只是在调用处把 null 换成 0;formatBalance 的 null 语义不变(下面那条照旧)。
+  assert.match(wxml, /class="pc-asset__value[^>]*>\{\{money\.amount\(balanceText == null \? 0 : balanceText\)\}\}</,
     '余额必须由 money.amount 渲染');
   // 反面:不许在资产卡里手写裸 ¥ 或自己判空 —— 那就是第二套口径
   const card = wxml.slice(wxml.indexOf('class="pc-asset"'), wxml.indexOf('pc-asset__arrow'));
@@ -72,7 +74,7 @@ test('资产卡的金额走 --cy-type-data-xl(DS 里金额唯一那档),不按�
 // 负控:把 money.amount 换成裸绑定(退化成直接渲原值)必须判红,
 // 否则上面那条「走 money.amount」是恒真断言。
 test('负控:余额绕开 money.amount 直接渲原值必须判红', () => {
-  const mutated = read(WXML).replace('{{money.amount(balanceText)}}', '{{balanceText}}');
-  assert.doesNotMatch(mutated, /money\.amount\(balanceText\)/, '变异未生效，负控本身是假的');
-  assert.throws(() => assert.match(mutated, /class="pc-asset__value[^>]*>\{\{money\.amount\(balanceText\)\}\}</));
+  const mutated = read(WXML).replace('{{money.amount(balanceText == null ? 0 : balanceText)}}', '{{balanceText}}');
+  assert.doesNotMatch(mutated, /money\.amount\(balanceText/, '变异未生效，负控本身是假的');
+  assert.throws(() => assert.match(mutated, /class="pc-asset__value[^>]*>\{\{money\.amount\(balanceText == null \? 0 : balanceText\)\}\}</));
 });

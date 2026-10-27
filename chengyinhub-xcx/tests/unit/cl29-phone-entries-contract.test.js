@@ -125,11 +125,13 @@ test('CL-29 报名:手机号齐全时才真正提交(对照组,证明上面拦�
 
 // ---------- 2. 资料页:getPhoneNumber 绑定入口 ----------
 
-test('CL-29 资料页:未绑号时渲染 getPhoneNumber 绑定按钮,按钮由用户点击触发', () => {
+test('CL-29 资料页:getPhoneNumber 绑定/换绑按钮常驻,按钮由用户点击触发', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/gerenziliao/gerenziliao.wxml'), 'utf8');
   const btn = wxml.match(/<button[^>]*open-type="getPhoneNumber"[^>]*>/g) || [];
   assert.equal(btn.length, 1);
-  assert.match(btn[0], /wx:if="\{\{!userInfo\.phone\}\}"/);
+  // 2026-10-27 owner 真机走查 P-56:已绑定也要有修改图标,点开走微信手机号授权换绑 ⇒ 不再按 !userInfo.phone 隐藏
+  assert.doesNotMatch(btn[0], /wx:if=/);
+  assert.match(btn[0], /aria-label="\{\{userInfo\.phone \? '更换手机号' : '绑定手机号'\}\}"/);
   assert.match(btn[0], /bindgetphonenumber="getPhoneNumber"/);
 });
 

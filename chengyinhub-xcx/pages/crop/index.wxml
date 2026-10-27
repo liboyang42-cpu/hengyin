@@ -33,13 +33,15 @@
     </view>
     <!-- 框外纯黑:图片超出部分直接裁掉,不做半透明蒙层(跟参考图一致)。
          居中交给 CSS flex,不用 JS 算 top —— 舞台真实高度只有布局知道,JS 再算一遍必然对不齐 -->
-    <view wx:else class="crop__frame"
+    <view wx:else class="crop__frame {{round ? 'crop__frame--round' : ''}}"
           style="width:{{frameW}}px;height:{{frameH}}px;">
       <image wx:if="{{ready}}"
              class="crop__img"
              src="{{src}}"
              mode="scaleToFill"
              style="width:{{imgW}}px;height:{{imgH}}px;transform:translate3d(calc(-50% + {{tx}}px), calc(-50% + {{ty}}px), 0) scale({{scale}});" />
+      <!-- M-08:圆形取景 —— 圆外四角压暗,圆内就是主页上会看到的 Logo -->
+      <view wx:if="{{round}}" class="crop__round-mask"></view>
     </view>
     <view wx:if="{{exportError}}" class="crop__export-error">
       <cy-inline-error kind="error" title="裁剪没有完成" sub="{{exportError}}" action="使用原图" bind:action="onUseOriginal" />

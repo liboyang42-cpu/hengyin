@@ -29,6 +29,8 @@ const mediaPreview = require('../../../../utils/media-preview.js');
 const { buildOrderPreviewList } = require('./order-preview.js');
 const { shapeMerchantSafety } = require('./merchant-safety-summary.js');
 const { shapeMerchantNode, readFavoriteToggle } = require('./merchant-node-favorite.js');
+const identitySync = require('../../../../utils/identity-sync.js');
+const tagLibrary = require('../../../../utils/tag-library.js');
 const THEME_EMOJI = ['🍜', '❤️', '📚', '☕', '🌸', '🎮', '📷', '🏯'];
 const MEDAL_EMOJI = {
   ramen: '🍜', coffee: '☕', book: '📚', history: '🏯', spring: '🌸',
@@ -279,6 +281,37 @@ function previewState(item) {
   return '';
 }
 
+// M-25:章节承接申请 → 「我的项目」卡。按主题合并(一店常承接同一主题多章),
+// 状态:0 审核中 / 1 已通过(再按档期给 未开始/进行中/已结束)/ 2 未通过;已结束、未通过不进预览。
+function buildUndertakePreview(rows, limit) {
+  var byTopic = {};
+  var order = [];
+  (rows || []).forEach(function (row) {
+    var topicId = row && Number(row.topicId);
+    var status = row && Number(row.status);
+    if (!topicId || (status !== 0 && status !== 1)) return;
+    var key = String(topicId);
+    var prev = byTopic[key];
+    if (prev && !(prev.status === 0 && status === 1)) return;   // 同主题有已通过的章就按已通过展示
+    if (!prev) order.push(key);
+    byTopic[key] = { status: status, row: row };
+  });
+  return order.map(function (key) {
+    var hit = byTopic[key];
+    var row = hit.row;
+    var time = calcTimeProgress(row.startDate, row.endDate);
+    var statusText = hit.status === 0 ? '审核中' : statusLabelOf(row.startDate, row.endDate);
+    return {
+      id: Number(row.topicId),
+      name: row.topicName || '未命名主题',
+      cover: row.topicImgUrl ? String(row.topicImgUrl).split(/[,;]/)[0] : '/images/route_free_cover.png',
+      timeLabel: time.label,
+      statusDone: statusText === '已结束',
+      statusText: statusText
+    };
+  }).filter(function (item) { return !item.statusDone; }).slice(0, limit || 8);
+}
+
 function normalizeProjectPreview(item) {
   item = Object.assign({}, item, { state: previewState(item) });
   var time = calcTimeProgress(item.startDate, item.endDate);
@@ -379,6 +412,11 @@ Component({
     merchantTeamEntryValue: '',
     _avatarSrc: '',
     _avatarInitial: '',
+    // G-5:身份头名称的唯一出口(商家视角=商家名,玩家=昵称);selfMerchant = 本人商家身份(access/me + merchant/info)
+    _displayName: '',
+    selfMerchant: null,
+    // M-19:登录者就是被看者(含「看公开主页」预览)—— 本人不关注自己、不向自己发起合作
+    viewingOwn: false,
     reportShow: false,
     reportTargetType: '',
     reportTargetId: '',
@@ -398,6 +436,9 @@ Component({
     merchantGallery: [],
     merchantTags: [],
     merchantCategories: [],
+    // G-8:商家标签库渲染项 [{label, iconSrc}]
+    merchantCategoryTags: [],
+    merchantTagItems: [],
     merchantHasGeo: false,
     merchantSafety: null,
     merchantNode: null,
@@ -468,14 +509,14 @@ Component({
   observers: {
     // 头像位真源:商家主体走 logo,没有就落店名首字;玩家走 avatar,没有才用默认头像那张图。
     // 首字在 js 里算 —— WXML 表达式不支持 charAt。
-    'subjectIsMerchant, subjectMerchant, userInfo': function (isMerchant, merchant, user) {
-      var m = merchant || {};
-      var u = user || {};
-      var name = (m.name || '').trim();
-      this.setData({
-        _avatarSrc: isMerchant ? (m.logo || '') : (u.avatar || '/images/d_profile.png'),
-        _avatarInitial: isMerchant ? (name ? name.charAt(0) : '店') : '',
-      });
+    // G-5(2026-10-27):本人商家视角同样只认商家名 / Logo(selfMerchant),不再挂会员昵称和个人头像。
+    'subjectIsMerchant, subjectMerchant, userInfo, isSelf, isMerchantView, selfMerchant': function (isMerchant, merchant, user, isSelf, merchantView, selfMerchant) {
+      var selfAsMerchant = !isMerchant && isSelf && merchantView;
+      var id = identitySync.resolveSelfIdentity(isMerchant || selfAsMerchant,
+        isMerchant ? merchant : selfMerchant, user);
+      // 本人商家身份还没回来时先不落「商家」两个字,沿用会员昵称占位一帧,避免闪成默认名
+      if (selfAsMerchant && !(selfMerchant && selfMerchant.name)) id.name = (user && user.nickname) || id.name;
+      this.setData({ _avatarSrc: id.avatar, _avatarInitial: id.initial, _displayName: id.name });
     },
     // 商家版没有「成就」tab(2026-08-20 用户拍板)。isMerchantView 有两个写入点
     // (被看者探测 probeSubjectMerchant / 观看者角色 syncMerchantView),observer 一处兜住全部。
@@ -501,10 +542,13 @@ Component({
       this._profileAttached = true;
       this._profileHidden = false;
       this._syncProfileReducedMotion();
+      this._identityEpoch = identitySync.identityEpoch();
+      this._offIdentity = identitySync.onIdentityChange(this.onIdentityChanged.bind(this));
       this.initializeProfile();
       this._syncCommunityProfile();
     },
     detached: function () {
+      if (this._offIdentity) { this._offIdentity(); this._offIdentity = null; }
       this._verificationGeneration = (this._verificationGeneration || 0) + 1;
       this._profileAttached = false;
       this._profileReadEpoch = (this._profileReadEpoch || 0) + 1;
@@ -540,6 +584,12 @@ Component({
         return;
       }
       this.refreshDirtyPosts();
+      // G-5:别处改了头像/Logo/封面/店名(本组件当时不在栈上或没收到广播)⇒ 丢掉身份缓存重拉
+      if (this._identityEpoch !== identitySync.identityEpoch()) {
+        this._identityEpoch = identitySync.identityEpoch();
+        if (this.data.isSelf && this.data.isMerchantView) this.loadSelfMerchant();
+        if (!this.data.isSelf && this.data.subjectIsMerchant) this.probeSubjectMerchant();
+      }
       if (firstShow) return;
       if (this.data.hostSelf) {
         this.syncMerchantView();
@@ -760,10 +810,14 @@ Component({
       merchantGallery: [],
       merchantTags: [],
       merchantCategories: [],
+      merchantCategoryTags: [],
+      merchantTagItems: [],
       merchantHasGeo: false,
       merchantSafety: null,
       merchantNode: null,
       merchantNodeBusy: false,
+      selfMerchant: null,
+      viewingOwn: !!String(app.getUserID() || '') && String(app.getUserID() || '') === userId,
       // 合法 initialTab 优先;非法值回退原规则(自己 projects、别人 posts)
       activeTab: initialTab || (isSelf ? 'projects' : (communityReadable() ? 'posts' : 'about')),
       memberTabs: memberTabs,
@@ -842,6 +896,8 @@ Component({
       merchantGallery: [],
       merchantTags: [],
       merchantCategories: [],
+      merchantCategoryTags: [],
+      merchantTagItems: [],
       merchantHasGeo: false,
       merchantSafety: null,
       merchantNode: null,
@@ -868,6 +924,10 @@ Component({
       merchantGallery: parseDisplayList(m.gallery, ['url', 'src', 'imgUrl', 'image']),
       merchantTags: parseDisplayList(m.tags),
       merchantCategories: m.sysCategoryList || [],
+      // G-8 / M-12:品类与特色标签都走商家标签库(图标 + 实底小标签)
+      merchantCategoryTags: tagLibrary.decorateTags((m.sysCategoryList || []).map(function (c) { return c && c.categoryName; }),
+        'merchant', tagLibrary.MEMBER_ICON_DIR),
+      merchantTagItems: tagLibrary.decorateTags(parseDisplayList(m.tags), 'merchant', tagLibrary.MEMBER_ICON_DIR),
       merchantHasGeo: hasGeo,
       merchantSafety: null,
       merchantNode: null,
@@ -992,16 +1052,64 @@ Component({
       }
       var access = normalizeMerchantAccess(res.data);
       that._viewerIsMerchant = access.active;
+      var viewChanged = access.active !== that.data.isMerchantView;
       that.setData({
         merchantAccess: access,
         merchantAccessState: 'ready',
         merchantTeamEntryValue: access.active
           ? (access.canManageOperators ? access.roleName + ' · 管理' : access.roleName + ' · 查看')
           : '',
-        isMerchantView: access.active
+        isMerchantView: access.active,
+        // G-5:本人商家身份先用 access/me 里的店名/Logo 顶上,封面等 merchant/info 回读
+        selfMerchant: access.active ? Object.assign({}, that.data.selfMerchant || {}, access.merchant) : null
       });
       if (that.data.hostSelf) applyTheme(access.active ? 'light' : 'dark');
+      if (access.active) that.loadSelfMerchant();
+      // M-25:视角在请求途中翻了 ⇒ 我的项目换成对应来源(商家=承接进度),订单段商家视角不出
+      if (viewChanged) { that.loadProjectPreview(); if (!access.active) that.loadOrderPreview(); }
     });
+  },
+
+  // G-5 / M-17:本人商家视角的店名、Logo、主页背景(=店铺装修封面)只读 /api/merchant/info 这一个来源。
+  loadSelfMerchant: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
+    var that = this;
+    return req('/api/merchant/info', {}).then(function (res) {
+      if (!that._currentProfileRead(read, res) || !that.data.isMerchantView) return;
+      if (res.code != '200' || !isRecord(res.data)) return;
+      var m = res.data;
+      var prev = that.data.selfMerchant || {};
+      var next = Object.assign({}, prev, {
+        name: typeof m.name === 'string' && m.name.trim() ? m.name : prev.name || '',
+        logo: typeof m.logo === 'string' && m.logo ? m.logo : prev.logo || '',
+        coverImage: typeof m.coverImage === 'string' ? m.coverImage : ''
+      });
+      that.setData({ selfMerchant: next, heroImg: next.coverImage || that.data.heroImg });
+    });
+  },
+
+  // G-5:品牌中心 / 个人资料保存成功后的全局广播。只先把旧图旧名换掉,随后仍以接口回读为准。
+  onIdentityChanged: function (evt) {
+    this._identityEpoch = evt.epoch;
+    if (!this.data.isSelf) {
+      if (evt.scope === 'merchant' && this.data.subjectIsMerchant && this.data.viewingOwn) this.probeSubjectMerchant();
+      return;
+    }
+    if (evt.scope === 'merchant' && this.data.isMerchantView) {
+      this.setData({
+        selfMerchant: Object.assign({}, this.data.selfMerchant || {}, evt.patch),
+        heroImg: evt.patch.coverImage || this.data.heroImg
+      });
+      this.loadSelfMerchant();
+      return;
+    }
+    if (evt.scope === 'member') {
+      var u = Object.assign({}, this.data.userInfo || {});
+      if (evt.patch.avatar) u.avatar = evt.patch.avatar;
+      if (evt.patch.nickname) u.nickname = evt.patch.nickname;
+      this.setData({ userInfo: u });
+    }
   },
 
   resetProfileMetricState: function () {
@@ -1064,6 +1172,12 @@ Component({
     const read = this._captureProfileRead(false);
     if (!read) return Promise.resolve();
     var that = this;
+    // M-17:本人商家视角的背景就是店铺装修封面(loadSelfMerchant 写入),不读玩家自选背景、也不拿运营 banner 顶替
+    if (this.data.isSelf && this.data.isMerchantView) {
+      var cover = this.data.selfMerchant && this.data.selfMerchant.coverImage;
+      if (cover) this.setData({ heroImg: cover });
+      return;
+    }
     var local = this.data.isSelf ? wx.getStorageSync('member_hero_bg') : '';
     if (local) {
       that.setData({ heroImg: local });
@@ -1368,6 +1482,12 @@ Component({
     if (!read) return Promise.resolve();
     var that = this;
     if (that._profileAttached === false) return Promise.resolve();
+    // M-25:商家视角不报名游玩、没有订单段,不去拉玩家订单
+    if (that.data.isMerchantView) {
+      that._orderPreviewRequestId = (that._orderPreviewRequestId || 0) + 1;
+      that.setData({ orderPreviewList: [], orderErr: false, orderAuthError: false });
+      return Promise.resolve();
+    }
     var memberId = app.getUserID();
     var requestId = that._orderPreviewRequestId = (that._orderPreviewRequestId || 0) + 1;
     var profileEpoch = that._followEpoch || 0;
@@ -1418,6 +1538,19 @@ Component({
       that.setData({ projectPreviewList: [], projectErr: false, projectAuthError: false });
     }
     that._projectPreviewMemberId = memberId;
+    // M-25(2026-10-27):商家视角的「我的项目」= 作为承接方报名的主题进度(章节承接申请),不是自己发布的路线
+    if (that.data.isMerchantView) {
+      return req('/api/merchant/chapter-application/mine', {}).then(function (res) {
+        if (!that._currentProfileRead(read, res)) return;
+        if (that._profileAttached === false || requestId !== that._projectPreviewRequestId
+            || memberId !== app.getUserID() || !that.data.isMerchantView) return;
+        if (res.code != '200' || !isRecordList(res.data)) {
+          that.setData({ projectErr: true, projectAuthError: isAuthFailure(res) });
+          return;
+        }
+        that.setData({ projectErr: false, projectAuthError: false, projectPreviewList: buildUndertakePreview(res.data, 8) });
+      });
+    }
     var PAGE_SIZE = 8;
     var MAX_PAGES = 5;
     var live = [];
@@ -2131,9 +2264,11 @@ Component({
     this.closeCoopInvite();
     returnToCoopOrigin(e.detail.topicId);
   },
-  goOrder: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/order/order', complete: () => { this._navigating = false; } }); },
-  goProject: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/myproject/index', complete: () => { this._navigating = false; } }); },
+  // M-25:商家视角没有订单页可看,任何进订单的入口都改去「我的项目」
+  goOrder: function () { if (this.data.isMerchantView) { this.goProject(); return; } if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/order/order', complete: () => { this._navigating = false; } }); },
+  goProject: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/myproject/index' + (this.data.isMerchantView ? '?scope=MERCHANT' : ''), complete: () => { this._navigating = false; } }); },
   onOrderPreviewTap: function (e) {
+    if (this.data.isMerchantView) { this.goProject(); return; }
     var id = e.currentTarget.dataset.id;
     // 订单详情是「订单」二级页的子场景;一级「我的」先进入父页,由父页托管返回关系。
     if (id) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/order/order?detailId=' + encodeURIComponent(String(id)), complete: () => { this._navigating = false; } }); }

@@ -44,7 +44,8 @@ test('模板结果按模板页行样式画:具象图标优先,meta 为人数 · 
   };
   [['.tpl-big', '.pc-ord-card', 'height'], ['.tpl-big', '.pc-ord-card', 'border-radius'], ['.tpl-big', '.pc-ord-card', 'background'],
     ['.tpl-big__shade', '.pc-ord-shade', 'background'], ['.tpl-big__shade', '.pc-ord-shade', 'height'],
-    ['.tpl-big__title', '.pc-ord-title', 'font-size'], ['.tpl-big__btn', '.pc-ord-btn', 'background']].forEach(([mine, theirs, prop]) => {
+    // 2026-10-27 owner 真机走查 P-48:「我的订单」卡去掉了「出示核销码/查看」按钮(.pc-ord-btn 已删),按钮一项不再比对
+    ['.tpl-big__title', '.pc-ord-title', 'font-size']].forEach(([mine, theirs, prop]) => {
     assert.equal(decl(wxss, mine, prop), decl(order, theirs, prop), `${mine} ${prop} 与订单卡一致`);
   });
 });

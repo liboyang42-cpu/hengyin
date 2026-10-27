@@ -712,7 +712,8 @@ function assertFirstRunMarkup(wxml, wxss) {
   assert.match(wxml, /<cy-error load-failure wx:if="\{\{projectErr\}\}"[\s\S]*bind:retry="reloadProjects"/)
   // 2026-10-22 owner:没有未完成订单时整段「我的订单」不显示(不再摆「暂无订单」空态)
   assert.doesNotMatch(wxml, /title="暂无订单"/)
-  assert.match(wxml, /<block wx:if="\{\{orderPreviewList\.length \|\| orderErr\}\}">/)
+  // 2026-10-27 owner 真机走查 M-25:商家视角没有订单段,条件前加 !isMerchantView;玩家侧口径不变
+  assert.match(wxml, /<block wx:if="\{\{!isMerchantView && \(orderPreviewList\.length \|\| orderErr\)\}\}">/)
   assert.match(wxml, /class="pc-achievement-metrics" wx:if="\{\{profileMetricState === 'ready'\}\}"/)
   assert.match(wxml, /aria-label="城瘾积分 \{\{profilePoint\}\}"[\s\S]*class="pc-gs-num">\{\{profilePoint\}\}/)
   assert.match(wxml, /class="pc-rank-v">\{\{exploreStat\.shops \|\| 0\}\}家店/)
