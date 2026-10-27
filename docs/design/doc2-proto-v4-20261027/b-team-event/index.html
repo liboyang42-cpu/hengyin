@@ -7230,6 +7230,10 @@ body.clean .mk-tag{display:none}
 .proto-li b{font-weight:600;color:var(--cy-color-text-primary);text-align:right}
 .proto-li.is-bad b{color:var(--cy-color-status-warning)}
 .proto-note{padding-top:12px;font-size:var(--cy-type-label);line-height:1.6;color:var(--cy-color-text-tertiary)}
+/* 10-27：开局前准备 */
+.topic-audio[data-st="none"]{display:none}
+.proto-preplist .c-consent-check{padding:12px 0;border-bottom:.52px solid var(--cy-color-border-subtle)}
+.proto-cta{margin-top:16px}
 /* 队伍进度矩阵：行高与 team-member 同档，字号沿用 team-member-role / team-note */
 .p-team .tm-matrix{margin-top:8px}
 .p-team .tm-mx-row{display:grid;grid-template-columns:64px repeat(5,1fr);align-items:center;min-height:36px;border-top:.52px solid var(--cy-border-line);font-size:var(--cy-font-caption);color:var(--cy-text-secondary)}
@@ -7326,13 +7330,15 @@ body.clean [data-drop]{display:none !important}
       </div>
      </div>
      <div class="topic-audio" data-toast="我的游玩记录（现有半屏，本原型未展开）"><i class="cyi cyi--clock" style="width:18.72px;height:18.72px"></i><span>我的游玩记录</span><i class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></i></div>
-     <!-- 新增：开局安全检查（10-23 业主保留；行形与上一行完全相同） -->
+     <!-- 10-27 业主：「开局安全检查」改名「开局前准备」；作者配了准备项或可玩时段才出现（行形与上一行完全相同） -->
      <div class="topic-audio" data-mk="new" data-mk-id="t-safe" data-st-id="t-safe" data-sheet="topic-safe-sheet">
-      <div data-s="ready" style="display:contents"><i class="cyi cyi--info" style="width:18.72px;height:18.72px"></i><span>开局安全检查 · 可以参加</span><i class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></i></div>
-      <div data-s="blocked" style="display:contents" hidden><i class="cyi cyi--warning" style="width:18.72px;height:18.72px"></i><span>开局安全检查 · 本场暂不能开局</span><i class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></i></div>
-      <div data-s="loading" style="display:contents" hidden><i class="cyi cyi--clock" style="width:18.72px;height:18.72px"></i><span>正在检查本场开局条件…</span></div>
-      <div data-s="error" style="display:contents" hidden><i class="cyi cyi--warning" style="width:18.72px;height:18.72px"></i><span>安全检查没读到 · 点按重试</span></div>
-      <div data-s="guest" style="display:contents" hidden><i class="cyi cyi--info" style="width:18.72px;height:18.72px"></i><span>登录后查看本场开局条件</span><i class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></i></div>
+      <div data-s="todo" style="display:contents"><i class="cyi cyi--info" style="width:18.72px;height:18.72px"></i><span>开局前准备 · 还有 2 项没确认</span><i class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></i></div>
+      <div data-s="ready" style="display:contents" hidden><i class="cyi cyi--check" style="width:18.72px;height:18.72px"></i><span>开局前准备 · 都准备好了</span><i class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></i></div>
+      <div data-s="closed" style="display:contents" hidden><i class="cyi cyi--clock" style="width:18.72px;height:18.72px"></i><span>开局前准备 · 只在夜间 20:00–06:00 开放</span><i class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></i></div>
+      <div data-s="minor" style="display:contents" hidden><i class="cyi cyi--warning" style="width:18.72px;height:18.72px"></i><span>开局前准备 · 未满 18 岁夜间不能开局</span><i class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></i></div>
+      <div data-s="loading" style="display:contents" hidden><i class="cyi cyi--clock" style="width:18.72px;height:18.72px"></i><span>正在读取开局前准备…</span></div>
+      <div data-s="error" style="display:contents" hidden><i class="cyi cyi--warning" style="width:18.72px;height:18.72px"></i><span>开局前准备没读到 · 点按重试</span></div>
+      <div data-s="guest" style="display:contents" hidden><i class="cyi cyi--info" style="width:18.72px;height:18.72px"></i><span>登录后查看开局前准备</span><i class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></i></div>
      </div>
      <div class="davidxian"></div>
      <div class="det4"><div class="dl"><div class="det-type david_sti">节点介绍</div>
@@ -7375,26 +7381,30 @@ body.clean [data-drop]{display:none !important}
  </div>
 </div>
 </div>
-<!-- 开局安全检查明细：cy-sheet（贴内容高 → 落在 peek/half 档） -->
+<!-- 开局前准备：cy-sheet（贴内容高 → 落在 peek/half 档）；勾选行 = 现有 cy-consent-check -->
 <div class="c-sheet" id="topic-safe-sheet"><div class="sh sh--bottom">
  <div class="sh__mask" data-close="topic-safe-sheet"></div>
  <div class="sh__panel">
   <div class="sh__grip"><div class="sh__handle"></div></div>
-  <div class="sh__head sh__head--closable"><div class="sh__title sh__title--closable">开局安全检查</div><div class="sh__close" data-close="topic-safe-sheet"><i class="cyi cyi--close-sm" style="width:22.88px;height:22.88px"></i></div></div>
+  <div class="sh__head sh__head--closable"><div class="sh__title sh__title--closable">开局前准备</div><div class="sh__close" data-close="topic-safe-sheet"><i class="cyi cyi--close-sm" style="width:22.88px;height:22.88px"></i></div></div>
   <div class="sh__body" data-st-id="t-safe">
-   <div class="proto-list" data-s="ready guest">
-    <div class="proto-li"><span>本场时段</span><b>夜间 19:30–22:30</b></div>
-    <div class="proto-li"><span>天气</span><b>无预警</b></div>
-    <div class="proto-li"><span>参与年龄</span><b>已确认成年</b></div>
-    <div class="proto-li"><span>安全须知</span><b>已确认 · 2026-10-22 版</b></div>
-    <div class="proto-note">开局时服务端再检查一次；不满足的条件会直接说明原因，不会悄悄放行。</div>
+   <div class="proto-list" data-s="todo ready guest">
+    <div class="proto-li"><span>开放时段</span><b>夜间 20:00–06:00</b></div>
    </div>
-   <div class="proto-list" data-s="blocked" hidden>
-    <div class="proto-li is-bad"><span>天气</span><b>暴雨橙色预警，本场暂停开局</b></div>
-    <div class="proto-li"><span>本场时段</span><b>夜间 19:30–22:30</b></div>
-    <div class="proto-li"><span>参与年龄</span><b>已确认成年</b></div>
-    <div class="proto-note">预警解除后会重新开放。已购票可在订单里查看退改规则。</div>
+   <div class="proto-list" data-s="closed" hidden>
+    <div class="proto-li is-bad"><span>开放时段</span><b>夜间 20:00–06:00 · 现在不在时段内</b></div>
    </div>
+   <div class="proto-list" data-s="minor" hidden>
+    <div class="proto-li"><span>开放时段</span><b>夜间 20:00–06:00</b></div>
+    <div class="proto-li is-bad"><span>年龄</span><b>未满 18 岁不能在夜间开局</b></div>
+   </div>
+   <div data-s="todo closed guest" class="proto-preplist" id="prepTodo"><div class="c-consent-check proto-prep" data-act="prepTick"><div class="cck"><i class="cck-box"></i><div class="cck__txt">手机电量充足</div></div></div><div class="c-consent-check proto-prep" data-act="prepTick"><div class="cck"><i class="cck-box"></i><div class="cck__txt">带手电筒</div></div></div></div>
+   <div data-s="ready minor" class="proto-preplist" hidden><div class="c-consent-check proto-prep" data-act="prepUntick"><div class="cck"><i class="cck-box on"><i class="cyi cyi--check" style="width:12.48px;height:12.48px"></i></i><div class="cck__txt">手机电量充足</div></div></div><div class="c-consent-check proto-prep" data-act="prepUntick"><div class="cck"><i class="cck-box on"><i class="cyi cyi--check" style="width:12.48px;height:12.48px"></i></i><div class="cck__txt">带手电筒</div></div></div></div>
+   <div class="proto-cta c-btn" data-s="todo guest"><div class="btn btn--disabled">勾完才能开始</div></div>
+   <div class="proto-cta c-btn" data-s="ready" hidden><div class="btn btn--primary" data-go="play">开始游玩</div></div>
+   <div class="proto-cta c-btn" data-s="closed" hidden><div class="btn btn--disabled">这个主题只在夜间 20:00–06:00 开放</div></div>
+   <div class="proto-cta c-btn" data-s="minor" hidden><div class="btn btn--disabled">未满 18 岁不能在夜间开局</div></div>
+   <div class="proto-note" data-s="todo ready closed minor guest">准备项是作者写的提醒，勾完就能开始。开局时还会再核一次时段和年龄（平台规则：未满 18 岁不能在夜间开局）。</div>
    <div class="proto-list" data-s="loading error" hidden><div class="proto-note">—</div></div>
   </div>
  </div>
@@ -8057,7 +8067,7 @@ body.clean [data-drop]{display:none !important}
     <div class="chain"><h3>② 赛事：报名 → 签到 → 开局 → 联系主办</h3><div class="flow">
      <div class="nd n" data-open="event">活动详情<small>安全须知勾选 → 立即报名</small></div><div class="ar">→<em>signup（需后端记 policyVersion）</em></div>
      <div class="nd n" data-open="event">到场签到<small>attendance-claim → credential</small></div><div class="ar">→<em>工作人员扫码 attendance-verify</em></div>
-     <div class="nd n" data-open="topic">主题详情<small>开局安全检查</small></div><div class="ar">→<em>topicId, activityId → blockers[]</em></div>
+     <div class="nd n" data-open="topic">主题详情<small>开局前准备</small></div><div class="ar">→<em>准备项全勾 + 在可玩时段内（需后端）；safety/check → blockers[]</em></div>
      <div class="nd n" data-open="play">游玩菜单<small>联系主办（Club.phone）</small></div></div>
      <div class="note">签到只记到场：不改计时、成绩、奖励。换码 attendance-rotate 后旧码失效；重复扫码返回原结果。电话只读主办俱乐部已有的联系电话；自由探索读本站商家的联系电话（MmsMerchant.phone）。不另设值班岗位、时段和 110 / 120。</div></div>
     <div class="chain"><h3>③ 到达申诉：被拦 → 申诉 → 复核 → 原局重验</h3><div class="flow">
@@ -8093,9 +8103,9 @@ const BE = {
 };
 window.MARKS = {
   /* 主题详情 */
-  't-safe': Object.assign({ kind: 'new', name: '开局安全检查一行', after: '「我的游玩记录」下面同款一行（图标 + 一句话 + 箭头）。点开是 cy-sheet：时段 / 天气 / 年龄 / 安全须知四行。被拦时这一行直接写「本场暂不能开局」，半屏里写 blockers[0].message（不显示错误码）。10-23 业主已定保留。',
-    states: [['ready', '可以参加'], ['blocked', '被拦'], ['loading', '加载中'], ['error', '出错'], ['guest', '游客']] },
-    BE.M('POST /api/orient/safety/check → allowed, blockers[{code,message}], night；开关 orient.safety.enabled')),
+  't-safe': Object.assign({ kind: 'new', name: '开局前准备一行（10-27 由「开局安全检查」改）', after: '「我的游玩记录」下面同款一行（图标 + 一句话 + 箭头）。只在作者配了「开局前准备」项或「可玩时段」时出现，否则整行不出（B1，10-27 已定）。点开是 cy-sheet：开放时段一行 + 作者写的准备项（现有 cy-consent-check 勾选行），全勾了「开始游玩」才能点；不在开放时段时按钮写「这个主题只在夜间 20:00–06:00 开放」；夜间未成年按平台规则写原因。项目名和时段说法与原型 A「开局前准备 / 可玩时段」一致。去掉了天气、年龄、安全须知那几行。',
+    states: [['todo', '还有没勾的'], ['ready', '都勾了 · 可以开始'], ['closed', '不在开放时段'], ['minor', '未满 18 岁 · 夜间'], ['none', '作者没配（整行不出）'], ['loading', '加载中'], ['error', '出错'], ['guest', '游客']] },
+    BE.X('作者端的准备项和可玩时段都没有字段（见原型 A）；未成年夜间规则沿用 master 的 POST /api/orient/safety/check（MINOR_NIGHT_FORBIDDEN）')),
   't-teams': Object.assign({ kind: 'chg', name: '组队卡可点 → 组队大厅', before: '只读卡片，最后一行写「购买后可在地图上发起或加入组队」，点不了。',
     after: '已购票时整卡可点，最后一行改成「去组队大厅看全部队伍 ›」，进「我的队伍」并直接落在「本场招募」。未购票时保持现状。' }, BE.M('无新接口（跳转带 ownerType / ownerId）')),
   /* 我的队伍 */
@@ -8161,11 +8171,11 @@ window.MARKS = {
 
 const STD = { light: false };
 window.META = {
-  topic: { title: '主题详情 · 安全检查 / 组队入口', host: 'pages/topic/index/index', files: ['chengyinhub-xcx/pages/topic/index/index.wxml / .wxss', 'components/cy/sheet', 'pages/topic/components/cy/theme-badge'], badges: ['n', 'c'],
-    why: '开局前最后一次看到「这一场」的地方就是主题详情；安全检查只读不写，放在「我的游玩记录」同组最自然。组队卡已在这一页，补一个去处即可。',
+  topic: { title: '主题详情 · 开局前准备 / 组队入口', host: 'pages/topic/index/index', files: ['chengyinhub-xcx/pages/topic/index/index.wxml / .wxss', 'components/cy/sheet', 'pages/topic/components/cy/theme-badge'], badges: ['n', 'c'],
+    why: '开局前最后一次看到「这一场」的地方就是主题详情；开局前准备放在「我的游玩记录」同组最自然，点开就地勾，不开新页。组队卡已在这一页，补一个去处即可。',
     els: ['t-safe', 't-teams'], eps: [{ m: 'POST /api/orient/safety/check', s: 'master · orient.safety.enabled' }, { m: 'GET /api/team/nearby', s: 'master · 现有组队卡数据源' }],
     init: (s) => { const sv = s.querySelector('.sv'), bar = s.querySelector('.topbar'); if (!sv.__nav) { sv.__nav = 1; sv.addEventListener('scroll', () => bar.classList.toggle('solid', sv.scrollTop > 420)); } },
-    qs: [['Q1', '安全检查是否在主题详情一直显示，还是只对夜间 / 有天气规则的场次显示？']] },
+    qs: [['B1', '已定（10-27）：改名「开局前准备」，只在作者配了准备项或可玩时段时出现；勾完才能开始，时段外按钮说明开放时间']] },
   myteams: { title: '我的队伍 · 本场招募（组队大厅）', host: 'subpackageRoam/my-teams/index', files: ['chengyinhub-xcx/subpackageRoam/my-teams/index.wxml / .wxss / .js'], badges: ['c', 'n'],
     why: '现在已有「我的队伍」页，它的第二格就是「附近招募」队伍列表，组队大厅不必新建页：带上场次时把这一格换成本场全部队伍即可。',
     els: ['mt-seg', 'mt-scope'], eps: [{ m: 'GET /api/orient/team/lobby', s: 'master · 没有前端调用' }, { m: 'POST /api/team/apply · /withdraw', s: 'master' }],
@@ -8221,10 +8231,14 @@ window.GROUPS = [
   { title: '申诉 · 信誉 · 判定', ids: ['settings', 'appeals', 'appeal-detail'] },
 ];
 window.FIRST = 'topic';
-window.STATE0 = { 't-safe': 'ready', 'mt-lobby': 'ready', 'team-board': 'ready', 'p-sos': 'ready', 'p-boardst': 'ready', 'p-guard': 'blocked', 'p-fin': 'ready', 'ev-duty': 'on', 'ev-checkin': 'open', 'ev-rank': 'ready', 'ev-policy': 'unchecked', 'ev-signed': 'unsigned', 'ap-list': 'ready', 'ap-detail': 'reviewing' };
+window.STATE0 = { 't-safe': 'todo', 'mt-lobby': 'ready', 'team-board': 'ready', 'p-sos': 'ready', 'p-boardst': 'ready', 'p-guard': 'blocked', 'p-fin': 'ready', 'ev-duty': 'on', 'ev-checkin': 'open', 'ev-rank': 'ready', 'ev-policy': 'unchecked', 'ev-signed': 'unsigned', 'ap-list': 'ready', 'ap-detail': 'reviewing' };
 
 /* ---------- 演示动作 ---------- */
 window.ACTS = {
+  prepTick: (a) => { const b = a.querySelector('.cck-box'); const on = !b.classList.contains('on'); b.classList.toggle('on', on); b.innerHTML = on ? '<i class="cyi cyi--check" style="width:12.48px;height:12.48px"></i>' : '';
+    const st = document.querySelector('.topic-audio[data-st-id="t-safe"]').dataset.st; const all = [...document.querySelectorAll('#prepTodo .cck-box')].every(x => x.classList.contains('on'));
+    if (all && st === 'todo') setState('t-safe', 'ready'); },
+  prepUntick: (a) => { const i = [...a.parentNode.children].indexOf(a); document.querySelectorAll('#prepTodo .cck-box').forEach((x, j) => { const on = j !== i; x.classList.toggle('on', on); x.innerHTML = on ? '<i class="cyi cyi--check" style="width:12.48px;height:12.48px"></i>' : ''; }); setState('t-safe', 'todo'); },
   tools: () => { const t = document.getElementById('play-tools'); t.classList.toggle('open'); },
   board: () => { document.getElementById('play-tools').classList.remove('open'); openSheet('play-board'); },
   sos: () => {
