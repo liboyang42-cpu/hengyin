@@ -184,11 +184,17 @@ test('站点矩阵不拦无通用工具的旧主题；公共采用回读后再�
   p.data.formData.themeRuntimeConfig=''; const legacy=tpl({estimate:{enabled:true}},0,8);
   p._bindNodeTemplate(legacy); assert.equal(p.data.nodesForm.templateId,8);
   p.data.nodesForm.templateId=7; p.data.selectedTempInfo=tpl(qa,1,2); p.data.selectedTempId=2;p.data.selectedTempSource='public';
-  p.getStoryDraftList=()=>{};p.confirmTemp(); sent.at(-1).success({code:200,data:99});
+  p.getStoryDraftList=()=>{};p.confirmTemp();
+  // 采用先读来源版本，带原请求号提交，再按原请求读回采用草稿详情。
+  sent.find(r=>r.url==='/api/template/adoption-source').success({code:200,data:{originalTemplateId:'2',sourceVersion:'a'.repeat(64)}});
+  const command=JSON.parse(sent.find(r=>r.url==='/api/template/adopt-draft').data);
+  sent.at(-1).success({code:200,data:{requestId:command.requestId,originalTemplateId:'2',sourceVersion:'a'.repeat(64),status:'COMPLETED',draftId:'99'}});
+  assert.equal(sent.at(-1).url,'/api/template/adoption-detail');
   sent.at(-1).success({code:200,data:tpl({estimate:{enabled:true},...cost},0,99)});
   assert.equal(p.data.nodesForm.templateId,7); assert.equal(sent.filter(r=>r.url==='/api/template/adopt-draft').length,1);
   assert.equal(notices.some(text=>text.includes('并绑定')),false);
-  assert.ok(notices.some(text=>text.includes('已存为草稿')));
+  // 采用已落成草稿但不兼容本站：原因改为常驻在节点卡上的采用提示(templateAdoptionError)，不再是一闪而过的 toast。
+  assert.match(p.data.templateAdoptionError,/已存为草稿；/);
 });
 
 test('旧主题纯效果模板在所有站点选择列表可用；通用主题只限制实际结算站点', () => {
