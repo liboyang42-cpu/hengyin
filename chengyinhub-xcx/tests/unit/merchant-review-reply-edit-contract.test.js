@@ -200,7 +200,11 @@ test('危险动作登记:删除端点已登记且文案写明不可撤销', () =
   const registry = JSON.parse(read('scripts/danger-action-registry.json'));
   const site = registry.sites.find((s) => s.endpoint === '/api/merchant/reviews/reply/delete');
   assert.ok(site, '删除端点必须登记在 danger-action-registry.json');
-  assert.equal(site.file, JS_PATH);
+  // W8:删除请求移进原请求恢复模块(reply-recovery.js 冻结 requestId 后发),危险确认仍在页面上弹
+  assert.equal(site.file, 'pages/merchant/reviews/reply-recovery.js');
+  assert.match(read(site.file), /url: '\/api\/merchant\/reviews\/reply\/delete'/);
+  assert.equal(site.confirmFile, JS_PATH);
+  assert.match(read(JS_PATH), /dc\.open\('merchant\.review\.reply\.delete'/);
   assert.equal(site.confirmKey, 'merchant.review.reply.delete');
   assert.equal(site.irreversible, true, '旧回复内容无法找回，必须按不可逆登记');
 
