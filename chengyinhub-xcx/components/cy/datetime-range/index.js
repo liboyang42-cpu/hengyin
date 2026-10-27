@@ -24,6 +24,8 @@ const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js')
 Component({
   behaviors: [reducedMotionBehavior],
   properties: {
+    // G-2:透传给内层弹层的返回守卫开关;宿主页已有自己的 page-container 覆盖它时传 false
+    backGuard: { type: Boolean, value: true },
     show: { type: Boolean, value: false },
     title: { type: String, value: '选择有效期' },
     // ['YYYY-MM-DD HH:mm:ss', 'YYYY-MM-DD HH:mm:ss'];调用方的已选值,打开时载入

@@ -10,3 +10,27 @@
 .mc-error { display: flex; align-items: center; justify-content: space-between; color: var(--cy-color-status-danger); }
 .mc-retry { margin: 0; font-size: var(--cy-font-caption); }
 .mc-error-text { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-color-status-danger); }
+
+/* P-55 page 档:商家名是分组标题,两条开关是设置页同款行(cy-cell 的行高 / 左右内距 / 字号 / 发丝线) */
+.mc--page { padding: 0 0 var(--cy-space-4); }
+.mc--page .mc-loading,
+.mc--page .mc-empty,
+.mc--page .mc-error,
+.mc--page .mc-error-text { padding: 0 var(--cy-page-x); }
+.mc--page .mc-list { gap: var(--cy-space-5); margin-top: 0; }
+.mc--page .mc-merchant { padding: 0; border-radius: 0; background: transparent; }
+.mc--page .mc-name {
+  padding: 0 var(--cy-comp-cell-pad-x) var(--cy-space-2);
+  font-size: var(--cy-type-label);
+  font-weight: 600;
+  color: var(--cy-color-text-tertiary);
+}
+.mc--page .mc-channel {
+  min-height: 112rpx;
+  padding: 0 var(--cy-comp-cell-pad-x);
+  box-sizing: border-box;
+  border-top: 0;
+  border-bottom: 1rpx solid var(--cy-color-border-subtle);
+}
+.mc--page .mc-label { font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }
+.mc--page .mc-sub { font-size: var(--cy-type-label); color: var(--cy-color-text-tertiary); }

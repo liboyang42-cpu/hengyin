@@ -429,7 +429,7 @@
     </view>
   </scroll-view>
   <cy-sheet inset="{{!fieldSheet.multiline}}" variant="{{fieldSheet.multiline ? 'full' : 'bottom'}}"
-    show="{{fieldSheet.show && !discardVisible}}"
+    show="{{fieldSheet.show && !discardVisible}}" back-guard="{{false}}"
     title="{{fieldSheet.label}}"
     bind:close="closeFieldSheet"
     mask-closable="{{!saving}}"
@@ -504,7 +504,7 @@
       <cy-btn disabled="{{!customTag}}" bindtap="addCustomTag" bind:disabledtap="onAddTagBlocked">添加</cy-btn>
     </view>
   </cy-sheet>
-  <cy-sheet inset show="{{discardVisible}}" title="还没有保存" bind:close="keepEditing">
+  <cy-sheet inset show="{{discardVisible}}" back-guard="{{false}}" title="还没有保存" bind:close="keepEditing">
     <view class="dc-sheet-content">
       <text class="dc-muted">离开后，本次修改不会保留。</text>
       <view class="dc-sheet-actions">

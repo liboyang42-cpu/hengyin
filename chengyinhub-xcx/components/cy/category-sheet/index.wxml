@@ -1,4 +1,4 @@
-<cy-sheet show="{{show}}" title="选择分类" bind:close="onClose" footer="{{true}}">
+<cy-sheet show="{{show}}" title="选择分类" bind:close="onClose" footer="{{true}}" back-guard="{{backGuard}}">
   <view class="cs-list" wx:if="{{categoryList.length}}">
     <view class="cs-li {{item.checked ? 'cs-li--on' : ''}} {{item.disabled ? 'cs-li--disabled' : ''}}"
           wx:for="{{categoryList}}"

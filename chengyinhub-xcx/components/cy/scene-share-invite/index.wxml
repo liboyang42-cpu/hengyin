@@ -9,11 +9,11 @@
   </view>
   <view wx:elif="{{qrState === 'code-error'}}" class="siv__qr-state">
     <cy-error title="个人码加载失败" sub="{{qrErrorText}}"
-      retry="重试" bind:retry="retryQr" />
+      retry="重新生成" bind:retry="retryQr" />
   </view>
   <view wx:elif="{{qrState === 'error'}}" class="siv__qr-state">
-    <cy-error load-failure title="二维码加载失败" sub="可以重试，或直接使用下方分享链接。"
-      retry="重试" bind:retry="retryQr" />
+    <cy-error load-failure title="二维码加载失败" sub="可以重新生成，或直接使用下方分享链接。"
+      retry="{{playerCode ? '重新生成' : '重试'}}" bind:retry="retryQr" />
   </view>
   <view wx:else class="siv__qr-state">
     <cy-empty title="二维码暂时不可用" sub="你仍可以直接使用下方分享链接。" size="sm" />

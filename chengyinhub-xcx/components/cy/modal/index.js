@@ -1,10 +1,19 @@
 const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
 const exitMotion = require('../../../behaviors/exit-motion.js');
+const { withNativeBackGuard, onBackGuardLeave } = require('../../../utils/native-back-guard.js');
 
-Component({
+/* G-2(2026-10-27):物理返回 = 取消(同 wx.showModal 的安卓返回);执行中或没有取消出口的提示只吞掉返回键。 */
+function onNativeBack(vm) {
+  if (vm.data._closing || vm.data.loading) return;
+  if (vm.data.showCancel || vm.data.maskClosable) vm.onCancel();
+}
+
+Component(withNativeBackGuard({
   options: { multipleSlots: true },
   behaviors: [reducedMotionBehavior, exitMotion(140)],
   properties: {
+    // G-2:页面已有自己的 page-container 覆盖这个弹层时传 false 让位(一页只能有一个容器)
+    backGuard: { type: Boolean, value: true },
     show:        { type: Boolean, value: false },
     title:       { type: String,  value: '' },
     content:     { type: String,  value: '' },   // 纯文本正文;富内容用 slot
@@ -23,6 +32,8 @@ Component({
     compact:     { type: Boolean, value: false },
   },
   methods: {
+    // G-2 返回守卫 page-container 的 afterleave(判定逻辑在 utils/native-back-guard.js)
+    _onBackGuardLeave() { onBackGuardLeave(this); },
     noop() {},   // catchtouchmove 吃掉遮罩下页面的滚动
     // 两道锁分开写:_closing 是退场期间拒绝重复触发(sheet-modal-exit-motion-contract 逐字断言这一行),
     // loading 是请求在途期间拒绝重复提交 —— 危险动作点两次会发两次删除请求。
@@ -49,4 +60,4 @@ Component({
       if (this.data.maskClosable) this.triggerEvent('cancel');
     },
   },
-});
+}, onNativeBack));

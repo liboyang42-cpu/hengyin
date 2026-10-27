@@ -512,6 +512,7 @@ const RAW = [
   ['F08', 'F08-merchant-customer-empty.png', '/pages/merchant/customer/index', 'merchant', 'empty', { loading: false, loadingMore: false, rows: [], hasMore: false, emptyTitle: '还没有到店客户', emptySub: '完成第一次核销后,客户会出现在这里' }, undefined, { selector: '.cu-page', min: 1 }, 'identity+setData', 'P0', '', '商家客户名单空态。normal 态前置:至少一次已核销的到店记录'],
   ['F09', 'F09-addressinfo-create.png', '/pages/addressinfo/addressinfo', 'player', 'normal', null, undefined, { selector: '.davidbox', min: 1 }, 'setData', 'P0', '', '参与人信息新建态(不带 id)。编辑态前置:一条已存在的参与人信息 id'],
   ['F10', 'F10-shezhi-about.png', '/pages/shezhi/about/index', 'player', 'normal', null, undefined, { selector: '.about-page', min: 1 }, 'real-data', 'P1', '', '关于页。⚠️ 本页有 isMerchantView 分支,商家侧观感另算一张,本行只覆盖玩家侧'],
+  ['F201', 'F201-shezhi-marketing.png', '/pages/shezhi/marketing/index', 'player', 'normal', null, undefined, { selector: '.mk-page', min: 1 }, 'real-data', 'P1', '', '营销消息与优惠券独立页(P-55,2026-10-27 从设置弹层改成页面)。⚠️ 本页有 isMerchantView 分支,本行只覆盖玩家侧'],
   ['F11', 'F11-coupon-wallet-shell.png', '/subpackageMember/coupon-wallet/index', 'player', 'normal', { state: 'ready', tab: 0, all: COUPON_WALLET_ITEMS, items: COUPON_WALLET_ITEMS, errorMsg: '' }, undefined, { selector: '.wallet-card', min: 1 }, 'setData', 'P1', '', '优惠券包薄壳的正文 ready 态；fixture 经 deep-link shadow path 注入真实 scene-game-coupon-wallet 字段，禁止把网络错误页冒充 normal', [{ selector: 'cy-scene-deep-link', index: 0 }, { selector: 'cy-scene-game-coupon-wallet', index: 0 }]],
   ['F59', 'F59-roam-nearby-list.png', '/subpackageRoam/nearby/index', 'player', 'normal', { loaded: true, hangoutCount: 2, sheet: 'list', items: [{ key: 'h5', kind: 'hangout', id: 5, label: '打 UNO 找搭子', pic: '', sub: '人民广场 · 09-06 20:00', meta: '3 人' }, { key: 'h6', kind: 'hangout', id: 6, label: '周日晨跑 5 公里', pic: '', sub: '世纪公园', meta: '12 人' }, { key: 'a9', kind: 'activity', id: 9, label: '周末飞盘局', pic: '', sub: '活动 · 徐汇滨江', meta: '1.2km' }] }, undefined, { selector: '.nb-row', min: 3 }, 'setData', 'P1', '', '漫游·附近的局(2026-09-05 新页):列表抽屉常态,两条局 + 一条只读活动叠加。地图本体不注 marker(真机 <map> 截不到 marker),卡片/建局态待真数据后补拍'],
   ['F12', 'F12-roam-poi-detail-missing.png', '/subpackageRoam/poi-detail/index', 'player', 'missing-param', null, undefined, { selector: '.pd-shell', min: 1 }, 'real-data', 'P1', '', '据点详情薄壳,把 poiId 透传给 cy-scene-roam-poi-detail。缺 poiId ⇒ 拍缺参态。normal 态前置:一个真实 poiId'],
@@ -648,11 +649,12 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页:D93/D94 两条 P1 setData 行退场,total 341、P1 198、actionable 317(P1 191)、D 42、setData 179。
 // 2026-10-23 起名页 templateadd 退役删除:B46(P0 real-data)/E21(P0 identity+setData)两行退场,total 341→339、P0 133→131、actionable 317→315(P0 124→122)、B 70→69、E 27→26、identity+setData 117→116、real-data 38→37。
 // 2026-10-25 新增官方地点挑战缺参真实态 F200；不新增 blocked 或已验 fixture。
+// 2026-10-27 L02 P-55 新增营销消息与优惠券独立页 F201(P1 real-data actionable):total 340→341、P1 199→200、actionable 316→317(P1 192→193)、F 94→95、real-data 38→39。
 const STATS = {
-  "total": 340,
+  "total": 341,
   "byPriority": {
     "P0": 131,
-    "P1": 199,
+    "P1": 200,
     "P2": 10
   },
   "blockedByPriority": {
@@ -662,9 +664,9 @@ const STATS = {
   },
   "actionable": {
     "P0": 122,
-    "P1": 192,
+    "P1": 193,
     "P2": 2,
-    "total": 316
+    "total": 317
   },
   "blocked": 24,
   "domains": {
@@ -673,12 +675,12 @@ const STATS = {
     "C": 56,
     "D": 42,
     "E": 26,
-    "F": 94
+    "F": 95
   },
   "control": {
     "setData": 179,
     "identity+setData": 116,
-    "real-data": 38,
+    "real-data": 39,
     "real-device": 7
   },
   "fixtureVerified": 16

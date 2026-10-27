@@ -3,6 +3,7 @@
 const toast = require('../../../utils/toast.js');
 const { getScene } = require('../../../utils/scene-registry.js')
 const { currentScene, exitDecision, popScene, pushScene } = require('../../../utils/scene-stack.js')
+const { releaseNativeBackGuards } = require('../../../utils/native-back-guard.js')
 
 const PLAYER_PLAY_SCENES = new Set([
   'play-activity-detail', 'roam-task-list', 'roam-poi-detail', 'roam-discover',
@@ -177,7 +178,8 @@ Component({
       this._rootOpened = false
       this.triggerEvent('close', { sceneId: this.data.sceneId })
       const fallback = fallbackRoute(this.data.sceneId)
-      wx.navigateBack({ delta: 1, fail: () => wx.reLaunch({ url: fallback }) })
+      // G-2:弹层开着时 page-container 会吃掉 navigateBack,先撤守卫再退页
+      releaseNativeBackGuards(() => wx.navigateBack({ delta: 1, fail: () => wx.reLaunch({ url: fallback }) }))
     },
   },
 })

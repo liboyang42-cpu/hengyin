@@ -2,6 +2,7 @@ const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
 const exitMotion = require('../../../behaviors/exit-motion.js');
 const morphEntrance = require('../../../behaviors/morph-entrance.js');
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
+const { withNativeBackGuard, onBackGuardLeave } = require('../../../utils/native-back-guard.js');
 const app = getApp();
 
 /* ——— 2026-09-01:handle 从「装饰横条」补成真的可拖 ———
@@ -27,10 +28,22 @@ const SNAP_MS = 220;           // = --cy-motion-standard,和 wxss 里的吸附�
 const LEVEL_EXIT_MS = { peek: 200, half: 250, full: 280 };
 const LEVEL_RATIO = { peek: 0.30, half: 0.60 };
 
-Component({
+/* G-2(2026-10-27):物理返回 / 侧滑先落在弹层上。full 有上一步就退一步;有脏输入只发 requestclose 交给宿主;
+ * 其余与用户能点到的出口一致 —— 遮罩可关或有 ✕ 才关,两者都没有的弹层只吞掉返回键,不替宿主关。 */
+function onNativeBack(vm) {
+  if (vm.data._closing) return;
+  if (vm.data.variant === 'full' && vm.data.canBack) { vm.onBack(); return; }
+  if (vm.data.dirty) { vm.triggerEvent('requestclose', { reason: 'back' }); return; }
+  const hasClose = vm.data.closable && (vm.data.title || vm.data.navTitle || vm.data.variant === 'full');
+  if (vm.data.maskClosable || hasClose) vm._requestClose('back');
+}
+
+Component(withNativeBackGuard({
   options: { multipleSlots: true },
   behaviors: [reducedMotionBehavior, exitMotion(250), morphEntrance({ shellSelector: '.sh__panel' })],
   properties: {
+    // G-2:页面已有自己的 page-container 覆盖这个弹层时传 false 让位(一页只能有一个容器)
+    backGuard: { type: Boolean, value: true },
     stacked: { type: Boolean, value: false },
     closeIcon: {type:String,value:'close-sm'},
     closeIconSize: {type:Number,value:44},
@@ -105,6 +118,8 @@ Component({
     },
   },
   methods: {
+    // G-2 返回守卫 page-container 的 afterleave(判定逻辑在 utils/native-back-guard.js)
+    _onBackGuardLeave() { onBackGuardLeave(this); },
     /* 内部步骤返回 —— 只退一步,不是退出任务,所以单独发 back,不发 requestclose */
     onBack() {
       if (this.data._closing) return;
@@ -239,4 +254,4 @@ Component({
 
     noop() {},
   },
-});
+}, onNativeBack));

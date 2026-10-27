@@ -804,7 +804,7 @@
        ⚠️ 不传 title:稿子的头是「左灰圆 × + 右黑药丸 完成」,而 cy-sheet 的 .sh__head 是
        「左标题 + 右 ×」且那段 wxml/wxss 被无障碍契约逐字锁死(不能改)。不传 title 时
        .sh__head 整段不渲染,头就完全交给这里画,不用 CSS 去盖组件的头。 -->
-  <cy-sheet variant="full" show="{{popChapterNodes}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="cancelPopChapter" class="node-sheet-host">
+  <cy-sheet variant="full" show="{{popChapterNodes}}" back-guard="{{false}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="cancelPopChapter" class="node-sheet-host">
   <view class="pop-chapter node-sheet">
     <!-- 头是两态,写成两段而不是把 handler 名塞进 {{}}:事件名走数据绑定的话,
          「死链按钮门禁」(扫 bind* → 必须有同名 js 方法)就看不见它绑到哪儿了。
@@ -1045,7 +1045,7 @@
   </cy-sheet>
 
   <!-- 节点下一站：只显示“玩法结果 → 地点”，不把起点、结局或技术规则交给创作者。 -->
-  <cy-sheet variant="full" show="{{routeMappingShow}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeNodeRouteMapping" class="node-sheet-host">
+  <cy-sheet variant="full" show="{{routeMappingShow}}" back-guard="{{false}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeNodeRouteMapping" class="node-sheet-host">
     <view class="route-mapping-sheet node-sheet">
       <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeNodeRouteMapping" aria-role="button" aria-label="关闭下一站编辑" hover-class="cy-pressed" hover-stay-time="80">退出</view>
         <view class="node-sheet__done" bindtap="finishNodeRouteMapping" aria-role="button" aria-label="完成下一站编辑" hover-class="cy-pressed" hover-stay-time="80">完成</view>
@@ -1662,7 +1662,7 @@
        两种模式的差别(要不要定集合时间地点、票怎么卖)全靠创作者自己知道,切错了
        整条票务链路的必填项都跟着变。改成先把两种模式摊开讲清楚再让人选。
        文案取自票种编辑器稿(2770:11762 / 2770:13325)的那两句模式说明,同一句话只有一份。 -->
-  <cy-sheet show="{{modePickerShow}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeModePicker" class="node-sheet-host">
+  <cy-sheet show="{{modePickerShow}}" back-guard="{{false}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeModePicker" class="node-sheet-host">
     <view class="pd-topic-detail node-sheet">
       <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeModePicker" aria-role="button" aria-label="关闭模式选择" hover-class="cy-pressed" hover-stay-time="80">退出</view>
         <view class="node-sheet__done" bindtap="confirmModePicker" aria-role="button" aria-label="确认创作模式" hover-class="cy-pressed" hover-stay-time="80">使用此模式</view>
@@ -1701,7 +1701,7 @@
 
   <include src="./topic-detail-sheet.wxml" />
 
-  <cy-sheet show="{{valueEditor.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeValueEditor" class="node-sheet-host">
+  <cy-sheet show="{{valueEditor.show}}" back-guard="{{false}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeValueEditor" class="node-sheet-host">
     <view class="node-sheet story-initial" wx:if="{{valueEditor.row}}">
       <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeValueEditor" aria-role="button" aria-label="关闭数值编辑" hover-class="cy-pressed">退出</view><view class="node-sheet__done" bindtap="saveValueEditor" aria-role="button" aria-label="保存数值" hover-class="cy-pressed">完成</view></view>
       <view class="node-sheet__titlebar"><text class="node-sheet__eyebrow">取值范围</text><text class="node-sheet__name node-sheet__name--static">{{valueEditor.index < 0 ? '添加数值' : '编辑数值'}}</text></view>
@@ -1756,7 +1756,7 @@
   </view>
 </cy-sheet>
 
-<cy-sheet show="{{initialStateEditor.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeInitialState" class="node-sheet-host">
+<cy-sheet show="{{initialStateEditor.show}}" back-guard="{{false}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeInitialState" class="node-sheet-host">
   <view class="node-sheet story-initial" wx:if="{{initialStateEditor.rules}}">
     <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeInitialState" aria-role="button" aria-label="关闭初始状态" hover-class="cy-pressed" hover-stay-time="80">退出</view>
       <view class="node-sheet__done" bindtap="saveInitialState" aria-role="button" aria-label="保存初始状态" hover-class="cy-pressed" hover-stay-time="80">完成</view>

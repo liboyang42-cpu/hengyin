@@ -17,6 +17,8 @@ const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
 Component({
   behaviors: [reducedMotionBehavior],
   properties: {
+    // G-2:透传给内层弹层的返回守卫开关;宿主页已有自己的 page-container 覆盖它时传 false
+    backGuard: { type: Boolean, value: true },
     show:     { type: Boolean, value: false },
     kind:     { type: String,  value: 'success' },  // success | fail | loading
     title:    { type: String,  value: '' },

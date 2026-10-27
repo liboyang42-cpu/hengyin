@@ -9,7 +9,7 @@ const HISTORY = '../../components/cy/scene-roam-history/index.js'
 const SID = '9007199254740993'
 const settle = async () => { for (let i = 0; i < 12; i++) await new Promise(r => setImmediate(r)) }
 
-let config, componentConfig, app, values, calls, sessions, toasts, modals, finishMode
+let config, componentConfig, app, values, calls, sessions, toasts, modals, finishMode, navigations
 
 function mount() {
   delete require.cache[require.resolve(PAGE)]
@@ -29,7 +29,7 @@ function mount() {
 }
 
 beforeEach(() => {
-  calls = []; sessions = {}; values = {}; toasts = []; modals = []; finishMode = 'timeout-after-apply'
+  calls = []; sessions = {}; values = {}; toasts = []; modals = []; navigations = []; finishMode = 'timeout-after-apply'
   global.Page = x => { config = x }
   global.Component = x => { componentConfig = x }
   app = { getUserID: () => '9', globalData: { user_id: '9', features: {} }, isDevEnv: () => false,
@@ -63,6 +63,7 @@ beforeEach(() => {
     getWindowInfo: () => ({ statusBarHeight: 20 }), getSystemInfoSync: () => ({ statusBarHeight: 20 }),
     showToast: o => toasts.push(o.title), hideLoading() {}, showLoading() {},
     showModal: o => modals.push(o),
+    navigateTo: o => { navigations.push(o.url); if (o.complete) o.complete() },
   }
 })
 
@@ -109,8 +110,11 @@ for (const mode of ['timeout-after-apply', 'http-504-after-apply']) {
     assert.equal(page.celebrations.filter(c => c === 'roam-finish').length, 1)
 
     // 之后打开漫游记录
+    // 2026-10-27 P-37(业主 p120):漫游历史改成全屏页面,不再在地图上压 psheet ⇒ 断言改为进历史页
+    navigations.length = 0
     page.openRoamHistory()
-    assert.equal(page.data.sceneCurrent && page.data.sceneCurrent.id, 'roam-history')
+    assert.deepEqual(navigations, ['/subpackageRoam/history/index'])
+    assert.equal(page.data.sceneCurrent, null, '地图上不再叠漫游历史弹层')
     delete require.cache[require.resolve(HISTORY)]
     require(HISTORY)
     const history = Object.assign({}, componentConfig.methods, { data: JSON.parse(JSON.stringify(componentConfig.data)) })

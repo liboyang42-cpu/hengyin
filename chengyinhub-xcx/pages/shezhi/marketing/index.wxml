@@ -1,0 +1,10 @@
+<view class="mk-page {{isMerchantView ? 'theme-merchant' : 'theme-dark'}}">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <cy-nav-bar plain custom-back bind:back="onBack" />
+  <view style="height:{{statusBarHeight + navBarHeight}}px;"></view>
+  <cy-page-title title="营销消息与优惠券" subtitle="默认关闭，随时可退订" safe-top="{{false}}" />
+  <!-- 按商家分组,每组两行开关;行样式沿用设置页 cy-cell 的行高与字号 -->
+  <cy-marketing-consent show="{{ready}}" layout="page" />
+</view>

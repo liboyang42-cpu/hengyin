@@ -46,6 +46,8 @@ const EXPECTED_NAV_ROUTES = [
   'pages/search2/index', 'pages/search2/result/index', 'subpackageMember/signup/index',
   'pages/templatedetail/templatedetail',
   'pages/address/address', 'pages/addressinfo/addressinfo', 'pages/shezhi/shezhi', 'pages/shezhi/about/index',
+  // 2026-10-27 L02 P-55:营销消息与优惠券改成设置里点进去的独立页
+  'pages/shezhi/marketing/index',
   'pages/club/apply/index',
   'pages/agreement/index', 'pages/deregister/index', 'pages/gerenziliao/gerenziliao', 'pages/userinfo/userinfo',
   'subpackageMember/mytemplate/mytemplate', 'subpackageMember/coupon-qr/index', 'subpackageMember/coupon/coupon',
@@ -129,6 +131,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   // 2026-09-06:申请页大标题用回共享 cy-page-title(不再自绘 .ca-q)
   'pages/club/apply/index',
   'pages/shezhi/shezhi', 'pages/shezhi/about/index', 'pages/agreement/index', 'pages/deregister/index', 'pages/userinfo/userinfo',
+  'pages/shezhi/marketing/index',
   'subpackageMember/mytemplate/mytemplate', 'subpackageMember/coupon/coupon', 'subpackageMember/couponInfo/couponInfo',
   'subpackageMember/order/order', 'subpackageMember/orderinfo/orderinfo', 'subpackageMember/tixian/tixian',
   'subpackageMember/tixianjilu/tixianjilu', 'pages/mylike/mylike', 'subpackageMember/mycanyu/mycanyu',
@@ -286,8 +289,9 @@ function assertTitleInventory(readSource = read) {
   // 2026-10-23 起名页 templateadd 退役删除(custom 导航页) ⇒ 145 → 144。
   // 2026-10-25 +1:官方地点挑战(pages/play/poi-challenge):整屏玩法页,拍照 / 答题用 cy-playkit-qa 自带的退出键,
   //   勋章用 cy-medal-screen,与 citystamp / stamp-camera 同形态,不挂 cy-nav-bar / cy-page-title ⇒ 144 → 145。
-  assert.equal(rows.length, 145, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 145)
+  // 2026-10-27 L02 P-55 +1:营销消息与优惠券独立页(custom 导航 + cy-nav-bar plain + cy-page-title 普通二级页)⇒ 145 → 146;custom 同步 146。
+  assert.equal(rows.length, 146, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 146)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

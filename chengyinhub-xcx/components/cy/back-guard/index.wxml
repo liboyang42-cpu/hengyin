@@ -1,0 +1,1 @@
+<page-container show="{{_backGuard}}" duration="{{0}}" overlay="{{false}}" custom-style="width:0;height:0;background:transparent;pointer-events:none" bind:afterleave="_onBackGuardLeave" />

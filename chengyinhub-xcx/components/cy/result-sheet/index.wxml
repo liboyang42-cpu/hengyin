@@ -1,6 +1,6 @@
 <!-- cy-result-sheet · 一次动作做完之后的结果面板(success / fail / loading)
      壳复用 cy-sheet:遮罩、上滑、退场、安全区、主题 role 重映射全在那边,这里只画内容。 -->
-<cy-sheet class="rs-shell" inset show="{{show}}" handle mask-closable="{{kind !== 'loading'}}" bind:close="onSheetClose">
+<cy-sheet class="rs-shell" inset show="{{show}}" handle mask-closable="{{kind !== 'loading'}}" bind:close="onSheetClose" back-guard="{{backGuard}}">
   <view class="rs rs--{{kind}} {{reducedMotion ? 'rs--reduced-motion' : ''}}" aria-role="alert" aria-label="{{title}}">
 
     <view class="rs__badge">

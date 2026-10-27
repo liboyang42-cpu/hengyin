@@ -1,7 +1,9 @@
 <view class="sdl" catchtouchmove="blockTouch">
+  <!-- G-2:深链壳的首层场景,物理返回直接退壳页就等于关闭;只有压了子场景或有未保存修改时才挂返回守卫 -->
   <cy-scene-sheet
     wx:if="{{sceneCurrent}}"
     show="{{true}}"
+    back-guard="{{sceneStack.length > 1 || sceneCurrent.dirty}}"
     variant="{{sceneCurrent.variant}}"
     theme="{{sceneCurrent.theme}}"
     title="{{sceneCurrent.title}}"
@@ -64,7 +66,7 @@
       <cy-scene-asset-earnings theme="{{sceneCurrent.theme}}" bind:open="openChildScene" />
     </block>
     <block wx:elif="{{sceneCurrent.id === 'share-invite'}}">
-      <cy-scene-share-invite theme="{{sceneCurrent.theme}}" design-preview="{{true}}" />
+      <cy-scene-share-invite theme="{{sceneCurrent.theme}}" design-preview="{{true}}" player-code="{{true}}" />
     </block>
     <block wx:else>
       <cy-scene-route-content id="deepSceneRouteContent" scene-id="{{sceneCurrent.id}}" params="{{sceneCurrent.params}}" theme="{{sceneCurrent.theme}}" bind:open="openChildScene" bind:back="backScene" bind:close="closeChildScene" bind:dirtychange="onSceneDirtyChange" />

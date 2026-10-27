@@ -80,6 +80,7 @@ const { currentScene, exitDecision, popScene, pushScene } = require('../../utils
 // 个性化地图(暗色底图)与 play 页共用一份配置,见 utils/map-style.js
 const { MAP_STYLE } = require('../../utils/map-style.js');
 const { getScene } = require('../../utils/scene-registry.js');
+const { openScene: openPageScene } = require('../../utils/scene-entry.js');
 const { getNodeLevelStyle, buildNodeLevelMarkerStyle } = require('./node-level-style.js'); const entryMap = require('../../utils/roam-entry-map.js');
 // 后台定位开关(与 play 页共用,引用计数收口)。★必须在模块顶层:#750 曾把这行插进 req() 函数体,
 // bgTracker 变成 req 的局部变量,_startReal 一调就 ReferenceError —— 漫游实时定位整条静默死掉。
@@ -451,6 +452,8 @@ Page({
   },
   openScene(id, params = {}) {
     const next = getScene(id, params);
+    // G-1(2026-10-27):page 档场景(漫游历史 / 优惠券)是页面,不在地图上压 psheet
+    if (next.variant === 'page' && next.route) { openPageScene(id, params); return true; }
     if (exitDecision(this.data.sceneStack, 'close') === 'confirm') {
       this.setData({ sceneConfirm: { show: true, action: 'replace', pending: next } });
       return false;

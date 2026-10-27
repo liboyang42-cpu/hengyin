@@ -4,6 +4,8 @@ const app = getApp();
 Component({
   properties: {
     show: { type: Boolean, value: false },
+    // P-55(2026-10-27):'page' = 设置里点进去的独立页面,按商家分组、每组两行开关用设置页行样式
+    layout: { type: String, value: 'sheet' },
   },
   data: {
     state: 'idle',
