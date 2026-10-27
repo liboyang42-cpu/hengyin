@@ -129,37 +129,59 @@
 
 </view>
 
-<!-- 长按卡片打开的操作面板:装稿里不许放在卡面上的那两个列表管理动作。
-     行是按这张卡的 _canToggle / _canDelete 现算的,不可用的动作整行不出,不置灰。 -->
+<!-- 长按卡片打开的操作面板:装稿里不许放在卡面上的那几个列表管理动作。
+     2026-10-27 业主 M-26:改成标准操作列表 —— 每行 图标 + 标题 + 说明,编辑在最上,删除在最下并标红。
+     行是按这张卡的 _canEdit / _canToggle / _canDelete… 现算的,不可用的动作整行不出,不置灰。 -->
 <cy-sheet show="{{opsSheet.show}}" title="{{opsSheet.title}}" bind:close="closeOpsSheet">
   <view class="mp-ops-sheet">
-    <view class="mp-ops-row" wx:if="{{opsSheet.canViewApplies}}" bindtap="onOpsPick" data-k="received" hover-class="cy-pressed" hover-stay-time="80">
-      <text class="mp-ops-label">收到的申请</text>
-      
+    <view class="mp-ops-row mp-ops-row--act" wx:if="{{opsSheet.canEdit}}" bindtap="onOpsPick" data-k="edit" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="编辑">
+      <view class="mp-ops-ico"><cy-icon name="edit" size="40" /></view>
+      <view class="mp-ops-body">
+        <text class="mp-ops-label">编辑</text>
+        <text class="mp-ops-sub">{{opsSheet.biz === 'topic' ? '回到编辑器修改这个主题' : '修改时间、地点与票种'}}</text>
+      </view>
     </view>
-    <view class="mp-ops-row" wx:if="{{opsSheet.canEdit}}" bindtap="onOpsPick" data-k="edit" hover-class="cy-pressed" hover-stay-time="80">
-      <text class="mp-ops-label">编辑</text>
-      
+    <view class="mp-ops-row mp-ops-row--act" wx:if="{{opsSheet.canViewApplies}}" bindtap="onOpsPick" data-k="received" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="收到的申请">
+      <view class="mp-ops-ico"><cy-icon name="list" size="40" /></view>
+      <view class="mp-ops-body">
+        <text class="mp-ops-label">收到的申请</text>
+        <text class="mp-ops-sub">看谁想承接，决定接受或婉拒</text>
+      </view>
     </view>
-    <view class="mp-ops-row" wx:if="{{opsSheet.canToggle}}" bindtap="onOpsPick" data-k="toggle" hover-class="cy-pressed" hover-stay-time="80">
-      <text class="mp-ops-label">{{opsSheet.toggleLabel}}</text>
-      
+    <view class="mp-ops-row mp-ops-row--act" wx:if="{{opsSheet.canToggle}}" bindtap="onOpsPick" data-k="toggle" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="{{opsSheet.toggleLabel}}">
+      <view class="mp-ops-ico"><cy-icon name="flag" size="40" /></view>
+      <view class="mp-ops-body">
+        <text class="mp-ops-label">{{opsSheet.toggleLabel}}</text>
+        <text class="mp-ops-sub">{{opsSheet.toggleLabel === '上架' ? '重新对玩家可见' : '暂时对玩家隐藏，可再上架'}}</text>
+      </view>
     </view>
-    <view class="mp-ops-row" wx:if="{{opsSheet.canCancel}}" bindtap="onOpsPick" data-k="cancel" hover-class="cy-pressed" hover-stay-time="80">
-      <text class="mp-ops-label">{{opsSheet.biz === 'topic' ? '取消主题并退款' : '取消活动'}}</text>
-      
+    <view class="mp-ops-row mp-ops-row--act" wx:if="{{opsSheet.canCancel}}" bindtap="onOpsPick" data-k="cancel" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="{{opsSheet.biz === 'topic' ? '取消主题并退款' : '取消活动'}}">
+      <view class="mp-ops-ico"><cy-icon name="close" size="40" /></view>
+      <view class="mp-ops-body">
+        <text class="mp-ops-label">{{opsSheet.biz === 'topic' ? '取消主题并退款' : '取消活动'}}</text>
+        <text class="mp-ops-sub">已付款玩家全额退款</text>
+      </view>
     </view>
-    <view class="mp-ops-row" wx:if="{{opsSheet.canAudit}}" bindtap="onOpsPick" data-k="audit" hover-class="cy-pressed" hover-stay-time="80">
-      <text class="mp-ops-label">审核记录</text>
-      
+    <view class="mp-ops-row mp-ops-row--act" wx:if="{{opsSheet.canAudit}}" bindtap="onOpsPick" data-k="audit" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="审核记录">
+      <view class="mp-ops-ico"><cy-icon name="info" size="40" /></view>
+      <view class="mp-ops-body">
+        <text class="mp-ops-label">审核记录</text>
+        <text class="mp-ops-sub">查看审核结果，可申诉一次</text>
+      </view>
     </view>
-    <view class="mp-ops-row" wx:if="{{opsSheet.canSaveAsTemplate}}" bindtap="onOpsPick" data-k="saveAsTemplate" hover-class="cy-pressed" hover-stay-time="80">
-      <text class="mp-ops-label">另存为模板</text>
-      
+    <view class="mp-ops-row mp-ops-row--act" wx:if="{{opsSheet.canSaveAsTemplate}}" bindtap="onOpsPick" data-k="saveAsTemplate" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="另存为模板">
+      <view class="mp-ops-ico"><cy-icon name="draft" size="40" /></view>
+      <view class="mp-ops-body">
+        <text class="mp-ops-label">另存为模板</text>
+        <text class="mp-ops-sub">出现在主题模板货架上，别人可复制</text>
+      </view>
     </view>
-    <view class="mp-ops-row mp-ops-row--danger" wx:if="{{opsSheet.canDelete}}" bindtap="onOpsPick" data-k="delete" hover-class="cy-pressed" hover-stay-time="80">
-      <text class="mp-ops-label">删除</text>
-      <text class="mp-ops-sub">删除后无法恢复</text>
+    <view class="mp-ops-row mp-ops-row--act mp-ops-row--danger" wx:if="{{opsSheet.canDelete}}" bindtap="onOpsPick" data-k="delete" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="删除">
+      <view class="mp-ops-ico"><cy-icon name="trash" size="40" /></view>
+      <view class="mp-ops-body">
+        <text class="mp-ops-label">删除</text>
+        <text class="mp-ops-sub">删除后无法恢复</text>
+      </view>
     </view>
   </view>
 </cy-sheet>
