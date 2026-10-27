@@ -5362,7 +5362,7 @@ Page({
     const view = flow.view();
     if (!this._isPlayAccountCurrent() || !view || view.command || !view.eligibility || !view.eligibility.canSubmit) return;
     const session = this._sessionKey();
-    wx.showModal({ title: '原局守卫申诉', editable: true, placeholderText: '请填写申诉理由（最多500字）',
+    cyModal.show({ title: '原局守卫申诉', editable: true, multiline: true, maxlength: 500, placeholderText: '请填写申诉理由（最多500字）',
       content: '成立后仍需重新现场核验，不直接放行或补发奖励。',
       success: async result => {
         if (!result.confirm || !this._isPlayAccountCurrent() || session !== this._sessionKey()) return;

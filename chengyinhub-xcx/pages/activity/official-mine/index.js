@@ -138,7 +138,7 @@ Page({
       _aud: audienceKnown ? audience.map(item => ROLE[item]).join(' / ') : '—',
       _mode: b.copyMode === 2 ? '分开发' : (b.copyMode === 1 ? '一起发' : '—'),
       _st: Number.isInteger(b.status) && BC_ST[b.status] ? BC_ST[b.status] : '状态待确认',
-      _reach: '点击读取逐渠道事实；历史汇总不代表送达',
+      _reach: finiteCount(b.reachedCount) ? '站内触达 ' + b.reachedCount + ' 人' : '—',
       _city: nonBlank(b.city, '—'),
     });
   },
