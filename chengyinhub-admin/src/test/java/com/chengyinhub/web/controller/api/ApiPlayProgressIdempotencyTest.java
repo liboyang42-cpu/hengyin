@@ -553,8 +553,9 @@ class ApiPlayProgressIdempotencyTest {
         assertEquals(true, result.get("firstTime"));
         verify(pointsAwardService).award(eq(MEMBER), eq(12L), eq(NODE), eq("节点打卡"));
         verify(playerProgressionService).onNodeDone(eq(MEMBER));
-        verify(routeCompletionCoordinator).advance(eq(MEMBER), eq(TOPIC), eq(ACTIVITY), eq(NODE),
-                isNull(), isNull(), isNull(), isNull(), isNull());
+        // 完成落地走 advanceOriginal(原局 sessionId 为空 = 非原局路径,与 advance 等价)
+        verify(routeCompletionCoordinator).advanceOriginal(eq(MEMBER), eq(TOPIC), eq(ACTIVITY), eq(NODE),
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull());
     }
 
     @Test
