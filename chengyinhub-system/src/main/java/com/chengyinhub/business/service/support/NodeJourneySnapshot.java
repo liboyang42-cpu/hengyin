@@ -362,6 +362,7 @@ public final class NodeJourneySnapshot {
     /**
      * 快照里按 nodeId 取冻结的模板判定字段(R18-FREEZE);老快照没有 nodeAnswers 键时返回
      * null,由调用方回退实时模板。条目在而字段缺 = 建局时就「没有这个字段」,不回退。
+     * 带内容快照(contentSnapshotVersion)的新局缺本节点 = 节点不属于原局,拒绝而不是回退。
      */
     public static JsonNode answer(String configSnapshotJson, Long nodeId) {
         if (configSnapshotJson == null || nodeId == null) return null;
@@ -373,8 +374,15 @@ public final class NodeJourneySnapshot {
         }
         JsonNode frozen = snapshot.path(NODE_ANSWERS_KEY);
         if (!frozen.isObject()) return null;
+        return frozenBlock(frozen, nodeId);
+    }
+
+    private static JsonNode frozenBlock(JsonNode frozen, Long nodeId) {
         JsonNode block = frozen.get(String.valueOf(nodeId));
-        return block != null && block.isObject() ? block : null;
+        if (block != null && block.isObject()) return block;
+        for (JsonNode row : frozen) if (row.has("contentSnapshotVersion"))
+            throw new IllegalStateException("节点不属于原局内容");
+        return null;
     }
 
     public static boolean hasContent(JsonNode answer) {
@@ -497,12 +505,8 @@ public final class NodeJourneySnapshot {
         if (snapshot == null || nodeId == null) return null;
         JsonNode frozen = snapshot.path(NODE_ANSWERS_KEY);
         if (!frozen.isObject()) return null;
-        JsonNode block = frozen.get(String.valueOf(nodeId));
-        if (block == null || !block.isObject()) {
-            for (JsonNode row : frozen) if (row.has("contentSnapshotVersion"))
-                throw new IllegalStateException("节点不属于原局内容");
-            return null;
-        }
+        JsonNode block = frozenBlock(frozen, nodeId);
+        if (block == null) return null;
         hasContent(block);
         return block.deepCopy();
     }
