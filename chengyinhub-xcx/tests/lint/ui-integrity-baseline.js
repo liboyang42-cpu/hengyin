@@ -1,3 +1,4 @@
+// 2026-10-27 最小改动返修:主理人申请页恢复开场形变(P-24 只修时序),U4-DYNAMIC club/apply onInput / toggleBool 两条锚点仅行号位移 221→233 / 232→244(同一行 this.setData({ [f]: ... }),理由不变),u4Dynamic digest 按同一算法重算。
 // 2026-10-27 L11 集成(L01–L09 合入 integrate/devfix-20261027):roam/play 等多路同改文件的既有锚点按「行及上下各一行」与登记来源分支逐字比对后换 key,同一调用点的多路重复登记去重(roam 31 条、play 2 条、nearby 1 条等);L05 出账的 post-compose 两条、L05/L07 还清的零消费债务保持出账。条数与各路理由不变:u1Variable 10、u4Field 120、u4Dynamic 62、u5Silent 42;四份 digest 按同一算法重算。
 // 2026-10-27 L02 弹层页面化与返回键先关弹层:roam/index.js 顶部加 scene-entry 引用 + openScene 加 page 档分流(+3 行)、play/index.js 同改(+3 行),既有 35 个锚点(roam 31、play 4)仅行号位移,按 difflib 相等块逐条映射换 key(新旧行内容逐字相同);条数与理由不变,u4Dynamic / u5Silent digest 按同一算法重算。
 // 2026-10-27 L03 真机走查(G-4/P-23/P-24/M-06):4 条既有锚点仅行号位移——U1-VARIABLE app.js 419→421(request-client 装配补 isPlayerView 两行)、U4-DYNAMIC club/apply 187→221 / 198→232(onInput / toggleBool,同一行 this.setData({ [f]: ... }))、im/list 323→347(同一 this.setData(patch) 行);上下文逐字相同、理由与条数不变,u1Variable / u4Dynamic digest 按同一算法重算。
@@ -839,7 +840,7 @@ module.exports = {
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):45 个既有锚点仅行号位移换 key + 本线 6 处新增登记,digest 按门禁同一算法(sha256 of sorted keys joined by \n)重算。
 // 2026-10-20 合并 master(#327 等)进 #293:两侧重锚逐条按合并后源码同一行文本定位一致(fabu 12 条、merchantinfo 2 条、scene-club-edit 1 条),square/list 196/1259 随 #325 点赞修复后移一行;digest 按门禁同一算法重算。
 // 2026-10-27 devfix L07(21 处动态 setData 仅行号位移):逐条以 master 原行与新行逐字比对一致,理由一字未改,digest 按门禁同算法重算。
-"9b0eaebff7670aaa22baf34fdc858fefcf155ce12ac0ffcbfba375695434ad60",
+"61986ea560caa2e6c672c6fc4f51b554b2d8d0d620d4fd2ce5b7b6546f6e75f3",
 // 2026-10-20 R5 尾段(#327,owner 批准 12 条重锚):fabu 729→731、898→900、2524→2530、3570→3588、3951→3969、4957→4990、5215→5248、5866→5899、5876→5909、5929→5962、6270→6303、7936→8060,逐行比对 master 原行一字未改,理由与条数 58 不变;digest 按同一算法显式重算。
       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点
       //   行号从 2360 移到 2573(见下方 u5Silent 区块的逐条说明)。等量换 key,显式改 digest。
@@ -1278,8 +1279,8 @@ module.exports = {
     "chengyinhub-xcx/pages/square/detail/index.js:1205": "评论翻页只追加list[oldLen+i]，其余commentState/listErr/nodata/hasMore固定字面字段；响应遍历序号只形成数组下标；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/square/list/index.js:1063": "广场翻页只追加list[oldLen+i]，其余listErr/loading/nodata/hasMore固定字面字段；下标由当前长度和响应序号形成；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/play/index.js:1624": "章节正文显形局部patch只写chapterParas[i]或chapStory.lines[i]的in/dir/d三个固定字段；i来自当前冻结数组遍历，值为本地布尔/方向枚举/延迟数值，异步回包前后校验章节模式及数组身份；WXML真消费两namespace；替代旧opacity/scale/blur渲染登记，经人工审查迁移；owner=小程序，复核=2026-09-30",
-    "chengyinhub-xcx/pages/club/apply/index.js:221": "onInput 的键来自 wxml data-field，取值是同页写死的七个枚举（identity/leaderName/phone/coFounders/avgEventSize/maxEventSize/hasGuideCert），全部在同一份 wxml 表单里被渲染消费，不是外部输入直传；owner=小程序，复核=2026-10-31",
-    "chengyinhub-xcx/pages/club/apply/index.js:232": "toggleBool 的键取自同一份 data-field 枚举，只在 0/1 之间翻转能力自评项；owner=小程序，复核=2026-10-31",
+    "chengyinhub-xcx/pages/club/apply/index.js:233": "onInput 的键来自 wxml data-field，取值是同页写死的七个枚举（identity/leaderName/phone/coFounders/avgEventSize/maxEventSize/hasGuideCert），全部在同一份 wxml 表单里被渲染消费，不是外部输入直传；owner=小程序，复核=2026-10-31",
+    "chengyinhub-xcx/pages/club/apply/index.js:244": "toggleBool 的键取自同一份 data-field 枚举，只在 0/1 之间翻转能力自评项；owner=小程序，复核=2026-10-31",
     "chengyinhub-xcx/components/cy/nav-bar/index.js:39": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/components/cy/nav-bar/index.js:51": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:806": "profilePatch 在本方法内以 userInfo/balanceText/cityName/categoryList/casePicsList/joinDate/friendNum/followNum/fansNum 固定键创建，仅按本人/他人条件追加 growthLevel 与 primaryCta，不展开服务端对象键；owner=小程序，复核=2026-09-30",

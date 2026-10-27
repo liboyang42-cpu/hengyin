@@ -888613,7 +888613,74 @@
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:104:bindinput:onInput:12",
+      "id": "pages/club/apply/index.wxml:102:bindtap:pickExp:10",
+      "route": "pages/club/apply/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/apply/index.wxml",
+        "js": "pages/club/apply/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "pickExp",
+        "line": 102,
+        "selectorHint": ".opt",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{item}}",
+        "ariaRole": "radio",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": "{{experience===item}}"
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/apply/index.js:236"
+      }
+    },
+    {
+      "id": "pages/club/apply/index.wxml:110:bindinput:onInput:11",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -888636,7 +888703,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 104,
+        "line": 110,
         "selectorHint": ".field__ctrl",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -888676,11 +888743,78 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:219"
+        "staticSource": "pages/club/apply/index.js:231"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:111:bindtap:toggleBool:13",
+      "id": "pages/club/apply/index.wxml:116:bindinput:onInput:12",
+      "route": "pages/club/apply/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/apply/index.wxml",
+        "js": "pages/club/apply/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "input",
+        "event": "bindinput",
+        "handler": "onInput",
+        "line": 116,
+        "selectorHint": ".field__ctrl",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/apply/index.js:231"
+      }
+    },
+    {
+      "id": "pages/club/apply/index.wxml:123:bindtap:toggleBool:13",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -888703,7 +888837,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleBool",
-        "line": 111,
+        "line": 123,
         "selectorHint": ".cap",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -888743,11 +888877,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:229"
+        "staticSource": "pages/club/apply/index.js:241"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:116:bindtap:toggleBool:14",
+      "id": "pages/club/apply/index.wxml:128:bindtap:toggleBool:14",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -888770,7 +888904,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleBool",
-        "line": 116,
+        "line": 128,
         "selectorHint": ".cap",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -888810,11 +888944,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:229"
+        "staticSource": "pages/club/apply/index.js:241"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:121:bindtap:toggleBool:15",
+      "id": "pages/club/apply/index.wxml:133:bindtap:toggleBool:15",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -888837,7 +888971,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleBool",
-        "line": 121,
+        "line": 133,
         "selectorHint": ".cap",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -888877,11 +889011,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:229"
+        "staticSource": "pages/club/apply/index.js:241"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:126:bindtap:toggleBool:16",
+      "id": "pages/club/apply/index.wxml:138:bindtap:toggleBool:16",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -888904,7 +889038,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleBool",
-        "line": 126,
+        "line": 138,
         "selectorHint": ".cap",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -888944,11 +889078,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:229"
+        "staticSource": "pages/club/apply/index.js:241"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:136:bindtap:toggleBool:17",
+      "id": "pages/club/apply/index.wxml:148:bindtap:toggleBool:17",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -888971,7 +889105,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleBool",
-        "line": 136,
+        "line": 148,
         "selectorHint": ".cap",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -889011,11 +889145,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:229"
+        "staticSource": "pages/club/apply/index.js:241"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:143:bind:add:addCerts:18",
+      "id": "pages/club/apply/index.wxml:155:bind:add:addCerts:18",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -889041,7 +889175,7 @@
         "tag": "cy-upload",
         "event": "bind:add",
         "handler": "addCerts",
-        "line": 143,
+        "line": 155,
         "selectorHint": "cy-upload[bind:add]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -889132,11 +889266,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:236"
+        "staticSource": "pages/club/apply/index.js:248"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:143:bind:remove:removeCert:19",
+      "id": "pages/club/apply/index.wxml:155:bind:remove:removeCert:19",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -889159,7 +889293,7 @@
         "tag": "cy-upload",
         "event": "bind:remove",
         "handler": "removeCert",
-        "line": 143,
+        "line": 155,
         "selectorHint": "cy-upload[bind:remove]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -889199,11 +889333,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:292"
+        "staticSource": "pages/club/apply/index.js:304"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:143:bind:retry:retryCert:20",
+      "id": "pages/club/apply/index.wxml:155:bind:retry:retryCert:20",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -889226,7 +889360,7 @@
         "tag": "cy-upload",
         "event": "bind:retry",
         "handler": "retryCert",
-        "line": 143,
+        "line": 155,
         "selectorHint": "cy-upload[bind:retry]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -889305,11 +889439,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:263"
+        "staticSource": "pages/club/apply/index.js:275"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:149:bind:action:retrySubmit:21",
+      "id": "pages/club/apply/index.wxml:161:bind:action:retrySubmit:21",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -889332,7 +889466,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "retrySubmit",
-        "line": 149,
+        "line": 161,
         "selectorHint": ".ca-alert",
         "visibleCondition": "{{submitError && step===4}}",
         "disabledCondition": null,
@@ -889414,11 +889548,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:379"
+        "staticSource": "pages/club/apply/index.js:391"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:157:bindtap:onNext:22",
+      "id": "pages/club/apply/index.wxml:169:bindtap:onNext:22",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -889441,7 +889575,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onNext",
-        "line": 157,
+        "line": 169,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canNext || submitting}}",
@@ -889523,11 +889657,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:200"
+        "staticSource": "pages/club/apply/index.js:212"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:163:bind:retry:retryLeaderStatus:23",
+      "id": "pages/club/apply/index.wxml:175:bind:retry:retryLeaderStatus:23",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -889550,7 +889684,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "retryLeaderStatus",
-        "line": 163,
+        "line": 175,
         "selectorHint": ".done-error",
         "visibleCondition": "{{bootstrapState === 'ready' && mode==='done' && doneState!=='ready' && doneState!=='loading'}}",
         "disabledCondition": null,
@@ -889601,11 +889735,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:387"
+        "staticSource": "pages/club/apply/index.js:399"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:179:bindtap:goCreateClub:24",
+      "id": "pages/club/apply/index.wxml:191:bindtap:goCreateClub:24",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -889628,7 +889762,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goCreateClub",
-        "line": 179,
+        "line": 191,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -889671,7 +889805,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:404"
+        "staticSource": "pages/club/apply/index.js:416"
       }
     },
     {
@@ -889741,7 +889875,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:406"
+        "staticSource": "pages/club/apply/index.js:418"
       }
     },
     {
@@ -889850,7 +889984,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:156"
+        "staticSource": "pages/club/apply/index.js:158"
       }
     },
     {
@@ -889921,7 +890055,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:148"
+        "staticSource": "pages/club/apply/index.js:150"
       }
     },
     {
@@ -889991,7 +890125,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:406"
+        "staticSource": "pages/club/apply/index.js:418"
       }
     },
     {
@@ -890058,141 +890192,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:179"
-      }
-    },
-    {
-      "id": "pages/club/apply/index.wxml:60:bindinput:onInput:6",
-      "route": "pages/club/apply/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/apply/index.wxml",
-        "js": "pages/club/apply/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "input",
-        "event": "bindinput",
-        "handler": "onInput",
-        "line": 60,
-        "selectorHint": ".field__ctrl",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "实名或昵称，必填",
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/apply/index.js:219"
-      }
-    },
-    {
-      "id": "pages/club/apply/index.wxml:67:bindinput:onInput:7",
-      "route": "pages/club/apply/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/apply/index.wxml",
-        "js": "pages/club/apply/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "input",
-        "event": "bindinput",
-        "handler": "onInput",
-        "line": 67,
-        "selectorHint": ".field__ctrl",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "联系方式，必填",
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/apply/index.js:219"
+        "staticSource": "pages/club/apply/index.js:182"
       }
     },
     {
@@ -890263,11 +890263,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:381"
+        "staticSource": "pages/club/apply/index.js:393"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:74:bindinput:onInput:8",
+      "id": "pages/club/apply/index.wxml:72:bindinput:onInput:6",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -890290,7 +890290,141 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 74,
+        "line": 72,
+        "selectorHint": ".field__ctrl",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "实名或昵称，必填",
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/apply/index.js:231"
+      }
+    },
+    {
+      "id": "pages/club/apply/index.wxml:79:bindinput:onInput:7",
+      "route": "pages/club/apply/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/apply/index.wxml",
+        "js": "pages/club/apply/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "input",
+        "event": "bindinput",
+        "handler": "onInput",
+        "line": 79,
+        "selectorHint": ".field__ctrl",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "联系方式，必填",
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/apply/index.js:231"
+      }
+    },
+    {
+      "id": "pages/club/apply/index.wxml:86:bindinput:onInput:8",
+      "route": "pages/club/apply/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/apply/index.wxml",
+        "js": "pages/club/apply/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "input",
+        "event": "bindinput",
+        "handler": "onInput",
+        "line": 86,
         "selectorHint": ".field__ctrl",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -890330,11 +890464,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:219"
+        "staticSource": "pages/club/apply/index.js:231"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:80:bindinput:onInput:9",
+      "id": "pages/club/apply/index.wxml:92:bindinput:onInput:9",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -890357,7 +890491,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 80,
+        "line": 92,
         "selectorHint": ".field__ctrl",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -890397,141 +890531,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:219"
-      }
-    },
-    {
-      "id": "pages/club/apply/index.wxml:90:bindtap:pickExp:10",
-      "route": "pages/club/apply/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/apply/index.wxml",
-        "js": "pages/club/apply/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "pickExp",
-        "line": 90,
-        "selectorHint": ".opt",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "{{item}}",
-        "ariaRole": "radio",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": "{{experience===item}}"
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/apply/index.js:224"
-      }
-    },
-    {
-      "id": "pages/club/apply/index.wxml:98:bindinput:onInput:11",
-      "route": "pages/club/apply/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/apply/index.wxml",
-        "js": "pages/club/apply/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "input",
-        "event": "bindinput",
-        "handler": "onInput",
-        "line": 98,
-        "selectorHint": ".field__ctrl",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/apply/index.js:219"
+        "staticSource": "pages/club/apply/index.js:231"
       }
     },
     {

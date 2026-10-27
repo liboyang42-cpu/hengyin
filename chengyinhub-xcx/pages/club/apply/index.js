@@ -1,5 +1,6 @@
 const app = getApp();
 const toast = require('../../../utils/toast.js');
+const wizardMorph = require('../../../utils/wizard-morph.js');
 const roleGuard = require('../../../utils/roleGuard.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 
@@ -25,9 +26,9 @@ Page({
     capCount: 0,
     dots: [0, 1, 2, 3],
     reducedMotion: false,
-    // P-24(owner 2026-10-27 p98):进度条进场从 0 直接 ease-out 到当前步宽,不再由开场 CTA 形变过来
-    // (那条形变先画满整条、再缩回一段,还会从标题上划过去)。progIn 落下后各段才填色,transition 才跑得起来。
-    progIn: false,
+    morphing: false,
+    morph: null,
+    morphRun: false,
     // P-23(owner 2026-10-27 p111):已有商家记录的账号进来就说明,并给去商家端的出口,不等第 4 步才报错。
     merchantActive: false,
     // 身份
@@ -69,6 +70,7 @@ Page({
   },
 
   onUnload() {
+    wizardMorph.cancelIntroMorph(this);
     this._bootstrapEpoch = (this._bootstrapEpoch || 0) + 1;
     this._submitEpoch = (this._submitEpoch || 0) + 1;
     this._leaderStatusEpoch = (this._leaderStatusEpoch || 0) + 1;
@@ -175,19 +177,29 @@ Page({
   },
 
   // 开场屏 → 第一步。四步之前先给一屏说清「这是什么、要多久、填完得到什么」。
-  // P-24:进度条先以空轨出现,下一帧再落 progIn,第一段从 0 ease-out 填到当前步宽(减动效时由 wxss 关掉过渡)。
+  // 那颗 CTA 会飞上去变成进度条,几何与约束见 utils/wizard-morph.js。
+  // P-24(owner 2026-10-27 p98):形变条一开始就快速缩到第一段的长度,不再先画满整条、到最后才突然缩短。
   startForm() {
     if (this.data.bootstrapState !== 'ready') return;
-    this.setData({ mode: 'form', progIn: false });
-    this.refreshStep(1);
+    if (this.data.reducedMotion) {          // 减动效:直接切,不放形变
+      this.setData({ mode: 'form' });
+      this.refreshStep(1);
+      return;
+    }
     var that = this;
-    wx.nextTick(function () { that.setData({ progIn: true }); });
+    wizardMorph.runIntroMorph(this, {
+      segSel: '.prog__seg',
+      enterData: { mode: 'form' },
+      afterEnter: function () { that.refreshStep(1); },
+    });
   },
+
+  endMorph() { wizardMorph.endIntroMorph(this); },
 
   onBack() {
     if (this._submitting) return;
     // 第一步往回退到开场屏,不是直接摔出页面 —— 开场屏才是这条流程的起点
-    if (this.data.mode === 'form' && this.data.step === 1) { this.setData({ mode: 'intro', progIn: false }); return; }
+    if (this.data.mode === 'form' && this.data.step === 1) { this.setData({ mode: 'intro' }); return; }
     if (this.data.step === 1) { this.exitPage(); return; }
     this.refreshStep(this.data.step - 1);
   },

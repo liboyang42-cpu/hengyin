@@ -12,10 +12,10 @@
        被顶距契约当成「nav 与标题之间的夹层」。夹在中间的进度条与 eyebrow
        因此一点顶距都不能带,呼吸靠自身高度撑,见 wxss。 -->
   <view class="head">
-    <view class="prog" wx:if="{{bootstrapState === 'ready' && mode==='form'}}"
+    <view class="prog {{morphing ? 'prog--ghost' : ''}}" wx:if="{{bootstrapState === 'ready' && mode==='form'}}"
           aria-role="status" aria-live="polite" aria-label="第{{step}}步，共4步，{{stepTitle}}">
       <view wx:for="{{dots}}" wx:key="*this"
-            class="prog__seg {{progIn && item < step ? 'on' : ''}}" aria-hidden="true"><view class="prog__fill"></view></view>
+            class="prog__seg {{item < step ? 'on' : ''}}" aria-hidden="true"></view>
     </view>
 
     <view class="step-head {{stepIn ? 'cy-rise-in' : ''}}" wx:if="{{mode !== 'intro'}}">
@@ -34,8 +34,8 @@
     secondary="返回" bind:secondary="onExit" />
 
   <!-- ===== 开场屏(四步之前) ===== -->
-  <view class="intro cy-rise-in"
-        wx:if="{{bootstrapState === 'ready' && mode==='intro'}}">
+  <view class="intro {{morphing ? 'intro--out' : 'cy-rise-in'}}"
+        wx:if="{{bootstrapState === 'ready' && (mode==='intro' || morphing)}}">
     
     <view class="intro__title">把你带的人，
 变成你的俱乐部</view>
@@ -46,6 +46,18 @@
     </view>
     <view class="intro-cta"><cy-btn variant="primary" accessibilityLabel="开始申请" bindtap="startForm">开始申请</cy-btn></view>
     
+  </view>
+
+  <!-- 开场胶囊 → 进度条:共享元素形变。
+       CTA 与进度轨等宽(都是 375 - 2×--cy-page-x),所以只需要「上移 + 纵向压扁」,
+       全程 transform / opacity / border-radius,一个布局属性都不动。 -->
+  <view class="morph" wx:if="{{morph}}" aria-hidden="true"
+        style="left:{{morph.x}}px; top:{{morph.y}}px; width:{{morph.w}}px; height:{{morph.h}}px;
+               transform: translate({{morphRun ? morph.dx : 0}}px, {{morphRun ? morph.dy : 0}}px)
+                          scale({{morphRun ? morph.sx : 1}}, {{morphRun ? morph.sy : 1}});
+               border-radius: {{morphRun ? 3 : 999}}px;">
+    <view class="morph__track" style="opacity:{{morphRun ? 1 : 0}}"></view>
+    <view class="morph__fill" style="transform: scaleX({{morphRun ? morph.fx : 1}})"></view>
   </view>
 
   <!-- ===== 表单 ===== -->

@@ -59,9 +59,13 @@ function runIntroMorph(page, opt) {
             fx: first.width / trackW,
           },
         }, function () {
-          // 下一帧再翻开关,否则起止两态落在同一帧里,transition 根本不跑
-          wx.nextTick(function () { page.setData({ morphRun: true }); });
-          page._morphTimer = setTimeout(function () { endIntroMorph(page); }, DURATION);
+          // 下一帧再翻开关,否则起止两态落在同一帧里,transition 根本不跑。
+          // 2026-10-27 P-24(真机 p98):nextTick 在真机上常和首帧合并 —— 形变条整段画满、
+          // 到收尾才一下缩成第一段。改成等一帧(约 32ms)再翻,收尾定时器从翻开关时起算。
+          page._morphTimer = setTimeout(function () {
+            page.setData({ morphRun: true });
+            page._morphTimer = setTimeout(function () { endIntroMorph(page); }, DURATION);
+          }, 32);
         });
       }).exec();
     });
