@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class FrozenAttributeDefinitionsTest {
     private final ObjectMapper json = new ObjectMapper();
     private ObjectNode snapshot() throws Exception {
-        return (ObjectNode) json.readTree("{\"journeyRules\":{\"stateEnabled\":true,\"attributes\":[]},"
+        return (ObjectNode) json.readTree("{\"journeyRules\":{\"schemaVersion\":1,\"stateEnabled\":true,\"attributes\":[]},"
                 + "\"attributeDefinition\":{\"schemaVersion\":1,\"configVersion\":\"3\",\"registryVersion\":\"2\",\"attributes\":[{"
                 + "\"key\":\"counter.focus\",\"keyType\":\"counter\",\"label\":\"专注\",\"initial\":3,\"min\":0,\"max\":10,"
                 + "\"visible\":true,\"persistScope\":\"topic\",\"displayType\":\"bar\",\"color\":\"#123456\",\"icon\":\"eye\",\"sortOrder\":null,\"rules\":null}]}}");
