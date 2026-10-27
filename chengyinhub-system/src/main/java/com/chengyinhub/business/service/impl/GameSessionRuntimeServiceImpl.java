@@ -6051,18 +6051,27 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     @Transactional(readOnly = true)
     public boolean isOriginalSharedRouteEligible(Long memberId, Long topicId, Long activityId, Long nodeId,
                                                  Long sessionId, String runtimeInstance, Integer authorityEpoch) {
-        requireOriginalSharedIdentity(memberId, topicId, activityId, nodeId, sessionId, runtimeInstance, authorityEpoch);
-        return originalSharedRouteEligible(runtimeMapper.selectSessionByActivity(activityId), memberId, topicId,
-                activityId, nodeId, sessionId, runtimeInstance, authorityEpoch);
+        return originalSharedRouteEligible(false, memberId, topicId, activityId, nodeId, sessionId, runtimeInstance, authorityEpoch);
     }
 
     @Override
     @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
     public boolean isOriginalSharedRouteEligibleForUpdate(Long memberId, Long topicId, Long activityId, Long nodeId,
                                                           Long sessionId, String runtimeInstance, Integer authorityEpoch) {
-        requireOriginalSharedIdentity(memberId, topicId, activityId, nodeId, sessionId, runtimeInstance, authorityEpoch);
-        return originalSharedRouteEligible(runtimeMapper.selectSessionByActivityForUpdate(activityId), memberId, topicId,
-                activityId, nodeId, sessionId, runtimeInstance, authorityEpoch);
+        return originalSharedRouteEligible(true, memberId, topicId, activityId, nodeId, sessionId, runtimeInstance, authorityEpoch);
+    }
+
+    /** Guard/audit port boundary: game reason codes become business ServiceException, not unknown 500s. */
+    private boolean originalSharedRouteEligible(boolean lock, Long memberId, Long topicId, Long activityId, Long nodeId,
+                                                Long sessionId, String runtimeInstance, Integer authorityEpoch) {
+        try {
+            requireOriginalSharedIdentity(memberId, topicId, activityId, nodeId, sessionId, runtimeInstance, authorityEpoch);
+            GameSession session = lock ? runtimeMapper.selectSessionByActivityForUpdate(activityId)
+                    : runtimeMapper.selectSessionByActivity(activityId);
+            return originalSharedRouteEligible(session, memberId, topicId, activityId, nodeId, sessionId, runtimeInstance, authorityEpoch);
+        } catch (GameSessionException denied) {
+            throw new ServiceException(denied.getMessage(), 409).setData(singleton("reasonCode", denied.getErrorCode()));
+        }
     }
 
     private void requireOriginalSharedIdentity(Long memberId, Long topicId, Long activityId, Long nodeId,
