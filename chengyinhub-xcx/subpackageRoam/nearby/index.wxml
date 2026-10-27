@@ -20,21 +20,21 @@
        一个动作两个入口、名字还不一样。要么等产品定筛选维度再做真的,要么现在不留半成品。删。 -->
   <!-- 2026-10-14 地图优化(用户确认原型):深色计数条 + 地图/列表切换;位置仍在胶囊下 10px(hudTop) -->
   <!-- 2026-10-25 业主:计数条挪到底部横滑卡片的标题;顶部只留筛选(文字,可展开)+ 地图 / 列表(图标) -->
-  <view class="mt-top mt-top--end" style="top:{{hudTop + 10}}px;">
-    <view class="mt-mode">
-      <view class="mt-mode__i {{viewMode === 'map' ? 'is-on' : ''}}" data-mode="map" bindtap="setViewMode" aria-role="tab" aria-selected="{{viewMode === 'map'}}" aria-label="地图" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="map" size="36" /></view>
-      <view class="mt-mode__i {{viewMode === 'list' ? 'is-on' : ''}}" data-mode="list" bindtap="setViewMode" aria-role="tab" aria-selected="{{viewMode === 'list'}}" aria-label="列表" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="list" size="36" /></view>
-    </view>
-  </view>
-
+  <!-- 2026-10-25 业主:筛选与地图 / 列表同一行并排(flex),筛选在自己的格子里横滑,不压到图标 -->
+  <view class="mt-toprow" style="top:{{hudTop + 10}}px;">
   <!-- 2026-10-22 业主:计数条下面一行筛选 —— 全部 / 主题队伍 / 地点▾ / 商家▾。
        地点、商家点开是下拉,选项只来自本屏真实数据(主题 / 活动、POI 标签),不预置分类。 -->
-  <scroll-view class="mt-filter mt-filter--row" scroll-x enhanced show-scrollbar="{{false}}" style="top:{{hudTop + 10}}px;">
+  <scroll-view class="mt-toprow__chips" scroll-x enhanced show-scrollbar="{{false}}">
     <view class="mt-chip {{layer === 'all' ? 'is-on' : ''}}" data-layer="all" bindtap="onLayerTap" aria-role="button" aria-label="全部节点" hover-class="cy-pressed" hover-stay-time="80">全部</view>
     <view class="mt-chip {{layer === 'team' ? 'is-on' : ''}}" data-layer="team" bindtap="onLayerTap" aria-role="button" aria-label="只看主题队伍" hover-class="cy-pressed" hover-stay-time="80">主题队伍</view>
     <view class="mt-chip {{layer === 'place' ? 'is-on' : ''}}" data-layer="place" bindtap="onLayerTap" aria-role="button" aria-label="地点玩法{{layer === 'place' && layerSub ? '：' + layerSub : ''}}，展开选项" hover-class="cy-pressed" hover-stay-time="80">{{layer === 'place' && layerSub ? layerSub : '地点玩法'}}<view class="mt-chip__caret {{layerSheet === 'place' ? 'is-up' : ''}}"></view></view>
     <view class="mt-chip {{layer === 'shop' ? 'is-on' : ''}}" data-layer="shop" bindtap="onLayerTap" aria-role="button" aria-label="商家{{layer === 'shop' && layerSub ? '：' + layerSub : ''}}，展开选项" hover-class="cy-pressed" hover-stay-time="80">{{layer === 'shop' && layerSub ? layerSub : '商家'}}<view class="mt-chip__caret {{layerSheet === 'shop' ? 'is-up' : ''}}"></view></view>
   </scroll-view>
+    <view class="mt-mode">
+      <view class="mt-mode__i {{viewMode === 'map' ? 'is-on' : ''}}" data-mode="map" bindtap="setViewMode" aria-role="tab" aria-selected="{{viewMode === 'map'}}" aria-label="地图" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="map" size="36" /></view>
+      <view class="mt-mode__i {{viewMode === 'list' ? 'is-on' : ''}}" data-mode="list" bindtap="setViewMode" aria-role="tab" aria-selected="{{viewMode === 'list'}}" aria-label="列表" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="list" size="36" /></view>
+    </view>
+  </view>
 
   <!-- 列表模式:范围内全部队伍,点一行 = 点地图上的那支(同一张队伍卡) -->
   <scroll-view class="mt-list" scroll-y enhanced show-scrollbar="{{false}}" wx:if="{{viewMode === 'list'}}" style="top:{{hudTop + 56}}px;">
