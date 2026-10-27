@@ -73,7 +73,10 @@ test('BL-87 GET /api/audit/{taskId}/detail:仅提交人本人,403/404 文案,申
     assert.match(status, new RegExp(`STATUS_${k} = ${v};`), '状态值 ' + k)
   }
   // 入口:系统卡片 payload 带 taskId(前端从 card.result.taskId 取)
-  const notify = methodBody(impl, 'private void notifyReviewResult(AuditTask task, AuditReviewDTO request)', 5200)
+  // 方法体随守卫申诉文案增长，按方法自身的闭合括号截取，不再用固定字符窗（也不会读到下一个方法）。
+  const notifyAt = impl.indexOf('private void notifyReviewResult(AuditTask task, AuditReviewDTO request)')
+  assert.ok(notifyAt >= 0, '找不到方法 notifyReviewResult')
+  const notify = impl.slice(notifyAt, impl.indexOf('\n    }\n', notifyAt))
   assert.match(notify, /result\.put\("taskId", task\.getId\(\)\)/)
   assert.match(notify, /card\.put\("result", result\)/)
   assert.match(notify, /ImMessage\.MSG_CARD/)
