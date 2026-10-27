@@ -91,6 +91,7 @@ public class PlayPhotoCommandApplication {
                 java.util.Arrays.asList(picUrl), originalRun -> photoOnce(actorMemberId, activityId, nodeId, picUrl, topicId, routeActionId, expectedRouteVersion, originalRun));
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult photo(Long actorMemberId, String activityId, String nodeId, String picUrl, String topicId,
             String routeActionId, Integer expectedRouteVersion)
     {

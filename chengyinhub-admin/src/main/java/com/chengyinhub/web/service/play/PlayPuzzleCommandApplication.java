@@ -45,6 +45,7 @@ public class PlayPuzzleCommandApplication {
                 java.util.Collections.emptyList(), originalRun -> revealPuzzleOnce(actorMemberId, activityId, nodeId, topicId, routeActionId, expectedRouteVersion, originalRun));
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult revealPuzzle(Long actorMemberId, String activityId, String nodeId, String topicId,
             String routeActionId, Integer expectedRouteVersion)
     {

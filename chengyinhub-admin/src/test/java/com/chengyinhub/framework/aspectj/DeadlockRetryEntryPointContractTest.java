@@ -98,7 +98,9 @@ class DeadlockRetryEntryPointContractTest {
             }
         }
         assertEquals(List.of(), missing, "这些原重试入口缺 @DeadlockRetry 或所属应用/服务事务");
-        assertEquals(12, checked, "入口数与 #294 审计口径不符：新增/删除重载需重新做副作用审计");
+        // W8 审计：PreferencePlayService.submit 新增带 originalPlayInstance 的重载（生产唯一调用方
+        // PlayPreferenceApplication 走它），旧重载以 "default" 自调用委托，副作用集合不变。
+        assertEquals(13, checked, "入口数与 #294 审计口径不符：新增/删除重载需重新做副作用审计");
     }
 
     /** Progress HTTP entries retain outer retry and delegate transaction ownership to the actual application. */
@@ -138,10 +140,12 @@ class DeadlockRetryEntryPointContractTest {
     @Test
     void playHttpRetryReentersTheActualPhotoApplicationAfterRollbackAndConnectionRelease() throws Exception {
         PlayBoundary boundary = playBoundary(true);
-        var result = boundary.controller().photo("500", "401", "media-asset:71", null, "photo-original-1", 0);
+        var result = boundary.controller().photo("500", "401", "media-asset:71", null, "photo-original-1", 0,
+                88L, null, 0);
         assertEquals(500, result.get("code"));
         assertEquals("节点不存在", result.get("msg"));
-        List<Object> originalCommand = Arrays.asList(7L, "500", "401", "media-asset:71", null, "photo-original-1", 0);
+        List<Object> originalCommand = Arrays.asList(7L, "500", "401", "media-asset:71", null, "photo-original-1", 0,
+                88L, null, 0);
         assertEquals(List.of(originalCommand, originalCommand), boundary.commands(),
                 "IR-T07: retry must preserve original actor, scope, media, command identity and expected version");
         assertEquals(List.of("identity", "begin1", "node1", "rollback1", "close1",
@@ -151,14 +155,21 @@ class DeadlockRetryEntryPointContractTest {
 
     @Test
     void photoAndRevealCompatibilityOverloadsEnterTheSameWritableApplicationTransaction() throws Exception {
-        PlayBoundary photo = playBoundary(false);
-        assertEquals("节点不存在", photo.controller().photo("500", "401", "media-asset:71", null).get("msg"));
-        assertEquals(List.of("identity", "begin1", "node1", "commit1", "close1"), photo.events());
-        assertEquals(List.of(Arrays.asList(7L, "500", "401", "media-asset:71", null)), photo.commands());
         PlayBoundary reveal = playBoundary(false);
-        assertEquals("节点不存在", reveal.controller().revealPuzzle("500", "401", null).get("msg"));
+        assertEquals("节点不存在", reveal.controller().revealPuzzle("500", "401", null, "reveal-original-1", 0,
+                88L, null, 0).get("msg"));
         assertEquals(List.of("identity", "begin1", "node1", "commit1", "close1"), reveal.events());
-        assertEquals(List.of(Arrays.asList(7L, "500", "401", null)), reveal.commands());
+        assertEquals(List.of(Arrays.asList(7L, "500", "401", null, "reveal-original-1", 0, 88L, null, 0)), reveal.commands());
+        // W8 起不带原运行时身份的旧重载一律拒绝（与 PlayBasicCommandApplication 的旧重载同口径）：
+        // 仍进同一写事务，但在读节点之前就拒，不会推进进度。
+        PlayBoundary photo = playBoundary(false);
+        assertEquals("必须提供原运行时身份", photo.controller().photo("500", "401", "media-asset:71", null).get("msg"));
+        assertEquals(List.of("identity", "begin1", "commit1", "close1"), photo.events());
+        assertEquals(List.of(Arrays.asList(7L, "500", "401", "media-asset:71", null)), photo.commands());
+        PlayBoundary legacyReveal = playBoundary(false);
+        assertEquals("必须提供原运行时身份", legacyReveal.controller().revealPuzzle("500", "401", null).get("msg"));
+        assertEquals(List.of("identity", "begin1", "commit1", "close1"), legacyReveal.events());
+        assertEquals(List.of(Arrays.asList(7L, "500", "401", null)), legacyReveal.commands());
         assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
     }
 
@@ -195,8 +206,17 @@ class DeadlockRetryEntryPointContractTest {
                 {new PlayPhotoCommandApplication(), "playPhotoCommandApplication"},
                 {new PlayPuzzleCommandApplication(), "playPuzzleCommandApplication"}
         };
+        // 原局意图闸（回执/版本/身份）不在本边界测试范围内：直接执行命令体，事务与重试仍是真实 advice。
+        var intents = org.mockito.Mockito.mock(com.chengyinhub.web.service.play.PlayBasicIntentApplication.class);
+        org.mockito.Mockito.when(intents.executeBasicIntent(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+                .thenAnswer(call -> call.<java.util.function.Function<Object, Object>>getArgument(12).apply(null));
         for (Object[] row : applications) {
             org.springframework.test.util.ReflectionTestUtils.setField(row[0], "cmsTopicNodeService", nodes);
+            org.springframework.test.util.ReflectionTestUtils.setField(row[0], "playBasicIntentApplication", intents);
             var application = new org.springframework.aop.framework.ProxyFactory(row[0]);
             application.setProxyTargetClass(true);
             application.addAdvice((org.springframework.aop.MethodBeforeAdvice) (method, arguments, target) -> {
