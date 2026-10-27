@@ -141,7 +141,8 @@ Component({
           fromCode: code,
           toCode: code,
           distanceValue,
-          distanceText: distanceValue === null ? '0' : String(distanceValue), // UI-04:没取到显示 0
+          // UI-04:本机记录没取到显示 0;服务端事实(serverFact)的 null 显示「—」不伪造 0
+          distanceText: distanceValue === null ? (session && session.serverFact ? '—' : '0') : String(distanceValue),
           shopsValue,
           shopsText: shopsValue === null ? '—' : String(shopsValue),
           time: (session && typeof session.time === 'string' && session.time.trim()) || this._formatDuration(session && session.durSec) || '—',

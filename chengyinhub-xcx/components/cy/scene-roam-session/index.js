@@ -152,14 +152,16 @@ Component({
       const shops = nonNegativeInteger(raw.shops)
       const explorePct = nonNegativeNumber(raw.explorePct)
       const formattedDuration = this._formatDuration(raw.durSec)
+      // 服务端已完成事实(serverFact)的 null 是服务端也不知道:显示「—」不伪造 0;本机旧记录仍按 UI-04 显示 0。
+      const unknownCount = raw.serverFact ? '—' : '0'
       return {
         ...raw,
         dateFull: validDate ? `${date.getMonth() + 1}月${date.getDate()}日 周${WEEK[date.getDay()]}` : '日期不可用',
         time: typeof raw.time === 'string' && raw.time.trim() ? raw.time.trim() : (formattedDuration || '—'),
         distance,
-        distanceText: distance === null ? '0' : String(distance),
+        distanceText: distance === null ? unknownCount : String(distance),
         shops,
-        shopsText: shops === null ? '0' : String(shops),
+        shopsText: shops === null ? unknownCount : String(shops),
         explorePct: explorePct !== null && explorePct <= 100 ? explorePct : null,
         explorePctText: explorePct !== null && explorePct <= 100 ? String(explorePct) : '0',
         pois: (Array.isArray(raw.pois) ? raw.pois : [])
