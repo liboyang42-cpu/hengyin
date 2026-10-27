@@ -20,7 +20,8 @@ function setByPath(target, raw, value) {
 const PAGE = '../../subpackageRoam/nearby/index.js'
 let config
 let navs
-global.getApp = () => ({ globalData: {}, getImgUrl: (u) => u || '', sendRequest: () => {} })
+// 真实 app 恒有 getUserID/getAuthorization;W8 起 onShow 用它们核对队伍写作用域(游客 = 空身份)
+global.getApp = () => ({ getUserID: () => '', getAuthorization: () => '', globalData: {}, getImgUrl: (u) => u || '', sendRequest: () => {} })
 global.wx = {
   getWindowInfo: () => ({ screenHeight: 844, safeArea: { bottom: 810 } }),
   getMenuButtonBoundingClientRect: () => ({ bottom: 88 }),
