@@ -78,7 +78,8 @@ test('编辑页试玩:玩法那一屏不压翻页点 / 箭头 / 保存栏,判定
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.wxml'), 'utf8');
   assert.doesNotMatch(wxml, /cg-pv-float/);
   assert.match(wxml, /<cy-play-verdict wx:if="\{\{ pvStepKey === 'challenge' && pvKit \}\}"[^>]*closable="\{\{ true \}\}" bind:close="closePvVerdict"/);
-  assert.match(wxml, /class="cg-pv-submit" wx:if="\{\{!previewMode && !\(pvStepKey === 'challenge' && pvKit\)\}\}"/);
+  // 2026-10-27 P-40:业主删掉了预览底部保存 / 发布栏(只留左右滑动 + 返回),不再断言 cg-pv-submit 存在
+  assert.doesNotMatch(wxml, /class="cg-pv-submit"/);
   const json = JSON.parse(fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.json'), 'utf8'));
   assert.equal(json.componentPlaceholder['cy-play-verdict'], 'view', '跨分包组件要占位');
 });

@@ -31,6 +31,13 @@ function fallbackCenter() {
   return { longitude: fb.longitude, latitude: fb.latitude };
 }
 
+// P-45 / G-12(2026-10-27):主题编辑器的点位换成玩家地图那套圆点图钉(utils/play-marker-draw.js,
+// 页面离屏画好后经 state.icons 传进来):已配玩法 = actionable 白底黑圈,未配 = candidate 虚线圈,
+// 选中 / 正在编辑 = target 靶心;序号仍由 label 胶囊承担。图标没画好(或画失败)时回落旧图钉。
+function pinIcon(icons, kind) {
+  return (icons && icons[kind]) || MAP_PIN;
+}
+
 /**
  * @param {object} state 页面显式传入的数据切片,模块本身不碰 this.data
  * @returns {{markerMap: object, patch: object}} markerMap 交回页面存为 _markerMap;patch 交给 setData
@@ -44,6 +51,8 @@ function buildRouteMapView(state) {
     let globalNo = 0; // 全局站点序号(跨章节连续)
     const selectedLid = state.selectedNodeLid; // 列表↔地图联动选中节点
     const markerMap = {}; // markerId → {chapterLid, nodeLid} 反查表(供 M1.2 bindmarkertap)
+    const icons = state.icons || null;
+    const round = !!(icons && icons.actionable);
 
     // 先数出本次所有有效(有坐标)节点总数,用于判定全局起点/终点
     let totalValid = 0;
@@ -112,15 +121,18 @@ function buildRouteMapView(state) {
               anchorX: 0,
               anchorY: -4
             };
-        markers.push({
+        const configured = (node.templateId && Number(node.templateId) > 0) || (node.templateInfo && node.templateInfo.title);
+        const marker = {
           id: globalNo,
           latitude: lat,
           longitude: lng,
-          iconPath: MAP_PIN,
+          iconPath: pinIcon(icons, isSelected ? 'target' : (configured ? 'actionable' : 'candidate')),
           width: isSelected ? 42 : (lite ? 22 : 30),
           height: isSelected ? 42 : (lite ? 22 : 30),
           label: label
-        });
+        };
+        if (round) marker.anchor = { x: 0.5, y: 0.5 };
+        markers.push(marker);
       });
     });
 
@@ -135,7 +147,7 @@ function buildRouteMapView(state) {
         id: markerId,
         latitude: lat,
         longitude: lng,
-        iconPath: MAP_PIN,
+        iconPath: pinIcon(icons, 'candidate'),
         width: 28,
         height: 28,
         label: {
@@ -179,7 +191,7 @@ function buildRouteMapView(state) {
         id: 900001,
         latitude: draftLat,
         longitude: draftLng,
-        iconPath: MAP_PIN,
+        iconPath: pinIcon(icons, 'target'),
         width: 38,
         height: 38,
         label: {

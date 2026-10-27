@@ -332,6 +332,7 @@ const themeRecords = require('../../utils/theme-records.js');
 const themeTrade = require('./utils/theme-trade.js');
 const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
+const { loadStoryFont } = require('./utils/story-font.js');
 Page({
   ...r5PlayerRuntime.methods(), closeR5Verdict() { this.setData({ 'r5Verdict.show': false }); },  // 结果反馈判定屏「继续」(状态见 r5-player-runtime)
   ...themeBackpack.methods(req),
@@ -520,6 +521,7 @@ Page({
   },
 
   onLoad(options) {
+    loadStoryFont(); // P-60:故事流手写体(未配置 / 失败时 .cy-story-hand 回落系统字体)
     this._playOwner = this._playMember();
     this._playDisposed = false;
     options = options || {};

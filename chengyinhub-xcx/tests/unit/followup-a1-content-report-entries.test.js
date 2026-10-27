@@ -121,13 +121,15 @@ function loadTemplate(h, scope, info) {
   h.requests.length = 0;
 }
 
-test('FOLLOWUP-A-1 模板广场:别人公开的广场玩法 → 更多里出「举报」,提交 /api/template/report', async () => {
+// 2026-10-27 P-42:⋯「更多」弹层已删,举报入口挪到玩法详情页末尾(同主题详情 10-20 的做法)
+test('FOLLOWUP-A-1 模板广场:别人公开的广场玩法 → 页面末尾出「举报」,提交 /api/template/report', async () => {
   const h = harness('pages/templatedetail/templatedetail.js');
   loadTemplate(h, 'library', { memberId: 22, status: 1, publishStatus: 1, delFlag: 0 });
   assert.equal(h.page.data.reportKind, 'template');
-  h.page.openMore();
+  const wxml = read('pages/templatedetail/templatedetail.wxml');
+  assert.match(wxml, /<view class="xb-report" wx:if="\{\{ reportKind === 'template' \}\}" bindtap="reportTemplate"/);
+  assert.match(wxml, /<view class="xb-report" wx:elif="\{\{ reportKind === 'personalTemplate' \}\}" bindtap="reportPersonalTemplate"/);
   const submit = await runReport(h, () => h.page.reportTemplate(), r => r.success({ code: 200, msg: '举报已提交，内容将进入审核' }));
-  assert.equal(h.page.data.moreShow, false, '先收起更多菜单');
   assert.equal(submit.url, '/api/template/report');
   assert.deepEqual(submit.data, { id: '5', reason: '违法违规' });
   assert.deepEqual(h.toasts, ['举报已提交，内容将进入审核']);
@@ -165,8 +167,9 @@ test('FOLLOWUP-A-1 玩法详情:本人的 / 未公开的玩法不出举报,处�
     assert.equal(h.requests.length, 0);
   }
   const wxml = read('pages/templatedetail/templatedetail.wxml');
-  assert.match(wxml, /<view class="xb-sheet-item" wx:if="\{\{ reportKind === 'template' \}\}" bindtap="reportTemplate"[^>]*>举报<\/view>/);
-  assert.match(wxml, /<view class="xb-sheet-item" wx:elif="\{\{ reportKind === 'personalTemplate' \}\}" bindtap="reportPersonalTemplate"[^>]*>举报<\/view>/);
+  // 2026-10-27 P-42:⋯ 弹层已删,举报是页面末尾的一行(xb-report)
+  assert.match(wxml, /<view class="xb-report" wx:if="\{\{ reportKind === 'template' \}\}" bindtap="reportTemplate"[^>]*>举报这个玩法<\/view>/);
+  assert.match(wxml, /<view class="xb-report" wx:elif="\{\{ reportKind === 'personalTemplate' \}\}" bindtap="reportPersonalTemplate"[^>]*>举报这个玩法<\/view>/);
   assert.match(wxml, /<cy-option-sheet show="\{\{reportReasonShow\}\}" title="选择举报原因" items="\{\{reportReasonItems\}\}"/);
   assert.ok(JSON.parse(read('pages/templatedetail/templatedetail.json')).usingComponents['cy-option-sheet']);
 });

@@ -180,7 +180,6 @@ Page({
     selectedOption: '',
     selectedOptionKey: '',
     inputAnswer: '',
-    moreShow: false,
     isMyScope: false,
     isMerchant: false,
     // 公共库主动作统一「开始应用」(基于模板起草)。scope=my 按服务端 canEdit 定:
@@ -332,7 +331,7 @@ Page({
     that._detailRequestToken = token;
     if (that._detailContext && that._detailContext !== context) {
       that.applyDetailPayload({});
-      that.setData({ moreShow: false, reportKind: '' });
+      that.setData({ reportKind: '' });
       that.closePop();
     }
     that._detailContext = context;
@@ -434,39 +433,14 @@ Page({
     mediaPreview.open(urls, urls[0]);
   },
 
-  openMore() {
-    this.setData({ moreShow: true });
-  },
-
-  closeMore() {
-    this.setData({ moreShow: false });
-  },
-
-  openPopFromMore() {
-    this.setData({
-      moreShow: false,
-      popDavid: true,
-      canSubmitPreview: false,
-      selectedOption: '',
-      selectedOptionKey: '',
-      inputAnswer: ''
-    });
-  },
-
-  onShare() {
-    this.setData({ moreShow: false });
-  },
-
   // FOLLOWUP-A-1:举报玩法,流程与动态详情 reportSquare 同一套(utils/content-report.js)。
   // 广场记录与个人玩法各走各的举报接口,两个入口分开绑定。
   reportTemplate() {
     if (this.data.reportKind !== 'template') return;
-    this.setData({ moreShow: false });
     require('../../utils/content-report.js').reportTemplate(this, app, this.data.id);
   },
   reportPersonalTemplate() {
     if (this.data.reportKind !== 'personalTemplate') return;
-    this.setData({ moreShow: false });
     require('../../utils/content-report.js').reportPersonalTemplate(this, app, this.data.id);
   },
   onReportReasonSelect(e) { require('../../utils/community-report-sheet.js').select(this, e); },

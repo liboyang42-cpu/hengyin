@@ -39,8 +39,10 @@
       <cy-progress-status wx:if="{{aiGenerating}}" density="compact"
                           title="正在生成主题草稿" sub="完成后仍需你确认地点"
                           reduced-motion="{{reducedMotion}}" />
+      <!-- P-43(2026-10-27):失败时给一个明确的重试(结果未确认时是「查看结果」),输入框里的描述原样保留 -->
       <cy-inline-error wx:elif="{{aiError}}" kind="data"
-                       title="这次没能继续" sub="{{aiError}}" />
+                       title="这次没能生成，你的描述已保留" sub="{{aiError}}"
+                       action="{{aiIdea ? (aiDraftPending ? '查看结果' : '重试') : ''}}" bind:action="retryAiPlan" />
       <!-- 稿 F5(99:5984):额度为 0 时界面上就写「今日额度已用完」,不是等他点了才说。
            发送键已经置灰(is-exhausted),但灰着不给理由 —— 顶部那行「还可生成 0 次」
            是小字,不会有人把两件事连起来。这里同时给出路:走「专业手动」。 -->
