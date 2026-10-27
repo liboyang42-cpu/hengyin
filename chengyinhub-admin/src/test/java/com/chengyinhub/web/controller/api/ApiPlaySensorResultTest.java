@@ -153,7 +153,8 @@ class ApiPlaySensorResultTest {
                 .put("sensorType","still").put("sensorConfig","{\"durationSec\":10}");
         content.putObject("nodePresentation").put("id",NODE).put("topicId",TOPIC).put("templateId",85L);
         content.putObject("templatePresentation");
-        when(route.nodeAnswers(MEMBER,TOPIC,ACTIVITY,NODE)).thenReturn(content);
+        // 写命令只消费入口锁定的原局快照(PlayNodeContext#frozenAnswer),不再走实时 nodeAnswers 读口
+        BasicPlayCommandFixtures.frozenRun(controller,ACTIVITY,TOPIC,NODE,0,content);
         node.setTemplateId(null);template.setSensorType("later-author-type");
         AjaxResult result=BasicPlayCommandFixtures.sensorResult(controller, request("still",payload("heldSec",12)));
         assertEquals(500,result.get("code"));assertEquals("传感器可信证明缺失，暂不能完成挑战",result.get("msg"));
@@ -390,7 +391,9 @@ class ApiPlaySensorResultTest {
                 org.mockito.ArgumentCaptor.forClass(PlayerNodeProgress.class);
         verify(progressService).insertPlayerNodeProgress(inserted.capture());
         assertEquals(picUrl, inserted.getValue().getPicUrl());
-        assertEquals(Integer.valueOf(0), inserted.getValue().getReviewStatus());
+        // 2026-09-17 拍照一律机审:首写即为机审通过(1),与 markPhotoMachineApproved 同口径;
+        // 0 会被定向结算 countPendingProgress 当成待审而永远挡住结算。
+        assertEquals(Integer.valueOf(1), inserted.getValue().getReviewStatus());
         verify(points).award(MEMBER, 12L, NODE, "节点打卡");
     }
 
