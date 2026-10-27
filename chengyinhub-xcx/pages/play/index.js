@@ -4569,7 +4569,11 @@ Page({
             // 仅"到点即完成(vm0)/GPS到达(vm5)"节点自动到达;答题/拍照/选项/扫码(1/2/3/4)须玩家手动完成,
             // 否则后端 arrive 闸会拒绝并在每次定位回调刷 toast。
             // 精度 > 80m 后端必拒(定位精度不足),不发,免得每次定位回调都弹一次拒绝
-            if (d <= 50 && !node.done && (node.vm === 0 || node.vm === 5) && playAccuracy.canAutoArrive(loc.accuracy)) that.arrive(node.nodeId, 'gps');
+            /* 8/9/10 是「玩法过了再到达收尾」(与 onAdvancedReady 同一白名单):玩法已通过就和 0/5 一样靠近即点亮,
+               否则做完玩法人就站在门口,卡片写着「靠近后会自动点亮」却永远不亮(2026-10-27 生产实测)。 */
+            const arrivesHere = node.vm === 0 || node.vm === 5
+              || ([8, 9, 10].includes(node.vm) && that._advancedReadyNodeId === node.nodeId);
+            if (d <= 50 && !node.done && arrivesHere && playAccuracy.canAutoArrive(loc.accuracy)) that.arrive(node.nodeId, 'gps');
           }
         };
         wx.onLocationChange(that._playLocationHandler);
@@ -5391,6 +5395,10 @@ Page({
       this.setData({ playKit: { show: false, kit: null } });
     }
     if (node.hasAdvanced && this._advancedReadyNodeId !== node.nodeId) {
+      /* 详情卡「开始任务」进来也认「首个会话视图已做完 → 直接接着走」,与故事里打开同一口径:
+         退出前做完没点继续、重进时以前会把第一个玩法空白重开(估数显示未答、找东西 0/3),
+         再点交就是「这一题已经答过了 / 已经全部找到了」的死循环(2026-10-27 生产实测)。 */
+      if (!node.done) this._freshStoryGame = String(node.nodeId);
       this.setData({ 'sheet.show': false, chapterGameAnchor: '', advancedPlay: { show: true, node } });
       return;
     }

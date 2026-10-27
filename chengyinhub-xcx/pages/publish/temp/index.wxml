@@ -320,13 +320,16 @@
     <view class="cg-ho-scene" bindtap="placeHotspot"
         aria-role="button" aria-label="在场景图上标出目标位置"
         hover-class="cg-ho-scene--press" hover-stay-time="60">
+    <!-- 画框按原图比例不裁,标点量这个框:玩家台面也按原图比例收框,两边是同一把尺 -->
+    <view class="cg-ho-frame" style="{{hotspotFrame}}">
     <image class="cg-ho-img" wx:if="{{advanced.hiddenObject.imageUrl}}"
-           src="{{advanced.hiddenObject.imageUrl}}" mode="aspectFill" />
+           src="{{advanced.hiddenObject.imageUrl}}" mode="aspectFill" bindload="onHotspotImgLoad" />
     <view class="cg-ho-ph" wx:else>先填上面的场景图地址，再回来节点置</view>
     <view class="cg-ho-pin {{hotspotArming === hi ? 'is-arming' : ''}}"
           wx:for="{{advanced.hiddenObject.hotspots}}" wx:key="id" wx:for-index="hi"
           wx:if="{{item.x >= 0 && item.y >= 0}}"
           style="left:{{item.x * 100 || 0}}%;top:{{item.y * 100 || 0}}%">{{hi + 1}}</view>
+    </view>
     </view>
 
     <view class="cg-adv-repeat" wx:for="{{advanced.hiddenObject.hotspots}}" wx:key="id" wx:for-index="hi">

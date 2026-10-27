@@ -7,7 +7,10 @@
     <view class="hd__scene pe pe--zoom" style="--pe-d:.15s" bindtap="onTapScene"
           hover-class="hd__scene--press" hover-stay-time="60"
           aria-role="button" aria-label="在图上点中藏起来的目标">
-      <image class="hd__img" wx:if="{{imageUrl}}" src="{{imageUrl}}" mode="aspectFill" />
+      <!-- 画框按底图原比例收在台面里(不裁),坐标都量这个框 —— 编辑页标点量的也是原图,
+           两边才是同一把尺。以前横图塞进竖台面被裁掉一半多,标在两侧的点玩家根本看不见。 -->
+      <view class="hd__frame" style="{{frame}}">
+      <image class="hd__img" wx:if="{{imageUrl}}" src="{{imageUrl}}" mode="aspectFill" bindload="onImgLoad" />
       <!-- 商家还没传图时画「这儿有一张图」。什么都不画的话整块是纯黑,
            读起来像加载失败,而这一屏的全部内容就是那张图。 -->
       <view class="hd__ph" wx:else>
@@ -20,6 +23,7 @@
       <view class="hd__miss" wx:if="{{miss}}" style="left:{{miss.x}}%;top:{{miss.y}}%"></view>
       <!-- 提示只泛一个象限,不指出具体位置 —— 指出来这一关就没了 -->
       <view class="hd__quad {{quad ? 'is-on' : ''}}" wx:if="{{quad}}" style="{{quad}}"></view>
+      </view>
     </view>
 
     <!-- 待找清单:玩家要知道自己在找什么。label 是有意下发的,坐标不是 -->
