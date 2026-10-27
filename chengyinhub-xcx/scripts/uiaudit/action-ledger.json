@@ -968791,7 +968791,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-album/index.wxml:11:bindtap:onCta:1",
+      "id": "pages/play/components/playkit-album/index.wxml:12:bindtap:onCta:1",
       "route": "component:pages/play/components/playkit-album/index",
       "hostRoutes": [
         "pages/play/index",
@@ -968882,12 +968882,12 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCta",
-        "line": 11,
+        "line": 12,
         "selectorHint": "view[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "{{uploadFailure === 'review_pending' ? '查看/重试审核，批准后提交相册' : uploadFailure === 'retry' ? '重试上传这张照片' : uploaded ? '重新提交照片' : '拍照或选择照片'}}",
+        "ariaLabelExpression": "{{uploadFailure === 'review_pending' ? '查看/重试审核，批准后提交相册' : uploadFailure === 'retry' ? '重试上传这张照片' : uploaded ? '重新提交照片' : uploadFailure === 'rejected' ? '重新选择照片' : '拍照或选择照片'}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -968938,7 +968938,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-album/index.wxml:12:bindtap:choosePhoto:2",
+      "id": "pages/play/components/playkit-album/index.wxml:13:bindtap:choosePhoto:2",
       "route": "component:pages/play/components/playkit-album/index",
       "hostRoutes": [
         "pages/play/index",
@@ -969029,7 +969029,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "choosePhoto",
-        "line": 12,
+        "line": 13,
         "selectorHint": "view[bindtap]",
         "visibleCondition": "{{uploaded || uploadFailure === 'retry'}}",
         "disabledCondition": null,
@@ -969085,7 +969085,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-album/index.wxml:14:bindtap:close:3",
+      "id": "pages/play/components/playkit-album/index.wxml:15:bindtap:close:3",
       "route": "component:pages/play/components/playkit-album/index",
       "hostRoutes": [
         "pages/play/index",
@@ -969173,7 +969173,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "close",
-        "line": 14,
+        "line": 15,
         "selectorHint": ".album__back",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1200520,7 +1200520,7 @@
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:107:bindtap:quit:10",
+      "id": "pages/team/detail/index.wxml:106:bindtap:quit:10",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1200543,7 +1200543,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "quit",
-        "line": 107,
+        "line": 106,
         "selectorHint": ".team-action",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1200585,11 +1200585,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:392"
+        "staticSource": "pages/team/detail/index.js:393"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:109:bindtap:disband:11",
+      "id": "pages/team/detail/index.wxml:108:bindtap:disband:11",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1200612,7 +1200612,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "disband",
-        "line": 109,
+        "line": 108,
         "selectorHint": ".team-action",
         "visibleCondition": "{{leader}}",
         "disabledCondition": null,
@@ -1200654,7 +1200654,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:404"
+        "staticSource": "pages/team/detail/index.js:405"
       }
     },
     {
@@ -1200739,7 +1200739,7 @@
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:112:bindtap:openReport:12",
+      "id": "pages/team/detail/index.wxml:111:bindtap:openReport:12",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1200762,7 +1200762,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openReport",
-        "line": 112,
+        "line": 111,
         "selectorHint": ".team-note",
         "visibleCondition": "{{!leader}}",
         "disabledCondition": null,
@@ -1200806,91 +1200806,7 @@
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:12:bindtap:cancelCommand:2",
-      "route": "pages/team/detail/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/team/detail/index.wxml",
-        "js": "pages/team/detail/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "cancelCommand",
-        "line": 12,
-        "selectorHint": "cy-btn[bindtap]",
-        "visibleCondition": null,
-        "disabledCondition": "{{commandRecovery.busy}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [
-          "/api/team/command/cancel"
-        ],
-        "primaryApis": [
-          "/api/team/command/cancel"
-        ],
-        "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/team/command/cancel",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/team/command/cancel"
-        ]
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/team/detail/index.js:77"
-      }
-    },
-    {
-      "id": "pages/team/detail/index.wxml:120:bind:confirm:onConfirmQuit:13",
+      "id": "pages/team/detail/index.wxml:119:bind:confirm:onConfirmQuit:13",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1200913,7 +1200829,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmQuit",
-        "line": 120,
+        "line": 119,
         "selectorHint": "#dcQuit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1201029,11 +1200945,95 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:413"
+        "staticSource": "pages/team/detail/index.js:414"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:121:bind:confirm:onConfirmKick:14",
+      "id": "pages/team/detail/index.wxml:12:bindtap:cancelCommand:2",
+      "route": "pages/team/detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/team/detail/index.wxml",
+        "js": "pages/team/detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "cancelCommand",
+        "line": 12,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": "{{commandRecovery.busy}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/team/command/cancel"
+        ],
+        "primaryApis": [
+          "/api/team/command/cancel"
+        ],
+        "auxiliaryApis": [],
+        "apiContracts": [
+          {
+            "url": "/api/team/command/cancel",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/team/command/cancel"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/team/detail/index.js:77"
+      }
+    },
+    {
+      "id": "pages/team/detail/index.wxml:120:bind:confirm:onConfirmKick:14",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1201056,7 +1201056,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmKick",
-        "line": 121,
+        "line": 120,
         "selectorHint": "#dcKick",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1201173,11 +1201173,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:414"
+        "staticSource": "pages/team/detail/index.js:415"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:122:bind:alt:onDisbandAlt:16",
+      "id": "pages/team/detail/index.wxml:121:bind:alt:onDisbandAlt:16",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1201200,7 +1201200,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:alt",
         "handler": "onDisbandAlt",
-        "line": 122,
+        "line": 121,
         "selectorHint": "#dcDisband",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1201241,11 +1201241,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:418"
+        "staticSource": "pages/team/detail/index.js:419"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:122:bind:confirm:onConfirmDisband:15",
+      "id": "pages/team/detail/index.wxml:121:bind:confirm:onConfirmDisband:15",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1201268,7 +1201268,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmDisband",
-        "line": 122,
+        "line": 121,
         "selectorHint": "#dcDisband",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1201385,11 +1201385,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:415"
+        "staticSource": "pages/team/detail/index.js:416"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:123:bind:close:closeReport:17",
+      "id": "pages/team/detail/index.wxml:122:bind:close:closeReport:17",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1201412,7 +1201412,7 @@
         "tag": "team-report-sheet",
         "event": "bind:close",
         "handler": "closeReport",
-        "line": 123,
+        "line": 122,
         "selectorHint": "team-report-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1201647,7 +1201647,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:343"
+        "staticSource": "pages/team/detail/index.js:344"
       }
     },
     {
@@ -1201717,7 +1201717,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:382"
+        "staticSource": "pages/team/detail/index.js:383"
       }
     },
     {
@@ -1201851,7 +1201851,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:356"
+        "staticSource": "pages/team/detail/index.js:357"
       }
     },
     {
@@ -1201920,11 +1201920,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:398"
+        "staticSource": "pages/team/detail/index.js:399"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:75:bind:action:retryBoard:8",
+      "id": "pages/team/detail/index.wxml:76:bind:action:retryBoard:8",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1201947,7 +1201947,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "retryBoard",
-        "line": 75,
+        "line": 76,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{boardState === 'error' || boardState === 'login'}}",
         "disabledCondition": null,
@@ -1202045,11 +1202045,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:338"
+        "staticSource": "pages/team/detail/index.js:339"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:93:bind:action:retryBoard:9",
+      "id": "pages/team/detail/index.wxml:92:bind:action:retryBoard:9",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1202072,7 +1202072,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "retryBoard",
-        "line": 93,
+        "line": 92,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{rankingState === 'error'}}",
         "disabledCondition": null,
@@ -1202170,7 +1202170,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:338"
+        "staticSource": "pages/team/detail/index.js:339"
       }
     },
     {
@@ -1247009,7 +1247009,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:174"
+        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:191"
       }
     },
     {
@@ -1247107,7 +1247107,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:180"
+        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:197"
       }
     },
     {
@@ -1247255,7 +1247255,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:108"
+        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:125"
       }
     },
     {
@@ -1247403,7 +1247403,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:116"
+        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:133"
       }
     },
     {
@@ -1247551,7 +1247551,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:119"
+        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:136"
       }
     },
     {
@@ -1247648,7 +1247648,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:178"
+        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:195"
       }
     },
     {
@@ -1247795,7 +1247795,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:179"
+        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:196"
       }
     },
     {
@@ -1247951,7 +1247951,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:181"
+        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:198"
       }
     },
     {
@@ -1248090,7 +1248090,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:144"
+        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:161"
       }
     },
     {
@@ -1248229,7 +1248229,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:145"
+        "staticSource": "subpackageMember/components/cy/coop-invite-sheet/index.js:162"
       }
     },
     {

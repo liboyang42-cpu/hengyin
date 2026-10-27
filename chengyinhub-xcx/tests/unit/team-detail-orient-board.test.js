@@ -169,3 +169,19 @@ test('read refresh preserves an in-flight join-mode lock and accepts its eventua
   assert.equal(h.page.data.joinModeSaving, false);
   assert.equal(h.page.data.team.joinMode, 1);
 });
+
+test('switch off, ordinary team and non-member hide the whole board section without a notice', () => {
+  const template = fs.readFileSync(file.replace('.js', '.wxml'), 'utf8');
+  const conditions = [...template.matchAll(/wx:if="\{\{([^}]*boardState[^}]*)\}\}"/g)].map(m => m[1]);
+  assert.ok(conditions.length >= 3);
+  const visible = data => conditions.filter(expr => new Function('boardState', 'board', 'return (' + expr + ')')(data.boardState, data.board));
+  for (const code of ['ORIENT_DISABLED', 'ORIENT_NOT_ORIENTEERING', 'ORIENT_TEAM_NOT_MEMBER']) {
+    const h = start(); h.requests.at(-1).success({ code: 500, errorCode: code });
+    assert.deepEqual(visible(h.page.data), [], code + ' must not render a title or notice');
+    assert.equal(h.page.data.boardMessage, '');
+  }
+  const outsider = mount(); outsider.page.onShow(); outsider.info({ joined: false, leader: false });
+  assert.equal(outsider.requests.length, 1); assert.deepEqual(visible(outsider.page.data), []);
+  assert.ok(visible(ready().page.data).length >= 2, 'applicable board keeps its title and content');
+  assert.ok(visible({ boardState: 'error', board: null }).length >= 2, 'board errors stay explicit');
+});

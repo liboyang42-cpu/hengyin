@@ -127,6 +127,25 @@ function createVerificationWorkflow(options) {
   function withIdentity(result, row) {
     return options.requestIdentity === true ? Object.assign({}, result, requestIdentity(row)) : result;
   }
+  function launch(key, meta, row, start, callback) {
+    let entered = false, closed = false;
+    const accepted = workflow.run(key, function (done) {
+      entered = true;
+      function finish(result) {
+        if (closed || destroyed) return;
+        closed = true;
+        result = result || unknownResult();
+        // 迟回包只能结算捕获的原待办，绝不按当前账号或新请求删除。
+        // 已证实的回执不因本机清理异常改报 UNKNOWN：删除可能已经完成。
+        // 未清掉的原记录仍会在下一次 run/重建时阻止 POST。
+        if (result.status === 'success' || result.status === 'failed') removeOriginal(meta, row);
+        done(result);
+      }
+      try { return start(finish, options.requestIdentity === true ? { requestId: row.attemptId } : undefined); }
+      catch (error) { finish(unknownResult()); return null; }
+    }, function (result) { closed = true; callback(withIdentity(result, row)); });
+    return { accepted, entered };
+  }
   return {
     isBusy: key => workflow.isBusy(key),
     hold: key => workflow.hold(key),
@@ -171,24 +190,19 @@ function createVerificationWorkflow(options) {
         removeOriginal(meta, row);
         return blocked(callback, '核销待办未能保存，本次未提交，请检查本机存储后再试');
       }
-      let entered = false, closed = false;
-      const accepted = workflow.run(key, function (done) {
-        entered = true;
-        function finish(result) {
-          if (closed || destroyed) return;
-          closed = true;
-          result = result || unknownResult();
-          // 迟回包只能结算捕获的原待办，绝不按当前账号或新请求删除。
-          // 已证实的回执不因本机清理异常改报 UNKNOWN：删除可能已经完成。
-          // 未清掉的原记录仍会在下一次 run/重建时阻止 POST。
-          if (result.status === 'success' || result.status === 'failed') removeOriginal(meta, row);
-          done(result);
-        }
-        try { return start(finish, options.requestIdentity === true ? { requestId: row.attemptId } : undefined); }
-        catch (error) { finish(unknownResult()); return null; }
-      }, function (result) { closed = true; callback(withIdentity(result, row)); });
-      if (!accepted && !entered) removeOriginal(meta, row);
-      return accepted;
+      const launched = launch(key, meta, row, start, callback);
+      if (!launched.accepted && !launched.entered) removeOriginal(meta, row);
+      return launched.accepted;
+    },
+    // 仅当调用方已按原 requestId 精确回读到「服务端无此原请求」(NOT_FOUND)时调用：
+    // 沿用同一 requestId 重发（服务端按原请求号去重/回放），不新建待办、不换号。
+    resumeRequest(key, requestId, start, callback) {
+      if (destroyed || options.requestIdentity !== true || typeof requestId !== 'string' || workflow.inFlight(key)) return false;
+      let meta, row;
+      try { meta = metadata(key); row = read(meta); } catch (error) { return false; }
+      if (!row || row.requestIdentityVersion !== 1 || row.attemptId !== requestId) return false;
+      workflow.reset(key);
+      return launch(key, meta, row, start, callback).accepted;
     },
     // 销毁只销毁内存工作流；磁盘 UNKNOWN 只允许原请求的明确回执结算，不能随离页清除。
     destroy() { destroyed = true; workflow.destroy(); },

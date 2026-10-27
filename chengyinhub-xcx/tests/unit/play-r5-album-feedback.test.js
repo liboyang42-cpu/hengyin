@@ -197,6 +197,41 @@ test('相册审核：REJECTED 沿共享上传器原资产重审，拒绝 URL 不
   assert.equal(page._kit().uploaded, false);
 });
 
+test('相册审核：REJECTED 与审核中区分，拒绝后提供重新选图出口', () => {
+  const fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/components/playkit-album/index.wxml'), 'utf8');
+  const status = wxml.match(/<text wx:elif="\{\{uploadFailure === 'rejected'\}\}" aria-live="polite">([^<]+)<\/text>/);
+  assert.ok(status); assert.match(status[1], /未通过审核/); assert.doesNotMatch(status[1], /审核中/);
+  const cta = wxml.match(/<view bindtap="onCta"[^>]+>([^<]+)<\/view>/)[0]
+    .replace(/\{\{([\s\S]*?)\}\}/g, (_, expression) => vm.runInNewContext(expression, { uploadFailure: 'rejected', uploaded: false }));
+  assert.match(cta, /aria-label="重新选择照片"/); assert.match(cta, />重新选择照片<\/view>/);
+
+  const direct = setup(albumView());
+  choose(direct.album);
+  uploads[0].success({ data: JSON.stringify({ code: 200, assetId: 12, reviewState: 'REJECTED', reviewReason: '图片不合规' }) });
+  assert.equal(direct.page._kit().uploadFailure, 'rejected');
+  assert.equal(direct.page._albumRetry, null, '拒绝的原图不再作为重试对象');
+  direct.album.data.uploadFailure = 'rejected';
+  media = null; reviewModal = null;
+  direct.album.onCta();
+  assert.equal(reviewModal, null, '拒绝后不再进入查看/重试审核'); assert.equal(media.count, 1);
+  media.success({ tempFiles: [{ tempFilePath: '/tmp/player-evidence-2.jpg', size: 2048 }] });
+  assert.equal(uploads.length, 2); assert.equal(uploads[1].filePath, '/tmp/player-evidence-2.jpg');
+  assert.equal(direct.page._kit().uploadFailure, '');
+});
+
+test('相册审核：原资产重审仍被拒绝时落到重新选图，不再停在审核中', () => {
+  const { page, album } = pendingAlbum();
+  reviewAlbum(album);
+  requests[0].success({ code: 200, data: { assetId: 12, reviewState: 'REJECTED' } });
+  requests[1].success({ code: 200, data: { assetId: 12, reviewState: 'REJECTED', reviewReason: '仍不合规' } });
+  assert.equal(page._kit().uploadFailure, 'rejected');
+  assert.equal(page._albumRetry, null);
+  album.data.uploadFailure = 'rejected'; media = null; reviewModal = null;
+  album.choosePhoto();
+  assert.equal(reviewModal, null); assert.equal(media.count, 1);
+});
+
 for (const mode of ['session', 'version', 'done', 'abort', 'unknown']) {
   test(`相册审核：${mode} 后不提交旧回包或发起新审核操作`, () => {
     const { page, game, album } = pendingAlbum();

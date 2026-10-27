@@ -37,6 +37,15 @@ function registrationTopic(info, recordId) {
   return topic;
 }
 
+// No theme relation = a plain activity (cmsActivity.topicId null/0) or another owner type without
+// cmsTopic/topicId. Such registrations have no character/score entry at all, which is not an error.
+const noId = value => value == null || value === 0 || value === '0';
+function hasTopicRelation(info) {
+  if (!isRecord(info) || [1, '1'].includes(info.ownerType) || info.cmsTopic != null || !noId(info.topicId)) return true;
+  if (![2, '2'].includes(info.ownerType)) return false;
+  return !isRecord(info.cmsActivity) || !noId(info.cmsActivity.topicId);
+}
+
 function attribute(raw, partial) {
   if (!isRecord(raw)) throw new Error('invalid attribute');
   if (raw.visible === false || raw.hidden === true) return null;
@@ -122,4 +131,4 @@ function failure(response, httpStatus) {
   return 'error';
 }
 
-module.exports = { exactId, reader, sameReader, registrationTopic, projectCard, failure, responseCode };
+module.exports = { exactId, reader, sameReader, registrationTopic, hasTopicRelation, projectCard, failure, responseCode };

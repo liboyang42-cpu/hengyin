@@ -633,11 +633,33 @@ class ApiCoopControllerInviteAuthzTest {
                 .thenReturn("内容审核暂时不可用");
         assertEquals(500, c.invite(request).get("code"));
         verify(security).checkText(org.mockito.ArgumentMatchers.eq("unsafe"), org.mockito.ArgumentMatchers.isNull());
+        verify(coopInviteService, never()).createOrReplayInvite(any(), any(), any());
         verifyNoInviteNotification();
+        when(security.checkText(org.mockito.ArgumentMatchers.eq("unsafe"), org.mockito.ArgumentMatchers.isNull())).thenReturn(null);
         when(coopInviteService.createOrReplayInvite(org.mockito.ArgumentMatchers.eq(ME), any(), any()))
                 .thenThrow(new com.chengyinhub.common.exception.ServiceException("COOP_REQUEST_CONFLICT", 409));
         assertEquals(409, c.invite(request).get("code"));
         verifyNoInviteNotification();
+    }
+
+    @Test
+    void originalRequestContentSecurityRunsBeforeReceiptTransactionNotInsideCallback() {
+        givenTopicPublishedBy(ME);
+        CoopInvite request = invite(0); request.setRequestId("vr_original"); request.setMessage("hello");
+        com.chengyinhub.business.service.IWxContentSecurityService security =
+                (com.chengyinhub.business.service.IWxContentSecurityService) ReflectionTestUtils.getField(c, "wxContentSecurityService");
+        when(coopInviteService.createOrReplayInvite(org.mockito.ArgumentMatchers.eq(ME), any(), any()))
+                .thenAnswer(call -> {
+                    // 进入原请求事务时内容安全已完成;回调(回执插入之后)不得再发起网络审核。
+                    verify(security, org.mockito.Mockito.times(1)).checkText(org.mockito.ArgumentMatchers.eq("hello"), org.mockito.ArgumentMatchers.isNull());
+                    ((Runnable) call.getArgument(2)).run();
+                    verify(security, org.mockito.Mockito.times(1)).checkText(org.mockito.ArgumentMatchers.eq("hello"), org.mockito.ArgumentMatchers.isNull());
+                    return receiptResult(request, false);
+                });
+        assertEquals(200, c.invite(request).get("code"));
+        org.mockito.InOrder order = org.mockito.Mockito.inOrder(security, coopInviteService);
+        order.verify(security).checkText(org.mockito.ArgumentMatchers.eq("hello"), org.mockito.ArgumentMatchers.isNull());
+        order.verify(coopInviteService).createOrReplayInvite(org.mockito.ArgumentMatchers.eq(ME), any(), any());
     }
 
     private void verifyNoInviteNotification() {

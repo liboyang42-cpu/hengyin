@@ -19,7 +19,7 @@ import java.util.function.Supplier;
 
 /**
  * F1b 城市定向计分后台:申诉/争议处理、整条冲正、复算核对。
- * 权限 business:orientScoring:* 为新增权限串,未分配给任何预置角色(仅超管),角色授予待 owner 决定。
+ * 权限 business:orientScoring:list/review 由 migration_20261027_orient_scoring_menu_grants.sql 登记,仅授 cy_operator(owner 2026-10-27)。
  */
 @RestController
 @RequestMapping("/business/orient/scoring")
