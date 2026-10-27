@@ -2,19 +2,19 @@
  * Wave2 截图矩阵（机器可读），供总控在 verify worktree 串行采集。
  *
  * ── 机器统计（唯一真值，由本文件末尾 STATS 断言锁死）──────────────────
- *   total 343
- *   按 priority 计全部行：P0 134 / P1 199 / P2 10
+ *   total 344
+ *   按 priority 计全部行：P0 135 / P1 199 / P2 10
  *   其中 blocked 24（不采集）：P0 9 / P1 7 / P2 8
- *   ⇒ actionable（本轮真要拍）：P0 125 / P1 192 / P2 2 = 319
- *   按域：A 53 / B 69 / C 56 / D 45 / E 26 / F 94
- *   按 control：setData 180 / identity+setData 116 / real-data 40 / real-device 7
+ *   ⇒ actionable（本轮真要拍）：P0 126 / P1 192 / P2 2 = 320
+ *   按域：A 53 / B 69 / C 56 / D 46 / E 26 / F 94
+ *   按 control：setData 180 / identity+setData 116 / real-data 41 / real-device 7
  *     (2026-08-05：A10 由 real-data 改 setData —— 它和 A12 的差别是 picList 空/非空,
  *      不显式注入两张必然拍成同一张)
  *   fixtureVerified 16（只保留当前页面仍全量消费其矩阵键、且在本次源版本
  *   修改前已有动态回读的状态；B71/B72/B73 要等本轮重拍后再晋级）
  *
- *   ⚠️ 两套 P0 数字都对，别再混用：`p0()` 返回 **actionable 125**（已滤掉
- *   blocked），裸按 priority 字段统计是 **134**。报告与 JSON 顶部写的是同一组。
+ *   ⚠️ 两套 P0 数字都对，别再混用：`p0()` 返回 **actionable 126**（已滤掉
+ *   blocked），裸按 priority 字段统计是 **135**。报告与 JSON 顶部写的是同一组。
  *   早期报告里的「P0 96 / P1 87 / P2 50 / 233 项」是逐行判定之前的估算，已作废。
  * ────────────────────────────────────────────────────────────────
  *
@@ -430,6 +430,7 @@ const RAW = [
   ['D12a', 'D12a-character-missing.png', '/subpackageMember/character/index', 'player', 'missing-param', null, undefined, EMPTY, 'real-data', 'P0', '', '角色卡缺主题参数态；仅登记待截图场景，不代表已拍摄'],
   ['D12b', 'D12b-invoice-login.png', '/subpackageMember/invoice/index', 'player', 'login', { login: true, unavailable: false }, undefined, EMPTY, 'setData', 'P0', '', '本人发票登录入口；仅登记待截图场景，不代表已拍摄'],
   ['D12c', 'D12c-orient-score-missing.png', '/subpackageMember/orient-score/index', 'player', 'missing-param', null, undefined, EMPTY, 'real-data', 'P0', '', '计分页缺会话参数态；登记待截图场景，未宣称设备验证'],
+  ['D12d', 'D12d-free-explore-missing.png', '/subpackageMember/free-explore/index', 'player', 'missing-param', null, undefined, INLINE_ERR, 'real-data', 'P0', '', '自由探索权益缺订单与商品编号态(页内 cy-inline-error)；仅登记待截图场景，不代表已拍摄'],
   ['D13', 'D13-coupon-content.png', '/subpackageMember/coupon/coupon', 'merchant', 'normal', { loading: false, loadError: false, list: [{ id: 1, name: '到店立减 10 元', description: '每单可用一张,不与其他优惠叠加', remainCount: 120 }] }, undefined, TITLE, 'identity+setData', 'P0', '', '新建按钮放到下面'],
   ['D14', 'D14-coupon-empty.png', '/subpackageMember/coupon/coupon', 'merchant', 'empty', { loadState: 'ready', errorMsg: '', list: [] }, undefined, EMPTY, 'identity+setData', 'P1', '', '优惠券列表已就绪且为空，使用真实 loadState 门展示居中空态与新建入口'],
   ['D15', 'D15-couponinfo.png', '/subpackageMember/couponInfo/couponInfo?id=1', 'player', 'normal', null, undefined, TITLE, 'real-data', 'P0', '', '—'],
@@ -651,10 +652,11 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页:D93/D94 两条 P1 setData 行退场,total 341、P1 198、actionable 317(P1 191)、D 42、setData 179。
 // 2026-10-23 起名页 templateadd 退役删除:B46(P0 real-data)/E21(P0 identity+setData)两行退场,total 341→339、P0 133→131、actionable 317→315(P0 124→122)、B 70→69、E 27→26、identity+setData 117→116、real-data 38→37。
 // 2026-10-25 新增官方地点挑战缺参真实态 F200；不新增 blocked 或已验 fixture。
+// 2026-10-27 新增自由探索权益缺参真实态 D12d(P0 real-data)：total 343→344、P0 134→135、actionable 319→320(P0 125→126)、D 45→46、real-data 40→41；不新增 blocked 或已验 fixture。
 const STATS = {
-  "total": 343,
+  "total": 344,
   "byPriority": {
-    "P0": 134,
+    "P0": 135,
     "P1": 199,
     "P2": 10
   },
@@ -664,24 +666,24 @@ const STATS = {
     "P2": 8
   },
   "actionable": {
-    "P0": 125,
+    "P0": 126,
     "P1": 192,
     "P2": 2,
-    "total": 319
+    "total": 320
   },
   "blocked": 24,
   "domains": {
     "A": 53,
     "B": 69,
     "C": 56,
-    "D": 45,
+    "D": 46,
     "E": 26,
     "F": 94
   },
   "control": {
     "setData": 180,
     "identity+setData": 116,
-    "real-data": 40,
+    "real-data": 41,
     "real-device": 7
   },
   "fixtureVerified": 16
