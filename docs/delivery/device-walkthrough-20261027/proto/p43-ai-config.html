@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 快速配置</title>
+<style>
+:root{
+  --ease-out:cubic-bezier(.22,.61,.36,1); --std:cubic-bezier(.4,0,.2,1); --spring:cubic-bezier(.2,1.4,.5,1);
+  /* 页面外：原型说明区 */
+  --doc-bg:#E6E8EC; --doc-card:#FFFFFF; --doc-ink:#111111; --doc-muted:#5B6270; --doc-line:#DADDE3; --doc-chip:#F1F2F4;
+  /* 本页真实 token：pages/publish/simple/index.wxss 的 .simple-ai.theme-topic-editor 局部覆写 */
+  --ai-top:#F7F9FC; --ai-mid:#EEF3FF; --ai-bottom:#E8EEFB;
+  --ai-surface:#FFFFFF; --ai-glass:rgba(255,255,255,.92); --ai-border:#D8E3FB;
+  --ai-ink:#000000; --ai-muted:#626C7E; --ai-accent-soft:#EAF1FF; --ai-accent:#2F6DF0; --ai-accent-strong:#1F55C8;
+  --danger:#C62828; --danger-soft:#FDECEC; --success:#15803D;
+  --r-md:12px; --r-lg:16px; --pill:999px; --px:16px;
+  --t-display:26px; --t-section:18px; --t-card:16px; --t-body:14px; --t-label:12px; --t-caption:11px; --t-micro:10px;
+  --mono:"SF Mono","DIN Alternate",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --doc-bg:#141518; --doc-card:#1D1F23; --doc-ink:#F2F3F5; --doc-muted:#A3A9B4; --doc-line:#2E3138; --doc-chip:#262930; }
+}
+:root[data-theme="dark"]{ --doc-bg:#141518; --doc-card:#1D1F23; --doc-ink:#F2F3F5; --doc-muted:#A3A9B4; --doc-line:#2E3138; --doc-chip:#262930; }
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--doc-bg);color:var(--doc-ink);font-family:-apple-system,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit;padding:0}
+textarea,input{font:inherit;color:inherit}
+.wrap{display:flex;gap:32px;justify-content:center;align-items:flex-start;padding:32px 16px;flex-wrap:wrap}
+
+/* 说明面板 */
+.panel{width:340px;background:var(--doc-card);border:1px solid var(--doc-line);border-radius:16px;padding:20px;font-size:13px;line-height:1.6}
+.panel h1{font-size:18px;margin:0 0 4px}
+.panel .id{display:inline-block;font-family:var(--mono);font-size:12px;padding:2px 8px;border-radius:999px;background:var(--doc-chip);margin-bottom:8px}
+.panel h2{font-size:13px;margin:16px 0 6px;color:var(--doc-muted);font-weight:600}
+.panel ul{margin:0;padding-left:18px}
+.panel li{margin:2px 0}
+.ctl{display:flex;flex-wrap:wrap;gap:8px}
+.ctl button{padding:6px 12px;border-radius:999px;border:1px solid var(--doc-line);background:var(--doc-chip);font-size:12px}
+.ctl button.on{background:var(--doc-ink);color:var(--doc-card);border-color:var(--doc-ink)}
+.q{background:var(--doc-chip);border-radius:10px;padding:8px 10px;margin-top:6px}
+
+/* 手机框 */
+.phone{position:relative;width:375px;height:812px;border-radius:44px;overflow:hidden;flex:none;box-shadow:0 0 0 10px #101010,0 24px 60px rgba(0,0,0,.28);
+  background:linear-gradient(180deg,var(--ai-top) 0%,var(--ai-mid) 58%,var(--ai-bottom) 100%);color:var(--ai-ink);display:flex;flex-direction:column}
+@media (max-width:420px){
+  .wrap{flex-direction:column;align-items:center;padding:16px 12px;gap:24px}
+  .phone{width:calc(100vw - 24px);max-width:375px}
+  .panel{width:100%}
+}
+.status{height:44px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 26px 0 32px;font-size:15px;font-weight:600}
+.status svg{display:block}
+.nav{height:44px;flex:none;position:relative;display:flex;align-items:center}
+.nav__back{width:44px;height:44px;display:flex;align-items:center;justify-content:center;margin-left:4px}
+.nav__title{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:17px;font-weight:600;white-space:nowrap}
+.capsule{position:absolute;right:7px;top:6px;width:87px;height:32px;border-radius:16px;display:flex;align-items:center;background:#fff;border:1px solid rgba(0,0,0,.1)}
+.capsule span{flex:1;display:flex;align-items:center;justify-content:center;height:100%}
+.capsule i{width:1px;height:18px;background:rgba(0,0,0,.14)}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ico--s{width:16px;height:16px}
+
+/* 页身 */
+.scroll{flex:1;min-height:0;overflow-y:auto;padding:4px var(--px) 120px;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+.hero-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.kicker{color:var(--ai-accent-strong);font-size:var(--t-label);font-weight:800;letter-spacing:.05em}
+.quota{display:flex;align-items:center;gap:4px;height:28px;padding:0 10px;border:1px solid var(--ai-border);border-radius:var(--pill);background:var(--ai-glass);font-size:var(--t-caption);font-weight:700;white-space:nowrap}
+.quota svg{color:var(--ai-accent-strong)}
+.title{margin:10px 0 0;font-size:var(--t-display);font-weight:800;letter-spacing:-.04em;line-height:1.15}
+.lead{margin:8px 0 0;color:var(--ai-muted);font-size:var(--t-body);line-height:1.6}
+.card{margin-top:12px;background:var(--ai-glass);border:1px solid var(--ai-border);border-radius:var(--r-lg);padding:14px}
+.label{display:flex;align-items:center;justify-content:space-between;color:var(--ai-muted);font-size:var(--t-label);font-weight:700}
+.req{color:var(--danger);margin-left:2px}
+.prompt{width:100%;min-height:104px;margin-top:8px;border:0;outline:0;resize:none;background:transparent;font-size:15px;line-height:1.6}
+.prompt::placeholder,.field::placeholder{color:#8C95A6}
+.count{font-family:var(--mono);font-size:var(--t-caption);color:var(--ai-muted);font-weight:500}
+.prompt-foot{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+.clear{font-size:var(--t-label);color:var(--ai-muted);display:flex;align-items:center;gap:2px;height:28px}
+.sub-h{margin:20px 0 0;color:var(--ai-muted);font-size:var(--t-label);font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{display:flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border:1px solid var(--ai-border);border-radius:var(--pill);background:var(--ai-glass);font-size:13px;transition:background .15s var(--std),border-color .15s var(--std)}
+.chip svg{color:var(--ai-accent-strong)}
+.chip.on{background:var(--ai-accent-soft);border-color:var(--ai-accent);color:var(--ai-accent-strong);font-weight:700}
+.opt-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;min-height:44px;font-size:var(--t-body);font-weight:700}
+.opt-toggle small{color:var(--ai-muted);font-weight:500;font-size:var(--t-label);margin-left:6px}
+.opt-toggle svg{transition:transform .2s var(--std);color:var(--ai-muted)}
+.opt-toggle.open svg{transform:rotate(180deg)}
+.opts{display:none;border-top:1px solid var(--ai-border);margin-top:4px;padding-top:6px}
+.opts.open{display:block}
+.opt-row{display:flex;align-items:center;gap:10px;min-height:48px}
+.opt-row + .opt-row{border-top:1px solid #EEF2FA}
+.opt-row > span{width:40px;flex:none;color:var(--ai-muted);font-size:var(--t-label);font-weight:700}
+.seg{display:flex;gap:6px;flex-wrap:nowrap}
+.seg button{height:30px;padding:0 10px;border-radius:var(--pill);border:1px solid var(--ai-border);background:var(--ai-surface);font-size:12px;white-space:nowrap}
+.seg button.on{background:var(--ai-ink);color:#fff;border-color:var(--ai-ink)}
+.city{flex:1;display:flex;align-items:center;justify-content:space-between;height:32px;font-size:13px}
+.city em{font-style:normal;color:var(--ai-muted);font-size:12px}
+
+/* 底栏 */
+.bar{position:absolute;left:0;right:0;bottom:0;z-index:5;padding:10px var(--px) 30px;border-top:1px solid var(--ai-border);border-radius:16px 16px 0 0;background:var(--ai-glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.bar-row{display:flex;gap:8px;align-items:center}
+.btn{height:44px;border-radius:var(--pill);display:flex;align-items:center;justify-content:center;gap:6px;font-size:15px;font-weight:700;padding:0 16px;white-space:nowrap;transition:transform .12s var(--std),opacity .15s}
+.btn:active{transform:scale(.97)}
+.btn--primary{background:var(--ai-accent);color:#fff;flex:1}
+.btn--primary.is-dim{opacity:.45}
+.btn--secondary{background:var(--ai-surface);border:1px solid var(--ai-border);color:var(--ai-ink)}
+.btn--icon{width:44px;padding:0;flex:none;background:var(--ai-surface);border:1px solid var(--ai-border)}
+.bar-hint{text-align:center;font-size:var(--t-caption);color:var(--ai-muted);margin-top:6px}
+
+/* 生成中 */
+.steps{list-style:none;margin:0;padding:0}
+.step{display:flex;align-items:center;gap:10px;min-height:36px;font-size:var(--t-body);color:var(--ai-muted)}
+.step .mk{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--ai-border);display:flex;align-items:center;justify-content:center;flex:none;background:#fff}
+.step.cur{color:var(--ai-ink);font-weight:700}
+.step.cur .mk{border-color:var(--ai-accent)}
+.step.cur .mk::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--ai-accent);animation:pulse 1s var(--std) infinite}
+.step.done{color:var(--ai-ink)}
+.step.done .mk{background:var(--ai-accent);border-color:var(--ai-accent);color:#fff}
+.track{height:4px;border-radius:2px;background:var(--ai-accent-soft);overflow:hidden;margin-top:10px}
+.track i{display:block;height:100%;width:0;background:var(--ai-accent);border-radius:2px;transition:width .3s linear}
+.sk{background:linear-gradient(90deg,#E4EAF6 0%,#F3F6FC 50%,#E4EAF6 100%);background-size:200% 100%;border-radius:8px;animation:shimmer 1.2s linear infinite}
+@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+@keyframes pulse{0%,100%{transform:scale(.7);opacity:.6}50%{transform:scale(1);opacity:1}}
+.quote{margin-top:10px;padding:10px 12px;border-radius:var(--r-md);background:var(--ai-accent-soft);color:var(--ai-ink);font-size:13px;line-height:1.6}
+.quote b{display:block;font-size:var(--t-caption);color:var(--ai-accent-strong);margin-bottom:2px}
+
+/* 结果 */
+.sec{display:flex;align-items:center;justify-content:space-between;margin-top:22px;font-size:var(--t-section);font-weight:800}
+.badge{padding:3px 8px;border-radius:var(--pill);background:var(--ai-accent-soft);color:var(--ai-accent-strong);font-size:var(--t-micro);font-weight:800}
+.field{display:block;width:100%;border:0;outline:0;background:transparent;border-bottom:1px solid var(--ai-border);padding:6px 0;margin-top:2px}
+.field--title{font-size:var(--t-card);font-weight:800;height:40px}
+.field--story{resize:none;min-height:72px;border-bottom:0;font-size:var(--t-body);line-height:1.6;color:#3A4252}
+.field:focus{border-bottom-color:var(--ai-accent)}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.meta .card{margin-top:0;padding:12px}
+.stepper{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.stepper button{width:32px;height:32px;border-radius:50%;border:1px solid var(--ai-border);background:#fff;display:flex;align-items:center;justify-content:center}
+.stepper b{font-family:var(--mono);font-size:18px;font-weight:700}
+.stepper b small{font-family:-apple-system,"PingFang SC",sans-serif;font-size:11px;color:var(--ai-muted);font-weight:500;margin-left:2px}
+.node{margin-top:10px;background:var(--ai-glass);border:1px solid var(--ai-border);border-radius:var(--r-lg);padding:12px 12px 10px;transition:transform .25s var(--ease-out),opacity .2s}
+.node.flash{animation:flash .6s var(--ease-out)}
+@keyframes flash{from{box-shadow:0 0 0 3px rgba(47,109,240,.35)}to{box-shadow:0 0 0 0 rgba(47,109,240,0)}}
+.node-head{display:flex;gap:10px;align-items:flex-start}
+.num{width:24px;height:24px;border-radius:50%;background:var(--ai-accent-soft);color:var(--ai-accent-strong);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none;margin-top:6px;font-family:var(--mono)}
+.node-copy{flex:1;min-width:0}
+.node-name{font-size:15px;font-weight:800;height:36px;border-bottom:1px dashed transparent}
+.node-name:hover{border-bottom-color:var(--ai-border)}
+.node-desc{resize:none;min-height:44px;font-size:13px;line-height:1.55;color:#4A5262;border:0;padding:2px 0}
+.poi{width:100%;min-height:40px;display:flex;align-items:center;gap:6px;margin-top:8px;padding:0 10px;border:1px solid var(--ai-border);border-radius:var(--r-md);background:var(--ai-surface);color:var(--ai-muted);font-size:12px;text-align:left}
+.poi span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.poi.ok{border-color:var(--ai-accent);color:var(--ai-ink)}
+.poi.ok svg:first-child{color:var(--ai-accent)}
+.node-ops{display:flex;justify-content:flex-end;gap:2px;margin-top:6px}
+.op{width:36px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--ai-muted)}
+.op:disabled{opacity:.3;cursor:default}
+.op--del{color:var(--danger)}
+.add{width:100%;margin-top:10px;height:48px;border:1.5px dashed var(--ai-border);border-radius:var(--r-lg);color:var(--ai-accent-strong);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px;background:rgba(255,255,255,.5)}
+.add:disabled{opacity:.45}
+.tip{margin-top:10px;font-size:12px;color:var(--ai-muted);line-height:1.5}
+
+/* 失败 / 额度 */
+.err{margin-top:16px;background:var(--ai-surface);border:1px solid #F3D0D0;border-radius:var(--r-lg);padding:18px 16px 16px}
+.err-ic{width:40px;height:40px;border-radius:50%;background:var(--danger-soft);color:var(--danger);display:flex;align-items:center;justify-content:center}
+.err h3{margin:12px 0 4px;font-size:var(--t-card);font-weight:800}
+.err p{margin:0;color:var(--ai-muted);font-size:13px;line-height:1.6}
+.err .row{display:flex;gap:8px;margin-top:14px}
+.err .code{margin-top:10px;font-family:var(--mono);font-size:10px;color:#9AA2B1}
+.info{margin-top:16px;background:var(--ai-surface);border:1px solid var(--ai-border);border-radius:var(--r-lg);padding:14px 16px;display:flex;gap:12px;align-items:flex-start}
+.info h3{margin:0;font-size:15px}
+.info p{margin:4px 0 0;color:var(--ai-muted);font-size:12px;line-height:1.5}
+.inline-hint{margin-top:8px;color:var(--danger);font-size:12px;display:none}
+.inline-hint.show{display:block}
+
+/* 弹层 */
+.mask{position:absolute;inset:0;z-index:20;background:rgba(0,0,0,.42);opacity:0;pointer-events:none;transition:opacity .25s var(--std)}
+.mask.show{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:21;background:#fff;border-radius:20px 20px 0 0;padding:8px var(--px) 30px;transform:translateY(105%);transition:transform .32s var(--ease-out);max-height:80%;display:flex;flex-direction:column}
+.sheet.show{transform:translateY(0)}
+.handle{width:100%;height:20px;display:flex;align-items:center;justify-content:center}
+.handle::before{content:"";width:36px;height:4px;border-radius:2px;background:#DBDBDB}
+.sheet-hd{display:flex;align-items:center;justify-content:space-between;min-height:40px}
+.sheet-hd b{font-size:var(--t-section)}
+.x{width:36px;height:36px;border-radius:50%;background:#F1F3F7;display:flex;align-items:center;justify-content:center}
+.map{height:150px;border-radius:var(--r-md);margin-top:8px;position:relative;overflow:hidden;background:#E9EEF5}
+.map svg{position:absolute;inset:0;width:100%;height:100%}
+.search{display:flex;align-items:center;gap:6px;height:40px;border-radius:var(--pill);background:#F1F3F7;padding:0 12px;color:var(--ai-muted);font-size:13px;margin-top:6px}
+.place{width:100%;display:flex;align-items:center;gap:10px;min-height:56px;border-bottom:1px solid #EEF0F4;text-align:left}
+.place div{flex:1;min-width:0}
+.place b{display:block;font-size:14px}
+.place small{display:block;color:var(--ai-muted);font-size:12px}
+.place em{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--ai-muted)}
+.confirm-p{color:var(--ai-muted);font-size:13px;line-height:1.6;margin:4px 0 16px}
+.list-pick{display:flex;flex-direction:column}
+
+.toast{position:absolute;left:50%;top:72%;z-index:40;transform:translate(-50%,-50%) scale(.96);max-width:260px;padding:10px 16px;border-radius:12px;background:rgba(17,17,17,.88);color:#fff;font-size:13px;line-height:1.5;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s var(--ease-out)}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.view{display:none}
+.view.show{display:block;animation:in .32s var(--ease-out)}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="phone" id="phone">
+    <div class="status"><span>9:41</span>
+      <svg width="68" height="12" viewBox="0 0 68 12" fill="#000"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><path d="M29 3.2a9 9 0 0 1 12 0l-1.3 1.4a7 7 0 0 0-9.4 0zM31.6 6a5.3 5.3 0 0 1 6.8 0L37 7.4a3.3 3.3 0 0 0-4 0zM35 11.2l-1.6-1.7a2.3 2.3 0 0 1 3.2 0z"/><rect x="45.5" y=".5" width="20" height="11" rx="3" fill="none" stroke="#000" opacity=".4"/><rect x="47" y="2" width="17" height="8" rx="1.6"/><rect x="66.5" y="4" width="1.5" height="4" rx=".7" opacity=".4"/></svg>
+    </div>
+    <div class="nav">
+      <button class="nav__back" data-act="back" aria-label="返回"><svg class="ico" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+      <div class="nav__title">快速配置</div>
+      <div class="capsule" aria-hidden="true"><span><svg width="18" height="4" viewBox="0 0 18 4"><circle cx="2" cy="2" r="2"/><circle cx="9" cy="2" r="2"/><circle cx="16" cy="2" r="2"/></svg></span><i></i><span><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#000" stroke-width="1.6"><circle cx="9" cy="9" r="7.5"/><circle cx="9" cy="9" r="2.6" fill="#000"/></svg></span></div>
+    </div>
+
+    <div class="scroll" id="scroll">
+      <div class="hero-row">
+        <span class="kicker" id="kicker">城市定向 · 集合式路线</span>
+        <span class="quota" id="quotaPill"><svg class="ico ico--s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="quotaTxt">今日还可生成 3 次</span></span>
+      </div>
+
+      <!-- ① 输入 -->
+      <section class="view show" id="vInput">
+        <h1 class="title">嗨，想做一条什么样的路线？</h1>
+        <p class="lead">说一句话就行。AI 会先搭好主题名、故事和节点，之后每一项都能改。</p>
+
+        <div class="info" id="exhaustedCard" style="display:none">
+          <svg class="ico" viewBox="0 0 24 24" style="color:var(--ai-accent-strong);margin-top:2px"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          <div style="flex:1"><h3>今日额度已用完</h3><p>明天 0 点恢复。现在也可以手动创建，写好的描述会带过去。</p>
+            <button class="btn btn--secondary" data-act="manual" style="height:36px;font-size:13px;margin-top:10px">改用手动创建</button></div>
+        </div>
+
+        <div class="card">
+          <div class="label"><span>路线描述<span class="req" aria-hidden="true">*</span></span><span class="count" id="count">0/300</span></div>
+          <textarea class="prompt" id="prompt" maxlength="300" placeholder="例如：周末下午，带朋友在老城区走 2 小时，串起 3 家咖啡馆，每站一个小谜题" aria-label="路线描述"></textarea>
+          <div class="prompt-foot">
+            <span class="inline-hint" id="emptyHint">先说说你想做什么路线</span>
+            <span></span>
+            <button class="clear" data-act="clearPrompt"><svg class="ico ico--s" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>清空</button>
+          </div>
+        </div>
+
+        <div class="sub-h"><span>可以从这些灵感开始</span><span style="font-weight:500">点一下填入</span></div>
+        <div class="chips" id="chips"></div>
+
+        <div class="card" style="margin-top:20px;padding:4px 14px 6px">
+          <button class="opt-toggle" id="optToggle" data-act="toggleOpts"><span>补充条件<small>可选，写了更准</small></span><svg class="ico" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
+          <div class="opts" id="opts">
+            <div class="opt-row"><span>城市</span>
+              <button class="city" data-act="openCity"><b id="cityVal" style="font-weight:600">示例市</b><em>更换 ›</em></button></div>
+            <div class="opt-row"><span>时长</span><div class="seg" data-group="dur">
+              <button data-act="pick" data-arg="dur:1 小时">1 小时</button><button class="on" data-act="pick" data-arg="dur:2 小时">2 小时</button><button data-act="pick" data-arg="dur:半天">半天</button></div></div>
+            <div class="opt-row"><span>人数</span><div class="seg" data-group="ppl">
+              <button data-act="pick" data-arg="ppl:1–2 人">1–2 人</button><button class="on" data-act="pick" data-arg="ppl:3–5 人">3–5 人</button><button data-act="pick" data-arg="ppl:6 人以上">6 人+</button></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ② 生成中 -->
+      <section class="view" id="vGen" aria-live="polite">
+        <h1 class="title">正在为你起草…</h1>
+        <div class="card">
+          <ol class="steps" id="steps">
+            <li class="step"><span class="mk"></span>理解需求</li>
+            <li class="step"><span class="mk"></span>规划路线</li>
+            <li class="step"><span class="mk"></span>编写玩法</li>
+          </ol>
+          <div class="track"><i id="trackBar"></i></div>
+          <div class="quote"><b>你的描述</b><span id="genQuote"></span></div>
+        </div>
+        <div class="card"><div class="sk" style="height:12px;width:30%"></div><div class="sk" style="height:20px;width:70%;margin-top:10px"></div><div class="sk" style="height:12px;width:100%;margin-top:12px"></div><div class="sk" style="height:12px;width:86%;margin-top:6px"></div></div>
+        <div class="card" style="display:flex;gap:10px"><div class="sk" style="width:24px;height:24px;border-radius:50%;flex:none"></div><div style="flex:1"><div class="sk" style="height:16px;width:55%"></div><div class="sk" style="height:12px;width:92%;margin-top:8px"></div></div></div>
+        <div class="card" style="display:flex;gap:10px"><div class="sk" style="width:24px;height:24px;border-radius:50%;flex:none"></div><div style="flex:1"><div class="sk" style="height:16px;width:45%"></div><div class="sk" style="height:12px;width:80%;margin-top:8px"></div></div></div>
+      </section>
+
+      <!-- ③ 失败 -->
+      <section class="view" id="vErr">
+        <h1 class="title">差一点就好了。</h1>
+        <div class="err" role="alert">
+          <div class="err-ic"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg></div>
+          <h3>这次没生成出来</h3>
+          <p>AI 返回的内容不完整，不是你的问题。描述已经帮你留着，可以直接重试，或者换个说法。</p>
+          <div class="quote"><b>保留的描述</b><span id="errQuote"></span></div>
+          <div class="row">
+            <button class="btn btn--primary" data-act="retry"><svg class="ico ico--s" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>重试</button>
+            <button class="btn btn--secondary" data-act="editPrompt" style="flex:1">修改描述</button>
+          </div>
+          <div class="code">本次未成功，不计入生成次数 · 编号 AI-7F3A</div>
+        </div>
+      </section>
+
+      <!-- ④ 结果 -->
+      <section class="view" id="vResult">
+        <h1 class="title">这条路线，已经有了轮廓。</h1>
+        <div class="sec"><span>AI 为你整理的初稿</span><span class="badge">都可以改</span></div>
+        <div class="card">
+          <div class="label"><span>主题名称<span class="req" aria-hidden="true">*</span></span><span class="count" id="titleCount">0/30</span></div>
+          <input class="field field--title" id="fTitle" maxlength="30" aria-label="主题名称">
+          <div class="label" style="margin-top:12px"><span>故事简介</span></div>
+          <textarea class="field field--story" id="fStory" maxlength="500" aria-label="故事简介"></textarea>
+        </div>
+        <div class="meta" style="margin-top:12px">
+          <div class="card"><div class="label"><span>预计时长</span></div>
+            <div class="stepper"><button data-act="dur" data-arg="-15" aria-label="减少 15 分钟"><svg class="ico ico--s" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button><b id="durVal">120<small>分钟</small></b><button data-act="dur" data-arg="15" aria-label="增加 15 分钟"><svg class="ico ico--s" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+          <div class="card"><div class="label"><span>票价</span></div>
+            <div class="stepper"><button data-act="price" data-arg="-5" aria-label="减少 5 元"><svg class="ico ico--s" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button><b id="priceVal">39<small>元</small></b><button data-act="price" data-arg="5" aria-label="增加 5 元"><svg class="ico ico--s" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+        </div>
+        <div class="sec"><span>节点</span><span class="badge" id="nodeCount">3 个</span></div>
+        <div id="nodes"></div>
+        <button class="add" id="addBtn" data-act="addNode"><svg class="ico ico--s" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>添加节点</button>
+        <p class="tip" id="poiTip">地点可以现在确认，也可以进专业配置后再补；发布前必须全部确认。</p>
+      </section>
+    </div>
+
+    <!-- 底栏 -->
+    <div class="bar" id="barInput">
+      <div class="bar-row"><button class="btn btn--primary" id="genBtn" data-act="generate"><svg class="ico ico--s" viewBox="0 0 24 24"><path d="m12 3 1.9 5.8L20 10l-5 3.9L16.5 20 12 16.5 7.5 20 9 13.9 4 10l6.1-1.2z"/></svg>生成草稿</button></div>
+      <div class="bar-hint">大约 10 秒 · 生成后仍需你确认地点</div>
+    </div>
+    <div class="bar" id="barGen" style="display:none">
+      <div class="bar-row"><button class="btn btn--secondary" data-act="cancelGen" style="flex:1">取消生成</button></div>
+      <div class="bar-hint">取消后描述会保留</div>
+    </div>
+    <div class="bar" id="barResult" style="display:none">
+      <div class="bar-row">
+        <button class="btn btn--icon" data-act="askRegen" aria-label="重新生成" title="重新生成"><svg class="ico" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></button>
+        <button class="btn btn--secondary" data-act="saveDraft" style="flex:1">保存草稿</button>
+        <button class="btn btn--primary" data-act="enterPro" style="flex:1.5">进入专业配置<svg class="ico ico--s" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </div>
+    </div>
+
+    <!-- 弹层：确认地点 -->
+    <div class="mask" id="mask" data-act="closeSheet"></div>
+    <div class="sheet" id="poiSheet" role="dialog" aria-label="确认地点">
+      <button class="handle" data-act="closeSheet" aria-label="关闭"></button>
+      <div class="sheet-hd"><b id="poiTitle">确认地点</b><button class="x" data-act="closeSheet" aria-label="关闭"><svg class="ico ico--s" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      <div class="search"><svg class="ico ico--s" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span id="poiSearch">搜索地点</span></div>
+      <div class="map"><svg viewBox="0 0 343 150" preserveAspectRatio="xMidYMid slice"><path d="M0 40h343M0 100h343M80 0v150M210 0v150" stroke="#fff" stroke-width="10"/><path d="M0 70 C80 60 140 120 343 90" stroke="#CFE0F7" stroke-width="16" fill="none"/><circle cx="172" cy="72" r="9" fill="#2F6DF0"/><circle cx="172" cy="72" r="3.5" fill="#fff"/></svg></div>
+      <div class="list-pick" id="placeList" style="margin-top:6px;overflow:auto"></div>
+    </div>
+    <div class="sheet" id="regenSheet" role="dialog" aria-label="重新生成">
+      <button class="handle" data-act="closeSheet" aria-label="关闭"></button>
+      <div class="sheet-hd"><b>重新生成？</b><button class="x" data-act="closeSheet" aria-label="关闭"><svg class="ico ico--s" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      <p class="confirm-p">会用同一段描述再起草一次，当前这份初稿上的修改会被替换，并消耗 1 次生成额度。</p>
+      <div class="bar-row"><button class="btn btn--secondary" data-act="closeSheet" style="flex:1">先不了</button><button class="btn btn--primary" data-act="regen">重新生成</button></div>
+    </div>
+    <div class="sheet" id="citySheet" role="dialog" aria-label="选择城市">
+      <button class="handle" data-act="closeSheet" aria-label="关闭"></button>
+      <div class="sheet-hd"><b>选择城市</b><button class="x" data-act="closeSheet" aria-label="关闭"><svg class="ico ico--s" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      <div class="list-pick">
+        <button class="place" data-act="setCity" data-arg="示例市"><div><b>示例市</b><small>当前定位</small></div></button>
+        <button class="place" data-act="setCity" data-arg="样例市"><div><b>样例市</b><small>最近使用</small></div></button>
+        <button class="place" data-act="setCity" data-arg="不限城市"><div><b>不限城市</b><small>让 AI 只写玩法，地点之后再定</small></div></button>
+      </div>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+  </div>
+
+  <aside class="panel">
+    <span class="id">P-43 · pages/publish/simple</span>
+    <h1>AI 快速配置（重做）</h1>
+    <p style="margin:0;color:var(--doc-muted)">沿用本页真实的浅蓝 AI 画布 token（#F7F9FC→#E8EEFB、主蓝 #2F6DF0）、「快速配置」「还可生成 N 次」「AI 为你整理的初稿」「在地图中确认地点」等现有文案与字段。</p>
+    <h2>状态切换</h2>
+    <div class="ctl">
+      <button data-act="mode" data-arg="1" id="m1" class="on">入口：城市定向</button>
+      <button data-act="mode" data-arg="2" id="m2">入口：自由探索</button>
+    </div>
+    <div class="ctl" style="margin-top:8px">
+      <button data-act="failNext" id="failBtn">下次生成失败</button>
+      <button data-act="exhaust" id="exBtn">额度用完</button>
+      <button data-act="jumpResult">直接看结果</button>
+      <button data-act="reset">重置</button>
+    </div>
+    <h2>相对现状改了什么</h2>
+    <ul>
+      <li>输入从底部聊天式输入条挪到页面正中的大输入框，带示例占位、字数、清空——一眼看出「在这里配置」。</li>
+      <li>灵感 chip 点一下填入完整的一句话（保留现有 3 条，新增 2 条）。</li>
+      <li>新增可折叠「补充条件」：城市 / 时长 / 人数，拼进同一段描述发给 AI，不改接口。</li>
+      <li>生成中：三段进度（理解需求→规划路线→编写玩法）+ 骨架屏，可取消，描述保留。</li>
+      <li>结果：标题、简介、预计时长、票价、节点都能就地改；节点可上移/下移/删除/添加；底栏 重新生成 / 保存草稿 / 进入专业配置。</li>
+      <li>失败：替换「这次没能继续 / AI 响应格式异常」的死胡同，改成友好错误卡，「重试」直接用保留的描述再发一次。</li>
+      <li>「重新生成」「确认地点」「选择城市」走底部弹层；有弹层时导航栏返回先关弹层（G-2）。</li>
+    </ul>
+    <h2>待业主确认</h2>
+    <div class="q">1. 进入专业配置不再要求先确认全部地点（现状是按钮置灰），未确认的在专业配置里补，发布前强制确认。可以吗？</div>
+    <div class="q">2. 「补充条件」（城市/时长/人数）和结果里的「预计时长 / 票价」是新增字段，现页没有；票价、时长会带入专业配置。保留还是去掉？</div>
+    <div class="q">3. 生成失败「不计入生成次数」需要后端配合（现状额度按请求扣）。</div>
+    <div class="q">4. AI 起草目前上限 3 个节点；原型里手动「添加节点」最多到 8 个。上限按多少？</div>
+    <div class="q">5. 新增的两条灵感「情侣夜游」「城市打卡挑战」文案是否 OK。</div>
+    <h2>不变的</h2>
+    <ul><li>后端 AI 回包解析（「响应格式异常」根因）另行在 8132 复现修复，原型只管界面。</li></ul>
+  </aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const PROMPTS = [
+  { t:'老城建筑与咖啡', s:'周末下午，在老城区走 2 小时，看几栋老建筑，串起 3 家咖啡馆，每站一个小谜题' },
+  { t:'周末亲子探险', s:'带 6–10 岁的孩子在公园附近探险，3 个站点，每站一个动手小任务，全程不超过 2 小时' },
+  { t:'雨天室内漫游', s:'下雨天也能玩：在商场和书店之间做一条室内路线，有故事线和找线索的玩法' },
+  { t:'情侣夜游', s:'傍晚开始的情侣约会路线，河边散步、拍照打卡、最后在一家小店收尾，带一点浪漫的故事' },
+  { t:'城市打卡挑战', s:'城市定向赛：5 个地标打卡点，限时完成，每个点一个答题或拍照任务' }
+];
+const DRAFTS = {
+  1: { title:'老城午后的三杯咖啡', story:'一封没有署名的明信片把你带回老城。寄信的人在三家咖啡馆各留下一句话，凑齐它们，才能读懂这张明信片真正想说的事。', dur:120, price:39,
+       nodes:[ {name:'钟楼下的旧邮局', desc:'在门口的信箱上找到明信片编号，解出第一句话。'}, {name:'梧桐巷 17 号咖啡馆', desc:'点一杯「今日特调」，杯垫背面藏着第二条线索。'}, {name:'河畔老码头', desc:'在码头的第三根系船柱旁，拼出完整的话。'} ] },
+  2: { title:'雨停之后的城市来信', story:'第一章从旧邮局开始。每走完一站，下一章的故事才会解锁，你的选择会决定这封信最后寄给谁。', dur:150, price:49,
+       nodes:[ {name:'第一章 · 旧邮局', desc:'读到第一封信，选择你要相信的那个人。'}, {name:'第二章 · 梧桐巷', desc:'根据上一章的选择，店主给你不同的线索。'}, {name:'第三章 · 老码头', desc:'在雨停的码头揭开结局。'} ] }
+};
+const PLACES = [
+  { n:'示例市钟楼邮局', a:'示例市老城区钟楼街 1 号', d:'120 m' },
+  { n:'梧桐巷 17 号', a:'示例市老城区梧桐巷 17 号', d:'480 m' },
+  { n:'河畔老码头广场', a:'示例市滨河路 88 号', d:'1.2 km' },
+  { n:'示例咖啡馆', a:'示例市新华路 26 号', d:'650 m' }
+];
+const MAX_NODES = 8;
+const S = { mode:1, view:'input', prompt:'', quota:3, failNext:false, exhausted:false, opts:{dur:'2 小时', ppl:'3–5 人', city:'示例市'}, optsOpen:false,
+  plan:null, sheet:null, poiIdx:-1, timer:null };
+
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),1800); }
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function renderChips(){
+  $('chips').innerHTML = PROMPTS.map((p,i)=>`<button class="chip${S.prompt===p.s?' on':''}" data-act="useChip" data-arg="${i}" aria-label="使用灵感：${p.t}">${p.t}<svg class="ico ico--s" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>`).join('');
+}
+function syncPrompt(){
+  $('prompt').value = S.prompt; $('count').textContent = S.prompt.length + '/300';
+  $('genBtn').classList.toggle('is-dim', !S.prompt.trim() || (S.exhausted));
+  renderChips();
+}
+function renderQuota(){
+  $('quotaTxt').textContent = '今日还可生成 ' + (S.exhausted?0:S.quota) + ' 次';
+  $('exhaustedCard').style.display = S.exhausted && S.view==='input' ? 'flex' : 'none';
+  $('genBtn').classList.toggle('is-dim', !S.prompt.trim() || S.exhausted);
+}
+function setView(v){
+  S.view=v;
+  ['Input','Gen','Err','Result'].forEach(k=>$('v'+k).classList.toggle('show', k.toLowerCase()===v));
+  $('barInput').style.display = v==='input' ? '' : 'none';
+  $('barGen').style.display = v==='gen' ? '' : 'none';
+  $('barResult').style.display = v==='result' ? '' : 'none';
+  $('scroll').scrollTop = 0; renderQuota();
+}
+function fullPrompt(){
+  const o=S.opts; const extra=[o.city!=='不限城市'?'城市：'+o.city:'', '时长：'+o.dur, '人数：'+o.ppl].filter(Boolean).join('，');
+  return S.prompt.trim() + (S.optsOpen ? '（'+extra+'）' : '');
+}
+function startGen(){
+  if (!S.prompt.trim()) { $('emptyHint').classList.add('show'); $('prompt').focus(); return; }
+  if (S.exhausted) { toast('今日额度已用完，可改用手动创建'); return; }
+  setView('gen'); $('genQuote').textContent = fullPrompt();
+  const steps=[...$('steps').children]; steps.forEach(s=>s.className='step');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const T = reduce ? 300 : 2600; const t0 = performance.now();
+  clearInterval(S.timer);
+  S.timer = setInterval(()=>{
+    const p = Math.min(1,(performance.now()-t0)/T); $('trackBar').style.width = (p*100).toFixed(0)+'%';
+    const idx = Math.min(2, Math.floor(p*3));
+    steps.forEach((s,i)=>{ s.className = 'step' + (i<idx||p>=1?' done':(i===idx?' cur':'')); s.querySelector('.mk').innerHTML = (i<idx||p>=1)?'<svg class="ico" style="width:12px;height:12px;stroke-width:3" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>':''; });
+    if (p>=1){ clearInterval(S.timer); setTimeout(finishGen, reduce?0:250); }
+  }, 60);
+}
+function finishGen(){
+  if (S.view!=='gen') return;
+  if (S.failNext){ S.failNext=false; $('failBtn').classList.remove('on'); $('errQuote').textContent = S.prompt; setView('err'); return; }
+  S.quota = Math.max(0,S.quota-1);
+  const d = DRAFTS[S.mode];
+  S.plan = { title:d.title, story:d.story, dur:d.dur, price:d.price, nodes:d.nodes.map(n=>({...n, poi:null})) };
+  renderPlan(); setView('result'); toast('初稿好了，哪里不满意直接改');
+}
+function renderPlan(flashIdx){
+  const p=S.plan; if(!p) return;
+  $('fTitle').value=p.title; $('titleCount').textContent=p.title.length+'/30'; $('fStory').value=p.story;
+  $('durVal').innerHTML = p.dur+'<small>分钟</small>'; $('priceVal').innerHTML = (p.price===0?'免费':p.price+'<small>元</small>');
+  $('nodeCount').textContent = p.nodes.length+' 个';
+  const n=p.nodes.length;
+  $('nodes').innerHTML = p.nodes.map((nd,i)=>`
+    <div class="node${flashIdx===i?' flash':''}">
+      <div class="node-head"><span class="num">${i+1}</span>
+        <div class="node-copy">
+          <input class="field node-name" data-k="name" data-i="${i}" value="${esc(nd.name)}" maxlength="30" placeholder="节点名称" aria-label="第${i+1}个节点名称">
+          <textarea class="field node-desc" data-k="desc" data-i="${i}" maxlength="300" placeholder="这一站发生什么、玩什么" aria-label="第${i+1}个节点故事">${esc(nd.desc)}</textarea>
+        </div></div>
+      <button class="poi${nd.poi?' ok':''}" data-act="openPoi" data-arg="${i}"><svg class="ico ico--s" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>${nd.poi?esc(nd.poi.a):'在地图中确认地点'}</span><svg class="ico ico--s" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+      <div class="node-ops">
+        <button class="op" data-act="moveNode" data-arg="${i}:-1" ${i===0?'disabled':''} aria-label="上移"><svg class="ico ico--s" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></svg></button>
+        <button class="op" data-act="moveNode" data-arg="${i}:1" ${i===n-1?'disabled':''} aria-label="下移"><svg class="ico ico--s" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
+        <button class="op op--del" data-act="delNode" data-arg="${i}" ${n<=1?'disabled':''} aria-label="删除"><svg class="ico ico--s" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+      </div>
+    </div>`).join('');
+  $('addBtn').disabled = n>=MAX_NODES;
+  const left = p.nodes.filter(x=>!x.poi).length;
+  $('poiTip').textContent = left ? `还有 ${left} 个节点没确认地点：可以现在确认，也可以进专业配置后再补；发布前必须全部确认。` : '地点都确认好了，可以进入专业配置细化玩法。';
+}
+function openSheet(id){ closeSheet(true); S.sheet=id; $('mask').classList.add('show'); $(id).classList.add('show'); }
+function closeSheet(silent){ if(!S.sheet) return false; $(S.sheet).classList.remove('show'); $('mask').classList.remove('show'); S.sheet=null; return true; }
+
+const ACT = {
+  back(){ if (closeSheet()) { toast('已关闭弹层（返回先关弹层）'); return; }
+    if (S.view==='gen'){ ACT.cancelGen(); return; }
+    if (S.view==='result' || S.view==='err'){ setView('input'); toast('回到描述，内容都还在'); return; }
+    toast('返回上一页（创作入口）'); },
+  useChip(el){ const p=PROMPTS[+el.dataset.arg]; S.prompt=p.s; $('emptyHint').classList.remove('show'); syncPrompt(); toast('已填入「'+p.t+'」，可以接着改'); },
+  clearPrompt(){ S.prompt=''; syncPrompt(); $('prompt').focus(); toast('已清空'); },
+  toggleOpts(){ S.optsOpen=!S.optsOpen; $('opts').classList.toggle('open',S.optsOpen); $('optToggle').classList.toggle('open',S.optsOpen); },
+  pick(el){ const [g,v]=el.dataset.arg.split(':'); S.opts[g]=v; el.parentNode.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===el)); },
+  openCity(){ openSheet('citySheet'); },
+  setCity(el){ S.opts.city=el.dataset.arg; $('cityVal').textContent=S.opts.city; closeSheet(); toast('城市：'+S.opts.city); },
+  generate(){ startGen(); },
+  cancelGen(){ clearInterval(S.timer); setView('input'); toast('已取消，描述还在'); },
+  retry(){ startGen(); },
+  editPrompt(){ setView('input'); setTimeout(()=>$('prompt').focus(),50); },
+  manual(){ toast('进入手动创建（专业配置），描述已带过去'); },
+  dur(el){ S.plan.dur=Math.max(30,Math.min(480,S.plan.dur+ +el.dataset.arg)); renderPlan(); },
+  price(el){ S.plan.price=Math.max(0,Math.min(999,S.plan.price+ +el.dataset.arg)); renderPlan(); },
+  moveNode(el){ const [i,d]=el.dataset.arg.split(':').map(Number); const a=S.plan.nodes; const j=i+d; if(j<0||j>=a.length) return; [a[i],a[j]]=[a[j],a[i]]; renderPlan(j); },
+  delNode(el){ const i=+el.dataset.arg; if(S.plan.nodes.length<=1) return; const [rm]=S.plan.nodes.splice(i,1); renderPlan(); toast('已删除「'+rm.name+'」'); },
+  addNode(){ if(S.plan.nodes.length>=MAX_NODES){ toast('最多 '+MAX_NODES+' 个节点'); return; } S.plan.nodes.push({name:'', desc:'', poi:null}); renderPlan(S.plan.nodes.length-1);
+    const last=$('nodes').lastElementChild; last.scrollIntoView({block:'center',behavior:'smooth'}); setTimeout(()=>last.querySelector('input').focus(),300); },
+  openPoi(el){ S.poiIdx=+el.dataset.arg; const nd=S.plan.nodes[S.poiIdx];
+    $('poiTitle').textContent='确认第 '+(S.poiIdx+1)+' 个地点'; $('poiSearch').textContent=nd.name||'搜索地点';
+    $('placeList').innerHTML=PLACES.map((p,i)=>`<button class="place" data-act="pickPlace" data-arg="${i}"><svg class="ico" viewBox="0 0 24 24" style="color:var(--ai-accent)"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><div><b>${p.n}</b><small>${p.a}</small></div><em>${p.d}</em></button>`).join('');
+    openSheet('poiSheet'); },
+  pickPlace(el){ const p=PLACES[+el.dataset.arg]; S.plan.nodes[S.poiIdx].poi=p; closeSheet(); renderPlan(S.poiIdx); toast('已确认：'+p.n); },
+  askRegen(){ openSheet('regenSheet'); },
+  regen(){ closeSheet(); if (S.exhausted){ toast('今日额度已用完'); return; } startGen(); },
+  saveDraft(){ toast('草稿已保存，可在「我的草稿」继续'); },
+  enterPro(){ const p=S.plan; if(!p.title.trim()){ $('fTitle').focus(); toast('先给主题起个名字'); return; }
+    if(p.nodes.some(n=>!n.name.trim())){ toast('有节点还没写名称'); return; }
+    const left=p.nodes.filter(n=>!n.poi).length; toast(left?'进入专业配置 · '+left+' 个地点待补':'进入专业配置'); },
+  closeSheet(){ closeSheet(); },
+  mode(el){ S.mode=+el.dataset.arg; $('m1').classList.toggle('on',S.mode===1); $('m2').classList.toggle('on',S.mode===2);
+    $('kicker').textContent = S.mode===2 ? '自由探索 · 章节承接路线' : '城市定向 · 集合式路线'; toast('入口模式：'+(S.mode===2?'自由探索':'城市定向')); },
+  failNext(el){ S.failNext=!S.failNext; el.classList.toggle('on',S.failNext); toast(S.failNext?'下一次生成会失败':'已恢复正常'); },
+  exhaust(el){ S.exhausted=!S.exhausted; el.classList.toggle('on',S.exhausted); if(S.view!=='input') setView('input'); renderQuota(); toast(S.exhausted?'额度已用完':'额度已恢复'); },
+  jumpResult(){ if(!S.prompt) { S.prompt=PROMPTS[0].s; syncPrompt(); } S.view='gen'; S.failNext=false; $('failBtn').classList.remove('on'); finishGen(); },
+  reset(){ clearInterval(S.timer); closeSheet(); Object.assign(S,{prompt:'',quota:3,failNext:false,exhausted:false,plan:null});
+    $('failBtn').classList.remove('on'); $('exBtn').classList.remove('on'); syncPrompt(); setView('input'); toast('已重置'); }
+};
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-act]'); if (!el || el.disabled) return;
+  const fn = ACT[el.dataset.act]; if (fn) fn(el, ev);
+});
+document.addEventListener('input', ev => {
+  const t=ev.target;
+  if (t.id==='prompt'){ S.prompt=t.value; $('count').textContent=t.value.length+'/300'; $('emptyHint').classList.remove('show'); $('genBtn').classList.toggle('is-dim', !t.value.trim()||S.exhausted); renderChips(); }
+  else if (t.id==='fTitle'){ S.plan.title=t.value; $('titleCount').textContent=t.value.length+'/30'; }
+  else if (t.id==='fStory'){ S.plan.story=t.value; }
+  else if (t.dataset.k){ S.plan.nodes[+t.dataset.i][t.dataset.k]=t.value; }
+});
+syncPrompt(); renderQuota();
+</script>
+</body>
+</html>
