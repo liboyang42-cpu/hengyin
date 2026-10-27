@@ -8364,7 +8364,7 @@ Page({
     if (record) {
       if (record.requestId) { this._recoverTemplateAdoption(record, current); return; }
       if (record.draftId) { this._readAdoptedTemplate(record, current); return; }
-      error('旧采用结果待确认，原服务没有请求回执；请查看我的玩法，勿重复创建'); return;
+      error('旧采用结果待确认，原请求没有可查询的编号；请查看我的玩法，勿重复创建'); return;
     }
     this._adoptingPublicTemplate = true;
     app.sendRequest({ url: '/api/template/adoption-source', method: 'GET',
@@ -8427,7 +8427,7 @@ Page({
     const facts = res && res.code == 200 && res.data;
     if (!facts || facts.requestId !== record.requestId || facts.sourceVersion !== record.sourceVersion
         || facts.originalTemplateId !== String(record.payload.originalTemplateId)) {
-      this.setData({ templateAdoptionError: '原请求回执未确认，原稿及恢复记录保留' }); return;
+      this.setData({ templateAdoptionError: '原请求结果未确认，原稿及恢复记录保留' }); return;
     }
     if (facts.status === 'REJECTED') {
       try { templateAdoption.clear(wx, record); } catch (_) { /* Re-read the same rejection. */ }
@@ -8439,7 +8439,7 @@ Page({
     }
     record.draftId = draftId;
     try { templateAdoption.write(wx, record); }
-    catch (_) { this.setData({ templateAdoptionError: '回执未能保存，请保留页面后按原请求重查' }); return; }
+    catch (_) { this.setData({ templateAdoptionError: '结果未能保存，请保留页面后按原请求重查' }); return; }
     this._readAdoptedTemplate(record, current);
   },
   _readAdoptedTemplate(record, current) {

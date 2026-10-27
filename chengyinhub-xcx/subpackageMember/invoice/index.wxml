@@ -17,8 +17,8 @@
       <view wx:if="{{titlePending}}" class="invoice-card">
         <text class="invoice-title">原抬头保存结果待确认</text>
         <text class="invoice-note" selectable>原请求号：{{titleRequestId || '旧版待确认记录'}}</text>
-        <text class="invoice-note">未查到回执不代表未保存。离页后不保留完整税号，只查询原回执；旧版未发送请求号的记录仍需平台核对。</text>
-        <cy-btn variant="secondary" disabled="{{writing || !titleRequestId}}" bindtap="queryTitleSave">查询原保存回执</cy-btn>
+        <text class="invoice-note">未查到结果不代表未保存。离页后不保留完整税号，只查询原保存结果；旧版未发送请求号的记录仍需平台核对。</text>
+        <cy-btn variant="secondary" disabled="{{writing || !titleRequestId}}" bindtap="queryTitleSave">查询原保存结果</cy-btn>
         <cy-btn wx:if="{{titleRetryable}}" variant="secondary" loading="{{writing}}" disabled="{{writing}}" bindtap="retryTitleSave">使用原输入重试保存</cy-btn>
       </view>
       <view wx:if="{{pending}}" class="invoice-card">
@@ -101,7 +101,7 @@
       </block>
 
       <block wx:elif="{{tab === 'titles'}}">
-        <text class="invoice-note" wx:if="{{titlePending}}">上次保存结果待确认，暂不能再次新建或修改。请查询原保存回执。</text>
+        <text class="invoice-note" wx:if="{{titlePending}}">上次保存结果待确认，暂不能再次新建或修改。请查询原保存结果。</text>
         <view class="invoice-actions">
           <cy-btn variant="primary" disabled="{{writing || titlePending}}" bindtap="editTitle">新增抬头</cy-btn>
           <cy-btn variant="ghost" disabled="{{writing}}" bindtap="loadTitles">刷新抬头</cy-btn>

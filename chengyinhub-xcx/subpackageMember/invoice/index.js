@@ -59,7 +59,7 @@ Page({
         titleRequestId: titleRequest && titleRequest.requestId || '',
         frozenTitleId: frozen ? frozen.titleId : '', frozenOrderIds: frozen ? frozen.orderIds : [],
         selectedTitle: frozen ? frozen.titleId : '',
-        notice: titlePending ? '上次抬头保存结果待确认，请查询原保存回执，勿重复新建。' : '' });
+        notice: titlePending ? '上次抬头保存结果待确认，请查询原保存结果，勿重复新建。' : '' });
     } catch (error) {
       this.setData({ pending: true, titlePending: true, error: '本机待办无法读取，请检查存储并联系平台核对，勿重复提交' });
     }
@@ -298,7 +298,7 @@ Page({
     this.loadTitles();
   },
   confirmTitleSave(row) {
-    if (!this.data.titlePending || row.requestId !== this.data.titleRequestId) throw Error('原保存回执已变化');
+    if (!this.data.titlePending || row.requestId !== this.data.titleRequestId) throw Error('原保存结果已变化');
     if (!this._workflow.confirmRequest(this.key('title-save'), row.requestId)) throw Error('本机原保存待办仍未清除，请继续核对');
     this.titleSaved(row);
   },
@@ -327,7 +327,7 @@ Page({
       if (result.status === 'success') {
         try { this.confirmTitleSave(result.value); return; } catch (error) { this.setData({ error: error.message }); return; }
       }
-      this.setData({ error: '原保存结果仍待确认，已保留原请求及冻结输入；请继续查询回执。' });
+      this.setData({ error: '原保存结果仍待确认，已保留原请求及冻结输入；请继续查询结果。' });
     });
   },
   deleteTitle(e) {

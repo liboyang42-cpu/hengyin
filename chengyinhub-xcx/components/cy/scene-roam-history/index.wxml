@@ -2,8 +2,8 @@
 <cy-error load-failure wx:if="{{state === 'error'}}" fill size="lg" title="漫游记录加载失败" retry="重试" bind:retry="retry" />
 <view wx:elif="{{state === 'loading'}}" class="history-loading" aria-role="status">正在读取漫游记录…</view>
 <view wx:else class="hs">
-  <view wx:if="{{remoteLoading}}" aria-role="status">正在读取服务端漫游记录…</view>
-  <view wx:if="{{remoteError}}" bindtap="retry" aria-role="button">服务端记录读取失败，当前仅显示已读取记录。点此重试</view>
+  <view wx:if="{{remoteLoading}}" aria-role="status">正在读取漫游记录…</view>
+  <view wx:if="{{remoteError}}" bindtap="retry" aria-role="button">漫游记录读取失败，当前仅显示已读取记录。点此重试</view>
   <view wx:if="{{localWarning}}">本机补充记录暂时无法读取</view>
   <view class="hs-sum" wx:if="{{summary.trips}}">
     <text>已读取{{ summary.trips || 0 }}次漫游</text>

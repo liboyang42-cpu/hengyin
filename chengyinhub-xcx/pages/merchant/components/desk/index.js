@@ -76,7 +76,7 @@ Component({
       this._workflow = createVerificationWorkflow({ storage: wx, getOwner: () => this._owner, requestIdentity: true });
       try {
         const pending = this._workflow.pendingRequest(this._key);
-        if (pending) this.setData({ pending: true, requestId: pending.requestId || '', notice: '原操作结果待确认，请读取原请求回执' });
+        if (pending) this.setData({ pending: true, requestId: pending.requestId || '', notice: '原操作结果待确认，请读取原请求结果' });
       } catch (e) { this.setData({ pending: true, error: '无法读取原操作，请保留现场并检查存储' }); }
     },
     clearReads() {
@@ -509,7 +509,7 @@ Component({
         if (!this.current(epoch)) return;
         const unknown = result.status !== 'success' && result.status !== 'failed' && result.status !== 'blocked';
         this.setData({ busy: false, pending: unknown, requestId: unknown ? result.requestId || '' : '',
-          notice: unknown ? '结果待确认，请读取原请求回执；请勿修改或重复提交' : result.status === 'success' ? '已收到原操作回执，正在重新读取结果' : '',
+          notice: unknown ? '结果待确认，请读取原请求结果；请勿修改或重复提交' : result.status === 'success' ? '已收到原操作结果，正在重新读取' : '',
           error: result.status === 'failed' || result.status === 'blocked' ? result.response && result.response.msg || '未提交成功' : '' });
         if (result.status === 'success') this.settleReceipt(result.value);
       });
@@ -519,8 +519,8 @@ Component({
       const epoch = this._epoch, requestId = this.data.requestId;
       if (!this.current(epoch)) { this.activate(); return; }
       this.read('receipt', { requestId }, 'notice', row => {
-        if (!receipt(row, requestId)) return '原请求仍待确认；未查到回执不能证明没有写入';
-        if (!this._workflow.confirmRequest(this._key, requestId)) return '已查到回执，本机待办尚未清理，请再次读回';
+        if (!receipt(row, requestId)) return '原请求仍待确认；未查到结果不能证明没有写入';
+        if (!this._workflow.confirmRequest(this._key, requestId)) return '已查到结果，本机待办尚未清理，请再次读回';
         this.setData({ pending: false, requestId: '', sku: null, note: '' }); this.settleReceipt(row);
         return '已确认原操作，正在重新读取结果';
       });

@@ -93,7 +93,7 @@ function methods() {
             if (this._isPlayAccountCurrent() && owner === this._boundPlayOwner() && sessionKey === this._sessionKey()
                 && this.data.journeyCheck === kit && this.selectComponent('#advancedGame') === game) {
               this.setData({ 'journeyCheck.unknown': !!game.data.unknown,
-                'journeyCheck.disabledReason': game.data.unknown ? '原检定结果仍待确认，请核对原回执' : '' });
+                'journeyCheck.disabledReason': game.data.unknown ? '原检定结果仍待确认，请再次核对' : '' });
             }
           });
         }

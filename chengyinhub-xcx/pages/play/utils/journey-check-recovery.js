@@ -19,7 +19,7 @@ module.exports.methods = send => ({
     if (!scope) return;
     try {
       const pending = wx.getStorageSync(this._journeyStorageKey(scope));
-      if (pending) this.setData({ 'journeyCheck.unknown': true, 'journeyCheck.disabledReason': '原检定结果待确认，请查询原回执' });
+      if (pending) this.setData({ 'journeyCheck.unknown': true, 'journeyCheck.disabledReason': '原检定结果待确认，请再次查询' });
     } catch (_) { this.setData({ 'journeyCheck.unknown': true, 'journeyCheck.disabledReason': '原检定记录无法读取，暂不提交新动作' }); }
   },
   _legacyCheckAction(action) {
@@ -45,7 +45,7 @@ module.exports.methods = send => ({
       if (!current()) return;
       this._checkActing = false;
       this.setData({ 'journeyCheck.loading': false, 'journeyCheck.unknown': true,
-        'journeyCheck.disabledReason': '原检定结果待确认，请查询原回执；未查到不代表未写入' });
+        'journeyCheck.disabledReason': '原检定结果待确认，请再次查询；未查到不代表未写入' });
     };
     this._checkActing = true;
     this.setData({ 'journeyCheck.loading': true, 'journeyCheck.unknown': true });

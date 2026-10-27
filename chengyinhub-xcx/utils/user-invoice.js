@@ -58,7 +58,7 @@ function titlePayload(draft) {
 function titleSaveReceipt(value, expectedRequestId, expectedTitleId) {
   if (!value || value.status !== 'SAVED' || !requestId(value.requestId) || !exactId(value.titleId)
       || expectedRequestId && value.requestId !== expectedRequestId
-      || expectedTitleId && exactId(value.titleId) !== expectedTitleId) throw Error('抬头保存回执与原请求不匹配');
+      || expectedTitleId && exactId(value.titleId) !== expectedTitleId) throw Error('抬头保存结果与原请求不匹配');
   return { requestId: value.requestId, titleId: exactId(value.titleId), status: 'SAVED' };
 }
 function classify(res, status, decode, transportFailure = false) {

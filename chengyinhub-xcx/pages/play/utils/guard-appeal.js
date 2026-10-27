@@ -35,7 +35,7 @@ function create({ storage, owner, session, send, current, changed, keyFactory })
           || intent.evidence !== null || !Array.isArray(intent.attachments) || intent.attachments.length !== 0
           || !intent.guardReference || intent.guardReference.guardLogId !== command.guardLogId
           || intent.guardReference.arrivalRequestId !== command.arrivalRequestId) {
-          entry.state = 'UNKNOWN'; entry.message = '尚未取得原请求回执，保留原号，不重新提交'; save(); return;
+          entry.state = 'UNKNOWN'; entry.message = '尚未取得原请求结果，保留原号，不重新提交'; save(); return;
         }
         entry.state = 'FOUND'; entry.result = fact; entry.message = fact.decisionReason || '申诉已提交，等待处理';
       } else {

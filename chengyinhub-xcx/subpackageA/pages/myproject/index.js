@@ -670,7 +670,7 @@ Page({
     catch (e) { toast('申诉草稿无法读取，请稍后重试'); return; }
     this.setData({ auditSheet: { show: true, loading: true, error: '', title: title || '', bizType: target.bizType,
       bizId, rows: [], appealText: '', canAppeal: false, attachments: draft && draft.attachments || [],
-      draftReason: draft && draft.reason || '', appealCommand: draft && draft.command || null, confirmed: !!(draft && draft.confirmed), pending: !!(draft && draft.pending), appealError: draft && draft.pending ? '原申诉结果待确认，请读取服务端记录；不要修改原说明。' : '' } });
+      draftReason: draft && draft.reason || '', appealCommand: draft && draft.command || null, confirmed: !!(draft && draft.confirmed), pending: !!(draft && draft.pending), appealError: draft && draft.pending ? '原申诉结果待确认，请读取平台记录；不要修改原说明。' : '' } });
     this.loadAudit();
   },
 
@@ -752,7 +752,7 @@ Page({
     const sheet = this.data.auditSheet, command = sheet.appealCommand;
     if (!sheet.show) return;
     if (!command) {
-      this.setData({ 'auditSheet.appealError': '历史申诉未绑定原请求号，保留说明；请核对下方服务端审核记录。' });
+      this.setData({ 'auditSheet.appealError': '历史申诉未绑定原请求号，保留说明；请核对下方平台审核记录。' });
       this.loadAudit(); return;
     }
     if (command.bizType !== sheet.bizType || command.bizId !== sheet.bizId
@@ -778,14 +778,14 @@ Page({
           && typeof receipt.taskId === 'string' && /^[1-9]\d*$/.test(receipt.taskId)
           && ['SUBMITTED', 'REVIEWING', 'ACCEPTED', 'REJECTED', 'WITHDRAWN'].includes(receipt.appealState);
         if (!matches) {
-          this.setData({ 'auditSheet.appealError': '原申诉回执未确认，保留原号和冻结输入；查无不代表未提交。' }); return;
+          this.setData({ 'auditSheet.appealError': '原申诉结果未确认，保留原号和冻结输入；查无不代表未提交。' }); return;
         }
         this.setData({ 'auditSheet.pending': false, 'auditSheet.confirmed': true, 'auditSheet.canAppeal': false,
           'auditSheet.appealError': '原申诉及附件意图已确认，申诉编号 ' + receipt.appealId,
           'auditSheet.appealText': auditTimeline.appealText({ appeal: { state: receipt.appealState } }) });
         this.saveAuditDraft(false); this.loadAudit();
       },
-      fail: () => { if (same()) this.setData({ 'auditSheet.appealError': '回执读取失败，保留原号和冻结输入，请重试读取。' }); }
+      fail: () => { if (same()) this.setData({ 'auditSheet.appealError': '结果读取失败，保留原号和冻结输入，请重试读取。' }); }
     });
   },
 
@@ -815,7 +815,7 @@ Page({
             if (!same()) return;
             that._appealing = false;
             if (res && res.code == '200') {
-              toast('申诉已提交，正在核对原回执'); that.recoverAuditAppeal();
+              toast('申诉已提交，正在核对结果'); that.recoverAuditAppeal();
             } else {
               const msg = app.getRequestErrorMessage(res, '申诉结果待确认');
               that.setData({ 'auditSheet.appealError': msg }); toast(msg);
@@ -833,7 +833,7 @@ Page({
         }); } catch (e) {
           if (!same()) return;
           that._appealing = false;
-          that.setData({ 'auditSheet.appealError': '请求结果未确认，保留原号和输入，请读取原申诉回执。' });
+          that.setData({ 'auditSheet.appealError': '请求结果未确认，保留原号和输入，请读取原申诉结果。' });
         }
       }
     });

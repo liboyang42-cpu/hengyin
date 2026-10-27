@@ -49,9 +49,9 @@ function createReader(app, platform) {
       try {
         app.sendRequest({ url: path, method: 'GET', data,
           hideLoading: true, autoErrorToast: false,
-          success: res => res && String(res.code) === '200' ? finish(res.data) : finish(null, Object.assign(new Error('服务端记录暂时无法读取'), { notFound: res && String(res.code) === '404' })),
-          fail: () => finish(null, new Error('服务端记录暂时无法读取')),
-          successStatusAbnormal: () => finish(null, new Error('服务端记录暂时无法读取')) })
+          success: res => res && String(res.code) === '200' ? finish(res.data) : finish(null, Object.assign(new Error('漫游记录暂时无法读取'), { notFound: res && String(res.code) === '404' })),
+          fail: () => finish(null, new Error('漫游记录暂时无法读取')),
+          successStatusAbnormal: () => finish(null, new Error('漫游记录暂时无法读取')) })
       } catch (error) { finish(null, error) }
     })
   }

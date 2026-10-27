@@ -192,7 +192,7 @@
         <text wx:if="{{!auditSheet.pending}}" data-index="{{index}}" bindtap="removeAuditAttachment">移除附件 {{index + 1}}</text>
       </view>
       <view class="mp-ops-row" wx:if="{{auditSheet.canAppeal && !auditSheet.pending && auditSheet.attachments.length < 6}}" bindtap="addAuditAttachment">
-        <text class="mp-ops-label">添加申诉图片</text><text class="mp-ops-sub">最多6张，须本人上传并通过内容安全审核；以服务端校验为准</text>
+        <text class="mp-ops-label">添加申诉图片</text><text class="mp-ops-sub">最多6张，须本人上传并通过内容安全审核；以平台校验为准</text>
       </view>
       <view class="mp-ops-row" wx:if="{{auditSheet.pending}}" bindtap="recoverAuditAppeal"><text class="mp-ops-label">读取原申诉结果</text></view>
       <view class="mp-ops-row" wx:if="{{auditSheet.canAppeal && !auditSheet.pending}}" bindtap="appealAudit" hover-class="cy-pressed" hover-stay-time="80">

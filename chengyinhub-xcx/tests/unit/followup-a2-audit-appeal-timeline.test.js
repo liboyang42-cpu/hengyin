@@ -94,7 +94,7 @@ test('FOLLOWUP-A-2 审核记录展示每轮决定;canAppeal=true 才出「申诉
   const original = JSON.parse(appeal.data); assert.ok(original.requestId);
   assert.deepEqual(original, { bizType: 'TOPIC', bizId: '31', reason: '引流信息是活动官方公众号，非违规', attachments: [], requestId: original.requestId });
   appeal.success({ code: 200, appealId: 3, state: 'SUBMITTED' });
-  assert.deepEqual(h.toasts, ['申诉已提交，正在核对原回执']);
+  assert.deepEqual(h.toasts, ['申诉已提交，正在核对结果']);
   const receipt = h.requests[2]; assert.equal(receipt.url, '/api/audit/appeal/receipt');
   receipt.success({ code: 200, data: { state: 'FOUND', intent: { ...original, version: 1, memberId: '9', evidence: null }, appealId: '3', taskId: '6', appealState: 'SUBMITTED' } });
   assert.equal(h.page.data.auditSheet.pending, false);

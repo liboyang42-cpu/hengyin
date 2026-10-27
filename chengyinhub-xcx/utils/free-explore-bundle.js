@@ -64,7 +64,7 @@ function order(value, owner, registrationId) {
     owned(row, owner, registrationId);
     if (!exactId(row.id) || !['SWAP_CONSENTED', 'REFUND_UNFULFILLED'].includes(row.decision)) throw Error('售后记录无法确认');
     return { id: exactId(row.id), unitId: exactId(row.unitId), targetOfferId: exactId(row.targetOfferId),
-      idempotencyKey: String(row.idempotencyKey || ''), decision: row.decision, text: row.decision === 'SWAP_CONSENTED' ? '已同意替换商家' : '已选择未履约退款，到账须核对退款回执' };
+      idempotencyKey: String(row.idempotencyKey || ''), decision: row.decision, text: row.decision === 'SWAP_CONSENTED' ? '已同意替换商家' : '已选择未履约退款，到账须核对退款记录' };
   });
   for (const key of ['productVersion', 'quotaVersion', 'policyVersion', 'contractVersion', 'settlementRuleVersion']) {
     result.versions.push({ key, value: String(bundle.order[key] || '历史版本未记录') });
@@ -125,9 +125,9 @@ function reviews(row, registrationId) {
   if (e.canCreate === true && !eligibleId) throw Error('评价资格订单编号无法确认');
   return { pageNum: row.pageNum, hasMore: row.hasMore === true,
     canCreate: e.canCreate === true && eligibleId === registrationId,
-    message: e.canCreate === true ? eligibleId === registrationId ? '服务端确认当前订单可评价，提交时将再次核验'
-      : '服务端返回的是另一订单的资格，尚不能确认本订单可评价'
-      : '服务端尚未确认本订单有可用评价资格（可能未核销、已评价或商家不可用）',
+    message: e.canCreate === true ? eligibleId === registrationId ? '平台确认当前订单可评价，提交时将再次核验'
+      : '平台返回的是另一订单的资格，尚不能确认本订单可评价'
+      : '平台尚未确认本订单有可用评价资格（可能未核销、已评价或商家不可用）',
     items: row.items.map(item => {
       if (!exactId(item.id) || item.status !== 'VISIBLE') throw Error('公开评价内容无法确认');
       return { id: exactId(item.id), content: String(item.content || ''), rating: item.rating,

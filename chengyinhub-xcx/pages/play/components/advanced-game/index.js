@@ -114,7 +114,7 @@ Component({
         if (pending) {
           this._unknownCommand = pending.command;
           this.setData({ loading: false, acting: false, unknown: true, readingBack: false,
-            state: pending.state, error: '', unknownText: '正在查询原请求回执，请勿重新提交' });
+            state: pending.state, error: '', unknownText: '正在查询原请求结果，请勿重新提交' });
           return this.resolveUnknown();
         }
       } catch (_) {
@@ -319,7 +319,7 @@ Component({
       }).catch(() => {
         if (!this.currentRequestContext(context)) return false;
         this.setData({ readingBack: false, unknown: true,
-          unknownText: '原请求仍待确认，未查到不代表未提交；请勿重复提交，核对原回执' });
+          unknownText: '原请求仍待确认，未查到不代表未提交；请勿重复提交，核对原结果' });
         return false;
       });
     },

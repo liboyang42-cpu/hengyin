@@ -12,7 +12,7 @@ function project(response, nodeId, arrivalRequestId) {
     appealBizType: r.appealBizType === 'play_arrive_guard' ? r.appealBizType : '',
     runtimeInstance: typeof r.runtimeInstance === 'string' ? r.runtimeInstance : '',
     authorityEpoch: Number.isSafeInteger(r.authorityEpoch) ? r.authorityEpoch : null,
-    message: typeof r.msg === 'string' && r.msg.length <= 160 ? r.msg : '本次到达未通过服务端核验',
+    message: typeof r.msg === 'string' && r.msg.length <= 160 ? r.msg : '本次到达未通过平台核验',
     next: reason === 'ARRIVE_ACCURACY_MISSING' || reason === 'ARRIVE_ACCURACY_INVALID'
       ? '请重新获取定位，或使用现场扫码。此结果不是作弊判定。'
       : r.appealable === true ? '可读取原局申诉资格并提交理由；当前尚未提交申诉。'

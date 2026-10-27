@@ -47,7 +47,7 @@ function resume(options) {
   };
   const accept=res=>{
     const facts=res&&res.code==200&&res.data;
-    if(!facts||facts.requestId!==record.requestId||facts.sourceVersion!==record.sourceVersion||facts.originalTemplateId!==sourceId){fail('原采用回执未确认，请按原请求重试');return;}
+    if(!facts||facts.requestId!==record.requestId||facts.sourceVersion!==record.sourceVersion||facts.originalTemplateId!==sourceId){fail('原采用结果未确认，请按原请求重试');return;}
     if(facts.status==='REJECTED'){
       try{clear(storage,record);}catch(_){}
       fail(facts.reason==='SOURCE_VERSION_CONFLICT'?'原采用被拒绝：来源已改变或下架，请重新选择':'原采用未通过内容、玩法能力或资产资格校验');return;
@@ -58,7 +58,7 @@ function resume(options) {
   };
   const submit=()=>{if(!current())return;onBusy(true);app.sendRequest({url:'/api/template/adopt-draft',method:'POST',header:{'Content-Type':'application/json'},data:JSON.stringify(record.payload),success:success(accept),fail:(error,status)=>fail([404,405].includes(Number(status || error && (error.statusCode || error.status)))?'当前服务尚未支持采用请求，请更新服务后重查原请求':'采用结果未确认；重试会查询原请求')});};
   if(record){
-    if(!record.requestId){if(record.draftId)load();else fail('旧采用缺少服务端请求号，请到我的玩法核查，勿重复创建');return;}
+    if(!record.requestId){if(record.draftId)load();else fail('旧采用缺少请求号，请到我的玩法核查，勿重复创建');return;}
     onBusy(true);app.sendRequest({url:'/api/template/adoption-receipt',method:'GET',data:{requestId:record.requestId,scope},success:success(res=>{
       const facts=res&&res.code==200&&res.data;
       if(facts&&facts.requestId===record.requestId&&['PENDING','UNKNOWN'].includes(facts.status))submit();else accept(res);

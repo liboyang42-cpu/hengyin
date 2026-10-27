@@ -43,7 +43,7 @@ function createRecovery({ app, platform, domain, targetId, scopeKey, changed, te
       if (saved.version !== 1 || saved.actor !== actor.id || saved.domain !== domain || !target || saved.targetId !== target
           || !saved.command || !/^[a-f0-9]{32}$/.test(saved.command.requestId)
           || saved.command.targetId !== target || typeof saved.command.action !== 'string') throw new Error('原请求记录无法识别，请保留记录');
-      if (saved.result && (saved.result.requestId !== saved.command.requestId || !TERMINAL.includes(saved.result.state))) throw new Error('回执记录无法识别');
+      if (saved.result && (saved.result.requestId !== saved.command.requestId || !TERMINAL.includes(saved.result.state))) throw new Error('结果记录无法识别');
       record = saved;
     }
   } catch (error) { storageError = '原请求记录不可读，不能安全提交新操作'; }
@@ -60,7 +60,7 @@ function createRecovery({ app, platform, domain, targetId, scopeKey, changed, te
       if (!current() || !ownsSnapshot()) return;
       if (result && result.requestId === command.requestId && TERMINAL.includes(result.state)) {
         try { save({ ...record, result }); }
-        catch (error) { storageError = '回执保存失败，原请求仍保留；请重进后查询'; emit(); return; }
+        catch (error) { storageError = '结果保存失败，原请求仍保留；请重进后查询'; emit(); return; }
         emit(); terminal(result, command); return;
       }
       // Includes 4xx/5xx, malformed JSON and UNKNOWN. They do not prove rollback or non-arrival.
@@ -114,7 +114,7 @@ function createRecovery({ app, platform, domain, targetId, scopeKey, changed, te
         platform.removeStorageSync(key);
         if (platform.getStorageSync(key)) throw new Error('clear failed');
         record = null; emit();
-      } catch (error) { storageError = '回执未能归档，请稍后重试'; emit(); }
+      } catch (error) { storageError = '结果未能归档，请稍后重试'; emit(); }
     },
     pending: () => !!record || !!storageError || busy,
     dispose() { disposed = true; },

@@ -15,9 +15,9 @@
         <view class="drow" bindtap="abandonOrientSession" aria-role="button" aria-label="放弃本局" hover-class="cy-pressed" hover-stay-time="80"><text>放弃本局</text></view>
       </block>
       <block wx:if="{{!orientLifecycle.pending && !orientLifecycle.busy && orientLifecycle.row.startedAt && (orientLifecycle.row.phase === 'RUNNING' || orientLifecycle.row.phase === 'FINISHED')}}">
-        <view class="drow" wx:for="{{orientLifecycle.tasks}}" wx:key="taskId" data-task-id="{{item.taskId}}" bindtap="recordOrientTask" aria-role="button" aria-label="确认任务完成回执 {{item.name}}" hover-class="cy-pressed" hover-stay-time="80"><text>确认任务完成回执 · {{item.name}}</text></view>
+        <view class="drow" wx:for="{{orientLifecycle.tasks}}" wx:key="taskId" data-task-id="{{item.taskId}}" bindtap="recordOrientTask" aria-role="button" aria-label="确认任务完成结果 {{item.name}}" hover-class="cy-pressed" hover-stay-time="80"><text>确认任务完成结果 · {{item.name}}</text></view>
       </block>
-      <view class="drow" bindtap="readOrientRewards" aria-role="button" aria-label="刷新本局奖励事实" hover-class="cy-pressed" hover-stay-time="80"><view class="dcopy"><text class="dt">刷新奖励事实</text><text class="ds" wx:if="{{orientLifecycle.reward}}">{{orientLifecycle.reward.message}}</text><text class="ds" wx:if="{{orientLifecycle.reward.state === 'settled'}}">回执 {{orientLifecycle.reward.settlementId}} · 积分 {{orientLifecycle.reward.points}} · 探索值 {{orientLifecycle.reward.xp}}</text></view></view>
+      <view class="drow" bindtap="readOrientRewards" aria-role="button" aria-label="刷新本局奖励事实" hover-class="cy-pressed" hover-stay-time="80"><view class="dcopy"><text class="dt">刷新奖励事实</text><text class="ds" wx:if="{{orientLifecycle.reward}}">{{orientLifecycle.reward.message}}</text><text class="ds" wx:if="{{orientLifecycle.reward.state === 'settled'}}">结算单 {{orientLifecycle.reward.settlementId}} · 积分 {{orientLifecycle.reward.points}} · 探索值 {{orientLifecycle.reward.xp}}</text></view></view>
       <view class="drow" bindtap="openOrientRewards" aria-role="button" aria-label="查看本局计分与奖励事实" hover-class="cy-pressed" hover-stay-time="80"><text>查看计分与奖励</text></view>
     </block>
   </block>

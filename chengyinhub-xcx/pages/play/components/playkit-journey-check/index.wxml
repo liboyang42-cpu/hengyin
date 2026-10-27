@@ -87,7 +87,7 @@
 
   <!-- 底部动作:题面「按住摇骰」;结果屏「重掷 + 结算」;结算屏「继续」。失败也推进,没有锁死的态 -->
   <view class="jc__hint jc__hint--foot" wx:if="{{disabledReason}}">{{disabledReason}}</view>
-  <view class="g-btn" wx:if="{{unknown}}" bindtap="onRecover" aria-role="button" aria-label="查询原检定回执" hover-class="g-btn--press" hover-stay-time="80">查询原检定回执</view>
+  <view class="g-btn" wx:if="{{unknown}}" bindtap="onRecover" aria-role="button" aria-label="查询原检定结果" hover-class="g-btn--press" hover-stay-time="80">查询原检定结果</view>
   <view class="g-btn jc__roll {{loading ? 'g-btn--disabled' : ''}} pe pe--up" style="--pe-d:1s" wx:elif="{{!receipt && (!r5 || rollVisible)}}"
         bindtouchstart="onHoldStart" bindtouchend="onHoldEnd" bindtouchcancel="onHoldEnd" bindtap="onRoll"
         aria-role="button" aria-label="掷骰" hover-class="g-btn--press" hover-stay-time="80">
