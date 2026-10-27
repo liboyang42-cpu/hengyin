@@ -36,7 +36,7 @@
       </block>
       <text wx:else class="score-muted">本局尚未结算，暂不能确认积分或探索值到账。</text>
       <cy-btn wx:if="{{score.canSync}}" variant="secondary" disabled="{{busy || !!pending}}" loading="{{busy}}" bindtap="sync">同步已通过任务</cy-btn>
-      <text wx:if="{{score.pendingReviewCount !== '0'}}" class="score-muted">仍有 {{score.pendingReviewCount}} 项任务待审核，审核结束后再结算。</text>
+      <text wx:if="{{score.pendingReviewCount !== '0'}}" class="score-muted">仍有 {{score.pendingReviewCount || '0'}} 项任务待审核，审核结束后再结算。</text>
       <cy-btn wx:if="{{score.canSettle}}" disabled="{{busy || !!pending}}" bindtap="settle">结算本局</cy-btn>
     </view>
     <view wx:if="{{score.recoveries.length}}" class="score-card">

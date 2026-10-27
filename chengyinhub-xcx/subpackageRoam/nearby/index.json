@@ -5,6 +5,7 @@
   "backgroundColor": "#000000",
   "usingComponents": {
     "cy-nav-bar": "/components/cy/nav-bar/index",
+    "cy-inline-error": "/components/cy/inline-error/index",
     "cy-avatar": "/components/cy/avatar/index",
     "free-map": "/components/cy/free-map/index",
     "cy-toast": "/components/cy/toast/index",

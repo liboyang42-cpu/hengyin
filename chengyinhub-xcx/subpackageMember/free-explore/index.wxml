@@ -6,7 +6,7 @@
   <view style="height: {{statusBarHeight + navBarHeight}}px;"></view>
   <cy-page-title title="自由探索权益" safe-top="{{false}}" />
   <view class="bundle-content">
-    <text wx:if="{{error}}" class="bundle-note">{{error}}</text>
+    <cy-inline-error wx:if="{{error}}" kind="error" title="{{error}}" />
     <text wx:if="{{notice}}" class="bundle-note">{{notice}}</text>
     <cy-btn variant="secondary" loading="{{loading}}" bindtap="reload">刷新权益与预约结果</cy-btn>
     <cy-card wx:if="{{swapPending}}">

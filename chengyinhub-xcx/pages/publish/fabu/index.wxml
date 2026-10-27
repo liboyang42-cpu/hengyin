@@ -978,10 +978,7 @@
         <view class="story-game-row__action" data-key="{{item.key}}" data-preview="1" bindtap="onCreateGame" aria-role="button" aria-label="预览{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">预览</view>
         <view wx:if="{{!supportNodeChallenge && !supportNodeSettled || !storySupportReasons[item.key]}}" class="story-game-row__action" data-key="{{item.key}}" bindtap="onCreateGame" aria-role="button" aria-label="配置{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">配置</view>
       </view>
-      <view wx:if="{{templateAdoptionError}}" class="node-card__value">
-        <text>{{templateAdoptionError}}</text>
-        <view bindtap="inspectAdoptedTemplates" aria-role="button" aria-label="查看我的玩法" class="node-pill">查看我的玩法</view>
-      </view>
+      <cy-inline-error wx:if="{{templateAdoptionError}}" kind="error" title="{{templateAdoptionError}}" action="查看我的玩法" bind:action="inspectAdoptedTemplates" />
       <view class="temp-seg">
         <text class="temp-seg__tit">公共玩法库</text>
         <text class="temp-seg__sub" wx:if="{{publicTempState === 'loading'}}">加载中…</text>

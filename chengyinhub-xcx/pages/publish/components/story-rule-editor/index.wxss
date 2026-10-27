@@ -1,9 +1,8 @@
 .rules { margin-top: 16rpx; color: var(--cy-color-text-primary); font-size: var(--cy-type-body); }
-.rules__toggle, .rules button { font-size: var(--cy-type-label); color: var(--cy-color-text-primary); background: transparent; margin: 8rpx 0; }
+.rules__toggle, .rules__btn { font-size: var(--cy-type-label); color: var(--cy-color-text-primary); background: transparent; margin: 8rpx 0; }
 .rules__hint { display: block; color: var(--cy-color-text-secondary); line-height: 1.6; font-size: var(--cy-type-label); }
 .rules__row { border-left: 2rpx solid var(--cy-color-border-subtle); padding: 16rpx; margin-top: 16rpx; }
 .rules__depth-1 { margin-left: 16rpx; } .rules__depth-2 { margin-left: 32rpx; } .rules__depth-3 { margin-left: 48rpx; }
-.rules__select, .rules input { min-height: 72rpx; line-height: 72rpx; border-bottom: 1rpx solid var(--cy-color-border-subtle); }
+.rules__select, .rules__input { min-height: 72rpx; line-height: 72rpx; border-bottom: 1rpx solid var(--cy-color-border-subtle); }
 .rules__field { margin: 12rpx 0; }
-.rules__error { display: block; color: var(--cy-color-status-danger); }
 .rules__actions { display: flex; gap: 16rpx; }

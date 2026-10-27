@@ -6,6 +6,7 @@
   "enablePullDownRefresh": true,
   "usingComponents": {
     "cy-nav-bar": "/components/cy/nav-bar/index",
+    "cy-inline-error": "/components/cy/inline-error/index",
     "cy-modal-host": "/components/cy/modal-host/index",
     "cy-icon": "/components/cy/icon/index",
     "cy-page-title": "/components/cy/page-title/index",
