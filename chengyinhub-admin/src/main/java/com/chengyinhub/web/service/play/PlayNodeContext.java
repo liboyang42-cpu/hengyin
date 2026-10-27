@@ -101,13 +101,18 @@ public class PlayNodeContext {
         return topicRouteRuntimeService.nodeAnswers(memberId, topicId, activityId, nodeId);
     }
 
-    /** 写命令只消费入口已锁定的原个人局；旧局缺答案不能补当前作者模板。 */
+    /**
+     * 写命令只消费入口已锁定的原个人局；有答案冻结的局缺答案不能补当前作者模板。
+     * D1:答案冻结上线前开的老个人局(快照无 nodeAnswers 键)返回 null,回退当前模板继续玩。
+     */
     public com.fasterxml.jackson.databind.JsonNode frozenAnswer(Long memberId, Long topicId,
             Long activityId, Long nodeId, PlayOriginalRun originalRun) {
         if (originalRun == null) return frozenAnswer(memberId, topicId, activityId, nodeId);
         if (originalRun.session() != null) {
+            String snapshotJson = originalRun.session().getConfigSnapshotJson();
+            if (com.chengyinhub.business.service.support.NodeJourneySnapshot.predatesAnswerFreeze(snapshotJson)) return null;
             com.fasterxml.jackson.databind.JsonNode answer = com.chengyinhub.business.service.support.NodeJourneySnapshot
-                    .answer(originalRun.session().getConfigSnapshotJson(), nodeId);
+                    .answer(snapshotJson, nodeId);
             return answer == null ? com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.objectNode() : answer;
         }
         if (!originalRun.hasRuntime()) return null;

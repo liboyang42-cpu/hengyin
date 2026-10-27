@@ -305,6 +305,20 @@ class JourneyPublishFreezeTest {
         assertEquals(200, result.get("code"), "老局快照没有冻结键时必须回退实时模板");
     }
 
+    /** D1 反向口径:快照有 nodeAnswers 键(冻结后开的局)即使缺本节点也不得回退实时模板。 */
+    @Test
+    void frozenRunMissingNodeAnswerNeverFallsBackToLiveTemplate() throws Exception {
+        startRun();
+        ObjectNode snapshot = (ObjectNode) JSON.readTree(stored[0].getConfigSnapshotJson());
+        snapshot.putObject(NodeJourneySnapshot.NODE_ANSWERS_KEY);
+        stored[0].setConfigSnapshotJson(JSON.writeValueAsString(snapshot));
+        template.setQuestionAnswer("修订答案");
+
+        AjaxResult result = BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "修订答案", null, null, null);
+
+        assertEquals(500, result.get("code"), "有答案冻结的局缺节点答案时必须拒绝,不得按当前模板判定");
+    }
+
     /** 完成方式闸(反作弊:答题节点不得用「到达」绕过)按开局快照判定。 */
     @Test
     void arriveGateUsesValidationMethodFrozenAtRunStart() {

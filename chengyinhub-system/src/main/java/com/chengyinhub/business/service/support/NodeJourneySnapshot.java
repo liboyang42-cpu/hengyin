@@ -377,6 +377,20 @@ public final class NodeJourneySnapshot {
         return frozenBlock(frozen, nodeId);
     }
 
+    /**
+     * D1(2026-10-27):答案冻结上线前开的老个人局 —— 快照可解析且整份没有 nodeAnswers 键。
+     * 只有这种局允许回退当前模板答案;键在(哪怕缺本节点)或快照不可解析都不是老局,不得回退。
+     */
+    public static boolean predatesAnswerFreeze(String configSnapshotJson) {
+        if (configSnapshotJson == null) return false;
+        try {
+            JsonNode snapshot = JSON.readTree(configSnapshotJson);
+            return snapshot != null && snapshot.isObject() && !snapshot.has(NODE_ANSWERS_KEY);
+        } catch (Exception unusableSnapshot) {
+            return false;
+        }
+    }
+
     private static JsonNode frozenBlock(JsonNode frozen, Long nodeId) {
         JsonNode block = frozen.get(String.valueOf(nodeId));
         if (block != null && block.isObject()) return block;
