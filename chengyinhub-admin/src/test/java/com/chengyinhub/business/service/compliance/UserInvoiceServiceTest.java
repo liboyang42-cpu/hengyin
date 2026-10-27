@@ -311,6 +311,8 @@ class UserInvoiceServiceTest {
 
     @Test
     void titleSaveReceiptIsOwnerBoundAndNeverExposesPayloadFingerprintOrPii() {
+        // MyBatis yields null for another member's absent receipt row; Mockito's default would be an empty map.
+        when(mapper.selectTitleReceipt(anyLong(), anyString())).thenReturn(null);
         when(mapper.selectTitleReceipt(ME, "title-request")).thenReturn(Map.of(
                 "requestId", "title-request", "titleId", Long.MAX_VALUE, "fingerprint", "PRIVATE_FINGERPRINT"));
         assertEquals(Map.of("requestId", "title-request", "titleId", Long.toString(Long.MAX_VALUE), "status", "SAVED"),

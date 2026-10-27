@@ -29,6 +29,8 @@ class UserInvoiceProcessingServiceTest {
         when(processing.lockProcessing(Long.MAX_VALUE)).thenReturn(state);
         when(processing.scope(Long.MAX_VALUE,901L)).thenReturn(state);
         when(processing.scopeRead(Long.MAX_VALUE,901L)).thenReturn(state);
+        // MyBatis resultType=map yields null for an absent audit row; Mockito's default would be an empty map.
+        when(processing.receipt(anyLong(),anyLong(),anyString())).thenReturn(null);
         UserInvoiceOrderLine line=new UserInvoiceOrderLine(); line.setOrderId(1L);
         when(invoices.selectOrderLines(Long.MAX_VALUE)).thenReturn(List.of(line));
         CmsRegistration row=new CmsRegistration(); row.setId(1L); row.setPaymentStatus(2); row.setRegistrationStatus(2);
