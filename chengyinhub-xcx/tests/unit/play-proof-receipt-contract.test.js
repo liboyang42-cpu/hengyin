@@ -201,8 +201,9 @@ test('答错(业务失败)仍走 failed，不冒充 unknown', async () => {
 });
 
 test('★后端必须下发 gameDone —— 没有它答题就没有权威回读', () => {
+  // /api/play/nodes 的节点投影已从 ApiPlayProgressController 下沉到 PlayNodeQueryApplication。
   const controller = require('node:fs').readFileSync(
-    require('node:path').join(__dirname, '../../../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java'),
+    require('node:path').join(__dirname, '../../../chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayNodeQueryApplication.java'),
     'utf8');
   assert.match(controller, /m\.put\("gameDone"/,
     '/api/play/nodes 不下发 gameDone 时，前端只能靠重发写请求去试探结果');

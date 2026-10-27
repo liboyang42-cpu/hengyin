@@ -3,7 +3,10 @@ const assert = require('node:assert/strict');
 let page;
 const requests = [];
 global.getApp = () => ({ globalData: {}, sendRequest: options => {
-  requests.push(options); options.success({ code: 200, data: {} });
+  requests.push(options);
+  // 基础写入缺原局身份时先读 /api/play/action-context 绑定原局，再发真正的完成请求。
+  options.success(options.url === '/api/play/action-context'
+    ? { code: 200, data: { routeSessionId: '77', expectedRouteVersion: 3 } } : { code: 200, data: {} });
 } });
 global.wx = { getStorageSync: () => null,
   getSystemInfoSync: () => ({ windowWidth: 375, statusBarHeight: 20 }),
@@ -77,7 +80,9 @@ test('六种节点完成入口先同步伏笔，再用同步后的版本提交',
       _routeWritePayload(action, nodeId, payload) {
         assert.equal(action, kind);
         assert.equal(this._routeState.version, 4, '完成请求不能提前生成旧版本');
-        return Object.assign({}, payload, { expectedRouteVersion: this._routeState.version });
+        const body = Object.assign({}, payload, { expectedRouteVersion: this._routeState.version });
+        Object.defineProperty(body, '_bindRouteContext', { value: fields => Object.assign(body, fields) });
+        return body;
       },
       setData(patch) { for (const [key, value] of Object.entries(patch)) {
         const parts = key.split('.'); let target = this.data;
@@ -90,8 +95,9 @@ test('六种节点完成入口先同步伏笔，再用同步后的版本提交',
     submit(p);
     assert.equal(requests.length, before, '同步完成前不得发出节点完成请求');
     await new Promise(setImmediate);
-    assert.equal(requests.length, before + 1, kind);
-    assert.equal(requests[before].data.expectedRouteVersion, 4);
+    const writes = requests.slice(before).filter(r => r.url !== '/api/play/action-context');
+    assert.equal(writes.length, 1, kind);
+    assert.equal(writes[0].data.expectedRouteVersion, 4);
   }
 });
 
