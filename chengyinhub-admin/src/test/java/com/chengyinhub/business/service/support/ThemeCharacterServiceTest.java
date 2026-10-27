@@ -211,7 +211,7 @@ class ThemeCharacterServiceTest {
     }
 
     @Test
-    void runningDefinitionsStayWithTheSessionAfterTheAuthorEditsRulesAndRegistry() {
+    void runWithoutCompleteFrozenDefinitionDisplaysCurrentRegistryAfterAuthorEdits() {
         TopicRouteSession running = frozenSession(RULES);
         when(sessions.selectHistoryPage(eq(MEMBER), eq(TOPIC), isNull(), eq(1)))
                 .thenReturn(Collections.singletonList(running));
@@ -226,19 +226,18 @@ class ThemeCharacterServiceTest {
 
         Map<String, Object> after = service.card(MEMBER, TOPIC);
 
-        assertEquals(before, after, "作者修改不能改变运行局的定义、hidden、范围或数值");
-        assertEquals("SESSION_SNAPSHOT_PARTIAL", after.get("definitionSource"));
-        assertEquals("2", after.get("configVersion"), "使用局配置版本，不用主题发布版本或 state CAS version");
-        assertEquals(2, rows(after).size());
-        assertEquals("力量", rows(after).get(0).get("label"));
-        assertEquals(7, rows(after).get(0).get("value"));
-        assertEquals(20, rows(after).get(0).get("max"));
-        assertEquals(10, rows(after).get(1).get("value"), "数值按冻结定义夹取，不按作者最新范围");
-        assertEquals(10, rows(after).get(1).get("max"));
-        assertNull(rows(after).get(0).get("persistScope"), "生产者未冻结的元数据不能冒充已知");
-        assertNull(rows(after).get(0).get("displayType"));
-        assertTrue(((List<?>) after.get("definitionMissingFields")).contains("stateKeys.visible"));
-        verifyNoInteractions(keys);
+        // D3(2026-10-27 用户决策):本局没有完整冻结定义时,属性定义按当前注册表展示(仅展示)。
+        assertEquals("LEGACY_LIVE", before.get("definitionSource"));
+        assertEquals(Arrays.asList("专注", "力量"), Arrays.asList(rows(before).get(0).get("label"), rows(before).get(1).get("label")));
+        assertEquals("LEGACY_LIVE", after.get("definitionSource"));
+        assertNull(after.get("configVersion"), "局版本不能给实时定义背书");
+        assertEquals(1, rows(after).size());
+        assertEquals("新版注册名", rows(after).get(0).get("label"));
+        assertEquals(2, rows(after).get(0).get("value"), "本局运行值按当前注册表范围夹取展示");
+        assertEquals(2, rows(after).get(0).get("max"));
+        assertEquals("run", rows(after).get(0).get("persistScope"));
+        assertEquals("number", rows(after).get(0).get("displayType"));
+        verify(keys, org.mockito.Mockito.times(2)).selectByTopicId(TOPIC);
         verify(characters, org.mockito.Mockito.times(2)).selectByMemberAndTopic(MEMBER, TOPIC);
         verify(sessions, org.mockito.Mockito.times(2)).selectHistoryPage(MEMBER, TOPIC, null, 1);
         verify(topics, org.mockito.Mockito.times(3)).selectCmsTopicById(TOPIC);
@@ -283,7 +282,7 @@ class ThemeCharacterServiceTest {
     }
 
     @Test
-    void partialSnapshotNeverPublishesUnknownVisibilityOrRangeAndNeverReadsAuthorRegistry() {
+    void partialSnapshotDisplaysCurrentRegistryDefinitions() {
         TopicRouteSession partial = frozenSession(RULES);
         partial.setConfigSnapshotJson("{\"journeyRules\":{\"schemaVersion\":1,\"stateEnabled\":true,\"attributes\":["
                 + "{\"key\":\"counter.str\",\"label\":\"未知可见性\",\"initial\":3,\"min\":0,\"max\":20},"
@@ -294,15 +293,16 @@ class ThemeCharacterServiceTest {
 
         Map<String, Object> card = service.card(MEMBER, TOPIC);
 
-        assertEquals("SESSION_SNAPSHOT_PARTIAL", card.get("definitionSource"));
-        assertTrue(rows(card).isEmpty(), "缺字段不能由 normalize 默认值变成公开定义");
-        assertTrue(((List<?>) card.get("definitionMissingFields")).contains("journeyRules.attributes.visible"));
-        assertTrue(((List<?>) card.get("definitionMissingFields")).contains("journeyRules.attributes.min"));
-        verifyCardReadsOnly(false);
+        assertEquals("LEGACY_LIVE", card.get("definitionSource"));
+        assertEquals("专注", rows(card).get(0).get("label"), "定义取当前注册表,不取残缺快照的标签");
+        assertEquals(10, rows(card).get(0).get("value"));
+        assertEquals(7, rows(card).get(1).get("value"));
+        assertEquals(2, rows(card).size(), "注册表隐藏键仍不上卡");
+        verifyCardReadsOnly(true);
     }
 
     @Test
-    void malformedExistingSnapshotDoesNotFallBackToLatestAuthorDefinitions() {
+    void malformedExistingSnapshotDisplaysCurrentRegistryDefinitions() {
         TopicRouteSession invalid = frozenSession(RULES);
         invalid.setConfigVersion(null);
         invalid.setConfigSnapshotJson("{\"journeyRules\":{\"attributes\":null}}");
@@ -311,24 +311,23 @@ class ThemeCharacterServiceTest {
 
         Map<String, Object> card = service.card(MEMBER, TOPIC);
 
-        assertEquals("SESSION_SNAPSHOT_PARTIAL", card.get("definitionSource"));
+        assertEquals("LEGACY_LIVE", card.get("definitionSource"));
         assertNull(card.get("configVersion"));
-        assertTrue(rows(card).isEmpty());
-        assertTrue(((List<?>) card.get("definitionMissingFields")).contains("journeyRules.attributes"));
-        verifyCardReadsOnly(false);
+        assertEquals(2, rows(card).size());
+        verifyCardReadsOnly(true);
     }
 
     @Test
-    void frozenEmptyAttributesDoNotPickUpNewLiveDefinitions() {
+    void frozenEmptyAttributesWithoutDefinitionDisplayCurrentRegistry() {
         TopicRouteSession empty = frozenSession("{\"schemaVersion\":1,\"stateEnabled\":true,\"attributes\":[]}");
         when(sessions.selectHistoryPage(eq(MEMBER), eq(TOPIC), isNull(), eq(1)))
                 .thenReturn(Collections.singletonList(empty));
 
         Map<String, Object> card = service.card(MEMBER, TOPIC);
 
-        assertEquals("SESSION_SNAPSHOT_PARTIAL", card.get("definitionSource"));
-        assertTrue(rows(card).isEmpty(), "已冻结空数组与旧局没有属性快照不同");
-        verifyCardReadsOnly(false);
+        assertEquals("LEGACY_LIVE", card.get("definitionSource"));
+        assertEquals(2, rows(card).size());
+        verifyCardReadsOnly(true);
     }
 
     @Test
@@ -338,8 +337,10 @@ class ThemeCharacterServiceTest {
         topic.setMemberId(OWNER);
         topic.setPublishedConfigVersion(Long.MAX_VALUE);
         when(topics.selectCmsTopicById(Long.MAX_VALUE)).thenReturn(topic);
-        TopicRouteSession running = frozenSession(RULES);
+        TopicRouteSession running = carrySession(42L, 8, TopicRouteSession.STATUS_RUNNING, "{}");
         running.setConfigVersion(Long.MAX_VALUE);
+        running.setConfigSnapshotJson(definitionSnapshot("topic", 20)
+                .replace("\"configVersion\":\"3\"", "\"configVersion\":\"9223372036854775807\""));
         when(sessions.selectHistoryPage(eq(MEMBER), eq(Long.MAX_VALUE), isNull(), eq(1)))
                 .thenReturn(Collections.singletonList(running));
 
@@ -354,7 +355,7 @@ class ThemeCharacterServiceTest {
     }
 
     @Test
-    void invalidFrozenIntegerRangesNeverReachTheCard() {
+    void invalidFrozenIntegerRangesNeverReachTheCardAndRegistryIsShownInstead() {
         TopicRouteSession invalid = frozenSession(RULES);
         when(sessions.selectHistoryPage(eq(MEMBER), eq(TOPIC), isNull(), eq(1)))
                 .thenReturn(Collections.singletonList(invalid));
@@ -367,10 +368,10 @@ class ThemeCharacterServiceTest {
 
             Map<String, Object> card = service.card(MEMBER, TOPIC);
 
-            assertEquals("SESSION_SNAPSHOT_PARTIAL", card.get("definitionSource"));
-            assertTrue(rows(card).isEmpty(), "原始整数溢出或 min>max 时不能生成角色卡属性");
+            assertEquals("LEGACY_LIVE", card.get("definitionSource"));
+            assertEquals(Arrays.asList(10, 20), Arrays.asList(rows(card).get(0).get("max"), rows(card).get(1).get("max")),
+                    "原始整数溢出或 min>max 的冻结范围不能进卡,只按注册表范围展示");
         }
-        verifyNoInteractions(keys);
         verify(characters, never()).updateIfNewer(any(ThemeCharacter.class));
         verify(characters, never()).insertIfAbsent(any(ThemeCharacter.class));
     }
@@ -497,7 +498,7 @@ class ThemeCharacterServiceTest {
     }
 
     @Test
-    void unsupportedOrIncompleteDefinitionRemainsPartialWithoutLiveFallback() {
+    void unsupportedOrIncompleteDefinitionDisplaysCurrentRegistry() {
         for (String snapshot : Arrays.asList(definitionSnapshot("topic", 20).replace("\"schemaVersion\":1", "\"schemaVersion\":2"),
                 definitionSnapshot("topic", 20).replace(",\"persistScope\":\"topic\"", ""),
                 definitionSnapshot("topic", 20).replace("\"configVersion\":\"3\"", "\"configVersion\":\"4\""))) {
@@ -505,11 +506,12 @@ class ThemeCharacterServiceTest {
             previous.setConfigSnapshotJson(snapshot);
             when(sessions.selectHistoryPage(MEMBER, TOPIC, null, 1)).thenReturn(Collections.singletonList(previous));
             Map<String, Object> card = service.card(MEMBER, TOPIC);
-            assertEquals("SESSION_SNAPSHOT_PARTIAL", card.get("definitionSource"));
-            assertTrue(rows(card).isEmpty());
+            assertEquals("LEGACY_LIVE", card.get("definitionSource"));
+            assertEquals(2, rows(card).size());
             assertNull(card.get("configVersion"));
         }
-        verifyNoInteractions(keys);
+        verify(characters, never()).updateIfNewer(any(ThemeCharacter.class));
+        verify(characters, never()).insertIfAbsent(any(ThemeCharacter.class));
     }
 
     private static String definitionSnapshot(String persist, int max) {
