@@ -108,7 +108,8 @@ function assertHistoryOpenBehavior(method) {
   }, { currentTarget: { dataset: { ts: timestamp } } })
   assert.deepEqual(emitted, {
     name: 'open',
-    detail: { id: 'roam-session', params: { ts: timestamp } },
+    // W8 起服务端记录行另带 sessionId;本机记录行 sessionId 为空串,ts 仍是原始毫秒
+    detail: { id: 'roam-session', params: { ts: timestamp, sessionId: '' } },
   }, 'RunCard 必须把原始毫秒 ts 完整压入 roam-session 子场景')
 }
 
