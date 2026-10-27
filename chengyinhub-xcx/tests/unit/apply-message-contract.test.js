@@ -32,13 +32,15 @@ test('P5 申请人行:applyMessage 出引号留言,空/缺省不出话', () => {
 
 test('申请动作弹可选留言输入(≤200),提交时才带上 message;取消不发请求', () => {
   assert.match(NEARBY_JS, /require\('\.\.\/\.\.\/utils\/modal\.js'\)/)
-  const apply = NEARBY_JS.slice(NEARBY_JS.indexOf('  apply() {'), NEARBY_JS.indexOf('  _applyErrorToCard('))
+  const apply = NEARBY_JS.slice(NEARBY_JS.indexOf('  apply() {'), NEARBY_JS.indexOf('  withdraw(teamId'))
   assert.match(apply, /modal\.show\(\{/, '申请必须走弹层(不再一键直发)')
   assert.match(apply, /editable: true/)
   assert.match(apply, /maxlength: 200/, '前端限长与后端 200 字口径一致')
-  assert.match(apply, /if \(!r\.confirm\) return;/, '取消不能发申请')
+  // W8 起确认回调里同时挡掉作用域已变(换号/切队伍/离页)的晚回包:取消仍是第一道闸
+  assert.match(apply, /if \(!r\.confirm \|\| !current\(\) \|\| that\._hidden\) return;/, '取消不能发申请')
   assert.match(apply, /if \(message\) body\.message = message;/, '空留言不发 message,有留言才带')
-  assert.match(apply, /'\/api\/team\/apply'/, '仍走原申请端点')
+  // W8 起申请走持久化队伍命令(POST /api/team/command,action=apply,后端 TeamEventCommandService → teams.apply)
+  assert.match(apply, /teamRecovery\.manager\(that, app, wx\)\.start\(body\.teamId, 'apply', \{ message: message \|\| null \}\)/, '仍走申请动作,留言随命令带上')
   assert.match(NEARBY_WXML, /<cy-modal-host id="cy-modal-host" \/>/, '命令式弹窗需要宿主')
   assert.match(read('subpackageRoam/nearby/index.json'), /"cy-modal-host": "\/components\/cy\/modal-host\/index"/)
   assert.match(NEARBY_WXML, /wx:if="\{\{item\.messageText\}\}"/, 'P5 行必须有留言渲染位')
