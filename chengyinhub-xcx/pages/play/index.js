@@ -5394,6 +5394,9 @@ Page({
       this.setData({ 'sheet.show': false, chapterGameAnchor: '', advancedPlay: { show: true, node } });
       return;
     }
+    /* 玩法已通过、本站靠到达收尾(vm 0/5/8/9/10,与 onAdvancedReady 同一白名单):详情卡的「开始任务」
+       走到达,不进老任务页 —— 老任务页只写了 vm 1/2/3/4/6,这几个进去只剩标题与录音、零按钮。 */
+    if (node.hasAdvanced && [0, 5, 8, 9, 10].includes(Number(node.vm))) { this.onSheetGoTap(); return; }
     const chips = [];
     if (node.duration) chips.push({ ic: '⏱', v: node.duration });
     if (node.difficulty) chips.push({ ic: '◇', v: node.difficulty });

@@ -598,7 +598,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-24 上线合并(#563 bug 修复 + #508 业主 UI + #554 文案)并 master 后重建实测:2167 → 2173。
   // 2026-10-23 合 master:起名页 templateadd 退役 −1(#565)+ 撤销条「撤销」+1,tap 2173 → 2173(重建实测)。
   // 2026-10-24 官方据点照片与评价：重建实测 local tap +4；不添加业务验收证据。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2183)  /* 2026-10-25 地图底部横滑卡片(点卡 = 点列表行)+1,重建实测 2182 → 2183。 */  /* 2026-10-25 官方地点卡:相册图、小红书行、评分星、发布评价、取景卡等新增 tap,重建实测 2177 → 2182。 */  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2178)  /* 2026-10-27 陌生人实测修复(#610):玩法已通过的到达站「开始任务」改走到达(onSheetGoTap),5 个调 startGame 的点击因此可达定位 API、按 real-device-required 移出 local 分母,2183 → 2178(重建实测,待主人批准冻结数值)。 */  /* 2026-10-25 地图底部横滑卡片(点卡 = 点列表行)+1,重建实测 2182 → 2183。 */  /* 2026-10-25 官方地点卡:相册图、小红书行、评分星、发布评价、取景卡等新增 tap,重建实测 2177 → 2182。 */  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */

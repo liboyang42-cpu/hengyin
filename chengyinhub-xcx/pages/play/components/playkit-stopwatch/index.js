@@ -75,9 +75,13 @@ Component({
      而且一条错都不报 —— 掷骰子那屏踩过一次,查了很久才发现不是环境的问题。 */
   observers: {
     rewardCeiling(value) { this.setData({ rewardNote: rewardNote(value) }); },
-    'show, kicker, targetSeconds, toleranceMs, tries': function (show, kicker, target, tol) {
+    'show, kicker, targetSeconds, toleranceMs, tries': function (show, kicker, target, tol, tries) {
+      if (!show) { this._stop(); this._configSignature = ''; return; }
+      // 开表后服务端回流会把同值属性再赋一遍:配置没变就不重置台面(与 typein 的 _roundSignature 同口径)
+      const signature = JSON.stringify([kicker, target, tol, tries]);
+      if (signature === this._configSignature) return;
+      this._configSignature = signature;
       this._stop();
-      if (!show) return;
       this.setData({
         phase: 'intro', big: '0.00', hidden: false, timeText: '00:00.00',
         cap: CAP_ON, round: 1,
@@ -180,6 +184,6 @@ Component({
     },
 
     onVerdict(e) { this.triggerEvent('verdict', e.detail); },
-    onClose() { this._stop(); this.triggerEvent('close'); },
+    onClose() { this._stop(); this._configSignature = ''; this.triggerEvent('close'); },
   },
 });
