@@ -213,7 +213,10 @@ class PlayLeadAdmissionFailureTest {
         var response = BasicPlayCommandFixtures.sensorResult(controller, request);
         assertEquals(500, response.get("code"));
         assertEquals("队伍集合中,等队长开始行程", response.get("msg"));
-        assertFalse(response.containsKey("intentTerminal"));
+        // 命令体内的业务拒绝是已执行意图的终态(PlayBasicIntentApplication 落 FAILED 回执并标 intentTerminal);
+        // 客户端(pages/play/index.js req.settle)把既无 intentTerminal 也无 intentNotExecuted 的基础命令
+        // 响应当成结果未知。异常回滚路径(见 reject)才不带终态标记。
+        assertEquals(Boolean.TRUE, response.get("intentTerminal"));
         verify(leads).selectByActivity(500L);
         verifyNoInteractions(routes, sensors, proof, progress, points, ledger, growth, drops, progression,
                 coupons, completionAwards, attempts);
