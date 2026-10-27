@@ -583,11 +583,11 @@ class WholeOrderRefundTest {
         CmsRegistration solo = reg(6L, "R006", "0.00", "0.00");
         solo.setPointUsed(100L);
         when(regMapper.selectCmsRegistrationById(6L)).thenReturn(solo);
-        when(regMapper.selectCmsRegistrationByIdForUpdate(6L)).thenReturn(solo);
         when(regMapper.claimRegistrationRefunded(eq(6L), anyString(), any(Date.class))).thenReturn(0);
         CmsRegistration verifiedNow = reg(6L, "R006", "0.00", "0.00");
         verifiedNow.setVerificationStatus(1);
-        when(regMapper.selectCmsRegistrationByIdForUpdate(6L)).thenReturn(verifiedNow);
+        // 入口锁内读仍未核销；claim 输给并发核销后的复读才看到已核销。
+        when(regMapper.selectCmsRegistrationByIdForUpdate(6L)).thenReturn(solo, verifiedNow);
 
         RuntimeException e = org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class,
                 () -> service.cancelPaidRegistration(6L, MEMBER_ID));
