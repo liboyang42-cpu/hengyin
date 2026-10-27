@@ -230,6 +230,7 @@ chengyinhub-xcx/subpackageMember/coupon/coupon.js 1  # BL-77:券统计卡是辅�
 # 2026-10-19 Claude 小程序线移植到 master(claude/mini-ui-on-master-20261019):本线新增的静默调用逐处实名登记,不动 BASELINE_TOTAL 与任何 UNREVIEWED 额度。
 chengyinhub-xcx/pages/roam/index.js 1  # BL-70 漫游商家横滑卡打卡头像堆(/api/roam/shop/visitors):头像堆只是附加信息,失败或迟到回包一律不动卡片,不挡「去这儿」;关全局 toast 免打扰
 chengyinhub-xcx/pages/roam/index.js 1  # BL-41 护照「官方活动」大卡读可参与的漫游官方活动(/api/official/active-for-roam):读不到时卡片保持原文案与原行为,不弹 toast
+chengyinhub-xcx/pages/roam/index.js 1  # 2026-10-27 P-29 护照「勋章墙」方卡读最新点亮勋章图(/api/medal/wall):只为方卡换一张图,读不到就保持业主空态插画,页面没有可给的重试动作,不弹 toast
 chengyinhub-xcx/pages/club/topic-detail/index.js 1  # BL-98 报名人数按日趋势:失败落 trendState=error,后端原因(如 403 无权查看)原样回显在趋势区块;seq 只认最后一次回包,关全局 toast 免双弹
 chengyinhub-xcx/pages/merchant/decor/index.js 1  # BL-141 营业状态写后回读:回读不到或与提交值不一致都按保存失败处理,由 _startSave 回滚开关并给重试提示;关全局 toast 免双弹
 chengyinhub-xcx/pages/merchant/index/index.js 1  # BL-141 营业状态写后回读:回读不到或不一致明确 toast「状态未同步…」并以回读值为准;关全局 toast 免双弹
