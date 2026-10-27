@@ -32,7 +32,10 @@ let uploads, requests, toasts, media, lastOperation, reviewModal;
 const app = { getUserID: () => 99, globalData: { features: {} }, isDevEnv: () => false };
 global.getApp = () => app;
 global.Behavior = value => value;
-global.wx = { getStorageSync: () => '', getWindowInfo: () => ({ statusBarHeight: 20 }),
+// advanced-game 写动作前把原请求身份落盘(advanced-original:*)，回执确认后才删除。
+let storage = {};
+global.wx = { getStorageSync: key => storage[key] || '', setStorageSync: (key, value) => { storage[key] = value; },
+  removeStorageSync: key => { delete storage[key]; }, getWindowInfo: () => ({ statusBarHeight: 20 }),
   getSystemInfoSync: () => ({ statusBarHeight: 20 }), showLoading() {}, hideLoading() {},
   showToast: options => toasts.push(options.title), hideToast() {}, vibrateShort() {},
   showModal: () => { assert.fail('相册审核确认必须经 house modal 宿主'); },
@@ -62,7 +65,7 @@ function component(def, props) {
     setData, selectComponent: () => null });
 }
 beforeEach(() => {
-  uploads = []; requests = []; toasts = []; media = null; reviewModal = null;
+  uploads = []; requests = []; toasts = []; media = null; reviewModal = null; storage = {};
   global.getCurrentPages = () => [{ selectComponent: id => id === '#cy-modal-host'
     ? { open: options => { reviewModal = options; } } : null }];
   app.sendRequest = options => { requests.push(options); };
@@ -281,17 +284,21 @@ test('相册：原证据被拒后可重新选择照片，不被重试按钮锁�
   assert.equal(page._kit().done, false);
 });
 
-test('相册：共享会话未知结果沿既有通道重放本人原命令，禁止再传照片', async () => {
+test('相册：共享会话未知结果只读本人原命令回执，禁止再传照片', async () => {
   const view = albumView(); view.ownerType = 2;
   const { page, game, album } = setup(view);
   choose(album); uploadSuccess(); requests[0].fail({}); await tick();
   assert.equal(game.data.unknown, true);
   assert.equal(requests.length, 2);
-  assert.deepEqual(JSON.parse(requests[1].data), JSON.parse(requests[0].data));
+  // 所有局的未知结果都只按原请求号读 /api/play/advanced/receipt，不重放写入。
+  const original = JSON.parse(requests[0].data);
+  assert.equal(requests[1].url, '/api/play/advanced/receipt');
+  assert.equal(requests[1].method, 'GET');
+  assert.deepEqual(requests[1].data, { sessionId: original.sessionId, idempotencyKey: original.idempotencyKey });
   page.onPlayKitAction({ detail: { type: 'album', action: 'shoot', detail: { tempFilePath: '/tmp/again.jpg' } } });
   assert.equal(uploads.length, 1);
   const done = albumView(true); done.ownerType = 2;
-  requests[1].success({ code: 200, data: done }); await tick();
+  requests[1].success({ code: 200, data: { sessionId: String(original.sessionId), idempotencyKey: original.idempotencyKey, view: done } }); await tick();
   assert.equal(game.data.unknown, false);
   assert.equal(page._kit().done, true);
 });
