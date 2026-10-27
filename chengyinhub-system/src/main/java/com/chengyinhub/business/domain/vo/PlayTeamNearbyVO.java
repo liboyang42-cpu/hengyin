@@ -39,6 +39,8 @@ public class PlayTeamNearbyVO {
     /** NONE / PENDING / JOINED / LEADER / REJECTED(被拒或被移出,不能再申请)。 */
     private String viewerStatus;
     private Boolean viewerHasTicket;
+    /** 仅 viewerStatus=PENDING 时为本人申请的失效时刻 = min(申请+24h, 场次开始);其他恒 null。 */
+    private Date applyExpireTime;
     /** 仅队长本人可见的待审申请数;其他人恒 null。 */
     private Integer pendingCount;
 
@@ -90,6 +92,8 @@ public class PlayTeamNearbyVO {
     public void setViewerStatus(String viewerStatus) { this.viewerStatus = viewerStatus; }
     public Boolean getViewerHasTicket() { return viewerHasTicket; }
     public void setViewerHasTicket(Boolean viewerHasTicket) { this.viewerHasTicket = viewerHasTicket; }
+    public Date getApplyExpireTime() { return applyExpireTime; }
+    public void setApplyExpireTime(Date applyExpireTime) { this.applyExpireTime = applyExpireTime; }
     public Integer getPendingCount() { return pendingCount; }
     public void setPendingCount(Integer pendingCount) { this.pendingCount = pendingCount; }
 }

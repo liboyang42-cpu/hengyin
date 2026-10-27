@@ -684,6 +684,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                         when viewer_row.status = 0 and viewer_row.apply_expire_time &gt; #{now} then 'PENDING'
                         when viewer_row.status in (3, 4) then 'REJECTED'
                         else 'NONE' end as viewerStatus,
+                   case when t.leader_member_id &lt;&gt; #{viewerMemberId} and viewer_row.status = 0
+                         and viewer_row.apply_expire_time &gt; #{now} then viewer_row.apply_expire_time end as applyExpireTime,
                    exists (select 1 from cms_registration viewer_ticket
                             where viewer_ticket.member_id = #{viewerMemberId}
                               and viewer_ticket.owner_type = 2 and viewer_ticket.owner_id = a.id
