@@ -1071,7 +1071,9 @@ page { background: var(--cy-bg-page); }
   gap: var(--cy-space-2-5);
   min-height: 88rpx;
   margin: 0 var(--cy-page-x) var(--cy-space-4);
-  /* 2026-10-27 P-16:普通列表行,不要灰底圆角条 */
+  padding: 0 var(--cy-space-3-5);
+  border-radius: var(--cy-radius-lg);
+  background: var(--cy-color-bg-surface-strong);
   color: var(--cy-color-text-primary);
 }
 .ov-badge-entry-text { flex: 1; min-width: 0; font-size: var(--cy-font-label); font-weight: 600; }
@@ -1083,8 +1085,9 @@ page { background: var(--cy-bg-page); }
   flex-direction: column;
   align-items: center;
   gap: 6rpx; /* ds-ok: Figma gap3 */
-  /* 2026-10-27 P-16 owner:去掉灰色圆角底块,一行三列纯文字 */
-  padding: var(--cy-space-1) 0;
+  padding: var(--cy-space-3) var(--cy-space-2-5) var(--cy-space-3) var(--cy-space-3-5);
+  border-radius: var(--cy-radius-lg);
+  background: var(--cy-color-bg-surface-strong);
 }
 .ov-fact-value {
   max-width: 100%;

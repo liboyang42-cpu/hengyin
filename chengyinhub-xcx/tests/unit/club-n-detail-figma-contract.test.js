@@ -56,12 +56,17 @@ function assertContract(overrides = {}) {
 
   // —— Facts 三宫格(23:4)——
   assert.match(rule(wxss, '.ov-facts'), /display:\s*flex/)
-  assert.equal((wxml.match(/class="ov-fact"/g) || []).length, 3, '主理人 / 等级 / 所在城市 三格')
+  assert.equal((wxml.match(/class="ov-fact"/g) || []).length, 3, '主理人 / 俱乐部类型 / 所在城市 三格')
   assert.match(wxml, /class="ov-fact-value"[\s\S]{0,200}class="ov-fact-label"/, '值在上、标签在下')
-  // 2026-10-27 P-16 owner:三格与「俱乐部勋章」都不要灰色圆角底块;没有等级时整格不出
-  assert.doesNotMatch(rule(wxss, '.ov-fact'), /background|border-radius/, '三格不要灰底圆角块')
-  assert.doesNotMatch(rule(wxss, '.ov-badge-entry'), /background|border-radius/, '俱乐部勋章是普通列表行')
-  assert.match(wxml, /<view class="ov-fact" wx:if="\{\{club\.levelText\}\}">/, '没有等级时不显示这一项')
+  // 2026-10-27 P-16 owner 更正(原型批注,取代 L05 「去掉灰底」的旧读法):三格灰色圆角块与
+  //   「俱乐部勋章」灰条保持 master 原样;中间一格「等级」改为「俱乐部类型」,与头部元信息行同源。
+  assert.match(rule(wxss, '.ov-fact'), /border-radius:\s*var\(--cy-radius-lg\)/, '三格保留圆角块')
+  assert.match(rule(wxss, '.ov-fact'), /background:\s*var\(--cy-color-bg-surface-strong\)/, '三格保留灰底')
+  assert.match(rule(wxss, '.ov-badge-entry'), /border-radius:\s*var\(--cy-radius-lg\)/, '俱乐部勋章保留圆角灰条')
+  assert.match(rule(wxss, '.ov-badge-entry'), /background:\s*var\(--cy-color-bg-surface-strong\)/, '俱乐部勋章保留灰底')
+  assert.match(wxml, /<text class="ov-fact-value">\{\{club\.clubTypeText \|\| '—'\}\}<\/text>\s*<text class="ov-fact-label">俱乐部类型<\/text>/, '中间一格是俱乐部类型')
+  assert.doesNotMatch(wxml, /class="ov-fact-label">等级</, '三格里不再有「等级」')
+  assert.match(js, /club\.metaLine = club\.clubTypeText \+/, '头部元信息行与第二格同用 clubTypeText')
   // 2026-10-27 P-19 owner:治理与安全 / 封禁申诉只给主理人和管理员
   assert.match(wxml, /class="overview-section governance-help-entry" wx:if="\{\{club\.isOwner \|\| club\.viewerIsAdmin\}\}"/, '治理与安全只给主理人和管理员')
 

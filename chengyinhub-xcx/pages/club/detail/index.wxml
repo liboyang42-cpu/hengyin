@@ -210,16 +210,17 @@
     <view class="feed feed--plain ov cy-rise-in" wx:elif="{{activeTab === 'overview'}}">
       <text class="ov-intro">{{club.description || '暂无简介'}}</text>
 
-      <!-- Facts 三宫格(23:4):主理人 / 等级 / 所在城市 —— 原来是三个上下堆叠的 label+text 区块。
-           2026-10-27 P-16 owner:去掉灰色圆角底块,改成无底色的一行文字;没有等级时不显示这一项。 -->
+      <!-- Facts 三宫格(23:4):主理人 / 俱乐部类型 / 所在城市 —— 原来是三个上下堆叠的 label+text 区块。
+           2026-10-27 P-16 owner 更正(原型批注):三个灰色圆角块和「俱乐部勋章」灰条保持原样;
+           中间一格由「等级」改成「俱乐部类型」,取值与头部元信息行的类型同源(club.clubTypeText)。 -->
       <view class="ov-facts">
         <view class="ov-fact">
           <text class="ov-fact-value">{{club.leaderName || '—'}}</text>
           <text class="ov-fact-label">主理人</text>
         </view>
-        <view class="ov-fact" wx:if="{{club.levelText}}">
-          <text class="ov-fact-value">{{club.levelText}}</text>
-          <text class="ov-fact-label">等级</text>
+        <view class="ov-fact">
+          <text class="ov-fact-value">{{club.clubTypeText || '—'}}</text>
+          <text class="ov-fact-label">俱乐部类型</text>
         </view>
         <view class="ov-fact">
           <text class="ov-fact-value">{{club.city || club.address || '—'}}</text>
@@ -227,8 +228,7 @@
         </view>
       </view>
 
-      <!-- N2 俱乐部勋章只读入口:/api/club/badge/list 需登录,所以只给已加入成员与主理人;游客不显示。
-           2026-10-27 P-16 owner:不再是灰条,改成普通列表行。 -->
+      <!-- N2 俱乐部勋章只读入口:/api/club/badge/list 需登录,所以只给已加入成员与主理人;游客不显示。 -->
       <view class="ov-badge-entry" wx:if="{{club.isOwner || club.isJoined}}" catchtap="goClubBadges"
             aria-role="button" aria-label="查看俱乐部勋章" hover-class="cy-pressed" hover-stay-time="80">
         <cy-icon name="star" size="32" />
