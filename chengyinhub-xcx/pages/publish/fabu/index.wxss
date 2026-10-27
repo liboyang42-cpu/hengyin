@@ -1018,6 +1018,7 @@ page { background: var(--cy-btn-solid-bg); }
   height: 100%;
   display: block;
 }
+.slopes-icon-cv { position: absolute; width: 54px; height: 54px; left: -9999px; top: -9999px; } /* ds-ok 离屏画布,同 cy-free-map .iconcv */
 
 /* 状态栏保护层:.slopes-map-wrap 是 fixed top:0,地图瓦片直接铺到系统状态栏底下;
    状态栏前景是白字,压在浅色瓦片上就看不见。这里在状态栏区域盖一层由深到透明的 scrim。
@@ -2653,12 +2654,6 @@ page { background: var(--cy-btn-solid-bg); }
    --cy-comp-card-pad 叠加成双层内边距。 */
 /* 卡间距 24rpx → 32rpx(用户 2026-09-05:「主题详情下面卡片上下间距也松一点」)。
    下面的 .pd-modecards 用同一个值,两处必须一起改,不然卡列的节奏会一段紧一段松。 */
-/* 旧草稿归属待确认横幅:内容流里,不浮在章节卡/地图之上(L09) */
-.pd-legacy-banner {
-  display: block;
-  margin: 0 var(--cy-page-x) var(--cy-space-4);
-}
-
 .pd-entry-card {
   --cy-comp-card-pad: var(--cy-space-3) var(--cy-space-3-5);
   margin: 0 var(--cy-page-x) var(--cy-space-4);

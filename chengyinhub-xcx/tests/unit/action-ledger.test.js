@@ -839,6 +839,8 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-27 L02 弹层页面化与返回键先关弹层:共享弹层 / cy-back-guard 的 page-container bind:afterleave、scene-sheet page 档导航返回等事件合同,重建实测 2555 → 2565。
   // 2026-10-27 L03:主理人申请「已是商家」态 state-shell 的 primary/secondary 两个事件合同替掉原 cy-error 的 back 一个,净 +1,重建实测 2555 → 2556。
   // 2026-10-27 L05 俱乐部与帖文真机修复:撤掉俱乐部/广场页内发帖框与活动月历(含 activity-picker 挂载、cy-result-sheet 关闭),组件事件合同重建实测 2555 → 2545。
+  // 2026-10-27 devfix L07:快速配置失败卡重试 bind:action +1、编辑底栏发布 bind:disabledtap +1、预览左右滑动 touchstart/touchend +2;
+  //   删玩法详情 ⋯ 弹层 bind:close -1、主题编辑旧草稿横幅 bind:action -1。重建实测 2555 → 2557。
   assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2565)  /* 2026-10-15 PR10 复查:七处登录引导 cta/primary、口碑缺参返回 cta、modal-host 多行 bindinput 全是事件合同,+9(重建实测)。 */  /* F-L5C-06 帖文详情社区未开放空态新增返回 CTA,事件合同 +1(与 E2 合并后实测)。 */  /* F-W1-12 口碑管理登录失效可见态新增「重新登录」事件合同 +1。 */  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
   // 商家承接接入 cy-date-range-sheet 后新增 confirm / cancel 两条事件合同，1662 → 1664。
   // 合作页将会话失效与无权限拆为两个 cy-empty CTA，新增 goLogin / goWorkbench 两条事件合同，1664 → 1666。
@@ -1155,7 +1157,8 @@ test('批准稿控件差分保留草稿双分支与成长中心真实绑定及�
     if (!bindings.has(binding)) bindings.set(binding, [])
     bindings.get(binding).push(item)
   }
-  assert.equal(bindings.size, 2)
+  // 2026-10-27 P-40:玩家视角预览底部的「保存草稿」已按业主要求删除,只剩编辑态底栏这一处 saveDraft 绑定(原 2 → 1)
+  assert.equal(bindings.size, 1)
   for (const items of bindings.values()) {
     assert.equal(items.length, 2)
     assert.deepEqual(items.map(item => item.variant.id).sort(), ['citynode-unavailable', 'draft'])
@@ -1682,6 +1685,9 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 2026-10-27 L05 俱乐部与帖文真机修复(删月历、撤页内发帖框、帖文卡还原 #508 前版本等),重建实测 5141 → 5112。
   // 2026-10-27 L06 漫游真机修复:更多菜单删 7 行(P-31)、勋章墙去墙/列表两键(P-30)、结算页「查看漫游数据」改地图浮钮(P-34)、
   //   +迷雾开关(P-32)+搜索结果「导航」(P-32)+附近活动空态卡(P-26)+附近地图返回键/空态卡(P-38),重建实测 5141 → 5135。
+  // 2026-10-27 devfix L07(业主真机走查):玩法编辑预览删圆形箭头 2 + 「开始任务」1 + 底部保存/发布 2,
+  //   编辑态底栏补「发布」1、封面不可用就地替换 1(temp 净 -3);玩法详情删 ⋯ 与弹层 6、加分享 1 + 页末举报 2(净 -3);
+  //   主题编辑删旧草稿归属横幅与发布确认阻断行(-2);快速配置失败卡加重试(+1)。重建实测 5141 → 5134。
   assert.equal(ledger.controlCount, 5151)
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。

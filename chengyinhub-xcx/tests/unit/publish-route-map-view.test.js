@@ -139,3 +139,21 @@ test('★负控：模块不碰 this，也不调 wx', () => {
   assert.doesNotMatch(src, /\bwx\./, '纯函数模块不该调用 wx API');
   assert.doesNotMatch(src, /setData/, '纯函数模块不该自己 setData');
 });
+
+// 2026-10-27 P-45 / G-12:主题编辑器点位换成玩家地图同款圆点图钉;图标没画好时回落旧图钉
+test('P-45 传入圆点图标时:已配 = actionable、未配 = candidate、选中 = target,锚点居中;不传回落旧图钉', () => {
+  const icons = { actionable: 'tmp://a.png', candidate: 'tmp://c.png', target: 'tmp://t.png' };
+  const chapters = [{ _localId: 'c1', nodes: [
+    { _localId: 'n1', latitude: 31.2, longitude: 121.4, templateId: 3 },
+    { _localId: 'n2', latitude: 31.21, longitude: 121.41 },
+    { _localId: 'n3', latitude: 31.22, longitude: 121.42, templateId: 4 },
+  ] }];
+  const round = view.buildRouteMapView({ chapters, selectedNodeLid: 'n3', icons }).patch.mapMarkers;
+  assert.deepEqual(round.map(m => m.iconPath), ['tmp://a.png', 'tmp://c.png', 'tmp://t.png']);
+  assert.deepEqual(round[0].anchor, { x: 0.5, y: 0.5 });
+  assert.equal(round[0].label.content, '1', '序号仍在');
+  const legacy = view.buildRouteMapView({ chapters }).patch.mapMarkers;
+  assert.ok(legacy.every(m => m.iconPath === view.MAP_PIN && !m.anchor));
+  const fabuWxml = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../pages/publish/fabu/index.wxml'), 'utf8');
+  assert.match(fabuWxml, /subkey="\{\{mapSubkey\}\}"\s+layer-style="\{\{mapLayerStyle\}\}"/, '编辑器地图接统一样式');
+});

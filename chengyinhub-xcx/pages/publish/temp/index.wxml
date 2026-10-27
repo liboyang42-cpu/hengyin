@@ -73,6 +73,7 @@
         <view class="cg-hero-plus"><cy-icon name="plus" size="36" /></view>
         <view class="cg-hero-c1">上传玩法封面</view>
       </view>
+      <view class="cg-cover-unusable" wx:if="{{coverMediaUnusable}}" bindtap="uploadPic" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="原封面暂不可用，点按重新上传">原封面暂不可用，点按重新上传</view>
       <view class="cg-hero-body">
         <view class="cg-title-row">
           <text class="req" aria-hidden="true">*</text>
@@ -115,7 +116,7 @@
           <view class="cg-col">
             <view class="cg-label">商铺类型</view>
             <view class="cg-pick {{ formData.usageLocation ? '' : 'empty' }}" bindtap="openVenueSheet" hover-class="cy-pressed" hover-stay-time="80">
-              <text>{{ formData.usageLocation || '请选择' }}</text><view class="cg-caret"><cy-icon name="back" size="28" /></view>
+              <text class="cg-pick-text">{{ formData.usageLocation || '请选择' }}</text><view class="cg-caret"><cy-icon name="back" size="28" /></view>
             </view>
           </view>
         </view>
@@ -124,9 +125,9 @@
       <!-- 玩法类别(走真实选择页) -->
       <view class="cg-field cg-divider">
         <view class="cg-label">玩法类别 <text class="req">*</text></view>
-        <view class="cg-chips">
+        <view class="cg-chips cg-cat-chips">
           <view class="cg-chip" wx:for="{{ categoryList }}" wx:key="id">
-            {{ item.categoryName }}
+            <cy-icon wx:if="{{ item.icon }}" class="cg-chip-ico" name="{{ item.icon }}" size="26" />{{ item.categoryName }}
             <view class="cg-chip-x" catchtap="removeCategory" data-id="{{ item.id }}" aria-role="button" aria-label="删除类别 {{item.categoryName}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
           </view>
           <view class="cg-chip-add" bindtap="navigateToCategorySelect" aria-role="button" aria-label="添加玩法类别" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加类别</view>
@@ -1317,9 +1318,16 @@
   </scroll-view>
 
   <!-- 编辑态底部栏 -->
+  <!-- P-40(2026-10-27):预览底部的保存 / 发布栏删掉后,发布(据点「保存玩法」、主题「保存并绑定」)和失败说明挪到编辑态底部 -->
+  <view class="cg-submit-error" wx:if="{{!previewMode && !previewVisible && submitError}}">
+    <cy-inline-error wx:if="{{submitError}}" kind="network"
+      title="{{from === 'citynode' ? '玩法没有保存成功' : (lastSubmitAction === 'draft' ? '草稿没有保存成功' : '玩法没有发布成功')}}"
+      sub="{{submitError}}" action="重试" bind:action="retrySubmit" />
+  </view>
   <view class="cg-bottombar" wx:if="{{!editorLoading && !loadError}}">
     <cy-btn wx:if="{{!previewMode && from !== 'fabu' && from !== 'citynode'}}" variant="secondary" disabled="{{submitting}}" loading="{{submitting && submittingAction === 'draft'}}" bindtap="saveDraft">保存草稿</cy-btn>
-    <cy-btn variant="primary" disabled="{{!canOpenPreview}}" aria-disabled="{{!canOpenPreview || submitting}}" loading="{{submitting}}" bindtap="openPreview" bind:disabledtap="onPreviewDisabledTap">查看预览</cy-btn>
+    <cy-btn variant="{{previewMode ? 'primary' : 'secondary'}}" disabled="{{!canOpenPreview}}" aria-disabled="{{!canOpenPreview || submitting}}" loading="{{submitting}}" bindtap="openPreview" bind:disabledtap="onPreviewDisabledTap">查看预览</cy-btn>
+    <cy-btn wx:if="{{!previewMode}}" variant="primary" disabled="{{!canPublishGame}}" aria-disabled="{{!canPublishGame || submitting}}" loading="{{submittingAction === 'publish' || submittingAction === 'bind'}}" bindtap="publishGame" bind:disabledtap="onPreviewDisabledTap">{{from === 'citynode' ? '保存玩法' : from === 'fabu' ? '保存并绑定' : '发布玩法'}}</cy-btn>
   </view>
 
   <!-- ============ 预览态(沉浸式分步,深色底) ============ -->
@@ -1344,19 +1352,19 @@
          玩完由判定屏整屏涌上来,作者配的成功 / 失败反馈就写在这一屏。 -->
     <cy-play-verdict wx:if="{{ pvStepKey === 'challenge' && pvKit }}" show="{{ pvVerdict.show }}" kind="{{ pvVerdict.kind }}"
                      text="{{ pvVerdict.text }}" images="{{ pvVerdict.images }}" closable="{{ true }}" bind:close="closePvVerdict" />
+    <!-- P-40(2026-10-27):玩家视角预览只留左右滑动切换 + 左上角返回,圆形箭头、「开始任务」和底部保存 / 发布栏都已删掉;
+         翻页点只做位置指示。 -->
     <!-- 2026-09-18 UI-22:翻页条 + 步骤标签固定在滚动区之上(不再 sticky 在滚动流里),
          步骤标签紧贴翻页点,滚到哪一步都和下面的内容对得上,也不会被滚过去的卡片压住。 -->
     <view class="cg-pv-head" wx:if="{{ !(pvStepKey === 'challenge' && pvKit) }}">
       <view class="cg-pv-pager">
-        <view class="cg-pv-arrow {{ pvStep <= 0 ? 'disabled' : '' }}" bindtap="pvPrev" aria-role="button" aria-label="上一步预览" aria-disabled="{{pvStep <= 0}}" hover-class="{{pvStep <= 0 ? 'none' : 'cy-pressed'}}" hover-stay-time="80"><cy-icon name="back" size="36" /></view>
         <view class="cg-pv-dots">
           <view class="cg-pv-dot {{ pvStep === idx ? 'on' : '' }}" wx:for="{{ pvSteps }}" wx:key="*this" wx:for-index="idx"></view>
         </view>
-        <view class="cg-pv-arrow {{ pvStep >= pvSteps.length - 1 ? 'disabled' : '' }}" bindtap="pvNext" aria-role="button" aria-label="下一步预览" aria-disabled="{{pvStep >= pvSteps.length - 1}}" hover-class="{{pvStep >= pvSteps.length - 1 ? 'none' : 'cy-pressed'}}" hover-stay-time="80"><cy-icon name="arrow-right" size="36" /></view>
       </view>
       <view class="cg-pv-step">玩家视角 · {{ pvStepLabel }}({{ pvStep + 1 }}/{{ pvSteps.length }})</view>
     </view>
-    <scroll-view scroll-y class="cg-pv-scroll" wx:if="{{ !(pvStepKey === 'challenge' && pvKit) }}">
+    <scroll-view scroll-y class="cg-pv-scroll" wx:if="{{ !(pvStepKey === 'challenge' && pvKit) }}" bindtouchstart="onPvTouchStart" bindtouchend="onPvTouchEnd">
       <view class="cg-pv-body">
 
         <!-- 1. 到达点位 -->
@@ -1374,7 +1382,6 @@
               <view class="cg-pv-meta-li"><view class="cg-pv-meta-k">难度</view><view class="cg-pv-meta-v">{{ difficultyLabel || '未设置' }}</view></view>
             </view>
           </cy-card>
-          <cy-btn variant="primary" style="margin-top:var(--cy-space-4)" bindtap="pvNext">开始任务</cy-btn>
         </view>
 
         <!-- 2. 剧情时间流(沉浸式,多节点) -->
@@ -1382,7 +1389,7 @@
           <view class="cg-pv-beat" wx:for="{{ pvBeats }}" wx:key="id" wx:for-item="pb">
             <view class="cg-pv-beat-tag"><view class="cg-pv-beat-line"></view>{{ pb.label }}</view>
             <view class="cg-pv-beat-img" wx:for="{{ pb.imgs }}" wx:key="index" wx:for-item="pimg"><image src="{{ pimg }}" mode="aspectFill" class="cg-pv-beat-img-pic" /></view>
-            <view class="cg-pv-beat-text">{{ pb.text }}</view>
+            <view class="cg-pv-beat-text cy-story-hand">{{ pb.text }}</view>
           </view>
           <cy-btn variant="primary" style="margin-top:var(--cy-space-4)" bindtap="pvNext">继续</cy-btn>
         </view>
@@ -1457,21 +1464,6 @@
       </view>
       <view class="cg-scroll-pad"></view>
     </scroll-view>
-
-    <!-- 预览态底部栏(FE-04:previewMode 时隐藏发布/草稿控件,temp 收窄为纯预览) -->
-    <!-- 玩法那一屏只有玩法本身(照试玩台);保存 / 发布留在玩完之后的几步 -->
-    <view class="cg-pv-submit" wx:if="{{!previewMode && !(pvStepKey === 'challenge' && pvKit)}}">
-      <!-- 2026-09-23 用户:底部「保存前摘要」删掉;只在保存失败时出失败说明 -->
-      <cy-inline-error wx:if="{{submitError}}" kind="network"
-        title="{{from === 'citynode' ? '玩法没有保存成功' : (lastSubmitAction === 'draft' ? '草稿没有保存成功' : '玩法没有发布成功')}}"
-        sub="{{submitError}}" action="重试" bind:action="retrySubmit" />
-      <!-- 据点玩法没有草稿(saveDraft 对 citynode 只会弹「请直接保存」),不摆一颗点了没用的键;
-           主键是「保存玩法」—— 保存后回到据点页再提交投放,这里不是发布路线。 -->
-      <view class="cg-pv-bottombar">
-        <cy-btn wx:if="{{from !== 'citynode' && from !== 'fabu'}}" variant="secondary" style="flex:1" loading="{{submittingAction === 'draft'}}" disabled="{{submitting}}" bindtap="saveDraft">保存草稿</cy-btn>
-        <cy-btn variant="primary" style="flex:1.4" loading="{{submittingAction === 'publish' || submittingAction === 'bind'}}" disabled="{{!canPublishGame}}" aria-disabled="{{!canPublishGame || submitting}}" bindtap="publishGame">{{from === 'citynode' ? '保存玩法' : from === 'fabu' ? '保存并绑定' : '发布玩法'}}</cy-btn>
-      </view>
-    </view>
   </view>
 
   <!-- ============ 添加模块 sheet ============ -->

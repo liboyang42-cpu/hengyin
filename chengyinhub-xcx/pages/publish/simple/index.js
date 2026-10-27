@@ -112,6 +112,11 @@ Page({
   },
   onAiIdeaInput(e) { this.setData({ aiIdea: e.detail.value, aiError: '' }); },
   useAiPrompt(e) { this.setData({ aiIdea: e.currentTarget.dataset.text || '', aiError: '' }); },
+  // P-43:失败卡上的重试 —— 结果未确认时只回读那一次(同发送键),否则用保留的描述再生成一次
+  retryAiPlan() {
+    if (this._aiPending) this.checkAiDraftRequest();
+    else this.generateAiPlan();
+  },
   generateAiPlan() {
     if (!memberId(app)) { this.setData({ creatorLoginRequired: true }); return; }
     if (this.data.aiGenerating) return;
