@@ -70,6 +70,7 @@ function loadPage(mutate) {
       showModal() {}, showToast() {},
       navigateBack: () => navigations.push('back'),
       redirectTo: (options) => navigations.push(options.url),
+      reLaunch: (options) => navigations.push('reLaunch:' + options.url),
       nextTick: (fn) => nextTicks.push(fn),
       // 开场形变要两级 boundingClientRect 量起止几何。喂定值进去,
       // 下面就能断言「位移是中心对中心」这件事 —— 按顶边算会差半个高度。
@@ -101,7 +102,13 @@ function loadPage(mutate) {
     setData(patch, done) { Object.assign(this.data, patch); if (done) done.call(this) },
   })
   return {
-    page, requests, roleCallbacks, navigations, nextTicks, timers,
+    page, requests, roleCallbacks, navigations, nextTicks, timers, app,
+    // P-23:进页同时问一次商家身份;回最新一条 /api/merchant/access/me
+    answerMerchant(res) {
+      const asks = requests.filter((r) => r.url === '/api/merchant/access/me')
+      assert.ok(asks.length, '进页必须问一次商家身份')
+      asks[asks.length - 1].success(res || { code: 200, data: { active: false, applicationState: 'NONE' } })
+    },
     setSnapshot(value) { snapshotReady = value },
     setClubLeader(value) { clubLeader = value },
   }
@@ -124,6 +131,9 @@ test('身份快照完成前不露申请表；失败原位重试且草稿不丢',
   assert.equal(h.roleCallbacks.length, 2, '同步连点只能发起一轮资格检查')
   h.setSnapshot(true)
   h.roleCallbacks[1]({ role: 'player', permission: { canApplyClub: true } })
+  // P-23(2026-10-27):资格快照与商家身份都回来才放行
+  assert.equal(h.page.data.bootstrapState, 'checking-role')
+  h.answerMerchant()
   assert.equal(h.page.data.bootstrapState, 'ready')
   // 资格确认完成先落到四步之前的开场屏;表单必须按下「开始申请」才露出来
   assert.equal(h.page.data.mode, 'intro')
@@ -245,6 +255,7 @@ test('epoch 负控：移除保护后旧资格回调会覆盖新一轮结果', ()
   h.page.retryBootstrap()
   h.setSnapshot(true)
   h.roleCallbacks[1]({ role: 'player', permission: { canApplyClub: true } })
+  h.answerMerchant()
   assert.equal(h.page.data.bootstrapState, 'ready')
   h.setSnapshot(false)
   h.roleCallbacks[0](null)
@@ -286,26 +297,28 @@ test('负控：refreshStep 不摘 .in 时动画不会重播', () => {
   assert.equal(h.page.data.stepIn, true, '.in 没被摘掉 = 同一个动画不会重新触发')
 })
 
-test('开场形变的起止几何按中心对中心算，不是按顶边', () => {
+// 2026-10-27 P-24(owner p98):原「开场 CTA → 进度条」形变被 owner 否掉 —— 它先画满整条再缩回一段,
+// 飞行途中还从标题上划过去。改为进度段以空轨出现,下一帧 progIn 落下,第一段从 0 ease-out 填满。
+// 原「形变几何中心对中心」断言随形变一并移除(形变 util 仍服务建团/商家入驻,其负控保留在下一条)。
+test('P-24 进度条从 0 直接填到当前步宽，且在标题上方、不再有形变层', () => {
   const h = loadPage()
   h.page.data.bootstrapState = 'ready'
   h.page.data.reducedMotion = false
   h.page.startForm()
-
   assert.equal(h.page.data.mode, 'form')
-  assert.equal(h.page.data.morphing, true, '形变期间旧开场屏要留着退场')
-  const m = h.page.data.morph
-  assert.ok(m, '没量到几何就不该进形变态')
-  // CTA 中心 y = 600 + 48/2 = 624;进度轨中心 y = 54 + 3/2 = 55.5
-  assert.equal(m.dy, 55.5 - 624, 'scaleY 以中心为原点，位移必须按中心算')
-  assert.equal(m.sy, 3 / 48, '纵向压扁比 = 轨道高 / 胶囊高')
-  // 白色占比 = 第一段 / 整条轨道(含段间空隙),不是写死的 25%
-  assert.equal(m.fx, 82.75 / (16 + 3 * 86.75 + 82.75 - 16))
-  assert.equal(m.x, 16); assert.equal(m.w, 343)
-
-  h.page.endMorph()
-  assert.equal(h.page.data.morphing, false)
-  assert.equal(h.page.data.morph, null)
+  assert.equal(h.page.data.step, 1)
+  assert.equal(h.page.data.progIn, false, '首帧必须是空轨,否则 transition 不跑、直接跳到满段')
+  h.nextTicks.forEach((fn) => fn())
+  assert.equal(h.page.data.progIn, true)
+  assert.doesNotMatch(WXML, /class="morph/, '不得再有从 CTA 飞上来的形变层')
+  assert.match(WXML, /class="prog__seg \{\{progIn && item < step \? 'on' : ''\}\}"/)
+  // 进度条在 .head 里、页标题之前
+  assert.ok(WXML.indexOf('class="prog"') < WXML.indexOf('<cy-page-title'), '进度条必须在标题上方')
+  assert.match(WXSS, /\.prog__fill\s*\{[^}]*transform:\s*scaleX\(0\)[^}]*var\(--cy-ease-out\)/s)
+  // 退回开场屏时清掉 progIn,再进来还是从 0 开始
+  h.page.onBack()
+  assert.equal(h.page.data.mode, 'intro')
+  assert.equal(h.page.data.progIn, false)
 })
 
 test('负控：位移按顶边算(漏掉中心修正)必须判红', () => {
@@ -319,14 +332,54 @@ test('负控：位移按顶边算(漏掉中心修正)必须判红', () => {
     '位移必须按中心对中心算:scaleY 以中心为原点，按顶边算会差半个胶囊高')
 })
 
-test('减动效时不放形变，直接切到第一步', () => {
+test('减动效时直接切到第一步，进度填色无过渡', () => {
   const h = loadPage()
   h.page.data.bootstrapState = 'ready'
   h.page.data.reducedMotion = true
   h.page.startForm()
   assert.equal(h.page.data.mode, 'form')
-  assert.equal(h.page.data.morphing, false)
-  assert.equal(h.page.data.morph, null)
+  assert.equal(h.page.data.step, 1)
+  // 2026-10-27 P-24:形变层已整体移除(morph/morphing 字段随之删除),减动效靠 wxss 关掉填色过渡
+  assert.equal('morph' in h.page.data, false)
+  assert.match(WXSS, /\.cy-motion-reduced \.prog__fill \{ transition: none !important; \}/)
+})
+
+// P-23(owner 2026-10-27 p111):已有商家行的账号进页就说明并给去商家端的出口,不填完 4 步才报错
+for (const [label, res, active, target] of [
+  ['申请中的商家行', { code: 200, data: { active: false, applicationState: 'PENDING', roleCode: 'MERCHANT_OWNER', merchant: { id: 3 } } }, false, '/pages/merchant/apply/index'],
+  ['生效中的商家(含员工)', { code: 200, data: { active: true, roleCode: 'MERCHANT_OWNER', merchant: { id: 3 } } }, true, 'reLaunch:/pages/merchant/index/index'],
+  ['异常商家行(403)', { code: 403, msg: '', roleViewSuppressed: true }, false, '/pages/merchant/apply/index'],
+]) {
+  test(`P-23 ${label}:进页即说明并引导到商家端`, () => {
+    const h = loadPage()
+    h.page.onLoad()
+    h.setSnapshot(true)
+    h.roleCallbacks[0]({ role: 'player', permission: { canApplyClub: true } })
+    h.answerMerchant(res)
+    assert.equal(h.page.data.bootstrapState, 'merchant')
+    assert.equal(h.page.data.merchantActive, active)
+    h.page.goMerchantSide()
+    assert.deepEqual(h.navigations, [target])
+  })
+}
+
+test('P-23 本地身份已是商家:不问后端,直接说明并给「切换到商家端」', () => {
+  const h = loadPage()
+  h.app.getUserRole = () => 'merchant'
+  h.page.onLoad()
+  assert.equal(h.page.data.bootstrapState, 'merchant')
+  assert.equal(h.page.data.merchantActive, true)
+  assert.equal(h.roleCallbacks.length, 0)
+  assert.match(WXML, /bootstrapState === 'merchant'[\s\S]*primary="\{\{merchantActive \? '切换到商家端' : '查看商家入驻'\}\}"[\s\S]*bind:primary="goMerchantSide"/)
+})
+
+test('P-23 商家身份问不到时不拦人(后端提交仍兜底)', () => {
+  const h = loadPage()
+  h.page.onLoad()
+  h.setSnapshot(true)
+  h.roleCallbacks[0]({ role: 'player', permission: { canApplyClub: true } })
+  h.requests.find((r) => r.url === '/api/merchant/access/me').fail({ errMsg: 'request:fail timeout' })
+  assert.equal(h.page.data.bootstrapState, 'ready')
 })
 
 test('申请主理人不要求实名，直接提交资料且不发送身份证字段', () => {

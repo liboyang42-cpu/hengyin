@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5141,
+  "controlCount": 5143,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -5847,74 +5847,6 @@
           "route": "pages/club/apply/index",
           "segments": [
             {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.rs__act",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.rs__act",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
               "selector": "cy-error.done-error",
               "index": 0
             },
@@ -6132,6 +6064,174 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             },
             {
               "selector": "cy-error",
@@ -85575,23 +85675,6 @@
           "route": "pages/club/apply/index",
           "segments": [
             {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-consent-check",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
               "selector": "cy-error.done-error",
               "index": 0
             },
@@ -85632,6 +85715,48 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             },
             {
               "selector": "cy-error",
@@ -142522,6 +142647,19 @@
           ]
         },
         {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-empty",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/club/badges/index",
           "segments": [
             {
@@ -148706,15 +148844,6 @@
           "route": "pages/club/apply/index",
           "segments": [
             {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
               "selector": "cy-error.done-error",
               "index": 0
             }
@@ -148739,6 +148868,32 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             },
             {
               "selector": "cy-error",
@@ -155652,15 +155807,6 @@
           "route": "pages/club/apply/index",
           "segments": [
             {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
               "selector": "cy-error.done-error",
               "index": 0
             }
@@ -155685,6 +155831,32 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             },
             {
               "selector": "cy-error",
@@ -162598,15 +162770,6 @@
           "route": "pages/club/apply/index",
           "segments": [
             {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
               "selector": "cy-error.done-error",
               "index": 0
             }
@@ -162631,6 +162794,32 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             },
             {
               "selector": "cy-error",
@@ -179932,7 +180121,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/loading-mask/index.js:16"
+        "staticSource": "components/cy/loading-mask/index.js:18"
       }
     },
     {
@@ -265862,19 +266051,6 @@
           "route": "pages/club/apply/index",
           "segments": [
             {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
               "selector": "cy-error.done-error",
               "index": 0
             },
@@ -265907,6 +266083,40 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             },
             {
               "selector": "cy-error",
@@ -278833,19 +279043,6 @@
           "route": "pages/club/apply/index",
           "segments": [
             {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
               "selector": "cy-error.done-error",
               "index": 0
             },
@@ -278878,6 +279075,40 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             },
             {
               "selector": "cy-error",
@@ -291804,19 +292035,6 @@
           "route": "pages/club/apply/index",
           "segments": [
             {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
               "selector": "cy-error.done-error",
               "index": 0
             },
@@ -291849,6 +292067,40 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             },
             {
               "selector": "cy-error",
@@ -304775,19 +305027,6 @@
           "route": "pages/club/apply/index",
           "segments": [
             {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
               "selector": "cy-error.done-error",
               "index": 0
             },
@@ -304820,6 +305059,40 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             },
             {
               "selector": "cy-error",
@@ -317746,19 +318019,6 @@
           "route": "pages/club/apply/index",
           "segments": [
             {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
               "selector": "cy-error.done-error",
               "index": 0
             },
@@ -317791,6 +318051,40 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             },
             {
               "selector": "cy-error",
@@ -385761,40 +386055,6 @@
           "route": "pages/club/apply/index",
           "segments": [
             {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
               "selector": "cy-error.done-error",
               "index": 0
             },
@@ -385894,6 +386154,90 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             },
             {
               "selector": "cy-error",
@@ -423337,40 +423681,6 @@
           "route": "pages/club/apply/index",
           "segments": [
             {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
               "selector": "cy-error.done-error",
               "index": 0
             },
@@ -423470,6 +423780,90 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             },
             {
               "selector": "cy-error",
@@ -460912,40 +461306,6 @@
           "route": "pages/club/apply/index",
           "segments": [
             {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
               "selector": "cy-error.done-error",
               "index": 0
             },
@@ -461045,6 +461405,90 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             },
             {
               "selector": "cy-error",
@@ -498487,40 +498931,6 @@
           "route": "pages/club/apply/index",
           "segments": [
             {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
               "selector": "cy-error.done-error",
               "index": 0
             },
@@ -498620,6 +499030,90 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             },
             {
               "selector": "cy-error",
@@ -536062,40 +536556,6 @@
           "route": "pages/club/apply/index",
           "segments": [
             {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
               "selector": "cy-error.done-error",
               "index": 0
             },
@@ -536195,6 +536655,90 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             },
             {
               "selector": "cy-error",
@@ -573637,40 +574181,6 @@
           "route": "pages/club/apply/index",
           "segments": [
             {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
               "selector": "cy-error.done-error",
               "index": 0
             },
@@ -573770,6 +574280,90 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             },
             {
               "selector": "cy-error",
@@ -611213,40 +611807,6 @@
           "route": "pages/club/apply/index",
           "segments": [
             {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
               "selector": "cy-error.done-error",
               "index": 0
             },
@@ -611346,6 +611906,90 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             },
             {
               "selector": "cy-error",
@@ -648789,40 +649433,6 @@
           "route": "pages/club/apply/index",
           "segments": [
             {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
               "selector": "cy-error.done-error",
               "index": 0
             },
@@ -648922,6 +649532,90 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             },
             {
               "selector": "cy-error",
@@ -686365,40 +687059,6 @@
           "route": "pages/club/apply/index",
           "segments": [
             {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
               "selector": "cy-error.done-error",
               "index": 0
             },
@@ -686498,6 +687158,90 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             },
             {
               "selector": "cy-error",
@@ -723941,40 +724685,6 @@
           "route": "pages/club/apply/index",
           "segments": [
             {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
               "selector": "cy-error.done-error",
               "index": 0
             },
@@ -724074,6 +724784,90 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             },
             {
               "selector": "cy-error",
@@ -761517,40 +762311,6 @@
           "route": "pages/club/apply/index",
           "segments": [
             {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
-              "selector": "cy-error.bootstrap-state",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/apply/index",
-          "segments": [
-            {
               "selector": "cy-error.done-error",
               "index": 0
             },
@@ -761650,6 +762410,90 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             },
             {
               "selector": "cy-error",
@@ -799073,6 +799917,15 @@
           ]
         },
         {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/club/badges/index",
           "segments": [
             {
@@ -799508,6 +800361,15 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             }
           ]
         },
@@ -799951,6 +800813,15 @@
           ]
         },
         {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/club/badges/index",
           "segments": [
             {
@@ -800390,6 +801261,15 @@
           ]
         },
         {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/club/badges/index",
           "segments": [
             {
@@ -800825,6 +801705,15 @@
             {
               "selector": "cy-state-shell.bootstrap-state",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/apply/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.bootstrap-state",
+              "index": 1
             }
           ]
         },
@@ -816725,7 +817614,7 @@
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:107:bindinput:onInput:10",
+      "id": "pages/club/apply/index.wxml:104:bindinput:onInput:12",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -816748,7 +817637,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 107,
+        "line": 104,
         "selectorHint": ".field__ctrl",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -816788,78 +817677,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:185"
+        "staticSource": "pages/club/apply/index.js:219"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:113:bindinput:onInput:11",
-      "route": "pages/club/apply/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/apply/index.wxml",
-        "js": "pages/club/apply/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "input",
-        "event": "bindinput",
-        "handler": "onInput",
-        "line": 113,
-        "selectorHint": ".field__ctrl",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/apply/index.js:185"
-      }
-    },
-    {
-      "id": "pages/club/apply/index.wxml:120:bindtap:toggleBool:12",
+      "id": "pages/club/apply/index.wxml:111:bindtap:toggleBool:13",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -816882,7 +817704,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleBool",
-        "line": 120,
+        "line": 111,
         "selectorHint": ".cap",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -816922,11 +817744,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:195"
+        "staticSource": "pages/club/apply/index.js:229"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:125:bindtap:toggleBool:13",
+      "id": "pages/club/apply/index.wxml:116:bindtap:toggleBool:14",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -816949,7 +817771,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleBool",
-        "line": 125,
+        "line": 116,
         "selectorHint": ".cap",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -816989,11 +817811,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:195"
+        "staticSource": "pages/club/apply/index.js:229"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:130:bindtap:toggleBool:14",
+      "id": "pages/club/apply/index.wxml:121:bindtap:toggleBool:15",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -817016,7 +817838,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleBool",
-        "line": 130,
+        "line": 121,
         "selectorHint": ".cap",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -817056,11 +817878,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:195"
+        "staticSource": "pages/club/apply/index.js:229"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:135:bindtap:toggleBool:15",
+      "id": "pages/club/apply/index.wxml:126:bindtap:toggleBool:16",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -817083,7 +817905,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleBool",
-        "line": 135,
+        "line": 126,
         "selectorHint": ".cap",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -817123,11 +817945,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:195"
+        "staticSource": "pages/club/apply/index.js:229"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:145:bindtap:toggleBool:16",
+      "id": "pages/club/apply/index.wxml:136:bindtap:toggleBool:17",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -817150,7 +817972,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleBool",
-        "line": 145,
+        "line": 136,
         "selectorHint": ".cap",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -817190,11 +818012,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:195"
+        "staticSource": "pages/club/apply/index.js:229"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:152:bind:add:addCerts:17",
+      "id": "pages/club/apply/index.wxml:143:bind:add:addCerts:18",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -817220,7 +818042,7 @@
         "tag": "cy-upload",
         "event": "bind:add",
         "handler": "addCerts",
-        "line": 152,
+        "line": 143,
         "selectorHint": "cy-upload[bind:add]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -817311,11 +818133,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:202"
+        "staticSource": "pages/club/apply/index.js:236"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:152:bind:remove:removeCert:18",
+      "id": "pages/club/apply/index.wxml:143:bind:remove:removeCert:19",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -817338,7 +818160,7 @@
         "tag": "cy-upload",
         "event": "bind:remove",
         "handler": "removeCert",
-        "line": 152,
+        "line": 143,
         "selectorHint": "cy-upload[bind:remove]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -817378,11 +818200,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:258"
+        "staticSource": "pages/club/apply/index.js:292"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:152:bind:retry:retryCert:19",
+      "id": "pages/club/apply/index.wxml:143:bind:retry:retryCert:20",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -817405,7 +818227,7 @@
         "tag": "cy-upload",
         "event": "bind:retry",
         "handler": "retryCert",
-        "line": 152,
+        "line": 143,
         "selectorHint": "cy-upload[bind:retry]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -817484,11 +818306,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:229"
+        "staticSource": "pages/club/apply/index.js:263"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:158:bind:action:retrySubmit:20",
+      "id": "pages/club/apply/index.wxml:149:bind:action:retrySubmit:21",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -817511,7 +818333,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "retrySubmit",
-        "line": 158,
+        "line": 149,
         "selectorHint": ".ca-alert",
         "visibleCondition": "{{submitError && step===4}}",
         "disabledCondition": null,
@@ -817593,11 +818415,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:345"
+        "staticSource": "pages/club/apply/index.js:379"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:166:bindtap:onNext:21",
+      "id": "pages/club/apply/index.wxml:157:bindtap:onNext:22",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -817620,7 +818442,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onNext",
-        "line": 166,
+        "line": 157,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canNext || submitting}}",
@@ -817702,11 +818524,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:166"
+        "staticSource": "pages/club/apply/index.js:200"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:172:bind:retry:retryLeaderStatus:22",
+      "id": "pages/club/apply/index.wxml:163:bind:retry:retryLeaderStatus:23",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -817729,7 +818551,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "retryLeaderStatus",
-        "line": 172,
+        "line": 163,
         "selectorHint": ".done-error",
         "visibleCondition": "{{bootstrapState === 'ready' && mode==='done' && doneState!=='ready' && doneState!=='loading'}}",
         "disabledCondition": null,
@@ -817780,11 +818602,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:353"
+        "staticSource": "pages/club/apply/index.js:387"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:188:bindtap:goCreateClub:23",
+      "id": "pages/club/apply/index.wxml:179:bindtap:goCreateClub:24",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -817807,7 +818629,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goCreateClub",
-        "line": 188,
+        "line": 179,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -817850,7 +818672,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:370"
+        "staticSource": "pages/club/apply/index.js:404"
       }
     },
     {
@@ -817920,7 +818742,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:372"
+        "staticSource": "pages/club/apply/index.js:406"
       }
     },
     {
@@ -817962,25 +818784,53 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "read",
       "interactionMode": "event-contract",
-      "baseActionClass": "state",
+      "baseActionClass": "read",
       "effectClasses": [
+        "read",
         "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
+        "routes": [
+          "pages/privacy/index"
+        ],
         "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/access/me",
           "/api/role/info"
         ],
-        "primaryApis": [],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/merchant/access/me"
+        ],
         "auxiliaryApis": [
+          "/api/login/code",
           "/api/role/info"
         ],
         "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/access/me",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
           {
             "url": "/api/role/info",
             "method": "POST",
@@ -817990,19 +818840,22 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:113"
+        "staticSource": "pages/club/apply/index.js:156"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:31:bind:back:onExit:3",
+      "id": "pages/club/apply/index.wxml:33:bind:primary:goMerchantSide:3",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -818022,12 +818875,83 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "cy-error",
-        "event": "bind:back",
-        "handler": "onExit",
-        "line": 31,
+        "tag": "cy-state-shell",
+        "event": "bind:primary",
+        "handler": "goMerchantSide",
+        "line": 33,
         "selectorHint": ".bootstrap-state",
-        "visibleCondition": "{{bootstrapState === 'blocked'}}",
+        "visibleCondition": "{{bootstrapState === 'merchant'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/apply/index",
+          "pages/merchant/index/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/apply/index.js:148"
+      }
+    },
+    {
+      "id": "pages/club/apply/index.wxml:34:bind:secondary:onExit:4",
+      "route": "pages/club/apply/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/apply/index.wxml",
+        "js": "pages/club/apply/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-state-shell",
+        "event": "bind:secondary",
+        "handler": "onExit",
+        "line": 34,
+        "selectorHint": ".bootstrap-state",
+        "visibleCondition": "{{bootstrapState === 'merchant'}}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": null,
@@ -818068,11 +818992,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:372"
+        "staticSource": "pages/club/apply/index.js:406"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:44:bindtap:startForm:4",
+      "id": "pages/club/apply/index.wxml:47:bindtap:startForm:5",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -818095,7 +819019,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "startForm",
-        "line": 44,
+        "line": 47,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -818135,11 +819059,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:136"
+        "staticSource": "pages/club/apply/index.js:179"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:69:bindinput:onInput:5",
+      "id": "pages/club/apply/index.wxml:60:bindinput:onInput:6",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -818162,7 +819086,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 69,
+        "line": 60,
         "selectorHint": ".field__ctrl",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -818202,7 +819126,74 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:185"
+        "staticSource": "pages/club/apply/index.js:219"
+      }
+    },
+    {
+      "id": "pages/club/apply/index.wxml:67:bindinput:onInput:7",
+      "route": "pages/club/apply/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/apply/index.wxml",
+        "js": "pages/club/apply/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "input",
+        "event": "bindinput",
+        "handler": "onInput",
+        "line": 67,
+        "selectorHint": ".field__ctrl",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "联系方式，必填",
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/apply/index.js:219"
       }
     },
     {
@@ -818273,11 +819264,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:347"
+        "staticSource": "pages/club/apply/index.js:381"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:76:bindinput:onInput:6",
+      "id": "pages/club/apply/index.wxml:74:bindinput:onInput:8",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -818300,74 +819291,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 76,
-        "selectorHint": ".field__ctrl",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "联系方式，必填",
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/apply/index.js:185"
-      }
-    },
-    {
-      "id": "pages/club/apply/index.wxml:83:bindinput:onInput:7",
-      "route": "pages/club/apply/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/apply/index.wxml",
-        "js": "pages/club/apply/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "input",
-        "event": "bindinput",
-        "handler": "onInput",
-        "line": 83,
+        "line": 74,
         "selectorHint": ".field__ctrl",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -818407,11 +819331,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:185"
+        "staticSource": "pages/club/apply/index.js:219"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:89:bindinput:onInput:8",
+      "id": "pages/club/apply/index.wxml:80:bindinput:onInput:9",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -818434,7 +819358,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 89,
+        "line": 80,
         "selectorHint": ".field__ctrl",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -818474,11 +819398,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:185"
+        "staticSource": "pages/club/apply/index.js:219"
       }
     },
     {
-      "id": "pages/club/apply/index.wxml:99:bindtap:pickExp:9",
+      "id": "pages/club/apply/index.wxml:90:bindtap:pickExp:10",
       "route": "pages/club/apply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -818501,7 +819425,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickExp",
-        "line": 99,
+        "line": 90,
         "selectorHint": ".opt",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -818541,7 +819465,74 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/apply/index.js:190"
+        "staticSource": "pages/club/apply/index.js:224"
+      }
+    },
+    {
+      "id": "pages/club/apply/index.wxml:98:bindinput:onInput:11",
+      "route": "pages/club/apply/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/apply/index.wxml",
+        "js": "pages/club/apply/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "input",
+        "event": "bindinput",
+        "handler": "onInput",
+        "line": 98,
+        "selectorHint": ".field__ctrl",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/apply/index.js:219"
       }
     },
     {
@@ -1212966,11 +1213957,89 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:106:bindtap:onCardTap:8",
+      "id": "subpackageB/pages/im/chat/index.wxml:10:bindtap:onMore:0",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
+      "entry": {
+        "wxml": "subpackageB/pages/im/chat/index.wxml",
+        "js": "subpackageB/pages/im/chat/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onMore",
+        "line": 10,
+        "selectorHint": ".hd-info-hit",
+        "visibleCondition": "{{!sysNotice}}",
+        "disabledCondition": null,
+        "ariaLabel": "更多",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/role/info"
+        ],
+        "primaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageB/pages/im/chat/index.js:834"
+      }
+    },
+    {
+      "id": "subpackageB/pages/im/chat/index.wxml:121:bindtap:onCardTap:8",
+      "route": "subpackageB/pages/im/chat/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1212989,7 +1214058,7 @@
         "tag": "cy-card",
         "event": "bindtap",
         "handler": "onCardTap",
-        "line": 106,
+        "line": 121,
         "selectorHint": ".card",
         "visibleCondition": "{{item.msgType == 3}}",
         "disabledCondition": null,
@@ -1213084,15 +1214153,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1061"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1072"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:116:catchtap:onCardTap:9",
+      "id": "subpackageB/pages/im/chat/index.wxml:132:catchtap:onCardTap:9",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1213111,7 +1214180,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onCardTap",
-        "line": 116,
+        "line": 132,
         "selectorHint": ".card-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1213206,15 +1214275,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1061"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1072"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:117:catchtap:onCardBtn:10",
+      "id": "subpackageB/pages/im/chat/index.wxml:133:catchtap:onCardBtn:10",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1213233,7 +1214302,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onCardBtn",
-        "line": 117,
+        "line": 133,
         "selectorHint": ".card-btn",
         "visibleCondition": "{{item.currentOriginalUrl}}",
         "disabledCondition": null,
@@ -1213321,15 +1214390,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1129"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1140"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:120:catchtap:onCardBtn:11",
+      "id": "subpackageB/pages/im/chat/index.wxml:136:catchtap:onCardBtn:11",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1213348,7 +1214417,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onCardBtn",
-        "line": 120,
+        "line": 136,
         "selectorHint": ".card-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1213436,15 +1214505,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1129"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1140"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:123:catchtap:onCardTap:12",
+      "id": "subpackageB/pages/im/chat/index.wxml:139:catchtap:onCardTap:12",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1213463,7 +1214532,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onCardTap",
-        "line": 123,
+        "line": 139,
         "selectorHint": ".card-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1213558,15 +1214627,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1061"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1072"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:137:catchtap:onResend:13",
+      "id": "subpackageB/pages/im/chat/index.wxml:153:catchtap:onResend:13",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1213585,7 +1214654,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onResend",
-        "line": 137,
+        "line": 153,
         "selectorHint": ".fail-hit",
         "visibleCondition": "{{item.failed}}",
         "disabledCondition": null,
@@ -1213686,15 +1214755,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:583"
+        "staticSource": "subpackageB/pages/im/chat/index.js:594"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:155:catchtap:onResend:14",
+      "id": "subpackageB/pages/im/chat/index.wxml:171:catchtap:onResend:14",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1213713,7 +1214782,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onResend",
-        "line": 155,
+        "line": 171,
         "selectorHint": ".fail-hit",
         "visibleCondition": "{{item.failed}}",
         "disabledCondition": null,
@@ -1213814,15 +1214883,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:583"
+        "staticSource": "subpackageB/pages/im/chat/index.js:594"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:176:bindtap:onPlus:15",
+      "id": "subpackageB/pages/im/chat/index.wxml:196:bindtap:onPlus:15",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1213841,7 +1214910,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPlus",
-        "line": 176,
+        "line": 196,
         "selectorHint": ".plus",
         "visibleCondition": "{{!disabled}}",
         "disabledCondition": null,
@@ -1213881,15 +1214950,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:683"
+        "staticSource": "subpackageB/pages/im/chat/index.js:694"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:179:bindconfirm:onSend:17",
+      "id": "subpackageB/pages/im/chat/index.wxml:199:bindconfirm:onSend:17",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1213908,7 +1214977,7 @@
         "tag": "input",
         "event": "bindconfirm",
         "handler": "onSend",
-        "line": 179,
+        "line": 199,
         "selectorHint": ".inp",
         "visibleCondition": null,
         "disabledCondition": "{{disabled || loadState !== 'ready'}}",
@@ -1214001,15 +1215070,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:503"
+        "staticSource": "subpackageB/pages/im/chat/index.js:514"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:179:bindinput:onInput:16",
+      "id": "subpackageB/pages/im/chat/index.wxml:199:bindinput:onInput:16",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1214028,7 +1215097,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 179,
+        "line": 199,
         "selectorHint": ".inp",
         "visibleCondition": null,
         "disabledCondition": "{{disabled || loadState !== 'ready'}}",
@@ -1214068,15 +1215137,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:501"
+        "staticSource": "subpackageB/pages/im/chat/index.js:512"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:180:bindtap:onSend:18",
+      "id": "subpackageB/pages/im/chat/index.wxml:200:bindtap:onSend:18",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1214095,7 +1215164,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSend",
-        "line": 180,
+        "line": 200,
         "selectorHint": ".send-hit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1214188,15 +1215257,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:503"
+        "staticSource": "subpackageB/pages/im/chat/index.js:514"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:190:bind:close:closeReviewResult:19",
+      "id": "subpackageB/pages/im/chat/index.wxml:210:bind:close:closeReviewResult:19",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1214215,7 +1215284,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeReviewResult",
-        "line": 190,
+        "line": 210,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1214255,15 +1215324,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1092"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1103"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:201:bind:action:retryReviewDetail:20",
+      "id": "subpackageB/pages/im/chat/index.wxml:221:bind:action:retryReviewDetail:20",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1214282,7 +1215351,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "retryReviewDetail",
-        "line": 201,
+        "line": 221,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{reviewDetail && reviewDetail.state === 'error'}}",
         "disabledCondition": null,
@@ -1214364,15 +1215433,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1125"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1136"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:210:bind:close:closeRoutePicker:21",
+      "id": "subpackageB/pages/im/chat/index.wxml:230:bind:close:closeRoutePicker:21",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1214391,7 +1215460,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeRoutePicker",
-        "line": 210,
+        "line": 230,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1214431,15 +1215500,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:736"
+        "staticSource": "subpackageB/pages/im/chat/index.js:747"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:211:bind:input:onRouteSearch:22",
+      "id": "subpackageB/pages/im/chat/index.wxml:231:bind:input:onRouteSearch:22",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1214458,7 +1215527,7 @@
         "tag": "cy-search",
         "event": "bind:input",
         "handler": "onRouteSearch",
-        "line": 211,
+        "line": 231,
         "selectorHint": "cy-search[bind:input]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1214540,15 +1215609,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:742"
+        "staticSource": "subpackageB/pages/im/chat/index.js:753"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:218:bindtap:onRoutePick:24",
+      "id": "subpackageB/pages/im/chat/index.wxml:238:bindtap:onRoutePick:24",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1214567,7 +1215636,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onRoutePick",
-        "line": 218,
+        "line": 238,
         "selectorHint": ".route-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1214660,15 +1215729,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:794"
+        "staticSource": "subpackageB/pages/im/chat/index.js:805"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:229:bind:cancel:onPlusCancel:26",
+      "id": "subpackageB/pages/im/chat/index.wxml:249:bind:cancel:onPlusCancel:26",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1214687,7 +1215756,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onPlusCancel",
-        "line": 229,
+        "line": 249,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1214727,15 +1215796,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:696"
+        "staticSource": "subpackageB/pages/im/chat/index.js:707"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:229:bind:select:onPlusSelect:25",
+      "id": "subpackageB/pages/im/chat/index.wxml:249:bind:select:onPlusSelect:25",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1214761,7 +1215830,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onPlusSelect",
-        "line": 229,
+        "line": 249,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1214902,15 +1215971,126 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:688"
+        "staticSource": "subpackageB/pages/im/chat/index.js:699"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:231:bind:cancel:onMoreCancel:28",
+      "id": "subpackageB/pages/im/chat/index.wxml:25:bindtap:openReportMine:1",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
+      "entry": {
+        "wxml": "subpackageB/pages/im/chat/index.wxml",
+        "js": "subpackageB/pages/im/chat/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openReportMine",
+        "line": 25,
+        "selectorHint": ".sys-entry",
+        "visibleCondition": "{{type == 2 && reportEntry}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "我的举报{{reportUnread ? '，' + reportUnread + ' 条新进度' : ''}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index",
+          "subpackageMember/report-detail/index",
+          "subpackageMember/report-mine/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info",
+          "/api/v1/community/notifications/{param}/read"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/v1/community/notifications/{param}/read"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/v1/community/notifications/{param}/read",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageB/pages/im/chat/index.js:216"
+      }
+    },
+    {
+      "id": "subpackageB/pages/im/chat/index.wxml:251:bind:cancel:onMoreCancel:28",
+      "route": "subpackageB/pages/im/chat/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1214929,7 +1216109,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onMoreCancel",
-        "line": 231,
+        "line": 251,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1214969,15 +1216149,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:857"
+        "staticSource": "subpackageB/pages/im/chat/index.js:868"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:231:bind:select:onMoreSelect:27:variant:block",
+      "id": "subpackageB/pages/im/chat/index.wxml:251:bind:select:onMoreSelect:27:variant:block",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1215004,7 +1216184,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onMoreSelect",
-        "line": 231,
+        "line": 251,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1215061,15 +1216241,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:828"
+        "staticSource": "subpackageB/pages/im/chat/index.js:839"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:231:bind:select:onMoreSelect:27:variant:clear",
+      "id": "subpackageB/pages/im/chat/index.wxml:251:bind:select:onMoreSelect:27:variant:clear",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1215096,7 +1216276,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onMoreSelect",
-        "line": 231,
+        "line": 251,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1215136,15 +1216316,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:828"
+        "staticSource": "subpackageB/pages/im/chat/index.js:839"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:231:bind:select:onMoreSelect:27:variant:report",
+      "id": "subpackageB/pages/im/chat/index.wxml:251:bind:select:onMoreSelect:27:variant:report",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1215171,7 +1216351,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onMoreSelect",
-        "line": 231,
+        "line": 251,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1215230,15 +1216410,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:828"
+        "staticSource": "subpackageB/pages/im/chat/index.js:839"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:231:bind:select:onMoreSelect:27:variant:unblock",
+      "id": "subpackageB/pages/im/chat/index.wxml:251:bind:select:onMoreSelect:27:variant:unblock",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1215287,7 +1216467,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onMoreSelect",
-        "line": 231,
+        "line": 251,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1215377,15 +1216557,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:828"
+        "staticSource": "subpackageB/pages/im/chat/index.js:839"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:232:bind:close:onReportClose:29",
+      "id": "subpackageB/pages/im/chat/index.wxml:252:bind:close:onReportClose:29",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1215404,7 +1216584,7 @@
         "tag": "cy-report-sheet",
         "event": "bind:close",
         "handler": "onReportClose",
-        "line": 232,
+        "line": 252,
         "selectorHint": "cy-report-sheet[bind:close]",
         "visibleCondition": "{{!readOnly}}",
         "disabledCondition": null,
@@ -1215444,15 +1216624,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:924"
+        "staticSource": "subpackageB/pages/im/chat/index.js:935"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:234:bind:settled:onPrivacyGateSettled:30",
+      "id": "subpackageB/pages/im/chat/index.wxml:254:bind:settled:onPrivacyGateSettled:30",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1215471,7 +1216651,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 234,
+        "line": 254,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1215511,15 +1216691,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:108"
+        "staticSource": "subpackageB/pages/im/chat/index.js:113"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:236:bind:cancel:onDangerCancel:32",
+      "id": "subpackageB/pages/im/chat/index.wxml:256:bind:cancel:onDangerCancel:32",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1215538,7 +1216718,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:cancel",
         "handler": "onDangerCancel",
-        "line": 236,
+        "line": 256,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1215579,15 +1216759,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:852"
+        "staticSource": "subpackageB/pages/im/chat/index.js:863"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:236:bind:confirm:onDangerConfirm:31:variant:block",
+      "id": "subpackageB/pages/im/chat/index.wxml:256:bind:confirm:onDangerConfirm:31:variant:block",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1215618,7 +1216798,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onDangerConfirm",
-        "line": 236,
+        "line": 256,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1215680,15 +1216860,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:960"
+        "staticSource": "subpackageB/pages/im/chat/index.js:971"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:236:bind:confirm:onDangerConfirm:31:variant:clear",
+      "id": "subpackageB/pages/im/chat/index.wxml:256:bind:confirm:onDangerConfirm:31:variant:clear",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1215719,7 +1216899,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onDangerConfirm",
-        "line": 236,
+        "line": 256,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1215781,15 +1216961,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:960"
+        "staticSource": "subpackageB/pages/im/chat/index.js:971"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:236:bind:done:onDangerCancel:33",
+      "id": "subpackageB/pages/im/chat/index.wxml:256:bind:done:onDangerCancel:33",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1215808,7 +1216988,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:done",
         "handler": "onDangerCancel",
-        "line": 236,
+        "line": 256,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1215849,126 +1217029,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:852"
+        "staticSource": "subpackageB/pages/im/chat/index.js:863"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:24:bindtap:openReportMine:1",
+      "id": "subpackageB/pages/im/chat/index.wxml:35:bindtap:loadMore:3",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageB/pages/im/chat/index.wxml",
-        "js": "subpackageB/pages/im/chat/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "openReportMine",
-        "line": 24,
-        "selectorHint": ".sys-entry",
-        "visibleCondition": "{{type == 2 && reportEntry}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "我的举报{{reportUnread ? '，' + reportUnread + ' 条新进度' : ''}}",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "tap",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index",
-          "subpackageMember/report-detail/index",
-          "subpackageMember/report-mine/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
-          "/api/v1/community/notifications/{param}/read"
-        ],
-        "primaryApis": [
-          "/api/config/features",
-          "/api/v1/community/notifications/{param}/read"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/v1/community/notifications/{param}/read",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:206"
-      }
-    },
-    {
-      "id": "subpackageB/pages/im/chat/index.wxml:34:bindtap:loadMore:3",
-      "route": "subpackageB/pages/im/chat/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1215987,7 +1217056,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "loadMore",
-        "line": 34,
+        "line": 35,
         "selectorHint": ".load-more",
         "visibleCondition": "{{hasMore}}",
         "disabledCondition": null,
@@ -1216080,15 +1217149,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:349"
+        "staticSource": "subpackageB/pages/im/chat/index.js:360"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:39:bind:cta:returnToMessageList:4",
+      "id": "subpackageB/pages/im/chat/index.wxml:40:bind:cta:returnToMessageList:4",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1216107,7 +1217176,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "returnToMessageList",
-        "line": 39,
+        "line": 40,
         "selectorHint": ".chat-empty",
         "visibleCondition": "{{loadState === 'closed'}}",
         "disabledCondition": null,
@@ -1216150,15 +1217219,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:344"
+        "staticSource": "subpackageB/pages/im/chat/index.js:355"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:55:catchtap:onLocationTap:6",
+      "id": "subpackageB/pages/im/chat/index.wxml:70:catchtap:onLocationTap:6",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1216177,7 +1217246,7 @@
         "tag": "cy-card",
         "event": "catchtap",
         "handler": "onLocationTap",
-        "line": 55,
+        "line": 70,
         "selectorHint": ".rcard",
         "visibleCondition": "{{item.card.cardType === 'location'}}",
         "disabledCondition": null,
@@ -1216227,15 +1217296,15 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1031"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1042"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:69:catchtap:onRouteTap:7",
+      "id": "subpackageB/pages/im/chat/index.wxml:84:catchtap:onRouteTap:7",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/chat/index.wxml",
         "js": "subpackageB/pages/im/chat/index.js"
@@ -1216254,7 +1217323,7 @@
         "tag": "cy-card",
         "event": "catchtap",
         "handler": "onRouteTap",
-        "line": 69,
+        "line": 84,
         "selectorHint": ".rcard",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1216297,18 +1217366,287 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1043"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1054"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:9:bindtap:onMore:0",
-      "route": "subpackageB/pages/im/chat/index",
+      "id": "subpackageB/pages/im/list/index.wxml:101:bindtouchend:onTouchEnd:14",
+      "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
-        "wxml": "subpackageB/pages/im/chat/index.wxml",
-        "js": "subpackageB/pages/im/chat/index.js"
+        "wxml": "subpackageB/pages/im/list/index.wxml",
+        "js": "subpackageB/pages/im/list/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtouchend",
+        "handler": "onTouchEnd",
+        "line": 101,
+        "selectorHint": ".conv",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageB/pages/im/list/index.js:351"
+      }
+    },
+    {
+      "id": "subpackageB/pages/im/list/index.wxml:101:bindtouchmove:onTouchMove:13",
+      "route": "subpackageB/pages/im/list/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "subpackageB/pages/im/list/index.wxml",
+        "js": "subpackageB/pages/im/list/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtouchmove",
+        "handler": "onTouchMove",
+        "line": 101,
+        "selectorHint": ".conv",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageB/pages/im/list/index.js:331"
+      }
+    },
+    {
+      "id": "subpackageB/pages/im/list/index.wxml:101:bindtouchstart:onTouchStart:12",
+      "route": "subpackageB/pages/im/list/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "subpackageB/pages/im/list/index.wxml",
+        "js": "subpackageB/pages/im/list/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtouchstart",
+        "handler": "onTouchStart",
+        "line": 101,
+        "selectorHint": ".conv",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageB/pages/im/list/index.js:326"
+      }
+    },
+    {
+      "id": "subpackageB/pages/im/list/index.wxml:102:bindtouchcancel:onTouchEnd:15",
+      "route": "subpackageB/pages/im/list/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "subpackageB/pages/im/list/index.wxml",
+        "js": "subpackageB/pages/im/list/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtouchcancel",
+        "handler": "onTouchEnd",
+        "line": 102,
+        "selectorHint": ".conv",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageB/pages/im/list/index.js:351"
+      }
+    },
+    {
+      "id": "subpackageB/pages/im/list/index.wxml:103:bindtap:openChat:16",
+      "route": "subpackageB/pages/im/list/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "subpackageB/pages/im/list/index.wxml",
+        "js": "subpackageB/pages/im/list/index.js"
       },
       "variant": null,
       "requiredRequests": null,
@@ -1216323,14 +1217661,14 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "onMore",
-        "line": 9,
-        "selectorHint": ".hd-info-hit",
+        "handler": "openChat",
+        "line": 103,
+        "selectorHint": ".conv",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": "更多",
+        "ariaLabel": null,
         "ariaLabelExpression": null,
-        "ariaRole": "button",
+        "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -1216339,43 +1217677,35 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "navigation",
       "interactionMode": "tap",
-      "baseActionClass": "state",
+      "baseActionClass": "navigation",
       "effectClasses": [
-        "state"
+        "navigation"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
-        "apis": [
-          "/api/role/info"
+        "routes": [
+          "subpackageB/pages/im/chat/index?conversationId="
         ],
+        "apis": [],
         "primaryApis": [],
-        "auxiliaryApis": [
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
+        "auxiliaryApis": [],
+        "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
       "requiredBranches": [
-        "success"
+        "success",
+        "error"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:823"
+        "staticSource": "subpackageB/pages/im/list/index.js:509"
       }
     },
     {
@@ -1216383,7 +1217713,7 @@
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/list/index.wxml",
         "js": "subpackageB/pages/im/list/index.js"
@@ -1216442,15 +1217772,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:221"
+        "staticSource": "subpackageB/pages/im/list/index.js:243"
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:110:bind:cancel:onDangerCancel:17",
+      "id": "subpackageB/pages/im/list/index.wxml:131:bind:cancel:onDangerCancel:18",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/list/index.wxml",
         "js": "subpackageB/pages/im/list/index.js"
@@ -1216469,7 +1217799,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:cancel",
         "handler": "onDangerCancel",
-        "line": 110,
+        "line": 131,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1216520,15 +1217850,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:407"
+        "staticSource": "subpackageB/pages/im/list/index.js:431"
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:110:bind:confirm:onDangerConfirm:16",
+      "id": "subpackageB/pages/im/list/index.wxml:131:bind:confirm:onDangerConfirm:17",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/list/index.wxml",
         "js": "subpackageB/pages/im/list/index.js"
@@ -1216547,7 +1217877,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onDangerConfirm",
-        "line": 110,
+        "line": 131,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1216632,15 +1217962,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:377"
+        "staticSource": "subpackageB/pages/im/list/index.js:401"
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:110:bind:done:onDangerCancel:18",
+      "id": "subpackageB/pages/im/list/index.wxml:131:bind:done:onDangerCancel:19",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/list/index.wxml",
         "js": "subpackageB/pages/im/list/index.js"
@@ -1216659,7 +1217989,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:done",
         "handler": "onDangerCancel",
-        "line": 110,
+        "line": 131,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1216710,7 +1218040,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:407"
+        "staticSource": "subpackageB/pages/im/list/index.js:431"
       }
     },
     {
@@ -1216718,7 +1218048,7 @@
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/list/index.wxml",
         "js": "subpackageB/pages/im/list/index.js"
@@ -1216780,7 +1218110,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:226"
+        "staticSource": "subpackageB/pages/im/list/index.js:248"
       }
     },
     {
@@ -1216788,7 +1218118,7 @@
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/list/index.wxml",
         "js": "subpackageB/pages/im/list/index.js"
@@ -1216889,15 +1218219,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:148"
+        "staticSource": "subpackageB/pages/im/list/index.js:163"
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:29:bindtap:openInvite:4",
+      "id": "subpackageB/pages/im/list/index.wxml:35:bindtap:openInvite:4",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/list/index.wxml",
         "js": "subpackageB/pages/im/list/index.js"
@@ -1216916,7 +1218246,77 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openInvite",
-        "line": 29,
+        "line": 35,
+        "selectorHint": ".invite-card",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "协作邀请：{{item.partnerName || item.topicText}}，{{item.statusText}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/coop/invite-detail/index?inviteId="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageB/pages/im/list/index.js:201"
+      }
+    },
+    {
+      "id": "subpackageB/pages/im/list/index.wxml:50:bindtap:openInvite:5",
+      "route": "subpackageB/pages/im/list/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "subpackageB/pages/im/list/index.wxml",
+        "js": "subpackageB/pages/im/list/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openInvite",
+        "line": 50,
         "selectorHint": ".invite-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1216959,15 +1218359,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:179"
+        "staticSource": "subpackageB/pages/im/list/index.js:201"
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:49:bind:cta:loginConversations:5",
+      "id": "subpackageB/pages/im/list/index.wxml:70:bind:cta:loginConversations:6",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/list/index.wxml",
         "js": "subpackageB/pages/im/list/index.js"
@@ -1216986,7 +1218386,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "loginConversations",
-        "line": 49,
+        "line": 70,
         "selectorHint": ".cy-fade-in",
         "visibleCondition": "{{error && loginRequired}}",
         "disabledCondition": null,
@@ -1217068,15 +1218468,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:142"
+        "staticSource": "subpackageB/pages/im/list/index.js:157"
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:58:bindcta:onEmptyCta:7",
+      "id": "subpackageB/pages/im/list/index.wxml:79:bindcta:onEmptyCta:8",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/list/index.wxml",
         "js": "subpackageB/pages/im/list/index.js"
@@ -1217095,7 +1218495,7 @@
         "tag": "cy-empty",
         "event": "bindcta",
         "handler": "onEmptyCta",
-        "line": 58,
+        "line": 79,
         "selectorHint": "cy-empty[bindcta]",
         "visibleCondition": "{{loaded && viewList.length === 0 && !(activeTab === 'in' ? invitesIn.length : invitesOut.length)}}",
         "disabledCondition": null,
@@ -1217149,15 +1218549,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:269"
+        "staticSource": "subpackageB/pages/im/list/index.js:293"
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:65:catchtap:onRowRead:8",
+      "id": "subpackageB/pages/im/list/index.wxml:86:catchtap:onRowRead:9",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/list/index.wxml",
         "js": "subpackageB/pages/im/list/index.js"
@@ -1217176,7 +1218576,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onRowRead",
-        "line": 65,
+        "line": 86,
         "selectorHint": ".act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1217261,15 +1218661,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:343"
+        "staticSource": "subpackageB/pages/im/list/index.js:367"
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:68:catchtap:onRowMute:9",
+      "id": "subpackageB/pages/im/list/index.wxml:89:catchtap:onRowMute:10",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/list/index.wxml",
         "js": "subpackageB/pages/im/list/index.js"
@@ -1217288,7 +1218688,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onRowMute",
-        "line": 68,
+        "line": 89,
         "selectorHint": ".act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1217370,426 +1218770,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:413"
-      }
-    },
-    {
-      "id": "subpackageB/pages/im/list/index.wxml:71:catchtap:onRowDelete:10",
-      "route": "subpackageB/pages/im/list/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageB/pages/im/list/index.wxml",
-        "js": "subpackageB/pages/im/list/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": "cy-danger-confirm",
-      "control": {
-        "tag": "view",
-        "event": "catchtap",
-        "handler": "onRowDelete",
-        "line": 71,
-        "selectorHint": ".act",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "删除会话",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "tap",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [
-          "/api/role/info"
-        ],
-        "primaryApis": [],
-        "auxiliaryApis": [
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error",
-        "modal-cancelled"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:368"
-      }
-    },
-    {
-      "id": "subpackageB/pages/im/list/index.wxml:80:bindtouchend:onTouchEnd:13",
-      "route": "subpackageB/pages/im/list/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageB/pages/im/list/index.wxml",
-        "js": "subpackageB/pages/im/list/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtouchend",
-        "handler": "onTouchEnd",
-        "line": 80,
-        "selectorHint": ".conv",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:327"
-      }
-    },
-    {
-      "id": "subpackageB/pages/im/list/index.wxml:80:bindtouchmove:onTouchMove:12",
-      "route": "subpackageB/pages/im/list/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageB/pages/im/list/index.wxml",
-        "js": "subpackageB/pages/im/list/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtouchmove",
-        "handler": "onTouchMove",
-        "line": 80,
-        "selectorHint": ".conv",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:307"
-      }
-    },
-    {
-      "id": "subpackageB/pages/im/list/index.wxml:80:bindtouchstart:onTouchStart:11",
-      "route": "subpackageB/pages/im/list/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageB/pages/im/list/index.wxml",
-        "js": "subpackageB/pages/im/list/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtouchstart",
-        "handler": "onTouchStart",
-        "line": 80,
-        "selectorHint": ".conv",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "event-contract",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:302"
-      }
-    },
-    {
-      "id": "subpackageB/pages/im/list/index.wxml:81:bindtouchcancel:onTouchEnd:14",
-      "route": "subpackageB/pages/im/list/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageB/pages/im/list/index.wxml",
-        "js": "subpackageB/pages/im/list/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtouchcancel",
-        "handler": "onTouchEnd",
-        "line": 81,
-        "selectorHint": ".conv",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:327"
-      }
-    },
-    {
-      "id": "subpackageB/pages/im/list/index.wxml:82:bindtap:openChat:15",
-      "route": "subpackageB/pages/im/list/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageB/pages/im/list/index.wxml",
-        "js": "subpackageB/pages/im/list/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "openChat",
-        "line": 82,
-        "selectorHint": ".conv",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "subpackageB/pages/im/chat/index?conversationId="
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:485"
+        "staticSource": "subpackageB/pages/im/list/index.js:437"
       }
     },
     {
@@ -1217797,7 +1218778,7 @@
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "subpackageB/pages/im/list/index.wxml",
         "js": "subpackageB/pages/im/list/index.js"
@@ -1217859,7 +1218840,87 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:483"
+        "staticSource": "subpackageB/pages/im/list/index.js:507"
+      }
+    },
+    {
+      "id": "subpackageB/pages/im/list/index.wxml:92:catchtap:onRowDelete:11",
+      "route": "subpackageB/pages/im/list/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "subpackageB/pages/im/list/index.wxml",
+        "js": "subpackageB/pages/im/list/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": "cy-danger-confirm",
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "onRowDelete",
+        "line": 92,
+        "selectorHint": ".act",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "删除会话",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/role/info"
+        ],
+        "primaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "modal-cancelled"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageB/pages/im/list/index.js:392"
       }
     },
     {

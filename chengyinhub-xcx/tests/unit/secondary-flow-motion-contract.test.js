@@ -39,14 +39,14 @@ const CASES = [
     wxmlRules: [
       /class="step cy-rise-in" wx:if/,
       /class="step-head \{\{stepIn \? 'cy-rise-in' : ''\}\}"/,
-      // 开场 CTA→进度条的共享元素形变:三层结构与 morphRun 开关缺一不可
-      /class="morph" wx:if="\{\{morph\}\}"/,
-      /class="morph__track"/,
-      /class="morph__fill"/,
-      /scale\(\{\{morphRun \? morph\.sx : 1\}\}, \{\{morphRun \? morph\.sy : 1\}\}\)/,
+      // 2026-10-27 P-24(owner p98):开场 CTA→进度条的形变被 owner 否掉(先画满再缩回、还划过标题),
+      // 改为进度段从 0 ease-out 填到当前步宽:progIn 落下后 .on 才挂上,填色层只动 transform。
+      /class="prog__seg \{\{progIn && item < step \? 'on' : ''\}\}"[^>]*><view class="prog__fill"><\/view>/,
     ],
     wxssRules: [
-      /\.cy-motion-reduced\s+\.opt,\s*\.cy-motion-reduced\s+\.cap,\s*\.cy-motion-reduced\s+\.sw,\s*\.cy-motion-reduced\s+\.sw__knob,\s*\.cy-motion-reduced\s+\.prog__seg\s*\{[^}]*transition:\s*none\s*!important/s,
+      /\.prog__fill\s*\{[^}]*transform:\s*scaleX\(0\)[^}]*transition:\s*transform\s+\d+ms\s+var\(--cy-ease-out\)/s,
+      /\.prog__seg\.on\s+\.prog__fill\s*\{[^}]*transform:\s*scaleX\(1\)/s,
+      /\.cy-motion-reduced\s+\.opt,\s*\.cy-motion-reduced\s+\.cap,\s*\.cy-motion-reduced\s+\.sw,\s*\.cy-motion-reduced\s+\.sw__knob,\s*\.cy-motion-reduced\s+\.prog__fill\s*\{[^}]*transition:\s*none\s*!important/s,
       // 形变样式住在 style/wizard-intro.wxss(三页共用),页面这边只查确实引了它
       /@import '\.\.\/\.\.\/\.\.\/style\/wizard-intro\.wxss';/,
     ],

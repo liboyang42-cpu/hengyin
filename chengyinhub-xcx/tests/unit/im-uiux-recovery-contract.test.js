@@ -32,6 +32,8 @@ function loadPage(modulePath) {
     setStorageSync: (key, value) => storage.set(key, value),
     removeStorageSync: key => storage.delete(key),
     showToast: (options) => toasts.push(options && options.title),
+    // 商家视角页会切原生导航栏配色(utils/merchant-theme.js)
+    setNavigationBarColor: () => {},
   }
   delete require.cache[require.resolve(modulePath)]
   require(modulePath)
@@ -81,6 +83,7 @@ for (const method of ['loadConversations', 'loadMerchantEntry']) {
     for (const callback of ['success', 'fail']) {
       test(`${method} ${invalidation}后的${callback}不能写页面`, () => {
         const h = loadPage(LIST_MODULE)
+        if (method === 'loadMerchantEntry') h.page.data.isMerchantView = true // G-4(2026-10-27):竞猜待答入口只在商家视角查
         h.page[method]()
         if (invalidation === '账号变化') h.setUserId(9)
         else if (h.page.onUnload) h.page.onUnload()
@@ -97,6 +100,7 @@ for (const method of ['loadConversations', 'loadMerchantEntry']) {
   }
   test(`${method} 当前账号正常回包仍可更新`, () => {
     const h = loadPage(LIST_MODULE)
+    if (method === 'loadMerchantEntry') h.page.data.isMerchantView = true // G-4(2026-10-27):竞猜待答入口只在商家视角查
     h.page[method]()
     h.requests[0].success({ code: 200, data: method === 'loadConversations'
       ? [{ conversationId: 42, unread: 1, type: 1 }]
@@ -112,6 +116,22 @@ for (const method of ['loadConversations', 'loadMerchantEntry']) {
   })
 }
 
+// G-4 / P-46(owner 2026-10-27 p89):玩家视角不查商家身份,竞猜待答入口永不出现;
+// 合作邀请被请求层标成 roleViewSuppressed 时按「没有邀请」处理,不出「商家身份无效」横幅。
+test('玩家视角:不查商家入口,合作邀请的商家报错不出横幅', () => {
+  const h = loadPage(LIST_MODULE)
+  h.page.loadMerchantEntry()
+  assert.equal(h.requests.length, 0)
+  assert.equal(h.page.data.canSettlePredict, false)
+  h.page.loadInvites()
+  h.requests[0].success({ code: 403, msg: '', roleViewSuppressed: true })
+  assert.equal(h.page.data.inviteError, '')
+  assert.deepEqual(h.page.data.invitesIn, [])
+  h.page.loadInvites()
+  h.requests[1].fail({ code: 403, msg: '', roleViewSuppressed: true }, 403)
+  assert.equal(h.page.data.inviteError, '')
+})
+
 // owner 2026-10-22:没有待答时「竞猜待答」整行不出;待答读失败时照样出(提醒有 48 小时期限,不能悄悄消失)
 for (const [label, respond, expected] of [
   ['没有待答 → 不出', (r) => r.success({ code: 200, data: [] }), false],
@@ -120,6 +140,7 @@ for (const [label, respond, expected] of [
 ]) {
   test(`竞猜待答入口:${label}`, () => {
     const h = loadPage(LIST_MODULE)
+    h.page.data.isMerchantView = true // G-4(2026-10-27):竞猜待答入口只在商家视角查
     h.page.loadMerchantEntry()
     h.requests[0].success({ code: 200, data: merchantAccess })
     respond(h.requests.find((r) => r.url === '/api/merchant/predict/inbox'))
@@ -130,6 +151,7 @@ for (const [label, respond, expected] of [
 for (const callback of ['success', 'fail']) {
   test(`商家入口旧${callback}不能覆盖新读取`, () => {
     const h = loadPage(LIST_MODULE)
+    h.page.data.isMerchantView = true // G-4(2026-10-27):竞猜待答入口只在商家视角查
     h.page.loadMerchantEntry()
     h.page.loadMerchantEntry()
     h.requests[1].success({ code: 200, data: merchantAccess })
@@ -297,8 +319,9 @@ for (const changed of [false, true]) {
     h.requests[0].success({ code: 200, data: [{ conversationId: 42, type: 1, unread: 2 }] })
     if (changed) h.setUserId(9)
     h.page.onShow()
-    // onShow:会话重读 + 合作邀请重读(收件箱/发件箱) + 商家入口,共 3 个新请求;requests[1] 仍是会话重读。
-    assert.equal(h.requests.length, 4)
+    // onShow:会话重读 + 合作邀请重读(收件箱/发件箱),共 2 个新请求;requests[1] 仍是会话重读。
+    // 2026-10-27 G-4:玩家视角不再查商家入口(/api/merchant/access/me),原来的第 3 个新请求按 owner 决定去掉。
+    assert.equal(h.requests.length, 3)
     if (changed) {
       assert.deepEqual(h.page.data.list, [])
       assert.deepEqual(h.page.data.viewList, [])
