@@ -48,8 +48,11 @@
   min-width:0;
   font-size: var(--cy-type-label);
   color: var(--cy-color-text-tertiary);
-  white-space: normal;
-  word-break: break-word;
+  /* 2026-10-27 业主 G-7/M-20:设置类行右侧说明一律单行,超长省略,不许折成两行;
+     完整值仍在整行 aria-label 里,读屏不受影响。文案本身也要缩短(各页自己缩)。 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cell__chevron {
