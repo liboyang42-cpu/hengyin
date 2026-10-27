@@ -3574,6 +3574,13 @@ Page({
       // 无块流的存量章节:沿用旧口径(描述 + 已完成节点的手记),行为逐字不变
       push(this.data.chapter.description);
       nodes.forEach((n) => { if (n.done && n.story) push(n.story); });
+      /* 没有块流就没有「节点在哪一块」可对:正开着的内嵌玩法只能接在末尾。下面那条兜底要求
+         _playKitNodeId 为空,而开站必然记下它 ⇒ 无块流章节的内嵌玩法以前一律不铺,
+         玩家只看见手记和「继续探索」,玩法永远打不开(2026-10-27 生产实测:南京路附录盲盒)。 */
+      if (inlineKit && this._playKitNodeId) {
+        items.push({ kind: 'kit', nodeId: this._playKitNodeId, mood: curMood }); kitPlaced = true;
+        pushVoices(this._playKitNodeId);
+      }
     }
     // 没有未完成节点(线性走完 / 没有节点块)时,内嵌玩法接在故事流末尾
     if (inlineKit && !kitPlaced && !this._playKitNodeId) items.push({ kind: 'kit', mood: curMood });

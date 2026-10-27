@@ -1534,3 +1534,21 @@ test('媒体块 altText 带进章节条目:图片做 aria-label,音频给出可�
   assert.match(wxml, /class="chfull__img"[^>]*aria-label="\{\{item\.altText \|\| '章节配图'\}\}"/)
   assert.match(wxml, /<text wx:if="\{\{item\.altText\}\}" class="chfull__audio-transcript"[^>]*aria-label="音频文字稿：\{\{item\.altText\}\}">文字稿：\{\{item\.altText\}\}<\/text>/)
 })
+
+// 2026-10-27 生产实测(南京路附录):无块流的章节里开一个内嵌玩法(盲盒),旧兜底要求 _playKitNodeId 为空,
+// 而开站必然记下它 ⇒ 玩法一律不铺,玩家只看见手记和「继续探索」,永远打不开。
+test('无块流章节里正开着的内嵌玩法铺在故事流末尾', () => {
+  const node = { nodeId: 322, name: '盲盒', hasAdvanced: true, vm: 5, done: false, lat: 31.2, lng: 121.4 }
+  const page = makePage({ description: '附录收录了几个小彩蛋。' }, [
+    { nodeId: 321, name: '结案', done: true, story: '档案已结案。' }, node])
+  page.data.chapterFull = true
+  page.data.advancedPlay = { show: true, node }
+  page._playKitNodeId = 322
+  page.onAdvancedSession({ detail: { nodeId: 322, sessionId: 9, version: 0, present: 'inline',
+    playKit: { random: { drawCount: 1, drawn: [], pool: [{ id: 'a', label: '今晚看电影' }] } } } })
+  assert.equal(page.data.playKit.kit.type, 'random')
+  page.openChapterFull()
+  const kinds = page.data.chapterParas.map(p => p.kind + (p.nodeId ? ':' + p.nodeId : ''))
+  assert.equal(kinds[kinds.length - 1], 'kit:322', kinds.join(','))
+  assert.equal(kinds.filter(k => k.startsWith('kit')).length, 1)
+})
