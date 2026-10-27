@@ -77,11 +77,12 @@ test('B31 官方活动邀约接受绿拒绝红', () => {
   assert.match(wxss, /\.oi-btn\.decline[\s\S]{0,180}action-danger-bg/)
 })
 
-test('B66 勋章墙默认列表并按来源分组', () => {
+// 2026-10-27 owner P-30:不再按来源分组,改为「已点亮 / 未解锁」两段
+test('B66 勋章墙默认列表并分「已点亮 / 未解锁」两段', () => {
   const js = read('subpackageP3/pages/badge-wall/index/index.js')
   const wxml = read('subpackageP3/pages/badge-wall/index/index.wxml')
   assert.match(js, /viewMode:\s*'list'/)
-  assert.match(js, /BADGE_FAMILIES/)
+  assert.match(js, /BADGE_SECTIONS/)
   assert.match(wxml, /badgeGroups/)
   assert.match(wxml, /城市身份卡|bw-list-h/)
 })

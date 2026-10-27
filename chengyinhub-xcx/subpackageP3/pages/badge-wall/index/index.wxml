@@ -60,7 +60,7 @@
         <cover-view class="bw-back-inner"><cover-image class="bw-back-icon" src="/subpackageP3/images/icon_back.png" mode="aspectFit" /></cover-view>
       </cover-view>
     </cover-view>
-    <!-- 信息层与切换控件必须继续使用 cover-view，避免被 WebGL 原生层压住。 -->
+    <!-- 信息层必须继续使用 cover-view，避免被 WebGL 原生层压住。 -->
     <cover-view class="bw-cap">
       <cover-view class="bw-head">
         <cover-view class="bw-page-title"><cover-view class="bw-cap-t">勋章墙</cover-view></cover-view>
@@ -70,10 +70,7 @@
              ⚠️必须留在 bw-cap 这棵 cover-view 里:普通 view 会被 WebGL 原生层压住,
              放在 canvas 之外的游离 cover-view 则根本不渲染(2026-08-25 截图实证)。 -->
         <cover-view class="bw-focus" wx:if="{{focusText}}">{{focusText}}</cover-view>
-        <cover-view class="bw-view-switch">
-          <cover-view class="bw-view-option {{viewMode === 'wall' ? 'is-active' : ''}}" bindtap="setWallMode" hover-class="cy-pressed" hover-stay-time="80">墙</cover-view>
-          <cover-view class="bw-view-option {{viewMode === 'list' ? 'is-active' : ''}}" bindtap="setListMode" hover-class="cy-pressed" hover-stay-time="80">列表</cover-view>
-        </cover-view>
+        <!-- 2026-10-27 owner P-30:去掉「墙 / 列表」切换,只有一页:上面已点亮,下面未解锁 -->
       </cover-view>
     </cover-view>
   </cover-view>

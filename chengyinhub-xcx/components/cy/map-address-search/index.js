@@ -1,6 +1,8 @@
 // 顶部输入地址(§6.1)。四个模式共用这一件:白框是唯一入口,抽屉里不再有同名的一行。
 // 组件只负责「输入 → 过滤 → 选中」,选中之后去哪由页面决定(bind:pick)。
 const { matchPlaces, decoratePlaces } = require('../../../utils/map-address-search.js');
+// 2026-10-27 owner P-33:下拉面板最多 5 条结果,面板之下要还能看到地图
+const MAX_RESULTS = 5;
 
 Component({
   properties: {
@@ -18,7 +20,7 @@ Component({
   },
   methods: {
     _refresh(q) {
-      this.setData({ results: decoratePlaces(matchPlaces(this.data.places, q)) });
+      this.setData({ results: decoratePlaces(matchPlaces(this.data.places, q)).slice(0, MAX_RESULTS) });
     },
     /* 原型是两个状态:点白条进搜索态,点「取消」或压暗层退回。
        不是「聚焦就展开」—— 那样退不回去,压暗层也没地方挂。 */
@@ -38,6 +40,13 @@ Component({
     onPick(e) {
       const row = this.data.results[Number(e.currentTarget.dataset.i)];
       if (row) this._pick(row);
+    },
+    // 2026-10-27 owner P-32:每条结果可直接导航(微信内置地图),与迷雾无关
+    onNavigate(e) {
+      const row = this.data.results[Number(e.currentTarget.dataset.i)];
+      const latitude = Number(row && row.lat); const longitude = Number(row && row.lng);
+      if (!row || !Number.isFinite(latitude) || !Number.isFinite(longitude) || typeof wx === 'undefined' || !wx.openLocation) return;
+      wx.openLocation({ latitude, longitude, name: row.name || '', address: row.address || '', scale: 17 });
     },
     _pick(row) {
       // 选完收起列表,但把选中的名字留在框里 —— 清空会让人以为白点了一次

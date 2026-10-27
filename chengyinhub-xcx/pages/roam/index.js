@@ -26,6 +26,7 @@ const {
 } = require('../../utils/play-state-contract.js');
 const { drawPlayStateMarker } = require('../../utils/play-marker-draw.js');
 const { readReducedMotion, writeReducedMotion } = require('../../utils/motion-preference.js');
+const { readFogOff, writeFogOff } = require('../../utils/roam-fog-preference.js');
 const countUp = require('../../utils/count-up.js');
 const { selectDemoRoamPois } = require('../../utils/roam-demo-gate.js');
 const {
@@ -254,6 +255,7 @@ function httpFail(res) { return !!res && res.httpFail === true; }
 // 官方活动虽可匿名访问，但登录态会返回报名进度，不能强制降为匿名请求。
 const { createRoamNpcCoordinator } = require('../../utils/roam-npc-coordinator.js');
 const { activeRoamEventCard, applyEventCard } = require('../../utils/roam-official-active.js');
+const { latestTrackThumb, latestStampImage, latestBadgeImage } = require('../../utils/roam-passport-tiles.js');
 const { persistPhoto, retainRecentPhotos, archivedSessionPhotos, droppedSavedPhotos, evictedSavedPhotos, releaseSavedPhotos } = require('../../utils/roam-session-photos.js');
 
 const NPC_JSON_HEADER = { header: { 'content-type': 'application/json' } };
@@ -313,6 +315,7 @@ Page({
     // 护照 tab 的读数全部来自本机 roam_sessions,拿不到就是空态,不摆假卡
     passport: { tiles: [], trips: [] }, ppOpen: { show: false, on: false, icon: '', title: '', value: '', style: '' }, // ppOpen:护照方卡放大层
     introCardIdx: 0,
+    fogOff: false, noFogPolys: [], // P-32:迷雾开关(本机偏好);关时 map-polygons 换成空数组
     introCards: [
       { key: 'start', icon: 'route', title: '开始漫游', sub: '走到哪，雾散到哪' },
       { key: 'map', nav: '/subpackageRoam/nearby/index', icon: 'map', title: '打开地图', sub: '寻找组队' },
@@ -743,20 +746,35 @@ Page({
           { k: '活跃日', v: days.size },
           { k: '公里', v: km.toFixed(1) },
         ],
+        // 2026-10-27 owner P-29:三张档案卡用真实图片(最近轨迹 / 最新邮票 / 最新点亮勋章),拿不到退回空态插画(empty)
         tiles: [
-          { key: 'history', icon: 'route', title: '漫游记录', value: sessions.length + ' 次旅程' },
-          { key: 'stamp', icon: 'image', title: '集邮册', value: stamps + ' 张邮票' },
-          { key: 'badge', icon: 'star', title: '勋章墙', value: '我的徽章' },
+          { key: 'history', icon: 'route', title: '漫游记录', value: sessions.length + ' 次旅程', img: latestTrackThumb(sessions), empty: true },
+          { key: 'stamp', icon: 'image', title: '集邮册', value: stamps + ' 张邮票', img: latestStampImage(sessions), empty: true },
+          { key: 'badge', icon: 'star', title: '勋章墙', value: '我的徽章', img: '', empty: true },
           // 2026-10-14 随漫游上线的两项(读数在各自页面现读,方卡不摆数字)
-          { key: 'goals', icon: 'flag', title: '探索目标', value: '给自己定个小目标', isNew: true },
-          { key: 'capsule', icon: 'clock', title: '时光胶囊', value: '写给以后的自己', isNew: true },
+          { key: 'goals', icon: 'flag', title: '探索目标', value: '给自己定个小目标' },
+          { key: 'capsule', icon: 'clock', title: '时光胶囊', value: '写给以后的自己' },
         ],
+        // P-29:去掉「官方活动 · 暂未开放」灰卡;有可参与的漫游官方活动时才插回官方活动大卡(_loadActiveRoamEvents)
         plays: [
-          // 官方活动暂未开放(用户裁决):卡片留位、点按只提示,不进列表
-          { key: 'event', icon: 'calendar', title: '官方活动', sub: '限时任务与奖励', cover: '', closed: true },
           { key: 'discover', icon: 'discover-shop', title: '发现附近店铺', sub: '现在能去哪', cover: '' },
         ],
       },
+    });
+    if (typeof getApp().sendRequest === 'function') this._loadPassportBadge();
+  },
+  // P-29:勋章墙方卡取最新点亮的那枚勋章图;失败静默,方卡保持空态插画
+  _loadPassportBadge() {
+    const token = {};
+    this._passportBadgeToken = token;
+    req('/api/medal/wall', 'POST', {}, { silentError: true }).then((res) => {
+      if (this._passportBadgeToken !== token || !apiOk(res) || !res.data) return;
+      const app = getApp();
+      const raw = latestBadgeImage(res.data.medals);
+      const img = raw && typeof app.getImgUrl === 'function' ? app.getImgUrl(raw) : raw;
+      const tiles = (this.data.passport && this.data.passport.tiles) || [];
+      const idx = tiles.findIndex((t) => t.key === 'badge');
+      if (img && idx >= 0) this.setData({ ['passport.tiles[' + idx + '].img']: img });
     });
   },
   onPassportTileTap(e) {
@@ -781,13 +799,16 @@ Page({
       const passport = this.data.passport || {};
       if (!card || !Array.isArray(passport.plays)) return;
       this._activeRoamEventId = card.eventId;
-      this.setData({ 'passport.plays': applyEventCard(passport.plays, card) });
+      // P-29:没有可参与活动时不摆灰卡;有活动才把官方活动大卡插到最前
+      const plays = passport.plays.some((p) => p && p.key === 'event') ? passport.plays
+        : [{ key: 'event', icon: 'calendar', title: '官方活动', sub: '限时任务与奖励', cover: '' }].concat(passport.plays);
+      this.setData({ 'passport.plays': applyEventCard(plays, card) });
     });
   },
   onPassportPlayTap(e) {
     const key = e.currentTarget.dataset.key;
     if (key === 'event' && this._activeRoamEventId) { if (this._eventNavigating) return; this._eventNavigating = true; wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + this._activeRoamEventId, complete: () => { this._eventNavigating = false; } }); return; } // 跳转中不响应连点,免得叠两层活动详情
-    if (key === 'event') return;   // 官方活动暂未开放:卡上已标状态,点按不进列表
+    if (key === 'event') return;   // 多场可参与时点按行为照旧(P-29 只去掉「暂未开放」灰卡)
     // 发现附近店铺:漫游开始前 _pois 为空、横滑条只在 map 态渲染,原 goDiscover 在这里只会弹「没有合作商家」→ 改去地图
     this.openNearbyMap();
   },
@@ -842,6 +863,12 @@ Page({
     this.setData({ reducedMotion });
     cyToast(reducedMotion ? '已减少动态效果' : '已恢复动态效果');
   },
+  // 2026-10-27 owner P-32:设置里关掉迷雾 —— 只停画雾层,足迹/点亮照常记;地点搜索本来就不受迷雾影响
+  toggleFogOff() {
+    const fogOff = writeFogOff(null, !this.data.fogOff); if (fogOff === null) { cyToast('设置未保存，请重试'); return; }
+    this.setData({ fogOff });
+    cyToast(fogOff ? '已关闭迷雾' : '已开启迷雾');
+  },
   _triggerCelebration(moment) {
     if (!moment) return;
     this._celebrationSeq = (this._celebrationSeq || 0) + 1;
@@ -885,6 +912,7 @@ Page({
       chrome,
       isDevtools: this._isDevtools(),
       reducedMotion: readReducedMotion(),
+      fogOff: readFogOff(),
     });
     // BL-23:入口地图首屏不再固定落在默认城市坐标 —— 有上次成功定位就从那里开始
     const lastPoint = lastLocation.load();
@@ -2320,9 +2348,9 @@ Page({
 
   /* 顶部输入地址的候选(§6.1)。喂的是这张图上真有的点位:
    *   挂着主题的 = 按玩法给绿 / 蓝针;没挂主题的 = 灰针 + 副标题「没有局」。
-   * ⚠️ 雾里的点不进候选 —— 搜出一个自己还没走到、地图上看不见的地方,等于把雾直接绕过去。 */
+   * 2026-10-27 owner P-32:搜地点不受迷雾影响 —— 雾里的点也进候选,开着迷雾也能搜、能导航(取代原「雾里的点不进候选」)。 */
   _searchPlaces() {
-    return (this._pois || []).filter((p) => p.state !== 'fog' && p.lat && p.lng).map((p) => ({
+    return (this._pois || []).filter((p) => p.lat && p.lng).map((p) => ({
       id: String(p.id),
       name: p.name || '未命名地点',
       address: p.desc || '',
@@ -5486,6 +5514,13 @@ Page({
     this.setData({ paused, endHoldPct: 0 }, () => this._syncPlayHud());
   },
 
+  // 2026-10-27 owner P-35:结算页右上角 × 只关掉结算页,回到漫游首页;不再走 backToSquare(单页栈时会 redirect 到无 tab 栏的动态页)
+  closeSettle() {
+    if (this.data.screen !== 'arrive') return;
+    this.setData({ screen: 'entry-map', introTab: 'start', sceneStack: [], sceneCurrent: null });
+    this._loadIntroPassport();
+    if (typeof getApp().sendRequest === 'function') this._loadEntryMap(this.data.center);
+  },
   backToSquare() {
     if (getCurrentPages().length > 1) wx.navigateBack();
     else if (typeof getApp().canUseCommunity === 'function' && getApp().canUseCommunity(false)) wx.redirectTo({ url: '/pages/square/list/index' });
