@@ -39,26 +39,19 @@ WHERE r.role_key='cy_operator' AND r.del_flag='0'
   AND m.menu_type='F' AND m.perms IN ('business:orientScoring:list','business:orientScoring:review')
   AND NOT EXISTS (SELECT 1 FROM sys_role_menu x WHERE x.role_id=r.role_id AND x.menu_id=m.menu_id);
 
-INSERT INTO tmp_cy_orient_scoring_menu_guard(id) SELECT 1 WHERE (SELECT COUNT(*) FROM sys_menu
-  WHERE menu_type='F' AND perms IN ('business:orientScoring:list','business:orientScoring:review'))<>2;
-DROP TEMPORARY TABLE tmp_cy_orient_scoring_menu_guard;
-
--- 回读断言：两个 F 按钮各恰好一行，挂在官方主题 C 菜单下。
--- runner: assert=scalar-true
-SELECT COUNT(*) = 2 AS assertion_ok FROM sys_menu f
-JOIN sys_menu p ON p.menu_id = f.parent_id AND p.menu_type='C' AND p.component='business/topic/index' AND p.path='official-topic'
-WHERE f.menu_type='F' AND f.perms IN ('business:orientScoring:list','business:orientScoring:review');
-
--- 回读断言：每个有效 cy_operator 角色都持有两个权限。
--- runner: assert=scalar-true
-SELECT COUNT(*) = 0 AS assertion_ok FROM sys_role r JOIN sys_menu m
+-- 回读自检(事务模式只允许 DML,断言写成守卫插入:任一不成立即主键冲突,整批回滚)。
+-- ① 两个 F 按钮各恰好一行，挂在官方主题 C 菜单下。
+INSERT INTO tmp_cy_orient_scoring_menu_guard(id) SELECT 1 WHERE (SELECT COUNT(*) FROM sys_menu f
+  JOIN sys_menu p ON p.menu_id = f.parent_id AND p.menu_type='C' AND p.component='business/topic/index' AND p.path='official-topic'
+  WHERE f.menu_type='F' AND f.perms IN ('business:orientScoring:list','business:orientScoring:review'))<>2;
+-- ② 每个有效 cy_operator 角色都持有两个权限。
+INSERT INTO tmp_cy_orient_scoring_menu_guard(id) SELECT 1 WHERE EXISTS (SELECT 1 FROM sys_role r JOIN sys_menu m
   ON m.menu_type='F' AND m.perms IN ('business:orientScoring:list','business:orientScoring:review')
-WHERE r.role_key='cy_operator' AND r.del_flag='0'
-  AND NOT EXISTS (SELECT 1 FROM sys_role_menu x WHERE x.role_id=r.role_id AND x.menu_id=m.menu_id);
-
--- 回读断言：除 cy_operator 外没有任何角色持有这两个权限(超管走代码放行，不入 sys_role_menu)。
--- runner: assert=scalar-true
-SELECT COUNT(*) = 0 AS assertion_ok FROM sys_role_menu rm
-JOIN sys_menu m ON m.menu_id = rm.menu_id AND m.perms IN ('business:orientScoring:list','business:orientScoring:review')
-JOIN sys_role r ON r.role_id = rm.role_id
-WHERE r.role_key <> 'cy_operator' OR r.del_flag <> '0';
+  WHERE r.role_key='cy_operator' AND r.del_flag='0'
+    AND NOT EXISTS (SELECT 1 FROM sys_role_menu x WHERE x.role_id=r.role_id AND x.menu_id=m.menu_id));
+-- ③ 除有效 cy_operator 外没有任何角色持有这两个权限(超管走代码放行，不入 sys_role_menu)。
+INSERT INTO tmp_cy_orient_scoring_menu_guard(id) SELECT 1 WHERE EXISTS (SELECT 1 FROM sys_role_menu rm
+  JOIN sys_menu m ON m.menu_id = rm.menu_id AND m.perms IN ('business:orientScoring:list','business:orientScoring:review')
+  JOIN sys_role r ON r.role_id = rm.role_id
+  WHERE r.role_key <> 'cy_operator' OR r.del_flag <> '0');
+DROP TEMPORARY TABLE tmp_cy_orient_scoring_menu_guard;
