@@ -21,6 +21,15 @@ const PLAY_PROGRESS_CONTROLLER = path.resolve(
   XCX_ROOT,
   '../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java'
 );
+// W8 起控制器只把 currentMemberId() 交给应用服务，会员/游玩事实校验在应用服务内完成。
+const PLAY_PREFERENCE_APPLICATION = path.resolve(
+  XCX_ROOT,
+  '../chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayPreferenceApplication.java'
+);
+const PLAY_PLAYER_QUERY_APPLICATION = path.resolve(
+  XCX_ROOT,
+  '../chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayPlayerQueryApplication.java'
+);
 
 // GET调用点显式权限清单；新增调用逐条复核。static = /profile/** 已公开的平台相册元数据。
 // optional = 后端允许匿名，但登录时会按 uid 返回个人态，所以仍使用默认认证；
@@ -203,6 +212,33 @@ const MATRIX = [
   ['pages/topic/index/index.js', "url: '/api/team/nearby'", 'required', 'member', 'global-authenticated-read'],
   ['pages/topic/index/index.js', "url: '/api/play/nodes'", 'required', 'member', 'current-session'],
   ['subpackageRoam/nearby/index.js', "url: '/api/roam/pois'", 'required', 'member', 'global-read+viewer-personalization'],
+  // 2026-10-27 W8 收口逐条复核后端(均未进 SecurityConfig permitAll，全部默认认证)：
+  //   赛事联络/签到:玩家读 OfficialEventAttendanceService.read(id, uid, false) 仅公开可见赛事 + 本人 mine 投影;
+  //   管理读先 canPublish(uid) 再 organizer(e, uid)。
+  ['components/cy/event-attendance/index.js', "url:'/api/official/events/'+id+'/attendance/manage'", 'required', 'publisher', 'controlled-event-operator'],
+  ['components/cy/event-attendance/index.js', "url:'/api/official/events/'+id+'/attendance'}", 'required', 'member', 'public-detail+viewer-personalization'],
+  //   注册属性绑定:AuthorAttributeRegistryReader.read 校验主题 memberId == 登录人(商家 scope 先换 PROJECT_MANAGE 主体)。
+  ['pages/publish/fabu/index.js', "url: '/api/topic/attribute-binding'", 'required', 'publisher', 'self-publisher'],
+  //   公共玩法采用来源/原请求结果/采用详情:TemplateAdoptionService principal(actor, owner) + 按 actor 读原请求。
+  ['pages/publish/fabu/index.js', "url: '/api/template/adoption-source'", 'required', 'publisher', 'self-publisher'],
+  ['pages/publish/fabu/index.js', "url: '/api/template/adoption-receipt'", 'required', 'publisher', 'self-publisher'],
+  ['pages/publish/fabu/index.js', "url: '/api/template/adoption-detail'", 'required', 'publisher', 'self-publisher'],
+  ['pages/publish/utils/publish/template-adoption.js', "url:'/api/template/adoption-detail'", 'required', 'publisher', 'self-publisher'],
+  ['pages/publish/utils/publish/template-adoption.js', "url:'/api/template/adoption-receipt'", 'required', 'publisher', 'self-publisher'],
+  ['pages/publish/utils/publish/template-adoption.js', "url:'/api/template/adoption-source'", 'required', 'publisher', 'self-publisher'],
+  //   原申诉请求结果:AuditTaskServiceImpl.appealReceipt 按 bizType/bizId/登录 memberId 查本人申诉。
+  ['subpackageA/pages/myproject/index.js', "url: '/api/audit/appeal/receipt'", 'required', 'author', 'self-publisher'],
+  //   定向计分排名:OrientScoringServiceImpl.leaderboard 先 readOwned(memberId, sessionId) 再 requireLeaderboardAccess。
+  ['subpackageMember/orient-score/index.js', "url: BASE + '/session/' + sessionId + '/leaderboard'", 'required', 'member', 'self-account'],
+  ['pages/play/index.js', "req('/api/orient/scoring/session/' + originalSessionId + '/leaderboard'", 'required', 'member', 'self-account'],
+  //   漫游护照 history/summary/record:ApiRoamPassportController 只取登录 owner，不接收客户端 owner。
+  ['utils/roam-passport-read.js', "url: path, method: 'GET'", 'required', 'member', 'self-member-history'],
+  //   基础动作上下文/原动作结果:PlayBasicIntentApplication 以 currentMemberId + basicIntentScope 限定本人当前游玩局。
+  ['pages/play/index.js', "req('/api/play/action-receipt', 'GET', { activityId: data.activityId", 'required', 'member', 'current-session'],
+  ['pages/play/index.js', "req('/api/play/action-receipt', 'GET', { activityId: body.activityId", 'required', 'member', 'current-session'],
+  ['pages/play/index.js', "req('/api/play/action-context'", 'required', 'member', 'current-session'],
+  //   定向计分明确不适用时回退原排行榜(与上一条 /api/play/leaderboard 同端点同权限档)。
+  ['pages/play/index.js', "req('/api/play/leaderboard', 'GET', params);\n    loadBoard", 'required', 'member', 'current-session'],
 ];
 
 const VALID_SCOPES = new Set([
@@ -343,11 +379,14 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 上述两端各新增单笔与分页 GET，共四处，79 → 83。
   // 本人角色卡及计分会话列表、明细、回执增加四处认证 GET，83 → 87。
   // Existing team detail adds two authenticated board reads, 87 → 89.
-  assert.equal(directCount, 89, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-10-27 W8 收口:赛事联络/签到两处、注册属性绑定一处、公共玩法采用六处、原申诉结果一处、定向计分排名一处、
+  //   漫游护照读取一处，共 12 处直接 GET(权限档见 MATRIX 同日注释)，89 → 101。
+  assert.equal(directCount, 101, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。
-  assert.equal(wrapperCount, 30, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-10-27 W8 收口:pages/play 基础动作原结果两处、动作上下文一处、定向计分排名一处、其回退排行榜一处，30 → 35。
+  assert.equal(wrapperCount, 35, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(ownMediaWrapperCount, 5, '作者媒体实际GET调用点变化需显式复核');
   assert.equal(MATRIX.length, directCount + wrapperCount + ownMediaWrapperCount);
 
@@ -455,37 +494,53 @@ test('team-progress 后端必须同时校验登录身份与本场资源归属', 
 
 test('偏好题组与新生活 OS GET 都绑定当前会员及其游玩/完成事实', () => {
   const controller = fs.readFileSync(PLAY_PROGRESS_CONTROLLER, 'utf8');
-  const preference = controller.slice(
+  const application = fs.readFileSync(PLAY_PREFERENCE_APPLICATION, 'utf8');
+  const preferenceRoute = controller.slice(
     controller.indexOf('@GetMapping("/preference/{nodeId}")'),
     controller.indexOf('@PostMapping("/preference/{nodeId}/submit")')
   );
-  const resolver = controller.slice(
-    controller.indexOf('private PreferencePlayCtx resolvePreferencePlayCtx'),
-    controller.indexOf('private static final class PreferencePlayCtx')
-  );
-  const operatingSystem = controller.slice(
+  const operatingSystemRoute = controller.slice(
     controller.indexOf('@GetMapping("/os/{topicId}")'),
-    controller.indexOf('private PreferencePlayCtx resolvePreferencePlayCtx')
+    controller.indexOf('\n    }', controller.indexOf('@GetMapping("/os/{topicId}")'))
+  );
+  const preference = application.slice(
+    application.indexOf('public AjaxResult preference(Long actorMemberId'),
+    application.indexOf('public AjaxResult submitPreference(')
+  );
+  const resolver = application.slice(
+    application.indexOf('private PreferencePlayCtx resolvePreferencePlayCtx')
+  );
+  const operatingSystem = application.slice(
+    application.indexOf('public AjaxResult newLifeOperatingSystem(Long actorMemberId'),
+    application.indexOf('public PreferencePlayCtx resolvePreferencePlayCtx')
   );
 
-  assert.match(preference, /Long memberId = currentMemberId\(\)/);
+  assert.match(preferenceRoute, /playPreferenceApplication\.preference\(currentMemberId\(\), nodeId, activityId, topicId\)/);
+  assert.match(preference, /Long memberId = actorMemberId;\s*if \(memberId <= 0\) return error\("请先登录"\)/);
   assert.match(preference, /resolvePreferencePlayCtx\(memberId, nodeId, activityId, topicId, null\)/);
   assert.match(resolver, /resolveCtx\(memberId, activityId, topicId, out\.node\)/);
   assert.match(resolver, /unlockGateError\(memberId, out\.playCtx\.actId, out\.node\)/);
-  assert.match(operatingSystem, /Long memberId = currentMemberId\(\)/);
+  assert.match(operatingSystemRoute, /playPreferenceApplication\.newLifeOperatingSystem\(currentMemberId\(\), topicId\)/);
+  assert.match(operatingSystem, /Long memberId = actorMemberId;\s*if \(memberId <= 0\) return error\("请先登录"\)/);
   assert.match(operatingSystem, /operatingSystem\(memberId, topicId\)/);
 });
 
 test('排行榜 GET 绑定当前会员及本场报名支付或自玩通行证', () => {
   const controller = fs.readFileSync(PLAY_PROGRESS_CONTROLLER, 'utf8');
-  const leaderboard = controller.slice(
+  const route = controller.slice(
     controller.indexOf('@GetMapping("/leaderboard")'),
     controller.indexOf('@Operation(summary = "我的成长+徽章")')
   );
+  const application = fs.readFileSync(PLAY_PLAYER_QUERY_APPLICATION, 'utf8');
+  const leaderboard = application.slice(
+    application.indexOf('public AjaxResult leaderboard(Long actorMemberId, String activityId, String topicId)'),
+    application.indexOf('List<LeaderboardItemVO> list', application.indexOf('public AjaxResult leaderboard(Long actorMemberId'))
+  );
 
-  assert.match(leaderboard, /Long memberId = currentMemberId\(\)/);
+  assert.match(route, /playPlayerQueryApplication\.leaderboard\(currentMemberId\(\), activityId, topicId\)/);
+  assert.match(leaderboard, /Long memberId = actorMemberId;/);
   assert.match(leaderboard, /if \(memberId <= 0\) return error\("请先登录"\)/);
-  assert.match(leaderboard, /if \(!isRegistered\(memberId, actId\)\) return error\("请先报名并完成支付"\)/);
+  assert.match(leaderboard, /if \(!playCompletionFacts\.isRegistered\(memberId, actId\)\) return error\("请先报名并完成支付"\)/);
   assert.match(leaderboard, /validSelfPlayPass\(memberId, tId\) == null/);
   assert.match(leaderboard, /return new AjaxResult\(402, "请先购买自玩通行证"\)/);
 });

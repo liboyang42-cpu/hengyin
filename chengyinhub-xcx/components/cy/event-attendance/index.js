@@ -35,7 +35,7 @@ Component({
    const current=this._current,seq=this._readSeq=(this._readSeq||0)+1,id=exactId(this.properties.eventId);
    this.setData({loading:true,error:''});
    const fail=()=>{if(current()&&seq===this._readSeq)this.setData({loading:false,error:'联系及签到信息读取失败，请重试',snapshot:null});};
-   const request={method:'GET',hideLoading:true,autoErrorToast:false,
+   const request={hideLoading:true,autoErrorToast:false,
     success:res=>{
      if(!current()||seq!==this._readSeq)return;
      if(!res||res.code!=200||!res.data)return fail();
@@ -52,8 +52,8 @@ Component({
      this.setData({snapshot:view,loading:false,error:'',fields:FIELDS.map(([key,label])=>({key,label,value:form[key]==null?'':TIMES.includes(key)?formatted(form[key]):String(form[key])})),publicConfirmed:!!form.publicConfirmed,
       code:frozen&&frozen.action==='attendance-verify'?frozen.credentialCode:this.data.code});
     },fail,successStatusAbnormal:fail};
-   if(this.properties.organizer)getApp().sendRequest({...request,url:'/api/official/events/'+id+'/attendance/manage'});
-   else getApp().sendRequest({...request,url:'/api/official/events/'+id+'/attendance'});
+   if(this.properties.organizer)getApp().sendRequest({...request,method:'GET',url:'/api/official/events/'+id+'/attendance/manage'});
+   else getApp().sendRequest({...request,method:'GET',url:'/api/official/events/'+id+'/attendance'});
   },
   input(e) {
    if(this._recovery&&this._recovery.pending())return;
