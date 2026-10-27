@@ -59,7 +59,11 @@ Component({
   },
   observers: {
     'show, items': function (show, items) {
-      if (!show) return;
+      if (!show) { this._configSignature = ''; return; }
+      // 服务端回流会把同值的题面数组再赋一遍:题面没变就不重置台面(与停表 / typein 的签名同口径)
+      const signature = JSON.stringify(items);
+      if (signature === this._configSignature) return;
+      this._configSignature = signature;
       this._dragTo = -1;
       this.setData({ rows: paint(items), dragging: -1, dragOffset: 0, picked: -1, verdict: '' });
       const stage = this.selectComponent('#cy-play-stage');
@@ -149,6 +153,6 @@ Component({
       // ★ 只报顺序,不报对错 —— 对错在服务端
       this.triggerEvent('submit', { order: this.data.rows.map((r) => r.id) });
     },
-    onClose() { this.triggerEvent('close'); },
+    onClose() { this._configSignature = ''; this.triggerEvent('close'); },
   },
 });

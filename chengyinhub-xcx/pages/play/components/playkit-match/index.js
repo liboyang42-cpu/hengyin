@@ -72,7 +72,11 @@ Component({
   },
   observers: {
     'show, left, right': function (show, left, right) {
-      if (!show) return;
+      if (!show) { this._configSignature = ''; return; }
+      // 服务端回流会把同值的题面数组再赋一遍:题面没变就不重置台面(与停表 / typein 的签名同口径)
+      const signature = JSON.stringify([left, right]);
+      if (signature === this._configSignature) return;
+      this._configSignature = signature;
       this._paintPairs([], '', left, right);
       const stage = this.selectComponent('#cy-play-stage');
       if (stage) stage.begin();
@@ -149,6 +153,6 @@ Component({
       // ★ 只报玩家连的那些,不报对错 —— 对错在服务端
       this.triggerEvent('submit', { pairs: (this._pairs || []).map((p) => [p[0], p[1]]) });
     },
-    onClose() { this.triggerEvent('close'); },
+    onClose() { this._configSignature = ''; this.triggerEvent('close'); },
   },
 });

@@ -63,8 +63,12 @@ Component({
     ghost: null,          // 飞进分类箱的那张(只是演出,数据已经落定)
   },
   observers: {
-    'show, items, bins': function (show, items) {
-      if (!show) return;
+    'show, items, bins': function (show, items, bins) {
+      if (!show) { this._configSignature = ''; return; }
+      // 服务端回流会把同值的题面数组再赋一遍:题面没变就不重置台面(与停表 / typein 的签名同口径)
+      const signature = JSON.stringify([items, bins]);
+      if (signature === this._configSignature) return;
+      this._configSignature = signature;
       const rows = paint(items);
       // 逐条归属只喂逻辑(牌堆 / 分类箱由它派生),不直接渲染:放实例字段,不进 data
       this._rows = rows;
@@ -132,6 +136,6 @@ Component({
       (this._rows || []).forEach((r) => { if (r.bin) placement[r.id] = r.bin; });
       this.triggerEvent('submit', { placement: placement });
     },
-    onClose() { this.triggerEvent('close'); },
+    onClose() { this._configSignature = ''; this.triggerEvent('close'); },
   },
 });
