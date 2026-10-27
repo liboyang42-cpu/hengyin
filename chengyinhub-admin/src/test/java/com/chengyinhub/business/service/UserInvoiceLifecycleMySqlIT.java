@@ -243,6 +243,26 @@ class UserInvoiceLifecycleMySqlIT {
         assertEquals(1, count("SELECT COUNT(*) FROM user_invoice_application_order WHERE active_key=1"));
     }
 
+    /** R625 major (a):W8 前的申请没有处理行;回填迁移只按唯一主体映射补行,映射缺失不推断,重跑幂等。 */
+    @Test
+    void preW8ApplicationsGetProcessingRowsFromIdempotentBackfill() throws Exception {
+        long mapped = id(service.apply(OWNER, "pre-w8-mapped", titleId, List.of(ORDER)));
+        long unmapped = id(service.apply(OWNER, "pre-w8-unmapped", titleId, List.of(ORDER + 1)));
+        jdbc.update("UPDATE cms_registration SET owner_id=999 WHERE id=?", ORDER + 1);
+        jdbc.update("DELETE FROM user_invoice_processing");
+        jdbc.update("UPDATE user_invoice_application SET status='ISSUED',invoice_no='PRE-W8-NOT-REAL' WHERE id=?", mapped);
+        Path backfill = Path.of("chengyinhub-admin/sql/migration_20261027_user_invoice_processing_backfill.sql");
+        if (!Files.exists(backfill)) backfill = Path.of("..").resolve(backfill);
+        for (int run = 0; run < 2; run++) {
+            try (Connection c = dataSource.getConnection()) { ItSchema.applyMigrations(c, backfill.toString()); }
+        }
+        assertEquals(1, count("SELECT COUNT(*) FROM user_invoice_processing"));
+        assertEquals(301, count("SELECT issuer_id FROM user_invoice_processing WHERE application_id=" + mapped));
+        assertEquals(0, count("SELECT COUNT(*) FROM user_invoice_processing WHERE application_id=" + unmapped));
+        assertEquals("ISSUED", desk.detail(901L, mapped).get("status"));
+        assertEquals("PRE-W8-NOT-REAL", service.applicationDetail(OWNER, mapped).get("invoiceNo"));
+    }
+
     @Test
     void originalRequestBeyondRecentTwoHundredIsStillOwnedAndRecoverable() {
         long original = id(service.apply(OWNER, "old-original", titleId, List.of(ORDER)));
@@ -447,8 +467,8 @@ class UserInvoiceLifecycleMySqlIT {
         desk.command(901L,app,command("claim",0,"CLAIM",null,null,null,null));
         desk.command(901L,app,command("start",1,"START",null,null,null,null));
         jdbc.update("INSERT INTO refund_application(source_type,source_id,member_id,status,refund_amount) VALUES('registration',?,?,0,5.00)",ORDER,OWNER);
-        // Even before asynchronous ingress, the attempted advancement must persist PAUSED, not ISSUED.
-        assertEquals("PAUSED",desk.command(901L,app,command("issued",2,"RECORD_ISSUED",app+"_start","NOT-REAL","evidence:outside",null)).get("status"));
+        // Even before asynchronous ingress, an unissued advancement must persist PAUSED.
+        assertEquals("PAUSED",desk.command(901L,app,command("unknown",2,"UNKNOWN",app+"_start",null,null,null)).get("status"));
         desk.acceptRegistrationRefundFact(ORDER); desk.acceptRegistrationRefundFact(ORDER);
         assertEquals(app+"_start",desk.detail(901L,app).get("operationId"));
         assertEquals(1,count("SELECT COUNT(*) FROM user_invoice_application_order WHERE active_key=1"));
@@ -554,8 +574,11 @@ class UserInvoiceLifecycleMySqlIT {
                 insert.setLong(1,ORDER); insert.setLong(2,OWNER); insert.executeUpdate();
             }
             refund.commit();
-            assertEquals("PAUSED",advance.get(30,TimeUnit.SECONDS).get("status"));
-            assertEquals(0,count("SELECT COUNT(*) FROM user_invoice_issued_reference"));
+            // R625 (b): the external invoice exists; it is recorded as ISSUED with its number, flagged from current refund facts.
+            assertEquals("ISSUED",advance.get(30,TimeUnit.SECONDS).get("status"));
+            assertEquals("TAX_REVIEW_REQUIRED",desk.detail(901L,app).get("reconciliationStatus"));
+            assertEquals("NOT-REAL",service.applicationDetail(OWNER,app).get("invoiceNo"));
+            assertEquals(1,count("SELECT COUNT(*) FROM user_invoice_issued_reference"));
             assertEquals(1,count("SELECT COUNT(*) FROM user_invoice_application_order WHERE active_key=1"));
         } finally {executor.shutdownNow(); assertTrue(executor.awaitTermination(10,TimeUnit.SECONDS));}
     }
@@ -567,10 +590,11 @@ class UserInvoiceLifecycleMySqlIT {
         desk.command(901L,app,command("start",1,"START",null,null,null,null));
         desk.command(901L,app,command("issued",2,"RECORD_ISSUED",app+"_start","NOT-REAL","evidence:issued",null));
         jdbc.update("INSERT INTO refund_application(source_type,source_id,member_id,status,payout_status,refund_amount) VALUES('registration',?,?,1,2,5.00)",ORDER,OWNER);
-        desk.acceptRegistrationRefundFact(ORDER);
-        assertEquals("PAUSED",service.applicationDetail(OWNER,app).get("status"));
+        desk.acceptRegistrationRefundFact(ORDER); desk.acceptRegistrationRefundFact(ORDER);
+        // R625 (b): a refund after issuance never demotes ISSUED or drops the invoice number.
+        assertEquals("ISSUED",service.applicationDetail(OWNER,app).get("status"));
+        assertEquals(1,count("SELECT COUNT(*) FROM user_invoice_processing_audit WHERE action='REFUND_TAX_REVIEW' AND result_status='ISSUED'"));
         assertEquals("DECLINED",desk.command(902L,app,command("incorrect-none",4,"RECONCILE",app+"_start",null,"evidence:conflict","NO_EXTERNAL_ISSUE")).get("status"));
-        desk.command(902L,app,command("tax-review",4,"RECONCILE",app+"_start",null,"evidence:tax","EXTERNAL_ISSUED"));
         assertEquals("TAX_REVIEW_REQUIRED",desk.detail(902L,app).get("reconciliationStatus"));
         var memberResult=service.applicationDetail(OWNER,app);
         assertEquals("TAX_REVIEW_REQUIRED",memberResult.get("reconciliationStatus"));

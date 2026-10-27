@@ -66,13 +66,39 @@ class UserInvoiceProcessingServiceTest {
         order.verify(refunds).selectRegistrationHistoryForUpdate(1L);
         order.verify(processing).lockApplication(Long.MAX_VALUE);
     }
-    @Test void approvedRefundEvenFailedPayoutPausesInsteadOfIssuing() {
+    @Test void approvedRefundEvenFailedPayoutPausesUnissuedProcessing() {
         RefundApplication refund=new RefundApplication(); refund.setStatus(1); refund.setPayoutStatus(2);
         when(refunds.selectRegistrationHistoryForUpdate(1L)).thenReturn(List.of(refund));
-        assertEquals("PAUSED",service.command(901L,Long.MAX_VALUE,command("RECORD_ISSUED","original")).get("status"));
+        assertEquals("PAUSED",service.command(901L,Long.MAX_VALUE,command("UNKNOWN","original")).get("status"));
         verify(processing).transition(Long.MAX_VALUE,"PROCESSING","PAUSED",null,null);
         verify(processing).advance(Long.MAX_VALUE,2L,901L,"original","REQUIRED",null);
         verify(invoices,never()).releaseOrderLines(anyLong());
+    }
+    /** R625 major (b):外部已开具的发票是事实,退款在途也必须记 ISSUED 并保留票号,只标税务复核。 */
+    @Test void recordIssuedDuringRefundKeepsIssuedStatusAndInvoiceNumberForTaxReview() {
+        RefundApplication refund=new RefundApplication(); refund.setStatus(1); refund.setPayoutStatus(2);
+        when(refunds.selectRegistrationHistoryForUpdate(1L)).thenReturn(List.of(refund));
+        when(processing.reserveIssuedReference(Long.MAX_VALUE,301L,"NO-REAL-INVOICE")).thenReturn(1);
+        assertEquals("ISSUED",service.command(901L,Long.MAX_VALUE,command("RECORD_ISSUED","original")).get("status"));
+        verify(processing).transition(Long.MAX_VALUE,"PROCESSING","ISSUED","NO-REAL-INVOICE",null);
+        verify(processing).advance(Long.MAX_VALUE,2L,901L,"original","TAX_REVIEW_REQUIRED","evidence:1");
+        verify(processing,never()).transition(anyLong(),anyString(),eq("PAUSED"),any(),any());
+        verify(invoices,never()).releaseOrderLines(anyLong());
+    }
+    @Test void refundFactAfterIssueNeverDemotesIssuedOrDropsInvoiceNumber() {
+        application.setStatus("ISSUED"); application.setInvoiceNo("NO-REAL-INVOICE");
+        RefundApplication refund=new RefundApplication(); refund.setStatus(0);
+        when(refunds.selectRegistrationHistoryForUpdate(1L)).thenReturn(List.of(refund));
+        when(processing.affectedApplications(List.of(1L))).thenReturn(List.of(Long.MAX_VALUE));
+        service.acceptRegistrationRefundFact(1L);
+        verify(processing,never()).transition(anyLong(),any(),any(),any(),any());
+        verify(processing).advance(Long.MAX_VALUE,2L,901L,"original","TAX_REVIEW_REQUIRED",null);
+        verify(processing).audit(eq(Long.MAX_VALUE),eq(0L),eq("refund_review_3"),anyString(),eq("REFUND_TAX_REVIEW"),eq("ISSUED"),eq(3L),isNull());
+        assertEquals("NO-REAL-INVOICE",application.getInvoiceNo());
+        state.put("reconciliation_status","TAX_REVIEW_REQUIRED"); clearInvocations(processing);
+        service.acceptRegistrationRefundFact(1L);
+        verify(processing,never()).advance(anyLong(),anyLong(),any(),any(),any(),any());
+        verify(processing,never()).audit(anyLong(),anyLong(),any(),any(),any(),any(),anyLong(),any());
     }
     @Test void pausedAndEmptyRefundHistoryDoesNotResumeAndCommitsDefiniteDeclineReceipt() {
         application.setStatus("PAUSED");

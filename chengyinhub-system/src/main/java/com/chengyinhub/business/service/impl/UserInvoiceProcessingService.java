@@ -135,7 +135,9 @@ public class UserInvoiceProcessingService implements com.chengyinhub.business.se
         if (version != c.version()) throw conflict("申请已变化，请回读后确认新操作");
         if (Set.of("CANCELLED","REJECTED").contains(status)) throw conflict("申请已结束");
         // Refund history is authoritative even if the post-commit notification is delayed/lost.
-        if (refund && !"PAUSED".equals(status)) {
+        // An externally issued invoice is a fact: recording it keeps ISSUED and its number, flagged for tax review.
+        boolean recordIssued = "RECORD_ISSUED".equals(c.action()) && Set.of("PROCESSING","ISSUE_UNKNOWN").contains(status);
+        if (refund && !recordIssued && !Set.of("PAUSED","ISSUED").contains(status)) {
             next="PAUSED"; reconciliation="REQUIRED";
         } else if ("CLAIM".equals(c.action())) {
             if (!"SUBMITTED".equals(status)) throw conflict("仅待处理申请可以认领");
@@ -154,6 +156,7 @@ public class UserInvoiceProcessingService implements com.chengyinhub.business.se
             requireEvidence(c.evidenceRef());
             if (c.invoiceNo()==null || !c.invoiceNo().matches("[A-Za-z0-9-]{1,64}")) throw conflict("请填写已核验的发票号码");
             invoiceNo=c.invoiceNo(); evidence=c.evidenceRef(); next="ISSUED";
+            if (refund) reconciliation="TAX_REVIEW_REQUIRED";
         } else if ("REJECT".equals(c.action())) {
             if (!Set.of("SUBMITTED","CLAIMED").contains(status) || operation!=null) throw conflict("外部处理开始后不能直接驳回");
             if (handler!=null) owns(actor,handler);
@@ -209,6 +212,13 @@ public class UserInvoiceProcessingService implements com.chengyinhub.business.se
             Map<String,Object> state=processing.lockProcessing(id);
             if (state==null || Set.of("CANCELLED","REJECTED","PAUSED").contains(app.getStatus())) continue;
             long version=number(state,"version");
+            if ("ISSUED".equals(app.getStatus())) {
+                // Issued invoices keep status and number; a later refund only flags tax review (red-invoice policy is manual).
+                if ("TAX_REVIEW_REQUIRED".equals(string(state.get("reconciliation_status")))) continue;
+                if (processing.advance(id,version,nullableLong(state.get("handler_id")),string(state.get("operation_id")),"TAX_REVIEW_REQUIRED",string(state.get("evidence_ref")))!=1) throw conflict("核对状态竞争");
+                processing.audit(id,0L,"refund_review_"+(version+1),fingerprint("REFUND|"+registrationId),"REFUND_TAX_REVIEW","ISSUED",version+1,null);
+                continue;
+            }
             if (processing.transition(id,app.getStatus(),"PAUSED",null,null)!=1
                     || processing.advance(id,version,nullableLong(state.get("handler_id")),string(state.get("operation_id")),"REQUIRED",string(state.get("evidence_ref")))!=1) throw conflict("暂停状态竞争");
             processing.audit(id,0L,"refund_pause_"+(version+1),fingerprint("REFUND|"+registrationId),"REFUND_PAUSE","PAUSED",version+1,null);

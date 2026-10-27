@@ -8,6 +8,7 @@
       join user_invoice_application_order o on o.application_id=a.id and o.active_key=1 and o.order_source='registration'
       join cms_registration r on r.id=o.order_id
       where r.id &gt; #{after} and a.status in ('SUBMITTED','CLAIMED','PROCESSING','ISSUE_UNKNOWN','ISSUED')
+        and not (a.status='ISSUED' and p.reconciliation_status='TAX_REVIEW_REQUIRED')
         and (r.payment_status is null or r.payment_status&lt;&gt;2 or r.registration_status is null or r.registration_status&lt;&gt;2
           or exists (select 1 from cms_registration child where r.parent_order_no is not null and r.parent_order_no!=''
             and child.parent_order_no=r.parent_order_no and (child.payment_status is null or child.payment_status&lt;&gt;2
