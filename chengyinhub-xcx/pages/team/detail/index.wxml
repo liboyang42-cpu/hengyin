@@ -56,6 +56,40 @@
       </view>
     </view>
 
+    <view wx:if="{{boardState}}" class="team-section-title">定向队伍进度</view>
+    <view wx:if="{{boardState === 'loading'}}" class="team-sync" aria-role="status">正在读取定向进度…</view>
+    <cy-inline-error wx:if="{{boardState === 'error' || boardState === 'login'}}"
+      title="{{boardMessage}}" action="{{boardState === 'login' ? '登录' : '重新加载'}}" bind:action="retryBoard" />
+    <view wx:if="{{boardState === 'disabled' || boardState === 'not-orient' || boardState === 'not-member'}}"
+      class="team-note" aria-role="status">{{boardMessage}}</view>
+    <block wx:if="{{boardState === 'ready' && board}}">
+      <view class="team-card">
+        <view class="team-member-name">队伍已完成 {{board.summary.teamDoneCount}} / {{board.summary.totalTasks || 0}} 项</view>
+        <view class="team-note">当前在岗 {{board.threshold.activeCount || 0}} 人，每项需 {{board.threshold.required || 0}} 人完成</view>
+        <cy-empty wx:if="{{!board.tasks.length}}" title="暂无定向任务" />
+        <view class="team-board-task" wx:for="{{board.tasks}}" wx:for-item="task" wx:key="taskId">
+          <view class="team-member-name">{{task.name}}</view>
+          <view class="team-note">{{task.teamDone ? '队伍已完成' : '队伍未完成'}} · {{task.completedCount || 0}} 人完成</view>
+          <view class="team-board-member" wx:for="{{task.members}}" wx:for-item="member" wx:key="memberId">
+            <text>{{member.name}}</text><text>{{member.done ? '已完成' : '未完成'}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="team-section-title">队伍排名</view>
+      <view wx:if="{{rankingState === 'loading'}}" class="team-sync" aria-role="status">正在读取队伍排名…</view>
+      <cy-inline-error wx:if="{{rankingState === 'error'}}" title="{{rankingMessage}}" action="重新加载" bind:action="retryBoard" />
+      <view wx:if="{{rankingState === 'ready'}}" class="team-card">
+        <cy-empty wx:if="{{!boardRanks.length}}" title="暂无队伍排名" />
+        <view class="team-member" wx:for="{{boardRanks}}" wx:key="teamId">
+          <text>{{item.rank}}</text>
+          <view class="team-member-main">
+            <view class="team-member-name">{{item.title}}{{item.mine ? '（我的队伍）' : ''}}</view>
+            <view class="team-note">已完成 {{item.teamDoneCount}} / {{item.totalTasks || 0}} 项</view>
+          </view>
+        </view>
+      </view>
+    </block>
+
     <view class="team-actions" wx:if="{{joined && team.status < 2}}">
       <view class="team-action secondary" bindtap="quit" aria-role="button"
             aria-label="{{leader ? '退出并移交队长' : '退出队伍'}}" hover-class="team-action--pressed">{{leader ? '退出并移交队长' : '退出队伍'}}</view>

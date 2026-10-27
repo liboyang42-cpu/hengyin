@@ -361,7 +361,34 @@ function pickJourneyCheck(encounter) {
 function checkReceiptView(receipt) {
   const r = receipt || {};
   const num = (v) => (v == null ? null : Number(v) || 0);
+  const breakdownRows = [];
+  const b = r.breakdown;
+  // 明细只搬服务端公开值；缺失或隐藏的加值不能从总分反推。
+  const addNumber = (label, value) => {
+    if (typeof value === 'number' && Number.isFinite(value)) breakdownRows.push({ label, value });
+  };
+  if (b && typeof b === 'object' && !b.hidden && !b.redacted) {
+    addNumber('采用骰点', b.die);
+    if (b.skill && (b.skill.hidden || b.skill.redacted)) {
+      breakdownRows.push({ label: '属性加值', value: '已隐藏' });
+    } else if (b.skill) {
+      addNumber(typeof b.skill.label === 'string' && b.skill.label ? b.skill.label : '属性加值', b.skill.value);
+    }
+    if (b.situational && !b.situational.hidden && !b.situational.redacted) {
+      addNumber('情境修正合计', b.situational.raw);
+      addNumber('情境修正上限', b.situational.cap);
+      addNumber('实际情境修正', b.situational.applied);
+    }
+    addNumber('交易加值', b.bargain);
+    addNumber('动量加值', b.momentum);
+    addNumber('达成值', b.total);
+    addNumber('难度 DC', b.dc);
+    if (typeof b.natAuto === 'boolean') {
+      breakdownRows.push({ label: '自然骰自动判定', value: b.natAuto ? '开启' : '关闭' });
+    }
+  }
   return {
+    breakdownRows,
     rolled: true,
     tier: r.tier || '',
     dc: Number(r.dc) || 0,
