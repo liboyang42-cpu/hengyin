@@ -32,8 +32,9 @@ public class UserInvoiceProcessingController extends BaseController {
     public AjaxResult detail(@PathVariable Long id,HttpServletResponse response) {
         return run(response,()->service.detail(getUserId(),id));
     }
+    /** D6:刷新会暂停申请并写审计,属处理动作,要求 process 权限而非查看权限。 */
     @PostMapping("/{id}/refresh-refund-facts")
-    @PreAuthorize("@ss.hasPermi('business:userInvoice:query')")
+    @PreAuthorize("@ss.hasPermi('business:userInvoice:process')")
     public AjaxResult refreshRefundFacts(@PathVariable Long id,HttpServletResponse response) {
         return run(response,()->reconciliation.refreshApplication(getUserId(),id));
     }

@@ -18,7 +18,7 @@
     <el-button v-if="pending" :loading="busy" @click="closeOriginal">封存原请求并回读</el-button>
     <section v-if="detail">
       <h3>{{ detail.applicationNo }} · {{ detail.issuerName }}</h3>
-      <el-button v-hasPermi="['business:userInvoice:query']" :loading="busy" @click="refreshRefundFacts">刷新退款事实与核对状态</el-button>
+      <el-button v-hasPermi="['business:userInvoice:process']" :loading="busy" @click="refreshRefundFacts">刷新退款事实与核对状态</el-button>
       <p>状态：{{ detail.status }}；处理人编号：{{ detail.handlerId || '未认领' }}；核对：{{ detail.reconciliationStatus }}；原处理号：{{ detail.operationId || '尚未开始' }}</p>
       <p>抬头：{{ detail.titleName }}；税号：{{ taxNo || detail.taxNoMasked }}</p>
       <el-button v-hasPermi="['business:userInvoice:taxView']" :disabled="busy" @click="reveal">受审计查看完整税号</el-button>

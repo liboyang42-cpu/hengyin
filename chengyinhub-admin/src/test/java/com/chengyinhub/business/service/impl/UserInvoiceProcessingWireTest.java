@@ -26,9 +26,26 @@ class UserInvoiceProcessingWireTest {
         @Bean ComplianceFeatureSwitches switches() {
             ComplianceFeatureSwitches s=mock(ComplianceFeatureSwitches.class); when(s.userInvoiceOn()).thenReturn(true); return s;
         }
-        @Bean UserInvoiceProcessingController controller(UserInvoiceProcessingService s,ComplianceFeatureSwitches f) {
-            return new UserInvoiceProcessingController(s,f,mock(UserInvoiceRefundReconciliationJob.class)) { @Override public Long getUserId() {return 901L;} };
+        @Bean UserInvoiceRefundReconciliationJob reconciliation() { return mock(UserInvoiceRefundReconciliationJob.class); }
+        @Bean UserInvoiceProcessingController controller(UserInvoiceProcessingService s,ComplianceFeatureSwitches f,UserInvoiceRefundReconciliationJob j) {
+            return new UserInvoiceProcessingController(s,f,j) { @Override public Long getUserId() {return 901L;} };
         }
+    }
+    /** D6:刷新退款事实会暂停申请并写审计,查看权限不够,必须 process。 */
+    @Test void refreshRefundFactsRequiresProcessPermissionNotViewPermission() {
+        SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("operator","unused","ROLE_USER"));
+        try(AnnotationConfigApplicationContext c=new AnnotationConfigApplicationContext(Security.class)) {
+            PermissionService permissions=c.getBean(PermissionService.class);
+            UserInvoiceProcessingController controller=c.getBean(UserInvoiceProcessingController.class);
+            UserInvoiceRefundReconciliationJob job=c.getBean(UserInvoiceRefundReconciliationJob.class);
+            when(permissions.hasPermi("business:userInvoice:list")).thenReturn(true);
+            when(permissions.hasPermi("business:userInvoice:query")).thenReturn(true);
+            assertThrows(org.springframework.security.access.AccessDeniedException.class,()->controller.refreshRefundFacts(7L,new MockHttpServletResponse()));
+            verifyNoInteractions(job);
+            when(permissions.hasPermi("business:userInvoice:process")).thenReturn(true);
+            controller.refreshRefundFacts(7L,new MockHttpServletResponse());
+            verify(job).refreshApplication(901L,7L);
+        } finally {SecurityContextHolder.clearContext();}
     }
     @Test void actualMethodSecurityRequiresDedicatedTaxPermissionNotFinancialListPermission() {
         SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("operator","unused","ROLE_USER"));
