@@ -474,7 +474,8 @@ test('邀约主题/对象刷新保留草稿与旧列表，提交使用同步锁�
     shareMode: 0,
     message: '保留这段邀约语',
   })
-  writes[0].success({ code: 200, data: { inviteId: '101', requestId, replayed: false } })
+  writes[0].success({ code: 200, data: { state: 'CREATED', requestId, inviteId: '101', replayed: false,
+    inviteType: 1, topicId: '9', toType: 'club', toId: '11', scope: '' } })
   assert.match(page.data.sendReceipt, /已发起 1 条/)
   assert.equal(page.data.submitting, false)
 })

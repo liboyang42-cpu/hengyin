@@ -290,7 +290,7 @@ Component({
             that._resultReader = reader;
             const entry = that._resultEntry();
             that.setData({ resultTopicId: entry ? entry.topicId : '',
-              resultEntryError: entry ? '' : '无法确认当前账号的报名与主题关联，请重新加载参与详情；若仍不可用请联系客服。' });
+              resultEntryError: entry || !character.hasTopicRelation(info) ? '' : '无法确认当前账号的报名与主题关联，请重新加载参与详情；若仍不可用请联系客服。' });
           } else {
             const fallback = res && res.code == "200" ? '参与详情数据暂不可用' : '获取参与详情失败，请重试';
             const msg = app.getRequestErrorMessage

@@ -121,12 +121,13 @@ Page({
   recover() {
     if (this._recovering || this.data.busy || !this._pending || !this._pending.length) return;
     const pending = this._pending[0];
-    if (pending.kind === 'SYNC' || !pending.requestId) {
+    if (!pending.requestId) {
       this.setData({ notice: '同步结果待确认；已刷新计分，但仍无法确认本次同步是否完成。请勿重复同步，无法确认时联系平台处理。' }); return;
     }
     const capture = this.capture(), sessionId = this.data.score && this.data.score.sessionId;
     if (!sessionId) return;
     this._recovering = true;
+    if (pending.kind === 'SYNC') { this.recoverSync(pending, capture, sessionId); return; }
     const unknown = () => {
       if (!this.current(capture)) return;
       this._recovering = false;
@@ -154,6 +155,32 @@ Page({
         if (view.failure(body, status).kind !== 'offline') { this._recovering = false; this.readFailure(body, status); return; }
         unknown();
       }
+    });
+  },
+  // 同步按节点幂等入账,结果收敛到计分本身:回读本局最新计分即可了结原同步待办,不重放写请求。
+  recoverSync(pending, capture, sessionId) {
+    const target = Object.assign({}, this._scope, { sessionId });
+    const unknown = (body, status) => {
+      if (!this.current(capture)) return;
+      this._recovering = false;
+      if (view.failure(body, status).kind !== 'offline') { this.readFailure(body, status); return; }
+      this.setData({ notice: '同步结果待确认，请联网后点「查询原操作结果」核对最新计分' });
+    };
+    app.sendRequest({ url: BASE + '/session/' + sessionId, method: 'GET', hideLoading: true,
+      success: response => {
+        if (!this.current(capture)) return;
+        const score = ok(response) && view.normalize(response.data, target);
+        if (!score) { unknown(response); return; }
+        this._recovering = false;
+        if (!this._workflow.confirmRequest(pending.key, pending.requestId)) {
+          this.setData({ score, notice: '同步结果待确认；本机待办未能清除，请检查本机存储后刷新' }); return;
+        }
+        this._pending.shift();
+        this.setData({ state: 'ready', score, pending: this._pending[0] || null,
+          notice: '已按最新计分核对同步结果；如仍有已通过任务未计入，可再次同步' });
+        if (this._pending.length) this.recover();
+      },
+      fail: unknown, successStatusAbnormal: unknown
     });
   },
   allowed(kind) {

@@ -157,11 +157,32 @@ test('unknown settlement accepts only positive same-session settlement; generic 
   h.respond(h.receipt(), settlement({ sessionId: '8' })); assert.ok(h.page.data.pending);
   h.page.recover(); h.respond(h.receipt(), settlement()); assert.equal(h.page.data.pending, null); assert.equal(h.storage.size, 0);
 });
-test('sync unknown never retries or guesses success from a refreshed total', () => {
+test('sync unknown is resolved only by a fresh score read-back, never by replaying the write', () => {
   const h = harness(); h.read(); h.page.sync(); h.confirm(); h.writes()[0].fail({ errMsg: 'network' });
   assert.equal(h.page.data.pending.kind, 'SYNC'); assert.equal(h.receipt(), undefined);
-  h.page.load(); h.respond(h.calls.at(-1), breakdown({ totalCenti: '9999' }));
-  assert.equal(h.page.data.pending.kind, 'SYNC'); h.page.sync(); assert.equal(h.writes().length, 1);
+  const readBack = h.calls.at(-1);
+  assert.equal(readBack.method, 'GET'); assert.equal(readBack.url, '/api/orient/scoring/session/' + SID);
+  h.page.sync(); assert.equal(h.writes().length, 1, 'pending sync blocks a second write while unresolved');
+  readBack.fail({ errMsg: 'network' });
+  assert.equal(h.page.data.pending.kind, 'SYNC'); assert.equal(h.storage.size, 1);
+  assert.match(h.page.data.notice, /同步结果待确认/);
+  h.page.recover(); const second = h.calls.at(-1); assert.equal(second.method, 'GET');
+  h.respond(second, breakdown({ totalCenti: '9999' }));
+  assert.equal(h.page.data.pending, null); assert.equal(h.storage.size, 0);
+  assert.equal(h.page.data.score.total, '99.99 分'); assert.match(h.page.data.notice, /已按最新计分核对同步结果/);
+  assert.equal(h.writes().length, 1, 'read-back never replays the original sync');
+  h.page.sync(); h.confirm(); assert.equal(h.writes().length, 2);
+  assert.notEqual(h.writes()[1].data.idempotencyKey, h.writes()[0].data.idempotencyKey);
+});
+test('pending sync survives a restart and is cleared by the rebuilt page read-back', () => {
+  const h = harness(); h.read(); h.page.sync(); h.confirm(); h.writes()[0].fail({ errMsg: 'network' });
+  h.calls.at(-1).fail({ errMsg: 'network' }); assert.equal(h.storage.size, 1);
+  const rebuilt = harness(h.storage); rebuilt.read();
+  assert.equal(rebuilt.page.data.pending.kind, 'SYNC'); assert.equal(rebuilt.writes().length, 0);
+  rebuilt.respond(rebuilt.calls.at(-1), breakdown({ sessionId: '5' }));
+  assert.equal(rebuilt.storage.size, 1, 'wrong-session read-back cannot clear the original record');
+  rebuilt.read(); rebuilt.respond(rebuilt.calls.at(-1), breakdown());
+  assert.equal(rebuilt.page.data.pending, null); assert.equal(rebuilt.storage.size, 0); assert.equal(rebuilt.writes().length, 0);
 });
 test('explicit business rejection releases original record; opaque server failure does not', () => {
   for (const [response, frozen] of [[{ code: 500, errorCode: 'ORIENT_WINDOW_CLOSED' }, false], [{ code: 500, msg: '内部失败' }, true]]) {
@@ -297,6 +318,7 @@ test('score recovery uses player-facing copy while keeping uncertainty explicit'
   assert.doesNotMatch(js + xml, /回执|服务端/);
   const h = harness(); h.read(); h.page.sync(); h.confirm(); h.writes()[0].fail({ errMsg: 'network' });
   assert.equal(h.page.data.pending.kind, 'SYNC');
-  assert.match(h.page.data.notice, /仍无法确认本次同步是否完成.*请勿重复同步/);
+  h.calls.at(-1).fail({ errMsg: 'network' });
+  assert.match(h.page.data.notice, /同步结果待确认.*查询原操作结果/);
   h.page.sync(); assert.equal(h.writes().length, 1);
 });

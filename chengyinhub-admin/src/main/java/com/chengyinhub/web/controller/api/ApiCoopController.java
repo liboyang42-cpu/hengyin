@@ -349,6 +349,9 @@ public class ApiCoopController extends BaseController {
             return error("只能为自己发布的主题发起合作");
         }
         if (body.getRequestId() != null) {
+            // 微信内容安全是网络调用:在原请求事务(回执唯一键行锁)之外先做,事务回调里只留 DB 校验。
+            String risk = textRisk(principalMemberId, body.getMessage());
+            if (risk != null) return error(risk);
             try {
                 CoopInviteRequestResult result = coopInviteService.createOrReplayInvite(principalMemberId, body, () -> {
                     String invalid = prepareFirstInvite(body, principalMemberId, topic, true);
@@ -425,7 +428,7 @@ public class ApiCoopController extends BaseController {
         body.setStatus(0);
         body.setHandleTime(null);
         body.setDelFlag(0);
-        return textRisk(principalMemberId, body.getMessage());
+        return originalRequest ? null : textRisk(principalMemberId, body.getMessage());
     }
 
     private void notifyNewInvite(CoopInvite body, Long toOwner, Long contractOwnerMemberId) {
