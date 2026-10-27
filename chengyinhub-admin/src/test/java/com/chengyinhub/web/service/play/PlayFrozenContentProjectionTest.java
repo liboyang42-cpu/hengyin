@@ -58,14 +58,33 @@ class PlayFrozenContentProjectionTest {
         ReflectionTestUtils.setField(context, "topicRouteRuntimeService", runtime);
         ReflectionTestUtils.setField(context, "cmsMemberTemplateService", drafts);
         var session = new com.chengyinhub.business.domain.TopicRouteSession();
-        session.setId(91L); session.setConfigSnapshotJson("{}");
+        session.setId(91L);
         PlayOriginalRun original = new PlayOriginalRun(session, 91L, null, null);
         CmsTopicNode node = node(); node.setTemplateId(41L);
+        // 有答案冻结(nodeAnswers 键在)的局:缺本节点仍是缺,不读当前模板。
+        session.setConfigSnapshotJson("{\"nodeAnswers\":{}}");
         CmsMemberTemplate template = context.effectiveTemplate(7L, 21L, 0L, node, original);
         assertNull(template.getValidationMethod()); assertNull(template.getQuestionAnswer());
         session.setConfigSnapshotJson("{\"nodeAnswers\":{\"11\":{\"validationMethod\":1,\"questionAnswer\":\"original-answer\"}}}");
         assertEquals("original-answer", context.effectiveTemplate(7L, 21L, 0L, node, original).getQuestionAnswer());
         verifyNoInteractions(runtime, drafts);
+    }
+
+    /** D1(2026-10-27 用户决策):答案冻结前开的老个人局(快照无 nodeAnswers 键)回退当前模板继续游玩。 */
+    @Test void legacyPersonalRunWithoutAnswerFreezeFallsBackToCurrentTemplate() {
+        PlayNodeContext context = new PlayNodeContext();
+        var runtime = mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        var drafts = mock(ICmsMemberTemplateService.class);
+        ReflectionTestUtils.setField(context, "topicRouteRuntimeService", runtime);
+        ReflectionTestUtils.setField(context, "cmsMemberTemplateService", drafts);
+        CmsMemberTemplate current = new CmsMemberTemplate(); current.setValidationMethod(1); current.setQuestionAnswer("current-answer");
+        when(drafts.selectCmsMemberTemplateById(41L)).thenReturn(current);
+        var session = new com.chengyinhub.business.domain.TopicRouteSession();
+        session.setId(91L); session.setConfigSnapshotJson("{}");
+        CmsTopicNode node = node(); node.setTemplateId(41L);
+        assertEquals("current-answer", context.effectiveTemplate(7L, 21L, 0L, node,
+                new PlayOriginalRun(session, 91L, null, null)).getQuestionAnswer());
+        verifyNoInteractions(runtime);
     }
 
     @Test void sharedOriginalContentRejectsAnotherEpochWithoutLiveFallback() {
