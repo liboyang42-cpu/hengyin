@@ -6,6 +6,9 @@ const payload = { name: '寒冬', publishMode: 'pro', productType: 1, chapters: 
 const detail = (extra) => Object.assign({ isDraft: true,
   chapters: [{ id: 101, topicId: 501, cmsTopicNodeList: [{ id: 11, chapterId: 101, topicId: 501, name: '甲' }, { id: 12, chapterId: 101, topicId: 501, name: '乙' }] }] }, extra,
   { topic: Object.assign({ id: 501, status: 0, name: '寒冬' }, extra && extra.topic) });
+// 真实 author-edit-detail 恒带 topic.configVersion(cms_topic.config_version NOT NULL DEFAULT 1);
+// 页面发布未知后的回读按保存时的版本核对，页面级发布恢复夹具必须带上它。
+const versioned = (extra) => detail(Object.assign({}, extra, { topic: Object.assign({ configVersion: 3 }, extra && extra.topic) }));
 
 test('回读校验：必须仍是草稿、节点都有编号且与本机一致', () => {
   assert.equal(readbackIssue(payload, detail(), true), '');
@@ -297,11 +300,11 @@ test('服务端草稿发布前落盘 UNKNOWN；丢回包后重进只查原主题
   Object.assign(first.page.data, { editingTopicId: '501', editLoaded: true, editIsDraft: true });
   first.page._doSubmit();
   first.sent[0].success({ code: 200, data: 501 });
-  first.sent[1].success({ code: 200, data: detail() });
+  first.sent[1].success({ code: 200, data: versioned() });
   assert.equal(first.sent[2].url, '/api/topic/publish-draft');
   const drafts = require('../../pages/publish/utils/publish/pro-editor-draft.js');
   const saved = drafts.loadDraft(wx, { topicId: '501' }, { memberId: 7 });
-  assert.deepEqual(saved.envelope.publishAttempt, { status: 'UNKNOWN', kind: 'SERVER_DRAFT', topicId: '501' }, '请求发出前已持久化');
+  assert.deepEqual(saved.envelope.publishAttempt, { status: 'UNKNOWN', kind: 'SERVER_DRAFT', topicId: '501', configVersion: '3' }, '请求发出前已持久化');
   first.sent[2].fail({}); first.sent[3].fail({});
   assert.equal(first.page.data.resultSheet.title, '发布结果待确认');
   first.page.onUnload();
@@ -314,7 +317,7 @@ test('服务端草稿发布前落盘 UNKNOWN；丢回包后重进只查原主题
   assert.equal(next.sent.length, 1);
   assert.equal(next.sent[0].url, '/api/topic/author-edit-detail');
   assert.equal(next.sent[0].data.id, 501);
-  next.sent[0].success({ code: 200, data: detail({ isDraft: false, topic: { name: '寒冬', status: 1 } }) });
+  next.sent[0].success({ code: 200, data: versioned({ isDraft: false, topic: { name: '寒冬', status: 1 } }) });
   assert.equal(next.sent.length, 1, '已发布主题不再写草稿或重复发布');
   assert.equal(next.page.data.resultSheet.title, '城市路线已发布');
   assert.equal(drafts.loadDraft(wx, { topicId: '501' }, { memberId: 7 }).status, 'missing');
@@ -380,13 +383,13 @@ test('发布同步异常仍保留 UNKNOWN，迟到或重复回调不能再结算
 test('UNKNOWN后改写本机稿，回读确认原版本已发布时不丢后续修改', () => {
   const t = loadPage();
   Object.assign(t.page.data, { editingTopicId: '501', editLoaded: true, editIsDraft: true });
-  t.page._doSubmit(); t.sent[0].success({ code: 200, data: 501 }); t.sent[1].success({ code: 200, data: detail() });
+  t.page._doSubmit(); t.sent[0].success({ code: 200, data: 501 }); t.sent[1].success({ code: 200, data: versioned() });
   t.sent[2].fail({}); t.sent[3].fail({});
   t.page.data.formData.name = '后续修改';
   t.page._buildSubmitPayload = () => Object.assign({}, payload, { name: '后续修改' });
   t.page._doSubmit();
   assert.equal(t.sent[4].url, '/api/topic/author-edit-detail');
-  t.sent[4].success({ code: 200, data: detail({ isDraft: false, topic: { name: '寒冬', status: 1 } }) });
+  t.sent[4].success({ code: 200, data: versioned({ isDraft: false, topic: { name: '寒冬', status: 1 } }) });
   assert.equal(t.sent.length, 5, '只读原主题、不重复发布后续修改');
   const drafts = require('../../pages/publish/utils/publish/pro-editor-draft.js');
   const saved = drafts.loadDraft(wx, { topicId: '501' }, { memberId: 7 });
@@ -434,13 +437,13 @@ test('UNKNOWN原号回读审核拒绝：明确失败并保留修改，不能误�
     Object.assign(t.page.data, { editingTopicId: '501', editLoaded: true, editIsDraft: true });
     t.page._doSubmit();
     t.sent[0].success({ code: 200, data: 501 });
-    t.sent[1].success({ code: 200, data: detail() });
+    t.sent[1].success({ code: 200, data: versioned() });
     t.sent[2].fail({});
     if (reload) {
       t.sent[3].fail({});
       t.page._doSubmit();
     }
-    t.sent.at(-1).success({ code: 200, data: detail({
+    t.sent.at(-1).success({ code: 200, data: versioned({
       isDraft: false, topic: { status: 2, reason: '请补充规则' }
     }) });
     assert.equal(t.page.data.resultSheet.title, '审核未通过');
@@ -461,14 +464,14 @@ test('缺失或异主题发布回执先按原号回读，确认前不清稿且�
     Object.assign(t.page.data, { editingTopicId: '501', editLoaded: true, editIsDraft: true });
     t.page._doSubmit();
     t.sent[0].success({ code: 200, data: 501 });
-    t.sent[1].success({ code: 200, data: detail() });
+    t.sent[1].success({ code: 200, data: versioned() });
     t.sent[2].success({ code: 200, data: receipt });
     assert.equal(t.sent.length, 4, '未绑定原topicId的回执不得直接结算');
     assert.equal(t.sent[3].url, '/api/topic/author-edit-detail');
     assert.equal(t.sent[3].data.id, 501);
     const drafts = require('../../pages/publish/utils/publish/pro-editor-draft.js');
     assert.equal(drafts.loadDraft(wx, { topicId: '501' }, { memberId: 7 }).envelope.publishAttempt.status, 'UNKNOWN');
-    t.sent[3].success({ code: 200, data: detail({ isDraft: false, topic: { status: 1 } }) });
+    t.sent[3].success({ code: 200, data: versioned({ isDraft: false, topic: { status: 1 } }) });
     assert.equal(t.page.data.resultSheet.title, '城市路线已发布');
     assert.equal(drafts.loadDraft(wx, { topicId: '501' }, { memberId: 7 }).status, 'missing');
     assert.equal(t.sent.length, 4, '确认只读原主题，不重复publish');
@@ -528,7 +531,7 @@ test('发布已确认但新修改遇存储故障：不假称已本机保存，�
     else {
       t.page._doSubmit();
       t.sent[0].success({ code: 200, data: 501 });
-      t.sent[1].success({ code: 200, data: detail() });
+      t.sent[1].success({ code: 200, data: versioned() });
     }
     const storedBefore = JSON.stringify(t.stored);
     const originalSet = wx.setStorageSync;
@@ -537,8 +540,12 @@ test('发布已确认但新修改遇存储故障：不假称已本机保存，�
       t.page.setData({ formData: Object.assign({}, t.page.data.formData, { name: '仅内存B' }) });
       if (kind === 'rejected') {
         t.sent[2].fail({});
-        t.sent[3].success({ code: 200, data: detail({ isDraft: false, topic: { status: 2 } }) });
-      } else t.sent.at(-1).success({ code: 200, data: { topicId: 501, published: true } });
+        t.sent[3].success({ code: 200, data: versioned({ isDraft: false, topic: { status: 2 } }) });
+      } else {
+        t.sent.at(-1).success({ code: 200, data: { topicId: 501, published: true } });
+        // 带版本的服务端草稿发布回执还要按原版本回读确认已发布。
+        if (kind === 'server-draft') t.sent[3].success({ code: 200, data: versioned({ isDraft: false, topic: { status: 1 } }) });
+      }
     } finally { wx.setStorageSync = originalSet; }
     assert.equal(t.page.data.formData.name, '仅内存B');
     assert.equal(t.page.data.resultSheet.kind, 'fail');
