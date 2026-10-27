@@ -381,7 +381,8 @@ test('发送成功关掉结果面板后进协作邀请的「我发出的」', ()
 })
 
 // W3: real persistent helper, account-scoped digest rows and the production transport.
-const okInvite = request => request.success({ code: 200, data: { inviteId: '501', requestId: JSON.parse(request.data).requestId, replayed: false } })
+// 真实契约：ApiCoopController 带 requestId 时回 CoopInviteRequestResult.created(receipt, replayed)。
+const okInvite = request => request.success({ code: 200, data: { ...requestReceipt(request), replayed: false } })
 const prepare = (env, targets = [{ toId: 11, name: '甲店' }]) => {
   env.page.data.topicId = 9
   env.page._setSelected(targets)
@@ -575,7 +576,7 @@ for (const ending of ['success', 'http403', 'http503', 'http408', 'network', 'ex
       else {
         if (ending === 'external') env.app._authorization = 'fixture-external'
         const statusCode = ending.startsWith('http') ? Number(ending.slice(4)) : 200
-        retry.success({ statusCode, data: { code: statusCode, data: { inviteId: '501', requestId: JSON.parse(retry.data).requestId, replayed: false } } })
+        retry.success({ statusCode, data: { code: statusCode, data: { ...requestReceipt(retry), replayed: false } } })
       }
       retry.complete({})
       assert.equal(env.page.data.submitting, false)
@@ -627,7 +628,7 @@ test('W4 POST前持久原请求号；丢响应后精确GET解原锁，一次POST
     get.success({ code: 200, data: requestReceipt(post) })
     assert.equal(env.storage.size, 0); assert.equal(env.page.data.unknownTargets.length, 0)
     assert.match(env.page.data.sendReceipt, /9223372036854775807/)
-    get.fail({}); post.success({ code: 200, data: { inviteId: '88', requestId: payload.requestId, replayed: false } })
+    get.fail({}); post.success({ code: 200, data: { ...requestReceipt(post, { inviteId: '88' }), replayed: false } })
     env.page._setSelected([{ toId: 11, name: '甲店' }]); env.page.confirmInvite()
     assert.equal(env.requests.filter(r => r.method === 'POST').length, 1)
   } finally { env.restore() }
@@ -745,16 +746,31 @@ test('W4正向回执遇本机删除故障保留待确认，不放行下一次POS
  } finally { env.restore() }
 })
 
-for (const patch of [{ inviteId: 9007199254740992 }, { inviteId: '9223372036854775808' }, { requestId: 'different' }, { replayed: undefined }]) {
+for (const patch of [{ inviteId: 9007199254740992 }, { inviteId: '9223372036854775808' }, { requestId: 'different' }, { replayed: undefined },
+  { state: undefined }, { state: 'NOT_FOUND' }, { topicId: undefined }, { toType: 'shop' }, { scope: undefined }]) {
  test('W4 POST不完整或不精确的keyed成功回包保留UNKNOWN '+JSON.stringify(patch), () => {
   const env = prepare(loadInvitePage())
   try {
    env.page.confirmInvite(); const post = env.requests[0]
-   post.success({ code: 200, data: { inviteId: '1', requestId: JSON.parse(post.data).requestId, replayed: false, ...patch } })
+   post.success({ code: 200, data: { ...requestReceipt(post), replayed: false, ...patch } })
    assert.equal(env.storage.size, 1); assert.equal(env.page.data.unknownTargets.length, 1)
   } finally { env.restore() }
  })
 }
+test('W8 POST成功按服务端真实契约解析：完整CREATED回执才清待办，缺状态与主体的简化回包保留UNKNOWN', () => {
+ const env = prepare(loadInvitePage())
+ try {
+  env.page.confirmInvite(); const post = env.requests[0], requestId = JSON.parse(post.data).requestId
+  post.success({ code: 200, data: { inviteId: '1', requestId, replayed: false } })
+  assert.equal(env.storage.size, 1); assert.equal(env.page.data.unknownTargets.length, 1)
+ } finally { env.restore() }
+ const real = prepare(loadInvitePage())
+ try {
+  real.page.confirmInvite(); const post = real.requests[0]
+  post.success({ code: 200, msg: '已发起', data: { ...requestReceipt(post), replayed: true } })
+  assert.equal(real.storage.size, 0); assert.equal(real.page.data.unknownTargets.length, 0)
+ } finally { real.restore() }
+})
 test('W4只读调用同步异常结束loading并保留UNKNOWN', () => {
  const env = prepare(loadInvitePage())
  try {
@@ -768,7 +784,7 @@ for (const code of ['2e2', '4e2', ' 200', '0200']) test('W4畸形状态码不按
  const env = prepare(loadInvitePage())
  try {
   env.page.confirmInvite(); const post = env.requests[0]
-  post.success({ code, data: { inviteId: '1', requestId: JSON.parse(post.data).requestId, replayed: false } })
+  post.success({ code, data: { ...requestReceipt(post), replayed: false } })
   assert.equal(env.storage.size, 1); assert.equal(env.page.data.unknownTargets.length, 1)
   queryTarget(env); env.requests[1].success({ code, data: requestReceipt(post) })
   assert.equal(env.storage.size, 1); assert.equal(env.page.data.unknownTargets.length, 1)

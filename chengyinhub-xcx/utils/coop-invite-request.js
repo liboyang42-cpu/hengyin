@@ -32,7 +32,9 @@ function classify(res, httpStatus, requestId) {
   const status = responseCode(httpStatus), code = responseCode(res && res.code), unknown = { status: 'unknown' };
   if (httpStatus != null && !status || !res || res.reason === 'sessionChanged' || status === 409 || code === 409) return unknown;
   if (status && status !== 200) return status >= 400 && status < 500 && status !== 408 ? { status: 'failed', response: res } : unknown;
-  if (code === 200 && res.data && exactId(res.data.inviteId) && res.data.requestId === requestId
+  // Server contract: POST success data = CoopInviteRequestResult.created(receipt, replayed).
+  const created = code === 200 ? receipt(res.data) : null;
+  if (created && created.state === 'CREATED' && created.requestId === requestId
       && typeof res.data.replayed === 'boolean') return { status: 'success', response: res };
   if (code >= 400 && code < 500 && code !== 408 || code === 500 && /^招商写入已关闭/.test(String(res.msg || ''))) return { status: 'failed', response: res };
   return unknown;

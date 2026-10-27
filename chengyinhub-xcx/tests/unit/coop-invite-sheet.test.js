@@ -45,7 +45,7 @@ test('俱乐部沿用主题合同，章节仅进入邀约展示；不发送合�
   assert.ok(body.message.includes('学习')); assert.equal(body.chapterId, undefined);
   assert.equal(body.shareMode, undefined); assert.equal(body.fixedFee, undefined);
   r.success({ code: 400, msg: '不可邀约' }); assert.equal(s.events.length, 0);
-  assert.equal(s.c.data.selectedChapterId, 11); s.c.send(); const retry = s.requests.shift(); retry.success({ code: 200, data: { inviteId: '501', requestId: JSON.parse(retry.data).requestId, replayed: false } });
+  assert.equal(s.c.data.selectedChapterId, 11); s.c.send(); const retry = s.requests.shift(); retry.success({ code: 200, data: { ...receiptFor(retry), replayed: false } });
   assert.equal(s.events[0].detail.chapterId, 11);
 });
 test('商家使用章节承接接口，失败保留输入，账号切换响应不污染', () => {
@@ -213,7 +213,7 @@ for (const fault of ['read', 'write']) test('W4 sheet存储'+fault+'故障未提
 test('W4 sheet同key409与重复回调不清待办；不同主题请求相互隔离', () => {
  const s = ready(); s.c.send(); const post = s.requests.shift();
  post.success({ code: 409, msg: 'COOP_REQUEST_CONFLICT' });
- post.success({ code: 200, data: { inviteId: '1', requestId: JSON.parse(post.data).requestId, replayed: false } });
+ post.success({ code: 200, data: { ...receiptFor(post), replayed: false } });
  assert.equal(s.storage.size, 1); assert.equal(s.c.data.unknown, true);
  pick(s, 2); chapter(s, 22); s.c.send(); const other = s.requests.shift(); assert.notEqual(JSON.parse(other.data).requestId, JSON.parse(post.data).requestId);
  other.success({ code: 400, msg: '明确拒绝' }); assert.equal(s.storage.size, 1); assert.equal(s.c.data.unknown, false);
