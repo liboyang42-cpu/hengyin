@@ -72,6 +72,15 @@ function assertTeamCompliance(sources) {
   assert.doesNotMatch(sanitized['subpackageMember/utils/team-up.js'], /share/i, '共享建队 helper 不能引入强制分享门槛')
 }
 
+// 页面合法 require 了纯函数 utils/user-character.js(只读 app 入参,不碰 wx):按页面目录解析,只放行这一个真模块,其余仍 unexpected require。
+const USER_CHARACTER = path.join(ROOT, 'utils/user-character.js')
+function teamPageRequire(relative) {
+  return (request) => {
+    if (path.resolve(ROOT, path.dirname(relative), request) === USER_CHARACTER) return require(USER_CHARACTER)
+    throw new Error('unexpected require: ' + request)
+  }
+}
+
 function loadDetailPage(source) {
   let definition
   vm.runInNewContext(source || read('pages/team/detail/index.js'), {
@@ -84,6 +93,7 @@ function loadDetailPage(source) {
     wx: { showModal() {}, showToast() {}, navigateTo() {}, redirectTo() {}, stopPullDownRefresh() {} },
     setTimeout,
     console,
+    require: teamPageRequire('pages/team/detail/index.js'),
   }, { filename: 'pages/team/detail/index.js' })
   return definition
 }
@@ -114,6 +124,7 @@ function loadTeamPage(relative) {
     },
     setTimeout,
     console,
+    require: teamPageRequire(relative),
   }, { filename: relative })
   const page = Object.assign({}, definition)
   page.data = JSON.parse(JSON.stringify(definition.data))
