@@ -1,3 +1,5 @@
+@import '../../../../style/merchant-light-scope.wxss';
+
 /* 底色跟 cy-nav-bar 同一枚 token(--cy-comp-nav-bg → --cy-color-bg-page),
    否则顶栏与正文(旧 bg-card 别名比 bg-page 浅一档)在顶栏下缘接出一条色带。 */
 page { background: var(--cy-bg-page); }
@@ -258,3 +260,20 @@ page { background: var(--cy-bg-page); }
   overflow-wrap: anywhere;
 }
 .review-result view + view { margin-top: var(--cy-space-3); }
+
+/* M-01 商家系统通知:整宽通知卡列表(Revolut 式),图标 · 标题/时间 · 正文;浅色由根节点 .theme-merchant 给。
+ * 文字通知走 .notice;卡片通知仍是同一张 .card(动作按钮只此一份),加 .card--notice 拉成整宽并补时间。 */
+.notice { display: flex; align-items: flex-start; gap: var(--cy-space-3); margin: 0 var(--cy-page-x) var(--cy-space-2-5); padding: var(--cy-space-4); border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); }
+.notice__icon { flex: none; width: var(--cy-space-8); height: var(--cy-space-8); border-radius: 50%; background: var(--cy-bg-card-2); color: var(--cy-info); display: flex; align-items: center; justify-content: center; }
+.notice__body { flex: 1; min-width: 0; }
+.notice__top { display: flex; align-items: baseline; gap: var(--cy-space-2); }
+.notice__title { flex: 1; min-width: 0; font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-text-title); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notice__time { flex: none; font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
+.notice__text { display: block; margin-top: var(--cy-space-1); font-size: var(--cy-font-label); line-height: var(--cy-leading-normal); color: var(--cy-text-secondary); word-break: break-all; }
+.notice__img { margin-top: var(--cy-space-2); }
+.card.card--notice { max-width: none; margin: 0 var(--cy-page-x) var(--cy-space-2-5); --cy-comp-card-radius: var(--cy-radius-lg); }
+.card--notice .card-hd { align-items: flex-start; padding: var(--cy-space-4); }
+.card--notice .card-icon { width: var(--cy-space-8); height: var(--cy-space-8); border-radius: 50%; }
+.card--notice .card-tt { flex: 1; min-width: 0; }
+.card--notice .card-title { font-size: var(--cy-font-body); }
+.card-time { flex: none; margin-left: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }

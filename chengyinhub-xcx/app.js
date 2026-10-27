@@ -382,7 +382,9 @@ App({
         showToast: function (msg) { cyToast(msg); },
         hideToast: function () { that.hideToast(); },
         getErrorMessage: function (res, fallback) { return that.getRequestErrorMessage(res, fallback); },
-        shouldAutoToast: function (param, body) { return that.shouldAutoToastRequestError(param, body); }
+        shouldAutoToast: function (param, body) { return that.shouldAutoToastRequestError(param, body); },
+        // G-4(2026-10-27):玩家视角不请求商家工作台接口、不展示商家身份报错,页面不再各自打补丁。
+        isPlayerView: function () { return !roleGuard.isMerchantView(); }
       });
     }
     return this._requestClient;

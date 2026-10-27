@@ -2,6 +2,7 @@
 // type:旧档 list/card/detail/amount；新档 feed-card/map-card/merchant-metric/route-timeline/form-section/ticket。
 // count: list/card 重复几条(默认 list=4 / card=2,由使用方传)
 const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
+const roleGuard = require('../../../utils/roleGuard.js');
 
 Component({
   options: { multipleSlots: false },
@@ -18,10 +19,11 @@ Component({
       this.setData({ items: Array.from({ length: Math.max(1, n) }) });
     },
   },
-  data: { items: [], ready: false },
+  // light:G-10(owner 2026-10-27)商家视角骨架一律浅色,不随宿主页根节点主题变黑。
+  data: { items: [], ready: false, light: false },
   lifetimes: {
     attached() {
-      this.setData({ items: Array.from({ length: Math.max(1, this.data.count) }) });
+      this.setData({ items: Array.from({ length: Math.max(1, this.data.count) }), light: roleGuard.isMerchantView() });
       const delay = Number(this.data.delay);
       if (!(delay > 0)) { this.setData({ ready: true }); return; }
       this._readyTimer = setTimeout(() => { this._readyTimer = null; this.setData({ ready: true }); }, delay);

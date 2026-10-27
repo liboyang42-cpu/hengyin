@@ -126,6 +126,20 @@ function reachedLimit(quotaKey, usageKey) {
   return policy.reachedLimit(permission(), usage(), quotaKey, usageKey);
 }
 
+// 当前视角(G-4 单一入口):与首页 identity-policy 分流同源(role → user_type → 开发版 debug_user_view)。
+function isMerchantView() {
+  try {
+    var app = getApp();
+    var debugView = '';
+    try { debugView = wx.getStorageSync('debug_user_view'); } catch (e) {}
+    return policy.isMerchantView({
+      role: typeof app.getUserRole === 'function' ? app.getUserRole() : '',
+      userType: typeof app.getUserType === 'function' ? app.getUserType() : '',
+      debugView: debugView,
+    });
+  } catch (e) { return false; }
+}
+
 function clear() {
   _dropCache();
 }
@@ -142,5 +156,6 @@ module.exports = {
   quota: quota,
   hasSnapshot: hasSnapshot,
   reachedLimit: reachedLimit,
+  isMerchantView: isMerchantView,
   clear: clear
 };

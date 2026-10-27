@@ -2,7 +2,6 @@ const app = getApp();
 const toast = require('../../../utils/toast.js');
 const roleGuard = require('../../../utils/roleGuard.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
-const wizardMorph = require('../../../utils/wizard-morph.js');
 
 // D18 表单A:注册成为俱乐部主理人(身份资格 + 能力档案 → L1-L5 定级依据)。
 // 填完即有:提交即 role→club;能力档案挂 club_leader,后台异步定级。建团走 club/create(表单B)。
@@ -26,9 +25,11 @@ Page({
     capCount: 0,
     dots: [0, 1, 2, 3],
     reducedMotion: false,
-    morphing: false,
-    morph: null,
-    morphRun: false,
+    // P-24(owner 2026-10-27 p98):进度条进场从 0 直接 ease-out 到当前步宽,不再由开场 CTA 形变过来
+    // (那条形变先画满整条、再缩回一段,还会从标题上划过去)。progIn 落下后各段才填色,transition 才跑得起来。
+    progIn: false,
+    // P-23(owner 2026-10-27 p111):已有商家记录的账号进来就说明,并给去商家端的出口,不等第 4 步才报错。
+    merchantActive: false,
     // 身份
     leaderName: '',
     phone: '',
@@ -68,7 +69,6 @@ Page({
   },
 
   onUnload() {
-    wizardMorph.cancelIntroMorph(this);
     this._bootstrapEpoch = (this._bootstrapEpoch || 0) + 1;
     this._submitEpoch = (this._submitEpoch || 0) + 1;
     this._leaderStatusEpoch = (this._leaderStatusEpoch || 0) + 1;
@@ -84,18 +84,50 @@ Page({
     this._bootstrapEpoch = bootstrapEpoch;
     var that = this;
     this.setData({ bootstrapState: 'checking-role', bootstrapError: '' });
-    // 账户互斥:已注册商户不能再申请俱乐部主理人(一个账户只能是商户或主理人之一)
+    // 账户互斥:已注册商户不能再申请俱乐部主理人(一个账户只能是商户或主理人之一)。
+    // P-23:不再只摆一句「不能申请」后自动退出,而是说明原因并给去商家端的出口。
     if (this.isMerchantAccount()) {
       this._bootstrapChecking = false;
-      // blocked 态自己弹 fail 半屏讲原因并 2s 后 onExit,不再叠一个同义的「知道了」弹窗
-      this.setData({ bootstrapState: 'blocked' });
+      this.setData({ bootstrapState: 'merchant', merchantActive: true });
       return;
     }
+    // P-23:本地身份是玩家、但后端有商家行(申请过/停用过)的账号,后端会在第 4 步提交时拒绝
+    // (ClubServiceImpl.requireNoActiveMerchantIdentity)。进页就问一次商家身份,与资格快照一起放行。
+    var merchantRow;          // undefined = 未回;null = 没有商家行;{active} = 有
+    var roleReady = false;
+    var settle = function () {
+      if (bootstrapEpoch !== that._bootstrapEpoch) return;
+      if (!roleReady || merchantRow === undefined) return;
+      that._bootstrapChecking = false;
+      if (merchantRow) {
+        that.setData({ bootstrapState: 'merchant', merchantActive: !!merchantRow.active });
+        return;
+      }
+      that.setData({ bootstrapState: 'ready', bootstrapError: '' });
+    };
+    app.sendRequest({
+      url: '/api/merchant/access/me',
+      method: 'POST',
+      data: {},
+      hideLoading: true,
+      silentError: true,
+      success: function (res) {
+        if (bootstrapEpoch !== that._bootstrapEpoch) return;
+        merchantRow = merchantRowOf(res);
+        settle();
+      },
+      // 问不到不拦人:后端提交时仍会兜底拒绝,这里只是提前说明
+      fail: function (res) {
+        if (bootstrapEpoch !== that._bootstrapEpoch) return;
+        merchantRow = merchantRowOf(res);
+        settle();
+      },
+    });
     // 已是主理人则不重复让其填整套表单,直接进"已成为主理人"态(去创建/管理俱乐部)
     roleGuard.load(function (snapshot) {
       if (bootstrapEpoch !== that._bootstrapEpoch) return;
-      that._bootstrapChecking = false;
       if (!snapshot || !roleGuard.hasSnapshot()) {
+        that._bootstrapChecking = false;
         that.setData({
           bootstrapState: 'error',
           bootstrapError: '暂时无法确认当前账号的主理人资格，请重试',
@@ -103,11 +135,22 @@ Page({
         return;
       }
       if (roleGuard.isClubLeader()) {
+        that._bootstrapChecking = false;
         that.setData({ mode: 'done', doneState: 'ready', bootstrapState: 'ready' });
         return;
       }
-      that.setData({ bootstrapState: 'ready', bootstrapError: '' });
+      roleReady = true;
+      settle();
     });
+  },
+
+  // P-23:去商家端。生效中的商家直接回商家首页;申请中/被拒/停用的去商家入驻页看申请状态。
+  goMerchantSide() {
+    if (this._navigating) return;
+    this._navigating = true;
+    var done = () => { this._navigating = false; };
+    if (this.data.merchantActive) wx.reLaunch({ url: '/pages/merchant/index/index', complete: done });
+    else wx.redirectTo({ url: '/pages/merchant/apply/index', complete: done });
   },
 
   retryBootstrap() { this.startBootstrap(); },
@@ -132,28 +175,19 @@ Page({
   },
 
   // 开场屏 → 第一步。四步之前先给一屏说清「这是什么、要多久、填完得到什么」。
-  // 那颗 CTA 会飞上去变成进度条,几何与约束见 utils/wizard-morph.js。
+  // P-24:进度条先以空轨出现,下一帧再落 progIn,第一段从 0 ease-out 填到当前步宽(减动效时由 wxss 关掉过渡)。
   startForm() {
     if (this.data.bootstrapState !== 'ready') return;
-    if (this.data.reducedMotion) {          // 减动效:直接切,不放形变
-      this.setData({ mode: 'form' });
-      this.refreshStep(1);
-      return;
-    }
+    this.setData({ mode: 'form', progIn: false });
+    this.refreshStep(1);
     var that = this;
-    wizardMorph.runIntroMorph(this, {
-      segSel: '.prog__seg',
-      enterData: { mode: 'form' },
-      afterEnter: function () { that.refreshStep(1); },
-    });
+    wx.nextTick(function () { that.setData({ progIn: true }); });
   },
-
-  endMorph() { wizardMorph.endIntroMorph(this); },
 
   onBack() {
     if (this._submitting) return;
     // 第一步往回退到开场屏,不是直接摔出页面 —— 开场屏才是这条流程的起点
-    if (this.data.mode === 'form' && this.data.step === 1) { this.setData({ mode: 'intro' }); return; }
+    if (this.data.mode === 'form' && this.data.step === 1) { this.setData({ mode: 'intro', progIn: false }); return; }
     if (this.data.step === 1) { this.exitPage(); return; }
     this.refreshStep(this.data.step - 1);
   },
@@ -371,6 +405,16 @@ Page({
 
   onExit() { this.exitPage(); }
 });
+
+// /api/merchant/access/me → 这个账号有没有商家行。生效中(含商家员工)= active;
+// 申请中/被拒/停用 = 有行但未生效;后端对异常商家行回 403,同样说明有行。其余(没有行/问不到)不拦。
+function merchantRowOf(res) {
+  if (!res || typeof res !== 'object') return null;
+  if (res.code == 403) return { active: false };
+  if (res.code != 200 || !res.data || typeof res.data !== 'object') return null;
+  if (res.data.active === true) return { active: true };
+  return ['PENDING', 'REJECTED', 'DISABLED'].indexOf(res.data.applicationState) >= 0 ? { active: false } : null;
+}
 
 function isTransportFailure(error) {
   return /request:fail|timeout/i.test(String(error && error.errMsg || ''));

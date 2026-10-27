@@ -245,3 +245,4 @@ chengyinhub-xcx/pages/shezhi/components/post-governance/index.js 2  # 2026-10-22
 chengyinhub-xcx/utils/predict-entry.js 1  # 2026-10-23 PR #508 业主第四轮:消息页「竞猜待答」入口只在有待答时出现。身份已先确认是可结算竞猜的商家,待答列表读失败时照样显示入口(fail-open),不让 48 小时期限的提醒悄悄消失;失败已有可见兜底(入口仍在、点进 predict 页有整页错误态),每次进消息页都弹通道 toast 是噪音
 chengyinhub-xcx/subpackageRoam/nearby/index.js 3  # 2026-10-25 官方地点卡展开:节点补读与评价列表是背景读取,卡片已先用地图数据渲染,读不到只少相册/玩法块或评价区(挑战页会重读同一节点并给错误页与重试);发布评价失败由 done() 自己 toast 后端原因,不再叠通用 toast。
 chengyinhub-xcx/pages/play/poi-challenge/index.js 2  # 2026-10-25 地点挑战页:节点读取失败落 cy-error 错误页 + 重试;提交 /complete 的拒绝原因由答题卡反馈或 toast 显示,未知结果 toast「结果还没确认」,不叠通用 toast。
+chengyinhub-xcx/pages/club/apply/index.js 1  # 2026-10-27 L03 P-23:进页预查 /api/merchant/access/me 只为提前说明「这个账号已经是商家」;查不到就照常放行(后端提交时 requireNoActiveMerchantIdentity 仍兜底拒绝并在第 4 步原位报错),有商家行时落 bootstrapState=merchant 由 cy-state-shell 说明并给出口。通用 toast 在进页时弹一条与表单无关的错误是噪音

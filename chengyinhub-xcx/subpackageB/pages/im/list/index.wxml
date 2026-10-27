@@ -1,4 +1,4 @@
-<view class="theme-dark">
+<view class="{{isMerchantView ? 'theme-merchant' : 'theme-dark'}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
@@ -25,7 +25,28 @@
 
   <!-- 合作邀请:收到的在收件箱、我发出的在发件箱,点进邀约详情处理。与会话是两套数据源,读不到只在这里局部报错。 -->
   <cy-inline-error wx:if="{{inviteError}}" kind="data" title="{{inviteError}}" action="重试" bind:action="loadInvites" />
-  <view wx:for="{{activeTab === 'in' ? invitesIn : invitesOut}}" wx:key="rowKey" class="invite-row cy-fly-in" style="animation-delay: {{index < 5 ? index * 40 : 200}}ms"
+  <!-- M-06(owner 2026-10-27 m681):商家视角的协作邀请不再是一条条消息,而是顶部一条横滑卡片带;
+       卡片同宽同高,点开进协作邀请详情。玩家视角保持下面原来的邀请行。 -->
+  <view wx:if="{{isMerchantView && (activeTab === 'in' ? invitesIn.length : invitesOut.length)}}" class="invite-strip">
+    <text class="invite-strip__title">协作邀请</text>
+    <scroll-view class="invite-strip__scroll" scroll-x enhanced show-scrollbar="{{false}}">
+      <view class="invite-strip__track">
+        <view wx:for="{{activeTab === 'in' ? invitesIn : invitesOut}}" wx:key="rowKey" class="invite-card"
+              data-id="{{item.inviteId}}" data-box="{{activeTab === 'in' ? 'received' : 'sent'}}" bindtap="openInvite"
+              aria-role="button" aria-label="协作邀请：{{item.partnerName || item.topicText}}，{{item.statusText}}"
+              hover-class="cy-pressed" hover-stay-time="80">
+          <view class="invite-card__top">
+            <view class="invite-card__icon" aria-hidden="true"><cy-icon name="connect" size="36" /></view>
+            <text class="invite-status is-{{item.badgeTone}}">{{item.statusText}}</text>
+          </view>
+          <text class="invite-card__name">{{item.partnerName || item.topicText}}</text>
+          <text class="invite-card__sub">{{activeTab === 'in' ? '邀请你合作' : '你发出的邀请'}}{{item.topicText ? ' · ' + item.topicText : ''}}</text>
+          <text class="invite-card__time">{{item.timeText}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+  <view wx:for="{{isMerchantView ? [] : (activeTab === 'in' ? invitesIn : invitesOut)}}" wx:key="rowKey" class="invite-row cy-fly-in" style="animation-delay: {{index < 5 ? index * 40 : 200}}ms"
         data-id="{{item.inviteId}}" data-box="{{activeTab === 'in' ? 'received' : 'sent'}}" bindtap="openInvite"
         aria-role="button" aria-label="合作邀请：{{item.partnerName || item.topicText}}，{{item.statusText}}"
         hover-class="cy-pressed-bg" hover-stay-time="80">

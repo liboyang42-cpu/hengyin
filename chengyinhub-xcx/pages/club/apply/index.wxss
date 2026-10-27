@@ -21,11 +21,18 @@ page { background: var(--cy-bg-page); }
 /* C40:未到段必须是可见的弱实心。原来用 8% 白,黑底上几乎看不见 ——
  * 与建团页统一走 action/secondary-bg。 */
 .prog__seg {
-  flex: 1; height: 6rpx; border-radius: var(--cy-radius-pill);
+  flex: 1; height: 6rpx; border-radius: var(--cy-radius-pill); overflow: hidden;
   background: var(--cy-color-action-secondary-bg);
-  transition: background-color var(--cy-motion-standard) var(--cy-ease-out);
 }
-.prog__seg.on { background: var(--cy-color-text-primary); }
+/* P-24(owner 2026-10-27 p98):填色从 0 直接 ease-out 到整段,只动 transform(不动 width);
+ * 进度条在 .head 里、标题之上,不再有一层从开场 CTA 飞上来、划过标题的形变条。 */
+.prog__fill {
+  height: 100%; border-radius: inherit;
+  background: var(--cy-color-text-primary);
+  transform: scaleX(0); transform-origin: left center;
+  transition: transform 360ms var(--cy-ease-out);
+}
+.prog__seg.on .prog__fill { transform: scaleX(1); }
 
 .eyebrow {
   display: flex; align-items: flex-end; height: 56rpx;
@@ -152,7 +159,7 @@ page { background: var(--cy-bg-page); }
 .cy-motion-reduced .cap,
 .cy-motion-reduced .sw,
 .cy-motion-reduced .sw__knob,
-.cy-motion-reduced .prog__seg { transition: none !important; }
+.cy-motion-reduced .prog__fill { transition: none !important; }
 
 /* 2026-09-06 用户定:整体间距放大一档。头部与正文之间也拉开。 */
 .step { padding-top: var(--cy-space-2); }

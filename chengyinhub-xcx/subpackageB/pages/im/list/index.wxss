@@ -1,3 +1,5 @@
+@import '../../../../style/merchant-light-scope.wxss';
+
 /* ⚠️ 页底必须读 --cy-bg-page,不能读 --cy-bg-card:
  * cy-nav-bar 的底色是 --cy-comp-nav-bg → --cy-color-bg-page,而 --cy-bg-card
  * → --cy-color-bg-surface,比 bg-page 浅一档 ⇒ 顶栏下缘就是一条肉眼可见的色带,
@@ -145,3 +147,21 @@ page { background: var(--cy-bg-page); }
 .conv-wrap:nth-child(7) { transition-delay: calc(var(--pm-l-s, 0) * 180ms), calc(var(--pm-l-s, 0) * 180ms), 0s, 0s; }
 .conv-wrap:nth-child(8) { transition-delay: calc(var(--pm-l-s, 0) * 210ms), calc(var(--pm-l-s, 0) * 210ms), 0s, 0s; }
 .conv-wrap:nth-child(n+9) { transition-delay: calc(var(--pm-l-s, 0) * 240ms), calc(var(--pm-l-s, 0) * 240ms), 0s, 0s; }
+
+/* M-06 协作邀请卡片带(商家视角):横滑、卡片同宽同高,标题与页边距对齐,右侧自然出血。 */
+.invite-strip { padding: var(--cy-space-3) 0 var(--cy-space-2); }
+.invite-strip__title { display: block; padding: 0 var(--cy-page-x) var(--cy-space-2); font-size: var(--cy-font-label); font-weight: 700; color: var(--cy-text-secondary); }
+.invite-strip__scroll { width: 100%; white-space: nowrap; }
+.invite-strip__track { display: inline-flex; gap: var(--cy-space-2-5); padding: 0 var(--cy-page-x); }
+.invite-card {
+  flex: none; width: 440rpx; height: 232rpx; box-sizing: border-box;
+  display: flex; flex-direction: column; padding: var(--cy-space-3);
+  border-radius: var(--cy-radius-md); background: var(--cy-bg-card);
+  border: 1rpx solid var(--cy-border-card);
+  white-space: normal;
+}
+.invite-card__top { display: flex; align-items: center; justify-content: space-between; }
+.invite-card__icon { width: 64rpx; height: 64rpx; border-radius: 50%; background: var(--cy-bg-card-2); color: var(--cy-info); display: flex; align-items: center; justify-content: center; }
+.invite-card__name { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-text-title); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.invite-card__sub { display: block; margin-top: var(--cy-space-1); font-size: var(--cy-font-label); color: var(--cy-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.invite-card__time { display: block; margin-top: auto; font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }

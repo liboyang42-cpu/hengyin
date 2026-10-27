@@ -416,7 +416,7 @@
       "pagePath": "subpackageB/pages/im/list/index",
       "pkg": "subpackageB",
       "tabBar": false,
-      "role": "player",
+      "role": "merchant",
       "needsLogin": true,
       "needsData": false,
       "dataKeys": [],
@@ -427,7 +427,7 @@
       "pagePath": "subpackageB/pages/im/chat/index",
       "pkg": "subpackageB",
       "tabBar": false,
-      "role": "player",
+      "role": "merchant",
       "needsLogin": true,
       "needsData": true,
       "dataKeys": [

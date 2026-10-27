@@ -1,18 +1,19 @@
-<view class="theme-dark">
+<view class="{{isMerchantView ? 'theme-merchant' : 'theme-dark'}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <view class="im-chat">
   <!-- 顶栏:仅返回 + 更多药丸(对齐 Airbnb),标题留空——名字挪到下方 hero 区。
        CU-C-142:入口名必须和它打开的面板同名,原来写「详情」点开却是标题「更多」的举报/拉黑/清空面板。 -->
-  <cy-nav-bar>
-    <view slot="actions" class="hd-info-hit" hover-class="cy-pressed" hover-stay-time="80" bindtap="onMore" aria-role="button" aria-label="更多">
+  <!-- M-01(owner 2026-10-27 m676):商家的系统通知把「系统通知」放进导航栏标题,去掉「更多」。 -->
+  <cy-nav-bar title="{{sysNotice ? '系统通知' : ''}}">
+    <view wx:if="{{!sysNotice}}" slot="actions" class="hd-info-hit" hover-class="cy-pressed" hover-stay-time="80" bindtap="onMore" aria-role="button" aria-label="更多">
       <view class="hd-details">更多</view>
     </view>
   </cy-nav-bar>
 
   <!-- 顶栏下方 hero 区:只留会话名,不再重复放头像(头像已在每条消息气泡旁展示)。 -->
-  <view class="chat-hero" style="top: {{headerH}}px;">
+  <view wx:if="{{!sysNotice}}" class="chat-hero" style="top: {{headerH}}px;">
     <text class="hero-name">{{heroName}}</text>
   </view>
 
@@ -41,9 +42,23 @@
     <cy-empty wx:elif="{{!msgs.length}}" class="chat-empty" kind="empty" title="还没有消息" />
 
     <block wx:for="{{msgs}}" wx:key="id">
+      <!-- M-01:商家系统通知 = 整宽通知卡(图标 · 标题 · 正文 · 时间),不再是窄气泡。
+           卡片消息(msgType 3)沿用下面同一张 cy-card(动作按钮只有一份),只换成整宽通知样式。 -->
+      <view wx:if="{{sysNotice && item.msgType != 3}}" class="notice" aria-label="系统通知">
+        <view class="notice__icon" aria-hidden="true"><cy-icon name="bell" size="36" /></view>
+        <view class="notice__body">
+          <view class="notice__top">
+            <text class="notice__title">系统通知</text>
+            <text class="notice__time">{{item.noticeTime}}</text>
+          </view>
+          <image wx:if="{{item.msgType == 2}}" class="b-img notice__img" src="{{item.content}}" mode="widthFix" lazy-load="true" />
+          <text wx:else class="notice__text">{{item.displayContent}}</text>
+        </view>
+      </view>
+      <block wx:else>
       <!-- 卡片/系统消息仍走居中时间分隔(与改动前一致);普通文字/图片气泡改用贴气泡的行内时间(见下方),
            两处若都渲染会对同一时刻重复显示,故这里限定 msgType==3 -->
-      <view wx:if="{{item.timeDivider && item.msgType == 3}}" class="time-div">{{item.timeDivider}}</view>
+      <view wx:if="{{item.timeDivider && item.msgType == 3 && !sysNotice}}" class="time-div">{{item.timeDivider}}</view>
 
       <!-- 卡片:location/route/signup 是用户或系统可发、有明确发送方 → 遵守左收右发(唯一不可协商的语义);
            generic 仅系统可发,无发送人概念,渲染路径不变(居左无头像) -->
@@ -103,13 +118,14 @@
 
       <!-- 通用卡(仅系统可发;渲染路径与改动前一致)。CU-M-124:可点性按卡真有的动作给,
            没有去处、没有结果可查的通知不再报成「查看卡片详情」按钮。 -->
-      <cy-card wx:elif="{{item.msgType == 3}}" class="card" interactive="{{item.cardTarget}}" accessibility-label="{{item.card.title || '查看卡片详情'}}" hover-class="{{item.cardTarget ? 'cy-pressed' : 'none'}}" hover-stay-time="80" bindtap="onCardTap" data-msg="{{item.id}}">
+      <cy-card wx:elif="{{item.msgType == 3}}" class="card {{sysNotice ? 'card--notice' : ''}}" interactive="{{item.cardTarget}}" accessibility-label="{{item.card.title || '查看卡片详情'}}" hover-class="{{item.cardTarget ? 'cy-pressed' : 'none'}}" hover-stay-time="80" bindtap="onCardTap" data-msg="{{item.id}}">
         <view class="card-hd">
           <view class="card-icon" aria-hidden="true"><cy-icon name="info" size="36" /></view>
           <view class="card-tt">
             <view class="card-title">{{item.card.title}}</view>
             <view class="card-sub">{{item.card.sub}}</view>
           </view>
+          <text wx:if="{{sysNotice}}" class="card-time">{{item.noticeTime}}</text>
         </view>
         <view class="card-meta" wx:if="{{item.card.meta}}">{{item.card.meta}}</view>
         <view class="card-btns" wx:if="{{item.systemRecord}}">
@@ -156,13 +172,17 @@
           <cy-icon class="fail-icon" name="warning" size="36" />
         </view>
       </view>
+      </block>
     </block>
     <view id="bottom-anchor" style="height: 20rpx;"></view>
   </scroll-view>
 
   <!-- 禁用态提示。R2:原来只看 disabled(拉黑),不看 loadState ⇒ 缺参/失败时输入栏照常亮着、
        用户看不到任何原因,视觉上等于"这会话可以发消息"。现在两类原因共用这一行。 -->
+  <!-- M-01 补:只读会话(系统通知)底部只留输入栏那一行说明,不再叠一行同义的禁用提示。 -->
+  <block wx:if="{{type != 2}}">
   <view wx:if="{{disabled || loadState !== 'ready'}}" class="disabled-tip" style="bottom: {{inputH}}px;">{{disabled ? disabledText : sendBlockedMap[loadState]}}</view>
+  </block>
 
   <!-- 输入栏。「+」仍留在框外(位置/路线等城瘾特有发送项,Airbnb 无对应物,保留原位不臆造新位置);
        输入框改大圆角矩形,发送键收进框内右侧、圆形箭头,随「有无文字」在灰底灰箭头/反色实底间切换 -->

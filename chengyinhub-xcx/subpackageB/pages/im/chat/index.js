@@ -6,6 +6,8 @@ const { showPermissionGuide } = require('../../../../utils/location/location-man
 const { auditDetailUrl, shapeAuditDetail, shouldLoadAuditDetail, isRetryableAuditError } = require('./audit-detail.js');
 const { reportNoticeRows, makeReadRequestId } = require('../list/report-notices.js');
 const systemCard = require('./system-card-target.js');
+const roleGuard = require('../../../../utils/roleGuard.js');
+const merchantTheme = require('../../../../utils/merchant-theme.js');
 const app = getApp();
 // 距底部不超过这个距离(px)视为「在看最新消息」,轮询到新消息时跟随滚动(U-142)
 const NEAR_BOTTOM_PX = 120;
@@ -47,7 +49,10 @@ Page({
     reportPeerId: '',
     // 只读会话:能读不能写。判据只有「对方是不是一个可交流的人」,不是 loadState。
     readOnly: false,
-    readOnlyTip: '系统通知，不能回复',
+    readOnlyTip: '系统通知不支持回复，有新动态会出现在这里',
+    // M-01 / G-10:商家视角整页浅色;商家的系统通知会话标题进导航栏、去掉「更多」、通知改整宽卡片。
+    isMerchantView: false,
+    sysNotice: false,
     statusBarHeight: 20,
     navBarHeight: 44,
     headerH: 64,
@@ -147,11 +152,16 @@ Page({
     // 原来它和私信共用同一套输入栏/举报/拉黑:能打字、能点发送,发出去才红一个气泡,
     // 拉黑/举报的目标又不是任何人。可供性必须在进入前就收窄,不是等后端拒绝。
     const readOnly = type === 2;
+    const isMerchantView = roleGuard.isMerchantView();
+    const sysNotice = readOnly && isMerchantView;
+    if (isMerchantView) merchantTheme.merchantPageShow();
     this.setData({
+      isMerchantView: isMerchantView,
+      sysNotice: sysNotice,
       statusBarHeight: sb,
       navBarHeight: nav,
       headerH: sb + nav,
-      heroH: Math.round(heroGuessRpx * winW / 750),
+      heroH: sysNotice ? 0 : Math.round(heroGuessRpx * winW / 750),
       safeBottom: safe,
       inputH: 60 + safe / 2,
       conversationId: conversationId,
@@ -270,6 +280,7 @@ Page({
   onReady() {
     // 实测 hero 区真实高度,覆正 onLoad 里的粗估值,消息流让位量与之同步(见 wxml scroll-view top)
     const that = this;
+    if (this.data.sysNotice) return; // 系统通知标题在导航栏里,没有 hero 区
     this.createSelectorQuery().select('.chat-hero').boundingClientRect(function (rect) {
       if (rect && rect.height) that.setData({ heroH: Math.round(rect.height) });
     }).exec();
@@ -414,7 +425,7 @@ Page({
       const cardTarget = systemRecord || !!currentOriginalUrl || !!genericAction;
       // 对方气泡上方「名字·时间」一行用的名字:单聊/客服/系统统一用会话对方名(name)。
       // 小程序不露出群聊(见 list/index.js:tabOf),故无需逐条 senderName。
-      return Object.assign({}, m, { timeDivider: divider, card: card, cardTarget, systemRecord, currentOriginalUrl, genericAction, genericButtons, displayContent: displayContent,
+      return Object.assign({}, m, { timeDivider: divider, noticeTime: t ? fmtAbs(t) : '', card: card, cardTarget, systemRecord, currentOriginalUrl, genericAction, genericButtons, displayContent: displayContent,
         displayName: that.data.name || '' });
     });
     if (that._reviewMessageId && !that._reviewMatches(decorated.find(row => String(row.id) === String(that._reviewMessageId)))) that.closeReviewResult();
@@ -1136,6 +1147,7 @@ Page({
   // ===== 准实时:页面可见时轮询新消息 =====
   onShow() {
     this._hidden = false;
+    if (this.data.isMerchantView) merchantTheme.merchantPageShow();
     this._navigating = false;
     if (this.data.type == 2 && this._reportEntryEpoch) this.loadReportEntry();
     const cleared = this._pendingClearReturn;
@@ -1161,6 +1173,7 @@ Page({
     this.startPoll();
   },
   onHide() {
+    if (this.data.isMerchantView) merchantTheme.merchantPageRestore();
     if (this.data.reviewResult) this.closeReviewResult();
     this._hidden = true;
     if (this.data.routePickerOpen) this.closeRoutePicker();
@@ -1169,6 +1182,7 @@ Page({
     this.stopPoll();
   },
   onUnload() {
+    if (this.data.isMerchantView) merchantTheme.merchantPageRestore();
     this._reviewDetailEpoch = (this._reviewDetailEpoch || 0) + 1;
     this._reviewMessageId = null; this._reviewRecordKey = null;
     this._disposed = true;
