@@ -129,13 +129,18 @@ public class AiCreatorServiceImpl implements IAiCreatorService
                 throw new AiServiceException("AI 服务暂未就绪,请稍后重试");
             }
             JSONObject json = parseAiJson(r.getText());
-            JSONArray planArr = json.getJSONArray("plans");
-            if (planArr == null || planArr.isEmpty())
+            JSONObject planJson = themeDraftPlan(json);
+            if (planJson == null)
             {
+                log.warn("[AiCreator] theme_draft missing plan traceId={} keys={}", r.getTraceId(), json.keySet());
                 throw new AiServiceException(PARSE_ERROR_MSG);
             }
-            AiThemePlan draft = parseThemePlan(planArr.getJSONObject(0), null);
-            if (!isValidThemeDraft(draft)) throw new AiServiceException(PARSE_ERROR_MSG);
+            AiThemePlan draft = parseThemePlan(planJson, null);
+            if (!isValidThemeDraft(draft))
+            {
+                log.warn("[AiCreator] theme_draft missing required fields traceId={}", r.getTraceId());
+                throw new AiServiceException(PARSE_ERROR_MSG);
+            }
             resp.setDraft(draft);
             if (reservation != null) resp.setRemainingQuota(reservation.remaining);
             accepted = true;
@@ -478,6 +483,21 @@ public class AiCreatorServiceImpl implements IAiCreatorService
 
     // ---- helpers ----
 
+    /**
+     * P-43:模型真实回包的三种外形 —— {"plans":[plan]}、{"plan":plan}、或直接就是 plan 本身。
+     * 必填字段(标题/故事线/带名称的节点)仍由 isValidThemeDraft 校验,这里只认外形。
+     */
+    private static JSONObject themeDraftPlan(JSONObject json)
+    {
+        Object plans = json.get("plans");
+        if (plans instanceof JSONArray)
+        {
+            return ((JSONArray) plans).isEmpty() ? null : ((JSONArray) plans).getJSONObject(0);
+        }
+        if (json.get("plan") instanceof JSONObject) return json.getJSONObject("plan");
+        return json.containsKey("nodes") ? json : null;
+    }
+
     private AiThemePlan parseThemePlan(JSONObject pj, Set<Long> validCandidateIds)
     {
         if (pj == null) return null;
@@ -508,7 +528,10 @@ public class AiCreatorServiceImpl implements IAiCreatorService
                     }
                 }
                 AiPlanNode n = nj.toJavaObject(AiPlanNode.class);
-                if (n != null) nodes.add(n);
+                if (n == null) continue;
+                // 主题草稿的节点没有商家,模型按提示把节点名称写在 name 上。
+                if (isBlank(n.getMerchantName())) n.setMerchantName(nj.getString("name"));
+                nodes.add(n);
             }
         }
         plan.setNodes(nodes);
@@ -722,12 +745,21 @@ public class AiCreatorServiceImpl implements IAiCreatorService
      */
     private static JSONObject parseAiJson(String text)
     {
-        JSONObject json = JSON.parseObject(stripJsonFence(text));
+        JSONObject json = JSON.parseObject(jsonObjectSpan(stripJsonFence(text)));
         if (json == null)
         {
             throw new com.alibaba.fastjson2.JSONException("empty ai response");
         }
         return json;
+    }
+
+    /** 模型偶尔在 JSON 前后加一句说明:只取第一个 { 到最后一个 } 之间;没有花括号时原样交给解析器报错。 */
+    private static String jsonObjectSpan(String text)
+    {
+        if (text == null) return null;
+        int open = text.indexOf('{');
+        int close = text.lastIndexOf('}');
+        return open >= 0 && close > open ? text.substring(open, close + 1) : text;
     }
 
     // ---- 内嵌 prompt 模板(输出 JSON 模式, [BIZ:xxx] 标记供 MockLlmClient 路由) ----
@@ -736,7 +768,9 @@ public class AiCreatorServiceImpl implements IAiCreatorService
         "[BIZ:theme_draft]\n" +
         "你是城市定向主题草稿生成器。根据一句话想法和 productType 生成1套主题骨架(无坐标,留给用户在地图补点)。\n" +
         "只生成标题、故事线、节点名称与节点文字说明；不要生成玩法规则、题目或答案。\n" +
-        "输出严格JSON(不要markdown代码块),同 merchant_plan 的 plans 结构,1 条 plan;nodes 字段 longitude/latitude/candidateId 留空。";
+        "输出严格JSON(不要markdown代码块),只含 1 条 plan;节点没有坐标和商家,name 写节点名称,roleText 写节点文字说明:\n" +
+        "{\"plans\":[{\"title\":\"\",\"subtitle\":\"\",\"storyline\":\"\",\"tags\":[],\"estDurationMin\":0," +
+        "\"nodes\":[{\"order\":1,\"name\":\"节点名称\",\"roleText\":\"节点文字说明\"}]}]}";
 
     private static final String SYS_NODE_GENERATE =
         "[BIZ:node_generate]\n" +

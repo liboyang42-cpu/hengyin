@@ -49,6 +49,8 @@ final class UploadImagePolicy
         RATIOS.put("image_3_4", 3D / 4D);
         RATIOS.put("image_5_4", 5D / 4D);
         RATIOS.put("image_4_5", 4D / 5D);
+        // G-3/M-10:商家店铺封面(主页背景)按 5:3 裁剪。
+        RATIOS.put("image_5_3", 5D / 3D);
     }
 
     private UploadImagePolicy()

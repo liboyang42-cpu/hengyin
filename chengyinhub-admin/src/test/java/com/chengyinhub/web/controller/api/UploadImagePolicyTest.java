@@ -133,6 +133,15 @@ class UploadImagePolicyTest
         assertThrows(IllegalArgumentException.class, () -> UploadImagePolicy.validate(square, "image_16_9"));
     }
 
+    /** G-3/M-10:商家店铺封面按 5:3 裁剪上传,不能再报「不支持的图片业务类型」。 */
+    @Test
+    void merchantCoverRatioFiveToThreeIsSupported() throws Exception
+    {
+        assertDoesNotThrow(() -> UploadImagePolicy.validate(png("cover.png", 1500, 900), "image_5_3"));
+        assertThrows(IllegalArgumentException.class,
+                () -> UploadImagePolicy.validate(png("cover.png", 1600, 900), "image_5_3"));
+    }
+
     @Test
     void freeAndStampImagesStillRequireRealImageContent() throws Exception
     {

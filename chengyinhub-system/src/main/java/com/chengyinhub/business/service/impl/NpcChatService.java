@@ -286,7 +286,11 @@ public class NpcChatService
         try
         {
             java.util.List<NpcProfile> list = npcProfileMapper.selectEnabledByScope(2, merchantId);
-            return list == null || list.isEmpty() ? null : list.get(0);
+            if (list == null || list.isEmpty()) return null;
+            NpcProfile profile = list.get(0);
+            // M-28:性格预设编码(gentle/cute/savage)在读取端展开成带角色名的人设,旧版自由文本原样。
+            profile.setPersona(com.chengyinhub.business.support.NpcPersonality.prompt(profile.getName(), profile.getPersona()));
+            return profile;
         }
         catch (Exception e)
         {

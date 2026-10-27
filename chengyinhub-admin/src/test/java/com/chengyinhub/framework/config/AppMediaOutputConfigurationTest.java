@@ -73,6 +73,19 @@ class AppMediaOutputConfigurationTest {
         assertEquals("", out.path("coverImg").asText());
     }
 
+    /** M-29:门店相册存 JSON 字符串数组,逐张投影且保持数组形状,不能按分隔符切碎。 */
+    @Test void merchantGalleryJsonArrayKeepsShapeAndHidesUnknownImages() throws Exception {
+        String json = mapper.writeValueAsString(Map.of("gallery", "[\"media-asset:1\",\"https://unknown/a.jpg\"]",
+                "albumPics", "media-asset:1;https://unknown/b.jpg"));
+        com.fasterxml.jackson.databind.JsonNode out = mapper.readTree(json);
+        com.fasterxml.jackson.databind.JsonNode gallery = mapper.readTree(out.path("gallery").asText());
+        assertEquals(2, gallery.size());
+        assertEquals("https://real/upload/approved?signature=stable", gallery.get(0).asText());
+        assertEquals("", gallery.get(1).asText());
+        assertEquals("https://real/upload/approved?signature=stable;", out.path("albumPics").asText());
+        assertEquals("", mapper.readTree(mapper.writeValueAsString(Map.of("gallery", "[\"broken"))).path("gallery").asText());
+    }
+
     @Test void canonicalArraysAndRealMapFieldsShareTheRegistryGateAndKeepOrdinaryText() throws Exception {
         String json = mapper.writeValueAsString(Map.of("avatar", "https://unregistered/photo.png",
                 "frames", List.of("media-asset:1", "media-asset:2"), "url", "https://normal/navigation",

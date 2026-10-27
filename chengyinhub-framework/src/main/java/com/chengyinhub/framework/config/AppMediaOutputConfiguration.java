@@ -86,6 +86,14 @@ public class AppMediaOutputConfiguration {
             } catch (IOException invalidMediaJson) { return ""; }
         }
         if (field == null || !MEDIA_FIELDS.contains(field)) return value;
+        if (MULTI_MEDIA_FIELDS.contains(field) && value.trim().startsWith("[")) {
+            // 门店相册等多图字段存 JSON 字符串数组:逐张投影后保持数组形状,不按分隔符切碎。
+            try {
+                JsonNode tree = json.readTree(value);
+                if (tree == null || !tree.isArray()) return "";
+                return json.writeValueAsString(projectTree(tree, "imageUrl"));
+            } catch (IOException invalidMediaJson) { return ""; }
+        }
         String[] references = MULTI_MEDIA_FIELDS.contains(field) ? value.split("[;,]", -1) : new String[]{value};
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < references.length; i++) {
