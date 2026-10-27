@@ -1855,7 +1855,7 @@
     </view>
   </view>
 
-  <cy-category-sheet show="{{categorySheetVisible}}" type="{{4}}" ids="{{categorySheetIds}}"
+  <cy-category-sheet show="{{categorySheetVisible}}" back-guard="{{false}}" type="{{4}}" ids="{{categorySheetIds}}"
     bind:select="onCategorySelect" bind:close="onCategorySheetClose" />
 
   <!-- 2026-08-20 物理返回守卫:任一浮层(预览/添加模块/picker/分类)开着时,

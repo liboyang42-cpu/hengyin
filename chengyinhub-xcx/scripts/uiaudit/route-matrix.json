@@ -3,7 +3,7 @@
   "generatedFrom": "app.json + scene-* 组件扫描",
   "previousBatch": null,
   "counts": {
-    "routes": 145,
+    "routes": 146,
     "scenes": 27,
     "added": 0,
     "removed": 0
@@ -1383,6 +1383,17 @@
     },
     {
       "pagePath": "pages/shezhi/about/index",
+      "pkg": "pages/shezhi",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/shezhi/marketing/index",
       "pkg": "pages/shezhi",
       "tabBar": false,
       "role": "merchant",

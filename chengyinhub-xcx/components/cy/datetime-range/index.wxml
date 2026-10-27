@@ -1,6 +1,6 @@
 <wxs src="../../../utils/time-format.wxs" module="tf" />
 
-<cy-date-sheet show="{{show}}" title="{{title}}" confirm-text="完成" bind:cancel="onCancel" bind:confirm="onConfirm">
+<cy-date-sheet show="{{show}}" title="{{title}}" confirm-text="完成" bind:cancel="onCancel" bind:confirm="onConfirm" back-guard="{{backGuard}}">
   <view class="cdr {{reducedMotion ? 'cdr--reduced-motion' : ''}}">
     <!-- 跨度:原来两处都不显示「这段有多长」,用户得自己心算跨了几天。
          ⚠️ 不合法时不在这儿红着显示占位文案 —— 两头明明都有值,却写「选择起止时间」是假的;

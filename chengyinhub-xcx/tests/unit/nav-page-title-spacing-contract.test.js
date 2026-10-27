@@ -491,7 +491,8 @@ test('全仓 82 个 cy-page-title 页面：共享标题统一提供上 space-5 /
   // 两线新增页面不重叠：本线83 + 官方线路列表/详情2 = 85。
   // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页、消息页改收件箱/发件箱(合并 master 584470ad 后按重建实测) ⇒ 83。
   // 2026-10-23 起名页 templateadd 退役删除(业主第四轮去掉起名一步,页面已无入口) ⇒ 83 → 82。
-  assert.equal(files.length, 82, 'cy-page-title 页面清单漂移时必须重新做间距归类')
+  // 2026-10-27 L02 +1:营销消息与优惠券独立页 pages/shezhi/marketing(P-55),cy-nav-bar plain + 共享 cy-page-title 标准二级页 ⇒ 82 → 83(实测)。
+  assert.equal(files.length, 83, 'cy-page-title 页面清单漂移时必须重新做间距归类')
 // 2026-09-02:+2 俱乐部客户列表与客户详情，复用 shared page-title 间距，64→66。
 //   客户详情的头像绝对定位在标题行上，不进入标题流，不影响上 space-5 / 下 space-2。
   files.forEach((rel) => {

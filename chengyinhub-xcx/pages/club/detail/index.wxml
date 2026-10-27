@@ -1118,11 +1118,11 @@
     bind:afterleave="onSceneNativeBackGuard" />
 <!-- 俱乐部编辑 = 三级 ⇒ 页内弹窗,由管理页托管;可写表单 ⇒ 遮罩不可关,走 dirty 闸。 -->
 <view class="club-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'club-edit'}}" catchtouchmove="blockSceneTouch">
-  <cy-scene-sheet show="{{true}}" variant="{{sceneCurrent.variant}}" theme="{{sceneCurrent.theme}}" title="{{sceneCurrent.title}}" can-back="{{sceneCurrent.canBack}}" dirty="{{sceneDirty}}" mask-closable="{{false}}" bind:requestclose="requestSceneClose" bind:back="requestSceneClose">
+  <cy-scene-sheet show="{{true}}" back-guard="{{!(sceneCurrent.id === 'club-edit' && (sceneDirty || sceneConfirm))}}" variant="{{sceneCurrent.variant}}" theme="{{sceneCurrent.theme}}" title="{{sceneCurrent.title}}" can-back="{{sceneCurrent.canBack}}" dirty="{{sceneDirty}}" mask-closable="{{false}}" bind:requestclose="requestSceneClose" bind:back="requestSceneClose">
     <cy-scene-club-edit club-id="{{sceneCurrent.params.clubId}}" theme="{{sceneCurrent.theme}}" bind:back="closeScene" bind:saved="onClubEdited" bind:dissolved="onClubDissolved" bind:transferowner="goClubGovernance" bind:dirtychange="onSceneDirtyChange" />
   </cy-scene-sheet>
 </view>
-<cy-modal show="{{sceneConfirm}}" title="放弃本轮修改" confirm-text="确认放弃" cancel-text="继续编辑" danger bind:confirm="confirmSceneDiscard" bind:cancel="cancelSceneDiscard" />
+<cy-modal show="{{sceneConfirm}}" back-guard="{{false}}" title="放弃本轮修改" confirm-text="确认放弃" cancel-text="继续编辑" danger bind:confirm="confirmSceneDiscard" bind:cancel="cancelSceneDiscard" />
 </view>
 
 <!-- 隐私授权闸(真弹窗):页内组件,不压页面栈。app.js 在需要授权时调本页 showPrivacyGate()。

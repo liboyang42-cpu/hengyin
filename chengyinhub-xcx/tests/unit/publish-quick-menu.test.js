@@ -11,6 +11,8 @@ function load(file, app = {}, wx = {}, pages = []) {
     require(name) {
       if (name.includes('toast')) return () => {};
       if (name.includes('exit-motion') || name.includes('morph-entrance')) return () => ({});
+      // 2026-10-27 L02:共享弹层套了返回守卫(G-2),沙箱里原样返回组件定义
+      if (name.includes('native-back-guard')) return { withNativeBackGuard: (definition) => definition };
       return {};
     },
     getApp: () => app, wx, console, getCurrentPages: () => pages

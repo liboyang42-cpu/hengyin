@@ -1437,6 +1437,8 @@
 </view>
 
 <!-- G01-G12:游玩宿主内的二级内容统一进入 sceneStack；内容组件与漫游宿主同源，避免两套状态/空壳。 -->
+<!-- G-2:手写 psheet 浮层开着时,物理返回 / 侧滑先关最上层,不退出本页 -->
+<cy-back-guard show="{{!!sceneCurrent}}" bind:back="onProtoSheetClose" />
 <view class="play-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'play-activity-detail'}}" catchtouchmove="blockSceneTouch">
 <view class="pdim {{sceneIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="onProtoSheetClose" aria-role="button" aria-label="关闭{{sceneCurrent.title}}" hover-class="cy-pressed" hover-stay-time="80"></view>
 <view class="psheet psheet--{{sceneCurrent.variant}} {{sceneIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">

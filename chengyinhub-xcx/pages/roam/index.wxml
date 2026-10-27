@@ -17,6 +17,8 @@
   <cy-modal-host id="cy-modal-host" />
 
 <!-- 地图入口弹层只服务开始前浏览态；开始后的 psheet 与 HUD 保持原样。 -->
+<!-- G-2:手写 psheet 浮层开着时,物理返回 / 侧滑先关最上层,不退出本页 -->
+<cy-back-guard show="{{!!sceneCurrent}}" bind:back="onProtoSheetClose" />
 <view class="roam-scene-host" wx:if="{{screen=='entry-map' && entrySheet}}" catchtouchmove="blockSceneTouch">
   <view class="pdim {{entrySheetIn?'is-in':''}} entry-sheet__mask" catchtouchmove="noop" bindtap="closeEntrySheet" aria-role="button" aria-label="关闭弹窗" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="psheet {{entrySheetIn?'is-in':''}} entry-sheet">

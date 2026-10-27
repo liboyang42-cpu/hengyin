@@ -14,8 +14,12 @@
 const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
 const exitMotion = require('../../../behaviors/exit-motion.js');
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
+const { withNativeBackGuard, onBackGuardLeave } = require('../../../utils/native-back-guard.js');
 
-Component({
+/* G-2(2026-10-27):物理返回 = 右上角 ✕(取消),半截的滚轮值不落下去。 */
+function onNativeBack(vm) { vm.onCancel(); }
+
+Component(withNativeBackGuard({
   behaviors: [reducedMotionBehavior, exitMotion(250)],
   properties: {
     show: { type: Boolean, value: false },
@@ -35,6 +39,8 @@ Component({
     },
   },
   methods: {
+    // G-2 返回守卫 page-container 的 afterleave(判定逻辑在 utils/native-back-guard.js)
+    _onBackGuardLeave() { onBackGuardLeave(this); },
     onCancel() { if (this.data._closing) return; this.triggerEvent('cancel'); },
     onConfirm() { if (this.data._closing) return; this.triggerEvent('confirm'); },
     // 点遮罩 = 取消,不是确认:半截的滚轮值不该被当成用户的选择落下去。
@@ -44,4 +50,4 @@ Component({
     },
     noop() {},
   },
-});
+}, onNativeBack));

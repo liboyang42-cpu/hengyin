@@ -22,6 +22,8 @@ const DANGER_LABEL = /^(删除|移出|移除|解散|退出|注销|撤回|拉黑|
 Component({
   options: { multipleSlots: true },
   properties: {
+    // G-2:透传给内层弹层的返回守卫开关;宿主页已有自己的 page-container 覆盖它时传 false
+    backGuard: { type: Boolean, value: true },
     show: { type: Boolean, value: false },
     title: { type: String, value: '请选择' },
     /* 选项。字符串数组即可(与 itemList 同形);要禁用某项时传

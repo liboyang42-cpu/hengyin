@@ -78,6 +78,8 @@
   </view>
 
   <!-- P2 / P3 / P4 / 被拒 / 已加入:队伍卡(稿 593:1017 · 594:1030 · 594:1060) -->
+  <!-- G-2:手写 psheet 浮层开着时,物理返回 / 侧滑先关最上层,不退出本页 -->
+  <cy-back-guard show="{{!!sheet}}" bind:back="closeSheet" />
   <block wx:if="{{sheet === 'team' && current}}">
   <view class="pdim {{sheetIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="closeSheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="psheet psheet--half {{sheetIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
