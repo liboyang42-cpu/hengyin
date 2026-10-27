@@ -152,7 +152,12 @@ Page({
     loadErrActionType: 'retry',
     organizerEntry: false,
     commandRecovery: null,
+    privacyGateShow: false,
   },
+
+  // 赛事签到组件的扫码(wx.scanCode)需要隐私授权：页内弹窗承接，不让 app.js 回退整页跳隐私页。
+  showPrivacyGate() { this.setData({ privacyGateShow: true }); },
+  onPrivacyGateSettled() { this.setData({ privacyGateShow: false }); },
 
   onLoad(q) {
     this._hidden = false;
@@ -531,7 +536,13 @@ Page({
     if (this._recovery) this._recovery.dispose();
     this._recovery = createRecovery({ app, platform: wx, domain: 'SIGNUP', targetId: this.data.id,
       changed: value => this.setData({ commandRecovery: value }),
-      terminal: () => this.fetch() });
+      terminal: result => {
+        if (result.state === 'APPLIED') {
+          motion.haptic({ type: 'light', reducedMotion: readReducedMotion() });
+          toast.success('报名成功');
+        }
+        this.fetch();
+      } });
   },
   queryCommand() { this._recovery.query(); },
   retryCommand() { this._recovery.retry(); },
@@ -539,9 +550,9 @@ Page({
   acknowledgeCommand() { this._recovery.acknowledge(); },
 
   doSignup() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('signup', () => this.doSignup())) return;
     if (participationInvalid(this.data.e)) { toast('参与资格已失效'); return; }
     if (!exactId(this.data.id) || this._disposed || this._hidden) return;
-    if (app.ensureLoginFor && !app.ensureLoginFor('signup', () => this.doSignup())) return;
     if (this._ctaBusy) return;
     if (!this._recovery || !sameReader(app, this._recoveryReader)) this._openRecovery();
     if (this._recovery.pending()) return;

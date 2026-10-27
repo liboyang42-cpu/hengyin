@@ -60,7 +60,12 @@ Page({
     formError: { action: '', text: '' },
     busyAction: '',
     result: null,
+    privacyGateShow: false,
   },
+
+  // 赛事签到组件的扫码(wx.scanCode)需要隐私授权：页内弹窗承接，不让 app.js 回退整页跳隐私页。
+  showPrivacyGate() { this.setData({ privacyGateShow: true }); },
+  onPrivacyGateSettled() { this.setData({ privacyGateShow: false }); },
 
   onLoad(q) {
     const raw = q && q.id;

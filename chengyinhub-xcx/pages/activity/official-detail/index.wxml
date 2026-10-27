@@ -15,6 +15,7 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
+  <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
   <cy-nav-bar overlay="{{!!e}}" scrolled="{{navScrolled}}" pill="{{!!e && !navScrolled}}" pillDark="{{!!e && !navScrolled}}" tint="{{(!e || navScrolled) ? 'dark' : 'light'}}" />
 
   <view class="od-page" wx:if="{{e}}">
