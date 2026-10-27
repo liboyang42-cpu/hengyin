@@ -17,7 +17,9 @@ class ApiTopicAttributeBindingControllerTest {
         doReturn(11L).when(controller).getAppUserId();
         when(reader.read(Long.MAX_VALUE,11L)).thenReturn(new ObjectMapper().createObjectNode()
                 .put("topicId",Long.toString(Long.MAX_VALUE)).put("registryVersion","2").put("configVersion","3"));
-        var mvc=MockMvcBuilders.standaloneSetup(controller).build();
+        // 生产 spring.http.converters.preferred-json-mapper=jackson2：Jackson 2 的 ObjectNode 须由同一转换器写出
+        var mvc=MockMvcBuilders.standaloneSetup(controller)
+                .setMessageConverters(new org.springframework.http.converter.json.MappingJackson2HttpMessageConverter()).build();
         mvc.perform(get("/api/topic/attribute-binding").param("topicId",Long.toString(Long.MAX_VALUE)).param("memberId","12"))
                 .andExpect(jsonPath("$.code").value(200)).andExpect(jsonPath("$.data.topicId").value(Long.toString(Long.MAX_VALUE)));
         verify(reader).read(Long.MAX_VALUE,11L);verifyNoInteractions(merchant);
