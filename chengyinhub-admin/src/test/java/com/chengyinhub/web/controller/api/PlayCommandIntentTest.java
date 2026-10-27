@@ -114,7 +114,8 @@ class PlayCommandIntentTest {
         PlayNodeAccessTestFixtures.installTransactions(controller, transactions);
         AjaxResult context = controller.basicActionContext("20", null, "11");
         assertEquals(200, context.get("code"));
-        assertEquals(Map.of("routeSessionId", 77L, "expectedRouteVersion", 3,
+        // HTTP 出口把 Long 会话号写成字符串(防 JS 精度丢失);服务端内部比对仍用 Long。
+        assertEquals(Map.of("routeSessionId", "77", "expectedRouteVersion", 3,
                 "runtimeInstance", "shared:77:4", "authorityEpoch", 4), context.get("data"));
         doAnswer(call -> {
             assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
@@ -153,7 +154,7 @@ class PlayCommandIntentTest {
         PlayNodeAccessTestFixtures.setField(controller, "gameSessionRuntimeService", shared);
         AjaxResult response = controller.basicActionContext("20", null, "11");
         assertEquals(200, response.get("code"));
-        assertEquals(Map.of("routeSessionId", 77L, "expectedRouteVersion", 4,
+        assertEquals(Map.of("routeSessionId", "77", "expectedRouteVersion", 4,
                 "runtimeInstance", "game:77", "authorityEpoch", 2), response.get("data"));
         assertEquals(List.of("refresh:4", "locked:4"), reads);
         assertNotSame(before, locked);
