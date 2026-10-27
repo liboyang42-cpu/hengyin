@@ -33,10 +33,21 @@ class SpoilerIsNotAnswerGateTest {
     private static final Path CTRL = Paths.get(
             "src", "main", "java", "com", "chengyinhub", "web", "controller", "api",
             "ApiPlayProgressController.java");
+    /** W8 起 /api/play/nodes 的列表构建下沉到 play 应用服务,/puzzle/reveal 的记分出口同理。 */
+    private static final Path PLAY = Paths.get(
+            "src", "main", "java", "com", "chengyinhub", "web", "service", "play");
+    private static final Path[] LIST = {CTRL, PLAY.resolve("PlayEntryApplication.java"),
+            PLAY.resolve("PlayNodeQueryApplication.java")};
+    private static final Path REVEAL = PLAY.resolve("PlayPuzzleCommandApplication.java");
+
+    private static String withoutComments(Path... files) throws Exception {
+        StringBuilder src = new StringBuilder();
+        for (Path file : files) src.append(new String(Files.readAllBytes(file), StandardCharsets.UTF_8)).append('\n');
+        return src.toString().replaceAll("(?s)/\\*.*?\\*/", "").replaceAll("(?m)^\\s*//.*$", "");
+    }
 
     private static String codeWithoutComments() throws Exception {
-        String src = new String(Files.readAllBytes(CTRL), StandardCharsets.UTF_8);
-        return src.replaceAll("(?s)/\\*.*?\\*/", "").replaceAll("(?m)^\\s*//.*$", "");
+        return withoutComments(LIST);
     }
 
     /**
@@ -101,7 +112,7 @@ class SpoilerIsNotAnswerGateTest {
     @Test
     @DisplayName("正规出口必须还在:/reveal 记 0 分之后才下发答案")
     void legitimateRevealPathStillExists() throws Exception {
-        String code = codeWithoutComments();
+        String code = withoutComments(REVEAL);
         assertTrue(code.contains("recordReveal"), "付费闸 recordReveal 不能被一起删掉");
         assertTrue(Pattern.compile("recordReveal[\\s\\S]{0,900}?data\\.put\\(\"answerReveal\"")
                         .matcher(code).find(),
@@ -115,8 +126,8 @@ class SpoilerIsNotAnswerGateTest {
         assertFalse(feedsAnswerIntoProject(clean), "干净输入不该报");
 
         String mutated = clean.replace(
-                "spoilerProtectionService.project(spoilerAccess, n.getId(), null)",
-                "spoilerProtectionService.project(spoilerAccess, n.getId(), tpl.getAnswerReveal())");
+                "spoilerProtectionService.project(read.spoilerAccess, n.getId(), null)",
+                "spoilerProtectionService.project(read.spoilerAccess, n.getId(), tpl.getAnswerReveal())");
         assertFalse(clean.equals(mutated), "负控变异注入失败 —— 锚点没命中,这条负控是假的");
         assertTrue(feedsAnswerIntoProject(mutated), "检查器没抓到被喂回去的答案正文");
     }
