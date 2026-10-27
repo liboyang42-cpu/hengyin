@@ -15,7 +15,7 @@ const profileReview = require('../../../../utils/profile-review.js');
 const pixelPortrait = require('../../../../utils/pixel-portrait.js');
 // 单文件限额与共享上传入口同一真源(生产 application.yml 10MB),避免页面自定 20MB 与服务端脱节。
 const { MAX_UPLOAD_FILE_SIZE } = require('../../../../utils/transport/upload-client.js');
-const { streetOnly } = require('../../../../utils/address-short.js');
+const { streetOnly } = require('../../utils/address-short.js');
 
 /**
  * 2026-10-27 业主 M-28(§6.3 已确认):性格设定不再自由输入,改成三选一 chip。

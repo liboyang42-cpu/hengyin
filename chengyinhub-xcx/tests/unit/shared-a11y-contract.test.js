@@ -31,7 +31,8 @@ for (const [component, before, after] of [
   ['btn', 'flex-wrap: wrap;', 'flex-wrap: nowrap;'],
   ['field', 'width: 88rpx;', 'width: 48rpx;'],
   ['search', 'calc(var(--cy-type-body)', 'calc(28rpx'],
-  ['cell', 'white-space: normal;', 'white-space: nowrap;'],
+  // 2026-10-27 业主 G-7/M-20:单元格右侧值改为单行省略,负控随之反转 —— 改回折行必须判红
+  ['cell', 'white-space: nowrap;\n  overflow: hidden;', 'white-space: normal;\n  overflow: hidden;'],
 ]) {
   test(`大字触达负控 ${component} 删除 ${before} 必须判红`, () => {
     const key = `components/cy/${component}/index.wxss`;
