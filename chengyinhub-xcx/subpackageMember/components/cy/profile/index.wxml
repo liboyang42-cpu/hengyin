@@ -216,7 +216,7 @@
         </view>
         <!-- P-49(2026-10-27,0.3 新口径):没有就是 0,不再用「—」代替 —— 取不到余额也显示 ¥0 -->
         <view class="pc-asset" bindtap="goEarnings" hover-class="pc-tap" hover-stay-time="80"
-              aria-role="button" aria-label="我的资产，账户余额{{balanceText == null ? 0 : balanceText}}元">
+              aria-role="button" aria-label="我的资产，账户余额{{balanceText || 0}}元">
           <view class="pc-asset__main">
             <text class="pc-asset__label">账户余额</text>
             <text class="pc-asset__value">{{money.amount(balanceText == null ? 0 : balanceText)}}</text>
@@ -429,7 +429,7 @@
           </block>
 
           <!-- ③ 品类 -->
-          <block wx:if="{{merchantCategoryTags.length}}">
+          <block wx:if="{{merchantCategories.length}}">
             <view class="pc-sec-tit">品类</view>
             <!-- G-8 / M-12(2026-10-27):商家标签库 —— 每个标签带图标,实底、无灰描边、小一号 -->
             <view class="pc-tags">
@@ -438,7 +438,7 @@
           </block>
 
           <!-- ④ 特色标签 -->
-          <block wx:if="{{merchantTagItems.length}}">
+          <block wx:if="{{merchantTags.length}}">
             <view class="pc-sec-tit">特色标签</view>
             <view class="pc-tags">
               <view class="pc-tag pc-tag--lib" wx:for="{{merchantTagItems}}" wx:key="label"><image wx:if="{{item.iconSrc}}" class="pc-tag-ico" src="{{item.iconSrc}}" mode="aspectFit" /><text>{{item.label}}</text></view>

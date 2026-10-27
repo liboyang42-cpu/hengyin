@@ -412,7 +412,7 @@ test('§3.6 商家公开身份接管身份头,不残留个人昵称/玩家角色
   // 商家被看者与本人商家视角共用;原「三元写在模板/观察器里」的字面量断言改为钉这一处真源。
   assert.match(wxml, /class="pc-gamer-name">\{\{_displayName\}\}/,
     '品牌名必须接管昵称位')
-  assert.match(js, /identitySync\.resolveSelfIdentity\(isMerchant \|\| selfAsMerchant,\s*isMerchant \? merchant : selfMerchant, user\)/,
+  assert.match(js, /identitySync\.resolveSelfIdentity\(d\.subjectIsMerchant \|\| selfAsMerchant,\s*d\.subjectIsMerchant \? d\.subjectMerchant : selfMerchant, d\.userInfo\)/,
     '商家被看者走商家身份')
   const identity = read('utils/identity-sync.js')
   // 头像位:商家走 logo,没有就落店名首字(lettermark);玩家走 avatar,没有才用默认头像那张图。
@@ -562,9 +562,8 @@ test('§3.6 商家 About 六块齐全且各自带空值闸', () => {
   assert.match(about, /<cy-empty wx:else/, '品牌故事全空只给一次克制空态')
   assert.match(about, /wx:if="\{\{merchantGallery\.length\}\}"[\s\S]*?门店相册/, '② 门店相册整块条件渲染')
   assert.match(about, /bindtap="previewMerchantGallery"/, '相册可预览')
-  // 2026-10-27 G-8 / M-12:品类与特色标签改走标签库渲染项(带图标),空值闸跟着换成渲染项长度
-  assert.match(about, /wx:if="\{\{merchantCategoryTags\.length\}\}"/, '③ 品类')
-  assert.match(about, /wx:if="\{\{merchantTagItems\.length\}\}"/, '④ 特色标签')
+  assert.match(about, /wx:if="\{\{merchantCategories\.length\}\}"/, '③ 品类')
+  assert.match(about, /wx:if="\{\{merchantTags\.length\}\}"/, '④ 特色标签')
   assert.match(about, /营业状态[\s\S]*?营业时间[\s\S]*?门店地址/, '⑤ 营业信息三行')
   assert.match(about, /bindtap="goMerchantLocation"/, '地址走 openLocation')
   assert.match(about,

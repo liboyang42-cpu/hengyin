@@ -412,9 +412,9 @@ Component({
     merchantTeamEntryValue: '',
     _avatarSrc: '',
     _avatarInitial: '',
-    // G-5:身份头名称的唯一出口(商家视角=商家名,玩家=昵称);selfMerchant = 本人商家身份(access/me + merchant/info)
+    // G-5:身份头名称的唯一出口(商家视角=商家名,玩家=昵称)。本人商家身份(access/me + merchant/info)
+    // 放实例字段 this._selfMerchant —— 只给 js 算头像/名称/背景,不进 WXML,不走 setData。
     _displayName: '',
-    selfMerchant: null,
     // M-19:登录者就是被看者(含「看公开主页」预览)—— 本人不关注自己、不向自己发起合作
     viewingOwn: false,
     reportShow: false,
@@ -449,10 +449,8 @@ Component({
     memberTabs: MEMBER_TABS,
     tabLabels: TAB_LABELS,
 
-    role: 'player',
     isClubLeader: false,
     benefits: buildBenefits({}),
-    clubOwnedCount: 0,
     pointsStat: { weekPoints: 0, rankPercentage: 0 },
     pointsSheet: { show: false, loading: false, loaded: false, failed: false, tasks: [], spendRules: [] },
 
@@ -510,12 +508,8 @@ Component({
     // 头像位真源:商家主体走 logo,没有就落店名首字;玩家走 avatar,没有才用默认头像那张图。
     // 首字在 js 里算 —— WXML 表达式不支持 charAt。
     // G-5(2026-10-27):本人商家视角同样只认商家名 / Logo(selfMerchant),不再挂会员昵称和个人头像。
-    'subjectIsMerchant, subjectMerchant, userInfo, isSelf, isMerchantView, selfMerchant': function (isMerchant, merchant, user, isSelf, merchantView, selfMerchant) {
-      var selfAsMerchant = !isMerchant && isSelf && merchantView;
-      var id = identitySync.resolveSelfIdentity(isMerchant || selfAsMerchant,
-        isMerchant ? merchant : selfMerchant, user);
-      // 本人商家身份还没回来时先不落「商家」两个字,沿用会员昵称占位一帧,避免闪成默认名
-      if (selfAsMerchant && !(selfMerchant && selfMerchant.name)) id.name = (user && user.nickname) || id.name;
+    'subjectIsMerchant, subjectMerchant, userInfo, isSelf, isMerchantView': function () {
+      var id = this._identityHead();
       this.setData({ _avatarSrc: id.avatar, _avatarInitial: id.initial, _displayName: id.name });
     },
     // 商家版没有「成就」tab(2026-08-20 用户拍板)。isMerchantView 有两个写入点
@@ -618,7 +612,7 @@ Component({
     _clearSelfReadState: function (access) {
       this.setData({ selfReadAccess: access, userInfo: {}, categoryList: [], casePicsList: [], joinInfo: { id: 0 },
         merchantAccess: inactiveAccess(), merchantAccessState: 'idle', merchantTeamEntryValue: '', isMerchantView: false,
-        role: 'player', isClubLeader: false, clubOwnedCount: 0, benefits: buildBenefits({}), balanceText: null,
+        isClubLeader: false, benefits: buildBenefits({}), balanceText: null,
         friendNum: 0, followNum: 0, fansNum: 0, growthLevel: 1, streakDays: 0, exploreValue: 0, profilePoint: null,
         pointsStat: { weekPoints: 0, rankPercentage: 0 }, rankDisplay: { no: 0, delta: '' },
         identityCard: { shops: 0, themes: 0, routes: 0, km: '0', medals: 0, cities: 1 },
@@ -794,6 +788,7 @@ Component({
     this._followEpoch = (this._followEpoch || 0) + 1;
     this._profileShown = false;
     this._viewerIsMerchant = policy.isMerchantView({ role: app.getUserRole(), userType: app.getUserType() });
+    this._selfMerchant = null;
     this.setData({
       coopInviteShow: false,
       hostSelf: hostSelf,
@@ -803,7 +798,6 @@ Component({
       merchantAccessState: 'idle',
       merchantTeamEntryValue: '',
       isClubLeader: false,
-      clubOwnedCount: 0,
       subjectIsMerchant: false,
       subjectMerchant: null,
       merchantState: hostSelf ? 'not-merchant' : 'loading',
@@ -816,7 +810,6 @@ Component({
       merchantSafety: null,
       merchantNode: null,
       merchantNodeBusy: false,
-      selfMerchant: null,
       viewingOwn: !!String(app.getUserID() || '') && String(app.getUserID() || '') === userId,
       // 合法 initialTab 优先;非法值回退原规则(自己 projects、别人 posts)
       activeTab: initialTab || (isSelf ? 'projects' : (communityReadable() ? 'posts' : 'about')),
@@ -1053,15 +1046,15 @@ Component({
       var access = normalizeMerchantAccess(res.data);
       that._viewerIsMerchant = access.active;
       var viewChanged = access.active !== that.data.isMerchantView;
+      // G-5:本人商家身份先用 access/me 里的店名/Logo 顶上,封面等 merchant/info 回读
+      that._selfMerchant = access.active ? Object.assign({}, that._selfMerchant || {}, access.merchant) : null;
       that.setData({
         merchantAccess: access,
         merchantAccessState: 'ready',
         merchantTeamEntryValue: access.active
           ? (access.canManageOperators ? access.roleName + ' · 管理' : access.roleName + ' · 查看')
           : '',
-        isMerchantView: access.active,
-        // G-5:本人商家身份先用 access/me 里的店名/Logo 顶上,封面等 merchant/info 回读
-        selfMerchant: access.active ? Object.assign({}, that.data.selfMerchant || {}, access.merchant) : null
+        isMerchantView: access.active
       });
       if (that.data.hostSelf) applyTheme(access.active ? 'light' : 'dark');
       if (access.active) that.loadSelfMerchant();
@@ -1079,14 +1072,34 @@ Component({
       if (!that._currentProfileRead(read, res) || !that.data.isMerchantView) return;
       if (res.code != '200' || !isRecord(res.data)) return;
       var m = res.data;
-      var prev = that.data.selfMerchant || {};
+      var prev = that._selfMerchant || {};
       var next = Object.assign({}, prev, {
         name: typeof m.name === 'string' && m.name.trim() ? m.name : prev.name || '',
         logo: typeof m.logo === 'string' && m.logo ? m.logo : prev.logo || '',
         coverImage: typeof m.coverImage === 'string' ? m.coverImage : ''
       });
-      that.setData({ selfMerchant: next, heroImg: next.coverImage || that.data.heroImg });
+      that._applySelfMerchant(next);
     });
+  },
+
+  // G-5:身份头按视角取唯一来源 —— 商家被看者走 subjectMerchant,本人商家视角走 this._selfMerchant,其余走会员资料。
+  _identityHead: function () {
+    var d = this.data;
+    var selfAsMerchant = !d.subjectIsMerchant && d.isSelf && d.isMerchantView;
+    var selfMerchant = this._selfMerchant;
+    var id = identitySync.resolveSelfIdentity(d.subjectIsMerchant || selfAsMerchant,
+      d.subjectIsMerchant ? d.subjectMerchant : selfMerchant, d.userInfo);
+    // 本人商家身份还没回来时先不落「商家」两个字,沿用会员昵称占位一帧,避免闪成默认名
+    if (selfAsMerchant && !(selfMerchant && selfMerchant.name)) id.name = (d.userInfo && d.userInfo.nickname) || id.name;
+    return id;
+  },
+
+  // 本人商家身份落地:头像/名称/背景(=店铺封面,M-17)一次写齐
+  _applySelfMerchant: function (next) {
+    this._selfMerchant = next;
+    var id = this._identityHead();
+    this.setData({ _avatarSrc: id.avatar, _avatarInitial: id.initial, _displayName: id.name,
+      heroImg: (next && next.coverImage) || this.data.heroImg });
   },
 
   // G-5:品牌中心 / 个人资料保存成功后的全局广播。只先把旧图旧名换掉,随后仍以接口回读为准。
@@ -1097,10 +1110,7 @@ Component({
       return;
     }
     if (evt.scope === 'merchant' && this.data.isMerchantView) {
-      this.setData({
-        selfMerchant: Object.assign({}, this.data.selfMerchant || {}, evt.patch),
-        heroImg: evt.patch.coverImage || this.data.heroImg
-      });
+      this._applySelfMerchant(Object.assign({}, this._selfMerchant || {}, evt.patch));
       this.loadSelfMerchant();
       return;
     }
@@ -1174,7 +1184,7 @@ Component({
     var that = this;
     // M-17:本人商家视角的背景就是店铺装修封面(loadSelfMerchant 写入),不读玩家自选背景、也不拿运营 banner 顶替
     if (this.data.isSelf && this.data.isMerchantView) {
-      var cover = this.data.selfMerchant && this.data.selfMerchant.coverImage;
+      var cover = this._selfMerchant && this._selfMerchant.coverImage;
       if (cover) this.setData({ heroImg: cover });
       return;
     }
@@ -1281,28 +1291,14 @@ Component({
         if (!that._currentProfileRead(read)) { resolve(); return; }
         if (data && data.role) {
           var isClubLeader = data.isClubLeader === true || data.role === 'club';
+          // P-53(2026-10-27):「创建俱乐部/俱乐部」入口已删,role 与自有俱乐部数不再渲染,不写 data 也不再拉 /api/club/my
           that.setData({
-            role: data.role,
             isClubLeader: isClubLeader,
-            clubOwnedCount: Array.isArray(data.ownedClubs) ? data.ownedClubs.length : 0,
             benefits: buildBenefits(data.permission || {})
           });
-          if (isClubLeader) that.loadClubSummary();
         }
         resolve();
       });
-    });
-  },
-
-  loadClubSummary: function () {
-    const read = this._captureProfileRead(true);
-    if (!read) return Promise.resolve();
-    var that = this;
-    req('/api/club/my', {}).then(function (res) {
-      if (!that._currentProfileRead(read, res)) return;
-      var owned = (res.code == '200' && res.data && res.data.owned) || [];
-      if (owned && !Array.isArray(owned)) owned = [owned];
-      that.setData({ clubOwnedCount: owned.length });
     });
   },
 
@@ -2291,29 +2287,10 @@ Component({
     if (ds.route && ds.unlocked) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: ds.route, complete: () => { this._navigating = false; } }); }
   },
   goInvite: function () { this.openScene('share-invite'); },
-  goComplaint: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/complaint/index', complete: () => { this._navigating = false; } }); },
   goEarnings: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/assetcenter/earnings/index', complete: () => { this._navigating = false; } }); },
   goMerchantTeam: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/team/index', complete: () => { this._navigating = false; } }); },
   goClubWorkbench: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/detail/index?owner=1&tab=manage', complete: () => { this._navigating = false; } }); },
   goCoupon: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/coupon-wallet/index', complete: () => { this._navigating = false; } }); },
-  goClub: function () {
-    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: this.data.clubOwnedCount >= 1 ? '/pages/club/detail/index?owner=1' : '/pages/club/create/index', complete: () => { this._navigating = false; } });
-  },
-  goBecomeTalent: function () {
-    var that = this; cyLoading.show('加载中');
-    req('/api/club/my', {}).then(function (res) {
-      cyLoading.hide();
-      if (res.code != '200') {
-        cyToast(isAuthFailure(res) ? '登录未成功，请重新进入' : app.getRequestErrorMessage(res, '加载失败，请重试'));
-        return;
-      }
-      var owned = (res.code == '200' && res.data && res.data.owned) || [];
-      if (owned && !Array.isArray(owned)) owned = [owned]; if (that._navigating) return; that._navigating = true; // 跳转中不响应连点,免得叠两层
-      if (owned.length >= 1) wx.navigateTo({ url: '/pages/club/detail/index?id=' + ((owned[0] && owned[0].id) || ''), complete: function () { that._navigating = false; } });
-      else if (roleGuard.isClubLeader()) wx.navigateTo({ url: '/pages/club/create/index', complete: function () { that._navigating = false; } });
-      else wx.navigateTo({ url: '/pages/club/apply/index', complete: function () { that._navigating = false; } });
-    });
-  },
   jumpDetail: function (e) {
     var activity = this.data.list[e.currentTarget.dataset.index];
     if (activity) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/square/detail/index?id=' + activity.id, complete: () => { this._navigating = false; } }); }
