@@ -3713,7 +3713,7 @@ Page({
     const context = this._beginRouteWriteContext('_openingWrite');
     const chapter = this.data.chapter;
     const current = () => this._isRouteWriteContextCurrent(context)
-      && this.data.chapter === chapter && (this._routeState || {}).opening
+      && String((this.data.chapter || {}).id) === String((chapter || {}).id) && (this._routeState || {}).opening
       && String(this._routeState.opening.chapterId) === String(opening.chapterId);
     const payload = Object.assign({}, this._sessionParams(), { topicId: this.data.topicId, chapterId: opening.chapterId });
     this._openingSubmitting = true;
@@ -5447,7 +5447,7 @@ Page({
     this._advancedReadyIntent = context;
     const scopeCurrent = () => this._isPlayAccountCurrent() && this._advancedReadyIntent === context
       && context.owner === this._playOwner && context.epoch === this._playLoadEpoch
-      && context.sessionKey === this._sessionKey() && this.data.chapter === context.chapter;
+      && context.sessionKey === this._sessionKey() && String((this.data.chapter || {}).id) === String((context.chapter || {}).id);
     const current = () => scopeCurrent() && this.data.advancedPlay === active
       && active.show && active.node === node && this._advancedGameComponent() === context.component;
     // 玩法作答可能更新路线变量和版本，收尾写入前先读取新的权威版本。
@@ -6442,7 +6442,7 @@ Page({
     // scopeCurrent 不要求本回调仍是最新视图:同一会话的重复视图不应吞掉已排好的故事衔接。
     const scopeCurrent = () => this._isPlayAccountCurrent()
       && context.owner === this._playOwner && context.epoch === this._playLoadEpoch
-      && context.sessionKey === this._sessionKey() && this.data.chapter === context.chapter
+      && context.sessionKey === this._sessionKey() && String((this.data.chapter || {}).id) === String((context.chapter || {}).id)
       && this.data.advancedPlay === active && active.show && this._advancedGameComponent() === component;
     const current = () => this._advancedSessionContext === context && scopeCurrent();
     if (this._applyR5AdvancedView(view)) return;
