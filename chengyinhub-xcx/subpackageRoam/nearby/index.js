@@ -50,7 +50,7 @@ function emptyResult() {
 }
 
 Page({
-  onTeamCommandTerminal(receipt, command) {
+  afterTeamCommandTerminal(receipt, command) {
     this._teamScopeEpoch = (this._teamScopeEpoch || 0) + 1;
     this.refresh(this.data.center);
     this.loadMyTeams(false);

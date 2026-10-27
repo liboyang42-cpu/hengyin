@@ -15,12 +15,12 @@ function valid(row, scope) {
 }
 function display(row) {
   return Object.assign({}, row, { sessionId: id(row.sessionId), label: PHASES[row.phase],
-    elapsedText: row.elapsedMs == null ? '尚未起表' : Math.floor(row.elapsedMs / 1000) + ' 秒（服务端回读）',
+    elapsedText: row.elapsedMs == null ? '尚未起表' : Math.floor(row.elapsedMs / 1000) + ' 秒（平台计时）',
     terminal: !!terminal(row) });
 }
 const data = { orientLifecycle: { open: false, ready: false, busy: false, pending: false, notice: '', row: null, sessions: [], tasks: [], reward: null } };
 function methods(send) {
-  return {
+  const lifecycleMethods = {
     suspendOrientLifecycle() {
       this._orientEpoch = (this._orientEpoch || 0) + 1;
       this._orientConfirming = false;
@@ -104,7 +104,7 @@ function methods(send) {
       if (!this._orientCurrent(c)) return;
       this._orientConfirming = true;
       modal.show({ title: action === 'start' ? '确认本局规则并开始' : '放弃本局',
-        content: action === 'start' ? '本局规则版本 ' + row.configVersion + '。开始后以服务端计时为准，退出或暂停页面不会重置成绩计时。'
+        content: action === 'start' ? '本局规则版本 ' + row.configVersion + '。开始后以平台计时为准，退出或暂停页面不会重置成绩计时。'
           : '放弃后本局不可恢复，也不会作为完成结局。是否继续？',
         confirmText: action === 'start' ? '确认开始' : '确认放弃',
         success: result => {
@@ -171,7 +171,7 @@ function methods(send) {
     },
     _orientConfirmReceipt(c, pending) {
       if (!this._orientClear(c, pending)) {
-        this._orientSet({ busy: false, pending: true, notice: '已收到回执，待确认记录尚未清理，请重新查询' }); return;
+        this._orientSet({ busy: false, pending: true, notice: '已收到结果，待确认记录尚未清理，请重新查询' }); return;
       }
       this._orientSet({ busy: false, pending: false });
       // Original receipts can be older than a terminal state. Always re-read current facts.
@@ -189,7 +189,7 @@ function methods(send) {
       }), Promise.resolve()).then(() => {
         if (!this._orientCurrent(c)) return;
         if (found) return this._orientConfirmReceipt(c, pending);
-        this._orientSet({ busy: false, pending: true, notice: '尚未确认原请求。未查到回执不代表未写入，请稍后重新查询' });
+        this._orientSet({ busy: false, pending: true, notice: '尚未确认原请求。未查到结果不代表未写入，请稍后重新查询' });
       });
     },
     readOrientRewards() {
@@ -205,11 +205,11 @@ function methods(send) {
         if (!ok(body) || !precise(value) || !sameScope(value, { ...c, sessionId: row.sessionId })
             || !Object.prototype.hasOwnProperty.call(value, 'settlement')) throw new Error('Reward read unavailable');
         if (value.settlement === null) {
-          this._orientSet({ reward: { state: 'unsettled', message: '尚无结算回执；完成结局不等于奖励已到账' } }); return;
+          this._orientSet({ reward: { state: 'unsettled', message: '尚无结算记录；完成结局不等于奖励已到账' } }); return;
         }
         if (!settled(value.settlement, row.sessionId)) throw new Error('Invalid settlement');
         const receipt = value.settlement;
-        this._orientSet({ reward: { state: 'settled', message: '已取得服务端结算回执',
+        this._orientSet({ reward: { state: 'settled', message: '已取得平台结算记录',
           settlementId: id(receipt.settlementId), points: integer(receipt.pointsAwarded), xp: integer(receipt.xpAwarded) } });
       }).catch(() => { if (current()) this._orientSet({ reward: { state: 'unknown', message: '奖励事实暂未读回，请重新查询；不能据此判定未发放' } }); });
     },
@@ -220,5 +220,6 @@ function methods(send) {
         + '&topicId=' + encodeURIComponent(id(this.data.topicId)) });
     }
   };
+  return lifecycleMethods;
 }
 module.exports = { data, methods, valid };

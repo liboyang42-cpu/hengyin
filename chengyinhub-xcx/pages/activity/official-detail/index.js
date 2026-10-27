@@ -236,9 +236,10 @@ Page({
     if (this._disposed || this._hidden) return;
     const id = exactId(this.data.id);
     if (!id) {
+      this.data.loadErrActionType = 'back';
       this.setData({ loading: false, e: null, organizerEntry: false,
         loadErrKind: 'data', loadErrTitle: '活动参数无效', loadErrSub: '',
-        loadErrAction: '返回活动列表', loadErrActionType: 'back' });
+        loadErrAction: '返回活动列表' });
       return;
     }
     if (this._reader && !sameReader(app, this._reader)) {

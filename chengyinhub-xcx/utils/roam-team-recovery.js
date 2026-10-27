@@ -32,7 +32,7 @@ function mount(host, app, platform) {
               : input.action === 'handle' ? (input.approved ? '同意成员 ' : '拒绝成员 ') + String(input.memberId || '') : '' })
           render()
         },
-        terminal(receipt, command) { if (current()) host.onTeamCommandTerminal(receipt, command) },
+        terminal(receipt, command) { if (current()) host.afterTeamCommandTerminal(receipt, command) },
       })
       instances.set(targetId, instance)
     }

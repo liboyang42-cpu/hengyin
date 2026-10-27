@@ -48,11 +48,13 @@ Page({
       this._roamRevokeEpoch = (this._roamRevokeEpoch || 0) + 1;
       this._roamRevokeReader = null;
       this._roamRevokeInFlight = false;
-      this.setData({ submitting: false, submitError: '', failedAction: '' });
+      this.data.failedAction = '';
+      this.setData({ submitting: false, submitError: '' });
     } else if (this._roamRevokeInFlight) {
       this._roamRevokeEpoch = (this._roamRevokeEpoch || 0) + 1;
       this._roamRevokeInFlight = false;
-      this.setData({ submitting: false, submitError: '本机定位已停，撤回记录待确认，请重试', failedAction: 'revoke' });
+      this.data.failedAction = 'revoke';
+      this.setData({ submitting: false, submitError: '本机定位已停，撤回记录待确认，请重试' });
     }
     this.syncRoamCollection();
     this._homeCityConsentEpoch = (this._homeCityConsentEpoch || 0) + 1;

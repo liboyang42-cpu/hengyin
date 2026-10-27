@@ -21,7 +21,7 @@ function members(t) { const j = Number(t && t.joinedCount) || 0; const m = Numbe
 function dateText(v) { if (!v) return ''; const s = String(v).replace('T', ' '); return s.slice(5, 16).replace('-', '/'); }
 
 Page({
-  onTeamCommandTerminal() {
+  afterTeamCommandTerminal() {
     this._teamScopeEpoch = (this._teamScopeEpoch || 0) + 1;
     this.setData({ openLoading: false, openLoaded: false });
     this.reload();

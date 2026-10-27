@@ -1,15 +1,16 @@
 const app = getApp();
 const bundle = require('../../utils/free-explore-bundle.js');
 const modal = require('../../utils/modal.js');
-const empty = () => ({ review: null, reviewPending: null, reviewBusy: false, reviewContent: '', reviewRating: 5, detail: null, catalog: null, quote: null, exitOptions: null, swapPending: null, pending: null, loading: false, writing: false, error: '', notice: '' });
+const empty = () => ({ review: null, reviewPending: null, reviewBusy: false, reviewContent: '', reviewRating: 5, detail: null, catalog: null, quote: null, exitOptions: null, swapPending: null, pending: null, loading: false, error: '', notice: '' });
 
 Page({
   data: empty(),
   clearView() {
+    this._writing = false;
     this.setData({
       review: null, reviewPending: null, reviewBusy: false, reviewContent: '', reviewRating: 5,
       detail: null, catalog: null, quote: null, exitOptions: null, swapPending: null, pending: null,
-      loading: false, writing: false, error: '', notice: '',
+      loading: false, error: '', notice: '',
     });
   },
   onLoad(options) {
@@ -45,7 +46,7 @@ Page({
             || typeof row.useWaiver !== 'boolean' || !row.requestId) throw Error('invalid pending');
         this.setData({ pending: row, notice: '上次取消结果待确认，原预约和豁免选择已保留' });
       }
-    } catch (error) { this._storageBlocked = true; this.setData({ error: '待确认记录无法读取，暂不能提交新操作；仍可刷新服务端历史' }); }
+    } catch (error) { this._storageBlocked = true; this.setData({ error: '待确认记录无法读取，暂不能提交新操作；仍可刷新订单历史' }); }
   },
   onHide() { this._hidden = true; this._epoch++; this.clearView(); },
   onUnload() { this.onHide(); this._unloaded = true; },
@@ -55,9 +56,6 @@ Page({
     if (this._unloaded || this._hidden || this._epoch !== epoch) return false;
     if (this._identity !== this.identity()) { this.onShow(); return false; }
     return true;
-  },
-  request(path, method, data, done) {
-    this.apiRequest(path, method, data, done);
   },
   apiRequest(url, method, data, done) {
     const epoch = this._epoch; let settled = false;
@@ -76,7 +74,7 @@ Page({
     if (!this.ready() || this.data.loading) return;
     if (!this._registrationId) { this.loadEntry(); return; }
     this.setData({ loading: true });
-    this.request('/api/free-explore/bundle/order', 'GET', { registrationId: this._registrationId }, (ok, res) => {
+    this.apiRequest('/api/free-explore/bundle/order', 'GET', { registrationId: this._registrationId }, (ok, res) => {
       this.setData({ loading: false });
       if (!ok) { this.setData({ error: res && res.msg || '权益加载失败，请重试；待确认操作不会清除' }); return; }
       try {
@@ -95,16 +93,16 @@ Page({
   loadEntry() {
     const receipt = !!this._purchaseRequestId;
     this.setData({ loading: true });
-    this.request(receipt ? '/api/free-explore/bundle/order/receipt' : '/api/free-explore/bundle/catalog', 'GET', receipt ? { requestId: this._purchaseRequestId } : { topicId: this._topicId }, (ok, res) => {
+    this.apiRequest(receipt ? '/api/free-explore/bundle/order/receipt' : '/api/free-explore/bundle/catalog', 'GET', receipt ? { requestId: this._purchaseRequestId } : { topicId: this._topicId }, (ok, res) => {
       this.setData({ loading: false });
       if (!ok) { this.setData({ error: res && res.msg || '回读失败，请稍后重试' }); return; }
       try {
         if (!receipt) { this.setData({ catalog: bundle.catalog(res.data, this._topicId) }); return; }
         const data = res.data;
-        if (!data || data.requestId !== this._purchaseRequestId) throw Error('购买回执无法确认');
+        if (!data || data.requestId !== this._purchaseRequestId) throw Error('购买结果无法确认');
         if (data.receipt !== 'FOUND') { this.setData({ notice: '购买结果待确认，保留原请求号；当前未查到不代表未购买，请继续回读' }); return; }
         const registrationId = bundle.exactId(data.order && data.order.registrationId);
-        if (!registrationId) throw Error('购买回执无法确认');
+        if (!registrationId) throw Error('购买结果无法确认');
         const detail = bundle.order(data.order, this._owner, registrationId);
         this._registrationId = registrationId;
         this.setData({ detail, notice: '已回读原订单，请查看支付与报名状态' }); this.restorePending(); this.reload();
@@ -175,7 +173,7 @@ Page({
       const row = res && res.data;
       if (ok && row && bundle.exactId(row.reviewId) && ['PENDING_REVIEW', 'VISIBLE', 'HIDDEN'].includes(row.status)) {
         try { wx.removeStorageSync(this.reviewKey()); }
-        catch (error) { this.setData({ error: '已收到评价回执，但恢复记录未清除；请按原请求再次确认' }); return; }
+        catch (error) { this.setData({ error: '已收到评价结果，但恢复记录未清除；请按原请求再次确认' }); return; }
         this.setData({ reviewPending: null, reviewContent: '', review: null,
           notice: row.status === 'PENDING_REVIEW' ? '评价已提交，等待平台复核，尚未公开' : '评价原请求已确认，状态：' + row.status });
         return;
@@ -187,26 +185,26 @@ Page({
   loadQuote() {
     if (!this.ready() || !this._registrationId) return;
     this.setData({ quote: null });
-    this.request('/api/free-explore/bundle/order/refund-quote', 'GET', { registrationId: this._registrationId }, (ok, res) => {
+    this.apiRequest('/api/free-explore/bundle/order/refund-quote', 'GET', { registrationId: this._registrationId }, (ok, res) => {
       if (!ok) { this.setData({ error: res && res.msg || '退款试算失败' }); return; }
       try { this.setData({ quote: bundle.quote(res.data) }); } catch (error) { this.setData({ error: error.message }); }
     });
   },
   cancelReservation(event) {
-    if (!this.ready() || this._storageBlocked || this.data.pending || this.data.swapPending || this.data.writing || this._confirming) return;
+    if (!this.ready() || this._storageBlocked || this.data.pending || this.data.swapPending || this._writing || this._confirming) return;
     const id = bundle.exactId(event.currentTarget.dataset.id);
     const row = this.data.detail && this.data.detail.reservations.find(item => item.id === id && item.canCancel);
     if (!row) return;
     const useWaiver = event.currentTarget.dataset.waiver === true || event.currentTarget.dataset.waiver === 'true';
     const epoch = this._epoch; this._confirming = true;
-    this.request('/api/free-explore/bundle/reservation/' + id + '/cancel-quote', 'GET', { useWaiver }, (ok, res) => {
+    this.apiRequest('/api/free-explore/bundle/reservation/' + id + '/cancel-quote', 'GET', { useWaiver }, (ok, res) => {
       if (!ok) { this._confirming = false; this.setData({ error: res && res.msg || '取消试算失败，未发送取消' }); return; }
       let quote;
       try { quote = bundle.cancellationQuote(res.data, this._owner, this._registrationId, id, useWaiver); }
       catch (error) { this._confirming = false; this.setData({ error: error.message }); return; }
       if (!quote.canCancel) { this._confirming = false; this.setData({ error: '当前不可取消，请刷新预约状态' }); return; }
       modal.show({ title: useWaiver ? '使用本月豁免取消预约？' : '确认取消预约？',
-        content: quote.message + ' 确认时若跨过免费取消边界或豁免月份，服务端将拒绝并要求重新确认。',
+        content: quote.message + ' 确认时若跨过免费取消边界或豁免月份，平台将拒绝并要求重新确认。',
         success: result => {
           if (!this.current(epoch)) return;
           this._confirming = false;
@@ -214,9 +212,10 @@ Page({
           const pending = { owner: this._owner, registrationId: this._registrationId, reservationId: id, useWaiver,
             expectedOutcome: quote.expectedOutcome, requestId: 'cancel-' + id + '-' + Date.now() };
           try { wx.setStorageSync(this.key(), pending); } catch (error) { this.setData({ error: '无法保存恢复记录，未发送取消请求' }); return; }
-          this.setData({ pending, writing: true, notice: '正在确认取消结果', error: '' });
-          this.request('/api/free-explore/bundle/reservation/' + id + '/cancel', 'POST', { useWaiver, expectedOutcome: quote.expectedOutcome }, (ok, res) => {
-            this.setData({ writing: false });
+          this._writing = true;
+          this.setData({ pending, notice: '正在确认取消结果', error: '' });
+          this.apiRequest('/api/free-explore/bundle/reservation/' + id + '/cancel', 'POST', { useWaiver, expectedOutcome: quote.expectedOutcome }, (ok, res) => {
+            this._writing = false;
             if (ok) {
               try {
                 const receipt = bundle.reservation(res.data, this._owner, this._registrationId);
@@ -237,7 +236,7 @@ Page({
     if (!this.data.detail || !this.data.detail.units.some(item => item.id === unitId)) return;
     this.setData({ exitOptions: null });
     const sequence = this._exitSequence = (this._exitSequence || 0) + 1;
-    this.request('/api/free-explore/bundle/exit-options', 'GET', { registrationId: this._registrationId, unitId }, (ok, res) => {
+    this.apiRequest('/api/free-explore/bundle/exit-options', 'GET', { registrationId: this._registrationId, unitId }, (ok, res) => {
       if (sequence !== this._exitSequence) return;
       if (!ok) { this.setData({ error: res && res.msg || '换店方案回读失败' }); return; }
       try { this.setData({ exitOptions: bundle.exitOptions(res.data, this._owner, this._registrationId, unitId) }); }
@@ -258,10 +257,11 @@ Page({
         const pending = { owner: this._owner, registrationId: this._registrationId, unitId: options.unitId,
           targetOfferId: targetId, idempotencyKey: 'fx-swap-' + Date.now() + '-' + Math.random().toString(36).slice(2, 14) };
         try { wx.setStorageSync(this.swapKey(), pending); } catch (error) { this.setData({ error: '无法保存换店恢复记录，未发送请求' }); return; }
-        this.setData({ swapPending: pending, writing: true, error: '' });
-        this.request('/api/free-explore/bundle/exit-decision', 'POST', { unitId: pending.unitId, decision: 'SWAP_CONSENTED', targetOfferId: targetId,
+        this._writing = true;
+        this.setData({ swapPending: pending, error: '' });
+        this.apiRequest('/api/free-explore/bundle/exit-decision', 'POST', { unitId: pending.unitId, decision: 'SWAP_CONSENTED', targetOfferId: targetId,
           idempotencyKey: pending.idempotencyKey }, (ok, res) => {
-          this.setData({ writing: false });
+          this._writing = false;
           const row = res && res.data;
           if (ok && row && bundle.exactId(row.id) && bundle.exactId(row.holderMemberId) === this._owner
               && bundle.exactId(row.registrationId) === this._registrationId && bundle.exactId(row.unitId) === pending.unitId
@@ -279,10 +279,10 @@ Page({
     try { wx.removeStorageSync(this.swapKey()); this.setData({ swapPending: null }); }
     catch (error) { this._storageBlocked = true; this.setData({ error: '换店恢复记录未清除，请再次刷新' }); }
   },
-  resolveSwap() { this.clearSwap(); this.setData({ exitOptions: null, notice: '服务端已确认同意换店，未自动预约或退款' }); },
+  resolveSwap() { this.clearSwap(); this.setData({ exitOptions: null, notice: '平台已确认同意换店，未自动预约或退款' }); },
   clearPending() {
     try { wx.removeStorageSync(this.key()); this.setData({ pending: null }); }
     catch (error) { this._storageBlocked = true; this.setData({ error: '结果已回读，但本机恢复记录未清除；请再次刷新' }); }
   },
-  resolvePending(row) { this.clearPending(); this.setData({ notice: '服务端预约状态：' + row.statusText }); },
+  resolvePending(row) { this.clearPending(); this.setData({ notice: '平台预约状态：' + row.statusText }); },
 });
