@@ -2,3 +2,6 @@
 @import "../design.wxss";
 .cs-demand{height:200rpx;}
 .cs-state{flex:1;display:flex;flex-direction:column;}
+/* 2026-10-27 业主 M-30:收费方式行(包在 cy-dropdown 里)与上面两行同一套左右分栏 + 右对齐。
+   变量挂在下拉宿主上,cy-cell 直接继承,不靠 .dc-fields 跨一层组件传下去。 */
+.cs-charge{display:block;width:100%;--cy-comp-cell-label-width:192rpx;--cy-comp-cell-label-flex:0 0 192rpx;--cy-comp-cell-value-max:100%;--cy-comp-cell-value-flex:1;--cy-comp-cell-value-align:right;}

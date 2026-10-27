@@ -62,7 +62,9 @@ test('数字位一律是数:null 指标写 0,不放横杠(2026-09-19 用户裁�
   assert.match(PAGE_JS, /_countText\(v\)[\s\S]*?value === null \? '0'/);
   assert.notEqual(nonRateJs(PAGE_JS), PAGE_JS, '锚点失效:_pct 已改名,比率位例外的剥离口径需同步');
   assert.doesNotMatch(nonRateJs(PAGE_JS), /(['"])—+\1/, '除比率位外,js 字符串字面量里不许再有破折号占位');
-  assert.match(PAGE_JS, /_pct\(v\) \{[\s\S]*?value === null \? '—'/, 'D4:比率位 null 显示「—」');
+  // 2026-10-27 业主 M-21(0.3 冲突裁决)取代 10-23 D4:比率位也不写「—」,没有就是 0%
+  assert.match(PAGE_JS, /_pct\(v\) \{[\s\S]*?value === null \? '0%'/, 'M-21:比率位 null 显示 0%');
+  assert.doesNotMatch(PAGE_JS, /(['"])—+\1/, 'M-21:js 字符串字面量里一个破折号占位都不许有(含比率位)');
   // 数字位不再兼职表达状态 ⇒ 状态必须另有出口,否则「算不出」就被画成「真的是 0」
   assert.match(PAGE_WXML, /wx:if="\{\{\s*facts\.lowSample\s*\}\}"/,
     '样本不足提示是本页唯一的「这不是零」出口，删掉它 0 就成了谎话');
@@ -120,8 +122,8 @@ test('后端全回 null 时,页面 builder 真的产出 0 而不是横杠(跑真
     sources: [],
   };
   const cards = page._buildMetricCards(facts);
-  // 2026-10-23 owner D4:比率为 null(分母为 0)显示「—」,不再写 0%
-  assert.deepEqual(cards.map((card) => card.num), ['—', '—']);
+  // 2026-10-27 业主 M-21 取代 10-23 D4:比率为 null(分母为 0)也写 0%,不放「—」
+  assert.deepEqual(cards.map((card) => card.num), ['0%', '0%']);
   const sampled = page._buildMetricCards(Object.assign({}, facts, {
     checkin: { total: 4, redeemRate: 0.5, repeatRate: 0 } }));
   assert.deepEqual(sampled.map((card) => card.num), ['50%', '0%'], '有分母时真实的 0 仍是 0%');

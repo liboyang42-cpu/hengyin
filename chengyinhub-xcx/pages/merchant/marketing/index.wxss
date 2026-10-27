@@ -28,6 +28,7 @@
 }
 
 .body {
+  position: relative; /* 刷新胶囊 .marketing-sync 的定位参照 */
   padding: 0 var(--cy-page-x) var(--cy-tabbar-h);
 }
 
@@ -41,6 +42,13 @@
 .hero {
   padding: var(--cy-space-2) 0 var(--cy-space-5);
 }
+
+/* M-22:首载骨架与真内容占同一块高度 —— 数据到达时只换内容,不改版面高度。
+   数值 = 对应真块的版面高度(hero 文字三行 + 上下内距;内容磁贴 200rpx;券卡 200rpx)。 */
+.mk-hold { overflow: hidden; }
+.mk-hold--hero { height: 256rpx; } /* ds-ok: = .hero 实际高度(16+40+8+101+8+34+48) */
+.mk-hold--mine { height: 200rpx; } /* ds-ok: = .mine-tile height */
+.mk-hold--deck { height: 200rpx; } /* ds-ok: = .deck-card min-height */
 
 .hero-label {
   display: block;
@@ -312,14 +320,20 @@
 }
 
 /* ===== 同步/降级条 ===== */
+/* 2026-10-27 业主 M-22:「每次打开顶部突然弹出一个东西又消失,页面上下跳」—— 刷新提示原来是
+   流式块,出现/消失都把整页往下推再拉回。改成浮在 hero 右上角的小胶囊:不占文档流,出入不移位。 */
 .marketing-sync {
+  position: absolute;
+  top: var(--cy-space-2);
+  right: var(--cy-page-x);
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: var(--cy-space-2);
-  margin-top: var(--cy-space-2-5);
-  padding: var(--cy-space-2-5) var(--cy-space-3);
-  border-radius: var(--cy-radius-lg);
+  padding: var(--cy-space-1) var(--cy-space-2-5);
+  border-radius: var(--cy-radius-pill);
   background: var(--cy-color-bg-surface);
+  pointer-events: none;
 }
 
 .marketing-sync-rail {

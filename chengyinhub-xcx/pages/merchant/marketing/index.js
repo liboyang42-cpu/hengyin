@@ -2,6 +2,7 @@ const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js'); const pageMotion = require('../../../utils/page-motion.js');
 const { ensureSession } = require('../utils/session/ensure-session.js');
 const { normalizeMarketingHome } = require('../utils/merchant-aggregate.js');
+const { openOpportunityCount } = require('../utils/recruit-routes.js');
 const { isRecord } = require('../../../utils/response-shape.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../utils/merchant-access-policy.js');
 
@@ -31,10 +32,10 @@ const ENTRIES = [
   { title: '店铺参谋', icon: 'star', action: 'aiInsight', permission: 'canReadMarketing' },
   { title: '店铺装修', icon: 'edit', action: 'decor', permission: 'canManageCoop' },
   { title: '发主题', icon: 'plus', action: 'topic' },
-  // CU-M-45:活动零条时落点是合作中心(承接浏览面),不是发布页。文案跟去向对齐成「接活动」。
-  // 商家自营发布(另立项目)在 CU-M-05 已接通,入口是品牌中心「去发布一个活动」与
-  // 「我的项目·活动」的「发布单场活动」—— 与本条去向不冲突,别把这里改成发布页。
-  { title: '接活动', icon: 'calendar', action: 'activity' },
+  // 2026-10-27 业主 M-23:「接活动」和下面的「合作机会」重复了(都进合作中心)⇒ 改成「发活动」,
+  // 直达商家自营活动发布页(CU-M-05 已接通 scope=MERCHANT)。承接浏览只留合作机会卡一个入口。
+  // 发布要项目管理岗,没有这个权的岗位不出这颗入口(不给点进去必被拦的假入口)。
+  { title: '发活动', icon: 'calendar', action: 'publishActivity', permission: 'canManageProjects' },
 ];
 
 function entriesForAccess(access) {
@@ -140,7 +141,9 @@ Page({
     entries: entriesForAccess(inactiveAccess()),
     // hero = 全页唯一的主角数字(近 N 天报名)。不用「收入」——那是工作台的 hero。
     hero: heroPlaceholder(30),
-    funnelLoading: false,
+    // 2026-10-27 业主 M-22:首帧就进骨架(true),不再先画一版「0」再换骨架再换真数 ——
+    // 那一来一回就是打开时顶部「弹出又消失」的跳动。任何落错误态的分支都要同时把它置 false。
+    funnelLoading: true,
     funnelError: '',
     marketingLoaded: false,
     // checking / ready / denied(明确无权限)。
@@ -208,7 +211,7 @@ Page({
       ensureSession(app).then(function (ok) {
         if (that._unloaded) return;
         if (!ok) {
-          that.setData({ entryError: '登录失败，请重试', accessState: 'checking' });
+          that.setData({ entryError: '登录失败，请重试', accessState: 'checking', funnelLoading: false });
           return;
         }
         that._scopeMemberId = currentMemberId();
@@ -224,7 +227,7 @@ Page({
   recoverSession() {
     if (this._unloaded) return;
     if (this._authRetryUsed) {
-      this.setData({ entryError: '登录已失效，请重新登录' });
+      this.setData({ entryError: '登录已失效，请重新登录', funnelLoading: false });
       return;
     }
     this._authRetryUsed = true;
@@ -232,7 +235,7 @@ Page({
     ensureSession(app).then(function (ok) {
       if (that._unloaded) return;
       if (!ok) {
-        that.setData({ entryError: '登录失败，请重试' });
+        that.setData({ entryError: '登录失败，请重试', funnelLoading: false });
         return;
       }
       that._scopeMemberId = currentMemberId();
@@ -307,7 +310,8 @@ Page({
           couponCard: couponView.couponCard,
           deckGhosts: couponView.deckGhosts,
           couponRate: couponView.couponRate,
-          recruitCount: home.recruiting.count,
+          // M-23:与合作中心广场列表同一口径(同一查询 + 同一道过滤),不再直读 recruiting.count
+          recruitCount: openOpportunityCount(home.recruiting),
           myContent: that._buildContentItems(home.content),
           marketingDataState: that._resolveMarketingDataState(home),
           marketingLoaded: true,
@@ -430,7 +434,7 @@ Page({
         }
         if (!isCurrent()) return;
         if (!(res && (res.code === '200' || res.code === 200) && isRecord(res.data))) {
-          that.setData({ funnelError: that._getErrMsg(res, '经营身份没能确认') });
+          that.setData({ funnelError: that._getErrMsg(res, '经营身份没能确认'), funnelLoading: false });
           return;
         }
         const access = normalizeMerchantAccess(res.data);
@@ -455,7 +459,7 @@ Page({
           return;
         }
         if (!isCurrent()) return;
-        that.setData({ entryError: '网络好像出了点小差' });
+        that.setData({ entryError: '网络好像出了点小差', funnelLoading: false });
       },
     });
   },
@@ -465,6 +469,8 @@ Page({
   // 用户看到的是「我明明重试了,它还说我没权限」。
   retryAll() {
     this.setData({
+      // M-22:还没有内容时重试也直接回骨架;已有内容时保持(刷新只出右上角胶囊)
+      funnelLoading: this.data.funnelLoading || !this.data.marketingLoaded,
       accessState: 'checking',
       accessError: '',
       funnelError: '',
@@ -584,6 +590,8 @@ Page({
     } else if (action === 'decor') {
       // 店铺装修 E0 已上线
       wx.navigateTo({ url: '/pages/merchant/decor/index' });
+    } else if (action === 'publishActivity') {
+      wx.navigateTo({ url: '/pages/publish/activity/index?scope=MERCHANT' });
     } else if (action === 'aiInsight') {
       // AI 店铺参谋:打卡分析 / 适合人群 / 活动建议
       wx.navigateTo({ url: '/pages/merchant/marketing/ai-insight/index' });

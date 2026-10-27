@@ -75,7 +75,7 @@
 /* ===== 问候区:同 pages/merchant/index .rv-hero-top ===== */
 .greet {
   display: flex;
-  align-items: flex-start;
+  align-items: center; /* M-21:问候行与头像垂直居中对齐 */
   justify-content: space-between;
   gap: var(--cy-space-3);
   padding: var(--cy-space-1) 4rpx var(--cy-space-2);

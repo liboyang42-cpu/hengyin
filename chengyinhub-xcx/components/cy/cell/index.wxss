@@ -48,8 +48,10 @@
   min-width:0;
   font-size: var(--cy-type-label);
   color: var(--cy-color-text-tertiary);
-  white-space: normal;
-  word-break: break-word;
+  /* G-7:单行省略,全文在 aria-label */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cell__chevron {
