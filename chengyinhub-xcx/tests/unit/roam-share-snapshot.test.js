@@ -218,7 +218,8 @@ test('拍板17 足迹正文组件收到快照就直接渲染(不读本机),并�
   assert.equal(instance.data.session.distanceText, '3.2')
   assert.ok(instance.data.routeSegs.length > 0, '朋友能看到路线轨迹')
   const wxml = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../components/cy/scene-roam-session/index.wxml'), 'utf8')
-  assert.match(wxml, /class="ss-ctaw" wx:if="\{\{!snapshot\}\}"/, '别人的足迹不给「分享足迹卡」按钮')
+  // W8 起服务端记录(无本机补充)也不给分享;快照这一道闸仍是首个合取条件
+  assert.match(wxml, /class="ss-ctaw" wx:if="\{\{!snapshot && \(!session\.serverFact \|\| session\.localSupplement\)\}\}"/, '别人的足迹不给「分享足迹卡」按钮')
 })
 
 
