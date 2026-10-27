@@ -71,19 +71,36 @@ function loadPage(modulePath) {
   return page
 }
 
+// 基础写入(到达/打卡/答题/拍照/偏好)缺原局身份时先 GET /api/play/action-context 绑定原局，再发写。
+const ORIGINAL_CONTEXT = { code: 200, data: { routeSessionId: '77', expectedRouteVersion: 2 } }
+const tick = () => new Promise((resolve) => setImmediate(resolve))
+async function bindOriginalRun(index) {
+  const request = requests[index]
+  assert.equal(request && request.url, '/api/play/action-context')
+  assert.equal(request.method, 'GET')
+  request.success(ORIGINAL_CONTEXT)
+  await tick()
+}
+
 // 真实页面里偏好题/结果卡只在 loadPreference 读出本题后才可提交:按它落下的上下文建模已读出的状态。
 function preferenceLoaded(page) {
   page._preferenceEpoch = (page._preferenceEpoch || 0) + 1
   page._preferenceContext = { epoch: page._preferenceEpoch, nodeId: page.data.game.nodeId, viewContext: page._legacyGameContext() }
 }
 
-test('三个 RequestBody 写入口发 JSON，并保留基础路线幂等上下文', () => {
+test('三个 RequestBody 写入口发 JSON，并保留基础路线幂等上下文', async () => {
   const page = loadPage(PLAY_PAGE)
   page.data.game.nodeId = 11
   page._withThoughtSync = write => write()
-  page._routeWritePayload = (_kind, nodeId, payload) => ({ ...payload, topicId: 7, nodeId, routeActionId: 'route_preference_1', expectedRouteVersion: 2 })
+  page._routeWritePayload = (_kind, nodeId, payload) => {
+    const body = { ...payload, topicId: 7, nodeId, routeActionId: 'route_preference_1', expectedRouteVersion: 2 }
+    Object.defineProperty(body, '_bindRouteContext', { value: fields => Object.assign(body, fields) })
+    return body
+  }
   preferenceLoaded(page)
   page.submitPreference({ choices: { first: 'a' } })
+  await bindOriginalRun(0)
+  requests.shift()
   page.data.preference.pendingTag = { id: 9, tagValue: 'old' }
   page.data.preference.availableTagValues = ['new']
   page.correctPreferenceTag()   // 选项弹层由「改错」打开，选中项来自弹层打开时的档位
@@ -220,8 +237,10 @@ test('5-3 注入③:/api/play/checkin 返回 500 时玩家看到明确错误', a
 
   page.checkin(7, 'SHOP-CODE')
   assert.equal(requests.length, 1)
-  assert.equal(requests[0].url, '/api/play/checkin')
-  requests[0].successStatusAbnormal({ code: 500, msg: '核销服务暂不可用' })
+  await bindOriginalRun(0)
+  assert.equal(requests.length, 2)
+  assert.equal(requests[1].url, '/api/play/checkin')
+  requests[1].successStatusAbnormal({ code: 500, msg: '核销服务暂不可用' })
   await new Promise((resolve) => setImmediate(resolve))
 
   // 2026-09-22 错误条随底部读数卡删除，可见性改由 toast 承担；盲重试的闸仍是 _arrivalWriteUnknown。
@@ -267,13 +286,17 @@ test('偏好题整组提交在途防连点，并把服务端结果与待确认�
   page.submitPreference({ choices: page.data.preference.choices })
   page.submitPreference({ choices: page.data.preference.choices })
   assert.equal(requests.length, 1)
+  await bindOriginalRun(0)
+  page.submitPreference({ choices: page.data.preference.choices })
+  requests.shift()
+  assert.equal(requests.length, 1)
   assert.equal(requests[0].url, '/api/play/preference/7/submit')
   assert.equal(requests[0].data.topicId, 19)
   assert.deepEqual(requests[0].data.choices, { space: 'A' })
   assert.match(requests[0].data.routeActionId, /^route-/)
   assert.equal(Number.isFinite(Number(requests[0].data.expectedRouteVersion)), true)
 
-  requests[0].success({ code: 200, data: {
+  requests[0].success({ code: 200, intentTerminal: true, data: {
     evaluation: { resultCode: 'compact', title: '小空间先减负' },
     pendingTag: { id: 11, tagCode: 'space_constraints', tagValue: 'compact', status: 0 },
     progress: { firstTime: true },
@@ -303,10 +326,12 @@ test('G4已确认标签可以在G5显式沿用；没有标签时仍保留现场�
   preferenceLoaded(page)
 
   page.useInheritedPreference({ currentTarget: { dataset: { code: 'space_constraints' } } })
+  await bindOriginalRun(0)
+  requests.shift()
   assert.equal(requests[0].data.reuseTagCode, 'space_constraints')
   assert.deepEqual(requests[0].data.choices, {})
 
-  requests[0].success({ code: 200, data: { evaluation: { resultCode: 'compact' } } })
+  requests[0].success({ code: 200, intentTerminal: true, data: { evaluation: { resultCode: 'compact' } } })
   await new Promise((resolve) => setImmediate(resolve))
   requests = []
   page.setData({
@@ -316,6 +341,9 @@ test('G4已确认标签可以在G5显式沿用；没有标签时仍保留现场�
     'preference.stepIndex': 0, 'preference.choices': { fallback: 'A' },
   })
   page.nextPreferenceStep()
+  assert.equal(requests.length, 1)
+  await bindOriginalRun(0)
+  requests.shift()
   assert.equal(requests.length, 1)
   assert.deepEqual(requests[0].data.choices, { fallback: 'A' })
 })
@@ -580,12 +608,13 @@ test('不相关节点的成功响应不能清除另一类待确认写锁', async
   assert.equal(page.data.gWriteUnknown, true)
 
   page.arrive(8, 'gps')
-  requests[1].success({ code: 200, data: {} })
+  await bindOriginalRun(1)
+  requests[2].success({ code: 200, intentTerminal: true, data: {} })
   await new Promise((resolve) => setImmediate(resolve))
   assert.equal(page.data.gWriteUnknown, true)
 
   page.submitGame()
-  assert.equal(requests.length, 2)
+  assert.equal(requests.length, 3)
 })
 
 test('广场发帖 HTTP 异常后不能再次创建无幂等保护的公开帖子', async () => {
