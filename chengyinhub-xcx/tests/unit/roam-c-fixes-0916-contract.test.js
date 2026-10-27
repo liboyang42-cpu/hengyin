@@ -36,14 +36,17 @@ function loadRoamPage(appMock) {
   return page;
 }
 
-test('C-04 抽屉里有「结束本次漫游」:不再只有长按 3 秒一个隐藏手势', () => {
+// 2026-10-27 owner P-31(取代 C-04 的抽屉行):更多菜单只留「附近正在走的人 / 玩法说明 / 设置」;
+//   结束仍走中键长按 3 秒,且中键的读屏名写明了这一手势。endRoamSession 的确认逻辑保持不变。
+test('P-31 更多菜单只留三行;结束漫游的中键读屏名说明长按手势', () => {
   const wxml = WXML();
   const js = JS();
   const drawerStart = wxml.indexOf("sceneCurrent.id === 'roam-more'");
   const drawer = wxml.slice(drawerStart, wxml.indexOf('<!-- 清空本机缓存的确认'));
   assert.ok(drawerStart > 0, 'roam-more 抽屉块必须存在');
-  assert.match(drawer, /bindtap="endRoamSession"/, '抽屉里必须有一行真的接 endRoamSession');
-  assert.match(drawer, /aria-label="结束本次漫游并结算"/, '这一行读屏器要念得出来');
+  assert.deepEqual((drawer.match(/class="drow" bindtap="(\w+)"/g) || []).map((m) => m.replace(/.*bindtap="(\w+)"/, '$1')),
+    ['openNearestRunner', 'openRoamRules', 'openRoamSettings']);
+  assert.match(wxml, /aria-label="\{\{paused \? '继续漫游' : '暂停漫游'\}\}，长按 3 秒结束本次漫游"/, '中键读屏名要念出长按结束');
   // 从抽屉进来先收起抽屉,否则确认框背后压着一层九行抽屉;长按进来时是空操作
   assert.match(js, /endRoamSession\(\) \{[\s\S]{0,220}?this\.closeScene\(\);[\s\S]{0,120}?dangerKey: 'roam\.finish'/);
 });

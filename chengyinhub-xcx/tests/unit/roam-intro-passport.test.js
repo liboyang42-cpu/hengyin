@@ -79,7 +79,11 @@ test('起始页护照:读数与档案卡都统计全部历史,不跟着任何截
   assert.ok(page.data.passport.tiles.filter(item => item.isNew).every(item => !/\d/.test(item.value)), '新方卡不摆未读取的数字')
 
   const plays = page.data.passport.plays.map(item => item.key)
-  assert.deepEqual(plays, ['event', 'discover'], '下排大卡只放官方活动与发现店铺')
+  // 2026-10-27 owner P-29:去掉「官方活动 · 暂未开放」灰卡;官方活动大卡只在有可参与活动时由 _loadActiveRoamEvents 插回
+  assert.deepEqual(plays, ['discover'], '默认下排只有发现店铺,不摆暂未开放的灰卡')
+  // P-29:档案三卡带真实图片字段(无图时退回空态插画),不再用大号通用图标
+  assert.equal(tile('stamp').img, '12.jpg', '集邮册方卡 = 最新一张邮票')
+  assert.ok(['history', 'stamp', 'badge'].every((k) => tile(k).empty === true), '档案三卡无图时退回空态插画')
 })
 
 test('negative control: 读数改回跟着旅程卡截断走必须判红', () => {

@@ -16,11 +16,10 @@ const { sendUiStateRequest } = require('../../../../utils/ui-state-request.js');
 // 9-24 顶部颜色图例删掉后,墙模式顶部少让约 20px(图例一行 + 上边距),170 → 150
 const WALL_HEADER_INSET = 150;
 const WALL_BOTTOM_INSET = 48;
-const BADGE_FAMILIES = [
-  // 身份卡是勋章墙的本体,列表里不再写这一组的标题(9-24 用户:「城市身份卡不用写」)
-  { key: 'identity', title: '' },
-  { key: 'medal', title: '城市纪念章' },
-  { key: 'achievement', title: '成长成就' },
+// 2026-10-27 owner P-30:不再按来源分组,一页两段 —— 上面已点亮,下面未解锁(段内保持接口顺序)
+const BADGE_SECTIONS = [
+  { key: 'lit', title: '已点亮', locked: false },
+  { key: 'locked', title: '未解锁', locked: true },
 ];
 
 // 类别 → 墙面配色轨道。信息层只消费 DS token；WebGL 内部颜色仍由引擎管理。
@@ -369,11 +368,11 @@ Page({
     const numbered = list.map(function (badge, idx) {
       return Object.assign({}, badge, { _idx: idx });
     });
-    const badgeGroups = BADGE_FAMILIES.map(function (fam) {
+    const badgeGroups = BADGE_SECTIONS.map(function (sec) {
       return {
-        key: fam.key,
-        title: fam.title,
-        items: numbered.filter(function (badge) { return badge.family === fam.key; }),
+        key: sec.key,
+        title: sec.title,
+        items: numbered.filter(function (badge) { return !!badge.locked === sec.locked; }),
       };
     }).filter(function (group) { return group.items.length; });
     if (this.data.viewMode === 'list' && !this.data.badges.length) pageMotion.enter(this, 'pmList'); this._badgeCache = list; // 2026-10-23:列表首次到达时依次浮上来
@@ -446,20 +445,6 @@ Page({
   },
 
   onFbTap(e) { this.openSheet(e.currentTarget.dataset.idx); },
-
-  setWallMode() {
-    if (this.data.viewMode === 'wall') return;
-    this.setData({ viewMode: 'wall' }, () => {
-      if (!this.data.loadFail && !this.data.partialFail && !this.data.glFail) this.initCanvas();
-    });
-  },
-
-  setListMode() {
-    if (this.data.viewMode === 'list') return;
-    this.closeSheet();
-    this.destroyEngine();
-    pageMotion.enter(this, 'pmList'); this.setData({ viewMode: 'list' }); // 2026-10-23:切到列表时勋章行依次浮上来
-  },
 
   goExplore() {
     wx.switchTab({ url: '/pages/index/index' });

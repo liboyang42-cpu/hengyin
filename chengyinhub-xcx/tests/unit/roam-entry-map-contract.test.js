@@ -13,7 +13,8 @@ test('漫游 tab 默认进入双菜单首页，地图预览不采集定位', () 
   assert.match(WXML, /class="intro" wx:if="\{\{screen=='entry-map'\|\|screen=='intro'\}\}"/)
   assert.match(WXML, /<free-map[^>]+entryMap/s)
   assert.match(WXML, /interactive="\{\{false\}\}"/)
-  assert.match(WXML, /introTabs[\s\S]*bindtap="switchIntroTab"/) // v13 标签下一根短线,改为自绘标签
+  // 2026-10-27 owner P-25:头部还原到 7f4bcee9 之前 —— 标签回到 cy-tabs(撤掉 v13 自绘短线标签)
+  assert.match(WXML, /<cy-tabs plain tabs="\{\{introTabs\}\}" active="\{\{introTab\}\}" bind:change="switchIntroTab" \/>/)
 })
 
 test('首页保留章节入口，移除浮动记录、搜索与图层按钮', () => {

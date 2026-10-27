@@ -115,34 +115,13 @@ page { background: var(--cy-color-bg-page); }
 }
 .bw-head .bw-cap-t { font-size: inherit; color: inherit; letter-spacing: 0; font-family: -apple-system, 'PingFang SC', sans-serif; }
 .bw-head .bw-cap-s { margin-top: var(--cy-space-1); color: var(--cy-color-text-secondary); font-family: -apple-system, 'PingFang SC', sans-serif; }
-.bw-view-switch {
-  display: flex;
-  align-items: center;
-  gap: var(--cy-space-1);
-  margin-top: var(--cy-space-3);
-  padding: var(--cy-space-1);
-  border: 1rpx solid var(--cy-color-border-subtle);
-  border-radius: var(--cy-radius-pill);
-  background: var(--cy-color-bg-surface);
-}
-.bw-view-option {
-  flex: 1;
-  min-height: var(--cy-btn-h-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--cy-radius-pill);
-  color: var(--cy-color-text-secondary);
-  font-size: var(--cy-type-label);
-  font-family: -apple-system, 'PingFang SC', sans-serif;
-}
-.bw-view-option.is-active { background: var(--cy-color-bg-surface-subtle); color: var(--cy-color-text-primary); font-weight: 700; }
+/* 2026-10-27 owner P-30:「墙 / 列表」切换已撤,.bw-view-* 样式随之删除 */
 
 .bw-list {
   position: fixed;
   inset: 0;
-  /* 9-24 删掉图例后顶部少了约 40rpx,260 → 220,列表首行紧跟墙/列表切换 */
-  padding: calc(var(--sbh) + var(--nbh) + 220rpx) var(--cy-page-x) calc(var(--cy-space-5) + var(--cy-safe-bottom));
+  /* 9-24 删掉图例后顶部少了约 40rpx,260 → 220;10-27 P-30 撤掉墙/列表切换(约 100rpx),220 → 120,列表首行紧跟标题副标 */
+  padding: calc(var(--sbh) + var(--nbh) + 120rpx) var(--cy-page-x) calc(var(--cy-space-5) + var(--cy-safe-bottom));
   box-sizing: border-box;
   background: var(--cy-color-bg-page);
 }
