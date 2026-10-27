@@ -1197,8 +1197,8 @@
    <view wx:if="{{themeBag.replayAllowed === true}}" bindtap="replayThemeSession" aria-role="button" aria-label="再玩一次" aria-disabled="{{themeReplayBusy}}" hover-class="cy-pressed" hover-stay-time="80">{{themeReplayBusy ? '正在开启新一局' : '再玩一次'}}</view>
    <cy-inline-error wx:if="{{themeRecordsError}}" aria-live="polite" kind="error" title="{{themeRecordsError}}" load-failure="{{themeRecordsReadFailure}}" />
   </view>
-  <view class="finsheet__title">{{allDone ? topicName : chapter.name}}</view>
-  <view class="finsheet__result">{{milestone ? milestone.title : (allDone ? '已通关' : '本章完成')}}</view>
+  <view class="finsheet__title">{{allDone || topicCompleted ? topicName : chapter.name}}</view>
+  <view class="finsheet__result">{{milestone ? milestone.title : (allDone || topicCompleted ? '已通关' : '本章完成')}}</view>
   <view class="finsheet__game-ending" wx:if="{{gameModule.story.ending}}">
     <text class="finsheet__game-ending-k">本局结局</text>
     <text class="finsheet__game-ending-title">{{gameModule.story.ending.title}}</text>

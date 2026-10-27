@@ -319,7 +319,8 @@ test('完成页明确显示通关状态并保留照片邮票', () => {
   // 2026-08-01:副文案改成称号式(优先显示累计里程碑),但「通关状态必须写在页面上」这条没变 ——
   // milestone 取不到时仍旧回落到 已通关/本章完成,这里连回落分支一起钉住,
   // 避免有人把回落删掉、让接口一挂完成页就不说自己完成没完成。
-  assert.match(playWxml, /class="finsheet__result">\{\{milestone \? milestone\.title : \(allDone \? '已通关' : '本章完成'\)\}\}/)
+  // 2026-10-27:服务端按主题规则(主线 N 站)判了通关时(topicCompleted)同样写「已通关」,不因选做站没走完写成「本章完成」
+  assert.match(playWxml, /class="finsheet__result">\{\{milestone \? milestone\.title : \(allDone \|\| topicCompleted \? '已通关' : '本章完成'\)\}\}/)
   assert.match(playWxml, /class="finish-stamps"[\s\S]*?wx:for="\{\{finishPhotos\}\}"/)
   assert.match(roamWxml, /class="finish-stamps"[\s\S]*?wx:for="\{\{finish\.photos\}\}"/)
 })

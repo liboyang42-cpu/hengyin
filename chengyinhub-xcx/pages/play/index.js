@@ -435,7 +435,7 @@ Page({
     // 爆炸的粒子/光条是数据驱动的(WXML 不能生成元素),开包那一刻才建,收场即清空。
     blastRays: [], blastShards: [], measuring: false,
     tileH: 0,                     // 瓦片行高:按剩余高度等分,4 家竖版大卡 / 6 家近方卡
-    nodes: [], total: 0, merchantCount: 0, doneCount: 0, allDone: false,
+    nodes: [], total: 0, merchantCount: 0, doneCount: 0, allDone: false, topicCompleted: false,
     remainingGameCount: 0,
     fmNodes: [], fmPolyline: [], fmPlayer: null, fmCenter: { lat: 31.2304, lng: 121.4737 },
     fmSubkey: MAP_DARK.subkey, fmLayerStyle: MAP_DARK.layerStyle, // S9 暗色底图预留,见上方 MAP_DARK 注释
@@ -6162,6 +6162,9 @@ Page({
         if (frText) this.setData({ frag: { show: true, text: frText, step: '我的第 ' + done.length + ' 步 · ' + (node.name || '') } });
       }
       const completed = data && data.completed;
+      /* 服务端这次判了通关(主题规则可以是「主线 N 站」,选做站没走完也算):通关卡按「通关」讲,
+         别因为本地还有没走的选做站就把标题写成章节名、把里程碑少算这一个(2026-10-27 生产实测)。 */
+      if (completed && !this.data.topicCompleted) this.setData({ topicCompleted: true });
       // 后端本次新得成长徽章(FIRST_STEP/STREAK/TOPIC_CLEAR…),与节点模板勋章不同源,逐一轻提示
       const newBadges = (data && data.newBadges) || [];
       if (newBadges.length) {
@@ -7724,6 +7727,8 @@ Page({
           const id = it && it.topicId;
           if (id != null && id !== '') ids[String(id)] = true;
         });
+        // 完成事实列表按路线局状态算,线性局要所有站(含选做)都走完才落「完成」;这一局刚由服务端判过通关,算上它
+        if (this.data.topicCompleted && this.data.topicId) ids[String(this.data.topicId)] = true;
         this.setData({ milestone: buildMilestone(Object.keys(ids).length) });
       },
     });
