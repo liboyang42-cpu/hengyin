@@ -44,8 +44,8 @@ function openTheme(skin) {
   const page = makePage('../../pages/publish/fabu/index.js');
   page.data.editingTopicId = skin.detail.topic.id;
   assert.equal(page.applyEditingTopic(skin.detail), true);
-  requests.filter(request => request.url === '/api/template/myinfo').forEach(request => {
-    const template = skin.templates.find(row => row.id === request.data.id);
+  requests.filter(request => request.url === '/api/template/author-myinfo').forEach(request => {
+    const template = skin.templates.find(row => String(row.id) === String(request.data.id));
     assert.ok(template, request.data.id);
     request.success({ code: '200', data: template });
   });
@@ -179,7 +179,7 @@ for (const skin of fixture.themes) {
     assert.ok(page.data.nodeSharedSites.length > 1);
     page.onCopyBoundTemplate();
     const detail = requests.at(-1);
-    assert.equal(detail.url, '/api/template/myinfo');
+    assert.equal(detail.url, '/api/template/author-myinfo');
     detail.success({ code: '200', data: original });
     const save = requests.find(request => request.url === '/api/template/draft');
     assert.ok(save, JSON.stringify({ error: page.data.nodeCopyError, busy: page.data.nodeCopyBusy,
