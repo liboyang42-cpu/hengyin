@@ -400,7 +400,7 @@ class RefundRetryAndRemainderMySqlIT {
             registrations.add(new Object[] {source, "REGFAIR" + source});
             seed.add(new Object[] {"RF" + source, source, "registration:" + source});
         }
-        db.batchUpdate("insert into cms_registration(id,registration_no,owner_type,owner_id,ticket_id,ticket_price,member_id,original_amount,total_amount,payable_amount,wechat_payment_amount,payment_status,registration_status,verification_status) values(?,?,2,20,1,1.00,9,1.00,1.00,1.00,1.00,4,3,0)", registrations);
+        db.batchUpdate("insert into cms_registration(id,registration_no,owner_type,owner_id,ticket_id,ticket_price,member_id,original_amount,total_amount,payable_amount,wechat_payment_amount,payment_status,registration_status,verification_status,pay_expire_time) values(?,?,2,20,1,1.00,9,1.00,1.00,1.00,1.00,4,3,0,now())", registrations);
         db.batchUpdate("insert into refund_application(refund_no,source_type,source_id,paid_amount,refund_amount,status,del_flag,payout_status,idempotency_key) values(?,'registration',?,1.00,1.00,1,0,1,?)", seed);
         java.util.List<Long> ids = db.queryForList("select id from refund_application order by id", Long.class);
         java.util.List<java.util.Map<String, Object>> cashBefore = db.queryForList(
