@@ -141,7 +141,7 @@ Component({
           fromCode: code,
           toCode: code,
           distanceValue,
-          distanceText: distanceValue === null ? '—' : String(distanceValue), // UI-04:没取到显示 0
+          distanceText: distanceValue === null ? '0' : String(distanceValue), // UI-04:没取到显示 0
           shopsValue,
           shopsText: shopsValue === null ? '—' : String(shopsValue),
           time: (session && typeof session.time === 'string' && session.time.trim()) || this._formatDuration(session && session.durSec) || '—',

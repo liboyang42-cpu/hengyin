@@ -157,9 +157,9 @@ Component({
         dateFull: validDate ? `${date.getMonth() + 1}月${date.getDate()}日 周${WEEK[date.getDay()]}` : '日期不可用',
         time: typeof raw.time === 'string' && raw.time.trim() ? raw.time.trim() : (formattedDuration || '—'),
         distance,
-        distanceText: distance === null ? '—' : String(distance),
+        distanceText: distance === null ? '0' : String(distance),
         shops,
-        shopsText: shops === null ? '—' : String(shops),
+        shopsText: shops === null ? '0' : String(shops),
         explorePct: explorePct !== null && explorePct <= 100 ? explorePct : null,
         explorePctText: explorePct !== null && explorePct <= 100 ? String(explorePct) : '0',
         pois: (Array.isArray(raw.pois) ? raw.pois : [])
