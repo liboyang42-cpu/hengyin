@@ -1987,10 +1987,27 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         return result;
     }
 
+    /**
+     * P-52/G-3:帖文读路径。认不出的历史媒体引用(不在当前对象存储)只跳过这一张,
+     * 不能让整条帖文、整页列表报「媒体必须来自当前配置的对象存储」。
+     */
+    private List<Map<String, Object>> readableMedia(Long postId, List<Map<String, Object>> stored) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        if (stored == null) return result;
+        for (Map<String, Object> row : stored) {
+            try {
+                result.add(mediaForRead(row));
+            } catch (ServiceException unrecognised) {
+                log.warn("[社区帖文] 跳过无法识别的帖文媒体: postId={}, mediaId={}", postId, value(row, "id"));
+            }
+        }
+        return result;
+    }
+
     private Map<String, Object> hydrate(CommunityPost post, Long viewerId) {
         Map<String, Object> result = new HashMap<>();
         result.put("post", post);
-        result.put("media", mediaForRead(mapper.selectMedia(post.getId())));
+        result.put("media", readableMedia(post.getId(), mapper.selectMedia(post.getId())));
         result.put("references", mapper.selectReferences(post.getId()));
         boolean viewerIsAuthor = viewerId.equals(post.getAuthorId());
         result.put("mentions", viewerIsAuthor
