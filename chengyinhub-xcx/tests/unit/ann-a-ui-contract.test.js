@@ -59,7 +59,8 @@ test('A01：首页只留头像，玩家徽标与招呼语同排，城市事件�
 
 test('A01 negative control：把旧城市事件卡注入首页必须判红', () => {
   const source = read('pages/index/index.wxml')
-  const mutated = source.replace('<!-- 继续探索', '<view class="v3-city-events">城市事件</view>\n      <!-- 继续探索')
+  // 2026-10-27 P-08 删掉了「继续探索」卡，注入锚点改到紧随其后的「附近活动」注释。
+  const mutated = source.replace('<!-- 附近活动', '<view class="v3-city-events">城市事件</view>\n      <!-- 附近活动')
   assert.notEqual(mutated, source)
   assert.throws(() => assertHomeChrome(mutated), /v3-city-events/)
 })

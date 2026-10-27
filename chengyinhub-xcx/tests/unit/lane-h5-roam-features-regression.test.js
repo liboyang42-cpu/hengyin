@@ -17,15 +17,17 @@ test('B8: /api/roam/pois 与 nearby-runners 共用 ROAM_POI_RADIUS_M', () => {
   assert.doesNotMatch(src, /'\/api\/roam\/pois', 'GET', \{[^}]*radius: '3000'/);
 });
 
-test('C9: 首页继续漫游条只读本机恢复记录、复用 validRecovery，不发请求', () => {
+// 2026-10-27 真机走查 P-08:owner 要求玩家首页不再放「继续上次漫游」,首页撤掉这条的挂载;
+// 组件本身仍归漫游线所有，组件内部约束照旧钉住，挂载断言改为「首页不再挂」。
+test('C9: 继续漫游条只读本机恢复记录、复用 validRecovery，不发请求;首页不再挂载(P-08)', () => {
   const src = read('subpackageRoam/components/scene-roam-resume-bar/index.js');
   assert.match(src, /require\('\.\.\/\.\.\/\.\.\/utils\/roam-recovery\.js'\)/);
   assert.match(src, /validRecovery\(state\.record\)/);
   assert.match(src, /readRecoveryState\(\)/);
   assert.doesNotMatch(src, /sendRequest|wx\.request/);
   assert.match(src, /wx\.switchTab\(\{ url: '\/pages\/roam\/index' \}\)/);
-  assert.match(read('pages/index/index.json'), /"cy-roam-resume-bar": "\/subpackageRoam\/components\/scene-roam-resume-bar\/index"/);
-  assert.match(read('pages/index/index.wxml'), /<cy-roam-resume-bar \/>/);
+  assert.doesNotMatch(read('pages/index/index.json'), /scene-roam-resume-bar/);
+  assert.doesNotMatch(read('pages/index/index.wxml'), /<cy-roam-resume-bar/);
 });
 
 test('C9: 恢复记录键与 roam-player-memory 一致（按玩家分桶）', () => {

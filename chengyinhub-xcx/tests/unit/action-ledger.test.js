@@ -598,6 +598,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-24 上线合并(#563 bug 修复 + #508 业主 UI + #554 文案)并 master 后重建实测:2167 → 2173。
   // 2026-10-23 合 master:起名页 templateadd 退役 −1(#565)+ 撤销条「撤销」+1,tap 2173 → 2173(重建实测)。
   // 2026-10-24 官方据点照片与评价：重建实测 local tap +4；不添加业务验收证据。
+  // 2026-10-27 真机走查 L04:首页删「为什么看到」(P-02)与继续探索卡 / 继续漫游条两颗(P-08)等 tap,重建实测 2183 → 2179。
   assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2184)  /* 2026-10-27 L03 商家消息页协作邀请卡片带 openInvite +1 tap,重建实测 2183 → 2184。 */  /* 2026-10-25 地图底部横滑卡片(点卡 = 点列表行)+1,重建实测 2182 → 2183。 */  /* 2026-10-25 官方地点卡:相册图、小红书行、评分星、发布评价、取景卡等新增 tap,重建实测 2177 → 2182。 */  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
@@ -1676,6 +1677,7 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 2026-10-27 L02 弹层页面化与返回键先关弹层:返回守卫 afterleave 与 page 档导航返回 +10,重建实测 5141 → 5151。
   // 2026-10-27 L03:商家消息页协作邀请卡片带 +1(openInvite);主理人申请「已是商家」态换成 state-shell
   //   (切换到商家端 / 返回两个出口,替掉原自动退出的 cy-error)净 +1;重建实测 5141 → 5143。
+  // 2026-10-27 真机走查 L04:首页删「为什么看到」(P-02)、「继续上次漫游」挂载与「继续探索」卡(P-08),重建实测 5141 → 5137。
   assert.equal(ledger.controlCount, 5151)
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
