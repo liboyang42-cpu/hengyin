@@ -1181904,11 +1181904,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:288"
+        "staticSource": "pages/team/detail/index.js:289"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:107:bind:confirm:onConfirmQuit:9",
+      "id": "pages/team/detail/index.wxml:106:bind:confirm:onConfirmQuit:9",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1181931,7 +1181931,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmQuit",
-        "line": 107,
+        "line": 106,
         "selectorHint": "#dcQuit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1182039,11 +1182039,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:378"
+        "staticSource": "pages/team/detail/index.js:379"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:108:bind:confirm:onConfirmKick:10",
+      "id": "pages/team/detail/index.wxml:107:bind:confirm:onConfirmKick:10",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1182066,7 +1182066,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmKick",
-        "line": 108,
+        "line": 107,
         "selectorHint": "#dcKick",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1182175,11 +1182175,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:379"
+        "staticSource": "pages/team/detail/index.js:380"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:109:bind:alt:onDisbandAlt:12",
+      "id": "pages/team/detail/index.wxml:108:bind:alt:onDisbandAlt:12",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1182202,7 +1182202,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:alt",
         "handler": "onDisbandAlt",
-        "line": 109,
+        "line": 108,
         "selectorHint": "#dcDisband",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1182243,11 +1182243,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:383"
+        "staticSource": "pages/team/detail/index.js:384"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:109:bind:confirm:onConfirmDisband:11",
+      "id": "pages/team/detail/index.wxml:108:bind:confirm:onConfirmDisband:11",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1182270,7 +1182270,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmDisband",
-        "line": 109,
+        "line": 108,
         "selectorHint": "#dcDisband",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1182379,11 +1182379,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:380"
+        "staticSource": "pages/team/detail/index.js:381"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:110:bind:close:closeReport:13",
+      "id": "pages/team/detail/index.wxml:109:bind:close:closeReport:13",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1182406,7 +1182406,7 @@
         "tag": "team-report-sheet",
         "event": "bind:close",
         "handler": "closeReport",
-        "line": 110,
+        "line": 109,
         "selectorHint": "team-report-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1182516,7 +1182516,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:350"
+        "staticSource": "pages/team/detail/index.js:351"
       }
     },
     {
@@ -1182626,7 +1182626,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:301"
+        "staticSource": "pages/team/detail/index.js:302"
       }
     },
     {
@@ -1182695,11 +1182695,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:365"
+        "staticSource": "pages/team/detail/index.js:366"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:62:bind:action:retryBoard:4",
+      "id": "pages/team/detail/index.wxml:63:bind:action:retryBoard:4",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1182722,7 +1182722,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "retryBoard",
-        "line": 62,
+        "line": 63,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{boardState === 'error' || boardState === 'login'}}",
         "disabledCondition": null,
@@ -1182820,11 +1182820,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:283"
+        "staticSource": "pages/team/detail/index.js:284"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:80:bind:action:retryBoard:5",
+      "id": "pages/team/detail/index.wxml:79:bind:action:retryBoard:5",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1182847,7 +1182847,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "retryBoard",
-        "line": 80,
+        "line": 79,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{rankingState === 'error'}}",
         "disabledCondition": null,
@@ -1182945,11 +1182945,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:283"
+        "staticSource": "pages/team/detail/index.js:284"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:94:bindtap:quit:6",
+      "id": "pages/team/detail/index.wxml:93:bindtap:quit:6",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1182972,7 +1182972,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "quit",
-        "line": 94,
+        "line": 93,
         "selectorHint": ".team-action",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1183014,11 +1183014,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:360"
+        "staticSource": "pages/team/detail/index.js:361"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:96:bindtap:disband:7",
+      "id": "pages/team/detail/index.wxml:95:bindtap:disband:7",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1183041,7 +1183041,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "disband",
-        "line": 96,
+        "line": 95,
         "selectorHint": ".team-action",
         "visibleCondition": "{{leader}}",
         "disabledCondition": null,
@@ -1183083,11 +1183083,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:370"
+        "staticSource": "pages/team/detail/index.js:371"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:99:bindtap:openReport:8",
+      "id": "pages/team/detail/index.wxml:98:bindtap:openReport:8",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1183110,7 +1183110,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openReport",
-        "line": 99,
+        "line": 98,
         "selectorHint": ".team-note",
         "visibleCondition": "{{!leader}}",
         "disabledCondition": null,

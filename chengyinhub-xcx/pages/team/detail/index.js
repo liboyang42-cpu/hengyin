@@ -180,17 +180,18 @@ Page({
     });
   },
 
+  // disabled / not-orient / not-member 不适用看板,页面整段隐藏,不给提示文案。
   _boardFailure(res, status) {
     const code = res && res.errorCode;
-    if (code === 'ORIENT_DISABLED') return ['disabled', '定向队伍看板暂未开放'];
-    if (code === 'ORIENT_NOT_ORIENTEERING') return ['not-orient', '此队伍不适用定向进度'];
-    if (code === 'ORIENT_TEAM_NOT_MEMBER') return ['not-member', '仅当前队伍成员可查看定向进度'];
+    if (code === 'ORIENT_DISABLED') return ['disabled', ''];
+    if (code === 'ORIENT_NOT_ORIENTEERING') return ['not-orient', ''];
+    if (code === 'ORIENT_TEAM_NOT_MEMBER') return ['not-member', ''];
     if (code === 'ORIENT_LOGIN_REQUIRED' || isLoginRequired(app, res, status)) return ['login', '请重新登录后查看定向进度'];
     return ['error', '定向队伍数据暂不可用，请重新加载'];
   },
   _loadBoard(context, team, joined) {
     if (!joined) {
-      this.setData({ boardState: 'not-member', boardMessage: '仅当前队伍成员可查看定向进度' });
+      this.setData({ boardState: 'not-member', boardMessage: '' });
       return;
     }
     if (!context.reader.id || !context.reader.token) {

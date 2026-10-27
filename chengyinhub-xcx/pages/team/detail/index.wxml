@@ -56,12 +56,11 @@
       </view>
     </view>
 
-    <view wx:if="{{boardState}}" class="team-section-title">定向队伍进度</view>
+    <!-- 定向开关关闭 / 普通队伍 / 非成员(无法确认是否定向队)不适用看板:整段不渲染,不给普通队伍挂定向提示。 -->
+    <view wx:if="{{boardState === 'loading' || boardState === 'error' || boardState === 'login' || boardState === 'ready'}}" class="team-section-title">定向队伍进度</view>
     <view wx:if="{{boardState === 'loading'}}" class="team-sync" aria-role="status">正在读取定向进度…</view>
     <cy-inline-error wx:if="{{boardState === 'error' || boardState === 'login'}}"
       title="{{boardMessage}}" action="{{boardState === 'login' ? '登录' : '重新加载'}}" bind:action="retryBoard" />
-    <view wx:if="{{boardState === 'disabled' || boardState === 'not-orient' || boardState === 'not-member'}}"
-      class="team-note" aria-role="status">{{boardMessage}}</view>
     <block wx:if="{{boardState === 'ready' && board}}">
       <view class="team-card">
         <view class="team-member-name">队伍已完成 {{board.summary.teamDoneCount}} / {{board.summary.totalTasks || 0}} 项</view>
