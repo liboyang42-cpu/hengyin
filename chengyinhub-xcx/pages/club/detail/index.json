@@ -12,6 +12,7 @@
     "cy-merchant-card": "/components/cy/merchant-card/index",
     "cy-timeline": "/components/cy/timeline/index",
     "cy-post-card": "/components/cy/post-card/index",
+    "cy-post-compose": "/pages/square/components/cy/post-compose/index",
     "cy-modal": "/components/cy/modal/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",
     "cy-qr-voucher": "/components/cy/qr-voucher/index",
@@ -26,6 +27,9 @@
     "cy-privacy-gate": "/components/cy/privacy-gate/index",
     "cy-modal-host": "/components/cy/modal-host/index",
     "cy-inline-error": "/components/cy/inline-error/index"
+  },
+  "componentPlaceholder": {
+    "cy-post-compose": "view"
   },
   "navigationBarTitleText": "俱乐部",
   "navigationBarBackgroundColor": "#000000",

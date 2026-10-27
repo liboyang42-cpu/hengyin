@@ -92,7 +92,8 @@ function guard(name, fn) {
   try { out[name] = fn() } catch (e) { out[name] = { error: String(e && e.stack || e) } }
 }
 
-// ① 主题卡(俱乐部主页「活动」列表 + 管理列表 + 活动日历):/api/club/topics → decorateTopicCard
+// ① 主题卡(俱乐部主页「活动」列表 + 管理列表):/api/club/topics → decorateTopicCard
+//    (2026-10-27 P-14:活动日历已删,不再读 eventCalendar*)
 guard('topicCard', () => {
   routes = { '/api/club/topics': (r) => r.success(ok([W.clubTopic])) }
   const vm = mountPage('pages/club/detail/index.js')
@@ -101,11 +102,10 @@ guard('topicCard', () => {
   vm.loadTopics()
   const card = vm.data.upcomingTopics[0] || {}
   const manage = vm.data.manageTopics[0] || {}
-  const cells = (vm.data.eventCalendarCells || []).filter((c) => c.inMonth && c.events.length).map((c) => c.dateText)
   return {
     upcomingCount: vm.data.upcomingTopics.length,
     stationText: card.stationText, timeText: card.timeText, dateText: card.dateText, statusText: card.statusText,
-    manageDateText: manage.dateText, calendarMonth: vm.data.eventCalendarMonth, calendarEventDays: cells,
+    manageDateText: manage.dateText,
   }
 })
 

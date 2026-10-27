@@ -132,51 +132,9 @@ test('广场加载更多单飞，失败保留分页资格并提供原位重试',
   assert.equal(h.requests[1].data.pageNum, 2)
 })
 
-test('广场发布有可见忙碌态，失败保留草稿并能重试', () => {
-  const h = loadPage('pages/square/list/index.js')
-  Object.assign(h.page.data, { valCont: '保留这份草稿', picList: ['/a.png'] })
-
-  h.page.submitFormData()
-  h.page.submitFormData()
-  assert.equal(h.requests.length, 1)
-  assert.equal(h.page.data.submitting, true)
-  assert.equal(h.requests[0].hideLoading, true)
-  assert.equal(h.requests[0].silentError, true)
-
-  h.requests[0].success({ code: 500, msg: '内容暂时无法发布' })
-  h.requests[0].complete()
-  assert.equal(h.page.data.submitting, false)
-  assert.equal(h.page.data.submitError, '内容暂时无法发布')
-  assert.equal(h.page.data.valCont, '保留这份草稿')
-  assert.deepEqual(h.page.data.picList, ['/a.png'])
-
-  h.page.retrySubmit()
-  assert.equal(h.requests.length, 2)
-  assert.equal(h.page.data.submitError, '')
-})
-
-test('广场发布成功关闭编辑层，并在刷新回读前保留原列表', () => {
-  const h = loadPage('pages/square/list/index.js')
-  const previous = [{ id: 1, contents: '已有帖文' }]
-  Object.assign(h.page.data, {
-    valCont: '新帖文',
-    canSubmit: true,
-    list: previous,
-    listLoading: false,
-    popOrig: true,
-    popShow: true,
-  })
-
-  h.page.submitFormData()
-  h.requests[0].success({ code: '200', data: { lifecycle: 'PUBLISHED' } })
-
-  assert.equal(h.page.data.popOrig, false)
-  assert.equal(h.page.data.popShow, false)
-  assert.equal(h.page.data.valCont, '')
-  assert.deepEqual(h.page.data.list, previous)
-  assert.equal(h.requests.length, 2)
-  assert.equal(h.requests[1].data.pageNum, 1)
-})
+// 2026-10-27 P-20 owner:广场行内发布框撤掉,新建帖统一走全屏发帖弹窗 cy-post-compose。
+// 原「广场发布有可见忙碌态，失败保留草稿并能重试」「广场发布成功关闭编辑层…」两条钉的是页内发布流水,
+// 随之撤走;组件侧的单飞 / 失败保留 / 关闭即存由 square-post-compose-context 与 club-post-compose-unified 覆盖。
 
 test('帖子与评论的点赞、关注微操作单飞，失败不会提前改写界面状态', () => {
   const list = loadPage('pages/square/list/index.js')
@@ -321,13 +279,10 @@ test('两个广场页面把恢复状态和按钮忙碌语义呈现在界面上',
   assert.equal(listJson.usingComponents['cy-post-card'], '/components/cy/post-card/index')
   assert.doesNotMatch(listWxml, /<cy-inline-error[^>]*staleError/s)
   assert.match(listWxml, /<cy-inline-error[^>]*wx:if="\{\{loadMoreError\}\}"[^>]*bind:action="retryLoadMore"/s)
-  assert.match(listWxml, /<cy-inline-error[^>]*wx:if="\{\{submitError\}\}"[^>]*bind:action="retrySubmit"/s)
-  // 2026-09-18 UI-15:行内发布区按用户要求去掉「发布」文字与扩大 icon,发布钮改 88rpx 图标钮。
-  // 忙碌/禁用语义不能因此丢:submitFormData 仍是唯一提交点,loading 走 spinner,
-  // 不可提交态由 compose-submit--off + aria-disabled 表达。
-  assert.match(listWxml, /class="compose-submit \{\{canSubmit && !submitting \? '' : 'compose-submit--off'\}\}"[^>]*bindtap="submitFormData"/s)
-  assert.match(listWxml, /aria-label="\{\{submitting \? '正在发布帖文' : '发布帖文'\}\}"/)
-  assert.match(listWxml, /aria-disabled="\{\{!canSubmit \|\| submitting\}\}"/)
+  // 2026-10-27 P-20 owner:行内发布区(submitError 原位重试 / compose-submit 忙碌钮)整块撤掉,
+  // 列表页只留一行入口拉起全屏发帖弹窗;发布的忙碌 / 禁用语义在 cy-post-compose 的「发布」钮上。
+  assert.doesNotMatch(listWxml, /submitFormData|retrySubmit|compose-submit/)
+  assert.match(listWxml, /class="compose-entry" bindtap="openCompose" aria-role="button" aria-label="发布帖文"/)
 
   assert.equal(detailJson.usingComponents['cy-inline-error'], '/components/cy/inline-error/index')
   assert.match(detailWxml, /<cy-skeleton[^>]*wx:if="\{\{commentsState === 'loading' && !list\.length\}\}"/s)
@@ -358,7 +313,8 @@ test('发布附件、帖子操作和评论操作均保留至少 88rpx 触达区'
   const postCardWxss = read('components/cy/post-card/index.wxss')
   const detailWxss = read('pages/square/detail/index.wxss')
 
-  assert.match(listWxss, /\.compose-body \.btns button\s*\{[^}]*min-width:\s*88rpx[^}]*min-height:\s*88rpx/s)
+  // 2026-10-27 P-20:行内发布框的附件按钮随之撤掉;发帖弹窗的工具钮热区见 club-detail-visual-state-contract
+  assert.doesNotMatch(listWxss, /\.compose-body \.btns button/)
   assert.match(postCardWxss, /\.post-card__action\s*\{[^}]*min-width:\s*88rpx[^}]*min-height:\s*88rpx/s)
   assert.match(postCardWxss, /\.post-card__share\s*\{[^}]*min-width:\s*88rpx[^}]*min-height:\s*88rpx/s)
   assert.match(detailWxss, /\.item-link button\s*\{[^}]*min-height:\s*88rpx/s)
@@ -371,7 +327,9 @@ test('广场评论与举报入口有准确可读名称，举报不再错用默�
   const listWxml = read('pages/square/list/index.wxml')
   const postCardWxml = read('components/cy/post-card/index.wxml')
   const postActionsWxml = read('pages/square/components/cy/post-actions/index.wxml')
-  assert.match(listWxml, /<textarea[^>]*aria-label="帖文内容"/s)
+  // 2026-10-27 P-20:行内 textarea 撤掉,正文输入在 cy-post-compose 里(同样带「帖文内容」可读名称)
+  assert.doesNotMatch(listWxml, /<textarea/)
+  assert.match(read('pages/square/components/cy/post-compose/index.wxml'), /<textarea[^>]*aria-label="帖文内容"/s)
   assert.match(postCardWxml, /catchtap="emitComment"[^>]*aria-role="button"[^>]*aria-label="查看评论，当前 \{\{post\.commentCount \|\| 0\}\}"/s)
   // 2026-09-16(H050/H051 收口):举报行从列表页自绘弹层退役,搬进三合一 cy-post-actions
   // (编辑/删除/举报)。守的判据不变:举报必须有可读名称,且不许顶一张默认头像冒充。

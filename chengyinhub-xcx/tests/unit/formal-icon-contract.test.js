@@ -49,8 +49,10 @@ test('广场完成状态使用 star 语义图标并保留完成数量', () => {
   const cardWxml = renderable(read('components/cy/feed-play-card/index.wxml'));
   assertCyIconRegistration('pages/square/list/index.json');
   assertCyIconRegistration('components/cy/feed-play-card/index.json');
+  // 2026-10-27 P-20 owner:广场行内发布框(含「已选活动 · 完成 N/M」摘要)撤掉,发帖统一走全屏发帖弹窗;
+  // 列表页只剩帖子通关徽章这一枚 star。
   const stars = [...(listWxml + cardWxml).matchAll(/<cy-icon\b[^>]*name="star"/g)];
-  assert.equal(stars.length, 2, '活动选择摘要与帖子通关徽章各应有一个 star 图标');
-  assert.match(listWxml, /selectedActivity\.name\}\} · 完成 \{\{selectedActivity\.doneCount\}\}/);
+  assert.equal(stars.length, 1, '帖子通关徽章应有一个 star 图标');
+  assert.doesNotMatch(listWxml, /selectedActivity/);
   assert.match(cardWxml, /class="feed-play-card__trophy"[\s\S]*class="feed-play-card__trophy-icon"/);
 });

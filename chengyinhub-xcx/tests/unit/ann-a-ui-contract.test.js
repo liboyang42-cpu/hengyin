@@ -101,8 +101,10 @@ test('A05/A06：广场顶部为横向 banner，发布器展示本人头像与昵
   // 2026-09-02 B2(Figma 379:2437):内容列首行由固定文案「发布帖文」改为本人昵称,
   // 断言随之从字面量改成昵称绑定 + 兜底「城瘾玩家」。
   assert.match(wxml, /class="compose-row"[\s\S]*?avatar \|\| '\/images\/d_profile\.png'[\s\S]*?class="compose-col"[\s\S]*?>\{\{nickname \|\| '城瘾玩家'\}\}</)
-  assert.match(wxml, /class="compose-col"[\s\S]*?class="compose-input/,
-    '正文必须落在内容列里，否则又会通栏、与头像右边缘不齐')
+  // 2026-10-27 P-20 owner:行内 textarea 撤掉,这一行只剩发帖入口(点开全屏发帖弹窗);
+  // 占位文案仍落在内容列里,与头像右边缘对齐。
+  assert.match(wxml, /class="compose-col"[\s\S]*?class="compose-ph"/,
+    '占位必须落在内容列里，否则又会通栏、与头像右边缘不齐')
   assert.match(postCard, /<cy-feed-play-card\b[^>]*bind:detail="emitPlayDetail"[^>]*bind:play="emitPlay"/,
     '发布帖文模板须接入列表/详情共用的可玩卡组件')
   assert.match(wxml, /bind:playdetail="goPlayTopicDetail"[\s\S]{0,80}bind:play="goPlay"/,

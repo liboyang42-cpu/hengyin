@@ -88,9 +88,9 @@
     <!-- 帖子流(默认展示) -->
     <view class="feed feed--plain cy-rise-in" wx:if="{{activeTab === 'posts'}}">
       <cy-club-pinned-notice notices="{{pinnedNotices}}" bind:open="onPinnedNoticeOpen" />
-      <!-- 收起态:一条 pill,点开才展开输入区。原来 textarea + 图片行常驻,
-           没发帖的人也要为它让出约 340rpx —— 首屏第一条帖子被挤到折线以下。 -->
-      <view class="post-composer-collapsed" wx:if="{{canSeeMembers && (club.memberPostAllowed != 0 || club.isOwner || club.viewerIsAdmin || canModerateContent) && !composerOpen}}" bindtap="openComposer"
+      <!-- 发帖入口:一条 pill。2026-10-27 P-20 owner:点开是全站统一的全屏发帖弹窗(带草稿),
+           不再在页内展开 textarea。没有帖子时它仍在空态上方(M-33)。 -->
+      <view class="post-composer-collapsed" wx:if="{{canSeeMembers && (club.memberPostAllowed != 0 || club.isOwner || club.viewerIsAdmin || canModerateContent)}}" bindtap="openComposer"
             aria-role="button" aria-label="发布俱乐部动态" hover-class="cy-pressed" hover-stay-time="80">
         <cy-avatar class="post-composer-me" size="80" src="{{myAvatar || '/images/d_profile.png'}}" name="我" />
         <view class="post-composer-col">
@@ -101,34 +101,6 @@
             <cy-icon class="post-composer-ico" name="pin" size="44" />
             <cy-icon class="post-composer-ico" name="flag" size="44" />
           </view>
-        </view>
-      </view>
-      <view class="post-composer" wx:if="{{canSeeMembers && (club.memberPostAllowed != 0 || club.isOwner || club.viewerIsAdmin || canModerateContent) && composerOpen}}">
-        <textarea class="post-input" value="{{postText}}" bindinput="onPostText" maxlength="300" focus
-                  placeholder="分享俱乐部路线、战报或公告…" placeholder-class="post-ph" />
-        <view class="post-imgrow">
-          <view class="post-thumb" wx:for="{{postImages}}" wx:key="index">
-            <image class="post-thumb-img" src="{{item}}" mode="aspectFill" />
-            <view class="post-thumb-del" catchtap="onRemovePostImage" data-index="{{index}}" aria-role="button" aria-label="删除发帖图片 {{index + 1}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon class="post-thumb-del__glyph" name="close-sm" size="28" /></view>
-          </view>
-          <view class="post-addimg" wx:if="{{postImages.length < 9}}" bindtap="onPickPostImage" aria-role="button" aria-label="添加发帖图片" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="image" size="40" /></view>
-          <view class="post-cancel" bindtap="closeComposer" aria-role="button" aria-label="收起发帖" hover-class="cy-pressed" hover-stay-time="80">收起</view>
-          <view class="post-send {{posting ? 'disabled' : ''}}" bindtap="onPostSubmit" aria-role="button" aria-label="发布俱乐部动态" aria-disabled="{{posting}}" hover-class="{{posting ? 'none' : 'cy-pressed'}}" hover-stay-time="80">发布</view>
-        </view>
-        <!-- 稿 N1b 47:2 的漫游卡与模板卡:帖子可以带上一次游玩记录。选中后卡片形态由
-             引用类型派生,不用作者自己选样式。 -->
-        <view class="post-ref" wx:if="{{postRef}}">
-          <cy-icon class="post-ref-ico" name="route" size="32" />
-          <text class="post-ref-name">{{postRef.name}}</text>
-          <view class="post-ref-del" catchtap="onClearPostRef" aria-role="button" aria-label="不带这条游玩记录" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
-        </view>
-        <view wx:else class="post-ref-add" catchtap="openPostRefPicker" aria-role="button" aria-label="带上一次游玩记录" hover-class="cy-pressed" hover-stay-time="80">
-          <cy-icon name="route" size="32" /><text>带上一次游玩记录</text>
-        </view>
-
-        <view class="post-kind-toggle {{postAsAnnouncement ? 'on' : ''}}" wx:if="{{canModerateContent}}" bindtap="onToggleAnnouncement" aria-role="switch" aria-checked="{{postAsAnnouncement}}" hover-class="cy-pressed" hover-stay-time="80">
-          <text>{{postAsAnnouncement ? '作为公告发布' : '普通动态'}}</text>
-          <text>{{postAsAnnouncement ? '已开启' : '设为公告'}}</text>
         </view>
       </view>
 
@@ -668,6 +640,11 @@
   <!-- 多团主理人选团(承接原 club/index switchClub) -->
   <!-- ⚙ 俱乐部设置(2026-08-26)。管理 tab 只留经营,治理与低频工具全在这里。
        「成员管理」「项目工具」在弹窗内二级展开 —— DS 规定 sheet 不嵌 sheet。 -->
+  <!-- 2026-10-27 P-20:全站统一的全屏发帖弹窗(俱乐部模式)。挂在游玩记录选择器之前 ——
+       选择器要叠在它上面。组件在广场分包,经 componentPlaceholder 跨分包引用。 -->
+  <cy-post-compose show="{{composerOpen}}" club-id="{{club.id}}" can-announce="{{canModerateContent}}" post-ref="{{postRef}}"
+                   bind:close="closeComposer" bind:published="onComposePublished"
+                   bind:refpick="openPostRefPicker" bind:refclear="onClearPostRef" />
   <!-- 「带上一次游玩记录」选择器。列表直接吃 /api/registration/my-joined —— 我参与过的
        主题与活动本来就在那儿,不为这个选择器另开一条查询。 -->
   <cy-sheet show="{{postRefPickerShow}}" title="带上一次游玩记录" handle closable maskClosable bind:close="closePostRefPicker">

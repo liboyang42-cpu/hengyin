@@ -446,13 +446,6 @@ function normalizeClubPost(p, clubOwnerId) {
   });
 }
 
-// 发帖引用被服务端拒绝时的机器错误码 → 用户文案;未知码回落到服务端 msg。
-const POST_REF_ERROR_TEXT = {
-  CLUB_POST_REF_UNAVAILABLE: '引用的记录暂不可用，已取消引用',
-  CLUB_POST_REF_NOT_JOINED: '只能带上你自己参加过的记录，已取消引用',
-  CLUB_POST_REF_INVALID: '引用信息有误，已取消引用',
-};
-
 function enrichClub(club) {
   if (!club) return club;
   // 服务端文本过滤会把 x<y 存成 x&lt;y;这几项都按纯文本展示,在这里解码一次。
@@ -544,18 +537,14 @@ Page({
     posts: [],
     pinnedNotices: [],
     postsLoaded: false,
-    postText: '',
-    // 发帖区默认收起,点一下才展开(2026-08-26)
+    // 2026-10-27 P-20:发帖走全站统一的全屏发帖弹窗(cy-post-compose 俱乐部模式),这里只管开关
     composerOpen: false,
-    postImages: [],
-    postAsAnnouncement: false,
     // 稿 N1b:帖子可以带上一次游玩记录,卡片形态由引用类型派生
     postRef: null,
     postRefPickerShow: false,
     postRefState: 'idle',       // idle | loading | ready | error
     postRefErrorText: '',
     postRefOptions: [],
-    posting: false,
     postEditShow: false,
     postEditId: null,
     postEditText: '',
@@ -1790,68 +1779,12 @@ Page({
     this._requestedPostId = '';
     wx.pageScrollTo({ selector: '#club-post-' + postId, duration: 250, offsetTop: 24 });
   },
-  closeComposer() { this.setData({ composerOpen: false }); },
+  closeComposer() { this.setData({ composerOpen: false, postRefPickerShow: false }); },
 
-  onPostText(e) { this.setData({ postText: e.detail.value }); },
-
-  onToggleAnnouncement() {
-    if (!this.data.canModerateContent) return;
-    this.setData({ postAsAnnouncement: !this.data.postAsAnnouncement });
-  },
-
-  onPickPostImage() {
-    const that = this;
-    const left = 9 - this.data.postImages.length;
-    if (left <= 0) { cyToast('最多9张'); return; }
-    app.chooseImage(function (urls) {
-      if (urls && urls.length) that.setData({ postImages: that.data.postImages.concat(urls).slice(0, 9) });
-    }, left);
-  },
-
-  onRemovePostImage(e) {
-    const i = e.currentTarget.dataset.index;
-    const arr = this.data.postImages.slice();
-    arr.splice(i, 1);
-    this.setData({ postImages: arr });
-  },
-
-  onPostSubmit() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.onPostSubmit())) return; // 2026-10-24 游客写前登录
-    const text = (this.data.postText || '').trim();
-    const imgs = this.data.postImages;
-    if (!text && !imgs.length) { cyToast('说点什么，或加张图'); return; }
-    if (this.data.posting) return;
-    const ref = this.data.postRef;
-    this.setData({ posting: true });
-    const that = this;
-    app.sendRequest({
-      url: '/api/club/post/create', method: 'POST',
-      data: JSON.stringify({
-        clubId: this.data.clubId,
-        content: text,
-        images: imgs.join(','),
-        type: this.data.postAsAnnouncement ? 2 : 0,
-        // 没选就一个字段都不带 —— 半个引用(只有类型没有 ID)会被服务端挡下,
-        // 但更该在这里就不产生
-        refType: ref ? ref.refType : null,
-        refId: ref ? ref.refId : null,
-      }),
-      header: { 'Content-Type': 'application/json', 'Authorization': app.getAuthorization() },
-      success(res) {
-        that.setData({ posting: false });
-        if (res.code == '200') {
-          that.setData({ postText: '', postImages: [], postAsAnnouncement: false, postRef: null });
-          that.loadPosts();
-        }
-        else if (res && POST_REF_ERROR_TEXT[res.errorCode]) {
-          // 正文与图片保留,只撤掉这条引用,用户可以直接再发
-          that.setData({ postRef: null });
-          cyToast(POST_REF_ERROR_TEXT[res.errorCode]);
-        }
-        else cyToast((res && res.msg) || '发布失败');
-      },
-      fail() { that.setData({ posting: false }); cyToast('网络异常，请重试'); },
-    });
+  // 全屏发帖弹窗发布成功:引用一并清掉,回读帖子流(正文/图片/草稿由组件自己清)
+  onComposePublished() {
+    this.setData({ postRef: null });
+    this.loadPosts();
   },
 
   /* ——— 「带上一次游玩记录」———

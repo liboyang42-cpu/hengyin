@@ -129,8 +129,6 @@ test('SC-UI-DATE-COUNT 主题起止日期:主题卡 / 主题页 / 向导 / 统�
       topicCardTime: parseCnMonthDay(out.topicCard.timeText),
       topicCardWeek: (/周(.)/.exec(out.topicCard.timeText) || [])[1],
       manageDate: out.topicCard.manageDateText,
-      calendarDays: out.topicCard.calendarEventDays,
-      calendarMonth: out.topicCard.calendarMonth,
       topicPageOpen: out.topicPage.openCell,
       wizardStart: out.wizard.startDateTime, wizardEnd: out.wizard.endDateTime,
       detailRange: out.topicDetail.dateRange,
@@ -141,14 +139,14 @@ test('SC-UI-DATE-COUNT 主题起止日期:主题卡 / 主题页 / 向导 / 统�
       topicCardTime: startMd,
       topicCardWeek: TOPIC_START.w,
       manageDate: TOPIC_START.ymd,
-      calendarDays: [TOPIC_START.ymd],
-      calendarMonth: TOPIC_START.ymd.slice(0, 7),
       topicPageOpen: TOPIC_START.m + '.' + TOPIC_START.d + '-' + TOPIC_END.m + '.' + TOPIC_END.d,
       wizardStart: TOPIC_START.ymd, wizardEnd: TOPIC_END.ymd,
       detailRange: TOPIC_START.m + '月' + TOPIC_START.d + '日 – ' + TOPIC_END.m + '月' + TOPIC_END.d + '日',
       eventOpsLabel: TOPIC.name + ' · ' + TOPIC_START.m + '月' + TOPIC_START.d + '日–' + TOPIC_END.m + '月' + TOPIC_END.d + '日 · 自有',
     }, zone)
-    assert.equal(out.topicCard.statusText, '进行中', zone + ' 主题卡状态按同一时刻判')
+    // 2026-10-27 P-14 owner:俱乐部活动 tab 删掉月历(原 calendarDays / calendarMonth 两项随之撤走),
+    // 标签文案「进行中 / 招募中」改为「已开始 / 未开始」;判定时刻不变。
+    assert.equal(out.topicCard.statusText, '已开始', zone + ' 主题卡状态按同一时刻判')
     assert.equal(out.topicCard.upcomingCount, 1, zone)
   }
 })
