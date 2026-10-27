@@ -23,7 +23,7 @@ public final class AuthorAttributeBinding {
     public static boolean hasBinding(String raw) {
         if (raw == null || raw.isBlank()) return false;
         try { return JSON.readTree(raw).has("attributeBinding"); }
-        catch (Exception invalid) { throw new IllegalArgumentException("属性规则无法读取", invalid); }
+        catch (Exception invalid) { throw new ServiceException("旅程数值规则无法解析", 400); }
     }
 
     public static String version(JsonNode value) {
@@ -97,7 +97,7 @@ public final class AuthorAttributeBinding {
         if (raw == null || raw.isBlank()) return raw;
         final ObjectNode root;
         try { root = (ObjectNode) JSON.readTree(raw); }
-        catch (Exception invalid) { throw new IllegalArgumentException("属性规则无法读取", invalid); }
+        catch (Exception invalid) { throw new ServiceException("旅程数值规则无法解析", 400); }
         JsonNode supplied = root.get("attributeBinding");
         if (supplied == null) {
             // Old drafts stay editable without silently importing/overwriting any registered definition.
