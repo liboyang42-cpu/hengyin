@@ -4,6 +4,7 @@ const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const { normalizeMarketingHome } = require('../utils/merchant-aggregate.js');
 const officialChannel = require('../../../utils/merchant-official-channel.js');
 const { toTimestamp, chinaParts } = require('../../../utils/datetime.js');
+const { hasValue, visibleRecruitItems } = require('../utils/recruit-routes.js');
 
 // 稿 234:276 合作中心:tab = 官方活动 / 广场,右上角铃铛进协作邀请(收到的 / 我发出的)。
 // 2026-09-15 用户裁决「全站只有收到的/我发出的两个入口」:原「邀约我的」tab 删除,
@@ -13,10 +14,6 @@ const { toTimestamp, chinaParts } = require('../../../utils/datetime.js');
 const PRODUCT_TYPE_TEXT = { 1: '城市定向', 2: '自由探索' };
 // 章节档位 CmsTopicChapter.termsMode;economics 口径见 MerchantAggregateReadServiceImpl.recruitTermsEconomics
 const TERMS_MODE_TEXT = { PERK: '权益核销', REVSHARE: '分润计酬', TRAFFIC: '引流合作 · 无结算' };
-
-function hasValue(value) {
-  return (typeof value === 'string' || typeof value === 'number') && !!String(value).trim();
-}
 
 function monthDay(value) {
   const timestamp = toTimestamp(value);
@@ -42,17 +39,10 @@ function termsLine(item) {
   return TERMS_MODE_TEXT[mode];
 }
 
-// 2026-10-22 owner:已过期的不展示 —— 招商截止或活动已结束都不进广场(后端 recruiting() 同口径先滤一遍)。
-function isRouteExpired(item, now) {
-  const deadline = toTimestamp(item.recruitDeadline || item.merchantSignUpEndDate);
-  if (deadline && deadline <= now) return true;
-  const end = toTimestamp(item.endDate);
-  return !!(end && end <= now);
-}
-
 function routeCards(items) {
   const now = Date.now();
-  return (items || []).filter((item) => item && hasValue(item.id) && hasValue(item.name) && !isRouteExpired(item, now)).map((item) => {
+  // M-23:过滤口径与营销页「N 个开放商机」同源(recruit-routes.visibleRecruitItems)
+  return visibleRecruitItems(items, now).map((item) => {
     const deadline = toTimestamp(item.recruitDeadline || item.merchantSignUpEndDate);
     const start = monthDay(item.startDate);
     const end = monthDay(item.endDate);

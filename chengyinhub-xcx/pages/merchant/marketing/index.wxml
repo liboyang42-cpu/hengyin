@@ -33,8 +33,10 @@
 
     <!-- Hero:全页唯一的主角数字 = 近 N 天报名(4-10:数字来自窗口 stages,写「累计」就是假口径)。
          刻意不用「收入」—— 那是工作台的 hero,两个 tab 不抢同一个数。 -->
-    <cy-skeleton wx:if="{{funnelLoading && !marketingLoaded}}" type="merchant-metric" count="{{1}}"
-                 loading-label="正在读取营销数据" />
+    <!-- M-22:首帧就是骨架(funnelLoading 初值 true),骨架外包固定高度,数据到达不跳版 -->
+    <view class="mk-hold mk-hold--hero" wx:if="{{funnelLoading && !marketingLoaded}}">
+      <cy-skeleton type="merchant-metric" count="{{1}}" loading-label="正在读取营销数据" />
+    </view>
     <!-- 取数失败时大数字落 0,真话由副行的错误文案 + 「点击重试」来说。
          2026-09-19 用户裁决:本页数字位不出现横杠。 -->
     <view class="hero" wx:elif="{{funnelError && !marketingLoaded}}"
@@ -81,8 +83,9 @@
               title="还没有营销数据"
               cta="{{merchantAccess.canManageProjects ? '发布第一个主题' : ''}}"
               bind:cta="startFirstContent" />
-    <cy-skeleton wx:elif="{{funnelLoading && !marketingLoaded}}" type="list" count="{{3}}"
-                 loading-label="正在读取我的内容" />
+    <view class="mk-hold mk-hold--mine" wx:elif="{{funnelLoading && !marketingLoaded}}">
+      <cy-skeleton type="list" count="{{3}}" loading-label="正在读取我的内容" />
+    </view>
     <view class="mine" wx:else>
       <view class="mine-tile" wx:for="{{myContent}}" wx:key="key"
             bindtap="goMyContent" data-key="{{item.key}}" data-count="{{item.count}}"
@@ -103,8 +106,9 @@
       <text class="sec-title">优惠券</text>
       <text class="sec-more">{{couponRate}}</text>
     </view>
-    <cy-skeleton wx:if="{{funnelLoading && !marketingLoaded}}" type="merchant-metric" count="{{1}}"
-                 loading-label="正在读取优惠券数据" />
+    <view class="mk-hold mk-hold--deck" wx:if="{{funnelLoading && !marketingLoaded}}">
+      <cy-skeleton type="merchant-metric" count="{{1}}" loading-label="正在读取优惠券数据" />
+    </view>
     <!-- 卡堆与空态是同一个入口的两种样子 ⇒ bindtap 只挂一层。
          拆成两个各自绑定 go 的可点元素会撞 ui-placeholder-cleanup 的
          「优惠券入口只能有一处」(它按 wxml 里的裸字符串计数,注释也算)。 -->
@@ -124,8 +128,8 @@
     </view>
 
     <!-- 商家合作的唯一入口:商机与定向邀约都在合作中心处理。
-         左上角的开放商机数取自 marketing-home 的 recruiting.count —— 这个字段一直在回，
-         以前只被拿去判空态。 -->
+         左上角的开放商机数与合作中心广场列表同源(recruit-routes.openOpportunityCount,2026-10-27 M-23),
+         写「1 个开放商机」点进去就一定有那一条。 -->
     <view class="sec-head">
       <text class="sec-title">合作机会</text>
     </view>
