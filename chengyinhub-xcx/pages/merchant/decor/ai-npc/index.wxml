@@ -178,7 +178,7 @@
           aria-role="radio" aria-checked="{{personaPick === item.key}}" aria-label="{{item.label}}，{{item.desc}}"
           hover-class="cy-pressed" hover-stay-time="80">
           <text class="npc-persona__label">{{item.label}}</text>
-          <text class="npc-persona__desc">{{item.desc}}</text>
+          <text class="npc-persona__desc">{{personality === item.key ? '当前性格' : item.desc}}</text>
         </view>
       </view>
       <cy-inline-error kind="error" wx:if="{{saveError}}" title="暂未完成" sub="{{saveError}}" />

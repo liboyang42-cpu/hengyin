@@ -73,8 +73,6 @@ Page({
     generatedAt: '',
     profile: null,        // 后端实时读的店铺视图(storeName/logo + 承接档案字段),不走缓存
     storeName: '',        // 页头问候「Hi，店名」
-    // M-21:页头头像 = 真实店铺 Logo(后端 profile.logo = mms_merchant.logo,与店名同一行记录)
-    storeLogo: '',
     factState: 'unknown', // unknown=字段缺失 | empty=服务端明确全零 | ready=有真实事实
     valueCard: null,      // 首屏归因价值卡:城瘾为你带来 N 位玩家/M 次打卡/K 单核销 + 核销进度 + 环比
     metricCards: [],      // 核销率 / 复购率两张小卡:比率 + 说明行 + 分段胶囊进度条
@@ -218,7 +216,6 @@ Page({
             generatedAt: d.generatedAt || '',
             profile: d.profile || null,
             storeName: String(profile.storeName || '').trim(),
-            storeLogo: String(profile.logo || '').trim(),
             factState,
             hero,
             slots: that._buildSlots(d.facts),
@@ -266,7 +263,6 @@ Page({
       generatedAt: '',
       profile: null,
       storeName: '',
-      storeLogo: '',
       factState: 'unknown',
       valueCard: null,
       metricCards: [],

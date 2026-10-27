@@ -167,7 +167,7 @@ test('身份失效清场:店名/头像/主卡/时段/客源/弹层一并清掉',
 test('页头是问候区 + 店铺头像,不再有店铺档案入口;最近到店玩家无竖线', () => {
   // 2026-10-27 业主 M-21:真实店名与 Logo,不写「店主」/「店」;头像不描边
   assert.match(PAGE_WXML, /class="greet-line"><text>Hi\{\{storeName \? '，' : ''\}\}<\/text><text>\{\{storeName\}\}<\/text>/);
-  assert.match(PAGE_WXML, /<cy-avatar class="greet-avatar"[^>]*src="\{\{storeLogo\}\}"[^>]*name="\{\{storeName\}\}"/);
+  assert.match(PAGE_WXML, /<cy-avatar class="greet-avatar"[^>]*src="\{\{profile\.logo \|\| ''\}\}"[^>]*name="\{\{storeName\}\}"/);
   assert.doesNotMatch(PAGE_WXML.replace(/<!--[\s\S]*?-->/g, ''), /'店主'|'店'|greet-avatar"[^>]*bordered/);
   assert.doesNotMatch(PAGE_WXML.replace(/<!--[\s\S]*?-->/g, ''), /店铺档案|goProfileSetup/);
   const wxss = fs.readFileSync(path.join(ROOT, 'pages/merchant/marketing/ai-insight/index.wxss'), 'utf8');
