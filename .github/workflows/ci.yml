@@ -823,7 +823,6 @@ jobs:
     # 而这条缺陷在 UTC runner 上从来没红过。用户全在 UTC+8,CI 就该站在用户的时区上。
     env:
       TZ: Asia/Shanghai
-      SOURCE_INVENTORY_DIR: ${{ runner.temp }}/mini-source-inventory
     steps:
       - uses: actions/checkout@v4
         with:
@@ -855,6 +854,8 @@ jobs:
       #   存量清单只能变小不能变大,修完存量跑 --update-baseline 收窄基线。硬红会把 master 的
       #   门禁永久锁死(存量 503 条(U2 0 + U3 95 + U4 408)),直接放行又等于"测试存在但从没被跑过",棘轮是这两者之间唯一的解。
       - name: Check mini program JavaScript and JSON (incl. U2/U3/U4 wxml-js bind gates)
+        env:
+          SOURCE_INVENTORY_DIR: ${{ runner.temp }}/mini-source-inventory
         run: bash ci/xcx-check.sh
       - name: Upload generated source inventory without modifying the checkout
         if: always()
