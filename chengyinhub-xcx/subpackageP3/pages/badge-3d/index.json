@@ -4,6 +4,7 @@
   "disableScroll": true,
   "usingComponents": {
     "xr-badge": "/subpackageP3/components/xr-badge/index",
+    "pin-spin": "/subpackageP3/components/pin-spin/index",
     "cy-icon": "/components/cy/icon/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",

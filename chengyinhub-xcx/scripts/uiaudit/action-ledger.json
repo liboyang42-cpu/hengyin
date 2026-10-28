@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5127,
+  "controlCount": 5134,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -1344228,6 +1344228,326 @@
       }
     },
     {
+      "id": "subpackageP3/components/pin-spin/index.wxml:3:bindtouchcancel:onTouchEnd:3",
+      "route": "component:subpackageP3/components/pin-spin/index",
+      "hostRoutes": [
+        "subpackageP3/pages/badge-3d/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "subpackageP3/pages/badge-3d/index",
+          "segments": [
+            {
+              "selector": "pin-spin",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageP3/components/pin-spin/index.wxml",
+        "js": "subpackageP3/components/pin-spin/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "canvas",
+        "event": "bindtouchcancel",
+        "handler": "onTouchEnd",
+        "line": 3,
+        "selectorHint": "#spincv",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "可点按或拖动旋转的勋章",
+        "ariaLabelExpression": null,
+        "ariaRole": "img",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/components/pin-spin/index.js:127"
+      }
+    },
+    {
+      "id": "subpackageP3/components/pin-spin/index.wxml:3:bindtouchend:onTouchEnd:2",
+      "route": "component:subpackageP3/components/pin-spin/index",
+      "hostRoutes": [
+        "subpackageP3/pages/badge-3d/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "subpackageP3/pages/badge-3d/index",
+          "segments": [
+            {
+              "selector": "pin-spin",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageP3/components/pin-spin/index.wxml",
+        "js": "subpackageP3/components/pin-spin/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "canvas",
+        "event": "bindtouchend",
+        "handler": "onTouchEnd",
+        "line": 3,
+        "selectorHint": "#spincv",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "可点按或拖动旋转的勋章",
+        "ariaLabelExpression": null,
+        "ariaRole": "img",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/components/pin-spin/index.js:127"
+      }
+    },
+    {
+      "id": "subpackageP3/components/pin-spin/index.wxml:3:bindtouchmove:onTouchMove:1",
+      "route": "component:subpackageP3/components/pin-spin/index",
+      "hostRoutes": [
+        "subpackageP3/pages/badge-3d/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "subpackageP3/pages/badge-3d/index",
+          "segments": [
+            {
+              "selector": "pin-spin",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageP3/components/pin-spin/index.wxml",
+        "js": "subpackageP3/components/pin-spin/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "canvas",
+        "event": "bindtouchmove",
+        "handler": "onTouchMove",
+        "line": 3,
+        "selectorHint": "#spincv",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "可点按或拖动旋转的勋章",
+        "ariaLabelExpression": null,
+        "ariaRole": "img",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/components/pin-spin/index.js:120"
+      }
+    },
+    {
+      "id": "subpackageP3/components/pin-spin/index.wxml:3:bindtouchstart:onTouchStart:0",
+      "route": "component:subpackageP3/components/pin-spin/index",
+      "hostRoutes": [
+        "subpackageP3/pages/badge-3d/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "subpackageP3/pages/badge-3d/index",
+          "segments": [
+            {
+              "selector": "pin-spin",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageP3/components/pin-spin/index.wxml",
+        "js": "subpackageP3/components/pin-spin/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "canvas",
+        "event": "bindtouchstart",
+        "handler": "onTouchStart",
+        "line": 3,
+        "selectorHint": "#spincv",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "可点按或拖动旋转的勋章",
+        "ariaLabelExpression": null,
+        "ariaRole": "img",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/components/pin-spin/index.js:113"
+      }
+    },
+    {
       "id": "subpackageP3/components/xr-badge/index.wxml:3:bindtouchcancel:onTouchEnd:3",
       "route": "component:subpackageP3/components/xr-badge/index",
       "hostRoutes": [
@@ -1344611,7 +1344931,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-3d/index.js:113"
+        "staticSource": "subpackageP3/pages/badge-3d/index.js:115"
       }
     },
     {
@@ -1344678,7 +1344998,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-3d/index.js:96"
+        "staticSource": "subpackageP3/pages/badge-3d/index.js:98"
       }
     },
     {
@@ -1344745,7 +1345065,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-3d/index.js:102"
+        "staticSource": "subpackageP3/pages/badge-3d/index.js:104"
       }
     },
     {
@@ -1344813,7 +1345133,141 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-3d/index.js:92"
+        "staticSource": "subpackageP3/pages/badge-3d/index.js:94"
+      }
+    },
+    {
+      "id": "subpackageP3/pages/badge-3d/index.wxml:21:bind:loaded:onLoaded:6",
+      "route": "subpackageP3/pages/badge-3d/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageP3/pages/badge-3d/index.wxml",
+        "js": "subpackageP3/pages/badge-3d/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "pin-spin",
+        "event": "bind:loaded",
+        "handler": "onLoaded",
+        "line": 21,
+        "selectorHint": ".b3__xr",
+        "visibleCondition": "{{style=='pin' && !unsupported}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/pages/badge-3d/index.js:98"
+      }
+    },
+    {
+      "id": "subpackageP3/pages/badge-3d/index.wxml:21:bind:unsupported:onUnsupported:5",
+      "route": "subpackageP3/pages/badge-3d/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageP3/pages/badge-3d/index.wxml",
+        "js": "subpackageP3/pages/badge-3d/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "pin-spin",
+        "event": "bind:unsupported",
+        "handler": "onUnsupported",
+        "line": 21,
+        "selectorHint": ".b3__xr",
+        "visibleCondition": "{{style=='pin' && !unsupported}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/pages/badge-3d/index.js:104"
       }
     },
     {
@@ -1344883,11 +1345337,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-3d/index.js:222"
+        "staticSource": "subpackageP3/pages/badge-3d/index.js:224"
       }
     },
     {
-      "id": "subpackageP3/pages/badge-wall/index/index.wxml:104:bindtap:goBadge3d:12",
+      "id": "subpackageP3/pages/badge-wall/index/index.wxml:104:bindtap:goBadge3d:13",
       "route": "subpackageP3/pages/badge-wall/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1344912,7 +1345366,7 @@
         "handler": "goBadge3d",
         "line": 104,
         "selectorHint": ".bw-sh-3d",
-        "visibleCondition": "{{sheet.style=='enamel'}}",
+        "visibleCondition": "{{sheet.style=='enamel' || (!sheet.iconUrl && sheet.pinId && !sheet.locked)}}",
         "disabledCondition": null,
         "ariaLabel": "查看 3D 徽章",
         "ariaLabelExpression": null,
@@ -1344936,7 +1345390,8 @@
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "subpackageP3/pages/badge-3d/index?name="
+          "subpackageP3/pages/badge-3d/index?name=",
+          "subpackageP3/pages/badge-3d/index?style=pin&glyph="
         ],
         "apis": [],
         "primaryApis": [],
@@ -1345020,7 +1345475,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:406"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:410"
       }
     },
     {
@@ -1345088,7 +1345543,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:400"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:404"
       }
     },
     {
@@ -1345156,7 +1345611,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:400"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:404"
       }
     },
     {
@@ -1345223,7 +1345678,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:406"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:410"
       }
     },
     {
@@ -1345290,7 +1345745,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:447"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:451"
       }
     },
     {
@@ -1345357,7 +1345812,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:447"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:451"
       }
     },
     {
@@ -1345427,7 +1345882,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:449"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:453"
       }
     },
     {
@@ -1345497,7 +1345952,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:453"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:457"
       }
     },
     {
@@ -1345682,7 +1346137,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:441"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:445"
       }
     },
     {
@@ -1345750,7 +1346205,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:420"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:424"
       }
     },
     {
@@ -1345817,7 +1346272,78 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:441"
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:445"
+      }
+    },
+    {
+      "id": "subpackageP3/pages/badge-wall/index/index.wxml:95:bindtap:goBadge3d:12",
+      "route": "subpackageP3/pages/badge-wall/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
+        "js": "subpackageP3/pages/badge-wall/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cover-image",
+        "event": "bindtap",
+        "handler": "goBadge3d",
+        "line": 95,
+        "selectorHint": ".bw-sh-pin",
+        "visibleCondition": "{{!sheet.iconUrl && pins[sheet.pinId]}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "旋转查看{{sheet.name}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageP3/pages/badge-3d/index?name=",
+          "subpackageP3/pages/badge-3d/index?style=pin&glyph="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:392"
       }
     },
     {

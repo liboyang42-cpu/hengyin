@@ -277,7 +277,8 @@ module.exports = {
     // 2026-10-27 L05 P-20:广场行内发布框撤掉,square/list 五条零消费债务(longitude/latitude/fileList/popOrig/popShow)随字段一并删除,126→121。
     // 2026-10-27 devfix L07:temp#useNum 零消费债务已还(回填时不再写进 data),126→125。
     // 2026-10-27 L11 集成:L05 还清 5 条 + L07 还清 1 条,126 → 120。
-    "u4Field": 120,
+    // 2026-10-28 珐琅勋章可旋转:badge-3d#rarity 被 pin-spin 的 track="{{rarity}}" 真消费,零消费债务还清,120 → 119。
+    "u4Field": 119,
       // 2026-08-26 圈层主题接回主题货架:新增 circleTheme import,两条 _coverFail 动态 setData
       //   等量下移(269→270 / 281→282,行号取门禁实测)。调用点与强化理由不变,显式改 digest。
     // 2026-08-27 合并 #883:activity/list 三条 U4-DYNAMIC 登记行号 +2(129→131/151→153/231→233,
@@ -444,7 +445,7 @@ module.exports = {
       // 2026-09-19 批复1-a=2 还清:partner#toType/toId 两条随页复活短暂回账(151 键)后当场还债出账,
       //   key 集回到退役前那份 149,digest 按当前 key 集合实算。
 // 2026-10-27 devfix L07(temp#useNum 债务出账):逐条以 master 原行与新行逐字比对一致,理由一字未改,digest 按门禁同算法重算。
-"u4Debt": "14dd136e1d232e110a56e4c14da0c4685b5c61ecf5b30f7dc64c0477296e4381",
+"u4Debt": "db19c7e700472ace8a0776302b9324508bf0f99e8fac5ff792c2e91d61ae2507",
       // 2026-08-17 漫游 S1 施工:条数不变(65),只是 pages/roam/index.js 的两处
       //   `...this._calcArch()` 动态 setData 行号从 3263/3305 移到 3261/3303
       //   (删掉 _apiCheckin 与 /api/play/arrive 那段后整段上移)。
@@ -1242,7 +1243,6 @@ module.exports = {
     "chengyinhub-xcx/subpackageMember/mytemplate/mytemplate.js#total": "存量零消费债务：total 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/subpackageMember/signup/index.js#hasMore": "存量零消费债务：hasMore 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/subpackageMember/signup/index.js#nodata": "存量零消费债务：nodata 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
-    "chengyinhub-xcx/subpackageP3/pages/badge-3d/index.js#rarity": "存量零消费债务：rarity 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/subpackageRoam/citynode-code/index.js#poiId": "存量零消费债务：poiId 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30"
   },
   // 2026-08-25 模板页删「圈层自由探索」「热门节点榜」两节:条数不变(54),
