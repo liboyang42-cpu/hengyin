@@ -62,8 +62,7 @@ class Doc2L8MapperMyBatisIT {
                     "sql/migration_20261022_theme_state_key_attribute_def.sql",
                     "sql/migration_20261026_theme_attribute_registry_version.sql");
             try (Statement st = session.getConnection().createStatement()) {
-                st.execute("drop table if exists cms_topic");
-                st.execute("create table cms_topic(id bigint primary key, name varchar(64), journey_rules_json longtext)");
+                createTopicTable(st);
                 st.execute("insert into cms_topic values(7,'雾港夜行','{\"schemaVersion\":1,\"stateEnabled\":true,\"attributes\":["
                         + "{\"key\":\"counter.focus\",\"label\":\"专注\",\"initial\":2,\"min\":0,\"max\":12,\"visible\":true},"
                         + "{\"key\":\"counter.stamina\",\"label\":\"体力\",\"initial\":3,\"min\":0,\"max\":9,\"visible\":false},"
@@ -152,7 +151,7 @@ class Doc2L8MapperMyBatisIT {
                         "cms_topic", "club_governance_ban"}) {
                     st.execute("drop table if exists " + table);
                 }
-                st.execute("create table cms_topic(id bigint primary key, name varchar(64))");
+                createTopicTable(st);
                 st.execute("create table topic_route_session(id bigint primary key, topic_id bigint)");
                 st.execute("create table orient_score_appeal(id bigint primary key, session_id bigint, member_id bigint,"
                         + " node_id bigint, status tinyint, resolution_note varchar(500), create_time datetime(3))");
@@ -160,7 +159,7 @@ class Doc2L8MapperMyBatisIT {
                         + " status tinyint, resolution_note varchar(500), create_time datetime(3))");
                 st.execute("create table club_governance_ban(id bigint primary key, club_id bigint, target_member_id bigint,"
                         + " status varchar(16), source_type varchar(16), expires_at datetime)");
-                st.execute("insert into cms_topic values(5,'城南旧事 · 夜行定向')");
+                st.execute("insert into cms_topic(id,name) values(5,'城南旧事 · 夜行定向')");
                 st.execute("insert into topic_route_session values(88001,5)");
                 st.execute("insert into orient_score_appeal values(1,88001,9,3,2,'计分记录与现场一致','2026-10-28 20:00:00')");
                 st.execute("insert into orient_score_appeal values(2,88001,10,3,0,null,'2026-10-28 20:30:00')");
@@ -189,6 +188,12 @@ class Doc2L8MapperMyBatisIT {
             assertEquals(1, mapper.countEffectiveBans(11L, now));
             assertEquals(0, mapper.countEffectiveBans(12L, now));
         }
+    }
+
+    /** 本类唯一一条 cms_topic 建表(列取两处用到的并集);别在别处再建。 */
+    private static void createTopicTable(Statement st) throws Exception {
+        st.execute("drop table if exists cms_topic");
+        st.execute("create table cms_topic(id bigint primary key, name varchar(64), journey_rules_json longtext)");
     }
 
     private static ThemeStateKey key(String name) {
