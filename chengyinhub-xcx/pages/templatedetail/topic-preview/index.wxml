@@ -1,8 +1,8 @@
-<view class="tp {{ reducedMotion ? 'cy-motion-reduced' : '' }}" style="--glow: {{ glow }};">
+<view class="tp {{ light ? 'tp--light theme-merchant' : 'theme-dark' }} {{ reducedMotion ? 'cy-motion-reduced' : '' }}" style="--glow: {{ glow }};">
   <cy-toast id="cy-toast" />
   <cy-modal-host id="cy-modal-host" />
   <view class="tp-glow" aria-hidden="true"></view>
-  <cy-nav-bar overlay tint="dark" />
+  <cy-nav-bar overlay tint="{{ light ? 'dark' : 'light' }}" />
 
   <view wx:if="{{ loading }}" class="tp-state"><cy-skeleton type="detail" count="1" loading-label="正在加载主题模板" /></view>
   <view wx:elif="{{ errorMsg }}" class="tp-state">

@@ -67,6 +67,7 @@ Page({
     entered: false,
     settled: true,
     reducedMotion: false,
+    light: false,
     navTop: (getApp().globalData.statusBarHeight || 20) + (getApp().globalData.navBarHeight || 44)
   },
 
@@ -75,7 +76,8 @@ Page({
     this._id = options.id;
     this._scope = options.scope === 'MERCHANT' ? 'MERCHANT' : '';
     this._readonly = options.readonly === '1';
-    this.setData({ reducedMotion: readReducedMotion() });
+    // 商家侧一律浅色(业主规则):只换颜色，版式同玩家侧深色版
+    this.setData({ reducedMotion: readReducedMotion(), light: this._scope === 'MERCHANT' });
     this.load();
   },
 

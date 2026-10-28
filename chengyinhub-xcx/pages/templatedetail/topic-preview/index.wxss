@@ -41,3 +41,17 @@ page { background: #000; } /* ds-ok 预览页固定纯黑底(原型 .px) */
 .tp-cta::before { content: ""; position: absolute; left: -32rpx; right: -32rpx; top: -80rpx; bottom: -200rpx; background: linear-gradient(180deg, rgba(0, 0, 0, 0), #000 55%); z-index: -2; } /* ds-ok 原型 .fab-bar.x 底部渐隐 */
 .tp-cta__glow { position: absolute; left: 10%; right: 10%; top: -60rpx; height: 120rpx; border-radius: 50%; background: var(--glow); filter: blur(28px); z-index: -1; opacity: .9; }
 .tp-cta__btn { height: 96rpx; border-radius: 999rpx; background: #F8F8F8; color: #0A0A0A; display: flex; align-items: center; justify-content: center; font-size: 30rpx; font-weight: 700; } /* ds-ok 原型 .btn.pri 白色主按钮 */
+
+/* ---- 商家侧浅色(业主规则：商家一律浅色)—— 只换颜色，版式不变；色值同货架 .shelf--light ---- */
+.tp--light { background: #FFFFFF; color: #111114; } /* ds-ok 同货架商家浅色 */
+.tp--light .tp-glow { opacity: .35; }
+.tp--light .tp-state__t { color: rgba(17, 17, 20, 0.55); } /* ds-ok 同货架商家浅色 */
+.tp--light .tp-state__btn { background: rgba(17, 17, 20, 0.06); } /* ds-ok 同货架商家浅色 */
+.tp--light .fc, .tp--light .bk { box-shadow: 0 24rpx 60rpx rgba(17, 17, 20, 0.16); } /* ds-ok 浅底卡面阴影 */
+.tp--light .fc { background: #E9E9EE; } /* ds-ok 同货架商家浅色 */
+.tp--light .fc__err, .tp--light .bk__no, .tp--light .bk__ft { color: rgba(17, 17, 20, 0.45); } /* ds-ok 同货架商家浅色 */
+.tp--light .bk { background: #FFFFFF; border-color: rgba(17, 17, 20, 0.1); } /* ds-ok 同货架商家浅色 */
+.tp--light .bk__li { color: rgba(17, 17, 20, 0.88); } /* ds-ok 同货架商家浅色 */
+.tp--light .tp-ck__ic { filter: invert(1); }
+.tp--light .tp-cta::before { background: linear-gradient(180deg, rgba(255, 255, 255, 0), #FFFFFF 55%); } /* ds-ok 浅底底部渐隐 */
+.tp--light .tp-cta__btn { background: #111114; color: #FFFFFF; } /* ds-ok 浅底主按钮反色 */

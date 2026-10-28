@@ -1188145,7 +1188145,7 @@
       "route": "pages/templatedetail/topic-preview/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/templatedetail/topic-preview/index.wxml",
         "js": "pages/templatedetail/topic-preview/index.js"
@@ -1188247,7 +1188247,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:89"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:91"
       }
     },
     {
@@ -1188255,7 +1188255,7 @@
       "route": "pages/templatedetail/topic-preview/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/templatedetail/topic-preview/index.wxml",
         "js": "pages/templatedetail/topic-preview/index.js"
@@ -1188314,7 +1188314,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:183"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:185"
       }
     },
     {
@@ -1188322,7 +1188322,7 @@
       "route": "pages/templatedetail/topic-preview/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/templatedetail/topic-preview/index.wxml",
         "js": "pages/templatedetail/topic-preview/index.js"
@@ -1188382,7 +1188382,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:177"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:179"
       }
     },
     {
@@ -1188390,7 +1188390,7 @@
       "route": "pages/templatedetail/topic-preview/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/templatedetail/topic-preview/index.wxml",
         "js": "pages/templatedetail/topic-preview/index.js"
@@ -1188449,7 +1188449,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:193"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:195"
       }
     },
     {
@@ -1188457,7 +1188457,7 @@
       "route": "pages/templatedetail/topic-preview/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/templatedetail/topic-preview/index.wxml",
         "js": "pages/templatedetail/topic-preview/index.js"
@@ -1188516,7 +1188516,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:166"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:168"
       }
     },
     {
@@ -1188524,7 +1188524,7 @@
       "route": "pages/templatedetail/topic-preview/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/templatedetail/topic-preview/index.wxml",
         "js": "pages/templatedetail/topic-preview/index.js"
@@ -1188626,7 +1188626,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:202"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:204"
       }
     },
     {
