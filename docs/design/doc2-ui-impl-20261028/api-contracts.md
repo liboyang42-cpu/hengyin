@@ -6,7 +6,8 @@
 - 返回统一是 RuoYi `AjaxResult`：`{code, msg, data}`。`code=200` 成功；业务拒绝 `code=500`（或下面写明的 400 / 404 / 409），`msg` 是一句中文。
 - 表里「后端原话」一栏的字符串，界面按原样显示，**不改字**。没列的拒绝文案界面统一写「没有保存成功，请再试一次。」或各自的出错句。
 - 创作者接口（`/api/topic/...`）的归属闸和现有状态键接口完全一致：登录 → 可选 `scope=MERCHANT`（商家 Owner 代管，需 `PROJECT_MANAGE`）→ 主题本人。拒绝原话：「请先登录」「主题不存在」「无权操作该主题」。
-- 创作者写接口还有编辑窗口闸（与 `/api/topic/update` 同口径）：主题进入售卖冻结后拒绝，原话「这个主题现在不能修改。」，`errorCode=TOPIC_FROZEN`。
+- 本文件里**新**的创作者写接口还有编辑窗口闸（与 `/api/topic/update` 同口径）：主题进入售卖冻结后拒绝，原话「这个主题现在不能修改。」，`errorCode=TOPIC_FROZEN`。已有的 `/api/topic/state-keys` 接口仍是它自己的原话（「主题已进入 SELLING，创作者接口不能修改状态键注册表」），界面不显示。
+- 校验失败统一 `code=400` + `errorCode`（属性 / 键为 `STATE_KEY_INVALID`，开局设置为 `PLAY_SETUP_INVALID`）；不存在 `code=404`；被用到不能删 `code=409` + `errorCode=STATE_KEY_IN_USE`。
 - 键名（`clue.*` / `tag.*` / `counter.*`）、`preset`、`kind`、`mode` 等是机器值，**界面不显示**；只显示 `label` / `name`。
 - 标「已有」的是 master / #625 已有的接口，本 PR 不改；标「新」的是本 PR 新增。
 
@@ -51,7 +52,7 @@
 
 ### 1.3 读 · 玩家（主题详情「开局前准备」一行与半屏）　`GET /api/play/setup?topicId=`　新
 
-不需要登录（游客也看得到）。只读已发布、未删除的主题；否则 `msg=主题不存在`。
+需要登录（`msg=请先登录`；原型 B 的游客态「登录后查看开局前准备」）。只读已发布（`status=1`）、未删除的主题；否则 `msg=主题不存在`。
 ```json
 { "code": 200, "data": {
   "playWindow": { "mode": "night", "start": "20:00", "end": "06:00" },
@@ -68,7 +69,7 @@
 
 - 在**新建游玩局**的那一刻检查（`TopicRouteRuntimeServiceImpl` 分支局与线性旅程局两个建局点）；已有的局续玩不拦。
 - 只对 **自由探索 / 个人票**（`activityId=0`，主题没有俱乐部）生效；俱乐部主题、赛事局一律不看时段（E2）。
-- 拒绝时现有游玩接口照常返回错误，原话：**「当前不在可玩时段，暂时不能开局。」**
+- 拒绝时现有游玩接口照常返回错误（与「路线尚未发布」同一通道），原话：**「当前不在可玩时段，暂时不能开局。」**
 - 准备项勾选只在前端，后端不记录。未成年夜间规则仍只在 `POST /api/orient/safety/check`（已有，不改）。
 
 ---
@@ -125,8 +126,10 @@
 } }
 ```
 - `attributes` 按 `sortOrder` 排（状态栏第二行取前 3，A4）。
-- `binding` + `projection`：保存主题时原样放进 `journeyRules.attributeBinding` 和 `journeyRules.attributes`（属性部分），并带 `stateEnabled: true`。这是现有发布冻结（registry → journeyRules，C-1）的入口，前端不用再做「我确认采用」。每次属性写接口成功后都要重新读一次拿新的 `registryVersion`。
-- **A1 旧值自动迁移**：老主题 `journeyRules.attributes` 里的 `counter.*` 行（「自定义整数值」，进度钟用的键除外）由迁移 `migration_20261028_d20_attribute_registry.sql` 一次性写进注册表并标成属性；迁移后才出现的同类行，第一次 GET 时服务端自动补登记（同一套规则，幂等）。补登记后的 `preset=custom`。
+- `binding` + `projection`：保存主题（`/api/topic/update`）时把 `binding` 原样放进 `journeyRules.attributeBinding`，把 `projection` 原样作为**整个** `journeyRules.attributes`，并带 `stateEnabled: true`（`projection` 为空时可不带这三项）。这是 #625 已有的发布冻结（registry → journeyRules，C-1）的入口，前端不用再做「我确认采用」。
+- `projection` 的内容 = 属性（按排序）+ 数值（3.1 `kind=counter`，进度钟的键除外）+ 开局带着的线索 / 标签（3.5）。形状 `{key, label, initial, min, max, visible}`，与注册表逐字一致，前端不要改。
+- 任何属性 / 键的写接口成功后，保存主题前都要重新 GET 一次，拿新的 `registryVersion`；版本对不上时保存返回 #625 的原话「注册版本缺失或不规范，请重新读取」/「属性注册版本已变化，请重新读取并确认」（409），界面写「没有保存成功，请再试一次。」并重新读取。
+- **A1 旧值自动迁移**：老主题 `journeyRules.attributes` 里的 `counter.*` 行（「自定义整数值」，进度钟用的键除外）由迁移 `migration_20261028_d20_attribute_registry.sql` 一次性写进注册表并标成属性；迁移后才出现的同类行，作者第一次 GET 时服务端自动补登记（同一套规则，幂等；售卖冻结的主题只读、不补）。已登记的同名键只补「是属性」标记，不改它的名字、范围和初值；名字为空或范围不合法的旧行跳过。补登记的 `preset=custom`。老主题可能超过 6 项，全部保留，只是满 6 项时不能再加。
 
 **预设（A3，作者看不到显示方式）**
 
@@ -176,7 +179,7 @@
 
 body `{topicId, scope, kind, label}`，`kind`：`clue` 线索 / `tag` 标签 / `counter` 数值（进度钟的 `var` 也用 `counter`）。
 
-返回 `{key, kind, label}`。键名：`clue.k1`、`clue.k2`…（`tag.k*`、`counter.v*` 同理，按主题内递增，不复用）。
+返回 `{key, kind, label}`。键名：`clue.k1`、`clue.k2`…（`tag.k*`、`counter.v*` 同理，取本主题同前缀现有最大编号 + 1）。
 
 | 校验 | 后端原话 |
 |---|---|
@@ -196,10 +199,11 @@ body `{topicId, scope, key, label}` → 返回 `{key, kind, label}`。只改 `la
 
 ```json
 { "code": 200, "data": { "items": [
-  { "key": "clue.k1", "kind": "clue", "label": "半张货单", "sortOrder": 1,
+  { "key": "clue.k1", "kind": "clue", "label": "半张货单", "sortOrder": 1, "startWith": true,
     "usedIn": ["节点「仓库侧门」", "初始状态"] }
 ] } }
 ```
+- `startWith`：开局带着（3.5）；数值恒为 `false`。
 - `kind`：`clue` / `tag` / `counter`（不含属性，属性只在 2.4）；进度钟用的 `counter` 也不在这里。
 - `usedIn` 的每一项是作者可读的位置：`节点「名字」`、`章节故事流`、`主题剧情配置`、`主题数值规则`、`初始状态`、`进度钟`。空数组 = 没被用到，可以删。
 - 主题里有读不懂的旧配置时，`usedIn` 不可信，整条接口返回 `msg=主题里有无法读取的配置，暂时不能查看用在哪里。`（界面用自己的出错句）。
@@ -211,9 +215,11 @@ body `{topicId, scope, key, label}` → 返回 `{key, kind, label}`。只改 `la
 - 已有的 `DELETE /api/topic/state-keys`（返回带键名的一句话）保留不动，新界面不再调用。
 - 属性删除（2.4）返回同一形状。
 
-### 3.5 初始状态 · 开局带着　已有
+### 3.5 初始状态 · 开局带着　`PUT /api/topic/state-keys/start`　新
 
-`journeyRules.attributes` 里 `clue.*` / `tag.*` 且 `initial=1` 的行，开局写进背包线索 / 标签（`JourneyInitialState.initialize`）。行的 `label` 用 3.1 返回的 `label`。开局物品：未做（待业主决定 2）。
+body `{topicId, scope, keys:["clue.k1","tag.k2"]}`：整组覆盖，列表里的线索 / 标签开局带着（注册表初值 1），其余线索 / 标签不带（0）。返回 `{items}`，同 3.3。键不存在 → `code=404`，`msg=这一项不存在。`。
+
+运行期仍是已有路径：`journeyRules.attributes` 里 `initial=1` 的 `tag.*` 开局写进标签（`JourneyInitialState.initialize`）；这些行由 2.4 的 `projection` 带上，前端不要手写。开局物品：未做（待业主决定 2）。
 
 ---
 
