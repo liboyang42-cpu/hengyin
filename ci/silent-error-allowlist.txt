@@ -140,7 +140,7 @@ chengyinhub-xcx/pages/shezhi/shezhi.js 1  # 2026-08-25 状态底座:调用点自
 chengyinhub-xcx/pages/square/detail/index.js 10  # 2026-09-21 状态底座:读取失败落页内错误态;收藏等提交动作自带精确 toast,通用 toast 会双弹
 chengyinhub-xcx/pages/square/list/index.js 5  # 2026-09-21 状态底座:背景预取静默降级;列表失败落页内错误态;收藏动作自带精确 toast
 chengyinhub-xcx/pages/talent/list/index.js 3  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
-chengyinhub-xcx/pages/templatedetail/shelf/index.js 1  # 2026-10-28 模板页货架移进分包组件(原 pages/template/index.js 3 处收回):两个列表请求共用一个 request 包装，失败落组件内 cy-error 错误态，通用 toast 会双弹
+chengyinhub-xcx/pages/templatedetail/shelf/index.js 2  # 2026-10-28 模板页货架移进分包组件(原 pages/template/index.js 3 处收回):主题列表与玩法列表(分页)两处请求，失败各落组件内 cy-error 错误态，通用 toast 会双弹
 chengyinhub-xcx/pages/templatedetail/topic-preview/index.js 1  # 2026-10-28 主题卡堆预览：详情读取失败落页内错误态 + 重试，通用 toast 会双弹
 chengyinhub-xcx/pages/templatedetail/templatedetail.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js 1  # 2026-08-25 商家项目页:待审核节点加载失败落 pendingMerchantNodesState:error 并可重试;通用 toast 会双弹

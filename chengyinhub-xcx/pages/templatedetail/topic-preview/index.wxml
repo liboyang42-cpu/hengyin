@@ -4,7 +4,7 @@
   <view class="tp-glow" aria-hidden="true"></view>
   <cy-nav-bar overlay tint="dark" />
 
-  <view wx:if="{{ loading }}" class="tp-state"><view class="tp-skel"></view></view>
+  <view wx:if="{{ loading }}" class="tp-state"><cy-skeleton type="detail" count="1" loading-label="正在加载主题模板" /></view>
   <view wx:elif="{{ errorMsg }}" class="tp-state">
     <text class="tp-state__t">{{ errorMsg }}</text>
     <view class="tp-state__btn" bindtap="load" aria-role="button" aria-label="重试" hover-class="cy-pressed" hover-stay-time="80">重试</view>
