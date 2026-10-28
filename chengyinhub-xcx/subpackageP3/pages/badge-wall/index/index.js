@@ -9,7 +9,7 @@
 const app = getApp();
 const { recoverReadSession } = require('../../../../utils/session/login-reload.js');
 const { resolveMenuChrome } = require('../../../../utils/nav-safe-area.js'); const pageMotion = require('../../../../utils/page-motion.js');
-const ENGINE = require('./engine.js'); const ENAMEL = require('./enamel-pin.js'); const PIN_PX = 320; function pinIdOf(b) { return (b.glyph || 'DEFAULT') + (b.locked ? '_l' : ''); } // 2026-10-28 业主:珐琅徽章(enamel-pin.js)
+const ENGINE = require('./engine.js'); const ENAMEL = require('./enamel-pin.js'); const PIN_PX = 420; function pinIdOf(b) { return (b.glyph || 'DEFAULT') + (b.locked ? '_l' : ''); } // 2026-10-28 业主:珐琅徽章(enamel-pin.js)
 const { chinaDateKey } = require('../../../../utils/datetime');
 const { isRecord, isRecordList } = require('../../../../utils/response-shape.js');
 const { sendUiStateRequest } = require('../../../../utils/ui-state-request.js');
@@ -391,6 +391,10 @@ Page({
   /** 双样式分流:enamel 徽章从墙上点开 3D 转台 */
   goBadge3d() {
     const sh = this.data.sheet || {};
+    if (!sh.iconUrl && sh.pinId && !sh.locked) { // 2026-10-28 业主:珐琅勋章点开能转(badge-3d 的 pin 样式)
+      wx.navigateTo({ url: '/subpackageP3/pages/badge-3d/index?style=pin&glyph=' + encodeURIComponent(sh.glyph) + '&name=' + encodeURIComponent(sh.name || '徽章') + '&rarity=' + (sh.rarity || 0) });
+      return;
+    }
     wx.navigateTo({ url: '/subpackageP3/pages/badge-3d/index?name=' + encodeURIComponent(sh.name || '徽章')
       + '&style=' + (sh.style || 'glow') + '&rarity=' + (sh.rarity || 0)
       + (sh.iconUrl ? '&img=' + encodeURIComponent(sh.iconUrl) : '') });
@@ -426,7 +430,7 @@ Page({
     this.setData({
       sheetOn: true,
       sheet: {
-        style: b.style || 'glow', iconUrl: b.iconUrl || '', rarity: b.rarity || 0, pinId: pinIdOf(b),
+        style: b.style || 'glow', iconUrl: b.iconUrl || '', rarity: b.rarity || 0, pinId: pinIdOf(b), glyph: b.glyph || 'DEFAULT', locked: !!b.locked,
         name: b.name,
         rarZh: b.tierZh || meta.zh,
         rarColor: b.rarity === 4 ? 'var(--cy-color-status-danger)' : meta.css,
@@ -487,8 +491,8 @@ Page({
    *  同一枚(已点亮 / 未解锁各一张)整页只画一次,画失败的不再重试,格子里就空着底板位置。 */
   _renderPins(list) {
     const tried = this._pinTried || (this._pinTried = {});
-    const todo = [];
-    list.forEach(function (b) { const id = pinIdOf(b); if (!b.iconUrl && !tried[id] && todo.indexOf(id) < 0) todo.push(id); });
+    const todo = [], track = {};
+    list.forEach(function (b) { const id = pinIdOf(b); track[id] = b.rarity; if (!b.iconUrl && !tried[id] && todo.indexOf(id) < 0) todo.push(id); });
     if (!todo.length || this._pinBusy) return;
     this._pinBusy = true;
     const that = this;
@@ -501,7 +505,7 @@ Page({
         if (i >= todo.length || that._unloaded) { that._pinBusy = false; if (!that._unloaded) that._renderPins(that.data.badges || []); return; }
         const id = todo[i];
         tried[id] = true;
-        try { ENAMEL.render(ctx, PIN_PX, id.replace(/_l$/, ''), /_l$/.test(id)); } catch (e) { next(i + 1); return; }
+        try { ENAMEL.render(ctx, PIN_PX, id.replace(/_l$/, ''), /_l$/.test(id), ENAMEL.optsFor(track[id])); } catch (e) { next(i + 1); return; }
         wx.canvasToTempFilePath({
           canvas: canvas, fileType: 'png', destWidth: PIN_PX, destHeight: PIN_PX,
           success(r) { if (!that._unloaded) that.setData({ ['pins.' + id]: r.tempFilePath }); },

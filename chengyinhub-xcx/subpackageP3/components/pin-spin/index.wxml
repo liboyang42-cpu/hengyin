@@ -1,0 +1,4 @@
+<!-- 2026-10-28 业主:珐琅勋章可以点着转。点一下转两圈停回正面;按住左右拖动,松手带惯性 -->
+<canvas type="2d" id="spincv" class="spincv"
+        bindtouchstart="onTouchStart" bindtouchmove="onTouchMove" bindtouchend="onTouchEnd" bindtouchcancel="onTouchEnd"
+        aria-role="img" aria-label="可点按或拖动旋转的勋章"></canvas>

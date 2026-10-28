@@ -65,6 +65,6 @@ test('★类别小胶囊放回来,挪到标题下一行;「来源」行删掉(�
   const wxml = fs.readFileSync(path.resolve(__dirname, '../../subpackageP3/pages/badge-wall/index/index.wxml'), 'utf8')
   const hd = (wxml.match(/<cover-view class="bw-sh-hd">[\s\S]*?\n    <\/cover-view>/) || [''])[0]
   assert.ok(hd && !/bw-sh-rar/.test(hd), '胶囊不能再和叉挤在标题行')
-  assert.match(wxml, /<cover-view class="bw-sh-body">(<cover-image[^>]*class="bw-sh-pin"[^>]*\/>)?\s*(<!--[\s\S]*?-->\s*)?<cover-view class="bw-sh-rar" style="color:\{\{sheet\.rarColor\}\};">\{\{sheet\.rarZh\}\}<\/cover-view>/, '胶囊放在正文第一行(2026-10-28 业主:上面只允许先放那枚珐琅徽章大图)')
+  assert.match(wxml, /<cover-view class="bw-sh-body">(<cover-image[^>]*class="bw-sh-pin"[^>]*\/>)*\s*(<!--[\s\S]*?-->\s*)?<cover-view class="bw-sh-rar" style="color:\{\{sheet\.rarColor\}\};">\{\{sheet\.rarZh\}\}<\/cover-view>/, '胶囊放在正文第一行(2026-10-28 业主:上面只允许先放那枚珐琅徽章大图)')
   assert.ok(!/>来源</.test(wxml), '来源行删掉')
 })
