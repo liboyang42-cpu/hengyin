@@ -1430,13 +1430,6 @@ function runRepoScan() {
     ...baselineContract('U5', U5_SILENT_ALLOWLIST, u5.callsites.map((item) => item.key),
       ratchet.u5Silent, NON_INCREASING_CEILING.u5Silent, ratchet.keyDigest.u5Silent),
   ];
-  if (process.env.GITHUB_ACTIONS === 'true' && process.env.SOURCE_INVENTORY_DIR) {
-    fs.mkdirSync(process.env.SOURCE_INVENTORY_DIR, { recursive: true });
-    fs.writeFileSync(path.join(process.env.SOURCE_INVENTORY_DIR, 'ui-source-observations.json'),
-      JSON.stringify({ sourceSha: process.env.GITHUB_SHA, runId: process.env.GITHUB_RUN_ID,
-        runAttempt: process.env.GITHUB_RUN_ATTEMPT, scope: 'SOURCE_METADATA_ONLY_NOT_BUSINESS_ACCEPTANCE',
-        baseline: BASELINE, observations: { u1, u3, u4, u5 } }, null, 2) + '\n');
-  }
   const violations = [
     ...u1.violations, ...u2Violations, ...u3.violations, ...u4.violations,
     ...u5.violations, ...enforcedLegacyViolations(legacy), ...baselineViolations, ...a11y,

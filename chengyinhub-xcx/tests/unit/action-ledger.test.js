@@ -1,4 +1,4 @@
-// 2026-10-28 整批公共合并源4efbd7ef：原hosted生成器实测5556控件，非external的tap2429/event2705；全部证据仍pending，不代业务或设备验收。
+// 2026-10-28 整批公共合并源9238ba04：原hosted生成器实测5556控件，非external的tap2429/event2705；全部证据仍pending，不代业务或设备验收。
 // 2026-10-20 修复并集实测：城市定位开关2个tap、四处登录/重试CTA、隐私与录音动作重分类；差异逐项见 docs/plans/mini-completion-20261020/anchor-receipt.json。
 // 2026-10-05 弹窗整合后按最终源码重建实测，精确分母同步；动作验收要求不变。
 const test = require('node:test')
