@@ -11209,6 +11209,8 @@ topic-state-keys .sk-row{display: flex; align-items: center; gap: 8.32px; paddin
 topic-state-keys .sk-row__main{flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2.08px;}
 topic-state-keys .sk-row__key{font-size: var(--cy-type-body); word-break: break-all;}
 topic-state-keys .sk-row__sub{font-size: var(--cy-type-label); color: var(--cy-color-text-secondary);}
+topic-state-keys .sk-row__v{flex: none; font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); font-variant-numeric: tabular-nums;}
+topic-state-keys .sk-row__chev{flex: none; display: inline-flex; color: var(--cy-color-text-tertiary);}
 topic-state-keys .sk-row__del{flex: none; padding: 8.32px; font-size: var(--cy-type-body); color: var(--cy-color-status-danger);}
 topic-state-keys .sk__add{align-self: flex-start;}
 topic-state-keys .sk-form{display: flex; flex-direction: column; gap: 8.32px;}
@@ -12160,6 +12162,15 @@ body.clean .scr .need{display:none}
 .ov-empty__t{display:block;font-size:var(--cy-type-section-title);font-weight:700}
 .ov-empty__s{display:block;margin:6px 0 18px;font-size:var(--cy-type-label);color:var(--cy-color-text-tertiary)}
 .ov-empty .btn{display:inline-flex;min-width:120px}
+.ov-empty__t + cy-btn{display:block;margin-top:18px}
+.sc-rank__of{font-size:calc(22.88px * var(--cy-type-scale,1));font-weight:700;color:var(--cy-color-text-tertiary);font-variant-numeric:tabular-nums}
+.pg-play .proto-fje-v{margin-left:auto;margin-right:6px;font-size:var(--cy-type-label);color:var(--cy-color-text-secondary)}
+.pg-temp .cg-cfg-act{display:inline-block;margin:var(--cy-space-2) 0 12.48px;font-size:var(--cy-font-label);color:var(--cy-color-brand-strong);font-weight:600;cursor:pointer}
+.pg-temp #skillPick .cg-pick{margin-bottom:12.48px}
+.pg-temp #skillPick .cg-pick + .cg-cfg-act{margin-top:0}
+.pg-temp .cg-adv-section + .cg-cfg-label{margin-top:var(--cy-space-4)}
+/* 10-28 去掉次级说明：「不出现」的状态整块不画，说明在右栏 */
+#timeCard[data-cur="club"], #altCard[data-cur="off"], #bargainSec[data-cur="off"], #bargainOffer[data-cur="off"], #finRpg[data-cur="off"], #charRow[data-cur="d20off"], #sessRows[data-cur="off"]{display:none !important}
 @media (prefers-reduced-motion: reduce){.cc-in,.cc-fig,.sc-rank,.pg-play .ov.is-open{animation:none;opacity:1;transform:none}.cc-fog,.sc-rays{animation:none}}
 /* 原生 modal 可输入（wx.showModal editable） */
 .wx-modal .in{display:none;margin:-12px 20px 22px;padding:10px 12px;min-height:64px;border-radius:8px;background:rgba(0,0,0,.05);font:15px/1.45 -apple-system,"PingFang SC",sans-serif;text-align:left;color:inherit;border:0;outline:0;resize:none;width:calc(100% - 40px);box-sizing:border-box}
@@ -12329,19 +12340,17 @@ body.clean .scr .need{display:none}
       <view class="node-card__hr"></view>
       <!-- 10-27 业主：d20、RPG 规则、角色属性合成一个入口 -->
       <view class="mk-chg" id="d20Entry" data-mk="d20 检定（一个入口）" data-before="四处分开：值域卡「角色属性 · 4 项 · 去定义」一行；这里「天然 20 / 天然 1」开关；一张长「RPG 规则」卡（环境 / 进度钟 / 魔鬼交易 / 动量 / 特质，带数字输入）；状态键表单里的「作为角色属性」一段" data-after="只剩一个开关「骰子检定（d20）」；开着时下面多一行「d20 与角色设定 · 4 项属性 · 规则：标准」，点开是分层半屏。关着时，编辑器、状态栏、检定明细、章节小结、角色卡都不出现任何属性" data-why="业主 10-27：d20、RPG 规则和角色属性是一回事，放在一起。开关 = journeyRules.checkEnabled（JourneyRules.java，已有）；分层半屏里的东西仍写进已有字段：属性 → 状态键注册表（C-1），规则 → journeyRules.natAuto / tiers / modCap / rpg。" data-states="on,off,noperm" data-st-name="d20 检定" data-cur="on">
-        <view class="node-card__row">
+        <view class="node-card__row mk-chg" data-mk="去掉开关说明" data-before="标题下一行小字：开着「玩家掷二十面骰，加上属性值通过检定」；关着「关闭后不使用骰子和属性」" data-after="只留「d20 检定」和开关" data-why="业主 10-28：去掉次级说明，让版式自己说明。">
           <view class="node-card__ico"><cy-icon><view class="cyi cyi--star-filled" style="width:16.64px;height:16.64px"></view></cy-icon></view>
-          <view class="node-card__main"><text class="node-card__title">d20 检定</text>
-            <text class="node-card__value" data-st="on noperm">玩家掷二十面骰，加上属性值通过检定</text>
-            <text class="node-card__value" data-st="off">关闭后不使用骰子和属性</text></view>
+          <view class="node-card__main"><text class="node-card__title">d20 检定</text></view>
           <cy-switch data-st="on off"><switch class="cs" checked id="d20Switch" data-act="d20Toggle"></switch></cy-switch>
         </view>
         <view data-st="on noperm">
           <view class="node-card__hr"></view>
           <view class="node-card__row mk-new" data-mk="d20 与角色设定" data-why="只有开着 d20 检定时出现。10-28：点开是叠在主题详情上的第二张半屏（主题详情缩小变暗、顶边露出，iOS 卡片叠放）；里面的层级用 iOS 导航推进。" data-open="d20Sheet" id="d20Row">
             <view class="node-card__ico"><cy-icon><view class="cyi cyi--tab-club" style="width:16.64px;height:16.64px"></view></cy-icon></view>
-            <view class="node-card__main"><text class="node-card__title">d20 与角色设定</text><text class="node-card__value" id="d20Sum">4 项属性 · 标准</text><text class="node-card__value" data-st="noperm">这个主题现在不能修改</text></view>
-            <view class="node-pill">设置<cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view>
+            <view class="node-card__main"><text class="node-card__title">d20 与角色设定</text></view>
+            <view class="node-pill mk-chg" data-mk="当前值挪到右边" data-before="标题下一行小字「4 项属性 · 标准」，不能修改时多一行「这个主题现在不能修改」；右边「设置 ›」" data-after="右边直接是当前值「4 项属性 · 标准 ›」；不能修改时进去的各行是灰的，不再写一句" data-why="业主 10-28：去掉次级说明，让版式自己说明。"><text id="d20Sum">4 项属性 · 标准</text><cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view>
           </view>
         </view>
       </view>
@@ -12351,7 +12360,6 @@ body.clean .scr .need{display:none}
     <!-- 10-27 业主：「定向安全」换成「可玩时段」+「开局前准备」 -->
     <view class="node-card mk-chg" id="timeCard" data-mk="可玩时段（一行 → 下一层）" data-before="10-27 版：卡里四个选项药丸 + 一句说明 + 自定义时的两个下拉，最后一行「平台规则：未满 18 岁的玩家不能在夜间（20:00–06:00）开局。这一条不能修改。」" data-after="一行「可玩时段 · 只在夜间 ›」，点进去是同一张半屏里的下一层（勾选列表）。平台规则那一行删掉，规则本身仍由服务端执行" data-why="业主 10-28 第 1、3 条。俱乐部带队（E2：主题有俱乐部，CmsTopic.clubId）时整张卡不出现。时段字段需后端。" data-states="solo,club" data-st-name="可玩时段（个人 / 俱乐部带队）" data-cur="solo">
       <view data-st="solo" class="node-card__row" data-act="lv" data-lv="tdTime"><view class="node-card__ico"><cy-icon><view class="cyi cyi--clock" style="width:16.64px;height:16.64px"></view></cy-icon></view><view class="node-card__main"><text class="node-card__title">可玩时段<text class="need">需后端</text></text></view><view class="node-pill"><text id="timeSum">只在夜间</text><cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
-      <view data-st="club" class="node-card__row"><view class="node-card__main"><text class="node-card__value">（俱乐部带队的主题：这张卡不出现）</text></view></view>
     </view>
 
     <view class="node-card mk-chg" id="prepCard" data-mk="开局前准备（一行 → 下一层）" data-before="10-27 版：卡里直接列出准备项（每行一个删除钮）+ 建议药丸 + 输入框" data-after="一行「开局前准备 · 2 项 ›」，点进去是下一层的 iOS 列表（左滑删除、编辑排序、建议一点就加）" data-why="业主 10-28 第 3 条：每张半屏照 iOS 结构；长列表放到下一层，主题详情保持短。">
@@ -12370,17 +12378,15 @@ body.clean .scr .need{display:none}
       <view class="sk__state" data-st="loading"><view class="cy-skel-line" style="height:14px;width:70%;border-radius:7px;background:var(--cy-color-bg-surface-subtle)"></view><view style="height:14px;width:45%;border-radius:7px;background:var(--cy-color-bg-surface-subtle);margin-top:8px"></view></view>
       <view data-st="error"><cy-error><view class="cy-error"><view class="cy-error-title" style="font-size:15px;font-weight:600">状态键加载失败</view><view class="node-pill" style="margin-top:8px" data-toast="重试">重试</view></view></cy-error></view>
       <text class="sk__empty" data-st="empty">还没有注册状态键</text>
-      <view data-st="ok noperm">
+      <view data-st="ok noperm" class="mk-chg" data-mk="属性行去掉小字" data-before="每行下面「属性 · 0–5 · 开局 2」；列表下面一句「以上 4 项属性在「d20 与角色设定」中修改」" data-after="每行左边名称、右边范围「0–5 ›」，点一行叠开「d20 与角色设定」；下面那句删掉" data-why="业主 10-28：去掉次级说明，让版式自己说明。">
       <view class="sk-row mk-new" data-mk="属性行只读" data-why="来自「d20 与角色设定」。不显示键名，不给编辑 / 删除；点这一行叠开那张半屏。" data-open="d20Sheet">
         <view class="sk-row__main">
-          <text class="sk-row__key">观察</text>
-          <text class="sk-row__sub">属性 · 0–5 · 开局 2</text>
-        </view>
+          <text class="sk-row__key">观察</text></view><text class="sk-row__v">0–5</text><cy-icon class="sk-row__chev"><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon>
+        
       </view>
-      <view class="sk-row" data-open="d20Sheet"><view class="sk-row__main"><text class="sk-row__key">胆量</text><text class="sk-row__sub">属性 · 0–10 · 开局 6</text></view></view>
-      <view class="sk-row" data-open="d20Sheet"><view class="sk-row__main"><text class="sk-row__key">体魄</text><text class="sk-row__sub">属性 · 0–8 · 开局 4</text></view></view>
-      <view class="sk-row" data-open="d20Sheet"><view class="sk-row__main"><text class="sk-row__key">灵感</text><text class="sk-row__sub">属性 · 0–5 · 开局 1</text></view></view>
-      <text class="sk__desc mk-new" data-mk="只读说明" data-open="d20Sheet">以上 4 项属性在「d20 与角色设定」中修改</text>
+      <view class="sk-row" data-open="d20Sheet"><view class="sk-row__main"><text class="sk-row__key">胆量</text></view><text class="sk-row__v">0–10</text><cy-icon class="sk-row__chev"><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view>
+      <view class="sk-row" data-open="d20Sheet"><view class="sk-row__main"><text class="sk-row__key">体魄</text></view><text class="sk-row__v">0–8</text><cy-icon class="sk-row__chev"><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view>
+      <view class="sk-row" data-open="d20Sheet"><view class="sk-row__main"><text class="sk-row__key">灵感</text></view><text class="sk-row__v">0–5</text><cy-icon class="sk-row__chev"><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view>
       </view>
       <view data-st="ok noperm d20off">
       <view class="sk-row">
@@ -12391,13 +12397,12 @@ body.clean .scr .need{display:none}
       <view data-st="ok empty d20off">
       <view class="node-pill sk__add" data-act="newAttr" id="skAddBtn"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon><text>新增状态键</text></view>
       <view class="rv sk-form" id="skForm">
-        <view class="sk-form__types" id="skTypes">
+        <view class="sk-form__types mk-chg" id="skTypes" data-mk="去掉类型说明" data-before="类型下面一行「记录一条线索」（master 是「有/没有(是否拿到某条线索)」）" data-after="只留四个类型" data-why="业主 10-28：去掉次级说明，让版式自己说明。">
           <view class="sk-form__type is-on">线索</view>
           <view class="sk-form__type">计数</view>
           <view class="sk-form__type">关系</view>
           <view class="sk-form__type">标签</view>
         </view>
-        <text class="sk__desc">记录一条线索</text>
         <view class="sk-form__name"><text class="sk-form__prefix">clue.</text><input class="sk-form__input" value="pocket_watch" id="skName"/></view>
         <input class="sk-form__input sk-form__input--box" value="巡夜人的怀表" />
         <view class="sk-form__actions"><view class="node-pill" data-act="cancelAttr"><text>取消</text></view><view class="node-pill node-pill--solid" data-act="saveAttr"><text>保存</text></view></view>
@@ -12415,13 +12420,12 @@ body.clean .scr .need{display:none}
     <view class="ios-nav"><view class="node-sheet__close ios-back" data-act="lvBack" aria-label="返回主题详情"><cy-icon><view class="cyi cyi--back" style="width:20.8px;height:20.8px"></view></cy-icon><text>主题详情</text></view><text class="ios-nav__t">可玩时段</text><view class="ios-nav__r"></view></view>
     <scroll-view class="ios-body">
     <view class="mk-new" id="timeList" data-mk="可玩时段 · 勾选列表" data-why="业主 10-28：选择类做成「一行 → 下一层勾选列表」。点一项立即生效（iOS 设置的做法），左上返回。时段按 E3：白天 06:00–20:00，夜间 20:00–06:00。平台的未成年夜间规则仍由服务端执行（/api/orient/safety/check），编辑器里不写。只许在某时段开局：后端没有字段，需后端。" data-states="ok,custom,error" data-st-name="可玩时段（下一层）" data-cur="ok">
-      <view class="ios-grp" id="winGrp">
+      <view class="ios-grp mk-chg" id="winGrp" data-mk="去掉脚注" data-before="列表下面「其余时间，玩家不能开局。」" data-after="（删除）" data-why="业主 10-28：去掉次级说明，让版式自己说明。">
         <view class="ios-row" data-act="pickWin" data-win="any"><view class="ios-m"><text class="ios-t">不限</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
         <view class="ios-row" data-act="pickWin" data-win="day"><view class="ios-m"><text class="ios-t">只在白天</text></view><text class="ios-v">06:00–20:00</text><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
         <view class="ios-row is-on" data-act="pickWin" data-win="night"><view class="ios-m"><text class="ios-t">只在夜间</text></view><text class="ios-v">20:00–06:00</text><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
         <view class="ios-row" data-act="pickWin" data-win="custom"><view class="ios-m"><text class="ios-t">自定义</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
       </view>
-      <view class="ios-ft">其余时间，玩家不能开局。</view>
       <view data-st="custom">
         <view class="ios-hd">自定义时段</view>
         <view class="ios-grp">
@@ -12439,7 +12443,7 @@ body.clean .scr .need{display:none}
     <scroll-view class="ios-body">
     <view class="mk-new" id="prepList" data-mk="开局前准备 · 列表" data-why="业主 10-27 定「开局前准备」，10-28 改成 iOS 列表：左滑删除，右上「编辑」进排序模式（拖右侧的三条线）。下方「建议」一点就加入，也可以自己输入。最多 6 项。玩家那边见原型 B 主题详情。后端没有清单字段，需后端。" data-states="ok,swipe,editing,empty,full" data-st-name="开局前准备（下一层）" data-cur="ok">
       <view class="ios-hd">准备项</view>
-      <view class="ios-grp ios-list" id="prepGrp">
+      <view class="ios-grp ios-list mk-chg" id="prepGrp" data-mk="去掉脚注" data-before="列表下面一句：「玩家开局前需要逐项确认，最多 6 项。」/ 空：「没有准备项时，玩家开局前不会看到这一步。」/ 满：「已满 6 项，删除一项后可以再添加。」" data-after="都删掉。满 6 项时「添加」一行和「建议」不出现，靠版式表达上限" data-why="业主 10-28：去掉次级说明，让版式自己说明。">
         <view class="ios-sw" data-st="ok swipe editing full"><view class="ios-del" data-act="rowDel">删除</view><view class="ios-row is-static"><view class="ios-minus" data-act="swOpen" aria-label="删除"></view><view class="ios-m"><text class="ios-t">手机电量充足</text></view><view class="ios-grip" aria-label="拖动排序"></view></view></view>
         <view class="ios-sw" data-st="ok swipe editing full"><view class="ios-del" data-act="rowDel">删除</view><view class="ios-row is-static"><view class="ios-minus" data-act="swOpen" aria-label="删除"></view><view class="ios-m"><text class="ios-t">带手电筒</text></view><view class="ios-grip" aria-label="拖动排序"></view></view></view>
         <view class="ios-sw" data-st="full"><view class="ios-del" data-act="rowDel">删除</view><view class="ios-row is-static"><view class="ios-minus" data-act="swOpen"></view><view class="ios-m"><text class="ios-t">穿运动鞋</text></view><view class="ios-grip"></view></view></view>
@@ -12448,9 +12452,6 @@ body.clean .scr .need{display:none}
         <view class="ios-sw" data-st="full"><view class="ios-del" data-act="rowDel">删除</view><view class="ios-row is-static"><view class="ios-minus" data-act="swOpen"></view><view class="ios-m"><text class="ios-t">和同伴约好集合地点</text></view><view class="ios-grip"></view></view></view>
         <view class="ios-row is-static is-add" data-st="ok swipe empty" id="prepAddRow"><view class="ios-ic ios-ic--add"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view><input class="ios-in ios-in--l" id="prepIn" placeholder="添加准备项" maxlength="20"/><view class="ios-txtbtn is-off" id="prepAddBtn" data-act="prepAddTyped">添加</view></view>
       </view>
-      <view class="ios-ft" data-st="ok swipe editing">玩家开局前需要逐项确认，最多 6 项。</view>
-      <view class="ios-ft" data-st="empty">没有准备项时，玩家开局前不会看到这一步。</view>
-      <view class="ios-ft" data-st="full">已满 6 项，删除一项后可以再添加。</view>
       <view data-st="ok swipe empty">
         <view class="ios-hd">建议</view>
         <view class="ios-grp" id="prepSug">
@@ -12476,30 +12477,27 @@ body.clean .scr .need{display:none}
     <view class="ios-nav mk-chg" id="d20Nav" data-mk="iOS 导航栏" data-before="10-27 版：master 半屏头（左「退出」、右黑色「完成」）+ 下面一行小字「主题详情 · 骰子检定」+ 大标题；第二层左上只有一个返回箭头" data-after="一行导航栏：第一层左「取消」、中间标题、右「完成」；往下一层时左上是「‹ 上一层的名字」，右上是这一层的主要动作（添加 / 完成，填好之前是灰的）" data-why="业主 10-28：半屏里的层级照 iOS 的导航来做。按钮仍用 master 的 node-sheet__close / node-sheet__done（含 is-disabled）样式，只改结构。"><view class="node-sheet__close" data-close="d20Sheet">取消</view><text class="ios-nav__t">d20 与角色设定</text><view class="ios-nav__r"><view class="node-sheet__done" data-close="d20Sheet" data-toast="已保存">完成</view></view></view>
     <scroll-view class="ios-body">
       <view class="mk-new" id="d20Preset" data-mk="规则难度（一行 → 勾选列表）" data-why="作者只挑一档，系统按档写进已有字段，作者看不到数字（E1）：轻松 = 难度线 8/11/14、情境加值封顶 +8、动量上限 8 开局 3 失败 +2 一次最多花 4、交易加值 +3、进度钟默认 8 格；标准 = 10/13/16、+6、6/2/+1/3、+2、6 格；硬核 = 12/15/18、+4、4/0/+1/2、+1、4 格。记住选的是哪一档：后端没有字段，需后端。" data-states="ok,noperm" data-st-name="规则难度">
-        <view class="ios-grp"><view class="ios-row" data-act="lv" data-lv="d20LPreset"><view class="ios-m"><text class="ios-t">规则难度<text class="need">需后端</text></text></view><text class="ios-v" id="presetV">标准</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
-        <view class="ios-ft" id="presetFt">多数检定有一半以上的把握。</view>
+        <view class="ios-grp mk-chg" data-mk="去掉脚注" data-before="下面一句「多数检定有一半以上的把握。」（随档位变）" data-after="只留「规则难度 · 标准 ›」" data-why="业主 10-28：去掉次级说明，让版式自己说明。"><view class="ios-row" data-act="lv" data-lv="d20LPreset"><view class="ios-m"><text class="ios-t">规则难度<text class="need">需后端</text></text></view><text class="ios-v" id="presetV">标准</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
       </view>
 
       <view class="mk-new" id="d20Opts" data-mk="三个开关" data-why="天然 20 / 1 = journeyRules.natAuto（新主题默认开，关掉才写 false）；魔鬼交易 = rpg.bargain.enabled；动量 = rpg.momentum.enabled（上限、开局、增量由规则难度给）。环境（天气、时段）开着 d20 检定就自动写 rpg.environment，不给界面。">
         <view class="ios-hd">规则</view>
-        <view class="ios-grp">
-          <view class="ios-row is-static"><view class="ios-m"><text class="ios-t">天然 20 和天然 1</text><text class="ios-s">掷出 20 必定通过，掷出 1 必定失败</text></view><cy-switch><switch class="cs" checked></switch></cy-switch></view>
-          <view class="ios-row is-static"><view class="ios-m"><text class="ios-t">魔鬼交易</text><text class="ios-s">掷骰前可以付出代价，换取加值</text></view><cy-switch><switch class="cs" checked></switch></cy-switch></view>
-          <view class="ios-row is-static"><view class="ios-m"><text class="ios-t">动量</text><text class="ios-s">检定失败时积累，之后可以补足点数</text></view><cy-switch><switch class="cs" checked></switch></cy-switch></view>
+        <view class="ios-grp mk-chg" data-mk="开关去掉小字" data-before="每个开关下面一行：「掷出 20 必定通过，掷出 1 必定失败」「掷骰前可以付出代价，换取加值」「检定失败时积累，之后可以补足点数」" data-after="只留名称和开关" data-why="业主 10-28：去掉次级说明，让版式自己说明。">
+          <view class="ios-row is-static"><view class="ios-m"><text class="ios-t">天然 20 和天然 1</text></view><cy-switch><switch class="cs" checked></switch></cy-switch></view>
+          <view class="ios-row is-static"><view class="ios-m"><text class="ios-t">魔鬼交易</text></view><cy-switch><switch class="cs" checked></switch></cy-switch></view>
+          <view class="ios-row is-static"><view class="ios-m"><text class="ios-t">动量</text></view><cy-switch><switch class="cs" checked></switch></cy-switch></view>
         </view>
       </view>
 
       <view class="mk-new" id="d20Attrs" data-mk="属性列表（左滑删除 · 编辑排序）" data-why="每行 = 名称 + 范围 + 开局值，点一行进下一层修改。左滑出现「删除」（删前用原生确认框）；「编辑」进排序模式，拖右侧三条线调顺序（= sortOrder，状态栏第二行只放前 3 项）。保存进状态键注册表（theme_state_key，键名系统生成 counter.*，C-1 唯一存处；A2 另存「是属性」字段，需后端）。" data-states="ok,swipe,editing,empty,error,noperm" data-st-name="属性列表" data-cur="ok">
         <view class="ios-hd"><text>属性</text><text class="ios-hd__act" id="attrEditBtn" data-st="ok swipe editing" data-act="editList" data-list="attrList">编辑</text></view>
-        <view class="ios-grp ios-list" id="attrList">
+        <view class="ios-grp ios-list mk-chg" id="attrList" data-mk="去掉脚注" data-before="列表下面「状态栏显示前 3 项。」；空时「没有属性时，检定只看骰子点数。」" data-after="都删掉；空时只剩「添加属性」一行。出错、不能修改各一句保留" data-why="业主 10-28：去掉次级说明，让版式自己说明。">
           <view class="ios-sw" data-attr="观察" data-st="ok swipe editing noperm"><view class="ios-del" data-modal="删除「观察」？|用到它的检定将不再加上属性值。|取消|删除" data-ok-act="rowDel">删除</view><view class="ios-row" data-act="d20Edit"><view class="ios-minus" data-act="swOpen" aria-label="删除"></view><view class="ios-ic tc t-obs"></view><view class="ios-m"><text class="ios-t">观察</text></view><text class="ios-v">0–5 · 开局 2</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view><view class="ios-grip" aria-label="拖动排序"></view></view></view>
           <view class="ios-sw" data-attr="胆量" data-st="ok swipe editing noperm"><view class="ios-del" data-modal="删除「胆量」？|用到它的检定将不再加上属性值。|取消|删除" data-ok-act="rowDel">删除</view><view class="ios-row" data-act="d20Edit"><view class="ios-minus" data-act="swOpen" aria-label="删除"></view><view class="ios-ic tc t-nerve"></view><view class="ios-m"><text class="ios-t">胆量</text></view><text class="ios-v">0–10 · 开局 6</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view><view class="ios-grip" aria-label="拖动排序"></view></view></view>
           <view class="ios-sw" data-attr="体魄" data-st="ok swipe editing noperm"><view class="ios-del" data-modal="删除「体魄」？|用到它的检定将不再加上属性值。|取消|删除" data-ok-act="rowDel">删除</view><view class="ios-row" data-act="d20Edit"><view class="ios-minus" data-act="swOpen" aria-label="删除"></view><view class="ios-ic tc t-body"></view><view class="ios-m"><text class="ios-t">体魄</text></view><text class="ios-v">0–8 · 开局 4</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view><view class="ios-grip" aria-label="拖动排序"></view></view></view>
           <view class="ios-sw" data-attr="灵感" data-st="ok swipe editing noperm"><view class="ios-del" data-modal="删除「灵感」？|用到它的检定将不再加上属性值。|取消|删除" data-ok-act="rowDel">删除</view><view class="ios-row" data-act="d20Edit"><view class="ios-minus" data-act="swOpen" aria-label="删除"></view><view class="ios-ic tc t-wit"></view><view class="ios-m"><text class="ios-t">灵感</text></view><text class="ios-v">0–5 · 开局 1</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view><view class="ios-grip" aria-label="拖动排序"></view></view></view>
           <view class="ios-row is-add" data-st="ok swipe empty" data-act="d20Add"><view class="ios-ic ios-ic--add"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view><view class="ios-m"><text class="ios-t">添加属性</text></view></view>
         </view>
-        <view class="ios-ft" data-st="ok swipe editing">状态栏显示前 3 项。</view>
-        <view class="ios-ft" data-st="empty">没有属性时，检定只看骰子点数。</view>
         <view class="ios-ft is-err" data-st="error">属性没有读取成功，请再试一次。</view>
         <view class="ios-ft" data-st="noperm">这个主题现在不能修改。</view>
       </view>
@@ -12515,11 +12513,10 @@ body.clean .scr .need{display:none}
     <view class="ios-nav"><view class="node-sheet__close ios-back" data-act="lvBack" aria-label="返回 d20 与角色设定"><cy-icon><view class="cyi cyi--back" style="width:20.8px;height:20.8px"></view></cy-icon><text>d20 与角色</text></view><text class="ios-nav__t">规则难度</text><view class="ios-nav__r"></view></view>
     <scroll-view class="ios-body">
       <view class="ios-grp mk-new" id="presetGrp" data-mk="规则难度 · 勾选列表" data-why="三档，点一项立即生效，左上返回（iOS 设置的做法）。数值见上一层「规则难度」标记。">
-        <view class="ios-row" data-act="pickPreset" data-p="easy"><view class="ios-m"><text class="ios-t">轻松</text><text class="ios-s">检定更容易通过，补救的机会多</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
-        <view class="ios-row is-on" data-act="pickPreset" data-p="std"><view class="ios-m"><text class="ios-t">标准</text><text class="ios-s">多数检定有一半以上的把握</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
-        <view class="ios-row" data-act="pickPreset" data-p="hard"><view class="ios-m"><text class="ios-t">硬核</text><text class="ios-s">检定更难，补救的机会少</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
+        <view class="ios-row mk-chg" data-act="pickPreset" data-p="easy" data-mk="三档去掉小字" data-before="每档下面一行（轻松「检定更容易通过，补救的机会多」、标准「多数检定有一半以上的把握」、硬核「检定更难，补救的机会少」）；列表下面「只改变检定和进度钟的数值，故事不变。」" data-after="只剩 轻松 / 标准 / 硬核 三行勾选" data-why="业主 10-28：去掉次级说明，让版式自己说明。"><view class="ios-m"><text class="ios-t">轻松</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
+        <view class="ios-row is-on" data-act="pickPreset" data-p="std"><view class="ios-m"><text class="ios-t">标准</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
+        <view class="ios-row" data-act="pickPreset" data-p="hard"><view class="ios-m"><text class="ios-t">硬核</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
       </view>
-      <view class="ios-ft">只改变检定和进度钟的数值，故事不变。</view>
     </scroll-view>
   </view>
 
@@ -12541,8 +12538,8 @@ body.clean .scr .need{display:none}
       <view class="ios-form">
         <view class="ios-step is-on" id="attrStep1">
           <view class="ios-hd">名称</view>
-          <view class="ios-grp"><view class="ios-row is-static" id="rowName"><input class="ios-in ios-in--l" id="attrName" value="敏捷" maxlength="6" placeholder="属性名称"/></view></view>
-          <view class="ios-ft" id="typeHint">状态栏中显示为数字。</view>
+          <view class="ios-grp mk-chg" data-mk="去掉类型说明" data-before="名称下面一句「状态栏中显示为数字。」（随类型变：星级 / 小条 / 数字）" data-after="删掉；显示方式跟着类型，作者不用看。这个位置只在没填名称时出一句「请填写名称。」" data-why="业主 10-28：去掉次级说明，让版式自己说明。"><view class="ios-row is-static" id="rowName"><input class="ios-in ios-in--l" id="attrName" value="敏捷" maxlength="6" placeholder="属性名称"/></view></view>
+          <view class="ios-ft is-err" id="typeHint"></view>
           <view class="ios-next" id="stepNext1" data-act="attrStep" data-step="2">下一步</view>
         </view>
         <view class="ios-step" id="attrStep2">
@@ -12572,21 +12569,19 @@ body.clean .scr .need{display:none}
     <scroll-view class="ios-body">
       <view class="mk-new" id="clockCard" data-mk="进度钟" data-why="每个钟 = 名称 + 类型（坏事逼近 / 事情进展 = rpg.clocks[].kind danger / progress）+ 4 / 6 / 8 格。点一行修改，左滑删除，「添加进度钟」进下一层。背后的计数（var: counter.*）系统生成。" data-states="ok,swipe,empty" data-st-name="进度钟" data-cur="ok">
         <view class="ios-hd">进度钟</view>
-        <view class="ios-grp ios-list" id="clockList">
-          <view class="ios-sw" data-st="ok swipe"><view class="ios-del" data-modal="删除进度钟「巡夜人警觉」？|用到它的条件和效果需要重新选择。|取消|删除" data-ok-act="rowDel">删除</view><view class="ios-row" data-act="clockEdit" data-n="巡夜人警觉" data-k="0" data-g="1"><view class="ios-m"><text class="ios-t">巡夜人警觉</text><text class="ios-s">坏事逼近</text></view><text class="ios-v">6 格</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
-          <view class="ios-sw" data-st="ok swipe"><view class="ios-del" data-modal="删除进度钟「拼出货单」？|用到它的条件和效果需要重新选择。|取消|删除" data-ok-act="rowDel">删除</view><view class="ios-row" data-act="clockEdit" data-n="拼出货单" data-k="1" data-g="0"><view class="ios-m"><text class="ios-t">拼出货单</text><text class="ios-s">事情进展</text></view><text class="ios-v">4 格</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
+        <view class="ios-grp ios-list mk-chg" id="clockList" data-mk="类型挪到右边" data-before="每行名称下面小字「坏事逼近 / 事情进展」；列表下面「格子走满时，触发故事里写好的事件。」" data-after="类型和格数都在右边「坏事逼近 · 6 格 ›」；脚注删掉" data-why="业主 10-28：去掉次级说明，让版式自己说明。">
+          <view class="ios-sw" data-st="ok swipe"><view class="ios-del" data-modal="删除进度钟「巡夜人警觉」？|用到它的条件和效果需要重新选择。|取消|删除" data-ok-act="rowDel">删除</view><view class="ios-row" data-act="clockEdit" data-n="巡夜人警觉" data-k="0" data-g="1"><view class="ios-m"><text class="ios-t">巡夜人警觉</text></view><text class="ios-v">坏事逼近 · 6 格</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
+          <view class="ios-sw" data-st="ok swipe"><view class="ios-del" data-modal="删除进度钟「拼出货单」？|用到它的条件和效果需要重新选择。|取消|删除" data-ok-act="rowDel">删除</view><view class="ios-row" data-act="clockEdit" data-n="拼出货单" data-k="1" data-g="0"><view class="ios-m"><text class="ios-t">拼出货单</text></view><text class="ios-v">事情进展 · 4 格</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
           <view class="ios-row is-add" data-act="clockAdd"><view class="ios-ic ios-ic--add"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view><view class="ios-m"><text class="ios-t">添加进度钟</text></view></view>
         </view>
-        <view class="ios-ft">格子走满时，触发故事里写好的事件。</view>
       </view>
       <view class="mk-new" id="traitCard" data-mk="特质" data-why="rpg.aspects[{key, label, kind, desc}]：名称和说明来自预设（A7），key 系统生成。「开局自带」在下一层；aspects 只有定义没有开局状态，需后端。" data-states="ok,swipe,empty" data-st-name="特质" data-cur="ok">
         <view class="ios-hd">特质</view>
-        <view class="ios-grp ios-list" id="traitList">
-          <view class="ios-sw" data-st="ok swipe" data-trait="夜行者"><view class="ios-del" data-act="rowDel">删除</view><view class="ios-row" data-act="traitEdit" data-n="夜行者" data-d="夜里行动更顺手" data-own="1"><view class="ios-m"><text class="ios-t">夜行者</text><text class="ios-s">夜里行动更顺手</text></view><text class="ios-v">开局自带</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
-          <view class="ios-sw" data-st="ok swipe" data-trait="受了伤"><view class="ios-del" data-act="rowDel">删除</view><view class="ios-row" data-act="traitEdit" data-n="受了伤" data-d="行动吃力，直到治好" data-own="0"><view class="ios-m"><text class="ios-t">受了伤</text><text class="ios-s">行动吃力，直到治好</text></view><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
+        <view class="ios-grp ios-list mk-chg" id="traitList" data-mk="特质去掉小字" data-before="每行名称下面一句说明（「夜里行动更顺手」）；列表下面「检定和分支可以按特质判断。」" data-after="每行只有名称，右边「开局自带」；说明在点进去的那一层；脚注删掉" data-why="业主 10-28：去掉次级说明，让版式自己说明。">
+          <view class="ios-sw" data-st="ok swipe" data-trait="夜行者"><view class="ios-del" data-act="rowDel">删除</view><view class="ios-row" data-act="traitEdit" data-n="夜行者" data-d="夜里行动更顺手" data-own="1"><view class="ios-m"><text class="ios-t">夜行者</text></view><text class="ios-v">开局自带</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
+          <view class="ios-sw" data-st="ok swipe" data-trait="受了伤"><view class="ios-del" data-act="rowDel">删除</view><view class="ios-row" data-act="traitEdit" data-n="受了伤" data-d="行动吃力，直到治好" data-own="0"><view class="ios-m"><text class="ios-t">受了伤</text></view><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
           <view class="ios-row is-add" data-act="traitAdd"><view class="ios-ic ios-ic--add"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view><view class="ios-m"><text class="ios-t">添加特质</text></view></view>
         </view>
-        <view class="ios-ft">检定和分支可以按特质判断。</view>
       </view>
     </scroll-view>
   </view>
@@ -12597,10 +12592,9 @@ body.clean .scr .need{display:none}
     <scroll-view class="ios-body">
     <view class="mk-new" id="clockForm" data-mk="进度钟 · 添加 / 修改" data-why="三项：类型（分段控件）、名称、格数（分段控件 4 / 6 / 8）。名称填好之前右上「添加」是灰的。修改时底部多一行红色「删除进度钟」。" data-states="add,edit" data-st-name="进度钟表单" data-cur="add">
       <view class="ios-hd">类型</view>
-      <view class="ios-grp"><view class="ios-row is-static"><view class="ios-seg" id="clockKind"><view class="is-on" data-act="seg">坏事逼近</view><view data-act="seg">事情进展</view></view></view></view>
-      <view class="ios-ft">走满时，坏事发生或目标达成。</view>
+      <view class="ios-grp mk-chg" data-mk="去掉脚注" data-before="类型下面「走满时，坏事发生或目标达成。」；名称输入框里的占位「例如：巡夜人警觉」" data-after="脚注删掉；占位删掉（上面已有「名称」小标题）" data-why="业主 10-28：去掉次级说明，让版式自己说明。"><view class="ios-row is-static"><view class="ios-seg" id="clockKind"><view class="is-on" data-act="seg">坏事逼近</view><view data-act="seg">事情进展</view></view></view></view>
       <view class="ios-hd">名称</view>
-      <view class="ios-grp"><view class="ios-row is-static"><input class="ios-in ios-in--l" id="clockName" value="" placeholder="例如：巡夜人警觉" maxlength="10"/></view></view>
+      <view class="ios-grp"><view class="ios-row is-static"><input class="ios-in ios-in--l" id="clockName" value="" maxlength="10"/></view></view>
       <view class="ios-hd">格数</view>
       <view class="ios-grp"><view class="ios-row is-static"><view class="ios-seg" id="clockSeg"><view data-act="seg">4 格</view><view class="is-on" data-act="seg">6 格</view><view data-act="seg">8 格</view></view></view></view>
       <view data-st="edit"><view class="ios-grp ios-gap"><view class="ios-row is-danger" data-modal="删除这个进度钟？|用到它的条件和效果需要重新选择。|取消|删除" data-ok-act="clockDel"><text class="ios-t">删除进度钟</text></view></view></view>
@@ -12613,15 +12607,14 @@ body.clean .scr .need{display:none}
     <view class="ios-nav"><view class="node-sheet__close ios-back" data-act="lvBack" aria-label="返回更多规则"><cy-icon><view class="cyi cyi--back" style="width:20.8px;height:20.8px"></view></cy-icon><text>更多规则</text></view><text class="ios-nav__t">添加特质</text><view class="ios-nav__r"><view class="node-sheet__done is-disabled" id="traitDone" data-act="traitSave">添加</view></view></view>
     <scroll-view class="ios-body">
       <view class="ios-grp mk-new" id="traitPick" data-mk="特质预设 · 多选" data-why="A7：特质只从预设里挑。已加入的显示「已添加」，不能再选；选了新的之后右上「添加」才可点。">
-        <view class="ios-row is-fixed"><view class="ios-m"><text class="ios-t">夜行者</text><text class="ios-s">夜里行动更顺手</text></view><text class="ios-v">已添加</text></view>
-        <view class="ios-row is-fixed"><view class="ios-m"><text class="ios-t">受了伤</text><text class="ios-s">行动吃力，直到治好</text></view><text class="ios-v">已添加</text></view>
-        <view class="ios-row" data-act="traitPick"><view class="ios-m"><text class="ios-t">眼尖</text><text class="ios-s">更容易发现线索</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
-        <view class="ios-row" data-act="traitPick"><view class="ios-m"><text class="ios-t">胆大</text><text class="ios-s">面对危险更镇定</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
-        <view class="ios-row" data-act="traitPick"><view class="ios-m"><text class="ios-t">手巧</text><text class="ios-s">开锁和修理更顺手</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
-        <view class="ios-row" data-act="traitPick"><view class="ios-m"><text class="ios-t">记性好</text><text class="ios-s">记得住看过的线索</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
-        <view class="ios-row" data-act="traitPick"><view class="ios-m"><text class="ios-t">被盯上了</text><text class="ios-s">巡夜人更容易注意到你</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
+        <view class="ios-row is-fixed mk-chg" data-mk="预设去掉小字" data-before="每个预设名称下面一句说明；列表下面「可以多选。」" data-after="只留名称和勾选；说明在特质自己那一层" data-why="业主 10-28：去掉次级说明，让版式自己说明。"><view class="ios-m"><text class="ios-t">夜行者</text></view><text class="ios-v">已添加</text></view>
+        <view class="ios-row is-fixed"><view class="ios-m"><text class="ios-t">受了伤</text></view><text class="ios-v">已添加</text></view>
+        <view class="ios-row" data-act="traitPick" data-d="更容易发现线索"><view class="ios-m"><text class="ios-t">眼尖</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
+        <view class="ios-row" data-act="traitPick" data-d="面对危险更镇定"><view class="ios-m"><text class="ios-t">胆大</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
+        <view class="ios-row" data-act="traitPick" data-d="开锁和修理更顺手"><view class="ios-m"><text class="ios-t">手巧</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
+        <view class="ios-row" data-act="traitPick" data-d="记得住看过的线索"><view class="ios-m"><text class="ios-t">记性好</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
+        <view class="ios-row" data-act="traitPick" data-d="巡夜人更容易注意到你"><view class="ios-m"><text class="ios-t">被盯上了</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
       </view>
-      <view class="ios-ft">可以多选。</view>
     </scroll-view>
   </view>
 
@@ -12630,8 +12623,7 @@ body.clean .scr .need{display:none}
     <view class="ios-nav"><view class="node-sheet__close ios-back" data-act="lvBack" aria-label="返回更多规则"><cy-icon><view class="cyi cyi--back" style="width:20.8px;height:20.8px"></view></cy-icon><text>更多规则</text></view><text class="ios-nav__t" id="traitTitle">夜行者</text><view class="ios-nav__r"><view class="node-sheet__done" data-act="lvBack" data-toast="已保存">完成</view></view></view>
     <scroll-view class="ios-body">
       <view class="mk-new" id="traitForm" data-mk="特质 · 开局自带" data-why="A7：可选「开局自带」。说明是预设的，只读。">
-        <view class="ios-grp"><view class="ios-row is-static"><view class="ios-m"><text class="ios-t">开局自带<text class="need">需后端</text></text></view><cy-switch><switch class="cs" id="traitOwn" checked></switch></cy-switch></view></view>
-        <view class="ios-ft">打开后，玩家开局时就有这个特质。</view>
+        <view class="ios-grp mk-chg" data-mk="去掉脚注" data-before="开关下面「打开后，玩家开局时就有这个特质。」" data-after="删掉；下面「说明」一组保留（这是特质自己的那一层）" data-why="业主 10-28：去掉次级说明，让版式自己说明。"><view class="ios-row is-static"><view class="ios-m"><text class="ios-t">开局自带<text class="need">需后端</text></text></view><cy-switch><switch class="cs" id="traitOwn" checked></switch></cy-switch></view></view>
         <view class="ios-hd">说明</view>
         <view class="ios-grp"><view class="ios-row is-static"><text class="ios-t" id="traitDesc">夜里行动更顺手</text></view></view>
         <view class="ios-grp ios-gap"><view class="ios-row is-danger" data-modal="移除这个特质？|用到它的条件需要重新选择。|取消|移除" data-ok-act="traitDel"><text class="ios-t">移除特质</text></view></view>
@@ -12678,14 +12670,12 @@ body.clean .scr .need{display:none}
     <scroll-view class="ios-body">
       <view class="mk-chg" id="initTags" data-mk="开局带着（标签）" data-before="已写码版（cy26）：attribute-binding-editor——「启用的注册属性」勾选、逐项「定义差异」、「我确认采用这项注册定义」、「确认启用与定义选择 / 重新读取注册版本 / 查看或调整注册定义」三颗按钮，选项显示 counter.* 键名；master 还有每个属性一张「开局值」卡" data-after="只剩一组标签：玩家开局时带着的线索、物品、标签，每个可以点 × 移除；最后一个「添加」进下一层，从主题已有的状态键里挑，或输入一个新标签。属性的开局值不在这里（在「d20 与角色设定」里）" data-why="业主 10-28：初始状态本质上就是加标签、看标签。后端已有：journeyRules.attributes 里 key 为 clue.* / tag.*、initial = 1 的行，开局时写进 state.tags（JourneyInitialState.initialize）。开局放进背包的物品：master 有没有字段我没找到，需后端核对。" data-states="ok,empty,error,noperm" data-st-name="开局带着" data-cur="ok">
         <view class="ios-hd">开局带着</view>
-        <view class="ios-grp"><view class="ios-chips" id="initChips">
+        <view class="ios-grp mk-chg" data-mk="去掉脚注" data-before="标签下面「玩家开局时就带着这些。」；空时「玩家开局时什么都不带。」" data-after="删掉；空时只剩「添加」。出错、不能修改各一句保留" data-why="业主 10-28：去掉次级说明，让版式自己说明。"><view class="ios-chips" id="initChips">
           <view class="ios-chip" data-st="ok noperm error"><text class="ios-chip__k">线索</text><text>半张货单</text><view class="ios-chip__x" data-act="chipDel" aria-label="移除半张货单"><cy-icon><view class="cyi cyi--close-sm" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
           <view class="ios-chip" data-st="ok noperm error"><text class="ios-chip__k">物品</text><text>旧手电</text><view class="ios-chip__x" data-act="chipDel" aria-label="移除旧手电"><cy-icon><view class="cyi cyi--close-sm" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
           <view class="ios-chip" data-st="ok noperm error"><text class="ios-chip__k">标签</text><text>新来的</text><view class="ios-chip__x" data-act="chipDel" aria-label="移除新来的"><cy-icon><view class="cyi cyi--close-sm" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
           <view class="ios-chip ios-chip--add" id="initAdd" data-st="ok empty error" data-act="lv" data-lv="initLAdd"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon><text>添加</text></view>
         </view></view>
-        <view class="ios-ft" data-st="ok">玩家开局时就带着这些。</view>
-        <view class="ios-ft" data-st="empty">玩家开局时什么都不带。</view>
         <view class="ios-ft is-err" data-st="error">没有保存成功，请再试一次。</view>
         <view class="ios-ft" data-st="noperm">这个主题现在不能修改。</view>
       </view>
@@ -12708,7 +12698,7 @@ body.clean .scr .need{display:none}
     <view class="ios-nav"><view class="node-sheet__close ios-back" data-act="lvBack" aria-label="返回初始状态"><cy-icon><view class="cyi cyi--back" style="width:20.8px;height:20.8px"></view></cy-icon><text>初始状态</text></view><text class="ios-nav__t">添加</text><view class="ios-nav__r"><view class="node-sheet__done is-disabled" id="tagDone" data-act="tagSave">添加</view></view></view>
     <scroll-view class="ios-body">
     <view class="mk-new" id="tagPicker" data-mk="添加：从状态键里挑，或输入新标签" data-why="列出主题已有的线索、物品、标签（状态键注册表），已在开局里的显示「已添加」。输入的名字没有对上已有项时，第一行变成「新建标签」。选了之后右上「添加」才可点。新标签同时写进状态键注册表（tag.*，键名系统生成）。">
-      <view class="ios-grp"><view class="ios-row is-static"><cy-icon><view class="cyi cyi--search" style="width:16.64px;height:16.64px;color:var(--cy-color-text-tertiary)"></view></cy-icon><input class="ios-in ios-in--l" id="tagIn" placeholder="搜索，或输入新标签" maxlength="12"/></view></view>
+      <view class="ios-grp mk-chg" data-mk="去掉脚注" data-before="列表最下面「新建的标签也会出现在主题的状态键里。」" data-after="（删除）" data-why="业主 10-28：去掉次级说明，让版式自己说明。"><view class="ios-row is-static"><cy-icon><view class="cyi cyi--search" style="width:16.64px;height:16.64px;color:var(--cy-color-text-tertiary)"></view></cy-icon><input class="ios-in ios-in--l" id="tagIn" placeholder="搜索，或输入新标签" maxlength="12"/></view></view>
       <view class="rv" id="tagNew"><view class="ios-grp ios-gap"><view class="ios-row" data-act="tagPick" id="tagNewRow"><view class="ios-ic ios-ic--add"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view><view class="ios-m"><text class="ios-t" id="tagNewT">新建标签</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view></view></view>
       <view id="tagOpts">
         <view class="ios-hd">线索</view>
@@ -12727,7 +12717,6 @@ body.clean .scr .need{display:none}
           <view class="ios-row" data-act="tagPick" data-k="标签"><view class="ios-m"><text class="ios-t">见过巡夜人</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
         </view>
       </view>
-      <view class="ios-ft">新建的标签也会出现在主题的状态键里。</view>
     </view>
     </scroll-view>
   </view>
@@ -12786,19 +12775,17 @@ body.clean .scr .need{display:none}
     <!-- 新增：定向任务 -->
     <view class="node-card mk-new" id="altCard" data-mk="找不到时换个方式（城市定向）" data-why="POST /api/orient/task/alternative {topicId, taskId, alternativeTaskType SCAN|PHOTO|QUIZ, promptText, answer, enabled}。每种一行开关，打开才展开填写。A5：不按节点设分，10-27 版的「本站分值」一行删掉。" data-states="ok,error,off" data-st-name="替代方式">
       <view data-st="ok error">
-      <view class="rt-card-head"><text>找不到时换个方式</text></view>
-      <text class="story-initial__example rt-lead">定位不可用时，玩家可以用下面打开的方式完成这个节点。</text>
-      <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">扫现场的码</text><text class="node-card__value">扫码后完成</text></view><cy-switch><switch class="cs" checked data-reveal="altScan"></switch></cy-switch></view>
+      <view class="rt-card-head mk-chg" data-mk="去掉说明" data-before="标题下一句「定位不可用时，玩家可以用下面打开的方式完成这个节点。」；三行「扫现场的码 · 扫码后完成」「回答现场题 · 答对后完成」「拍一张照片 · 审核通过后完成」" data-after="三行只剩名词：扫码 / 答题 / 拍照，各带开关" data-why="业主 10-28：去掉次级说明，让版式自己说明。"><text>找不到时换个方式</text></view>
+      <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">扫码</text></view><cy-switch><switch class="cs" checked data-reveal="altScan"></switch></cy-switch></view>
       <view class="rv is-open" id="altScan"><view class="rt-field"><text>提示</text><input value="码贴在仓库侧门的铁牌上" maxlength="200"/></view></view>
       <view class="node-card__hr"></view>
-      <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">回答现场题</text><text class="node-card__value">答对后完成</text></view><cy-switch><switch class="cs" checked data-reveal="altQuiz"></switch></cy-switch></view>
+      <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">答题</text></view><cy-switch><switch class="cs" checked data-reveal="altQuiz"></switch></cy-switch></view>
       <view class="rv is-open" id="altQuiz"><view class="rt-field"><text>题目</text><input value="仓库门牌上写的年份是？"/></view><view class="rt-field"><text>答案</text><input value="1937"/></view></view>
       <view class="node-card__hr"></view>
-      <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">拍一张照片</text><text class="node-card__value">审核通过后完成</text></view><cy-switch><switch class="cs" data-reveal="altPhoto"></switch></cy-switch></view>
+      <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">拍照</text></view><cy-switch><switch class="cs" data-reveal="altPhoto"></switch></cy-switch></view>
       <view class="rv" id="altPhoto"><view class="rt-field"><text>拍摄内容</text><input value="拍下仓库的大门和门牌"/></view></view>
       <cy-inline-error data-st="error"><view class="inline-error inline-error--error"><view class="inline-error__icon"><cy-icon><view class="cyi cyi--warning" style="width:18.72px;height:18.72px"></view></cy-icon></view><view class="inline-error__copy"><view class="inline-error__title">没有保存成功，请再试一次。</view></view></view></cy-inline-error>
       </view>
-      <text data-st="off" class="story-initial__example">（自由探索主题：这张卡不出现）</text>
     </view>
     <view class="node-card">
       <view class="rt-card-head"><text>预先批准的备用节点</text><text class="rt-count">已选 1 / 20</text></view>
@@ -12888,7 +12875,7 @@ body.clean .scr .need{display:none}
     <cy-card class="pc-summary"><view class="cy-card">
       <view class="pc-summary__line">城市定向 · 2 章 · 5 个节点</view>
       <view class="pc-summary__line">票务：单人票 ¥68</view>
-      <view class="pc-summary__line mk-new" data-mk="冻结说明" data-why="联动第 3 步：发布时把状态键注册表里的角色属性（范围、开局值，以及按类型预设的显示方式）和 d20 规则冻结进开局快照；已经开局的玩家继续用开局时那一版。后端现在只冻结 key+label（JourneyInitialState.freezeKeys），范围和显示字段需后端补。">4 项属性和 d20 规则随本次发布生效，进行中的玩家不受影响<text class="need">需后端</text></view>
+      <view class="pc-summary__line mk-chg" data-mk="冻结说明 → 一行摘要" data-before="（本原型新增的一行）4 项属性和 d20 规则随本次发布生效，进行中的玩家不受影响" data-after="d20 检定 · 4 项属性（和上面「票务：单人票 ¥68」同一种摘要行）" data-why="联动第 3 步：发布时把状态键注册表里的角色属性（范围、开局值，以及按类型预设的显示方式）和 d20 规则冻结进开局快照；已经开局的玩家继续用开局时那一版。后端现在只冻结 key+label（JourneyInitialState.freezeKeys），范围和显示字段需后端补。">d20 检定 · 4 项属性<text class="need">需后端</text></view>
       <view class="pc-summary__visibility">发布后在创意广场公开</view>
     </view></cy-card>
     <view class="pc-section-tit">自动检查</view>
@@ -12935,16 +12922,15 @@ body.clean .scr .need{display:none}
     <view class="cg-gcfg">
       <view class="cg-adv-body">
         <view class="cg-cfg-label">判定什么技能</view>
-        <view class="mk-chg" id="skillPick" data-mk="技能 → 选属性" data-before="一个自由输入框「例如 潜行 / 观察」，写什么都只当文字显示" data-after="下拉：列出「d20 与角色设定」里的属性（观察 / 胆量 / 体魄 / 灵感）+ 最后一项「不加属性值」；主题关着 d20 检定时不出现下拉" data-why="check.skill：值是 counter.* 时引擎把属性值加进达成值（GameplayCheckEngine:15,132），否则只当文字。下拉保证只能选注册过的属性（C-1）。" data-states="ok,empty,error,off" data-st-name="技能下拉">
+        <view class="mk-chg" id="skillPick" data-mk="技能 → 选属性（10-28 去掉小字）" data-before="一个自由输入框「例如 潜行 / 观察」，写什么都只当文字显示" data-after="下拉：列出「d20 与角色设定」里的属性（观察 / 胆量 / 体魄 / 灵感）+ 最后一项「不加属性值」；主题关着 d20 检定时不出现下拉。10-28：下拉下面的小字都删掉（「检定时加上玩家的观察值（0–5）」「d20 检定关闭时，这里只填名称」）；没有属性时下面只有一个动作「添加属性」（原来是「在「d20 与角色设定」中添加属性」）；出错时「轻点重试」→「重试」" data-why="check.skill：值是 counter.* 时引擎把属性值加进达成值（GameplayCheckEngine:15,132），否则只当文字。下拉保证只能选注册过的属性（C-1）。" data-states="ok,empty,error,off" data-st-name="技能下拉">
           <view data-st="ok"><view class="cg-pick" data-dd="观察|胆量|体魄|灵感|不加属性值"><text class="dd-v">观察</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view>
-          <view class="cg-cfg-hint">检定时加上玩家的观察值（0–5）</view></view>
-          <view data-st="empty"><view class="cg-pick empty">还没有属性<view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="cg-cfg-hint">在「d20 与角色设定」中添加属性</view></view>
-          <view data-st="off"><input class="cg-cfg-input" value="撬锁"/><view class="cg-cfg-hint">d20 检定关闭时，这里只填名称</view></view>
-          <view data-st="error"><view class="cg-pick empty">属性没有读取成功<view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="cg-cfg-hint" data-toast="正在重新读取">轻点重试</view></view>
+</view>
+          <view data-st="empty"><view class="cg-pick empty">还没有属性<view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="cg-cfg-act" data-go="e-d20">添加属性</view></view>
+          <view data-st="off"><input class="cg-cfg-input" value="撬锁"/></view>
+          <view data-st="error"><view class="cg-pick empty">属性没有读取成功<view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="cg-cfg-act" data-toast="正在重新读取">重试</view></view>
         </view>
         <view class="cg-cfg-label">难度</view>
-        <view class="cg-pick" data-dd="简单|中等|困难"><text class="dd-v">中等</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view>
-        <view class="cg-cfg-hint mk-new" data-mk="难度说明" data-why="只给三档（easy/medium/hard），数字线由主题「规则难度」写进 journeyRules.tiers（标准 = 10/13/16），作者在这里不写数字。">每档的难度由「规则难度」决定</view>
+        <view class="cg-pick mk-chg" data-dd="简单|中等|困难" data-mk="去掉难度说明" data-before="下拉下面一行「每档的难度由「规则难度」决定」" data-after="（删除）" data-why="业主 10-28：去掉次级说明。只给三档（easy/medium/hard），数字线由主题「规则难度」写进 journeyRules.tiers（标准 = 10/13/16），作者在这里不写数字。"><text class="dd-v">中等</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view>
 
         <!-- 新增：情境加值 mods[] -->
         <view class="cg-adv-section mk-new" id="modsSec" data-mk="情境加值（mods）" data-why="check.mods[{when, value | var(counter.*), label}]；when 必填，用同一套条件词表。合计受主题 modCap 封顶（由「规则难度」给：轻松 8 / 标准 6 / 硬核 4）。master 编辑器不暴露 mods，保存时原样保留——这里第一次给界面。">
@@ -12954,7 +12940,7 @@ body.clean .scr .need{display:none}
               <view class="cg-adv-repeat-head"><text>加值 1</text><view class="cg-adv-del"><cy-icon><view class="cyi cyi--close-sm" style="width:14.56px;height:14.56px"></view></cy-icon></view></view>
               <input class="cg-cfg-input" value="带着旧手电"/>
               <view class="cg-two"><view class="cg-pick" data-dd="装备着某件物品|带着某个状态|节点检定结果|天气或时段|数值比较"><text class="dd-v">装备着某件物品</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="cg-pick" data-dd="旧手电|撬棍|怀表"><text class="dd-v">旧手电</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
-              <view class="cg-two"><view class="cg-pick" data-dd="加固定值|加属性值"><text class="dd-v">加固定值</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><input class="cg-cfg-input" value="2"/></view>
+              <view class="cg-two"><view class="cg-pick" data-dd="加固定值|加属性值"><text class="dd-v">加固定值</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><input class="cg-cfg-input" type="number" min="0" max="6" value="2"/></view>
             </view>
             <view class="cg-adv-repeat">
               <view class="cg-adv-repeat-head"><text>加值 2</text><view class="cg-adv-del"><cy-icon><view class="cyi cyi--close-sm" style="width:14.56px;height:14.56px"></view></cy-icon></view></view>
@@ -12962,8 +12948,7 @@ body.clean .scr .need{display:none}
               <view class="cg-two"><view class="cg-pick" data-dd="装备着某件物品|带着某个状态|节点检定结果|天气或时段"><text class="dd-v">带着某个状态</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="cg-pick" data-dd="夜行者|手背擦伤"><text class="dd-v">夜行者</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
               <view class="cg-two"><view class="cg-pick" data-dd="加固定值|加属性值"><text class="dd-v">加属性值</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="cg-pick" data-dd="观察|胆量|体魄"><text class="dd-v">胆量</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
             </view>
-            <view class="cg-adv-add" data-toast="已添加情境加值"><cy-icon><view class="cyi cyi--plus" style="width:14.56px;height:14.56px"></view></cy-icon>添加加值</view>
-            <view class="cg-cfg-hint">情境加值合计最多 +6</view>
+            <view class="cg-adv-add mk-chg" data-toast="已添加情境加值" data-mk="去掉封顶说明" data-before="最下面一行「情境加值合计最多 +6」" data-after="删掉。封顶由系统保证：加值输入框最大到上限（规则难度：轻松 8 / 标准 6 / 硬核 4），合计到顶时「添加加值」变灰" data-why="业主 10-28：作者不用照着做的规则不写出来，用上限和禁用来表达。"><cy-icon><view class="cyi cyi--plus" style="width:14.56px;height:14.56px"></view></cy-icon>添加加值</view>
           </view>
         </view>
 
@@ -12979,7 +12964,6 @@ body.clean .scr .need{display:none}
             <input class="cg-cfg-input" value="2" placeholder="格数"/>
           </view>
           </view>
-          <view data-st="off" class="cg-cfg-hint">（主题关闭魔鬼交易时，这一段不出现）</view>
         </view>
 
         <view class="cg-cfg-label">过了说一句</view><input class="cg-cfg-input" value="门轴一声闷响，你站稳了"/>
@@ -13088,18 +13072,16 @@ body.clean .scr .need{display:none}
     <view class="drow drow--static"><view class="dic pic pic--journal"></view><view class="dcopy"><text class="dt">伏笔</text><text class="ds">巡夜人的怀表 · 1/3 步</text></view></view>
     <view class="drow drow--static"><view class="dic pic pic--route"></view><view class="dcopy"><text class="dt">本局读数</text><text class="ds">章节 2 · 已完成 1 · 还有游戏 3</text></view></view>
     <!-- 10-28：我的角色 / 本局用时 / 当前得分（X3：菜单里只加这些行，不放对局面板） -->
-    <view id="charRow" class="mk-new" data-mk="我的角色" data-why="业主 10-28 第 5 条：角色卡属于主题，从游玩页打开——点状态栏第二行，或点这一行。全屏盖在游玩页上，不是新页面。主题没开 d20 检定时这一行不出现。" data-states="ok,d20off" data-st-name="我的角色（d20 开 / 关）">
-      <view data-st="ok" class="drow" data-act="charOpen" data-close="toolsMask,toolsMenu"><view class="dic"><view class="proto-ava">巡</view></view><view class="dcopy"><text class="dt">我的角色</text><text class="ds">夜巡人 · 观察 3 · 胆量 6</text></view><view class="darr"></view></view>
-      <view data-st="d20off" class="drow drow--static"><view class="dcopy"><text class="ds">（d20 检定关闭：这一行不出现）</text></view></view>
+    <view id="charRow" class="mk-new" data-mk="我的角色（10-28 去掉小字）" data-why="业主 10-28 第 5 条：角色卡属于主题，从游玩页打开——点状态栏第二行，或点这一行。全屏盖在游玩页上，不是新页面。主题没开 d20 检定时这一行不出现。" data-states="ok,d20off" data-st-name="我的角色（d20 开 / 关）">
+      <view data-st="ok" class="drow" data-act="charOpen" data-close="toolsMask,toolsMenu"><view class="dic"><view class="proto-ava">巡</view></view><view class="dcopy"><text class="dt">我的角色</text></view><view class="darr"></view></view>
     </view>
-    <view id="sessRows" class="mk-new" data-mk="本局用时 · 当前得分" data-why="业主 X3：「…」里只加这两行。10-28：两行都打开全屏的「本局成绩」，不再进单独的计分页（X1）。用时 = 服务端开局时间起算（GET /api/play/orient/session → elapsedMs / serverNow）；得分和名次 = GET /api/orient/scoring/session/{id} 的 totalCenti + 本场榜单。" data-states="ok,loading,error,off" data-st-name="用时与得分">
+    <view id="sessRows" class="mk-new" data-mk="本局用时 · 当前得分（10-28 去掉小字）" data-why="业主 X3：「…」里只加这两行。10-28：两行都打开全屏的「本局成绩」，不再进单独的计分页（X1）。用时 = 服务端开局时间起算（GET /api/play/orient/session → elapsedMs / serverNow）；得分和名次 = GET /api/orient/scoring/session/{id} 的 totalCenti + 本场榜单。" data-states="ok,loading,error,off" data-st-name="用时与得分">
       <view data-st="ok">
       <view class="drow" data-act="scoreOpen" data-close="toolsMask,toolsMenu"><view class="dic"><cy-icon><view class="cyi cyi--clock" style="width:18.72px;height:18.72px"></view></cy-icon></view><view class="dcopy"><text class="dt">本局用时</text></view><text class="dv">42:10</text><view class="darr"></view></view>
-      <view class="drow" data-act="scoreOpen" data-close="toolsMask,toolsMenu"><view class="dic pic pic--settle"></view><view class="dcopy"><text class="dt">当前得分</text><text class="ds">暂列第 2 名</text></view><text class="dv">230</text><view class="darr"></view></view>
+      <view class="drow" data-act="scoreOpen" data-close="toolsMask,toolsMenu"><view class="dic pic pic--settle"></view><view class="dcopy"><text class="dt">当前得分</text></view><text class="dv">230</text><view class="darr"></view></view>
       </view>
-      <view data-st="loading" class="drow drow--static"><view class="dic pic pic--route"></view><view class="dcopy"><text class="dt">本局用时 · 当前得分</text><text class="ds">正在读取</text></view></view>
-      <view data-st="error" class="drow" data-toast="正在重新读取"><view class="dic pic pic--route"></view><view class="dcopy"><text class="dt">本局用时 · 当前得分</text><text class="ds">暂时没有读到，轻点重试</text></view><view class="darr"></view></view>
-      <view data-st="off" class="drow drow--static"><view class="dcopy"><text class="ds">（自由探索或还没开局：这两行不出现）</text></view></view>
+      <view data-st="loading" class="drow drow--static"><view class="dic pic pic--route"></view><view class="dcopy"><text class="dt">本局用时 · 当前得分</text></view><text class="dv">…</text></view>
+      <view data-st="error" class="drow" data-toast="正在重新读取"><view class="dic pic pic--route"></view><view class="dcopy"><text class="dt">暂时没有读到</text></view><text class="dv">重试</text></view>
     </view>
     <view class="drow" data-open="nodeSheetP,nodeMaskP" data-close="toolsMask,toolsMenu"><view class="dic pic pic--scan"></view><view class="dcopy"><text class="dt">扫码到达</text><text class="ds">到店后扫商家的码</text></view><view class="darr"></view></view>
     <view class="drow drow--hold"><view class="dic pic pic--route"></view><view class="dcopy"><text class="dt">暂停这一局</text><text class="ds">长按结束这一局</text></view><view class="darr"></view></view>
@@ -13167,21 +13149,21 @@ body.clean .scr .need{display:none}
     <view class="sheet-name serif">旧码头仓库</view>
     <view class="sheet-meta">滨江路 12 号 · 距你 30 米</view>
     <view class="sheet-desc serif">铁门上的门牌写着一个年份。找到它，或者找到贴在侧门上的码。</view>
-    <view id="arrive" data-states="ok,blocked,guard,unknown,alt,quiz,pending,rejected,done,guest" data-st-name="到站与完成" data-cur="ok">
+    <view id="arrive" class="mk-chg" data-mk="到站各状态去掉小字" data-before="定位不准「定位不够准确。到开阔处再试一次，或换个方式」/ 结果未确认「到达结果还没确认。请留在原地再核验一次，不会重复计分。」/ 审核中「照片已提交，审核通过后完成 · 也可以换一张或换个方式」/ 未通过「……也可以换个方式」/ 已完成下面「每个节点只计一次分」/ 游客按钮下面「登录后才能记录到达」；替代方式「扫现场的码」「回答现场题」「拍一张照片」；入口「找不到？换个方式：扫码 · 答题 · 拍照」" data-after="出错只留一句发生了什么，动作放在按钮或「· 换个方式」：定位不够准确 · 换个方式 / 到达结果还没确认 / 照片已提交 · 审核中 · 换一张 · 换个方式 / 照片未通过：门牌不清晰 · 换个方式；「只计一次分」和游客那句删掉（按钮已说明）；替代方式叫 扫码 / 答题 / 拍照；入口「找不到？换个方式」" data-why="业主 10-28：去掉次级说明。守卫那句「这次到达没有记录 · 申诉」本来就是一句话 + 一个动作，没改。" data-states="ok,blocked,guard,unknown,alt,quiz,pending,rejected,done,guest" data-st-name="到站与完成" data-cur="ok">
       <!-- 现状：到达即完成 -->
       <view data-st="ok alt quiz">
         <cy-btn style="margin-top:var(--cy-space-3-5)" data-act="arriveOk"><view class="btn btn--primary">我已到达此站</view></cy-btn>
         <view class="sheet-note">已到站附近，点按钮完成<text class="sheet-note-action" data-toast="打开扫一扫"> · 可扫码到达</text></view>
       </view>
       <!-- 新增：找不到时换个方式（一行紧凑列表）-->
-      <view data-st="ok" class="sheet-nav mk-new" data-mk="找不到？换个方式" data-why="GET /api/orient/task/state 的 alternatives[]：作者开了哪几种就列哪几种，一行排开。点哪种就在这张卡里就地展开，不开新弹层。" data-act="altOpen"><cy-icon><view class="cyi cyi--route" style="width:14.56px;height:14.56px"></view></cy-icon><text>找不到？换个方式：扫码 · 答题 · 拍照</text></view>
+      <view data-st="ok" class="sheet-nav mk-new" data-mk="找不到？换个方式" data-why="GET /api/orient/task/state 的 alternatives[]：作者开了哪几种就列哪几种，一行排开。点哪种就在这张卡里就地展开，不开新弹层。" data-act="altOpen"><cy-icon><view class="cyi cyi--route" style="width:14.56px;height:14.56px"></view></cy-icon><text>找不到？换个方式</text></view>
       <view data-st="alt" class="mk-new" data-mk="三种方式" data-why="POST /api/orient/task/alternative/submit {alternativeTaskType SCAN|QUIZ|PHOTO, code|answer|picUrl, lng, lat}。">
-        <view class="sheet-nav" data-toast="打开扫一扫"><cy-icon><view class="cyi cyi--qr-scan" style="width:14.56px;height:14.56px"></view></cy-icon><text>扫现场的码 · 码贴在仓库侧门的铁牌上</text></view>
-        <view class="sheet-nav" data-act="altQuiz"><cy-icon><view class="cyi cyi--edit" style="width:14.56px;height:14.56px"></view></cy-icon><text>回答现场题</text></view>
-        <view class="sheet-nav" data-act="altPhoto"><cy-icon><view class="cyi cyi--camera" style="width:14.56px;height:14.56px"></view></cy-icon><text>拍一张照片 · 拍下仓库的大门和门牌</text></view>
+        <view class="sheet-nav" data-toast="打开扫一扫"><cy-icon><view class="cyi cyi--qr-scan" style="width:14.56px;height:14.56px"></view></cy-icon><text>扫码 · 码贴在仓库侧门的铁牌上</text></view>
+        <view class="sheet-nav" data-act="altQuiz"><cy-icon><view class="cyi cyi--edit" style="width:14.56px;height:14.56px"></view></cy-icon><text>答题</text></view>
+        <view class="sheet-nav" data-act="altPhoto"><cy-icon><view class="cyi cyi--camera" style="width:14.56px;height:14.56px"></view></cy-icon><text>拍照 · 拍下仓库的大门和门牌</text></view>
       </view>
       <view data-st="quiz" class="game-card mk-new" data-mk="现场题（就地展开）">
-        <view class="g0">回答现场题</view>
+        <view class="g0">答题</view>
         <view class="g1 serif">仓库门牌上写的年份是？</view>
         <input class="proto-answer" value="1937"/>
         <cy-btn style="margin-top:var(--cy-space-3)" data-act="quizOk"><view class="btn btn--primary">提交答案</view></cy-btn>
@@ -13189,7 +13171,7 @@ body.clean .scr .need{display:none}
       <!-- 被拦：一句话 + 一个动作 -->
       <view data-st="blocked" class="mk-new" data-mk="到站被拦 · 定位不准" data-why="ARRIVE_ACCURACY_MISSING/INVALID：appealable=false。只给一句话 + 一个动作（重新定位）。不显示错误码。">
         <cy-btn style="margin-top:var(--cy-space-3-5)" data-act="arriveOk"><view class="btn btn--primary">重新定位</view></cy-btn>
-        <view class="sheet-note">定位不够准确。到开阔处再试一次，或<text class="sheet-note-action" data-act="altOpen">换个方式</text></view>
+        <view class="sheet-note">定位不够准确<text class="sheet-note-action" data-act="altOpen"> · 换个方式</text></view>
       </view>
       <view data-st="guard" class="mk-new" data-mk="到站被拦 · 守卫" data-why="ARRIVE_GUARD_THROTTLE/SPEED/WINDOW_DISTANCE（appealable=true，guardLogId）。一句话 + 一个动作「申诉」：微信原生确认框，确认即提交，不开半屏、不让玩家填编号。">
         <cy-btn style="margin-top:var(--cy-space-3-5)" data-act="arriveOk"><view class="btn btn--primary">我已到达此站</view></cy-btn>
@@ -13197,24 +13179,22 @@ body.clean .scr .need{display:none}
       </view>
       <view data-st="unknown" class="mk-new" data-mk="结果未确认 → 现场再核验" data-why="业主 10-23：打卡结果不明 = 在现场重新核验，不是「查询原回执」。后端 /api/play/checkin 没有 UNKNOWN 状态码（网络超时时由前端判定）。">
         <cy-btn style="margin-top:var(--cy-space-3-5)" data-act="arriveOk"><view class="btn btn--primary">再核验一次</view></cy-btn>
-        <view class="sheet-note">到达结果还没确认。请留在原地再核验一次，不会重复计分。</view>
+        <view class="sheet-note">到达结果还没确认</view>
       </view>
       <view data-st="pending" class="mk-new" data-mk="照片审核中（不算完成）" data-why="outcome=PENDING_REVIEW：本站不完成、不计分；可以换别的方式，也可以换一张照片（新的会替换旧的，后端 SUPERSEDED）。">
-        <view class="post-row"><text class="pl">照片已提交，审核通过后完成</text><text class="pr">审核中</text></view>
-        <view class="sheet-note">也可以<text class="sheet-note-action" data-act="altPhoto">换一张</text><text> 或 </text><text class="sheet-note-action" data-act="altOpen">换个方式</text></view>
+        <view class="post-row"><text class="pl">照片已提交</text><text class="pr">审核中</text></view>
+        <view class="sheet-note"><text class="sheet-note-action" data-act="altPhoto">换一张</text><text class="sheet-note-action" data-act="altOpen"> · 换个方式</text></view>
       </view>
       <view data-st="rejected" class="mk-new" data-mk="照片没通过 → 重拍" data-why="outcome=REJECTED：不是死胡同，直接给「重新拍一张」，另一条路「换个方式」。">
         <cy-btn style="margin-top:var(--cy-space-3-5)" data-act="altPhoto"><view class="btn btn--primary">重新拍一张</view></cy-btn>
-        <view class="sheet-note">照片未通过：门牌不清晰。也可以<text class="sheet-note-action" data-act="altOpen">换个方式</text></view>
+        <view class="sheet-note">照片未通过：门牌不清晰<text class="sheet-note-action" data-act="altOpen"> · 换个方式</text></view>
       </view>
       <view data-st="done">
         <view class="post-row"><text class="pl">这一关你已通关</text><text class="pr">+100 分</text></view>
-        <view class="sheet-note mk-new" data-mk="只计一次" data-why="分账按 (对局, 节点) 只记第一次（ledger 键 task:node:{id}）。">每个节点只计一次分</view>
         <cy-btn style="margin-top:var(--cy-space-3-5)" data-close="nodeSheetP,nodeMaskP" data-open="finMask,finSheet"><view class="btn btn--primary">继续</view></cy-btn>
       </view>
       <view data-st="guest">
         <cy-btn style="margin-top:var(--cy-space-3-5)" data-toast="去登录"><view class="btn btn--primary">登录后记录到达</view></cy-btn>
-        <view class="sheet-note">登录后才能记录到达</view>
       </view>
     </view>
     <view class="sheet-nav" data-toast="打开微信地图"><cy-icon><view class="cyi cyi--route" style="width:14.56px;height:14.56px"></view></cy-icon><text>在地图中查看路线</text></view>
@@ -13252,11 +13232,10 @@ body.clean .scr .need{display:none}
       <text class="finsheet__game-ending-copy">状态 · 手背擦伤</text>
     </view>
     </view>
-    <view data-st="off" class="finsheet__retry">（d20 检定关闭：这一块不出现）</view>
     <view data-st="error" class="finsheet__retry">本章小结暂时没有读到。<text class="finsheet__retry-act" data-toast="正在重新读取">重试</text></view>
   </view>
   <view class="finish-journal-entry"><view><text class="finish-journal-entry__title">回看旅程手记</text></view><cy-icon><view class="cyi cyi--arrow-right" style="width:14.56px;height:14.56px"></view></cy-icon></view>
-  <view class="finish-journal-entry mk-new" data-mk="本局成绩入口" data-why="业主 10-28 第 6 条：章节结算卡也能打开全屏的本局成绩。行形照抄上一行「回看旅程手记」（master .finish-journal-entry）。自由探索主题不出现。" data-act="scoreOpen"><view><text class="finish-journal-entry__title">本局成绩 · 暂列第 2 名</text></view><cy-icon><view class="cyi cyi--arrow-right" style="width:14.56px;height:14.56px"></view></cy-icon></view>
+  <view class="finish-journal-entry mk-new" data-mk="本局成绩入口（名次挪到右边）" data-why="业主 10-28 第 6 条：章节结算卡也能打开全屏的本局成绩。行形照抄上一行「回看旅程手记」（master .finish-journal-entry）。自由探索主题不出现。" data-act="scoreOpen"><view><text class="finish-journal-entry__title">本局成绩</text></view><text class="proto-fje-v">第 2 名</text><cy-icon><view class="cyi cyi--arrow-right" style="width:14.56px;height:14.56px"></view></cy-icon></view>
   <view class="finsheet__cta" data-close="finMask,finSheet">继续</view>
 </view>
 
@@ -13264,7 +13243,7 @@ body.clean .scr .need{display:none}
 <view class="ov ps" id="charOv" role="dialog" aria-label="我的角色">
   <view class="ov__x" data-act="ovClose" data-ov="charOv" aria-label="关闭"><cy-icon><view class="cyi cyi--close" style="width:16.64px;height:16.64px"></view></cy-icon></view>
   <view class="ov__sv">
-  <view class="mk-new" id="charHost" data-mk="角色卡（全屏）" data-why="业主 10-28 第 5 条：角色卡属于主题，不属于整个体验。从游玩页打开（状态栏第二行、「…」里的「我的角色」），全屏盖在游玩页上，左上 × 或下滑关闭，不进新页面；参与详情和个人页不再有入口。照游戏角色界面来做：主题风格的头图和角色剪影、角色名和称号、属性大数字 + 条 + 小雷达、特质徽章、进度（章节 / 线索 / 动量 / 进度钟）；进场淡入、数字从 0 数上来。只读 GET /api/play/character（开局冻结值）；颜色跟着属性类型，只用 cy token。" data-states="ok,loading,error" data-st-name="角色卡" data-cur="ok">
+  <view class="mk-new" id="charHost" data-mk="角色卡（全屏）· 10-28 去掉小字" data-why="业主 10-28 第 5 条：角色卡属于主题，不属于整个体验。从游玩页打开（状态栏第二行、「…」里的「我的角色」），全屏盖在游玩页上，左上 × 或下滑关闭，不进新页面；参与详情和个人页不再有入口。照游戏角色界面来做：主题风格的头图和角色剪影、角色名和称号、属性大数字 + 条 + 小雷达、特质徽章、进度（章节 / 线索 / 动量 / 进度钟）；进场淡入、数字从 0 数上来。只读 GET /api/play/character（开局冻结值）；颜色跟着属性类型，只用 cy token。" data-states="ok,loading,error" data-st-name="角色卡" data-cur="ok">
    <view data-st="ok">
     <view class="cc-hero">
       <view class="cc-art"><view class="cc-fog"></view><view class="cc-fog cc-fog--2"></view></view>
@@ -13282,13 +13261,12 @@ body.clean .scr .need{display:none}
         <path d="M147 161 L151.5 153 L156 161" stroke="#05080b" stroke-width="2" fill="none"/>
       </svg>
       <view class="cc-id">
-        <text class="cc-kicker">雾港夜行 · 第 1 章</text>
         <text class="cc-name">夜巡人</text>
         <text class="cc-title">循着半张货单走进旧港的人</text>
       </view>
     </view>
     <view class="cc-sec cc-in" style="--d:1">
-      <view class="cc-h"><text>属性</text><text class="cc-h__s">4 项</text></view>
+      <view class="cc-h"><text>属性</text></view>
       <view class="cc-attrs">
         <svg class="cc-radar" viewBox="0 0 150 150" aria-hidden="true">
           <polygon class="g" points="75,31 119,75 75,119 31,75"/><polygon class="g" points="75,46 104,75 75,104 46,75"/><polygon class="g" points="75,60 90,75 75,90 60,75"/>
@@ -13305,10 +13283,10 @@ body.clean .scr .need{display:none}
       </view>
     </view>
     <view class="cc-sec cc-in" style="--d:2">
-      <view class="cc-h"><text>特质</text><text class="cc-h__s">2 项</text></view>
+      <view class="cc-h"><text>特质</text></view>
       <view class="cc-traits">
-        <view class="cc-tr"><view class="cc-tr__badge"><cy-icon><view class="cyi cyi--star-filled" style="width:14.56px;height:14.56px"></view></cy-icon></view><view><text class="cc-tr__n">夜行者</text><text class="cc-tr__d">夜里行动更顺手</text><text class="cc-tr__tag">开局自带</text></view></view>
-        <view class="cc-tr cc-tr--bad"><view class="cc-tr__badge"><cy-icon><view class="cyi cyi--warning" style="width:14.56px;height:14.56px"></view></cy-icon></view><view><text class="cc-tr__n">手背擦伤</text><text class="cc-tr__d">行动吃力，直到治好</text><text class="cc-tr__tag">第 1 章获得</text></view></view>
+        <view class="cc-tr"><view class="cc-tr__badge"><cy-icon><view class="cyi cyi--star-filled" style="width:14.56px;height:14.56px"></view></cy-icon></view><view><text class="cc-tr__n">夜行者</text><text class="cc-tr__tag">开局自带</text></view></view>
+        <view class="cc-tr cc-tr--bad"><view class="cc-tr__badge"><cy-icon><view class="cyi cyi--warning" style="width:14.56px;height:14.56px"></view></cy-icon></view><view><text class="cc-tr__n">手背擦伤</text><text class="cc-tr__tag">第 1 章获得</text></view></view>
       </view>
     </view>
     <view class="cc-sec cc-in" style="--d:3">
@@ -13319,14 +13297,14 @@ body.clean .scr .need{display:none}
         <view><text class="cc-p__k">动量</text><text class="cc-p__v"><text data-count="2">2</text><text class="cc-max">/6</text></text><view class="cc-pips"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i></view></view>
       </view>
       <view class="cc-clocks">
-        <view class="cc-clock t-body"><svg viewBox="0 0 40 40" aria-hidden="true"><circle class="tr" cx="20" cy="20" r="16" stroke-dasharray="14.76 2"/><circle class="fl" cx="20" cy="20" r="16" stroke-dasharray="14.76 2 14.76 2 14.76 2 0 120"/></svg><view><text class="cc-clock__n">巡夜人警觉</text><text class="cc-clock__v">3/6 · 坏事逼近</text></view></view>
-        <view class="cc-clock t-agi"><svg viewBox="0 0 40 40" aria-hidden="true"><circle class="tr" cx="20" cy="20" r="16" stroke-dasharray="23.13 2"/><circle class="fl" cx="20" cy="20" r="16" stroke-dasharray="23.13 2 23.13 2 0 120"/></svg><view><text class="cc-clock__n">拼出货单</text><text class="cc-clock__v">2/4 · 事情进展</text></view></view>
+        <view class="cc-clock t-body"><svg viewBox="0 0 40 40" aria-hidden="true"><circle class="tr" cx="20" cy="20" r="16" stroke-dasharray="14.76 2"/><circle class="fl" cx="20" cy="20" r="16" stroke-dasharray="14.76 2 14.76 2 14.76 2 0 120"/></svg><view><text class="cc-clock__n">巡夜人警觉</text><text class="cc-clock__v">3/6</text></view></view>
+        <view class="cc-clock t-agi"><svg viewBox="0 0 40 40" aria-hidden="true"><circle class="tr" cx="20" cy="20" r="16" stroke-dasharray="23.13 2"/><circle class="fl" cx="20" cy="20" r="16" stroke-dasharray="23.13 2 23.13 2 0 120"/></svg><view><text class="cc-clock__n">拼出货单</text><text class="cc-clock__v">2/4</text></view></view>
       </view>
     </view>
     <view style="height:44px"></view>
    </view>
    <view data-st="loading"><view class="ov-skel" style="height:300px;margin:0 0 14px;border-radius:0"></view><view class="ov-skel" style="height:150px"></view><view class="ov-skel" style="height:110px"></view></view>
-   <view data-st="error" class="ov-empty"><text class="ov-empty__t">角色信息暂时没有读到</text><text class="ov-empty__s">游玩进度不受影响。</text><cy-btn data-toast="正在重新读取"><view class="btn btn--secondary">重试</view></cy-btn></view>
+   <view data-st="error" class="ov-empty"><text class="ov-empty__t">角色信息暂时没有读到</text><cy-btn data-toast="正在重新读取"><view class="btn btn--secondary">重试</view></cy-btn></view>
   </view>
   </view>
 </view>
@@ -13335,15 +13313,13 @@ body.clean .scr .need{display:none}
 <view class="ov ps" id="scoreOv" role="dialog" aria-label="本局成绩">
   <view class="ov__x" data-act="ovClose" data-ov="scoreOv" aria-label="关闭"><cy-icon><view class="cyi cyi--close" style="width:16.64px;height:16.64px"></view></cy-icon></view>
   <view class="ov__sv">
-  <view class="mk-new" id="scoreHost" data-mk="本局成绩（全屏）" data-why="业主 X1 + 10-28 第 6 条：没有单独的计分页；本局成绩是盖在游玩页上的全屏结算画面（像游戏的对局结算 / 记分板）：大名次、得分从 0 数上来、用时、完成节点、得分明细、本场前 5 名，「对成绩有异议」是一行小字，点开是可输入的原生弹窗。从「…」的本局用时 / 当前得分、章节结算卡打开。数据：GET /api/orient/scoring/session/{sessionId}（totalCenti、byDimension）、POST /api/growth/leaderboard（定向主题由 OrientScoringService.decorateLeaderboard 补分数和用时）、POST /api/orient/scoring/dispute {reason}。已写码计分页的同步、结算、流水、申诉按钮全部去掉。" data-states="live,final,loading,error" data-st-name="本局成绩" data-cur="live">
+  <view class="mk-new" id="scoreHost" data-mk="本局成绩（全屏）· 10-28 去掉小字" data-why="业主 X1 + 10-28 第 6 条：没有单独的计分页；本局成绩是盖在游玩页上的全屏结算画面（像游戏的对局结算 / 记分板）：大名次、得分从 0 数上来、用时、完成节点、得分明细、本场前 5 名，底部文字按钮「申诉」，点开是可输入的原生弹窗。从「…」的本局用时 / 当前得分、章节结算卡打开。数据：GET /api/orient/scoring/session/{sessionId}（totalCenti、byDimension）、POST /api/growth/leaderboard（定向主题由 OrientScoringService.decorateLeaderboard 补分数和用时）、POST /api/orient/scoring/dispute {reason}。已写码计分页的同步、结算、流水、申诉按钮全部去掉。" data-states="live,final,loading,error" data-st-name="本局成绩" data-cur="live">
    <view data-st="live final">
     <view class="sc-hero">
       <view class="sc-rays"></view>
-      <text class="sc-kicker">雾港夜行 · 本局成绩</text>
+      <text class="sc-kicker">本局成绩</text>
       <text class="sc-pre" data-st="live">暂列</text><text class="sc-pre" data-st="final">最终名次</text>
-      <view class="sc-rank"><text class="sc-rank__a">第</text><text class="sc-rank__n">2</text><text class="sc-rank__a">名</text></view>
-      <text class="sc-of">本场 18 位玩家</text>
-      <text class="sc-badge" data-st="live">进行中</text><text class="sc-badge" data-st="final">已结束</text>
+      <view class="sc-rank"><text class="sc-rank__a">第</text><text class="sc-rank__n">2</text><text class="sc-rank__a">名</text><text class="sc-rank__of">/ 18</text></view>
     </view>
     <view class="sc-tiles cc-in" style="--d:1">
       <view class="sc-t"><text class="sc-t__v" data-count="230">230</text><text class="sc-t__k">得分</text></view>
@@ -13355,11 +13331,11 @@ body.clean .scr .need{display:none}
       <view class="sc-rows">
         <view class="sc-r"><text>到达节点 × 2</text><text class="sc-r__v">+200</text></view>
         <view class="sc-r"><text>解谜</text><text class="sc-r__v">+30</text></view>
-        <view class="sc-r is-wait" data-st="live"><text>照片审核中 × 1</text><text class="sc-r__v">通过后计分</text></view>
+        <view class="sc-r is-wait" data-st="live"><text>照片 × 1</text><text class="sc-r__v">审核中</text></view>
       </view>
     </view>
     <view class="cc-sec cc-in" style="--d:3">
-      <view class="cc-h"><text>排行</text><text class="cc-h__s">本场前 5 名</text></view>
+      <view class="cc-h"><text>排行</text></view>
       <view class="sc-board">
         <view class="sc-p"><text class="sc-p__r m1">1</text><view class="sc-p__ava">林</view><text class="sc-p__n">雾港小林</text><text class="sc-p__t">38:02</text><text class="sc-p__s">260</text></view>
         <view class="sc-p is-me"><text class="sc-p__r m2">2</text><view class="sc-p__ava">你</view><text class="sc-p__n">你</text><text class="sc-p__t">42:10</text><text class="sc-p__s">230</text></view>
@@ -13368,10 +13344,10 @@ body.clean .scr .need{display:none}
         <view class="sc-p"><text class="sc-p__r">5</text><view class="sc-p__ava">满</view><text class="sc-p__n">小满</text><text class="sc-p__t">47:12</text><text class="sc-p__s">150</text></view>
       </view>
     </view>
-    <view class="sc-foot cc-in" style="--d:4"><text class="sc-dispute" data-modal="对成绩有异议|请说明哪里不对，我们核实后会通知你。|取消|提交|edit:例如：第 3 个节点已到达，但没有计分" data-ok-toast="已提交">对成绩有异议</text></view>
+    <view class="sc-foot cc-in" style="--d:4"><text class="sc-dispute" data-modal="申诉成绩|请说明哪里不对，我们核实后会通知你。|取消|提交|edit:例如：第 3 个节点已到达，但没有计分" data-ok-toast="已提交">申诉</text></view>
    </view>
    <view data-st="loading"><view class="ov-skel" style="height:300px;margin:0 0 14px;border-radius:0"></view><view class="ov-skel" style="height:80px"></view><view class="ov-skel" style="height:220px"></view></view>
-   <view data-st="error" class="ov-empty"><text class="ov-empty__t">成绩暂时没有读到</text><text class="ov-empty__s">游玩进度不受影响。</text><cy-btn data-toast="正在重新读取"><view class="btn btn--secondary">重试</view></cy-btn></view>
+   <view data-st="error" class="ov-empty"><text class="ov-empty__t">成绩暂时没有读到</text><cy-btn data-toast="正在重新读取"><view class="btn btn--secondary">重试</view></cy-btn></view>
   </view>
   </view>
 </view>
@@ -13407,7 +13383,6 @@ body.clean .scr .need{display:none}
           <view class="proto-inline-acts"><view class="jc__act jc__act--ghost" data-act="takeBargain">接受交易</view></view>
         </view>
         <view data-st="accepted"><view class="jc__mods-k">魔鬼交易</view><view class="jc__mod is-held"><text class="jc__mod-l">已接受 · 让巡夜人听见你</text><text class="jc__mod-v">+2</text></view></view>
-        <view data-st="off"><view class="jc__mods-k">（主题关闭魔鬼交易，或这个检定没有交易：这一块不出现）</view></view>
       </view>
     </view>
 
@@ -13439,10 +13414,6 @@ body.clean .scr .need{display:none}
       <view class="jc__vitals"><text>生命 7</text><text>幸运 2</text></view>
     </view>
 
-    <view data-st="off" class="mk-new" data-mk="d20 关：没有这一屏" data-why="业主 10-27：主题关着 d20 检定时，故事流里不出现检定入口，玩家走不到这一屏；明细、属性、魔鬼交易、动量都没有。">
-      <view class="jc__copy">（d20 检定关闭）</view>
-      <view class="jc__hint">（故事流里没有检定入口，玩家不会来到这一屏。）</view>
-    </view>
     <!-- 已写码版（cy26）原样 -->
     <view data-st="wip" class="mk-wip" data-mk="检定明细（cy25/cy26）" data-why="feature/cy25-w7-team-check 起加的 breakdownRows，cy26 再加「检定明细已隐藏」与「查询原检定回执」。" data-prob="① 10 行里有「情境修正合计 / 情境修正上限 / 实际情境修正 / 难度 DC / 自然骰自动判定 开启」等规则词和英文缩写；② 结算后与题面两处都画；③ unknown 时底部换成「查询原检定回执」，玩家不懂；④ disabledReason 对非 R5 也显示，会出现「原检定结果待确认，请查询原回执；未查到不代表未写入」。">
       <view class="jc__total"><text class="jc__die jc__total-n">18</text><text class="jc__total-s">达成值 18 · 难度 15</text></view>
@@ -13495,7 +13466,7 @@ body.clean .scr .need{display:none}
       <view class="proto-album-act" data-modal="查看/重试审核|照片尚未提交相册。将查看原照片的审核结果；若已被拒绝或暂不可用，可能重新提交审核。审核批准后才会提交相册。|取消|查看重试">查看/重试审核</view>
     </view>
     <view data-st="pending" class="mk-chg" data-mk="审核中（建议）" data-before="cy26：只有「查看/重试审核」+ 说明弹窗" data-after="一句「照片已提交，审核通过后完成」+ 一个动作「换一张」" data-why="审核中不算完成；换一张会替换上一张（后端 SUPERSEDED），不弹框。">
-      <text>照片已提交，审核通过后完成</text>
+      <text>照片审核中</text>
       <view class="proto-album-act" data-toast="打开相机 / 相册">换一张</view>
     </view>
     <view data-st="rejected" class="mk-new" data-mk="没通过 → 重选" data-why="REJECTED：一句原因 + 「重新选择照片」，永远不是停在「审核中」。">
@@ -13525,7 +13496,7 @@ body.clean .scr .need{display:none}
   <div class="lk-step" data-goto="e-publish"><div class="k">③ 发布 · 冻结</div><div class="t">发布即生效</div><div class="f">publish-check 校验检定用到的属性都在注册表；开局 freezeJourney 写快照。现在快照只有 [{key,label}]，范围和显示方式 <span class="need">需后端</span></div></div>
   <div class="lk-step" data-goto="p-story"><div class="k">④ 游玩 · 状态栏两行</div><div class="t">第二行：前 3 项属性</div><div class="f">第一行 master 原样（生命值 · 背包）；第二行 GET /api/play/character → attributes 按 sortOrder 取前 3（观察 ★★★☆☆ · 胆量小条 · 体魄 4），点开角色卡</div></div>
   <div class="lk-step" data-goto="p-check"><div class="k">⑤ 检定</div><div class="t">骰子 + 属性 + 修正</div><div class="f">check.skill=counter.observe（<a data-goto="e-temp">玩法模板 · 检定</a> 下拉选）→ PlayCheckReceipt.breakdown{die, skill, situational, bargain, momentum, total, dc}</div></div>
-  <div class="lk-step" data-goto="p-finish"><div class="k">⑥ 章节结算</div><div class="t">RPG 小结 + 本局成绩入口</div><div class="f">GET /api/play/journey/stage-end；属性前后值来自角色卡；clocks / momentum / aspects 来自 rpg 视图；一行「本局成绩 · 暂列第 2 名」打开全屏成绩</div></div>
+  <div class="lk-step" data-goto="p-finish"><div class="k">⑥ 章节结算</div><div class="t">RPG 小结 + 本局成绩入口</div><div class="f">GET /api/play/journey/stage-end；属性前后值来自角色卡；clocks / momentum / aspects 来自 rpg 视图；一行「本局成绩 · 第 2 名 ›」打开全屏成绩</div></div>
   <div class="lk-step" data-goto="p-char"><div class="k">⑦ 角色卡（全屏）</div><div class="t">盖在游玩页上</div><div class="f">GET /api/play/character：同一组冻结值；属性大数字 + 雷达、特质、进度（章节 / 线索 / 动量 / 进度钟）</div></div>
   <div class="lk-step" data-goto="p-score"><div class="k">⑧ 本局成绩（全屏）</div><div class="t">名次 · 得分 · 用时</div><div class="f">scoring/session/{id}.totalCenti、byDimension；/api/growth/leaderboard；异议 POST /api/orient/scoring/dispute</div></div>
 </div>
@@ -13550,7 +13521,7 @@ body.clean .scr .need{display:none}
   <tr><td>可玩时段 · 开局前准备</td><td><a data-goto="e-time">可玩时段</a> · <a data-goto="e-prep">开局前准备</a></td><td><span class="need">需后端</span></td><td>原型 B 主题详情</td><td>「只在夜间 20:00–06:00 开放」</td></tr>
   <tr><td><code>alternativeTaskType / promptText / answer</code></td><td><a data-goto="e-quest">到达与引导</a></td><td>orient task alternative</td><td><a data-goto="p-node">节点详情</a></td><td>扫码 · 答题 · 拍照</td></tr>
   <tr><td><code>outcome</code> PENDING_REVIEW / REJECTED / COMPLETED</td><td>—</td><td>attempt 表</td><td><a data-goto="p-node">节点详情</a>、<a data-goto="p-album">相册</a>、<a data-goto="p-score">本局成绩</a></td><td>审核中 / 未通过 · 重拍 / +100</td></tr>
-  <tr><td><code>totalCenti / byDimension</code> · 榜单</td><td>—</td><td>分账（task:node:{id} 每个节点一次）</td><td><a data-goto="p-tools">「…」</a>、<a data-goto="p-finish">章节结算</a> → <a data-goto="p-score">本局成绩</a></td><td>230 分 · 暂列第 2 名</td></tr>
+  <tr><td><code>totalCenti / byDimension</code> · 榜单</td><td>—</td><td>分账（task:node:{id} 每个节点一次）</td><td><a data-goto="p-tools">「…」</a>、<a data-goto="p-finish">章节结算</a> → <a data-goto="p-score">本局成绩</a></td><td>230 分 · 第 2 名</td></tr>
 </table>
 </section>
     </div>
@@ -13571,7 +13542,7 @@ var META = {
     'e-detail': { sec: 'fabu', scope: '#tdHost > .ios-root', init: ['tdSheet'], t: '主题详情', host: 'fabu/topic-detail-sheet.wxml', theme: 'light', badges: 'n,c',
       files: ['chengyinhub-xcx/pages/publish/fabu/topic-detail-sheet.wxml', 'chengyinhub-xcx/pages/publish/components/topic-state-keys/index.wxml'],
       intro: '10-28：左上「退出」改「取消」。「可玩时段」「开局前准备」各变成一行（右边是当前值），点进去是同一张半屏里的下一层，左上「‹ 主题详情」返回。点「d20 与角色设定」会叠一张新半屏：主题详情缩小变暗，顶边露在上面（iOS 卡片叠放），关掉后回来。平台夜间规则那一行删掉。',
-      notes: ['卡片仍是 master 的 .node-card / .node-pill / cy-switch，只改结构。'] },
+      notes: ['卡片仍是 master 的 .node-card / .node-pill / cy-switch，只改结构。', '10-28 去掉次级说明：d20 开关下面的小字删掉；「d20 与角色设定」的当前值挪到右边。', '俱乐部带队的主题（E2）：「可玩时段」整行不出现。手机里不再画「（这张卡不出现）」，右栏切「俱乐部带队」看。'] },
     'e-time': { sec: 'fabu', scope: '#tdTime', init: ['tdSheet'], lv: ['tdTime'], t: '可玩时段（下一层）', host: '主题详情的下一层', theme: 'light', badges: 'n',
       files: ['chengyinhub-xcx/pages/publish/fabu/topic-detail-sheet.wxml（卡片语言）'],
       intro: '勾选列表，点一项立即生效。选「自定义」时下面多一组开始 / 结束。俱乐部带队的主题（E2：主题有俱乐部）整行不出现，回到上一层用右栏切换。',
@@ -13585,7 +13556,7 @@ var META = {
       intro: '叠在主题详情上的第二张半屏（主题详情缩到 0.94、变暗、顶边露出）。第一层是分组列表：规则难度（一行，点进勾选列表）· 规则三个开关 · 属性列表（左滑删除，「编辑」排序，「添加属性」）· 更多规则。右栏「属性列表」可以切到「左滑」「编辑中」看效果。',
       api: ['开关 <code>journeyRules.checkEnabled</code>（已有）', '规则难度展开成已有字段：<code>tiers</code>、<code>modCap</code>、<code>rpg.momentum</code>、进度钟默认格数；档名 <span class="need">需后端</span>', '属性 → <code>theme_state_key</code>（C-1）'] },
     'e-d20-preset': { sec: 'fabu', scope: '#d20LPreset', init: ['tdSheet', 'd20Sheet'], lv: ['d20LPreset'], t: 'd20 · 规则难度（下一层）', host: 'd20 半屏的下一层', theme: 'light', badges: 'n',
-      files: ['同一张 cy-sheet'], intro: '三档勾选列表，点一项立即生效，上一层那行的值和脚注跟着变。左上「‹ d20 与角色」返回。' },
+      files: ['同一张 cy-sheet'], intro: '三档勾选列表，点一项立即生效，上一层那行的值跟着变。左上「‹ d20 与角色」返回。' },
     'e-d20-add': { sec: 'fabu', scope: '#d20LAdd', init: ['tdSheet', 'd20Sheet'], lv: ['d20LAdd'], run: 'd20AddInit', t: 'd20 · 添加属性（下一层）', host: 'd20 半屏的下一层', theme: 'light', badges: 'n',
       files: ['同一张 cy-sheet'],
       intro: '左边侧栏式类型列表（已添加的置灰），右边分组表单，一步一步：名称 →「下一步」→ 范围 →「下一步」→ 开局值。三步都对之前右上「添加」是灰的；填错就在那一组下面写一句。改已有属性也是这一层（标题是属性名，右上「完成」，底部红色「删除属性」）。右栏切「添加 / 修改 / 填错了 / 不能修改」。',
@@ -13616,6 +13587,7 @@ var META = {
     'e-quest': { sec: 'fabu', scope: '#questSheet', init: ['nodeSheet', 'questSheet'], stack: ['e-node'], t: '到达与引导 · 替代方式', host: 'fabu/runtime-structure-editor.wxml', theme: 'light', badges: 'n',
       files: ['chengyinhub-xcx/pages/publish/fabu/runtime-structure-editor.wxml'],
       intro: '每个节点的替代方式（扫码 / 答题 / 拍照）放进已有的「到达与引导」。A5：不按节点设分，「本站分值」一行删掉。',
+      notes: ['自由探索主题：「找不到时换个方式」整张卡不出现（右栏切「关闭」）。'],
       api: ['POST <code>/api/orient/task/alternative</code> {topicId, taskId, alternativeTaskType SCAN|PHOTO|QUIZ, promptText, answer, enabled}'] },
     'e-route': { sec: 'fabu', scope: '#routeSheet', init: ['nodeSheet', 'routeSheet'], stack: ['e-node'], t: '下一站 · 条件与效果', host: 'fabu/index.wxml routeMappingShow', theme: 'light', badges: 'c,w',
       files: ['chengyinhub-xcx/pages/publish/fabu/index.wxml', 'origin/feature/cy26-w8-closeout: pages/publish/components/story-rule-editor'],
@@ -13624,6 +13596,7 @@ var META = {
     'e-temp': { sec: 'temp', stack: ['e-node'], focus: 'game-cfg', t: '玩法模板 · 检定', host: 'pages/publish/temp/index', theme: 'light', badges: 'n,c,f',
       files: ['chengyinhub-xcx/pages/publish/temp/index.wxml（gameSection = check）'],
       intro: '技能改成选属性（check.skill = counter.*）；新增情境加值（mods）；新增本检定的魔鬼交易（check.bargain）。难度仍只有三档。',
+      notes: ['主题「d20 与角色设定」里魔鬼交易关着时，「魔鬼交易」整段不出现（右栏切「关闭」）。', '情境加值合计封顶（轻松 8 / 标准 6 / 硬核 4）不写在界面上：加值输入框最大到上限，合计到顶时「添加加值」变灰。', 'd20 检定关闭时「判定什么技能」是输入框，只填名称。'],
       api: ['<code>check</code>{tier easy|medium|hard, skill, mods[{when, value|var, label}], bargain{label, bonus 1–3, effects[1–4]}, successEffects, failEffects}'] },
     'e-after': { sec: 'temp', scope: '#afterSheet', init: ['afterSheet', 'afterMask'], stack: ['e-node', 'e-temp'], t: '消耗与效果', host: 'temp/index.wxml afterEditor', theme: 'light', badges: 'n,c',
       files: ['chengyinhub-xcx/pages/publish/temp/index.wxml'], intro: '效果第一格先选「做什么」；可选「只在满足条件时生效」。' },
@@ -13635,27 +13608,30 @@ var META = {
       intro: 'A4：第一行回到 master（生命值 · 背包）；紧贴下面一条细的第二行放头像 + 前 3 项属性，不横滑。点第二行打开全屏角色卡。右栏切「d20 检定关」：第二行不出现。' },
     'p-tools': { sec: 'play', scope: '#toolsMenu', init: ['toolsMask', 'toolsMenu'], t: '「…」菜单 · 角色 / 用时 / 得分', host: 'pages/play/index（.tools--corner）', theme: 'dark', badges: 'n',
       files: ['chengyinhub-xcx/pages/play/index.wxml'],
-      intro: 'X3：只加三行——我的角色（打开角色卡）、本局用时、当前得分（都打开本局成绩）。cy26 的「定向对局」面板删掉，不再保留切换。' },
+      intro: 'X3：只加三行——我的角色（打开角色卡）、本局用时、当前得分（都打开本局成绩）。cy26 的「定向对局」面板删掉，不再保留切换。',
+      notes: ['d20 检定关闭时「我的角色」不出现；自由探索或还没开局时「本局用时」「当前得分」不出现（右栏切换）。', '10-28：「我的角色」「当前得分」下面的小字删掉，得分只在右边。'] },
     'p-char': { sec: 'play', scope: '#charOv', init: ['charOv'], run: 'charRun', t: '角色卡（全屏层）', host: 'pages/play/index 上的全屏层', theme: 'dark', badges: 'n',
       files: ['chengyinhub-xcx/pages/play/index.wxml（宿主）', 'origin/feature/cy26-w8-closeout: subpackageMember/character（替换掉）'],
       intro: '盖在游玩页上的全屏层，不是新页面。左上 × 或在顶部往下拖关闭。头图（主题风格 + 角色剪影）→ 属性（大数字、条、小雷达）→ 特质徽章 → 进度。打开时分段淡入，数字从 0 数上来。只在主题开着 d20 检定时存在。',
       api: ['GET <code>/api/play/character?topicId</code> → {attributes[{stateKey,label,value,min,max,displayType,…}], rpg{clocks, momentum, aspects}}', '角色名、称号：<span class="need">需后端</span>（现在没有角色名字段；原型用「夜巡人」）'] },
     'p-score': { sec: 'play', scope: '#scoreOv', init: ['scoreOv'], run: 'scoreRun', t: '本局成绩（全屏层）', host: 'pages/play/index 上的全屏层', theme: 'dark', badges: 'n',
       files: ['chengyinhub-xcx/pages/play/index.wxml（宿主）', 'origin/feature/cy26-w8-closeout: subpackageMember/orient-score（删除）'],
-      intro: '像游戏的对局结算：大名次、得分数上来、用时、完成节点、明细、本场前 5 名。底部一行小字「对成绩有异议」，点开是可输入的原生弹窗。从「…」和章节结算卡打开。右栏切「进行中 / 已结束」。',
+      intro: '像游戏的对局结算：大名次、得分数上来、用时、完成节点、明细、本场前 5 名。底部一个文字按钮「申诉」，点开是可输入的原生弹窗。从「…」和章节结算卡打开。右栏切「进行中 / 已结束」。',
       api: ['GET <code>/api/orient/scoring/session/{sessionId}</code>（totalCenti、byDimension）', 'POST <code>/api/growth/leaderboard</code>（定向主题由 decorateLeaderboard 补分数和用时）', 'POST <code>/api/orient/scoring/dispute</code> {sessionId, reason}', '从游玩页拿 sessionId：游玩页本来就有，不再需要「我的对局列表」'] },
     'p-bag': { sec: 'play', scope: '#bagSheet', init: ['bagSheet'], t: '背包 · 属性显示', host: 'pages/play/theme-backpack.wxml', theme: 'dark', badges: 'c',
       files: ['chengyinhub-xcx/pages/play/theme-backpack.wxml'] },
     'p-check': { sec: 'check', t: '检定 · 明细 / 魔鬼交易 / 动量', host: 'components/playkit-journey-check', theme: 'dark', badges: 'n,c,w',
       files: ['chengyinhub-xcx/pages/play/components/playkit-journey-check/index.wxml', 'chengyinhub-xcx/pages/play/components/play-stage/index.wxml'],
       intro: '右栏「检定步骤」依次看：题面（含魔鬼交易）→ 通过 → 差一点（重掷 / 花动量）→ 隐藏属性 → 结算 → d20 检定关 → 已写码版。',
+      notes: ['d20 检定关闭：故事流里没有检定入口，玩家不会来到这一屏（「关闭」状态是空屏）。', '主题关闭魔鬼交易，或这个检定没有交易：交易一块不出现。', '「还剩幸运，可以重掷一次」是 master 原文（playkit-journey-check），没动。'],
       api: ['POST <code>/api/play/check/bargain</code>（掷骰前）、<code>/roll</code>、<code>/momentum</code>（掷后结算前）、<code>/settle</code>'] },
     'p-node': { sec: 'play', scope: '#nodeSheetP', init: ['nodeSheetP', 'nodeMaskP'], t: '节点详情 · 到达与替代方式', host: 'pages/play/index（C. 节点详情卡）', theme: 'dark', badges: 'n',
       files: ['chengyinhub-xcx/pages/play/index.wxml（.sheet）'],
       intro: '到达、被拦、结果未确认、替代方式、照片审核与驳回，都在这张已有的卡里换内容：一句话 + 一个动作。右栏「到达与完成」逐个切换。',
       api: ['POST <code>/api/play/arrive</code>：ARRIVE_ACCURACY_* / ARRIVE_GUARD_*（appealable, guardLogId）', 'GET <code>/api/orient/task/state</code>、POST <code>/api/orient/task/alternative/submit</code>'] },
     'p-finish': { sec: 'play', scope: '#finSheet', init: ['finMask', 'finSheet'], t: '章节结算 · RPG 小结', host: 'pages/play/index（.finsheet）', theme: 'dark', badges: 'n',
-      files: ['chengyinhub-xcx/pages/play/index.wxml（.finsheet）'], intro: '主题开着 d20 检定才有 RPG 小结。新增一行「本局成绩 · 暂列第 2 名」，打开全屏成绩（用 master 的 finish-journal-entry 行形）。' },
+      files: ['chengyinhub-xcx/pages/play/index.wxml（.finsheet）'], intro: '主题开着 d20 检定才有 RPG 小结。新增一行「本局成绩」（名次「第 2 名」在右边），打开全屏成绩（用 master 的 finish-journal-entry 行形）。',
+      notes: ['d20 检定关闭：RPG 小结整块不出现（右栏切「关闭」）。'] },
     'p-album': { sec: 'album', t: '相册 · 照片审核', host: 'components/playkit-album', theme: 'dark', badges: 'c,w',
       files: ['chengyinhub-xcx/pages/play/components/playkit-album/index.wxml'],
       intro: '审核中可以「换一张」，未通过直接「重新选择照片」。' }
@@ -13678,8 +13654,8 @@ window.ACT = {
   /* ---- d20 与角色设定 ---- */
   d20Toggle: function(sw){ window.__proto.setState(document.getElementById('d20Entry'), sw.hasAttribute('checked') ? 'on' : 'off'); },
   'st:d20Entry': function(st){ var sw = document.getElementById('d20Switch'); if (!sw) return; if (st === 'off') sw.removeAttribute('checked'); else sw.setAttribute('checked', ''); },
-  PRESET: { easy: ['轻松', '检定更容易通过，补救的机会多。'], std: ['标准', '多数检定有一半以上的把握。'], hard: ['硬核', '检定更难，补救的机会少。'] },
-  pickPreset: function(el){ ACT.pickRow(el); var p = ACT.PRESET[el.dataset.p]; document.getElementById('presetV').textContent = p[0]; document.getElementById('presetFt').textContent = p[1]; ACT.syncSum(); },
+  PRESET: { easy: ['轻松'], std: ['标准'], hard: ['硬核'] },
+  pickPreset: function(el){ ACT.pickRow(el); var p = ACT.PRESET[el.dataset.p]; document.getElementById('presetV').textContent = p[0]; ACT.syncSum(); },
   syncSum: function(){ var n = document.querySelectorAll('#attrList [data-attr]').length; var v = document.getElementById('presetV'); var s = document.getElementById('d20Sum'); if (s) s.textContent = (n ? n + ' 项属性' : '没有属性') + ' · ' + (v ? v.textContent : '标准'); },
   syncMore: function(){ var c = document.querySelectorAll('#clockList .ios-sw').length, t = document.querySelectorAll('#traitList .ios-sw').length; document.getElementById('moreV').textContent = '进度钟 ' + c + ' · 特质 ' + t; },
   'st:d20Attrs': function(st){ var g = document.getElementById('attrList'), b = document.getElementById('attrEditBtn'); g.classList.toggle('is-editing', st === 'editing'); b.textContent = st === 'editing' ? '完成' : '编辑'; ACT.closeSwipes(); if (st === 'swipe') g.querySelector('.ios-sw').classList.add('is-open'); },
@@ -13688,7 +13664,7 @@ window.ACT = {
   pickType: function(el){
     if (el.classList.contains('is-done')) { window.__proto.toast('已添加，可在列表里修改'); return; }
     Array.prototype.forEach.call(el.parentNode.children, function(c){ c.classList.toggle('is-on', c === el); }); var t = ACT.TYPES[el.dataset.t];
-    ACT.$('typeHint').textContent = t[0];
+    ACT.$('typeHint').textContent = '';
     ACT.$('attrName').value = el.dataset.t === '自定义' ? '' : el.dataset.t;
     ACT.$('attrMin').value = t[1]; ACT.$('attrMax').value = t[2]; ACT.$('attrInit').value = t[3];
     ACT.attrMode('add');
@@ -13716,7 +13692,7 @@ window.ACT = {
     else if (s2 && +lo >= +hi) { e2 = '最小值要小于最大值。'; g('rowMin').classList.add('is-bad'); g('rowMax').classList.add('is-bad'); }
     if (!e2 && s3 && (!int.test(ini) || +ini < +lo || +ini > +hi)) { e3 = '开局值要在 ' + lo + '–' + hi + ' 之间。'; g('rowInit').classList.add('is-bad'); }
     var ro = !!document.querySelector('#attrPicker input[disabled]');
-    if (!ro) { g('attrErr2').textContent = quiet ? '' : e2; g('attrErr3').textContent = quiet ? '' : e3; if (!quiet && e1) g('typeHint').textContent = e1; }
+    if (!ro) { g('attrErr2').textContent = quiet ? '' : e2; g('attrErr3').textContent = quiet ? '' : e3; if (!quiet) g('typeHint').textContent = e1; }
     var ok = !e1 && !e2 && !e3 && s3; g('attrDone').classList.toggle('is-disabled', !ok || ro);
     if (quiet && (e2 || e3) && !ro) { g('attrErr2').textContent = e2; g('attrErr3').textContent = e3; }
     return !e1 && !e2 && !e3;
@@ -13736,7 +13712,7 @@ window.ACT = {
     ACT.fillEdit(sw); var ro = ACT.$('d20Attrs').dataset.cur === 'noperm'; ACT.attrMode(ro ? 'noperm' : 'edit'); window.__proto.navPush('d20LAdd'); },
   fillEdit: function(sw){ ACT.__editRow = sw; var nm = sw.dataset.attr, v = sw.querySelector('.ios-v').textContent.match(/(-?\d+)–(-?\d+) · 开局 (-?\d+)/) || [0, 0, 5, 0];
     var t = document.querySelector('#typeList [data-t="' + nm + '"]') || document.querySelector('#typeList [data-t="自定义"]'); Array.prototype.forEach.call(document.querySelectorAll('#typeList .ios-side__i'), function(c){ c.classList.toggle('is-on', c === t); });
-    ACT.$('typeHint').textContent = (ACT.TYPES[nm] || ACT.TYPES['自定义'])[0];
+    ACT.$('typeHint').textContent = '';
     ACT.$('attrName').value = nm; ACT.$('attrMin').value = v[1]; ACT.$('attrMax').value = v[2]; ACT.$('attrInit').value = v[3]; },
   'st:attrPicker': function(st){
     if (st === 'add') ACT.d20AddInit();
@@ -13750,14 +13726,14 @@ window.ACT = {
   clockSave: function(){ var d = ACT.$('clockDone'); if (d.classList.contains('is-disabled')) return; var nm = ACT.$('clockName').value.trim(), kind = ACT.$('clockKind').querySelector('.is-on').textContent, seg = ACT.$('clockSeg').querySelector('.is-on').textContent;
     var row = ACT.__clock;
     if (!row) { var tpl = document.querySelector('#clockList .ios-sw'); var sw = tpl.cloneNode(true); sw.classList.remove('is-open'); ACT.$('clockList').insertBefore(sw, ACT.$('clockList').querySelector('.is-add')); row = sw.querySelector('.ios-row'); }
-    row.dataset.n = nm; row.dataset.k = kind === '坏事逼近' ? 0 : 1; row.dataset.g = { '4 格': 0, '6 格': 1, '8 格': 2 }[seg]; row.querySelector('.ios-t').textContent = nm; row.querySelector('.ios-s').textContent = kind; row.querySelector('.ios-v').textContent = seg;
+    row.dataset.n = nm; row.dataset.k = kind === '坏事逼近' ? 0 : 1; row.dataset.g = { '4 格': 0, '6 格': 1, '8 格': 2 }[seg]; row.querySelector('.ios-t').textContent = nm; row.querySelector('.ios-v').textContent = kind + ' · ' + seg;
     row.parentNode.querySelector('.ios-del').dataset.modal = '删除进度钟「' + nm + '」？|用到它的条件和效果需要重新选择。|取消|删除';
     ACT.syncMore(); window.__proto.navPop(ACT.$('d20Host')); window.__proto.toast(ACT.__clock ? '已保存' : '已添加'); },
   clockDel: function(){ if (ACT.__clock) ACT.__clock.closest('.ios-sw').remove(); ACT.syncMore(); window.__proto.navPop(ACT.$('d20Host')); window.__proto.toast('已删除'); },
   traitAdd: function(){ if (ACT.$('traitList').classList.contains('is-editing')) return; window.__proto.navPush('d20LTraits'); },
   traitPick: function(el){ el.classList.toggle('is-on'); ACT.$('traitDone').classList.toggle('is-disabled', !document.querySelector('#traitPick .ios-row.is-on:not(.is-fixed)')); },
   traitSave: function(){ if (ACT.$('traitDone').classList.contains('is-disabled')) return; var list = ACT.$('traitList'), tpl = list.querySelector('.ios-sw'), n = 0;
-    Array.prototype.forEach.call(document.querySelectorAll('#traitPick .ios-row.is-on:not(.is-fixed)'), function(r){ var nm = r.querySelector('.ios-t').textContent, ds = r.querySelector('.ios-s').textContent; var sw = tpl.cloneNode(true); sw.classList.remove('is-open'); sw.dataset.trait = nm; var row = sw.querySelector('.ios-row'); row.dataset.n = nm; row.dataset.d = ds; row.dataset.own = '0'; row.querySelector('.ios-t').textContent = nm; row.querySelector('.ios-s').textContent = ds; var v = row.querySelector('.ios-v'); if (v) v.remove(); list.insertBefore(sw, list.querySelector('.is-add'));
+    Array.prototype.forEach.call(document.querySelectorAll('#traitPick .ios-row.is-on:not(.is-fixed)'), function(r){ var nm = r.querySelector('.ios-t').textContent, ds = r.dataset.d || ''; var sw = tpl.cloneNode(true); sw.classList.remove('is-open'); sw.dataset.trait = nm; var row = sw.querySelector('.ios-row'); row.dataset.n = nm; row.dataset.d = ds; row.dataset.own = '0'; row.querySelector('.ios-t').textContent = nm; var v = row.querySelector('.ios-v'); if (v) v.remove(); list.insertBefore(sw, list.querySelector('.is-add'));
       r.classList.remove('is-on'); r.classList.add('is-fixed'); r.removeAttribute('data-act'); var c = r.querySelector('.ios-chk'); c.outerHTML = '<text class="ios-v">已添加</text>'; n++; });
     ACT.$('traitDone').classList.add('is-disabled'); ACT.syncMore(); window.__proto.navPop(ACT.$('d20Host')); window.__proto.toast('已添加 ' + n + ' 项'); },
   traitEdit: function(el){ var sw = el.closest('.ios-sw'); if (sw.classList.contains('is-open')) { sw.classList.remove('is-open'); return; } ACT.__trait = el; ACT.$('traitTitle').textContent = el.dataset.n; ACT.$('traitDesc').textContent = el.dataset.d; var s = ACT.$('traitOwn'); if (el.dataset.own === '1') s.setAttribute('checked', ''); else s.removeAttribute('checked'); window.__proto.navPush('d20LTrait'); },
