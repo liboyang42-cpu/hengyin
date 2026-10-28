@@ -770,7 +770,18 @@ class GenericGameplayHttpE2eIT {
         database.update("INSERT INTO cms_registration(registration_no,member_id,owner_type,owner_id,topic_id,registration_status,payment_status,purchase_kind,original_amount,total_amount,payable_amount,pay_expire_time,create_time) VALUES(?,?,1,?,?,2,2,2,0,0,0,DATE_ADD(NOW(),INTERVAL 1 DAY),NOW())","lc-"+s.topicId,s.memberId,s.topicId,s.topicId);
         database.update("UPDATE cms_topic_node SET checkin_code=? WHERE id=?","lc-"+s.nodeId,s.nodeId);
         JsonNode view=theme(s);s.routeId=view.path("sessionId").asLong();assertTrue(s.routeId>0,view.toString());
-        success(formFields("/api/play/checkin",json.createObjectNode().put("topicId",s.topicId).put("code","lc-"+s.nodeId).put("routeActionId","arrive"),s.headers));
+        ObjectNode arrival=json.createObjectNode().put("topicId",s.topicId).put("nodeId",s.nodeId).put("code","lc-"+s.nodeId).put("routeActionId","arrive");
+        JsonNode beforeArrival=stored(s);
+        rejected(formFields("/api/play/checkin",arrival,s.headers));
+        assertEquals(beforeArrival,stored(s),"Missing original intent context must not change the route");
+        JsonNode intent=success(get("/api/play/action-context?topicId="+s.topicId+"&nodeId="+s.nodeId,s.headers));
+        assertEquals(String.valueOf(s.routeId),intent.path("routeSessionId").asText());
+        assertTrue(intent.path("expectedRouteVersion").isInt() && intent.path("expectedRouteVersion").asInt()>=0);
+        arrival.put("routeSessionId",intent.path("routeSessionId").asText()).put("expectedRouteVersion",intent.path("expectedRouteVersion").asInt());
+        JsonNode arrived=success(formFields("/api/play/checkin",arrival,s.headers));
+        JsonNode afterArrival=stored(s);
+        assertEquals(arrived,success(formFields("/api/play/checkin",arrival,s.headers)));
+        assertEquals(afterArrival,stored(s),"Replaying the same scan intent must not change the route");
         if(config.has("outcomeRules"))assertScanHasNotCompleted(s);
         success(route(s,"QUEST_START","start"));
         if(config.has("outcomeRules")){JsonNode advanced=success(post("/api/play/advanced/start",json.createObjectNode().put("topicId",s.topicId).put("nodeId",s.nodeId),s.headers));s.advancedId=advanced.path("sessionId").asLong();assertTrue(s.advancedId>0,advanced.toString());}
