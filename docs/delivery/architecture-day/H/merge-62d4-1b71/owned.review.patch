@@ -1,0 +1,859 @@
+diff --git a/chengyinhub-xcx/pages/play/components/advanced-game/index.js b/chengyinhub-xcx/pages/play/components/advanced-game/index.js
+index e1d6b71..d283df4 100644
+--- a/chengyinhub-xcx/pages/play/components/advanced-game/index.js
++++ b/chengyinhub-xcx/pages/play/components/advanced-game/index.js
+@@ -1,6 +1,7 @@
+ const { applyPreviewAction } = require('../../../../utils/game-preview-action.js');
+ const toast = require('../../../../utils/toast.js');
+ const { id, integer } = require('../../../../utils/orient-score-view.js');
++const photoPending = require('../../utils/advanced-photo-pending.js');
+ const app = getApp();
+ const { safeUserMessage } = require('../../../../utils/transport/safe-user-message.js');
+ const { buildActionKey, buildUnitId } = require('../../utils/play-action-key.js');
+@@ -46,7 +47,10 @@ Component({
+   pageLifetimes: { hide() { this.stopDrawAudio(); this.stopBackgroundMusic(); } },
+   methods: {
+     sessionRequestContext() {
++      let issuedAt = '';
++      try { issuedAt = wx.getStorageSync('authorization_issued_at') || ''; } catch (_) {}
+       return { memberId: String(app.getUserID() || ''),
++        loginGeneration: String(app._featureFlagsEpoch || 0) + ':' + String(issuedAt),
+         sessionId: String((this.data.state || {}).sessionId || ''),
+         nodeId: String((this.data.node || {}).nodeId || ''),
+         topicId: String(this.data.topicId || ''), activityId: String(this.data.activityId || ''),
+@@ -54,7 +58,7 @@ Component({
+     },
+     currentRequestContext(context, requireSession = true) {
+       const current = this.sessionRequestContext();
+-      return current.memberId === context.memberId
++      return current.memberId === context.memberId && current.loginGeneration === context.loginGeneration
+         && current.epoch === context.epoch && current.nodeId === context.nodeId
+         && current.topicId === context.topicId && current.activityId === context.activityId
+         && (!requireSession || current.sessionId === context.sessionId);
+@@ -113,6 +117,7 @@ Component({
+         const pending = wx.getStorageSync(this.pendingKey());
+         if (pending) {
+           this._unknownCommand = pending.command;
++          this._unknownRequestContext = Object.assign({}, context, { sessionId: String(pending.state.sessionId || '') });
+           this.setData({ loading: false, acting: false, unknown: true, readingBack: false,
+             state: pending.state, error: '', unknownText: '正在查询原请求结果，请勿重新提交' });
+           return this.resolveUnknown();
+@@ -127,6 +132,25 @@ Component({
+         this.setData({ loading: false, error: '玩法标识不完整，请重新进入' }); return;
+       }
+       this.setData({ loading: true, acting: false, unknown: false, readingBack: false, error: '', state: null });
++      let restored;
++      try { restored = photoPending.read(wx, context); }
++      catch (error) { this.setData({ loading: false, unknown: true, error: error.message }); return; }
++      if (restored) {
++        this._photoPending = restored;
++        this._unknownCommand = restored.value.command;
++        this._unknownAction = 'SUBMIT_PHOTO_CHECK';
++        this._unknownVersion = restored.value.command.version;
++        return this.request('/api/play/advanced/state', 'GET', { sessionId: restored.value.command.sessionId }).then(res => {
++          if (!this.currentRequestContext(context, false)) return;
++          const original = Object.assign({}, context, { sessionId: String(restored.value.command.sessionId) });
++          if (Number(res.code) !== 200 || !this.responseMatchesSession(res.data, original)) throw Error('original photo session unavailable');
++          this.hydrate(res.data);
++          this._unknownRequestContext = this.sessionRequestContext();
++          this.setData({ loading: false, unknown: true, readingBack: false, unknownText: '照片结果待确认，请核对原提交' });
++        }).catch(() => {
++          if (this.currentRequestContext(context, false)) this.setData({ loading: false, unknown: true, error: '照片原局暂时无法读取，请稍后核对' });
++        });
++      }
+       this.request('/api/play/advanced/start', 'POST', scope).then(res => {
+         if (!this.currentRequestContext(context, false)) return;
+         if (res.code == 200 || res.code == '200') this.hydrate(res.data || {});
+@@ -225,7 +249,7 @@ Component({
+       const context = this.sessionRequestContext();
+       const sessionId = this.data.state.sessionId;
+       const version = this.data.state.version;
+-      const body = payload || {};
++      const body = JSON.parse(JSON.stringify(payload || {}));
+       // 幂等键由「session + 服务端 version + 动作 + 入参」派生：同一次意图重试复用同一个键，
+       // 服务端 selectByIdempotencyKey 才能 replay；写成功后 version 前进，下一动作自动换键。
+       const idempotencyKey = buildActionKey(sessionId, version, name, body);
+@@ -237,17 +261,30 @@ Component({
+       const command = {
+         sessionId, version, idempotencyKey, action: name, payload: body
+       };
+-      // Persist only original identity, not answers/photos or the command payload.
+-      const original = { sessionId, version, idempotencyKey, action: name };
++      const isPhoto = name === 'SUBMIT_PHOTO_CHECK';
++      let capturedPhoto;
++      if (isPhoto) {
++        try { capturedPhoto = this._photoPending = photoPending.save(wx, context, command); }
++        catch (error) { this.setData({ acting: false, error: error.message }); this.emitActionFail(name, sessionId); return Promise.resolve(false); }
++      }
++      // 普通动作只持久化脱敏身份；照片沿既有 photoPending 保存原本站媒体引用。
++      const original = isPhoto ? command : { sessionId, version, idempotencyKey, action: name };
+       const originalState = { sessionId, version, nodeId: this.data.state.nodeId,
+         ownerId: this.data.state.ownerId, ownerType: this.data.state.ownerType,
+         challenge: this.data.state.challenge ? {} : null };
+       const pendingKey = this.pendingKey();
+-      try { wx.setStorageSync(pendingKey, { command: original, state: originalState }); }
++      try { if (!isPhoto) wx.setStorageSync(pendingKey, { command: original, state: originalState }); }
+       catch (_) { this.setData({ acting: false, error: '原请求记录无法保存，尚未提交' }); return; }
+       this._unknownCommand = original;
++      this._unknownRequestContext = context;
+       return this.request('/api/play/advanced/action', 'POST', command).then(res => {
++        if (capturedPhoto && Number(res.code) === 200 && this.responseMatchesSession(res.data, context)) photoPending.clear(wx, capturedPhoto);
+         if (!this.currentRequestContext(context)) return;
++        if (isPhoto && Number(res.code) !== 200 && !(res.data && res.data.intentNotExecuted === true)) {
++          this._unknownAction = name; this._unknownRequestContext = context;
++          this._unknownCommand = JSON.parse(JSON.stringify(command));
++          this.enterUnknown(version); return false;
++        }
+         if (res.code == 200 || res.code == '200') {
+           if (!this.responseMatchesSession(res.data, context, name)) throw new Error('session response mismatch');
+           wx.removeStorageSync(pendingKey);
+@@ -257,6 +294,7 @@ Component({
+           this.setData({ acting: false });
+           return true;
+         }
++        if (capturedPhoto) photoPending.clear(wx, capturedPhoto);
+         if (Number(res.code) === 409 && res.data && this.responseMatchesSession(res.data.view, context)) {
+           wx.removeStorageSync(pendingKey);
+           this._unknownCommand = null;
+@@ -281,6 +319,7 @@ Component({
+       }).catch(() => {
+         if (!this.currentRequestContext(context)) return;
+         this._unknownAction = name;
++        this._unknownRequestContext = context;
+         this._unknownChallengeGame = body.game;
+         this._unknownCommand = original;
+         this.enterUnknown(version);
+@@ -298,8 +337,10 @@ Component({
+     resolveUnknown() {
+       if (this.data.readingBack || !this._unknownCommand || !this.data.state) return Promise.resolve(false);
+       const original = this._unknownCommand;
++      if (!this._unknownRequestContext || !this.currentRequestContext(this._unknownRequestContext)) return Promise.resolve(false);
+       const context = this.sessionRequestContext();
+       const pendingKey = this.pendingKey();
++      const capturedPhoto = original.action === 'SUBMIT_PHOTO_CHECK' ? this._photoPending : null;
+       this.setData({ readingBack: true });
+       return this.request('/api/play/advanced/receipt', 'GET', {
+         sessionId: original.sessionId, idempotencyKey: original.idempotencyKey
+@@ -310,7 +351,8 @@ Component({
+             || receipt.idempotencyKey !== original.idempotencyKey
+             || !this.responseMatchesSession(receipt.view, context, original.action)) throw new Error('Original receipt unconfirmed');
+         // hydrate already rejects older versions. A historical receipt proves this request only.
+-        wx.removeStorageSync(pendingKey);
++        if (capturedPhoto) photoPending.clear(wx, capturedPhoto);
++        else wx.removeStorageSync(pendingKey);
+         this.hydrate(receipt.view);
+         if (!this.currentRequestContext(context, false)) return true;
+         this._unknownCommand = null;
+diff --git a/chengyinhub-xcx/pages/play/index.js b/chengyinhub-xcx/pages/play/index.js
+index b4dd830..012464e 100644
+--- a/chengyinhub-xcx/pages/play/index.js
++++ b/chengyinhub-xcx/pages/play/index.js
+@@ -16,6 +16,8 @@ const recommend = require('./utils/play-recommend.js'); // P0 推荐评分(纯
+ const { buildPlayRoute, createSessionClock, formatElapsed } = require('../../utils/play-ui-contract.js');
+ const { readPausedRun, writePausedRun, clearRunSession, saveServerPausedRun, clearServerRunSession, readServerPausedRun, newerPausedRun } = require('./utils/play-run-session.js');
+ const { resolveLeadMemberTicket } = require('./utils/lead-ticket-scan.js');
++const { seatTarget, seatKey, seatRecovery, seatChoice, captureLogin, loginCurrent } = require('../../utils/registration-seat.js');
++const { classifyVerificationOutcome, createVerificationWorkflow } = require('../../utils/merchant-verification.js');
+ const { routeColorForKey, ROUTE_BORDER_COLOR } = require('../../utils/play-visual-tokens.js');
+ const { getPlayMapState, getPlayRouteNodeState } = require('../../utils/play-state-contract.js');
+ const gameSessionClient = require('../../utils/game-session-client.js');
+@@ -928,8 +930,15 @@ Page({
+     });
+   },
+   _handleRouteConflict(response, kind, nodeId) {
++    if (response && (response.intentUnknown || Number(response.code) === 520)) return false;
+     if (!isRouteConflict(response)) return false;
+-    this._resolveRouteAction(kind, nodeId);
++    const store = this._routeActions, sessionKey = this._sessionKey(), runtime = String((this._routeState || {}).sessionId || '');
++    // 只有服务端确认原意图未执行，且用户确认后，才释放身份供下一次点击创建新意图。
++    if (response.intentNotExecuted) cyModal.show({
++      title: '原操作未执行', content: '路线状态已更新。确认结束原意图，再检查当前状态后重新操作？', confirmText: '确认',
++      success: result => { if (result.confirm && this._isPlayAccountCurrent() && store === this._routeActions
++        && sessionKey === this._sessionKey() && runtime === String((this._routeState || {}).sessionId || '')) this._resolveRouteAction(kind, nodeId); },
++    });
+     this.setData({ routeNotice: '路线状态有更新，正在同步…' });
+     this.refreshRouteState();
+     return true;
+@@ -971,6 +980,7 @@ Page({
+     this.suspendOrientLifecycle();
+     this.setData({ arrivalGuard: null });
+     this._playDisposed = true;
++    if (this._leadVerificationWorkflow) { this._leadVerificationWorkflow.destroy(); this._leadVerificationWorkflow = null; }
+     this._leadArrivalEpoch = (this._leadArrivalEpoch || 0) + 1; this._leadArriving = false;
+     this._themeRecordsDisposed = true;
+     this._themeRecordsEpoch = (this._themeRecordsEpoch || 0) + 1;
+@@ -4109,7 +4119,7 @@ Page({
+       if (acceptProjection) that._versionedRouteState = that._routeStateVersionKnown(routeInput) ? routeState : null;
+       that._routeNodeCatalog = catalog;
+       if (routeState.thoughtCount > 0) that._askWeRunOnce();
+-      if (that._routeActions) that._routeActions.clear();
++      // 加载/轮询不是原命令终态，不能清除待确认身份。
+       const chapter = that.buildChapter(d, nodes);
+       // 成功已落地:此后回调里的后处理(rebuild / 会话时钟 / 角色卡)再抛错,不该冒充「加载失败」
+       // 把已经渲染出来的首屏盖成错误页 —— 重试只会重跑同一段计算,用户永远出不去。异常仍打 console。
+@@ -4804,7 +4814,7 @@ Page({
+         lead: {
+           exists: true, status: d.status || 1, isLeader: !!d.isLeader,
+           arrived: d.arrived || 0, total: d.total || 0, meArrived: !!d.meArrived,
+-          chapterName: d.chapterName || '', broadcast: d.broadcast || '',
++          chapterName: d.chapterName || '', currentChapterId: d.currentChapterId, nextChapterId: d.nextChapterId, broadcast: d.broadcast || '',
+           members: (d.members || []).slice(0, 8)
+         },
+         leadLoadError: false,
+@@ -4912,6 +4922,7 @@ Page({
+     const that = this;
+     if (!this._isPlayAccountCurrent() || !this._canUseLeadTools() || !this.data.activityId) return;
+     const context = this._leadOperationContext();
++    const seatLogin = captureLogin(app, wx);
+     const sequence = this._leadTicketScanSequence = (this._leadTicketScanSequence || 0) + 1;
+     const isCurrent = () => that._isLeadOperationContextCurrent(context, true)
+       && sequence === that._leadTicketScanSequence;
+@@ -4927,6 +4938,29 @@ Page({
+           that.diegetic(ticket.error);
+           return;
+         }
++        const request = { url: '/api/registration/scan_group_member_ticket', method: 'POST',
++          data: { code: ticket.code, activityId: context.activityId } };
++        const target = seatTarget(request);
++        if (target) {
++          const seatCurrent = () => isCurrent() && loginCurrent(app, wx, seatLogin);
++          if (!seatCurrent()) return;
++          if (!that._leadVerificationWorkflow) that._leadVerificationWorkflow = createVerificationWorkflow({
++            deadlineMs: 15000, storage: wx, getOwner: () => app.getUserID && app.getUserID() });
++          const key = seatKey(context.owner, target);
++          that._leadVerificationWorkflow.run(key, done => app.sendRequest(Object.assign({}, request, {
++            hideLoading: true, silentError: true, autoErrorToast: false,
++            success: r => done(classifyVerificationOutcome(r, 'success', undefined, request)),
++            fail: (r, status) => done(classifyVerificationOutcome(r, 'fail', status, request)),
++            successStatusAbnormal: (r, status) => done(classifyVerificationOutcome(r, 'abnormal', status, request))
++          })), result => {
++            if (!seatCurrent()) return;
++            if (result.status === 'success') motion.haptic({ type: 'medium', reducedMotion: that.data.reducedMotion });
++            that.diegetic(result.status === 'unknown'
++              ? '原席位结果待确认；再次扫描同一席位只查询结果，请勿改选席位重发'
++              : result.response && result.response.msg || '核销未提交');
++          }, seatRecovery(app, target, seatCurrent));
++          return;
++        }
+         loadingShown = true; cyLoading.show('正在核销');
+         req('/api/registration/scan_group_member_ticket', 'POST', {
+           code: ticket.code, activityId: context.activityId
+@@ -4951,68 +4985,64 @@ Page({
+   },
+   leadUnlock() {
+     if (!this._isPlayAccountCurrent() || !this._canUseLeadTools() || !this.data.activityId) return;
++    if (this._leadUnlockIntent && this._leadUnlockIntent.inFlight
++      && this._isLeadOperationContextCurrent(this._leadUnlockIntent.context, true)) return;
+     const context = this._leadOperationContext();
+-    const key = JSON.stringify([context.owner, context.activityId, context.sessionKey]);
+-    const intents = this._leadUnlockIntents = this._leadUnlockIntents || Object.create(null);
+-    let intent = intents[key];
++    const store = scopedRouteActionStore([context.owner, context.sessionKey, 'lead-chapter'], wx);
++    const lead = this.data.lead || {};
++    const original = { activityId: context.activityId, expectedChapterId: lead.currentChapterId == null ? 0 : lead.currentChapterId,
++      targetChapterId: lead.nextChapterId };
++    let body;
++    try { body = store.payload('unlock', context.activityId, {}, original); }
++    catch (error) { this.diegetic(error.message); return; }
++    const intent = { context, body };
++    this._leadUnlockIntent = intent;
+     const current = () => this._leadUnlockIntent === intent && this._isLeadOperationContextCurrent(context, true);
+-    const audit = () => {
++    const submit = () => {
+       if (!current()) return;
+-      this._leadUnlockInFlight = false; this._leadUnlockChecking = true;
+-      intent.auditToken = this._leadUnlockAuditToken = (this._leadUnlockAuditToken || 0) + 1;
++      intent.inFlight = true;
++      this._leadUnlockInFlight = true;
+       this.setData({ leadUnlockChecking: true });
+-      this.loadTeamProgress({ unlockAuditToken: intent.auditToken });
+-    };
+-    if (intent) {
+-      this._leadUnlockIntent = intent;
+-      // 已有放行读回在途时再点不再追加读取;读回中断(换页回来等)后再点才重新核对。
+-      if (intent.phase === 'checking' && !this._leadUnlockChecking) audit();
+-      return;
+-    }
+-    intent = intents[key] = { key, context, phase: 'confirming' };
+-    this._leadUnlockIntent = intent;
+-    this._leadUnlockInFlight = true; this._leadUnlockChecking = false;
+-    this.setData({ leadUnlockChecking: false });
+-    const release = () => { if (intents[key] === intent) delete intents[key]; };
+-    let modalSettled = false, loadingShown = false;
+-    const finishLoading = () => { if (loadingShown) { loadingShown = false; cyLoading.hide(); } };
+-    cyModal.show({
+-      title: '解锁下一章节',
+-      content: '确认让全队进入下一章节?',
+-      confirmText: '确认解锁',
+-      success: (res) => {
+-        if (modalSettled) return;
+-        modalSettled = true;
+-        if (!current()) { release(); return; }
+-        if (!res.confirm) { release(); this._leadUnlockInFlight = false; this.diegetic('已取消解锁'); return; }
+-        intent.phase = 'submitting';
+-        loadingShown = true; cyLoading.show('正在放行');
+-        req('/api/club/lead/unlock-chapter', 'POST', { activityId: context.activityId }).then((r) => {
+-          finishLoading();
+-          if (r.httpFail) {
+-            intent.phase = 'checking';
+-            if (current()) { this.diegetic('章节放行结果待确认，正在读取队伍进度'); audit(); }
+-            return;
+-          }
+-          release();
+-          if (!current()) return;
+-          this._leadUnlockInFlight = false;
+-          const ok = r.code == 200 || r.code == '200';
+-          this.diegetic(r.msg || (ok ? '已放行' : '章节放行失败，请重试'));
+-          if (ok) this.loadTeamProgress();
+-        }).catch(() => {
+-          finishLoading(); release();
+-          if (!current()) return;
++      const input = Object.assign({}, body, { commandId: body.routeActionId });
++      const request = body.receiptOnly
++        ? req('/api/club/lead/unlock-chapter-receipt', 'GET', { activityId: body.activityId, commandId: body.routeActionId }, undefined, true)
++        : req('/api/club/lead/unlock-chapter', 'POST', input);
++      request.then(response => {
++        const validReceipt = Number(response.code) === 200 && response.data
++          && response.data.commandId === body.routeActionId
++          && Number(response.data.expectedChapterId) === Number(body.expectedChapterId)
++          && Number(response.data.targetChapterId) === Number(body.targetChapterId);
++        const unknown = response.netFail || response.httpFail || Number(response.code) === 520 || Number(response.code) === 200 && !validReceipt;
++        // 原请求的未知事实属于原账号/场次，即使页面已换场也必须保留；不写当前页状态。
++        if (unknown && typeof body._markIntentUnknown === 'function') body._markIntentUnknown();
++        if (!current()) return;
++        if (unknown) {
++          // 队伍当前章发生变化不能证明“本命令”执行过；只保留原身份查回执。
++          body.receiptOnly = true;
++          this._leadUnlockUnknown = true;
++          if (typeof body._markIntentUnknown === 'function') body._markIntentUnknown();
++          this.diegetic('章节放行结果待确认，再点放行只查询原命令');
++          return;
++        }
++        this._leadUnlockUnknown = false;
++        if (response.intentNotExecuted) {
++          cyModal.show({ title: '原操作未执行', content: '期望章节已变化。确认结束原意图，再检查当前章节后操作？', confirmText: '确认',
++            success: result => { if (result.confirm && current()) store.resolve('unlock', context.activityId); } });
++        } else if (Number(response.code) === 200 || Number(response.code) !== 409 && !body.receiptOnly) store.resolve('unlock', context.activityId);
++        this.diegetic(response.msg || '请核对本场章节');
++        this.loadTeamProgress();
++      }).catch(() => { if (current()) this.diegetic('章节放行结果待确认，再点放行只查询原命令'); })
++        .finally(() => {
++          intent.inFlight = false;
++          if (this._leadUnlockIntent !== intent) return;
+           this._leadUnlockInFlight = false;
+-          this.diegetic('章节放行没有送达，请检查网络后重试');
++          if (current()) this.setData({ leadUnlockChecking: !!this._leadUnlockUnknown });
+         });
+-      },
+-      fail: () => {
+-        if (modalSettled) return;
+-        modalSettled = true; release();
+-        if (current()) { this._leadUnlockInFlight = false; this.diegetic('解锁确认未打开，请重试'); }
+-      }
+-    });
++    };
++    if (body.receiptOnly) { submit(); return; }
++    if (!body.targetChapterId) { store.resolve('unlock', context.activityId); this.diegetic('本场没有可放行的下一章'); return; }
++    cyModal.show({ title: '解锁下一章节', content: '确认放行选定的下一章节？', confirmText: '确认解锁',
++      success: result => { if (!current()) return; if (result.confirm) submit(); else store.resolve('unlock', context.activityId); } });
+   },
+   leadBroadcast() {
+     if (!this._isPlayAccountCurrent()) return;
+@@ -6639,14 +6669,22 @@ Page({
+     const regId = this.data.regId;
+     if (!regId) { this._explainMissingEntryQr(); return; }
+     const owner = this._boundPlayOwner(), sessionKey = this._sessionKey();
++    const login = captureLogin(app, wx);
++    if (!loginCurrent(app, wx, login)) return;
+     const sequence = this._ticketIssueSequence = (this._ticketIssueSequence || 0) + 1;
+-    const current = () => this._isPlayAccountCurrent() && owner === this._playOwner
++    const current = () => loginCurrent(app, wx, login) && this._isPlayAccountCurrent() && owner === this._playOwner
+       && !this.data.isPreview && !this.data.isMock && this.data.regId === regId
+       && sequence === this._ticketIssueSequence && sessionKey === this._sessionKey();
+     this.setData({ ticket: { show: this.data.ticket.show, url: '', code: '', loading: true, expiresAt: 0 } });
+     req('/api/verify/dyncode/issue', 'POST', { registrationId: regId }).then((res) => {
+       if (!current()) return;
+       if (String(res.code) === '200' && res.data) {
++        if (seatChoice(res.data, regId)) {
++          // 旧优惠券出码调用也走同一明确选席组件；不能把整单默认成第一席。
++          that.setData({ 'ticket.loading': false, 'ticket.url': '', 'ticket.code': '' });
++          that.openScene('qr-ticket', { registrationId: regId });
++          return;
++        }
+         that.setData({ 'ticket.url': res.data.qrcodeUrl || '', 'ticket.code': res.data.code || '', 'ticket.loading': false, 'ticket.expiresAt': res.data.expiresAt || 0 });
+       } else {
+         that.setData({ 'ticket.loading': false });
+@@ -7124,12 +7162,26 @@ Page({
+     /* ★ 业务身份 + 题目版本隔离:照片是异步上传的,回来时必须仍是**同一 session、同一版本**
+        (页面 kit 与 advanced-game 权威 state 都要对得上)。否则玩家在同一页面切到别的节点/会话后,
+        旧回包会经 game.action 把上一题的照片提交到下一题/下一个会话。 */
+-    const intent = { owner: this._boundPlayOwner(), sessionKey: this._sessionKey(),
++    const nodeIdentity = () => [((game.data || {}).node || {}).nodeId, ((game.data || {}).state || {}).nodeId,
++      (this._kit() || {}).nodeId, ((this.data.advancedPlay || {}).node || {}).nodeId]
++      .map(id => id == null ? '' : String(id)).join(':');
++    const question = { sessionId: state.sessionId, version: state.version, nodeId: nodeIdentity() };
++    const intent = { owner: this._boundPlayOwner(), login: this._capturePlayLoginContext(), sessionKey: this._sessionKey(),
+       epoch: this._playLoadEpoch, active: this.data.advancedPlay, game, settled: false, loading: false };
+     this._kitPhotoIntent = intent;
+-    const contextCurrent = () => this._isPlayAccountCurrent() && intent.owner === this._playOwner
+-      && intent.sessionKey === this._sessionKey() && intent.epoch === this._playLoadEpoch
+-      && this.data.advancedPlay === intent.active && this._advancedGameComponent() === game;
++    const contextCurrent = () => {
++      const login = this._capturePlayLoginContext();
++      return this._isPlayAccountCurrent() && intent.owner === this._playOwner
++        && intent.login.authorization === login.authorization && intent.login.generation === login.generation
++        && intent.sessionKey === this._sessionKey() && intent.epoch === this._playLoadEpoch
++        && this.data.advancedPlay === intent.active && this._advancedGameComponent() === game;
++    };
++    const sameQuestion = () => {
++      const currentState = (game.data || {}).state, currentKit = this._kit();
++      return currentState && currentState.sessionId === question.sessionId
++        && sameVersion(currentState.version, question.version) && currentKit.sessionId === question.sessionId
++        && sameVersion(currentKit.version, question.version) && nodeIdentity() === question.nodeId;
++    };
+     const settle = () => {
+       if (intent.settled) return false;
+       intent.settled = true;
+@@ -7149,21 +7201,19 @@ Page({
+       // 组件拍照回调带了真实 size 就交给共享入口按生产 10MB 预检:超限不发起 wxUploadFile,
+       // 直接给「压缩/换文件」可操作文案;size 未知(旧组件/拿不到)按 undefined 放行,由服务端拦截。
+       fileSizes: [detail && detail.size],
++      mapResult: option.name === 'SUBMIT_PHOTO_CHECK' ? data => ({ url: data.url,
++        photoReference: (typeof data.assetId !== 'number' || Number.isSafeInteger(data.assetId))
++          && /^[1-9][0-9]{0,18}$/.test(String(data.assetId || '')) ? 'media-asset:' + data.assetId : '' }) : undefined,
+       onDone: (r) => {
+         const owned = this._kitPhotoIntent === intent && contextCurrent();
+         if (!settle()) return;
+         if (operation.isAborted()) return;
+         operation.finish();
+         if (!owned) return;
+-        const url = r && r.ok && r.results && r.results[0];
++        const uploaded = r && r.ok && r.results && r.results[0];
++        const url = option.name === 'SUBMIT_PHOTO_CHECK' ? uploaded && uploaded.photoReference : uploaded;
+         const currentGame = this.selectComponent('#advancedGame');
+-        const currentState = currentGame && currentGame.data && currentGame.data.state;
+-        const currentKit = this._kit();
+-        const sameQuestion = currentState && currentState.sessionId === state.sessionId
+-          && sameVersion(currentState.version, state.version)
+-          && currentKit.sessionId === state.sessionId
+-          && sameVersion(currentKit.version, state.version);
+-        if (!sameQuestion) {
++        if (!sameQuestion()) {
+           fail('题目已变化，上一张照片未提交');
+           return;
+         }
+@@ -7185,21 +7235,15 @@ Page({
+       },
+     }));
+     if (option.name === 'SUBMIT_PHOTO_CHECK') {
+-      app.requestSeparateConsent('photo', () => !operation.isAborted()).then(() => {
+-        const currentGame = this.selectComponent('#advancedGame');
+-        const currentState = currentGame && currentGame.data && currentGame.data.state;
+-        const currentKit = this._kit();
+-        if (operation.isAborted()) return;
+-        if (!currentState || currentState.sessionId !== state.sessionId || !sameVersion(currentState.version, state.version)
+-            || currentKit.sessionId !== state.sessionId || !sameVersion(currentKit.version, state.version)) {
+-          settle(); operation.finish();
+-          fail('题目已变化，照片未发送'); return;
+-        }
++      const consentCurrent = () => !operation.isAborted() && this._kitPhotoIntent === intent && contextCurrent() && sameQuestion();
++      app.requestSeparateConsent('photo', consentCurrent).then(() => {
++        if (!consentCurrent()) { settle(); operation.finish(); return; }
+         upload();
+       }).catch(error => {
++        const owned = consentCurrent();
+         settle();
+         if (operation.isAborted()) return;
+-        operation.finish(); fail(error.message);
++        operation.finish(); if (owned) fail(error.message);
+       });
+     } else upload();
+   },
+diff --git a/chengyinhub-xcx/tests/unit/advanced-game-object-card-relay.test.js b/chengyinhub-xcx/tests/unit/advanced-game-object-card-relay.test.js
+index 2941d10..faeb532 100644
+--- a/chengyinhub-xcx/tests/unit/advanced-game-object-card-relay.test.js
++++ b/chengyinhub-xcx/tests/unit/advanced-game-object-card-relay.test.js
+@@ -34,13 +34,13 @@ const STATE = {
+ }
+ 
+ function createGame(queue) {
+-  // 写动作前把原请求身份落盘(advanced-original:*)，回执确认后才删除。
+-  const storage = new Map()
+-  global.wx = { getStorageSync: k => storage.get(k), setStorageSync: (k, v) => storage.set(k, v), removeStorageSync: k => storage.delete(k) }
++  // 两侧原请求均通过真实存储合同；照片只接受本站媒体引用。
+   const events = []
++  const disk = new Map()
++  global.wx = { getStorageSync: key => disk.get(key), setStorageSync: (key, value) => disk.set(key, JSON.parse(JSON.stringify(value))), removeStorageSync: key => disk.delete(key) }
+   const instance = {
+     properties: {},
+-    data: Object.assign(JSON.parse(JSON.stringify(definition.data)), { state: JSON.parse(JSON.stringify(STATE)) }),
++    data: Object.assign(JSON.parse(JSON.stringify(definition.data)), { node: { nodeId: 7 }, state: JSON.parse(JSON.stringify(STATE)) }),
+     setData(update, cb) { Object.assign(this.data, update); if (cb) cb() },
+     triggerEvent(name, detail) { events.push({ name, detail }) },
+     syncTimer() {}, stopTimer() {}, loadLeaderboard() {},
+@@ -61,9 +61,17 @@ const view = (version, extra) => Object.assign(JSON.parse(JSON.stringify(STATE))
+ const CARD = { id: 61, title: '半个牛油果', cutoutUrl: 'https://cdn/c.png', cutoutBox: [0.1, 0.2, 0.5, 0.5] }
+ const flush = () => new Promise(setImmediate)
+ 
++test('原照片版本被明确拒绝时仍抛 actionfail，不把确定未执行当 UNKNOWN', async () => {
++  const rejected = createGame([{ res: { code: 409, msg: '原版本已过期', data: { intentNotExecuted: true } } }])
++  await rejected.action('SUBMIT_PHOTO_CHECK', { imageUrl: 'media-asset:701' })
++  assert.deepEqual(rejected.events.filter(e => e.name === 'actionfail').map(e => e.detail), [{ action: 'SUBMIT_PHOTO_CHECK', sessionId: 42 }])
++  assert.equal(rejected.data.unknown, false)
++  assert.equal(rejected.calls.filter(c => c.method === 'POST').length, 1)
++})
++
+ test('★判过的回包带着卡:session 事件把 objectCard 原样抛给页面', async () => {
+   const game = createGame([{ res: { code: 200, data: view(4, { objectCard: CARD }) } }])
+-  await game.action('SUBMIT_PHOTO_CHECK', { imageUrl: 'https://x/p.jpg' })
++  await game.action('SUBMIT_PHOTO_CHECK', { imageUrl: 'media-asset:701' })
+   const session = game.events.filter((e) => e.name === 'session').pop()
+   assert.ok(session, '没有抛 session 事件')
+   assert.deepEqual(session.detail.objectCard, CARD, 'objectCard 在 emitSession 这一层被丢了:当场那一屏永远出不了卡')
+@@ -71,21 +79,21 @@ test('★判过的回包带着卡:session 事件把 objectCard 原样抛给页
+ 
+ test('回包没带卡(老模板 / 没判过 / 回读):objectCard 为 null,不是 undefined', async () => {
+   const game = createGame([{ res: { code: 200, data: view(4) } }])
+-  await game.action('SUBMIT_PHOTO_CHECK', {})
++  await game.action('SUBMIT_PHOTO_CHECK', { imageUrl: 'media-asset:701' })
+   assert.equal(game.events.filter((e) => e.name === 'session').pop().detail.objectCard, null)
+ })
+ 
+ test('★提交被服务端明确拒绝(4xx):抛 actionfail,带上动作名', async () => {
+-  const game = createGame([{ res: { code: 400, msg: '照片不符合要求' } }])
+-  await game.action('SUBMIT_PHOTO_CHECK', {})
++  const game = createGame([{ res: { code: 400, msg: '照片不符合要求', data: { intentNotExecuted: true } } }])
++  await game.action('SUBMIT_PHOTO_CHECK', { imageUrl: 'media-asset:701' })
+   assert.deepEqual(game.events.filter((e) => e.name === 'actionfail').map((e) => e.detail), [{ action: 'SUBMIT_PHOTO_CHECK', sessionId: 42 }])
+   assert.equal(game.data.unknown, false)
+   assert.equal(game.data.acting, false)
+ })
+ 
+ test('状态已更新(409 带权威视图):换上视图也抛 actionfail(这一步没提交)', async () => {
+-  const game = createGame([{ res: { code: 409, msg: '状态已更新，请刷新后重试', data: { view: view(5) } } }])
+-  await game.action('SUBMIT_PHOTO_CHECK', {})
++  const game = createGame([{ res: { code: 409, msg: '状态已更新，请刷新后重试', data: { intentNotExecuted: true, view: view(5) } } }])
++  await game.action('SUBMIT_PHOTO_CHECK', { imageUrl: 'media-asset:701' })
+   await flush()
+   assert.equal(game.events.filter((e) => e.name === 'actionfail').length, 1)
+   assert.equal(game.data.state.version, 5)
+@@ -94,7 +102,7 @@ test('状态已更新(409 带权威视图):换上视图也抛 actionfail(这一
+ test('结果未知(5xx 通用错误 / 响应丢失):只读原请求回执;查不到或读失败都保持 unknown,不冒充失败', async () => {
+   for (const first of [{ res: { code: 500, msg: '服务繁忙' } }, { err: new Error('timeout') }]) {
+     const notFound = createGame([first, { res: { code: 404, msg: '尚未查到原请求回执，结果仍待确认' } }])
+-    await notFound.action('SUBMIT_PHOTO_CHECK', {})
++    await notFound.action('SUBMIT_PHOTO_CHECK', { imageUrl: 'media-asset:701' })
+     await flush(); await flush()
+     const original = notFound.calls[0].data
+     assert.deepEqual(notFound.calls[1], { url: '/api/play/advanced/receipt', method: 'GET',
+@@ -104,9 +112,10 @@ test('结果未知(5xx 通用错误 / 响应丢失):只读原请求回执;查不
+     assert.equal(notFound.events.filter((e) => e.name === 'actionfail').length, 0)
+ 
+     const readbackDown = createGame([first, { err: new Error('timeout') }])
+-    await readbackDown.action('SUBMIT_PHOTO_CHECK', {})
++    await readbackDown.action('SUBMIT_PHOTO_CHECK', { imageUrl: 'media-asset:701' })
+     await flush(); await flush()
+     assert.equal(readbackDown.data.unknown, true, '回执也读不到,保持锁定')
++    assert.equal(readbackDown._unknownCommand.version, 3)
+     assert.equal(readbackDown.events.filter((e) => e.name === 'actionfail').length, 0)
+   }
+ })
+@@ -119,7 +128,7 @@ test('负控:响应丢失但原请求回执证明已写进去 → 不抛 actionf
+     if (url === '/api/play/advanced/receipt') { game.calls.push({ url, method, data }); return Promise.resolve(receipt(data)) }
+     return request.call(this, url, method, data)
+   }
+-  await game.action('SUBMIT_PHOTO_CHECK', {})
++  await game.action('SUBMIT_PHOTO_CHECK', { imageUrl: 'media-asset:701' })
+   await flush(); await flush()
+   assert.equal(game.events.filter((e) => e.name === 'actionfail').length, 0)
+   assert.equal(game.data.unknown, false)
+@@ -131,7 +140,7 @@ for (const withCard of [true, false]) {
+     const game = createGame([]);
+     let finish;
+     game.request = () => new Promise(resolve => { finish = resolve; });
+-    const old = game.action('SUBMIT_PHOTO_CHECK', {});
++    const old = game.action('SUBMIT_PHOTO_CHECK', { imageUrl: 'media-asset:701' });
+     game.hydrate(view(5, { vars: { stage: 'latest' }, readyForBase: true,
+       playKit: { photoCheck: { title: '原玩法', passed: true } } }));
+     const current = game.data.state;
+diff --git a/chengyinhub-xcx/tests/unit/advanced-game-receipt-contract.test.js b/chengyinhub-xcx/tests/unit/advanced-game-receipt-contract.test.js
+index 64c2da9..4a4b9ac 100644
+--- a/chengyinhub-xcx/tests/unit/advanced-game-receipt-contract.test.js
++++ b/chengyinhub-xcx/tests/unit/advanced-game-receipt-contract.test.js
+@@ -4,6 +4,7 @@ const test = require('node:test');
+ const COMPONENT_PATH = require.resolve('../../pages/play/components/advanced-game/index.js');
+ let definition;
+ const appStub = { sendRequest() {}, getUserID: () => 7 };
++let photoStorage;
+ 
+ function loadDefinition() {
+   const previousComponent = global.Component;
+@@ -20,11 +21,14 @@ loadDefinition();
+ /** queue: 每次 request 按顺序取一项；{ res } 走 resolve，{ err } 走 reject。 */
+ function createGame(queue, state) {
+   const storage = new Map();
+-  global.wx = { getStorageSync: k => storage.get(k), setStorageSync: (k,v) => storage.set(k,v), removeStorageSync: k => storage.delete(k) };
++  global.wx = photoStorage || { getStorageSync: k => storage.get(k), setStorageSync: (k,v) => storage.set(k,v), removeStorageSync: k => storage.delete(k) };
+   const calls = [];
++  global.wx = global.wx || {};
++  if (!global.wx.getStorageSync) global.wx.getStorageSync = () => undefined;
+   const instance = {
+     properties: {},
+     data: Object.assign(JSON.parse(JSON.stringify(definition.data)), {
++      node: { nodeId: 7 },
+       state: Object.assign({
+         sessionId: 42, version: 3, status: 'RUNNING', draws: [],
+         config: { random: { enabled: true, drawCount: 3, items: [] }, branch: { enabled: false, steps: [] },
+@@ -48,6 +52,7 @@ function createGame(queue, state) {
+     return next.err ? Promise.reject(next.err) : Promise.resolve(next.res);
+   };
+   instance._unknownCommand = { sessionId: 42, version: 3, idempotencyKey: 'original', action: 'DRAW' };
++  instance._unknownRequestContext = instance.sessionRequestContext();
+   instance.calls = calls;
+   return instance;
+ }
+@@ -441,7 +446,7 @@ for (const method of ['start', 'action', 'resolveUnknown', 'loadLeaderboard', 'r
+         const events = [];
+         game.triggerEvent = (name, detail) => events.push({ name, detail });
+         game._unknownVersion = 3;
+-        if (method === 'resolveUnknown') game.data.unknown = true;
++        if (method === 'resolveUnknown') { game.data.unknown = true; game._unknownRequestContext = game.sessionRequestContext(); }
+         const old = method === 'action' ? game.action('DRAW', {}) : game[method]();
+         await clearIdentity();
+         assert.equal(game._requestEpoch || 0, method === 'start' ? 1 : 0,
+@@ -610,6 +615,7 @@ test('团队挑战原回执查询冲突不能解除UNKNOWN或发起state副作
+ test('共享挑战旧原键回执迟到不能覆盖新局或解除新局写锁', async () => {
+   const game=createGame([],{ownerType:2,nodeId:7});game.data.node={nodeId:7};
+   game._unknownCommand={sessionId:42,version:3,idempotencyKey:'original',action:'SUBMIT_BALL_SHAKE',payload:{hits:6}};
++  game._unknownRequestContext=game.sessionRequestContext();
+   let finish;game.request=()=>new Promise(resolve=>{finish=resolve;});
+   const waiting=game.resolveUnknown();
+   game.data.state={sessionId:99,version:1,nodeId:7,ownerType:2,config:{}};game.data.unknown=true;game.data.acting=true;game.data.error='新局待确认';
+@@ -709,3 +715,151 @@ test('unsafe numeric node identity cannot be rounded into a start request', () =
+   assert.equal(game.calls.length, 0);
+   assert.match(game.data.error, /标识不完整/);
+ });
++
++
++function photoDisk() {
++  const rows = new Map();
++  photoStorage = global.wx = { getStorageSync: key => rows.get(key),
++    setStorageSync: (key, value) => rows.set(key, JSON.parse(JSON.stringify(value))),
++    removeStorageSync: key => rows.delete(key) };
++  return rows;
++}
++const photoInput = () => ({ imageUrl: 'media-asset:701' });
++const tick = () => new Promise(setImmediate);
++
++test('Photo 520 保留原 key/输入/expected；个人局只读原回执，版本变化不推断成功', async () => {
++  photoDisk();
++  const game = createGame([{ res: { code: 520, intentUnknown: true } }, { res: { code: 520 } }], { ownerType: 1 });
++  await game.action('SUBMIT_PHOTO_CHECK', photoInput()); await tick();
++  assert.equal(game.data.unknown, true); assert.equal(game.calls.length, 2);
++  assert.deepEqual(game.calls[1], { url: '/api/play/advanced/receipt', method: 'GET',
++    data: { sessionId: 42, idempotencyKey: game.calls[0].data.idempotencyKey } });
++  assert.equal(game.calls.filter(c => c.method === 'POST').length, 1);
++  assert.deepEqual(game._unknownCommand, game.calls[0].data);
++  game.data.state.version = 9;
++  game.request = async (url, method, data) => { game.calls.push({ url, method, data }); return { code: 520 }; };
++  await game.resolveUnknown();
++  assert.deepEqual(game.calls[2], game.calls[1]); assert.equal(game._unknownCommand.version, 3); assert.equal(game.data.unknown, true);
++});
++
++test('Photo 已保存原结果但玩法冲突，不清 pending、不换版本重发', async () => {
++  const disk = photoDisk();
++  const game = createGame([{ res: { code: 409, data: { view: { sessionId: 42, version: 9 } } } }, { res: { code: 520 } }]);
++  await game.action('SUBMIT_PHOTO_CHECK', photoInput()); await tick();
++  assert.equal(game.data.unknown, true); assert.equal(game.data.state.version, 3); assert.ok(disk.size > 0);
++  assert.equal(game._unknownCommand.version, 3);
++  assert.equal(game.calls[1].url, '/api/play/advanced/receipt'); assert.equal(game.calls[1].method, 'GET');
++});
++
++test('Photo 重启先读取原 session，用户核对只读原回执，不自动启动另一局', async () => {
++  photoDisk();
++  const first = createGame([{ err: Error('response lost') }, { res: { code: 520 } }]);
++  await first.action('SUBMIT_PHOTO_CHECK', photoInput()); await tick();
++  const recovered = createGame([okAction(8)], { sessionId: 99 });
++  await recovered.start();
++  assert.equal(recovered.calls.length, 1); assert.equal(recovered.calls[0].method, 'GET');
++  assert.deepEqual(recovered.calls[0].data, { sessionId: 42 }); assert.equal(recovered.data.state.sessionId, 42);
++  assert.equal(recovered.data.unknown, true);
++  recovered.request = async (url, method, data) => { recovered.calls.push({ url, method, data });
++    return { code: 200, data: { sessionId: String(data.sessionId), idempotencyKey: data.idempotencyKey, view: okAction(4).res.data } }; };
++  await recovered.resolveUnknown();
++  assert.deepEqual(recovered.calls[1], { url: '/api/play/advanced/receipt', method: 'GET',
++    data: { sessionId: 42, idempotencyKey: first.calls[0].data.idempotencyKey } });
++  assert.equal(recovered.data.unknown, false);
++  assert.equal(recovered.calls.some(c => c.method === 'POST'), false);
++});
++
++test('Photo A UNKNOWN 切 B retry 与 A→B→A 同页迟到均不再发 A 命令', async () => {
++  photoDisk(); appStub._featureFlagsEpoch = 10;
++  try {
++    const game = createGame([{ res: { code: 520 } }, { res: { code: 520 } }]);
++    await game.action('SUBMIT_PHOTO_CHECK', photoInput()); await tick();
++    const before = game.calls.length;
++    appStub.getUserID = () => 8; appStub._featureFlagsEpoch++;
++    assert.equal(await game.resolveUnknown(), false); assert.equal(game.calls.length, before);
++    appStub.getUserID = () => 7; appStub._featureFlagsEpoch++;
++    assert.equal(await game.resolveUnknown(), false); assert.equal(game.calls.length, before);
++  } finally { appStub.getUserID = () => 7; delete appStub._featureFlagsEpoch; }
++});
++
++test('Photo A 迟到成功仅清 A 原键，不清 B pending，不改变 B UI', async () => {
++  const disk = photoDisk(); appStub._featureFlagsEpoch = 20;
++  try {
++    const a = createGame([]); let finish;
++    a.request = () => new Promise(resolve => { finish = resolve; });
++    const old = a.action('SUBMIT_PHOTO_CHECK', photoInput());
++    appStub.getUserID = () => 8; appStub._featureFlagsEpoch++;
++    const b = createGame([{ res: { code: 520 } }, { res: { code: 520 } }]);
++    await b.action('SUBMIT_PHOTO_CHECK', photoInput()); await tick();
++    const bKeys = [...disk.keys()].filter(k => k.startsWith('advanced_photo_pending:8:'));
++    const before = JSON.parse(JSON.stringify(b.data));
++    finish(okAction(4).res); await old;
++    assert.deepEqual(b.data, before); assert.ok(bKeys.length > 0); assert.ok(bKeys.every(k => disk.has(k)));
++    assert.ok(![...disk.keys()].some(k => k.startsWith('advanced_photo_pending:7:')));
++  } finally { appStub.getUserID = () => 7; delete appStub._featureFlagsEpoch; }
++});
++
++test('Photo 仅显式 intentNotExecuted 释放原记录，缺媒体或存储失败零发送', async () => {
++  const disk = photoDisk();
++  const rejected = createGame([{ res: { code: 409, data: { intentNotExecuted: true,
++    view: { sessionId: 42, version: 8 } } } }]);
++  await rejected.action('SUBMIT_PHOTO_CHECK', photoInput()); assert.equal(rejected.data.unknown, false); assert.equal(disk.size, 0);
++  const absent = createGame([]); await absent.action('SUBMIT_PHOTO_CHECK', { imageUrl: 'https://example.invalid/signed?token=private' });
++  assert.equal(absent.calls.length, 0);
++  global.wx.setStorageSync = () => { throw Error('storage full'); };
++  const full = createGame([]); await full.action('SUBMIT_PHOTO_CHECK', photoInput()); assert.equal(full.calls.length, 0);
++});
++
++test('Photo 存储写入无异常但无法读回时明确拒绝，不发送原动作', async () => {
++  photoDisk();
++  global.wx.setStorageSync = () => {};
++  const game = createGame([]);
++  assert.equal(await game.action('SUBMIT_PHOTO_CHECK', photoInput()), false);
++  assert.equal(game.calls.length, 0);
++  assert.equal(game.data.acting, false);
++  assert.equal(game.data.unknown, false);
++  assert.match(game.data.error, /未保存/);
++});
++
++test('Photo A→B→A 的旧成功不改新登录代次 UI，原终态只清原存储键', async () => {
++  const disk = photoDisk(); appStub._featureFlagsEpoch = 30;
++  try {
++    const game = createGame([]); let finish;
++    game.request = () => new Promise(resolve => { finish = resolve; });
++    const old = game.action('SUBMIT_PHOTO_CHECK', photoInput());
++    appStub.getUserID = () => 8; appStub._featureFlagsEpoch++;
++    appStub.getUserID = () => 7; appStub._featureFlagsEpoch++;
++    const before = JSON.parse(JSON.stringify(game.data));
++    finish(okAction(4).res); await old;
++    assert.deepEqual(game.data, before); assert.equal(disk.size, 0);
++  } finally { appStub.getUserID = () => 7; delete appStub._featureFlagsEpoch; }
++});
++
++test('Photo 在途时调用者改 payload，原发送、原存储和原重试仍冻结首次输入', async () => {
++  const disk = photoDisk(); const game = createGame([]); let finish;
++  game.request = (url, method, data) => {
++    game.calls.push({ url, method, data });
++    if (game.calls.length === 1) return new Promise(resolve => { finish = resolve; });
++    return Promise.resolve({ code: 520 });
++  };
++  const payload = photoInput(); const waiting = game.action('SUBMIT_PHOTO_CHECK', payload);
++  payload.imageUrl = 'media-asset:702'; finish({ code: 520 }); await waiting; await tick();
++  assert.equal(game.calls[0].data.payload.imageUrl, 'media-asset:701');
++  assert.deepEqual(game._unknownCommand, game.calls[0].data);
++  assert.deepEqual(game.calls[1], { url: '/api/play/advanced/receipt', method: 'GET',
++    data: { sessionId: 42, idempotencyKey: game.calls[0].data.idempotencyKey } });
++  assert.ok([...disk.values()].some(value => value && value.command && value.command.payload.imageUrl === 'media-asset:701'));
++});
++
++test('共享高级动作 A UNKNOWN 切 B 及 A→B→A 不得用当前 token 重发旧命令', async () => {
++  appStub._featureFlagsEpoch = 50;
++  try {
++    const game = createGame([{ err: Error('timeout') }, { err: Error('offline') }], { ownerType: 2 });
++    await game.action('SUBMIT_BALL_SHAKE', { hits: 6 }); await tick();
++    assert.equal(game.data.unknown, true); const count = game.calls.length;
++    appStub.getUserID = () => 8; appStub._featureFlagsEpoch++;
++    assert.equal(await game.resolveUnknown(), false); assert.equal(game.calls.length, count);
++    appStub.getUserID = () => 7; appStub._featureFlagsEpoch++;
++    assert.equal(await game.resolveUnknown(), false); assert.equal(game.calls.length, count);
++  } finally { appStub.getUserID = () => 7; delete appStub._featureFlagsEpoch; }
++});
+diff --git a/chengyinhub-xcx/tests/unit/longrun-own-c01-26.test.js b/chengyinhub-xcx/tests/unit/longrun-own-c01-26.test.js
+index d5d3397..a48022d 100644
+--- a/chengyinhub-xcx/tests/unit/longrun-own-c01-26.test.js
++++ b/chengyinhub-xcx/tests/unit/longrun-own-c01-26.test.js
+@@ -1,5 +1,5 @@
+ 'use strict';
+-// Authored regression; NOT_RUN by source-only delivery instruction.
++// Agent C 已在轻量 Node 环境实际执行。
+ const { test } = require('node:test');
+ const assert = require('node:assert/strict');
+ const path = require('node:path');
+@@ -20,7 +20,7 @@ function load() {
+   const file = path.resolve(__dirname, '../../pages/play/index.js'); delete require.cache[file]; delete require.cache[ROUTE_STATE]; require(file);
+   const page = Object.assign({}, definition, { data: { activityId: 9, topicId: 8, mode: 1, game: { nodeId: 31 }, answerInput: 'fixture' },
+     _routeState: { sessionId: 's9', version: 4 }, _routeActions: {}, setData(patch) { Object.assign(this.data, patch); },
+-    _routeWritePayload(kind, nodeId, extra) { return Object.assign({ activityId: this.data.activityId, routeActionId: 'original-fixture-key', routeSessionId: this._routeState.sessionId }, extra); },
++    _routeWritePayload(kind, nodeId, extra) { return Object.assign({ activityId: this.data.activityId, routeActionId: 'original-fixture-key', routeSessionId: this._routeState.sessionId, expectedRouteVersion: this._routeState.version }, extra); },
+     clearGameNetworkError() {}, _resolveRouteAction() {}, onComplete: id => completed.push(id), _applyAiScore() {} });
+   return { page, requests, completed, scan: () => scan, picked: () => picked };
+ }
+diff --git a/chengyinhub-xcx/tests/unit/longrun-own-c01-34.test.js b/chengyinhub-xcx/tests/unit/longrun-own-c01-34.test.js
+index 8cd5e83..5a49966 100644
+--- a/chengyinhub-xcx/tests/unit/longrun-own-c01-34.test.js
++++ b/chengyinhub-xcx/tests/unit/longrun-own-c01-34.test.js
+@@ -12,6 +12,15 @@ test('original answer and action key survive UNKNOWN and recovery only reads rec
+  query.success({code:520});await reading;assert.equal(h.page._gameWriteUnknown,true);
+ });
+ test('attempt from another game cannot be retried',()=>{const h=load();const old=h.page._legacyGameContext();h.page.recordGameNetworkFailure('fixture',{type:'photo',nodeId:31,pic:'fixture',viewContext:old});h.page.data.game={nodeId:32};h.page.retryGameSubmission();assert.deepEqual(h.requests,[]);});
++test('unknown answer keeps original request and never dispatches a replacement write',async()=>{
++ const h=load();
++ h.page._routeWritePayload=(kind,nodeId,extra)=>Object.assign({routeActionId:'original-key',routeSessionId:'99',expectedRouteVersion:4},extra);
++ h.page.submitGame();await new Promise(r=>setImmediate(r));
++ assert.equal(h.requests[0].data.answer,'original');assert.equal(h.requests[0].data.expectedRouteVersion,4);
++ h.requests[0].fail({errMsg:'fixture'});await new Promise(r=>setImmediate(r));
++ h.page.data.answerInput='replacement';h.page.retryGameSubmission();await new Promise(r=>setImmediate(r));
++ assert.equal(h.requests.length,1);assert.equal(h.page._gameWriteUnknown,true);
++});
+ test('HTTP unknown never dispatches a retry',()=>{const h=load();h.page._gameWriteUnknown=true;h.page._lastGameAttempt={type:'answer',viewContext:h.page._legacyGameContext()};h.page.retryGameSubmission();assert.deepEqual(h.requests,[]);});
+ 
+ test('retry preserves original session, version, epoch and input after state refresh',()=>{
+diff --git a/chengyinhub-xcx/tests/unit/longrun-own-c01-36.test.js b/chengyinhub-xcx/tests/unit/longrun-own-c01-36.test.js
+index 4ba0a56..f00a30a 100644
+--- a/chengyinhub-xcx/tests/unit/longrun-own-c01-36.test.js
++++ b/chengyinhub-xcx/tests/unit/longrun-own-c01-36.test.js
+@@ -1,5 +1,5 @@
+ 'use strict';
+-// NOT_RUN: authored source-only regression.
++// Uses the real page helpers and an isolated persistent storage fixture.
+ const {test}=require('node:test');const assert=require('node:assert/strict');const path=require('node:path');
+ // W8 起登录态写意图按账号/场次持久化到本机(play-route-state scopedRouteActionStore → wx storage),
+ // 模块级按作用域缓存;每个用例给新存储并重载该模块。
+diff --git a/chengyinhub-xcx/tests/unit/play-journey-request.test.js b/chengyinhub-xcx/tests/unit/play-journey-request.test.js
+index 23f600b..fd039e4 100644
+--- a/chengyinhub-xcx/tests/unit/play-journey-request.test.js
++++ b/chengyinhub-xcx/tests/unit/play-journey-request.test.js
+@@ -80,7 +80,7 @@ test('六种节点完成入口先同步伏笔，再用同步后的版本提交',
+       _routeWritePayload(action, nodeId, payload) {
+         assert.equal(action, kind);
+         assert.equal(this._routeState.version, 4, '完成请求不能提前生成旧版本');
+-        const body = Object.assign({}, payload, { expectedRouteVersion: this._routeState.version });
++        const body = Object.assign({}, payload, { expectedRouteVersion: this._routeState.version, routeActionId: 'sync-' + kind });
+         Object.defineProperty(body, '_bindRouteContext', { value: fields => Object.assign(body, fields) });
+         return body;
+       },
+diff --git a/chengyinhub-xcx/tests/unit/v4-scan-cancel.test.js b/chengyinhub-xcx/tests/unit/v4-scan-cancel.test.js
+index c665a20..6a04282 100644
+--- a/chengyinhub-xcx/tests/unit/v4-scan-cancel.test.js
++++ b/chengyinhub-xcx/tests/unit/v4-scan-cancel.test.js
+@@ -28,6 +28,7 @@ function loadPage() {
+     offLocationChange() {},
+     getStorageSync: () => '', setStorageSync() {}, removeStorageSync() {},
+   }
++  // 原局上下文由用例显式回包；不能和 master 的手动回包同时响应两次。
+   const app = { sendRequest(options) { requests.push(options) }, getUserID: () => 9, globalData: {} }
+   global.getApp = () => app
+   global.Page = (value) => { definition = value }
