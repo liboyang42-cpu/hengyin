@@ -8,6 +8,7 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.JSONFactory;
 import com.alibaba.fastjson2.JSONWriter;
+import java.util.Arrays;
 import com.chengyinhub.common.config.AiModelConfig;
 
 import java.util.concurrent.TimeUnit;
@@ -176,16 +177,19 @@ public class OpenAiCompatibleLlmClient implements LlmClient
         try (HttpUtils.AttemptLease lease = admission.acquire(url))
         {
             byte[] json;
+            VisionParts parts;
             try
             {
-                json = encodeBody(body, image, systemPrompt, userPrompt, model);
+                parts = visionParts(body, image);
+                json = parts == null ? encodeBody(body, image, systemPrompt, userPrompt, model) : null;
             }
             catch (RuntimeException invalid)
             {
                 throw new AiProviderNotSentException();
             }
             phase = "transport";
-            String result = HttpUtils.sendJsonPostBytes(url, json, apiKey, deadline, lease);
+            String result = parts == null ? HttpUtils.sendJsonPostBytes(url, json, apiKey, deadline, lease)
+                    : HttpUtils.sendJsonPostParts(url, parts.prefix(), parts.image(), parts.suffix(), apiKey, deadline, lease);
             // The String-only common API does not expose a success status; do not invent one.
             phase = "parse";
             return responseText(result);
@@ -212,6 +216,46 @@ public class OpenAiCompatibleLlmClient implements LlmClient
             logFailure(phase, status, "PROVIDER_OUTCOME_UNKNOWN");
             throw failure(phase, status);
         }
+    }
+
+    private record VisionParts(byte[] prefix, String image, byte[] suffix) { }
+
+    /** Split only the original fixed image string position; neither marker is sent or persisted. */
+    private static VisionParts visionParts(JSONObject body, String image)
+    {
+        // Below the pinned writer's initial 8192 bytes there is no large-array materialization to remove.
+        if (image == null || image.length() <= 8192 || body == null || body.getClass() != JSONObject.class) return null;
+        JSONWriter.Context context = new JSONWriter.Context(JSONFactory.getDefaultObjectWriterProvider());
+        if (context.getFeatures() != 0
+                || !context.getObjectWriter(JSONObject.class).getClass().getName().equals("com.alibaba.fastjson2.writer.ObjectWriterImplMap")
+                || !context.getObjectWriter(JSONArray.class).getClass().getName().equals("com.alibaba.fastjson2.writer.ObjectWriterImplList")) return null;
+        for (int i = 0; i < image.length(); i++)
+        {
+            char value = image.charAt(i);
+            if (value < 32 || value > 126 || value == '"' || value == '\\') return null;
+        }
+        JSONArray messages = body.getJSONArray("messages");
+        if (messages == null || messages.isEmpty()) return null;
+        JSONObject user = messages.getJSONObject(messages.size() - 1);
+        JSONArray content = user.getJSONArray("content");
+        if (content == null || content.isEmpty()) return null;
+        JSONObject imagePart = content.getJSONObject(0).getJSONObject("image_url");
+        if (imagePart == null || !image.equals(imagePart.get("url"))) return null;
+        byte[] empty, marker;
+        try
+        {
+            imagePart.put("url", ""); empty = JSON.toJSONBytes(body);
+            if (empty.length > 8192 || (long) empty.length + image.length() >= 67108864L) return null;
+            // Optional optimization only; preserve the original metadata/codec size behavior otherwise.
+            imagePart.put("url", "!"); marker = JSON.toJSONBytes(body);
+        }
+        finally { imagePart.put("url", image); }
+        if (marker.length != empty.length + 1) return null;
+        int at = 0;
+        while (at < empty.length && empty[at] == marker[at]) at++;
+        if (at == 0 || at >= empty.length || marker[at] != '!' || empty[at - 1] != '"' || empty[at] != '"') return null;
+        for (int i = at; i < empty.length; i++) if (empty[i] != marker[i + 1]) return null;
+        return new VisionParts(Arrays.copyOf(empty, at), image, Arrays.copyOfRange(empty, at, empty.length));
     }
 
     /** Preserve the pinned default UTF-8 codec; reserve space before the image's trailing text grows it again. */

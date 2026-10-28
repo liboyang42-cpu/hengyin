@@ -733,6 +733,85 @@ class CombinedContextConfigurationTest {
             assertArrayEquals(originalBytes, com.alibaba.fastjson2.JSON.toJSONBytes(sent), "Encoding must not mutate the input or caller's earlier output");
         }
 
+        // Real pinned entity/cursor and existing lease FSM controls; no HTTP success or physical handler is simulated.
+        String largeImage = "data:image/jpeg;base64," + "A".repeat(8193);
+        content.getJSONObject(0).getJSONObject("image_url").put("url", largeImage);
+        byte[] complete = com.alibaba.fastjson2.JSON.toJSONBytes(sent);
+        var streamType = assertDoesNotThrow(() -> Class.forName("com.chengyinhub.common.utils.http.HttpUtils$JsonPartsInputStream"));
+        var streamConstructor = assertDoesNotThrow(() -> streamType.getDeclaredConstructor(byte[].class, String.class, byte[].class));
+        streamConstructor.setAccessible(true);
+        Object previousParts = null;
+        List<java.io.InputStream> cursors = new ArrayList<>();
+        for (int cursor = 0; cursor < 4; cursor++) {
+            Object parts = ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient.class,
+                    "visionParts", sent, largeImage);
+            assertNotNull(parts); assertEquals(largeImage, content.getJSONObject(0).getJSONObject("image_url").getString("url"));
+            byte[] prefix = (byte[]) ReflectionTestUtils.getField(parts, "prefix");
+            byte[] suffix = (byte[]) ReflectionTestUtils.getField(parts, "suffix");
+            assertEquals(complete.length, (long) prefix.length + largeImage.length() + suffix.length);
+            if (previousParts != null) assertNotSame(ReflectionTestUtils.getField(previousParts, "prefix"), prefix);
+            java.io.InputStream source = (java.io.InputStream) assertDoesNotThrow(() -> streamConstructor.newInstance(prefix, largeImage, suffix));
+            ReflectionTestUtils.invokeMethod(source, "validate");
+            cursors.add(source); previousParts = parts;
+        }
+        // All four cursors exist before any is consumed; closing the first cannot alter the other three.
+        for (java.io.InputStream source : cursors) {
+            var entity = new org.apache.http.entity.InputStreamEntity(source, complete.length);
+            assertFalse(entity.isRepeatable()); assertFalse(entity.isChunked()); assertEquals(complete.length, entity.getContentLength());
+            var received = new java.io.ByteArrayOutputStream();
+            assertDoesNotThrow(() -> entity.writeTo(received)); assertArrayEquals(complete, received.toByteArray());
+            assertNull(ReflectionTestUtils.getField(source, "ascii"), "Actual entity completion drops its own source reference");
+        }
+        var partPosts = new java.util.concurrent.atomic.AtomicInteger();
+        try (var transport = mockStatic(com.chengyinhub.common.utils.http.HttpUtils.class, invocation -> {
+            assertEquals("sendJsonPostParts", invocation.getMethod().getName()); assertEquals("fixture-token", invocation.getArgument(4));
+            assertSame(largeImage, invocation.getArgument(2));
+            java.io.InputStream source = (java.io.InputStream) streamConstructor.newInstance(invocation.getArgument(1),
+                    invocation.getArgument(2), invocation.getArgument(3));
+            ReflectionTestUtils.invokeMethod(source, "validate");
+            var received = new java.io.ByteArrayOutputStream();
+            new org.apache.http.entity.InputStreamEntity(source, complete.length).writeTo(received);
+            assertArrayEquals(complete, received.toByteArray()); partPosts.incrementAndGet();
+            throw new com.chengyinhub.business.service.ai.AiProviderNotSentException();
+        })) {
+            String origin = "http://127.0.0.1:1";
+            var client = new com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient("controlled-parts", origin,
+                    "fixture-token", "fixture-model", true, 2000, new com.chengyinhub.business.service.ai.AiHttpAdmission(List.of(origin)));
+            assertThrows(com.chengyinhub.business.service.ai.AiProviderNotSentException.class,
+                    () -> client.chatVision("中文\u0000\"\\", largeImage, "要求\uD83D\uDE00"));
+        }
+        assertEquals(1, partPosts.get(), "Stream preparation must not introduce another provider attempt");
+        var stateType = assertDoesNotThrow(() -> Class.forName("com.chengyinhub.common.utils.http.HttpUtils$AttemptState"));
+        var stateConstructor = assertDoesNotThrow(() -> stateType.getDeclaredConstructor(com.chengyinhub.common.utils.http.HttpUtils.AttemptLease.class));
+        stateConstructor.setAccessible(true);
+        for (int phase = 0; phase < 3; phase++) {
+            var released = new java.util.concurrent.atomic.AtomicInteger();
+            var originalLease = new com.chengyinhub.common.utils.http.HttpUtils.AttemptLease(released::incrementAndGet);
+            java.io.InputStream source = (java.io.InputStream) assertDoesNotThrow(() -> streamConstructor.newInstance(new byte[]{'{','"'}, largeImage, new byte[]{'"','}'}));
+            ReflectionTestUtils.invokeMethod(source, "validate");
+            var ownedLease = (com.chengyinhub.common.utils.http.HttpUtils.AttemptLease) ReflectionTestUtils.invokeMethod(source, "own", originalLease);
+            assertTrue((Boolean) ReflectionTestUtils.invokeMethod(ownedLease, "transfer"));
+            Object state = assertDoesNotThrow(() -> stateConstructor.newInstance(ownedLease));
+            if (phase > 0) assertTrue((Boolean) ReflectionTestUtils.invokeMethod(state, "startWorker"));
+            if (phase == 2) assertTrue((Boolean) ReflectionTestUtils.invokeMethod(state, "enterDispatch"));
+            boolean cancelled = (Boolean) ReflectionTestUtils.invokeMethod(state, "cancelBeforeDispatch"); assertEquals(phase != 2, cancelled);
+            originalLease.close(); ownedLease.close();
+            if (phase == 0) {
+                assertEquals(1, released.get()); assertNull(ReflectionTestUtils.getField(source, "ascii"));
+                assertFalse((Boolean) ReflectionTestUtils.invokeMethod(state, "startWorker"));
+            } else {
+                assertEquals(0, released.get()); assertSame(largeImage, ReflectionTestUtils.getField(source, "ascii"));
+                var reused = assertThrows(com.chengyinhub.common.utils.http.HttpRequestException.class,
+                        () -> com.chengyinhub.common.utils.http.HttpUtils.sendJsonPostParts("ftp://127.0.0.1/", new byte[]{'{','"'},
+                                largeImage, new byte[]{'"','}'}, "fixture-token", System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(2), originalLease));
+                assertEquals(com.chengyinhub.common.utils.http.HttpRequestException.SendDisposition.NOT_SENT, reused.getSendDisposition());
+                assertEquals(0, released.get(), "A reused lease cannot close another physical request's source/credit");
+                ReflectionTestUtils.invokeMethod(state, "finishWorker");
+                assertEquals(1, released.get()); assertNull(ReflectionTestUtils.getField(source, "ascii"));
+                ReflectionTestUtils.invokeMethod(state, "finishWorker"); assertEquals(1, released.get());
+            }
+        }
+
         // The shared production review.patch is required before these byte-entry controls can pass.
         byte[] body = "{\"value\":\"中文\"}".getBytes(StandardCharsets.UTF_8), retainedBody = body.clone();
         for (int refusal = 0; refusal < 4; refusal++) {
@@ -752,6 +831,26 @@ class CombinedContextConfigurationTest {
             }
             assertEquals(1, releases.get(), "Original lease releases once even after caller close");
             assertArrayEquals(retainedBody, body, "Exclusive input bytes must not be mutated");
+        }
+        var partReleases = new java.util.concurrent.atomic.AtomicInteger();
+        try (var lease = new com.chengyinhub.common.utils.http.HttpUtils.AttemptLease(partReleases::incrementAndGet)) {
+            var unsent = assertThrows(com.chengyinhub.common.utils.http.HttpRequestException.class,
+                    () -> com.chengyinhub.common.utils.http.HttpUtils.sendJsonPostParts("ftp://127.0.0.1/", new byte[]{'{','"'},
+                            largeImage, new byte[]{'"','}'}, "fixture-token", System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(2), lease));
+            assertEquals(com.chengyinhub.common.utils.http.HttpRequestException.SendDisposition.NOT_SENT, unsent.getSendDisposition());
+            assertFalse(unsent.isRetryable()); assertEquals(1, partReleases.get());
+        }
+        assertEquals(1, partReleases.get());
+        for (String invalid : List.of("bad\\image", "中文")) {
+            var released = new java.util.concurrent.atomic.AtomicInteger();
+            try (var lease = new com.chengyinhub.common.utils.http.HttpUtils.AttemptLease(released::incrementAndGet)) {
+                var unsent = assertThrows(com.chengyinhub.common.utils.http.HttpRequestException.class,
+                        () -> com.chengyinhub.common.utils.http.HttpUtils.sendJsonPostParts("http://127.0.0.1:1/", new byte[]{'{','"'},
+                                invalid, new byte[]{'"','}'}, "fixture-token", System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(2), lease));
+                assertEquals(com.chengyinhub.common.utils.http.HttpRequestException.SendDisposition.NOT_SENT, unsent.getSendDisposition());
+                assertEquals(1, released.get());
+            }
+            assertEquals(1, released.get());
         }
     }
 

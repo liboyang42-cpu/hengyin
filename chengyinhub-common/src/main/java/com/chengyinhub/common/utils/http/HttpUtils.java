@@ -38,6 +38,7 @@ import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
@@ -144,7 +145,7 @@ public class HttpUtils
     public static String sendJsonPost(String url, String json, String bearer,
             long deadlineNanos, AttemptLease lease, java.util.Map<String, String> additionalHeaders)
     {
-        return sendJsonPostEncoded(url, json == null ? null : () -> json.getBytes(StandardCharsets.UTF_8),
+        return sendJsonPostEncoded(url, json == null ? null : () -> new ByteArrayEntity(json.getBytes(StandardCharsets.UTF_8)),
                 bearer, deadlineNanos, lease, additionalHeaders);
     }
 
@@ -156,11 +157,31 @@ public class HttpUtils
     public static String sendJsonPostBytes(String url, byte[] json, String bearer,
             long deadlineNanos, AttemptLease lease)
     {
-        return sendJsonPostEncoded(url, json == null ? null : () -> json,
+        return sendJsonPostEncoded(url, json == null ? null : () -> new ByteArrayEntity(json),
                 bearer, deadlineNanos, lease, java.util.Map.of());
     }
 
-    private static String sendJsonPostEncoded(String url, java.util.function.Supplier<byte[]> encode, String bearer,
+    /** Exclusive small JSON ends and immutable unescaped ASCII content; one cursor and one physical lease. */
+    public static String sendJsonPostParts(String url, byte[] prefix, String ascii, byte[] suffix, String bearer,
+            long deadlineNanos, AttemptLease lease)
+    {
+        final JsonPartsInputStream source;
+        try { source = new JsonPartsInputStream(prefix, ascii, suffix); }
+        catch (RuntimeException | Error failure)
+        {
+            try { if (lease != null) lease.close(); } catch (RuntimeException | Error cleanup) { failure.addSuppressed(cleanup); }
+            throw failure;
+        }
+        try (AttemptLease owned = source.own(lease))
+        {
+            return sendJsonPostEncoded(url, () -> {
+                source.validate();
+                return new InputStreamEntity(source, source.length);
+            }, bearer, deadlineNanos, owned, java.util.Map.of());
+        }
+    }
+
+    private static String sendJsonPostEncoded(String url, java.util.function.Supplier<HttpEntity> encode, String bearer,
             long deadlineNanos, AttemptLease lease, java.util.Map<String, String> additionalHeaders)
     {
         if (lease == null || !lease.transfer())
@@ -190,10 +211,10 @@ public class HttpUtils
             if (remaining <= 0) throw notSent("third-party HTTP total timeout");
             long boundedDeadline = now + Math.min(remaining,
                     TimeUnit.MILLISECONDS.toNanos(policy.totalTimeoutMs));
-            byte[] body = encode.get();
+            HttpEntity body = encode.get();
             if (remainingMillis(boundedDeadline) <= 0) throw notSent("third-party HTTP total timeout");
             handedToAttempt = true;
-            return executeAttempt("POST", target, body, MediaType.APPLICATION_JSON_VALUE,
+            return executeAttemptEntity("POST", target, body, MediaType.APPLICATION_JSON_VALUE,
                     Constants.UTF8, false, policy, boundedDeadline, bearer, lease, headers).body;
         }
         catch (HttpRequestException error)
@@ -333,21 +354,45 @@ public class HttpUtils
             String requestContentType, String responseCharset, boolean trustAnyCertificate,
             RequestPolicy policy, long deadlineNanos, String bearer, AttemptLease lease, java.util.Map<String, String> headers)
     {
-        AtomicReference<HttpRequestBase> activeRequest = new AtomicReference<>();
-        AtomicBoolean cancelled = new AtomicBoolean(false);
-        AttemptState state = lease == null ? null : new AttemptState(lease);
-        FutureTask<AttemptResult> attempt = new FutureTask<>(() -> {
-            try
-            {
-                if (state != null && !state.startWorker()) throw notSent("third-party HTTP request cancelled");
-                return executeBlocking(method, target, body, requestContentType, responseCharset,
-                        trustAnyCertificate, policy, deadlineNanos, activeRequest, cancelled, bearer, state, headers);
-            }
-            finally
-            {
-                if (state != null) state.finishWorker();
-            }
-        });
+        return executeAttemptEntity(method, target, body == null ? null : new ByteArrayEntity(body), requestContentType,
+                responseCharset, trustAnyCertificate, policy, deadlineNanos, bearer, lease, headers);
+    }
+
+    private static AttemptResult executeAttemptEntity(String method, URL target, HttpEntity body,
+            String requestContentType, String responseCharset, boolean trustAnyCertificate,
+            RequestPolicy policy, long deadlineNanos, String bearer, AttemptLease lease, java.util.Map<String, String> headers)
+    {
+        final AttemptState state;
+        try { state = lease == null ? null : new AttemptState(lease); }
+        catch (RuntimeException | Error failure)
+        {
+            try { if (lease != null) lease.complete(); } catch (RuntimeException | Error cleanup) { failure.addSuppressed(cleanup); }
+            throw failure; // Nothing was submitted; never hide an allocation Error.
+        }
+        final AtomicReference<HttpRequestBase> activeRequest;
+        final AtomicBoolean cancelled;
+        final FutureTask<AttemptResult> attempt;
+        try
+        {
+            activeRequest = new AtomicReference<>(); cancelled = new AtomicBoolean(false);
+            attempt = new FutureTask<>(() -> {
+                try
+                {
+                    if (state != null && !state.startWorker()) throw notSent("third-party HTTP request cancelled");
+                    return executeBlockingEntity(method, target, body, requestContentType, responseCharset,
+                            trustAnyCertificate, policy, deadlineNanos, activeRequest, cancelled, bearer, state, headers);
+                }
+                finally
+                {
+                    if (state != null) state.finishWorker();
+                }
+            });
+        }
+        catch (RuntimeException | Error failure)
+        {
+            try { if (state != null) state.cancelBeforeDispatch(); } catch (RuntimeException | Error cleanup) { failure.addSuppressed(cleanup); }
+            throw failure;
+        }
         try
         {
             HTTP_EXECUTOR.execute(attempt);
@@ -356,6 +401,12 @@ public class HttpUtils
         {
             if (state != null) state.cancelBeforeDispatch();
             throw classify(new HttpRequestException("third-party HTTP client capacity exceeded", 0, false), state);
+        }
+        catch (RuntimeException | Error failure)
+        {
+            try { if (state != null) state.cancelBeforeDispatch(); } catch (RuntimeException | Error cleanup) { failure.addSuppressed(cleanup); }
+            try { attempt.cancel(true); HTTP_EXECUTOR.remove(attempt); } catch (RuntimeException | Error cleanup) { failure.addSuppressed(cleanup); }
+            throw failure; // A won physical worker still owns the lease through its original finally.
         }
         try
         {
@@ -417,6 +468,16 @@ public class HttpUtils
             AtomicReference<HttpRequestBase> activeRequest, AtomicBoolean cancelled,
             String bearer, AttemptState state, java.util.Map<String, String> headers)
     {
+        return executeBlockingEntity(method, target, body == null ? null : new ByteArrayEntity(body), requestContentType,
+                responseCharset, trustAnyCertificate, policy, deadlineNanos, activeRequest, cancelled, bearer, state, headers);
+    }
+
+    private static AttemptResult executeBlockingEntity(String method, URL target, HttpEntity body,
+            String requestContentType, String responseCharset, boolean trustAnyCertificate,
+            RequestPolicy policy, long deadlineNanos,
+            AtomicReference<HttpRequestBase> activeRequest, AtomicBoolean cancelled,
+            String bearer, AttemptState state, java.util.Map<String, String> headers)
+    {
         HttpRequestBase request = null;
         boolean reusable = false;
         try
@@ -425,7 +486,7 @@ public class HttpUtils
             {
                 throw new HttpRequestException("third-party HTTP total timeout", 0, true);
             }
-            request = createRequest(method, target, body, requestContentType,
+            request = createRequestEntity(method, target, body, requestContentType,
                     policy, deadlineNanos);
             if (bearer != null)
             {
@@ -530,13 +591,19 @@ public class HttpUtils
     private static HttpRequestBase createRequest(String method, URL target, byte[] body,
             String requestContentType, RequestPolicy policy, long deadlineNanos)
     {
+        return createRequestEntity(method, target, body == null ? null : new ByteArrayEntity(body), requestContentType, policy, deadlineNanos);
+    }
+
+    private static HttpRequestBase createRequestEntity(String method, URL target, HttpEntity body,
+            String requestContentType, RequestPolicy policy, long deadlineNanos)
+    {
         HttpRequestBase request;
         if ("POST".equals(method))
         {
             HttpPost post = new HttpPost(target.toString());
             if (body != null)
             {
-                post.setEntity(new ByteArrayEntity(body));
+                post.setEntity(body);
             }
             request = post;
         }
@@ -783,6 +850,91 @@ public class HttpUtils
     }
 
     /** A release-only lease: close releases only if transport has not claimed ownership. */
+    /** Memory-only segments; no file, socket, custom producer or shared mutable read cursor. */
+    private static final class JsonPartsInputStream extends InputStream
+    {
+        private byte[] prefix, suffix;
+        private String ascii;
+        private long position, length;
+        private boolean closed;
+
+        private JsonPartsInputStream(byte[] prefix, String ascii, byte[] suffix)
+        {
+            this.prefix = prefix; this.ascii = ascii; this.suffix = suffix;
+        }
+
+        private AttemptLease own(AttemptLease original)
+        {
+            if (original == null || !original.transfer())
+            {
+                close();
+                throw notSent("third-party HTTP lease unavailable");
+            }
+            try
+            {
+                return new AttemptLease(() -> { close(); original.complete(); });
+            }
+            catch (RuntimeException | Error failure)
+            {
+                close();
+                try { original.complete(); } catch (RuntimeException | Error cleanup) { failure.addSuppressed(cleanup); }
+                throw failure;
+            }
+        }
+
+        private void validate()
+        {
+            if (closed || prefix == null || ascii == null || suffix == null) throw notSent("invalid third-party HTTP request");
+            for (int i = 0; i < ascii.length(); i++)
+            {
+                char value = ascii.charAt(i);
+                if (value < 32 || value > 126 || value == '"' || value == '\\') throw notSent("invalid third-party HTTP request");
+            }
+            length = (long) prefix.length + ascii.length() + suffix.length;
+        }
+
+        @Override public int read()
+        {
+            if (closed || position >= length) return -1;
+            long at = position++;
+            if (at < prefix.length) return prefix[(int) at] & 255;
+            at -= prefix.length;
+            return at < ascii.length() ? ascii.charAt((int) at) : suffix[(int) (at - ascii.length())] & 255;
+        }
+
+        @Override public int read(byte[] bytes, int offset, int count)
+        {
+            Objects.checkFromIndexSize(offset, count, bytes.length);
+            if (count == 0) return 0;
+            if (closed || position >= length) return -1;
+            int copied;
+            if (position < prefix.length)
+            {
+                copied = (int) Math.min(count, prefix.length - position);
+                System.arraycopy(prefix, (int) position, bytes, offset, copied);
+            }
+            else if (position - prefix.length < ascii.length())
+            {
+                int start = (int) (position - prefix.length);
+                copied = Math.min(count, ascii.length() - start);
+                for (int i = 0; i < copied; i++) bytes[offset + i] = (byte) ascii.charAt(start + i);
+            }
+            else
+            {
+                int start = (int) (position - prefix.length - ascii.length());
+                copied = Math.min(count, suffix.length - start);
+                System.arraycopy(suffix, start, bytes, offset, copied);
+            }
+            position += copied;
+            return copied;
+        }
+
+        @Override public void close()
+        {
+            closed = true; prefix = null; ascii = null; suffix = null;
+        }
+    }
+
     public static final class AttemptLease implements AutoCloseable
     {
         private final Runnable release;
