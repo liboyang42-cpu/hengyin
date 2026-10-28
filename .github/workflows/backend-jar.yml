@@ -61,6 +61,11 @@ jobs:
           printf '%s\n' "$SOURCE_SHA" > out/SOURCE_SHA
           (cd out && sha256sum chengyinhub-admin.jar > chengyinhub-admin.jar.sha256)
           cat out/chengyinhub-admin.jar.sha256
+      - name: Verify embedded git commit
+        run: |
+          embedded="$(unzip -p out/chengyinhub-admin.jar BOOT-INF/classes/git.properties | sed -n 's/^git\.commit\.id=//p' | tr -d '\r')"
+          echo "embedded git.commit.id=$embedded"
+          test "$embedded" = "$SOURCE_SHA"
       - uses: actions/upload-artifact@v4
         with:
           name: backend-jar-${{ inputs.source_sha }}
