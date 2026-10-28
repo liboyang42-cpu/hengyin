@@ -1,0 +1,57 @@
+.sn {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--cy-space-2);
+  min-height: 120rpx;
+  padding-top: var(--cy-space-1);
+}
+/* 左:同 node-sheet__close —— 88rpx 热区、主色字 */
+.sn__l {
+  justify-self: start;
+  min-width: 88rpx;
+  max-width: 100%;
+  height: 88rpx;
+  margin-left: calc(var(--cy-space-1) * -1);
+  padding: 0 var(--cy-space-1);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  color: var(--cy-color-text-primary);
+  font-size: var(--cy-type-button);
+  font-weight: 600;
+}
+.sn__lt { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.sn__t {
+  max-width: 320rpx;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: center;
+  font-size: var(--cy-type-sheet-title);
+  font-weight: 700;
+  color: var(--cy-color-text-primary);
+}
+.sn__r { justify-self: end; display: flex; align-items: center; }
+/* 右:同 node-sheet__done(实心胶囊);文字按钮用 --plain */
+.sn__a {
+  min-width: 128rpx;
+  height: var(--cy-btn-h);
+  padding: 0 var(--cy-space-4);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--cy-radius-pill);
+  background: var(--cy-color-action-primary-bg);
+  color: var(--cy-color-action-primary-fg);
+  font-size: var(--cy-type-button);
+  font-weight: 700;
+}
+.sn__a.is-disabled { background: var(--cy-color-bg-surface-subtle); color: var(--cy-color-text-placeholder); }
+.sn__a--plain { min-width: 0; height: 88rpx; padding: 0 4rpx; background: transparent; color: var(--cy-color-text-primary); font-weight: 600; }
+.sn__a--plain.is-disabled { background: transparent; color: var(--cy-color-text-disabled); }
+
+/* 组件样式隔离,全局 .cy-pressed 进不来,本地补一份(同 cy-card) */
+.cy-pressed { opacity: .88; }

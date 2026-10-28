@@ -1469,7 +1469,7 @@
       <!-- P0.5 奖励总览(只读:XP 自动分配 / 通关勋章) -->
       <view class="pc-section-tit">奖励总览</view>
       <cy-card class="pc-reward">
-        <view class="pc-reward-row"><text class="pc-reward-k">探索值(XP)</text><text class="pc-reward-v">自动分配 · 按任务难度拆 60%,余额为通关奖励</text></view>
+        <view class="pc-reward-row"><text class="pc-reward-k">探索值</text><text class="pc-reward-v">自动分配</text></view>
         <view class="pc-reward-row"><text class="pc-reward-k">通关勋章</text><text class="pc-reward-v">{{formData.finishMedalName || (formData.name || '主题名') + ' · 通关(默认)'}}</text></view>
       </cy-card>
       <!-- blocking 非空(内容安全/AI 判定为 error)时不给继续发布。
@@ -1701,7 +1701,7 @@
     </view>
   </cy-sheet>
 
-  <include src="./topic-detail-sheet.wxml" />
+  <include src="./topic-detail-sheet.wxml" /><!-- 文档二 L1:可玩时段底部选择卡,和主题详情同在主题根节点下 --><cy-choice-sheet show="{{playWindowSheet.show}}" title="可玩时段" options="{{playWindowOptions}}" value="{{playWindow.mode}}" error="{{playWindowSheet.error}}" bind:change="onPlayWindowPick" bind:close="closePlayWindow"><view wx:if="{{playWindow.mode === 'custom'}}" class="pw-custom"><view class="pw-custom__grp"><cy-dropdown topic-editor range="{{playWindowStarts}}" value="{{playWindowStartIndex}}" data-field="start" bind:change="onPlayWindowTime"><view class="pw-custom__row"><text class="pw-custom__t">开始</text><text class="pw-custom__v">{{playWindow.start}}</text><cy-icon name="chevron-right" size="28" /></view></cy-dropdown><cy-dropdown topic-editor range="{{playWindowEnds}}" value="{{playWindowEndIndex}}" data-field="end" bind:change="onPlayWindowTime"><view class="pw-custom__row pw-custom__row--hr"><text class="pw-custom__t">结束</text><text class="pw-custom__v">{{playWindow.end}}</text><cy-icon name="chevron-right" size="28" /></view></cy-dropdown></view><view class="pw-custom__done" bindtap="closePlayWindow" aria-role="button" aria-label="完成" hover-class="cy-pressed" hover-stay-time="80">完成</view></view></cy-choice-sheet>
 
   <cy-sheet show="{{valueEditor.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeValueEditor" class="node-sheet-host">
     <view class="node-sheet story-initial" wx:if="{{valueEditor.row}}">
