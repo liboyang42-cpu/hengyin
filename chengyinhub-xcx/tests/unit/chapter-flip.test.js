@@ -96,3 +96,7 @@ test('过场组件:通关期间不出字,按钮最后才出;盖在通关勋章�
   const page = read('pages/play/index.wxml')
   assert.match(page, /<cy-chapter-flip wx:if="\{\{showFinish && finale\.show\}\}" mode="finale"/)
 })
+
+test('通关:拿不到主题名时标题用「主题通关」,不留空', () => {
+  assert.equal(buildFinale({ cards: [], nodes: [], topicName: '' }).info.title, '主题通关')
+})

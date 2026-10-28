@@ -70,7 +70,7 @@ function buildFinale({ cards, nodes, topicCover, topicName, doneCount, elapsed, 
     elapsed ? { v: elapsed, k: '用时' } : null,
     score ? { v: Number(score).toLocaleString('en-US'), k: '探索值' } : (puzzle && puzzle.count ? { v: String(puzzle.score), k: '解谜分' } : null),
   ].filter(Boolean);
-  return { faces: [a, b, goldFace(topicCover || (b && b.cover), topicName)], info: { kicker: '全部完成', title: topicName || '', desc: '', stats } };
+  return { faces: [a, b, goldFace(topicCover || (b && b.cover), topicName)], info: { kicker: '全部完成', title: topicName || '主题通关', desc: '', stats } };  // 拿不到主题名时与通关勋章页同口径
 }
 
 module.exports = { buildGateFlip, buildFinale, faceLabel };
