@@ -780,7 +780,9 @@ class GenericGameplayHttpE2eIT {
         arrival.put("routeSessionId",intent.path("routeSessionId").asText()).put("expectedRouteVersion",intent.path("expectedRouteVersion").asInt());
         JsonNode arrived=success(formFields("/api/play/checkin",arrival,s.headers));
         JsonNode afterArrival=stored(s);
-        assertEquals(arrived,success(formFields("/api/play/checkin",arrival,s.headers)));
+        JsonNode replayedArrival=success(formFields("/api/play/checkin",arrival,s.headers));
+        assertEquals(arrived.path("arrivedAt"),replayedArrival.path("arrivedAt"),"Scan replay must preserve the HTTP timestamp");
+        assertEquals(arrived,replayedArrival);
         assertEquals(afterArrival,stored(s),"Replaying the same scan intent must not change the route");
         if(config.has("outcomeRules"))assertScanHasNotCompleted(s);
         success(route(s,"QUEST_START","start"));
