@@ -98,6 +98,7 @@ const methods = {
       }
     }
     this.setData({ 'formData.themeRuntimeConfig': JSON.stringify(c) });
+    if (this._syncKeysItems) this._syncKeysItems(c);
     if (this._refreshStructureSummary) this._refreshStructureSummary(); // structure
     if (this._refreshThemeOwnership) this._refreshThemeOwnership();
   },
@@ -558,25 +559,13 @@ const methods = {
     const links = editor.links.concat({ id: 'link_' + suffix, sourceKey: editor.row.key, targetKey: 'sys.hp', trigger: 'PER_POINT', allowedReasons: ['TASK_COST'], frequency: 'EVENT', multiplier: 1 });
     this.setData({ 'valueEditor.links': links });
   },
-  removeValueLink(e) {
-    const links = copy(this.data.valueEditor.links);
-    links.splice(Number(e.currentTarget.dataset.index), 1);
-    this.setData({ 'valueEditor.links': links });
-  },
-  onValueLink(e) {
-    const index = Number(e.currentTarget.dataset.index), field = e.currentTarget.dataset.field;
-    const links = copy(this.data.valueEditor.links), link = links[index];
-    if (!link) return;
-    const option = Number(e.detail.value);
-    if (field === 'trigger') {
-      link.trigger = values.TRIGGERS[option];
-      delete link.amount; delete link.multiplier; delete link.threshold;
-      if (link.trigger === 'PER_POINT') link.multiplier = 1; else link.amount = 1;
-      if (link.trigger === 'FIRST_THRESHOLD') { link.frequency = 'RUN'; link.threshold = Number(this.data.valueEditor.row.min); }
-    } else if (field === 'frequency') link.frequency = link.trigger === 'FIRST_THRESHOLD' || option ? 'RUN' : 'EVENT';
-    else if (field === 'reason') link.allowedReasons = [values.REASONS[option]];
-    else if (['amount', 'multiplier', 'threshold'].includes(field)) link[field] = e.detail.value;
-    this.setData({ 'valueEditor.links': links, 'valueEditor.error': '' });
+  /** 关联只剩一个开关:打开 = 下降时按点扣生命值(默认一条);关掉 = 去掉这个数值的全部关联。 */
+  onValueLinkSwitch(e) {
+    if (e.detail.value) {
+      if (!this.data.valueEditor.links.length) this.addValueLink();
+      if (!this.data.valueEditor.links.length) this.setData({ 'valueEditor.links': [] }); // 没开成:开关弹回
+    }
+    else this.setData({ 'valueEditor.links': [], 'valueEditor.error': '' });
   },
   saveValueEditor() {
     const editor = this.data.valueEditor, r = initial.parse(this.data.formData.journeyRules);

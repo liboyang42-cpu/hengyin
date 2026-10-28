@@ -1,0 +1,24 @@
+/* 初始状态 · 开局带着 / 添加一层(线索与物品同一套行样式) */
+.ic-label { display: block; padding: var(--cy-space-1) var(--cy-space-4) var(--cy-space-2); font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
+.ic-list { padding-top: 0; padding-bottom: 0; }
+.ic-row { display: flex; align-items: center; gap: var(--cy-space-2); min-height: 100rpx; border-top: 1rpx solid var(--cy-color-border-subtle); font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }
+.ic-list .ic-row:first-child { border-top: 0; }
+.ic-row__name { flex: 1; min-width: 0; }
+.ic-row__kind { flex: none; color: var(--cy-color-text-secondary); }
+.ic-row__remove { flex: none; width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: flex-end; color: var(--cy-color-text-tertiary); }
+.ic-row__check { flex: none; color: var(--cy-color-action-primary-bg); }
+.ic-row__input { flex: 1; min-width: 0; min-height: 88rpx; text-align: right; }
+.ic-row__act { flex: none; padding: var(--cy-space-2) 0 var(--cy-space-2) var(--cy-space-2); font-size: var(--cy-type-button); font-weight: 700; }
+.ic-row__act.is-off { color: var(--cy-color-text-tertiary); }
+.ic-row--add { gap: var(--cy-space-3); font-weight: 600; }
+.ic-row__plus { width: 44rpx; height: 44rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }
+.ic-note { display: block; padding: 0 var(--cy-space-4) var(--cy-space-3); font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
+.ic-note--error { color: var(--cy-color-status-danger); }
+.ic-picker .node-sheet__top { position: relative; }
+.ic-picker .node-sheet__close { gap: var(--cy-space-1); }
+.ic-picker__title { position: absolute; left: 50%; transform: translateX(-50%); font-size: var(--cy-type-button); font-weight: 700; color: var(--cy-color-text-primary); }
+.ic-search { display: flex; align-items: center; gap: var(--cy-space-2); color: var(--cy-color-text-secondary); }
+.ic-search input { flex: 1; min-height: 72rpx; font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }
+.ic-seg { display: flex; padding: 6rpx; margin: var(--cy-space-2) 0; border-radius: var(--cy-radius-md); background: var(--cy-color-border-subtle); }
+.ic-seg__opt { flex: 1; min-height: 64rpx; display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-sm); font-size: var(--cy-type-label); color: var(--cy-color-text-primary); }
+.ic-seg__opt.is-on { background: var(--cy-color-bg-raised); font-weight: 600; }

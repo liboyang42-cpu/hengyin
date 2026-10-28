@@ -28,7 +28,8 @@
     "attribute-binding-editor": "/pages/publish/components/attribute-binding-editor/index",
     "cy-choice-sheet": "/components/cy/choice-sheet/index",
     "d20-settings": "/pages/publish/components/d20-settings/index",
-    "start-prep": "/pages/publish/components/start-prep/index"
+    "start-prep": "/pages/publish/components/start-prep/index",
+    "cy-stepper": "/components/cy/stepper/index"
   },
   "navigationStyle": "custom",
   "navigationBarTextStyle": "black",

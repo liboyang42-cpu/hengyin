@@ -209,13 +209,13 @@ const runtimeEditor = require('./theme-runtime.js');
 const structure = require('./theme-runtime-structure.js'); // structure
 const survivalEditor = require('./theme-runtime-survival.js'); // survival
 const zeroHpEditor = require('./theme-runtime-zero-hp.js'); // R5 HP 归零面板（与 runtimeEditor 内同一组方法，直接展开便于 handler 溯源）
-const ownership = require('./theme-ownership.js'); const d20Page = require('./theme-d20-page.js'); // 文档二 L1
+const ownership = require('./theme-ownership.js'); const d20Page = require('./theme-d20-page.js'); const keysItems = require('./theme-keys-items.js'); const initialCarry = require('./theme-initial-carry.js'); // 文档二 L1;L2 线索与物品 · 物品一组;初始状态 · 开局带着
 Page({
   ...runtimeEditor.methods,
   ...structure.methods, // structure
   ...survivalEditor.methods, // survival
   ...zeroHpEditor.methods, // R5 HP 归零
-  ...ownership.methods, ...d20Page.methods,
+  ...ownership.methods, ...d20Page.methods, ...keysItems.methods, ...initialCarry.methods,
   _routeGraph: topicRouteGraph.emptyGraph(),
   _routeMappingSourceNodeId: '',
   _routeMappingReturnToNodeEditor: false,
@@ -227,7 +227,7 @@ Page({
     ...runtimeEditor.data,
     ...structure.data, // structure
     ...survivalEditor.data, // survival
-    ...ownership.data, ...d20Page.data,
+    ...ownership.data, ...d20Page.data, ...keysItems.data, ...initialCarry.data,
     // 氛围块的选择器:cy-dropdown 吃 {value,label} 数组(全仓禁原生 picker),块上回显要 key→中文的映射。
     moodOptions: CHAPTER_ATMOSPHERES,
     storyWhenOptions: [], storyWhenLabelOf: {},
@@ -1301,7 +1301,7 @@ Page({
     } else if (this.data.valueEditor && this.data.valueEditor.show) {
       this.closeValueEditor();
     } else if (this.data.initialStateEditor && this.data.initialStateEditor.show) {
-      this.closeInitialState();
+      if (this.data.carryPicker && this.data.carryPicker.show) this.closeCarryPicker(); else this.closeInitialState(); // 开局带着 · 添加层先关
     } else if (this.data.routeMappingShow) {
       this.closeNodeRouteMapping();
     } else if (this.data.popChapterNodes) {
@@ -5000,7 +5000,7 @@ Page({
   // ⚠️ 以后要补回「发布前看成品」,走**本地草稿预览**(主题详情页加 preview 入参 + 一条
   // 本地数据源分支),不要再把按钮接回 ?id= —— 那条路读的永远是服务端那一版。
 
-  openTopicDetail() { this._syncRuntimeStats(); this._syncD20Rows(); this.setData({ topicDetailShow: true }); },
+  openTopicDetail() { this._syncRuntimeStats(); this._syncD20Rows(); this._syncKeysItems(); this.setData({ topicDetailShow: true }); },
   closeTopicDetail() { this.setData({ topicDetailShow: false }); },
 
   // 列表 ↔ 地图 视图切换(左下角药丸)。
@@ -7218,7 +7218,7 @@ Page({
       const editing = Object.assign({}, this.data.initialStateEditor.rules, { attributeBinding: rules.attributeBinding });
       editing.attributes = rules.attributes; delete editing.attributeDefinition; delete editing.attributeSnapshot;
       this.setData({ 'formData.journeyRules': confirmed.rules,
-        'initialStateEditor.rules': editing, 'initialStateEditor.values': customInitialValues(editing.attributes), 'initialStateEditor.error': '' });
+        'initialStateEditor.rules': editing, 'initialStateEditor.values': customInitialValues(editing.attributes), 'initialStateEditor.carry': this._carryRowsOf(editing.attributes), 'initialStateEditor.error': '' });
       this._onDraftEdited(this._persistDraftEnvelope());
     } catch (error) { this.setData({ 'initialStateEditor.error': error.message }); }
   },
@@ -7229,7 +7229,7 @@ Page({
       this._syncRuntimeStats();
       const rules = storyInitialState.parse(this.data.formData.journeyRules);
       const values = customInitialValues(rules.attributes);
-      this.setData({ initialStateEditor: { show: true, rules, values, error: '' } });
+      this.setData({ initialStateEditor: { show: true, rules, values, carry: this._carryRowsOf(rules.attributes), error: '' } });
       this.loadAttributeRegistry();
     } catch (error) { cyToast(error.message); }
   },
