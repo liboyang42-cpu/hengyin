@@ -5,6 +5,7 @@ import com.chengyinhub.common.enums.LimitType;
 
 import com.chengyinhub.business.service.IAdvancedGameRuntimeService;
 import com.chengyinhub.business.service.support.CheckReceiptProjection;
+import com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.text.Convert;
@@ -55,8 +56,10 @@ public class ApiAdvancedPlayController extends BaseController {
                     body.get("version") == null ? null : Convert.toInt(body.get("version"), -1),
                     Convert.toStr(body.get("idempotencyKey"), ""),
                     Convert.toStr(body.get("action"), ""), payload);
-            // act 是 @Transactional,它一返回就已提交、已还连接;铸卡(最多等 4 秒)放在这之后,不占库连接。
+            // act 返回前已提交玩法事务；铸卡放在提交之后。
             return success(CheckReceiptProjection.response(runtimeService.finishPendingCardMint(judged)));
+        } catch (AiProviderOutcomeUnknownException e) {
+            return AjaxResult.error(520, "照片结果还在确认中，请稍后核对").put("intentUnknown", true);
         } catch (ServiceException e) {
             // 冲突回执(fresh view + encounter)在 ServiceException.data 里,交给全局处理器按 code 下发。
             throw e.setData(CheckReceiptProjection.response(e.getData()));
