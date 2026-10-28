@@ -1,0 +1,30 @@
+Complete SOURCE chain (all public; [skip ci]):
+f431bddd040a51ed8ea198be3518d7f1e4a801c2 -> 90e5965836e230a61818143bef93040149e45e7e -> 83cdc64b84a5ae56cc159149cd3db86410a1bc74
+Final SOURCE tree: a07a26873a216e2c7cb26351471722643c057532
+90e tree: 54b0ef260e197f5ddf7b97c603540a8e3dbfcda4
+
+Cumulative complete.patch applies to exact f431, includes BOTH files:
+2442 bytes
+8a7493003114f30a85a06d40cede6fc2a8f7fe118c79955717340a9575c72c8c  complete.patch
+
+Preimages SHA256:
+f5169b986f0856fc17d8046a534d8430f787709284aafad0e2655eecc11ce456  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialBroadcastDeliveryMySqlIT.java
+48b1ed4cdc44fa4b22a02948bc3186d619e3cbe37b732fad817ad34490021810  chengyinhub-admin/src/test/tools/test_generic_gameplay_fresh_schema.py
+Postimages SHA256:
+058eadf40b1b83c3a61ec8382e815becb2e33ad50a8f61de11e625c815360a0c  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialBroadcastDeliveryMySqlIT.java
+14e7acc9abe69b9c022c717007a747983a40342068dd4b36484530ce2a5c8c7c  chengyinhub-admin/src/test/tools/test_generic_gameplay_fresh_schema.py
+
+SOURCE proof: normal setup retains the exact legacy resource + 10/23 original migration/backfill assertions,
+THEN applies canonical 10/28 union BEFORE constructing the real Mapper sessions.
+This supplies audience_frozen, nullable request fields/unique request key, creation table,
+both frozen-content field families, VARCHAR32/default UNKNOWN, attempts/update_time and shared message_id.
+Per-case reset deletes only owned-schema creation receipts as well as the original rows.
+withLegacySchema/resource and all 12 test bodies remain byte-identical: old-prefix guard,
+partial 1060, raw-history and canonical composition assertions are not upgraded away.
+Python change is import re only; its five broadcast controls and all old bodies remain unchanged.
+No production Mapper/Service/SQL/registry/workflow change. If 90e already applied, take 83cdc only.
+
+Executed: source reads, Git diff/apply-check, hashes, bounded added-line secret scan (0).
+NOT_RUN: project parse/import/tests, Java/Node/Python/DB/Redis/Docker/HTTP/CI.
+No transferred green; current run's 7 passed/5 errors are root's original evidence, not this source's acceptance.
+Earlier root-integrated b909/8c14 packages remain untouched and are not to be reapplied.
