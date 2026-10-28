@@ -8,6 +8,7 @@ Read AGENTS.md and chengyinhub-xcx/AGENTS.md first and follow them: Chinese comm
 - Do not rewrite, re-layout, restyle or rename existing pages, components, classes, tokens or files. Do not create parallel "v2" components that replace working ones. Do not swap existing controls for new ones unless the prototype marks that exact element as 改动.
 - Reuse existing components (cy-sheet, cy-switch, node-card, node-pill, cy-btn, cy-modal, existing list/row styles). Add a new component only for a genuinely new element with no existing counterpart, and keep it small.
 - Where a lane prompt says "replace" (e.g. topic-state-keys, story-rule-editor), read it as "edit in place". Keep the component, its file, its data flow and save path. Change only what shows raw keys/English or what the prototype marks, inside the same component.
+- L1's "reusable sheet primitives" means: first look for existing sheet/list/stepper/segmented styles on the base branch and reuse them. Extract only the few small pieces that do not exist yet. No new design system and no restyling of existing sheets.
 - Keep the diff small and reviewable. In the PR body, list every existing file you touched with a one-line reason.
 - If a prototype detail would need a large rewrite, implement the nearest small change and list the gap in the PR body instead.
 
