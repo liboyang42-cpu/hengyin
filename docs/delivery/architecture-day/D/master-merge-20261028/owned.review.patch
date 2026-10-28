@@ -1,0 +1,1413 @@
+diff --git a/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/BusinessOfficialEventController.java b/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/BusinessOfficialEventController.java
+index fa1737a..48ee1da 100644
+--- a/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/BusinessOfficialEventController.java
++++ b/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/BusinessOfficialEventController.java
+@@ -240,13 +240,11 @@ public class BusinessOfficialEventController extends BaseController {
+                 Long officialMemberId = resolveV2OfficialMember();
+                 if (officialMemberId == null) return error(V2_OPERATOR_UNAUTHORIZED);
+                 saved = officialEventV2Service.publishBroadcastForOperator(bc, officialMemberId);
+-                return AjaxResult.success("通知已登记，请读取逐渠道结果",
+-                        saved.getId());
++                return AjaxResult.success("通知已提交", saved.getId());
+             }
+         }
+         saved = officialBroadcastService.publish(bc, null);
+-        return AjaxResult.success("通知已登记，请读取逐渠道结果",
+-                saved.getId());
++        return AjaxResult.success("通知已提交", saved.getId());
+     }
+ 
+     @PreAuthorize("@ss.hasPermi('business:officialevent:notify')")
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialBroadcastDeliveryTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialBroadcastDeliveryTest.java
+index 350cd52..b81896f 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialBroadcastDeliveryTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialBroadcastDeliveryTest.java
+@@ -1,19 +1,332 @@
+ package com.chengyinhub.business.service.impl;
++
+ import com.chengyinhub.business.domain.OfficialBroadcast;
+-import com.chengyinhub.business.mapper.*;
+-import com.chengyinhub.business.notify.*;
++import com.chengyinhub.business.domain.OfficialBroadcastLog;
++import com.chengyinhub.business.mapper.OfficialAudienceMapper;
++import com.chengyinhub.business.mapper.OfficialBroadcastLogMapper;
++import com.chengyinhub.business.mapper.OfficialBroadcastMapper;
++import com.chengyinhub.business.mapper.UmsMemberMapper;
+ import com.chengyinhub.business.service.IImService;
+-import org.junit.jupiter.api.*;
++import com.chengyinhub.business.service.IWxSubscribeMsgService;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.Nested;
++import com.chengyinhub.business.notify.WxSubscribeChannel;
++import org.springframework.test.util.ReflectionTestUtils;
+ import org.springframework.transaction.PlatformTransactionManager;
+ import org.springframework.transaction.support.SimpleTransactionStatus;
+-import java.util.*;
+-import static org.mockito.Mockito.*;
++
++import java.util.ArrayList;
++import java.util.Collections;
++import java.util.HashMap;
++import java.util.LinkedHashMap;
++import java.util.List;
++import java.util.Map;
++import java.util.concurrent.atomic.AtomicBoolean;
++
+ import static org.junit.jupiter.api.Assertions.*;
++import static org.mockito.ArgumentMatchers.*;
++import static org.mockito.Mockito.*;
++
++/** Unit-only state-machine evidence. Does NOT establish MySQL locking/rollback or remote delivery. */
+ class OfficialBroadcastDeliveryTest {
++    static class Fixture {
++        final OfficialBroadcast broadcast;
++        final OfficialAudienceMapper audience = mock(OfficialAudienceMapper.class);
++        final OfficialBroadcastLogMapper logs = mock(OfficialBroadcastLogMapper.class);
++        final OfficialBroadcastMapper broadcasts = mock(OfficialBroadcastMapper.class);
++        final UmsMemberMapper members = mock(UmsMemberMapper.class);
++        final IImService im = mock(IImService.class);
++        final IWxSubscribeMsgService wx = mock(IWxSubscribeMsgService.class);
++        final PlatformTransactionManager transactions = mock(PlatformTransactionManager.class);
++        final Map<Long, OfficialBroadcastLog> rows = new LinkedHashMap<>();
++        OfficialBroadcastServiceImpl service;
++
++        Fixture() { this(broadcast("inapp,subscribe")); }
++
++        Fixture(OfficialBroadcast bc) {
++            broadcast = bc;
++            broadcast.setStatus(OfficialBroadcast.ST_PENDING);
++            when(transactions.getTransaction(any())).thenAnswer(call -> new SimpleTransactionStatus());
++            when(logs.lockBroadcast(bc.getId())).thenReturn(bc);
++            when(broadcasts.selectOfficialBroadcastById(bc.getId())).thenReturn(bc);
++            when(broadcasts.insertOfficialBroadcast(any())).thenReturn(1);
++            when(logs.selectRecoverableBroadcasts()).thenReturn(Collections.singletonList(bc));
++            when(logs.selectByBroadcast(bc.getId())).thenAnswer(call -> new ArrayList<>(rows.values()));
++            when(logs.insertPending(any())).thenAnswer(call -> {
++                OfficialBroadcastLog row = call.getArgument(0);
++                assertFalse(rows.values().stream().anyMatch(old -> old.getMemberId().equals(row.getMemberId())
++                        && old.getChannel().equals(row.getChannel())), "business identity must not change");
++                row.setId((long) rows.size() + 1);
++                row.setReached(0);
++                rows.put(row.getId(), row);
++                return 1;
++            });
++            when(logs.lockDeliveryIntent(anyLong())).thenAnswer(call -> rows.get(call.<Long>getArgument(0)));
++            when(logs.transition(anyLong(), anyString(), anyString(), nullable(String.class), nullable(Long.class)))
++                    .thenAnswer(call -> {
++                        OfficialBroadcastLog row = rows.get(call.<Long>getArgument(0));
++                        if (!row.getDeliveryState().equals(call.<String>getArgument(1))) return 0;
++                        row.setDeliveryState(call.getArgument(2));
++                        row.setFailureCode(call.getArgument(3));
++                        row.setMessageId(call.getArgument(4));
++                        row.setReached(OfficialBroadcastLog.SUCCESS.equals(row.getDeliveryState()) ? 1 : 0);
++                        return 1;
++                    });
++            when(logs.countInappReached(bc.getId())).thenAnswer(call -> (int) rows.values().stream()
++                    .filter(row -> "inapp".equals(row.getChannel()) && success(row)).count());
++            when(logs.countReached(bc.getId())).thenAnswer(call -> (int) rows.values().stream()
++                    .filter(Fixture::success).count());
++            when(logs.countUnsuccessful(bc.getId())).thenAnswer(call -> (int) rows.values().stream()
++                    .filter(row -> !success(row)).count());
++            when(broadcasts.updateOfficialBroadcast(any())).thenAnswer(call -> {
++                OfficialBroadcast patch = call.getArgument(0);
++                bc.setStatus(patch.getStatus());
++                bc.setReachedCount(patch.getReachedCount());
++                return 1;
++            });
++            when(audience.selectPlayerIds(any())).thenReturn(Collections.singletonList(10L));
++            when(members.lockMemberById(anyLong())).thenAnswer(call -> call.getArgument(0));
++            when(im.sendSystem(anyLong(), anyInt(), anyString(), anyString())).thenReturn(501L);
++            when(wx.notifyOfficialBroadcast(anyLong(), anyString(), anyString())).thenReturn(true);
++            restart();
++        }
++
++        static boolean success(OfficialBroadcastLog row) {
++            return OfficialBroadcastLog.SUCCESS.equals(row.getDeliveryState());
++        }
++
++        OfficialBroadcastServiceImpl restart() {
++            service = new OfficialBroadcastServiceImpl();
++            ReflectionTestUtils.setField(service, "broadcastMapper", broadcasts);
++            ReflectionTestUtils.setField(service, "logMapper", logs);
++            ReflectionTestUtils.setField(service, "audienceMapper", audience);
++            ReflectionTestUtils.setField(service, "memberMapper", members);
++            ReflectionTestUtils.setField(service, "imService", im);
++            ReflectionTestUtils.setField(service, "wxSubscribeMsgService", wx);
++            ReflectionTestUtils.setField(service, "transactionManager", transactions);
++            ReflectionTestUtils.setField(service, "officialTemplate", "configured");
++            return service;
++        }
++
++        OfficialBroadcastLog row(String channel) {
++            return rows.values().stream().filter(row -> channel.equals(row.getChannel())).findFirst().orElseThrow();
++        }
++    }
++
++    static OfficialBroadcast broadcast(String channels) {
++        OfficialBroadcast bc = new OfficialBroadcast();
++        bc.setId(1L);
++        bc.setTitle("官方通知");
++        bc.setAudience("player");
++        bc.setChannels(channels);
++        return bc;
++    }
++
++    @Test
++    void stalePrecheckCannotSendSixthInappAndKeepsOriginalPendingIdentity() {
++        Fixture f = new Fixture(broadcast("inapp"));
++        // Another broadcast commits the fifth receipt after this dispatch's advisory precheck.
++        when(f.logs.countRecentByMember(10L, 60)).thenReturn(4, 5);
++        assertEquals(0, f.service.dispatch(f.broadcast));
++        Long originalId = f.row("inapp").getId();
++        assertEquals(OfficialBroadcastLog.PENDING, f.row("inapp").getDeliveryState());
++        assertEquals(OfficialBroadcast.ST_PENDING, f.broadcast.getStatus());
++        verifyNoInteractions(f.im, f.wx);
++        when(f.logs.countRecentByMember(10L, 60)).thenReturn(0);
++        assertEquals(1, f.restart().dispatch(f.broadcast));
++        assertEquals(originalId, f.row("inapp").getId());
++        verify(f.im, times(1)).sendSystem(anyLong(), anyInt(), anyString(), anyString());
++    }
++
++    @Test
++    void memberLockPrecedesDeliveryLockFrequencyReadMessageAndSuccess() {
++        Fixture f = new Fixture(broadcast("inapp"));
++        when(f.logs.countRecentByMember(10L, 60)).thenReturn(4);
++        assertEquals(1, f.service.dispatch(f.broadcast));
++        org.mockito.InOrder ordered = inOrder(f.members, f.logs, f.im);
++        ordered.verify(f.members).lockMemberById(10L);
++        ordered.verify(f.logs).lockDeliveryIntent(f.row("inapp").getId());
++        ordered.verify(f.logs).countRecentByMember(10L, 60);
++        ordered.verify(f.im).sendSystem(eq(10L), anyInt(), anyString(), anyString());
++        ordered.verify(f.logs).transition(f.row("inapp").getId(), OfficialBroadcastLog.PENDING,
++                OfficialBroadcastLog.SUCCESS, null, 501L);
++    }
++
++    @Test
++    void missingMemberCannotAcquireDeliveryOrWriteMessageOrSuccess() {
++        Fixture f = new Fixture(broadcast("inapp"));
++        when(f.members.lockMemberById(10L)).thenReturn(null);
++        assertEquals(0, f.service.dispatch(f.broadcast));
++        assertEquals(OfficialBroadcastLog.PENDING, f.row("inapp").getDeliveryState());
++        verify(f.logs, never()).lockDeliveryIntent(anyLong());
++        verifyNoInteractions(f.im, f.wx);
++    }
++
++    @Test
++    void missingTemplateIsDefiniteFailureAndCanRecoverWithoutResendingInapp() {
++        Fixture f = new Fixture();
++        ReflectionTestUtils.setField(f.service, "officialTemplate", "");
++        assertEquals(1, f.service.dispatch(f.broadcast));
++        assertEquals(OfficialBroadcastLog.FAILED, f.row("subscribe").getDeliveryState());
++        assertEquals("TEMPLATE_MISSING", f.row("subscribe").getFailureCode());
++        assertEquals(OfficialBroadcast.ST_PENDING, f.broadcast.getStatus());
++        verifyNoInteractions(f.wx);
++        assertEquals(1, f.restart().dispatch(f.broadcast));
++        assertEquals(OfficialBroadcast.ST_SENT, f.broadcast.getStatus());
++        verify(f.im, times(1)).sendSystem(anyLong(), anyInt(), anyString(), anyString());
++        verify(f.wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
++    }
++
++    @Test
++    void falseCannotProveSuccessOrSafeRetryAcrossRestart() {
++        Fixture f = new Fixture();
++        when(f.wx.notifyOfficialBroadcast(anyLong(), anyString(), anyString())).thenReturn(false);
++        f.service.dispatch(f.broadcast);
++        assertEquals(OfficialBroadcastLog.UNKNOWN, f.row("subscribe").getDeliveryState());
++        assertEquals(0, f.row("subscribe").getReached());
++        assertEquals(OfficialBroadcast.ST_PENDING, f.broadcast.getStatus());
++        f.restart().runDueScheduled();
++        verify(f.wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
++        verify(f.im, times(1)).sendSystem(anyLong(), anyInt(), anyString(), anyString());
++    }
++
++    @Test
++    void remoteExceptionRetainsUnknownIntentAndOriginalIdentity() {
++        Fixture f = new Fixture(broadcast("subscribe"));
++        when(f.wx.notifyOfficialBroadcast(anyLong(), anyString(), anyString()))
++                .thenThrow(new IllegalStateException("response lost after acceptance"));
++        f.service.dispatch(f.broadcast);
++        Long original = f.row("subscribe").getId();
++        f.restart().dispatch(f.broadcast);
++        assertEquals(original, f.row("subscribe").getId());
++        assertEquals(OfficialBroadcastLog.UNKNOWN, f.row("subscribe").getDeliveryState());
++        assertEquals(0, f.broadcast.getReachedCount());
++        verify(f.wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
++    }
++
++    @Test
++    void successFollowedByReceiptFailureDoesNotRepeatExternalAction() {
++        Fixture f = new Fixture(broadcast("subscribe"));
++        doThrow(new IllegalStateException("DB receipt unavailable")).when(f.logs)
++                .transition(anyLong(), eq(OfficialBroadcastLog.UNKNOWN), eq(OfficialBroadcastLog.SUCCESS),
++                        isNull(), isNull());
++        assertThrows(IllegalStateException.class, () -> f.service.dispatch(f.broadcast));
++        assertEquals(OfficialBroadcastLog.UNKNOWN, f.row("subscribe").getDeliveryState());
++        f.restart().dispatch(f.broadcast);
++        verify(f.wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
++    }
++
++    @Test
++    void localFailureRetriesOnlyUnsuccessfulChannelAndKeepsConfirmedCounts() {
++        Fixture f = new Fixture();
++        when(f.im.sendSystem(anyLong(), anyInt(), anyString(), anyString()))
++                .thenThrow(new IllegalStateException("local write failed")).thenReturn(502L);
++        assertEquals(0, f.service.dispatch(f.broadcast));
++        assertEquals(OfficialBroadcastLog.FAILED, f.row("inapp").getDeliveryState());
++        assertEquals(OfficialBroadcastLog.SUCCESS, f.row("subscribe").getDeliveryState());
++        assertEquals(1, f.restart().dispatch(f.broadcast));
++        assertEquals(502L, f.row("inapp").getMessageId());
++        assertEquals(OfficialBroadcast.ST_SENT, f.broadcast.getStatus());
++        verify(f.wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
++    }
++
++    @Test
++    void nullMessageIdCannotBecomeSuccess() {
++        Fixture f = new Fixture(broadcast("inapp"));
++        when(f.im.sendSystem(anyLong(), anyInt(), anyString(), anyString())).thenReturn(null);
++        assertEquals(0, f.service.dispatch(f.broadcast));
++        assertEquals(OfficialBroadcastLog.FAILED, f.row("inapp").getDeliveryState());
++        assertEquals(OfficialBroadcast.ST_PENDING, f.broadcast.getStatus());
++    }
++
++    @Test
++    void remoteClaimIsDurableAndCallOccursOutsideTransactionTemplate() {
++        Fixture f = new Fixture(broadcast("subscribe"));
++        AtomicBoolean insideTemplate = new AtomicBoolean(false);
++        doAnswer(call -> { insideTemplate.set(true); return new SimpleTransactionStatus(); })
++                .when(f.transactions).getTransaction(argThat(definition -> definition != null
++                        && definition.getPropagationBehavior() != org.springframework.transaction.TransactionDefinition.PROPAGATION_NOT_SUPPORTED));
++        doAnswer(call -> { insideTemplate.set(false); return null; }).when(f.transactions).commit(any());
++        when(f.wx.notifyOfficialBroadcast(anyLong(), anyString(), anyString())).thenAnswer(call -> {
++            assertEquals(OfficialBroadcastLog.UNKNOWN, f.row("subscribe").getDeliveryState());
++            assertFalse(insideTemplate.get(), "claim template must have committed before remote call");
++            return true;
++        });
++        f.service.dispatch(f.broadcast);
++        assertEquals(OfficialBroadcastLog.SUCCESS, f.row("subscribe").getDeliveryState());
++    }
++
++    @Test
++    void recoveryUsesFrozenAudienceAndCopy() {
++        Fixture f = new Fixture(broadcast("inapp"));
++        when(f.im.sendSystem(anyLong(), anyInt(), anyString(), anyString()))
++                .thenThrow(new IllegalStateException("local failed")).thenReturn(503L);
++        f.service.dispatch(f.broadcast);
++        f.broadcast.setTitle("后来修改的标题");
++        when(f.audience.selectPlayerIds(any())).thenReturn(List.of(20L));
++        f.restart().dispatch(f.broadcast);
++        assertEquals(1, f.rows.size());
++        verify(f.im, times(2)).sendSystem(eq(10L), anyInt(), eq("官方通知"), anyString());
++        verify(f.audience, times(1)).selectPlayerIds(any());
++    }
++
++    @Test
++    void statsSeparateInappMembersFromSuccessfulChannelReceipts() {
++        Fixture f = new Fixture();
++        f.service.dispatch(f.broadcast);
++        Map<String, Object> stats = f.service.reachStats(1L, null);
++        assertEquals(1, stats.get("reached"));
++        assertEquals(2, stats.get("channelReached"));
++        assertEquals(1, f.broadcast.getReachedCount());
++        verify(f.logs).channelStats(1L);
++    }
++
++    @Test
++    void invalidOrRepeatedChannelsRejectBeforePersistingBroadcast() {
++        Fixture f = new Fixture();
++        for (String channels : List.of("subscribe,subscribe", "not-inapp", "inapp,")) {
++            OfficialBroadcast invalid = broadcast(channels);
++            assertThrows(RuntimeException.class, () -> f.service.publish(invalid, null));
++        }
++        verify(f.broadcasts, never()).insertOfficialBroadcast(any());
++        verifyNoInteractions(f.im, f.wx);
++    }
++
++    @Test
++    void unknownLegacyRowsNeverRetryEvenWhenReachedWasZero() {
++        Fixture f = new Fixture(broadcast("inapp"));
++        OfficialBroadcastLog old = new OfficialBroadcastLog();
++        old.setId(88L); old.setBroadcastId(1L); old.setMemberId(10L); old.setChannel("inapp");
++        old.setDeliveryState(OfficialBroadcastLog.UNKNOWN); old.setReached(0);
++        f.rows.put(88L, old);
++        f.restart().dispatch(f.broadcast);
++        assertEquals(1, f.rows.size());
++        assertEquals(OfficialBroadcast.ST_PENDING, f.broadcast.getStatus());
++        verifyNoInteractions(f.im, f.wx);
++    }
++
++    @Test
++    void committedPublishRemainsAcceptedPendingWhenWakeFails() {
++        Fixture f = new Fixture();
++        when(f.logs.lockBroadcast(1L)).thenThrow(new IllegalStateException("wake unavailable"));
++        f.broadcast.setReachedCount(999);
++        assertSame(f.broadcast, f.service.publish(f.broadcast, null));
++        assertEquals(OfficialBroadcast.ST_PENDING, f.broadcast.getStatus());
++        assertEquals(0, f.broadcast.getReachedCount());
++        verify(f.broadcasts).insertOfficialBroadcast(f.broadcast);
++        verifyNoInteractions(f.im, f.wx);
++    }
++
++
++    /** Original master durable-intent cases coexist with the original direct-receipt cases. */
++    @Nested
++    class DurableIntentProtocol {
++ UmsMemberMapper members;
+  OfficialBroadcastLogMapper logs;OfficialBroadcastMapper batches;IImService im;WxSubscribeChannel channel;OfficialBroadcastDeliveryService service;Map<String,Object> row;OfficialBroadcast bc;
+- @BeforeEach void setup(){
++ @org.junit.jupiter.api.BeforeEach void setup(){
+   logs=mock(OfficialBroadcastLogMapper.class);batches=mock(OfficialBroadcastMapper.class);im=mock(IImService.class);channel=mock(WxSubscribeChannel.class);PlatformTransactionManager tx=mock(PlatformTransactionManager.class);
+   when(tx.getTransaction(any())).thenAnswer(c->new SimpleTransactionStatus());service=new OfficialBroadcastDeliveryService(logs,batches,im,channel,tx);
++  members=mock(UmsMemberMapper.class);when(members.lockMemberById(anyLong())).thenAnswer(c->c.getArgument(0));ReflectionTestUtils.setField(service,"members",members);
+   bc=new OfficialBroadcast();bc.setId(9L);bc.setStatus(OfficialBroadcast.ST_PENDING);row=new HashMap<>();row.put("id",1L);row.put("broadcast_id",9L);row.put("member_id",7L);row.put("channel","subscribe");row.put("delivery_state","READY");row.put("frozen_title","frozen");row.put("frozen_sub","original");
+   when(batches.lockDispatch(9L)).thenReturn(Map.of("status",OfficialBroadcast.ST_PENDING,"audience_frozen",1));
+   when(logs.deliveryRows(9L)).thenAnswer(c->List.of(new HashMap<>(row)));when(logs.lockDelivery(1L)).thenReturn(row);
+@@ -33,4 +346,27 @@ class OfficialBroadcastDeliveryTest {
+   service.resume(bc);assertEquals("NOT_SUBMITTED_TEMPLATE",row.get("delivery_state"));assertEquals(true,service.summary(9L).get("canRecoverInapp"));
+   service.resume(bc);assertEquals("REJECTED_43101",row.get("delivery_state"));service.resume(bc);verify(channel,times(2)).sendOfficialBroadcast(anyLong(),anyString(),anyString());assertEquals(false,service.summary(9L).get("canRecoverInapp"));assertEquals(0,service.summary(9L).get("reached"));
+  }
++
++ @Test void durableInappRechecksTheSharedCapBeforeIntentOrMessage(){
++  row.put("channel","inapp");when(logs.countRecentByMember(7L,60)).thenReturn(5);
++  service.resume(bc);
++  assertEquals("READY",row.get("delivery_state"));
++  verifyNoInteractions(im,channel);
++  verify(members).lockMemberById(7L);
++ }
++ @Test void durableInappKeepsMemberFenceThroughIntentMessageAndReceipt(){
++  row.put("channel","inapp");
++  when(im.enqueueSystemNotification(anyLong(),anyInt(),anyString(),anyString(),anyString())).thenReturn(31L);
++  when(im.deliverSystemNotification(31L)).thenReturn(81L);
++  service.resume(bc);
++  org.mockito.InOrder locks=inOrder(members,logs,im);
++  locks.verify(members).lockMemberById(7L);
++  locks.verify(logs).lockDelivery(1L);
++  locks.verify(logs).countRecentByMember(7L,60);
++  locks.verify(im).enqueueSystemNotification(eq(7L),anyInt(),eq("frozen"),anyString(),eq("official_bc:9:7:inapp"));
++  locks.verify(im).deliverSystemNotification(31L);
++  locks.verify(logs).deliveryState(1L,"INAPP_STORED",31L,81L,1);
++ }
++
++    }
+ }
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialEventContractTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialEventContractTest.java
+index 6b8b21c..722fccd 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialEventContractTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialEventContractTest.java
+@@ -17,10 +17,11 @@ import com.chengyinhub.business.service.IGrowthService;
+ import com.chengyinhub.business.service.IImService;
+ import com.chengyinhub.business.service.IOfficialEventV2Service;
+ import com.chengyinhub.business.service.ISmsCouponHistoryService;
++import com.chengyinhub.business.service.IWxSubscribeMsgService;
+ import com.chengyinhub.business.service.INotifyService;
++import org.mockito.ArgumentCaptor;
+ import com.chengyinhub.common.exception.ServiceException;
+ import org.junit.jupiter.api.Test;
+-import org.mockito.ArgumentCaptor;
+ import org.springframework.test.util.ReflectionTestUtils;
+ 
+ import static org.junit.jupiter.api.Assertions.assertEquals;
+@@ -50,33 +51,13 @@ class OfficialEventContractTest {
+     private OfficialBroadcastServiceImpl broadcastService(OfficialAudienceMapper aud,
+                                                           OfficialBroadcastLogMapper logMapper,
+                                                           IImService im,
+-                                                          INotifyService wx) {
++                                                          IWxSubscribeMsgService wx) {
+         OfficialBroadcastServiceImpl s = new OfficialBroadcastServiceImpl();
+         ReflectionTestUtils.setField(s, "broadcastMapper", mock(OfficialBroadcastMapper.class));
+         ReflectionTestUtils.setField(s, "logMapper", logMapper);
+         ReflectionTestUtils.setField(s, "audienceMapper", aud);
+         ReflectionTestUtils.setField(s, "imService", im);
+-        ReflectionTestUtils.setField(s, "notifyService", wx);
+-        // Exercise the new delivery adapter; old audience/content assertions stay intact.
+-        OfficialBroadcastMapper batch=mock(OfficialBroadcastMapper.class);
+-        when(batch.lockDispatch(anyLong())).thenReturn(java.util.Map.of("audience_frozen",0,"status",OfficialBroadcast.ST_PENDING));
+-        java.util.Map<Long,java.util.Map<String,Object>> rows=new java.util.LinkedHashMap<>();
+-        org.mockito.Mockito.doAnswer(c->{
+-            com.chengyinhub.business.domain.OfficialBroadcastLog legacy=new com.chengyinhub.business.domain.OfficialBroadcastLog();
+-            if(logMapper.insertIgnore(legacy)==0)return 0;
+-            long id=rows.size()+1;java.util.Map<String,Object> row=new java.util.HashMap<>();
+-            row.put("id",id);row.put("broadcast_id",c.getArgument(0));row.put("member_id",c.getArgument(1));row.put("channel",c.getArgument(3));row.put("frozen_title",c.getArgument(4));row.put("frozen_sub",c.getArgument(5));row.put("delivery_state",c.getArgument(6));rows.put(id,row);return 1;
+-        }).when(logMapper).snapshot(anyLong(),anyLong(),anyString(),anyString(),anyString(),anyString(),anyString());
+-        when(logMapper.deliveryRows(anyLong())).thenAnswer(c->new java.util.ArrayList<>(rows.values()));
+-        when(logMapper.lockDelivery(anyLong())).thenAnswer(c->rows.get(c.getArgument(0)));
+-        org.mockito.Mockito.doAnswer(c->{rows.get(c.getArgument(0)).put("delivery_state",c.getArgument(1));return 1;}).when(logMapper).deliveryState(anyLong(),anyString(),org.mockito.ArgumentMatchers.nullable(Long.class),org.mockito.ArgumentMatchers.nullable(Long.class),anyInt());
+-        when(im.enqueueSystemNotification(anyLong(),anyInt(),anyString(),anyString(),anyString())).thenReturn(101L);
+-        when(im.deliverSystemNotification(anyLong())).thenReturn(201L);
+-        com.chengyinhub.business.notify.WxSubscribeChannel channel=mock(com.chengyinhub.business.notify.WxSubscribeChannel.class);
+-        when(channel.sendOfficialBroadcast(anyLong(),anyString(),anyString())).thenAnswer(c->{wx.notifyOfficialBroadcast(c.getArgument(0),c.getArgument(1),c.getArgument(2));return new com.chengyinhub.business.service.IWxSubscribeMsgService.OfficialBroadcastResult(com.chengyinhub.business.service.IWxSubscribeMsgService.OfficialBroadcastResult.State.UNKNOWN,com.chengyinhub.business.service.IWxSubscribeMsgService.OfficialBroadcastResult.Reason.TRANSPORT_UNCONFIRMED,null);});
+-        org.springframework.transaction.PlatformTransactionManager tm=mock(org.springframework.transaction.PlatformTransactionManager.class);
+-        when(tm.getTransaction(any())).thenAnswer(c->new org.springframework.transaction.support.SimpleTransactionStatus());
+-        ReflectionTestUtils.setField(s,"delivery",new OfficialBroadcastDeliveryService(logMapper,batch,im,channel,tm));
++        ReflectionTestUtils.setField(s, "wxSubscribeMsgService", wx);
+         return s;
+     }
+ 
+@@ -94,110 +75,60 @@ class OfficialEventContractTest {
+ 
+     @Test
+     void dispatch_圈人跨角色去重_双渠道fanout() {
+-        OfficialAudienceMapper aud = mock(OfficialAudienceMapper.class);
+-        // 11 同时命中 player 与 club → 去重,首命中 player 为准;总去重后 = {10,11,20,30} = 4 人
+-        when(aud.selectPlayerIds("成都")).thenReturn(Arrays.asList(10L, 11L));
+-        when(aud.selectClubMemberIds("成都")).thenReturn(Arrays.asList(11L, 20L));
+-        when(aud.selectMerchantMemberIds("成都")).thenReturn(Collections.singletonList(30L));
+-
+-        OfficialBroadcastLogMapper logMapper = mock(OfficialBroadcastLogMapper.class);
+-        when(logMapper.insertIgnore(any())).thenReturn(1); // 全新,可发
+-
+-        IImService im = mock(IImService.class);
+-        INotifyService wx = mock(INotifyService.class);
+-
+-        int reached = broadcastService(aud, logMapper, im, wx).dispatch(bc(1, "{\"title\":\"统一标题\",\"sub\":\"统一内容\"}"));
+-
+-        // 去重后 4 人,站内信 4 次(未去重会是 5 次)
+-        assertEquals(4, reached);
+-        verify(im, times(4)).enqueueSystemNotification(anyLong(), eq(3), anyString(), anyString(), anyString());
+-        // 订阅渠道也 4 次
+-        verify(wx, times(4)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
++        OfficialBroadcastDeliveryTest.Fixture f = new OfficialBroadcastDeliveryTest.Fixture(bc(1,
++                "{\"title\":\"统一标题\",\"sub\":\"统一内容\"}"));
++        when(f.audience.selectPlayerIds("成都")).thenReturn(Arrays.asList(10L, 11L));
++        when(f.audience.selectClubMemberIds("成都")).thenReturn(Arrays.asList(11L, 20L));
++        when(f.audience.selectMerchantMemberIds("成都")).thenReturn(Collections.singletonList(30L));
++        assertEquals(4, f.service.dispatch(f.broadcast));
++        verify(f.im, times(4)).sendSystem(anyLong(), eq(3), anyString(), anyString());
++        verify(f.wx, times(4)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
++        assertEquals(8, f.rows.size());
+     }
+ 
+     @Test
+     void dispatch_uk已发过则不重发() {
+-        OfficialAudienceMapper aud = mock(OfficialAudienceMapper.class);
+-        when(aud.selectPlayerIds(any())).thenReturn(Arrays.asList(10L, 11L));
+-        when(aud.selectClubMemberIds(any())).thenReturn(Collections.emptyList());
+-        when(aud.selectMerchantMemberIds(any())).thenReturn(Collections.emptyList());
+-
+-        OfficialBroadcastLogMapper logMapper = mock(OfficialBroadcastLogMapper.class);
+-        when(logMapper.insertIgnore(any())).thenReturn(0); // uk 冲突,已发过
+-
+-        IImService im = mock(IImService.class);
+-        INotifyService wx = mock(INotifyService.class);
+-
+-        int reached = broadcastService(aud, logMapper, im, wx).dispatch(bc(1, null));
+-
+-        assertEquals(0, reached);
+-        verify(im, never()).enqueueSystemNotification(anyLong(), anyInt(), anyString(), anyString(), anyString());
+-        verify(wx, never()).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
++        OfficialBroadcastDeliveryTest.Fixture f = new OfficialBroadcastDeliveryTest.Fixture(bc(1, null));
++        when(f.audience.selectPlayerIds("成都")).thenReturn(Arrays.asList(10L, 11L));
++        assertEquals(2, f.service.dispatch(f.broadcast));
++        assertEquals(2, f.restart().dispatch(f.broadcast)); // Total confirmed inapp receipts, not this-attempt count.
++        verify(f.im, times(2)).sendSystem(anyLong(), anyInt(), anyString(), anyString());
++        verify(f.wx, times(2)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
++        assertEquals(4, f.rows.size());
+     }
+ 
+     @Test
+     void dispatch_分开发_按角色取对应文案() {
+-        OfficialAudienceMapper aud = mock(OfficialAudienceMapper.class);
+-        when(aud.selectPlayerIds("成都")).thenReturn(Collections.singletonList(10L));
+-        when(aud.selectClubMemberIds("成都")).thenReturn(Collections.emptyList());
+-        when(aud.selectMerchantMemberIds("成都")).thenReturn(Collections.emptyList());
+-
+-        OfficialBroadcastLogMapper logMapper = mock(OfficialBroadcastLogMapper.class);
+-        when(logMapper.insertIgnore(any())).thenReturn(1);
+-        IImService im = mock(IImService.class);
+-        INotifyService wx = mock(INotifyService.class);
+-
+-        String content = "{\"player\":{\"title\":\"玩家标题\",\"sub\":\"出门点亮\"},\"merchant\":{\"title\":\"商家标题\",\"sub\":\"客流洪峰\"}}";
+-        broadcastService(aud, logMapper, im, wx).dispatch(bc(2, content));
+-
+-        ArgumentCaptor<String> titleCap = ArgumentCaptor.forClass(String.class);
+-        verify(im, times(1)).enqueueSystemNotification(eq(10L), eq(3), titleCap.capture(), anyString(), anyString());
+-        assertEquals("玩家标题", titleCap.getValue()); // 玩家收到玩家文案,而非默认标题
++        OfficialBroadcastDeliveryTest.Fixture f = new OfficialBroadcastDeliveryTest.Fixture(bc(2,
++                "{\"player\":{\"title\":\"玩家标题\",\"sub\":\"出门点亮\"},"
++                + "\"merchant\":{\"title\":\"商家标题\",\"sub\":\"客流洪峰\"}}"));
++        when(f.audience.selectPlayerIds("成都")).thenReturn(Collections.singletonList(10L));
++        f.service.dispatch(f.broadcast);
++        verify(f.im).sendSystem(eq(10L), eq(3), eq("玩家标题"), anyString());
++        verify(f.wx).notifyOfficialBroadcast(10L, "玩家标题", "出门点亮");
+     }
+ 
+     @Test
+     void dispatch_频控_超限用户被跳过() {
+-        OfficialAudienceMapper aud = mock(OfficialAudienceMapper.class);
+-        when(aud.selectPlayerIds("成都")).thenReturn(Arrays.asList(10L, 11L));
+-        when(aud.selectClubMemberIds("成都")).thenReturn(Collections.emptyList());
+-        when(aud.selectMerchantMemberIds("成都")).thenReturn(Collections.emptyList());
+-
+-        OfficialBroadcastLogMapper logMapper = mock(OfficialBroadcastLogMapper.class);
+-        when(logMapper.insertIgnore(any())).thenReturn(1);
+-        // 10 号近1小时已收5条(达上限)→ 跳过;11 号未达 → 正常发
+-        when(logMapper.countRecentByMember(eq(10L), anyInt())).thenReturn(5);
+-        when(logMapper.countRecentByMember(eq(11L), anyInt())).thenReturn(0);
+-
+-        IImService im = mock(IImService.class);
+-        INotifyService wx = mock(INotifyService.class);
+-
+-        int reached = broadcastService(aud, logMapper, im, wx).dispatch(bc(1, null));
+-
+-        assertEquals(1, reached); // 仅 11 收到
+-        verify(im, times(1)).enqueueSystemNotification(eq(11L), anyInt(), anyString(), anyString(), anyString());
+-        verify(im, never()).enqueueSystemNotification(eq(10L), anyInt(), anyString(), anyString(), anyString());
++        OfficialBroadcastDeliveryTest.Fixture f = new OfficialBroadcastDeliveryTest.Fixture(bc(1, null));
++        when(f.audience.selectPlayerIds("成都")).thenReturn(Arrays.asList(10L, 11L));
++        when(f.logs.countRecentByMember(eq(10L), anyInt())).thenReturn(5);
++        assertEquals(1, f.service.dispatch(f.broadcast));
++        verify(f.im).sendSystem(eq(11L), anyInt(), anyString(), anyString());
++        verify(f.im, never()).sendSystem(eq(10L), anyInt(), anyString(), anyString());
++        verify(f.wx, never()).notifyOfficialBroadcast(eq(10L), anyString(), anyString());
++        assertEquals(OfficialBroadcast.ST_PENDING, f.broadcast.getStatus());
+     }
+ 
+     @Test
+     void dispatch_频控_查询异常fallback禁止发送() {
+-        OfficialAudienceMapper aud = mock(OfficialAudienceMapper.class);
+-        when(aud.selectPlayerIds("成都")).thenReturn(Arrays.asList(10L, 11L));
+-        when(aud.selectClubMemberIds("成都")).thenReturn(Collections.emptyList());
+-        when(aud.selectMerchantMemberIds("成都")).thenReturn(Collections.emptyList());
+-
+-        OfficialBroadcastLogMapper logMapper = mock(OfficialBroadcastLogMapper.class);
+-        when(logMapper.insertIgnore(any())).thenReturn(1);
+-        when(logMapper.countRecentByMember(eq(10L), anyInt())).thenThrow(new RuntimeException("simulated DB timeout"));
+-        when(logMapper.countRecentByMember(eq(11L), anyInt())).thenReturn(0);
+-
+-        IImService im = mock(IImService.class);
+-        INotifyService wx = mock(INotifyService.class);
+-
+-        int reached = broadcastService(aud, logMapper, im, wx).dispatch(bc(1, null));
+-
+-        assertEquals(1, reached);
+-        verify(im, times(1)).enqueueSystemNotification(eq(11L), anyInt(), anyString(), anyString(), anyString());
+-        verify(im, never()).enqueueSystemNotification(eq(10L), anyInt(), anyString(), anyString(), anyString());
++        OfficialBroadcastDeliveryTest.Fixture f = new OfficialBroadcastDeliveryTest.Fixture(bc(1, null));
++        when(f.audience.selectPlayerIds("成都")).thenReturn(Arrays.asList(10L, 11L));
++        when(f.logs.countRecentByMember(eq(10L), anyInt())).thenThrow(new RuntimeException("DB timeout"));
++        assertEquals(1, f.service.dispatch(f.broadcast));
++        verify(f.im).sendSystem(eq(11L), anyInt(), anyString(), anyString());
++        verify(f.im, never()).sendSystem(eq(10L), anyInt(), anyString(), anyString());
++        verify(f.wx, never()).notifyOfficialBroadcast(eq(10L), anyString(), anyString());
+     }
+ 
+     @Test
+@@ -206,7 +137,7 @@ class OfficialEventContractTest {
+         OfficialEventMapper eventMapper = mock(OfficialEventMapper.class);
+         IOfficialEventV2Service v2 = mock(IOfficialEventV2Service.class);
+         OfficialBroadcastServiceImpl service = broadcastService(mock(OfficialAudienceMapper.class),
+-                mock(OfficialBroadcastLogMapper.class), mock(IImService.class), mock(INotifyService.class));
++                mock(OfficialBroadcastLogMapper.class), mock(IImService.class), mock(IWxSubscribeMsgService.class));
+         ReflectionTestUtils.setField(service, "broadcastMapper", broadcastMapper);
+         ReflectionTestUtils.setField(service, "eventMapper", eventMapper);
+         ReflectionTestUtils.setField(service, "officialEventV2Service", v2);
+@@ -479,7 +410,7 @@ class OfficialEventContractTest {
+         when(em.selectOfficialEventById(9L)).thenReturn(ended);
+ 
+         OfficialBroadcastServiceImpl svc = broadcastService(mock(OfficialAudienceMapper.class),
+-                mock(OfficialBroadcastLogMapper.class), mock(IImService.class), mock(INotifyService.class));
++                mock(OfficialBroadcastLogMapper.class), mock(IImService.class), mock(IWxSubscribeMsgService.class));
+         ReflectionTestUtils.setField(svc, "broadcastMapper", bm);
+         ReflectionTestUtils.setField(svc, "eventMapper", em);
+         ReflectionTestUtils.setField(svc, "officialEventV2Service", v2);
+@@ -510,7 +441,7 @@ class OfficialEventContractTest {
+         when(em.selectOfficialEventById(9L)).thenReturn(ended);
+ 
+         OfficialBroadcastServiceImpl svc = broadcastService(mock(OfficialAudienceMapper.class),
+-                mock(OfficialBroadcastLogMapper.class), mock(IImService.class), mock(INotifyService.class));
++                mock(OfficialBroadcastLogMapper.class), mock(IImService.class), mock(IWxSubscribeMsgService.class));
+         ReflectionTestUtils.setField(svc, "broadcastMapper", bm);
+         ReflectionTestUtils.setField(svc, "eventMapper", em);
+         ReflectionTestUtils.setField(svc, "officialEventV2Service", v2);
+@@ -535,4 +466,158 @@ class OfficialEventContractTest {
+         s.setStatus(EventSignup.ST_DOING);
+         return s;
+     }
++
++    private OfficialBroadcastServiceImpl durableBroadcastService(OfficialAudienceMapper aud,
++                                                          OfficialBroadcastLogMapper logMapper,
++                                                          IImService im,
++                                                          INotifyService wx) {
++        OfficialBroadcastServiceImpl s = new OfficialBroadcastServiceImpl();
++        ReflectionTestUtils.setField(s, "broadcastMapper", mock(OfficialBroadcastMapper.class));
++        ReflectionTestUtils.setField(s, "logMapper", logMapper);
++        ReflectionTestUtils.setField(s, "audienceMapper", aud);
++        ReflectionTestUtils.setField(s, "imService", im);
++        // Exercise the new delivery adapter; old audience/content assertions stay intact.
++        OfficialBroadcastMapper batch=mock(OfficialBroadcastMapper.class);
++        when(batch.updateOfficialBroadcast(any())).thenReturn(1);
++        when(batch.lockDispatch(anyLong())).thenReturn(java.util.Map.of("audience_frozen",0,"status",OfficialBroadcast.ST_PENDING));
++        java.util.Map<Long,java.util.Map<String,Object>> rows=new java.util.LinkedHashMap<>();
++        org.mockito.Mockito.doAnswer(c->{
++            com.chengyinhub.business.domain.OfficialBroadcastLog legacy=new com.chengyinhub.business.domain.OfficialBroadcastLog();
++            if(logMapper.insertIgnore(legacy)==0)return 0;
++            long id=rows.size()+1;java.util.Map<String,Object> row=new java.util.HashMap<>();
++            row.put("id",id);row.put("broadcast_id",c.getArgument(0));row.put("member_id",c.getArgument(1));row.put("channel",c.getArgument(3));row.put("frozen_title",c.getArgument(4));row.put("frozen_sub",c.getArgument(5));row.put("delivery_state",c.getArgument(6));rows.put(id,row);return 1;
++        }).when(logMapper).snapshot(anyLong(),anyLong(),anyString(),anyString(),anyString(),anyString(),anyString());
++        when(logMapper.deliveryRows(anyLong())).thenAnswer(c->new java.util.ArrayList<>(rows.values()));
++        when(logMapper.lockDelivery(anyLong())).thenAnswer(c->rows.get(c.getArgument(0)));
++        org.mockito.Mockito.doAnswer(c->{rows.get(c.getArgument(0)).put("delivery_state",c.getArgument(1));return 1;}).when(logMapper).deliveryState(anyLong(),anyString(),org.mockito.ArgumentMatchers.nullable(Long.class),org.mockito.ArgumentMatchers.nullable(Long.class),anyInt());
++        when(im.enqueueSystemNotification(anyLong(),anyInt(),anyString(),anyString(),anyString())).thenReturn(101L);
++        when(im.deliverSystemNotification(anyLong())).thenReturn(201L);
++        com.chengyinhub.business.notify.WxSubscribeChannel channel=mock(com.chengyinhub.business.notify.WxSubscribeChannel.class);
++        when(channel.sendOfficialBroadcast(anyLong(),anyString(),anyString())).thenAnswer(c->{wx.notifyOfficialBroadcast(c.getArgument(0),c.getArgument(1),c.getArgument(2));return new com.chengyinhub.business.service.IWxSubscribeMsgService.OfficialBroadcastResult(com.chengyinhub.business.service.IWxSubscribeMsgService.OfficialBroadcastResult.State.UNKNOWN,com.chengyinhub.business.service.IWxSubscribeMsgService.OfficialBroadcastResult.Reason.TRANSPORT_UNCONFIRMED,null);});
++        org.springframework.transaction.PlatformTransactionManager tm=mock(org.springframework.transaction.PlatformTransactionManager.class);
++        when(tm.getTransaction(any())).thenAnswer(c->new org.springframework.transaction.support.SimpleTransactionStatus());
++        OfficialBroadcastDeliveryService delivery = new OfficialBroadcastDeliveryService(logMapper,batch,im,channel,tm);
++        com.chengyinhub.business.mapper.UmsMemberMapper members = mock(com.chengyinhub.business.mapper.UmsMemberMapper.class);
++        when(members.lockMemberById(anyLong())).thenAnswer(c -> c.getArgument(0));
++        ReflectionTestUtils.setField(delivery,"members",members);
++        ReflectionTestUtils.setField(s,"delivery",delivery);
++        ReflectionTestUtils.setField(s,"transactionManager",tm);
++        return s;
++    }
++
++    private OfficialBroadcast durableBc(int mode, String content) {
++        OfficialBroadcast result = bc(mode, content);
++        result.setClientRequestId("0123456789abcdef0123456789abcdef");
++        result.setRequestOwner("ADMIN:1");
++        return result;
++    }
++
++    @Test
++    void dispatch_圈人跨角色去重_双渠道fanout_durableCreation() {
++        OfficialAudienceMapper aud = mock(OfficialAudienceMapper.class);
++        // 11 同时命中 player 与 club → 去重,首命中 player 为准;总去重后 = {10,11,20,30} = 4 人
++        when(aud.selectPlayerIds("成都")).thenReturn(Arrays.asList(10L, 11L));
++        when(aud.selectClubMemberIds("成都")).thenReturn(Arrays.asList(11L, 20L));
++        when(aud.selectMerchantMemberIds("成都")).thenReturn(Collections.singletonList(30L));
++
++        OfficialBroadcastLogMapper logMapper = mock(OfficialBroadcastLogMapper.class);
++        when(logMapper.insertIgnore(any())).thenReturn(1); // 全新,可发
++
++        IImService im = mock(IImService.class);
++        INotifyService wx = mock(INotifyService.class);
++
++        int reached = durableBroadcastService(aud, logMapper, im, wx).dispatch(durableBc(1, "{\"title\":\"统一标题\",\"sub\":\"统一内容\"}"));
++
++        // 去重后 4 人,站内信 4 次(未去重会是 5 次)
++        assertEquals(4, reached);
++        verify(im, times(4)).enqueueSystemNotification(anyLong(), eq(3), anyString(), anyString(), anyString());
++        // 订阅渠道也 4 次
++        verify(wx, times(4)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
++    }
++
++    @Test
++    void dispatch_uk已发过则不重发_durableCreation() {
++        OfficialAudienceMapper aud = mock(OfficialAudienceMapper.class);
++        when(aud.selectPlayerIds(any())).thenReturn(Arrays.asList(10L, 11L));
++        when(aud.selectClubMemberIds(any())).thenReturn(Collections.emptyList());
++        when(aud.selectMerchantMemberIds(any())).thenReturn(Collections.emptyList());
++
++        OfficialBroadcastLogMapper logMapper = mock(OfficialBroadcastLogMapper.class);
++        when(logMapper.insertIgnore(any())).thenReturn(0); // uk 冲突,已发过
++
++        IImService im = mock(IImService.class);
++        INotifyService wx = mock(INotifyService.class);
++
++        int reached = durableBroadcastService(aud, logMapper, im, wx).dispatch(durableBc(1, null));
++
++        assertEquals(0, reached);
++        verify(im, never()).enqueueSystemNotification(anyLong(), anyInt(), anyString(), anyString(), anyString());
++        verify(wx, never()).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
++    }
++
++    @Test
++    void dispatch_分开发_按角色取对应文案_durableCreation() {
++        OfficialAudienceMapper aud = mock(OfficialAudienceMapper.class);
++        when(aud.selectPlayerIds("成都")).thenReturn(Collections.singletonList(10L));
++        when(aud.selectClubMemberIds("成都")).thenReturn(Collections.emptyList());
++        when(aud.selectMerchantMemberIds("成都")).thenReturn(Collections.emptyList());
++
++        OfficialBroadcastLogMapper logMapper = mock(OfficialBroadcastLogMapper.class);
++        when(logMapper.insertIgnore(any())).thenReturn(1);
++        IImService im = mock(IImService.class);
++        INotifyService wx = mock(INotifyService.class);
++
++        String content = "{\"player\":{\"title\":\"玩家标题\",\"sub\":\"出门点亮\"},\"merchant\":{\"title\":\"商家标题\",\"sub\":\"客流洪峰\"}}";
++        durableBroadcastService(aud, logMapper, im, wx).dispatch(durableBc(2, content));
++
++        ArgumentCaptor<String> titleCap = ArgumentCaptor.forClass(String.class);
++        verify(im, times(1)).enqueueSystemNotification(eq(10L), eq(3), titleCap.capture(), anyString(), anyString());
++        assertEquals("玩家标题", titleCap.getValue()); // 玩家收到玩家文案,而非默认标题
++    }
++
++    @Test
++    void dispatch_频控_超限用户被跳过_durableCreation() {
++        OfficialAudienceMapper aud = mock(OfficialAudienceMapper.class);
++        when(aud.selectPlayerIds("成都")).thenReturn(Arrays.asList(10L, 11L));
++        when(aud.selectClubMemberIds("成都")).thenReturn(Collections.emptyList());
++        when(aud.selectMerchantMemberIds("成都")).thenReturn(Collections.emptyList());
++
++        OfficialBroadcastLogMapper logMapper = mock(OfficialBroadcastLogMapper.class);
++        when(logMapper.insertIgnore(any())).thenReturn(1);
++        // 10 号近1小时已收5条(达上限)→ 跳过;11 号未达 → 正常发
++        when(logMapper.countRecentByMember(eq(10L), anyInt())).thenReturn(5);
++        when(logMapper.countRecentByMember(eq(11L), anyInt())).thenReturn(0);
++
++        IImService im = mock(IImService.class);
++        INotifyService wx = mock(INotifyService.class);
++
++        int reached = durableBroadcastService(aud, logMapper, im, wx).dispatch(durableBc(1, null));
++
++        assertEquals(1, reached); // 仅 11 收到
++        verify(im, times(1)).enqueueSystemNotification(eq(11L), anyInt(), anyString(), anyString(), anyString());
++        verify(im, never()).enqueueSystemNotification(eq(10L), anyInt(), anyString(), anyString(), anyString());
++    }
++
++    @Test
++    void dispatch_频控_查询异常fallback禁止发送_durableCreation() {
++        OfficialAudienceMapper aud = mock(OfficialAudienceMapper.class);
++        when(aud.selectPlayerIds("成都")).thenReturn(Arrays.asList(10L, 11L));
++        when(aud.selectClubMemberIds("成都")).thenReturn(Collections.emptyList());
++        when(aud.selectMerchantMemberIds("成都")).thenReturn(Collections.emptyList());
++
++        OfficialBroadcastLogMapper logMapper = mock(OfficialBroadcastLogMapper.class);
++        when(logMapper.insertIgnore(any())).thenReturn(1);
++        when(logMapper.countRecentByMember(eq(10L), anyInt())).thenThrow(new RuntimeException("simulated DB timeout"));
++        when(logMapper.countRecentByMember(eq(11L), anyInt())).thenReturn(0);
++
++        IImService im = mock(IImService.class);
++        INotifyService wx = mock(INotifyService.class);
++
++        int reached = durableBroadcastService(aud, logMapper, im, wx).dispatch(durableBc(1, null));
++
++        assertEquals(1, reached);
++        verify(im, times(1)).enqueueSystemNotification(eq(11L), anyInt(), anyString(), anyString(), anyString());
++        verify(im, never()).enqueueSystemNotification(eq(10L), anyInt(), anyString(), anyString(), anyString());
++    }
++
+ }
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/OfficialBroadcastLogMapper.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/OfficialBroadcastLogMapper.java
+index c87998f..3fee02e 100644
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/OfficialBroadcastLogMapper.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/OfficialBroadcastLogMapper.java
+@@ -1,33 +1,36 @@
+ package com.chengyinhub.business.mapper;
+ 
++import java.util.List;
++import java.util.Map;
+ import org.apache.ibatis.annotations.Param;
++import com.chengyinhub.business.domain.OfficialBroadcast;
+ import com.chengyinhub.business.domain.OfficialBroadcastLog;
+ 
+-/**
+- * 官方通知分发日志 Mapper(uk_bc_member_channel 防重发)
+- *
+- * @author cy
+- * @date 2026-07-08
+- */
++/** 广播专属持久投递意图；唯一身份始终为 (broadcast, member, channel)。 */
+ public interface OfficialBroadcastLogMapper
+ {
+     java.util.List<java.util.Map<String,Object>> deliveryRows(@Param("broadcastId") Long broadcastId);
+     java.util.Map<String,Object> lockDelivery(@Param("id") Long id);
+     int snapshot(@Param("broadcastId") Long broadcastId,@Param("memberId") Long memberId,@Param("role") String role,@Param("channel") String channel,@Param("title") String title,@Param("sub") String sub,@Param("state") String state);
+     int deliveryState(@Param("id") Long id,@Param("state") String state,@Param("intent") Long intent,@Param("message") Long message,@Param("attempt") int attempt);
+-    /** insert ignore:同一(broadcast,member,channel)已存在则返回 0(不重发)。 */
++    /** Historical direct-message protocol; never overload the Map recovery lock. */
++    OfficialBroadcast lockBroadcast(@Param("broadcastId") Long broadcastId);
++    List<OfficialBroadcast> selectRecoverableBroadcasts();
++    List<OfficialBroadcastLog> selectByBroadcast(@Param("broadcastId") Long broadcastId);
++    OfficialBroadcastLog lockDeliveryIntent(@Param("id") Long id);
++    int insertPending(OfficialBroadcastLog log);
+     int insertIgnore(OfficialBroadcastLog log);
+-
++    int markReached(@Param("broadcastId") Long broadcastId, @Param("memberId") Long memberId,
++                    @Param("channel") String channel);
++    int transition(@Param("id") Long id, @Param("expected") String expected,
++                   @Param("state") String state, @Param("failureCode") String failureCode,
++                   @Param("messageId") Long messageId);
++    int countUnsuccessful(@Param("broadcastId") Long broadcastId);
++    int countInappReached(@Param("broadcastId") Long broadcastId);
+     int countReached(@Param("broadcastId") Long broadcastId);
+-
+     int countClicked(@Param("broadcastId") Long broadcastId);
+-
+-    /** 频控:该 member 近 minutes 分钟已收到的官方站内通知条数。 */
++    List<Map<String, Object>> channelStats(@Param("broadcastId") Long broadcastId);
+     int countRecentByMember(@Param("memberId") Long memberId, @Param("minutes") int minutes);
+-
+-    /** 点击回流。 */
+-    int markClicked(@Param("broadcastId") Long broadcastId, @Param("memberId") Long memberId, @Param("channel") String channel);
+-
+-    /** 发送成功后置达:reached=1(此前 insertIgnore 落的是 reached=0 的占位/尝试行,失败则不置达,统计不虚高)。 */
+-    int markReached(@Param("broadcastId") Long broadcastId, @Param("memberId") Long memberId, @Param("channel") String channel);
++    int markClicked(@Param("broadcastId") Long broadcastId, @Param("memberId") Long memberId,
++                    @Param("channel") String channel);
+ }
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialBroadcastServiceImpl.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialBroadcastServiceImpl.java
+index 5dc78f7..592901d 100644
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialBroadcastServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialBroadcastServiceImpl.java
+@@ -1,5 +1,6 @@
+ package com.chengyinhub.business.service.impl;
+ 
++import java.util.ArrayList;
+ import java.util.Date;
+ import java.util.LinkedHashMap;
+ import java.util.List;
+@@ -15,20 +16,27 @@ import com.chengyinhub.business.mapper.OfficialAudienceMapper;
+ import com.chengyinhub.business.mapper.OfficialBroadcastLogMapper;
+ import com.chengyinhub.business.mapper.OfficialBroadcastMapper;
+ import com.chengyinhub.business.mapper.OfficialEventMapper;
++import com.chengyinhub.business.mapper.UmsMemberMapper;
+ import com.chengyinhub.business.service.IImService;
+ import com.chengyinhub.business.service.IOfficialBroadcastService;
+ import com.chengyinhub.business.service.IOfficialEventV2Service;
+-import com.chengyinhub.business.service.INotifyService;
++import com.chengyinhub.business.service.IWxSubscribeMsgService;
+ import com.chengyinhub.common.exception.ServiceException;
+ import com.chengyinhub.common.utils.StringUtils;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.beans.factory.annotation.Value;
++import org.springframework.transaction.PlatformTransactionManager;
++import org.springframework.transaction.TransactionDefinition;
++import org.springframework.transaction.support.TransactionSynchronization;
++import org.springframework.transaction.support.TransactionSynchronizationManager;
++import org.springframework.transaction.support.TransactionTemplate;
+ import org.springframework.context.annotation.Lazy;
+ import org.springframework.stereotype.Service;
+ 
+ /**
+- * 官方通知/广播 实现。best-effort:单个 member 发送失败不影响整体。
++ * 官方广播：冻结逐成员/通道意图，站内信与回执同事务，微信 UNKNOWN 不自动重投。
+  *
+  * @author cy
+  * @date 2026-07-08
+@@ -47,15 +55,19 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
+     @Autowired
+     private OfficialBroadcastLogMapper logMapper;
+     @Autowired
++    private OfficialBroadcastDeliveryService delivery;
++    @Autowired
+     private OfficialAudienceMapper audienceMapper;
+     @Autowired
+-    private IImService imService;
++    private UmsMemberMapper memberMapper;
+     @Autowired
+-    private INotifyService notifyService;
++    private IImService imService;
+     @Autowired
+-    private OfficialBroadcastDeliveryService delivery;
++    private IWxSubscribeMsgService wxSubscribeMsgService;
+     @Autowired
+-    private org.springframework.transaction.PlatformTransactionManager transactionManager;
++    private PlatformTransactionManager transactionManager;
++    @Value("${wx.subscribe.tplOfficialEvent:}")
++    private String officialTemplate;
+     @Autowired
+     private OfficialEventMapper eventMapper;
+     @Autowired
+@@ -64,6 +76,7 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
+ 
+     @Override
+     public OfficialBroadcast publish(OfficialBroadcast bc, Long actorMemberId) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         if(bc==null || bc.getClientRequestId()==null)return publishOnce(bc,actorMemberId);
+         requireCreationKey(bc.getRequestOwner(),bc.getClientRequestId());
+         return new org.springframework.transaction.support.TransactionTemplate(transactionManager).execute(status->{
+@@ -77,6 +90,7 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
+     }
+ 
+     private OfficialBroadcast publishOnce(OfficialBroadcast bc, Long actorMemberId) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+         if (bc == null || StringUtils.isEmpty(bc.getTitle())) {
+             throw new ServiceException("通知标题不能为空");
+         }
+@@ -88,6 +102,7 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
+         if (requireV2EventScope(bc.getEventId(), actorMemberId)) {
+             bc.setSenderAccount(actorMemberId);
+         }
++        validateChannels(bc.getChannels());
+         if(bc.getClientRequestId()!=null) {
+             if(!bc.getClientRequestId().matches("[a-f0-9]{32}") || bc.getRequestOwner()==null)throw new ServiceException("广播原请求身份无效");
+             String frozen=JSON.toJSONString(java.util.Arrays.asList(bc.getEventId(),bc.getTitle(),bc.getAudience(),bc.getCopyMode(),bc.getContentJson(),bc.getChannels(),bc.getCity(),bc.getScheduledTime()));
+@@ -98,21 +113,32 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
+         if(bc.getScheduledTime()==null)bc.setScheduledTime(new Date());
+         bc.setCreateTime(new Date());
+         bc.setStatus(OfficialBroadcast.ST_PENDING);
+-        try { broadcastMapper.insertOfficialBroadcast(bc); }
+-        catch(org.springframework.dao.DuplicateKeyException duplicate) {
+-            if(bc.getClientRequestId()==null)throw duplicate;
+-            OfficialBroadcast previous=broadcastMapper.findRequest(bc.getRequestOwner(),bc.getClientRequestId());
+-            if(previous==null)throw duplicate;return sameCreation(previous,bc);
+-        }
++        bc.setReachedCount(0);
++        OfficialBroadcast saved = new TransactionTemplate(transactionManager).execute(status -> {
++            try {
++                if (broadcastMapper.insertOfficialBroadcast(bc) != 1 || bc.getId() == null)
++                    throw new ServiceException("通知保存失败");
++                return bc;
++            } catch (org.springframework.dao.DuplicateKeyException duplicate) {
++                if (bc.getClientRequestId() == null) throw duplicate;
++                OfficialBroadcast previous = broadcastMapper.findRequest(bc.getRequestOwner(), bc.getClientRequestId());
++                if (previous == null) throw duplicate;
++                return sameCreation(previous, bc);
++            }
++        });
++        if (saved != bc) return saved; // The original receipt is replayed; do not start a second delivery.
+ 
+         boolean immediate = bc.getScheduledTime() == null
+                 || bc.getScheduledTime().getTime() <= System.currentTimeMillis();
+         if (immediate) {
+-            if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
+-                org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(new org.springframework.transaction.support.TransactionSynchronization() {
+-                    @Override public void afterCommit() { try { dispatch(bc); } catch (RuntimeException failure) { log.warn("官方广播待恢复 bc={}",bc.getId()); } }
++            if (TransactionSynchronizationManager.isActualTransactionActive()) {
++                // Only wake after the caller's broadcast insert commits; recovery also scans immediate rows.
++                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
++                    @Override public void afterCommit() { wakeDispatch(bc); }
+                 });
+-            } else dispatch(bc);
++            } else {
++                wakeDispatch(bc);
++            }
+         }
+         return bc;
+     }
+@@ -139,7 +165,74 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
+         });
+     }
+ 
++    @Override
++    public Map<String,Object> recover(Long id,Long actorMemberId) {return recoverOwned(id,actorMemberId,"MEMBER:"+actorMemberId);}
++    @Override public Map<String,Object> recoverOwned(Long id,Long actorMemberId,String owner) {
++        OfficialBroadcast bc=getById(id,actorMemberId);
++        if(bc==null)throw new ServiceException("通知不存在");
++        if(!java.util.Objects.equals(owner,bc.getRequestOwner()) && (actorMemberId==null || !actorMemberId.equals(bc.getSenderAccount())))throw new ServiceException("仅原发布者可恢复通知");
++        requireV2EventScope(bc.getEventId(),actorMemberId);
++        if(bc.getScheduledTime()!=null && bc.getScheduledTime().after(new Date()))throw new ServiceException("尚未到广播计划时间");
++        dispatch(bc);return reachStats(id,actorMemberId);
++    }
++
++    private void wakeDispatch(OfficialBroadcast bc) {
++        try {
++            dispatch(bc);
++        } catch (RuntimeException failure) {
++            // Publication is already committed. Report accepted/pending, not a rejection with side effects.
++            log.warn("[官方通知] 已提交待恢复 bc={} type={}", bc.getId(), failure.getClass().getSimpleName());
++        }
++    }
++
+     int dispatch(OfficialBroadcast bc) {
++        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
++        if (bc == null || bc.getId() == null) return 0;
++        // The remote call must never inherit a caller's transaction (including afterCommit resources).
++        TransactionTemplate outside = new TransactionTemplate(transactionManager);
++        outside.setPropagationBehavior(TransactionDefinition.PROPAGATION_NOT_SUPPORTED);
++        Integer reached = outside.execute(status -> dispatchOutsideTransaction(bc));
++        return reached == null ? 0 : reached;
++    }
++
++    private int dispatchOutsideTransaction(OfficialBroadcast bc) {
++        if (usesDurableDelivery(bc)) return dispatchDurable(bc);
++        List<OfficialBroadcastLog> deliveries = independent().execute(status -> prepare(bc.getId()));
++        Long lastMember = null;
++        boolean capped = false;
++        for (OfficialBroadcastLog delivery : safeDeliveries(deliveries)) {
++            if (!delivery.getMemberId().equals(lastMember)) {
++                lastMember = delivery.getMemberId();
++                capped = freqCapped(lastMember);
++            }
++            // Advisory precheck preserves the existing channel policy; inapp enforces the cap under the member lock.
++            if (capped) continue; // Keep the frozen intent; no fake success or deletion.
++            if ("inapp".equals(delivery.getChannel())) deliverInapp(delivery);
++            if ("subscribe".equals(delivery.getChannel())) deliverSubscribe(delivery);
++        }
++        OfficialBroadcast result = independent().execute(status -> {
++            OfficialBroadcast current = logMapper.lockBroadcast(bc.getId());
++            if (current == null) throw new ServiceException("通知不存在");
++            int reached = logMapper.countInappReached(bc.getId());
++            OfficialBroadcast patch = new OfficialBroadcast();
++            patch.setId(bc.getId());
++            patch.setReachedCount(reached);
++            // Revoked/draft broadcasts must not be revived by an old worker.
++            patch.setStatus(current.getStatus());
++            if (Integer.valueOf(OfficialBroadcast.ST_PENDING).equals(current.getStatus())
++                    && logMapper.countUnsuccessful(bc.getId()) == 0) {
++                patch.setStatus(OfficialBroadcast.ST_SENT);
++            }
++            if (broadcastMapper.updateOfficialBroadcast(patch) != 1)
++                throw new ServiceException("通知统计保存失败");
++            return patch;
++        });
++        bc.setReachedCount(result.getReachedCount());
++        bc.setStatus(result.getStatus());
++        return result.getReachedCount();
++    }
++
++    private int dispatchDurable(OfficialBroadcast bc) {
+         if (bc == null || bc.getId() == null) return 0;
+         String channels = bc.getChannels() == null ? "" : bc.getChannels();
+         boolean inapp = channels.contains("inapp");
+@@ -176,17 +269,160 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
+         return refreshDelivery(bc);
+     }
+ 
+-    private int refreshDelivery(OfficialBroadcast bc) {return delivery.finish(bc);}
++    private int refreshDelivery(OfficialBroadcast bc) { return delivery.finish(bc); }
+ 
+-    @Override
+-    public Map<String,Object> recover(Long id,Long actorMemberId) {return recoverOwned(id,actorMemberId,"MEMBER:"+actorMemberId);}
+-    @Override public Map<String,Object> recoverOwned(Long id,Long actorMemberId,String owner) {
+-        OfficialBroadcast bc=getById(id,actorMemberId);
+-        if(bc==null)throw new ServiceException("通知不存在");
+-        if(!java.util.Objects.equals(owner,bc.getRequestOwner()) && (actorMemberId==null || !actorMemberId.equals(bc.getSenderAccount())))throw new ServiceException("仅原发布者可恢复通知");
+-        requireV2EventScope(bc.getEventId(),actorMemberId);
+-        if(bc.getScheduledTime()!=null && bc.getScheduledTime().after(new Date()))throw new ServiceException("尚未到广播计划时间");
+-        dispatch(bc);return delivery.summary(id);
++    /** Persisted protocol evidence chooses the owner; exceptions never switch delivery algorithms. */
++    private boolean usesDurableDelivery(OfficialBroadcast bc) {
++        if (bc.getClientRequestId() != null) return true;
++        // Master also accepted broadcasts without a creation key. Retain their frozen protocol.
++        for (OfficialBroadcastLog row : safeDeliveries(logMapper.selectByBroadcast(bc.getId()))) {
++            String state = row.getDeliveryState();
++            if (state != null && (java.util.Set.of("READY", "RETRYABLE", "CAPPED", "INAPP_STORED",
++                    "CHANNEL_ACCEPTED", "LEGACY_UNCONFIRMED").contains(state)
++                    || state.startsWith("NOT_SUBMITTED_") || state.startsWith("REJECTED_"))) return true;
++        }
++        return false; // Original PENDING/SUCCESS/FAILED/UNKNOWN ledger keeps its original row identity.
++    }
++
++    /** Serialize the first audience snapshot. Retrying uses these rows, never a new audience/copy. */
++    private List<OfficialBroadcastLog> prepare(Long broadcastId) {
++        OfficialBroadcast bc = logMapper.lockBroadcast(broadcastId);
++        if (bc == null || !Integer.valueOf(OfficialBroadcast.ST_PENDING).equals(bc.getStatus()))
++            return java.util.Collections.emptyList();
++        List<OfficialBroadcastLog> existing = logMapper.selectByBroadcast(broadcastId);
++        if (!existing.isEmpty()) return existing;
++        validateChannels(bc.getChannels());
++        Map<Long, String> targets = new LinkedHashMap<>();
++        String audience = bc.getAudience() == null ? "" : bc.getAudience();
++        if (audience.contains("player"))
++            for (Long id : safe(audienceMapper.selectPlayerIds(bc.getCity()))) targets.putIfAbsent(id, "player");
++        if (audience.contains("club"))
++            for (Long id : safe(audienceMapper.selectClubMemberIds(bc.getCity()))) targets.putIfAbsent(id, "club");
++        if (audience.contains("merchant"))
++            for (Long id : safe(audienceMapper.selectMerchantMemberIds(bc.getCity()))) targets.putIfAbsent(id, "merchant");
++        List<OfficialBroadcastLog> result = new ArrayList<>();
++        JSONObject content = parse(bc.getContentJson());
++        int mode = bc.getCopyMode() == null ? OfficialBroadcast.MODE_UNIFIED : bc.getCopyMode();
++        for (Map.Entry<Long, String> target : targets.entrySet()) {
++            if (target.getKey() == null || target.getKey() <= 0) continue;
++            String[] copy = resolveTitleSub(mode, content, target.getValue(), bc.getTitle());
++            for (String channel : bc.getChannels().split(",")) {
++                OfficialBroadcastLog delivery = new OfficialBroadcastLog();
++                delivery.setBroadcastId(broadcastId);
++                delivery.setMemberId(target.getKey());
++                delivery.setRole(target.getValue());
++                delivery.setChannel(channel.trim());
++                delivery.setDeliveryState(OfficialBroadcastLog.PENDING);
++                delivery.setDeliveryTitle(copy[0]);
++                delivery.setDeliverySub(copy[1]);
++                if (logMapper.insertPending(delivery) != 1)
++                    throw new ServiceException("通知投递意图保存失败");
++                result.add(delivery);
++            }
++        }
++        // Empty audiences are terminal too, so later recovery cannot expand them.
++        if (result.isEmpty()) {
++            OfficialBroadcast patch = new OfficialBroadcast();
++            patch.setId(broadcastId);
++            patch.setStatus(OfficialBroadcast.ST_SENT);
++            patch.setReachedCount(0);
++            if (broadcastMapper.updateOfficialBroadcast(patch) != 1)
++                throw new ServiceException("通知状态保存失败");
++        }
++        return result;
++    }
++
++    private void deliverInapp(OfficialBroadcastLog intent) {
++        try {
++            independent().executeWithoutResult(status -> {
++                // All broadcasts share this stable member mutex. Always acquire it BEFORE a delivery/IM lock.
++                Long memberId = intent.getMemberId();
++                if (memberId == null || !memberId.equals(memberMapper.lockMemberById(memberId))) return;
++                OfficialBroadcastLog row = logMapper.lockDeliveryIntent(intent.getId());
++                if (row == null || !(OfficialBroadcastLog.PENDING.equals(row.getDeliveryState())
++                        || OfficialBroadcastLog.FAILED.equals(row.getDeliveryState()))) return;
++                if (!memberId.equals(row.getMemberId())) throw new ServiceException("通知接收人不一致");
++                // First consistent read in this fresh transaction: observe the previous holder's committed receipt.
++                // Hold the member fence through IM insertion and SUCCESS commit; capped intents remain retryable.
++                if (freqCapped(memberId)) return;
++                JSONObject extra = new JSONObject();
++                extra.put("title", row.getDeliveryTitle());
++                extra.put("sub", row.getDeliverySub());
++                extra.put("bcId", row.getBroadcastId());
++                Long messageId = imService.sendSystem(row.getMemberId(), ImMessage.MSG_CARD,
++                        row.getDeliveryTitle(), extra.toJSONString());
++                if (messageId == null || messageId <= 0) throw new ServiceException("站内信未返回回执");
++                // Same DB transaction as sendSystem: no message can commit without its terminal receipt.
++                transition(row, OfficialBroadcastLog.SUCCESS, null, messageId);
++            });
++        } catch (RuntimeException failure) {
++            log.warn("[官方通知] 站内信事务未确认 bc={} delivery={} type={}",
++                    intent.getBroadcastId(), intent.getId(), failure.getClass().getSimpleName());
++            independent().executeWithoutResult(status -> {
++                OfficialBroadcastLog row = logMapper.lockDeliveryIntent(intent.getId());
++                // A lost commit response may already have left SUCCESS. Never overwrite it.
++                if (row != null && OfficialBroadcastLog.PENDING.equals(row.getDeliveryState()))
++                    transition(row, OfficialBroadcastLog.FAILED, "LOCAL_TRANSACTION_FAILED", null);
++            });
++        }
++    }
++
++    private void deliverSubscribe(OfficialBroadcastLog intent) {
++        Boolean claimed = independent().execute(status -> {
++            OfficialBroadcastLog row = logMapper.lockDeliveryIntent(intent.getId());
++            if (row == null || !(OfficialBroadcastLog.PENDING.equals(row.getDeliveryState())
++                    || (OfficialBroadcastLog.FAILED.equals(row.getDeliveryState())
++                        && "TEMPLATE_MISSING".equals(row.getFailureCode())))) return false;
++            if (StringUtils.isBlank(officialTemplate)) {
++                transition(row, OfficialBroadcastLog.FAILED, "TEMPLATE_MISSING", null);
++                return false;
++            }
++            // Commit before the remote call. Process death or timeout leaves UNKNOWN, never a retry lease.
++            transition(row, OfficialBroadcastLog.UNKNOWN, "OUTCOME_UNCONFIRMED", null);
++            return true;
++        });
++        if (!Boolean.TRUE.equals(claimed)) return;
++        boolean delivered;
++        try {
++            // This is the WX-only contract. INotifyService fans out and cannot prove WX acceptance.
++            delivered = wxSubscribeMsgService.notifyOfficialBroadcast(intent.getMemberId(),
++                    intent.getDeliveryTitle(), intent.getDeliverySub());
++        } catch (RuntimeException failure) {
++            log.warn("[官方通知] 微信结果未知 bc={} delivery={} type={}",
++                    intent.getBroadcastId(), intent.getId(), failure.getClass().getSimpleName());
++            return;
++        }
++        if (!delivered) return; // false also hides network failures; it is NOT a safe-retry signal.
++        independent().executeWithoutResult(status -> {
++            OfficialBroadcastLog row = logMapper.lockDeliveryIntent(intent.getId());
++            if (row != null && OfficialBroadcastLog.UNKNOWN.equals(row.getDeliveryState()))
++                transition(row, OfficialBroadcastLog.SUCCESS, null, null);
++        });
++    }
++
++    private void transition(OfficialBroadcastLog row, String state, String failureCode, Long messageId) {
++        if (logMapper.transition(row.getId(), row.getDeliveryState(), state, failureCode, messageId) != 1)
++            throw new ServiceException("通知投递状态冲突");
++    }
++
++    private TransactionTemplate independent() {
++        TransactionTemplate tx = new TransactionTemplate(transactionManager);
++        tx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
++        return tx;
++    }
++
++    private void validateChannels(String channels) {
++        if (StringUtils.isBlank(channels)) throw new ServiceException("请选择通知通道");
++        java.util.Set<String> selected = new java.util.HashSet<>();
++        for (String channel : channels.split(",", -1)) {
++            String value = channel.trim();
++            if (!("inapp".equals(value) || "subscribe".equals(value)) || !selected.add(value))
++                throw new ServiceException("通知通道无效或重复");
++        }
++    }
++
++    private List<OfficialBroadcastLog> safeDeliveries(List<OfficialBroadcastLog> rows) {
++        return rows == null ? java.util.Collections.emptyList() : rows;
+     }
+ 
+     @Override
+@@ -207,7 +443,8 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
+ 
+     @Override
+     public void runDueScheduled() {
+-        List<OfficialBroadcast> due = broadcastMapper.selectDueScheduled();
++        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return;
++        List<OfficialBroadcast> due = logMapper.selectRecoverableBroadcasts();
+         if (due == null) return;
+         for (OfficialBroadcast bc : due) {
+             try {
+@@ -220,8 +457,41 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
+ 
+     @Override
+     public java.util.Map<String, Object> reachStats(Long broadcastId, Long actorMemberId) {
+-        getById(broadcastId, actorMemberId);
+-        return delivery.summary(broadcastId);
++        OfficialBroadcast broadcast = getById(broadcastId, actorMemberId);
++        java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
++        // reached/clicked are inapp members; channelReached counts successful channel receipts.
++        m.put("reached", logMapper.countInappReached(broadcastId));
++        m.put("channelReached", logMapper.countReached(broadcastId));
++        m.put("byChannel", logMapper.channelStats(broadcastId));
++        m.put("clicked", logMapper.countClicked(broadcastId));
++        if (usesDurableDelivery(broadcast)) m.putAll(delivery.summary(broadcastId));
++        else m.putAll(legacyDeliverySummary(broadcastId));
++        return m;
++    }
++
++    /** Read-only projection for the original ledger; never manufactures provider acceptance. */
++    private Map<String, Object> legacyDeliverySummary(Long broadcastId) {
++        Map<String, Integer> counts = new LinkedHashMap<>();
++        for (String state : List.of("INAPP_STORED", "CHANNEL_ACCEPTED", "REJECTED", "NOT_SUBMITTED",
++                "RETRYABLE", "UNKNOWN", "READY", "CAPPED", "LEGACY_UNCONFIRMED")) counts.put(state, 0);
++        boolean recoverable = false;
++        for (OfficialBroadcastLog row : safeDeliveries(logMapper.selectByBroadcast(broadcastId))) {
++            String state = row.getDeliveryState(), projected = "LEGACY_UNCONFIRMED";
++            if (OfficialBroadcastLog.SUCCESS.equals(state))
++                projected = "inapp".equals(row.getChannel()) ? "INAPP_STORED" : "CHANNEL_ACCEPTED";
++            else if (OfficialBroadcastLog.UNKNOWN.equals(state)) projected = "UNKNOWN";
++            else if (OfficialBroadcastLog.PENDING.equals(state)) { projected = "READY"; recoverable = true; }
++            else if (OfficialBroadcastLog.FAILED.equals(state)) {
++                if ("inapp".equals(row.getChannel())) { projected = "RETRYABLE"; recoverable = true; }
++                else if ("TEMPLATE_MISSING".equals(row.getFailureCode())) { projected = "NOT_SUBMITTED"; recoverable = true; }
++            }
++            counts.put(projected, counts.get(projected) + 1);
++        }
++        Map<String, Object> result = new LinkedHashMap<>();
++        result.put("deliveryCounts", counts);
++        result.put("canRecoverInapp", recoverable);
++        result.put("deliveryNote", "站内已入库不等于已读；订阅仅表示渠道受理。UNKNOWN及历史未确认不会重发。");
++        return result;
+     }
+ 
+     @Override
+@@ -313,8 +583,4 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
+         return list == null ? java.util.Collections.emptyList() : list;
+     }
+ 
+-    private String esc(String s) {
+-        if (s == null) return "";
+-        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", " ");
+-    }
+ }
+diff --git a/chengyinhub-system/src/main/resources/mapper/business/OfficialBroadcastLogMapper.xml b/chengyinhub-system/src/main/resources/mapper/business/OfficialBroadcastLogMapper.xml
+index 5bc30bd..7eaac2d 100644
+--- a/chengyinhub-system/src/main/resources/mapper/business/OfficialBroadcastLogMapper.xml
++++ b/chengyinhub-system/src/main/resources/mapper/business/OfficialBroadcastLogMapper.xml
+@@ -1,34 +1,96 @@
+ <?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="com.chengyinhub.business.mapper.OfficialBroadcastLogMapper">
++    <resultMap type="OfficialBroadcastLog" id="DeliveryResult">
++        <id property="id" column="id"/>
++        <result property="broadcastId" column="broadcast_id"/>
++        <result property="memberId" column="member_id"/>
++        <result property="role" column="role"/>
++        <result property="channel" column="channel"/>
++        <result property="reached" column="reached"/>
++        <result property="clicked" column="clicked"/>
++        <result property="createTime" column="create_time"/>
++        <result property="deliveryState" column="delivery_state"/>
++        <result property="deliveryTitle" column="delivery_title"/>
++        <result property="deliverySub" column="delivery_sub"/>
++        <result property="failureCode" column="failure_code"/>
++        <result property="messageId" column="message_id"/>
++        <result property="reachedTime" column="reached_time"/>
++    </resultMap>
+ 
+-    <!-- uk_bc_member_channel 冲突时 insert ignore(不重发) -->
+-    <insert id="insertIgnore" parameterType="OfficialBroadcastLog" useGeneratedKeys="true" keyProperty="id">
+-        insert ignore into official_broadcast_log
+-            (broadcast_id, member_id, role, channel, reached, clicked, create_time)
+-        values (#{broadcastId}, #{memberId}, #{role}, #{channel},
+-                <choose><when test="reached != null">#{reached}</when><otherwise>0</otherwise></choose>,
+-                0, now())
++    <!-- Serialize initial audience snapshot and aggregate refresh, without changing shared mapper. -->
++    <select id="lockBroadcast" resultMap="com.chengyinhub.business.mapper.OfficialBroadcastMapper.OfficialBroadcastResult" useCache="false" flushCache="true">
++        select * from official_broadcast where id = #{broadcastId} for update
++    </select>
++    <select id="selectRecoverableBroadcasts" resultMap="com.chengyinhub.business.mapper.OfficialBroadcastMapper.OfficialBroadcastResult">
++        select b.* from official_broadcast b
++        where b.status = 1 and (b.scheduled_time is null or b.scheduled_time &lt;= now())
++        order by b.id
++    </select>
++    <select id="selectByBroadcast" resultMap="DeliveryResult">
++        select * from official_broadcast_log where broadcast_id = #{broadcastId} order by member_id, id
++    </select>
++    <select id="lockDeliveryIntent" resultMap="DeliveryResult" useCache="false" flushCache="true">
++        select * from official_broadcast_log where id = #{id} for update
++    </select>
++    <insert id="insertPending" parameterType="OfficialBroadcastLog" useGeneratedKeys="true" keyProperty="id">
++        insert into official_broadcast_log
++            (broadcast_id, member_id, role, channel, reached, clicked, create_time,
++             delivery_state, delivery_title, delivery_sub)
++        values (#{broadcastId}, #{memberId}, #{role}, #{channel}, 0, 0, now(),
++                'PENDING', #{deliveryTitle}, #{deliverySub})
+     </insert>
+-
++    <update id="transition">
++        update official_broadcast_log
++        set delivery_state = #{state}, failure_code = #{failureCode}, message_id = #{messageId},
++            reached = case when #{state} = 'SUCCESS' then 1 else 0 end,
++            reached_time = case when #{state} = 'SUCCESS' then now() else null end
++        where id = #{id} and delivery_state = #{expected}
++    </update>
++    <select id="countUnsuccessful" resultType="int">
++        select count(1) from official_broadcast_log
++        where broadcast_id = #{broadcastId} and (delivery_state is null or delivery_state != 'SUCCESS')
++    </select>
++    <select id="countInappReached" resultType="int">
++        select count(1) from official_broadcast_log
++        where broadcast_id = #{broadcastId} and channel = 'inapp' and reached = 1
++          and delivery_state in ('SUCCESS', 'INAPP_STORED')
++    </select>
++    <!-- Channel receipts, not distinct members. -->
+     <select id="countReached" resultType="int">
+-        select count(1) from official_broadcast_log where broadcast_id = #{broadcastId} and channel='inapp' and delivery_state='INAPP_STORED'
++        select count(1) from official_broadcast_log
++        where broadcast_id = #{broadcastId}
++          and ((reached = 1 and delivery_state in ('SUCCESS', 'INAPP_STORED'))
++               or (channel = 'subscribe' and delivery_state = 'CHANNEL_ACCEPTED'))
+     </select>
+-
+     <select id="countClicked" resultType="int">
+-        select count(1) from official_broadcast_log where broadcast_id = #{broadcastId} and channel='inapp' and clicked = 1
++        select count(1) from official_broadcast_log
++        where broadcast_id = #{broadcastId} and channel = 'inapp' and clicked = 1 and reached = 1
++          and delivery_state in ('SUCCESS', 'INAPP_STORED')
++    </select>
++    <select id="channelStats" resultType="java.util.LinkedHashMap">
++        select channel, delivery_state as deliveryState, count(1) as receiptCount
++        from official_broadcast_log where broadcast_id = #{broadcastId}
++        group by channel, delivery_state order by channel, delivery_state
+     </select>
+-
+     <select id="countRecentByMember" resultType="int">
+         select count(1) from official_broadcast_log
+         where member_id = #{memberId} and channel = 'inapp' and reached = 1
+-          and create_time &gt;= DATE_SUB(NOW(), INTERVAL #{minutes} MINUTE)
++          and delivery_state in ('SUCCESS', 'INAPP_STORED')
++          and coalesce(reached_time, create_time) &gt;= DATE_SUB(NOW(), INTERVAL #{minutes} MINUTE)
+     </select>
+-
+     <update id="markClicked">
+         update official_broadcast_log set clicked = 1
+         where broadcast_id = #{broadcastId} and member_id = #{memberId} and channel = #{channel}
++          and reached = 1 and delivery_state in ('SUCCESS', 'INAPP_STORED')
+     </update>
++    <insert id="insertIgnore" parameterType="OfficialBroadcastLog" useGeneratedKeys="true" keyProperty="id">
++        insert ignore into official_broadcast_log
++            (broadcast_id, member_id, role, channel, reached, clicked, create_time)
++        values (#{broadcastId}, #{memberId}, #{role}, #{channel},
++                <choose><when test="reached != null">#{reached}</when><otherwise>0</otherwise></choose>,
++                0, now())
++    </insert>
+ 
+     <update id="markReached">
+         update official_broadcast_log set reached = 1
+@@ -38,5 +100,5 @@
+  <select id="deliveryRows" resultType="map">select id,member_id,role,channel,delivery_state,frozen_title,frozen_sub,intent_id,message_id,attempts from official_broadcast_log where broadcast_id=#{broadcastId} order by id</select>
+  <select id="lockDelivery" resultType="map">select * from official_broadcast_log where id=#{id} for update</select>
+  <insert id="snapshot">insert ignore into official_broadcast_log(broadcast_id,member_id,role,channel,reached,clicked,create_time,delivery_state,frozen_title,frozen_sub) values(#{broadcastId},#{memberId},#{role},#{channel},0,0,now(),#{state},#{title},#{sub})</insert>
+- <update id="deliveryState">update official_broadcast_log set delivery_state=#{state},intent_id=#{intent},message_id=#{message},attempts=attempts+#{attempt},update_time=now(3),reached=case when #{state}='INAPP_STORED' then 1 else 0 end where id=#{id}</update>
++ <update id="deliveryState">update official_broadcast_log set delivery_state=#{state},intent_id=#{intent},message_id=#{message},attempts=attempts+#{attempt},update_time=now(3),reached=case when #{state}='INAPP_STORED' then 1 else 0 end,reached_time=case when #{state}='INAPP_STORED' then now() else null end where id=#{id}</update>
+ </mapper>
+diff --git a/chengyinhub-ui/src/views/business/officialevent/index.vue b/chengyinhub-ui/src/views/business/officialevent/index.vue
+index 1fccbbc..5e7832e 100644
+--- a/chengyinhub-ui/src/views/business/officialevent/index.vue
++++ b/chengyinhub-ui/src/views/business/officialevent/index.vue
+@@ -301,7 +301,7 @@ const MISSION_TYPE_TEXT = {
+   ROAM_SESSION_AREA: '漫游区域覆盖'
+ }
+ const POLICY_TEXT = { SELF_RUN: '官方自行运行', OPTIONAL_PARTNERS: '合作可选', REQUIRED_FULFILLMENT: '外部履约必需' }
+-const BROADCAST_STATUS_TEXT = { 0: '草稿', 1: '待发', 2: '投递处理结束（不代表已读）', 3: '已停止（已送达内容不回收）' }
++const BROADCAST_STATUS_TEXT = { 0: '草稿', 1: '投递未全部确认', 2: '投递处理结束（不代表已读）', 3: '已停止（已送达内容不回收）' }
+ const PARTY_ROLE_TEXT = { ORGANIZER: '主办方', CO_ORGANIZER: '协办方', FULFILLMENT_MERCHANT: '商家履约', FULFILLMENT_CLUB: '俱乐部履约', SPONSOR: '支持方', PROMOTION_PARTNER: '推广伙伴' }
+ const PARTY_TYPE_TEXT = { OFFICIAL: '官方', MERCHANT: '商家', CLUB: '俱乐部' }
+ const PARTY_STATUS_TEXT = { INVITED: '已邀请待确认', ACCEPTED: '已接受', ACTIVE: '已生效', DECLINED: '已拒绝', WITHDRAWN: '已撤回', SUSPENDED: '已暂停', COMPLETED: '已完成', ARCHIVED: '已归档' }

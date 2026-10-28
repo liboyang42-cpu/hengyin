@@ -1,0 +1,83 @@
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialBroadcastDeliveryService.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialBroadcastDeliveryService.java
+index 27229c9..6f5a127 100644
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialBroadcastDeliveryService.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialBroadcastDeliveryService.java
+@@ -18,6 +18,8 @@ public class OfficialBroadcastDeliveryService {
+  private final IImService im;
+  private final WxSubscribeChannel subscribe;
+  private final TransactionTemplate tx;
++ @org.springframework.beans.factory.annotation.Autowired
++ private UmsMemberMapper members;
+  public OfficialBroadcastDeliveryService(OfficialBroadcastLogMapper logs,OfficialBroadcastMapper broadcasts,IImService im,WxSubscribeChannel subscribe,PlatformTransactionManager manager){
+   this.logs=logs;this.broadcasts=broadcasts;this.im=im;this.subscribe=subscribe;
+   tx=new TransactionTemplate(manager);tx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+@@ -35,15 +37,22 @@ public class OfficialBroadcastDeliveryService {
+   if(bc==null || Integer.valueOf(OfficialBroadcast.ST_REVOKED).equals(bc.getStatus()))return;
+   for(Map<String,Object> row:logs.deliveryRows(bc.getId())) {
+    Long id=((Number)row.get("id")).longValue();String state=(String)row.get("delivery_state");
+-   if("inapp".equals(row.get("channel")) && ("READY".equals(state)||"RETRYABLE".equals(state))) inapp(bc.getId(),id);
++   if("inapp".equals(row.get("channel")) && ("READY".equals(state)||"RETRYABLE".equals(state))) inapp(bc.getId(),id,number(row.get("member_id")));
+    if("subscribe".equals(row.get("channel")) && ("READY".equals(state)||state!=null && state.startsWith("NOT_SUBMITTED_"))) subscription(bc.getId(),id);
+   }
+  }
+- private void inapp(Long broadcastId,Long id){
++ private void inapp(Long broadcastId,Long id,Long member){
+   try {
+-   tx.execute(status->{if(!active(broadcastId))return null;Map<String,Object> row=logs.lockDelivery(id);String state=(String)row.get("delivery_state");
++   tx.execute(status->{if(!active(broadcastId))return null;
++    // All broadcast protocols share the same existing member fence. Lock it before delivery/IM.
++    // This transaction has made only locking reads; the following frequency read sees the last holder's commit.
++    if(member==null || !member.equals(members.lockMemberById(member)))return null;
++    Map<String,Object> row=logs.lockDelivery(id);if(row==null)return null;String state=(String)row.get("delivery_state");
+     if(!Set.of("READY","RETRYABLE").contains(state))return null;
+-    Long member=((Number)row.get("member_id")).longValue(),bc=((Number)row.get("broadcast_id")).longValue();
++    if(!member.equals(number(row.get("member_id"))) || !broadcastId.equals(number(row.get("broadcast_id"))))
++     throw new IllegalStateException("通知投递归属已变化");
++    if(logs.countRecentByMember(member,60)>=5)return null;
++    Long bc=((Number)row.get("broadcast_id")).longValue();
+     String title=(String)row.get("frozen_title"),sub=(String)row.get("frozen_sub");
+     String extra=JSON.toJSONString(Map.of("title",title,"sub",sub,"bcId",String.valueOf(bc)));
+     Long intent=im.enqueueSystemNotification(member,ImMessage.MSG_CARD,title,extra,"official_bc:"+bc+":"+member+":inapp");
+@@ -94,7 +103,7 @@ public class OfficialBroadcastDeliveryService {
+    int unresolved=counts.get("UNKNOWN")+counts.get("RETRYABLE")+counts.get("READY")+counts.get("LEGACY_UNCONFIRMED")+counts.get("CAPPED")+counts.get("NOT_SUBMITTED");
+    int reached=counts.get("INAPP_STORED");OfficialBroadcast update=new OfficialBroadcast();update.setId(bc.getId());update.setReachedCount(reached);update.setStatus(unresolved==0?OfficialBroadcast.ST_SENT:OfficialBroadcast.ST_PENDING);
+    if(batch==null || ((Number)batch.get("status")).intValue()==OfficialBroadcast.ST_REVOKED)return reached;
+-   broadcasts.updateOfficialBroadcast(update);bc.setReachedCount(reached);bc.setStatus(update.getStatus());return reached;
++   if(broadcasts.updateOfficialBroadcast(update)!=1)throw new IllegalStateException("通知统计保存失败");bc.setReachedCount(reached);bc.setStatus(update.getStatus());return reached;
+   });
+  }
+  public Map<String,Object> summary(Long id){
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/OfficialBroadcastDeliveryMySqlIT.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/OfficialBroadcastDeliveryMySqlIT.java
+index 05873de..176445e 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/OfficialBroadcastDeliveryMySqlIT.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/OfficialBroadcastDeliveryMySqlIT.java
+@@ -33,18 +33,28 @@ class OfficialBroadcastDeliveryMySqlIT {
+   new JdbcTemplate(new DriverManagerDataSource(mysql.adminUrl(),mysql.user(),mysql.password())).execute("CREATE DATABASE "+mysql.databaseName());
+   DriverManagerDataSource source=new DriverManagerDataSource(mysql.databaseUrl(),mysql.user(),mysql.password());jdbc=new JdbcTemplate(source);manager=new DataSourceTransactionManager(source);
+   try(Connection c=source.getConnection()){for(String f:List.of("migration_official_broadcast.sql","migration_20261026_official_broadcast_delivery.sql"))ScriptUtils.executeSqlScript(c,new FileSystemResource("sql/"+f));}
++  jdbc.execute("CREATE TABLE fixture_member_fence(id BIGINT PRIMARY KEY) ENGINE=InnoDB");
+   jdbc.execute("CREATE TABLE fixture_intent(id BIGINT PRIMARY KEY AUTO_INCREMENT,event_key VARCHAR(96) UNIQUE,delivered INT NOT NULL DEFAULT 0) ENGINE=InnoDB");
+   Configuration cfg=new Configuration(new Environment("test",new SpringManagedTransactionFactory(),source));cfg.getTypeAliasRegistry().registerAlias(OfficialBroadcast.class);cfg.getTypeAliasRegistry().registerAlias(OfficialBroadcastLog.class);
+   for(Class<?> type:List.of(OfficialBroadcastMapper.class,OfficialBroadcastLogMapper.class)){cfg.addMapper(type);String resource="mapper/business/"+type.getSimpleName()+".xml";try(InputStream xml=getClass().getClassLoader().getResourceAsStream(resource)){assertNotNull(xml);new XMLMapperBuilder(xml,cfg,resource,cfg.getSqlFragments()).parse();}}
+   SqlSessionTemplate session=new SqlSessionTemplate(new SqlSessionFactoryBuilder().build(cfg));batches=session.getMapper(OfficialBroadcastMapper.class);logs=session.getMapper(OfficialBroadcastLogMapper.class);
+  }
+  @BeforeEach void reset(){
+-  for(String table:List.of("official_broadcast_creation","official_broadcast_log","official_broadcast","fixture_intent"))jdbc.update("DELETE FROM "+table);
++  for(String table:List.of("official_broadcast_creation","official_broadcast_log","official_broadcast","fixture_intent","fixture_member_fence"))jdbc.update("DELETE FROM "+table);
+   jdbc.update("INSERT INTO official_broadcast(id,title,audience,channels,status) VALUES(9,'frozen','player','inapp,subscribe',1)");bc=batches.selectOfficialBroadcastById(9L);
++  jdbc.update("INSERT INTO fixture_member_fence(id) VALUES(7)");
+   im=mock(IImService.class);channel=mock(WxSubscribeChannel.class);
+   when(im.enqueueSystemNotification(anyLong(),anyInt(),anyString(),anyString(),anyString())).thenAnswer(c->{String key=c.getArgument(4);jdbc.update("INSERT IGNORE INTO fixture_intent(event_key) VALUES(?)",key);return jdbc.queryForObject("SELECT id FROM fixture_intent WHERE event_key=?",Long.class,key);});
+   when(im.deliverSystemNotification(anyLong())).thenAnswer(c->{Long id=c.getArgument(0);jdbc.queryForMap("SELECT * FROM fixture_intent WHERE id=? FOR UPDATE",id);jdbc.update("UPDATE fixture_intent SET delivered=1 WHERE id=?",id);return id;});
+   service=new OfficialBroadcastDeliveryService(logs,batches,im,channel,manager);
++  // Same SQL/transaction resource as the real delivery mapper; this remains a member-fact adapter,
++  // not evidence that the full member/IM domain was assembled.
++  UmsMemberMapper members=mock(UmsMemberMapper.class);
++  when(members.lockMemberById(anyLong())).thenAnswer(c->{
++   List<Long> ids=jdbc.queryForList("SELECT id FROM fixture_member_fence WHERE id=? FOR UPDATE",Long.class,c.getArgument(0));
++   return ids.isEmpty()?null:ids.get(0);
++  });
++  org.springframework.test.util.ReflectionTestUtils.setField(service,"members",members);
+  }
+  void freeze(String channel){service.prepare(bc,List.of(Map.of("member",7L,"role","player","channel",channel,"title","frozen","sub","original","state","READY")));}
+  void parallel(Runnable a,Runnable b)throws Exception{ExecutorService pool=Executors.newFixedThreadPool(2);try{Future<?> x=pool.submit(a),y=pool.submit(b);x.get(10,TimeUnit.SECONDS);y.get(10,TimeUnit.SECONDS);}finally{pool.shutdownNow();}}
