@@ -1,8 +1,12 @@
-.rules { margin-top: 16rpx; color: var(--cy-color-text-primary); font-size: var(--cy-type-body); }
-.rules__toggle, .rules__btn { font-size: var(--cy-type-label); color: var(--cy-color-text-primary); background: transparent; margin: 8rpx 0; }
-.rules__hint { display: block; color: var(--cy-color-text-secondary); line-height: 1.6; font-size: var(--cy-type-label); }
-.rules__row { border-left: 2rpx solid var(--cy-color-border-subtle); padding: 16rpx; margin-top: 16rpx; }
-.rules__depth-1 { margin-left: 16rpx; } .rules__depth-2 { margin-left: 32rpx; } .rules__depth-3 { margin-left: 48rpx; }
-.rules__select, .rules__input { min-height: 72rpx; line-height: 72rpx; border-bottom: 1rpx solid var(--cy-color-border-subtle); }
-.rules__field { margin: 12rpx 0; }
-.rules__actions { display: flex; gap: 16rpx; }
+/* 条件与效果：行、分组、分段、步进器都来自 L1 的 cy-list-* / cy-segmented / cy-stepper，这里只管缩进、
+   分段所在那一行的留白、红字删除、搜索框和「上移」。 */
+.sr-d1 { padding-left: var(--cy-space-4); } .sr-d2 { padding-left: var(--cy-space-6); } .sr-d3 { padding-left: var(--cy-space-7); }
+.sr-d1, .sr-d2, .sr-d3 { background: var(--cy-color-bg-surface); }
+.sr-seg { padding: var(--cy-space-2) var(--cy-space-4); background: var(--cy-color-bg-surface); }
+.sr-row--del { --cy-color-text-primary: var(--cy-color-status-danger); }
+.sr-search { display: flex; align-items: center; gap: var(--cy-space-2); min-height: 100rpx; padding: 0 var(--cy-space-4); color: var(--cy-color-text-tertiary); background: var(--cy-color-bg-surface); }
+.sr-search__in { flex: 1; min-width: 0; font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }
+.sr-move { position: relative; flex: none; padding: 0 var(--cy-space-2); font-size: var(--cy-type-label); font-weight: 700; color: var(--cy-color-text-primary); }
+.sr-move::after { content: ''; position: absolute; left: 0; right: 0; top: -24rpx; bottom: -24rpx; } /* 热区撑到 88rpx */
+/* 组件样式隔离，全局 .cy-pressed 进不来，本地定义一份（同 cy-sheet）。 */
+.cy-pressed { opacity: .88; }
