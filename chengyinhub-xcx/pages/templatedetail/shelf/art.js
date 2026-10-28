@@ -82,12 +82,6 @@ const THEMES = {
 // 横滑行只放 ROW 里那几个，其余进「全部分类」半屏，按组列出。
 const byNames = (names) => (t) => names.indexOf(t.key) >= 0;
 const byTitles = (titles) => (g) => titles.indexOf(g.title) >= 0;
-const AREA = {
-  '城市藏宝猎人': ['虹口', '黄浦'], '异常事务局：不存在的坐标': ['徐汇'], '末日广播：最后一座中继站': ['浦东'],
-  '时间污染：被删除的今天': ['徐汇', '黄浦'], '风味巡游': ['黄浦'], '不惑之年': ['徐汇', '黄浦'], '预制人生': ['黄浦'],
-  '高温末日逃生': ['浦东'], '上海像一部旧电影': ['黄浦']
-};
-const byArea = (area) => (t) => (AREA[t.key] || []).indexOf(area) >= 0;
 const FREE_EXPLORE = ['风味巡游', '不惑之年', '预制人生', '高温末日逃生', '上海像一部旧电影'];
 const STORIES = ['城市藏宝猎人', '异常事务局：不存在的坐标', '末日广播：最后一座中继站', '时间污染：被删除的今天'];
 
@@ -116,8 +110,7 @@ const TOPIC_TAG_GROUPS = [
     { key: 't2h', name: '两小时内', icon: 'cat-quick', test: (t) => t.seconds > 3600 && t.seconds <= 7200 },
     { key: 'halfday', name: '半天', icon: 'tag-clocktower', test: (t) => t.seconds > 7200 },
     { key: 'multiday', name: '可以跨天', icon: 'tag-tent', test: byNames(FREE_EXPLORE) }
-  ] },
-  { name: '区域', tags: ['黄浦', '徐汇', '浦东', '虹口'].map((area) => ({ key: 'area-' + area, name: area, icon: 'tag-pin', test: byArea(area) })) }
+  ] }
 ];
 const TOPIC_ROW = ['explore', 'story', 'survival', 'puzzle', 'scifi', 'nostalgia', 'solo', 't2h'];
 

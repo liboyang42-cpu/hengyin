@@ -408,9 +408,10 @@ test('业主暂缓的主题(野生邻居观察局)接口回来也不上货架', 
 });
 
 test('标签按多个维度分组(没有「场景」维度);横滑行只放常用几个，其余进「全部分类」', async () => {
-  assert.deepEqual(art.TOPIC_TAG_GROUPS.map((g) => g.name), ['类型', '风格', '适合谁', '时长', '区域']);
+  assert.deepEqual(art.TOPIC_TAG_GROUPS.map((g) => g.name), ['类型', '风格', '适合谁', '时长']);
   assert.deepEqual(art.GAME_TAG_GROUPS.map((g) => g.name), ['用途', '玩法', '题材', '适合的店', '人数', '时间', '分区']);
   assert.ok(!art.TOPIC_TAGS.some((t) => /雨天|滨江|公园|美食探店|拍照出片/.test(t.name)), '业主去掉了场景维度');
+  assert.ok(!art.TOPIC_TAGS.some((t) => /黄浦|徐汇|浦东|虹口/.test(t.name)), '业主去掉了区域维度');
   const { vm, requests } = mountShelf();
   await respond(requests.find((r) => r.url === '/api/template/topic-template/list'), ok([
     topic(1, '风味巡游', { totalTime: 14400 }), topic(2, '高温末日逃生', { totalTime: 21600 }), topic(3, '异常事务局：不存在的坐标', { productType: 1 })
@@ -419,10 +420,10 @@ test('标签按多个维度分组(没有「场景」维度);横滑行只放常�
   assert.ok(!vm.data.topicTagGroups.some((g) => g.tags.some((t) => t.key === 'versus')), '没有内容的「竞技对抗」不出现');
   vm.openAllTags();
   assert.equal(vm.data.allTagsShow, true);
-  vm.pickTag({ currentTarget: { dataset: { key: 'area-浦东' } } });
+  vm.pickTag({ currentTarget: { dataset: { key: 'halfday' } } });
   assert.equal(vm.data.allTagsShow, false, '在半屏里选完就收起');
-  assert.equal(vm.data.topicTags[0].key, 'area-浦东', '选中的标签不在常用行里时临时放到最前');
-  assert.deepEqual(vm.data.topicCat.items.map((t) => t.name), ['高温末日逃生']);
+  assert.equal(vm.data.topicTags[0].key, 'halfday', '选中的标签不在常用行里时临时放到最前');
+  assert.deepEqual(vm.data.topicCat.items.map((t) => t.name).sort(), ['风味巡游', '高温末日逃生'].sort());
   const wxml = read('pages/templatedetail/shelf/index.wxml');
   assert.equal((wxml.match(/class="tg tg--more" bindtap="openAllTags"/g) || []).length, 2, '两个 tab 的标签行末尾都有「全部分类」');
   assert.match(wxml, /<cy-sheet show="\{\{ allTagsShow \}\}" title="全部分类"/);
