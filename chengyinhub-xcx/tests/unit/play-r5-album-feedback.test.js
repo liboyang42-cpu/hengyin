@@ -139,13 +139,12 @@ function reviewAlbum(album) {
   assert.equal(requests.at(-1).method, 'GET');
 }
 
-test('相册审核：pending 可见说明、CTA 与 aria 明示审核及批准后提交', () => {
+test('相册审核：pending 一句状态，CTA 与 aria 明示审核及批准后提交', () => {
   const fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
   const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/components/playkit-album/index.wxml'), 'utf8');
   const pending = wxml.match(/<text wx:if="\{\{uploadFailure === 'review_pending'\}\}" aria-live="polite">([^<]+)<\/text>/);
   assert.ok(pending);
-  assert.match(pending[1], /照片审核中，尚未提交相册/);
-  assert.match(pending[1], /查看\/重试审核，批准后才会提交相册/);
+  assert.equal(pending[1], '照片审核中');
   const cta = wxml.match(/<view bindtap="onCta"[^>]+>([^<]+)<\/view>/)[0];
   const context = { uploadFailure: 'review_pending', uploaded: false };
   const rendered = cta.replace(/\{\{([\s\S]*?)\}\}/g, (_, expression) => vm.runInNewContext(expression, context));

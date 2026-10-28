@@ -239,6 +239,11 @@ const MATRIX = [
   ['pages/play/index.js', "req('/api/play/action-context'", 'required', 'member', 'current-session'],
   //   定向计分明确不适用时回退原排行榜(与上一条 /api/play/leaderboard 同端点同权限档)。
   ['pages/play/index.js', "req('/api/play/leaderboard', 'GET', params);\n    loadBoard", 'required', 'member', 'current-session'],
+  // 2026-10-28 文档二 L5 游玩页:状态栏第二行 / 全屏角色卡读本人角色卡(后端按登录会员只读自己),
+  //   「…」用时得分 / 全屏本局成绩读本局计分与本场排名(后端 lockOwned 按本人校验对局归属)。
+  ['pages/play/utils/play-hud-overlays.js', "req('/api/play/character'", 'required', 'member', 'self-account'],
+  ['pages/play/utils/play-hud-overlays.js', "req(base, 'GET'", 'required', 'member', 'self-account'],
+  ['pages/play/utils/play-hud-overlays.js', "req(base + '/leaderboard'", 'required', 'member', 'self-account'],
 ];
 
 const VALID_SCOPES = new Set([
@@ -386,7 +391,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。
   // 2026-10-27 W8 收口:pages/play 基础动作原结果两处、动作上下文一处、定向计分排名一处、其回退排行榜一处，30 → 35。
-  assert.equal(wrapperCount, 35, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-10-28 文档二 L5:pages/play 角色卡一处、本局计分与本场排名两处(权限档见 MATRIX 同日注释)，35 → 38。
+  assert.equal(wrapperCount, 38, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(ownMediaWrapperCount, 5, '作者媒体实际GET调用点变化需显式复核');
   assert.equal(MATRIX.length, directCount + wrapperCount + ownMediaWrapperCount);
 

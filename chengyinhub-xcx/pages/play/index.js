@@ -379,6 +379,7 @@ const themeRecords = require('../../utils/theme-records.js');
 const themeTrade = require('./utils/theme-trade.js');
 const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
+const playOverlays = require('./utils/play-hud-overlays.js');
 Page({
   ...journeyCheckRecovery.methods(req),
   ...orientLifecycle.methods((url, method, data) => {
@@ -403,6 +404,7 @@ Page({
   ...themeTrade.methods(req),
   ...themePlans.methods(req),
   ...playerOps.methods(req),
+  ...playOverlays.methods(req, uuid4),
   _routeState: normalizeRouteState(null),
 
   data: {
@@ -414,6 +416,7 @@ Page({
     ...themeBackpack.data,
     ...themeRecords.data,
     ...playerOps.data,
+    ...playOverlays.data,
     tagSheetShow: false,
     tagSheetItems: [],
     privacyGateShow: false,
@@ -4111,7 +4114,7 @@ Page({
       // 作者配得再对,一取这个名字就被顶掉,看到的仍是写死在 JS 里的那份。
       that.setData({
         loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName, topicDesc: d.topicDesc || '', topicCover: d.topicCover || '',
-        mode, serverMode: mode,
+        mode, serverMode: mode, playContact: playOverlays.contact(d.contact),
         modeLabel: mode == 2 ? '自由探索' : '城市定向',
         routeNotice: that._routeNoticeForState(routeState),
         journeyAttributes: routeState.attributes,
@@ -4149,6 +4152,7 @@ Page({
         that._restoreRunSession(d, routeState, nodes);
         that.loadTeamProgress();   // P1 带领场探测(club 场次才 exists,内部自管轮询)
         that._loadPlayerGameModule();
+        that.loadHudCharacter(); that.loadSessionStats();   // 文档二 L5:状态栏第二行 / 「…」用时与得分
       });
     }).catch(() => {
       if (!isCurrent()) return;
@@ -6533,7 +6537,7 @@ Page({
   onScanArriveFromTools() { this.setData({ sessionToolsOpen: false }, () => this.onScanArrive()); },
   onRunToggleFromTools() { this.setData({ sessionToolsOpen: false }, () => this.onRunToggle()); },
   openStackOrChaptersFromTools() { this.setData({ sessionToolsOpen: false }, () => this.openStackOrChapters()); },
-  toggleSessionTools() { if (this.data.sessionToolsOpen) this._toolsClose(); else this.setData({ sessionToolsOpen: true, toolsOut: false }); },
+  toggleSessionTools() { if (this.data.sessionToolsOpen) this._toolsClose(); else { this.setData({ sessionToolsOpen: true, toolsOut: false }); this.loadSessionStats(); } },
   closeSessionTools() { this._toolsClose(); },
   /* 定位驱动的两行(自动记录足迹 / 到点提醒)在这一页翻不动:它们跟着系统定位权限走。
    * 没开就去要权限,已经开着就说清楚它由谁决定 —— 不留一枚按下去毫无反应的开关。 */
@@ -7566,6 +7570,7 @@ Page({
       this.buildReview(); this._openMedalScreen(); // B:轨迹回顾层(渐进描线 + 成就气泡 + 用时/距离);v13 整个主题走完时盖上通关勋章页
     });
     this.loadMilestone(); this.loadStageEnd(); // BL-186 本章结算与里程碑并列读,不挡完成页
+    if (!this.data.allDone) { this.loadSessionStats(); this.loadHudCharacter(); } // 文档二 L5:章节结算的本局成绩名次与 RPG 小结
     this.loadFinishRouteRecommendation();
   },
   closeFinish() {
