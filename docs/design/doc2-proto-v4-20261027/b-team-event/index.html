@@ -7255,6 +7255,8 @@ body.clean .mk-tag{display:none}
 .ev-code__link{font-size:var(--cy-type-label);color:var(--cy-color-text-secondary);text-decoration:underline;padding:6px}
 /* 清爽模式：去掉「建议撤掉」的已写码块 */
 body.clean [data-drop]{display:none !important}
+/* 10-28：全局页签下划线漏进 chip 页签（「我的申诉」全部 chip 上方的白色短横），只在原型里去掉 */
+.scr .c-tabs .cy-tabs--chip .cy-tabs__item--on::after{background:transparent}
 
 </style>
 </head>
@@ -7332,12 +7334,11 @@ body.clean [data-drop]{display:none !important}
      <div class="topic-audio" data-toast="我的游玩记录（现有半屏，本原型未展开）"><i class="cyi cyi--clock" style="width:18.72px;height:18.72px"></i><span>我的游玩记录</span><i class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></i></div>
      <!-- 10-27 业主：「开局安全检查」改名「开局前准备」；作者配了准备项或可玩时段才出现（行形与上一行完全相同） -->
      <div class="topic-audio" data-mk="new" data-mk-id="t-safe" data-st-id="t-safe" data-sheet="topic-safe-sheet">
-      <div data-s="todo" style="display:contents"><i class="cyi cyi--info" style="width:18.72px;height:18.72px"></i><span>开局前准备 · 还有 2 项没确认</span><i class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></i></div>
-      <div data-s="ready" style="display:contents" hidden><i class="cyi cyi--check" style="width:18.72px;height:18.72px"></i><span>开局前准备 · 都准备好了</span><i class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></i></div>
-      <div data-s="closed" style="display:contents" hidden><i class="cyi cyi--clock" style="width:18.72px;height:18.72px"></i><span>开局前准备 · 只在夜间 20:00–06:00 开放</span><i class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></i></div>
-      <div data-s="minor" style="display:contents" hidden><i class="cyi cyi--warning" style="width:18.72px;height:18.72px"></i><span>开局前准备 · 未满 18 岁夜间不能开局</span><i class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></i></div>
-      <div data-s="loading" style="display:contents" hidden><i class="cyi cyi--clock" style="width:18.72px;height:18.72px"></i><span>正在读取开局前准备…</span></div>
-      <div data-s="error" style="display:contents" hidden><i class="cyi cyi--warning" style="width:18.72px;height:18.72px"></i><span>开局前准备没读到 · 点按重试</span></div>
+      <div data-s="todo" style="display:contents"><i class="cyi cyi--info" style="width:18.72px;height:18.72px"></i><span>开局前准备 · 还有 2 项未勾选</span><i class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></i></div>
+      <div data-s="ready refused" style="display:contents" hidden><i class="cyi cyi--check" style="width:18.72px;height:18.72px"></i><span>开局前准备 · 已全部勾选</span><i class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></i></div>
+      <div data-s="closed" style="display:contents" hidden><i class="cyi cyi--clock" style="width:18.72px;height:18.72px"></i><span>开局前准备 · 夜间 20:00–06:00 开放</span><i class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></i></div>
+      <div data-s="loading" style="display:contents" hidden><i class="cyi cyi--clock" style="width:18.72px;height:18.72px"></i><span>正在加载…</span></div>
+      <div data-s="error" style="display:contents" hidden><i class="cyi cyi--warning" style="width:18.72px;height:18.72px"></i><span>开局前准备加载失败 · 轻点重试</span></div>
       <div data-s="guest" style="display:contents" hidden><i class="cyi cyi--info" style="width:18.72px;height:18.72px"></i><span>登录后查看开局前准备</span><i class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></i></div>
      </div>
      <div class="davidxian"></div>
@@ -7362,7 +7363,7 @@ body.clean [data-drop]{display:none !important}
        <div class="topic-teams__hd"><span class="topic-teams__n">已组 2 支队伍</span><span class="topic-teams__need">还差 3 人</span></div>
        <div class="topic-teams__row"><div class="topic-teams__av"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%23f2c7a5%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2226%22%20r%3D%2212%22%20fill%3D%22%236b4a3a%22%2F%3E%3Crect%20x%3D%2212%22%20y%3D%2242%22%20width%3D%2240%22%20height%3D%2230%22%20rx%3D%2220%22%20fill%3D%22%23d89b74%22%2F%3E%3C%2Fsvg%3E" style="width:24px;height:24px;border-radius:50%"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%23c7d8f2%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2226%22%20r%3D%2212%22%20fill%3D%22%233a4a6b%22%2F%3E%3Crect%20x%3D%2212%22%20y%3D%2242%22%20width%3D%2240%22%20height%3D%2230%22%20rx%3D%2220%22%20fill%3D%22%238fb0e0%22%2F%3E%3C%2Fsvg%3E" style="width:24px;height:24px;border-radius:50%;margin-left:-8px"></div><div class="topic-teams__tx"><span class="topic-teams__t">周六夜行小队</span><span class="topic-teams__s">10/25 19:30 开始</span></div><div class="topic-teams__cnt"><span class="topic-teams__c">3/4</span><span class="topic-teams__m">还差 1 人</span></div></div>
        <div class="topic-teams__row"><div class="topic-teams__av"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%23d8f2c7%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2226%22%20r%3D%2212%22%20fill%3D%22%233a6b40%22%2F%3E%3Crect%20x%3D%2212%22%20y%3D%2242%22%20width%3D%2240%22%20height%3D%2230%22%20rx%3D%2220%22%20fill%3D%22%239ee08f%22%2F%3E%3C%2Fsvg%3E" style="width:24px;height:24px;border-radius:50%"></div><div class="topic-teams__tx"><span class="topic-teams__t">一起出发的玩家队伍</span><span class="topic-teams__s">10/26 20:00 开始</span></div><div class="topic-teams__cnt"><span class="topic-teams__c">2/4</span><span class="topic-teams__m">还差 2 人</span></div></div>
-       <div class="topic-teams__ft">去组队大厅看全部队伍 ›</div>
+       <div class="topic-teams__ft">查看本场全部队伍 ›</div>
       </div>
      </div>
      <div class="det6">
@@ -7388,23 +7389,19 @@ body.clean [data-drop]{display:none !important}
   <div class="sh__grip"><div class="sh__handle"></div></div>
   <div class="sh__head sh__head--closable"><div class="sh__title sh__title--closable">开局前准备</div><div class="sh__close" data-close="topic-safe-sheet"><i class="cyi cyi--close-sm" style="width:22.88px;height:22.88px"></i></div></div>
   <div class="sh__body" data-st-id="t-safe">
-   <div class="proto-list" data-s="todo ready guest">
+   <div class="proto-list" data-s="todo ready refused guest">
     <div class="proto-li"><span>开放时段</span><b>夜间 20:00–06:00</b></div>
    </div>
    <div class="proto-list" data-s="closed" hidden>
-    <div class="proto-li is-bad"><span>开放时段</span><b>夜间 20:00–06:00 · 现在不在时段内</b></div>
-   </div>
-   <div class="proto-list" data-s="minor" hidden>
-    <div class="proto-li"><span>开放时段</span><b>夜间 20:00–06:00</b></div>
-    <div class="proto-li is-bad"><span>年龄</span><b>未满 18 岁不能在夜间开局</b></div>
+    <div class="proto-li is-bad"><span>开放时段</span><b>夜间 20:00–06:00 · 当前未开放</b></div>
    </div>
    <div data-s="todo closed guest" class="proto-preplist" id="prepTodo"><div class="c-consent-check proto-prep" data-act="prepTick"><div class="cck"><i class="cck-box"></i><div class="cck__txt">手机电量充足</div></div></div><div class="c-consent-check proto-prep" data-act="prepTick"><div class="cck"><i class="cck-box"></i><div class="cck__txt">带手电筒</div></div></div></div>
-   <div data-s="ready minor" class="proto-preplist" hidden><div class="c-consent-check proto-prep" data-act="prepUntick"><div class="cck"><i class="cck-box on"><i class="cyi cyi--check" style="width:12.48px;height:12.48px"></i></i><div class="cck__txt">手机电量充足</div></div></div><div class="c-consent-check proto-prep" data-act="prepUntick"><div class="cck"><i class="cck-box on"><i class="cyi cyi--check" style="width:12.48px;height:12.48px"></i></i><div class="cck__txt">带手电筒</div></div></div></div>
-   <div class="proto-cta c-btn" data-s="todo guest"><div class="btn btn--disabled">勾完才能开始</div></div>
+   <div data-s="ready refused" class="proto-preplist" hidden><div class="c-consent-check proto-prep" data-act="prepUntick"><div class="cck"><i class="cck-box on"><i class="cyi cyi--check" style="width:12.48px;height:12.48px"></i></i><div class="cck__txt">手机电量充足</div></div></div><div class="c-consent-check proto-prep" data-act="prepUntick"><div class="cck"><i class="cck-box on"><i class="cyi cyi--check" style="width:12.48px;height:12.48px"></i></i><div class="cck__txt">带手电筒</div></div></div></div>
+   <div class="proto-cta c-btn" data-s="todo guest closed"><div class="btn btn--disabled">开始游玩</div></div>
    <div class="proto-cta c-btn" data-s="ready" hidden><div class="btn btn--primary" data-go="play">开始游玩</div></div>
-   <div class="proto-cta c-btn" data-s="closed" hidden><div class="btn btn--disabled">这个主题只在夜间 20:00–06:00 开放</div></div>
-   <div class="proto-cta c-btn" data-s="minor" hidden><div class="btn btn--disabled">未满 18 岁不能在夜间开局</div></div>
-   <div class="proto-note" data-s="todo ready closed minor guest">准备项是作者写的提醒，勾完就能开始。开局时还会再核一次时段和年龄（平台规则：未满 18 岁不能在夜间开局）。</div>
+      <div class="proto-cta c-btn" data-s="refused" hidden><div class="btn btn--disabled">开始游玩</div></div>
+   <div class="proto-note" data-s="todo ready closed guest">准备项由作者设置，全部勾选后可开始。</div>
+   <div class="proto-note" data-s="refused" hidden data-mk="new" data-mk-id="t-refused">按平台规则，现在不能开始这个主题。</div>
    <div class="proto-list" data-s="loading error" hidden><div class="proto-note">—</div></div>
   </div>
  </div>
@@ -7429,7 +7426,7 @@ body.clean [data-drop]{display:none !important}
  <div class="mt-seg">
   <div class="mt-seg__i" data-act="mtTab" data-tab="mine">我的</div>
   <!-- 改动 T-31：从主题页「组队」进来时，这一格读本场队伍（/api/orient/team/lobby），不再要定位 -->
-  <div class="mt-seg__i is-on" data-act="mtTab" data-tab="open" data-mk="chg" data-mk-id="mt-seg">本场招募 · 3</div>
+  <div class="mt-seg__i is-on" data-act="mtTab" data-tab="open" data-mk="chg" data-mk-id="mt-seg">本场招募 · 2</div>
  </div>
  <div data-tab-pane="mine" hidden>
   <div class="mt-sec">已通过</div>
@@ -7440,9 +7437,9 @@ body.clean [data-drop]{display:none !important}
  </div>
  <div data-tab-pane="open" data-st-id="mt-lobby">
   <div data-s="ready">
-   <div class="mt-sec" data-mk="new" data-mk-id="mt-scope">城南旧事 · 夜行定向 · 10/25 19:30 场</div>
+   <div class="mt-sec" data-mk="new" data-mk-id="mt-scope">城南旧事 · 夜行定向 · 10月25日 19:30 场</div>
    <div class="mt-card" data-go="team">
-    <div class="mt-card__top"><div class="mt-av mt-av--3"><img class="mt-av__i" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%23f2c7a5%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2226%22%20r%3D%2212%22%20fill%3D%22%236b4a3a%22%2F%3E%3Crect%20x%3D%2212%22%20y%3D%2242%22%20width%3D%2240%22%20height%3D%2230%22%20rx%3D%2220%22%20fill%3D%22%23d89b74%22%2F%3E%3C%2Fsvg%3E"><img class="mt-av__i" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%23c7d8f2%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2226%22%20r%3D%2212%22%20fill%3D%22%233a4a6b%22%2F%3E%3Crect%20x%3D%2212%22%20y%3D%2242%22%20width%3D%2240%22%20height%3D%2230%22%20rx%3D%2220%22%20fill%3D%22%238fb0e0%22%2F%3E%3C%2Fsvg%3E"><img class="mt-av__i" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%23d8f2c7%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2226%22%20r%3D%2212%22%20fill%3D%22%233a6b40%22%2F%3E%3Crect%20x%3D%2212%22%20y%3D%2242%22%20width%3D%2240%22%20height%3D%2230%22%20rx%3D%2220%22%20fill%3D%22%239ee08f%22%2F%3E%3C%2Fsvg%3E"></div><div class="mt-card__body"><span class="mt-card__n">周六夜行小队</span><span class="mt-card__m">队长 阿栗</span></div><span class="mt-badge mt-badge--ok">已在队伍里</span></div>
+    <div class="mt-card__top"><div class="mt-av mt-av--3"><img class="mt-av__i" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%23f2c7a5%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2226%22%20r%3D%2212%22%20fill%3D%22%236b4a3a%22%2F%3E%3Crect%20x%3D%2212%22%20y%3D%2242%22%20width%3D%2240%22%20height%3D%2230%22%20rx%3D%2220%22%20fill%3D%22%23d89b74%22%2F%3E%3C%2Fsvg%3E"><img class="mt-av__i" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%23c7d8f2%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2226%22%20r%3D%2212%22%20fill%3D%22%233a4a6b%22%2F%3E%3Crect%20x%3D%2212%22%20y%3D%2242%22%20width%3D%2240%22%20height%3D%2230%22%20rx%3D%2220%22%20fill%3D%22%238fb0e0%22%2F%3E%3C%2Fsvg%3E"><img class="mt-av__i" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%23d8f2c7%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2226%22%20r%3D%2212%22%20fill%3D%22%233a6b40%22%2F%3E%3Crect%20x%3D%2212%22%20y%3D%2242%22%20width%3D%2240%22%20height%3D%2230%22%20rx%3D%2220%22%20fill%3D%22%239ee08f%22%2F%3E%3C%2Fsvg%3E"></div><div class="mt-card__body"><span class="mt-card__n">周六夜行小队</span><span class="mt-card__m">队长 阿栗</span></div><span class="mt-badge mt-badge--ok">已加入</span></div>
     <div class="mt-card__foot"><span>已组 3/4</span><span class="mt-card__go">进入队伍</span></div>
    </div>
    <div class="mt-card" data-act="applyTeam">
@@ -7451,9 +7448,9 @@ body.clean [data-drop]{display:none !important}
    </div>
    <!-- B3（10-27 业主定）：满员队伍不列出 -->
   </div>
-  <div data-s="loading" hidden><div class="mt-state">正在找本场的队伍…</div></div>
-  <div data-s="empty" hidden><div class="mt-state">本场暂时没有在招募的队伍</div></div>
-  <div data-s="error" hidden><div class="mt-err">本场队伍获取失败 · 点按重试</div></div>
+  <div data-s="loading" hidden><div class="mt-state">正在加载…</div></div>
+  <div data-s="empty" hidden><div class="mt-state">本场暂无招募中的队伍</div></div>
+  <div data-s="error" hidden><div class="mt-err">加载失败 · 轻点重试</div></div>
   <div data-s="guest" hidden><div class="mt-state">登录后查看本场队伍</div></div>
  </div>
 </div>
@@ -7488,7 +7485,7 @@ body.clean [data-drop]{display:none !important}
   <div data-s="ready">
    <div class="team-section-title" data-mk="chg" data-mk-id="tm-board">队伍进度</div>
    <div class="team-card">
-    <div class="team-member" style="border-bottom:0;min-height:0;padding-bottom:6px"><div class="team-member-main"><div class="team-member-name">已完成 3 / 8 站</div><div class="team-member-role">3 人在队 · 每站 2 人完成算全队完成</div></div></div>
+    <div class="team-member" style="border-bottom:0;min-height:0;padding-bottom:6px"><div class="team-member-main"><div class="team-member-name">全队已完成 3 / 8 个节点</div><div class="team-member-role">3 人在队 · 每个节点 2 人完成即算全队完成</div></div></div>
     <div class="tm-matrix">
      <div class="tm-mx-row tm-mx-head"><span></span><b>城砖</b><b>邮局</b><b>钟楼</b><b>老井</b><b>…</b></div>
      <div class="tm-mx-row"><span>阿栗</span><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
@@ -7499,14 +7496,14 @@ body.clean [data-drop]{display:none !important}
    </div>
    <div class="team-section-title">本场队伍排名</div>
    <div class="team-card">
-    <div class="team-member"><span class="tm-rank">1</span><div class="team-member-main"><div class="team-member-name">钟楼慢行组</div><div class="team-member-role">已完成 5 / 8 站</div></div></div>
-    <div class="team-member"><span class="tm-rank">2</span><div class="team-member-main"><div class="team-member-name">周六夜行小队 · 我的队伍</div><div class="team-member-role">已完成 3 / 8 站</div></div></div>
-    <div class="team-member"><span class="tm-rank">3</span><div class="team-member-main"><div class="team-member-name">一起出发的玩家队伍</div><div class="team-member-role">已完成 3 / 8 站</div></div></div>
+    <div class="team-member"><span class="tm-rank">1</span><div class="team-member-main"><div class="team-member-name">钟楼慢行组</div><div class="team-member-role">已完成 5 / 8 个节点</div></div></div>
+    <div class="team-member"><span class="tm-rank">2</span><div class="team-member-main"><div class="team-member-name">周六夜行小队 · 我的队伍</div><div class="team-member-role">已完成 3 / 8 个节点</div></div></div>
+    <div class="team-member"><span class="tm-rank">3</span><div class="team-member-main"><div class="team-member-name">一起出发的玩家队伍</div><div class="team-member-role">已完成 3 / 8 个节点</div></div></div>
    </div>
   </div>
-  <div data-s="loading" hidden><div class="team-section-title">队伍进度</div><div class="team-sync">正在读取队伍进度…</div></div>
+  <div data-s="loading" hidden><div class="team-section-title">队伍进度</div><div class="team-sync">正在加载…</div></div>
   <div data-s="error" hidden><div class="team-section-title">队伍进度</div>
-   <div class="c-inline-error"><div class="inline-error inline-error--data"><div class="inline-error__icon"><i class="cyi cyi--info" style="width:18.72px;height:18.72px"></i></div><div class="inline-error__copy"><div class="inline-error__title">队伍进度没读到</div></div><div class="inline-error__action">重新加载</div></div></div>
+   <div class="c-inline-error"><div class="inline-error inline-error--data"><div class="inline-error__icon"><i class="cyi cyi--info" style="width:18.72px;height:18.72px"></i></div><div class="inline-error__copy"><div class="inline-error__title">队伍进度加载失败</div></div><div class="inline-error__action">重试</div></div></div>
   </div>
   <div data-s="hidden" hidden></div>
   <!-- 已写码原样（W7 #612–#620 / W8 #625） -->
@@ -7567,8 +7564,8 @@ body.clean [data-drop]{display:none !important}
    <!-- 新增 T-37（10-27 业主改）：联系主办 / 联系商家 —— 号码来自内容归属方的已有电话，不另设值班电话 -->
    <div class="drow" data-mk="new" data-mk-id="p-sos" data-st-id="p-sos" data-act="sos">
     <div data-s="club" style="display:contents"><div class="dic"><i class="cyi cyi--phone" style="width:18.72px;height:18.72px"></i></div><div class="dcopy"><span class="dt">联系主办</span><span class="ds">城南徒步俱乐部</span></div><div class="darr"></div></div>
-    <div data-s="merchant" style="display:contents" hidden><div class="dic"><i class="cyi cyi--phone" style="width:18.72px;height:18.72px"></i></div><div class="dcopy"><span class="dt">联系商家</span><span class="ds">示例咖啡 · 本站商家</span></div><div class="darr"></div></div>
-    <div data-s="error" style="display:contents" hidden><div class="dic"><i class="cyi cyi--phone" style="width:18.72px;height:18.72px"></i></div><div class="dcopy"><span class="dt">联系主办</span><span class="ds">号码没读到 · 点一下重试</span></div><div class="darr"></div></div>
+    <div data-s="merchant" style="display:contents" hidden><div class="dic"><i class="cyi cyi--phone" style="width:18.72px;height:18.72px"></i></div><div class="dcopy"><span class="dt">联系商家</span><span class="ds">示例咖啡 · 本节点商家</span></div><div class="darr"></div></div>
+    <div data-s="error" style="display:contents" hidden><div class="dic"><i class="cyi cyi--phone" style="width:18.72px;height:18.72px"></i></div><div class="dcopy"><span class="dt">联系主办</span><span class="ds">号码加载失败 · 轻点重试</span></div><div class="darr"></div></div>
    </div>
    <!-- 已写码（W8 orient-lifecycle.wxml + 守卫申诉）：原样复刻，建议撤掉 -->
    <div data-mk="coded" data-mk-id="p-coded-life" data-drop>
@@ -7585,7 +7582,7 @@ body.clean [data-drop]{display:none !important}
    </div>
    <div class="drow drow--static"><div class="dic pic pic--route"></div><div class="dcopy"><span class="dt">本局读数</span><span class="ds">章节 4 · 已完成 3 · 还有游戏 2</span></div></div>
    <!-- 新增 T-30：同行者榜入口（榜单半屏现有，master 上没有任何入口） -->
-   <div class="drow" data-mk="new" data-mk-id="p-board" data-act="board"><div class="dic pic pic--team"></div><div class="dcopy"><span class="dt">同行者榜</span><span class="ds">本主题一张榜 · 我第 3 名</span></div><div class="darr"></div></div>
+   <div class="drow" data-mk="new" data-mk-id="p-board" data-act="board"><div class="dic pic pic--team"></div><div class="dcopy"><span class="dt">同行者榜</span><span class="ds">我排第 3 名</span></div><div class="darr"></div></div>
    <div class="drow"><div class="dic pic pic--scan"></div><div class="dcopy"><span class="dt">扫码到达</span><span class="ds">到店后扫商家的码</span></div><div class="darr"></div></div>
    <div class="drow drow--hold"><div class="dic pic pic--route"></div><div class="dcopy"><span class="dt">暂停这一局</span><span class="ds">长按结束这一局</span></div><div class="darr"></div></div>
    <div class="drow" data-go="team"><div class="dic pic pic--team"></div><div class="dcopy"><span class="dt">队伍位置</span></div><span class="dv">3/4</span><div class="darr"></div></div>
@@ -7612,7 +7609,7 @@ body.clean [data-drop]{display:none !important}
      <div class="board__row is-first" data-mk="chg" data-mk-id="p-score"><span class="board__rank is-first">1</span><img class="board__avatar" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%23f2c7a5%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2226%22%20r%3D%2212%22%20fill%3D%22%236b4a3a%22%2F%3E%3Crect%20x%3D%2212%22%20y%3D%2242%22%20width%3D%2240%22%20height%3D%2230%22%20rx%3D%2220%22%20fill%3D%22%23d89b74%22%2F%3E%3C%2Fsvg%3E"><span class="board__nick">阿栗</span><span class="board__score">已到达结局 · 1:42:10</span><div class="board__crown"><i class="cyi cyi--star" style="width:16.64px;height:16.64px"></i></div></div>
      <div class="board__row"><span class="board__rank">1</span><img class="board__avatar" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%23c7d8f2%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2226%22%20r%3D%2212%22%20fill%3D%22%233a4a6b%22%2F%3E%3Crect%20x%3D%2212%22%20y%3D%2242%22%20width%3D%2240%22%20height%3D%2230%22%20rx%3D%2220%22%20fill%3D%22%238fb0e0%22%2F%3E%3C%2Fsvg%3E"><span class="board__nick">夜行者</span><span class="board__score">已到达结局 · 1:42:10</span></div>
      <div class="board__row"><span class="board__rank">3</span><div class="board__avatar board__avatar--ph"></div><span class="board__nick">同行者</span><span class="board__score">已到达结局 · 1:58:03</span></div>
-     <div class="board__row"><span class="board__rank">4</span><div class="board__avatar board__avatar--ph"></div><span class="board__nick">同行者</span><span class="board__score">未到结局 · 0:51:20</span></div>
+     <div class="board__row"><span class="board__rank">4</span><div class="board__avatar board__avatar--ph"></div><span class="board__nick">同行者</span><span class="board__score">未到达结局 · 0:51:20</span></div>
      <div class="board__me"><span class="board__me-rank">3</span><span class="board__me-nick">我</span><span class="board__me-score">已到达结局 · 1:58:03</span></div>
     </div>
     <div data-s="linear" hidden>
@@ -7651,13 +7648,13 @@ body.clean [data-drop]{display:none !important}
   <div class="sheet-desc serif">钟楼的指针停在九点十分，旧邮局那封信里提过这个时间。</div>
   <div class="c-btn" style="margin-top:var(--cy-space-3-5)"><div class="btn btn--primary" data-act="arrive">我已到达此站</div></div>
   <div class="sheet-note" data-st-id="p-guard">
-   <div data-s="idle">走到站点附近再点</div>
+   <div data-s="idle">定位已开启 · 靠近后会自动点亮</div>
    <!-- 新增 T-34：被位置守卫拦下且 appealable=true 时，同一行写一句话 + 一个动作 -->
    <div data-s="blocked" hidden data-mk="new" data-mk-id="p-guard-line">本次到达未记录<span class="sheet-note-action" data-act="guardAppeal"> · 申诉</span></div>
-   <div data-s="notappealable" hidden>定位精度不够，本次到达未记录<span class="sheet-note-action"> · 可扫码到达</span></div>
+   <div data-s="notappealable" hidden>定位精度不足，请到开阔处或扫码完成<span class="sheet-note-action"> · 可扫码到达</span></div>
    <div data-s="submitted" hidden data-mk="new" data-mk-id="p-guard-sent">已申诉，24 小时内处理<span class="sheet-note-action" data-go="appeal-detail"> · 查看进度</span></div>
-   <div data-s="upheld" hidden data-mk="new" data-mk-id="p-guard-up">申诉已通过，请在本站重新到达核验<span class="sheet-note-action" data-go="appeal-detail"> · 查看</span></div>
-   <div data-s="unknown" hidden>申诉结果还没确认，不会重复提交<span class="sheet-note-action" data-toast="正在查询原申诉结果"> · 再查一次</span></div>
+   <div data-s="upheld" hidden data-mk="new" data-mk-id="p-guard-up">申诉已通过，请在本节点重新确认到达<span class="sheet-note-action" data-go="appeal-detail"> · 查看</span></div>
+   <div data-s="unknown" hidden>申诉提交结果未确认<span class="sheet-note-action" data-toast="正在刷新"> · 刷新</span></div>
   </div>
   <div class="sheet-nav"><i class="cyi cyi--route" style="width:14.56px;height:14.56px"></i><span>在地图中查看路线</span></div>
  </div>
@@ -7692,15 +7689,15 @@ body.clean [data-drop]{display:none !important}
  <!-- 新增 T-40：本场成绩（同一个 finsheet__game-ending 块）+ 争议一行（finsheet__records 行形） -->
  <div class="finsheet__game-ending" data-mk="new" data-mk-id="p-fin-board" data-st-id="p-fin">
   <span class="finsheet__game-ending-k">本场成绩</span>
-  <div data-s="ready"><span class="finsheet__game-ending-title">第 3 名 · 已到达结局 · 1:58:03</span><span class="finsheet__game-ending-copy">成绩公示到 10-28 21:58，有异议可在此之前提出。</span></div>
-  <div data-s="pending" hidden><span class="finsheet__game-ending-title">还有 1 项任务在审核</span><span class="finsheet__game-ending-copy">审核结束后公布成绩，结果会出现在「我的申诉」。</span></div>
-  <div data-s="disputed" hidden><span class="finsheet__game-ending-title">第 3 名 · 已到达结局 · 1:58:03</span><span class="finsheet__game-ending-copy">你已提出成绩争议，处理结果会更新在「我的申诉」。</span></div>
-  <div data-s="closed" hidden><span class="finsheet__game-ending-title">第 3 名 · 已到达结局 · 1:58:03</span><span class="finsheet__game-ending-copy">公示已结束，成绩为最终结果。</span></div>
-  <div data-s="error" hidden><span class="finsheet__game-ending-copy">本场成绩没读到，稍后在「我的游玩记录」里查看。</span></div>
+  <div data-s="ready"><span class="finsheet__game-ending-title">暂列第 3 名 · 已到达结局 · 1:58:03</span><span class="finsheet__game-ending-copy">公示截止 10月28日 21:58，截止前可提出成绩争议。</span></div>
+  <div data-s="pending" hidden><span class="finsheet__game-ending-title">还有 1 项任务在审核</span><span class="finsheet__game-ending-copy">审核完成后公布成绩。</span></div>
+  <div data-s="disputed" hidden><span class="finsheet__game-ending-title">暂列第 3 名 · 已到达结局 · 1:58:03</span><span class="finsheet__game-ending-copy">已提出成绩争议，结果见「我的申诉」。</span></div>
+  <div data-s="closed" hidden><span class="finsheet__game-ending-title">第 3 名 · 已到达结局 · 1:58:03</span><span class="finsheet__game-ending-copy">公示已结束，成绩已确定。</span></div>
+  <div data-s="error" hidden><span class="finsheet__game-ending-copy">成绩加载失败，稍后可在「我的游玩记录」查看。</span></div>
  </div>
  <div class="finsheet__records" data-mk="new" data-mk-id="p-fin-dispute" data-st-id="p-fin">
-  <div data-s="ready" data-act="dispute">对成绩有异议？提出争议</div>
-  <div data-s="disputed" hidden data-go="appeals">查看争议进度</div>
+  <div data-s="ready" data-act="dispute">提出成绩争议</div>
+  <div data-s="disputed" hidden data-go="appeals">查看成绩争议</div>
   <div data-s="pending closed error" hidden></div>
  </div>
  <div class="finsheet__map"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20400%20300%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%2314212b%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%232f4a5c%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22400%22%20height%3D%22300%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%239cc7d9%22%20stroke-opacity%3D%22.35%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22M0%20220%20L60%20200%20L60%20150%20L110%20150%20L110%20190%20L170%20190%20L170%20120%20L230%20120%20L230%20180%20L300%20180%20L300%20140%20L360%20140%20L360%20200%20L400%20200%22%2F%3E%3Cpath%20d%3D%22M30%20260%20C120%20230%20200%20280%20380%20240%22%20stroke-dasharray%3D%226%208%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22%239cc7d9%22%20fill-opacity%3D%22.5%22%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%2260%22%20r%3D%2218%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E" style="width:100%;height:100%;object-fit:cover"></div>
@@ -7726,58 +7723,15 @@ body.clean [data-drop]{display:none !important}
    </div>
    <!-- 新增 T-40：同一组 tr-detail 行，局后 24 小时内随时能回来提争议 -->
    <div class="tr-group" data-mk="new" data-mk-id="p-card-board">
-    <div class="tr-detail"><span class="tr-label">本场名次</span><span class="tr-value">第 3 名</span></div>
+    <div class="tr-detail"><span class="tr-label">本场名次</span><span class="tr-value">暂列第 3 名</span></div>
     <div class="tr-detail"><span class="tr-label">成绩</span><span class="tr-value">已到达结局 · 1:58:03</span></div>
-    <div class="tr-detail"><span class="tr-label">公示截止</span><span class="tr-value">10-28 21:58</span></div>
+    <div class="tr-detail"><span class="tr-label">公示截止</span><span class="tr-value">10月28日 21:58</span></div>
    </div>
    <div class="tr-button tr-button--muted" data-mk="new" data-mk-id="p-card-dispute" data-act="dispute">提出成绩争议</div>
    <div class="tr-button">再玩一次</div>
   </div></div>
  </div>
 </div></div>
-</section>
-
-<section class="scr p-os" id="orient-score">
-<div class="sv">
-<div class="wx-native-nav"><span>本局计分</span></div>
-<div class="theme-dark orient-score" data-mk="coded" data-mk-id="os-coded">
- <div class="score-card">
-  <span class="score-title">本局计分 · FINISHED</span>
-  <span class="score-total">240.00</span>
-  <span class="score-muted">对局 1854077</span>
-  <span class="score-muted">计分精确到0.01分；积分与探索值以结算结果为准。</span>
-  <div class="score-row"><span>TASK</span><span>200.00</span></div>
-  <div class="score-row"><span>PUZZLE</span><span>40.00</span></div>
-  <div class="score-row"><span>PENALTY</span><span>0.00</span></div>
- </div>
- <div class="score-card">
-  <span class="score-title">结算结果</span>
-  <span>本局已结算 · 240.00</span>
-  <span>积分 24 · 探索值 60</span>
-  <span class="score-muted">结算编号 900213 · 2026-10-25 21:58</span>
-  <span class="score-muted">结算后冲正只影响展示分，不追发或追扣本局奖励。</span>
- </div>
- <div class="score-card">
-  <span class="score-title">本场榜单</span>
-  <span class="score-muted">每人取最新一局；同分同用时并列，分支主题先看是否到达结局。</span>
-  <div class="c-btn"><div class="btn btn--secondary">读取本场榜单</div></div>
-  <div class="score-row"><span>1 · 参赛玩家</span><span>已到结局 · 6130 秒</span></div>
-  <div class="score-row"><span>3 · 本人</span><span>已到结局 · 7083 秒</span></div>
- </div>
- <div class="score-card">
-  <span class="score-title">计分时间线</span>
-  <div class="score-entry"><div class="score-row"><span>TASK</span><span>+100.00</span></div><span>累计 100.00</span><span class="score-muted">TASK_DONE · 2026-10-25 20:02</span><span class="score-muted">流水 5520031 · 节点 88123</span><div class="c-btn"><div class="btn btn--text btn--sm">申诉此条流水</div></div></div>
-  <div class="c-btn"><div class="btn btn--secondary">申诉漏记任务</div></div>
- </div>
- <div class="score-card">
-  <span class="score-title">成绩争议</span>
-  <span class="score-muted">争议提交截止时间：2026-10-26 21:58</span>
-  <span class="score-muted">暂无成绩争议</span>
-  <div class="c-btn"><div class="btn btn--secondary">提出成绩争议</div></div>
-  <span class="score-muted">提交后等待复核，是否在受理期限内以提交时的核验结果为准。</span>
- </div>
-</div>
-</div>
 </section>
 
 <section class="scr p-od" id="event">
@@ -7806,24 +7760,24 @@ body.clean [data-drop]{display:none !important}
     <div class="od-section-head"><span class="od-heading">集合与联系</span><span data-s="on unset error" hidden></span></div>
     <div data-s="on unset">
      <div class="od-task-list">
-      <div class="od-task"><div class="od-task-index"><i class="cyi cyi--pin" style="width:14.56px;height:14.56px"></i></div><div class="od-task-copy"><span class="od-task-title">10-25 18:00 · 东门广场集合</span><span class="od-task-sub">示例市城南区东门路 1 号</span></div><span class="od-task-action">导航</span></div>
-      <div class="od-task" data-act="dial" data-s="on"><div class="od-task-index"><i class="cyi cyi--phone" style="width:14.56px;height:14.56px"></i></div><div class="od-task-copy"><span class="od-task-title">联系主办 · 城南徒步俱乐部</span><span class="od-task-sub">138****0000</span></div><span class="od-task-action">拨打</span></div>
+      <div class="od-task"><div class="od-task-index"><i class="cyi cyi--pin" style="width:14.56px;height:14.56px"></i></div><div class="od-task-copy"><span class="od-task-title">10月25日 18:00 · 东门广场集合</span><span class="od-task-sub">示例市城南区东门路 1 号</span></div><span class="od-task-action">导航</span></div>
+      <div class="od-task" data-act="dial" data-s="on"><div class="od-task-index"><i class="cyi cyi--phone" style="width:14.56px;height:14.56px"></i></div><div class="od-task-copy"><span class="od-task-title">联系主办 · 城南徒步俱乐部</span></div><span class="od-task-action">拨打</span></div>
      </div>
     </div>
-    <div class="c-inline-error" data-s="error" hidden><div class="inline-error inline-error--data"><div class="inline-error__icon"><i class="cyi cyi--info" style="width:18.72px;height:18.72px"></i></div><div class="inline-error__copy"><div class="inline-error__title">集合信息没读到</div><div class="inline-error__sub">请稍后再试</div></div><div class="inline-error__action">重试</div></div></div>
+    <div class="c-inline-error" data-s="error" hidden><div class="inline-error inline-error--data"><div class="inline-error__icon"><i class="cyi cyi--info" style="width:18.72px;height:18.72px"></i></div><div class="inline-error__copy"><div class="inline-error__title">集合信息加载失败</div></div><div class="inline-error__action">重试</div></div></div>
    </div>
 
    <!-- 新增 T-39：到场签到（独立签到码；只记到场） -->
    <div class="od-section od-section--divided" data-mk="new" data-mk-id="ev-checkin" data-st-id="ev-checkin">
     <div class="od-section-head"><span class="od-heading">到场签到</span>
      <span class="od-eligible" data-s="before">18:30 开放</span><span class="od-eligible is-ok" data-s="open" hidden>可签到</span><span class="od-eligible is-ok" data-s="done" hidden>已签到</span><span class="od-eligible" data-s="closed" hidden>已截止</span><span data-s="unsigned guest error" hidden></span></div>
-    <div class="od-task" data-s="before open" data-sheet="ev-code"><div class="od-task-index"><i class="cyi cyi--qr" style="width:14.56px;height:14.56px"></i></div><div class="od-task-copy"><span class="od-task-title">出示我的签到码</span><span class="od-task-sub">10-25 18:30–19:20 · 号码布 A-027</span></div><span class="od-task-action">出示</span></div>
+    <div class="od-task" data-s="before open" data-sheet="ev-code"><div class="od-task-index"><i class="cyi cyi--qr" style="width:14.56px;height:14.56px"></i></div><div class="od-task-copy"><span class="od-task-title">出示我的签到码</span><span class="od-task-sub">10月25日 18:30–19:20 · 号码布 A-027</span></div><span class="od-task-action">出示</span></div>
     <div class="od-task" data-s="done" hidden><div class="od-task-index" style="background:var(--cy-color-text-primary);color:var(--cy-color-text-inverse)"><i class="cyi cyi--check" style="width:14.56px;height:14.56px"></i></div><div class="od-task-copy"><span class="od-task-title">已签到 · 18:42</span><span class="od-task-sub">号码布 A-027</span></div><span class="od-task-action">已记录</span></div>
-    <span class="od-note" data-s="closed" hidden>签到已截止。签到只记到场，不影响成绩和奖励。</span>
+    <span class="od-note" data-s="closed" hidden>签到已截止。</span>
     <span class="od-note" data-s="unsigned" hidden>报名后可领取签到码</span>
     <span class="od-note" data-s="guest" hidden>登录并报名后可领取签到码</span>
-    <div class="c-inline-error" data-s="error" hidden><div class="inline-error inline-error--data"><div class="inline-error__icon"><i class="cyi cyi--info" style="width:18.72px;height:18.72px"></i></div><div class="inline-error__copy"><div class="inline-error__title">签到信息没读到</div></div><div class="inline-error__action">重试</div></div></div>
-    <span class="od-note" data-s="before open done">签到只记到场，不影响计时、成绩和奖励。</span>
+    <div class="c-inline-error" data-s="error" hidden><div class="inline-error inline-error--data"><div class="inline-error__icon"><i class="cyi cyi--info" style="width:18.72px;height:18.72px"></i></div><div class="inline-error__copy"><div class="inline-error__title">签到信息加载失败</div></div><div class="inline-error__action">重试</div></div></div>
+    <span class="od-note" data-s="before open done">签到只记录到场，不影响成绩。</span>
    </div>
 
    <div class="od-section od-section--divided">
@@ -7837,15 +7791,15 @@ body.clean [data-drop]{display:none !important}
 
    <!-- 新增 T-30（按赛事）：赛事榜单 —— 后端只有 leaderboardEnabled 开关，没有榜单接口 -->
    <div class="od-section od-section--divided" data-mk="new" data-mk-id="ev-rank" data-st-id="ev-rank">
-    <div class="od-section-head"><span class="od-heading">赛事榜单</span><span class="od-eligible" data-s="ready">我第 12 名</span><span data-s="empty off error" hidden></span></div>
+    <div class="od-section-head"><span class="od-heading">赛事榜单</span><span class="od-eligible" data-s="ready">暂列第 12 名</span><span data-s="empty off error" hidden></span></div>
     <div class="od-task-list" data-s="ready">
      <div class="od-task"><div class="od-task-index"><span>1</span></div><div class="od-task-copy"><span class="od-task-title">阿栗</span><span class="od-task-sub">3 / 3 任务 · 1:42:10</span></div></div>
      <div class="od-task"><div class="od-task-index"><span>1</span></div><div class="od-task-copy"><span class="od-task-title">夜行者</span><span class="od-task-sub">3 / 3 任务 · 1:42:10</span></div></div>
      <div class="od-task"><div class="od-task-index"><span>3</span></div><div class="od-task-copy"><span class="od-task-title">同行者</span><span class="od-task-sub">3 / 3 任务 · 1:51:44</span></div></div>
     </div>
-    <span class="od-note" data-s="ready">按完成任务数，再按用时排；完全相同时并列。成绩公示 24 小时。</span>
-    <span class="od-note" data-s="empty" hidden>还没有人完成任务</span>
-    <span class="od-note" data-s="error" hidden>榜单没读到，稍后再看</span>
+    <span class="od-note" data-s="ready">按完成任务数和用时排名，公示 24 小时。</span>
+    <span class="od-note" data-s="empty" hidden>暂无成绩</span>
+    <span class="od-note" data-s="error" hidden>榜单加载失败</span>
     <span data-s="off" hidden></span>
    </div>
 
@@ -7854,10 +7808,10 @@ body.clean [data-drop]{display:none !important}
    <!-- 新增 T-35：安全须知确认（报名前勾选；同意不默认勾、不打包进按钮） -->
    <div class="od-section od-section--divided" data-mk="new" data-mk-id="ev-policy" data-st-id="ev-policy">
     <span class="od-heading">安全须知</span>
-    <span class="od-copy" style="margin-top:0">夜间场次仅面向已确认成年的成员；遇天气预警本场暂停；全程注意交通安全，不进入封闭区域。保险不是参与条件。</span>
-    <div class="c-consent-check" style="margin-top:12px" data-act="consent" data-s="unchecked"><div class="cck"><i class="cck-box"></i><div class="cck__txt">我已阅读并同意《城南夜行安全须知》（2026-10-22 版）</div></div></div>
-    <div class="c-consent-check" style="margin-top:12px" data-act="consent" data-s="checked" hidden><div class="cck"><i class="cck-box on"><i class="cyi cyi--check" style="width:12.48px;height:12.48px"></i></i><div class="cck__txt">我已阅读并同意《城南夜行安全须知》（2026-10-22 版）</div></div></div>
-    <span class="od-note" data-s="blocked" hidden style="background:var(--cy-color-status-danger-soft);color:var(--cy-color-status-danger)">夜间场次仅面向已确认成年的成员，请先完善生日</span>
+    <span class="od-copy" style="margin-top:0">全程注意交通安全，不进入封闭区域。</span>
+    <div class="c-consent-check" style="margin-top:12px" data-act="consent" data-s="unchecked"><div class="cck"><i class="cck-box"></i><div class="cck__txt">我已阅读并同意《城南夜行安全须知》</div></div></div>
+    <div class="c-consent-check" style="margin-top:12px" data-act="consent" data-s="checked" hidden><div class="cck"><i class="cck-box on"><i class="cyi cyi--check" style="width:12.48px;height:12.48px"></i></i><div class="cck__txt">我已阅读并同意《城南夜行安全须知》</div></div></div>
+    <span class="od-note" data-s="blocked" hidden>按平台规则，你暂时不能报名这一场。</span>
    </div>
    <div class="od-bottom-space"></div>
   </div>
@@ -7876,8 +7830,8 @@ body.clean [data-drop]{display:none !important}
   <div class="sh__body"><div class="ev-code">
    <div class="ev-qr" id="evQr"></div>
    <div class="ev-code__bib">号码布 A-027</div>
-   <div class="ev-code__tip">请向现场工作人员出示。重复扫码只会显示第一次的结果。</div>
-   <div class="ev-code__link" data-act="rotate">换一个码</div>
+   <div class="ev-code__tip">请向现场工作人员出示。</div>
+   <div class="ev-code__link" data-act="rotate">更换签到码</div>
   </div></div>
  </div>
 </div></div>
@@ -7932,7 +7886,7 @@ body.clean [data-drop]{display:none !important}
   <div class="c-cell"><div class="cell cell--tint-mono"><img class="cell__icon" src="data:image/svg+xml,%3C%21--%20%40license%20lucide-static%20v0.460.0%20-%20ISC%20--%3E%0A%3Csvg%0A%20%20%0A%20%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%0A%20%20width%3D%2224%22%0A%20%20height%3D%2224%22%0A%20%20viewBox%3D%220%200%2024%2024%22%0A%20%20fill%3D%22none%22%0A%20%20stroke%3D%22%23131313%22%0A%20%20stroke-width%3D%221.6%22%0A%20%20stroke-linecap%3D%22round%22%0A%20%20stroke-linejoin%3D%22round%22%0A%3E%0A%20%20%3Cpath%20d%3D%22M2%209a3%203%200%200%201%200%206v2a2%202%200%200%200%202%202h16a2%202%200%200%200%202-2v-2a3%203%200%200%201%200-6V7a2%202%200%200%200-2-2H4a2%202%200%200%200-2%202Z%22%20%2F%3E%0A%20%20%3Cpath%20d%3D%22M13%205v2%22%20%2F%3E%0A%20%20%3Cpath%20d%3D%22M13%2017v2%22%20%2F%3E%0A%20%20%3Cpath%20d%3D%22M13%2011v2%22%20%2F%3E%0A%3C%2Fsvg%3E%0A"><div class="cell__body"><div class="cell__title">营销消息与优惠券</div></div><div class="cell__chevron"><i class="cyi cyi--arrow-right" style="width:16.64px;height:16.64px"></i></div></div></div>
   <div class="c-cell"><div class="cell cell--tint-mono"><img class="cell__icon" src="data:image/svg+xml,%3C%21--%20%40license%20lucide-static%20v0.460.0%20-%20ISC%20--%3E%0A%3Csvg%0A%20%20%0A%20%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%0A%20%20width%3D%2224%22%0A%20%20height%3D%2224%22%0A%20%20viewBox%3D%220%200%2024%2024%22%0A%20%20fill%3D%22none%22%0A%20%20stroke%3D%22%23131313%22%0A%20%20stroke-width%3D%221.6%22%0A%20%20stroke-linecap%3D%22round%22%0A%20%20stroke-linejoin%3D%22round%22%0A%3E%0A%20%20%3Cpath%20d%3D%22M21%2015a2%202%200%200%201-2%202H7l-4%204V5a2%202%200%200%201%202-2h14a2%202%200%200%201%202%202z%22%20%2F%3E%0A%20%20%3Cpath%20d%3D%22M12%207v2%22%20%2F%3E%0A%20%20%3Cpath%20d%3D%22M12%2013h.01%22%20%2F%3E%0A%3C%2Fsvg%3E%0A"><div class="cell__body"><div class="cell__title">帖子处置与申诉</div></div><div class="cell__chevron"><i class="cyi cyi--arrow-right" style="width:16.64px;height:16.64px"></i></div></div></div>
   <!-- 新增：我的申诉（业主 10-23 定在设置里） -->
-  <div class="c-cell" data-mk="new" data-mk-id="sz-appeals" data-go="appeals"><div class="cell cell--tint-mono cell--twoline"><img class="cell__icon" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2221%22%20height%3D%2221%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%230f172b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%0A%20%20%3Cpath%20d%3D%22M14%203H7a2%202%200%200%200-2%202v14a2%202%200%200%200%202%202h10a2%202%200%200%200%202-2V8z%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M14%203v5h5%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M9%2013h6M9%2017h4%22%2F%3E%0A%3C%2Fsvg%3E%0A"><div class="cell__body"><div class="cell__title">我的申诉</div><div class="cell__desc">到达、计分与成绩争议的进度</div></div><div class="cell__chevron"><i class="cyi cyi--arrow-right" style="width:16.64px;height:16.64px"></i></div></div></div>
+  <div class="c-cell" data-mk="new" data-mk-id="sz-appeals" data-go="appeals"><div class="cell cell--tint-mono cell--twoline"><img class="cell__icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMSIgaGVpZ2h0PSIyMSIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwZjE3MmIiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KICA8cGF0aCBkPSJNMTIgM2w3IDN2NWMwIDQuNS0zIDcuNy03IDktNC0xLjMtNy00LjUtNy05VjZsNy0zeiIvPgogIDxwYXRoIGQ9Ik05IDEybDIgMiA0LTQiLz4KPC9zdmc+Cg=="><div class="cell__body"><div class="cell__title">我的申诉</div><div class="cell__desc">计分申诉与成绩争议</div></div><div class="cell__chevron"><i class="cyi cyi--arrow-right" style="width:16.64px;height:16.64px"></i></div></div></div>
   <!-- 已写码（W7/W8，非本线）：我的发票 -->
   <div class="c-cell" data-mk="coded" data-mk-id="sz-invoice"><div class="cell cell--tint-mono"><div class="cell__body"><div class="cell__title">我的发票</div></div><div class="cell__chevron"><i class="cyi cyi--arrow-right" style="width:16.64px;height:16.64px"></i></div></div></div>
   <div class="c-cell"><div class="cell cell--tint-mono"><img class="cell__icon" src="data:image/svg+xml,%3C%21--%20%40license%20lucide-static%20v0.460.0%20-%20ISC%20--%3E%0A%3Csvg%0A%20%20%0A%20%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%0A%20%20width%3D%2224%22%0A%20%20height%3D%2224%22%0A%20%20viewBox%3D%220%200%2024%2024%22%0A%20%20fill%3D%22none%22%0A%20%20stroke%3D%22%23131313%22%0A%20%20stroke-width%3D%221.6%22%0A%20%20stroke-linecap%3D%22round%22%0A%20%20stroke-linejoin%3D%22round%22%0A%3E%0A%20%20%3Cpath%20d%3D%22M15%2012h-5%22%20%2F%3E%0A%20%20%3Cpath%20d%3D%22M15%208h-5%22%20%2F%3E%0A%20%20%3Cpath%20d%3D%22M19%2017V5a2%202%200%200%200-2-2H4%22%20%2F%3E%0A%20%20%3Cpath%20d%3D%22M8%2021h12a2%202%200%200%200%202-2v-1a1%201%200%200%200-1-1H11a1%201%200%200%200-1%201v1a2%202%200%201%201-4%200V5a2%202%200%201%200-4%200v2a1%201%200%200%200%201%201h3%22%20%2F%3E%0A%3C%2Fsvg%3E%0A"><div class="cell__body"><div class="cell__title">用户服务协议</div></div><div class="cell__chevron"><i class="cyi cyi--arrow-right" style="width:16.64px;height:16.64px"></i></div></div></div>
@@ -7953,30 +7907,19 @@ body.clean [data-drop]{display:none !important}
   <div class="rp__body" data-st-id="ap-list">
    <div data-s="ready" style="display:contents">
     <!-- 新增 T-33：账号信誉与门槛（透明阈值）——整块需后端 -->
-    <div class="rp-row" data-mk="new" data-mk-id="ap-rep" data-sheet="rep-sheet">
-     <div class="rp-row__main"><div class="rp-row__head"><span class="rp-row__title">账号信誉 86 · 正常</span><div class="c-tag"><div class="tag tag--green">无限制</div></div></div>
-      <span class="rp-row__sub">低于 60 不能申请公开队伍，低于 40 不能报名赛事</span></div>
+    <div class="rp-row" data-mk="new" data-mk-id="ap-rep" data-st-id="ap-rep" data-sheet="rep-sheet">
+     <div class="rp-row__main"><div class="rp-row__head"><span class="rp-row__title">账号信誉</span><div class="c-tag" data-s="ok"><div class="tag tag--green">正常</div></div><div class="c-tag" data-s="limited" hidden><div class="tag tag--mono">受限</div></div></div></div>
      <div class="rp-row__arrow"><i class="cyi cyi--arrow-right" style="width:14.56px;height:14.56px"></i></div>
     </div>
     <div class="c-tabs"><div class="cy-tabs cy-tabs--chip sv-x"><div class="cy-tabs__item cy-tabs__item--on"><div class="cy-tabs__label">全部</div></div><div class="cy-tabs__item"><div class="cy-tabs__label">处理中</div></div><div class="cy-tabs__item"><div class="cy-tabs__label">已有结论</div></div></div></div>
     <div class="rp-row" data-go="appeal-detail">
-     <div class="rp-row__main"><div class="rp-row__head"><span class="rp-row__title">到达未记录 · 钟楼</span><div class="c-tag"><div class="tag tag--blue">处理中</div></div></div>
-      <span class="rp-row__sub">城南旧事 · 夜行定向 · 10-25 20:41</span><span class="rp-row__sub">预计 10-26 20:41 前给出结论</span></div>
-     <div class="rp-row__arrow"><i class="cyi cyi--arrow-right" style="width:14.56px;height:14.56px"></i></div>
-    </div>
-    <div class="rp-row" data-go="appeal-detail">
      <div class="rp-row__main"><div class="rp-row__head"><span class="rp-row__title">成绩争议 · 城南旧事 · 夜行定向</span><div class="c-tag"><div class="tag tag--blue">处理中</div></div></div>
-      <span class="rp-row__sub">10-25 22:05 提交</span><span class="rp-row__sub">公示截止 10-28 21:58</span></div>
+      <span class="rp-row__sub">10月25日 22:05 提交</span><span class="rp-row__sub">公示截止 10月28日 21:58</span></div>
      <div class="rp-row__arrow"><i class="cyi cyi--arrow-right" style="width:14.56px;height:14.56px"></i></div>
     </div>
     <div class="rp-row" data-go="appeal-detail">
-     <div class="rp-row__main"><div class="rp-row__head"><span class="rp-row__title">计分漏记 · 城砖上的字</span><div class="c-tag"><div class="tag tag--done">已更正</div></div></div>
-      <span class="rp-row__sub">10-18 · 补记 100 分</span></div>
-     <div class="rp-row__arrow"><i class="cyi cyi--arrow-right" style="width:14.56px;height:14.56px"></i></div>
-    </div>
-    <div class="rp-row">
-     <div class="rp-row__main"><div class="rp-row__head"><span class="rp-row__title">门槛拦截 · 申请公开队伍</span><div class="c-tag"><div class="tag tag--mono">已结束</div></div></div>
-      <span class="rp-row__sub">10-12 · 当时信誉 58，低于 60</span></div>
+     <div class="rp-row__main"><div class="rp-row__head"><span class="rp-row__title">计分申诉 · 城砖上的字</span><div class="c-tag"><div class="tag tag--done">已更正</div></div></div>
+      <span class="rp-row__sub">10月18日 · 已补记 100 分</span></div>
      <div class="rp-row__arrow"><i class="cyi cyi--arrow-right" style="width:14.56px;height:14.56px"></i></div>
     </div>
     <div class="rp__more rp__more--end">已经到底了</div>
@@ -7984,7 +7927,7 @@ body.clean [data-drop]{display:none !important}
    <div data-s="loading" hidden><div class="c-skeleton"><div class="proto-sk"></div><div class="proto-sk"></div><div class="proto-sk"></div></div></div>
    <div data-s="empty" hidden><div class="c-empty"><div class="cy-empty"><div class="cy-empty-glyph"><i class="cyi cyi--info" style="width:24.96px;height:24.96px"></i></div><div class="cy-empty-title">还没有申诉记录</div></div></div></div>
    <div data-s="error" hidden><div class="c-empty"><div class="cy-empty"><div class="cy-empty-glyph"><i class="cyi cyi--info" style="width:24.96px;height:24.96px"></i></div><div class="cy-empty-title">申诉记录加载失败</div><div class="cy-empty-cta">重试</div></div></div></div>
-   <div data-s="guest" hidden><div class="c-empty"><div class="cy-empty"><div class="cy-empty-glyph"><i class="cyi cyi--lock" style="width:24.96px;height:24.96px"></i></div><div class="cy-empty-title">登录后查看申诉</div><div class="cy-empty-cta">登录</div></div></div></div>
+   <div data-s="guest" hidden><div class="c-empty"><div class="cy-empty"><div class="cy-empty-glyph"><i class="cyi cyi--lock" style="width:24.96px;height:24.96px"></i></div><div class="cy-empty-title">登录后查看申诉</div><div class="cy-empty-cta">微信登录</div></div></div></div>
   </div>
  </div>
 </div>
@@ -7992,15 +7935,11 @@ body.clean [data-drop]{display:none !important}
 <div class="c-sheet" id="rep-sheet"><div class="sh sh--bottom">
  <div class="sh__mask" data-close="rep-sheet"></div>
  <div class="sh__panel"><div class="sh__grip"><div class="sh__handle"></div></div>
-  <div class="sh__head sh__head--closable"><div class="sh__title sh__title--closable">信誉怎么算</div><div class="sh__close" data-close="rep-sheet"><i class="cyi cyi--close-sm" style="width:22.88px;height:22.88px"></i></div></div>
+  <div class="sh__head sh__head--closable"><div class="sh__title sh__title--closable">账号信誉</div><div class="sh__close" data-close="rep-sheet"><i class="cyi cyi--close-sm" style="width:22.88px;height:22.88px"></i></div></div>
   <div class="sh__body"><div class="proto-list">
-   <div class="proto-li"><span>起始</span><b>100</b></div>
-   <div class="proto-li"><span>队伍举报被核实</span><b>−10 / 次</b></div>
-   <div class="proto-li"><span>报名后未到场</span><b>−5 / 次</b></div>
-   <div class="proto-li"><span>完成一局且无违规</span><b>+2，最高 100</b></div>
-   <div class="proto-li"><span>低于 60</span><b>不能申请公开招募队伍</b></div>
-   <div class="proto-li"><span>低于 40</span><b>不能报名赛事</b></div>
-   <div class="proto-note">联系主办 / 商家从不受信誉影响。每次被门槛拦下都会出现在下方列表，可以申诉。</div>
+   <div class="proto-li"><span>正常</span><b>可以组队和报名赛事</b></div>
+   <div class="proto-li"><span>受限</span><b>暂时不能申请公开招募队伍和报名赛事</b></div>
+   <div class="proto-note">受限期间仍可联系主办或商家。</div>
   </div></div>
  </div>
 </div></div>
@@ -8014,13 +7953,13 @@ body.clean [data-drop]{display:none !important}
   <div class="c-page-title"><div class="pt pt--left"><div class="pt__title">申诉进度</div></div></div>
   <div class="rd__body" data-st-id="ap-detail">
    <div class="rd-card">
-    <div class="rd-card__head"><span class="rd-card__title">到达未记录 · 钟楼</span>
+    <div class="rd-card__head"><span class="rd-card__title">到达申诉 · 钟楼</span>
      <div class="c-tag" data-s="reviewing"><div class="tag tag--blue">处理中</div></div><div class="c-tag" data-s="accepted ended" hidden><div class="tag tag--green">已通过</div></div><div class="c-tag" data-s="rejected" hidden><div class="tag tag--red">未通过</div></div></div>
-    <span class="rd-card__hint" data-s="reviewing">授权复核员正在看这次到达，24 小时内给结论。</span>
-    <span class="rd-card__hint" data-s="accepted" hidden>申诉通过：可以在原来这一局里，到钟楼现场重新核验一次。不会直接算到达，也不补发奖励。</span>
-    <span class="rd-card__hint" data-s="ended" hidden>申诉通过，但这一局已经结束，结果只读。</span>
-    <span class="rd-card__hint" data-s="rejected" hidden>复核认为这次到达记录无误。</span>
-    <span class="rd-card__meta">城南旧事 · 夜行定向 · 提交于 10-25 20:43</span>
+    <span class="rd-card__hint" data-s="reviewing">管理员正在复核，24 小时内给出结论。</span>
+    <span class="rd-card__hint" data-s="accepted" hidden>回到这一局，在钟楼重新确认到达即可。</span>
+    <span class="rd-card__hint" data-s="ended" hidden>这一局已结束，到达记录不再更新。</span>
+    <span class="rd-card__hint" data-s="rejected" hidden>到达记录经复核无误。</span>
+    <span class="rd-card__meta">城南旧事 · 夜行定向 · 10月25日 20:43 提交</span>
    </div>
    <!-- 新增 T-42：玩家看得到的判定 —— 只给结论与一句理由，不给守卫编号、错误码 -->
    <div class="rd-section" data-mk="new" data-mk-id="ad-verdict" data-s="accepted ended rejected" hidden>
@@ -8028,16 +7967,16 @@ body.clean [data-drop]{display:none !important}
     <span class="rd-section__text" data-s="accepted ended">定位轨迹显示你一直在步行，速度判断有误。</span>
     <span class="rd-section__text" data-s="rejected" hidden>两次定位相隔 40 秒、距离 1.8 公里，不是步行能完成的距离。</span>
    </div>
-   <div class="rd-section"><span class="rd-section__label">你的申诉说明</span><span class="rd-section__text">从邮局一路走过来的，中间没坐车，手机定位跳了一下。</span></div>
+   <div class="rd-section"><span class="rd-section__label">申诉理由</span><span class="rd-section__text">从邮局一路走过来的，中间没坐车，手机定位跳了一下。</span></div>
    <div class="rd-section"><span class="rd-section__label">处理进度</span>
     <div class="c-timeline"><div class="cyt"><div class="cyt__body">
-     <div class="cyt__node cyt__node--done"><div class="cyt__rail"><div class="cyt__dot cyt__dot--done"></div><div class="cyt__line cyt__line--done"></div></div><div class="cyt__copy"><div class="cyt__title">已提交</div><div class="cyt__meta"><span class="cyt__time">10-25 20:43</span></div></div></div>
-     <div class="cyt__node cyt__node--current"><div class="cyt__rail"><div class="cyt__dot cyt__dot--current"></div><div class="cyt__line"></div></div><div class="cyt__copy"><div class="cyt__title">复核中</div><div class="cyt__meta"><span>预计 10-26 20:41 前</span></div></div></div>
+     <div class="cyt__node cyt__node--done"><div class="cyt__rail"><div class="cyt__dot cyt__dot--done"></div><div class="cyt__line cyt__line--done"></div></div><div class="cyt__copy"><div class="cyt__title">已提交</div><div class="cyt__meta"><span class="cyt__time">10月25日 20:43</span></div></div></div>
+     <div class="cyt__node cyt__node--current"><div class="cyt__rail"><div class="cyt__dot cyt__dot--current"></div><div class="cyt__line"></div></div><div class="cyt__copy"><div class="cyt__title">复核中</div><div class="cyt__meta"><span>预计 10月26日 20:41 前</span></div></div></div>
      <div class="cyt__node cyt__node--todo"><div class="cyt__rail"><div class="cyt__dot cyt__dot--todo"></div></div><div class="cyt__copy"><div class="cyt__title">出结论</div></div></div>
     </div></div></div>
    </div>
-   <div class="rd-actions" data-mk="new" data-mk-id="ad-recheck" data-s="accepted" hidden><div class="c-btn"><div class="btn btn--primary" data-go="play-node" data-act="recheck">回到这一局，去钟楼重新核验</div></div></div>
-   <div class="rd-link" data-go="appeals">查看我的全部申诉</div>
+   <div class="rd-actions" data-mk="new" data-mk-id="ad-recheck" data-s="accepted" hidden><div class="c-btn"><div class="btn btn--primary" data-go="play-node" data-act="recheck">回到这一局</div></div></div>
+   <div class="rd-link" data-go="appeals">查看全部申诉</div>
   </div>
  </div>
 </div>
@@ -8074,7 +8013,7 @@ body.clean [data-drop]{display:none !important}
      <div class="nd n" data-open="play-node">站点卡<small>/play/arrive 返回 appealable, guardLogId</small></div><div class="ar">→<em>guardLogId, arrivalRequestId, reason</em></div>
      <div class="nd b" data-open="play-node">提交<small>/audit/guard/appeal</small></div><div class="ar">→<em>appealId, dueAt</em></div>
      <div class="nd n" data-open="settings">设置<small>我的申诉</small></div><div class="ar">→</div>
-     <div class="nd n" data-open="appeals">我的申诉<small>列表（需后端）</small></div><div class="ar">→</div>
+     <div class="nd n" data-open="appeals">我的申诉<small>到达申诉待跨局列表接口（C1）</small></div><div class="ar">→</div>
      <div class="nd n" data-open="appeal-detail">申诉进度<small>decisionReason / canReverify</small></div><div class="ar">→<em>原 routeSessionId + nodeId</em></div>
      <div class="nd n" data-open="play-node">原局站点卡<small>重新现场核验</small></div></div>
      <div class="note">只有授权复核员能判；通过 = 只允许在原局原站点再核验一次（不直接通过、不补奖励）；原局已结束 = 只读。</div></div>
@@ -8083,11 +8022,11 @@ body.clean [data-drop]{display:none !important}
      <div class="nd n" data-open="play-fin">本局结果卡<small>24 小时内可回来提</small></div><div class="ar">→<em>/scoring/dispute</em></div>
      <div class="nd n" data-open="appeals">我的申诉<small>争议进度</small></div><div class="ar">↔</div>
      <div class="nd" data-open="play">同行者榜<small>reachedEnding → 用时 → 并列</small></div><div class="ar">⇢</div>
-     <div class="nd b" data-open="orient-score">本局计分页<small>已写码 · 建议撤</small></div></div>
+     <div class="nd">游玩页 · 计分全屏层<small>见原型 A（独立计分页已撤，X1）</small></div></div>
      <div class="note">disputeWindowDeadline = 对局结束 + orient.scoring.dispute_window_hours（默认 24）。截止后结算半屏与结果卡都不再出「提出争议」。</div></div>
     <div class="chain"><h3>⑤ 信誉门槛</h3><div class="flow">
      <div class="nd" data-open="myteams">申请公开队伍<small>被门槛拦下</small></div><div class="ar">→<em>gate event（需后端）</em></div>
-     <div class="nd n" data-open="appeals">我的申诉<small>顶部信誉 + 拦截记录</small></div></div>
+     <div class="nd n" data-open="appeals">我的申诉<small>顶部一行「正常 / 受限」</small></div></div>
      <div class="note">全仓没有信誉代码；求助 / 拨号永远不受信誉影响（OrientSafetyPolicy.sosAllowed 注释已写明）。</div></div>
    </div>
   </div>
@@ -8103,9 +8042,10 @@ const BE = {
 };
 window.MARKS = {
   /* 主题详情 */
-  't-safe': Object.assign({ kind: 'new', name: '开局前准备一行（10-27 由「开局安全检查」改）', after: '「我的游玩记录」下面同款一行（图标 + 一句话 + 箭头）。只在作者配了「开局前准备」项或「可玩时段」时出现，否则整行不出（B1，10-27 已定）。点开是 cy-sheet：开放时段一行 + 作者写的准备项（现有 cy-consent-check 勾选行），全勾了「开始游玩」才能点；不在开放时段时按钮写「这个主题只在夜间 20:00–06:00 开放」；夜间未成年按平台规则写原因。项目名和时段说法与原型 A「开局前准备 / 可玩时段」一致。去掉了天气、年龄、安全须知那几行。',
-    states: [['todo', '还有没勾的'], ['ready', '都勾了 · 可以开始'], ['closed', '不在开放时段'], ['minor', '未满 18 岁 · 夜间'], ['none', '作者没配（整行不出）'], ['loading', '加载中'], ['error', '出错'], ['guest', '游客']] },
-    BE.X('作者端的准备项和可玩时段都没有字段（见原型 A）；未成年夜间规则沿用 master 的 POST /api/orient/safety/check（MINOR_NIGHT_FORBIDDEN）')),
+  't-safe': Object.assign({ kind: 'new', name: '开局前准备一行（10-27 由「开局安全检查」改）', after: '「我的游玩记录」下面同款一行（图标 + 一句话 + 箭头）。只在作者配了「开局前准备」项或「可玩时段」时出现，否则整行不出（B1，10-27 已定）。点开是 cy-sheet：开放时段一行 + 作者写的准备项（现有 cy-consent-check 勾选行），全勾了「开始游玩」才能点；不在开放时段时按钮置灰、时段行写「当前未开放」。10-28：去掉了「未满 18 岁夜间不能开局」这条平台规则说明（规则仍在服务端执行）；只有真的被拒时，按钮下写一句中性的「按平台规则，现在不能开始这个主题。」项目名和时段说法与原型 A「开局前准备 / 可玩时段」一致。去掉了天气、年龄、安全须知那几行。',
+    states: [['todo', '还有没勾的'], ['ready', '都勾了 · 可以开始'], ['closed', '不在开放时段'], ['refused', '开局被拒（服务端）'], ['none', '作者没配（整行不出）'], ['loading', '加载中'], ['error', '出错'], ['guest', '游客']] },
+    BE.X('作者端的准备项和可玩时段都没有字段（见原型 A）；开局被拒沿用 master 的 POST /api/orient/safety/check（blockers[]），玩家只看到一句中性说明，不显示规则和原因码')),
+  't-refused': Object.assign({ kind: 'new', name: '开局被拒时的一句说明（10-28）', after: '只在服务端真的拒绝开局时出现，写在置灰的「开始游玩」下面：「按平台规则，现在不能开始这个主题。」不写年龄、不写夜间、不写规则名。清单和主题详情行里都不再提未成年规则。' }, BE.M('POST /api/orient/safety/check → blockers[]')),
   't-teams': Object.assign({ kind: 'chg', name: '组队卡可点 → 组队大厅', before: '只读卡片，最后一行写「购买后可在地图上发起或加入组队」，点不了。',
     after: '已购票时整卡可点，最后一行改成「去组队大厅看全部队伍 ›」，进「我的队伍」并直接落在「本场招募」。未购票时保持现状。' }, BE.M('无新接口（跳转带 ownerType / ownerId）')),
   /* 我的队伍 */
@@ -8137,14 +8077,12 @@ window.MARKS = {
     BE.W('W8 GET /api/audit/guard/reference + POST /api/audit/guard/appeal + GET /guard/appeal/receipt；/api/play/arrive 的 appealable / guardLogId 在 master')),
   'p-guard-sent': Object.assign({ kind: 'new', name: '已申诉 · 查看进度', after: '同一行换成「已申诉，24 小时内处理 · 查看进度」，进申诉进度页。' }, BE.W('receipt.dueAt')),
   'p-guard-up': Object.assign({ kind: 'new', name: '申诉通过 · 原局重新核验', after: '同一行写「申诉已通过，请在本站重新到达核验」；按钮仍是原来的「我已到达此站」，照原守卫条件再核验一次。不直接算到达、不补奖励。' }, BE.W('receipt.canReverify / reverifyRule=FRESH_ON_SITE_WITH_ALL_GUARDS')),
-  'p-fin-board': Object.assign({ kind: 'new', name: '章节结算 · 本场成绩', after: '结算半屏里「本局结局」下面再一块同款 finsheet__game-ending：名次 · 结局 · 用时，一句公示截止时间。',
+  'p-fin-board': Object.assign({ kind: 'new', name: '章节结算 · 本场成绩', after: '结算半屏里「本局结局」下面再一块同款 finsheet__game-ending：公示期内写「暂列第 N 名 · 结局 · 用时」（B8），公示结束后写「第 N 名」；下面一句公示截止时间。完整计分在游玩页的计分全屏层（原型 A），这里不另开计分页。',
     states: [['ready', '公示中'], ['pending', '有任务待审'], ['disputed', '已提出争议'], ['closed', '公示结束'], ['error', '出错']], stId: 'p-fin' },
     BE.M('GET /api/orient/scoring/session/{id}：totalCenti、disputeWindowDeadline、disputes[]；名次取 /api/play/leaderboard 的 me.rank')),
-  'p-fin-dispute': Object.assign({ kind: 'new', name: '对成绩有异议？提出争议', after: '沿用 finsheet__records 那排文字链接的行形。点 = 原生带输入框确认框，提交后这一行变「查看争议进度」。公示截止后整行不出。' }, BE.M('POST /api/orient/scoring/dispute（sessionId, reason, idempotencyKey）；窗口 orient.scoring.dispute_window_hours 默认 24')),
-  'p-card-board': Object.assign({ kind: 'new', name: '本局结果卡 · 名次与公示', after: '「本局结果」半屏（cy-theme-records）里加一组同款 tr-detail：本场名次 / 成绩 / 公示截止。结算半屏关掉以后，从「我的游玩记录」还能回来。' }, BE.M('同上')),
+  'p-fin-dispute': Object.assign({ kind: 'new', name: '提出成绩争议', after: '沿用 finsheet__records 那排文字链接的行形。点 = 原生带输入框确认框（理由必填 1–500 字，X8），提交后这一行变「查看成绩争议」。公示截止后整行不出。' }, BE.M('POST /api/orient/scoring/dispute（sessionId, reason, idempotencyKey）；窗口 orient.scoring.dispute_window_hours 默认 24')),
+  'p-card-board': Object.assign({ kind: 'new', name: '本局结果卡 · 名次与公示', after: '「本局结果」半屏（cy-theme-records）里加一组同款 tr-detail：本场名次（公示期内「暂列第 N 名」）/ 成绩 / 公示截止。结算半屏关掉以后，从「我的游玩记录」还能回来。' }, BE.M('同上')),
   'p-card-dispute': Object.assign({ kind: 'new', name: '本局结果卡 · 提出成绩争议', after: '同组件现成的次级按钮（tr-button--muted），放在「再玩一次」上面；公示截止后不出。' }, BE.M('POST /api/orient/scoring/dispute')),
-  'os-coded': { kind: 'coded', name: '本局计分页（已写码新页）', branch: 'feature/cy25-w7-team-check / cy26-w8-closeout subpackageMember/orient-score/*（从参与详情的「定向成绩」卡进入）',
-    problems: '① 没有 cy-nav-bar + cy-page-title，用的是微信原生黑色导航栏；② 维度直接显示 TASK / PUZZLE / PENALTY 代码、对局号、流水号、节点号、结算编号（10-23 已定去掉）；③ wxss 读的 --cy-type-card-title / --cy-color-text-primary 等与页面主题不一致，卡片只是平铺文字；④ 和结算半屏、本局结果卡重复做了一遍「榜单 / 争议」；⑤ 入口挂在「参与详情」（商家参与记录页）里，玩家很难找到。', after: '不建新页：名次与争议进结算半屏 + 本局结果卡；进度进「我的申诉」。' },
   /* 赛事 */
   'ev-duty': Object.assign({ kind: 'new', name: '集合与联系（10-27 业主改）', after: '赛事 = 主题 + 时间 + 队伍，所以活动详情只加一段：集合时间和地点（点 = 导航），一行「联系主办 · 俱乐部名」（点 = 拨号）。删掉值班岗位、时段、备用电话、110 / 120 说明。主办没填电话时只显示集合那一行。',
     states: [['on', '有主办电话'], ['unset', '主办没填电话'], ['error', '出错']], stId: 'ev-duty' },
@@ -8155,15 +8093,15 @@ window.MARKS = {
   'ev-rank': Object.assign({ kind: 'new', name: '赛事榜单', after: '同款一段，前 3 名 + 右上「我第 N 名」；排序与并列口径写一句。leaderboardEnabled=false 时整段不出。',
     states: [['ready', '有成绩'], ['empty', '空'], ['error', '出错'], ['off', '主办未开（整段不出）']], stId: 'ev-rank' },
     BE.X('只有 detail.leaderboardEnabled 开关，没有按赛事的榜单接口')),
-  'ev-policy': Object.assign({ kind: 'new', name: '安全须知确认', after: '页面最后一段：须知摘要 + 现有 cy-consent-check 勾选行（不默认勾）。没勾时点「立即报名」只提示一句，不弹新半屏；夜间场被年龄拦时这里写原因。',
-    states: [['unchecked', '未勾'], ['checked', '已勾'], ['blocked', '被年龄拦']], stId: 'ev-policy' },
+  'ev-policy': Object.assign({ kind: 'new', name: '安全须知确认', after: '页面最后一段：须知摘要 + 现有 cy-consent-check 勾选行（不默认勾）。没勾时点「立即报名」只提示一句，不弹新半屏。10-28：须知摘要里删掉「夜间场次仅面向已确认成年的成员」和天气说明；只有报名真的被拒时，这里写一句中性的「按平台规则，你暂时不能报名这一场。」',
+    states: [['unchecked', '未勾'], ['checked', '已勾'], ['blocked', '报名被拒（服务端）']], stId: 'ev-policy' },
     BE.X('没有「确认安全须知」接口：需在报名时记录 policyVersion；年龄 / 夜间判定可复用 /api/orient/safety/check')),
   'ev-coded': { kind: 'coded', name: '赛事联络与到场签到（已写码组件）', branch: 'feature/cy26-w8-closeout components/cy/event-attendance/*，挂在 official-detail 与 official-organizer 根节点之外',
     problems: '① wx:if="loading" / "error" / "snapshot" 等都没写 {{}}，字符串恒为真 ⇒ 「正在读取」「读取失败」与内容同时显示；② 挂在页面根 view 之外，浅色活动页底部出现一块深色玩家半屏底色的面板，没有标题层级；③ 直接显示 WGS84 坐标、完整 64 位签到码、「版本 3」「请求号」；④ 主办配置表单（12 个裸 input）和玩家视图在同一组件里；⑤ 用原生 <button>，不是 cy-btn；⑥ 时间写成 2026-10-25T18:00 的 ISO 格式。', after: '玩家侧拆成「赛事联络」「到场签到」两段（见活动详情），主办侧另议。' },
   /* 设置与申诉 */
-  'sz-appeals': Object.assign({ kind: 'new', name: '我的申诉', after: '「帖子处置与申诉」下面同款双行 cy-cell（业主 10-23 已定入口在设置）。' }, BE.X('没有「我的申诉」列表接口')),
+  'sz-appeals': Object.assign({ kind: 'new', name: '我的申诉', after: '「帖子处置与申诉」下面同款双行 cy-cell（业主 10-23 已定入口在设置），排在「发票」前面；图标用 icon_privacy.svg（X6）；说明「计分申诉与成绩争议」（C1）。' }, BE.X('没有「我的申诉」列表接口')),
   'sz-invoice': { kind: 'coded', name: '我的发票（他线已写码）', branch: 'feature/cy25-w7-team-check / cy26 pages/shezhi/shezhi.wxml', problems: '不属本线，只标出：这一行没有图标（同列其它行都有），与「我的申诉」行相邻时图标列对不齐。' },
-  'ap-rep': Object.assign({ kind: 'new', name: '账号信誉与门槛', after: '「我的申诉」页顶部一行（rp-row 两行形）：当前分数、是否受限、两条门槛直接写出来；点开 cy-sheet 列出加减分与门槛。被门槛拦下的记录作为一类出现在下面列表里，可申诉。数值是占位，等业主定。' }, BE.X('全仓没有信誉、门槛事件或阈值代码')),
+  'ap-rep': Object.assign({ kind: 'new', name: '账号信誉（X7）', after: '「我的申诉」页顶部一行：「账号信誉」+ 状态签「正常 / 受限」，不显示分数和门槛数值（X7）。点开 cy-sheet 只解释两种状态各意味着什么。列表先只放计分申诉与成绩争议（C1），门槛拦截记录等跨局列表接口就绪后再加。', states: [['ok', '正常'], ['limited', '受限']], stId: 'ap-rep' }, BE.X('全仓没有信誉、门槛事件或阈值代码')),
   'ad-verdict': Object.assign({ kind: 'new', name: '复核结论（玩家可见的判定）', after: '申诉进度页「处理结论」位置：只写结论 + 一句理由（decisionReason），不给守卫编号、错误码、规则名。',
     states: [['reviewing', '复核中'], ['accepted', '已通过 · 局在进行'], ['ended', '已通过 · 局已结束'], ['rejected', '未通过']], stId: 'ap-detail' }, BE.W('W8 receipt.decisionReason / decidedAt / appealState')),
   'ad-recheck': Object.assign({ kind: 'new', name: '回到这一局重新核验', after: '只在通过且原局仍在进行时出现，回到原站点卡；局已结束只读，不出按钮。' }, BE.W('receipt.canReverify / originalRunActive')),
@@ -8185,25 +8123,22 @@ window.META = {
     els: ['tm-board', 'tm-coded', 'tm-coded-ord'], eps: [{ m: 'GET /api/orient/team/detail', s: 'master · orient.team.board.enabled' }, { m: 'GET /api/orient/team/ranking', s: 'master · ++rank 顺排（B4 已定）' }],
     qs: [['B4', '已定：队伍排名 1、2、3 顺排，同分先完成的排前'], ['Q5', '矩阵超过 5 站时横向滑动还是只显示未完成的站？原型横滑。']] },
   play: { title: '游玩 · 工具菜单（联系主办 / 同行者榜）', host: 'pages/play/index（故事流 .chfull + 右上游玩工具）', files: ['chengyinhub-xcx/pages/play/index.wxml:76-271, 1761-1793', 'pages/play/index.wxss', 'style/proto-sheet.wxss', 'style/proto-icons.wxss', 'feature/cy26-w8-closeout pages/play/orient-lifecycle.wxml（已写码对照）'], badges: ['n', 'c', 'b'],
-    why: '玩家在路上只会打开右上「…」；求助和看榜都放这里，不在顶栏加任何东西（10-23 已定）。点右上「…」打开菜单。',
+    why: '玩家在路上只会打开右上「…」；联系主办和看榜都放这里，不在顶栏加任何东西（10-23 已定）。点右上「…」打开菜单。',
     els: ['p-sos', 'p-board', 'p-score', 'p-coded-life', 'p-coded-guard'], eps: [{ m: 'GET /api/play/leaderboard', s: 'master' }, { m: 'GET /api/orient/scoring/session/{id}/leaderboard', s: 'W8 · 前端先读它再回退', x: 1 }, { m: '归属方联系电话（Club.phone / MmsMerchant.phone）', s: '字段已有，游玩接口需带出', x: 1 }],
     qs: [],
     init: (s) => { s.querySelector('#play-tools').classList.add('open'); } },
   'play-node': { title: '站点卡 · 到达被拦 → 申诉', host: 'pages/play/index（节点详情卡 .sheet--story）', files: ['chengyinhub-xcx/pages/play/index.wxml:923-990', 'pages/play/index.js:5202-5237 arrive()'], badges: ['n'],
     why: '被拦的那一刻玩家正看着这张卡；一句话 + 一个动作，用原生确认框，不再开半屏（10-23 已定）。',
     els: ['p-guard-line', 'p-guard-sent', 'p-guard-up'], eps: [{ m: 'POST /api/play/arrive', s: 'master · errorCode/appealable/guardLogId' }, { m: 'GET /api/audit/guard/reference', s: 'W8', x: 1 }, { m: 'POST /api/audit/guard/appeal', s: 'W8', x: 1 }, { m: 'GET /api/audit/guard/appeal/receipt', s: 'W8', x: 1 }],
-    qs: [['Q8', '理由必填（后端 1–500 字）。原生输入框能否接受？备选：预置三个理由 + 选填补充。']] },
+    qs: [['X8', '已定：理由必填 1–500 字，用带输入框的原生确认框']] },
   'play-fin': { title: '章节结算 · 本场成绩与争议窗口', host: 'pages/play/index（.finsheet）+ cy-theme-records 本局结果', files: ['chengyinhub-xcx/pages/play/index.wxml:1190-1260', 'components/cy/theme-records/index.wxml'], badges: ['n'],
     why: '成绩出来的地方就是结算半屏；争议窗口有 24 小时，所以「本局结果」卡（从游玩记录随时能回）也放同样三行和一个按钮。不建计分新页。',
     els: ['p-fin-board', 'p-fin-dispute', 'p-card-board', 'p-card-dispute'], eps: [{ m: 'GET /api/orient/scoring/session/{id}', s: 'master · disputeWindowDeadline' }, { m: 'POST /api/orient/scoring/dispute', s: 'master' }, { m: 'GET /api/orient/scoring/receipt?kind=DISPUTE', s: 'master' }],
-    qs: [['Q9', '名次在公示期内会变，要不要写「暂列第 3 名」？']] },
-  'orient-score': { title: '本局计分页（已写码新页）', host: 'subpackageMember/orient-score/index（分支）', files: ['feature/cy26-w8-closeout subpackageMember/orient-score/index.wxml / .wxss'], badges: ['b'],
-    why: '原样复刻其他 agent 未经批准写的新页，供对照；原型建议不保留这一页。', els: ['os-coded'], eps: [{ m: 'GET /api/orient/scoring/session/{id}', s: 'master' }, { m: 'POST /api/orient/scoring/session/{id}/recovery', s: 'W8', x: 1 }],
-    qs: [['Q10', '是否同意撤掉这个新页，把成绩与争议放回结算半屏和本局结果卡？']] },
+    qs: [['B8', '已定：公示期内写「暂列第 N 名」，公示结束写「第 N 名」'], ['X1', '已定：独立计分页撤掉，完整计分在游玩页的计分全屏层（原型 A）']] },
   event: { title: '活动详情 · 联络 / 签到 / 榜单 / 安全须知', host: 'pages/activity/official-detail/index（浅色）', files: ['chengyinhub-xcx/pages/activity/official-detail/index.wxml / .wxss', 'style/merchant-light.wxss'], badges: ['n'], light: true,
     why: '赛事所有「这一场」的信息都在官方活动详情；四块都用页内现成的 od-section / od-task / od-note，不新开页。页面本身现在就是浅色（theme-merchant），照现状画。',
     els: ['ev-duty', 'ev-checkin', 'ev-rank', 'ev-policy'], eps: [{ m: 'GET /api/official/events/{id}', s: 'master' }, { m: 'POST /api/official/events/{id}/signup', s: 'master' }, { m: 'GET /api/official/events/{id}/attendance', s: 'W8', x: 1 }, { m: 'POST /api/official/signup-command', s: 'W8 · attendance-claim / rotate', x: 1 }, { m: '赛事榜单', s: '缺', x: 1 }, { m: '安全须知确认', s: '缺', x: 1 }],
-    qs: [['Q11', '玩家能看到完整电话号码，还是只给「拨打」按钮？原型只给岗位名 + 拨打。'], ['Q12', '签到码换码要不要限次数？'], ['Q13', '安全须知每场一份还是全站一份？']],
+    qs: [['B9', '已定：只给「拨打」按钮，不显示号码'], ['Q13', '安全须知每场一份还是全站一份？']],
     init: (s) => { window.drawQr && window.drawQr(); const sv = s.querySelector('.od-scroll'), nav = s.querySelector('.nav'), pill = s.querySelector('.nav__back-inner');
       if (!sv.__nav) { sv.__nav = 1; sv.addEventListener('scroll', () => { const on = sv.scrollTop > 160; nav.classList.toggle('nav--overlay', !on); nav.classList.toggle('nav--solid', on); nav.classList.toggle('nav--tint-light', !on); nav.classList.toggle('nav--tint-dark', on); pill.classList.toggle('nav__back-inner--pill', !on); pill.classList.toggle('nav__back-inner--pill-dark', !on); }); } } },
   'event-coded': { title: '赛事联络与签到（已写码组件）', host: 'components/cy/event-attendance（分支）', files: ['feature/cy26-w8-closeout components/cy/event-attendance/index.wxml / .wxss'], badges: ['b'], light: true,
@@ -8211,12 +8146,12 @@ window.META = {
     init: () => { window.drawQr && window.drawQr(); } },
   settings: { title: '设置 · 我的申诉入口', host: 'pages/shezhi/shezhi', files: ['chengyinhub-xcx/pages/shezhi/shezhi.wxml / .wxss', 'components/cy/cell'], badges: ['n', 'b'],
     why: '业主 10-23 已定「我的申诉」入口在设置，「帖子处置与申诉」下面。', els: ['sz-appeals', 'sz-invoice'],
-    qs: [['Q14', '「我的申诉」用哪个图标？原型借用页内未用的 icon_agreement.svg。']] },
+    qs: [['X6', '已定：图标 icon_privacy.svg，排在「发票」前']] },
   appeals: { title: '我的申诉（新页）+ 信誉与门槛', host: '新页 · 照抄 subpackageMember/report-mine', files: ['chengyinhub-xcx/subpackageMember/report-mine/index.wxml / .wxss（照抄）'], badges: ['p', 'n'],
     copyOf: 'subpackageMember/report-mine', copyWhy: '同为「我提交的东西 + 处理进度」列表：标题、三个 chip、行形（标题 + 状态签 + 两行小字 + 箭头）全部照抄。去掉了「编号 xxx」。',
-    why: '现在没有任何地方能看到到达申诉、计分申诉和成绩争议的进度。信誉门槛直接决定「为什么被拦」，放在同一页顶部，少一个入口。',
-    els: ['ap-rep'], eps: [{ m: '我的申诉列表（跨局：到达 + 计分 + 争议 + 门槛）', s: '缺', x: 1 }, { m: 'GET /api/orient/scoring/session/{id}', s: 'master · 单局 appeals[] / disputes[]' }, { m: '信誉 / 门槛', s: '缺', x: 1 }],
-    qs: [['Q15', '信誉与门槛放在「我的申诉」顶部，还是设置里单独一行？'], ['Q16', '信誉分数与门槛数值（原型 60 / 40）由谁定？要不要显示分数，还是只显示「正常 / 受限」？']] },
+    why: '现在没有任何地方能看到计分申诉和成绩争议的进度（C1：先放这两类，可按局读取）。信誉只写「正常 / 受限」一行，放在同一页顶部（X7）。',
+    els: ['ap-rep'], eps: [{ m: '我的申诉列表（跨局；先放计分申诉 + 成绩争议，到达申诉与门槛记录后加）', s: '缺', x: 1 }, { m: 'GET /api/orient/scoring/session/{id}', s: 'master · 单局 appeals[] / disputes[]' }, { m: '信誉 / 门槛', s: '缺', x: 1 }],
+    qs: [['X7', '已定：顶部一行「正常 / 受限」，不显示分数'], ['C1', '已定：列表先只放计分申诉与成绩争议']] },
   'appeal-detail': { title: '申诉进度（新页）· 复核结论', host: '新页 · 照抄 subpackageMember/report-detail', files: ['chengyinhub-xcx/subpackageMember/report-detail/index.wxml / .wxss（照抄）', 'components/cy/timeline'], badges: ['p', 'n'],
     copyOf: 'subpackageMember/report-detail', copyWhy: '卡片（标题 + 状态签 + 一句说明 + 时间）、「处理结论」「你的说明」「处理进度」时间线全部照抄；去掉「编号」，去掉页内「提交申诉」（申诉不再二次申诉）。',
     why: '玩家看到的判定只有这一处：结论 + 一句理由；通过时给回原局重新核验的入口，局结束只读。',
@@ -8225,13 +8160,13 @@ window.META = {
 };
 window.GROUPS = [
   { title: '组队', ids: ['topic', 'myteams', 'team'] },
-  { title: '游玩中：求助 · 榜单 · 到达申诉', ids: ['play', 'play-node'] },
-  { title: '成绩与争议', ids: ['play-fin', 'orient-score'] },
+  { title: '游玩中：联系主办 · 榜单 · 到达申诉', ids: ['play', 'play-node'] },
+  { title: '成绩与争议', ids: ['play-fin'] },
   { title: '赛事', ids: ['event', 'event-coded'] },
   { title: '申诉 · 信誉 · 判定', ids: ['settings', 'appeals', 'appeal-detail'] },
 ];
 window.FIRST = 'topic';
-window.STATE0 = { 't-safe': 'todo', 'mt-lobby': 'ready', 'team-board': 'ready', 'p-sos': 'ready', 'p-boardst': 'ready', 'p-guard': 'blocked', 'p-fin': 'ready', 'ev-duty': 'on', 'ev-checkin': 'open', 'ev-rank': 'ready', 'ev-policy': 'unchecked', 'ev-signed': 'unsigned', 'ap-list': 'ready', 'ap-detail': 'reviewing' };
+window.STATE0 = { 't-safe': 'todo', 'mt-lobby': 'ready', 'team-board': 'ready', 'p-sos': 'club', 'p-boardst': 'ready', 'p-guard': 'blocked', 'p-fin': 'ready', 'ev-duty': 'on', 'ev-checkin': 'open', 'ev-rank': 'ready', 'ev-policy': 'unchecked', 'ev-signed': 'unsigned', 'ap-list': 'ready', 'ap-rep': 'ok', 'ap-detail': 'reviewing' };
 
 /* ---------- 演示动作 ---------- */
 window.ACTS = {
@@ -8243,20 +8178,20 @@ window.ACTS = {
   board: () => { document.getElementById('play-tools').classList.remove('open'); openSheet('play-board'); },
   sos: () => {
     const st = (document.querySelector('[data-st-id="p-sos"]') || {}).dataset.st;
-    if (st === 'error') { toast('号码没读到，请稍后再试'); return; }
+    if (st === 'error') { toast('号码加载失败，请稍后重试'); return; }
     const who = st === 'merchant' ? '示例咖啡' : '城南徒步俱乐部';
-    modal({ title: '', content: '将拨打「' + who + '」的联系电话。', confirmText: '拨打', ok: () => toast('正在打开拨号') });
+    modal({ title: '', content: '拨打「' + who + '」的电话？', confirmText: '拨打', ok: () => toast('正在打开拨号') });
   },
-  arrive: () => { const b = document.querySelector('[data-st-id="p-guard"]'); if (b.dataset.st === 'idle') { setState('p-guard', 'blocked'); } else if (b.dataset.st === 'upheld') { toast('到达已记录'); setState('p-guard', 'idle'); } else toast('还没到这一站附近'); },
-  guardAppeal: () => modal({ title: '申诉这次到达', content: '说说当时的情况，24 小时内会有结论。通过后可在本站重新核验一次，不会直接算到达。', editable: true, placeholder: '例如：一路步行过来，定位跳了一下', required: true, requiredText: '请填写申诉理由', confirmText: '提交', ok: () => { toast('已提交'); setState('p-guard', 'submitted'); } }),
-  dispute: () => modal({ title: '提出成绩争议', content: '公示截止 10-28 21:58 前可以提出，处理结果会出现在「我的申诉」。', editable: true, placeholder: '写下你认为有误的地方', required: true, requiredText: '请填写理由', confirmText: '提交', ok: () => { toast('已提交'); setState('p-fin', 'disputed'); const s = document.getElementById('play-result'); if (s) s.classList.remove('open'); } }),
-  dial: () => modal({ title: '', content: '将拨打「城南徒步俱乐部」的联系电话。', confirmText: '拨打', ok: () => toast('正在打开拨号') }),
-  rotate: () => modal({ title: '换一个签到码？', content: '换码后旧码立即失效；已经签到的记录不会撤销。', confirmText: '换码', ok: () => { window.drawQr(true); toast('已换码'); } }),
+  arrive: () => { const b = document.querySelector('[data-st-id="p-guard"]'); if (b.dataset.st === 'idle') { setState('p-guard', 'blocked'); } else if (b.dataset.st === 'upheld') { toast('到达已记录'); setState('p-guard', 'idle'); } else toast('还未到达这个节点附近'); },
+  guardAppeal: () => modal({ title: '申诉这次到达', content: '24 小时内给出结论。', editable: true, max: 500, placeholder: '写下当时的情况，例如：定位跳了一下', required: true, requiredText: '请填写申诉理由', confirmText: '提交', ok: () => { toast('已提交'); setState('p-guard', 'submitted'); } }),
+  dispute: () => modal({ title: '提出成绩争议', content: '结果会显示在「我的申诉」。', editable: true, max: 500, placeholder: '写下你认为有误的地方', required: true, requiredText: '请填写争议理由', confirmText: '提交', ok: () => { toast('已提交'); setState('p-fin', 'disputed'); const s = document.getElementById('play-result'); if (s) s.classList.remove('open'); } }),
+  dial: () => modal({ title: '', content: '拨打「城南徒步俱乐部」的电话？', confirmText: '拨打', ok: () => toast('正在打开拨号') }),
+  rotate: () => modal({ title: '更换签到码？', content: '旧码会失效，签到记录保留。', confirmText: '更换', ok: () => { window.drawQr(true); toast('已更换'); } }),
   consent: () => { const b = document.querySelector('[data-st-id="ev-policy"]'); setState('ev-policy', b.dataset.st === 'checked' ? 'unchecked' : 'checked'); },
   evSignup: () => {
     const s = document.querySelector('.od-cta[data-st-id="ev-signed"]').dataset.st;
     if (s === 'unsigned' || s === 'guest') {
-      if (document.querySelector('[data-st-id="ev-policy"]').dataset.st !== 'checked') { toast('请先阅读并勾选安全须知'); return; }
+      if (document.querySelector('[data-st-id="ev-policy"]').dataset.st !== 'checked') { toast('请先勾选安全须知'); return; }
       toast('报名成功'); setState('ev-signed', 'signed'); setState('ev-checkin', 'before');
     } else if (s === 'live') toast('去漫游 · 验证到达（现有流程）');
   },
