@@ -16,8 +16,8 @@
 | 项 | 值 |
 |---|---|
 | 仓库参考基线 | `19408d49172c1d8fd16ec012f4498ff8ea584a37`；不声明生产已执行 |
-| 源提交 | `5ff94dc31ef74c0b07b889bda9ce525dec42ea6c` |
-| 源 tree | `096d98438479a4a70fab79db629dc784304d6a08` |
+| 源提交 | `b739b00c082047c57167c5541682f443b4b2dda5` |
+| 源 tree | `ab5a90b50161a90aa39299e986d7906b4b2791a7` |
 | SQL 子树 | `61eff9b0b9419cf4b1b9cb09ec3d771fc9cc1525` |
 | 依赖台账 SHA-256 | `0118e7fda3512918d2b0faf3f40f06d6468fbdbeeec984041ff354bc99558d91` |
 | 发布集 | 60 项；新增 59、修改 1、删除 0 |
@@ -271,7 +271,7 @@ GitHub 托管 workflow 使用钉 digest 的 MySQL 8.0.45 一次性容器，不�
 
 1. 从参考基线与当前源提交计算发布集，逐项核对 path/hash/order/dependsOn；数量不写死。
 2. 从仓库基线 schema/seed 和非发布集迁移重建合成库，写入合成行（含品牌形象图商家）。
-3. 逐项检查 `expectedAtBaseline`，严格按序执行全部 60 项，任何错误或断言失败立即停止。
+3. 逐项检查 `expectedAtBaseline`，按 owner 执行顺序（`execution_rounds`：A 轮 PRE_DEPLOY_REQUIRED 及其发布集内前置 → B 轮其余 PRE_DEPLOY → C 轮 OWNER_GATED_DATA，每轮内按 step）执行全部 60 项，任何错误或断言失败立即停止；脚本先校验该顺序不违反任何声明的依赖。
 4. 检查 `expectedAfterApply`；回读商家回填、积分种子与品牌相册搬迁。
 5. welcome_note 原文件直接重跑的 1060 负控；第二遍可重入项实际重跑、单次执行项按预检跳过，全库 schema/索引/约束/CHECKSUM 零变更（唯一声明差异仍是 `o14_city_code_backfill_log.write_time`）。
 6. 负控：10-22 的全部负控 + 新增单次执行坏表/缺表、加列漂移、配置键重复、菜单形状漂移、授权越权、索引缺失。

@@ -115,6 +115,21 @@ class ReleaseMigrationPackTest(unittest.TestCase):
             with self.subTest(ok=ok, problems=problems, after=after):
                 self.assertFalse(rehearsal.direct_rerun_rejected_safely(ok, problems, fingerprint, after))
 
+    def test_execution_rounds_put_required_first_and_keep_dependencies(self):
+        rounds = rehearsal.execution_rounds(PACK["migrations"])
+        flat = [i for name in rehearsal.EXECUTION_ROUNDS for i in rounds[name]]
+        self.assertEqual(sorted(m["migrationId"] for m in PACK["migrations"]), sorted(flat))
+        phase = {m["migrationId"]: m["phase"] for m in PACK["migrations"]}
+        required = {i for i, p in phase.items() if p == "PRE_DEPLOY_REQUIRED"}
+        self.assertTrue(required <= set(rounds["A_PRE_DEPLOY_REQUIRED"]))
+        self.assertFalse(any(phase[i] == "PRE_DEPLOY_REQUIRED" for i in rounds["B_PRE_DEPLOY"]))
+        self.assertTrue(all(phase[i] == "OWNER_GATED_DATA" for i in rounds["C_OWNER_GATED_DATA"]))
+        broken = copy.deepcopy(PACK["migrations"])
+        target = next(m for m in broken if m["migrationId"] == "20261026_user_invoice_processing")
+        target["phase"] = "OWNER_GATED_DATA"
+        with self.assertRaises(ValueError):
+            rehearsal.execution_rounds(broken)
+
     def test_refresh_rejects_unreviewed_or_removed_contracts(self):
         computed = [{k: m[k] for k in ("migrationId", "path", "sha256", "baseSha256", "change", "order", "dependsOn")}
                     for m in PACK["migrations"]]

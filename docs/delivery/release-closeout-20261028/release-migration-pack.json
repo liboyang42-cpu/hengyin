@@ -3,8 +3,8 @@
   "kind": "release-migration-pack",
   "releaseCloseout": "release-closeout-20261028",
   "generatedFor": {
-    "masterCommit": "5ff94dc31ef74c0b07b889bda9ce525dec42ea6c",
-    "sourceTree": "096d98438479a4a70fab79db629dc784304d6a08",
+    "masterCommit": "b739b00c082047c57167c5541682f443b4b2dda5",
+    "sourceTree": "ab5a90b50161a90aa39299e986d7906b4b2791a7",
     "migrationTree": "61eff9b0b9419cf4b1b9cb09ec3d771fc9cc1525",
     "dependencySha256": "0118e7fda3512918d2b0faf3f40f06d6468fbdbeeec984041ff354bc99558d91",
     "date": "2026-10-28"

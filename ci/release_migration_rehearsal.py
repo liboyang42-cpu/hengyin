@@ -152,6 +152,39 @@ def release_set(base):
                   for c in items]
 
 
+EXECUTION_ROUNDS = ("A_PRE_DEPLOY_REQUIRED", "B_PRE_DEPLOY", "C_OWNER_GATED_DATA")
+
+
+def execution_rounds(items):
+    """Owner order: PRE_DEPLOY_REQUIRED (plus in-set prerequisites) first, other pre-deploy next, data last.
+
+    Each round keeps step order; the result must still respect every declared in-set dependency.
+    """
+    by_id = {m["migrationId"]: m for m in items}
+    first = set()
+    pending = [m["migrationId"] for m in items if m["phase"] == "PRE_DEPLOY_REQUIRED"]
+    while pending:
+        migration_id = pending.pop()
+        if migration_id not in first:
+            first.add(migration_id)
+            pending.extend(d for d in by_id[migration_id]["dependsOn"] if d in by_id)
+    rounds = {name: [] for name in EXECUTION_ROUNDS}
+    for m in sorted(items, key=lambda m: m["step"]):
+        if m["migrationId"] in first:
+            rounds["A_PRE_DEPLOY_REQUIRED"].append(m["migrationId"])
+        elif m["phase"] == "OWNER_GATED_DATA":
+            rounds["C_OWNER_GATED_DATA"].append(m["migrationId"])
+        else:
+            rounds["B_PRE_DEPLOY"].append(m["migrationId"])
+    seen = set()
+    for migration_id in [i for name in EXECUTION_ROUNDS for i in rounds[name]]:
+        missing = [d for d in by_id[migration_id]["dependsOn"] if d in by_id and d not in seen]
+        if missing:
+            raise ValueError("execution rounds break dependency: %s needs %s" % (migration_id, missing))
+        seen.add(migration_id)
+    return rounds
+
+
 def compare_pack(pack, computed):
     declared = [{k: m[k] for k in ("migrationId", "path", "sha256", "order", "dependsOn")}
                 for m in pack["migrations"]]
@@ -411,12 +444,14 @@ def main():
     expected_after = {m["migrationId"]: set(m["expectedAfterApply"]) for m in pack["migrations"]}
     pack_by_id = {m["migrationId"]: m for m in pack["migrations"]}
     known_delta = {m["migrationId"]: m["rerunKnownDelta"] for m in pack["migrations"] if m.get("rerunKnownDelta")}
-    release_ids = [m["migrationId"] for m in computed]
+    rounds = execution_rounds(pack["migrations"])
+    release_ids = [i for name in EXECUTION_ROUNDS for i in rounds[name]]
 
     from scripts.e2e import build_schema as bs
     a.password = os.environ.get(PASSWORD_ENV, "")
     bs.validate_target(a)
-    report = {"base": diff["base"], "head": diff["head"], "releaseCount": len(computed), "steps": []}
+    report = {"base": diff["base"], "head": diff["head"], "releaseCount": len(computed),
+              "executionRounds": rounds, "steps": []}
 
     def fail(message, **extra):
         report["result"] = "FAIL"
