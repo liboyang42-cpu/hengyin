@@ -1,0 +1,19 @@
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicPublicationService.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicPublicationService.java
+index 4e22278118a79a5c1cb2bfe7708707a6427a5fc6..4156d928d4207c296ce53817c2a22d6414b08576 100644
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicPublicationService.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicPublicationService.java
+@@ -191,8 +191,12 @@ public class TopicPublicationService {
+ 
+     /** Both original derivations finish before the one final author-declaration copy. */
+     private List<ThemeStateKey> prepareDeclarations(CmsTopic current) {
+-        topicRouteRuntimeService.deriveTemplateCluesForPublication(current);
+-        publicationContentGuard.deriveOptionTagsForPublication(current);
++        // Version-bound authors confirm registry declarations before publishing. Deriving a
++        // new declaration here would advance the confirmed registryVersion after attribute freeze.
++        if (!com.chengyinhub.business.service.support.AuthorAttributeBinding.hasBinding(current.getJourneyRulesJson())) {
++            topicRouteRuntimeService.deriveTemplateCluesForPublication(current);
++            publicationContentGuard.deriveOptionTagsForPublication(current);
++        }
+         return com.chengyinhub.business.service.support.ThemeStateKeyDeclarationSnapshot.copy(current.getId(),
+                 themeStateKeyService.listCurrentDeclarations(current.getId()));
+     }

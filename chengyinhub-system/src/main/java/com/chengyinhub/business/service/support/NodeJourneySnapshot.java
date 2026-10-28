@@ -38,6 +38,129 @@ public final class NodeJourneySnapshot {
     public static final String CHOICE_EFFECTS_KEY = "choiceEffects";
     /** R18-FREEZE:模板对错判定字段的建局冻结区。 */
     public static final String NODE_ANSWERS_KEY = "nodeAnswers";
+
+    /** New marker is authoritative. Missing old markers alone retain the historical path. */
+    public static boolean hasContent(JsonNode answer) {
+        if (answer == null || !answer.has("contentSnapshotVersion")) return false;
+        JsonNode version = answer.get("contentSnapshotVersion"), node = answer.path("nodePresentation");
+        if (!version.isIntegralNumber() || !version.canConvertToInt() || version.asInt() != 1
+                || !node.isObject() || !positiveId(node.get("id")) || !positiveId(node.get("topicId"))) {
+            throw new IllegalStateException("本局内容快照不可用");
+        }
+        JsonNode templateId = answer.get("templateId");
+        if (templateId != null && !templateId.isNull()) {
+            if (!positiveId(templateId) || !answer.path("templatePresentation").isObject()
+                    || !positiveId(node.get("templateId")) || templateId.asLong() != node.path("templateId").asLong()) {
+                throw new IllegalStateException("本局内容身份不可用");
+            }
+        } else if (node.hasNonNull("templateId")) {
+            throw new IllegalStateException("本局内容身份不可用");
+        }
+        return true;
+    }
+
+    private static boolean positiveId(JsonNode value) {
+        return value != null && value.isIntegralNumber() && value.canConvertToLong() && value.asLong() > 0L;
+    }
+
+    public static boolean hasContentSnapshots(JsonNode snapshot) {
+        if (snapshot == null || !snapshot.path(NODE_ANSWERS_KEY).isObject()) return false;
+        for (JsonNode row : snapshot.path(NODE_ANSWERS_KEY)) if (row.has("contentSnapshotVersion")) return true;
+        return false;
+    }
+
+    /** A new full content source cannot silently become a legacy/live read after losing required facts. */
+    public static void requireContentSnapshot(JsonNode snapshot) {
+        if (!hasContentSnapshots(snapshot)) return;
+        JsonNode rules=snapshot.get(JOURNEY_RULES_KEY);
+        if (rules==null || rules.isNull() || !rules.isObject() && !rules.isTextual()
+                || !snapshot.has(JOURNEY_STORY_KEY) || !snapshot.path("nodeConfigs").isObject())
+            throw new IllegalStateException("本局内容快照不完整");
+        java.util.Iterator<java.util.Map.Entry<String,JsonNode>> nodes=snapshot.path(NODE_ANSWERS_KEY).fields();
+        while(nodes.hasNext()) {
+            java.util.Map.Entry<String,JsonNode> row=nodes.next();
+            if (!hasContent(row.getValue()) || !row.getKey().equals(row.getValue().path("nodePresentation").path("id").asText())
+                    || row.getValue().hasNonNull("templateId") && !snapshot.path("nodeConfigs").path(row.getKey()).isObject())
+                throw new IllegalStateException("本局内容快照不完整");
+        }
+    }
+
+    /** Server-only typed view; never serialize this object as a public response. */
+    public static com.chengyinhub.business.domain.CmsMemberTemplate contentTemplate(JsonNode answer) {
+        if (!hasContent(answer) || !answer.hasNonNull("templateId")) return null;
+        com.chengyinhub.business.domain.CmsMemberTemplate template = new com.chengyinhub.business.domain.CmsMemberTemplate();
+        template.setId(answer.path("templateId").asLong());
+        JsonNode presentation = answer.path("templatePresentation");
+        template.setTitle(presentation.path("title").asText(null));
+        template.setStoryText(presentation.path("storyText").asText(null));
+        template.setImgUrl(presentation.path("imgUrl").asText(null));
+        template.setAudioUrl(presentation.path("audioUrl").asText(null));
+        template.setQuestionName(presentation.path("questionName").asText(null));
+        template.setQuestionImg(presentation.path("questionImg").asText(null));
+        template.setQuestionAudio(presentation.path("questionAudio").asText(null));
+        template.setQuestionOptionMediaJson(presentation.path("questionOptionMediaJson").asText(null));
+        template.setDuration(presentation.hasNonNull("duration") ? presentation.path("duration").asLong() : null);
+        template.setDifficulty(presentation.path("difficulty").asText(null));
+        template.setPlayers(presentation.path("players").asText(null));
+        template.setRequiredMaterials(presentation.path("requiredMaterials").asText(null));
+        template.setRuleInstructions(presentation.path("ruleInstructions").asText(null));
+        template.setStoryImg(presentation.path("storyImg").asText(null));
+        template.setHint1(answer.path("hint1").asText(null));
+        template.setHint2(answer.path("hint2").asText(null));
+        template.setFeedbackText(presentation.path("feedbackText").asText(null));
+        template.setPhotoRequireDesc(presentation.path("photoRequireDesc").asText(null));
+        template.setAudioDuration(presentation.hasNonNull("audioDuration") ? presentation.path("audioDuration").asInt() : null);
+        template.setMedalName(presentation.path("medalName").asText(null));
+        template.setMedalStyle(presentation.path("medalStyle").asText(null));
+        template.setMedalImg(presentation.path("medalImg").asText(null));
+        template.setCouponId(presentation.hasNonNull("couponId") ? presentation.path("couponId").asLong() : null);
+        template.setValidationMethod(answer.hasNonNull("validationMethod") ? answer.path("validationMethod").asInt() : null);
+        template.setPhotoReview(answer.hasNonNull("photoReview") ? answer.path("photoReview").asInt() : null);
+        template.setQuestionAnswer(answer.path("questionAnswer").asText(null));
+        template.setCorrectAnswer(answer.path("correctAnswer").asText(null));
+        template.setAnswerReveal(answer.path("answerReveal").asText(null));
+        template.setQuestionA(answer.path("questionA").asText(null));
+        template.setQuestionB(answer.path("questionB").asText(null));
+        template.setQuestionC(answer.path("questionC").asText(null));
+        template.setQuestionD(answer.path("questionD").asText(null));
+        template.setPreferenceJson(answer.path("preferenceJson").asText(null));
+        template.setSensorType(answer.path("sensorType").asText(null));
+        template.setSensorConfig(answer.path("sensorConfig").asText(null));
+        return template;
+    }
+
+    /**
+     * Content projection only. An authorized shared source-node mapping may retain the actual
+     * station id from original; status, QR credentials and current authorization facts stay original.
+     */
+    public static com.chengyinhub.business.domain.CmsTopicNode contentNode(JsonNode answer,
+            com.chengyinhub.business.domain.CmsTopicNode original) {
+        if (!hasContent(answer)) return original;
+        JsonNode p = answer.path("nodePresentation");
+        if (original != null && !java.util.Objects.equals(original.getTopicId(), Long.valueOf(p.path("topicId").asLong())))
+            throw new IllegalStateException("本局内容归属不可用");
+        com.chengyinhub.business.domain.CmsTopicNode node = new com.chengyinhub.business.domain.CmsTopicNode();
+        if (original != null) org.springframework.beans.BeanUtils.copyProperties(original, node);
+        else { node.setId(p.path("id").asLong()); node.setTopicId(p.path("topicId").asLong()); }
+        node.setTemplateId(answer.hasNonNull("templateId") ? answer.path("templateId").asLong() : null);
+        node.setChapterId(p.hasNonNull("chapterId") ? p.path("chapterId").asLong() : null);
+        node.setMerchantMemberId(p.hasNonNull("merchantMemberId") ? p.path("merchantMemberId").asLong() : null);
+        node.setSortId(p.hasNonNull("sortId") ? p.path("sortId").asLong() : null);
+        node.setUnlockAfterNodeId(p.hasNonNull("unlockAfterNodeId") ? p.path("unlockAfterNodeId").asLong() : null);
+        node.setName(p.path("name").asText(null));
+        node.setDescription(p.path("description").asText(null));
+        node.setAddress(p.path("address").asText(null));
+        node.setLongitude(p.path("longitude").asText(null));
+        node.setLatitude(p.path("latitude").asText(null));
+        node.setImgUrl(p.path("imgUrl").asText(null));
+        node.setBusinessTime(p.path("businessTime").asText(null));
+        node.setHookText(p.path("hookText").asText(null));
+        node.setCardHookLong(p.path("cardHookLong").asText(null));
+        node.setFragmentText(p.path("fragmentText").asText(null));
+        node.setNodeTime(p.hasNonNull("nodeTime") ? p.path("nodeTime").asInt() : null);
+        return node;
+    }
+
     /**
      * R22-C4:玩法入口段的启用态冻结。encounter 的 allowedActions 原来读实时模板,check 读冻结块
      * —— 会话中途新增玩法会立刻出现在进行中的局。键总是写入(nodeJourney 每块都有,空对象 =
@@ -372,6 +495,13 @@ public final class NodeJourneySnapshot {
         } catch (Exception unusableSnapshot) {
             return null;
         }
+        return answerFromSnapshot(snapshot, nodeId);
+    }
+
+    /** Defensive server-only read of an already authorized original run (including shared aliases). */
+    public static JsonNode answerFromSnapshot(JsonNode snapshot, Long nodeId) {
+        snapshot = nodeContentSource(snapshot, nodeId);
+        if (snapshot == null || nodeId == null) return null;
         JsonNode frozen = snapshot.path(NODE_ANSWERS_KEY);
         if (!frozen.isObject()) return null;
         return frozenBlock(frozen, nodeId);
@@ -393,138 +523,16 @@ public final class NodeJourneySnapshot {
 
     private static JsonNode frozenBlock(JsonNode frozen, Long nodeId) {
         JsonNode block = frozen.get(String.valueOf(nodeId));
-        if (block != null && block.isObject()) return block;
-        for (JsonNode row : frozen) if (row.has("contentSnapshotVersion"))
-            throw new IllegalStateException("节点不属于原局内容");
-        return null;
-    }
-
-    public static boolean hasContent(JsonNode answer) {
-        if (answer == null || !answer.has("contentSnapshotVersion")) return false;
-        JsonNode version = answer.get("contentSnapshotVersion"), node = answer.path("nodePresentation");
-        if (!version.isIntegralNumber() || !version.canConvertToInt() || version.asInt() != 1
-                || !node.isObject() || !positiveId(node.get("id")) || !positiveId(node.get("topicId"))) {
-            throw new IllegalStateException("本局内容快照不可用");
+        if (block == null || !block.isObject()) {
+            for (JsonNode row : frozen) if (row.has("contentSnapshotVersion"))
+                throw new IllegalStateException("节点不属于原局内容");
+            return null;
         }
-        JsonNode templateId = answer.get("templateId");
-        if (templateId != null && !templateId.isNull()) {
-            if (!positiveId(templateId) || !answer.path("templatePresentation").isObject()
-                    || !positiveId(node.get("templateId")) || templateId.asLong() != node.path("templateId").asLong()) {
-                throw new IllegalStateException("本局内容身份不可用");
-            }
-        } else if (node.hasNonNull("templateId")) {
-            throw new IllegalStateException("本局内容身份不可用");
-        }
-        return true;
-    }
-
-    private static boolean positiveId(JsonNode value) {
-        return value != null && value.isIntegralNumber() && value.canConvertToLong() && value.asLong() > 0L;
-    }
-
-    public static boolean hasContentSnapshots(JsonNode snapshot) {
-        if (snapshot == null || !snapshot.path(NODE_ANSWERS_KEY).isObject()) return false;
-        for (JsonNode row : snapshot.path(NODE_ANSWERS_KEY)) if (row.has("contentSnapshotVersion")) return true;
-        return false;
-    }
-
-    public static void requireContentSnapshot(JsonNode snapshot) {
-        if (!hasContentSnapshots(snapshot)) return;
-        JsonNode rules=snapshot.get(JOURNEY_RULES_KEY);
-        if (rules==null || rules.isNull() || !rules.isObject() && !rules.isTextual()
-                || !snapshot.has(JOURNEY_STORY_KEY) || !snapshot.path("nodeConfigs").isObject())
-            throw new IllegalStateException("本局内容快照不完整");
-        java.util.Iterator<java.util.Map.Entry<String,JsonNode>> nodes=snapshot.path(NODE_ANSWERS_KEY).fields();
-        while(nodes.hasNext()) {
-            java.util.Map.Entry<String,JsonNode> row=nodes.next();
-            if (!hasContent(row.getValue()) || !row.getKey().equals(row.getValue().path("nodePresentation").path("id").asText())
-                    || row.getValue().hasNonNull("templateId") && !snapshot.path("nodeConfigs").path(row.getKey()).isObject())
-                throw new IllegalStateException("本局内容快照不完整");
-        }
-    }
-
-    public static com.chengyinhub.business.domain.CmsMemberTemplate contentTemplate(JsonNode answer) {
-        if (!hasContent(answer) || !answer.hasNonNull("templateId")) return null;
-        com.chengyinhub.business.domain.CmsMemberTemplate template = new com.chengyinhub.business.domain.CmsMemberTemplate();
-        template.setId(answer.path("templateId").asLong());
-        JsonNode presentation = answer.path("templatePresentation");
-        template.setTitle(presentation.path("title").asText(null));
-        template.setStoryText(presentation.path("storyText").asText(null));
-        template.setImgUrl(presentation.path("imgUrl").asText(null));
-        template.setAudioUrl(presentation.path("audioUrl").asText(null));
-        template.setQuestionName(presentation.path("questionName").asText(null));
-        template.setQuestionImg(presentation.path("questionImg").asText(null));
-        template.setQuestionAudio(presentation.path("questionAudio").asText(null));
-        template.setQuestionOptionMediaJson(presentation.path("questionOptionMediaJson").asText(null));
-        template.setDuration(presentation.hasNonNull("duration") ? presentation.path("duration").asLong() : null);
-        template.setDifficulty(presentation.path("difficulty").asText(null));
-        template.setPlayers(presentation.path("players").asText(null));
-        template.setRequiredMaterials(presentation.path("requiredMaterials").asText(null));
-        template.setRuleInstructions(presentation.path("ruleInstructions").asText(null));
-        template.setStoryImg(presentation.path("storyImg").asText(null));
-        template.setHint1(answer.path("hint1").asText(null));
-        template.setHint2(answer.path("hint2").asText(null));
-        template.setFeedbackText(presentation.path("feedbackText").asText(null));
-        template.setPhotoRequireDesc(presentation.path("photoRequireDesc").asText(null));
-        template.setAudioDuration(presentation.hasNonNull("audioDuration") ? presentation.path("audioDuration").asInt() : null);
-        template.setMedalName(presentation.path("medalName").asText(null));
-        template.setMedalStyle(presentation.path("medalStyle").asText(null));
-        template.setMedalImg(presentation.path("medalImg").asText(null));
-        template.setCouponId(presentation.hasNonNull("couponId") ? presentation.path("couponId").asLong() : null);
-        template.setValidationMethod(answer.hasNonNull("validationMethod") ? answer.path("validationMethod").asInt() : null);
-        template.setPhotoReview(answer.hasNonNull("photoReview") ? answer.path("photoReview").asInt() : null);
-        template.setQuestionAnswer(answer.path("questionAnswer").asText(null));
-        template.setCorrectAnswer(answer.path("correctAnswer").asText(null));
-        template.setAnswerReveal(answer.path("answerReveal").asText(null));
-        template.setQuestionA(answer.path("questionA").asText(null));
-        template.setQuestionB(answer.path("questionB").asText(null));
-        template.setQuestionC(answer.path("questionC").asText(null));
-        template.setQuestionD(answer.path("questionD").asText(null));
-        template.setPreferenceJson(answer.path("preferenceJson").asText(null));
-        template.setSensorType(answer.path("sensorType").asText(null));
-        template.setSensorConfig(answer.path("sensorConfig").asText(null));
-        return template;
-    }
-
-    public static com.chengyinhub.business.domain.CmsTopicNode contentNode(JsonNode answer,
-            com.chengyinhub.business.domain.CmsTopicNode original) {
-        if (!hasContent(answer)) return original;
-        JsonNode p = answer.path("nodePresentation");
-        if (original != null && !java.util.Objects.equals(original.getTopicId(), Long.valueOf(p.path("topicId").asLong())))
-            throw new IllegalStateException("本局内容归属不可用");
-        com.chengyinhub.business.domain.CmsTopicNode node = new com.chengyinhub.business.domain.CmsTopicNode();
-        if (original != null) org.springframework.beans.BeanUtils.copyProperties(original, node);
-        else { node.setId(p.path("id").asLong()); node.setTopicId(p.path("topicId").asLong()); }
-        node.setTemplateId(answer.hasNonNull("templateId") ? answer.path("templateId").asLong() : null);
-        node.setChapterId(p.hasNonNull("chapterId") ? p.path("chapterId").asLong() : null);
-        node.setMerchantMemberId(p.hasNonNull("merchantMemberId") ? p.path("merchantMemberId").asLong() : null);
-        node.setSortId(p.hasNonNull("sortId") ? p.path("sortId").asLong() : null);
-        node.setUnlockAfterNodeId(p.hasNonNull("unlockAfterNodeId") ? p.path("unlockAfterNodeId").asLong() : null);
-        node.setName(p.path("name").asText(null));
-        node.setDescription(p.path("description").asText(null));
-        node.setAddress(p.path("address").asText(null));
-        node.setLongitude(p.path("longitude").asText(null));
-        node.setLatitude(p.path("latitude").asText(null));
-        node.setImgUrl(p.path("imgUrl").asText(null));
-        node.setBusinessTime(p.path("businessTime").asText(null));
-        node.setHookText(p.path("hookText").asText(null));
-        node.setCardHookLong(p.path("cardHookLong").asText(null));
-        node.setFragmentText(p.path("fragmentText").asText(null));
-        node.setNodeTime(p.hasNonNull("nodeTime") ? p.path("nodeTime").asInt() : null);
-        return node;
-    }
-
-    public static JsonNode answerFromSnapshot(JsonNode snapshot, Long nodeId) {
-        snapshot = nodeContentSource(snapshot, nodeId);
-        if (snapshot == null || nodeId == null) return null;
-        JsonNode frozen = snapshot.path(NODE_ANSWERS_KEY);
-        if (!frozen.isObject()) return null;
-        JsonNode block = frozenBlock(frozen, nodeId);
-        if (block == null) return null;
         hasContent(block);
         return block.deepCopy();
     }
 
+    /** Server-only per-node source captured from an existing default minigame, never a new route. */
     public static JsonNode nodeContentSource(JsonNode snapshot, Long nodeId) {
         if (snapshot == null || nodeId == null) return snapshot;
         JsonNode original = snapshot.path("originalNodeGames").get(String.valueOf(nodeId));
